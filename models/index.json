@@ -1,0 +1,20 @@
+{
+  "schema": "inverse-earth.models/v1",
+  "models": [
+    {
+      "id": "cnn-field-prior",
+      "architecture": "2-channel Conv2d field prior",
+      "inputs": ["normalized_density", "normalized_susceptibility"],
+      "target": "normalized_density",
+      "training": "grouped case split, seeded offline bake"
+    },
+    {
+      "id": "spatial-autoencoder",
+      "architecture": "2-channel dense autoencoder with 48-dimensional latent state",
+      "inputs": ["normalized_density", "normalized_susceptibility"],
+      "target": "reconstruction",
+      "training": "grouped case split, seeded offline bake"
+    }
+  ],
+  "weight_policy": "regenerate from data/derived/training.json; binary weights are not committed"
+}

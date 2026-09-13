@@ -1,0 +1,8 @@
+"""Seeded random generators are explicit in every canonical run."""
+from __future__ import annotations
+
+import numpy as np
+
+
+def make_rng(seed: int) -> np.random.Generator:
+    return np.random.default_rng(int(seed))

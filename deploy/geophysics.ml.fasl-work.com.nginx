@@ -1,0 +1,27 @@
+server {
+    server_name geophysics.ml.fasl-work.com;
+    root /var/www/geophysics.ml.fasl-work.com/current;
+
+    location = /index.html {
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+
+    location /data/ {
+        add_header Cache-Control "public, max-age=86400" always;
+        try_files $uri =404;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    gzip on;
+    gzip_types application/javascript application/json image/svg+xml text/css text/plain;
+    listen 80;
+}

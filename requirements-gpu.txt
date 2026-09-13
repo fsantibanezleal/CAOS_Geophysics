@@ -1,0 +1,6 @@
+-r requirements-precompute.txt
+--index-url https://download.pytorch.org/whl/cu126
+torch==2.14.0+cu126
+--extra-index-url https://pypi.org/simple
+deepwave==0.0.27
+devito==4.8.23

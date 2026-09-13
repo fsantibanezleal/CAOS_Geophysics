@@ -1,0 +1,22 @@
+import { Callout, Equation, Figure, Refs, SubTabs, useShellLang } from '@fasl-work/caos-app-shell';
+
+const tabs = ['Staged bake', 'Contracts', 'GPU lane', 'Browser lane', 'Artifacts', 'Deployment', 'Validation', 'Reproduction'];
+const bodies = [
+  'The ordered stages are ingest, preprocess, grouped split, features, train, infer, evaluate, export, and validate. Each stage receives typed records and emits a named artifact. The release bake is seeded and the browser never mutates canonical science.',
+  'Contract 1 accepts station_id, x_m, y_m, frequency_hz, value, and unit. NaN, non-positive frequency, unknown unit, and malformed rows are rejected. Extreme finite values are retained with a flag. Contract 2 binds manifest identity, schema, artifact path, byte size, and provenance.',
+  'The local RTX 4070 is the authoritative accelerator path for acoustic finite-difference and learned experiments. A capability record stores the CUDA device and whether heavy packages imported. The public mirror is CPU-only and serves replay artifacts.',
+  'The browser mirrors compact NumPy-safe equations in TypeScript. A method tab is a real tool: its map, line plot, residual, or uncertainty layer changes with case, physical controls, and animation angle. The full solver remains offline.',
+  'Artifacts are compact JSON with coordinates, fields, observations, residuals, MT curves, FWI traces, joint evidence, metrics, and uncertainty. Manifests store exact bytes and engine inventory. The frontend build copies only these committed outputs.',
+  'GitHub Pages is the static canonical release. The ML VPS hosts an HTTPS static mirror because it has storage and reliable public routing but no GPU. Neither host trains or alters the release evidence.',
+  'Validation checks deterministic seeds, analytic limits, contract rejection, manifest byte identity, complete case index, and parity between browser and Python schemas. A single HTTP 200 is not scientific validation.',
+  'A fresh contributor creates the ignored environments, downloads permitted source inputs, runs the bake, runs tests, then builds the frontend. The data ledger records fetch URLs, hashes, licenses, and transformations.',
+];
+const formulas = ['D_{out}=E(V(P(S(D_{raw}))))', 'contract = schema + units + ranges + policy', 'T_{GPU} < T_{CPU}', 'y_{live}(p) \\\\approx y_{offline}(p)', 'sha256(a)=h_{manifest}', 'release = static(replay)', 'pass = contracts \\\\land metrics \\\\land artifacts', 'run = f(seed, parameters)'];
+
+export default function Implementation() {
+  const es = useShellLang() === 'es';
+  return <div className="page-body prose"><div className="page-head"><h1>{es ? 'Implementación' : 'Implementation'}</h1><p className="lede">{es ? 'El producto es el pipeline y su evidencia; la SPA es una proyección interactiva de artefactos validados, no una sustitución del procesamiento.' : 'The product is the pipeline and its evidence; the SPA is an interactive projection of validated artifacts, not a substitute for processing.'}</p></div>
+    <Figure caption="Offline compute, compact contract, browser replay"><svg className="doc-svg" viewBox="0 0 900 230" role="img" aria-label="Implementation architecture"><rect width="900" height="230" rx="14" fill="var(--figure-bg)" /><g className="diagram-label"><rect x="28" y="68" width="190" height="96" /><text x="48" y="100">OFFLINE</text><text x="48" y="128">stages + GPU + solvers</text><path d="M218 116h108" /><rect x="326" y="48" width="230" height="136" /><text x="348" y="84">CONTRACT 2</text><text x="348" y="112">JSON + manifest + hash</text><text x="348" y="140">replay artifact</text><path d="M556 116h108" /><rect x="664" y="68" width="208" height="96" /><text x="686" y="100">BROWSER</text><text x="686" y="128">live + pointer + export</text></g></svg></Figure>
+    <SubTabs ariaLabel="Implementation modules" tabs={tabs.map((title, i) => ({ id: title.toLowerCase().replaceAll(' ', '-'), label: title, content: <section><h2>{title}</h2><p>{bodies[i]}</p><Equation tex={formulas[i]} caption={es ? 'Relación operativa del módulo.' : 'Operational relation for this module.'} /><Callout variant={i === 6 ? 'honest' : 'note'} title={es ? 'Evidencia' : 'Evidence'}>{es ? 'La pestaña de Pipeline y la documentación reproducible conservan esta frontera.' : 'The Pipeline view and reproducible documentation preserve this boundary.'}</Callout><Refs ids={['cockett2015','deepwave','devito']} label={es ? 'Referencias' : 'References'} /></section> }))} />
+  </div>;
+}

@@ -1,0 +1,3 @@
+# CORE / LIVE lane. The browser mirrors the analytic formulas in TypeScript; this file is for
+# contract checks and optional Python-side replay tooling.
+numpy==2.2.6

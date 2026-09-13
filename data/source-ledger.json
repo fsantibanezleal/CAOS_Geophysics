@@ -1,0 +1,8 @@
+{
+  "schema": "inverse-earth.sources/v1",
+  "sources": [
+    {"name": "SimPEG gravity tutorial archive", "url": "https://storage.googleapis.com/simpeg/doc-assets/gravity.tar.gz", "sha256": "e3a632f1eb25b318db943c0854181e6e609479503b3f406c657cd4d6408e74a4", "license_status": "local comparison only until upstream terms are confirmed", "raw_path": "data/downloads/simpeg-gravity.tar.gz"},
+    {"name": "SimPEG magnetics tutorial archive", "url": "https://github.com/simpeg/user-tutorials/raw/main/assets/04-magnetics/inv_magnetics_induced_3d_files.tar.gz", "sha256": "a098688e946b500ae6496449241fea9a19a12648461f52503d5ffa2e02e2aca6", "license_status": "local comparison only until upstream terms are confirmed", "raw_path": "data/downloads/simpeg-magnetics.tar.gz"},
+    {"name": "Inverse Earth Studio canonical cases", "url": "local generator in data-pipeline/geophysicslab/cases.py", "sha256": null, "license_status": "original synthetic; CC-BY-4.0 content", "raw_path": null}
+  ]
+}

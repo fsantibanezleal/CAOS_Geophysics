@@ -1,0 +1,2 @@
+# Offline scientific lane. Heavy engines stay isolated from the browser runtime.
+numpy==2.2.6

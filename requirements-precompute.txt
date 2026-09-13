@@ -1,0 +1,7 @@
+# Canonical OFFLINE lane. Each dependency is documented under docs/frameworks/.
+-r data-pipeline/requirements.txt
+scipy==1.15.2
+pandas==2.2.3
+simpeg==0.25.2
+discretize==0.12.0
+choclo==0.3.2
