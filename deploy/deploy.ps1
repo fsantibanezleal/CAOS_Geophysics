@@ -1,5 +1,5 @@
 param(
-    [string]$Key = "D:\_Repos\_Web_Projects\_CAOS_MANAGE\credentials\general\ssh\hetzner_fasl_prod",
+    [string]$Key = $env:FASL_SSH_KEY,
     [string]$HostName = "89.167.4.175",
     [string]$Domain = "geophysics.ml.fasl-work.com"
 )
@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\")).Path
 $dist = Join-Path $repo "frontend\dist"
 if (-not (Test-Path (Join-Path $dist "index.html"))) { throw "Missing frontend/dist/index.html. Run the local build first." }
-if (-not (Test-Path $Key)) { throw "Missing SSH key: $Key" }
+if ([string]::IsNullOrWhiteSpace($Key) -or -not (Test-Path $Key)) { throw "Pass -Key or set FASL_SSH_KEY to the SSH key path." }
 
 $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddHHmmss")
 $archive = Join-Path $env:TEMP "inverse-earth-$stamp.tar.gz"
