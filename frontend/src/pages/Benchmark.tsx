@@ -11,7 +11,9 @@ export default function Benchmark() {
   const es = useShellLang() === 'es';
   const [summary, setSummary] = useState<Summary | null>(null);
   useEffect(() => {
-    const base = import.meta.env.BASE_URL;
+    // Resolve from the deployed app root so static route entrypoints such as
+    // /benchmark/ still reach the shared /data release rather than /benchmark/data.
+    const base = typeof window !== 'undefined' && window.location.pathname.startsWith('/CAOS_Geophysics') ? '/CAOS_Geophysics/' : '/';
     fetch(`${base}data/release.json`).then((response) => response.json()).then(async (release) => {
       const index = await fetch(`${base}data/manifests/index.json`).then((response) => response.json());
       const manifests = await Promise.all((index.cases as { case_id: string }[]).map(({ case_id }) => fetch(`${base}data/manifests/${case_id}.json`).then((response) => response.json() as Promise<Manifest>)));
