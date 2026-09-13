@@ -1,6 +1,16 @@
 server {
+    listen 80;
+    server_name geophysics.ml.fasl-work.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
     server_name geophysics.ml.fasl-work.com;
     root /var/www/geophysics.ml.fasl-work.com/current;
+
+    ssl_certificate /etc/letsencrypt/live/geophysics.ml.fasl-work.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/geophysics.ml.fasl-work.com/privkey.pem;
 
     location = /index.html {
         add_header Cache-Control "no-cache" always;
@@ -23,5 +33,4 @@ server {
 
     gzip on;
     gzip_types application/javascript application/json image/svg+xml text/css text/plain;
-    listen 80;
 }

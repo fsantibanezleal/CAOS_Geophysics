@@ -1,0 +1,10 @@
+server {
+    listen 80;
+    server_name geophysics.ml.fasl-work.com;
+    root /var/www/geophysics.ml.fasl-work.com/current;
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    gzip on;
+    gzip_types application/javascript application/json image/svg+xml text/css text/plain;
+}
