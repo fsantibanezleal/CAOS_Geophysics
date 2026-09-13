@@ -34,6 +34,8 @@ const config: ShellConfig = {
   },
 };
 
-createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><CitationsProvider items={CITATIONS}><AppShell config={config}><Routes>
+const pagesBasePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/CAOS_Geophysics') ? '/CAOS_Geophysics' : '';
+
+createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter basename={pagesBasePath}><CitationsProvider items={CITATIONS}><AppShell config={config}><Routes>
   <Route path="/" element={<Workbench />} /><Route path="/introduction" element={<Intro />} /><Route path="/methodology" element={<Methodology />} /><Route path="/implementation" element={<Implementation />} /><Route path="/experiments" element={<Experiments />} /><Route path="/benchmark" element={<Benchmark />} /><Route path="*" element={<Workbench />} />
 </Routes></AppShell></CitationsProvider></BrowserRouter></StrictMode>);
