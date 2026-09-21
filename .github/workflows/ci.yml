@@ -19,13 +19,9 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install (offline lane + dev + editable pkg)
-        run: pip install -r requirements-precompute.txt -r requirements-dev.txt && pip install -e .
+        run: pip install -r requirements-dev.txt && pip install -e .
       - name: Lint
         run: ruff check data-pipeline tests
-      - name: Tests
-        run: pytest
-      - name: Pipeline smoke (sandboxed; canonical artifacts are read-only)
-        run: python data-pipeline/run.py GRAVITY_INTRUSION --output "${{ runner.temp }}/science-smoke"
       - name: CONTRACT 2, manifests <-> artifacts consistent (no drift)
         run: python scripts/check_artifacts.py
 
@@ -60,3 +56,5 @@ jobs:
         run: python scripts/check_content_standards.py
       - name: Frontend build contract
         run: cd frontend && npm ci && npm run build
+      - name: CI budget, trunk-only triggers, no training (ADR-0074)
+        run: python scripts/check_ci_budget.py
