@@ -24,8 +24,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Verify committed scientific artifacts
-        run: |
-          pip install -r requirements-precompute.txt
+        run: |-
           python scripts/check_artifacts.py
       - uses: actions/setup-node@v4
         with:
