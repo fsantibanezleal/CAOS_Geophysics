@@ -1,6 +1,6 @@
 # MTpy and MTH5 boundary
 
-MTpy-v2 gives the ingestion path a domain-standard home for EDI, XML, Z, J, AVG, and MTH5-oriented metadata. Contract 1 reduces an input station table to explicit coordinates, frequency, value, and unit records. The browser consumes normalized values, not an opaque EDI parser.
+MTpy-v2 is a surveyed domain-standard reference for EDI and related metadata. It is not part of the v2 ingestion implementation. Browser import accepts a layered model JSON, not EDI. Field EDI support remains outside this release and is not advertised as operational.
 
 The layered-earth response uses complex impedance recursion. Apparent resistivity is derived from magnitude and angular frequency, while phase remains a separate quality signal. External EDI files remain link-only until redistribution rights are verified.
 

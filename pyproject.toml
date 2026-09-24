@@ -1,27 +1,10 @@
-[build-system]
-requires = ["setuptools>=69"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "inverse-earth-studio"
-version = "0.1.0"
-description = "Auditable geophysics forward modelling and inversion workbench"
-requires-python = ">=3.11"
-dependencies = ["numpy>=2.2,<2.3"]
-
-[tool.setuptools]
-package-dir = {"" = "data-pipeline"}
-
-[tool.setuptools.packages.find]
-where = ["data-pipeline"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
 
 [tool.ruff]
-line-length = 110
-target-version = "py311"
+line-length = 120
+target-version = "py312"
 
 [tool.ruff.lint]
-# S/I/R are the standard SIR compartment names; single-letter here is intentional domain notation, not ambiguous.
-ignore = ["E741"]
+select = ["F"]

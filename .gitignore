@@ -26,6 +26,7 @@ frontend/.vite/
 frontend/public/data/
 frontend/public/manifests/
 frontend/public/pyodide/
+frontend/public-release/
 *.tsbuildinfo
 
 # --- Secrets / env (public repo — only .env.example is committed) ---

@@ -1,27 +1,33 @@
-# Problem types and methods
-
-## Forward and inverse framing
-
-The forward problem evaluates d_pred = F(m) for a proposed density, susceptibility, conductivity, or velocity model. The inverse problem minimizes a data objective plus a prior:
-
-Φ(m) = ||W_d(F(m) - d_obs)||² + β R(m).
-
-W_d encodes data uncertainty, β balances fit and prior, and R may express smoothness, compactness, depth weighting, or a learned manifold. Non-uniqueness is part of the result.
+# Methods and interpretation
 
 ## Potential fields
 
-Gravity is sensitive to density contrast and decays with distance. Magnetics is sensitive to susceptibility and the inducing field direction. The app includes forward, weighted inverse, sparse IRLS, depth-weighting, scalar magnetic, vector-direction, and cross-gradient diagnostics. The outputs are profiles and maps with units, not unlabeled heatmaps.
+SimPEG integral operators map rectangular-prism density in g/cm³ to gz in mGal, or scalar susceptibility to linearized TMI in nT. The coordinate convention is ENU. Surface receivers sample a 16×16 grid. Model dimension is 14×12×8. Acquisition variants change receiver height; coverage variants use alternate stations.
 
-## MT
+Let W be reciprocal column sensitivity with a 6% floor and A=GW/s where s is the mean row-energy scale. The inverse minimizes ||Aq-d/s||²+β qᵀDq, with m=Wq. The data-space solution is D⁻¹Aᵀ(AD⁻¹Aᵀ+βI)⁻¹d/s. L2 sets D=I; eight IRLS updates use weights proportional to (q²+ε²)^−1/2, normalized by their median, ε=0.12 max|q|. This is model-norm sparsity, not smoothness. All canonical stations have the same noise sigma; custom CSV inversion supports row-wise sigma.
 
-For a one-dimensional layered earth, the complex impedance is propagated from the bottom half-space upward. Apparent resistivity and phase are separate observables. A differentiable parameterization can optimize log resistivity, but it remains conditioned by frequency band and the smoothness prior.
+Magnetic vector inversion estimates three components using SimPEG's vector operator. Scalar susceptibility assumes induced direction; the remanent case violates it deliberately. Additional vector freedom is not independent evidence for magnetization direction.
 
-## FWI
+## Magnetotellurics
 
-The acoustic equation u_tt = v² nabla²u + s is discretized in time and space. The source wavelet, receiver geometry, taper, and update are explicit. Frequency continuation and residual inspection are essential because cycle skipping can produce a plausible but wrong model.
+For angular frequency ω, permeability μ and resistivity ρ, the half-space impedance is sqrt(iωμρ). Each finite layer uses propagation constant sqrt(iωμ/ρ), characteristic impedance sqrt(iωμρ), thickness h and the standard complex tanh recursion. Apparent resistivity is |Z|²/(μω); phase is atan2(Im Z, Re Z).
 
-## Learned and joint tools
+Three solvers fit complex observations: bounded log-resistivity least squares, Adam on log resistivity, and a tanh neural parameterization differentiated through the same recursion. The layer thicknesses are known. A first-difference log-resistivity penalty controls roughness. The neural solution is optimized per sounding and is not a pretrained general inverse. Objective evaluations are labelled as such; they are not necessarily accepted least-squares iterations.
 
-The CNN prior and autoencoder novelty tools are measured on held-out case groups. The cross-gradient diagnostic compares structural alignment between two model images. None of these tools creates information absent from acquisition.
+## Acoustic FWI
 
-References: [SimPEG](https://doi.org/10.1016/j.cageo.2015.09.015), [FWI review](https://doi.org/10.1190/1.3238367), [physics-informed review](https://doi.org/10.1190/geo2023-0615.1).
+Deepwave solves the constant-density 2D acoustic equation with fourth-order spatial differences and absorbing boundaries. Three Ricker shots, 40 (or 20) receivers, 25 m cells and 1 ms integration produce 1.1 s records. Saved pressure frames are 24 ms apart; displayed gathers are sampled at 4 ms. Coordinates and dimensions are explicit.
+
+A bounded sigmoid parameterization permits velocities 1400–4400 m/s. Adam makes 28 updates from the declared depth trend 1800+22×depth-index. The direct method fits waveforms; continuation uses moving-average low-pass windows 21,9,1. The retained model minimizes the full-band data loss over evaluated models. A squared neighbour-difference penalty discourages rough velocity. Automatic differentiation is checked against a double-precision directional finite difference on CUDA. Model error can remain large after a strong data-fit improvement.
+
+## Joint inversion
+
+Gravity and magnetic properties are standardized by 0.5 g/cm³ and 0.03 SI. Independent L2 solutions initialize 180 joint Adam steps. The objective combines both noise-normalized data losses, a cross-gradient penalty and weak model norms. Cross-gradients use cell-index derivatives; their displayed magnitude is dimensionless, not a physical spatial derivative. Shared-boundary and conflicting-boundary cases test the assumption. A small cross-gradient can also arise from a flat model.
+
+## Learned inversion
+
+A CNN maps a normalized gravity map to depth-integrated density. Two convolutions, GELU, adaptive 4×4 pooling and two dense layers output 12×14 column values. An autoencoder compresses 256 observations through a 12-dimensional bottleneck. Training uses 800 models, validation 160, testing 160, with disjoint generation seeds and duplicate-model checks. Weights are chosen only by validation loss. The oblique and ring geological cases are outside the training geometry classes.
+
+The classical comparator estimates the same column target from the same held-out models. Its noise-free observation baseline is deliberately favourable to the classical model; the CNN test includes 2% training-scale noise. This is not a comprehensive hyperparameter-tuned SOTA benchmark. Acquisition-height changes are distribution shift, not a new trained model. No probabilistic confidence is claimed from the autoencoder's validation-quantile flag.
+
+Primary sources and methodological differences are recorded in [the review](../research/review.md). The UI methodology page contains the same implementation-specific assumptions in EN/ES.

@@ -2,6 +2,15 @@
 
 All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
+## [0.02.000] - 2026-09-23
+
+- Replaces the rejected repeated-shape renderer and all v1 scientific artifacts with 20 distinct geological questions, 120 computed conditions and 324 method results.
+- Adds actual SimPEG 3D operators and scalar/vector inversions, complex MT solvers, compiled CUDA Deepwave FWI, coupled inversion, trained CNN and autoencoder checkpoints.
+- Rebuilds the interface, neutral theme, 3D scene, scientific plots, waveform/time cursor, inversion replay, angle controls, bilingual investigations, live MT import/export and benchmark.
+- Adds numerical gradient/parity tests, complete artifact hashes, external tutorial preprocessing, user CSV inversion and a software technical report.
+- Removes the internal Python package and editable installs. CI performs cheap guards and static builds only.
+- The earlier release's completion and research-grade claims were overstated; v1 remains recoverable in Git history, not served as v2 evidence.
+
 ## [0.01.000] - 2026-09-13
 
 ### Added

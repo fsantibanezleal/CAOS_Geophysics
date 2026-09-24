@@ -18,12 +18,18 @@ try {
     [IO.File]::WriteAllText($keyCopy, $keyText, [Text.UTF8Encoding]::new($false))
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
     icacls $keyCopy /inheritance:r /grant:r "${identity}:F" | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw "Could not restrict temporary SSH key permissions." }
     tar -czf $archive -C $dist .
+    if ($LASTEXITCODE -ne 0) { throw "Release archive failed." }
     scp -i $keyCopy -o StrictHostKeyChecking=accept-new $archive "root@$HostName`:/tmp/$stamp.tar.gz"
+    if ($LASTEXITCODE -ne 0) { throw "Release upload failed." }
     scp -i $keyCopy -o StrictHostKeyChecking=accept-new (Join-Path $PSScriptRoot "$Domain.nginx") "root@$HostName`:/tmp/$Domain.nginx"
+    if ($LASTEXITCODE -ne 0) { throw "TLS configuration upload failed." }
     scp -i $keyCopy -o StrictHostKeyChecking=accept-new (Join-Path $PSScriptRoot "$Domain.bootstrap.nginx") "root@$HostName`:/tmp/$Domain.bootstrap.nginx"
+    if ($LASTEXITCODE -ne 0) { throw "Bootstrap configuration upload failed." }
     $remote = "set -eu; root=/var/www/$Domain; release=`$root/releases/$stamp; mkdir -p `$release; tar -xzf /tmp/$stamp.tar.gz -C `$release; if [ -f /etc/letsencrypt/live/$Domain/fullchain.pem ]; then install -m 0644 /tmp/$Domain.nginx /etc/nginx/sites-available/$Domain; else install -m 0644 /tmp/$Domain.bootstrap.nginx /etc/nginx/sites-available/$Domain; fi; ln -sfn /etc/nginx/sites-available/$Domain /etc/nginx/sites-enabled/$Domain; ln -sfn `$release `$root/current; rm -f /tmp/$stamp.tar.gz /tmp/$Domain.nginx /tmp/$Domain.bootstrap.nginx; nginx -t; systemctl reload nginx; printf 'release=%s\n' `$release"
     ssh -i $keyCopy -o StrictHostKeyChecking=accept-new "root@$HostName" $remote
+    if ($LASTEXITCODE -ne 0) { throw "Remote release failed; inspect the server before retrying." }
 } finally {
     Remove-Item -LiteralPath $archive, $keyCopy -Force -ErrorAction SilentlyContinue
 }

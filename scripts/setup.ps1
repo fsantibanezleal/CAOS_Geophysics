@@ -11,9 +11,9 @@ $runtime = VenvPy '.venv'; $offline = VenvPy '.venv-pipeline'
 & $offline -m pip install --upgrade pip -q
 & $runtime -m pip install -r requirements.txt -q
 & $offline -m pip install -r requirements-precompute.txt -r requirements-dev.txt -q
-& $offline -m pip install -e . -q
 if ($Gpu) {
   Write-Host '[setup] installing CUDA PyTorch from the official CUDA 12.6 index'
   & $offline -m pip install -r requirements-gpu.txt -q
 }
+else { & $offline -m pip install torch==2.14.0 deepwave==0.0.27 }
 Write-Host '[setup] complete. Run .\scripts\precompute.ps1, then cd frontend; npm install; npm run build'

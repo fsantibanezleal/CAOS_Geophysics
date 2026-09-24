@@ -1,5 +1,7 @@
-# GPU lane
+# GPU boundary
 
-The local compute record targets an NVIDIA GeForce RTX 4070 Laptop GPU with the CUDA PyTorch wheel. Use scripts/setup.ps1 -Gpu, then run the pipeline and inspect data/derived/release.json for the engine inventory. GPU availability is evidence only when the import and CUDA capability are observed. The ML VPS is CPU-only; it does not receive the environment or train models.
+The canonical bake was executed with PyTorch 2.14.0+cu126 and Deepwave 0.0.27 on an NVIDIA GeForce RTX 4070 Laptop GPU. Deepwave uses its compiled CUDA propagator, including adjoint gradients. Neural training, neural MT and joint optimization also use CUDA. SimPEG operators and SciPy solves use CPU.
 
-The web artifact is intentionally backend-independent. A GPU failure does not erase the CPU-safe analytic bake, but the release record must state whether the accelerator was used.
+`tests/run_validation.py` requires CUDA for the release gradient check, runs a double-precision directional derivative comparison, and records device/runtime metadata. A GPU availability label is not accepted as evidence on its own. The learning ledger records the training device and held-out results.
+
+The public ML VPS is a static host. It does not expose GPU compute or accept uploaded datasets. The live MT browser calculator runs on the viewer's CPU. Full FWI retraining/recalibration must run locally and be exported as a new experiment.
