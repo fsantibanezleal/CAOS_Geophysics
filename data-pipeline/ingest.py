@@ -71,10 +71,9 @@ def invert_csv(path,family,out):
     else:
         survey=magnetics.Survey(magnetics.sources.UniformBackgroundField([magnetics.receivers.Point(a[:,:3],components='tmi')],amplitude=50000,inclination=60,declination=12))
         G=magnetics.simulation.Simulation3DIntegral(mesh,survey=survey,chiMap=maps.IdentityMap(nP=mesh.nC),engine='geoana').G
-    weighted=G/a[:,4,None];d=a[:,3]/a[:,4]
     results={}
     for name,sparse in [('l2',False),('irls',True)]:
-        result=invert(weighted,d,1,.018,sparse)
+        result=invert(np.asarray(G,dtype=float),a[:,3],a[:,4],.018,sparse,shape=(8,12,14),spacing=tuple(spacing))
         result['predicted']=(G@result['model']).tolist()
         result['residual']=(a[:,3]-result['predicted']).tolist()
         results[name]=result
