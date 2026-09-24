@@ -1,10 +1,10 @@
 {
   "name": "inverse-earth-studio-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "dev": "node copy-data.mjs && vite --host 127.0.0.1",
     "build": "tsc --noEmit && node copy-data.mjs && vite build && node -e \"require('node:fs').copyFileSync('dist/index.html','dist/404.html')\" && node create-route-entrypoints.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run"
@@ -16,12 +16,14 @@
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^8.3.0",
+    "three": "^0.180.0",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@types/node": "^24.9.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^5.0.4",
     "typescript": "^5.9.3",
     "vite": "^7.1.12",

@@ -1,7 +1,5 @@
-# Learned baselines
+# Learned weights
 
-The release contains two learned baselines: a spatial convolutional field prior and a spatial autoencoder. Both are trained offline on the grouped synthetic geology registry, with case-level separation between training, validation, and held-out groups. The GPU bake records the backend, device, sample counts, train loss, and held-out loss in `data/derived/training.json` and each replay manifest.
+Canonical weights live in `data/derived/v2/models/cnn.json` and `autoencoder.json`; the colocated `training.json` is the model registry. It carries hashes, normalization, three split seeds, counts, per-test errors, training curves and device. JSON tensors are reconstructed with `learning.load_checkpoint`. The release tests reload those exact weights and compare predictions with exported artifacts.
 
-Weights are intentionally regenerated from the seeded training stage rather than committed as an opaque binary. The exact architecture, seed, groups, and metrics are part of the release evidence, so a fresh environment can reproduce the checkpoint path with `scripts/precompute.ps1` or `scripts/precompute.sh`.
-
-These baselines express spatial priors. They do not replace physics, acquisition geometry, uncertainty analysis, or expert interpretation.
+MT's neural method is a per-sounding optimization parameterization, not a released pretrained inverse. No third-party learned weights are redistributed.

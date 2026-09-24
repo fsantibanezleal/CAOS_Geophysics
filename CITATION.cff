@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "Cite this software together with the scientific sources documented in docs/research/review.md."
+title: "Inverse Earth Studio"
+type: software
+version: 0.02.000
+date-released: 2026-09-23
+repository-code: "https://github.com/fsantibanezleal/CAOS_Geophysics"
+url: "https://geophysics.ml.fasl-work.com/"
+license: Apache-2.0
+authors:
+  - family-names: "Santibáñez-Leal"
+    given-names: "Felipe"

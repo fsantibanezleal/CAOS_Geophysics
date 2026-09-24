@@ -2,13 +2,13 @@
 
 The repository has three deliberate lanes:
 
-- `data-pipeline/geophysicslab/` is the offline scientific engine and staged pipeline.
-- `frontend/` is the browser workbench. Its compact analytic engine is intentionally low latency and never imports the heavy offline packages.
-- `data/derived/` is the replay lane. It contains immutable, seeded artifacts and manifests that the browser and static deployments serve.
+- `data-pipeline/` contains plain numerical scripts, invoked by path.
+- `frontend/` renders the canonical arrays and provides an independently parity-tested live MT calculator.
+- `data/derived/v2/` contains original experiments, the hashed catalogue and learned checkpoints.
 
 ## Scientific stages
 
-`pipeline.py` executes the ordered contract: ingest, preprocess, dataset, features, train, infer, evaluate, export, validate. Every case writes a replay artifact, a manifest, and a stage summary. `training.json` records the grouped learning split and held-out losses. `release.json` records the engine inventory and the full stage contract.
+`rebuild.py` constructs geology, configures acquisition, solves physics, perturbs and masks observations, inverts, evaluates and exports. The learned branch additionally generates disjoint training/validation/test realizations. `ingest.py` handles external and user observations separately. `models/training.json` records learned splits, checkpoints and evaluation; `release.json` records actual counts and engines.
 
 ## Frontend routes
 
