@@ -15,3 +15,5 @@ Executed against local development and the production build on 2026-09-23/24 (UT
 - Old ignored `frontend/public/data` and `pyodide` build leftovers are excluded by an allowlisted `public-release` build source. They are not canonical evidence and are not shipped. No broad local directory cleanup was needed.
 
 These checks establish rendered functionality and engineering acceptance, not the user's aesthetic approval or field-science validity. Numerical, remote CI and deployed checks are separate records.
+
+Final production inspection on 2026-09-24: both HTTPS endpoints loaded actual data. VPS 3D angle-step/cut, acoustic playback and live MT were exercised; Pages benchmark counts, route navigation, inlined architecture, Spanish/light MT and mobile layout were inspected. A shared-shell brand-link escape was fixed with the router basename; final recovery error is now the benchmark fallback metric. See `deployment.md` for the released commit and exact-byte receipts.

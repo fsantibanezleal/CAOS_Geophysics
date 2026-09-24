@@ -46,3 +46,12 @@ Two separately pinned SimPEG tutorial archives contain 289 observations each. Lo
 ## Reproducibility versus illustration
 
 The browser displays solver outputs, not substitute analytic patterns. The only independent online solver is the layered MT recursion, tested against every offline truth sounding. Three-dimensional orbit is a camera operation; wave replay represents acoustic time; inversion replay represents saved optimizer states. Interpolation/gain are labelled display operations. No animated overlay is used as evidence for resolution or uncertainty.
+
+## Original-scope reconciliation, 2026-09-24
+
+The older plan also mentioned PGI, EDI ingestion and ensemble uncertainty. They are not implemented in this release. A new review of the primary implementation references confirms that a cross-gradient penalty is not a petrophysical Gaussian-mixture prior, and model import for browser forward modelling is not an EDI observation workflow. Keep those boundaries explicit rather than treating UI labels as delivered algorithms.
+
+- [SimPEG 0.25.2 PGI linear example](https://docs.simpeg.xyz/v0.25.2/content/user-guide/examples/10-pgi/plot_inv_0_PGI_Linear_1D.html): an actual mixture-prior inversion and its regularization/directive structure.
+- [Astic et al., multi-physics inversion with a dynamic Gaussian mixture model](https://arxiv.org/abs/2002.09515): the multi-property PGI research reference.
+- [MTpy-v2 core documentation](https://mtpy-v2.readthedocs.io/en/latest/mtpy.core.html): transfer-function tensors, impedance-unit choices and NED/ENU conventions that an EDI pipeline must preserve.
+- [USGS legacy MT preservation software](https://www.usgs.gov/data/software-process-and-preserve-legacy-magnetotelluric-data): provenance-sensitive conversion into EDI; a surveyed resource, not an executed product adapter.

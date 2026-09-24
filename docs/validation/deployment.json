@@ -1,0 +1,22 @@
+[
+  {
+    "origin": "https://geophysics.ml.fasl-work.com/",
+    "https_verified": true,
+    "cases": 20,
+    "verified_experiments": 120,
+    "verified_routes": 6,
+    "verified_model_files": 3,
+    "catalog_sha256": "3c544d0f15a48845ec5561e0970fc7fc03f71cb38c8dd6bde6b105024d4379c2",
+    "index_sha256": "f11f94a34fc287722fc16f72d9e51e17d71703b8252387a2d06f35ec76b97108"
+  },
+  {
+    "origin": "https://fsantibanezleal.github.io/CAOS_Geophysics/",
+    "https_verified": true,
+    "cases": 20,
+    "verified_experiments": 120,
+    "verified_routes": 6,
+    "verified_model_files": 3,
+    "catalog_sha256": "3c544d0f15a48845ec5561e0970fc7fc03f71cb38c8dd6bde6b105024d4379c2",
+    "index_sha256": "f11f94a34fc287722fc16f72d9e51e17d71703b8252387a2d06f35ec76b97108"
+  }
+]
