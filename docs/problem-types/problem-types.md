@@ -2,7 +2,7 @@
 
 ## Potential fields
 
-SimPEG integral operators map rectangular-prism density in g/cm³ to gz in mGal, or scalar susceptibility to linearized TMI in nT. The coordinate convention is ENU. Surface receivers sample a 16×16 grid. Model dimension is 14×12×8. Acquisition variants change receiver height; coverage variants use alternate stations.
+SimPEG integral operators map rectangular-prism density in g/cm³ to gz in mGal, or scalar susceptibility to linearized TMI in nT. The coordinate convention is ENU. Surface receivers sample a 16×16 grid. Model dimension is 28×24×16. Acquisition variants change receiver height; coverage variants use alternate stations.
 
 Let W be reciprocal column sensitivity with a 6% floor and A=GW/s where s is the mean row-energy scale. The inverse minimizes ||Aq-d/s||²+β qᵀDq, with m=Wq. The data-space solution is D⁻¹Aᵀ(AD⁻¹Aᵀ+βI)⁻¹d/s. L2 sets D=I; eight IRLS updates use weights proportional to (q²+ε²)^−1/2, normalized by their median, ε=0.12 max|q|. This is model-norm sparsity, not smoothness. All canonical stations have the same noise sigma; custom CSV inversion supports row-wise sigma.
 

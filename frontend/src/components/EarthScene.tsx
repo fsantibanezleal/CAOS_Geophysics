@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { color, extent, format, type Run } from "../science";
 import { useShellLang } from "@fasl-work/caos-app-shell";
+import { isosurface } from "../isosurface";
 
 export function EarthScene({
   run,
@@ -16,6 +18,8 @@ export function EarthScene({
   reset,
   label,
   onCell,
+  representation = "surface",
+  threshold = 0.35,
 }: {
   run: Run;
   values: number[];
@@ -28,6 +32,8 @@ export function EarthScene({
   reset: number;
   label: string;
   onCell?: (i: number) => void;
+  representation?: "surface" | "cells";
+  threshold?: number;
 }) {
   const es = useShellLang() === "es";
   const host = useRef<HTMLDivElement>(null);
@@ -50,15 +56,18 @@ export function EarthScene({
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     } catch {
       setError(
-        "WebGL is unavailable. Use the section view to inspect the same model.",
+        es
+          ? "WebGL no está disponible. La sección muestra el mismo modelo."
+          : "WebGL is unavailable. The section view shows the same model.",
       );
       return;
     }
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.localClippingEnabled = true;
     container.appendChild(renderer.domElement);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 50);
-    camera.position.set(3, 1.9, 3.3);
+    camera.position.set(2.65, 1.65, 2.9);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, -0.45, 0);
     controls.enableDamping = true;
@@ -92,14 +101,17 @@ export function EarthScene({
     const range: [number, number] = diverging ? [-max, max] : [0, max];
     const indices: number[] = [];
     for (let i = 0; i < values.length; i++) {
-      if (Math.abs(values[i]) > max * 0.1 && run.grid.centers[i][1] <= cut)
+      if (
+        Math.abs(values[i]) > max * threshold &&
+        run.grid.centers[i][1] <= cut
+      )
         indices.push(i);
     }
     const spacing = run.grid.spacing;
     const geometry = new THREE.BoxGeometry(
-      (spacing[0] / 1000) * 0.97,
-      (spacing[2] / 1000) * 0.97,
-      (spacing[1] / 1000) * 0.97,
+      spacing[0] / 1000,
+      spacing[2] / 1000,
+      spacing[1] / 1000,
     );
     const material = new THREE.MeshStandardMaterial({
       roughness: 0.78,
@@ -117,7 +129,46 @@ export function EarthScene({
       voxels.setColorAt(j, new THREE.Color(color(values[i], range, palette)));
     });
     voxels.instanceMatrix.needsUpdate = true;
+    voxels.visible = representation === "cells";
     scene.add(voxels);
+    const surfaces: THREE.Mesh[] = [];
+    if (representation === "surface" && max > 0)
+      for (const sign of [1, -1]) {
+        if (!values.some((v) => v * sign > max * threshold)) continue;
+        const rawGeometry = new THREE.BufferGeometry();
+        rawGeometry.setAttribute(
+          "position",
+          new THREE.BufferAttribute(
+            isosurface(
+              values.map((v) => v * sign),
+              run.grid.shape,
+              run.grid.origin!,
+              spacing,
+              max * threshold,
+            ),
+            3,
+          ),
+        );
+        const meshGeometry = mergeVertices(rawGeometry, 1e-6);
+        rawGeometry.dispose();
+        meshGeometry.computeVertexNormals();
+        const surface = new THREE.Mesh(
+          meshGeometry,
+          new THREE.MeshStandardMaterial({
+            color: color(sign * max * threshold, range, palette),
+            roughness: 0.65,
+            side: THREE.DoubleSide,
+            transparent: opacity < 1,
+            opacity,
+            depthWrite: opacity > 0.65,
+            clippingPlanes: [
+              new THREE.Plane(new THREE.Vector3(0, 0, -1), cut / 1000),
+            ],
+          }),
+        );
+        scene.add(surface);
+        surfaces.push(surface);
+      }
     const box = new THREE.BoxGeometry(2.24, 1.12, 1.92);
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(box),
@@ -129,7 +180,7 @@ export function EarthScene({
     );
     edges.position.y = -0.56;
     scene.add(edges);
-    const grid = new THREE.GridHelper(2.24, 14, 0x879392, 0xb8beb7);
+    const grid = new THREE.GridHelper(2.24, 14);
     grid.position.y = -1.125;
     grid.scale.z = 1.92 / 2.24;
     scene.add(grid);
@@ -143,7 +194,11 @@ export function EarthScene({
         opacity: 0.32,
         side: THREE.DoubleSide,
       });
-      const plane = new THREE.InstancedMesh(geom, mat, 256);
+      const plane = new THREE.InstancedMesh(
+        geom,
+        mat,
+        run.survey.locations.length,
+      );
       run.survey.locations.forEach((p, i) => {
         transform.makeTranslation(
           p[0] / 1000,
@@ -174,13 +229,21 @@ export function EarthScene({
         ),
       );
     }
-    const labels: THREE.Sprite[] = [];
+    const labels: {
+      sprite: THREE.Sprite;
+      canvas: HTMLCanvasElement;
+      text: string;
+    }[] = [];
     const sprite = (text: string, p: THREE.Vector3) => {
       const canvas = document.createElement("canvas");
       canvas.width = 512;
       canvas.height = 80;
       const ctx = canvas.getContext("2d")!;
-      ctx.font = "28px system-ui";
+      ctx.font =
+        "28px " +
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--font-sans",
+        );
       ctx.fillStyle = getComputedStyle(document.documentElement)
         .getPropertyValue("--color-fg")
         .trim();
@@ -193,7 +256,7 @@ export function EarthScene({
       sp.scale.set(0.9, 0.14, 1);
       sp.position.copy(p);
       scene.add(sp);
-      labels.push(sp);
+      labels.push({ sprite: sp, canvas, text });
     };
     sprite(es ? "Este · m" : "Easting · m", new THREE.Vector3(0, -1.27, 1.1));
     sprite(
@@ -202,12 +265,32 @@ export function EarthScene({
     );
     sprite("0", new THREE.Vector3(-1.22, 0, 1));
     sprite("−1,120 m", new THREE.Vector3(-1.28, -1.09, 1));
-    sprite("2,240 m", new THREE.Vector3(0.95, -1.18, 1.13));
+    sprite("+1,120 m", new THREE.Vector3(1.12, -1.18, 1.13));
     const theme = () => {
       const css = getComputedStyle(document.documentElement);
       scene.background = new THREE.Color(
-        css.getPropertyValue("--scene-bg").trim() || "#edf0eb",
+        css.getPropertyValue("--color-surface").trim(),
       );
+      (edges.material as THREE.LineBasicMaterial).color.set(
+        css.getPropertyValue("--color-border").trim(),
+      );
+      for (const material of Array.isArray(grid.material)
+        ? grid.material
+        : [grid.material])
+        material.color.set(css.getPropertyValue("--color-border").trim());
+      scene.traverse((o) => {
+        if (o instanceof THREE.Points)
+          (o.material as THREE.PointsMaterial).color.set(
+            css.getPropertyValue("--color-fg").trim(),
+          );
+      });
+      labels.forEach(({ sprite, canvas, text }) => {
+        const ctx = canvas.getContext("2d")!;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = css.getPropertyValue("--color-fg").trim();
+        ctx.fillText(text, 256, 48);
+        sprite.material.map!.needsUpdate = true;
+      });
     };
     theme();
     const themeObserver = new MutationObserver(theme);
@@ -235,12 +318,28 @@ export function EarthScene({
         (-(event.clientY - r.top) / r.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObject(voxels)[0];
-      if (hit?.instanceId !== undefined) {
-        picked = indices[hit.instanceId];
+      const hit =
+        representation === "cells"
+          ? raycaster.intersectObject(voxels)[0]
+          : raycaster
+              .intersectObjects(surfaces)
+              .find((h) => h.point.z <= cut / 1000);
+      if (hit) {
+        const [nz, ny, nx] = run.grid!.shape;
+        const o = run.grid!.origin!;
+        const cell = (p: number, axis: number, n: number) =>
+          Math.max(
+            0,
+            Math.min(n - 1, Math.floor((p * 1000 - o[axis]) / spacing[axis])),
+          );
+        picked =
+          representation === "cells"
+            ? indices[hit.instanceId!]
+            : (cell(hit.point.y, 2, nz) * ny + cell(hit.point.z, 1, ny)) * nx +
+              cell(hit.point.x, 0, nx);
         const p = run.grid!.centers![picked];
         setReadout(
-          `E ${p[0]} · N ${p[1]} · depth ${-p[2]} m | ${format(values[picked])} ${run.units}`,
+          `E ${p[0]} · N ${p[1]} · ${es ? "profundidad" : "depth"} ${-p[2]} m | ${format(values[picked])} ${run.units}`,
         );
       } else {
         picked = undefined;
@@ -292,13 +391,25 @@ export function EarthScene({
       renderer.forceContextLoss();
       renderer.domElement.remove();
     };
-  }, [run, values, opacity, cut, showSurvey, angle, reset, onCell, es]);
+  }, [
+    run,
+    values,
+    opacity,
+    cut,
+    showSurvey,
+    angle,
+    reset,
+    onCell,
+    es,
+    representation,
+    threshold,
+  ]);
   return (
     <div
       className="earth-scene"
       ref={host}
       role="img"
-      aria-label={`${label}: three-dimensional subsurface model and survey`}
+      aria-label={`${label}: ${es ? "modelo tridimensional y levantamiento" : "three-dimensional subsurface model and survey"}`}
     >
       <div className="scene-label">
         <span className="small-caps">3D / {label}</span>
@@ -306,18 +417,14 @@ export function EarthScene({
       </div>
       <div className="scene-instructions">
         {es
-          ? "Arrastre para orbitar · Rueda para zoom · Seleccione un vóxel"
-          : "Drag to orbit · Scroll to zoom · Select a voxel"}
+          ? "Arrastrar: orbitar · Rueda: zoom · Pulsar: sección"
+          : "Drag: orbit · Scroll: zoom · Click: section"}
       </div>
       <output className="scene-readout">
         {error ||
           readout ||
-          `${run.grid?.shape.join(" × ")} cells · ${run.units}`}
+          `${run.grid?.shape.join(" × ")} ${es ? "celdas" : "cells"} · ${run.units}`}
       </output>
-      <div className="scene-compass">
-        <b>N</b>
-        <span>↑</span>
-      </div>
     </div>
   );
 }

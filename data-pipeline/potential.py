@@ -6,7 +6,7 @@ from scipy.linalg import solve
 from simpeg import maps
 from simpeg.potential_fields import gravity, magnetics
 
-from geology import properties, volume_grid
+from geology import properties, volume_grid, VOLUME_SHAPE, VOLUME_SPACING
 
 
 def operators(height=60.0, inclination=60.0):
@@ -98,7 +98,7 @@ def solve_case(case,variant,cache):
         out.update(model=np.linalg.norm(vector,axis=0).tolist(),vectors=vector.T.tolist(),frames=[],predicted=(V@vector.ravel()).tolist(),residual=(observed-V@vector.ravel()).tolist(),name="Vector magnetization",name_es="Magnetización vectorial")
         methods["vector"]=out
     return dict(schema="inverse-earth/v2",**case,variant=variant,engine="SimPEG 0.25.2 3D integral / SciPy",lane="computed replay",
-                grid=dict(shape=[8,12,14],origin=[-1120,-960,-1120],spacing=[160,160,140],centers=mesh.cell_centers.tolist()),
+                grid=dict(shape=list(VOLUME_SHAPE),origin=[-1120,-960,-1120],spacing=list(VOLUME_SPACING),centers=mesh.cell_centers.tolist()),
                 truth=truth.tolist(),secondary_truth=chi.tolist(),units=unit,data_units=data_unit,
                 survey=dict(shape=[16,16],locations=receivers.tolist(),observed=observed.tolist(),clean=clean.tolist(),sigma=sigma,active=mask.tolist(),height=height,inclination=60,declination=12),methods=methods,
                 parameters=dict(contrast=contrast,noise_sigma=sigma,height_m=height,regularization=beta,receivers=int(mask.sum())))

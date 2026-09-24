@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useShellLang } from "@fasl-work/caos-app-shell";
 import { color, extent, format, type Palette } from "../science";
 
 export function Legend({
@@ -58,6 +59,7 @@ export function Heatmap({
   boundaries?: number[][];
   cursorY?: number;
 }) {
+  const es = useShellLang() === "es";
   const canvas = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
   const rows = data.length,
@@ -83,12 +85,14 @@ export function Heatmap({
     ctx.drawImage(source, 0, 0, c.width, c.height);
   }, [data, palette, bounds[0], bounds[1], rows, cols]);
   const xv = hover
-    ? (xCoordinates?.[hover.x] ?? ((xRange?.[0] ?? 0) +
-      ((hover.x + 0.5) / cols) * ((xRange?.[1] ?? cols) - (xRange?.[0] ?? 0))))
+    ? (xCoordinates?.[hover.x] ??
+      (xRange?.[0] ?? 0) +
+        ((hover.x + 0.5) / cols) * ((xRange?.[1] ?? cols) - (xRange?.[0] ?? 0)))
     : 0;
   const yv = hover
-    ? (yCoordinates?.[hover.y] ?? ((yRange?.[0] ?? 0) +
-      ((hover.y + 0.5) / rows) * ((yRange?.[1] ?? rows) - (yRange?.[0] ?? 0))))
+    ? (yCoordinates?.[hover.y] ??
+      (yRange?.[0] ?? 0) +
+        ((hover.y + 0.5) / rows) * ((yRange?.[1] ?? rows) - (yRange?.[0] ?? 0)))
     : 0;
   return (
     <figure className="science-plot heatmap">
@@ -132,7 +136,11 @@ export function Heatmap({
               className="geology-overlay"
               viewBox={`0 0 ${cols} ${rows}`}
               preserveAspectRatio="none"
-              aria-label="Known geological interfaces"
+              aria-label={
+                es
+                  ? "Interfaces geológicas conocidas"
+                  : "Known geological interfaces"
+              }
             >
               {boundaries.flatMap((row, y) =>
                 row.flatMap((v, x) => {
@@ -244,9 +252,9 @@ export function Plot({
     Y = (v: number) =>
       h - p.b - ((ty(v) - yr[0]) / (yr[1] - yr[0])) * (h - p.b - p.t);
   const hues = [
-    "var(--plot-observed)",
-    "var(--plot-predicted)",
-    "var(--plot-third)",
+    "var(--color-accent)",
+    "var(--color-accent-2)",
+    "var(--color-magenta)",
   ];
   return (
     <figure className="science-plot curve">
@@ -317,9 +325,9 @@ export function Plot({
                 strokeDasharray={s.dashed ? "6 4" : undefined}
               />
             )}{" "}
-            {(s.points || pick !== null) &&
+            {(s.points || s.values.length === 1 || pick !== null) &&
               s.values.map((v, i) =>
-                s.points || i === pick ? (
+                s.points || s.values.length === 1 || i === pick ? (
                   <circle
                     key={i}
                     cx={X(x[i])}

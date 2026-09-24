@@ -1,20 +1,20 @@
 import type { ArchitectureConfig } from "@fasl-work/caos-app-shell";
-import diagram1 from '../public/svg/tech/01-the-app.svg?raw';
-import diagram2 from '../public/svg/tech/02-lanes.svg?raw';
-import diagram3 from '../public/svg/tech/03-web-flow.svg?raw';
-import diagram4 from '../public/svg/tech/04-the-science.svg?raw';
-import diagram5 from '../public/svg/tech/05-data-contracts.svg?raw';
+import diagram1 from "../public/svg/tech/01-the-app.svg?raw";
+import diagram2 from "../public/svg/tech/02-lanes.svg?raw";
+import diagram3 from "../public/svg/tech/03-web-flow.svg?raw";
+import diagram4 from "../public/svg/tech/04-the-science.svg?raw";
+import diagram5 from "../public/svg/tech/05-data-contracts.svg?raw";
 export const architecture: ArchitectureConfig = {
   tabs: [
     {
       id: "app",
-      en: "The instrument",
-      es: "El instrumento",
+      en: "Physical models",
+      es: "Modelos físicos",
       svg: diagram1,
       body_en:
-        "Twenty geological questions use distinct volumes, layers and sections. Every result keeps the known earth, observations, predicted response and residual separate. No posterior confidence is inferred from a pleasing reconstruction.",
+        "Potential fields use 3D property volumes, MT uses resistivity layers, and seismic uses 2D velocity sections. Each result contains the known model, measured response, inverse solution and residuals. Joint and learned methods operate on these specified physical targets.",
       body_es:
-        "Veinte preguntas geológicas usan volúmenes, capas y secciones distintos. Cada resultado separa Tierra conocida, observaciones, predicción y residuo. Una reconstrucción atractiva no implica confianza posterior.",
+        "Campos potenciales usan volúmenes 3D, MT capas de resistividad y sísmica secciones 2D de velocidad. Cada resultado contiene modelo conocido, respuesta observada, solución inversa y residuos. Métodos conjuntos y aprendidos operan sobre esos objetivos físicos.",
     },
     {
       id: "lanes",
@@ -22,9 +22,9 @@ export const architecture: ArchitectureConfig = {
       es: "Cálculo y reproducción",
       svg: diagram2,
       body_en:
-        "Local SimPEG/SciPy and CUDA PyTorch/Deepwave produce canonical artifacts. Both public hosts serve the same static files. Browsers render those arrays and run a parity-tested layered-earth impedance calculator. No remote GPU service is claimed.",
+        "Local SimPEG/SciPy and CUDA PyTorch/Deepwave produce canonical artifacts. Both public hosts serve the same static files. Browsers render those arrays and run a parity-tested layered-earth impedance calculator. Wave propagation and network training execute locally, not on either static host.",
       body_es:
-        "SimPEG/SciPy local y PyTorch/Deepwave CUDA producen artefactos. Ambos hosts sirven los mismos archivos. El navegador representa arreglos y ejecuta una calculadora de impedancia validada por paridad. No se anuncia servicio GPU remoto.",
+        "SimPEG/SciPy local y PyTorch/Deepwave CUDA producen artefactos. Ambos hosts sirven los mismos archivos. El navegador representa arreglos y ejecuta una calculadora de impedancia validada por paridad. Propagación de ondas y entrenamiento se ejecutan localmente, no en los hosts estáticos.",
     },
     {
       id: "flow",
@@ -42,9 +42,9 @@ export const architecture: ArchitectureConfig = {
       es: "Flujo científico",
       svg: diagram4,
       body_en:
-        "Construct geology, configure acquisition, solve forward, add seeded noise, mask observations, invert, compare with known truth, export and validate. Neural models use separate realization seeds for training, validation and test. The UI exposes failures and non-uniqueness, not a combined score.",
+        "Construct geology, configure acquisition, solve forward, add seeded noise, mask observations, invert, compare with known truth, export and validate. Neural models use separate realization seeds for training, validation and test. Model error and data misfit are reported separately, with their units and evaluation populations.",
       body_es:
-        "Construir geología, configurar adquisición, resolver, agregar ruido sembrado, enmascarar, invertir, comparar, exportar y validar. Redes usan semillas distintas para entrenamiento, validación y prueba. La UI expone fallos y no unicidad, no un puntaje combinado.",
+        "Construir geología, configurar adquisición, resolver, agregar ruido sembrado, enmascarar, invertir, comparar, exportar y validar. Redes usan semillas distintas para entrenamiento, validación y prueba. Error de modelo y desajuste de datos se informan por separado, con unidades y poblaciones evaluadas.",
     },
     {
       id: "contracts",

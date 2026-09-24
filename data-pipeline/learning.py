@@ -11,14 +11,15 @@ import torch
 from torch import nn
 from scipy.linalg import solve
 from scipy.interpolate import griddata
+from geology import VOLUME_SHAPE, VOLUME_SPACING
 
 
 class InverseCNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.net=nn.Sequential(nn.Conv2d(1,16,3,padding=1),nn.GELU(),nn.Conv2d(16,24,3,padding=1),nn.GELU(),nn.AdaptiveAvgPool2d((4,4)),nn.Flatten(),nn.Linear(384,96),nn.GELU(),nn.Linear(96,168))
+        self.net=nn.Sequential(nn.Conv2d(1,16,3,padding=1),nn.GELU(),nn.Conv2d(16,24,3,padding=1),nn.GELU(),nn.AdaptiveAvgPool2d((4,4)),nn.Flatten(),nn.Linear(384,96),nn.GELU(),nn.Linear(96,VOLUME_SHAPE[1]*VOLUME_SHAPE[2]))
     def forward(self,x):
-        return self.net(x).reshape(-1,12,14)
+        return self.net(x).reshape(-1,*VOLUME_SHAPE[1:])
 
 
 class ObservationAE(nn.Module):
@@ -76,7 +77,7 @@ def train(mesh,G,outdir,epochs=180):
     observations=[m@G.T for m in models]
     scale=float(np.std(observations[0]))
     target_scale=400.0
-    targets=[m.reshape(-1,8,12,14).sum(1)*140/target_scale for m in models]
+    targets=[m.reshape(-1,*VOLUME_SHAPE).sum(1)*VOLUME_SPACING[2]/target_scale for m in models]
     rng=np.random.default_rng(5001)
     xx=[torch.tensor((d+rng.normal(0,.02*scale,d.shape))/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16) for d in observations]
     yy=[torch.tensor(v,dtype=torch.float32,device=device) for v in targets]
@@ -109,7 +110,7 @@ def train(mesh,G,outdir,epochs=180):
     sensitivity=np.maximum(np.linalg.norm(G,axis=0),np.linalg.norm(G,axis=0).max()*.06)
     A=G/sensitivity
     classical=(A.T@solve(A@A.T+.08*np.eye(256),observations[2].T,assume_a="pos")).T/sensitivity
-    classic_projection=classical.reshape(-1,8,12,14).sum(1)*140
+    classic_projection=classical.reshape(-1,*VOLUME_SHAPE).sum(1)*VOLUME_SPACING[2]
     truth_projection=targets[2]*target_scale
     with torch.no_grad():
         val_error=(ae(xx[1])-xx[1]).square().flatten(1).mean(1).cpu().numpy()
@@ -133,7 +134,7 @@ def attach(run,bundle):
         observed_input=np.where(np.isfinite(interpolated),interpolated,nearest)
     run["learning_preprocess"]="Training-scale normalization; linear interpolation of omitted stations with nearest edge fill; fixed-height trained network"
     x=torch.tensor(observed_input/meta["input_scale"],dtype=torch.float32,device=device).reshape(1,1,16,16)
-    truth=np.asarray(run["truth"]).reshape(8,12,14).sum(0)*140
+    truth=np.asarray(run["truth"]).reshape(VOLUME_SHAPE).sum(0)*VOLUME_SPACING[2]
     with torch.no_grad():
         column=cnn(x)[0].cpu().numpy()*meta["target_scale"]
         reconstruction=ae(x)[0,0].cpu().numpy()*meta["input_scale"]

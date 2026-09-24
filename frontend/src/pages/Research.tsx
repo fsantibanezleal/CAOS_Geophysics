@@ -1,8 +1,20 @@
-import { useEffect, useState } from "react";
-import { Equation, Refs as ShellRefs, Tabs, useShellLang } from "@fasl-work/caos-app-shell";
-function Refs({ids}:{ids:string[]}) { const es=useShellLang()==='es';return <ShellRefs ids={ids} label={es?'Referencias':'References'}/>; }
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  Callout,
+  Cite,
+  Equation,
+  InlineMath,
+  Refs,
+  SubTabs,
+  Tabs,
+  useShellLang,
+} from "@fasl-work/caos-app-shell";
 import { Plot } from "../components/ScientificPlots";
+import { MethodDiagram } from "../components/MethodDiagram";
+import { LiveMT } from "../components/LiveMT";
+import { chapters, type Algorithm, type Chapter } from "../data/methods";
 import { lessons } from "../data/lessons";
+import { methodName, metricInfo } from "../data/metrics";
 import {
   appBase,
   familyLabels,
@@ -12,36 +24,35 @@ import {
   type Family,
 } from "../science";
 const source = "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/main/";
-const useText = () => {
+function useText() {
   const es = useShellLang() === "es";
   return (en: string, sp: string) => (es ? sp : en);
-};
+}
 function useCatalog() {
   const [catalog, setCatalog] = useState<Catalog>();
   const [error, setError] = useState("");
   useEffect(() => {
-    loadArtifact<Catalog>("catalog.json")
+    const c = new AbortController();
+    loadArtifact<Catalog>("catalog.json", c.signal)
       .then(setCatalog)
-      .catch((e) => setError(String(e)));
+      .catch((e) => {
+        if (e.name !== "AbortError") setError(String(e));
+      });
+    return () => c.abort();
   }, []);
   return { catalog, error };
 }
-function Head({
-  kicker,
-  title,
-  children,
-}: {
-  kicker: string;
-  title: string;
-  children: React.ReactNode;
-}) {
+function Head({ title, children }: { title: string; children: ReactNode }) {
   return (
     <header className="page-head">
-      <span className="small-caps">{kicker}</span>
       <h1>{title}</h1>
       <p className="lede">{children}</p>
     </header>
   );
+}
+function Sources({ ids }: { ids: string[] }) {
+  const t = useText();
+  return <Refs ids={ids} label={t("References", "Referencias")} />;
 }
 
 export function Introduction() {
@@ -49,557 +60,876 @@ export function Introduction() {
   return (
     <div className="page-body prose">
       <Head
-        kicker={t("FIELD NOTES / 01", "NOTAS DE CAMPO / 01")}
         title={t(
-          "The earth is not a photograph.",
-          "La Tierra no es una fotografía.",
+          "Geophysical inverse problems",
+          "Problemas inversos geofísicos",
         )}
       >
         {t(
-          "We observe gravity, magnetic fields, electromagnetic impedance and travelling waves. Geology must be inferred from those responses. This observatory lets you inspect where that inference succeeds, where it is ambiguous, and where a convincing image is wrong.",
-          "Observamos gravedad, campos magnéticos, impedancia electromagnética y ondas viajeras. La geología debe inferirse desde esas respuestas. Este observatorio permite inspeccionar dónde la inferencia funciona, dónde es ambigua y dónde una imagen convincente está equivocada.",
+          "Geophysical inversion estimates subsurface properties from measured physical responses. This application compares density, magnetic susceptibility, resistivity and acoustic velocity in controlled synthetic experiments. The relation ",
+          "La inversión geofísica estima propiedades del subsuelo a partir de respuestas físicas medidas. Esta aplicación compara densidad, susceptibilidad, resistividad y velocidad acústica en experimentos sintéticos controlados. La relación ",
+        )}
+        <InlineMath tex="d=F(m)+\epsilon" />
+        {t(
+          " separates the unknown model, the forward operator and observation error.",
+          " separa modelo desconocido, operador directo y error de observación.",
         )}
       </Head>
-      <div className="process-diagram">
-        {[
-          [
-            t("01 / EARTH", "01 / TIERRA"),
-            t("Construct geology", "Construir geología"),
-            t(
-              "A basin, dyke, aquifer, fault or salt dome. Known truth makes error measurable.",
-              "Cuenca, dique, acuífero, falla o domo salino. La verdad conocida permite medir el error.",
-            ),
-          ],
-          [
-            t("02 / PHYSICS", "02 / FÍSICA"),
-            t("Predict a response", "Predecir respuesta"),
-            t(
-              "An integral kernel, complex impedance recursion or finite-difference wave equation maps the earth to a survey.",
-              "Un núcleo integral, recursión de impedancia o ecuación de ondas transforma la Tierra en mediciones.",
-            ),
-          ],
-          [
-            t("03 / OBSERVATION", "03 / OBSERVACIÓN"),
-            t("Limit what is seen", "Limitar lo observado"),
-            t(
-              "Finite coverage, bandwidth and seeded noise remove information before inversion begins.",
-              "Cobertura finita, banda y ruido sembrado eliminan información antes de invertir.",
-            ),
-          ],
-          [
-            t("04 / INFERENCE", "04 / INFERENCIA"),
-            t("Compare hypotheses", "Comparar hipótesis"),
-            t(
-              "Data fit, model error and prior assumptions must be inspected together.",
-              "Ajuste de datos, error de modelo e hipótesis previas deben inspeccionarse juntos.",
-            ),
-          ],
-        ].map(([n, title, body]) => (
-          <div key={n}>
-            <b>{n}</b>
-            <strong>{title}</strong>
-            <p>{body}</p>
-          </div>
-        ))}
-      </div>
-      <Equation
-        tex={String.raw`d_{obs}=F(m_{true})+\epsilon,\qquad \hat m=\arg\min_m\{\|W_d(F(m)-d_{obs})\|_2^2+\beta R(m)\}`}
-        caption={t(
-          "The forward model predicts observations. The inverse objective balances agreement with observations against a declared prior.",
-          "El modelo directo predice observaciones. El objetivo inverso equilibra acuerdo con datos y un prior declarado.",
-        )}
-      />
-      <div className="doc-grid">
-        <section>
-          <h2>
-            {t(
-              "A small residual can hide a wrong earth",
-              "Un residuo pequeño puede ocultar una Tierra incorrecta",
-            )}
-          </h2>
-          <p>
-            {t(
-              "Potential fields are non-unique: many distributions of density or magnetization can generate similar surface observations. Sensitivity weighting and sparse penalties select a solution; they do not create information that was never measured. In the opposing-density case, cancellation can produce a weak field over substantial geological structure.",
-              "Los campos potenciales no son únicos: muchas distribuciones de densidad o magnetización generan observaciones superficiales similares. Ponderaciones y penalizaciones seleccionan una solución; no crean información nunca medida. En el caso de densidades opuestas, la cancelación genera un campo débil sobre estructura importante.",
-            )}
-          </p>
-          <Refs ids={["cockett2015", "choclo"]} />
-        </section>
-        <section>
-          <h2>
-            {t(
-              "Frequency is a depth filter, not a ruler",
-              "La frecuencia filtra profundidad, no la mide directamente",
-            )}
-          </h2>
-          <p>
-            {t(
-              "In a uniform conductor, electromagnetic skin depth scales approximately with the square root of resistivity divided by frequency. Layered responses mix a range of depths. The MT cases show why apparent resistivity is not a direct depth section. The layer thicknesses are held known here so the resistivity inverse problem can be isolated.",
-              "En un conductor uniforme, la profundidad de penetración escala aproximadamente con la raíz de resistividad sobre frecuencia. Las respuestas estratificadas mezclan profundidades. MT muestra por qué resistividad aparente no es una sección directa. Aquí los espesores son conocidos para aislar la inversión de resistividad.",
-            )}
-          </p>
-          <Refs ids={["heagy2017", "mtpy"]} />
-        </section>
-        <section>
-          <h2>
-            {t(
-              "Waveforms carry timing and amplitude",
-              "Las ondas transportan tiempo y amplitud",
-            )}
-          </h2>
-          <p>
-            {t(
-              "A shot gather places receiver position horizontally and time vertically. Reflections, refractions and diffractions create different moveout patterns. The animation is a saved acoustic pressure field from the same finite-difference simulation that produces the gathers. It is not a drawn expanding circle. Inversion uses the waveform gradient through Deepwave automatic differentiation.",
-              "Un registro coloca receptores horizontalmente y tiempo verticalmente. Reflexiones, refracciones y difracciones generan patrones distintos. La animación es presión acústica guardada de la misma simulación que produce registros, no un círculo dibujado. La inversión usa el gradiente de onda por diferenciación automática de Deepwave.",
-            )}
-          </p>
-          <Refs ids={["virieux2009", "deepwave"]} />
-        </section>
-        <section>
-          <h2>
-            {t(
-              "A learned prior has a domain",
-              "Un prior aprendido tiene un dominio",
-            )}
-          </h2>
-          <p>
-            {t(
-              "The CNN learns column density, a depth-integrated property, from gravity observations. The autoencoder learns a compressed representation of observations. Neither is a universal geological interpreter. Realization-disjoint training, validation and test sets separate fitting from evaluation; two withheld geometries deliberately stress transfer.",
-              "La CNN aprende densidad integrada en profundidad desde gravedad. El autoencoder aprende una representación comprimida de observaciones. Ninguno interpreta geología universalmente. Particiones por realizaciones separan ajuste y evaluación; dos geometrías excluidas ponen a prueba la transferencia.",
-            )}
-          </p>
-          <Refs ids={["inversionnet", "openfwi"]} />
-        </section>
-      </div>
-      <section className="method-article">
+      <section>
         <h2>
           {t(
-            "Start with a falsifiable question",
-            "Comience con una pregunta contrastable",
+            "1. Physical properties and observations",
+            "1. Propiedades físicas y observaciones",
           )}
         </h2>
-        <p>
+        <p className="measure">
           {t(
-            "Open the normal-fault seismic case, play the central shot and pause at an interface. Then inspect a different receiver gather and compare direct with multiscale inversion. For a contrasting failure, use decoupled joint structures and increase regularization: a visually cleaner model may be scientifically worse. Every case includes a guided comparison and an explicit limitation.",
-            "Abra la falla normal sísmica, reproduzca el disparo central y pause en una interfaz. Inspeccione otro registro y compare inversión directa y multiescala. Para un fallo distinto, use estructuras conjuntas desacopladas y aumente regularización: un modelo visualmente limpio puede ser peor científicamente. Cada caso incluye una comparación guiada y una limitación.",
+            "Gravity anomalies respond to density contrasts; magnetic anomalies respond to magnetization; magnetotelluric impedance responds to electrical resistivity; seismic waveforms respond here to acoustic velocity. These quantities are not interchangeable geological images. Each method requires a different acquisition model, forward equation and interpretation of spatial resolution. The examples include sedimentary basins, intrusive bodies, dipping dykes, conductive layers, faults, salt and low-velocity channels.",
+            "La gravedad responde a contrastes de densidad; el magnetismo, a magnetización; la impedancia magnetotelúrica, a resistividad eléctrica; las ondas sísmicas, aquí a velocidad acústica. No son imágenes geológicas intercambiables. Cada método requiere adquisición, ecuación directa e interpretación de resolución diferentes. Los ejemplos incluyen cuencas, intrusiones, diques inclinados, capas conductoras, fallas, sal y canales lentos.",
           )}
         </p>
-        <a href={appBase}>
-          {t("Open the observatory →", "Abrir el observatorio →")}
-        </a>
+        <div className="table-scroll">
+          <table className="cmp-table">
+            <thead>
+              <tr>
+                {[
+                  t("Method", "Método"),
+                  t("Unknown", "Incógnita"),
+                  t("Observation", "Observación"),
+                  t("Geometry", "Geometría"),
+                ].map((x) => (
+                  <th key={x}>{x}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{t("Gravity", "Gravedad")}</td>
+                <td>Δρ · g/cm³</td>
+                <td>g𝓏 · mGal</td>
+                <td>
+                  {t(
+                    "3D prisms / surface stations",
+                    "Prismas 3D / estaciones superficiales",
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td>{t("Magnetics", "Magnetismo")}</td>
+                <td>χ / mₓ,mᵧ,m𝓏 · SI</td>
+                <td>TMI · nT</td>
+                <td>
+                  {t(
+                    "3D prisms / uniform inducing field",
+                    "Prismas 3D / campo inductor uniforme",
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td>MT</td>
+                <td>ρ · Ω m</td>
+                <td>Z(f) · Ω</td>
+                <td>
+                  {t(
+                    "1D layers / known thicknesses",
+                    "Capas 1D / espesores conocidos",
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <td>FWI</td>
+                <td>v · m/s</td>
+                <td>
+                  {t("Receiver pressure histories", "Historias de presión")}
+                </td>
+                <td>
+                  {t(
+                    "2D constant-density acoustics",
+                    "Acústica 2D de densidad constante",
+                  )}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <Sources ids={["cockett2015", "heagy2017", "virieux2009"]} />
+      </section>
+      <section>
+        <h2>
+          {t(
+            "2. Forward modelling and discretization",
+            "2. Modelación directa y discretización",
+          )}
+        </h2>
+        <p className="measure">
+          {t(
+            "The forward operator predicts what a specified survey would measure for a candidate earth. It includes receiver locations, source parameters and boundary conditions; these cannot be separated from the interpretation of a result. Potential fields use integrated prism kernels. MT uses complex impedance recursion through layers. Seismic uses finite-difference propagation. Refining a grid improves the representation of geometry and numerical propagation, but cannot replace missing observations.",
+            "El operador directo predice lo que mediría un levantamiento para un subsuelo candidato. Incluye receptores, fuentes y fronteras, inseparables de la interpretación. Los campos potenciales usan núcleos prismáticos integrados; MT, recursión compleja entre capas; sísmica, propagación por diferencias finitas. Refinar una malla mejora geometría y propagación numérica, pero no sustituye datos ausentes.",
+          )}
+        </p>
+        <Equation
+          tex={String.raw`d_i^{obs}=F_i(m_{true})+\epsilon_i,\qquad G_{ij}=\frac{\partial F_i}{\partial m_j}`}
+          caption={t(
+            "dᵒᵇˢ is observed data; mtrue is the synthetic model; ε is measurement noise; Gᵢⱼ is sensitivity of observation i to parameter j. For linear potential fields, G does not depend on m.",
+            "dᵒᵇˢ son datos observados; mtrue es modelo sintético; ε es ruido; Gᵢⱼ es sensibilidad del dato i al parámetro j. En campos potenciales lineales, G no depende de m.",
+          )}
+        />
+        <MethodDiagram kind="potential" />
+        <Sources ids={["simpeggravity", "deepwave"]} />
+      </section>
+      <section>
+        <h2>
+          {t(
+            "3. Regularization and identifiability",
+            "3. Regularización e identificabilidad",
+          )}
+        </h2>
+        <p className="measure">
+          {t(
+            "Different subsurface models can reproduce similar observations. Regularization selects among these possibilities using explicit preferences such as small coefficients, sparse support, smooth layer transitions or shared boundaries. It does not establish that the selected preference is geologically correct. A reduced data residual and a reduced model error are therefore different outcomes. The benchmark reports both where synthetic truth is available, with no combined score across physical units.",
+            "Distintos modelos pueden reproducir datos similares. La regularización selecciona usando preferencias explícitas: coeficientes pequeños, soporte disperso, transiciones suaves o límites compartidos. No establece que esa preferencia sea correcta geológicamente. Reducir residuo de datos y reducir error de modelo son resultados distintos. El benchmark informa ambos cuando existe verdad sintética, sin combinar unidades físicas en un puntaje.",
+          )}
+        </p>
+        <Equation
+          tex={String.raw`\widehat m=\arg\min_m\{\Phi_d(F(m),d^{obs})+\beta\Phi_m(m)\}`}
+          caption={t(
+            "Φd measures data disagreement; Φm encodes a model preference; β controls their relative weight. Each implemented algorithm defines these terms separately; not every history curve includes both.",
+            "Φd mide desacuerdo de datos; Φm expresa preferencia de modelo; β pondera ambos. Cada algoritmo define sus términos; no toda curva histórica incluye los dos.",
+          )}
+        />
+        <Equation
+          tex={String.raw`\mathrm{RMSE}_m=\sqrt{\frac1M\sum_{j=1}^M(\widehat m_j-m_{true,j})^2}`}
+          caption={t(
+            "M is the number of model parameters. Model RMSE uses the property units and requires known truth. It does not measure uncertainty and is not available for an unknown field subsurface.",
+            "M es número de parámetros. RMSE usa unidades de propiedad y requiere verdad conocida. No mide incertidumbre ni está disponible para un subsuelo de campo desconocido.",
+          )}
+        />
+        <Sources ids={["cockett2015", "crossgradient"]} />
+      </section>
+      <section>
+        <h2>
+          {t(
+            "4. Experimental calculation and interpretation",
+            "4. Cálculo e interpretación experimental",
+          )}
+        </h2>
+        <ol className="measure">
+          <li>
+            {t(
+              "Define the geological geometry, property contrasts and physical units.",
+              "Definir geometría, contrastes y unidades.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Set receivers, sources, frequencies and the numerical domain.",
+              "Configurar receptores, fuentes, frecuencias y dominio numérico.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Generate the forward response; add seeded observation noise and apply the acquisition mask.",
+              "Generar respuesta directa; agregar ruido con semilla y aplicar máscara de adquisición.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Run each inverse algorithm from its declared initialization without using the known solution for checkpoint selection.",
+              "Ejecutar cada inversor desde su inicialización declarada sin usar la solución conocida para seleccionar checkpoints.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Compare predicted observations, residuals and recovered properties. Use the noise and coverage variants to assess sensitivity, not to construct an unsupported probability interval.",
+              "Comparar predicciones, residuos y propiedades. Usar variantes de ruido y cobertura para sensibilidad, no para construir intervalos probabilísticos no sustentados.",
+            )}
+          </li>
+        </ol>
+        <p className="measure">
+          {t(
+            "On the App page, Model shows geometry or physical response, Data shows observations and predictions, and Inversion shows recovered properties and numerical histories. Case analysis explains the specific geological question. Experiment selection loads separately computed results; camera rotation and display gain only alter the view. The MT calculator is a separate browser forward calculation.",
+            "En App, Modelo muestra geometría o respuesta física; Datos, observaciones y predicciones; Inversión, propiedades recuperadas e historiales. Análisis del caso explica la pregunta geológica. Elegir un experimento carga resultados calculados separadamente; cámara y ganancia sólo modifican la vista. La calculadora MT es un cálculo directo separado en navegador.",
+          )}
+        </p>
+        <Sources ids={["deepwave", "heagy2017"]} />
+      </section>
+      <section>
+        <h2>
+          {t(
+            "5. Notation and scope of validation",
+            "5. Notación y alcance de validación",
+          )}
+        </h2>
+        <ul className="method-symbols">
+          {[
+            [
+              "m: subsurface model; m̂: recovered model.",
+              "m: modelo del subsuelo; m̂: modelo recuperado.",
+            ],
+            [
+              "d: observations; F: forward operator.",
+              "d: observaciones; F: operador directo.",
+            ],
+            [
+              "G: sensitivity matrix; N: observation count.",
+              "G: matriz de sensibilidad; N: cantidad de observaciones.",
+            ],
+            [
+              "M: cell/parameter count; ε: noise.",
+              "M: cantidad de celdas/parámetros; ε: ruido.",
+            ],
+            [
+              "σ: component noise standard deviation.",
+              "σ: desviación del ruido por componente.",
+            ],
+            [
+              "β: model-penalty weight; λ: structural-coupling weight.",
+              "β: peso de penalización; λ: peso de acoplamiento.",
+            ],
+            [
+              "Δρ: density contrast (g/cm³); χ: susceptibility (SI).",
+              "Δρ: contraste de densidad (g/cm³); χ: susceptibilidad (SI).",
+            ],
+            [
+              "ρ: electrical resistivity (Ω m); h: layer thickness (m).",
+              "ρ: resistividad (Ω m); h: espesor (m).",
+            ],
+            [
+              "Z: complex impedance (Ω); f: frequency (Hz).",
+              "Z: impedancia compleja (Ω); f: frecuencia (Hz).",
+            ],
+            [
+              "v: acoustic velocity (m/s); t: time (s).",
+              "v: velocidad acústica (m/s); t: tiempo (s).",
+            ],
+            [
+              "θ: neural weights; J: objective function.",
+              "θ: pesos neuronales; J: función objetivo.",
+            ],
+            [
+              "c: column density (g/cm³ m) or cross-gradient, as defined locally.",
+              "c: densidad integrada (g/cm³ m) o gradiente cruzado según definición local.",
+            ],
+          ].map(([en, sp]) => (
+            <li key={en}>{t(en, sp)}</li>
+          ))}
+        </ul>
+        <Callout
+          variant="honest"
+          title={t("Synthetic validation", "Validación sintética")}
+        >
+          {t(
+            "Known-model recovery, independent prism checks, homogeneous MT identities and directional gradient tests verify specific calculations. They do not establish field accuracy, unique geology, posterior uncertainty or a new inversion method. External tutorial data are handled separately from the synthetic benchmark.",
+            "Recuperación de modelos conocidos, pruebas prismáticas independientes, identidades MT y pruebas de gradiente verifican cálculos específicos. No establecen precisión de campo, geología única, incertidumbre posterior ni un método nuevo. Los datos externos de tutorial se manejan separados del benchmark sintético.",
+          )}
+        </Callout>
+        <Sources ids={["cockett2015", "virieux2009", "goyes2024"]} />
       </section>
     </div>
   );
 }
 
-const theory: Record<
-  Family,
-  {
-    equation: string;
-    refs: string[];
-    algorithm: [string, string];
-    assumptions: [string, string];
-    validation: [string, string];
-  }
-> = {
-  gravity: {
-    equation: String.raw`d=G_\rho m,\quad \min_q\|Aq-b\|_2^2+\beta\sum_i w_iq_i^2,\quad m=Wq`,
-    refs: ["cockett2015", "choclo"],
-    algorithm: [
-      "SimPEG computes exact rectangular-prism gz sensitivities for a 14 × 12 × 8 mesh and 256 stations. Columns are scaled by sensitivity with a 6% floor. L2 solves a data-space positive-definite linear system. IRLS repeats eight solves with weights proportional to (q² + ε²)^−1/2; ε is 12% of the current maximum |q|. This is sparse model-norm regularization, not a smoothness penalty.",
-      "SimPEG calcula sensibilidades gz de prismas en malla 14 × 12 × 8 y 256 estaciones. Se escalan columnas por sensibilidad con piso 6%. L2 resuelve un sistema definido positivo en espacio de datos. IRLS repite ocho soluciones con pesos proporcionales a (q² + ε²)^−1/2; ε es 12% del máximo |q|. Es norma dispersa de modelo, no suavizado.",
-    ],
-    assumptions: [
-      "Cartesian ENU coordinates; density contrast in g/cm³ and gz in mGal. Upward z gives negative gz over a positive mass. Finite mesh, independent Gaussian noise, uniform station uncertainty; no regional trend or terrain outside the mesh.",
-      "Coordenadas ENU; contraste en g/cm³ y gz en mGal. z positivo arriba produce gz negativo sobre masa positiva. Malla finita, ruido gaussiano independiente e incertidumbre uniforme; sin tendencia regional ni terreno exterior.",
-    ],
-    validation: [
-      "Independent prism comparison, linearity and sign checks; artifact residual closure; model error against known truth. Small residuals do not certify depth resolution.",
-      "Comparación independiente de prismas, linealidad y signo; cierre de residuos; error de modelo contra verdad conocida. Residuos pequeños no certifican resolución en profundidad.",
-    ],
-  },
-  magnetics: {
-    equation: String.raw`d_{TMI}\simeq\hat b_0^T B_a,\qquad d=G_xm_x+G_ym_y+G_zm_z`,
-    refs: ["cockett2015", "choclo"],
-    algorithm: [
-      "The inducing field is 50,000 nT at inclination 60° and declination 12°. Scalar inversion assumes induced magnetization. Vector inversion solves three susceptibility-equivalent components per cell and displays their norm. In the remanent case, the true direction is normalized (0.80, −0.55, 0.23), intentionally inconsistent with the scalar assumption.",
-      "Campo inductor de 50.000 nT, inclinación 60° y declinación 12°. Inversión escalar supone magnetización inducida. La vectorial resuelve tres componentes equivalentes de susceptibilidad por celda y muestra su norma. En remanencia, la dirección real es (0,80; −0,55; 0,23) normalizada, incompatible con la hipótesis escalar.",
-    ],
-    assumptions: [
-      "Weak-anomaly linearized total-field response; no self-demagnetization or nonlinear susceptibility. Vector amplitude is not directly interchangeable with a signed scalar susceptibility estimate.",
-      "Respuesta total linealizada de anomalía débil; sin autodesmagnetización ni susceptibilidad no lineal. La amplitud vectorial no equivale directamente a susceptibilidad escalar con signo.",
-    ],
-    validation: [
-      "Check vector/scalar forward consistency for induced direction, physical nT scale, and remanent residuals. Additional vector freedom can overfit.",
-      "Verifique consistencia vectorial/escalar en dirección inducida, escala nT y residuos remanentes. Mayor libertad vectorial puede sobreajustar.",
-    ],
-  },
-  mt: {
-    equation: String.raw`Z_j=w_j\frac{Z_{j+1}+w_j\tanh(k_jh_j)}{w_j+Z_{j+1}\tanh(k_jh_j)},\quad k_j=\sqrt{i\omega\mu/\rho_j},\quad w_j=\sqrt{i\omega\mu\rho_j}`,
-    refs: ["heagy2017", "goyes2024", "mtpy"],
-    algorithm: [
-      "Complex impedance recurses upward from a homogeneous half-space. Bounded SciPy least squares estimates log resistivity between 1 and 6,000 Ω m. A second solver optimizes log resistivity with Adam. A third uses a 1–24–24–1 tanh network as a per-sounding parameterization, differentiating through the same physical recursion. Neural bounds are exp(1) to exp(8) Ω m.",
-      "La impedancia compleja recurre hacia arriba desde un semiespacio. SciPy estima log resistividad entre 1 y 6.000 Ω m. Un segundo solver optimiza con Adam. Un tercero usa red tanh 1–24–24–1 por sondeo, diferenciando la misma recursión física. Límites neuronales exp(1) a exp(8) Ω m.",
-    ],
-    assumptions: [
-      "Known layer thicknesses; isotropic 1D earth; 36 frequencies. Loss fits real and imaginary impedance with known noise standard deviation, plus differences of log resistivity. Apparent resistivity and phase are response diagnostics.",
-      "Espesores conocidos, Tierra 1D isotrópica y 36 frecuencias. La pérdida ajusta impedancia real e imaginaria con desviación conocida y diferencias de log resistividad. Resistividad aparente y fase son diagnósticos de respuesta.",
-    ],
-    validation: [
-      "Homogeneous half-space: apparent resistivity equals true resistivity and phase is 45°. NumPy/PyTorch parity and directional derivative tests check implementation. Saved least-squares states are objective evaluations, not accepted iterations.",
-      "Semiespacio homogéneo: resistividad aparente igual a real y fase 45°. Paridad NumPy/PyTorch y derivadas direccionales verifican implementación. Estados de mínimos cuadrados son evaluaciones, no iteraciones aceptadas.",
-    ],
-  },
-  seismic: {
-    equation: String.raw`\partial_{tt}u-v^2\nabla^2u=s,\qquad \Phi(v)=\|P u(v)-d\|_2^2/\|d\|_2^2+\beta R(v)`,
-    refs: ["deepwave", "virieux2009", "devito"],
-    algorithm: [
-      "Deepwave propagates three Ricker shots on a 64 × 48 grid, 25 m spacing, 1 ms time step and 1.1 s duration. Fourth-order spatial differences and 12-cell absorbing boundaries are used. Automatic differentiation computes gradients. Adam performs 28 updates inside velocity bounds 1,400–4,400 m/s. Multiscale optimization uses moving-average windows 21, 9 and 1 samples; the retained solution minimizes full-band data loss among evaluated states.",
-      "Deepwave propaga tres disparos Ricker en malla 64 × 48, paso 25 m, tiempo 1 ms y duración 1,1 s. Diferencias espaciales de orden cuatro y bordes absorbentes de 12 celdas. Diferenciación automática calcula gradientes. Adam realiza 28 actualizaciones entre 1.400–4.400 m/s. Multiescala usa ventanas de 21, 9 y 1 muestras; se retiene el menor error de datos de banda completa.",
-    ],
-    assumptions: [
-      "Constant-density acoustic 2D medium, known source, 40 or 20 receivers. Starting velocity is an a priori depth trend (1,800 + 22 × depth-index), not a smoothed copy of truth. Displayed wavefields are central-shot snapshots every 24 ms; gathers are sampled every 4 ms.",
-      "Medio acústico 2D de densidad constante, fuente conocida y 40 o 20 receptores. Velocidad inicial es tendencia previa (1.800 + 22 × índice de profundidad), no verdad suavizada. Campos del disparo central cada 24 ms; registros cada 4 ms.",
-    ],
-    validation: [
-      "Adjoint directional derivative, finite nonzero propagated energy, residual closure, and final-versus-initial loss across all cases. Data improvement is not a claim that 28 updates fully recover the earth.",
-      "Derivada direccional adjunta, energía finita no nula, cierre de residuos y comparación de pérdida final/inicial en todos los casos. Mejorar datos no implica que 28 actualizaciones recuperen toda la Tierra.",
-    ],
-  },
-  joint: {
-    equation: String.raw`\Phi=\Phi_g(\rho)+\Phi_m(\chi)+\lambda\|\nabla\tilde\rho\times\nabla\tilde\chi\|_2^2+\alpha(\|\tilde\rho\|_2^2+\|\tilde\chi\|_2^2)`,
-    refs: ["cockett2015"],
-    algorithm: [
-      "The gravity and magnetic operators share a mesh. Dimensionless density and susceptibility are optimized together for 180 Adam steps from independent L2 solutions. Cross-gradients use cell-index derivatives on normalized properties; their magnitude is dimensionless. Coupling increases from 4 to 25 in the regularization experiment.",
-      "Los operadores gravimétrico y magnético comparten malla. Propiedades adimensionales se optimizan 180 pasos Adam desde soluciones L2 independientes. Gradientes cruzados usan derivadas por índice de celda en propiedades normalizadas; magnitud adimensional. Acoplamiento aumenta de 4 a 25.",
-    ],
-    assumptions: [
-      "Structural compatibility is a prior, not an observed fact. One case shares boundaries; the other deliberately violates that prior. Zero gradients also make a cross-product small.",
-      "Compatibilidad estructural es un prior, no un hecho observado. Un caso comparte límites; otro lo viola deliberadamente. Gradientes nulos también reducen el producto cruzado.",
-    ],
-    validation: [
-      "Compare both data fits, property errors and structural penalty; test zero/parallel/orthogonal gradients. Coverage masks must apply to both objectives.",
-      "Compare ambos ajustes, errores de propiedades y penalización estructural; pruebe gradientes nulos, paralelos y ortogonales. Máscaras de cobertura aplican a ambos objetivos.",
-    ],
-  },
-  learned: {
-    equation: String.raw`\hat c=f_\theta(d/s_d)\,s_c,\quad c(x,y)=\sum_z\rho(x,y,z)\Delta z;\qquad a(d)=\|g_\theta(d/s_d)-d/s_d\|_2^2/N`,
-    refs: ["inversionnet", "openfwi"],
-    algorithm: [
-      "The CNN uses two 3 × 3 convolutions (16 and 24 channels), GELU, adaptive 4 × 4 pooling, and 384–96–168 dense layers. It predicts 12 × 14 column density. The autoencoder uses 256–64–12–64–256 dense layers. Both train for 180 epochs on 800 realizations; best validation weights on 160 realizations are frozen before evaluating another 160.",
-      "La CNN usa convoluciones 3 × 3 (16 y 24 canales), GELU, pooling 4 × 4 y capas 384–96–168. Predice densidad integrada 12 × 14. Autoencoder 256–64–12–64–256. Ambos entrenan 180 épocas con 800 realizaciones; mejores pesos en 160 de validación se congelan antes de evaluar otras 160.",
-    ],
-    assumptions: [
-      "Four procedural geometry families, fixed reference survey, training-only normalization. Oblique and ring geometries are withheld. Missing stations are linearly interpolated with nearest edge fill. Changing survey height deliberately tests acquisition shift, not recalibration.",
-      "Cuatro familias procedurales, geometría de referencia fija y normalización sólo de entrenamiento. Geometrías oblicua y anular excluidas. Estaciones faltantes se interpolan linealmente con borde cercano. Cambiar altura prueba cambio de adquisición, no recalibración.",
-    ],
-    validation: [
-      "Serialized weight round-trip, disjoint seeds, held-out per-realization errors, and classical column-density baseline. The 99th-percentile validation autoencoder threshold is an empirical novelty flag, not uncertainty or probability.",
-      "Recarga de pesos, semillas disjuntas, errores por realización independiente y referencia clásica de densidad integrada. Umbral percentil 99 de validación es alerta empírica, no incertidumbre ni probabilidad.",
-    ],
-  },
-};
+function TheoryChapter({ chapter }: { chapter: Chapter }) {
+  const i = useShellLang() === "es" ? 1 : 0;
+  const t = useText();
+  return (
+    <article className="method-article">
+      <h2>{chapter.title[i]}</h2>
+      {chapter.paragraphs.map((p, k) => (
+        <p key={k}>
+          {p[i]}
+          {k === 0 && (
+            <>
+              {" "}
+              <Cite id={chapter.refs[0]} paren />
+            </>
+          )}
+        </p>
+      ))}
+      {chapter.equations.map((e, k) => (
+        <Equation key={k} tex={e.tex} caption={e.caption[i]} />
+      ))}
+      <MethodDiagram kind={chapter.id} />
+      <Callout
+        variant="honest"
+        title={t("Assumptions and limitations", "Supuestos y limitaciones")}
+      >
+        {chapter.assumptions[i]}
+      </Callout>
+      <Sources ids={chapter.refs} />
+    </article>
+  );
+}
 export function Methodology() {
   const t = useText();
-  const es = useShellLang() === "es";
+  const i = useShellLang() === "es" ? 1 : 0;
   return (
     <div className="page-body prose">
       <Head
-        kicker={t("METHODS / 02", "MÉTODOS / 02")}
         title={t(
-          "Follow the physics. Inspect the assumptions.",
-          "Siga la física. Inspeccione los supuestos.",
+          "Forward models and inverse formulations",
+          "Modelos directos y formulaciones inversas",
         )}
       >
         {t(
-          "Every named method below maps to an executable implementation and a computed artifact. The inverse objective, not the visual style, defines what a result means.",
-          "Cada método corresponde a una implementación ejecutable y un artefacto calculado. El objetivo inverso, no el estilo visual, define el significado del resultado.",
+          "These six sections explain what each method measures, its unknown parameters, the governing equations and the assumptions that limit interpretation. The Implementation page specifies the numerical algorithms and constants used to compute the results; the equations here distinguish the physical problem from its discretization.",
+          "Estas seis secciones explican lo que mide cada método, sus incógnitas, ecuaciones y supuestos. Implementación especifica los algoritmos numéricos y constantes usados para obtener resultados; aquí se distingue el problema físico de su discretización.",
         )}
       </Head>
-      <Tabs
-        ariaLabel={t("Method families", "Familias de métodos")}
-        tabs={Object.entries(theory).map(([family, item]) => ({
-          id: family,
-          label: familyLabels[family as Family][es ? 1 : 0],
-          content: (
-            <article className="method-article">
-              <Equation
-                tex={item.equation}
-                caption={familyLabels[family as Family][es ? 1 : 0]}
-              />
-              <div className="doc-grid">
-                <section>
-                  <h2>
-                    {t("Algorithm & parameters", "Algoritmo y parámetros")}
-                  </h2>
-                  <p>{item.algorithm[es ? 1 : 0]}</p>
-                </section>
-                <section>
-                  <h2>{t("Assumptions & units", "Supuestos y unidades")}</h2>
-                  <p>{item.assumptions[es ? 1 : 0]}</p>
-                </section>
-                <section>
-                  <h2>
-                    {t(
-                      "Validation & interpretation",
-                      "Validación e interpretación",
-                    )}
-                  </h2>
-                  <p>{item.validation[es ? 1 : 0]}</p>
-                </section>
-                <section>
-                  <h2>
-                    {t(
-                      "Inspect the implementation",
-                      "Inspeccione la implementación",
-                    )}
-                  </h2>
-                  <p>
-                    <a
-                      href={`${source}data-pipeline/${{ gravity: "potential", magnetics: "potential", mt: "electromagnetics", seismic: "seismic", joint: "joint", learned: "learning" }[family]}.py`}
-                    >
-                      {t("Open the numerical source", "Abrir código numérico")}
-                    </a>
-                  </p>
-                  <p>
-                    <a href={`${source}tests/test_rebuild.py`}>
-                      {t("Numerical tests", "Pruebas numéricas")}
-                    </a>
-                  </p>
-                  <Refs ids={item.refs} />
-                </section>
-              </div>
-            </article>
-          ),
+      <SubTabs
+        orientation="vertical"
+        ariaLabel={t("Physical method families", "Familias de métodos físicos")}
+        tabs={chapters.map((c) => ({
+          id: c.id,
+          label: c.title[i],
+          content: <TheoryChapter chapter={c} />,
         }))}
       />
     </div>
   );
 }
 
+function AlgorithmSection({
+  algorithm,
+  chapter,
+}: {
+  algorithm: Algorithm;
+  chapter: Chapter;
+}) {
+  const i = useShellLang() === "es" ? 1 : 0;
+  const t = useText();
+  return (
+    <article className="method-article">
+      <h2>{algorithm.title[i]}</h2>
+      <p>
+        {algorithm.explanation[i]} <Cite id={chapter.refs[0]} paren />
+      </p>
+      <Equation
+        tex={algorithm.equation.tex}
+        caption={algorithm.equation.caption[i]}
+      />
+      <h3>{t("Numerical sequence", "Secuencia numérica")}</h3>
+      <ol>
+        {algorithm.steps.map((s, k) => (
+          <li key={k}>{s[i]}</li>
+        ))}
+      </ol>
+      <h3>
+        {t("Constants and stopping rule", "Constantes y regla de parada")}
+      </h3>
+      <p>{algorithm.settings[i]}</p>
+      <h3>
+        {t("What the saved history measures", "Qué mide el historial guardado")}
+      </h3>
+      <p>{algorithm.history[i]}</p>
+      <MethodDiagram kind={chapter.id} />
+      <Callout
+        variant="honest"
+        title={t("Interpretation limits", "Límites de interpretación")}
+      >
+        {algorithm.limitation[i]}
+      </Callout>
+      <p className="small">
+        {t(
+          "The inverse calculation runs in the local numerical pipeline. The browser displays its saved models, data predictions and histories; changing the case does not launch a new inverse solve.",
+          "El cálculo inverso se ejecuta en el procesamiento numérico local. El navegador muestra modelos, predicciones e historiales guardados; cambiar caso no inicia una nueva inversión.",
+        )}
+      </p>
+      <p>
+        <a
+          href={
+            source +
+            "data-pipeline/" +
+            {
+              potential: "potential",
+              mt: "electromagnetics",
+              seismic: "seismic",
+              joint: "joint",
+              cnn: "learning",
+              ae: "learning",
+            }[chapter.id] +
+            ".py"
+          }
+        >
+          {t(
+            "Numerical source for this method",
+            "Código numérico de este método",
+          )}
+        </a>
+      </p>
+      <Sources ids={chapter.refs} />
+    </article>
+  );
+}
+function ValidationSection() {
+  const t = useText();
+  return (
+    <article className="method-article">
+      <h2>
+        {t(
+          "Numerical checks and reproducibility",
+          "Verificación numérica y reproducibilidad",
+        )}
+      </h2>
+      <p>
+        {t(
+          "A numerical check needs an oracle independent of the output it is checking. Gravity is compared with a separate prism implementation; MT with homogeneous-halfspace identities and split-layer equivalence; differentiable MT and acoustic propagation with central directional differences. Passing these checks establishes local numerical agreement, not geological uniqueness.",
+          "Una prueba necesita una referencia independiente de su salida. Gravedad se compara con otra implementación prismática; MT con identidades de semiespacio y equivalencia al dividir capas; gradientes MT y acústicos con diferencias direccionales centrales. Aprobar establece acuerdo numérico local, no unicidad geológica.",
+        )}
+      </p>
+      <Equation
+        tex={String.raw`\frac{J(m+\epsilon q)-J(m-\epsilon q)}{2\epsilon}\approx\nabla J(m)^Tq`}
+        caption={t(
+          "q is a chosen perturbation direction and ε a small step. Agreement checks the directional derivative. MT uses relative tolerance 10⁻⁶; the float64 CUDA acoustic test uses 2×10⁻³. These are test tolerances, not model accuracy claims.",
+          "q es dirección de perturbación y ε un paso pequeño. El acuerdo verifica derivada direccional. MT usa tolerancia relativa 10⁻⁶; la prueba acústica CUDA float64 usa 2×10⁻³. Son tolerancias de prueba, no precisión de modelo.",
+        )}
+      />
+      <h3>
+        {t(
+          "Saved arrays and exact reproduction",
+          "Arreglos guardados y reproducción",
+        )}
+      </h3>
+      <p>
+        {t(
+          "Potential fields are stored depth–northing–easting with easting fastest. Seismic sections are depth–distance; gathers are shot–receiver–time. Export retains seven significant digits, so checking observed minus predicted against a stored residual requires a rounding tolerance. Checkpoints carry layer dimensions and weight values; reloaded CPU predictions are compared with saved results. GPU floating-point execution need not be bitwise identical across hardware.",
+          "Campos potenciales se guardan profundidad–norte–este, con este más rápido. Secciones sísmicas: profundidad–distancia; registros: disparo–receptor–tiempo. Se exportan siete cifras significativas; verificar observación menos predicción requiere tolerancia de redondeo. Checkpoints contienen dimensiones y pesos; sus predicciones CPU se comparan con resultados guardados. GPU no garantiza identidad bit a bit entre equipos.",
+        )}
+      </p>
+      <h3>
+        {t(
+          "Running the numerical calculation",
+          "Ejecución del cálculo numérico",
+        )}
+      </h3>
+      <pre className="codeblock">
+        <code>
+          {
+            "./scripts/setup.ps1 -Gpu\n./scripts/precompute.ps1\n.venv-pipeline/Scripts/python tests/run_validation.py\ncd frontend\nnpm ci\nnpm test\nnpm run build"
+          }
+        </code>
+      </pre>
+      <p>
+        {t(
+          "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",
+          "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. Pages y VPS sirven archivos estáticos. Sólo la calculadora directa MT recalcula respuesta física en navegador.",
+        )}
+      </p>
+      <Callout
+        variant="honest"
+        title={t("What is not validated", "Qué no está validado")}
+      >
+        {t(
+          "No field-scale performance, posterior coverage, EDI interpretation, PGI implementation or universal learned generalization is established by this test suite. Mesh refinement is evaluated as numerical discretization, not claimed additional survey resolution.",
+          "La batería no establece rendimiento de campo, cobertura posterior, interpretación EDI, implementación PGI ni generalización universal. Refinar malla evalúa discretización, no resolución adicional del levantamiento.",
+        )}
+      </Callout>
+      <Sources ids={["cockett2015", "deepwave", "scipytrf"]} />
+    </article>
+  );
+}
 export function Implementation() {
   const t = useText();
+  const i = useShellLang() === "es" ? 1 : 0;
+  const groups = [
+    ...chapters
+      .slice(0, 4)
+      .map((c) => ({
+        id: c.id,
+        label: c.title[i],
+        content: (
+          <SubTabs
+            orientation="vertical"
+            ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")}
+            tabs={c.algorithms.map((a) => ({
+              id: a.id,
+              label: a.title[i],
+              content: <AlgorithmSection algorithm={a} chapter={c} />,
+            }))}
+          />
+        ),
+      })),
+    {
+      id: "learning",
+      label: t("Neural models", "Modelos neuronales"),
+      content: (
+        <SubTabs
+          orientation="vertical"
+          ariaLabel={t("Neural algorithms", "Algoritmos neuronales")}
+          tabs={chapters
+            .slice(4)
+            .map((c) => ({
+              id: c.id,
+              label: c.title[i],
+              content: (
+                <AlgorithmSection algorithm={c.algorithms[0]} chapter={c} />
+              ),
+            }))}
+        />
+      ),
+    },
+    {
+      id: "validation",
+      label: t("Numerical checks", "Verificación numérica"),
+      content: <ValidationSection />,
+    },
+  ];
   return (
     <div className="page-body prose">
       <Head
-        kicker={t("ENGINEERING / 03", "INGENIERÍA / 03")}
         title={t(
-          "One calculation. Traceable all the way to the screen.",
-          "Un cálculo. Trazable hasta la pantalla.",
+          "Numerical algorithms and solver settings",
+          "Algoritmos numéricos y configuración de solvers",
         )}
       >
         {t(
-          "Python computes canonical experiments locally. The browser loads the exact exported arrays, rather than drawing a second approximate simulation. The VPS and GitHub Pages serve the same static release; neither is advertised as a GPU server.",
-          "Python calcula experimentos canónicos localmente. El navegador carga exactamente los arreglos exportados, no una segunda simulación aproximada. VPS y GitHub Pages sirven el mismo release estático; ninguno se anuncia como servidor GPU.",
+          "This page specifies how the implemented inverse calculations are performed: parameter transformations, discrete objectives, matrix solves or gradient updates, regularization, initialization and stopping rules. Each algorithm also identifies what its recorded history measures, because data error, penalized loss and validation error are different quantities.",
+          "Esta página especifica cómo se calculan las inversiones: transformaciones, objetivos discretos, soluciones matriciales o gradientes, regularización, inicialización y parada. También identifica qué mide cada historial: error de datos, pérdida penalizada y error de validación son cantidades distintas.",
         )}
       </Head>
-      <div className="process-diagram">
-        {[
-          [
-            "01",
-            "geology.py",
-            t(
-              "Explicit 3D geometry and layered/section constructors; units and seeded cases.",
-              "Geometría 3D explícita y constructores estratificados; unidades y casos sembrados.",
-            ),
-          ],
-          [
-            "02",
-            "rebuild.py",
-            t(
-              "Forward model, noise, coverage mask, inverse solve, evaluation. GPU where supported.",
-              "Modelo directo, ruido, máscara, inversión y evaluación. GPU cuando corresponde.",
-            ),
-          ],
-          [
-            "03",
-            "catalog.json",
-            t(
-              "120 artifacts, method summaries, SHA-256 and byte sizes; trained checkpoints.",
-              "120 artefactos, métodos, SHA-256 y tamaños; checkpoints entrenados.",
-            ),
-          ],
-          [
-            "04",
-            "React / Three.js",
-            t(
-              "Case-specific rendering, orbit, cuts, frame replay, units, export and comparison.",
-              "Vistas por caso, órbita, cortes, reproducción, unidades, exportación y comparación.",
-            ),
-          ],
-        ].map(([n, title, body]) => (
-          <div key={n}>
-            <b>{n}</b>
-            <strong>{title}</strong>
-            <p>{body}</p>
-          </div>
-        ))}
-      </div>
-      <div className="doc-grid">
-        <section>
-          <h2>{t("Reproduce locally", "Reproducir localmente")}</h2>
-          <pre>
-            <code>
-              {
-                "./scripts/setup.ps1 -Gpu\n./scripts/precompute.ps1\n.venv-pipeline/Scripts/python tests/run_validation.py\ncd frontend\nnpm ci\nnpm test\nnpm run build"
-              }
-            </code>
-          </pre>
-          <p>
-            {t(
-              "Virtual environments stay inside the repository and are ignored by Git. No internal Python package or editable install is needed. The build copies committed artifacts; CI never trains or regenerates them.",
-              "Los entornos virtuales permanecen en el repositorio y fuera de Git. No requiere paquete Python interno ni instalación editable. El build copia artefactos; CI nunca entrena ni los regenera.",
-            )}
-          </p>
-        </section>
-        <section>
-          <h2>
-            {t(
-              "Array orientation is part of the contract",
-              "La orientación es parte del contrato",
-            )}
-          </h2>
-          <p>
-            {t(
-              "Potential-field vectors use x-fast mesh order: [z, northing, easting]. Surface maps are [northing, easting]. Seismic images are [depth, distance], while shot data are [shot, receiver, time]. The renderer transposes shot gathers, not velocity grids. All axes carry physical units.",
-              "Los vectores potenciales usan x rápido: [z, norte, este]. Mapas [norte, este]. Imágenes sísmicas [profundidad, distancia], registros [disparo, receptor, tiempo]. El render transpone registros, no velocidades. Los ejes indican unidades físicas.",
-            )}
-          </p>
-        </section>
-        <section>
-          <h2>{t("Evidence and checkpoints", "Evidencia y checkpoints")}</h2>
-          <p>
-            {t(
-              "Each artifact includes truth, observations, predictions, residuals, inverse model, recorded states, parameters, seed and engine. CNN/autoencoder weights are small JSON arrays with shape metadata and SHA-256. The training ledger records split counts, normalization, per-test errors and the selected validation loss.",
-              "Cada artefacto incluye verdad, observaciones, predicciones, residuos, modelo, estados, parámetros, semilla y motor. Pesos CNN/autoencoder son arreglos JSON con formas y SHA-256. El registro documenta particiones, normalización, errores y pérdida de validación.",
-            )}
-          </p>
-          <a href={`${appBase}data/v2/models/training.json`}>
-            {t(
-              "Download the training ledger",
-              "Descargar registro de entrenamiento",
-            )}
-          </a>
-        </section>
-        <section>
-          <h2>{t("What runs online", "Qué se ejecuta online")}</h2>
-          <p>
-            {t(
-              "3D rendering, slicing, orbit, time/iteration scrubbing, method and experiment comparisons, and run export execute in the browser. The live layered-earth calculator on Experiments recomputes complex impedance for your chosen resistivity and thickness values. FWI and neural training are deliberately offline.",
-              "Render 3D, cortes, órbita, reproducción, comparación y exportación se ejecutan en navegador. La calculadora estratificada en Experimentos recalcula impedancia para resistividades y espesores elegidos. FWI y entrenamiento neuronal son offline deliberadamente.",
-            )}
-          </p>
-        </section>
-      </div>
-      <Refs ids={["cockett2015", "deepwave", "choclo"]} />
+      <Tabs
+        ariaLabel={t("Algorithm groups", "Grupos de algoritmos")}
+        tabs={groups}
+      />
     </div>
   );
 }
 
-export function Experiments() {
+function CaseProtocol() {
   const t = useText();
-  const es = useShellLang() === "es";
+  const i = useShellLang() === "es" ? 1 : 0;
   const { catalog, error } = useCatalog();
   const [selected, setSelected] = useState("GRAVITY_INTRUSION");
-  const lesson = lessons[selected];
+  const l = lessons[selected];
+  return (
+    <>
+      <label className="select-control">
+        <span>{t("Geological case", "Caso geológico")}</span>
+        <select
+          className="select"
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+        >
+          {catalog?.cases.map((c) => (
+            <option key={c.id} value={c.id}>
+              {i ? c.name_es : c.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      {error && <p role="alert">{error}</p>}
+      <h3>{l.question[i]}</h3>
+      <p>{l.read[i]}</p>
+      <h3>{t("Comparison", "Comparación")}</h3>
+      <p>{l.try[i]}</p>
+      <Callout
+        variant="honest"
+        title={t("Inference limit", "Límite de inferencia")}
+      >
+        {l.limit[i]}
+      </Callout>
+    </>
+  );
+}
+export function Experiments() {
+  const t = useText();
   return (
     <div className="page-body prose">
       <Head
-        kicker={t("EXPERIMENTS / 04", "EXPERIMENTOS / 04")}
         title={t(
-          "Change one cause. Examine the consequence.",
-          "Cambie una causa. Examine la consecuencia.",
+          "Experimental design and controlled conditions",
+          "Diseño experimental y condiciones controladas",
         )}
       >
         {t(
-          "Six controlled conditions separate property contrast, observation noise, acquisition, missing coverage and regularization. They are individual forward/inverse computations, not colour variants.",
-          "Seis condiciones controladas separan contraste, ruido, adquisición, cobertura faltante y regularización. Son cálculos directos/inversos individuales, no variantes de color.",
+          "Each synthetic geometry is evaluated under a reference survey and five modified conditions. The comparisons separate changes in property contrast, noise, acquisition, available observations and regularization. A case uses a fixed random seed, but the same seed does not make every modified dataset an identical-noise paired experiment.",
+          "Cada geometría sintética se evalúa con un levantamiento de referencia y cinco modificaciones. Se comparan contraste, ruido, adquisición, observaciones disponibles y regularización. Cada caso usa semilla fija, pero eso no convierte todos los datos modificados en pares con ruido idéntico.",
         )}
       </Head>
-      {error && <p role="alert">{error}</p>}
-      <div className="case-guide">
-        <label className="inline-control">
-          {t("Choose an investigation", "Elija una investigación")}
-          <select
-            value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-          >
-            {catalog?.cases.map((c) => (
-              <option key={c.id} value={c.id}>
-                {es ? c.name_es : c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <h2>{lesson.question[es ? 1 : 0]}</h2>
-        <p>{lesson.read[es ? 1 : 0]}</p>
-        <p>{lesson.try[es ? 1 : 0]}</p>
-        <p className="plot-note">{lesson.limit[es ? 1 : 0]}</p>
-      </div>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>{t("Condition", "Condición")}</th>
-              <th>{t("Potential fields", "Campos potenciales")}</th>
-              <th>MT</th>
-              <th>{t("Seismic", "Sísmica")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              [
-                "Reference / referencia",
-                "256 stations · 60 m",
-                "36 frequencies · 0.01–100 Hz",
-                "3 shots · 40 receivers · 8 or 9 Hz",
-              ],
-              [
-                "Contrast / contraste",
-                "×1.5 property",
-                "×1.5 resistivity",
-                "×1.15 velocity contrast",
-              ],
-              [
-                "Noise / ruido",
-                "14% field SD",
-                "10% |Z| per component",
-                "8% amplitude SD",
-              ],
-              [
-                "Acquisition / adquisición",
-                "180 m survey height",
-                "0.001–100 Hz",
-                "5 Hz source",
-              ],
-              [
-                "Coverage / cobertura",
-                "128 active stations",
-                "18 active frequencies",
-                "20 receivers",
-              ],
-              [
-                "Regularization / regularización",
-                "β .018 → .25; joint λ 4 → 25",
-                "β .001 → .3",
-                "β .002 → .06",
-              ],
-            ].map((row) => (
-              <tr key={row[0]}>
-                {row.map((cell, i) => (
-                  <td key={i}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <LiveMT />
+      <Tabs
+        ariaLabel={t("Experiment protocols", "Protocolos experimentales")}
+        tabs={[
+          {
+            id: "cases",
+            label: t("Case design", "Diseño de casos"),
+            content: (
+              <section>
+                <h2>{t("Geological hypotheses", "Hipótesis geológicas")}</h2>
+                <p>
+                  {t(
+                    "Potential-field cases vary geometry and sign, not just the position of one common anomaly. MT changes the layer sequence; seismic changes interfaces and lateral structure. Shared and conflicting joint cases test the structural prior. The learned cases test geometries withheld from training. Reference and modified conditions are separate forward/inverse calculations; changing colour limits or camera position is not an experiment.",
+                    "Los campos potenciales varían geometría y signo, no sólo posición de una anomalía común. MT cambia capas; sísmica cambia interfaces y estructura lateral. Los casos conjuntos prueban el prior estructural. Los aprendidos prueban geometrías excluidas. Referencia y modificaciones son cálculos directos/inversos separados; cambiar color o cámara no es un experimento.",
+                  )}
+                </p>
+                <CaseProtocol />
+                <Sources ids={["cockett2015", "crossgradient"]} />
+              </section>
+            ),
+          },
+          {
+            id: "acquisition",
+            label: t("Acquisition", "Adquisición"),
+            content: (
+              <section>
+                <h2>
+                  {t(
+                    "Sampling and information loss",
+                    "Muestreo y pérdida de información",
+                  )}
+                </h2>
+                <p>
+                  {t(
+                    "Potential-field acquisition raises the receiver plane from 60 to 180 m without changing the subsurface. Coverage retains alternating stations. MT acquisition extends the frequency range to 0.001–100 Hz while keeping 36 logarithmic samples; it therefore changes frequency spacing as well as the low-frequency endpoint. Seismic acquisition changes the source to 5 Hz; reduced coverage uses 20 receivers instead of 40. These are different physical perturbations, not a common severity axis.",
+                    "En potenciales se eleva el plano de 60 a 180 m sin cambiar subsuelo; cobertura retiene estaciones alternas. MT extiende a 0,001–100 Hz conservando 36 muestras logarítmicas, por lo que cambia espaciado además del extremo inferior. Sísmica cambia fuente a 5 Hz; cobertura usa 20 receptores en vez de 40. Son perturbaciones físicas distintas, no un eje común de severidad.",
+                  )}
+                </p>
+                <div className="table-scroll">
+                  <table className="cmp-table">
+                    <thead>
+                      <tr>
+                        <th>{t("Family", "Familia")}</th>
+                        <th>{t("Reference", "Referencia")}</th>
+                        <th>{t("Reduced coverage", "Cobertura reducida")}</th>
+                        <th>{t("Scoring population", "Población evaluada")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{t("Potential fields", "Campos potenciales")}</td>
+                        <td>256 · 60 m</td>
+                        <td>128</td>
+                        <td>
+                          {t(
+                            "Active stations for scalar WRMS",
+                            "Estaciones activas para WRMS escalar",
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>MT</td>
+                        <td>36 · 0.01–100 Hz</td>
+                        <td>18</td>
+                        <td>
+                          {t("All 36 frequencies", "Todas las 36 frecuencias")}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>FWI</td>
+                        <td>3 × 40</td>
+                        <td>3 × 20</td>
+                        <td>
+                          {t(
+                            "All acquired traces",
+                            "Todas las trazas adquiridas",
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>{t("Joint", "Conjunta")}</td>
+                        <td>256 + 256</td>
+                        <td>128 + 128</td>
+                        <td>
+                          {t(
+                            "All stations for final WRMS",
+                            "Todas para WRMS final",
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <MethodDiagram kind="seismic" />
+                <Sources ids={["simpeggravity", "deepwave", "heagy2017"]} />
+              </section>
+            ),
+          },
+          {
+            id: "noise",
+            label: t("Noise and contrast", "Ruido y contraste"),
+            content: (
+              <section>
+                <h2>
+                  {t("Observation-noise definitions", "Definiciones del ruido")}
+                </h2>
+                <p>
+                  {t(
+                    "Potential-field noise is independent Gaussian with standard deviation 2.5% of the clean-field standard deviation, increased to 14% in the noisy condition. Gravity uses a 0.006 mGal floor and magnetics a 0.2 nT floor. MT noise scales each real and imaginary component by 2.5% of clean impedance magnitude, or 10%. Seismic noise is 1% or 8% of clean pressure-amplitude standard deviation. These are simulator noise models, not a description of cultural interference or instrument drift.",
+                    "El ruido potencial es gaussiano independiente con desviación de 2,5% de la desviación del campo limpio, elevada a 14%. Gravedad usa piso de 0,006 mGal y magnetismo de 0,2 nT. En MT cada componente real e imaginaria usa 2,5% de magnitud limpia o 10%. Sísmica usa 1% u 8% de desviación de amplitud. Son modelos sintéticos, no contaminación cultural ni deriva instrumental.",
+                  )}
+                </p>
+                <Equation
+                  tex={String.raw`\epsilon_g\sim\mathcal N(0,\sigma_g^2),\quad \epsilon_Z=\sigma_Z(\xi_1+i\xi_2),\quad \xi_1,\xi_2\sim\mathcal N(0,1)`}
+                  caption={t(
+                    "εg is real-valued potential-field noise; εZ is complex impedance noise; ξ₁ and ξ₂ are independent standard Gaussian values. Therefore E(|εZ/σZ|²) = 2.",
+                    "εg es ruido real de campos potenciales; εZ ruido complejo; ξ₁ y ξ₂ son gaussianas estándar independientes. Por tanto E(|εZ/σZ|²) = 2.",
+                  )}
+                />
+                <h3>{t("Property contrast", "Contraste de propiedades")}</h3>
+                <p>
+                  {t(
+                    "Potential-property and MT-resistivity contrasts multiply by 1.5. Seismic multiplies the difference from 1,800 m/s by 1.15, not all velocities by 1.5. Signal-dependent noise scales may also change when contrast changes; a contrast comparison is not automatically a fixed-absolute-noise test.",
+                    "Potenciales y resistividad MT se multiplican por 1,5. Sísmica multiplica la diferencia respecto a 1.800 m/s por 1,15, no todas las velocidades por 1,5. El ruido dependiente de señal puede cambiar al cambiar contraste; no es automáticamente una prueba de ruido absoluto fijo.",
+                  )}
+                </p>
+                <Sources ids={["cockett2015", "heagy2017", "deepwave"]} />
+              </section>
+            ),
+          },
+          {
+            id: "regularization",
+            label: t("Regularization", "Regularización"),
+            content: (
+              <section>
+                <h2>
+                  {t(
+                    "Changes in the imposed prior",
+                    "Cambios en el prior impuesto",
+                  )}
+                </h2>
+                <p>
+                  {t(
+                    "The stronger-regularization condition changes potential-field β from 0.018 to 0.25, MT β from 0.001 to 0.3, seismic β from 0.002 to 0.06, and joint coupling λ from 4 to 25. Joint density initialization also inherits the changed potential-field β; it is therefore not a pure one-parameter ablation of the joint objective. The CNN and autoencoder are not retrained in this condition.",
+                    "La regularización mayor cambia β potencial de 0,018 a 0,25; MT de 0,001 a 0,3; sísmica de 0,002 a 0,06; y λ conjunto de 4 a 25. La inicialización de densidad conjunta también hereda el cambio de β, por lo que no es una ablación pura de un parámetro. CNN y autoencoder no se reentrenan en esta condición.",
+                  )}
+                </p>
+                <Equation
+                  tex={String.raw`\Delta E_m=E_m(\text{modified})-E_m(\text{reference}),\quad \Delta E_d=E_d(\text{modified})-E_d(\text{reference})`}
+                  caption={t(
+                    "Em is a chosen model error and Ed a data error with unchanged definitions and units. Reporting both deltas separates model recovery from data fitting; it does not combine them into a score.",
+                    "Em es error de modelo y Ed error de datos con definición y unidades fijas. Ambas diferencias separan recuperación de ajuste, sin combinarlos en un puntaje.",
+                  )}
+                />
+                <MethodDiagram kind="joint" />
+                <Callout
+                  variant="honest"
+                  title={t(
+                    "Regularization is not validation",
+                    "Regularizar no es validar",
+                  )}
+                >
+                  {t(
+                    "A smoother or more compact model can have larger error. The direction of the result must be read from the computed metrics, not assumed from the chosen penalty.",
+                    "Un modelo más suave o compacto puede tener mayor error. El resultado debe leerse de las métricas calculadas, no suponerse por la penalización.",
+                  )}
+                </Callout>
+                <Sources ids={["cockett2015", "crossgradient"]} />
+              </section>
+            ),
+          },
+          {
+            id: "learning",
+            label: t("Learning protocol", "Protocolo aprendido"),
+            content: (
+              <section>
+                <h2>
+                  {t(
+                    "Splits, checkpoint selection and data provenance",
+                    "Particiones, selección y procedencia",
+                  )}
+                </h2>
+                <MethodDiagram kind="protocol" />
+                <p>
+                  {t(
+                    "Training, validation and test contain 800, 160 and 160 independent complete realizations. Input normalization is fitted only on training data. Validation selects checkpoints and sets the autoencoder threshold; the test set does neither. Oblique and ring geometries are withheld from the generator families. No field observations enter network training.",
+                    "Entrenamiento, validación y prueba contienen 800, 160 y 160 realizaciones completas independientes. Sólo entrenamiento fija la normalización. Validación selecciona checkpoints y umbral; prueba no hace ninguna de esas tareas. Geometrías oblicua y anular quedan excluidas del generador. No se entrena con observaciones de campo.",
+                  )}
+                </p>
+                <div className="table-scroll">
+                  <table className="cmp-table">
+                    <thead>
+                      <tr>
+                        <th>{t("Source", "Fuente")}</th>
+                        <th>{t("Use", "Uso")}</th>
+                        <th>{t("Distribution", "Distribución")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          {t(
+                            "Original synthetic geology",
+                            "Geología sintética original",
+                          )}
+                        </td>
+                        <td>
+                          {t(
+                            "Case matrix and network splits",
+                            "Matriz de casos y particiones",
+                          )}
+                        </td>
+                        <td>CC-BY-4.0</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          {t(
+                            "SimPEG tutorial archives",
+                            "Archivos de tutorial SimPEG",
+                          )}
+                        </td>
+                        <td>
+                          {t(
+                            "Local ingestion / preprocessing checks",
+                            "Ingesta y preprocesamiento local",
+                          )}
+                        </td>
+                        <td>
+                          {t(
+                            "Source link; raw archives not mirrored",
+                            "Enlace a fuente; archivos sin redistribuir",
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          {t(
+                            "Python geophysical-inversion course",
+                            "Curso de inversión geofísica Python",
+                          )}
+                        </td>
+                        <td>
+                          {t(
+                            "Teaching reference; no copied data or notebooks",
+                            "Referencia docente; sin copiar datos ni notebooks",
+                          )}
+                        </td>
+                        <td>
+                          <a href="https://github.com/Anagabrielamantilla/inversion-geofisica-python">
+                            {t("Original repository", "Repositorio original")}
+                          </a>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <Callout
+                  variant="honest"
+                  title={t("Baseline mismatch", "Diferencia con la referencia")}
+                >
+                  {t(
+                    "The current held-out classical projection uses clean data; the CNN uses noisy inputs. The comparison is not noise-matched, and the classical regularization is not tuned. No superiority or field-transfer claim follows from their mean errors.",
+                    "La proyección clásica independiente usa datos limpios y CNN entradas ruidosas. No se iguala ruido ni calibra la regularización clásica. Sus errores medios no sustentan superioridad ni transferencia a campo.",
+                  )}
+                </Callout>
+                <Sources ids={["cockett2015", "adam"]} />
+              </section>
+            ),
+          },
+          {
+            id: "live",
+            label: t("MT forward calculation", "Cálculo directo MT"),
+            content: (
+              <>
+                <LiveMT />
+                <Sources ids={["heagy2017"]} />
+              </>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
 
-import { LiveMT } from "../components/LiveMT";
 export function Benchmark() {
   const t = useText();
   const es = useShellLang() === "es";
@@ -613,172 +943,272 @@ export function Benchmark() {
   const metrics = Object.keys(methods[selectedMethod]?.metrics ?? {}).filter(
     (k) => typeof methods[selectedMethod]?.metrics[k] === "number",
   );
-  const defaultMetric = ["model_rmse", "velocity_rmse", "log_model_rmse", "column_rmse", "wrms", "relative_mse", "reconstruction_mse"].find((key) => metrics.includes(key));
-  const selectedMetric = metrics.includes(metric) ? metric : (defaultMetric ?? metrics[0]);
+  const selectedMetric = metrics.includes(metric)
+    ? metric
+    : ([
+        "model_rmse",
+        "velocity_rmse",
+        "log_model_rmse",
+        "column_rmse",
+        "wrms",
+        "relative_mse",
+        "reconstruction_mse",
+      ].find((k) => metrics.includes(k)) ?? metrics[0]);
+  const info = metricInfo(selectedMetric, family, selectedMethod, es);
   return (
     <div className="page-body prose">
       <Head
-        kicker={t("EVIDENCE / 05", "EVIDENCIA / 05")}
         title={t(
-          "Compare errors, not appearances.",
-          "Compare errores, no apariencias.",
+          "Data fit, model error and sensitivity to conditions",
+          "Ajuste, error de modelo y sensibilidad a condiciones",
         )}
       >
         {t(
-          "Results below are read directly from the committed artifact catalogue. Compare like units within a method. There is no combined score that mixes gravity, resistivity and velocity.",
-          "Resultados leídos directamente del catálogo de artefactos. Compare unidades iguales dentro de un método. No existe un puntaje combinado de gravedad, resistividad y velocidad.",
+          "Results are evaluated against known synthetic models. Select a physical family, an algorithm and a metric to compare the six experimental conditions within each geometry. Metrics have different populations and units; a data-fit improvement is not equivalent to an improvement in recovered properties.",
+          "Los resultados se evalúan contra modelos sintéticos conocidos. Seleccione familia, algoritmo y métrica para comparar seis condiciones en cada geometría. Las métricas tienen distintas poblaciones y unidades; mejorar ajuste no equivale a mejorar propiedades recuperadas.",
         )}
       </Head>
       {error && <p role="alert">{error}</p>}
-      <div className="benchmark-summary">
-        {[
-          [
-            catalog?.cases.length ?? 0,
-            t("geological cases", "casos geológicos"),
-          ],
-          [
-            catalog?.cases.reduce((n, c) => n + c.variants.length, 0) ?? 0,
-            t("computed experiments", "experimentos calculados"),
-          ],
-          [
-            catalog?.cases.reduce(
-              (n, c) =>
-                n +
-                c.variants.reduce(
-                  (m, v) => m + Object.keys(v.methods).length,
-                  0,
-                ),
-              0,
-            ) ?? 0,
-            t("method results", "resultados de métodos"),
-          ],
-          [1120, t("learning realizations", "realizaciones de aprendizaje")],
-        ].map(([v, l]) => (
-          <div key={l}>
-            <strong>{v}</strong>
-            <span>{l}</span>
-          </div>
-        ))}
-      </div>
       <div className="benchmark-controls">
-        <select
-          aria-label={t("Family", "Familia")}
-          value={family}
-          onChange={(e) => setFamily(e.target.value as Family)}
-        >
-          {Object.entries(familyLabels).map(([k, v]) => (
-            <option key={k} value={k}>
-              {v[es ? 1 : 0]}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label={t("Method", "Método")}
-          value={selectedMethod ?? ""}
-          onChange={(e) => setMethod(e.target.value)}
-        >
-          {Object.entries(methods).map(([k, v]) => (
-            <option key={k} value={k}>
-              {es ? v.name_es : v.name}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label={t("Metric", "Métrica")}
-          value={selectedMetric ?? ""}
-          onChange={(e) => setMetric(e.target.value)}
-        >
-          {metrics.map((k) => (
-            <option key={k} value={k}>
-              {k.replaceAll("_", " ")}
-            </option>
-          ))}
-        </select>
+        <label className="select-control">
+          <span>{t("Physical family", "Familia física")}</span>
+          <select
+            className="select"
+            aria-label={t("Family", "Familia")}
+            value={family}
+            onChange={(e) => setFamily(e.target.value as Family)}
+          >
+            {Object.entries(familyLabels).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v[es ? 1 : 0]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="select-control">
+          <span>{t("Algorithm", "Algoritmo")}</span>
+          <select
+            className="select"
+            aria-label={t("Method", "Método")}
+            value={selectedMethod ?? ""}
+            onChange={(e) => setMethod(e.target.value)}
+          >
+            {Object.keys(methods).map((k) => (
+              <option key={k} value={k}>
+                {methodName(k, es)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="select-control">
+          <span>{t("Metric", "Métrica")}</span>
+          <select
+            className="select"
+            aria-label={t("Metric", "Métrica")}
+            value={selectedMetric ?? ""}
+            onChange={(e) => setMetric(e.target.value)}
+          >
+            {metrics.map((k) => (
+              <option key={k} value={k}>
+                {metricInfo(k, family, selectedMethod, es).label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-      {cases.length > 0 && selectedMetric && (
+      {catalog && selectedMetric && (
         <>
-          <Plot
-            title={t(
-              "Effect of controlled conditions",
-              "Efecto de condiciones controladas",
-            )}
-            x={[1, 2, 3, 4, 5, 6]}
-            series={cases.map((c, i) => ({
-              name: es ? c.name_es : c.name,
-              values: c.variants.map((v) =>
-                Number(v.methods[selectedMethod]?.metrics[selectedMetric]),
-              ),
-              color: [
-                "var(--plot-observed)",
-                "var(--plot-predicted)",
-                "var(--plot-third)",
-                "#779487",
-              ][i % 4],
-            }))}
-            xLabel={t(
-              "1 Reference · 2 Contrast · 3 Noise · 4 Acquisition · 5 Coverage · 6 Regularization",
-              "1 Referencia · 2 Contraste · 3 Ruido · 4 Adquisición · 5 Cobertura · 6 Regularización",
-            )}
-            yLabel={selectedMetric.replaceAll("_", " ")}
-          />
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{t("Case", "Caso")}</th>
-                  {cases[0].variants.map((v) => (
-                    <th key={v.id}>{es ? v.name_es : v.name}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {cases.map((c) => (
-                  <tr key={c.id}>
-                    <td>{es ? c.name_es : c.name}</td>
-                    {c.variants.map((v) => (
-                      <td key={v.id}>
-                        <a
-                          title={`SHA-256 ${v.sha256}`}
-                          href={`${appBase}data/v2/${v.path}`}
-                        >
-                          {format(
-                            Number(
-                              v.methods[selectedMethod]?.metrics[
-                                selectedMetric
-                              ],
-                            ),
-                          )}
-                        </a>
-                      </td>
+          <section>
+            <h2>
+              {info.label} · {info.unit}
+            </h2>
+            <p className="measure">{info.description}</p>
+            <Plot
+              title={t(
+                "Condition comparison by geological case",
+                "Comparación de condiciones por caso",
+              )}
+              x={[1, 2, 3, 4, 5, 6]}
+              series={cases.map((c, i) => ({
+                name: es ? c.name_es : c.name,
+                values: c.variants.map((v) =>
+                  Number(v.methods[selectedMethod]?.metrics[selectedMetric]),
+                ),
+                color: [
+                  "var(--color-accent)",
+                  "var(--color-accent-2)",
+                  "var(--color-magenta)",
+                  "var(--color-warn)",
+                ][i % 4],
+              }))}
+              xLabel={t(
+                "1 Reference · 2 Contrast · 3 Noise · 4 Acquisition · 5 Coverage · 6 Regularization",
+                "1 Referencia · 2 Contraste · 3 Ruido · 4 Adquisición · 5 Cobertura · 6 Regularización",
+              )}
+              yLabel={info.label + " [" + info.unit + "]"}
+            />
+            <div className="table-scroll">
+              <table className="cmp-table">
+                <thead>
+                  <tr>
+                    <th>{t("Case", "Caso")}</th>
+                    {cases[0].variants.map((v) => (
+                      <th key={v.id}>{es ? v.name_es : v.name}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {cases.map((c) => (
+                    <tr key={c.id}>
+                      <td>{es ? c.name_es : c.name}</td>
+                      {c.variants.map((v) => (
+                        <td key={v.id}>
+                          <a
+                            title={t(
+                              "Download the numerical result",
+                              "Descargar resultado numérico",
+                            )}
+                            href={appBase + "data/v2/" + v.path}
+                          >
+                            {format(
+                              Number(
+                                v.methods[selectedMethod]?.metrics[
+                                  selectedMetric
+                                ],
+                              ),
+                            )}
+                          </a>
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="small">
+              {t(
+                "Lines connect categorical conditions for readability; the horizontal axis is not a continuous parameter sweep. Each linked number opens the complete numerical result.",
+                "Las líneas unen categorías para facilitar lectura; el eje no es un barrido continuo. Cada número enlaza al resultado numérico completo.",
+              )}
+            </p>
+            <Sources
+              ids={
+                family === "mt"
+                  ? ["heagy2017"]
+                  : family === "seismic"
+                    ? ["deepwave"]
+                    : family === "joint"
+                      ? ["crossgradient"]
+                      : ["cockett2015"]
+              }
+            />
+          </section>
+          <section>
+            <h2>
+              {t(
+                "Reference-condition method comparison",
+                "Comparación de métodos en referencia",
+              )}
+            </h2>
+            <p className="measure">
+              {t(
+                "The table compares the selected metric across algorithms for the same reference observations. A dash means that the algorithm does not export a comparable metric, not that its error is zero. Model norms and thresholds are not accuracy scores.",
+                "La tabla compara la métrica elegida entre algoritmos para observaciones de referencia. Un guion significa que no hay una métrica comparable, no error cero. Normas y umbrales no son puntajes de precisión.",
+              )}
+            </p>
+            <div className="table-scroll">
+              <table className="cmp-table">
+                <thead>
+                  <tr>
+                    <th>{t("Case", "Caso")}</th>
+                    {Object.keys(methods).map((k) => (
+                      <th key={k}>{methodName(k, es)}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cases.map((c) => (
+                    <tr key={c.id}>
+                      <td>{es ? c.name_es : c.name}</td>
+                      {Object.keys(methods).map((k) => (
+                        <td key={k}>
+                          {typeof c.variants[0].methods[k]?.metrics[
+                            selectedMetric
+                          ] === "number"
+                            ? format(
+                                Number(
+                                  c.variants[0].methods[k].metrics[
+                                    selectedMetric
+                                  ],
+                                ),
+                              )
+                            : "–"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Callout
+              variant="honest"
+              title={t(
+                "Interpretation of the comparison",
+                "Interpretación de la comparación",
+              )}
+            >
+              {family === "learned"
+                ? t(
+                    "CNN column error, classical cell error and autoencoder reconstruction error concern different targets. They are not comparable simply because all are called errors. The held-out training ledger separately reports a column-projection baseline, with unmatched noise and untuned classical regularization.",
+                    "El error de columna CNN, error clásico por celda y reconstrucción del autoencoder tienen objetivos diferentes. No son comparables por llamarse errores. El registro informa aparte una referencia de columnas con ruido no igualado y regularización clásica no calibrada.",
+                  )
+                : family === "mt"
+                  ? t(
+                      "The three MT algorithms use different bounds, parameterizations and relative penalty scaling. Their comparison measures those complete configurations, not optimizer choice alone.",
+                      "Los algoritmos MT cambian cotas, parametrización y escala relativa de penalización. Se comparan configuraciones completas, no sólo optimizadores.",
+                    )
+                  : t(
+                      "These are single seeded experiments, not repeated-noise confidence intervals. Use data residuals, known-model error and the case’s stated assumptions together. A result from one synthetic geometry does not establish field performance.",
+                      "Son experimentos de una semilla, no intervalos de confianza de ruido repetido. Considere residuos, error de modelo y supuestos del caso juntos. Una geometría sintética no establece rendimiento de campo.",
+                    )}
+            </Callout>
+            <Sources
+              ids={
+                family === "mt"
+                  ? ["scipytrf", "goyes2024"]
+                  : ["cockett2015", "adam"]
+              }
+            />
+          </section>
         </>
       )}
-      <p className="plot-note">
-        {t(
-          "WRMS is dimensionless data residual normalized by the specified noise. Model RMSE uses the property units of the selected family; MT log-model RMSE is dimensionless; velocity RMSE is m/s; column RMSE is g/cm³ m. Cross-gradient values use normalized cell-index derivatives. Click a result to inspect its complete artifact.",
-          "WRMS es residuo adimensional normalizado por ruido. RMSE usa unidades de la propiedad; log-RMSE MT es adimensional; RMSE de velocidad m/s; RMSE de columna g/cm³ m. Gradiente cruzado usa derivadas por celda normalizadas. Pulse un resultado para inspeccionar su artefacto.",
-        )}
-      </p>
-      <p>
-        <a href={`${appBase}data/v2/models/training.json`}>
+      <section>
+        <h2>
           {t(
-            "Training / validation / held-out test evidence",
-            "Evidencia de entrenamiento / validación / prueba independiente",
+            "Training and verification records",
+            "Registros de entrenamiento y verificación",
           )}
-        </a>{" "}
-        ·{" "}
-        <a href={`${source}docs/validation/rebuild.md`}>
+        </h2>
+        <p className="measure">
           {t(
-            "Validation report and limitations",
-            "Informe de validación y limitaciones",
+            "The training record contains split counts, normalization, checkpoint hashes, validation curves and per-realization test errors. Numerical tests separately check forward identities, gradients and serialization. Neither record supplies posterior credible intervals.",
+            "El registro contiene particiones, normalización, hashes, curvas y errores por realización de prueba. Las pruebas numéricas verifican identidades, gradientes y serialización por separado. Ninguno aporta intervalos posteriores.",
           )}
-        </a>
-      </p>
+        </p>
+        <p>
+          <a href={appBase + "data/v2/models/training.json"}>
+            {t(
+              "Training and held-out results",
+              "Entrenamiento y resultados independientes",
+            )}
+          </a>{" "}
+          ·{" "}
+          <a href={source + "docs/validation/results.md"}>
+            {t("Numerical validation report", "Informe de validación numérica")}
+          </a>
+        </p>
+        <Sources ids={["cockett2015", "deepwave", "adam"]} />
+      </section>
     </div>
   );
 }
