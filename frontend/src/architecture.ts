@@ -1,9 +1,60 @@
-import type { ArchitectureConfig } from '@fasl-work/caos-app-shell';
-
-export const architecture: ArchitectureConfig = { tabs: [
-  { id: 'app', en: 'The app', es: 'La app', svg: 'svg/tech/01-the-app.svg', body_en: 'Inverse Earth Studio is a real geophysics workbench for inspecting how gravity, magnetics, magnetotellurics, and acoustic waves constrain a subsurface model. A selected case and physical controls alter the live fields, residuals, evidence layers, and uncertainty story. It is not a field interpreter and it does not hide non-uniqueness behind a single score.', body_es: 'Inverse Earth Studio es un workbench real de geofísica para inspeccionar cómo la gravedad, el magnetismo, la magnetotelúrica y las ondas acústicas restringen un modelo del subsuelo. Un caso seleccionado y controles físicos cambian los campos, residuos, capas de evidencia y la incertidumbre en vivo. No es un intérprete de campo ni oculta la no unicidad detrás de un único puntaje.' },
-  { id: 'lanes', en: 'Web, offline, replay', es: 'Web, offline, replay', svg: 'svg/tech/02-lanes.svg', body_en: 'The browser lane mirrors compact analytic equations for immediate what-if interaction. The offline lane runs the staged Python bake, solver-backed checks, learned baselines, and GPU experiments. Replay artifacts are the checked release truth; the CPU-only mirror serves those artifacts without pretending to provide GPU compute.', body_es: 'El carril del navegador espeja ecuaciones analíticas compactas para interacción inmediata. El carril offline ejecuta el bake Python por etapas, verificaciones con solvers, baselines aprendidos y experimentos GPU. Los artefactos replay son la verdad de release; el espejo CPU-only los sirve sin fingir que entrega cómputo GPU.' },
-  { id: 'flow', en: 'Web-app flow', es: 'Flujo web', svg: 'svg/tech/03-web-flow.svg', body_en: 'The selected case loads its manifest and replay artifact. Controls feed the live engine, which recomputes a density and susceptibility field, potential-field lines, layered impedance, wave residuals, joint evidence, and uncertainty. Pointer readouts expose coordinates and units. The six routes separate the tool from the rigorous documentation and benchmark record.', body_es: 'El caso seleccionado carga su manifest y artefacto replay. Los controles alimentan el motor en vivo, que recalcula densidad y susceptibilidad, líneas de campos potenciales, impedancia estratificada, residuos de onda, evidencia conjunta e incertidumbre. Los readouts del puntero exponen coordenadas y unidades. Las seis rutas separan la herramienta de la documentación rigurosa y del registro benchmark.' },
-  { id: 'science', en: 'Science flow', es: 'Flujo científico', svg: 'svg/tech/04-the-science.svg', body_en: 'The scientific chain is ingest, preprocess, grouped split, features, train, infer, evaluate, export, validate. Gravity and magnetics use potential-field kernels and regularization context; MT uses layered-earth recursion and a differentiable loss; FWI uses a compact finite-difference acoustic shot; learned views show a labelled surrogate or novelty score, never an unexplained oracle.', body_es: 'La cadena científica es ingesta, preproceso, partición agrupada, features, train, infer, evaluate, export, validate. Gravedad y magnetismo usan kernels de campos potenciales y contexto de regularización; MT usa recursión de tierra estratificada y una pérdida diferenciable; FWI usa un disparo acústico compacto por diferencias finitas; las vistas aprendidas muestran un surrogate o score de novedad etiquetado, nunca un oráculo inexplicado.' },
-  { id: 'contracts', en: 'Data contracts', es: 'Contratos de datos', svg: 'svg/tech/05-data-contracts.svg', body_en: 'Contract 1 validates station observations, coordinates, positive frequencies, values, and units with explicit reject and flag rules. Contract 2 validates replay JSON, manifest byte sizes, schema, case identity, and engine provenance. These contracts are the boundary that lets a researcher bring another observation table without silently changing the experiment.', body_es: 'El Contrato 1 valida observaciones de estación, coordenadas, frecuencias positivas, valores y unidades con reglas explícitas de rechazo y marcado. El Contrato 2 valida JSON replay, tamaños en bytes, schema, identidad del caso y procedencia del motor. Estos contratos permiten traer otra tabla de observaciones sin cambiar el experimento en silencio.' },
-] };
+import type { ArchitectureConfig } from "@fasl-work/caos-app-shell";
+import diagram1 from '../public/svg/tech/01-the-app.svg?raw';
+import diagram2 from '../public/svg/tech/02-lanes.svg?raw';
+import diagram3 from '../public/svg/tech/03-web-flow.svg?raw';
+import diagram4 from '../public/svg/tech/04-the-science.svg?raw';
+import diagram5 from '../public/svg/tech/05-data-contracts.svg?raw';
+export const architecture: ArchitectureConfig = {
+  tabs: [
+    {
+      id: "app",
+      en: "The instrument",
+      es: "El instrumento",
+      svg: diagram1,
+      body_en:
+        "Twenty geological questions use distinct volumes, layers and sections. Every result keeps the known earth, observations, predicted response and residual separate. No posterior confidence is inferred from a pleasing reconstruction.",
+      body_es:
+        "Veinte preguntas geológicas usan volúmenes, capas y secciones distintos. Cada resultado separa Tierra conocida, observaciones, predicción y residuo. Una reconstrucción atractiva no implica confianza posterior.",
+    },
+    {
+      id: "lanes",
+      en: "Compute and replay",
+      es: "Cálculo y reproducción",
+      svg: diagram2,
+      body_en:
+        "Local SimPEG/SciPy and CUDA PyTorch/Deepwave produce canonical artifacts. Both public hosts serve the same static files. Browsers render those arrays and run a parity-tested layered-earth impedance calculator. No remote GPU service is claimed.",
+      body_es:
+        "SimPEG/SciPy local y PyTorch/Deepwave CUDA producen artefactos. Ambos hosts sirven los mismos archivos. El navegador representa arreglos y ejecuta una calculadora de impedancia validada por paridad. No se anuncia servicio GPU remoto.",
+    },
+    {
+      id: "flow",
+      en: "Interaction flow",
+      es: "Flujo de interacción",
+      svg: diagram3,
+      body_en:
+        "Case, experiment and method select a computed result. Camera controls change the view, not geology. Wave playback advances acoustic time; inversion playback advances recorded solver states. Amplitude gain changes display clipping only. Export preserves the full numerical record.",
+      body_es:
+        "Caso, experimento y método seleccionan un resultado calculado. La cámara cambia vista, no geología. Ondas avanzan tiempo acústico; inversión avanza estados guardados. Ganancia sólo cambia saturación visual. Exportar conserva el registro numérico.",
+    },
+    {
+      id: "science",
+      en: "Scientific workflow",
+      es: "Flujo científico",
+      svg: diagram4,
+      body_en:
+        "Construct geology, configure acquisition, solve forward, add seeded noise, mask observations, invert, compare with known truth, export and validate. Neural models use separate realization seeds for training, validation and test. The UI exposes failures and non-uniqueness, not a combined score.",
+      body_es:
+        "Construir geología, configurar adquisición, resolver, agregar ruido sembrado, enmascarar, invertir, comparar, exportar y validar. Redes usan semillas distintas para entrenamiento, validación y prueba. La UI expone fallos y no unicidad, no un puntaje combinado.",
+    },
+    {
+      id: "contracts",
+      en: "Data contracts",
+      es: "Contratos de datos",
+      svg: diagram5,
+      body_en:
+        "CSV ingestion checks five named columns, finite values, positive uncertainties and duplicate coordinates. External tutorial archives are checked by SHA-256 and remain local. Release validation checks every result identity, finite values, hashes, sizes, model weights and catalogue completeness.",
+      body_es:
+        "Ingesta CSV verifica cinco columnas, finitud, incertidumbres positivas y coordenadas duplicadas. Archivos externos se verifican SHA-256 y permanecen locales. Validación de release revisa identidad, valores, hashes, tamaños, pesos y catálogo completo.",
+    },
+  ],
+};

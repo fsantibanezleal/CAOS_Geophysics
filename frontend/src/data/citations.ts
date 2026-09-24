@@ -5,7 +5,7 @@ export const CITATIONS: Citation[] = [
   { id: 'heagy2017', label: 'Heagy et al. 2017', citation: 'Heagy, L. J. et al. (2017). A framework for simulation and inversion in electromagnetics.', doi: '10.1016/j.cageo.2017.06.018' },
   { id: 'choclo', label: 'Choclo', citation: 'Choclo, fast and accurate gravity and magnetic forward modelling.', url: 'https://www.fatiando.org/choclo/dev/overview.html' },
   { id: 'mtpy', label: 'MTpy-v2', citation: 'MTpy-v2 documentation, magnetotelluric data structures and EDI workflows.', url: 'https://mtpy-v2.readthedocs.io/en/stable/index.html' },
-  { id: 'goyes2024', label: 'Goyes-Peñafiel et al. 2024', citation: 'Goyes-Peñafiel, P., Waheed, U. and Arguello, H. (2024). Physics-guided neural network for magnetotelluric inversion.', url: 'https://arxiv.org/abs/2410.15274' },
+  { id: 'goyes2024', label: 'Goyes-Peñafiel et al. 2025', citation: 'Goyes-Peñafiel, P., Waheed, U. and Arguello, H. Physically Guided Deep Unsupervised Inversion for 1D Magnetotelluric Models.', doi: '10.1109/LGRS.2025.3528767', url: 'https://arxiv.org/abs/2410.15274v3' },
   { id: 'virieux2009', label: 'Virieux and Operto 2009', citation: 'Virieux, J. and Operto, S. (2009). An overview of full-waveform inversion in exploration geophysics.', doi: '10.1190/1.3238367' },
   { id: 'deepwave', label: 'Deepwave', citation: 'Deepwave, PyTorch wave propagation and differentiable seismic modelling.', url: 'https://github.com/ar4/deepwave' },
   { id: 'devito', label: 'Devito', citation: 'Devito project, symbolic finite-difference operators for seismic modelling and inversion.', url: 'https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html' },
