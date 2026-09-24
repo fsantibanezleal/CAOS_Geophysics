@@ -5,4 +5,4 @@
 - [x] R-007: bake the full case/variant matrix and hash it.
 - [x] R-F01 through R-F03: replace UI and scientific renderers against the result contract.
 - [x] R-008 through R-010: verify controls, languages, themes, diagrams and docs.
-- [ ] R-F04: run numerical and rendered acceptance before promotion/deployment.
+- [x] R-F04: numerical/rendered acceptance, develop/main promotion and full external HTTPS artifact/route verification. See `docs/validation/deployment.md` and `deployment.json`.
