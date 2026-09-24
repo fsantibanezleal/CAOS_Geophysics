@@ -6,8 +6,8 @@
     "verified_experiments": 120,
     "verified_routes": 6,
     "verified_model_files": 3,
-    "catalog_sha256": "3c544d0f15a48845ec5561e0970fc7fc03f71cb38c8dd6bde6b105024d4379c2",
-    "index_sha256": "f11f94a34fc287722fc16f72d9e51e17d71703b8252387a2d06f35ec76b97108"
+    "catalog_sha256": "580ec02af9a8e80d55e3444c0d0bcd9bef1b25753236089cd96af8ffc658332c",
+    "index_sha256": "761cf7540b83c4e047134806280290193781f71fb38ca516d3dac0af078bd887"
   },
   {
     "origin": "https://fsantibanezleal.github.io/CAOS_Geophysics/",
@@ -16,7 +16,7 @@
     "verified_experiments": 120,
     "verified_routes": 6,
     "verified_model_files": 3,
-    "catalog_sha256": "3c544d0f15a48845ec5561e0970fc7fc03f71cb38c8dd6bde6b105024d4379c2",
-    "index_sha256": "f11f94a34fc287722fc16f72d9e51e17d71703b8252387a2d06f35ec76b97108"
+    "catalog_sha256": "580ec02af9a8e80d55e3444c0d0bcd9bef1b25753236089cd96af8ffc658332c",
+    "index_sha256": "761cf7540b83c4e047134806280290193781f71fb38ca516d3dac0af078bd887"
   }
 ]

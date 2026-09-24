@@ -5,5 +5,6 @@
 - [x] Rewrite all routes, contextual labels, metric interpretation and architecture copy (R-C01–03).
 - [x] Restore shared CSS, fonts, form controls and navigation (R-C04).
 - [x] Validate content, math, existing numerical artifacts and interactive rendering (R-C01–05).
-- [ ] Promote through develop/main, deploy both hosts and verify live (R-C06).
+- [x] Promote through develop/main, deploy both hosts and verify live (R-C06).
 - [x] Refine, regenerate and compare numerical grids; retain non-monotone cases (R-C07).
+Release evidence: application PRs #12/#13; both hosts externally verified in `docs/validation/deployment.json`.
