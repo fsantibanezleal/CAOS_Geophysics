@@ -10,6 +10,5 @@ VR="$(venvpy .venv)"; VP="$(venvpy .venv-pipeline)"
 "$VR" -m pip install --upgrade pip -q; "$VP" -m pip install --upgrade pip -q
 "$VR" -m pip install -r requirements.txt -q
 "$VP" -m pip install -r requirements-precompute.txt -r requirements-dev.txt -q
-"$VP" -m pip install -e . -q
-if [ "$GPU" = "--gpu" ]; then "$VP" -m pip install -r requirements-gpu.txt -q; fi
+if [ "$GPU" = "--gpu" ]; then "$VP" -m pip install -r requirements-gpu.txt -q; else "$VP" -m pip install torch==2.14.0 deepwave==0.0.27; fi
 echo "[setup] complete. Run ./scripts/precompute.sh, then cd frontend && npm install && npm run build"

@@ -1,0 +1,578 @@
+{
+  "cases": 20,
+  "experiments": 120,
+  "reference_results": [
+    {
+      "case": "GRAVITY_INTRUSION",
+      "family": "gravity",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7211473,
+        "rmse": 0.009608915,
+        "model_norm": 3.021732,
+        "model_rmse": 0.07889402
+      }
+    },
+    {
+      "case": "GRAVITY_INTRUSION",
+      "family": "gravity",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.5950654,
+        "rmse": 0.007928939,
+        "model_norm": 2.562047,
+        "model_rmse": 0.08283458
+      }
+    },
+    {
+      "case": "GRAVITY_DEEP_BODY",
+      "family": "gravity",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.6812359,
+        "rmse": 0.01651124,
+        "model_norm": 7.600503,
+        "model_rmse": 0.2311207
+      }
+    },
+    {
+      "case": "GRAVITY_DEEP_BODY",
+      "family": "gravity",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.614693,
+        "rmse": 0.01489843,
+        "model_norm": 7.863358,
+        "model_rmse": 0.2335499
+      }
+    },
+    {
+      "case": "GRAVITY_NOISY",
+      "family": "gravity",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7266609,
+        "rmse": 0.009543208,
+        "model_norm": 2.635718,
+        "model_rmse": 0.09180724
+      }
+    },
+    {
+      "case": "GRAVITY_NOISY",
+      "family": "gravity",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.6822192,
+        "rmse": 0.008959556,
+        "model_norm": 2.272971,
+        "model_rmse": 0.08390307
+      }
+    },
+    {
+      "case": "GRAVITY_TILTED",
+      "family": "gravity",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7499503,
+        "rmse": 0.007467246,
+        "model_norm": 4.458458,
+        "model_rmse": 0.1829132
+      }
+    },
+    {
+      "case": "GRAVITY_TILTED",
+      "family": "gravity",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.7064284,
+        "rmse": 0.007033899,
+        "model_norm": 4.552375,
+        "model_rmse": 0.1850783
+      }
+    },
+    {
+      "case": "MAGNETIC_DYKE",
+      "family": "magnetics",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7873098,
+        "rmse": 0.9918113,
+        "model_norm": 0.3074197,
+        "model_rmse": 0.00941413
+      }
+    },
+    {
+      "case": "MAGNETIC_DYKE",
+      "family": "magnetics",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.5526481,
+        "rmse": 0.6961969,
+        "model_norm": 0.289707,
+        "model_rmse": 0.008911184
+      }
+    },
+    {
+      "case": "MAGNETIC_DYKE",
+      "family": "magnetics",
+      "method": "vector",
+      "metrics": {
+        "wrms": 0.376717,
+        "rmse": 0.4745682,
+        "model_norm": 0.2000409
+      }
+    },
+    {
+      "case": "MAGNETIC_REMANENCE",
+      "family": "magnetics",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.8374003,
+        "rmse": 0.5800816,
+        "model_norm": 0.1227327,
+        "model_rmse": 0.007539556
+      }
+    },
+    {
+      "case": "MAGNETIC_REMANENCE",
+      "family": "magnetics",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.6182263,
+        "rmse": 0.428256,
+        "model_norm": 0.1188039,
+        "model_rmse": 0.007530265
+      }
+    },
+    {
+      "case": "MAGNETIC_REMANENCE",
+      "family": "magnetics",
+      "method": "vector",
+      "metrics": {
+        "wrms": 0.257976,
+        "rmse": 0.1787044,
+        "model_norm": 0.07296694
+      }
+    },
+    {
+      "case": "MAGNETIC_DEEP",
+      "family": "magnetics",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.506661,
+        "rmse": 0.2238189,
+        "model_norm": 0.07602366,
+        "model_rmse": 0.009665201
+      }
+    },
+    {
+      "case": "MAGNETIC_DEEP",
+      "family": "magnetics",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.496577,
+        "rmse": 0.2193643,
+        "model_norm": 0.102622,
+        "model_rmse": 0.01011083
+      }
+    },
+    {
+      "case": "MAGNETIC_DEEP",
+      "family": "magnetics",
+      "method": "vector",
+      "metrics": {
+        "wrms": 0.2507048,
+        "rmse": 0.1107496,
+        "model_norm": 0.04987767
+      }
+    },
+    {
+      "case": "MAGNETIC_NOISY",
+      "family": "magnetics",
+      "method": "l2",
+      "metrics": {
+        "wrms": 1.125742,
+        "rmse": 2.518556,
+        "model_norm": 0.4818452,
+        "model_rmse": 0.01229508
+      }
+    },
+    {
+      "case": "MAGNETIC_NOISY",
+      "family": "magnetics",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.5768573,
+        "rmse": 1.290569,
+        "model_norm": 0.3309212,
+        "model_rmse": 0.01039379
+      }
+    },
+    {
+      "case": "MAGNETIC_NOISY",
+      "family": "magnetics",
+      "method": "vector",
+      "metrics": {
+        "wrms": 1.209679,
+        "rmse": 2.706343,
+        "model_norm": 0.3056097
+      }
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "family": "mt",
+      "method": "mt-lm",
+      "metrics": {
+        "wrms": 1.445945,
+        "log_model_rmse": 0.1708916
+      }
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "family": "mt",
+      "method": "mt-adam",
+      "metrics": {
+        "wrms": 1.447746,
+        "log_model_rmse": 0.1016021
+      }
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "family": "mt",
+      "method": "mt-neural",
+      "metrics": {
+        "wrms": 1.446853,
+        "log_model_rmse": 0.1223857
+      }
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "family": "mt",
+      "method": "mt-lm",
+      "metrics": {
+        "wrms": 1.359813,
+        "log_model_rmse": 0.09798581
+      }
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "family": "mt",
+      "method": "mt-adam",
+      "metrics": {
+        "wrms": 1.370786,
+        "log_model_rmse": 0.1279885
+      }
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "family": "mt",
+      "method": "mt-neural",
+      "metrics": {
+        "wrms": 1.359813,
+        "log_model_rmse": 0.09807011
+      }
+    },
+    {
+      "case": "MT_MIXED",
+      "family": "mt",
+      "method": "mt-lm",
+      "metrics": {
+        "wrms": 1.289929,
+        "log_model_rmse": 1.341857
+      }
+    },
+    {
+      "case": "MT_MIXED",
+      "family": "mt",
+      "method": "mt-adam",
+      "metrics": {
+        "wrms": 2.015155,
+        "log_model_rmse": 1.005521
+      }
+    },
+    {
+      "case": "MT_MIXED",
+      "family": "mt",
+      "method": "mt-neural",
+      "metrics": {
+        "wrms": 2.396181,
+        "log_model_rmse": 1.098687
+      }
+    },
+    {
+      "case": "MT_NOISY",
+      "family": "mt",
+      "method": "mt-lm",
+      "metrics": {
+        "wrms": 1.277649,
+        "log_model_rmse": 0.03267647
+      }
+    },
+    {
+      "case": "MT_NOISY",
+      "family": "mt",
+      "method": "mt-adam",
+      "metrics": {
+        "wrms": 1.337569,
+        "log_model_rmse": 0.09283405
+      }
+    },
+    {
+      "case": "MT_NOISY",
+      "family": "mt",
+      "method": "mt-neural",
+      "metrics": {
+        "wrms": 1.277654,
+        "log_model_rmse": 0.03170103
+      }
+    },
+    {
+      "case": "FWI_LAYERED",
+      "family": "seismic",
+      "method": "fwi-l2",
+      "metrics": {
+        "initial_relative_mse": 0.2829709,
+        "relative_mse": 0.008531145,
+        "velocity_rmse": 259.3858
+      }
+    },
+    {
+      "case": "FWI_LAYERED",
+      "family": "seismic",
+      "method": "fwi-multiscale",
+      "metrics": {
+        "initial_relative_mse": 0.2829709,
+        "relative_mse": 0.007233825,
+        "velocity_rmse": 259.6581
+      }
+    },
+    {
+      "case": "FWI_FAULT",
+      "family": "seismic",
+      "method": "fwi-l2",
+      "metrics": {
+        "initial_relative_mse": 0.1130661,
+        "relative_mse": 0.003348466,
+        "velocity_rmse": 341.1584
+      }
+    },
+    {
+      "case": "FWI_FAULT",
+      "family": "seismic",
+      "method": "fwi-multiscale",
+      "metrics": {
+        "initial_relative_mse": 0.1130661,
+        "relative_mse": 0.002972596,
+        "velocity_rmse": 339.5165
+      }
+    },
+    {
+      "case": "FWI_CYCLE_SKIP",
+      "family": "seismic",
+      "method": "fwi-l2",
+      "metrics": {
+        "initial_relative_mse": 0.07718915,
+        "relative_mse": 0.01332664,
+        "velocity_rmse": 737.31
+      }
+    },
+    {
+      "case": "FWI_CYCLE_SKIP",
+      "family": "seismic",
+      "method": "fwi-multiscale",
+      "metrics": {
+        "initial_relative_mse": 0.07718915,
+        "relative_mse": 0.01261379,
+        "velocity_rmse": 736.7971
+      }
+    },
+    {
+      "case": "FWI_NOISY",
+      "family": "seismic",
+      "method": "fwi-l2",
+      "metrics": {
+        "initial_relative_mse": 0.1455761,
+        "relative_mse": 0.007052112,
+        "velocity_rmse": 421.3705
+      }
+    },
+    {
+      "case": "FWI_NOISY",
+      "family": "seismic",
+      "method": "fwi-multiscale",
+      "metrics": {
+        "initial_relative_mse": 0.1455761,
+        "relative_mse": 0.006603607,
+        "velocity_rmse": 421.725
+      }
+    },
+    {
+      "case": "JOINT_SHARED",
+      "family": "joint",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7732014,
+        "rmse": 0.009578935,
+        "model_norm": 6.111781,
+        "model_rmse": 0.2184735
+      }
+    },
+    {
+      "case": "JOINT_SHARED",
+      "family": "joint",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.7102425,
+        "rmse": 0.008798958,
+        "model_norm": 6.216805,
+        "model_rmse": 0.2230311
+      }
+    },
+    {
+      "case": "JOINT_SHARED",
+      "family": "joint",
+      "method": "joint",
+      "metrics": {
+        "wrms": 0.6674263,
+        "magnetic_wrms": 0.3956127,
+        "cross_gradient": 0.008807957,
+        "model_rmse": 0.2183481
+      }
+    },
+    {
+      "case": "JOINT_CONFLICT",
+      "family": "joint",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7033449,
+        "rmse": 0.008330343,
+        "model_norm": 2.603367,
+        "model_rmse": 0.07653906
+      }
+    },
+    {
+      "case": "JOINT_CONFLICT",
+      "family": "joint",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.6620692,
+        "rmse": 0.007841479,
+        "model_norm": 2.29069,
+        "model_rmse": 0.07365869
+      }
+    },
+    {
+      "case": "JOINT_CONFLICT",
+      "family": "joint",
+      "method": "joint",
+      "metrics": {
+        "wrms": 0.5955806,
+        "magnetic_wrms": 0.2635143,
+        "cross_gradient": 0.005189767,
+        "model_rmse": 0.07818791
+      }
+    },
+    {
+      "case": "LEARNED_CNN",
+      "family": "learned",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.6481454,
+        "rmse": 0.005739153,
+        "model_norm": 2.452403,
+        "model_rmse": 0.109315
+      }
+    },
+    {
+      "case": "LEARNED_CNN",
+      "family": "learned",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.6126533,
+        "rmse": 0.00542488,
+        "model_norm": 2.202442,
+        "model_rmse": 0.1044867
+      }
+    },
+    {
+      "case": "LEARNED_CNN",
+      "family": "learned",
+      "method": "cnn",
+      "metrics": {
+        "column_rmse": 76.45755
+      }
+    },
+    {
+      "case": "LEARNED_CNN",
+      "family": "learned",
+      "method": "autoencoder",
+      "metrics": {
+        "reconstruction_mse": 0.0181226,
+        "threshold": 0.106183,
+        "above_threshold": false
+      }
+    },
+    {
+      "case": "LEARNED_AUTOENCODER",
+      "family": "learned",
+      "method": "l2",
+      "metrics": {
+        "wrms": 0.7112004,
+        "rmse": 0.007817317,
+        "model_norm": 2.874934,
+        "model_rmse": 0.1276543
+      }
+    },
+    {
+      "case": "LEARNED_AUTOENCODER",
+      "family": "learned",
+      "method": "irls",
+      "metrics": {
+        "wrms": 0.6591834,
+        "rmse": 0.00724556,
+        "model_norm": 2.58336,
+        "model_rmse": 0.1196014
+      }
+    },
+    {
+      "case": "LEARNED_AUTOENCODER",
+      "family": "learned",
+      "method": "cnn",
+      "metrics": {
+        "column_rmse": 89.59569
+      }
+    },
+    {
+      "case": "LEARNED_AUTOENCODER",
+      "family": "learned",
+      "method": "autoencoder",
+      "metrics": {
+        "reconstruction_mse": 0.006493619,
+        "threshold": 0.106183,
+        "above_threshold": false
+      }
+    }
+  ],
+  "learning": {
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "split_counts": [
+      800,
+      160,
+      160
+    ],
+    "cnn_test_mse": 877.4940669536591,
+    "classical_test_mse": 2231.872294227996,
+    "units": "(g/cm\u00b3 m)\u00b2"
+  },
+  "source_sha256": {
+    "data-pipeline/electromagnetics.py": "32809de87e60ed7997407e445df8c1343a610e758a146cb9f0924ea26efa0b08",
+    "data-pipeline/geology.py": "50a97ece0bb350c186e4a6fc4dd4807ed317b07821391df0988b2242b3221c2e",
+    "data-pipeline/ingest.py": "cac38d4a256e7d6106c396ed55c00801806ebfdb9b73da2c812a9e3c6ebf5547",
+    "data-pipeline/joint.py": "7c6acfff5d07ac934bbde22f0776ba7c0621bb9030291b39afbe222c757a3d81",
+    "data-pipeline/learning.py": "0ced105bfb17269643ea19f02a31fcbae37c598d4459484182399f5b83facde3",
+    "data-pipeline/potential.py": "05fe056f68ae6b5804c77576c46547e0f07f1b02f2e141bcd7888eb3e290a0a8",
+    "data-pipeline/rebuild.py": "7eee004b87dc6d931ea613ed80203fbfeb1047cca8ef20b853b84c031fe989e2",
+    "data-pipeline/seismic.py": "b42543a7a47f78a66c39f59270cfddc378ae416c72da9ca7f9b071b731f63ba2"
+  }
+}

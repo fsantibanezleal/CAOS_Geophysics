@@ -1,51 +1,43 @@
-# Inverse Earth Studio
+# Inverse Earth Studio · 0.02.000
 
-Public release: [GitHub Pages](https://fsantibanezleal.github.io/CAOS_Geophysics/) · [ML mirror](https://geophysics.ml.fasl-work.com)
+[Open the observatory](https://geophysics.ml.fasl-work.com/) · [GitHub Pages](https://fsantibanezleal.github.io/CAOS_Geophysics/) · [Documentation](docs/README.md)
 
-Inverse Earth Studio is a research-grade interactive workbench for visual and didactic geophysics. It keeps a selected subsurface case, the physical observation, the inferred model, the residual, and identifiability evidence in one linked surface. The initial release covers potential fields, layered magnetotellurics, acoustic full-waveform inversion, learned spatial priors, joint cross-gradient diagnostics, and reproducible uncertainty views.
+A geophysics investigation workbench: 20 distinct geological cases, six controlled conditions per case, and 324 computed inverse-method results. The v2 rebuild replaces the rejected repeated-Gaussian analytic renderer. It uses the actual arrays produced by SimPEG, SciPy, PyTorch and Deepwave.
 
-## Why it exists
+## Investigate
 
-Geophysical inversion is underdetermined. Different density, susceptibility, conductivity, or velocity models can produce similar observations. This project makes that relationship inspectable: move contrast, depth, noise, field angle, frequency, and regularization context; then read the changed field, profile, residual, and uncertainty at the pointer. Every canonical case is synthetic and labelled, so a result is auditable rather than presented as field truth.
+- Gravity and magnetics: 3D geological volumes, survey fields, sections, scalar/vector inversion, L2 and sparse IRLS.
+- Magnetotellurics: layered-earth impedance, bounded least squares, differentiable inversion and a physics-guided neural parameterization.
+- Seismics: four geological sections, three shots, finite-difference pressure animation, receiver gathers, adjoint FWI and continuation.
+- Joint inversion: shared and conflicting property structures with a cross-gradient objective.
+- Learned models: a trained column-density CNN and observation autoencoder with held-out geometries, serialized weights and test errors.
+- Online operations: orbit and angle steps, cuts, physical playback, comparisons, numerical exports, and a live MT calculator with model import/export.
 
-## Impact and value
+## Reproduce
 
-- Researchers can compare physics families with the same case and explicit assumptions.
-- Students can connect equations to observations and failure modes through animated, value-reading views.
-- Method developers can reproduce the staged bake, inspect metrics, and bring a new CSV or EDI table through the input contract.
-- Reviewers can trace public numbers to a seed, manifest, artifact, engine inventory, and source ledger.
+```powershell
+./scripts/setup.ps1 -Gpu
+./scripts/precompute.ps1
+./.venv-pipeline/Scripts/python.exe data-pipeline/ingest.py --external
+./.venv-pipeline/Scripts/python.exe tests/run_validation.py
+./.venv-pipeline/Scripts/python.exe scripts/check_artifacts.py
+cd frontend
+npm ci
+npm test
+npm run build
+npm run dev
+```
 
-## What is included
+Python 3.12. Both `.venv` and `.venv-pipeline` are local and ignored. Scripts are invoked by file path; there is no internal Python package. Bash equivalents are in `scripts/`. Filtered bakes require a separate `--output` directory to protect the canonical catalogue.
 
-- 20 configurable cases across potential fields, electromagnetics, seismic, joint inversion, and learned methods.
-- Gravity and magnetics forward maps with density or susceptibility fields, field direction, profiles, residual context, and compact regularization evidence.
-- Layered-earth MT impedance recursion with apparent resistivity, phase, thickness, and differentiable physics-guided loss context.
-- Finite-difference acoustic shot and update artifacts with frequency and cycle-skipping explanations.
-- Learned CNN-prior and autoencoder-novelty tools with held-out split language and no fabricated headline accuracy.
-- Joint cross-gradient structure comparison and an uncertainty layer that grows with depth and noise.
-- Nine named stages: ingest, preprocess, grouped split, features, train, infer, evaluate, export, validate.
-- Two enforced data contracts, deterministic manifests, source ledger, GPU capability record, docs wiki, manuscript source, and CI guards.
+## What the results mean
 
-## Quick start on Windows
+The release uses original synthetic geology with known truth, not a real field interpretation. A low data residual is not proof of the recovered geology. Neural column density does not resolve 3D depth. MT thicknesses are known. Seismics is constant-density 2D acoustics, not field-scale elastic FWI. The limited FWI optimization budget and training distribution are declared. No posterior uncertainty or algorithmic novelty is claimed.
 
-Run scripts/setup.ps1, scripts/fetch-data.ps1, and scripts/precompute.ps1 from PowerShell. Then run .venv-pipeline/Scripts/python.exe -m pytest, change to frontend, run npm install, and run npm run build or npm run dev.
+GPU computations were executed locally on an NVIDIA RTX 4070 Laptop GPU. Public hosts serve computed artifacts; there is no public GPU execution endpoint. The live MT calculation is independent browser computation, checked against the offline recursion.
 
-Use scripts/setup.ps1 -Gpu to add the official CUDA PyTorch wheel on the local RTX workstation. The ML VPS is CPU-only and serves the checked static build. Git Bash equivalents are available as scripts/setup.sh, scripts/fetch-data.sh, scripts/precompute.sh, and scripts/local.sh.
+## Repository
 
-## Scientific boundary
+`data-pipeline/`: plain numerical and ingestion scripts. `data/derived/v2/`: catalogue, experiments and checkpoints. `frontend/`: shared-shell bilingual React instrument. `tests/`: numerical tests including CUDA adjoint verification. `docs/validation/`: release evidence. `docs/research/`: primary-source review. `manuscripts/`: software technical report, not a novelty claim.
 
-The web lane is a compact analytic mirror designed for low-latency interaction. The offline lane is the canonical numerical bake and is where solver-backed SimPEG, Choclo, MTpy, PyTorch, Devito, and Deepwave integrations are checked when installed. The app does not claim that a synthetic result is a field interpretation, that a scalar magnetic inversion resolves remanence, or that a compact acoustic example is a production elastic FWI survey.
-
-## Repository map
-
-data-pipeline/geophysicslab/ contains typed contracts, models, and the staged bake. data/derived/ contains compact public replay artifacts and manifests. frontend/ contains the shared-shell SPA and linked visualizations. docs/ contains theory, framework, contract, case, and run guides. manuscripts/ contains research manuscript source and evidence notes. scripts/ contains PowerShell and Bash reproducibility commands. tests/ contains contracts, physics, determinism, and lane gates.
-
-## Documentation and citations
-
-Start with [the docs wiki](docs/README.md), [architecture](docs/architecture/architecture.md), [theory](docs/problem-types/problem-types.md), [framework cards](docs/frameworks/frameworks.md), and [the data contract](docs/data-contract/data-contract.md). The research review that motivated the implementation is persisted in the private coordination workspace; this public repository contains only public-safe technical documentation and source links.
-
-Key references include SimPEG ([Cockett et al.](https://doi.org/10.1016/j.cageo.2015.09.015)), the electromagnetic framework ([Heagy et al.](https://doi.org/10.1016/j.cageo.2017.06.018)), FWI ([Virieux and Operto](https://doi.org/10.1190/1.3238367)), and the OpenFWI benchmark ([repository](https://github.com/lanl/OpenFWI)).
-
-## License
-
-Code is Apache-2.0. Original explanatory content and synthetic replay data are CC-BY-4.0. External archives are downloaded only to ignored local storage pending license review and are not silently redistributed.
+The [reference course](https://github.com/Anagabrielamantilla/inversion-geofisica-python) informed the topic sequence. Its unlicensed notebooks and data are not redistributed. Two external SimPEG tutorial archives are downloaded, hashed, validated and preprocessed locally; values stay ignored pending redistribution review. Original code: Apache-2.0. Original content and generated data: CC-BY-4.0.

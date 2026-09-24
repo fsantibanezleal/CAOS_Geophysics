@@ -1,7 +1,7 @@
-# Run setup and release bake
+# Local reproduction
 
-On Windows, run scripts/setup.ps1 from the repository root. This creates the ignored root .venv and the offline .venv-pipeline. Run scripts/fetch-data.ps1 for the optional SimPEG comparison archives, then scripts/precompute.ps1. The all command produces 20 result artifacts, one manifest per case, an index, a release record, and a validation result.
+Run `scripts/setup.ps1 -Gpu` (Windows) or `scripts/setup.sh --gpu` (Linux). Python 3.12 and NVIDIA-compatible CUDA wheels are required for the GPU validation. `.venv` and `.venv-pipeline` are ignored. No editable package installation is used.
 
-Run the Python tests in .venv-pipeline. Build the SPA from frontend with npm install and npm run build. The build copies data/derived into a public overlay and does not regenerate canonical science.
+Run `scripts/precompute.ps1` or `scripts/precompute.sh` to bake all 120 experiments and train both learned models. For an isolated experiment use `python data-pipeline/rebuild.py --cases FWI_FAULT --variants reference --output data/raw/fault-study`. A filtered bake cannot overwrite the canonical catalogue.
 
-The Bash commands have the same subcommands and are intended for Git Bash, Linux, or CI.
+Run `python tests/run_validation.py`, `python scripts/check_artifacts.py`, then in `frontend`, `npm ci`, `npm test`, `npm run build`, and `npm run dev`. Computation is local; the build only copies committed results. The test runner saves JUnit and GPU environment evidence.

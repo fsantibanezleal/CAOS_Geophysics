@@ -1,0 +1,40 @@
+[
+  {
+    "source": "https://storage.googleapis.com/simpeg/doc-assets/gravity.tar.gz",
+    "archive_sha256": "e3a632f1eb25b318db943c0854181e6e609479503b3f406c657cd4d6408e74a4",
+    "member": "gravity/gravity_data.obs",
+    "rows": 289,
+    "columns": [
+      "east_m",
+      "north_m",
+      "up_m",
+      "value",
+      "sigma"
+    ],
+    "units": "mGal",
+    "synthetic_tutorial": true,
+    "preprocessed_path": "data/raw/simpeg-gravity.npz",
+    "preprocessed_sha256": "581502e7639190eba6f8fbdfaadedcf7ee71c7cf7f6abb767790c3b171a953f0",
+    "uncertainty_policy": "3% observation SD assigned for local experimentation, not instrument uncertainty",
+    "redistribution": "raw and preprocessed values remain ignored; upstream license not assumed"
+  },
+  {
+    "source": "https://github.com/simpeg/user-tutorials/raw/main/assets/04-magnetics/inv_magnetics_induced_3d_files.tar.gz",
+    "archive_sha256": "a098688e946b500ae6496449241fea9a19a12648461f52503d5ffa2e02e2aca6",
+    "member": "inv_magnetics_induced_3d_files/magnetics_data.obs",
+    "rows": 289,
+    "columns": [
+      "east_m",
+      "north_m",
+      "up_m",
+      "value",
+      "sigma"
+    ],
+    "units": "nT",
+    "synthetic_tutorial": true,
+    "preprocessed_path": "data/raw/simpeg-magnetics.npz",
+    "preprocessed_sha256": "d93d7fd90a5a5543601e185939f6d244f378dc6ea89e8d2d4cadad662f145eed",
+    "uncertainty_policy": "3% observation SD assigned for local experimentation, not instrument uncertainty",
+    "redistribution": "raw and preprocessed values remain ignored; upstream license not assumed"
+  }
+]

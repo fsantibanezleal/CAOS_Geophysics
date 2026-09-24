@@ -18,8 +18,8 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install (offline lane + dev + editable pkg)
-        run: pip install -r requirements-dev.txt && pip install -e .
+      - name: Install lightweight linter only
+        run: pip install ruff==0.15.18
       - name: Lint
         run: ruff check data-pipeline tests
       - name: CONTRACT 2, manifests <-> artifacts consistent (no drift)

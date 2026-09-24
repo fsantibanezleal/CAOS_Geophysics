@@ -1,22 +1,86 @@
-# Interactive Multi-Physics Identifiability
+# Inverse Earth Studio: a reproducible observatory for failure-aware geophysical inversion
 
-Working manuscript title: Interactive Multi-Physics Identifiability: An Auditable Demonstration of Gravity, Magnetics, Magnetotellurics, and Full-Waveform Inversion.
+Technical software report · version 0.02.000 · 2026-09-23
 
-## Claim boundary
+Status: executable synthetic study, not a peer-reviewed manuscript. No algorithmic novelty, publication priority or field interpretation accuracy is claimed. The software integrates established methods to make their assumptions and failure modes inspectable.
 
-The contribution is a reproducible software and visualization instrument called Subsurface Evidence Cartography. It aligns observation, model, residual, and identifiability context across multiple geophysical families. It does not claim a new inversion algorithm.
+## Abstract
 
-## Planned sections
+Geophysical inverse results can appear convincing while remaining non-unique, prior-sensitive or poorly transferable. We present a reproducible instrument linking geological truth, observations, inverse models, residuals and recorded optimization states across 20 distinct geological cases. Six controlled conditions per case yield 120 experiments and 324 method results. The implemented methods include integral potential-field inversion, layered magnetotellurics, differentiable acoustic full-waveform inversion, structural joint inversion, a learned column-density inverse and an observation autoencoder. Numerical computations are separated from public visualization through hashed artifacts. A small live MT operator is parity-tested against its offline equivalent. The study demonstrates measurable data-fit improvement without assuming model recovery, and retains negative results from a learned novelty detector. Its contribution is an auditable experimental interface and reproducible software composition, not a new inverse algorithm.
 
-1. Inverse problems and the limits of a single model.
-2. Reproducible contracts and seeded synthetic design.
-3. Potential fields and depth-weighted regularization.
-4. Layered MT and physics-guided learning.
-5. Acoustic FWI and cycle-skipping controls.
-6. Cross-gradient evidence and uncertainty.
-7. Browser replay, GPU bake, and validation certificates.
-8. Limitations, licensing, and future field-data evaluation.
+## 1. Motivation and related work
 
-## Evidence policy
+An inverse image is conditioned on a forward model, acquisition, noise model, parameterization and regularization. These conditions are frequently less visible than the resulting image. SimPEG's modular approach [1] makes those components explicit; established FWI analysis [2] explains how illumination and nonlinearity limit reconstruction. Physics-guided MT [3] shows how differentiable physics can constrain neural optimization without supervised model labels. Learned inversion benchmarks such as OpenFWI [4] emphasize the diversity of geological distributions that a learned method may encounter.
 
-Every reported number must resolve to a committed manifest, seed, artifact, and engine record. Synthetic results are labelled. External data remain link-only until redistribution rights are confirmed. The manuscript will report degradation and failure modes, not only best-case scores.
+The source geophysics course [5] provided a coherent pedagogical sequence, but its notebooks are not redistributed. This implementation uses original geological constructors and independent code paths. It replaces an earlier inadequate interface that reused a single central anomaly. The rebuild treats visual differentiation as insufficient unless the underlying geological arrays, physics and results also differ.
+
+## 2. Experimental design
+
+The suite contains four gravity cases (intrusive stock, asymmetric basin, opposing contrasts, faulted dipping layer), four magnetic cases (dyke swarm, remanent slab, deep lens, crossing dykes), four MT soundings, four acoustic sections, two joint-structure hypotheses, and two withheld learned geometries. Each has reference, increased contrast, increased noise, changed acquisition, reduced coverage and increased regularization conditions. The acquisition perturbation is family-specific: height for potential fields, low-frequency extension for MT and source frequency for seismics. These are not claimed to be physically equivalent perturbations.
+
+Every reference truth is hash-distinct. Each condition is independently forward-modelled and inverted. The canonical release records the exact method output arrays and metrics. Comparisons are made within a physical family and unit system; no aggregate accuracy score combines magnetic, gravity, resistivity and velocity errors.
+
+## 3. Methods
+
+### 3.1 Potential fields
+
+SimPEG [1] supplies rectangular-prism gravity and magnetic sensitivity matrices on 1,344 cells with 256 surface observations. An explicit sensitivity-weighted parameterization leads to data-space L2 and eight-step IRLS solves. IRLS regularizes model amplitude, not spatial smoothness. Vector magnetic inversion estimates three components per cell. The remanent case prescribes a direction inconsistent with the induced scalar model. Independent Choclo prism values check sign and physical scaling.
+
+### 3.2 Magnetotellurics
+
+The standard complex impedance recursion propagates upward through isotropic layers from a homogeneous half-space. Layer thicknesses are known. The three inverse parameterizations are bounded least squares in log resistivity, direct Adam optimization and a small tanh neural mapping differentiated through the same recursion. The neural method is conceptually related to [3], not a numerical reproduction of that paper. Half-space and homogeneous-layer splitting identities test physics; automatic-differentiation gradients and the browser implementation are checked independently.
+
+### 3.3 Seismics
+
+Deepwave [6] computes constant-density acoustic propagation and gradients on 64×48 cells with 25 m spacing. Three Ricker shots illuminate 40 receivers; the coverage condition uses 20. Time integration is 1 ms for 1.1 s with absorbing boundaries. Two methods perform 28 bounded Adam updates: direct waveform misfit and a moving-average continuation schedule. The initial velocity is a declared depth trend independent of the true model. The retained solution has the smallest evaluated full-band waveform loss. A CUDA double-precision directional finite difference checks the adjoint derivative. Pressure frames and receiver traces originate from the same physical simulation.
+
+### 3.4 Joint and learned methods
+
+Joint inversion combines gravity and magnetics with normalized cross-gradients. Shared and conflicting geological boundaries expose the structural prior. The optimization is deliberately explicit: 180 Adam updates from independent L2 models with fixed property normalizers and coupling weights.
+
+The learned inverse predicts column density rather than non-identifiable depth-resolved structure. It uses two convolutions, adaptive pooling and two dense layers. The observation autoencoder has a 12-dimensional bottleneck. Four procedural training geometry families generate 800 training, 160 validation and 160 test realizations from disjoint seeds. Duplicate-model hashes are checked across all splits. Validation selects weights before held-out evaluation. Oblique and ring geometries are excluded from training. Checkpoints and normalization are serialized and reloaded for prediction parity tests.
+
+## 4. Results
+
+The full reference-condition table is generated directly from artifacts in [results.md](../../docs/validation/results.md); all six conditions are available in the app and catalogue. These selected observations describe this fixed run, not a general ranking of algorithms.
+
+For the normal-fault reference seismic case, multiscale relative waveform MSE decreases from 0.1130661 to 0.002972596, while velocity RMSE remains approximately 339.52 m/s. This juxtaposition is more informative than presenting the improved data fit alone. Every exported seismic method/condition is checked for final data improvement over its starting model; none is described as complete geological recovery.
+
+For shared joint structure, the gravity-only L2 model RMSE is about 0.218473 g/cm³ and the joint value about 0.218348 g/cm³. The small change does not support a sweeping benefit claim. For conflicting structure, joint gravity WRMS improves from 0.703345 to 0.595581 while model RMSE worsens from 0.0765391 to 0.0781879 g/cm³. The prior can improve one diagnostic while increasing geological error.
+
+The held-out CNN column-density MSE is 877.494067 (g/cm³ m)² versus 2231.872294 for the declared classical baseline. This is not a SOTA comparison: the classical baseline receives clean observations, the CNN evaluation includes training-scale noise, and neither baseline receives an exhaustive tuning budget. Results apply to this generator distribution only. Withheld oblique and ring cases have column RMSEs of approximately 76.46 and 89.60 g/cm³ m.
+
+The autoencoder's 99th-percentile validation threshold is 0.106183 normalized squared error. The oblique reference scores 0.018123 and the ring reference 0.006494. Neither crosses the threshold despite being outside the training geometry families. Thus reconstruction error does not reliably identify these geological novelty cases. The interface preserves this failure instead of presenting a generic anomaly badge.
+
+## 5. Visualization as an inspection instrument
+
+Potential fields use actual 3D cell geometry, camera rotation, northing cuts and a surface observation plane. MT uses thickness-scaled layers and frequency-dependent response plots. Seismic playback advances computed pressure states with geological interfaces and a synchronized gather time cursor. A separate replay advances inverse-model updates. The learned views compare the correct 2D target or observation reconstruction instead of borrowing an unrelated 3D surface.
+
+Colour scales carry units. Paired models use shared scales; seismic display gain is fixed and explicitly clips colours at legend bounds. Pointer readouts retain original numerical cell values. Interpolation is a display operation and is not advertised as increased resolution. The six-condition selector changes the experiment, whereas camera and opacity controls only alter inspection. All downloadable records preserve that distinction.
+
+## 6. Reproducibility and provenance
+
+Scripts, original constructors, requirements, learned weights, source hashes and compact experiment artifacts are public. The bake uses local CUDA where supported; static hosts do not imply GPU execution. Artifact validation checks identities, hashes, sizes and finite arrays. Numerical tests verify independent physical identities and derivatives. Frontend tests establish offline/live MT parity and volume orientation. Browser and deployment checks are separate from numerical tests.
+
+Two external SimPEG tutorial archives were downloaded and preprocessed locally, each with 289 observations. They serve as ingestion examples, not validation of field performance. Their pinned source and preprocessing hashes are public metadata, but observation values remain ignored pending redistribution review. Original public synthetic observations are independently generated.
+
+## 7. Limitations and next research questions
+
+The suite does not include realistic correlated noise, uncertain source wavelets, field terrain correction, anisotropy, elastic or attenuating wave physics, posterior inference, learned field-data transfer or petrophysical mixture priors. Known layer thickness simplifies MT. Limited seismic illumination and update budgets constrain velocity recovery. Cross-gradient magnitudes depend on normalization. The learned baseline comparison is not noise-matched or hyperparameter-exhaustive. Runtime values include implementation-specific overhead and are not performance benchmarks against external systems.
+
+A defensible future study would pre-register acquisition and noise ensembles, match baseline tuning budgets, evaluate calibrated uncertainty, vary training geological families, and include license-cleared field datasets. A user study could test whether linking physical animation, residuals and explicit negative results improves interpretation. Those investigations have not been conducted here and no educational-efficacy claim is made.
+
+## 8. Conclusion
+
+The instrument makes several established inverse-problem failure modes directly inspectable with real computed outputs. The reported counterexamples show why model images, data misfit and learned scores must be considered together. Reproducibility and bounded claims are the software contribution; visual quality is necessary for inspection but is not scientific validation.
+
+## References
+
+1. Cockett et al. (2015), [SimPEG](https://doi.org/10.1016/j.cageo.2015.09.015).
+2. Virieux and Operto (2009), [FWI overview](https://doi.org/10.1190/1.3238367).
+3. Goyes-Peñafiel et al. (2025), [Physically Guided Deep Unsupervised Inversion for 1D Magnetotelluric Models](https://doi.org/10.1109/LGRS.2025.3528767).
+4. [OpenFWI project](https://github.com/lanl/OpenFWI).
+5. [Theoretical-practical geophysical inversion course](https://github.com/Anagabrielamantilla/inversion-geofisica-python), audited commit recorded in the research review.
+6. [Deepwave FWI documentation](https://ausargeo.com/deepwave/example_fwi).
+
+Further primary-source mappings and explicit deviations are in [the research review](../../docs/research/review.md).

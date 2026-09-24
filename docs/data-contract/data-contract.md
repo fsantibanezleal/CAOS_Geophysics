@@ -1,15 +1,27 @@
-# Data contract
+# Scientific data contracts · v2
 
-## Contract 1: ingestion
+## User observations
 
-The accepted record has station_id, x_m, y_m, frequency_hz, value, and unit. Coordinates are metres, frequency is hertz, and value uses an explicit unit. The unit must be one of gravity_mgal, magnetic_nT, ohm_m, phase_deg, or trace_amplitude. Rows with missing keys, non-numeric values, NaN, non-positive frequency, or unknown units are rejected. Extreme finite values are accepted with a review flag rather than silently clipped.
+UTF-8 CSV headers must be exactly `east_m,north_m,up_m,value,sigma`. At least four unique stations are required. Every value must be finite; sigma must be strictly positive. Duplicate coordinates reject the table; no silent averaging, clipping or outlier deletion occurs. Stations are sorted northing then easting. Coordinates are Cartesian ENU in metres. Gravity is gz, positive upward, in mGal. Magnetics is TMI in nT.
 
-## Contract 2: replay
+`ingest.py --csv survey.csv --family gravity --output data/raw/result.json` performs sensitivity-weighted L2 and IRLS. Heteroscedastic uncertainty is applied by scaling operator rows and observations before solving. A 14×12×8 mesh is derived from station extent, below the lowest station. Magnetic direction is fixed to 60° inclination / 12° declination, amplitude 50,000 nT; users must explicitly modify this configuration for another field. Terrain masks, regional removal and source separation are not automatic. This path does not claim known truth or field accuracy.
 
-The replay artifact has schema inverse-earth.replay/v1, case identity, category, method, seed, coordinates, fields, observations, residuals, metrics, and uncertainty. The manifest binds the artifact path and exact byte size. A release is invalid if the index, manifest, or artifact disagree.
+External archives are read member-by-member in memory, never extracted blindly. Checksums must match `data/source-ledger.json`. The source tutorial has four columns; an explicitly assumed 3%-SD uncertainty is added for local experiments. `data/external-preprocessing.json` records row counts, units, source members, hashes and licensing boundaries. Raw values and NPZ derivatives remain ignored.
 
-## Bringing other data
+## Live MT input
 
-Convert a CSV or EDI-derived table to the six required fields, preserve the original file hash and source license in a ledger, then run the contract validator before preprocessing. Keep source data outside the public repository when redistribution is not explicit. A new case should be grouped as held-out at the model level, not split by neighbouring samples.
+The browser accepts JSON `{rho:[...], thickness:[...]}`: 2–8 resistivity values in [1,10000] Ω m; one fewer finite thickness values in [10,2000] m. Invalid shape, range, type or >100 kB files are rejected with a visible error. The last layer is a half-space. Frequencies are positive and logarithmically sampled. No input is uploaded to a server. Export includes model, frequencies, real/imaginary impedance, apparent resistivity and phase.
 
-References: [MTpy-v2](https://mtpy-v2.readthedocs.io/en/stable/index.html), [MTH5](https://doi.org/10.1016/j.cageo.2022.105102).
+## Computed experiment
+
+Schema `inverse-earth/v2` includes case identity, family, variant, seed, engine, truth, methods, parameters, runtime and original-synthetic provenance. Potential fields add mesh origin/spacing/centres and a survey with clean/observed values, sigma and active mask. MT adds known thicknesses, frequencies, complex responses and active-frequency mask. Seismics adds initial velocity, shot locations, receiver positions, dt, actual pressure snapshots and shot arrays.
+
+Array order is contractual: volumes flatten x-fast from `[z,northing,easting]`, with z increasing upward; plotted sections reverse z to depth-down. Seismic velocity and pressure are `[depth,distance]`. Gathers are `[shot,receiver,time]`. Column density is `[northing,easting]`. Predictions and residuals refer to final selected models; replay frames are separately labelled.
+
+Each method carries named parameters, model, prediction, residual, recorded objective and states, and metrics. CNN predicts a 2D column, not a 3D model. Autoencoder `model` is normalized squared observation error. Vector magnetic `model` is the component norm, accompanied by vectors.
+
+## Release
+
+`catalog.json` contains 20 cases × 6 variants, relative artifact paths, byte sizes, SHA-256, names and metric summaries. `release.json` counts actual experiments and method results. The guard rejects nonfinite values, duplicate reference truth hashes, missing variants, drifted identities/hashes/sizes, metric mismatches and checkpoint drift. It does not certify scientific adequacy by itself; the numerical and rendered tests are separate gates.
+
+Floats are exported to seven significant digits. Residual closure tests therefore use a scale-aware absolute rounding floor. CNN and autoencoder weights are JSON tensors with explicit shape; the ledger records source seeds, split counts, normalization, best validation loss and every held-out error.

@@ -1,5 +1,5 @@
 # Devito
 
-Devito provides symbolic finite-difference operators and a clear way to inspect the stencil, boundary conditions, and adjoint logic of an acoustic FWI experiment. It is a validation and reproducibility path alongside the smaller NumPy implementation, not a hidden dependency of the browser build.
+Devito is a surveyed alternative providing symbolic finite-difference operators. It is not a v2 runtime or validation path. The implemented forward/adjoint calculations use compiled Deepwave CUDA and are tested by directional finite differences. No Devito execution evidence is claimed.
 
 Reference: [Devito FWI tutorial](https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html).
