@@ -7,10 +7,10 @@
       "family": "gravity",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7211473,
-        "rmse": 0.009608915,
-        "model_norm": 3.021732,
-        "model_rmse": 0.07889402
+        "wrms": 0.5929461,
+        "rmse": 0.007861904,
+        "model_norm": 8.634703,
+        "model_rmse": 0.0791328
       }
     },
     {
@@ -18,10 +18,10 @@
       "family": "gravity",
       "method": "irls",
       "metrics": {
-        "wrms": 0.5950654,
-        "rmse": 0.007928939,
-        "model_norm": 2.562047,
-        "model_rmse": 0.08283458
+        "wrms": 0.426336,
+        "rmse": 0.005652812,
+        "model_norm": 7.561433,
+        "model_rmse": 0.08221757
       }
     },
     {
@@ -29,10 +29,10 @@
       "family": "gravity",
       "method": "l2",
       "metrics": {
-        "wrms": 0.6812359,
-        "rmse": 0.01651124,
-        "model_norm": 7.600503,
-        "model_rmse": 0.2311207
+        "wrms": 0.534085,
+        "rmse": 0.01376126,
+        "model_norm": 26.68776,
+        "model_rmse": 0.2858823
       }
     },
     {
@@ -40,10 +40,10 @@
       "family": "gravity",
       "method": "irls",
       "metrics": {
-        "wrms": 0.614693,
-        "rmse": 0.01489843,
-        "model_norm": 7.863358,
-        "model_rmse": 0.2335499
+        "wrms": 0.3442807,
+        "rmse": 0.008870756,
+        "model_norm": 27.02246,
+        "model_rmse": 0.2899013
       }
     },
     {
@@ -51,10 +51,10 @@
       "family": "gravity",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7266609,
-        "rmse": 0.009543208,
-        "model_norm": 2.635718,
-        "model_rmse": 0.09180724
+        "wrms": 0.5176194,
+        "rmse": 0.006765573,
+        "model_norm": 7.338566,
+        "model_rmse": 0.09378321
       }
     },
     {
@@ -62,10 +62,10 @@
       "family": "gravity",
       "method": "irls",
       "metrics": {
-        "wrms": 0.6822192,
-        "rmse": 0.008959556,
-        "model_norm": 2.272971,
-        "model_rmse": 0.08390307
+        "wrms": 0.4105884,
+        "rmse": 0.005366618,
+        "model_norm": 6.307884,
+        "model_rmse": 0.08887165
       }
     },
     {
@@ -73,10 +73,10 @@
       "family": "gravity",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7499503,
-        "rmse": 0.007467246,
-        "model_norm": 4.458458,
-        "model_rmse": 0.1829132
+        "wrms": 0.4920356,
+        "rmse": 0.00502658,
+        "model_norm": 12.53108,
+        "model_rmse": 0.183573
       }
     },
     {
@@ -84,10 +84,10 @@
       "family": "gravity",
       "method": "irls",
       "metrics": {
-        "wrms": 0.7064284,
-        "rmse": 0.007033899,
-        "model_norm": 4.552375,
-        "model_rmse": 0.1850783
+        "wrms": 0.3737462,
+        "rmse": 0.00381815,
+        "model_norm": 12.75034,
+        "model_rmse": 0.1861746
       }
     },
     {
@@ -95,10 +95,10 @@
       "family": "magnetics",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7873098,
-        "rmse": 0.9918113,
-        "model_norm": 0.3074197,
-        "model_rmse": 0.00941413
+        "wrms": 0.287346,
+        "rmse": 0.3710899,
+        "model_norm": 0.6469595,
+        "model_rmse": 0.00947836
       }
     },
     {
@@ -106,10 +106,10 @@
       "family": "magnetics",
       "method": "irls",
       "metrics": {
-        "wrms": 0.5526481,
-        "rmse": 0.6961969,
-        "model_norm": 0.289707,
-        "model_rmse": 0.008911184
+        "wrms": 0.1626918,
+        "rmse": 0.2101066,
+        "model_norm": 0.7922173,
+        "model_rmse": 0.01007245
       }
     },
     {
@@ -117,9 +117,9 @@
       "family": "magnetics",
       "method": "vector",
       "metrics": {
-        "wrms": 0.376717,
-        "rmse": 0.4745682,
-        "model_norm": 0.2000409
+        "wrms": 0.291847,
+        "rmse": 0.3769026,
+        "model_norm": 0.3953897
       }
     },
     {
@@ -127,10 +127,10 @@
       "family": "magnetics",
       "method": "l2",
       "metrics": {
-        "wrms": 0.8374003,
-        "rmse": 0.5800816,
-        "model_norm": 0.1227327,
-        "model_rmse": 0.007539556
+        "wrms": 0.1664626,
+        "rmse": 0.12425,
+        "model_norm": 0.2413433,
+        "model_rmse": 0.007330949
       }
     },
     {
@@ -138,10 +138,10 @@
       "family": "magnetics",
       "method": "irls",
       "metrics": {
-        "wrms": 0.6182263,
-        "rmse": 0.428256,
-        "model_norm": 0.1188039,
-        "model_rmse": 0.007530265
+        "wrms": 0.1158776,
+        "rmse": 0.08649268,
+        "model_norm": 0.2722589,
+        "model_rmse": 0.007387368
       }
     },
     {
@@ -149,9 +149,9 @@
       "family": "magnetics",
       "method": "vector",
       "metrics": {
-        "wrms": 0.257976,
-        "rmse": 0.1787044,
-        "model_norm": 0.07296694
+        "wrms": 0.1596079,
+        "rmse": 0.1191336,
+        "model_norm": 0.148893
       }
     },
     {
@@ -159,10 +159,10 @@
       "family": "magnetics",
       "method": "l2",
       "metrics": {
-        "wrms": 0.506661,
-        "rmse": 0.2238189,
-        "model_norm": 0.07602366,
-        "model_rmse": 0.009665201
+        "wrms": 0.1392202,
+        "rmse": 0.06931705,
+        "model_norm": 0.1746182,
+        "model_rmse": 0.01033868
       }
     },
     {
@@ -170,10 +170,10 @@
       "family": "magnetics",
       "method": "irls",
       "metrics": {
-        "wrms": 0.496577,
-        "rmse": 0.2193643,
-        "model_norm": 0.102622,
-        "model_rmse": 0.01011083
+        "wrms": 0.08902019,
+        "rmse": 0.04432272,
+        "model_norm": 0.2041688,
+        "model_rmse": 0.01055693
       }
     },
     {
@@ -181,9 +181,9 @@
       "family": "magnetics",
       "method": "vector",
       "metrics": {
-        "wrms": 0.2507048,
-        "rmse": 0.1107496,
-        "model_norm": 0.04987767
+        "wrms": 0.1719266,
+        "rmse": 0.08560139,
+        "model_norm": 0.1106581
       }
     },
     {
@@ -191,10 +191,10 @@
       "family": "magnetics",
       "method": "l2",
       "metrics": {
-        "wrms": 1.125742,
-        "rmse": 2.518556,
-        "model_norm": 0.4818452,
-        "model_rmse": 0.01229508
+        "wrms": 0.768864,
+        "rmse": 1.705763,
+        "model_norm": 0.9931451,
+        "model_rmse": 0.01221248
       }
     },
     {
@@ -202,10 +202,10 @@
       "family": "magnetics",
       "method": "irls",
       "metrics": {
-        "wrms": 0.5768573,
-        "rmse": 1.290569,
-        "model_norm": 0.3309212,
-        "model_rmse": 0.01039379
+        "wrms": 0.3572063,
+        "rmse": 0.7924801,
+        "model_norm": 0.8812964,
+        "model_rmse": 0.01203478
       }
     },
     {
@@ -213,9 +213,9 @@
       "family": "magnetics",
       "method": "vector",
       "metrics": {
-        "wrms": 1.209679,
-        "rmse": 2.706343,
-        "model_norm": 0.3056097
+        "wrms": 0.6456019,
+        "rmse": 1.4323,
+        "model_norm": 0.5946053
       }
     },
     {
@@ -331,9 +331,9 @@
       "family": "seismic",
       "method": "fwi-l2",
       "metrics": {
-        "initial_relative_mse": 0.2829709,
-        "relative_mse": 0.008531145,
-        "velocity_rmse": 259.3858
+        "initial_relative_mse": 0.2521008,
+        "relative_mse": 0.007341316,
+        "velocity_rmse": 256.9059
       }
     },
     {
@@ -341,9 +341,9 @@
       "family": "seismic",
       "method": "fwi-multiscale",
       "metrics": {
-        "initial_relative_mse": 0.2829709,
-        "relative_mse": 0.007233825,
-        "velocity_rmse": 259.6581
+        "initial_relative_mse": 0.2521008,
+        "relative_mse": 0.006197948,
+        "velocity_rmse": 255.8527
       }
     },
     {
@@ -351,9 +351,9 @@
       "family": "seismic",
       "method": "fwi-l2",
       "metrics": {
-        "initial_relative_mse": 0.1130661,
-        "relative_mse": 0.003348466,
-        "velocity_rmse": 341.1584
+        "initial_relative_mse": 0.09798975,
+        "relative_mse": 0.002721288,
+        "velocity_rmse": 332.8042
       }
     },
     {
@@ -361,9 +361,9 @@
       "family": "seismic",
       "method": "fwi-multiscale",
       "metrics": {
-        "initial_relative_mse": 0.1130661,
-        "relative_mse": 0.002972596,
-        "velocity_rmse": 339.5165
+        "initial_relative_mse": 0.09798975,
+        "relative_mse": 0.002459818,
+        "velocity_rmse": 332.0414
       }
     },
     {
@@ -371,9 +371,9 @@
       "family": "seismic",
       "method": "fwi-l2",
       "metrics": {
-        "initial_relative_mse": 0.07718915,
-        "relative_mse": 0.01332664,
-        "velocity_rmse": 737.31
+        "initial_relative_mse": 0.07007499,
+        "relative_mse": 0.01189425,
+        "velocity_rmse": 740.04
       }
     },
     {
@@ -381,9 +381,9 @@
       "family": "seismic",
       "method": "fwi-multiscale",
       "metrics": {
-        "initial_relative_mse": 0.07718915,
-        "relative_mse": 0.01261379,
-        "velocity_rmse": 736.7971
+        "initial_relative_mse": 0.07007499,
+        "relative_mse": 0.01130366,
+        "velocity_rmse": 739.4879
       }
     },
     {
@@ -391,9 +391,9 @@
       "family": "seismic",
       "method": "fwi-l2",
       "metrics": {
-        "initial_relative_mse": 0.1455761,
-        "relative_mse": 0.007052112,
-        "velocity_rmse": 421.3705
+        "initial_relative_mse": 0.1183956,
+        "relative_mse": 0.005716372,
+        "velocity_rmse": 419.9822
       }
     },
     {
@@ -401,9 +401,9 @@
       "family": "seismic",
       "method": "fwi-multiscale",
       "metrics": {
-        "initial_relative_mse": 0.1455761,
-        "relative_mse": 0.006603607,
-        "velocity_rmse": 421.725
+        "initial_relative_mse": 0.1183956,
+        "relative_mse": 0.005445212,
+        "velocity_rmse": 420.2439
       }
     },
     {
@@ -411,10 +411,10 @@
       "family": "joint",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7732014,
-        "rmse": 0.009578935,
-        "model_norm": 6.111781,
-        "model_rmse": 0.2184735
+        "wrms": 0.5120651,
+        "rmse": 0.006342597,
+        "model_norm": 16.69485,
+        "model_rmse": 0.2128352
       }
     },
     {
@@ -422,10 +422,10 @@
       "family": "joint",
       "method": "irls",
       "metrics": {
-        "wrms": 0.7102425,
-        "rmse": 0.008798958,
-        "model_norm": 6.216805,
-        "model_rmse": 0.2230311
+        "wrms": 0.4054196,
+        "rmse": 0.005021652,
+        "model_norm": 17.02807,
+        "model_rmse": 0.2170642
       }
     },
     {
@@ -433,10 +433,10 @@
       "family": "joint",
       "method": "joint",
       "metrics": {
-        "wrms": 0.6674263,
-        "magnetic_wrms": 0.3956127,
-        "cross_gradient": 0.008807957,
-        "model_rmse": 0.2183481
+        "wrms": 0.1071992,
+        "magnetic_wrms": 9.836769e-05,
+        "cross_gradient": 0.001992847,
+        "model_rmse": 0.2129515
       }
     },
     {
@@ -444,10 +444,10 @@
       "family": "joint",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7033449,
-        "rmse": 0.008330343,
-        "model_norm": 2.603367,
-        "model_rmse": 0.07653906
+        "wrms": 0.494249,
+        "rmse": 0.005716865,
+        "model_norm": 7.227219,
+        "model_rmse": 0.07721719
       }
     },
     {
@@ -455,10 +455,10 @@
       "family": "joint",
       "method": "irls",
       "metrics": {
-        "wrms": 0.6620692,
-        "rmse": 0.007841479,
-        "model_norm": 2.29069,
-        "model_rmse": 0.07365869
+        "wrms": 0.3853558,
+        "rmse": 0.004457322,
+        "model_norm": 6.246661,
+        "model_rmse": 0.07512776
       }
     },
     {
@@ -466,10 +466,10 @@
       "family": "joint",
       "method": "joint",
       "metrics": {
-        "wrms": 0.5955806,
-        "magnetic_wrms": 0.2635143,
-        "cross_gradient": 0.005189767,
-        "model_rmse": 0.07818791
+        "wrms": 0.01587548,
+        "magnetic_wrms": 9.169495e-05,
+        "cross_gradient": 0.0006507679,
+        "model_rmse": 0.07876403
       }
     },
     {
@@ -477,10 +477,10 @@
       "family": "learned",
       "method": "l2",
       "metrics": {
-        "wrms": 0.6481454,
-        "rmse": 0.005739153,
-        "model_norm": 2.452403,
-        "model_rmse": 0.109315
+        "wrms": 0.4249703,
+        "rmse": 0.004503138,
+        "model_norm": 7.790295,
+        "model_rmse": 0.1059735
       }
     },
     {
@@ -488,10 +488,10 @@
       "family": "learned",
       "method": "irls",
       "metrics": {
-        "wrms": 0.6126533,
-        "rmse": 0.00542488,
-        "model_norm": 2.202442,
-        "model_rmse": 0.1044867
+        "wrms": 0.2639188,
+        "rmse": 0.002796578,
+        "model_norm": 6.624058,
+        "model_rmse": 0.09923217
       }
     },
     {
@@ -499,7 +499,7 @@
       "family": "learned",
       "method": "cnn",
       "metrics": {
-        "column_rmse": 76.45755
+        "column_rmse": 91.19284
       }
     },
     {
@@ -507,8 +507,8 @@
       "family": "learned",
       "method": "autoencoder",
       "metrics": {
-        "reconstruction_mse": 0.0181226,
-        "threshold": 0.106183,
+        "reconstruction_mse": 0.03696656,
+        "threshold": 0.07403329,
         "above_threshold": false
       }
     },
@@ -517,10 +517,10 @@
       "family": "learned",
       "method": "l2",
       "metrics": {
-        "wrms": 0.7112004,
-        "rmse": 0.007817317,
-        "model_norm": 2.874934,
-        "model_rmse": 0.1276543
+        "wrms": 0.5022153,
+        "rmse": 0.006326285,
+        "model_norm": 9.097267,
+        "model_rmse": 0.1286679
       }
     },
     {
@@ -528,10 +528,10 @@
       "family": "learned",
       "method": "irls",
       "metrics": {
-        "wrms": 0.6591834,
-        "rmse": 0.00724556,
-        "model_norm": 2.58336,
-        "model_rmse": 0.1196014
+        "wrms": 0.3168357,
+        "rmse": 0.003991103,
+        "model_norm": 8.005012,
+        "model_rmse": 0.1222422
       }
     },
     {
@@ -539,7 +539,7 @@
       "family": "learned",
       "method": "cnn",
       "metrics": {
-        "column_rmse": 89.59569
+        "column_rmse": 89.06006
       }
     },
     {
@@ -547,8 +547,8 @@
       "family": "learned",
       "method": "autoencoder",
       "metrics": {
-        "reconstruction_mse": 0.006493619,
-        "threshold": 0.106183,
+        "reconstruction_mse": 0.01033054,
+        "threshold": 0.07403329,
         "above_threshold": false
       }
     }
@@ -561,18 +561,18 @@
       160,
       160
     ],
-    "cnn_test_mse": 877.4940669536591,
-    "classical_test_mse": 2231.872294227996,
+    "cnn_test_mse": 680.1518052816391,
+    "classical_test_mse": 3122.0192716988845,
     "units": "(g/cm\u00b3 m)\u00b2"
   },
   "source_sha256": {
     "data-pipeline/electromagnetics.py": "32809de87e60ed7997407e445df8c1343a610e758a146cb9f0924ea26efa0b08",
-    "data-pipeline/geology.py": "50a97ece0bb350c186e4a6fc4dd4807ed317b07821391df0988b2242b3221c2e",
+    "data-pipeline/geology.py": "d821a6681ab4d9b2c1d78b9c3df9be45f87e14d43d0dac17fbdad9d3ddd300c7",
     "data-pipeline/ingest.py": "cac38d4a256e7d6106c396ed55c00801806ebfdb9b73da2c812a9e3c6ebf5547",
-    "data-pipeline/joint.py": "7c6acfff5d07ac934bbde22f0776ba7c0621bb9030291b39afbe222c757a3d81",
-    "data-pipeline/learning.py": "0ced105bfb17269643ea19f02a31fcbae37c598d4459484182399f5b83facde3",
-    "data-pipeline/potential.py": "05fe056f68ae6b5804c77576c46547e0f07f1b02f2e141bcd7888eb3e290a0a8",
-    "data-pipeline/rebuild.py": "7eee004b87dc6d931ea613ed80203fbfeb1047cca8ef20b853b84c031fe989e2",
-    "data-pipeline/seismic.py": "4175f2724c8b917925ee89a4607b19b25f446ea24e91c8b992386a7be72c1142"
+    "data-pipeline/joint.py": "b7baede4cc6e1d2c6342f6ee84fa25cadaff6cafd16663ae904b365aea7584bf",
+    "data-pipeline/learning.py": "f7e11d0c1bee721404e34b29318d30ae343c687ec9e94ebdbe452bd675636c72",
+    "data-pipeline/potential.py": "e76670fb0d8b419b4f62fa717077614317fb97be27aae6a79f70e802dee0598b",
+    "data-pipeline/rebuild.py": "aee0630e436ba557a8192b68f8218fb9948e61b8e111fd5c5d1827882819f869",
+    "data-pipeline/seismic.py": "b59090fac8dec14d2607dd546463d87638f4f353efb7ac1f9995ceec3ae90049"
   }
 }

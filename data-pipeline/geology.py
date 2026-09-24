@@ -3,6 +3,12 @@ from __future__ import annotations
 
 import numpy as np
 
+# Same physical domain; refinement is not additional survey information.
+VOLUME_SHAPE = (16, 24, 28)  # depth, northing, easting
+VOLUME_SPACING = (80.0, 80.0, 70.0)  # easting, northing, up (m)
+SEISMIC_SHAPE = (128, 96)
+SEISMIC_SPACING = 12.5
+
 CASES = [
     ("GRAVITY_INTRUSION", "gravity", "Offset intrusive stock", "Intrusión desplazada", "stock"),
     ("GRAVITY_DEEP_BODY", "gravity", "Asymmetric sedimentary basin", "Cuenca sedimentaria asimétrica", "basin"),
@@ -40,9 +46,9 @@ def registry():
     return [dict(id=c[0], family=c[1], name=c[2], name_es=c[3], geometry=c[4], seed=4200+i) for i, c in enumerate(CASES)]
 
 
-def volume_grid():
+def volume_grid(refinement=2):
     from discretize import TensorMesh
-    mesh = TensorMesh([[(160.0, 14)], [(160.0, 12)], [(140.0, 8)]], origin=[-1120, -960, -1120])
+    mesh = TensorMesh([[(160.0/refinement, 14*refinement)], [(160.0/refinement, 12*refinement)], [(140.0/refinement, 8*refinement)]], origin=[-1120, -960, -1120])
     return mesh
 
 
@@ -99,9 +105,9 @@ def mt_model(kind, contrast=1.0):
     return np.asarray(rho,dtype=float)*contrast,np.asarray(h,dtype=float)
 
 
-def seismic_model(kind, contrast=1.0, nx=64, nz=48):
-    x=np.arange(nx)*25.0
-    z=np.arange(nz)*25.0
+def seismic_model(kind, contrast=1.0, nx=128, nz=96, spacing=12.5):
+    x=np.arange(nx)*spacing
+    z=np.arange(nz)*spacing
     X,Z=np.meshgrid(x,z,indexing="ij")
     if kind == "layers":
         v=np.where(Z<260,1750,np.where(Z<610,2200,2850)).astype(float)

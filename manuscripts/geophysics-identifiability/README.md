@@ -1,6 +1,6 @@
-# Inverse Earth Studio: a reproducible observatory for failure-aware geophysical inversion
+# Inverse Earth Studio: synthetic geophysical inversion and numerical diagnostics
 
-Technical software report · version 0.02.000 · 2026-09-23
+Technical software report · version 0.03.000 · 2026-09-24
 
 Status: executable synthetic study, not a peer-reviewed manuscript. No algorithmic novelty, publication priority or field interpretation accuracy is claimed. The software integrates established methods to make their assumptions and failure modes inspectable.
 
@@ -24,7 +24,7 @@ Every reference truth is hash-distinct. Each condition is independently forward-
 
 ### 3.1 Potential fields
 
-SimPEG [1] supplies rectangular-prism gravity and magnetic sensitivity matrices on 1,344 cells with 256 surface observations. An explicit sensitivity-weighted parameterization leads to data-space L2 and eight-step IRLS solves. IRLS regularizes model amplitude, not spatial smoothness. Vector magnetic inversion estimates three components per cell. The remanent case prescribes a direction inconsistent with the induced scalar model. Independent Choclo prism values check sign and physical scaling.
+SimPEG [1] supplies rectangular-prism gravity and magnetic sensitivity matrices on 10,752 cells (80 × 80 × 70 m) with 256 surface observations. An explicit sensitivity-weighted parameterization leads to data-space L2 and eight-step IRLS solves. IRLS regularizes model amplitude, not spatial smoothness. Vector magnetic inversion estimates three components per cell. The remanent case prescribes a direction inconsistent with the induced scalar model. Independent Choclo prism values check sign and physical scaling.
 
 ### 3.2 Magnetotellurics
 
@@ -32,7 +32,7 @@ The standard complex impedance recursion propagates upward through isotropic lay
 
 ### 3.3 Seismics
 
-Deepwave [6] computes constant-density acoustic propagation and gradients on 64×48 cells with 25 m spacing. Three Ricker shots illuminate 40 receivers; the coverage condition uses 20. Time integration is 1 ms for 1.1 s with absorbing boundaries. Two methods perform 28 bounded Adam updates: direct waveform misfit and a moving-average continuation schedule. The initial velocity is a declared depth trend independent of the true model. The retained solution has the smallest evaluated full-band waveform loss. A CUDA double-precision directional finite difference checks the adjoint derivative. Pressure frames and receiver traces originate from the same physical simulation.
+Deepwave [6] computes constant-density acoustic propagation and gradients on 128×96 nodes with 12.5 m spacing. Three Ricker shots illuminate 40 receivers; the coverage condition uses 20. Time integration is 0.5 ms for 1.1 s with absorbing boundaries. Two methods perform 28 bounded Adam updates: direct waveform misfit and a moving-average continuation schedule. The initial velocity is a declared depth trend independent of the true model. The retained solution has the smallest evaluated full-band waveform loss. A CUDA double-precision directional finite difference checks the adjoint derivative. Pressure frames and receiver traces originate from the same physical simulation.
 
 ### 3.4 Joint and learned methods
 
@@ -44,17 +44,23 @@ The learned inverse predicts column density rather than non-identifiable depth-r
 
 The full reference-condition table is generated directly from artifacts in [results.md](../../docs/validation/results.md); all six conditions are available in the app and catalogue. These selected observations describe this fixed run, not a general ranking of algorithms.
 
-For the normal-fault reference seismic case, multiscale relative waveform MSE decreases from 0.1130661 to 0.002972596, while velocity RMSE remains approximately 339.52 m/s. This juxtaposition is more informative than presenting the improved data fit alone. Every exported seismic method/condition is checked for final data improvement over its starting model; none is described as complete geological recovery.
+For the normal-fault reference seismic case, multiscale relative waveform MSE decreases from 0.09798975 to 0.002459818, while velocity RMSE remains approximately 332.04 m/s. This juxtaposition is more informative than presenting the improved data fit alone. Every exported seismic method/condition is checked for final data improvement over its starting model; none is described as complete geological recovery.
 
-For shared joint structure, the gravity-only L2 model RMSE is about 0.218473 g/cm³ and the joint value about 0.218348 g/cm³. The small change does not support a sweeping benefit claim. For conflicting structure, joint gravity WRMS improves from 0.703345 to 0.595581 while model RMSE worsens from 0.0765391 to 0.0781879 g/cm³. The prior can improve one diagnostic while increasing geological error.
+For shared joint structure, the gravity-only L2 model RMSE is about 0.212835 g/cm³ and the joint value about 0.212952 g/cm³. The slightly larger joint model error does not indicate improved density recovery, despite improved data fit. For conflicting structure, joint gravity WRMS improves from 0.494249 to 0.0158755 while model RMSE worsens from 0.0772172 to 0.0787640 g/cm³. The prior can improve one diagnostic while increasing geological error.
 
-The held-out CNN column-density MSE is 877.494067 (g/cm³ m)² versus 2231.872294 for the declared classical baseline. This is not a SOTA comparison: the classical baseline receives clean observations, the CNN evaluation includes training-scale noise, and neither baseline receives an exhaustive tuning budget. Results apply to this generator distribution only. Withheld oblique and ring cases have column RMSEs of approximately 76.46 and 89.60 g/cm³ m.
+The held-out CNN column-density MSE is 680.151805 (g/cm³ m)² versus 3122.019272 for the declared classical baseline. This is not a SOTA comparison: the classical baseline receives clean observations, the CNN evaluation includes training-scale noise, and neither baseline receives an exhaustive tuning budget. Results apply to this generator distribution only. Withheld oblique and ring cases have column RMSEs of approximately 91.19 and 89.06 g/cm³ m.
 
-The autoencoder's 99th-percentile validation threshold is 0.106183 normalized squared error. The oblique reference scores 0.018123 and the ring reference 0.006494. Neither crosses the threshold despite being outside the training geometry families. Thus reconstruction error does not reliably identify these geological novelty cases. The interface preserves this failure instead of presenting a generic anomaly badge.
+The autoencoder's 99th-percentile validation threshold is 0.0740333 normalized squared error. The oblique reference scores 0.0369666 and the ring reference 0.0103305. Neither crosses the threshold despite being outside the training geometry families. Thus reconstruction error does not reliably identify these geological novelty cases. The interface preserves this failure instead of presenting a generic anomaly badge.
+
+### 4.1 Spatial discretization diagnostic
+
+The local diagnostic compares original 14×12×8 and refined 28×24×16 potential-field grids with a 56×48×32 discretization at 36 common receivers. Uniform-prism subdivision agrees within 1.73×10⁻⁹ relative difference. Ten of twelve geological responses move closer to the fine-grid reference. The basin and opposing-body responses do not: cell-centre sampling of discontinuous boundaries is not monotonically convergent. The fine grid is a numerical reference, not exact geological truth. Results are preserved in [refinement.json](../../docs/validation/refinement.json).
+
+The acoustic refinement preserves source positions, duration and 300 m absorbing-layer thickness while halving space and time increments. The smallest 1,550 m/s velocity at a 9 Hz peak frequency corresponds to 13.78 nodes per wavelength, compared with 6.89 previously. This is a sampling diagnostic, not a full dispersion or convergence study.
 
 ## 5. Visualization as an inspection instrument
 
-Potential fields use actual 3D cell geometry, camera rotation, northing cuts and a surface observation plane. MT uses thickness-scaled layers and frequency-dependent response plots. Seismic playback advances computed pressure states with geological interfaces and a synchronized gather time cursor. A separate replay advances inverse-model updates. The learned views compare the correct 2D target or observation reconstruction instead of borrowing an unrelated 3D surface.
+Potential fields provide cell geometry and piecewise-linear isosurfaces of the computed field, camera rotation, northing cuts and a surface observation plane. MT uses thickness-scaled layers and frequency-dependent response plots. Seismic playback advances computed pressure states with geological interfaces and a synchronized gather time cursor. A separate replay advances inverse-model updates. The learned views compare the correct 2D target or observation reconstruction instead of borrowing an unrelated 3D surface.
 
 Colour scales carry units. Paired models use shared scales; seismic display gain is fixed and explicitly clips colours at legend bounds. Pointer readouts retain original numerical cell values. Interpolation is a display operation and is not advertised as increased resolution. The six-condition selector changes the experiment, whereas camera and opacity controls only alter inspection. All downloadable records preserve that distinction.
 

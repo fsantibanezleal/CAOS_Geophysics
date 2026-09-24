@@ -83,15 +83,15 @@ def main():
                             learned=train(cache[60][0],cache[60][2],out/"models",args.epochs)
                         result=attach(result,learned)
                 result["runtime_seconds"]=time.perf_counter()-start
-                result["provenance"]={"source":"Original geological constructors","license":"CC-BY-4.0","seed":case["seed"],"version":"0.02.000","synthetic":True}
+                result["provenance"]={"source":"Original geological constructors","license":"CC-BY-4.0","seed":case["seed"],"version":"0.03.000","synthetic":True}
                 result["stages"]=["construct geological model","configure survey","forward solve","seed noise and mask coverage","invert","evaluate against known truth","export"]
                 save(path,result)
             entry["variants"].append(dict(id=vid,name=label,name_es=label_es,path=f"{case['id']}/{vid}.json",sha256=hashlib.sha256(path.read_bytes()).hexdigest(),bytes=path.stat().st_size,
                 methods={k:{"name":v["name"],"name_es":v["name_es"],"metrics":v["metrics"]} for k,v in result["methods"].items()},runtime_seconds=result["runtime_seconds"]))
             print(f"OK {path.name} {path.stat().st_size//1024} KiB {time.perf_counter()-start:.1f}s",flush=True)
         catalog.append(entry)
-    save(out/"catalog.json",dict(schema="inverse-earth.catalog/v2",version="0.02.000",cases=catalog))
-    save(out/"release.json",dict(schema="inverse-earth.release/v2",version="0.02.000",cases=len(catalog),runs=sum(len(c["variants"]) for c in catalog),methods=sum(len(v["methods"]) for c in catalog for v in c["variants"]),synthetic=True,engines=["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27"]))
+    save(out/"catalog.json",dict(schema="inverse-earth.catalog/v2",version="0.03.000",cases=catalog))
+    save(out/"release.json",dict(schema="inverse-earth.release/v2",version="0.03.000",cases=len(catalog),runs=sum(len(c["variants"]) for c in catalog),methods=sum(len(v["methods"]) for c in catalog for v in c["variants"]),synthetic=True,engines=["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27"]))
 
 
 if __name__=="__main__":

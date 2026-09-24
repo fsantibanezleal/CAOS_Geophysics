@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import torch
 from electromagnetics import impedance,torch_impedance,curves
-from geology import registry,properties,volume_grid,seismic_model
+from geology import registry,properties,volume_grid,seismic_model,VOLUME_SHAPE
 from potential import operators,invert
 from joint import cross_gradient
 from learning import InverseCNN,ObservationAE,load_checkpoint,generate
@@ -62,7 +62,7 @@ def test_inverse_improves_data_fit():
 
 
 def test_cross_gradient_parallel_and_orthogonal():
-    z,y,x=torch.meshgrid(torch.arange(8.),torch.arange(12.),torch.arange(14.),indexing='ij')
+    z,y,x=torch.meshgrid(*(torch.arange(float(n)) for n in VOLUME_SHAPE),indexing='ij')
     assert torch.max(torch.abs(cross_gradient(x,3*x)))==0
     assert torch.mean(cross_gradient(x,y).square())>0
 
@@ -83,10 +83,10 @@ def test_all_artifact_cells(family):
                     # JSON exports 7 significant digits, so cancellation has an absolute rounding floor.
                     np.testing.assert_allclose(obs-pred,res,rtol=1e-4,atol=2e-6*max(np.max(abs(obs)),np.max(abs(pred))))
                     assert m['metrics']['relative_mse']<m['metrics']['initial_relative_mse']
-                    assert np.asarray(run['truth']).shape==(48,64)
-                    assert np.asarray(run['wavefields']).shape[1:]==(48,64)
+                    assert np.asarray(run['truth']).shape==(96,128)
+                    assert np.asarray(run['wavefields']).shape[1:]==(96,128)
                     assert np.std(run['wavefields'])>0
-                    expected_receivers=(torch.linspace(3,60,run['parameters']['receivers']).long()*25).tolist()
+                    expected_receivers=(torch.linspace(6,120,run['parameters']['receivers']).long()*12.5).tolist()
                     assert run['receivers']==expected_receivers
                 elif method_id not in ('cnn','autoencoder'):
                     np.testing.assert_allclose(np.asarray(run['survey']['observed'])-m['predicted'],m['residual'],rtol=1e-3,atol=1e-4)
@@ -114,8 +114,8 @@ def test_learning_split_hashes_and_checkpoint_inference():
 def test_deepwave_cuda_adjoint_directional_derivative():
     assert torch.cuda.is_available(),'GPU execution is a release requirement'
     v=torch.tensor(seismic_model('normal_fault'),dtype=torch.float64,device='cuda',requires_grad=True)
-    target=simulate(v.detach()+100,nt=500)
-    def objective(model):return (simulate(model,nt=500)-target).square().mean()
+    target=simulate(v.detach()+100,nt=1000)
+    def objective(model):return (simulate(model,nt=1000)-target).square().mean()
     loss=objective(v);loss.backward()
     direction=v.grad.detach()/v.grad.detach().norm()
     eps=1.

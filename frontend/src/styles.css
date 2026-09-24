@@ -1,349 +1,210 @@
-.mobile-controls-toggle {
-  display: none;
-}
-@media (max-width: 760px) {
-  .mobile-controls-toggle {
-    display: block;
-    grid-column: 1/-1;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    padding: 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-  }
-  .instrument-sidebar:not(.expanded) > .select-control:nth-of-type(n + 2),
-  .instrument-sidebar:not(.expanded) > .sidebar-actions,
-  .instrument-sidebar:not(.expanded) > .source-caption,
-  .instrument-sidebar:not(.expanded) .playback > .select-control,
-  .instrument-sidebar:not(.expanded) .playback > .range-control,
-  .instrument-sidebar:not(.expanded) .playback > small,
-  .instrument-sidebar:not(.expanded) .playback > .small-caps {
-    display: none;
-  }
-  .instrument-sidebar:not(.expanded) > .instrument-brand {
-    display: none;
-  }
-  .instrument-sidebar:not(.expanded) > .select-control:first-of-type {
-    grid-column: 1/-1;
-  }
-  .instrument-sidebar:not(.expanded) .case-question {
-    display: none;
-  }
-  .instrument-sidebar:not(.expanded) .playback {
-    border: 0;
-    padding: 0;
-    margin: 0;
-  }
-  .instrument-sidebar:not(.expanded) .playback-row {
-    margin: 0;
-  }
-}
-:root {
-  --maxw: 1440px;
-  --maxw-wide: 2400px;
-  --color-bg: #171b1d;
-  --color-surface: #1e2427;
-  --color-surface-2: #272f32;
-  --color-border: #394347;
-  --color-fg: #e7e9e6;
-  --color-fg-subtle: #b1b9b8;
-  --color-fg-faint: #98a5a5;
-  --color-accent: #91bed0;
-  --color-accent-soft: #293a42;
-  --color-accent-fg: #14242b;
-  --scene-bg: #252e32;
-  --plot-observed: #c5b393;
-  --plot-predicted: #86bacd;
-  --plot-third: #d88c70;
-  --figure-bg: var(--scene-bg);
-}
-[data-theme="light"] {
-  --color-bg: #f5f4ef;
-  --color-surface: #fffefa;
-  --color-surface-2: #eaece7;
-  --color-border: #d6dcd6;
-  --color-fg: #243338;
-  --color-fg-subtle: #536568;
-  --color-fg-faint: #647579;
-  --color-accent: #245b72;
-  --color-accent-soft: #e0e9e9;
-  --color-accent-fg: #fff;
-  --scene-bg: #e8ede8;
-  --plot-observed: #705744;
-  --plot-predicted: #246785;
-  --plot-third: #a64d32;
-}
-* {
-  box-sizing: border-box;
-}
-body {
-  margin: 0;
-}
-button,
-input,
-select {
-  font: inherit;
-}
-button {
-  cursor: pointer;
-  background: var(--color-surface);
-}
-button:disabled {
-  cursor: default;
-  opacity: 0.45;
-}
-button,
-select {
-  color: var(--color-fg);
-}
-button:focus-visible,
-input:focus-visible,
-select:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
-}
-input[type="range"] {
-  accent-color: var(--color-accent);
-  min-width: 0;
-  cursor: pointer;
-}
-select {
-  max-width: 100%;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 5px;
-  padding: 0.6rem 0.45rem;
-}
-code {
-  overflow-wrap: anywhere;
-  font-size: 0.78em;
-}
-p {
-  line-height: 1.65;
-}
-.small-caps {
-  font-size: 0.63rem;
-  letter-spacing: 0.14em;
-  font-weight: 650;
-  text-transform: uppercase;
-  color: var(--color-fg-subtle);
-}
-.page-body.workbench {
+/* Geophysics widgets only. Shared shell owns theme, typography, page measure,
+   navigation and controls. Widget patterns follow RotorVitals (ADR-0016/17/71). */
+.workbench {
   display: grid;
-  grid-template-columns: 258px minmax(0, 1fr);
-  gap: 0;
-  padding: 0;
-  height: 100%;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
+  overflow: hidden;
+}
+.workbench > * {
+  min-width: 0;
   min-height: 0;
-  max-width: 2400px;
 }
 .instrument-sidebar {
-  padding: 1.7rem 1.25rem 1rem;
-  border-right: 1px solid var(--color-border);
-  overflow: auto;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.9rem;
+  overflow: auto;
+  padding-right: 0.4rem;
+  scrollbar-width: thin;
 }
 .instrument-brand h1 {
-  font:
-    500 1.85rem/1.12 Georgia,
-    serif;
-  letter-spacing: -0.04em;
-  margin: 0.55rem 0 0.3rem;
+  font-size: 1.1rem;
+  margin: 0 0 0.4rem;
 }
-.instrument-brand .small-caps {
-  font-size: 0.56rem;
-}
-.select-control {
-  display: grid;
-  gap: 0.4rem;
-}
-.select-control > span {
-  font-size: 0.67rem;
-  letter-spacing: 0.05em;
+.small-caps {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--color-fg-subtle);
-}
-.select-control select {
-  width: 100%;
-  font-size: 0.77rem;
-}
-.case-question {
-  border-left: 2px solid var(--color-accent);
-  padding-left: 0.8rem;
-}
-.case-question > span {
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--color-accent);
-}
-.case-question p {
-  font-size: 0.85rem;
-  line-height: 1.45;
-  margin: 0.25rem 0;
-}
-.playback {
-  border-top: 1px solid var(--color-border);
-  padding-top: 1rem;
-  margin-top: auto;
-}
-.playback-row {
-  display: flex;
-  gap: 0.65rem;
-  align-items: center;
-  margin: 0.6rem 0;
-}
-.playback-row input {
-  width: 100%;
-}
-.playback-row output {
-  font:
-    0.62rem ui-monospace,
-    monospace;
-  white-space: nowrap;
-}
-.play-button {
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: var(--color-accent);
-  color: var(--color-accent-fg);
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.playback small {
-  font-size: 0.65rem;
-  color: var(--color-fg-subtle);
-}
-.sidebar-actions {
-  display: flex;
-  gap: 0.6rem;
-}
-.sidebar-actions button,
-.text-button {
-  border: 0;
-  background: none;
-  padding: 0.25rem 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.69rem;
-  color: var(--color-fg-subtle);
-}
-.source-caption {
-  font-size: 0.65rem;
-  border-top: 1px solid var(--color-border);
-  padding-top: 0.75rem;
-  color: var(--color-fg-subtle);
-}
-.source-caption small {
-  display: block;
-  font-size: 0.58rem;
-  line-height: 1.6;
-  margin-top: 0.35rem;
-}
-.source-dot {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  background: var(--color-accent);
-  margin-right: 0.4rem;
-  border-radius: 50%;
 }
 .instrument-main {
   min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 1.4rem 1.6rem 0.7rem;
 }
 .case-heading {
   display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.8rem;
+  align-items: center;
 }
 .case-heading h2 {
-  font-size: 1.3rem;
-  letter-spacing: -0.035em;
-  line-height: 1.2;
-  margin: 0.4rem 0;
+  font-size: 1.15rem;
+  margin: 0.3rem 0 0.8rem;
 }
 .case-counter {
-  font-size: 0.65rem;
+  font-size: 0.8rem;
   color: var(--color-fg-subtle);
 }
 .instrument-main > .tabs {
   min-height: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  flex: 1;
 }
-.instrument-main .tablist {
-  gap: 0.25rem;
-  flex-shrink: 0;
-  margin-bottom: 0;
+.instrument-main > .tabs > .tablist {
+  flex: none;
 }
-.instrument-main .tab {
-  font-size: 0.74rem;
-  padding: 0.6rem 0.7rem;
-  border-radius: 0;
-}
-.instrument-main .tabpanel {
+.instrument-main > .tabs > .tabpanel {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  padding: 0.75rem 0 0;
+  scrollbar-width: thin;
 }
-.earth-view {
-  height: 100%;
-  min-height: 390px;
+.select-control,
+.range-control {
   display: flex;
   flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--color-fg-subtle);
+  min-width: 0;
+}
+.select-control .select,
+.range-control .range {
+  width: 100%;
+  min-width: 0;
+  margin-inline: 0;
+}
+.range-control > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.range-control output {
+  font-family: var(--font-mono);
+  color: var(--color-fg);
+}
+.case-question {
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--color-accent);
+}
+.case-question p {
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+}
+.case-question > span {
+  font-size: 0.76rem;
+  color: var(--color-fg-subtle);
+}
+.playback {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.7rem;
+}
+.playback > .select-control,
+.playback > .range-control {
+  margin-bottom: 0.6rem;
+}
+.playback-row,
+.sidebar-actions,
+.scene-toolbar,
+.angle-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.playback-row {
+  margin: 0.6rem 0;
+}
+.playback-row input {
+  flex: 1;
+  min-width: 0;
+}
+.playback-row output {
+  font: 0.76rem var(--font-mono);
+  white-space: nowrap;
+}
+.playback > .small-caps {
+  display: block;
+  margin-top: 0.5rem;
+}
+.playback small,
+.source-caption {
+  font-size: 0.78rem;
+  color: var(--color-fg-subtle);
+}
+.sidebar-actions {
+  flex-wrap: wrap;
+}
+.source-caption {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.6rem;
+}
+.source-caption small {
+  display: block;
+  line-height: 1.5;
+  margin-top: 0.3rem;
+}
+.source-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  margin-right: 0.4rem;
+}
+.mobile-controls-toggle {
+  display: none;
+}
+.earth-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  height: 100%;
 }
 .scene-toolbar {
-  display: flex;
-  gap: 1.3rem;
-  align-items: center;
   flex-wrap: wrap;
   margin-bottom: 0.6rem;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
 }
 .scene-toolbar label {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
 }
 .segmented {
-  display: flex;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+.chip {
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 5px;
-  padding: 2px;
+  color: var(--color-fg-subtle);
+  border-radius: 999px;
+  padding: 0.32rem 0.75rem;
+  font-size: 0.82rem;
+  cursor: pointer;
 }
-.segmented button {
-  font-size: 0.7rem;
-  background: none;
-  border: 0;
-  padding: 0.4rem 0.75rem;
-  border-radius: 3px;
+.chip:hover {
+  color: var(--color-fg);
+  border-color: var(--color-fg-faint);
 }
-.segmented button.active {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
+.chip.on {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+  border-color: transparent;
+  font-weight: 600;
 }
 .earth-scene {
   position: relative;
   flex: 1;
-  min-height: 240px;
+  min-height: 260px;
   border: 1px solid var(--color-border);
+  border-radius: 10px;
   overflow: hidden;
-  border-radius: 3px;
-  background: var(--scene-bg);
+  background: var(--color-surface);
 }
 .earth-scene canvas {
   width: 100%;
@@ -351,179 +212,156 @@ p {
   display: block;
   touch-action: none;
 }
-.scene-label {
-  position: absolute;
-  z-index: 1;
-  top: 1rem;
-  left: 1.1rem;
-  pointer-events: none;
-  display: grid;
-  gap: 0.3rem;
-}
-.scene-label strong {
-  font-weight: 500;
-  font-size: 0.78rem;
-}
-.scene-instructions {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  font-size: 0.6rem;
-  color: var(--color-fg-subtle);
-  pointer-events: none;
-}
-.scene-readout {
-  position: absolute;
-  bottom: 1rem;
-  left: 1rem;
-  font:
-    0.65rem ui-monospace,
-    monospace;
-  pointer-events: none;
-  max-width: 60%;
-}
+.scene-label,
+.scene-readout,
+.scene-instructions,
 .scene-compass {
   position: absolute;
-  top: 1rem;
-  right: 1.1rem;
+  pointer-events: none;
+  z-index: 1;
+}
+.scene-label {
+  left: 0.75rem;
+  top: 0.75rem;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+}
+.scene-readout {
+  bottom: 0.6rem;
+  left: 0.6rem;
+  max-width: 75%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.2rem 0.45rem;
+  font: 0.74rem var(--font-mono);
+}
+.scene-instructions {
+  bottom: 2.5rem;
+  left: 0.75rem;
+  font-size: 0.74rem;
+  color: var(--color-fg-subtle);
+}
+.scene-compass {
+  top: 0.75rem;
+  right: 0.75rem;
   display: grid;
   text-align: center;
-  pointer-events: none;
-  font-size: 0.6rem;
-}
-.scene-compass span {
-  font-size: 1.5rem;
+  font-size: 0.85rem;
 }
 .scene-bottom {
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
+  justify-content: space-between;
+  font-size: 0.74rem;
 }
 .scene-bottom > .scale-legend {
-  width: 45%;
+  width: 40%;
+  flex-shrink: 0;
 }
 .scene-bottom > span {
-  font-size: 0.58rem;
+  flex: 1;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.angle-control {
+  min-width: 0;
+}
+.angle-control input {
+  width: 100%;
+  min-width: 0;
+}
+.scene-settings summary {
+  cursor: pointer;
+  padding: 0.4rem 0;
+  font-size: 0.82rem;
   color: var(--color-fg-subtle);
 }
 .scene-adjustments {
   display: grid;
-  grid-template-columns: 1fr 0.8fr 0.8fr 1.3fr;
-  gap: 1.2rem;
-  padding: 0.3rem 0;
-}
-.range-control {
-  display: grid;
-  gap: 0.3rem;
-  font-size: 0.65rem;
-}
-.range-control > span {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.3rem;
-}
-.range-control output {
-  color: var(--color-accent);
-  font-family: ui-monospace, monospace;
-}
-.range-control input {
-  width: 100%;
-  margin: 0;
-}
-.angle-control {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
 }
 .angle-control .range-control {
   flex: 1;
-}
-.angle-control button {
-  border: 1px solid var(--color-border);
-  border-radius: 3px;
-  background: var(--color-surface);
-  width: 24px;
-  height: 28px;
-  padding: 0;
 }
 .scale-legend {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font:
-    0.58rem ui-monospace,
-    monospace;
-  margin: 0.55rem 0;
-  white-space: nowrap;
+  font: 0.72rem var(--font-mono);
+  margin: 0.5rem 0;
 }
 .scale-legend i {
   flex: 1;
-  height: 6px;
-  border-radius: 1px;
-  min-width: 32px;
+  height: 8px;
+  min-width: 30px;
+  border-radius: 3px;
 }
 .science-plot {
   margin: 0;
-  padding: 0.8rem;
+  padding: 0.6rem 0.75rem;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: 10px;
   min-width: 0;
 }
 .science-plot figcaption {
-  font-size: 0.75rem;
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
-  font-weight: 500;
+  font-size: 0.84rem;
+  margin-bottom: 0.5rem;
 }
 .science-plot figcaption output {
-  font-size: 0.57rem;
-  max-width: 50%;
-  font-weight: 400;
+  font: 0.72rem var(--font-mono);
   color: var(--color-fg-subtle);
+  max-width: 55%;
 }
 .heatmap-axes {
   display: flex;
-  gap: 0.45rem;
-  min-height: 0;
+  gap: 0.4rem;
 }
 .axis-y {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   text-align: center;
-  font-size: 0.6rem;
+  font-size: 0.76rem;
   color: var(--color-fg-subtle);
 }
 .heatmap-area {
-  position: relative;
-  min-width: 0;
   flex: 1;
+  min-width: 0;
+  position: relative;
   aspect-ratio: 1.45;
   overflow: hidden;
   cursor: crosshair;
-  background: var(--scene-bg);
+  background: var(--color-surface-2);
 }
 .heatmap-area canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  display: block;
-  image-rendering: auto;
 }
 .axis-x {
   display: flex;
   justify-content: space-between;
-  font-size: 0.58rem;
+  font-size: 0.74rem;
+  padding: 0.4rem 0 0 1rem;
   color: var(--color-fg-subtle);
-  padding: 0.45rem 0 0 1rem;
 }
 .crosshair-v,
 .crosshair-h {
   position: absolute;
   pointer-events: none;
-  background: #fff9;
+  background: var(--color-fg);
+  opacity: 0.6;
 }
 .crosshair-v {
   width: 1px;
@@ -535,37 +373,29 @@ p {
   left: 0;
   right: 0;
 }
-.plot-readout {
-  position: absolute;
-  right: 0.3rem;
-  bottom: 0.3rem;
-  background: #1c2a32df;
-  color: white;
-  font:
-    0.6rem ui-monospace,
-    monospace;
-  padding: 0.2rem 0.35rem;
-  pointer-events: none;
-}
+.plot-readout,
 .map-marker {
   position: absolute;
-  font-size: 0.6rem;
-  border: 1px solid white;
-  border-radius: 50%;
-  padding: 1px 4px;
-  background: #263f50;
-  color: white;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.2rem 0.35rem;
+  font: 0.72rem var(--font-mono);
+  pointer-events: none;
+}
+.plot-readout {
+  right: 0.3rem;
+  bottom: 0.3rem;
 }
 .curve svg {
   display: block;
   width: 100%;
-  max-height: 250px;
-  overflow: visible;
+  height: auto;
 }
 .curve svg text {
   fill: var(--color-fg-subtle);
-  font-size: 11px;
-  font-family: ui-monospace, monospace;
+  font: 11px var(--font-mono);
 }
 .chart-grid {
   stroke: var(--color-border);
@@ -577,9 +407,10 @@ p {
 }
 .curve-legend {
   display: flex;
-  gap: 1rem;
+  gap: 0.6rem;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  font-size: 0.62rem;
+  font-size: 0.76rem;
   color: var(--color-fg-subtle);
 }
 .curve-legend span:first-child {
@@ -587,35 +418,35 @@ p {
 }
 .curve-legend i {
   display: inline-block;
-  width: 10px;
-  height: 2px;
-  margin-right: 0.25rem;
+  width: 12px;
+  height: 3px;
+  margin-right: 0.3rem;
   vertical-align: middle;
 }
-.evidence-layout {
+.evidence-layout,
+.mt-curves {
   display: grid;
   gap: 1rem;
-  padding-bottom: 1rem;
 }
 .two-plots,
-.three-plots {
+.three-plots,
+.two-columns {
   display: grid;
-  gap: 0.8rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 .three-plots {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .plot-note {
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   color: var(--color-fg-subtle);
-  margin: 0.5rem 0;
-  line-height: 1.5;
+  max-width: 78ch;
 }
 .convergence-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(180px, 1fr);
-  gap: 0.8rem;
+  grid-template-columns: minmax(0, 1.6fr) minmax(200px, 1fr);
+  gap: 1rem;
 }
 .convergence-panel > .plot-note {
   grid-column: 1/-1;
@@ -631,24 +462,18 @@ p {
   padding: 0.5rem;
 }
 .metric-grid span {
-  font-size: 0.62rem;
+  font-size: 0.78rem;
   color: var(--color-fg-subtle);
 }
 .metric-grid strong {
   display: block;
-  font:
-    1.2rem ui-monospace,
-    monospace;
+  font: 1.1rem var(--font-mono);
   margin-top: 0.3rem;
 }
 .mt-view {
   display: grid;
-  grid-template-columns: minmax(150px, 0.6fr) minmax(0, 2fr);
-  gap: 1.2rem;
-}
-.mt-curves {
-  display: grid;
-  gap: 0.8rem;
+  grid-template-columns: minmax(170px, 0.6fr) minmax(0, 2fr);
+  gap: 1.25rem;
 }
 .layer-stack {
   height: 360px;
@@ -656,41 +481,32 @@ p {
   flex-direction: column;
 }
 .earth-layer {
-  min-height: 26px;
+  min-height: 40px;
   padding: 0.4rem 0.6rem;
-  position: relative;
   border-bottom: 2px solid var(--color-surface);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  color: white;
-  text-shadow: 0 1px 3px #142433;
-  font-size: 0.85rem;
 }
-.earth-layer > span {
-  font:
-    0.55rem ui-monospace,
-    monospace;
+.earth-layer > span,
+.earth-layer strong {
+  align-self: start;
+  background: var(--color-surface);
+  color: var(--color-fg);
+  padding: 0 0.25rem;
+  border-radius: 3px;
+  font: 0.8rem var(--font-mono);
 }
 .earth-layer strong {
-  font:
-    500 1.05rem ui-monospace,
-    monospace;
+  font-size: 1rem;
 }
 .layer-base {
   text-align: center;
-  font-size: 1.2rem;
-}
-.two-columns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 640px;
-  gap: 1rem;
 }
 .seismic-view {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
-  gap: 0.8rem;
+  gap: 1rem;
   align-items: start;
 }
 .seismic-view > .two-plots {
@@ -706,492 +522,143 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.7rem;
+  gap: 1rem;
+  padding: 0.5rem;
+  font-size: 0.8rem;
 }
 .wave-clock strong {
-  font:
-    2rem ui-monospace,
-    monospace;
-  letter-spacing: -0.06em;
-}
-.wave-clock small {
-  font-size: 1rem;
+  font: 1.5rem var(--font-mono);
+  white-space: nowrap;
 }
 .wave-clock span {
-  font-size: 0.65rem;
   color: var(--color-fg-subtle);
-  max-width: 45%;
 }
-.inline-control {
+.inline-control,
+.benchmark-controls {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
-  font-size: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
 }
-.learning-contract {
-  max-width: 780px;
-  padding: 0.7rem 0 1.2rem;
-}
-.learning-contract h2 {
-  font:
-    1.7rem Georgia,
-    serif;
-  margin: 0.6rem 0;
-}
-.learning-contract p {
-  font-size: 0.86rem;
-  color: var(--color-fg-subtle);
-}
+.learning-contract,
 .context-view {
-  max-width: 880px;
-  padding: 1.2rem 1rem;
+  padding: 0.5rem 0;
 }
-.context-view h2 {
-  font:
-    2rem/1.2 Georgia,
-    serif;
-  max-width: 28ch;
-}
-.context-view > p {
-  font-size: 0.95rem;
-  color: var(--color-fg-subtle);
+.context-view p,
+.context-view li {
+  max-width: 70ch;
 }
 .investigation {
   display: flex;
-  gap: 1.2rem;
-  margin: 1.5rem 0;
-  padding-top: 1.3rem;
+  gap: 1rem;
+  margin: 1.25rem 0;
   border-top: 1px solid var(--color-border);
+  padding-top: 0.8rem;
 }
 .investigation > span {
-  font:
-    1.7rem Georgia,
-    serif;
-  color: var(--color-accent);
+  color: var(--color-fg-subtle);
+  font-family: var(--font-mono);
 }
 .investigation h3 {
   margin: 0;
-  font-size: 0.95rem;
-}
-.investigation p {
-  margin: 0.4rem 0;
-  font-size: 0.85rem;
-  color: var(--color-fg-subtle);
 }
 .parameter-ledger {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
 }
 .parameter-ledger dt {
-  font-size: 0.63rem;
+  font-size: 0.78rem;
   color: var(--color-fg-subtle);
 }
 .parameter-ledger dd {
   margin: 0.35rem 0;
-  font:
-    0.9rem ui-monospace,
-    monospace;
+  font: 0.85rem var(--font-mono);
 }
 .load-state {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  flex: 1;
-  font-size: 0.9rem;
-}
-.loading-orbit {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--color-border);
-  border-top-color: var(--color-accent);
-  border-radius: 50%;
-  animation: loading 1s linear infinite;
-}
-@keyframes loading {
-  to {
-    transform: rotate(360deg);
-  }
-}
-.prose {
-  padding-top: 2.5rem;
-}
-.page-head {
-  max-width: 1000px;
-  margin-bottom: 2.5rem;
-}
-.page-head h1 {
-  font:
-    500 clamp(2rem, 4vw, 3.4rem) / 1.08 Georgia,
-    serif;
-  letter-spacing: -0.04em;
-  margin: 0.6rem 0 1rem;
-}
-.page-head .lede {
-  font-size: 1.05rem;
-  max-width: 82ch;
-  color: var(--color-fg-subtle);
-}
-.doc-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2rem;
-}
-.doc-grid section {
-  border-top: 1px solid var(--color-border);
-  padding-top: 1rem;
-}
-.doc-grid h2 {
-  font-size: 1.2rem;
-}
-.doc-grid p {
-  font-size: 0.92rem;
-  color: var(--color-fg-subtle);
-}
-.process-diagram {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1px;
-  background: var(--color-border);
-  border: 1px solid var(--color-border);
-  margin: 2rem 0;
-}
-.process-diagram > div {
-  padding: 1.5rem;
-  background: var(--color-surface);
-}
-.process-diagram b {
-  display: block;
-  color: var(--color-accent);
-  font:
-    0.7rem ui-monospace,
-    monospace;
-  margin-bottom: 1rem;
-}
-.process-diagram strong {
-  font-size: 0.9rem;
-}
-.process-diagram p {
-  font-size: 0.8rem;
-  margin-bottom: 0;
-  color: var(--color-fg-subtle);
-}
-.method-article {
-  padding: 1.5rem 0;
-}
-.method-article h2 {
-  font:
-    1.8rem Georgia,
-    serif;
-}
-.method-article .doc-grid {
-  margin-top: 1.5rem;
+  padding: 2rem;
 }
 .table-scroll {
   overflow: auto;
+  min-width: 0;
 }
-table {
+.cmp-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 0.78rem;
-  margin: 1rem 0;
+  font-size: 0.84rem;
+  margin-top: 0.8rem;
 }
-th,
-td {
+.cmp-table th,
+.cmp-table td {
+  padding: 0.5rem 0.6rem;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
-  padding: 0.7rem 0.6rem;
 }
-th {
-  font-size: 0.63rem;
-  letter-spacing: 0.06em;
+.cmp-table th {
   color: var(--color-fg-subtle);
-  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.78rem;
 }
-td code {
-  font-size: 0.6rem;
-}
-.benchmark-controls {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.benchmark-controls select {
-  font-size: 0.8rem;
-}
-.benchmark-summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-.benchmark-summary > div {
-  padding: 1rem;
-  border-top: 1px solid var(--color-border);
-}
-.benchmark-summary strong {
-  font:
-    2rem Georgia,
-    serif;
-  display: block;
-}
-.benchmark-summary span {
-  font-size: 0.7rem;
-  color: var(--color-fg-subtle);
-}
-.case-guide {
-  padding: 1.4rem;
+.codeblock {
+  background: var(--color-surface-2);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  overflow-x: auto;
+  font: 0.8rem/1.55 var(--font-mono);
+  color: var(--color-fg);
+  white-space: pre;
 }
-.case-guide h2 {
-  font:
-    1.5rem Georgia,
-    serif;
+.method-article {
+  min-width: 0;
 }
-.case-guide p {
-  font-size: 0.9rem;
+.method-article p,
+.method-article li {
+  max-width: 70ch;
 }
-.source-list {
-  columns: 2;
-  column-gap: 2rem;
+.method-symbols {
+  font-size: 0.88rem;
 }
-.source-list > li {
-  break-inside: avoid;
-  margin-bottom: 1rem;
-  font-size: 0.85rem;
-  line-height: 1.6;
+.method-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--color-fg);
 }
-@media (min-width: 1900px) {
-  .instrument-sidebar {
-    padding: 2.1rem 1.7rem;
-  }
-  .page-body.workbench {
-    grid-template-columns: 300px minmax(0, 1fr);
-  }
-  .instrument-main {
-    padding: 1.8rem 2rem;
-  }
-  .case-heading h2 {
-    font-size: 1.7rem;
-  }
-  .science-plot figcaption {
-    font-size: 0.9rem;
-  }
-  .curve svg {
-    max-height: 340px;
-  }
-  .scene-adjustments {
-    padding: 0.7rem 0;
-  }
-  .instrument-sidebar {
-    gap: 1.5rem;
-  }
+.method-diagram text {
+  fill: currentColor;
+  font: 14px var(--font-sans);
 }
-@media (max-width: 1100px) {
-  .page-body.workbench {
-    grid-template-columns: 230px minmax(0, 1fr);
-  }
-  .instrument-main {
-    padding: 1rem;
-  }
-  .instrument-sidebar {
-    padding: 1rem 0.8rem;
-  }
-  .case-counter {
-    display: none;
-  }
-  .three-plots {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .three-plots > .science-plot:last-child {
-    grid-column: 1/-1;
-    max-width: 100%;
-  }
-  .seismic-view {
-    grid-template-columns: 1fr;
-  }
-  .seismic-view > .two-plots {
-    grid-template-columns: 1fr 1fr;
-  }
-  .scene-adjustments {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem 1rem;
-  }
-  .convergence-panel {
-    grid-template-columns: 1fr;
-  }
-  .case-heading h2 {
-    font-size: 1.1rem;
-  }
-  .instrument-main .tab {
-    font-size: 0.67rem;
-    padding: 0.5rem;
-  }
-  .source-caption {
-    font-size: 0.58rem;
-  }
-  .mt-view {
-    grid-template-columns: 140px minmax(0, 1fr);
-  }
+.method-diagram .diagram-muted {
+  fill: var(--color-fg-subtle);
 }
-@media (max-width: 760px) {
-  .app-shell.fixed {
-    height: auto !important;
-    overflow: visible !important;
-    min-height: 100dvh;
-  }
-  .app-shell.fixed .app-main {
-    overflow: visible !important;
-  }
-  .page-body.workbench {
-    display: block;
-    height: auto;
-  }
-  .instrument-sidebar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-right: 0;
-    border-bottom: 1px solid var(--color-border);
-    overflow: visible;
-    gap: 0.8rem;
-    padding: 1rem;
-  }
-  .instrument-brand {
-    grid-column: 1/-1;
-  }
-  .instrument-brand h1 {
-    font-size: 1.5rem;
-  }
-  .case-question,
-  .source-caption {
-    grid-column: 1/-1;
-  }
-  .case-question p {
-    font-size: 0.85rem;
-  }
-  .playback {
-    grid-column: 1/-1;
-    margin: 0;
-    padding-top: 0.7rem;
-  }
-  .sidebar-actions {
-    grid-column: 1/-1;
-  }
-  .instrument-main {
-    min-height: 640px;
-    padding: 1rem;
-  }
-  .instrument-main > .tabs {
-    display: block;
-  }
-  .instrument-main .tabpanel {
-    overflow: visible;
-  }
-  .instrument-main .tablist {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    display: flex;
-  }
-  .instrument-main .tab {
-    white-space: nowrap;
-  }
-  .earth-view {
-    height: 600px;
-    min-height: 0;
-  }
-  .earth-scene {
-    min-height: 270px;
-  }
-  .scene-instructions {
-    bottom: 2.5rem;
-    left: 1rem;
-    font-size: 0.5rem;
-  }
-  .scene-readout {
-    max-width: 90%;
-    font-size: 0.55rem;
-  }
-  .scene-label strong {
-    max-width: 160px;
-  }
-  .scene-bottom {
-    align-items: start;
-    flex-direction: column;
-    gap: 0;
-  }
-  .scene-bottom > .scale-legend {
-    width: 100%;
-    margin-bottom: 0.2rem;
-  }
-  .scene-toolbar {
-    gap: 0.6rem;
-  }
-  .scene-toolbar label {
-    font-size: 0.62rem;
-  }
-  .two-plots,
-  .three-plots,
-  .two-columns,
-  .doc-grid {
-    grid-template-columns: 1fr;
-  }
-  .three-plots > .science-plot:last-child {
-    grid-column: auto;
-  }
-  .mt-view {
-    grid-template-columns: 1fr;
-  }
-  .mt-column .layer-stack {
-    height: 250px;
-  }
-  .seismic-view > .two-plots {
-    grid-template-columns: 1fr;
-  }
-  .metric-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .parameter-ledger {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .context-view {
-    padding: 0.6rem 0;
-  }
-  .context-view h2 {
-    font-size: 1.6rem;
-  }
-  .process-diagram {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .benchmark-summary {
-    grid-template-columns: 1fr 1fr;
-  }
-  .source-list {
-    columns: 1;
-  }
-  .prose {
-    padding: 1.5rem 1rem;
-  }
-  .select-control select {
-    font-size: 0.7rem;
-  }
-  .plot-note {
-    font-size: 0.65rem;
-  }
-  .curve-legend {
-    gap: 0.45rem;
-    font-size: 0.55rem;
-  }
+.method-diagram .diagram-box {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
 }
-@media (prefers-reduced-motion: reduce) {
-  .loading-orbit {
-    animation: none;
-  }
-  * {
-    scroll-behavior: auto !important;
-  }
+.method-diagram .diagram-active {
+  fill: var(--color-accent-soft);
+  stroke: var(--color-accent);
+}
+.method-diagram .diagram-edge {
+  fill: none;
+  stroke: var(--color-fg-subtle);
+  stroke-width: 1.5;
+}
+.method-diagram .diagram-highlight {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.method-diagram .diagram-warning {
+  fill: none;
+  stroke: var(--color-bad);
+  stroke-width: 2;
 }
 .geology-overlay {
   position: absolute;
@@ -1200,55 +667,93 @@ td code {
   height: 100%;
   pointer-events: none;
   fill: none;
-  stroke: #718184;
-  stroke-width: 0.12;
-  opacity: 0.7;
+  stroke: var(--color-fg);
+  stroke-width: 0.15;
+  opacity: 0.65;
 }
 .time-cursor {
   position: absolute;
   height: 1px;
   left: 0;
   right: 0;
-  background: #bd5b37;
+  background: var(--color-bad);
   pointer-events: none;
 }
-.playback > .range-control {
-  margin: 0.65rem 0 0.3rem;
-}
-.playback > .select-control {
-  margin-bottom: 0.7rem;
-}
-.playback > small {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-.seismic-view .heatmap-area {
-  aspect-ratio: auto;
-  height: clamp(100px, calc((100dvh - 490px) / 2), 320px);
-}
-.seismic-view .wave-stage .heatmap-area {
-  height: clamp(260px, calc(100dvh - 400px), 710px);
-}
-.instrument-sidebar {
-  scrollbar-width: thin;
-}
-.instrument-main .tabpanel {
-  scrollbar-width: thin;
-}
-.app-shell.fixed .page-body.workbench {
-  padding-top: 0;
-  padding-bottom: 0;
+@media (max-width: 1100px) {
+  .workbench {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .scene-adjustments,
+  .three-plots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .convergence-panel,
+  .seismic-view {
+    grid-template-columns: 1fr;
+  }
+  .case-counter {
+    display: none;
+  }
 }
 @media (max-width: 760px) {
-  .seismic-view .heatmap-area,
-  .seismic-view .wave-stage .heatmap-area {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  .instrument-sidebar {
+    max-height: 32dvh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .instrument-sidebar:not(.expanded)
+    > :not(.select-control):not(.mobile-controls-toggle) {
+    display: none;
+  }
+  .instrument-sidebar:not(.expanded) > .select-control:not(:first-of-type) {
+    display: none;
+  }
+  .instrument-sidebar > .select-control:first-of-type {
+    grid-column: 1/-1;
+  }
+  .instrument-brand,
+  .case-question,
+  .playback,
+  .sidebar-actions,
+  .source-caption {
+    grid-column: 1/-1;
+  }
+  .mobile-controls-toggle {
+    display: block;
+    grid-column: 1/-1;
+  }
+  .earth-view {
     height: auto;
-    aspect-ratio: 1.333;
+    min-height: 0;
   }
-  .instrument-sidebar .playback {
-    margin-top: 0.5rem;
+  .earth-scene {
+    height: 220px;
+    min-height: 220px;
+    flex: none;
   }
-  .seismic-view > .two-plots {
+  .two-plots,
+  .three-plots,
+  .two-columns,
+  .mt-view {
     grid-template-columns: 1fr;
+  }
+  .scene-bottom {
+    display: block;
+  }
+  .scene-bottom > .scale-legend {
+    width: 100%;
+  }
+  .scene-adjustments,
+  .parameter-ledger {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .scene-readout {
+    max-width: 95%;
   }
 }

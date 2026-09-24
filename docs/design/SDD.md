@@ -22,7 +22,7 @@ Gravity forward uses the SimPEG 3D prism operator. Weighted L2 and sparse IRLS s
 
 ## UI and visual language
 
-Keep the shared shell and six routes. Replace all app-specific styling. Use neutral ivory/white light surfaces, charcoal dark surfaces, ink text, a restrained blue interaction accent, and physical colormaps with legends. No purple/cyan/amber dashboard gradients. One 300px control rail plus a dominant instrument, organized into at most five measurement families. Show only relevant controls. Potential fields use rotatable 3D voxels, a survey surface and linked orthogonal sections; MT uses a log-resistivity depth column plus log-frequency impedance plots; seismic uses receiver-time gathers, velocity sections and actual wavefield frames. Residuals use a zero-centered diverging scale. Truth/recovered comparison has shared limits. All views include units, coordinate readouts and labeled acquisition geometry. No claim of certainty inferred from a noise slider.
+Correction authorized 2026-09-24: the custom palette and typography are rejected. Use the shared-shell CSS, fonts, controls, Tabs/SubTabs and page primitives without product overrides. RotorVitals supplies component patterns; only scientific-widget geometry remains product-specific. See [scientific content and UI correction](features/scientific-copy/design.md). Potential fields retain 3D voxels and sections, MT retains layer columns and impedance curves, and seismic retains gathers and computed pressure fields. These representations must use shared theme tokens for chrome and labeled quantitative colour scales for data.
 
 ## Requirements and gates
 

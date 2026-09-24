@@ -1,4 +1,4 @@
-# Inverse Earth Studio · 0.02.000
+# Inverse Earth Studio · 0.03.000
 
 [Open the observatory](https://geophysics.ml.fasl-work.com/) · [GitHub Pages](https://fsantibanezleal.github.io/CAOS_Geophysics/) · [Documentation](docs/README.md)
 
