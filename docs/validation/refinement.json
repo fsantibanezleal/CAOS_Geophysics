@@ -1,0 +1,75 @@
+{
+  "reference": "56 x 48 x 32 cell-centre property discretization, not an analytic geological truth",
+  "stations": 36,
+  "uniform_prism_subdivision_max_relative_difference": 1.725596117868681e-09,
+  "cases": [
+    {
+      "case": "GRAVITY_INTRUSION",
+      "coarse_relative_l2": 0.038299059500521544,
+      "refined_relative_l2": 0.021889880108982
+    },
+    {
+      "case": "GRAVITY_DEEP_BODY",
+      "coarse_relative_l2": 0.13513007776790903,
+      "refined_relative_l2": 0.1431155996987673
+    },
+    {
+      "case": "GRAVITY_NOISY",
+      "coarse_relative_l2": 0.0444630808514518,
+      "refined_relative_l2": 0.09834080952428545
+    },
+    {
+      "case": "GRAVITY_TILTED",
+      "coarse_relative_l2": 0.026870038054056817,
+      "refined_relative_l2": 0.00408102153227075
+    },
+    {
+      "case": "MAGNETIC_DYKE",
+      "coarse_relative_l2": 0.11909968036376346,
+      "refined_relative_l2": 0.031748392482346365
+    },
+    {
+      "case": "MAGNETIC_REMANENCE",
+      "coarse_relative_l2": 0.16776893773896398,
+      "refined_relative_l2": 0.03002192609355198
+    },
+    {
+      "case": "MAGNETIC_DEEP",
+      "coarse_relative_l2": 0.10860241927987743,
+      "refined_relative_l2": 0.013491177811391336
+    },
+    {
+      "case": "MAGNETIC_NOISY",
+      "coarse_relative_l2": 0.21462229819901749,
+      "refined_relative_l2": 0.07382595710444792
+    },
+    {
+      "case": "JOINT_SHARED",
+      "coarse_relative_l2": 0.011288862567546808,
+      "refined_relative_l2": 0.003118744308170596
+    },
+    {
+      "case": "JOINT_CONFLICT",
+      "coarse_relative_l2": 0.03786307552149722,
+      "refined_relative_l2": 0.015025341094093838
+    },
+    {
+      "case": "LEARNED_CNN",
+      "coarse_relative_l2": 0.09284808039213635,
+      "refined_relative_l2": 0.02741322855394044
+    },
+    {
+      "case": "LEARNED_AUTOENCODER",
+      "coarse_relative_l2": 0.10920797827660798,
+      "refined_relative_l2": 0.04137059778694148
+    }
+  ],
+  "seismic": {
+    "previous_spacing_m": 25,
+    "spacing_m": 12.5,
+    "dt_seconds": 0.0005,
+    "pml_m": 300,
+    "points_per_wavelength_at_1550ms_9Hz": 13.777777777777779,
+    "caveat": "Peak-frequency sampling diagnostic only; no claim of a full seismic convergence study."
+  }
+}

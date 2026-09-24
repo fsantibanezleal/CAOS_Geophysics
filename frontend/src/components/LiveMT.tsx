@@ -24,22 +24,16 @@ export function LiveMT() {
   const [error, setError] = useState("");
   return (
     <section className="method-article">
-      <span className="small-caps">
-        {t(
-          "LIVE PHYSICS / YOUR LAYERED EARTH",
-          "FÍSICA EN VIVO / SU TIERRA ESTRATIFICADA",
-        )}
-      </span>
       <h2>
         {t(
-          "Build a sounding, not an illustration.",
-          "Construya un sondeo, no una ilustración.",
+          "Layered-earth MT forward response",
+          "Respuesta directa MT de un medio estratificado",
         )}
       </h2>
       <p>
         {t(
-          "Change a layer and the browser recomputes the complex impedance recursion immediately. The dashed curve is the fixed reference aquifer; solid curves are your current earth. This is forward modelling, not an inversion of observed field data.",
-          "Cambie una capa y el navegador recalcula la recursión de impedancia. La curva segmentada es el acuífero de referencia; las curvas continuas corresponden a su Tierra. Es modelación directa, no inversión de datos de campo.",
+          "Change a layer and the browser recomputes the complex impedance recursion immediately. The dashed curve is the fixed reference aquifer; solid curves represent the specified model. This is forward modelling, not an inversion of observed field data.",
+          "Cambie una capa y el navegador recalcula la recursión de impedancia. La curva segmentada es el acuífero de referencia; las curvas continuas representan el modelo especificado. Es modelación directa, no inversión de datos de campo.",
         )}
       </p>
       <div className="mt-view">
@@ -47,7 +41,7 @@ export function LiveMT() {
           <LayerColumn
             rho={rho}
             thickness={h}
-            title={t("Your resistivity column", "Su columna de resistividad")}
+            title={t("Resistivity model", "Modelo de resistividad")}
           />
           {rho.map((value, i) => (
             <label key={i} className="range-control">
@@ -58,6 +52,7 @@ export function LiveMT() {
               <input
                 aria-label={`${t("Layer", "Capa")} ${i + 1} Ω m`}
                 type="range"
+                className="range"
                 min={0}
                 max={4}
                 step={0.025}
@@ -81,6 +76,7 @@ export function LiveMT() {
               <input
                 aria-label={`h${i + 1} m`}
                 type="range"
+                className="range"
                 min={10}
                 max={2000}
                 step={10}
@@ -99,6 +95,7 @@ export function LiveMT() {
             <input
               aria-label={t("Minimum frequency", "Frecuencia mínima")}
               type="range"
+              className="range"
               min={-4}
               max={0}
               value={minimum}
@@ -117,7 +114,7 @@ export function LiveMT() {
                 dashed: true,
               },
               {
-                name: t("Current earth", "Tierra actual"),
+                name: t("Specified model", "Modelo especificado"),
                 values: result.apparent,
               },
             ]}
@@ -136,7 +133,7 @@ export function LiveMT() {
                 dashed: true,
               },
               {
-                name: t("Current earth", "Tierra actual"),
+                name: t("Specified model", "Modelo especificado"),
                 values: result.phase,
               },
             ]}
@@ -146,6 +143,7 @@ export function LiveMT() {
           />
           <div className="sidebar-actions">
             <button
+              className="btn"
               onClick={() => {
                 setRho([300, 15, 900]);
                 setH([300, 550]);
@@ -156,6 +154,7 @@ export function LiveMT() {
               {t("Reset model", "Restablecer modelo")}
             </button>
             <button
+              className="btn"
               onClick={() => {
                 const url = URL.createObjectURL(
                   new Blob(

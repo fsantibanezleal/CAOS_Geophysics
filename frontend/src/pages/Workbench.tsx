@@ -26,6 +26,7 @@ import {
   type Curves,
   type Run,
 } from "../science";
+import { methodName, metricInfo, historyInfo } from "../data/metrics";
 import { lessons } from "../data/lessons";
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
@@ -65,6 +66,7 @@ function Range({
       <input
         aria-label={label}
         type="range"
+        className="range"
         min={min}
         max={max}
         step={step}
@@ -86,8 +88,12 @@ export default function Workbench() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState("truth");
-  const [section, setSection] = useState(6);
+  const [section, setSection] = useState(12);
   const [cut, setCut] = useState(960);
+  const [representation, setRepresentation] = useState<"surface" | "cells">(
+    "surface",
+  );
+  const [threshold, setThreshold] = useState(0.35);
   const [opacity, setOpacity] = useState(1);
   const [survey, setSurvey] = useState(true);
   const [angle, setAngle] = useState(0);
@@ -97,7 +103,7 @@ export default function Workbench() {
   const [reset, setReset] = useState(0);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [blend,setBlend]=useState(0);
+  const [blend, setBlend] = useState(0);
   const [shot, setShot] = useState(1);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [gain, setGain] = useState(8);
@@ -155,16 +161,38 @@ export default function Workbench() {
       ? (run.wavefields?.length ?? 0)
       : (method?.frames.length ?? 0);
   useEffect(() => {
-    if (!playing || count < 2) {setBlend(0);return;}
-    if(run?.family==='seismic'&&playbackKind==='wave'){
-      const start=performance.now(),initial=frame;let handle=0,last=0;
-      const tick=(now:number)=>{if(now-last>=32){const progress=initial+(now-start)/120;const current=Math.floor(progress)%count;setFrame(current);setBlend(current===count-1?0:progress%1);last=now;}handle=requestAnimationFrame(tick);};
-      handle=requestAnimationFrame(tick);return()=>cancelAnimationFrame(handle);
+    if (!playing || count < 2) {
+      setBlend(0);
+      return;
+    }
+    if (run?.family === "seismic" && playbackKind === "wave") {
+      const start = performance.now(),
+        initial = frame;
+      let handle = 0,
+        last = 0;
+      const tick = (now: number) => {
+        if (now - last >= 32) {
+          const progress = initial + (now - start) / 120;
+          const current = Math.floor(progress) % count;
+          setFrame(current);
+          setBlend(current === count - 1 ? 0 : progress % 1);
+          last = now;
+        }
+        handle = requestAnimationFrame(tick);
+      };
+      handle = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(handle);
     }
     const id = setInterval(() => setFrame((f) => (f + 1) % count), 120);
     return () => clearInterval(id);
-  }, [playing, count,run?.family,playbackKind]);
-  const waveRange=useMemo(()=>run?.wavefields?signed(run.wavefields.flat(2)):[-1,1] as [number,number],[run]);
+  }, [playing, count, run?.family, playbackKind]);
+  const waveRange = useMemo(
+    () =>
+      run?.wavefields
+        ? signed(run.wavefields.flat(2))
+        : ([-1, 1] as [number, number]),
+    [run],
+  );
   const values = useMemo(
     () =>
       !run || !method
@@ -177,8 +205,11 @@ export default function Workbench() {
     [run, method, frame, mode],
   );
   const pickCell = useCallback(
-    (i: number) => setSection(Math.floor(i / 14) % 12),
-    [],
+    (i: number) => {
+      if (run?.grid)
+        setSection(Math.floor(i / run.grid.shape[2]) % run.grid.shape[1]);
+    },
+    [run],
   );
   const select = (id: string) => {
     setSelected(id);
@@ -211,35 +242,36 @@ export default function Workbench() {
   if (run && method) {
     const final = flatten(method.model);
     const truth = flatten(run.truth);
+    const h = historyInfo(methodId, es);
     const history = (
       <div className="convergence-panel">
         <Plot
-          title={t("Recorded objective", "Objetivo registrado")}
-          x={indices(method.history.length)}
-          series={[
-            { name: t("Objective", "Objetivo"), values: method.history },
-          ]}
-          xLabel={t(
-            "Saved evaluation / update",
-            "Evaluación / actualización guardada",
-          )}
-          yLabel={t("Objective value", "Valor del objetivo")}
+          title={h.label}
+          x={indices(method.history.length).map((i) => i * h.stride)}
+          series={[{ name: h.label, values: method.history }]}
+          xLabel={h.axis}
+          yLabel={h.label + " · 1"}
           logY={method.history.every((v) => v > 0)}
         />
         <div className="metric-grid">
           {Object.entries(method.metrics).map(([key, value]) => (
-            <div key={key}>
-              <span>{key.replaceAll("_", " ")}</span>
+            <div
+              key={key}
+              title={metricInfo(key, run.family, methodId, es).description}
+            >
+              <span>{metricInfo(key, run.family, methodId, es).label}</span>
               <strong>
                 {typeof value === "boolean"
                   ? value
                     ? t("Yes", "Sí")
                     : t("No", "No")
-                  : format(value)}
+                  : format(value)}{" "}
+                {metricInfo(key, run.family, methodId, es).unit}
               </strong>
             </div>
           ))}
         </div>
+        <p className="plot-note">{h.description}</p>
         <p className="plot-note">
           {t(
             "Metrics describe the final selected solution, not the replay frame. Lower data error does not guarantee correct geology.",
@@ -257,13 +289,13 @@ export default function Workbench() {
           <div className="scene-toolbar">
             <div className="segmented">
               <button
-                className={mode === "truth" ? "active" : ""}
+                className={`chip ${mode === "truth" ? "on" : ""}`}
                 onClick={() => setMode("truth")}
               >
                 {t("Known geology", "Geología conocida")}
               </button>
               <button
-                className={mode === "recovered" ? "active" : ""}
+                className={`chip ${mode === "recovered" ? "on" : ""}`}
                 onClick={() => {
                   setMode("recovered");
                   setFrame(Math.max(0, count - 1));
@@ -280,7 +312,10 @@ export default function Workbench() {
               />
               {t("Survey plane", "Plano de medición")}
             </label>
-            <button className="text-button" onClick={() => setOrbit((v) => !v)}>
+            <button
+              className="btn text-button"
+              onClick={() => setOrbit((v) => !v)}
+            >
               {orbit ? <Pause size={14} /> : <Play size={14} />}{" "}
               {t("Orbit", "Orbitar")}
             </button>
@@ -301,6 +336,8 @@ export default function Workbench() {
                 : t("Recovered model", "Modelo recuperado")
             }
             onCell={pickCell}
+            representation={representation}
+            threshold={threshold}
           />
           <div className="scene-bottom">
             <Legend
@@ -316,60 +353,97 @@ export default function Workbench() {
             />
             <span>
               {t(
-                "Cells below 10% of maximum |m| are hidden.",
-                "Se ocultan celdas bajo 10% del máximo |m|.",
+                "Surface interpolates the computed cell values; it does not add numerical resolution.",
+                "La superficie interpola valores calculados; no agrega resolución numérica.",
               )}
             </span>
           </div>
-          <div className="scene-adjustments">
-            <Range
-              label={t("Northing cut", "Corte norte")}
-              value={cut}
-              min={-960}
-              max={960}
-              step={80}
-              unit="m"
-              onChange={setCut}
-            />
-            <Range
-              label={t("Opacity", "Opacidad")}
-              value={opacity}
-              min={0.2}
-              max={1}
-              step={0.05}
-              onChange={setOpacity}
-            />
-            <Range
-              label={t("Orbit speed", "Velocidad orbital")}
-              value={speed}
-              min={1}
-              max={24}
-              unit="°/s"
-              onChange={setSpeed}
-            />
-            <div className="angle-control">
+          <details className="scene-settings">
+            <summary>
+              {t(
+                "View controls: threshold, cut and rotation",
+                "Controles de vista: umbral, corte y rotación",
+              )}
+            </summary>
+            <div className="scene-adjustments">
+              <label className="select-control">
+                <span>{t("Representation", "Representación")}</span>
+                <select
+                  className="select"
+                  aria-label={t("Representation", "Representación")}
+                  value={representation}
+                  onChange={(e) =>
+                    setRepresentation(e.target.value as "surface" | "cells")
+                  }
+                >
+                  <option value="surface">
+                    {t("Isosurfaces", "Isosuperficies")}
+                  </option>
+                  <option value="cells">
+                    {t("Computed cells", "Celdas calculadas")}
+                  </option>
+                </select>
+              </label>
               <Range
-                label={t("Angle step", "Paso angular")}
-                value={angleStep}
-                min={1}
+                label={t("Property threshold", "Umbral de propiedad")}
+                value={Math.round(threshold * 100)}
+                min={5}
                 max={90}
-                unit="°"
-                onChange={setAngleStep}
+                step={5}
+                unit="% |m|max"
+                onChange={(v) => setThreshold(v / 100)}
               />
-              <button
-                aria-label={t("Rotate left", "Girar izquierda")}
-                onClick={() => setAngle((v) => (v - angleStep + 360) % 360)}
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                aria-label={t("Rotate right", "Girar derecha")}
-                onClick={() => setAngle((v) => (v + angleStep) % 360)}
-              >
-                <ChevronRight size={16} />
-              </button>
+              <Range
+                label={t("Northing cut", "Corte norte")}
+                value={cut}
+                min={-960}
+                max={960}
+                step={80}
+                unit="m"
+                onChange={setCut}
+              />
+              <Range
+                label={t("Opacity", "Opacidad")}
+                value={opacity}
+                min={0.2}
+                max={1}
+                step={0.05}
+                onChange={setOpacity}
+              />
+              <Range
+                label={t("Orbit speed", "Velocidad orbital")}
+                value={speed}
+                min={1}
+                max={24}
+                unit="°/s"
+                onChange={setSpeed}
+              />
+              <div className="angle-control">
+                <Range
+                  label={t("Angle step", "Paso angular")}
+                  value={angleStep}
+                  min={1}
+                  max={90}
+                  unit="°"
+                  onChange={setAngleStep}
+                />
+                <button
+                  className="btn"
+                  aria-label={t("Rotate left", "Girar izquierda")}
+                  onClick={() => setAngle((v) => (v - angleStep + 360) % 360)}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  className="btn"
+                  aria-label={t("Rotate right", "Girar derecha")}
+                  onClick={() => setAngle((v) => (v + angleStep) % 360)}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
-          </div>
+          </details>
         </div>
       );
       measurements = (
@@ -418,8 +492,8 @@ export default function Workbench() {
           />
           <p className="plot-note">
             {t(
-              "Black survey markers identify active stations. Coverage experiments fit alternate stations; predictions at omitted stations remain visible.",
-              "Marcadores negros identifican estaciones activas. Los experimentos de cobertura ajustan estaciones alternas; las predicciones en estaciones omitidas siguen visibles.",
+              "Survey markers identify active stations. Coverage experiments fit alternate stations; predictions at omitted stations remain visible.",
+              "Los marcadores identifican estaciones activas. Los experimentos de cobertura ajustan estaciones alternas; las predicciones en estaciones omitidas siguen visibles.",
             )}
           </p>
         </div>
@@ -430,7 +504,7 @@ export default function Workbench() {
             label={t("Northing section", "Sección norte")}
             value={section}
             min={0}
-            max={11}
+            max={run.grid.shape[1] - 1}
             onChange={setSection}
           />
           <div className="two-plots">
@@ -584,6 +658,10 @@ export default function Workbench() {
       const obs = run.observed as number[][][],
         pred = method.predicted as number[][][],
         res = method.residual as number[][][];
+      const [nz, nx] = run.grid!.shape;
+      const dx = run.grid!.spacing[0];
+      const seismicX: [number, number] = [-dx / 2, (nx - 0.5) * dx];
+      const seismicY: [number, number] = [-dx / 2, (nz - 0.5) * dx];
       const gather = obs[Math.min(shot, obs.length - 1)];
       const nt = gather[0].length;
       const time = indices(nt).map((i) => i * run.dt!);
@@ -591,7 +669,16 @@ export default function Workbench() {
         playbackKind === "wave"
           ? run.wavefields![Math.min(frame, count - 1)]
           : (method.frames[Math.min(frame, count - 1)] as number[][]);
-      const wave=playbackKind==='wave'&&playing&&blend>0?savedWave.map((row,y)=>row.map((v,x)=>v*(1-blend)+run.wavefields![Math.min(frame+1,count-1)][y][x]*blend)):savedWave;
+      const wave =
+        playbackKind === "wave" && playing && blend > 0
+          ? savedWave.map((row, y) =>
+              row.map(
+                (v, x) =>
+                  v * (1 - blend) +
+                  run.wavefields![Math.min(frame + 1, count - 1)][y][x] * blend,
+              ),
+            )
+          : savedWave;
       const fullWaveRange = waveRange;
       const wr: [number, number] = [
         fullWaveRange[0] / gain,
@@ -607,8 +694,8 @@ export default function Workbench() {
           unit="m/s"
           xLabel={t("Distance · m", "Distancia · m")}
           yLabel={t("Depth · m", "Profundidad · m")}
-          xRange={[-12.5, 1587.5]}
-          yRange={[-12.5, 1187.5]}
+          xRange={seismicX}
+          yRange={seismicY}
         />
       );
       const gatherPlot = (data: number[][], title: string) => (
@@ -619,7 +706,8 @@ export default function Workbench() {
           range={signed(gather.flat()).map((v) => v / gain) as [number, number]}
           cursorY={
             playbackKind === "wave"
-              ? ((frame+blend) * run.wavefield_dt! + run.dt! / 2) / (nt * run.dt!)
+              ? ((frame + blend) * run.wavefield_dt! + run.dt! / 2) /
+                (nt * run.dt!)
               : undefined
           }
           xLabel={t("Receiver position · m", "Posición receptor · m")}
@@ -656,14 +744,20 @@ export default function Workbench() {
               boundaries={run.truth as number[][]}
               xLabel={t("Distance · m", "Distancia · m")}
               yLabel={t("Depth · m", "Profundidad · m")}
-              xRange={[-12.5, 1587.5]}
-              yRange={[-12.5, 1187.5]}
-              markers={[{ x: 32.5 / 64, y: 3.5 / 48, label: "S" }]}
+              xRange={seismicX}
+              yRange={seismicY}
+              markers={[
+                {
+                  x: (run.sources![1][0] + dx / 2) / (nx * dx),
+                  y: (run.sources![1][1] + dx / 2) / (nz * dx),
+                  label: "S₂",
+                },
+              ]}
             />
             <div className="wave-clock">
               <strong>
                 {playbackKind === "wave"
-                  ? ((frame+blend) * run.wavefield_dt!).toFixed(3)
+                  ? ((frame + blend) * run.wavefield_dt!).toFixed(3)
                   : frame * 2}{" "}
                 <small>
                   {playbackKind === "wave" ? "s" : t("update", "paso")}
@@ -699,7 +793,11 @@ export default function Workbench() {
         <div className="evidence-layout">
           <label className="inline-control">
             {t("Source position", "Posición de fuente")}
-            <select value={shot} onChange={(e) => setShot(+e.target.value)}>
+            <select
+              className="select"
+              value={shot}
+              onChange={(e) => setShot(+e.target.value)}
+            >
               {run.sources!.map((p, i) => (
                 <option key={i} value={i}>
                   S{i + 1} · {p[0]} m
@@ -746,8 +844,8 @@ export default function Workbench() {
               unit="m/s"
               xLabel={t("Distance · m", "Distancia · m")}
               yLabel={t("Depth · m", "Profundidad · m")}
-              xRange={[-12.5, 1587.5]}
-              yRange={[-12.5, 1187.5]}
+              xRange={seismicX}
+              yRange={seismicY}
             />
           </div>
           {history}
@@ -772,12 +870,12 @@ export default function Workbench() {
             <h2>
               {cnn
                 ? t(
-                    "A projection, not a 3D earth",
-                    "Una proyección, no una Tierra 3D",
+                    "Depth-integrated density prediction",
+                    "Predicción de densidad integrada",
                   )
                 : t(
-                    "Where the learned prior fails",
-                    "Dónde falla el prior aprendido",
+                    "Observation reconstruction error",
+                    "Error de reconstrucción de observaciones",
                   )}
             </h2>
             <p>{lesson.read[lang]}</p>
@@ -852,14 +950,13 @@ export default function Workbench() {
     <div className="page-body wide workbench">
       <aside className={`instrument-sidebar ${controlsOpen ? "expanded" : ""}`}>
         <div className="instrument-brand">
-          <span className="small-caps">
-            {t("GEOPHYSICAL OBSERVATORY", "OBSERVATORIO GEOFÍSICO")}
-          </span>
-          <h1>{t("Beneath the surface.", "Bajo la superficie.")}</h1>
+          <span className="small-caps">{t("GEOPHYSICS", "GEOFÍSICA")}</span>
+          <h1>{t("Geophysical inversion", "Inversión geofísica")}</h1>
         </div>
         <label className="select-control">
           <span>01 / {t("Geological case", "Caso geológico")}</span>
           <select
+            className="select"
             aria-label={t("Geological case", "Caso geológico")}
             value={selected}
             onChange={(e) => select(e.target.value)}
@@ -878,11 +975,11 @@ export default function Workbench() {
           </select>
         </label>
         <div className="case-question">
-          <span>{t("THE QUESTION", "LA PREGUNTA")}</span>
+          <span>{t("Case hypothesis", "Hipótesis del caso")}</span>
           <p>{lesson.question[lang]}</p>
         </div>
         <button
-          className="mobile-controls-toggle"
+          className="btn mobile-controls-toggle"
           aria-expanded={controlsOpen}
           onClick={() => setControlsOpen((v) => !v)}
         >
@@ -897,6 +994,7 @@ export default function Workbench() {
         <label className="select-control">
           <span>02 / {t("Experiment", "Experimento")}</span>
           <select
+            className="select"
             aria-label={t("Experiment", "Experimento")}
             value={variant}
             onChange={(e) => setVariant(e.target.value)}
@@ -911,6 +1009,7 @@ export default function Workbench() {
         <label className="select-control">
           <span>03 / {t("Inverse method", "Método inverso")}</span>
           <select
+            className="select"
             aria-label={t("Inverse method", "Método inverso")}
             value={methodId}
             onChange={(e) => {
@@ -921,7 +1020,7 @@ export default function Workbench() {
           >
             {Object.entries(run?.methods ?? {}).map(([id, m]) => (
               <option key={id} value={id}>
-                {es ? m.name_es : m.name}
+                {methodName(id, es, es ? m.name_es : m.name)}
               </option>
             ))}
           </select>
@@ -930,10 +1029,9 @@ export default function Workbench() {
           {run?.family === "seismic" && (
             <>
               <label className="select-control">
-                <span>
-                  {t("Animate a physical process", "Animar un proceso físico")}
-                </span>
+                <span>{t("Recorded process", "Proceso registrado")}</span>
                 <select
+                  className="select"
                   aria-label={t("Animation process", "Proceso animado")}
                   value={playbackKind}
                   onChange={(e) => {
@@ -976,7 +1074,7 @@ export default function Workbench() {
           </span>
           <div className="playback-row">
             <button
-              className="play-button"
+              className="btn play-button"
               disabled={count < 2 || loading}
               aria-label={
                 playing ? t("Pause", "Pausar") : t("Play", "Reproducir")
@@ -991,6 +1089,7 @@ export default function Workbench() {
             <input
               aria-label={t("Replay frame", "Cuadro de reproducción")}
               type="range"
+              className="range"
               min={0}
               max={Math.max(0, count - 1)}
               value={Math.min(frame, Math.max(0, count - 1))}
@@ -1002,23 +1101,29 @@ export default function Workbench() {
               }}
             />
             <output>
-              {count ? frame + 1 : 0}/{count}
+              {count ? `${frame + 1}/${count}` : t("final", "final")}
             </output>
           </div>
           <small>
-            {count < 2
+            {count === 0
               ? t(
-                  "This method has a single saved solution.",
-                  "Este método tiene una solución guardada.",
+                  "Final prediction; validation history is in Inversion.",
+                  "Predicción final; historial de validación en Inversión.",
                 )
-              : t(
-                  "Computed states · pause and scrub to inspect",
-                  "Estados calculados · pause e inspeccione",
-                )}
+              : count < 2
+                ? t(
+                    "This method has a single saved solution.",
+                    "Este método tiene una solución guardada.",
+                  )
+                : t(
+                    "Computed states · pause and scrub to inspect",
+                    "Estados calculados · pause e inspeccione",
+                  )}
           </small>
         </div>
         <div className="sidebar-actions">
           <button
+            className="btn"
             onClick={() => {
               setReset((n) => n + 1);
               setAngle(0);
@@ -1032,7 +1137,7 @@ export default function Workbench() {
             <RotateCcw size={14} />
             {t("Reset view", "Restablecer vista")}
           </button>
-          <button onClick={exportRun} disabled={!run}>
+          <button className="btn" onClick={exportRun} disabled={!run}>
             <Download size={14} />
             {t("Export run", "Exportar ejecución")}
           </button>
@@ -1062,20 +1167,20 @@ export default function Workbench() {
             <h2>{es ? entry?.name_es : entry?.name}</h2>
           </div>
           <span className="case-counter">
-            20 {t("geological questions", "preguntas geológicas")}
+            {catalog?.cases.length} {t("computed cases", "casos calculados")}
           </span>
         </header>
         {error ? (
           <div role="alert" className="load-state">
             {error}
-            <button onClick={() => location.reload()}>
+            <button className="btn" onClick={() => location.reload()}>
               {t("Retry", "Reintentar")}
             </button>
           </div>
         ) : loading ? (
           <div className="load-state">
             <span className="loading-orbit" />
-            {t("Loading computed evidence…", "Cargando evidencia calculada…")}
+            {t("Loading numerical result…", "Cargando resultado numérico…")}
           </div>
         ) : (
           run &&
@@ -1086,36 +1191,83 @@ export default function Workbench() {
               tabs={[
                 {
                   id: "earth",
-                  label: t("Earth & physics", "Tierra y física"),
+                  label: t("Model", "Modelo"),
                   content: earth,
                 },
                 {
                   id: "observations",
-                  label: t("Measurements", "Mediciones"),
+                  label: t("Data", "Datos"),
                   content: measurements,
                 },
                 {
                   id: "recovery",
-                  label: t("Recovery & residual", "Recuperación y residuo"),
+                  label: t("Inversion", "Inversión"),
                   content: recovery,
                 },
                 {
                   id: "question",
-                  label: t("Question & context", "Pregunta y contexto"),
+                  label: t("Case analysis", "Análisis del caso"),
                   content: (
                     <div className="context-view">
                       <span className="small-caps">
-                        {t("READ THE EXPERIMENT", "LEA EL EXPERIMENTO")}
+                        {t(
+                          "Experimental conditions",
+                          "Condiciones experimentales",
+                        )}
                       </span>
                       <h2>{lesson.question[lang]}</h2>
                       <p>{lesson.read[lang]}</p>
+                      <h3>{t("Selected result", "Resultado seleccionado")}</h3>
+                      <p>
+                        {methodName(methodId, es)} ·{" "}
+                        {es ? artifact?.name_es : artifact?.name}
+                      </p>
+                      <dl className="parameter-ledger">
+                        {Object.entries(method.metrics).map(([key, value]) => {
+                          const info = metricInfo(
+                            key,
+                            run.family,
+                            methodId,
+                            es,
+                          );
+                          return (
+                            <div key={key}>
+                              <dt>{info.label}</dt>
+                              <dd>
+                                {typeof value === "boolean"
+                                  ? value
+                                    ? t("Yes", "Sí")
+                                    : t("No", "No")
+                                  : format(value)}{" "}
+                                {info.unit}
+                              </dd>
+                            </div>
+                          );
+                        })}
+                      </dl>
+                      {Object.keys(method.metrics).map((key) => (
+                        <p className="plot-note" key={key}>
+                          <strong>
+                            {metricInfo(key, run.family, methodId, es).label}
+                            :{" "}
+                          </strong>
+                          {
+                            metricInfo(key, run.family, methodId, es)
+                              .description
+                          }
+                        </p>
+                      ))}
+                      <h3>
+                        {t("Recorded trajectory", "Trayectoria registrada")}
+                      </h3>
+                      <p>{historyInfo(methodId, es).description}</p>
                       <div className="investigation">
                         <span>01</span>
                         <div>
                           <h3>
                             {t(
-                              "Try this comparison",
-                              "Pruebe esta comparación",
+                              "Comparison protocol",
+                              "Protocolo de comparación",
                             )}
                           </h3>
                           <p>{lesson.try[lang]}</p>
@@ -1126,8 +1278,8 @@ export default function Workbench() {
                         <div>
                           <h3>
                             {t(
-                              "What this cannot establish",
-                              "Lo que esto no establece",
+                              "Limits of interpretation",
+                              "Límites de interpretación",
                             )}
                           </h3>
                           <p>{lesson.limit[lang]}</p>
@@ -1136,7 +1288,48 @@ export default function Workbench() {
                       <dl className="parameter-ledger">
                         {Object.entries(run.parameters).map(([k, v]) => (
                           <div key={k}>
-                            <dt>{k.replaceAll("_", " ")}</dt>
+                            <dt>
+                              {(
+                                {
+                                  contrast: t(
+                                    "Property contrast factor",
+                                    "Factor de contraste",
+                                  ),
+                                  noise: t(
+                                    "Noise condition",
+                                    "Condición de ruido",
+                                  ),
+                                  height: t(
+                                    "Receiver height · m",
+                                    "Altura de receptores · m",
+                                  ),
+                                  inclination: t(
+                                    "Inclination · °",
+                                    "Inclinación · °",
+                                  ),
+                                  beta: t(
+                                    "Regularization β",
+                                    "Regularización β",
+                                  ),
+                                  frequency: t(
+                                    "Source frequency · Hz",
+                                    "Frecuencia de fuente · Hz",
+                                  ),
+                                  receivers: t(
+                                    "Receiver count",
+                                    "Cantidad de receptores",
+                                  ),
+                                  coverage: t(
+                                    "Coverage fraction",
+                                    "Fracción de cobertura",
+                                  ),
+                                  coupling: t(
+                                    "Structural coupling λ",
+                                    "Acoplamiento estructural λ",
+                                  ),
+                                } as Record<string, string>
+                              )[k] ?? k}
+                            </dt>
                             <dd>{format(v)}</dd>
                           </div>
                         ))}

@@ -2,11 +2,12 @@
 import numpy as np
 import torch
 from potential import invert
+from geology import VOLUME_SHAPE
 
 
-def cross_gradient(a,b):
-    ga=torch.gradient(a.reshape(8,12,14))
-    gb=torch.gradient(b.reshape(8,12,14))
+def cross_gradient(a,b,shape=VOLUME_SHAPE):
+    ga=torch.gradient(a.reshape(shape))
+    gb=torch.gradient(b.reshape(shape))
     return torch.stack((ga[1]*gb[2]-ga[2]*gb[1],ga[2]*gb[0]-ga[0]*gb[2],ga[0]*gb[1]-ga[1]*gb[0]))
 
 

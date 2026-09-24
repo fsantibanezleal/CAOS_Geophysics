@@ -6,21 +6,21 @@ import torch
 import torch.nn.functional as F
 import deepwave
 
-from geology import seismic_model
+from geology import seismic_model, SEISMIC_SPACING
 
 
-def simulate(v,frequency=8.0,receivers=40,nt=1100,callback=None):
+def simulate(v,frequency=8.0,receivers=40,nt=2200,callback=None):
     device=v.device
-    source_locations=torch.tensor([[[12,3]],[[32,3]],[[51,3]]],device=device)
-    rx=torch.linspace(3,v.shape[0]-4,receivers,device=device).long()
-    receiver_locations=torch.stack((rx,torch.full_like(rx,3)),dim=-1)[None].repeat(3,1,1)
-    t=torch.arange(nt,device=device,dtype=v.dtype)*.001
+    source_locations=torch.tensor([[[24,6]],[[64,6]],[[102,6]]],device=device)
+    rx=torch.linspace(6,120,receivers,device=device).long()
+    receiver_locations=torch.stack((rx,torch.full_like(rx,6)),dim=-1)[None].repeat(3,1,1)
+    t=torch.arange(nt,device=device,dtype=v.dtype)*.0005
     a=np.pi*frequency*(t-1.5/frequency)
     wavelet=(1-2*a*a)*torch.exp(-a*a)
     sources=wavelet[None,None].repeat(3,1,1)
-    return deepwave.scalar(v,25.0,.001,source_amplitudes=sources,source_locations=source_locations,
-        receiver_locations=receiver_locations,pml_width=12,pml_freq=frequency,accuracy=4,
-        max_vel=4600,forward_callback=callback,callback_frequency=24)[-1]
+    return deepwave.scalar(v,SEISMIC_SPACING,.0005,source_amplitudes=sources,source_locations=source_locations,
+        receiver_locations=receiver_locations,pml_width=24,pml_freq=frequency,accuracy=4,
+        max_vel=4600,forward_callback=callback,callback_frequency=48)[-1]
 
 
 def lowpass(x,width):
@@ -38,7 +38,7 @@ def solve_case(case,variant,iterations=28):
     freq=5.0 if variant=="acquisition" else (9.0 if case["geometry"]=="salt" else 8.0)
     receivers=20 if variant=="coverage" else 40
     # Initial model depends only on a declared depth trend, never smoothed truth.
-    start=np.broadcast_to(1800+np.arange(truth.shape[1])*22.0,truth.shape).copy().astype(np.float32)
+    start=np.broadcast_to(1800+np.arange(truth.shape[1])*11.0,truth.shape).copy().astype(np.float32)
     snapshots=[]
     def callback(state):
         field=state.get_wavefield("wavefield_0")[1]
@@ -62,9 +62,9 @@ def solve_case(case,variant,iterations=28):
             optimizer.zero_grad()
             v=1400+3000*torch.sigmoid(param)
             pred=simulate(v,freq,receivers)
-            window=(21 if it<iterations//3 else 9 if it<2*iterations//3 else 1) if multiscale else 1
+            window=(41 if it<iterations//3 else 17 if it<2*iterations//3 else 1) if multiscale else 1
             data_loss=(lowpass(pred,window)-lowpass(observed,window)).square().mean()/scale
-            reg=((v[:,1:]-v[:,:-1]).square().mean()+(v[1:]-v[:-1]).square().mean())/1e6
+            reg=4*((v[:,1:]-v[:,:-1]).square().mean()+(v[1:]-v[:-1]).square().mean())/1e6
             loss=data_loss+beta*reg
             loss.backward()
             torch.nn.utils.clip_grad_norm_([param],10)
@@ -80,10 +80,10 @@ def solve_case(case,variant,iterations=28):
             final=simulate(torch.tensor(best_model,device=device),freq,receivers)
         key="fwi-multiscale" if multiscale else "fwi-l2"
         methods[key]=dict(name="Multiscale acoustic FWI" if multiscale else "Acoustic waveform L2 FWI",name_es="FWI acústica multiescala" if multiscale else "FWI acústica L2",
-            model=best_model.T.tolist(),predicted=final.detach().cpu().numpy()[:,:,::4].tolist(),residual=(observed-final).detach().cpu().numpy()[:,:,::4].tolist(),history=history,frames=frames,
+            model=best_model.T.tolist(),predicted=final.detach().cpu().numpy()[:,:,::8].tolist(),residual=(observed-final).detach().cpu().numpy()[:,:,::8].tolist(),history=history,frames=frames,
             metrics=dict(initial_relative_mse=initial_loss,relative_mse=float((final-observed).square().mean()/scale),velocity_rmse=float(np.sqrt(np.mean((best_model-truth)**2)))),device=device)
     return dict(schema="inverse-earth/v2",**case,variant=variant,engine="Deepwave 0.0.27 / PyTorch automatic differentiation",lane="computed replay",units="m/s",data_units="amplitude",
-        truth=truth.T.tolist(),initial=start.T.tolist(),observed=observed.detach().cpu().numpy()[:,:,::4].tolist(),wavefields=snapshots,
-        grid=dict(shape=[48,64],spacing=[25,25]),dt=.004,wavefield_dt=.024,frequency=freq,
-        sources=[[300,75],[800,75],[1275,75]],receivers=(torch.linspace(3,60,receivers).long()*25).tolist(),methods=methods,
+        truth=truth.T.tolist(),initial=start.T.tolist(),observed=observed.detach().cpu().numpy()[:,:,::8].tolist(),wavefields=snapshots,
+        grid=dict(shape=[96,128],spacing=[12.5,12.5]),dt=.004,wavefield_dt=.024,frequency=freq,
+        sources=[[300,75],[800,75],[1275,75]],receivers=(torch.linspace(6,120,receivers).long()*12.5).tolist(),methods=methods,
         parameters=dict(frequency_hz=freq,noise_fraction=noise,receivers=receivers,regularization=beta,iterations=iterations))

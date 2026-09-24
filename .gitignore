@@ -37,6 +37,7 @@ frontend/public-release/
 # --- Raw / heavy data — commit ONLY the compact derived artifacts under data/derived/ ---
 data/raw/
 data/downloads/
+data/experiments/
 *.parquet
 *.h5
 *.hdf5
