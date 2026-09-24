@@ -8,9 +8,9 @@ Enable inspection of the relationship between a geological model, the survey tha
 
 ## Contracts and lanes
 
-Input: typed case registry with family, geological construction, seed, SI geometry, property units, source/receiver geometry, uncertainty and six acquisition/regularization variants. External observation JSON is validated before fitting; non-finite values, missing units, inconsistent shapes and nonpositive errors fail. Preprocessing preserves physical quantities and records centering/scaling only for learning.
+Input: typed case registry with family, geological construction, seed, SI geometry, property units, source/receiver geometry, declared observation noise and six acquisition/regularization variants. External observation CSV is validated before fitting; non-finite values, missing columns, duplicate locations and nonpositive errors fail. Preprocessing preserves physical quantities and records centering/scaling only for learning.
 
-Output: `inverse-earth/v2` catalogue and individual case/variant runs. Each run contains volume or section coordinates, truth, observed measurements, noise, per-method reconstructions, predictions, residuals, objective history, metrics, provenance and runtime. Index entries carry SHA-256 and byte size. Numerical work uses published SimPEG, SciPy and Deepwave/PyTorch; product orchestration is plain Python scripts, not an internal package. Canonical solves and training run locally; public deployments serve committed artifacts. Browser interactions rotate, slice, compare, replay iterations and wavefields, and select six genuinely recomputed variants. Lightweight MT fitting on user input is a separate deterministic browser tool, parity tested against the offline recursion.
+Output: `inverse-earth/v2` catalogue and individual case/variant runs. Each run contains volume or section coordinates, truth, observed measurements, noise, per-method reconstructions, predictions, residuals, objective history, metrics, provenance and runtime. Index entries carry SHA-256 and byte size. Numerical work uses published SimPEG, SciPy and Deepwave/PyTorch; product orchestration is plain Python scripts, not an internal package. Canonical solves and training run locally; public deployments serve committed artifacts. Browser interactions rotate, slice, compare, replay iterations and wavefields, and select six genuinely recomputed variants. Lightweight MT forward modelling on user input is a separate deterministic browser tool, parity tested against the offline recursion; it does not invert uploaded observations.
 
 ## Cases
 
@@ -26,15 +26,15 @@ Keep the shared shell and six routes. Replace all app-specific styling. Use neut
 
 ## Requirements and gates
 
-R-001 THE pipeline SHALL produce distinct geological arrays for all 20 cases. Gate: `tests/test_rebuild.py::test_geological_diversity`, checking shape hashes and structural differences.
+R-001 THE pipeline SHALL produce distinct geological arrays for all 20 cases. Gate: `scripts/check_artifacts.py`, checking truth hashes, identities, shapes and all variant artifacts; rendered case walkthrough.
 
-R-002 THE potential-field inverse SHALL fit actual SimPEG-generated observations with separately exported L2 and IRLS results. Gate: `tests/test_rebuild.py::test_potential_recovery` and release objective audit.
+R-002 THE potential-field inverse SHALL fit actual SimPEG-generated observations with separately exported L2 and IRLS results. Gate: `tests/test_rebuild.py::test_inverse_improves_data_fit`, `test_gravity_independent_prism_and_linear_scaling` and release objective audit.
 
-R-003 THE MT solver SHALL reproduce a homogeneous halfspace and fit layered complex impedance. Gate: `tests/test_rebuild.py::test_mt_halfspace` and `test_mt_recovery`.
+R-003 THE MT solver SHALL reproduce a homogeneous halfspace and fit layered complex impedance. Gate: `tests/test_rebuild.py::test_mt_halfspace_and_split_homogeneous_layer`, `test_mt_autodiff_parity_and_directional_derivative` and `test_all_artifact_cells[mt]`.
 
-R-004 THE FWI solver SHALL differentiate Deepwave receiver residuals and record before/after data misfit. Gate: `tests/test_rebuild.py::test_fwi_gradient` and release objective audit.
+R-004 THE FWI solver SHALL differentiate Deepwave receiver residuals and record before/after data misfit. Gate: `tests/test_rebuild.py::test_deepwave_cuda_adjoint_directional_derivative` and `test_all_artifact_cells[seismic]`.
 
-R-005 THE learned tools SHALL load persisted checkpoints and evaluate held-out geometry groups. Gate: `tests/test_rebuild.py::test_checkpoint_and_split` and `scripts/check_artifacts.py`.
+R-005 THE learned tools SHALL load persisted checkpoints and evaluate held-out geometry groups. Gate: `tests/test_rebuild.py::test_learning_split_hashes_and_checkpoint_inference` and `scripts/check_artifacts.py`.
 
 R-006 WHEN a case or variant changes, THE web SHALL show that artifact's model and measured response. Gate: rendered case/variant walkthrough and `frontend/src/test/contract.test.ts`.
 
