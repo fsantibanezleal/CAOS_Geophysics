@@ -390,9 +390,9 @@ export default function Workbench() {
                 range={bounds}
                 unit={run.data_units}
                 xLabel={t("Easting · m", "Este · m")}
-                yLabel={t("Northing", "Norte")}
-                xRange={[-1000, 1000]}
-                yRange={[-880, 880]}
+                yLabel={t("Northing · m", "Norte · m")}
+                xRange={[-1120, 1120]}
+                yRange={[-960, 960]}
               />
             ))}
           </div>
@@ -482,6 +482,8 @@ export default function Workbench() {
                 unit={t("normalized", "normalizado")}
                 xLabel="E · m"
                 yLabel={t("Depth · m", "Profundidad · m")}
+                xRange={[-1120, 1120]}
+                yRange={[0, 1120]}
                 palette="error"
               />
             </div>
@@ -605,8 +607,8 @@ export default function Workbench() {
           unit="m/s"
           xLabel={t("Distance · m", "Distancia · m")}
           yLabel={t("Depth · m", "Profundidad · m")}
-          xRange={[0, 1600]}
-          yRange={[0, 1200]}
+          xRange={[-12.5, 1587.5]}
+          yRange={[-12.5, 1187.5]}
         />
       );
       const gatherPlot = (data: number[][], title: string) => (
@@ -617,13 +619,15 @@ export default function Workbench() {
           range={signed(gather.flat()).map((v) => v / gain) as [number, number]}
           cursorY={
             playbackKind === "wave"
-              ? ((frame+blend) * run.wavefield_dt!) / (nt * run.dt!)
+              ? ((frame+blend) * run.wavefield_dt! + run.dt! / 2) / (nt * run.dt!)
               : undefined
           }
           xLabel={t("Receiver position · m", "Posición receptor · m")}
           yLabel={t("Time · s", "Tiempo · s")}
           xRange={[75, 1500]}
-          yRange={[0, nt * run.dt!]}
+          yRange={[-run.dt! / 2, (nt - 0.5) * run.dt!]}
+          xCoordinates={run.receivers}
+          yCoordinates={time}
         />
       );
       earth = (
@@ -652,15 +656,15 @@ export default function Workbench() {
               boundaries={run.truth as number[][]}
               xLabel={t("Distance · m", "Distancia · m")}
               yLabel={t("Depth · m", "Profundidad · m")}
-              xRange={[0, 1600]}
-              yRange={[0, 1200]}
-              markers={[{ x: 0.5, y: 0.0625, label: "S" }]}
+              xRange={[-12.5, 1587.5]}
+              yRange={[-12.5, 1187.5]}
+              markers={[{ x: 32.5 / 64, y: 3.5 / 48, label: "S" }]}
             />
             <div className="wave-clock">
               <strong>
                 {playbackKind === "wave"
                   ? ((frame+blend) * run.wavefield_dt!).toFixed(3)
-                  : frame * 2 + 1}{" "}
+                  : frame * 2}{" "}
                 <small>
                   {playbackKind === "wave" ? "s" : t("update", "paso")}
                 </small>
@@ -672,8 +676,8 @@ export default function Workbench() {
                       "Presión calculada · reproducción interpolada",
                     )
                   : t(
-                      "White lines: known interfaces",
-                      "Líneas blancas: interfaces conocidas",
+                      "Outlines: known interfaces",
+                      "Contornos: interfaces conocidas",
                     )}{" "}
                 · {run.frequency} Hz
               </span>
@@ -742,8 +746,8 @@ export default function Workbench() {
               unit="m/s"
               xLabel={t("Distance · m", "Distancia · m")}
               yLabel={t("Depth · m", "Profundidad · m")}
-              xRange={[0, 1600]}
-              yRange={[0, 1200]}
+              xRange={[-12.5, 1587.5]}
+              yRange={[-12.5, 1187.5]}
             />
           </div>
           {history}
@@ -790,6 +794,8 @@ export default function Workbench() {
               unit={cnn ? "g/cm³ m" : "mGal"}
               xLabel="E · m"
               yLabel="N · m"
+              xRange={[-1120, 1120]}
+              yRange={[-960, 960]}
             />
             <Heatmap
               data={predicted}
@@ -798,6 +804,8 @@ export default function Workbench() {
               unit={cnn ? "g/cm³ m" : "mGal"}
               xLabel="E · m"
               yLabel="N · m"
+              xRange={[-1120, 1120]}
+              yRange={[-960, 960]}
             />
             <Heatmap
               data={errorMap}
@@ -812,6 +820,8 @@ export default function Workbench() {
               }
               xLabel="E · m"
               yLabel="N · m"
+              xRange={[-1120, 1120]}
+              yRange={[-960, 960]}
               palette={cnn ? "field" : "error"}
             />
           </div>

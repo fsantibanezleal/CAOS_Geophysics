@@ -86,6 +86,8 @@ def test_all_artifact_cells(family):
                     assert np.asarray(run['truth']).shape==(48,64)
                     assert np.asarray(run['wavefields']).shape[1:]==(48,64)
                     assert np.std(run['wavefields'])>0
+                    expected_receivers=(torch.linspace(3,60,run['parameters']['receivers']).long()*25).tolist()
+                    assert run['receivers']==expected_receivers
                 elif method_id not in ('cnn','autoencoder'):
                     np.testing.assert_allclose(np.asarray(run['survey']['observed'])-m['predicted'],m['residual'],rtol=1e-3,atol=1e-4)
 

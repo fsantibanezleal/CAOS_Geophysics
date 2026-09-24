@@ -35,6 +35,8 @@ export function Heatmap({
   range,
   xRange,
   yRange,
+  xCoordinates,
+  yCoordinates,
   onPick,
   markers = [],
   boundaries,
@@ -49,6 +51,8 @@ export function Heatmap({
   range?: [number, number];
   xRange?: [number, number];
   yRange?: [number, number];
+  xCoordinates?: number[];
+  yCoordinates?: number[];
   onPick?: (x: number, y: number) => void;
   markers?: { x: number; y: number; label: string }[];
   boundaries?: number[][];
@@ -79,12 +83,12 @@ export function Heatmap({
     ctx.drawImage(source, 0, 0, c.width, c.height);
   }, [data, palette, bounds[0], bounds[1], rows, cols]);
   const xv = hover
-    ? (xRange?.[0] ?? 0) +
-      ((hover.x + 0.5) / cols) * ((xRange?.[1] ?? cols) - (xRange?.[0] ?? 0))
+    ? (xCoordinates?.[hover.x] ?? ((xRange?.[0] ?? 0) +
+      ((hover.x + 0.5) / cols) * ((xRange?.[1] ?? cols) - (xRange?.[0] ?? 0))))
     : 0;
   const yv = hover
-    ? (yRange?.[0] ?? 0) +
-      ((hover.y + 0.5) / rows) * ((yRange?.[1] ?? rows) - (yRange?.[0] ?? 0))
+    ? (yCoordinates?.[hover.y] ?? ((yRange?.[0] ?? 0) +
+      ((hover.y + 0.5) / rows) * ((yRange?.[1] ?? rows) - (yRange?.[0] ?? 0))))
     : 0;
   return (
     <figure className="science-plot heatmap">

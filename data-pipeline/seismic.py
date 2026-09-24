@@ -85,5 +85,5 @@ def solve_case(case,variant,iterations=28):
     return dict(schema="inverse-earth/v2",**case,variant=variant,engine="Deepwave 0.0.27 / PyTorch automatic differentiation",lane="computed replay",units="m/s",data_units="amplitude",
         truth=truth.T.tolist(),initial=start.T.tolist(),observed=observed.detach().cpu().numpy()[:,:,::4].tolist(),wavefields=snapshots,
         grid=dict(shape=[48,64],spacing=[25,25]),dt=.004,wavefield_dt=.024,frequency=freq,
-        sources=[[300,75],[800,75],[1275,75]],receivers=np.linspace(75,1500,receivers).tolist(),methods=methods,
+        sources=[[300,75],[800,75],[1275,75]],receivers=(torch.linspace(3,60,receivers).long()*25).tolist(),methods=methods,
         parameters=dict(frequency_hz=freq,noise_fraction=noise,receivers=receivers,regularization=beta,iterations=iterations))
