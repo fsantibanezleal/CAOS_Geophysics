@@ -11,6 +11,35 @@ import numpy as np
 from geology import registry, VARIANTS
 import potential
 
+RELEASE_VERSION = '0.04.000'
+
+
+def generator_fingerprint(family, iterations=28, epochs=180):
+    """Resume only artifacts produced by the same scientific source/settings."""
+    modules=['geology.py']
+    if family=='seismic':modules+=['seismic.py']
+    elif family=='mt':modules+=['electromagnetics.py']
+    else:
+        modules+=['potential.py','spatial_inverse.py','evaluation.py']
+        if family=='joint':modules+=['joint.py','petrophysics.py']
+        if family=='learned':modules+=['learning.py']
+    digest=hashlib.sha256()
+    for name in sorted(modules):
+        digest.update(name.encode());digest.update((Path(__file__).parent/name).read_bytes())
+    digest.update(json.dumps(dict(version=RELEASE_VERSION,iterations=iterations if family=='seismic' else None,
+                                  epochs=epochs if family=='learned' else None),sort_keys=True).encode())
+    return digest.hexdigest()
+
+
+def annotate(result, case, runtime, iterations=28, epochs=180):
+    result['runtime_seconds']=runtime
+    result['provenance']={**result.get('provenance',{}),'source':'Original geological constructors','license':'CC-BY-4.0',
+                          'seed':case['seed'],'version':RELEASE_VERSION,'synthetic':True,
+                          'generator_fingerprint':generator_fingerprint(case['family'],iterations,epochs)}
+    result['stages']=['construct geological model','configure survey','forward solve','seed noise and mask coverage',
+                      'invert without target truth','evaluate data fit and model recovery separately','export']
+    return result
+
 
 def jsonable(value):
     if isinstance(value,np.ndarray):
@@ -62,8 +91,9 @@ def main():
             path=out/case["id"]/f"{vid}.json"
             start=time.perf_counter()
             print(f"SOLVE {case['id']} / {vid}",flush=True)
-            if args.resume and path.exists():
-                result=json.loads(path.read_text(encoding="utf-8"))
+            existing=json.loads(path.read_text(encoding='utf-8')) if args.resume and path.exists() else None
+            if existing and existing.get('provenance',{}).get('generator_fingerprint')==generator_fingerprint(case['family'],args.iterations,args.epochs):
+                result=existing
             else:
                 if case["family"]=="mt":
                     from electromagnetics import solve_case
@@ -82,16 +112,14 @@ def main():
                             print("TRAIN CNN + autoencoder on disjoint realizations",flush=True)
                             learned=train(cache[60][0],cache[60][2],out/"models",args.epochs)
                         result=attach(result,learned)
-                result["runtime_seconds"]=time.perf_counter()-start
-                result["provenance"]={"source":"Original geological constructors","license":"CC-BY-4.0","seed":case["seed"],"version":"0.03.000","synthetic":True}
-                result["stages"]=["construct geological model","configure survey","forward solve","seed noise and mask coverage","invert","evaluate against known truth","export"]
+                annotate(result,case,time.perf_counter()-start,args.iterations,args.epochs)
                 save(path,result)
             entry["variants"].append(dict(id=vid,name=label,name_es=label_es,path=f"{case['id']}/{vid}.json",sha256=hashlib.sha256(path.read_bytes()).hexdigest(),bytes=path.stat().st_size,
-                methods={k:{"name":v["name"],"name_es":v["name_es"],"metrics":v["metrics"]} for k,v in result["methods"].items()},runtime_seconds=result["runtime_seconds"]))
+                methods={k:{"name":v["name"],"name_es":v["name_es"],"metrics":v["metrics"],"evaluation":v.get('evaluation'),"target":v.get('target'),"applicability":v.get('applicability')} for k,v in result["methods"].items()},runtime_seconds=result["runtime_seconds"]))
             print(f"OK {path.name} {path.stat().st_size//1024} KiB {time.perf_counter()-start:.1f}s",flush=True)
         catalog.append(entry)
-    save(out/"catalog.json",dict(schema="inverse-earth.catalog/v2",version="0.03.000",cases=catalog))
-    save(out/"release.json",dict(schema="inverse-earth.release/v2",version="0.03.000",cases=len(catalog),runs=sum(len(c["variants"]) for c in catalog),methods=sum(len(v["methods"]) for c in catalog for v in c["variants"]),synthetic=True,engines=["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27"]))
+    save(out/"catalog.json",dict(schema="inverse-earth.catalog/v2",version=RELEASE_VERSION,cases=catalog))
+    save(out/"release.json",dict(schema="inverse-earth.release/v2",version=RELEASE_VERSION,cases=len(catalog),runs=sum(len(c["variants"]) for c in catalog),methods=sum(len(v["methods"]) for c in catalog for v in c["variants"]),synthetic=True,engines=["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27"]))
 
 
 if __name__=="__main__":

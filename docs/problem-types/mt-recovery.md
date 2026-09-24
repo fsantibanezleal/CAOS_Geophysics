@@ -293,4 +293,3 @@ Existing NumPy 2.2.6, SciPy 1.15.2 and Torch 2.14.0+cu126 were not upgraded.
 Torch's CUDA build is installed but **this vertical uses CPU only**.
 Pip check reported no broken requirements. The integration owner must add the
 direct pin (and lock transitive dependencies according to repository policy).
-

@@ -69,7 +69,7 @@ def validate(data,report):
                         u=method['uncertainty'];assert u['members']>=16
                         assert np.asarray(u['lower']).shape==model.shape
                         assert np.all(np.asarray(u['lower'])<=u['upper'])
-                        assert 'posterior' in u['conditioning'].lower()
+                        assert u['kind']=='conditional-parametric-bootstrap' and u['conditioning']
                     rows.append(dict(case=case['id'],variant=entry['id'],method=key,status=verdict['status'],reason_codes=verdict['reason_codes'],metrics=method['metrics']))
                 except (AssertionError,KeyError,ValueError) as exc:
                     failures.append(dict(result=label,error=str(exc)))
