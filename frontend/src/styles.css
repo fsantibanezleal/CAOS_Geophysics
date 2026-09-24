@@ -86,6 +86,7 @@ select {
 }
 button {
   cursor: pointer;
+  background: var(--color-surface);
 }
 button:disabled {
   cursor: default;
