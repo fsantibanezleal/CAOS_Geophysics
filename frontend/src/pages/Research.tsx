@@ -613,7 +613,8 @@ export function Benchmark() {
   const metrics = Object.keys(methods[selectedMethod]?.metrics ?? {}).filter(
     (k) => typeof methods[selectedMethod]?.metrics[k] === "number",
   );
-  const selectedMetric = metrics.includes(metric) ? metric : metrics[0];
+  const defaultMetric = ["model_rmse", "velocity_rmse", "log_model_rmse", "column_rmse", "wrms", "relative_mse", "reconstruction_mse"].find((key) => metrics.includes(key));
+  const selectedMetric = metrics.includes(metric) ? metric : (defaultMetric ?? metrics[0]);
   return (
     <div className="page-body prose">
       <Head

@@ -13,22 +13,21 @@ applyTheme(readTheme());
 if (typeof localStorage !== 'undefined' && !localStorage.getItem('caos.lang')) useLangStore.getState().setLang('en');
 
 const pagesBasePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/CAOS_Geophysics') ? '/CAOS_Geophysics' : '';
-const appPath = (path: string) => `${pagesBasePath}${path === '/' ? '/' : path}`;
 
 const config: ShellConfig = {
   product: { name: 'Inverse Earth Studio', mark: <Activity size={18} aria-hidden="true" /> },
   routes: [
-    { path: appPath('/'), en: 'App', es: 'App' },
-    { path: appPath('/introduction'), en: 'Introduction', es: 'Introducción' },
-    { path: appPath('/methodology'), en: 'Methodology', es: 'Metodología' },
-    { path: appPath('/implementation'), en: 'Implementation', es: 'Implementación' },
-    { path: appPath('/experiments'), en: 'Experiments', es: 'Experimentos' },
-    { path: appPath('/benchmark'), en: 'Benchmark', es: 'Benchmark' },
+    { path: '/', en: 'App', es: 'App' },
+    { path: '/introduction', en: 'Introduction', es: 'Introducción' },
+    { path: '/methodology', en: 'Methodology', es: 'Metodología' },
+    { path: '/implementation', en: 'Implementation', es: 'Implementación' },
+    { path: '/experiments', en: 'Experiments', es: 'Experimentos' },
+    { path: '/benchmark', en: 'Benchmark', es: 'Benchmark' },
   ],
   links: { github: 'https://github.com/fsantibanezleal/CAOS_Geophysics' },
   version: '0.02.000',
   architecture,
-  fixedRoutes: [appPath('/')],
+  fixedRoutes: ['/'],
   footer: {
     attribution: { en: 'Developed by Felipe Santibáñez-Leal', es: 'Desarrollado por Felipe Santibáñez-Leal' },
     provenance: { en: 'Original seeded synthetic cases; solver-backed engines are documented in the research wiki.', es: 'Casos sintéticos originales y sembrados; los motores con solver están documentados en la wiki de investigación.' },
@@ -37,6 +36,6 @@ const config: ShellConfig = {
   },
 };
 
-createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter><CitationsProvider items={CITATIONS}><AppShell config={config}><Routes>
-  <Route path={appPath('/')} element={<Workbench />} /><Route path={appPath('/introduction')} element={<Intro />} /><Route path={appPath('/methodology')} element={<Methodology />} /><Route path={appPath('/implementation')} element={<Implementation />} /><Route path={appPath('/experiments')} element={<Experiments />} /><Route path={appPath('/benchmark')} element={<Benchmark />} /><Route path="*" element={<Workbench />} />
+createRoot(document.getElementById('root')!).render(<StrictMode><BrowserRouter basename={pagesBasePath || '/'}><CitationsProvider items={CITATIONS}><AppShell config={config}><Routes>
+  <Route path="/" element={<Workbench />} /><Route path="/introduction" element={<Intro />} /><Route path="/methodology" element={<Methodology />} /><Route path="/implementation" element={<Implementation />} /><Route path="/experiments" element={<Experiments />} /><Route path="/benchmark" element={<Benchmark />} /><Route path="*" element={<Workbench />} />
 </Routes></AppShell></CitationsProvider></BrowserRouter></StrictMode>);
