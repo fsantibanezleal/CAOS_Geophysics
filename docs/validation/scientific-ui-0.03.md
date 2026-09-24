@@ -40,7 +40,7 @@ Checked with the Codex in-app browser against the local development build.
 - Live MT resistivity changes updated the plotted forward response. Acoustic playback advanced time.
   Angle step, rotation, northing cut, cell/isosurface selection, section index, reduced coverage and
   mobile control disclosure were exercised.
-- Responsive checks include 1280 × 720, 1600 × 900 and 390 × 844. Mobile uses contained panel
+- Responsive checks include 1280 × 720, 1600 × 900, 2560 × 1440 and 390 × 844. Mobile uses contained panel
   scrolling and the shared horizontally scrollable navigation; there is no whole-page horizontal overflow.
 - Computed body font is the shared ui-sans-serif/system-ui stack. Dark body colour is rgb(13,17,23),
   matching the shell token. Product CSS declares no palette, font-stack or shell-page overrides.
@@ -50,8 +50,9 @@ The renderer interpolates cell data for an isosurface; it does not claim extra n
 
 ## Release gate
 
-Local validation is complete. Remote promotion, deployment and external verification are recorded
-separately after execution. This file alone is not evidence that a public host was updated.
+Local validation and remote promotion are complete. Both hosts passed exact artifact and route-HTML
+verification. See [deployment.md](deployment.md) and [deployment.json](deployment.json) for executed
+release checks; the numerical and browser gates above remain distinct from deployment.
 
 ## Remaining scientific boundaries
 
