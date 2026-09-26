@@ -19,6 +19,11 @@ $SourcePath = [IO.Path]::GetFullPath((Join-Path $RepoRoot $EdiSource))
 if (-not (Test-Path -LiteralPath $SourcePath -PathType Leaf)) {
     throw "Missing hash-pinned Clear Lake EDI source. Obtain the station file identified in data/source-ledger.json and save it at $SourcePath before baking."
 }
+$Station = (Get-Content (Join-Path $RepoRoot 'data/source-ledger.json') -Raw | ConvertFrom-Json).sources | Where-Object { $_.name -eq 'USGS Clear Lake cl061 EarthScope EMTF station EDI' }
+if ((Split-Path $SourcePath -Leaf) -ne 'USGS-GMEG.2022.cl061.edi' -or
+    (Get-FileHash -Algorithm SHA256 -LiteralPath $SourcePath).Hash.ToLowerInvariant() -ne $Station.sha256) {
+    throw 'Clear Lake EDI bytes or station identity do not match the pinned source ledger; no GPU computation started.'
+}
 $Python = Join-Path $RepoRoot '.venv-pipeline/Scripts/python.exe'
 if (-not (Test-Path -LiteralPath $Python)) { throw 'Missing .venv-pipeline; run scripts/setup.ps1 -Gpu first.' }
 

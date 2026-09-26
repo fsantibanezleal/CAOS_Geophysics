@@ -51,4 +51,7 @@ def test_case_display_scale_preserves_cross_condition_amplitude():
     stats=[0.,0.]
     update_extrema(stats,[[-0.2,0.4],[0.8]])
     update_extrema(stats,[[-0.5,1.3]])
-    assert display_scale(stats)==dict(range=[-1.3,1.3],maximum=1.3,signed=True)
+    scale=display_scale(stats)
+    assert scale['signed'] and scale['maximum']>1.3
+    assert scale['range']==[-scale['maximum'],scale['maximum']]
+    assert scale['maximum']==pytest.approx(1.3,rel=2e-6)

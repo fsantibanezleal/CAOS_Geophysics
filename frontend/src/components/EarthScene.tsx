@@ -45,6 +45,7 @@ export function EarthScene({
   animate.current = { playing, speed };
   const [readout, setReadout] = useState("");
   const [error, setError] = useState("");
+  const [visibleCells, setVisibleCells] = useState(0);
   const pose = useRef<{
     position: THREE.Vector3;
     target: THREE.Vector3;
@@ -108,6 +109,7 @@ export function EarthScene({
       )
         indices.push(i);
     }
+    setVisibleCells(indices.length);
     const spacing = run.grid.spacing;
     const geometry = new THREE.BoxGeometry(
       spacing[0] / 1000,
@@ -413,6 +415,7 @@ export function EarthScene({
       className="earth-scene"
       ref={host}
       role="img"
+      data-visible-cells={visibleCells}
       aria-label={`${label}: ${es ? "modelo tridimensional y levantamiento" : "three-dimensional subsurface model and survey"}`}
     >
       <div className="scene-label">
@@ -427,7 +430,7 @@ export function EarthScene({
       <output className="scene-readout">
         {error ||
           readout ||
-          `${run.grid?.shape.join(" × ")} ${es ? "celdas" : "cells"} · ${run.units}`}
+          `${run.grid?.shape.join(" × ")} ${es ? "celdas" : "cells"} · ${visibleCells} ${es ? "sobre umbral" : "above threshold"} · ${run.units}`}
       </output>
     </div>
   );

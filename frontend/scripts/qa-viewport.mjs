@@ -174,6 +174,8 @@ for (const id of families) {
     if (run && (run.id !== id || run.variant !== variant)) failures.push(`${id}/${variant}: artifact identity ${run.id}/${run.variant}`);
     const viz = page.locator(rendered[id.startsWith('GRAVITY') ? 'gravity' : id.startsWith('MAGNETIC') ? 'magnetics' : id.startsWith('MT_') ? 'mt' : id.startsWith('FWI') ? 'seismic' : id.startsWith('JOINT') ? 'joint' : 'learned']).first();
     await viz.waitFor({ state: 'visible' });
+    if (variant === 'reference' && /^(GRAVITY|MAGNETIC|JOINT)/.test(id) && Number(await viz.getAttribute('data-visible-cells')) < 1)
+      failures.push(`${id}/reference: no model cells above the default physical threshold`);
     const visualHash = createHash('sha256').update(await viz.screenshot()).digest('hex').slice(0, 12);
     visualHashes.add(visualHash);
     const metrics = run?.methods?.[await page.getByLabel('Inverse method', { exact: true }).inputValue()]?.metrics ?? {};

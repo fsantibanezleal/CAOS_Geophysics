@@ -883,6 +883,11 @@ export function Experiments() {
                         </td>
                       </tr>
                       <tr>
+                        <td>{t("USGS Clear Lake MT station cl061", "Estación MT USGS Clear Lake cl061")}</td>
+                        <td>{t("Measured tensor screen only; no 1D inversion or geological target", "Sólo control tensorial medido; sin inversión 1D ni objetivo geológico")}</td>
+                        <td><a href="https://doi.org/10.5066/P14KAQ3M" target="_blank" rel="noopener noreferrer">{t("USGS CC0 release; station EDI requests citation", "Publicación USGS CC0; el EDI solicita cita")}</a></td>
+                      </tr>
+                      <tr>
                         <td>
                           {t(
                             "Python geophysical-inversion course",

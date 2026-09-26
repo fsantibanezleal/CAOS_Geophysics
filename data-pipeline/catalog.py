@@ -20,9 +20,10 @@ def update_extrema(stats, values):
 
 def display_scale(extrema):
     lo,hi=extrema
-    maximum=max(abs(lo),abs(hi)) or 1.
+    # One part per million keeps the serialized seven-digit range inclusive.
+    maximum=max(abs(lo),abs(hi))*(1+1e-6) or 1.
     signed=lo<0
-    return dict(range=[-maximum,maximum] if signed else [0,hi or 1.],maximum=maximum,signed=signed)
+    return dict(range=[-maximum,maximum] if signed else [0,maximum],maximum=maximum,signed=signed)
 
 
 def assemble(root,allow_partial=False):
@@ -63,7 +64,7 @@ def assemble(root,allow_partial=False):
             entry['display_scales']={'volume':display_scale(volume_stats)}
             if case['family']=='magnetics':entry['display_scales']['vector-amplitude']=display_scale(vector_stats)
             if case['family']=='joint':entry['display_scales']['secondary']=display_scale(secondary_stats)
-            entry['survey_max_abs']=survey_max_abs
+            entry['survey_max_abs']=survey_max_abs*(1+1e-6)
         if entry['variants']:cases.append(entry)
     if missing and not allow_partial:raise ValueError('Incomplete matrix: '+', '.join(missing))
     save(root/'catalog.json',dict(schema='inverse-earth.catalog/v2',version=RELEASE_VERSION,complete=not missing,cases=cases))
