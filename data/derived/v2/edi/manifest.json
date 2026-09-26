@@ -18,7 +18,7 @@
       "source": "halfspace-100-native.edi",
       "source_sha256": "904f1e183f665ed642ff07d42ac3c1d7a4569b9590abe1d111401110db650039",
       "artifact": "halfspace-100-native.json",
-      "artifact_sha256": "a12f781901f0db6076e31baff028269a987be217d7f33bb862758499b095ddee",
+      "artifact_sha256": "2e251e36bcfc9549e5c4c6b412eb6cc4972be4590b2a8fe58bdda8e46d6342e5",
       "noise_added": false,
       "noise_seed": 67101,
       "input_units": "mt",
@@ -53,7 +53,7 @@
       "source": "halfspace-500-ohm-negative.edi",
       "source_sha256": "0b87a08400424934c7e528f55d5b136ea23e3bcebe9f0fcdd089b6bf4181be9d",
       "artifact": "halfspace-500-ohm-negative.json",
-      "artifact_sha256": "0eb7a36de58d68d7e33ae80c0ef2338a21991a6fe9f2790dea862e1fff0c1862",
+      "artifact_sha256": "be6e8991dbbcf5bb8a70c97e00a41b0c784f008fbfc3789c64ff4bb5b1c77ae7",
       "noise_added": false,
       "noise_seed": 67102,
       "input_units": "ohm",
@@ -91,7 +91,7 @@
       "source": "two-layer-noisy-rotated.edi",
       "source_sha256": "0d6b0fab71efe69d183445070aba1181604333f00fb6781bf6d2c9d9d2ee5e95",
       "artifact": "two-layer-noisy-rotated.json",
-      "artifact_sha256": "dc61c9be0ed8594c0bab59354eaf30e01a37af3cbc798c69b3b51cca7cd4c9a5",
+      "artifact_sha256": "1fe28210e07b20a1666dcabde021bc323176376eef05b832d2d554cb41344be0",
       "noise_added": true,
       "noise_seed": 67201,
       "input_units": "mt",
@@ -143,5 +143,23 @@
   "parser_dependency": "mt-metadata==1.0.10",
   "artifact_schema": "inverse-earth/edi-1d/v1",
   "provenance": "Original analytic synthetic transfer functions; not downloaded field data",
-  "uncertainty": "Per-artifact TRF conditional parametric bootstrap, no empirical coverage inferred here"
+  "uncertainty": "Per-artifact TRF conditional parametric bootstrap, no empirical coverage inferred here",
+  "field_screens": [
+    {
+      "id": "cl061",
+      "artifact": "clear-lake-cl061-screen.json",
+      "artifact_sha256": "0bb33c3fdeed7bec98064a753979d7f8184bdb89795fbbcd2c76ec6cc520e364",
+      "artifact_bytes": 50910,
+      "source_sha256": "90c5c96cd69d6d29c866a768097cb3b38bc20e8b9c143e24bf10b2d253261e83",
+      "source_bytes": 16411,
+      "source_file": "USGS-GMEG.2022.cl061.edi",
+      "station_url": "https://data.earthscope.org/app/products/portal/emtf/emtf_item.html?p=2022%2FMT_TF_USGS-GMEG.2022.cl061",
+      "release_doi": "10.5066/P14KAQ3M",
+      "transfer_function_doi": "10.17611/DP/EMTF/GMEG/Clearlake",
+      "parser_source_sha256": "2181a4fa4f6fe822949ba834b3adbaf1dee3dcdd6455b218a341648c200587b6",
+      "one_d_inversion_eligible": false,
+      "observed_frequencies": 42,
+      "citation_condition": "Data Citation Required; see artifact source_release and original station INFO"
+    }
+  ]
 }

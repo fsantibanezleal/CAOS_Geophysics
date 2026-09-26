@@ -222,6 +222,19 @@ type Series = {
   points?: boolean;
 };
 export type Band = { name: string; lower: number[]; upper: number[] };
+
+/** Prevent floating-point differences in near-constant curves from filling the plot. */
+export function plotYRange(values: number[], logY: boolean): [number, number] {
+  const finite = values.filter(Number.isFinite).map(v => logY ? Math.log10(Math.max(v, 1e-20)) : v);
+  if (!finite.length) return [0, 1];
+  const low = Math.min(...finite), high = Math.max(...finite);
+  const centre = (low + high) / 2;
+  const minimumSpan = logY ? 2 * Math.log10(1.05) : 0.1 * (Math.max(Math.abs(low), Math.abs(high)) || 1);
+  const span = Math.max(high - low, minimumSpan);
+  const padding = span * 0.08;
+  return [centre - span / 2 - padding, centre + span / 2 + padding];
+}
+
 export function Plot({
   x,
   series,
@@ -242,16 +255,27 @@ export function Plot({
   band?: Band;
 }) {
   const [pick, setPick] = useState<number | null>(null);
-  const w = 640,
-    h = 270,
-    p = { l: 64, r: 22, t: 20, b: 42 };
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [w, setWidth] = useState(640);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const update = () => {
+      const next = Math.max(280, Math.round(svg.getBoundingClientRect().width));
+      setWidth(current => current === next ? current : next);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(svg);
+    update();
+    return () => observer.disconnect();
+  }, []);
+  const h = 300,
+    p = { l: 78, r: 22, t: 26, b: 46 };
+  const ticks = w < 480 ? 4 : 5;
   const tx = (v: number) => (logX ? Math.log10(Math.max(v, 1e-20)) : v),
     ty = (v: number) => (logY ? Math.log10(Math.max(v, 1e-20)) : v);
   const xr = extent(x.map(tx)),
-    yr = extent([...series.flatMap((s) => s.values.map(ty)), ...(band ? [...band.lower, ...band.upper].map(ty) : [])]);
-  const pad = (yr[1] - yr[0]) * 0.08;
-  yr[0] -= pad;
-  yr[1] += pad;
+    yr = plotYRange([...series.flatMap((s) => s.values), ...(band ? [...band.lower, ...band.upper] : [])], logY);
   const X = (v: number) =>
       p.l + ((tx(v) - xr[0]) / (xr[1] - xr[0])) * (w - p.l - p.r),
     Y = (v: number) =>
@@ -274,6 +298,7 @@ export function Plot({
         </output>
       </figcaption>
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${w} ${h}`}
         role="img"
         aria-label={title}
@@ -287,8 +312,8 @@ export function Plot({
           setPick(near);
         }}
       >
-        {Array.from({ length: 5 }, (_, i) => {
-          const a = i / 4,
+        {Array.from({ length: ticks }, (_, i) => {
+          const a = i / (ticks - 1),
             yv = yr[0] + a * (yr[1] - yr[0]),
             xv = xr[0] + a * (xr[1] - xr[0]);
           return (
@@ -356,7 +381,7 @@ export function Plot({
             y2={h - p.b}
           />
         )}
-        <text className="axis-unit" x={p.l} y={12}>
+        <text className="axis-unit" x={p.l} y={17}>
           {yLabel}
         </text>
       </svg>

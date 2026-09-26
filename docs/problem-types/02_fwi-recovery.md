@@ -172,11 +172,15 @@ observed energy over the same trace population. They are distinct from model
 error; fitting pressure does not identify a unique velocity field.
 
 A nominal case is marked recovered only when whole-model RMSE, active waveform
-error and withheld waveform error all improve their independent start.
-"Recovered" means that explicit baseline test, not exact geometry. Non-improving
-outputs are failed and remain exported. Salt remains an expected negative
-control and retains any failed criteria in its reason codes. Finite-budget
-optimizer status is independent of scientific recovery status.
+error and withheld waveform error all improve their independent start **and**
+both active and withheld WRMS are at most two. A baseline-improving model with
+larger noise-normalized residual remains unresolved; a non-improving model is
+failed. "Recovered" is this synthetic baseline-and-data criterion, not exact
+geometry. Salt remains an expected negative control and retains any failed or
+unresolved criteria in its reason codes. Finite-budget optimizer status is
+independent of scientific recovery status. The release gate reloads every
+ten-significant-digit exported velocity model and replays all 48 final models
+on CUDA, checking observations, predictions, residuals, metrics and verdicts.
 
 The tests include analytical filter attenuation and a finite-difference filter
 gradient, spacing-invariant regularization, withheld-data noninterference,

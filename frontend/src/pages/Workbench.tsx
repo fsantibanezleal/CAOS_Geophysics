@@ -28,7 +28,7 @@ import {
 } from "../science";
 import { methodName, metricInfo, historyInfo } from "../data/metrics";
 import { lessons } from "../data/lessons";
-import { absoluteThreshold, physicalTarget, propertyScale, selectedModel, sharedScale, type ModelState } from "../recovery";
+import { absoluteThreshold, casePropertyScale, physicalTarget, selectedModel, sharedScale, type ModelState } from "../recovery";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, TargetEvidence, UncertaintyView } from "../components/ScientificEvidence";
 import { provenanceDescription } from "../data/evidence";
 
@@ -96,7 +96,7 @@ export default function Workbench() {
   const [representation, setRepresentation] = useState<"surface" | "cells">(
     "surface",
   );
-  const [threshold, setThreshold] = useState(0.35);
+  const [threshold, setThreshold] = useState<number | null>(null);
   const [opacity, setOpacity] = useState(1);
   const [survey, setSurvey] = useState(true);
   const [angle, setAngle] = useState(0);
@@ -110,6 +110,7 @@ export default function Workbench() {
   const [blend, setBlend] = useState(0);
   const [shot, setShot] = useState(1);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [sidebarPanel, setSidebarPanel] = useState<"experiment" | "replay" | "evidence">("experiment");
   const [gain, setGain] = useState(8);
   const [playbackKind, setPlaybackKind] = useState("inverse");
   useEffect(() => {
@@ -195,7 +196,14 @@ export default function Workbench() {
         : ([-1, 1] as [number, number]),
     [run],
   );
-  const comparisonScale = useMemo(() => run && method ? propertyScale(run, methodId) : sharedScale([]), [run, methodId, method]);
+  const comparisonScale = useMemo(() => {
+    if (!run || !method) return sharedScale([]);
+    return casePropertyScale(run, methodId, entry?.display_scales);
+  }, [run, methodId, method, entry]);
+  const thresholdGroup = methodId === "vector" ? "vector-amplitude" : "volume";
+  const displayThreshold = threshold === null
+    ? entry?.default_thresholds?.[thresholdGroup] ?? absoluteThreshold(comparisonScale, 0.35)
+    : absoluteThreshold(comparisonScale, threshold);
   const displayedModel = useMemo(() => method ? selectedModel(method, modelState, frame) : [], [method, modelState, frame]);
   const values = useMemo(() => !run ? [] : flatten(mode === "truth" ? physicalTarget(run, methodId) : displayedModel), [run, displayedModel, mode, methodId]);
   const returnToFinal = () => {
@@ -213,6 +221,8 @@ export default function Workbench() {
   );
   const select = (id: string) => {
     setSelected(id);
+    setControlsOpen(false);
+    setSidebarPanel("experiment");
     setVariant("reference");
     setMode("recovered");
     setModelState("final");
@@ -220,6 +230,7 @@ export default function Workbench() {
     setFrame(0);
     setReset((n) => n + 1);
     setCut(960);
+    setThreshold(null);
     setPlaying(false);
   };
   const lesson = lessons[selected];
@@ -328,6 +339,7 @@ export default function Workbench() {
             opacity={opacity}
             cut={cut}
             showSurvey={survey}
+            surveyMaxAbs={entry?.survey_max_abs}
             angle={angle}
             speed={speed}
             playing={orbit}
@@ -339,7 +351,7 @@ export default function Workbench() {
             }
             onCell={pickCell}
             representation={representation}
-            threshold={absoluteThreshold(comparisonScale, threshold)}
+            threshold={displayThreshold}
             range={comparisonScale.range}
           />
           <div className="scene-bottom">
@@ -350,10 +362,14 @@ export default function Workbench() {
             />
             <span>
               {run.grid.shape.slice().reverse().join(" × ")} {t("computed cells", "celdas calculadas")}; Δx, Δy, Δz = {run.grid.spacing.join(", ")} m.{" "}
-              {t(
+              {entry?.display_scales ? t(
+                "Model colours and the reference-inverse display threshold are fixed across six conditions for each property; the threshold is adjustable. Interpolated surfaces add no resolution.",
+                "El color y el umbral de visualización derivado de la inversión de referencia son fijos entre seis condiciones para cada propiedad; el umbral es ajustable. Las superficies interpoladas no agregan resolución.",
+              ) : t(
                 "Fixed colour scale and absolute threshold across target, methods and saved states. A surface interpolates computed cells; it does not add resolution.",
                 "Escala y umbral absoluto fijos entre objetivo, métodos y estados. La superficie interpola celdas calculadas; no agrega resolución.",
               )}
+              {survey && entry?.survey_max_abs ? ` ${t("Survey colours", "Colores del levantamiento")} ±${format(entry.survey_max_abs)} ${run.data_units}.` : ""}
             </span>
           </div>
           <details className="scene-settings">
@@ -384,7 +400,7 @@ export default function Workbench() {
               </label>
               <Range
                 label={t("Property threshold", "Umbral de propiedad")}
-                value={absoluteThreshold(comparisonScale, threshold)}
+                value={displayThreshold}
                 min={0}
                 max={comparisonScale.maximum || 1}
                 step={(comparisonScale.maximum || 1) / 100}
@@ -523,7 +539,7 @@ export default function Workbench() {
               />
             ))}
           </div>
-          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} />}
+          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} caseRange={entry?.display_scales?.secondary?.range} />}
           {history}
         </div>
       );
@@ -816,7 +832,9 @@ export default function Workbench() {
       );
     } else if (run.family === "learned") {
       const cnn = methodId === "cnn";
-      const ref = cnn ? run.column_truth! : matrix(run.survey!.observed);
+      const networkInput = !cnn && method.network_input?.length === run.survey!.observed.length
+        ? method.network_input : undefined;
+      const ref = cnn ? run.column_truth! : matrix(networkInput ?? run.survey!.observed);
       const predicted = cnn
         ? (method.model as number[][])
         : matrix(method.predicted as number[]);
@@ -844,6 +862,14 @@ export default function Workbench() {
                   )}
             </h2>
             <p>{lesson.read[lang]}</p>
+            {!cnn && !networkInput && <p role="note" className="plot-note">{t(
+              "This artifact does not export the network input. The first map shows recorded observations; its preprocessing support cannot be checked against the exported error map here.",
+              "Este artefacto no exporta la entrada de la red. El primer mapa muestra observaciones registradas; aquí no se puede comprobar su soporte de preprocesamiento frente al mapa de error exportado.",
+            )}</p>}
+            {!cnn && networkInput && run.variant === "coverage" && <p className="plot-note">{t(
+              "Missing stations are interpolated in the network input. The score and error map compare reconstruction with that input; the separate raw-observation MSE retains the comparison with recorded stations.",
+              "Las estaciones omitidas se interpolan en la entrada de la red. Puntaje y mapa de error comparan reconstrucción con esa entrada; el MSE separado frente a observaciones originales conserva la comparación con estaciones registradas.",
+            )}</p>}
           </div>
           <div className="three-plots">
             <Heatmap
@@ -851,7 +877,7 @@ export default function Workbench() {
               title={
                 cnn
                   ? t("Known column density", "Densidad integrada conocida")
-                  : t("Observed field", "Campo observado")
+                  : networkInput ? t("Network input", "Entrada de la red") : t("Recorded observations", "Observaciones registradas")
               }
               range={bounds}
               unit={cnn ? "g/cm³ m" : "mGal"}
@@ -872,7 +898,7 @@ export default function Workbench() {
             />
             <Heatmap
               data={errorMap}
-              title={t("Reconstruction error", "Error de reconstrucción")}
+              title={cnn ? t("Column error", "Error de columna") : networkInput ? t("Squared error versus network input", "Error cuadrático frente a entrada de red") : t("Exported squared-error map", "Mapa de error cuadrático exportado")}
               unit={
                 cnn
                   ? "g/cm³ m"
@@ -921,8 +947,8 @@ export default function Workbench() {
     <div className="page-body wide workbench">
       <aside className={`instrument-sidebar ${controlsOpen ? "expanded" : ""}`}>
         <div className="instrument-brand">
-          <span className="small-caps">{t("GEOPHYSICS", "GEOFÍSICA")}</span>
-          <h1>{t("Geophysical inversion", "Inversión geofísica")}</h1>
+          <span className="small-caps">{entry && familyLabels[entry.family][lang]} / {String((catalog?.cases.findIndex((c) => c.id === selected) ?? 0) + 1).padStart(2, "0")}</span>
+          <h1>{es ? entry?.name_es : entry?.name}</h1>
         </div>
         <label className="select-control">
           <span>01 / {t("Geological case", "Caso geológico")}</span>
@@ -945,10 +971,6 @@ export default function Workbench() {
             ))}
           </select>
         </label>
-        <div className="case-question">
-          <span>{t("Case hypothesis", "Hipótesis del caso")}</span>
-          <p>{lesson.question[lang]}</p>
-        </div>
         <button
           className="btn mobile-controls-toggle"
           aria-expanded={controlsOpen}
@@ -962,6 +984,14 @@ export default function Workbench() {
               )}{" "}
           {controlsOpen ? "−" : "+"}
         </button>
+        <div className="sidebar-panel-switch" role="group" aria-label={t("Control sections", "Secciones de control")}>
+          {([
+            ["experiment", t("Experiment", "Experimento")],
+            ["replay", t("Replay", "Reproducción")],
+            ["evidence", t("Evidence", "Evidencia")],
+          ] as const).map(([id, label]) => <button key={id} className={`chip ${sidebarPanel === id ? "on" : ""}`} aria-pressed={sidebarPanel === id} onClick={() => setSidebarPanel(id)}>{label}</button>)}
+        </div>
+        {sidebarPanel === "experiment" && <>
         <label className="select-control">
           <span>02 / {t("Experiment", "Experimento")}</span>
           <select
@@ -998,6 +1028,9 @@ export default function Workbench() {
             ))}
           </select>
         </label>
+        {method && <EvaluationStatus method={method} methodId={methodId} variant={run?.variant} compact />}
+        </>}
+        {sidebarPanel === "replay" && <>
         <div className="playback">
           <button className="btn" aria-pressed={modelState === "final" && playbackKind === "inverse"} onClick={returnToFinal}>{t("Show final model", "Mostrar modelo final")}</button>
           {run?.family === "seismic" && (
@@ -1120,6 +1153,13 @@ export default function Workbench() {
             {t("Export run", "Exportar ejecución")}
           </button>
         </div>
+        {method && <EvaluationStatus method={method} methodId={methodId} variant={run?.variant} compact />}
+        </>}
+        {sidebarPanel === "evidence" && <>
+        <div className="case-question">
+          <span>{t("Case hypothesis", "Hipótesis del caso")}</span>
+          <p>{lesson.question[lang]}</p>
+        </div>
         <div className="source-caption">
           <span className="source-dot" />
           {run?.provenance.synthetic ? t("Constructed synthetic target", "Objetivo sintético construido") : t("External observations", "Observaciones externas")}
@@ -1132,24 +1172,11 @@ export default function Workbench() {
             )}
           </small>
           {run && <p>{provenanceDescription(run, es)}</p>}
-          {method && <EvaluationStatus method={method} />}
+          {method && <EvaluationStatus method={method} methodId={methodId} variant={run?.variant} />}
         </div>
+        </>}
       </aside>
-      <section className="instrument-main">
-        <header className="case-heading">
-          <div>
-            <span className="small-caps">
-              {entry && familyLabels[entry.family][lang]} /{" "}
-              {String(
-                (catalog?.cases.findIndex((c) => c.id === selected) ?? 0) + 1,
-              ).padStart(2, "0")}
-            </span>
-            <h2>{es ? entry?.name_es : entry?.name}</h2>
-          </div>
-          <span className="case-counter">
-            {catalog?.cases.length} {t("computed cases", "casos calculados")}
-          </span>
-        </header>
+      <section className="instrument-main" aria-label={es ? entry?.name_es : entry?.name}>
         {error ? (
           <div role="alert" className="load-state">
             {error}
@@ -1172,7 +1199,7 @@ export default function Workbench() {
                 {
                   id: "earth",
                   label: t("Model", "Modelo"),
-                  content: <>{run.family !== "learned" && <p className="plot-note" role="status">{playbackKind === "wave" && run.family === "seismic" ? t("Synthetic-target wavefield; not propagation in the recovered model.", "Campo de ondas del objetivo sintético; no propagación en el modelo recuperado.") : mode === "truth" && physical ? t("Constructed synthetic target", "Objetivo sintético construido") : displayedState}. {t("Data predictions and evaluation remain at the selected final model.", "Las predicciones y evaluación corresponden al modelo final seleccionado.")}</p>}{earth}</>,
+                  content: <>{run.family !== "learned" && !physical && <p className="plot-note" role="status">{playbackKind === "wave" && run.family === "seismic" ? t("Synthetic-target wavefield; not propagation in the recovered model.", "Campo de ondas del objetivo sintético; no propagación en el modelo recuperado.") : displayedState}. {t("Data predictions and evaluation remain at the selected final model.", "Las predicciones y evaluación corresponden al modelo final seleccionado.")}</p>}{earth}</>,
                 },
                 {
                   id: "observations",

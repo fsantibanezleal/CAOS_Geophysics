@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { absoluteThreshold, curvePath, membershipField, physicalTarget, propertyScale, selectedModel, sharedScale, uncertaintyProblem } from "../recovery";
-import { evaluationLabel, evaluationReason, provenanceDescription, targetDescription } from "../data/evidence";
+import { readFileSync } from "node:fs";
+import { absoluteThreshold, casePropertyScale, curvePath, membershipField, physicalTarget, propertyScale, selectedModel, sharedScale, uncertaintyProblem } from "../recovery";
+import { evaluationLabel, evaluationPresentation, evaluationReason, provenanceDescription, targetDescription } from "../data/evidence";
 import { metricInfo, metricValue, methodName } from "../data/metrics";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, UncertaintyView } from "../components/ScientificEvidence";
 import { PotentialCalibration } from "../components/PotentialCalibration";
-import type { Method, Run, Uncertainty } from "../science";
+import { plotYRange } from "../components/ScientificPlots";
+import type { Catalog, Method, Run, Uncertainty } from "../science";
 
 function method(overrides: Partial<Method> = {}): Method {
   return { name: "Inverse", name_es: "Inversa", model: [0.1, 0.2], frames: [[0.01, -0.04], [0.03, 0.06]], predicted: [1, 2], residual: [0, 0], history: [3, 1], metrics: {}, ...overrides };
@@ -26,6 +28,13 @@ describe("physical comparison and state identity", () => {
     expect(absoluteThreshold(propertyScale(r, "l2"), .2)).toBeCloseTo(.6);
     expect(absoluteThreshold(propertyScale(r, "irls"), .2)).toBeCloseTo(.6);
   });
+  it("uses a fixed case scale when comparing different acquisition conditions", () => {
+    const r = run();
+    const scales = { volume: { range: [-5, 5] as [number, number], maximum: 5, signed: true }, "vector-amplitude": { range: [0, 8] as [number, number], maximum: 8, signed: false } };
+    expect(casePropertyScale(r, "l2", scales).range).toEqual([-5, 5]);
+    expect(casePropertyScale(r, "vector", scales).range).toEqual([0, 8]);
+    expect(casePropertyScale(r, "l2").range).toEqual([-3, 3]);
+  });
   it("keeps negative CNN estimates visible without mixing column and cell units", () => {
     const r = run({ family: "learned", column_truth: [[4, 8]], methods: { cnn: method({ model: [[-10, 2]], frames: [] }), l2: method({ model: [1000, 2000] }) } });
     expect(propertyScale(r, "cnn").range).toEqual([-10, 10]);
@@ -43,6 +52,13 @@ describe("physical comparison and state identity", () => {
   it("does not invent a physical threshold for an all-zero field", () => {
     expect(sharedScale([[0, 0]]).maximum).toBe(0);
     expect(absoluteThreshold(sharedScale([[0, 0]]), .5)).toBe(0);
+  });
+  it("does not exaggerate floating-point differences in near-constant response plots", () => {
+    const logRange = plotYRange([100, 100 + 1e-10, 100 - 1e-10], true);
+    const linearRange = plotYRange([45, 45 + 1e-10], false);
+    expect(logRange[1] - logRange[0]).toBeGreaterThan(0.04);
+    expect(linearRange[1] - linearRange[0]).toBeGreaterThan(4);
+    expect(plotYRange([1, 100], true)[1] - plotYRange([1, 100], true)[0]).toBeGreaterThan(2);
   });
   it("separates secondary property scales and validates mixture responsibility rows", () => {
     const m = method({ magnetic_model: [.01, .02], prior_membership: [[.2, .8], [.9, .1]] });
@@ -76,6 +92,60 @@ describe("evidence contracts", () => {
     expect(provenanceDescription(run(), false)).toContain("not measured geology");
     expect(evaluationLabel("negative-control", true)).toBe("Control negativo declarado");
     expect(methodName("pgi", true)).toContain("petrofísica");
+  });
+  it("defines every exported catalog diagnostic in both languages", () => {
+    const catalog = JSON.parse(readFileSync(new URL("../../../data/derived/v2/catalog.json", import.meta.url), "utf8")) as Catalog;
+    for (const c of catalog.cases) for (const v of c.variants) for (const [methodId, m] of Object.entries(v.methods)) {
+      for (const key of Object.keys(m.metrics)) for (const es of [false, true]) {
+        const info = metricInfo(key, c.family, methodId, es);
+        expect(info.label, `${c.id}/${v.id}/${methodId}/${key}`).not.toBe(key);
+        expect(info.description.length, `${c.id}/${v.id}/${methodId}/${key}`).toBeGreaterThan(20);
+      }
+    }
+    expect(metricInfo("raw_observation_mse", "learned", "autoencoder").description).toContain("recorded observation");
+    expect(metricInfo("reconstruction_mse", "learned", "autoencoder").description).toContain("interpolated network input");
+    expect(metricInfo("unknown_contract_key", "gravity").label).toBe("unknown_contract_key");
+  });
+  it("never turns a display-case autoencoder score into geological success", () => {
+    for (const variant of ["reference", "contrast", "noise", "acquisition", "coverage", "regularization"]) {
+      for (const status of ["recovered", "failed"] as const) {
+        const evaluation = { status, reason_codes: ["withheld-geometric-family-detected"] };
+        for (const es of [false, true]) {
+          const view = evaluationPresentation(evaluation, "autoencoder", variant, es);
+          expect(view.status).toBe("unresolved");
+          expect(view.reasonCodes).toEqual(["case-score-not-calibrated-as-geology"]);
+          expect(view.label).not.toMatch(/recover|recuperad/i);
+        }
+        const html = renderToStaticMarkup(createElement(EvaluationStatus, { method: method({ evaluation }), methodId: "autoencoder", variant }));
+        expect(html).toContain('data-evaluation="unresolved"');
+        expect(html).toContain("Case score has no calibrated geological verdict");
+        expect(html).not.toContain("Recovery criteria met");
+      }
+    }
+    expect(evaluationReason("case-score-not-calibrated-as-geology", true)).toContain("no está calibrado");
+  });
+  it("names the joint two-property baseline and FWI noise-fit gates in both languages", () => {
+    const jointReasons = [
+      "coupling-does-not-improve-independent-density-recovery",
+      "coupling-does-not-improve-independent-susceptibility-recovery",
+      "magnetic-data-misfit-above-noise",
+      "magnetic-withheld-data-not-predicted",
+    ];
+    const fwiReasons = ["active_data_misfit_above_declared_noise", "withheld_data_misfit_above_declared_noise"];
+    for (const code of [...jointReasons, ...fwiReasons]) for (const es of [false, true]) {
+      expect(evaluationReason(code, es)).not.toMatch(/additional condition|condición adicional/);
+      expect(evaluationReason(code, es).length).toBeGreaterThan(40);
+    }
+    for (const key of ["independent_model_rmse", "independent_baseline_ratio", "independent_magnetic_model_rmse", "independent_magnetic_baseline_ratio", "magnetic_wrms", "magnetic_heldout_wrms"]) {
+      for (const es of [false, true]) {
+        const info = metricInfo(key, "joint", "joint", es);
+        expect(info.label).not.toBe(key);
+        expect(info.description.length).toBeGreaterThan(40);
+      }
+    }
+    expect(evaluationReason(jointReasons[0], false)).toContain("optimized uncoupled");
+    expect(evaluationReason(fwiReasons[0], false)).toContain("noise-normalized");
+    expect(targetDescription(run({ family: "learned", methods: { autoencoder: method() } }), "autoencoder", false)).toContain("network-input");
   });
   it("rejects mismatched, nonfinite, inverted and mislabelled uncertainty arrays", () => {
     expect(uncertaintyProblem(ensemble(), [100, 200])).toBeNull();

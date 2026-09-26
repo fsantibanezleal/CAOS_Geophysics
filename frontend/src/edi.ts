@@ -11,7 +11,31 @@ export type EdiFixture = {
 export type EdiBundle = {
   schema: "inverse-earth/edi-bundle/v1";
   fixtures: EdiFixture[]; license: string; parser_dependency: string;
+  field_screens?: EdiFieldScreenEntry[];
   calibration: { id: string; artifact: string; artifact_sha256: string; synthetic: boolean; realizations: number; coverage_per_layer: number[]; failures: number; seed: number }[];
+};
+export type EdiSourceRelease = {
+  station_url?: string;
+  release_doi?: string;
+  transfer_function_doi?: string;
+  rights?: string;
+  citation?: string;
+  note?: string;
+};
+export type EdiFieldScreenEntry = {
+  id: string; artifact: string; artifact_sha256: string; source_sha256: string;
+  source?: string; label?: string; source_release?: EdiSourceRelease;
+};
+export type EdiFieldScreen = {
+  schema: "inverse-earth/edi-screen/v1"; id: string; family: "mt";
+  source_kind: string; truth: null; methods: Record<string, never>;
+  inversion_performed: false; one_d_fit_performed: false; one_d_inversion_eligible: boolean;
+  interpretation: string; frequencies_hz: number[];
+  observed: Record<"xy" | "yx", Curves & { sigma_real_imag_ohm: number[] }>;
+  compatibility: EdiRun["compatibility"];
+  provenance: EdiRun["provenance"] & { source_bytes?: number; preflight?: string; error_assumption?: string };
+  source_release?: EdiSourceRelease;
+  metadata?: Record<string, unknown>;
 };
 export type EdiBootstrap = {
   kind: string; confidence: number; interval_method: string;
@@ -61,6 +85,30 @@ export function validateEdiRun(run: EdiRun, fixture: EdiFixture): void {
     if (method.model.length !== run.thickness.length + 1 || method.model.some(v => !Number.isFinite(v) || v <= 0) || method.solver.initial_model.length !== method.model.length || method.solver.initial_model.some(v => !Number.isFinite(v) || v <= 0)) throw new Error("Invalid EDI layer model");
   }
   if (!run.compatibility.passes_screen) throw new Error("EDI tensor did not pass the necessary 1D screen");
+}
+
+/** Field screening has no inverse model, synthetic oracle, or geological truth. */
+export function validateEdiFieldScreen(screen: EdiFieldScreen, entry: EdiFieldScreenEntry): void {
+  if (screen.schema !== "inverse-earth/edi-screen/v1" || screen.id !== entry.id || screen.family !== "mt" ||
+      screen.source_kind !== "measured EDI transfer functions" || screen.truth !== null ||
+      screen.inversion_performed !== false || screen.one_d_fit_performed !== false ||
+      Object.keys(screen.methods ?? {}).length !== 0 || screen.provenance?.synthetic !== false ||
+      screen.provenance?.target_known !== false || screen.provenance?.source_sha256 !== entry.source_sha256)
+    throw new Error("Measured EDI identity or no-inverse contract mismatch");
+  const n = screen.frequencies_hz?.length;
+  if (!n || screen.frequencies_hz.some(v => !Number.isFinite(v) || v <= 0) ||
+      screen.compatibility?.passes_screen !== screen.one_d_inversion_eligible ||
+      !Number.isFinite(screen.compatibility?.threshold) || screen.compatibility.threshold <= 0)
+    throw new Error("Invalid measured EDI frequencies or compatibility");
+  for (const component of ["xy", "yx"] as const) {
+    const curves = screen.observed?.[component];
+    if (!curves || [curves.real, curves.imag, curves.apparent, curves.phase, curves.sigma_real_imag_ohm]
+      .some(values => !Array.isArray(values) || values.length !== n || values.some(v => !Number.isFinite(v))) ||
+      curves.apparent.some(v => v <= 0) || curves.sigma_real_imag_ohm.some(v => v <= 0))
+      throw new Error(`Invalid measured EDI ${component} curves or uncertainty`);
+  }
+  for (const value of [screen.compatibility.xx_component_wrms, screen.compatibility.yy_component_wrms, screen.compatibility.antisymmetry_conservative_wrms])
+    if (!Number.isFinite(value) || value < 0) throw new Error("Invalid measured EDI compatibility score");
 }
 
 export function ediInterval(uncertainty?: EdiBootstrap | Uncertainty): { lower: number[]; upper: number[]; members: number; requested: number; quantiles: number[]; seed: number; failures: number } | null {

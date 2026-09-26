@@ -3,8 +3,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { calibrationSeries, ediInterval, ediPath, validateEdiRun, type EdiBundle, type EdiCalibration, type EdiRun } from "../edi";
-import { EdiCalibrationResult, EdiResult } from "../components/EdiFixtures";
+import { calibrationSeries, ediInterval, ediPath, validateEdiFieldScreen, validateEdiRun, type EdiBundle, type EdiCalibration, type EdiFieldScreen, type EdiFieldScreenEntry, type EdiRun } from "../edi";
+import { EdiCalibrationResult, EdiFieldScreenResult, EdiResult } from "../components/EdiFixtures";
 import { mtForward } from "../mt";
 import { intervalPath } from "../recovery";
 
@@ -15,6 +15,28 @@ const read = <T,>(filename: string): T => JSON.parse(readFileSync(new URL(filena
 const bundle = read<EdiBundle>("manifest.json");
 
 describe("actual EDI fixture and calibration contracts", () => {
+  it("keeps measured screening separate from any inverse solution", () => {
+    const fixtureRun = read<EdiRun>(bundle.fixtures[0].artifact);
+    const entry: EdiFieldScreenEntry = { id: "cl061", artifact: "test-screen.json", artifact_sha256: "artifact-digest", source_sha256: "source-digest", source_release: { citation: "Source citation from exporter", station_url: "https://www.usgs.gov/example", release_doi: "10.1234/release", transfer_function_doi: "10.1234/transfer", rights: "Public test fixture", note: "No geological inference" } };
+    const curve = { real: [1, 2], imag: [2, 3], apparent: [100, 200], phase: [30, 40], sigma_real_imag_ohm: [0.1, 0.2] };
+    const screen: EdiFieldScreen = {
+      schema: "inverse-earth/edi-screen/v1", id: entry.id, family: "mt", source_kind: "measured EDI transfer functions",
+      truth: null, methods: {}, inversion_performed: false, one_d_fit_performed: false, one_d_inversion_eligible: false,
+      interpretation: "Necessary tensor screen", frequencies_hz: [1, 10], observed: { xy: curve, yx: { ...curve, phase: [130, 140] } },
+      compatibility: { passes_screen: false, threshold: 3, xx_component_wrms: 320.23, yy_component_wrms: 109.51, antisymmetry_conservative_wrms: 267.60 },
+      provenance: { ...fixtureRun.provenance, source_sha256: entry.source_sha256, synthetic: false, target_known: false },
+    };
+    expect(() => validateEdiFieldScreen(screen, entry)).not.toThrow();
+    const html = renderToStaticMarkup(createElement(EdiFieldScreenResult, { screen, entry }));
+    for (const text of ["1D screen rejected", "No 1D inversion was performed", "Zxx", "Zyy", "267.6", "Source citation from exporter", "USGS station record", "EarthScope release DOI", "Transfer-function DOI", "sign-corrected", "full tensor without this YX sign flip", "source-digest", "artifact-digest"]) expect(html).toContain(text);
+    expect(html).toContain('href="https://doi.org/10.1234/release"');
+    expect(html).toContain('href="https://doi.org/10.1234/transfer"');
+    for (const text of ["Final-model prediction", "Selected final model", "Independent synthetic fixture oracle", "Layer resistivity and empirical interval"]) expect(html).not.toContain(text);
+    expect(() => validateEdiFieldScreen({ ...screen, methods: { fabricated: {} } } as unknown as EdiFieldScreen, entry)).toThrow();
+    expect(() => validateEdiFieldScreen({ ...screen, truth: [1] } as unknown as EdiFieldScreen, entry)).toThrow();
+    expect(() => validateEdiFieldScreen({ ...screen, one_d_inversion_eligible: true }, entry)).toThrow();
+    expect(() => validateEdiFieldScreen({ ...screen, observed: { ...screen.observed, xy: { ...curve, sigma_real_imag_ohm: [0, 0] } } }, entry)).toThrow();
+  });
   it("only fetches adjacent exporter-owned files", () => {
     expect(ediPath("halfspace-100-native.edi")).toBe("edi/halfspace-100-native.edi");
     for (const path of ["../private.json", "https://example.com/a.json", "/a.json", "sub/a.json", "a.html"]) expect(() => ediPath(path)).toThrow();

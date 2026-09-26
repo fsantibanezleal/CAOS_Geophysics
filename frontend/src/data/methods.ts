@@ -414,6 +414,10 @@ export const chapters: Chapter[] = [
         "Cycle skipping arises when a local update matches the wrong oscillation. Both methods first fit a data-only 1D background from an independent depth trend, then refine spatial controls under an identical physical-gradient prior. One branch uses full-band traces; the other uses a fixed 3, 5, 8, 14 Hz schedule selected on separate calibration geometry. Each stage receives 28 L-BFGS calls; stages and accepted states are recorded. A finite budget does not certify a global solution, and withheld receiver data never select the model.",
         "El salto de ciclo aparece al ajustar una oscilación equivocada. Ambos métodos ajustan primero un fondo 1D desde tendencia independiente y refinan controles espaciales con el mismo prior físico. Una rama usa banda completa y otra secuencia 3, 5, 8, 14 Hz fijada con geometría separada. Cada etapa recibe 28 llamadas L-BFGS; se registran etapas y estados aceptados. Presupuesto finito no certifica solución global, y receptores omitidos nunca seleccionan modelo.",
       ),
+      T(
+        "The recovery verdict requires improvement over the initial velocity and waveform baselines and checks noise-normalized waveform residuals separately at active and withheld receivers. A lower model or relative waveform error can still leave recovery unresolved when either residual exceeds the declared threshold of 2; withheld traces never enter model selection.",
+        "El veredicto exige mejorar las referencias iniciales de velocidad y onda, y comprueba por separado los residuos de onda normalizados por ruido en receptores activos y omitidos. Reducir error del modelo o error relativo de onda aún puede dejar la recuperación sin resolver si algún residuo supera el umbral declarado de 2; las trazas omitidas nunca seleccionan el modelo.",
+      ),
     ],
     equations: [
       E(
@@ -476,8 +480,8 @@ export const chapters: Chapter[] = [
       "MSE relativo sin filtrar en entradas de etapa y estados de llamadas aceptadas. Objetivo filtrado y regularización se exportan aparte. Los cuadros se enlazan a registros; modelo final y predicciones usan el mismo estado terminal."
     ],
     "limitation": [
-      "Finite-budget baseline improvement is not exact geology, uniqueness or field performance. The known source and same-operator synthetic observations simplify the inverse. Salt remains a declared cycle-skipping challenge with failures visible; source estimation and elastic physics are excluded.",
-      "Mejorar referencia con presupuesto finito no es geología exacta, unicidad ni rendimiento de campo. Fuente conocida y mismo operador sintético simplifican la inversión. La sal mantiene desafío de salto de ciclos y fallos visibles; no se estima fuente ni física elástica."
+      "Finite-budget baseline improvement is not exact geology, uniqueness or field performance. Both active and withheld noise-normalized waveform residuals must satisfy the declared fit criterion for a resolved verdict. The known source and same-operator synthetic observations simplify the inverse. Salt remains a declared cycle-skipping challenge with failures visible; source estimation and elastic physics are excluded.",
+      "Mejorar referencia con presupuesto finito no es geología exacta, unicidad ni rendimiento de campo. Los residuos de onda normalizados por ruido, activos y omitidos, deben cumplir el criterio declarado para un veredicto resuelto. Fuente conocida y mismo operador sintético simplifican la inversión. La sal mantiene desafío de salto de ciclos y fallos visibles; no se estima fuente ni física elástica."
     ]
   },
   {
@@ -524,8 +528,8 @@ export const chapters: Chapter[] = [
       "MSE relativo sin filtrar en entradas de etapa y estados de llamadas aceptadas. Objetivo filtrado y regularización se exportan aparte. Los cuadros se enlazan a registros; modelo final y predicciones usan el mismo estado terminal."
     ],
     "limitation": [
-      "Finite-budget baseline improvement is not exact geology, uniqueness or field performance. The known source and same-operator synthetic observations simplify the inverse. Salt remains a declared cycle-skipping challenge with failures visible; source estimation and elastic physics are excluded.",
-      "Mejorar referencia con presupuesto finito no es geología exacta, unicidad ni rendimiento de campo. Fuente conocida y mismo operador sintético simplifican la inversión. La sal mantiene desafío de salto de ciclos y fallos visibles; no se estima fuente ni física elástica."
+      "Finite-budget baseline improvement is not exact geology, uniqueness or field performance. Both active and withheld noise-normalized waveform residuals must satisfy the declared fit criterion for a resolved verdict. The known source and same-operator synthetic observations simplify the inverse. Salt remains a declared cycle-skipping challenge with failures visible; source estimation and elastic physics are excluded.",
+      "Mejorar referencia con presupuesto finito no es geología exacta, unicidad ni rendimiento de campo. Los residuos de onda normalizados por ruido, activos y omitidos, deben cumplir el criterio declarado para un veredicto resuelto. Fuente conocida y mismo operador sintético simplifican la inversión. La sal mantiene desafío de salto de ciclos y fallos visibles; no se estima fuente ni física elástica."
     ]
   }
 ],
@@ -547,8 +551,8 @@ export const chapters: Chapter[] = [
       "Gravedad y magnetismo restringen propiedades distintas. Compartir límites es una hipótesis, no ley universal. Se comparan una referencia multipropiedad desacoplada, gradiente cruzado físico y un prior petrofísico diferente de mezcla gaussiana. Los tres usan datos, incertidumbre, estimados iniciales, precisiones espaciales y presupuesto iguales. Así se aísla el prior añadido sin confundirlo con inicialización o penalizaciones."
     ],
     [
-      "For structural coupling, density is normalized by 0.5 g/cm³ and susceptibility by 0.03 SI. Derivatives divide differences by physical cell spacing in metres. The mean squared cross-gradient is multiplied by 240⁴ and divided by its value at the matched independent initialization (floor 10⁻¹²). A diagonal quadratic-Hessian preconditioner scales optimizer variables. This normalization uses no target truth. Parallel, antiparallel or vanishing gradients all make the penalty small; this is not proof of matching interfaces. Inspect density and susceptibility recovery, active and omitted station errors, and change relative to the independent model.",
-      "En acoplamiento estructural se normaliza densidad por 0,5 g/cm³ y susceptibilidad por 0,03 SI. Derivadas dividen diferencias por espaciamiento en metros. La media del gradiente cruzado cuadrado se multiplica por 240⁴ y divide por su valor en la inicialización independiente común (piso 10⁻¹²). Un precondicionador Hessiano diagonal escala variables. Esta normalización no usa verdad objetivo. Gradientes paralelos, antiparalelos o nulos reducen la penalización sin probar interfaces correctas. Inspeccione ambas propiedades, estaciones activas/omitidas y cambio respecto al modelo independiente."
+      "For structural coupling, density is normalized by 0.5 g/cm³ and susceptibility by 0.03 SI. Derivatives divide differences by physical cell spacing in metres. The mean squared cross-gradient is multiplied by 240⁴ and divided by its value at the matched independent initialization (floor 10⁻¹²). A diagonal quadratic-Hessian preconditioner scales optimizer variables. This normalization uses no target truth. Parallel, antiparallel or vanishing gradients all make the penalty small; this is not proof of matching interfaces. Compare both property RMSE values against the matched optimized uncoupled solution, and require active and withheld gravity and magnetic data fits within their declared noise thresholds.",
+      "En acoplamiento estructural se normaliza densidad por 0,5 g/cm³ y susceptibilidad por 0,03 SI. Derivadas dividen diferencias por espaciamiento en metros. La media del gradiente cruzado cuadrado se multiplica por 240⁴ y divide por su valor en la inicialización independiente común (piso 10⁻¹²). Un precondicionador Hessiano diagonal escala variables. Esta normalización no usa verdad objetivo. Gradientes paralelos, antiparalelos o nulos reducen la penalización sin probar interfaces correctas. Compare RMSE de ambas propiedades con la solución desacoplada optimizada y exija ajuste de datos gravitatorios y magnéticos, activos y omitidos, dentro de umbrales de ruido declarados."
     ],
     [
       "The petrophysical branch minimizes the actual negative log density of a fitted two-class full-covariance Gaussian mixture. Its 640 density/susceptibility pairs are original synthetic laboratory-like samples generated independently with seed 68121. EM fits weights, means and covariances before inversion; it does not see display-case voxel labels. This explicit likelihood formulation is inspired by petrophysically guided inversion, but it does not invoke SimPEG’s PGI optimizer or dynamically update the mixture during the geological inversion.",
@@ -672,8 +676,8 @@ export const chapters: Chapter[] = [
         "Objetivo completo después de actualizaciones aceptadas, guardado cada ocho pasos y al final. Se exportan términos de datos, espacial, gradiente cruzado y mezcla; la densidad logarítmica negativa puede ser negativa y no es error normalizado."
       ],
       "limitation": [
-        "Parallel gradients and flat fields can both satisfy the structural term. Failure to improve independent density recovery is reported as unresolved even when the coupling term decreases.",
-        "Gradientes paralelos y campos constantes satisfacen el término estructural. No mejorar la densidad independiente se informa como no resuelto aunque disminuya acoplamiento."
+        "Parallel gradients and flat fields can both satisfy the structural term. Coupled density and susceptibility errors are each compared with the optimized uncoupled solution; either property or either data fit can leave recovery unresolved even when the coupling term decreases.",
+        "Gradientes paralelos y campos constantes satisfacen el término estructural. Los errores acoplados de densidad y susceptibilidad se comparan por separado con la solución desacoplada optimizada; cualquier propiedad o ajuste de datos puede dejar la recuperación sin resolver aunque disminuya el término de acoplamiento."
       ]
     },
     {
@@ -831,8 +835,8 @@ export const chapters: Chapter[] = [
         "El umbral es el percentil 99 de errores en 160 realizaciones de calibración separadas, semilla 49001, no de validación de pesos. Se prueba con 160 ejemplos independientes del generador y 80 realizaciones de familias omitidas, semilla 59001. Se registran sensibilidad, especificidad, fallos, falsas alarmas y ROC AUC. Son medidas específicas del generador y ruido, no probabilidades calibradas de corrección geológica.",
       ),
       T(
-        "The workbench reports both the case score and threshold. The comparison is a testable detector decision, not an assurance of reliability. Under missing coverage the network input is interpolated, whereas the displayed error compares the reconstructed map against all recorded stations, including omitted ones. This distinction matters when attributing a high score to novelty rather than preprocessing. Results should be read alongside input coverage, observation noise and the inverse CNN’s separate column error.",
-        "El visor informa puntaje y umbral. La comparación es una decisión verificable del detector, no una garantía. Con cobertura incompleta, la entrada se interpola, mientras el error mostrado compara reconstrucción con todas las estaciones registradas, incluidas las omitidas. Esto importa para distinguir novedad de efectos del preprocesamiento. Los resultados deben leerse junto a cobertura, ruido y error independiente de columna de la CNN.",
+        "The workbench reports the case score and the frozen threshold as a literal comparison, never a calibrated geological verdict for a display case. Under missing coverage, both the score and error map compare the reconstruction with the interpolated network input. A separate raw-observation MSE retains the discrepancy against recorded stations before interpolation. Interpret the aggregate withheld-family test separately from these case scores.",
+        "El visor muestra puntaje y umbral fijo como comparación literal, nunca veredicto geológico calibrado de un caso visualizado. Con cobertura incompleta, tanto puntaje como mapa de error comparan reconstrucción con entrada interpolada de la red. Un MSE separado frente a observaciones originales conserva la discrepancia con estaciones registradas antes de interpolar. La prueba agregada de familias omitidas se interpreta por separado.",
       ),
     ],
     equations: [
@@ -843,8 +847,8 @@ export const chapters: Chapter[] = [
       ),
       E(
         String.raw`\tau=Q_{0.99}\{J_{AE}(x):x\in calibration\},\qquad flag(x)=\mathbf1[J_{AE}(x)>\tau]`,
-        "τ is the empirical independent-calibration threshold; Q is a sample quantile; flag is a binary threshold decision. It is not a posterior probability or a geological classification.",
-        "τ es el umbral empírico de calibración independiente; Q un cuantil muestral; flag una decisión binaria. No es probabilidad posterior ni clasificación geológica.",
+        "τ is the empirical independent-calibration threshold; Q is a sample quantile; flag is a literal score comparison. It is not a calibrated case-level geological verdict, posterior probability or classification.",
+        "τ es el umbral empírico de calibración independiente; Q un cuantil muestral; flag compara literalmente el puntaje. No es veredicto geológico calibrado del caso, probabilidad posterior ni clasificación.",
       ),
     ],
     assumptions: T(
@@ -891,8 +895,8 @@ export const chapters: Chapter[] = [
           "MSE de reconstrucción de validación cada cinco épocas. Es historial de entrenamiento, no trayectoria inversa del caso seleccionado.",
         ),
         limitation: T(
-          "A threshold miss must be reported as a miss. Reconstructed observations and a low error score do not validate a geological interpretation.",
-          "No superar el umbral en un caso desconocido debe informarse como fallo de detección. Reconstruir observaciones con error bajo no valida interpretación geológica.",
+          "In the independently labeled 80-case withheld-family test, threshold misses remain misses. A displayed case score alone is not calibrated as geological detection, and reconstructed observations do not validate a subsurface interpretation.",
+          "En la prueba independiente de 80 casos de familias omitidas, los fallos del umbral se conservan como fallos. El puntaje aislado de un caso visualizado no está calibrado como detección geológica y las observaciones reconstruidas no validan una interpretación del subsuelo.",
         ),
       },
     ],

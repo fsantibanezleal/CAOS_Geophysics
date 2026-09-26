@@ -12,6 +12,7 @@ export function EarthScene({
   opacity,
   cut,
   showSurvey,
+  surveyMaxAbs,
   angle,
   speed,
   playing,
@@ -27,6 +28,7 @@ export function EarthScene({
   opacity: number;
   cut: number;
   showSurvey: boolean;
+  surveyMaxAbs?: number;
   angle: number;
   speed: number;
   playing: boolean;
@@ -43,6 +45,7 @@ export function EarthScene({
   animate.current = { playing, speed };
   const [readout, setReadout] = useState("");
   const [error, setError] = useState("");
+  const [visibleCells, setVisibleCells] = useState(0);
   const pose = useRef<{
     position: THREE.Vector3;
     target: THREE.Vector3;
@@ -106,6 +109,7 @@ export function EarthScene({
       )
         indices.push(i);
     }
+    setVisibleCells(indices.length);
     const spacing = run.grid.spacing;
     const geometry = new THREE.BoxGeometry(
       spacing[0] / 1000,
@@ -184,7 +188,7 @@ export function EarthScene({
     grid.scale.z = 1.92 / 2.24;
     scene.add(grid);
     const surveyValues = run.survey.observed;
-    const observedMax = Math.max(...surveyValues.map(Math.abs));
+    const observedMax = surveyMaxAbs && surveyMaxAbs > 0 ? surveyMaxAbs : Math.max(...surveyValues.map(Math.abs));
     if (showSurvey) {
       const geom = new THREE.PlaneGeometry(0.132, 0.12);
       geom.rotateX(-Math.PI / 2);
@@ -396,6 +400,7 @@ export function EarthScene({
     opacity,
     cut,
     showSurvey,
+    surveyMaxAbs,
     angle,
     reset,
     onCell,
@@ -410,6 +415,7 @@ export function EarthScene({
       className="earth-scene"
       ref={host}
       role="img"
+      data-visible-cells={visibleCells}
       aria-label={`${label}: ${es ? "modelo tridimensional y levantamiento" : "three-dimensional subsurface model and survey"}`}
     >
       <div className="scene-label">
@@ -424,7 +430,7 @@ export function EarthScene({
       <output className="scene-readout">
         {error ||
           readout ||
-          `${run.grid?.shape.join(" × ")} ${es ? "celdas" : "cells"} · ${run.units}`}
+          `${run.grid?.shape.join(" × ")} ${es ? "celdas" : "cells"} · ${visibleCells} ${es ? "sobre umbral" : "above threshold"} · ${run.units}`}
       </output>
     </div>
   );

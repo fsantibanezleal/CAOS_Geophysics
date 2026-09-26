@@ -36,7 +36,7 @@ def verify(origin):
     assert edi_manifest== (edi_root/'manifest.json').read_bytes(),'EDI manifest differs from local release: '+base
     edi=json.loads(edi_manifest)
     edi_files=set()
-    for entry in edi['fixtures']+edi['calibration']:
+    for entry in edi['fixtures']+edi['calibration']+edi.get('field_screens',[]):
         for field, digest_field in [('artifact','artifact_sha256'),('source','source_sha256')]:
             if field not in entry:continue
             name=entry[field]
@@ -46,12 +46,19 @@ def verify(origin):
             assert hashlib.sha256(data).hexdigest()==entry[digest_field],'EDI hash mismatch: '+name
             edi_files.add(name)
     assert fetch(base+'data/v2/release.json')==(root/'data/derived/v2/release.json').read_bytes(),'Release record differs from local release: '+base
+    for name in ('validation.json','fwi-replay.json'):
+        assert fetch(base+'data/v2/'+name)==(root/'data/derived/v2'/name).read_bytes(),name+' differs from local release: '+base
     index=(root/'frontend/dist/index.html').read_bytes()
     for route in ['', 'introduction/','methodology/','implementation/','experiments/','benchmark/']:
         assert fetch(base+route)==index,'Direct route build mismatch: '+route
     for name in ['cnn.json','autoencoder.json','training.json']:
         assert fetch(base+'data/v2/models/'+name)==(root/'data/derived/v2/models'/name).read_bytes()
-    result=dict(origin=base,https_verified=base.startswith('https://'),cases=len(catalog['cases']),verified_experiments=len(checked),verified_edi_files=len(edi_files),verified_routes=6,verified_model_files=3,catalog_sha256=hashlib.sha256(catalog_raw).hexdigest(),index_sha256=hashlib.sha256(index).hexdigest())
+    static_files=list(sorted((root/'frontend/dist/assets').glob('*.js')))+list(sorted((root/'frontend/dist/assets').glob('*.css')))
+    static_files+=list(sorted((root/'frontend/dist/svg/tech').glob('*.svg')))
+    for path in static_files:
+        relative=path.relative_to(root/'frontend/dist').as_posix()
+        assert fetch(base+relative)==path.read_bytes(),'Static UI asset differs from local release: '+relative
+    result=dict(origin=base,https_verified=base.startswith('https://'),cases=len(catalog['cases']),verified_experiments=len(checked),verified_edi_files=len(edi_files),verified_routes=6,verified_model_files=3,verified_release_evidence_files=2,verified_static_ui_files=len(static_files),catalog_sha256=hashlib.sha256(catalog_raw).hexdigest(),index_sha256=hashlib.sha256(index).hexdigest())
     print(json.dumps(result),flush=True)
     return result
 

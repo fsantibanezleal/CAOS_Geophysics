@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Callout, Cite, Refs, useShellLang } from "@fasl-work/caos-app-shell";
 import { appBase, extent, format, loadArtifact, type Curves } from "../science";
-import { calibrationSeries, ediInterval, ediPath, validateEdiRun, type EdiBundle, type EdiCalibration, type EdiFixture, type EdiRun } from "../edi";
+import { calibrationSeries, ediInterval, ediPath, validateEdiFieldScreen, validateEdiRun, type EdiBundle, type EdiCalibration, type EdiFieldScreen, type EdiFieldScreenEntry, type EdiFixture, type EdiRun } from "../edi";
 import { metricInfo, methodName } from "../data/metrics";
 import { mtForward } from "../mt";
 import { EvaluationStatus } from "./ScientificEvidence";
@@ -73,6 +73,73 @@ export function EdiResult({ run, fixture }: { run: EdiRun; fixture: EdiFixture }
   </div>;
 }
 
+function sourceLink(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const url = /^10\.\d{4,9}\//.test(raw) ? `https://doi.org/${raw}` : raw;
+  try { return new URL(url).protocol === "https:" ? url : undefined; } catch { return undefined; }
+}
+
+export function EdiFieldScreenResult({ screen, entry }: { screen: EdiFieldScreen; entry: EdiFieldScreenEntry }) {
+  const es = useShellLang() === "es";
+  const t = (a: string, b: string) => es ? b : a;
+  const [view, setView] = useState<"apparent" | "complex">("apparent");
+  const release = screen.source_release ?? entry.source_release;
+  const stationUrl = sourceLink(release?.station_url);
+  const releaseDoi = sourceLink(release?.release_doi);
+  const transferDoi = sourceLink(release?.transfer_function_doi);
+  const comparison = (key: keyof Curves) => <Plot
+    title={({ apparent: t("Apparent resistivity", "Resistividad aparente"), phase: t("Impedance phase", "Fase de impedancia"), real: t("Real impedance", "Impedancia real"), imag: t("Imaginary impedance", "Impedancia imaginaria") })[key]}
+    x={screen.frequencies_hz}
+    series={(["xy", "yx"] as const).map(component => ({ name: component === "xy" ? `Zxy · ${t("measured", "medido")}` : `−Zyx · ${t("sign-corrected", "signo corregido")}`, values: screen.observed[component][key], points: true }))}
+    xLabel={t("Frequency · Hz", "Frecuencia · Hz")}
+    yLabel={key === "apparent" ? "Ω m" : key === "phase" ? "°" : "Ω"}
+    logX logY={key === "apparent"}
+  />;
+  const c = screen.compatibility;
+  return <section className="evidence-layout" data-source-kind="measured-edi-screen">
+    <Callout variant="honest" title={c.passes_screen ? t("Measured transfer functions · 1D screen passed", "Funciones de transferencia medidas · control 1D aprobado") : t("Measured transfer functions · 1D screen rejected", "Funciones de transferencia medidas · control 1D rechazado")}>
+      {c.passes_screen
+        ? t("The necessary tensor-consistency screen passes, but no inversion has been performed and one-dimensional geology is not established.", "El control necesario de consistencia tensorial pasa, pero no se ha invertido y no se establece geología unidimensional.")
+        : t("The tensor fails the declared necessary isotropic-1D consistency screen. No 1D inversion was performed. The observed curves below are measurements, not predictions or a recovered subsurface model.", "El tensor no cumple el control necesario declarado de consistencia isotrópica 1D. No se realizó inversión 1D. Las curvas siguientes son mediciones, no predicciones ni un modelo del subsuelo recuperado.")}
+    </Callout>
+    <div className="benchmark-controls">
+      <label className="select-control"><span>{t("Measured response", "Respuesta medida")}</span><select className="select" aria-label={t("Measured response", "Respuesta medida")} value={view} onChange={event => setView(event.target.value as typeof view)}><option value="apparent">{t("Apparent resistivity and phase", "Resistividad aparente y fase")}</option><option value="complex">{t("Complex impedance", "Impedancia compleja")}</option></select></label>
+      <a className="btn" download href={appBase + "data/v2/" + ediPath(entry.artifact)}>{t("Download measured screen", "Descargar control medido")}</a>
+      {entry.source && <a className="btn" download href={appBase + "data/v2/" + ediPath(entry.source)}>{t("Download source EDI", "Descargar EDI original")}</a>}
+    </div>
+    <div className="two-plots">{view === "apparent" ? <>{comparison("apparent")}{comparison("phase")}</> : <>{comparison("real")}{comparison("imag")}</>}</div>
+    <Plot title={t("Impedance-component measurement uncertainty", "Incertidumbre de componentes de impedancia")} x={screen.frequencies_hz} series={(["xy", "yx"] as const).map(component => ({ name: `σ Z${component.toUpperCase()}`, values: screen.observed[component].sigma_real_imag_ohm }))} xLabel={t("Frequency · Hz", "Frecuencia · Hz")} yLabel="Ω" logX logY />
+    <p className="plot-note">{t("The XY curve is Zxy; the YX curve is −Zyx, sign-corrected by the parser for comparison with the 1D antisymmetric convention. The full tensor without this YX sign flip remains in the downloadable artifact. σ applies separately to real and imaginary impedance; it is not an apparent-resistivity uncertainty interval. No model curves or geological truth are available.", "La curva XY es Zxy; la curva YX es −Zyx, con signo corregido por el lector para compararla con la convención antisimétrica 1D. El tensor completo sin esa corrección de signo YX permanece en el artefacto descargable. σ corresponde por separado a impedancia real e imaginaria; no es un intervalo de resistividad aparente. No hay curvas de modelo ni verdad geológica.")}</p>
+    <h3>{t("Necessary 1D tensor-compatibility screen", "Control necesario de compatibilidad tensorial 1D")}</h3>
+    <dl className="parameter-ledger">
+      <div><dt>WRMS Zxx</dt><dd>{format(c.xx_component_wrms)}</dd></div>
+      <div><dt>WRMS Zyy</dt><dd>{format(c.yy_component_wrms)}</dd></div>
+      <div><dt>{t("Conservative antisymmetry WRMS", "WRMS conservador de antisimetría")}</dt><dd>{format(c.antisymmetry_conservative_wrms)}</dd></div>
+      <div><dt>{t("Declared acceptance threshold", "Umbral de aceptación declarado")}</dt><dd>{format(c.threshold)}</dd></div>
+      <div><dt>{t("1D inversion eligible", "Apto para inversión 1D")}</dt><dd>{screen.one_d_inversion_eligible ? t("Yes", "Sí") : t("No", "No")}</dd></div>
+      <div><dt>{t("Inversion performed", "Inversión realizada")}</dt><dd>{t("No", "No")}</dd></div>
+    </dl>
+    <p className="plot-note">{t("A failed necessary screen rejects this isotropic-1D interpretation under the stated threshold; it does not determine whether a 2D or 3D geological model is correct. Tensor dimensionality, processing assumptions and site effects require separate analysis.", "Fallar este control necesario rechaza la interpretación isotrópica 1D con el umbral declarado; no determina si un modelo geológico 2D o 3D es correcto. Dimensionalidad del tensor, supuestos de procesamiento y efectos locales requieren análisis aparte.")}</p>
+    <h3>{t("Source and parsing record", "Fuente y registro de lectura")}</h3>
+    <p>{release?.citation ?? t("Source citation not included in this artifact.", "La cita de origen no figura en este artefacto.")}</p>
+    <div className="benchmark-controls">
+      {stationUrl && <a href={stationUrl} target="_blank" rel="noopener noreferrer">{t("USGS station record", "Registro de estación USGS")}</a>}
+      {releaseDoi && <a href={releaseDoi} target="_blank" rel="noopener noreferrer">{t("EarthScope release DOI", "DOI de publicación EarthScope")}: {release?.release_doi}</a>}
+      {transferDoi && <a href={transferDoi} target="_blank" rel="noopener noreferrer">{t("Transfer-function DOI", "DOI de funciones de transferencia")}: {release?.transfer_function_doi}</a>}
+    </div>
+    {release?.rights && <p>{t("Data rights", "Derechos de datos")}: {release.rights}</p>}
+    {release?.note && <p className="plot-note">{release.note}</p>}
+    <dl className="parameter-ledger">
+      <div><dt>{t("Sounding", "Sondeo")}</dt><dd>{screen.id}</dd></div>
+      <div><dt>{t("Frequency samples", "Frecuencias")}</dt><dd>{screen.frequencies_hz.length}</dd></div>
+      <div><dt>{t("Parser", "Lector")}</dt><dd>{screen.provenance.parser} · {screen.provenance.parser_version}</dd></div>
+      <div><dt>{t("Input → output impedance units", "Unidades de impedancia entrada → salida")}</dt><dd>{screen.provenance.original_units} → {screen.provenance.output_units}</dd></div>
+      <div><dt>{t("Orientation handling", "Tratamiento de orientación")}</dt><dd>{screen.provenance.rotation_action}</dd></div>
+    </dl>
+    <p>SHA-256 · EDI: <code>{entry.source_sha256}</code></p><p>SHA-256 · JSON: <code>{entry.artifact_sha256}</code></p>
+  </section>;
+}
+
 export function EdiCalibrationResult({ data }: { data: EdiCalibration }) {
   const es = useShellLang() === "es";
   const t = (a: string, b: string) => es ? b : a;
@@ -102,17 +169,29 @@ export function EdiFixtures() {
   const [selected, setSelected] = useState("");
   const [run, setRun] = useState<EdiRun>();
   const [error, setError] = useState("");
+  const [selectedField, setSelectedField] = useState("");
+  const [fieldScreen, setFieldScreen] = useState<EdiFieldScreen>();
+  const [fieldError, setFieldError] = useState("");
   useEffect(() => { const controller = new AbortController(); loadArtifact<EdiBundle>("edi/manifest.json", controller.signal).then(data => {
     if (data.schema !== "inverse-earth/edi-bundle/v1" || !data.fixtures.length) throw new Error("EDI bundle contract mismatch");
     data.fixtures.forEach(f => { ediPath(f.source); ediPath(f.artifact); });
-    setBundle(data); setSelected(data.fixtures[0].id);
+    data.field_screens?.forEach(f => { ediPath(f.artifact); if (f.source) ediPath(f.source); });
+    setBundle(data); setSelected(data.fixtures[0].id); setSelectedField(data.field_screens?.[0]?.id ?? "");
   }).catch(e => { if (e.name !== "AbortError") setError(String(e)); }); return () => controller.abort(); }, []);
   const fixture = bundle?.fixtures.find(f => f.id === selected);
+  const fieldEntry = bundle?.field_screens?.find(f => f.id === selectedField);
   useEffect(() => { if (!fixture) return; const controller = new AbortController(); setRun(undefined); setError(""); loadArtifact<EdiRun>(ediPath(fixture.artifact), controller.signal).then(data => { validateEdiRun(data, fixture); setRun(data); }).catch(e => { if (e.name !== "AbortError") setError(String(e)); }); return () => controller.abort(); }, [fixture]);
+  useEffect(() => { if (!fieldEntry) return; const controller = new AbortController(); setFieldScreen(undefined); setFieldError(""); loadArtifact<EdiFieldScreen>(ediPath(fieldEntry.artifact), controller.signal).then(data => { validateEdiFieldScreen(data, fieldEntry); setFieldScreen(data); }).catch(e => { if (e.name !== "AbortError") setFieldError(String(e)); }); return () => controller.abort(); }, [fieldEntry]);
   return <section className="evidence-layout">
-    <h2>{t("EDI parsing and fixed-thickness 1D inversion", "Lectura EDI e inversión 1D de espesores fijos")}</h2>
-    <p>{t("Original EDI fixtures exercise native MT units, ohm impedance, sign convention, tensor rotation and stated measurement variance before a real local inverse solve. The static browser loads those computed outputs; it does not upload field data or run the inverse on a server.", "Archivos EDI originales ejercitan unidades MT nativas, impedancia ohm, signo, rotación y varianza declarada antes de inversión local real. El navegador estático carga esas salidas; no sube datos de campo ni invierte en servidor.")} <Cite id="mtpy" paren /></p>
+    <h2>{t("EDI evidence: measured screening and synthetic inversion", "Evidencia EDI: control medido e inversión sintética")}</h2>
+    <p>{t("The measured sounding is screened without inversion. Separate authored synthetic EDI fixtures exercise the full parsing and fixed-thickness inverse workflow; their models and independent oracle must not be read as field results.", "El sondeo medido se evalúa sin inversión. Archivos EDI sintéticos independientes ejercitan lectura e inversión de espesores fijos; sus modelos y referencia independiente no son resultados de campo.")} <Cite id="mtpy" paren /></p>
     {error ? <p role="alert">{t("EDI evidence could not be loaded; no synthetic fallback was generated.", "No se pudo cargar evidencia EDI; no se generó reemplazo sintético.")} {error}</p> : !bundle ? <p role="status">{t("Loading EDI evidence…", "Cargando evidencia EDI…")}</p> : <>
+      {!!bundle.field_screens?.length && <section className="evidence-layout">
+        <h3>{t("Measured EDI · tensor screen only", "EDI medido · sólo control tensorial")}</h3>
+        {bundle.field_screens.length > 1 && <label className="select-control"><span>{t("Measured sounding", "Sondeo medido")}</span><select className="select" value={selectedField} onChange={event => setSelectedField(event.target.value)}>{bundle.field_screens.map(f => <option key={f.id} value={f.id}>{f.label ?? f.id}</option>)}</select></label>}
+        {fieldError ? <p role="alert">{t("Measured EDI screening record could not be loaded; no inversion is substituted.", "No se pudo cargar el control EDI medido; no se sustituye por una inversión.")} {fieldError}</p> : fieldScreen && fieldEntry ? <EdiFieldScreenResult key={fieldEntry.id} screen={fieldScreen} entry={fieldEntry} /> : <p role="status">{t("Loading measured tensor screen…", "Cargando control tensorial medido…")}</p>}
+      </section>}
+      <h3>{t("Authored synthetic EDI inversion fixtures", "Archivos EDI sintéticos con inversión")}</h3>
       <label className="select-control"><span>{t("Original EDI fixture", "Archivo EDI original")}</span><select className="select" value={selected} onChange={e => setSelected(e.target.value)}>{bundle.fixtures.map((f, i) => <option key={f.id} value={f.id}>{i + 1} · {f.truth_ohm_m.length === 1 ? t("Half-space", "Semiespacio") : t("Layered earth", "Tierra estratificada")} · {f.input_units} · {f.rotation_deg}° · {f.noise_added ? t("with noise", "con ruido") : t("no added noise", "sin ruido agregado")}</option>)}</select></label>
       {run && fixture ? <EdiResult key={fixture.id} run={run} fixture={fixture} /> : <p role="status">{t("Loading computed inversion…", "Cargando inversión calculada…")}</p>}
       {!!bundle.calibration?.length && <section>

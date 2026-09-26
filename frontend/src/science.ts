@@ -55,6 +55,9 @@ export type Case = {
   name_es: string;
   geometry: string;
   seed: number;
+  display_scales?: Record<string, { range: [number, number]; maximum: number; signed: boolean }>;
+  default_thresholds?: Record<string, number>;
+  survey_max_abs?: number;
   variants: Variant[];
 };
 export type Catalog = {
@@ -77,6 +80,7 @@ export type Method = MethodSummary & {
   cross_gradient?: number[];
   predicted: number[] | number[][][] | Curves;
   residual: number[] | number[][][] | Curves;
+  network_input?: number[];
   history: number[];
   frames: (number[] | number[][])[];
   vectors?: number[][];
