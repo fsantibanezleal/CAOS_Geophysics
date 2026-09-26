@@ -1,5 +1,7 @@
 # Deployment verification: 0.03.000
 
+Historical 0.03 receipt. The current 0.04.000 verification is [deployment-0.04.md](deployment-0.04.md).
+
 Verified on 2026-09-24 after the ADR UI correction and full numerical refinement.
 
 - Application commit: `b3863eacfd9e6be7e5435861c8877e235f38b1f7`.
