@@ -23,6 +23,24 @@ def altered(tmp_path, replacement):
     return source
 
 
+def with_field_style_tipper(text):
+    """Exercise the field EDI structure without adding a downloaded file to Git."""
+    text = text.replace(" UNITS=millivolts_per_kilometer_per_nanotesla\n", "")
+    text = text.replace(" SIGN_CONVENTION=+", r" SIGNCONVENTION=exp(+ i\omega t)")
+    text = text.replace(" VARIANCE_CONVENTION=complex\n", "")
+    text = text.replace("MAXCHAN=4", "MAXCHAN=5").replace("MAXMEAS=4", "MAXMEAS=5")
+    text = text.replace("NCHAN=4", "NCHAN=5")
+    text = text.replace(">EMEAS ID=3", ">HMEAS ID=5 CHTYPE=HZ X=0 Y=0 AZM=0\n>EMEAS ID=3", 1)
+    text = text.replace(" HY=2\n", " HY=2\n HZ=5\n", 1)
+    valid = " ".join(["1e32" if i == 23 else "0.01" for i in range(24)])
+    variance = " ".join(["1e32" if i == 23 else "0.001" for i in range(24)])
+    tipper = ">TROT // 24\n" + " ".join(["0"]*24) + "\n"
+    for axis in ("X", "Y"):
+        for suffix, values in (("R.EXP", valid), ("I.EXP", valid), ("VAR.EXP", variance)):
+            tipper += f">T{axis}{suffix} ROT=TROT // 24\n{values}\n"
+    return text.replace(">END", tipper+">END")
+
+
 def test_original_fixture_manifest_hashes():
     manifest = json.loads((FIXTURES/"manifest.json").read_text())
     assert manifest["license"] == "CC0-1.0"
@@ -51,7 +69,7 @@ def test_native_units_complex_variance_and_independent_halfspace():
 
 def test_negative_time_sign_si_units_and_exact_rotation():
     original = read_edi(NEGATIVE)
-    geographic = read_edi(NEGATIVE, rotation="geographic")
+    geographic = read_edi(NEGATIVE, rotation="geographic", rotation_reference="geographic-north")
     z, _ = original.select("xy")
     expected = (1+1j)*np.sqrt(np.pi*original.frequencies*MU*500)
     np.testing.assert_allclose(z, expected, rtol=1e-12)
@@ -60,6 +78,7 @@ def test_negative_time_sign_si_units_and_exact_rotation():
     assert (original.rotation_deg == 90).all()
     assert (geographic.rotation_deg == 0).all()
     assert original.provenance["original_sign_convention"] == "-"
+    assert geographic.provenance["rotation_reference"] == "geographic-north"
 
 
 def test_nonzero_rotation_preserves_errors_but_arbitrary_rerotation_rejected():
@@ -69,7 +88,9 @@ def test_nonzero_rotation_preserves_errors_but_arbitrary_rerotation_rejected():
     assert np.all(sounding.rotation_deg == 27)
     assert "none" in sounding.provenance["rotation_action"]
     with pytest.raises(EDIError, match="full error covariance"):
-        read_edi(source, rotation="geographic")
+        read_edi(source, rotation="geographic", rotation_reference="geographic-north")
+    with pytest.raises(EDIError, match="geographic-north reference"):
+        read_edi(NEGATIVE, rotation="geographic")
 
 
 @pytest.mark.parametrize("mutation, message", [
@@ -122,7 +143,7 @@ def test_exact_rotation_permutates_unequal_variances_and_signed_components(tmp_p
         return replace_first_data_value(text, "ZXX.VAR", "0.125")
     source = altered(tmp_path, edit)
     original = read_edi(source)
-    rotated = read_edi(source, rotation="geographic")
+    rotated = read_edi(source, rotation="geographic", rotation_reference="geographic-north")
     np.testing.assert_array_equal(rotated.tensor[:, 0, 0], original.tensor[:, 1, 1])
     np.testing.assert_array_equal(rotated.tensor[:, 1, 1], original.tensor[:, 0, 0])
     np.testing.assert_array_equal(rotated.tensor[:, 0, 1], -original.tensor[:, 1, 0])
@@ -138,6 +159,45 @@ def test_explicit_metadata_interpretation_is_recorded_not_silently_guessed(tmp_p
         read_edi(NATIVE, units="ohm")
     with pytest.raises(EDIError, match="diagonal"):
         sounding.select("xx")
+
+
+def test_field_style_info_and_ancillary_tipper_preserve_missing_mask(tmp_path):
+    source = altered(tmp_path, with_field_style_tipper)
+    with pytest.raises(EDIError, match="impedance units"):
+        read_edi(source)
+    with pytest.raises(EDIError, match="variance convention"):
+        read_edi(source, units="mt")
+    sounding = read_edi(source, units="mt", variance_convention="complex")
+    assert sounding.provenance["original_sign_convention"] == "+"
+    assert sounding.metadata["info"]["SIGNCONVENTION"] == r"exp(+ i\omega t)"
+    assert sounding.provenance["tipper_present"]
+    assert not sounding.provenance["tipper_used_in_1d_inversion"]
+    tipper = sounding.metadata["tipper"]
+    assert tipper["missing_frequency_hz"] == [pytest.approx(sounding.frequencies[0])]
+    assert tipper["components"]["X"]["real"][0] is None
+    assert tipper["components"]["Y"]["variance"][0] is None
+    assert tipper["components"]["X"]["real"][1] == pytest.approx(.01)
+    json.dumps(sounding.metadata, allow_nan=False)
+
+
+@pytest.mark.parametrize("mutation, message", [
+    (lambda s: s.replace(">TYI.EXP", ">UNKNOWN", 1), "Incomplete tipper"),
+    (lambda s: s.replace(" HZ=5\n", " HZ=6\n", 1), "identifiers"),
+    (lambda s: s.replace("NCHAN=5", "NCHAN=4", 1), "NCHAN"),
+    (lambda s: s.replace(">TXR.EXP ROT=TROT", ">TXR.EXP ROT=27", 1), "TROT frame"),
+    (lambda s: replace_first_data_value(s, "TXVAR.EXP", "0"), "tipper variances"),
+    (lambda s: replace_first_data_value(s, "TXR.EXP", "1e32"), "masks disagree"),
+])
+def test_invalid_field_tipper_fails_closed(tmp_path, mutation, message):
+    source = altered(tmp_path, lambda s: mutation(with_field_style_tipper(s)))
+    with pytest.raises(EDIError, match=message):
+        read_edi(source, units="mt", variance_convention="complex")
+
+
+def test_converted_variance_underflow_rejected(tmp_path):
+    source = altered(tmp_path, lambda s: replace_first_data_value(s, "ZXY.VAR", "5e-324"))
+    with pytest.raises(EDIError, match="finite and strictly positive"):
+        read_edi(source)
 
 
 def test_per_real_variance_is_distinct_and_recorded(tmp_path):
