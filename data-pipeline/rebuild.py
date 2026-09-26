@@ -51,7 +51,7 @@ def save(path,obj):
 
 def main():
     parser=argparse.ArgumentParser()
-    parser.add_argument("--output",type=Path,default=Path(__file__).resolve().parents[1]/"data/derived/v2")
+    parser.add_argument("--output",type=Path,default=Path(__file__).resolve().parents[1]/"data/experiments/precompute")
     parser.add_argument("--cases",nargs="*")
     parser.add_argument("--variants",nargs="*")
     parser.add_argument("--iterations",type=int,default=28)
@@ -59,8 +59,8 @@ def main():
     parser.add_argument("--reuse-trained-from",type=Path,help="Hash-check and reuse a frozen CNN/autoencoder training ledger and checkpoints; case inference still reruns")
     parser.add_argument("--resume",action="store_true")
     args=parser.parse_args()
-    if (args.cases or args.variants) and args.output.resolve()==(Path(__file__).resolve().parents[1]/"data/derived/v2").resolve():
-        parser.error('Filtered runs require --output to a separate experiment directory; canonical catalogue must remain complete.')
+    if args.output.resolve()==(Path(__file__).resolve().parents[1]/"data/derived/v2").resolve():
+        parser.error('Build into an ignored candidate directory; validate before copying into canonical data/derived/v2.')
     out=args.output
     out.mkdir(parents=True,exist_ok=True)
     cache={};learned=None

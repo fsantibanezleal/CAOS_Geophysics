@@ -16,4 +16,4 @@ if ($Gpu) {
   & $offline -m pip install -r requirements-gpu.txt -q
 }
 else { & $offline -m pip install torch==2.14.0 deepwave==0.0.27 }
-Write-Host '[setup] complete. Run .\scripts\precompute.ps1, then cd frontend; npm install; npm run build'
+Write-Host '[setup] complete. Run .\scripts\rebuild-release.ps1 for the full candidate release, then validate before promotion.'
