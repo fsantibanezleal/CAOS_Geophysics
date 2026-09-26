@@ -1,6 +1,6 @@
 # Inverse Earth Studio · 0.04.000
 
-[Open the observatory](https://geophysics.ml.fasl-work.com/) · [GitHub Pages](https://fsantibanezleal.github.io/CAOS_Geophysics/) · [Documentation](docs/README.md) · [0.04 scientific and browser evidence](docs/validation/scientific-ui-0.04.md)
+[Open the observatory](https://geophysics.ml.fasl-work.com/) · [GitHub Pages](https://fsantibanezleal.github.io/CAOS_Geophysics/) · [Documentation](docs/README.md) · [0.04 scientific and browser evidence](docs/validation/scientific-ui-0.04.md) · [0.04 public deployment evidence](docs/validation/deployment-0.04.md)
 
 A geophysics investigation workbench with 20 distinct geological cases, six conditions per case, and 348 computed inverse-method results. The release uses original synthetic geology and arrays calculated by SimPEG, SciPy, PyTorch and Deepwave. The catalogue records each method's target, units, final state and recovery verdict.
 
