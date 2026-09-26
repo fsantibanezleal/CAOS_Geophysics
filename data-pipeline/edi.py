@@ -2,7 +2,8 @@
 
 mt_metadata performs the official EDI read AFTER a strict raw-block preflight.
 The preflight prevents its permissive replacement of bad/missing numbers by zero.
-Only complete impedance tensors with explicit conventions are accepted. See
+Only complete impedance tensors with explicit conventions are accepted. A
+complete ancillary tipper may be retained but is never fitted by the 1D solver. See
 docs/problem-types/mt-recovery.md for supported inputs and rejected ambiguities.
 """
 from __future__ import annotations
@@ -20,6 +21,8 @@ import numpy as np
 from electromagnetics import MU, MT_BOUNDS, bootstrap_mt, calibrate_mt_bootstrap, curves, impedance, invert_mt
 
 COMPONENTS = ("xx", "xy", "yx", "yy")
+TIPPER_BLOCKS = {f"T{axis}{suffix}" for axis in ("X", "Y")
+                 for suffix in ("R.EXP", "I.EXP", "VAR.EXP")}
 MT_TO_OHM = MU*1000  # (mV/km)/nT = 1000 (V/m)/T; H = B/mu0.
 PARSER_PIN = "mt-metadata==1.0.10"
 
@@ -33,7 +36,7 @@ class EDISounding:
     frequencies: np.ndarray
     tensor: np.ndarray                  # canonical E/H ohm, positive-time convention
     sigma: np.ndarray                   # SD of each real/imag part, in ohm
-    rotation_deg: np.ndarray            # clockwise from geographic North
+    rotation_deg: np.ndarray            # relative to the documented (or unspecified) input frame
     provenance: dict
     metadata: dict
     compatibility: dict
@@ -53,6 +56,24 @@ def _assignments(text):
         key, value = match.group(1).upper(), match.group(2).strip("\"'")
         if key in result:
             raise EDIError(f"Duplicate metadata key {key}")
+        result[key] = value
+    return result
+
+
+def _metadata_assignments(entry):
+    """Preserve one EDI metadata value per line, including unquoted spaces."""
+    result = {}
+    for line in entry["lines"]:
+        if not line:
+            continue
+        match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_.]*)\s*=\s*(.*?)\s*", line)
+        if not match:
+            raise EDIError(f"Malformed metadata line in {entry['name']}: {line[:80]}")
+        key, value = match[1].upper(), match[2]
+        if key in result:
+            raise EDIError(f"Duplicate metadata key {key}")
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
         result[key] = value
     return result
 
@@ -89,7 +110,7 @@ def _sections(text):
     return singleton, repeated
 
 
-def _numeric(entry, count, empty):
+def _numeric(entry, count, empty, *, allow_missing=False):
     declaration = re.search(r"//\s*(\d+)\s*$", entry["header"])
     if not declaration or int(declaration[1]) != count:
         raise EDIError(f"{entry['name']} must declare exactly // {count} entries")
@@ -99,7 +120,8 @@ def _numeric(entry, count, empty):
         raise EDIError(f"Invalid numeric token in {entry['name']}") from error
     if len(values) != count or not np.isfinite(values).all():
         raise EDIError(f"Wrong length or nonfinite values in {entry['name']}")
-    if np.any(abs(values) == abs(empty)) or np.any(abs(values) >= 1e30):
+    missing = np.abs(values) == abs(empty)
+    if (np.any(missing) and not allow_missing) or np.any((np.abs(values) >= 1e30) & ~missing):
         raise EDIError(f"Missing-value sentinel in {entry['name']}; no silent zero replacement")
     return values
 
@@ -114,7 +136,7 @@ def _normalize_units(value):
 
 
 def _normalize_sign(value):
-    normalized = value.lower().replace(" ", "")
+    normalized = value.lower().replace(" ", "").replace(r"\omega", "omega").replace("ω", "omega")
     if normalized in ("+", "exp(+iwt)", "exp(+iomegat)"):
         return "+"
     if normalized in ("-", "exp(-iwt)", "exp(-iomegat)"):
@@ -148,11 +170,11 @@ def _layout(measurements):
     for entry in measurements:
         item = _assignments(entry["header"]+" "+" ".join(entry["lines"]))
         channel = item.get("CHTYPE", "").upper()
-        if channel not in ("EX", "EY", "HX", "HY") or channel in channels:
-            raise EDIError("Require exactly one EX, EY, HX, HY measurement; additional channels unsupported")
+        if channel not in ("EX", "EY", "HX", "HY", "HZ") or channel in channels:
+            raise EDIError("Require exactly one EX, EY, HX, HY; only HZ is an optional ancillary channel")
         try:
             if entry["name"] == "HMEAS":
-                if channel not in ("HX", "HY"):
+                if channel not in ("HX", "HY", "HZ"):
                     raise EDIError("Magnetic measurement has electric channel identifier")
                 angle = float(item["AZM"])
             else:
@@ -169,7 +191,7 @@ def _layout(measurements):
             channels[channel] = dict(id=item["ID"], azimuth_deg=float(angle))
         except (KeyError, ValueError) as error:
             raise EDIError("Missing or malformed measurement orientation/identifier") from error
-    if set(channels) != {"EX", "EY", "HX", "HY"}:
+    if not {"EX", "EY", "HX", "HY"}.issubset(channels):
         raise EDIError("Four horizontal channel orientations must be documented")
     def close(a, b):
         return abs((a-b+180) % 360-180) < 1e-5
@@ -197,7 +219,8 @@ def _compatibility(tensor, sigma):
     )
 
 
-def read_edi(path, *, units=None, sign_convention=None, variance_convention=None, rotation="preserve"):
+def read_edi(path, *, units=None, sign_convention=None, variance_convention=None,
+             rotation="preserve", rotation_reference=None):
     """Read full tensor strictly, convert units/errors, keep or exactly permute axes.
 
     Arbitrary re-rotation is rejected because Z.VAR has no covariance. Preservation
@@ -218,11 +241,17 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
     required |= {f"Z{c.upper()}{suffix}" for c in COMPONENTS for suffix in ("R", "I", ".VAR")}
     if required-set(blocks):
         raise EDIError(f"Missing required blocks: {sorted(required-set(blocks))}")
-    if set(blocks)-(required | {"ZROT"}):
-        raise EDIError(f"Unsupported EDI blocks: {sorted(set(blocks)-(required | {'ZROT'}))}; only impedance transfer functions supported")
-    header = _assignments(" ".join(blocks["HEAD"]["lines"]))
-    info = _assignments(" ".join(blocks["INFO"]["lines"]))
-    mtsect = _assignments(" ".join(blocks["MTSECT"]["lines"]))
+    tipper_present = bool(set(blocks) & (TIPPER_BLOCKS | {"TROT"}))
+    if tipper_present and not (TIPPER_BLOCKS | {"TROT"}).issubset(blocks):
+        raise EDIError("Incomplete tipper: require TROT and all six TX/TY real, imaginary, variance blocks")
+    allowed = required | {"ZROT"} | (TIPPER_BLOCKS | {"TROT"} if tipper_present else set())
+    if set(blocks)-allowed:
+        raise EDIError(f"Unsupported EDI blocks: {sorted(set(blocks)-allowed)}")
+    header = _metadata_assignments(blocks["HEAD"])
+    info = _metadata_assignments(blocks["INFO"])
+    mtsect = _metadata_assignments(blocks["MTSECT"])
+    if any(blocks[name]["header"] for name in ("HEAD", "INFO", "DEFINEMEAS", "MTSECT")):
+        raise EDIError("Metadata block headers must not hide attributes")
     if not header.get("DATAID") or header.get("DATAID") != mtsect.get("SECTID"):
         raise EDIError("DATAID and SECTID must be present and agree")
     try:
@@ -233,13 +262,22 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
     if not 2 <= count <= 512 or not np.isfinite(empty) or empty == 0:
         raise EDIError("Require 2..512 frequencies and a finite nonzero missing sentinel")
     layout = _layout(measurements)
-    if len({v["id"] for v in layout.values()}) != 4:
+    if len({v["id"] for v in layout.values()}) != len(layout):
         raise EDIError("Channel identifiers must be unique")
+    if "NCHAN" in mtsect and mtsect["NCHAN"] != str(len(layout)):
+        raise EDIError("NCHAN disagrees with the documented channel layout")
+    if set(mtsect)-{"SECTID", "NFREQ", "NCHAN", "HX", "HY", "HZ", "EX", "EY"}:
+        raise EDIError("Unsupported MTSECT channel or metadata fields")
     if any(mtsect.get(c) != value["id"] for c, value in layout.items()):
         raise EDIError("MTSECT channel identifiers do not match measurement definitions")
+    if tipper_present and "HZ" not in layout:
+        raise EDIError("Tipper requires a documented HZ measurement and MTSECT channel")
+    if set(mtsect) & {"HZ"} and "HZ" not in layout:
+        raise EDIError("MTSECT HZ has no matching measurement definition")
     input_units = _resolve([header.get("UNITS"), info.get("TRANSFER_FUNCTION.UNITS"), info.get("IMPEDANCE_UNITS")],
                            units, "impedance units", _normalize_units)
-    input_sign = _resolve([info.get("TRANSFER_FUNCTION.SIGN_CONVENTION"), info.get("SIGN_CONVENTION")],
+    input_sign = _resolve([info.get("TRANSFER_FUNCTION.SIGN_CONVENTION"), info.get("SIGN_CONVENTION"),
+                           info.get("SIGNCONVENTION")],
                           sign_convention, "time/sign convention", _normalize_sign)
     variance_kind = _resolve([info.get("VARIANCE_CONVENTION"), info.get("CAOS.VARIANCE_CONVENTION")],
                              variance_convention, "variance convention", _normalize_variance)
@@ -285,6 +323,37 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
                 tensor[:, i, j] += values
             else:
                 tensor[:, i, j] += 1j*values
+    tipper = None
+    tipper_missing = None
+    if tipper_present:
+        if _assignments(blocks["TROT"]["header"].split("//")[0]):
+            raise EDIError("TROT must have no undeclared attributes")
+        trot = _numeric(blocks["TROT"], count, empty)
+        tipper, tipper_missing = {}, None
+        for axis in ("X", "Y"):
+            tipper[axis] = {}
+            for suffix, field in (("R.EXP", "real"), ("I.EXP", "imag"), ("VAR.EXP", "variance")):
+                block = blocks[f"T{axis}{suffix}"]
+                attrs = _assignments(block["header"].split("//")[0])
+                if set(attrs) != {"ROT"}:
+                    raise EDIError("Every tipper block must declare only ROT=TROT or a numeric angle")
+                try:
+                    tipper_angle = trot if attrs["ROT"].upper() == "TROT" else np.full(count, float(attrs["ROT"]))
+                except ValueError as error:
+                    raise EDIError("Unsupported tipper rotation reference") from error
+                if not np.isfinite(tipper_angle).all() or not np.allclose(
+                    (tipper_angle-trot+180) % 360-180, 0, atol=1e-7, rtol=0
+                ):
+                    raise EDIError("Tipper blocks must share the declared TROT frame")
+                values = _numeric(block, count, empty, allow_missing=True)
+                missing = np.abs(values) == abs(empty)
+                if tipper_missing is None:
+                    tipper_missing = missing
+                elif not np.array_equal(missing, tipper_missing):
+                    raise EDIError("Tipper missing-value masks disagree across components")
+                if field == "variance" and np.any(values[~missing] <= 0):
+                    raise EDIError("Valid tipper variances must be strictly positive")
+                tipper[axis][field] = values
     # Official parser agreement is mandatory, not an optional fallback.
     try:
         from mt_metadata.transfer_functions.io.edi import EDI
@@ -297,6 +366,14 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
         np.testing.assert_allclose(np.asarray(parsed.frequency)[official_order], frequency[order], rtol=1e-12)
         np.testing.assert_allclose(np.asarray(parsed.z)[official_order], tensor[order], rtol=1e-12, atol=1e-15)
         np.testing.assert_allclose(np.asarray(parsed.z_err)[official_order]**2, variance[order], rtol=1e-12, atol=1e-25)
+        if tipper_present:
+            for column, axis in enumerate(("X", "Y")):
+                valid = ~tipper_missing[order]
+                expected = (tipper[axis]["real"] + 1j*tipper[axis]["imag"])[order]
+                np.testing.assert_allclose(np.asarray(parsed.t)[official_order, 0, column][valid],
+                                           expected[valid], rtol=1e-12, atol=1e-15)
+                np.testing.assert_allclose(np.asarray(parsed.t_err)[official_order, 0, column][valid]**2,
+                                           tipper[axis]["variance"][order][valid], rtol=1e-12, atol=1e-25)
     except Exception as error:
         raise EDIError(f"Official EDI parser disagrees with validated raw blocks: {error}") from error
     factor = MT_TO_OHM if input_units == "mt" else 1.
@@ -305,8 +382,14 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
     if input_sign == "-":
         tensor = tensor.conj()
     variance /= 2 if variance_kind == "complex" else 1
+    if not np.isfinite(variance).all() or np.any(variance <= 0):
+        raise EDIError("Converted impedance variances must remain finite and strictly positive")
     transformation = "none; tensor and marginal errors remain in supplied common frame"
+    if rotation_reference not in (None, "geographic-north"):
+        raise EDIError("Rotation reference must be explicitly geographic-north or unspecified")
     if rotation == "geographic":
+        if rotation_reference != "geographic-north":
+            raise EDIError("Geographic rotation needs an explicit geographic-north reference")
         turns = np.rint(angle/90)
         if not np.allclose(angle, turns*90, atol=1e-7, rtol=0):
             raise EDIError("Arbitrary rotation needs full error covariance; use preserve for isotropic 1D")
@@ -323,15 +406,28 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
     order = np.argsort(frequency)
     frequency, tensor, sigma, angle = frequency[order], tensor[order], np.sqrt(variance[order]), angle[order]
     metadata = dict(header=header, info=info, mtsect=mtsect, measurement_layout=layout)
+    if tipper_present:
+        metadata["tipper"] = dict(
+            present=True, used_in_1d_inversion=False,
+            raw_variance_convention="uninterpreted EDI native variance",
+            rotation_deg=trot[order].tolist(),
+            missing_frequency_hz=frequency[tipper_missing[order]].tolist(),
+            components={axis: {field: [None if absent else float(value)
+                                       for value, absent in zip(values[order], tipper_missing[order])]
+                               for field, values in tipper[axis].items()} for axis in ("X", "Y")},
+        )
     provenance = dict(
         source_file=source.name, source_sha256=hashlib.sha256(raw).hexdigest(), source_bytes=len(raw),
         parser="mt_metadata.transfer_functions.io.edi.EDI", parser_version=importlib.metadata.version("mt-metadata"),
-        preflight="strict impedance-only EDI v1", original_units=input_units, output_units="ohm",
+        preflight="strict full-impedance EDI with optional validated ancillary tipper v2",
+        original_units=input_units, output_units="ohm",
         units_multiplier_to_ohm=factor, original_sign_convention=input_sign, output_sign_convention="+",
         variance_convention=variance_kind, sigma_definition="SD per real or imaginary component",
         error_assumption="equal real/imag variance and zero real-imag covariance; no component covariance invented",
         interpretation_arguments=dict(units=units, sign_convention=sign_convention, variance_convention=variance_convention),
-        rotation_action=transformation, original_rotation_deg=block_angle.tolist(),
+        rotation_action=transformation, rotation_reference=rotation_reference,
+        original_rotation_deg=block_angle.tolist(),
+        tipper_present=tipper_present, tipper_used_in_1d_inversion=False,
         frequency_permutation=order.tolist(), original_frequency_hz=_numeric(blocks["FREQ"], count, empty).tolist(),
         data_kind=info.get("DATA_KIND", "unclassified supplied transfer functions; no geological truth"),
         synthetic=info.get("DATA_KIND") == "original-synthetic-transfer-functions",
@@ -460,6 +556,8 @@ def main():
     parser.add_argument("--sign-convention", choices=("+", "-"))
     parser.add_argument("--variance-convention", choices=("complex", "per-real-component"))
     parser.add_argument("--rotation", choices=("preserve", "geographic"), default="preserve")
+    parser.add_argument("--rotation-reference", choices=("geographic-north",),
+                        help="Externally documented source-frame reference, required for geographic re-rotation")
     parser.add_argument("--beta", type=float, default=.001)
     parser.add_argument("--seed", type=int, default=61001)
     parser.add_argument("--bootstrap-samples", type=int, default=128, help="0 disables; otherwise >=20")
@@ -487,6 +585,7 @@ def main():
         result = invert_edi(args.source, args.thickness, component=args.component, output=args.output,
                             units=args.units, sign_convention=args.sign_convention,
                             variance_convention=args.variance_convention, rotation=args.rotation,
+                            rotation_reference=args.rotation_reference,
                             beta=args.beta, seed=args.seed, bootstrap_samples=args.bootstrap_samples, methods=methods)
     except (EDIError, ValueError, OSError) as error:
         parser.exit(2, f"EDI rejected: {error}\n")
