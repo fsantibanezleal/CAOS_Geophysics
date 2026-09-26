@@ -269,8 +269,8 @@ export function Plot({
     update();
     return () => observer.disconnect();
   }, []);
-  const h = 270,
-    p = { l: 64, r: 22, t: 20, b: 42 };
+  const h = 300,
+    p = { l: 78, r: 22, t: 26, b: 46 };
   const ticks = w < 480 ? 4 : 5;
   const tx = (v: number) => (logX ? Math.log10(Math.max(v, 1e-20)) : v),
     ty = (v: number) => (logY ? Math.log10(Math.max(v, 1e-20)) : v);
@@ -381,7 +381,7 @@ export function Plot({
             y2={h - p.b}
           />
         )}
-        <text className="axis-unit" x={p.l} y={12}>
+        <text className="axis-unit" x={p.l} y={17}>
           {yLabel}
         </text>
       </svg>
