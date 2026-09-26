@@ -4,6 +4,9 @@ All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
 ## [0.03.000] - 2026-09-24
 
+The `VERSION` file of this release read `0.02.000` until 2026-09-26; the tag, the manifest and this
+entry named `0.03.000`, and the file now does too.
+
 - Restores the canonical CAOS shared-shell palette, sans-serif fonts, controls, page layout and tab styles. Removes the rejected custom CSS and promotional page headings.
 - Rewrites Introduction, Methodology, Implementation, Experiments and Benchmark with bilingual physical models, objectives, numerical sequences, settings, history semantics, units and assumptions. Documents eleven actual algorithms rather than repository plumbing.
 - Adds metric definitions and numerical results to case analysis; corrects the legacy MT optimizer label to bounded TRF.
