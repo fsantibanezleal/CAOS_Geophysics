@@ -24,6 +24,7 @@ async function capture(name){
 }
 await page.goto(base,{waitUntil:'networkidle'});
 await page.getByLabel('Geological case',{exact:true}).waitFor();
+await page.getByRole('button',{name:'Synthetic target',exact:true}).waitFor();
 await capture('desktop-gravity-final');
 await page.getByRole('button',{name:'Synthetic target',exact:true}).click();
 await capture('desktop-gravity-truth');

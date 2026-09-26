@@ -676,8 +676,8 @@ export const chapters: Chapter[] = [
         "Objetivo completo después de actualizaciones aceptadas, guardado cada ocho pasos y al final. Se exportan términos de datos, espacial, gradiente cruzado y mezcla; la densidad logarítmica negativa puede ser negativa y no es error normalizado."
       ],
       "limitation": [
-        "Parallel gradients and flat fields can both satisfy the structural term. Failure to improve independent density recovery is reported as unresolved even when the coupling term decreases.",
-        "Gradientes paralelos y campos constantes satisfacen el término estructural. No mejorar la densidad independiente se informa como no resuelto aunque disminuya acoplamiento."
+        "Parallel gradients and flat fields can both satisfy the structural term. Coupled density and susceptibility errors are each compared with the optimized uncoupled solution; either property or either data fit can leave recovery unresolved even when the coupling term decreases.",
+        "Gradientes paralelos y campos constantes satisfacen el término estructural. Los errores acoplados de densidad y susceptibilidad se comparan por separado con la solución desacoplada optimizada; cualquier propiedad o ajuste de datos puede dejar la recuperación sin resolver aunque disminuya el término de acoplamiento."
       ]
     },
     {
