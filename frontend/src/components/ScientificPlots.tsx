@@ -222,6 +222,19 @@ type Series = {
   points?: boolean;
 };
 export type Band = { name: string; lower: number[]; upper: number[] };
+
+/** Prevent floating-point differences in near-constant curves from filling the plot. */
+export function plotYRange(values: number[], logY: boolean): [number, number] {
+  const finite = values.filter(Number.isFinite).map(v => logY ? Math.log10(Math.max(v, 1e-20)) : v);
+  if (!finite.length) return [0, 1];
+  const low = Math.min(...finite), high = Math.max(...finite);
+  const centre = (low + high) / 2;
+  const minimumSpan = logY ? 2 * Math.log10(1.05) : 0.1 * (Math.max(Math.abs(low), Math.abs(high)) || 1);
+  const span = Math.max(high - low, minimumSpan);
+  const padding = span * 0.08;
+  return [centre - span / 2 - padding, centre + span / 2 + padding];
+}
+
 export function Plot({
   x,
   series,
@@ -248,10 +261,7 @@ export function Plot({
   const tx = (v: number) => (logX ? Math.log10(Math.max(v, 1e-20)) : v),
     ty = (v: number) => (logY ? Math.log10(Math.max(v, 1e-20)) : v);
   const xr = extent(x.map(tx)),
-    yr = extent([...series.flatMap((s) => s.values.map(ty)), ...(band ? [...band.lower, ...band.upper].map(ty) : [])]);
-  const pad = (yr[1] - yr[0]) * 0.08;
-  yr[0] -= pad;
-  yr[1] += pad;
+    yr = plotYRange([...series.flatMap((s) => s.values), ...(band ? [...band.lower, ...band.upper] : [])], logY);
   const X = (v: number) =>
       p.l + ((tx(v) - xr[0]) / (xr[1] - xr[0])) * (w - p.l - p.r),
     Y = (v: number) =>
