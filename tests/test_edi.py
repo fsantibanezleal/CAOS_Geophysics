@@ -21,6 +21,7 @@ def test_screen_only_preserves_observations_without_inventing_an_inverse(tmp_pat
     output=tmp_path/'screen.json'
     result=screen_edi(NATIVE,output=output)
     assert result['schema']=='inverse-earth/edi-screen/v1'
+    assert result['source_kind']=='original synthetic EDI transfer functions'
     assert result['truth'] is None and result['methods']=={}
     assert result['inversion_performed'] is False
     assert result['one_d_inversion_eligible'] is True

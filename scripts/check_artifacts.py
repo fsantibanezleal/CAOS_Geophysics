@@ -83,6 +83,22 @@ def validate():
                 assert method['evaluation']==variant['methods'][key]['evaluation']
                 assert method['target'] and method['state_identity']['predictions']=='final-model'
                 if method['frames']:assert method['frames'][-1]==method['model'],'Last replay state differs from final model'
+                if key=='autoencoder':
+                    assert method['evaluation']==dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
+                    assert len(method['network_input'])==len(method['predicted'])==len(method['residual'])==256
+                if case['family']=='seismic':
+                    metrics=method['metrics'];status=method['evaluation']['status']
+                    if case['geometry']=='salt':assert status=='negative-control'
+                    if status=='recovered':
+                        assert metrics['model_rmse_ratio']<1 and metrics['active_relative_mse']<metrics['initial_active_relative_mse']
+                        assert metrics['withheld_relative_mse']<metrics['initial_withheld_relative_mse']
+                        assert metrics['active_wrms']<=2 and metrics['withheld_wrms']<=2
+                if case['family']=='joint' and key in ('joint','pgi'):
+                    baseline=run['methods']['joint-uncoupled']['metrics']
+                    metrics=method['metrics']
+                    assert math.isclose(metrics['independent_model_rmse'],baseline['model_rmse'],rel_tol=2e-5)
+                    assert math.isclose(metrics['independent_magnetic_model_rmse'],baseline['magnetic_model_rmse'],rel_tol=2e-5)
+                    if case['geometry']=='conflict':assert method['evaluation']['status']=='negative-control'
                 cells+=1
             runs+=1
     training=json.loads((ROOT/"models/training.json").read_text())
@@ -104,7 +120,7 @@ def validate():
             assert source.is_relative_to((ROOT/'edi').resolve())
             assert hashlib.sha256(source.read_bytes()).hexdigest()==entry['source_sha256']
     field_screens=edi.get('field_screens',[])
-    assert len(field_screens)==1 and field_screens[0]['id']=='CLEAR_LAKE_CL061'
+    assert len(field_screens)==1 and field_screens[0]['id']=='cl061'
     field=field_screens[0]
     field_path=(ROOT/'edi'/field['artifact']).resolve()
     assert field_path.is_relative_to((ROOT/'edi').resolve())
@@ -113,6 +129,7 @@ def validate():
     assert field['parser_source_sha256']==hashlib.sha256((Path(__file__).resolve().parents[1]/'data-pipeline/edi.py').read_bytes()).hexdigest()
     screened=json.loads(raw)
     assert screened['schema']=='inverse-earth/edi-screen/v1' and screened['id']=='cl061'
+    assert screened['source_kind']=='measured EDI transfer functions' and screened['provenance']['synthetic'] is False
     assert screened['truth'] is None and not screened['methods'] and screened['inversion_performed'] is False
     assert len(screened['frequencies_hz'])==field['observed_frequencies']==42
     assert screened['provenance']['source_sha256']==field['source_sha256']

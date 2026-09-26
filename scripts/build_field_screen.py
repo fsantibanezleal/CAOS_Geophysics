@@ -30,14 +30,14 @@ def build(source,output_root):
     assert not run['one_d_inversion_eligible'] and not run['methods']
     assert all(run['compatibility'][name]>run['compatibility']['threshold'] for name in
                ('xx_component_wrms','yy_component_wrms','antisymmetry_conservative_wrms'))
-    run['source_release']=dict(doi=RELEASE_DOI,transfer_function_doi=TRANSFER_FUNCTION_DOI,
+    run['source_release']=dict(release_doi=RELEASE_DOI,transfer_function_doi=TRANSFER_FUNCTION_DOI,
         station_url=STATION_URL,rights='USGS data release marked CC0; station EDI requests data citation',
         citation='Peacock, J. R., Mitchell, M. A., and Burgess, S. D. (2025), Magnetotelluric data from the Clear Lake Region, Northern California, USGS data release, doi:10.5066/P14KAQ3M. EarthScope EMTF transfer functions doi:10.17611/DP/EMTF/GMEG/Clearlake.',
         note='Impedance units mt and complex EDI variance are explicit interpretation arguments, not declared by this EDI file.')
     destination.write_text(json.dumps(run,indent=2,allow_nan=False)+'\n',encoding='utf-8',newline='\n')
     manifest_path=output_root/'edi/manifest.json'
     manifest=json.loads(manifest_path.read_text(encoding='utf-8'))
-    manifest['field_screens']=[dict(id='CLEAR_LAKE_CL061',artifact=destination.name,
+    manifest['field_screens']=[dict(id='cl061',artifact=destination.name,
         artifact_sha256=hashlib.sha256(destination.read_bytes()).hexdigest(),artifact_bytes=destination.stat().st_size,
         source_sha256=SOURCE_SHA256,source_bytes=len(raw),source_file=STATION,
         station_url=STATION_URL,release_doi=RELEASE_DOI,

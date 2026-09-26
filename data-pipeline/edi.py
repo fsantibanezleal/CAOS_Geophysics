@@ -446,7 +446,8 @@ def screen_edi(path, *, output=None, **read_options):
                                         'sigma_real_imag_ohm':sigma.tolist()}
     result=dict(
         schema='inverse-earth/edi-screen/v1',id=sounding.metadata['header']['DATAID'],
-        family='mt',source_kind='measured EDI transfer functions',truth=None,methods={},
+        family='mt',source_kind=('original synthetic EDI transfer functions' if sounding.provenance['synthetic']
+                                 else 'measured EDI transfer functions'),truth=None,methods={},
         inversion_performed=False,one_d_fit_performed=False,
         one_d_inversion_eligible=bool(sounding.compatibility['passes_screen']),
         interpretation='Necessary isotropic-1D tensor consistency screen, not proof of geological dimensionality',

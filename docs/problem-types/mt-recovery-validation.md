@@ -116,23 +116,18 @@ artifacts and calibration records. Its calibration members retain each
 observation seed, bootstrap seed, selected model, interval, inclusion result and
 any failures.
 
-## Integration handoff
+## Release contract
 
-- Own edited files: data-pipeline/electromagnetics.py, data-pipeline/edi.py,
-  tests/test_mt_recovery.py, tests/test_edi.py, data/fixtures/edi/* and these two
-  MT documents under docs/problem-types/.
-- Direct new dependency pin: mt-metadata==1.0.10, installed only in the existing
-  .venv-pipeline. Exact newly installed transitive versions are in the method doc.
-- Public-copy candidate: **entire data/experiments/edi directory**. Main chooses
-  the committed/published data/edi destination. Relative manifest paths require
-  no host-specific rewrites.
-- Frontend must not cast the generic EDI schema to a synthetic v2 run with known
-  truth. Use truth_ohm_m from the labelled fixture manifest for fixture comparisons.
-  The generic artifact records target_known=false.
-- Preserve the additive method evaluation, target, uncertainty and state_identity
-  fields during canonical export. Include evaluation in catalogue summaries.
-- Full direct JSON exports retain exact final-model/last-frame identity. If the
-  shared exporter rounds floating values, its numerical checks must acknowledge
-  that rounding rather than asserting bit-exact forward re-evaluation.
-- No claims of GPU execution for MT, field generalization, posterior coverage,
-  arbitrary EDI formats or joint thickness recovery.
+The public EDI manifest separates original synthetic inversion fixtures from
+`field_screens`. The Clear Lake `cl061` field screen has 42 measured frequencies,
+source and derivative SHA-256 hashes, declared EDI-unit and complex-variance
+interpretation arguments, and no inverse, model, or known-truth field. Its failed
+necessary isotropic-1D test is a reason not to run this fixed-thickness inverse;
+it is not a 2D/3D geological interpretation. The independently authored fixture
+oracles belong only to synthetic experiments. The browser and static-artifact
+guards enforce this separation.
+
+The numerical release checks EDI source hashes, final-model predictions and
+last-frame identity. A successful parse or fit alone cannot establish geology.
+There is no claim of GPU execution for MT, field generalization, posterior
+coverage, arbitrary EDI format support, or joint thickness recovery.

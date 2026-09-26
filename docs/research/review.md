@@ -49,7 +49,7 @@ The browser displays solver outputs, not substitute analytic patterns. The only 
 
 ## Original-scope reconciliation, 2026-09-24
 
-This paragraph records the 0.03 release boundary. The 0.04 recovery work implements an independently fitted mixture prior, strict local EDI ingestion and conditional data-noise ensembles as specified in [the later research dossier](recovery-2026-09-24.md). Cross-gradient and mixture priors remain distinct methods. Browser forward-model import and the local EDI inversion workflow remain distinct operations; the browser replays only original synthetic EDI fixtures.
+This paragraph records the 0.03 release boundary. The 0.04 recovery work implements an independently fitted mixture prior, strict local EDI ingestion and conditional data-noise ensembles as specified in [the later research dossier](recovery-2026-09-24.md). Cross-gradient and mixture priors remain distinct methods. Browser forward-model import and the local EDI inversion workflow remain distinct operations. In 0.04.001, the browser also displays one cited measured EDI tensor screen; only the original synthetic fixtures have known truth and inverse results.
 
 - [SimPEG 0.25.2 PGI linear example](https://docs.simpeg.xyz/v0.25.2/content/user-guide/examples/10-pgi/plot_inv_0_PGI_Linear_1D.html): an actual mixture-prior inversion and its regularization/directive structure.
 - [Astic et al., multi-physics inversion with a dynamic Gaussian mixture model](https://arxiv.org/abs/2002.09515): the multi-property PGI research reference.
