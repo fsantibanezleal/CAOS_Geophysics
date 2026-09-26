@@ -130,8 +130,8 @@ export const lessons: Record<string, Lesson> = {
       "Compare la lente real con el alargamiento vertical recuperado y eleve el levantamiento.",
     ],
     [
-      "Sensitivity weighting reduces near-surface bias but does not restore missing information.",
-      "La ponderación por sensibilidad reduce el sesgo superficial, pero no recupera información ausente.",
+      "The independently calibrated depth prior changes the depth preference; it does not restore missing information.",
+      "El prior de profundidad calibrado independientemente y derivadas físicas regulariza el problema; no recupera información ausente.",
     ],
   ),
   MAGNETIC_NOISY: L(

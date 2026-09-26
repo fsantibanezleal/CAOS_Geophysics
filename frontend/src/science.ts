@@ -5,11 +5,38 @@ export type Family =
   | "seismic"
   | "joint"
   | "learned";
-export type Metric = number | boolean;
+export type Metric = number | boolean | null;
+export type ModelArray = number[] | number[][];
+export type Evaluation = {
+  status: "recovered" | "unresolved" | "failed" | "negative-control";
+  reason_codes: string[];
+  reason?: string;
+  reason_es?: string;
+};
+export type Uncertainty = {
+  kind: string;
+  conditioning: string;
+  conditioning_es?: string;
+  members: number;
+  seed: number;
+  lower: ModelArray;
+  upper: ModelArray;
+  mean: ModelArray;
+  std: ModelArray;
+  coverage?: number | null;
+  quantiles: number[];
+  units?: string;
+  target?: string;
+  support_coverage?: number;
+  background_coverage?: number;
+};
 export type MethodSummary = {
   name: string;
   name_es: string;
   metrics: Record<string, Metric>;
+  evaluation?: Evaluation;
+  target?: { quantity: string; units: string; dimensionality: string | number; provenance: string };
+  applicability?: { varied_parameter: boolean; reason: string };
 };
 export type Variant = {
   id: string;
@@ -44,15 +71,48 @@ export type Curves = {
 export type Method = MethodSummary & {
   model: number[] | number[][];
   secondary_model?: number[];
+  column_model?: number[][];
+  applicability?: { varied_parameter: boolean; reason: string };
+  detection_validation?: DetectionValidation;
   cross_gradient?: number[];
   predicted: number[] | number[][][] | Curves;
   residual: number[] | number[][][] | Curves;
   history: number[];
   frames: (number[] | number[][])[];
   vectors?: number[][];
+  vector_truth?: number[][];
   units?: string;
   checkpoint?: string;
   device?: string;
+  target?: { quantity: string; units: string; dimensionality: string | number; provenance: string };
+  magnetic_model?: number[];
+  prior_membership?: number[][];
+  petrophysical_prior?: { means: number[][]; covariances: number[][][]; weights: number[]; source: string };
+  state_identity?: { final_frame_index: number | null; selected_iteration: number | null; frame_quantity: string; predictions: "final-model" };
+  uncertainty?: Uncertainty;
+  responsibilities?: number[][];
+  membership?: number[];
+  prior?: { name?: string; name_es?: string; weights?: number[]; means?: number[][]; source?: string; labels?: string[]; labels_es?: string[] };
+  final_state?: { index?: number; selection?: string; objective?: number };
+  frame_indices?: number[];
+  history_indices?: number[];
+  frame_history_indices?: number[];
+  states?: { step: number; kind: string; objective: { total: number; data: number; regularization: number } }[];
+};
+export type DetectionValidation = {
+  calibration_count: number;
+  calibration_seed: number;
+  ood_count: number;
+  ood_seed: number;
+  true_positive: number;
+  false_positive: number;
+  false_negative: number;
+  true_negative: number;
+  sensitivity: number;
+  specificity: number;
+  roc_auc: number;
+  id_test_errors: number[];
+  ood_test_errors: number[];
 };
 export type Run = {
   schema: "inverse-earth/v2";
@@ -68,11 +128,11 @@ export type Run = {
   truth: number[] | number[][];
   secondary_truth?: number[];
   column_truth?: number[][];
-  initial?: number[][];
+  initial?: ModelArray;
   units: string;
   data_units: string;
   methods: Record<string, Method>;
-  parameters: Record<string, number>;
+  parameters: Record<string, number | boolean | string | number[]>;
   grid?: {
     shape: number[];
     origin?: number[];
@@ -109,6 +169,12 @@ export type Run = {
     version: string;
     license: string;
     seed: number;
+    source?: string;
+    source_url?: string;
+    description?: string;
+    description_es?: string;
+    target_known?: boolean;
+    data_kind?: string;
   };
 };
 export const appBase = typeof location !== 'undefined' && location.pathname.startsWith("/CAOS_Geophysics")

@@ -248,8 +248,8 @@ export function MethodDiagram({ kind }: { kind: string }) {
                     "Objetivo: Σ densidad × espesor; sin coordenada de profundidad.",
                   )
                 : t(
-                    "Score: mean squared observation error, compared with validation Q₀.₉₉.",
-                    "Puntaje: error cuadrático de observaciones, comparado con Q₀,₉₉.",
+                    "Score: mean squared observation error, compared with calibration Q₀.₉₉.",
+                    "Puntaje: error cuadrático de observaciones, comparado con Q₀,₉₉ de calibración.",
                   ),
             )}
           </>

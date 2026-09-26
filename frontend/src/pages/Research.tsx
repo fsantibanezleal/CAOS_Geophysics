@@ -11,10 +11,11 @@ import {
 } from "@fasl-work/caos-app-shell";
 import { Plot } from "../components/ScientificPlots";
 import { MethodDiagram } from "../components/MethodDiagram";
+import { EdiFixtures } from "../components/EdiFixtures";
 import { LiveMT } from "../components/LiveMT";
 import { chapters, type Algorithm, type Chapter } from "../data/methods";
 import { lessons } from "../data/lessons";
-import { methodName, metricInfo } from "../data/metrics";
+import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
   appBase,
   familyLabels,
@@ -22,7 +23,9 @@ import {
   loadArtifact,
   type Catalog,
   type Family,
+  type DetectionValidation,
 } from "../science";
+import { ApplicabilityWarning, DetectionEvidence, EvaluationStatus } from "../components/ScientificEvidence";
 const source = "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/main/";
 function useText() {
   const es = useShellLang() === "es";
@@ -520,8 +523,8 @@ function ValidationSection() {
         title={t("What is not validated", "Qué no está validado")}
       >
         {t(
-          "No field-scale performance, posterior coverage, EDI interpretation, PGI implementation or universal learned generalization is established by this test suite. Mesh refinement is evaluated as numerical discretization, not claimed additional survey resolution.",
-          "La batería no establece rendimiento de campo, cobertura posterior, interpretación EDI, implementación PGI ni generalización universal. Refinar malla evalúa discretización, no resolución adicional del levantamiento.",
+          "Numerical checks do not establish field-scale performance, posterior coverage or universal learned generalization. The joint methods use a matched uncoupled comparator and an explicit GMM prior; synthetic recovery is scored separately from execution. Conditional noise-bootstrap coverage is measured, not assumed to equal the nominal interval level. Mesh refinement is numerical discretization, not extra survey information.",
+          "Las pruebas numéricas no establecen rendimiento de campo, cobertura posterior ni generalización universal. Los métodos conjuntos usan referencia desacoplada equivalente y prior GMM explícito; recuperación sintética se evalúa separada de ejecución. Se mide cobertura de ruido bootstrap, sin suponer que iguala nivel nominal. Refinar malla es discretización, no información adicional.",
         )}
       </Callout>
       <Sources ids={["cockett2015", "deepwave", "scipytrf"]} />
@@ -710,7 +713,7 @@ export function Experiments() {
                         <td>36 · 0.01–100 Hz</td>
                         <td>18</td>
                         <td>
-                          {t("All 36 frequencies", "Todas las 36 frecuencias")}
+                          {t("Active / withheld real components separately; legacy complex WRMS over all frequencies", "Componentes reales activas / omitidas por separado; WRMS complejo legado en todas las frecuencias")}
                         </td>
                       </tr>
                       <tr>
@@ -719,8 +722,8 @@ export function Experiments() {
                         <td>3 × 20</td>
                         <td>
                           {t(
-                            "All acquired traces",
-                            "Todas las trazas adquiridas",
+                            "Active and withheld receiver traces separately",
+                            "Trazas activas y receptores omitidos por separado",
                           )}
                         </td>
                       </tr>
@@ -730,8 +733,8 @@ export function Experiments() {
                         <td>128 + 128</td>
                         <td>
                           {t(
-                            "All stations for final WRMS",
-                            "Todas para WRMS final",
+                            "Active and withheld gravity/magnetic stations separately",
+                            "Estaciones gravimétricas/magnéticas activas y omitidas por separado",
                           )}
                         </td>
                       </tr>
@@ -788,8 +791,8 @@ export function Experiments() {
                 </h2>
                 <p>
                   {t(
-                    "The stronger-regularization condition changes potential-field β from 0.018 to 0.25, MT β from 0.001 to 0.3, seismic β from 0.002 to 0.06, and joint coupling λ from 4 to 25. Joint density initialization also inherits the changed potential-field β; it is therefore not a pure one-parameter ablation of the joint objective. The CNN and autoencoder are not retrained in this condition.",
-                    "La regularización mayor cambia β potencial de 0,018 a 0,25; MT de 0,001 a 0,3; sísmica de 0,002 a 0,06; y λ conjunto de 4 a 25. La inicialización de densidad conjunta también hereda el cambio de β, por lo que no es una ablación pura de un parámetro. CNN y autoencoder no se reentrenan en esta condición.",
+                    "The potential-field condition multiplies discrepancy-selected beta by 0.25/0.018; beta itself depends on observed data and uncertainty. MT changes beta from 0.001 to 0.3; seismic from 0.001 to 0.03. Joint structural or mixture strength changes from 1 to 4 while retaining the matched independent initialization and spatial terms. CNN/autoencoder checkpoints remain frozen; that condition changes their classical comparator only.",
+                    "En potenciales se multiplica beta elegida por discrepancia por 0,25/0,018; beta depende de datos e incertidumbre. MT cambia beta 0,001 a 0,3; sísmica 0,001 a 0,03. La fuerza conjunta estructural o de mezcla cambia 1 a 4 conservando inicialización independiente y términos espaciales. Checkpoints CNN/autoencoder se congelan; sólo cambia su comparador clásico.",
                   )}
                 </p>
                 <Equation
@@ -903,11 +906,11 @@ export function Experiments() {
                 </div>
                 <Callout
                   variant="honest"
-                  title={t("Baseline mismatch", "Diferencia con la referencia")}
+                  title={t("Matched baseline and transfer limits", "Referencia comparable y límites de transferencia")}
                 >
                   {t(
-                    "The current held-out classical projection uses clean data; the CNN uses noisy inputs. The comparison is not noise-matched, and the classical regularization is not tuned. No superiority or field-transfer claim follows from their mean errors.",
-                    "La proyección clásica independiente usa datos limpios y CNN entradas ruidosas. No se iguala ruido ni calibra la regularización clásica. Sus errores medios no sustentan superioridad ni transferencia a campo.",
+                    "The held-out classical and CNN comparison uses exactly identical noisy observations and the same integrated-column targets. Classical spatial L2 selects beta by discrepancy. Geometric transfer is evaluated separately on withheld families; mean test error does not establish superiority for each case or transfer to field surveys.",
+                    "La comparación clásica/CNN usa observaciones ruidosas exactamente idénticas y los mismos objetivos de columnas. L2 espacial elige beta por discrepancia. La transferencia geométrica se evalúa aparte en familias omitidas; el error medio no establece superioridad en cada caso ni transferencia a campo.",
                   )}
                 </Callout>
                 <Sources ids={["cockett2015", "adam"]} />
@@ -916,10 +919,10 @@ export function Experiments() {
           },
           {
             id: "live",
-            label: t("MT forward calculation", "Cálculo directo MT"),
+            label: t("MT forward and EDI evidence", "MT directo y evidencia EDI"),
             content: (
               <>
-                <LiveMT />
+                <SubTabs ariaLabel={t("MT experiments", "Experimentos MT")} tabs={[{id:"forward",label:t("Live forward response","Respuesta directa en vivo"),content:<LiveMT />},{id:"edi",label:t("EDI fixtures and inversion","Archivos EDI e inversión"),content:<EdiFixtures />}]} />
                 <Sources ids={["heagy2017"]} />
               </>
             ),
@@ -937,15 +940,23 @@ export function Benchmark() {
   const [family, setFamily] = useState<Family>("gravity");
   const [method, setMethod] = useState("l2");
   const [metric, setMetric] = useState("model_rmse");
+  const [detection, setDetection] = useState<DetectionValidation>();
+  useEffect(() => {
+    if (family !== "learned") return;
+    const c = new AbortController();
+    loadArtifact<{ novelty_evaluation?: DetectionValidation }>("models/training.json", c.signal).then(data => setDetection(data.novelty_evaluation)).catch(e => { if (e.name !== "AbortError") setDetection(undefined); });
+    return () => c.abort();
+  }, [family]);
   const cases = catalog?.cases.filter((c) => c.family === family) ?? [];
-  const methods = cases[0]?.variants[0]?.methods ?? {};
+  const methods = Object.assign({}, ...cases.flatMap(c => c.variants.map(v => v.methods)));
   const selectedMethod = methods[method] ? method : Object.keys(methods)[0];
-  const metrics = Object.keys(methods[selectedMethod]?.metrics ?? {}).filter(
-    (k) => typeof methods[selectedMethod]?.metrics[k] === "number",
-  );
+  const metrics = Array.from(new Set(cases.flatMap(c => c.variants.flatMap(v => Object.entries(v.methods[selectedMethod]?.metrics ?? {}).filter(([, value]) => metricValue(value) !== undefined).map(([key]) => key)))));
   const selectedMetric = metrics.includes(metric)
     ? metric
     : ([
+        "baseline_ratio",
+        "model_rmse_ratio",
+        "model_error_ratio",
         "model_rmse",
         "velocity_rmse",
         "log_model_rmse",
@@ -1028,11 +1039,11 @@ export function Benchmark() {
                 "Condition comparison by geological case",
                 "Comparación de condiciones por caso",
               )}
-              x={[1, 2, 3, 4, 5, 6]}
+              x={Array.from({ length: Math.max(...cases.map(c => c.variants.length)) }, (_, i) => i + 1)}
               series={cases.map((c, i) => ({
                 name: es ? c.name_es : c.name,
                 values: c.variants.map((v) =>
-                  Number(v.methods[selectedMethod]?.metrics[selectedMetric]),
+                  metricValue(v.methods[selectedMethod]?.metrics[selectedMetric]) ?? NaN,
                 ),
                 color: [
                   "var(--color-accent)",
@@ -1070,14 +1081,9 @@ export function Benchmark() {
                             )}
                             href={appBase + "data/v2/" + v.path}
                           >
-                            {format(
-                              Number(
-                                v.methods[selectedMethod]?.metrics[
-                                  selectedMetric
-                                ],
-                              ),
-                            )}
+                            {metricValue(v.methods[selectedMethod]?.metrics[selectedMetric]) === undefined ? t("Unavailable", "No disponible") : format(metricValue(v.methods[selectedMethod]?.metrics[selectedMetric])!)}
                           </a>
+                          {v.methods[selectedMethod] && <><EvaluationStatus method={v.methods[selectedMethod]} /><ApplicabilityWarning method={v.methods[selectedMethod]} /></>}
                         </td>
                       ))}
                     </tr>
@@ -1132,9 +1138,7 @@ export function Benchmark() {
                       <td>{es ? c.name_es : c.name}</td>
                       {Object.keys(methods).map((k) => (
                         <td key={k}>
-                          {typeof c.variants[0].methods[k]?.metrics[
-                            selectedMetric
-                          ] === "number"
+                          {metricValue(c.variants[0].methods[k]?.metrics[selectedMetric]) !== undefined
                             ? format(
                                 Number(
                                   c.variants[0].methods[k].metrics[
@@ -1143,6 +1147,7 @@ export function Benchmark() {
                                 ),
                               )
                             : "–"}
+                          {c.variants[0].methods[k] && <EvaluationStatus method={c.variants[0].methods[k]} />}
                         </td>
                       ))}
                     </tr>
@@ -1159,17 +1164,17 @@ export function Benchmark() {
             >
               {family === "learned"
                 ? t(
-                    "CNN column error, classical cell error and autoencoder reconstruction error concern different targets. They are not comparable simply because all are called errors. The held-out training ledger separately reports a column-projection baseline, with unmatched noise and untuned classical regularization.",
-                    "El error de columna CNN, error clásico por celda y reconstrucción del autoencoder tienen objetivos diferentes. No son comparables por llamarse errores. El registro informa aparte una referencia de columnas con ruido no igualado y regularización clásica no calibrada.",
+                    "CNN column error is comparable only with the exported classical column projection on the same observations and target, not with 3D cell RMSE or autoencoder observation error. The comparison retains signs and physical units, and shows the CNN/classical ratio. Withheld-family misses remain visible in the detector confusion counts.",
+                    "El error de columna CNN sólo se compara con la proyección clásica exportada en las mismas observaciones y objetivo, no con RMSE 3D ni error de observaciones del autoencoder. Se conservan signos y unidades y se muestra razón CNN/clásico. Fallos de familias omitidas permanecen en la matriz del detector.",
                   )
                 : family === "mt"
                   ? t(
-                      "The three MT algorithms use different bounds, parameterizations and relative penalty scaling. Their comparison measures those complete configurations, not optimizer choice alone.",
-                      "Los algoritmos MT cambian cotas, parametrización y escala relativa de penalización. Se comparan configuraciones completas, no sólo optimizadores.",
+                      "The three MT solvers share resistivity bounds, starting profile and complete real-component objective normalization. Their parameterizations and optimizer budgets differ. Data agreement, local identifiability and known synthetic layer recovery are separate diagnostics; bootstrap spread is conditional, not posterior uncertainty.",
+                      "Los tres métodos MT comparten cotas, perfil inicial y normalización completa por componente real. Difieren en parametrización y presupuesto. Ajuste, identificabilidad local y recuperación sintética son diagnósticos separados; dispersión bootstrap es condicional, no incertidumbre posterior.",
                     )
                   : t(
-                      "These are single seeded experiments, not repeated-noise confidence intervals. Use data residuals, known-model error and the case’s stated assumptions together. A result from one synthetic geometry does not establish field performance.",
-                      "Son experimentos de una semilla, no intervalos de confianza de ruido repetido. Considere residuos, error de modelo y supuestos del caso juntos. Una geometría sintética no establece rendimiento de campo.",
+                      "The condition matrix consists of separate seeded experiments, not posterior samples. When an explicit noise ensemble is supplied, its conditioning and measured coverage are displayed separately. Use active and withheld residuals, baseline model error and the stated assumptions together; one synthetic geometry cannot establish field performance.",
+                      "La matriz contiene experimentos con semillas separadas, no muestras posteriores. Cuando se aporta conjunto de ruido explícito se muestran aparte condicionamiento y cobertura medida. Considere residuos activos/omitidos, error respecto a referencia y supuestos; una geometría sintética no establece rendimiento de campo.",
                     )}
             </Callout>
             <Sources
@@ -1182,6 +1187,7 @@ export function Benchmark() {
           </section>
         </>
       )}
+      {family === "learned" && <DetectionEvidence data={detection} />}
       <section>
         <h2>
           {t(
