@@ -98,6 +98,11 @@ coverage is not assumed to equal the nominal 95% quantile span.
 
 `evaluation.py` separates active/held-out data error, baseline-relative model
 error, correlation, support/background error and centroid/direction error.
+Potential-field display thresholds are fixed per geological case using the
+90th percentile of the recovered reference IRLS property distribution (or the
+reference vector norm), then reused across all six conditions. Property and
+survey colour ranges are likewise case-fixed. These are display choices, not
+additional inverse constraints, numerical resolution, or recovery evidence.
 `validate_recovery.py` recomputes physical predictions and state identities and
 requires three nominal reference FWI cases to improve independent starts.
 FWI recovery also requires active and withheld noise-normalized waveform fit;
