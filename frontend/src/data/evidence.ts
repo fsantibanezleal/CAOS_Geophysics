@@ -10,10 +10,36 @@ export function evaluationLabel(status: Evaluation["status"] | undefined, es: bo
   return status && labels[status] ? labels[status][es ? 1 : 0] : es ? "Recuperación no evaluada" : "Recovery not evaluated";
 }
 
+export function evaluationPresentation(
+  evaluation: Evaluation | undefined,
+  methodId: string | undefined,
+  _variant: string | undefined,
+  es: boolean,
+) {
+  if (methodId === "autoencoder") {
+    return {
+      status: "unresolved" as const,
+      label: es ? "Puntaje del caso sin veredicto geológico calibrado" : "Case score has no calibrated geological verdict",
+      reasonCodes: ["case-score-not-calibrated-as-geology"],
+      note: es
+        ? "Se muestran el error de reconstrucción y su cruce literal del umbral, no una detección validada para este caso. Contraste, ruido o adquisición modificados también pueden alterar el puntaje. La prueba agregada independiente de 80 casos omitidos se informa por separado."
+        : "Reconstruction error and literal threshold crossing are shown, not validated detection for this case. Changed contrast, noise or acquisition can also alter the score. The independent aggregate test of 80 withheld cases is reported separately.",
+    };
+  }
+  return {
+    status: evaluation?.status ?? "unassessed",
+    label: evaluationLabel(evaluation?.status, es),
+    reasonCodes: evaluation?.reason_codes ?? [],
+    note: "",
+  };
+}
+
 const reasons: Record<string, [string, string]> = {
   whole_model_not_improved: ["Whole-model error does not improve on the independent starting model.", "El error total no mejora el modelo inicial independiente."],
   waveform_not_improved: ["Active waveform error does not improve on the starting model.", "El error de onda activo no mejora el modelo inicial."],
   withheld_data_not_improved: ["Withheld waveform error does not improve on the starting model.", "El error de onda omitido no mejora el modelo inicial."],
+  active_data_misfit_above_declared_noise: ["Active-receiver noise-normalized waveform residual exceeds the declared noise-fit criterion; reduced baseline error is not sufficient for resolved recovery.", "El residuo de onda normalizado por ruido en receptores activos supera el criterio declarado de ajuste al ruido; mejorar respecto a la referencia no basta para resolver la recuperación."],
+  withheld_data_misfit_above_declared_noise: ["Withheld-receiver noise-normalized waveform residual exceeds the declared noise-fit criterion; the omitted traces are not predicted within that tolerance.", "El residuo de onda normalizado por ruido en receptores omitidos supera el criterio declarado de ajuste al ruido; las trazas omitidas no se predicen dentro de esa tolerancia."],
   salt_cycle_skipping_challenge: ["Salt is a declared cycle-skipping challenge; apparent fit is not accepted as verified recovery.", "La sal es un desafío declarado de salto de ciclos; el ajuste aparente no se acepta como recuperación verificada."],
   solver_failure: ["The optimizer did not report successful convergence.", "El optimizador no informó convergencia satisfactoria."],
   data_misfit_exceeds_threshold: ["Data error exceeds the evaluator's declared acceptance threshold.", "El error de datos supera el umbral de aceptación declarado."],
@@ -26,12 +52,16 @@ const reasons: Record<string, [string, string]> = {
   "low-model-correlation": ["Target–estimate correlation is below 0.5.", "Correlación objetivo–estimación menor que 0,5."],
   "active-data-misfit-above-noise": ["Active-station WRMS exceeds 2.", "WRMS de estaciones activas supera 2."],
   "deliberately-misspecified-physical-model": ["The physical or petrophysical prior is deliberately misspecified.", "El modelo físico o prior petrofísico es deliberadamente incorrecto."],
-  "coupling-does-not-improve-independent-density-recovery": ["Coupling does not improve independent density recovery.", "El acoplamiento no mejora recuperación independiente de densidad."],
+  "coupling-does-not-improve-independent-density-recovery": ["Coupled density RMSE does not improve the matched optimized uncoupled density baseline.", "El RMSE de densidad acoplada no mejora la referencia de densidad sin acoplamiento optimizada y comparable."],
+  "coupling-does-not-improve-independent-susceptibility-recovery": ["Coupled susceptibility RMSE does not improve the matched optimized uncoupled susceptibility baseline.", "El RMSE de susceptibilidad acoplada no mejora la referencia de susceptibilidad sin acoplamiento optimizada y comparable."],
+  "magnetic-data-misfit-above-noise": ["Active magnetic-station noise-normalized RMS exceeds the declared fit threshold of 2.", "El RMS magnético normalizado por ruido en estaciones activas supera el umbral declarado de ajuste de 2."],
+  "magnetic-withheld-data-not-predicted": ["Withheld magnetic-station noise-normalized RMS exceeds the declared prediction threshold of 2.", "El RMS magnético normalizado por ruido en estaciones omitidas supera el umbral declarado de predicción de 2."],
   "held-out-geological-family": ["This geometric family was excluded from training.", "Esta familia geométrica se excluyó del entrenamiento."],
   "column-target-not-three-dimensional-recovery": ["Only depth-integrated columns are evaluated, not 3D recovery.", "Se evalúan columnas integradas, no recuperación 3D."],
   "does-not-improve-classical-baseline": ["CNN column error does not improve the matched classical baseline.", "El error de columna CNN no mejora la referencia clásica comparable."],
   "withheld-geometric-family-detected": ["The withheld geometry exceeds the calibrated novelty threshold.", "La geometría omitida supera el umbral calibrado de novedad."],
   "withheld-geometric-family-missed": ["The withheld geometry is missed by the novelty detector.", "El detector de novedad no detecta la geometría omitida."],
+  "case-score-not-calibrated-as-geology": ["A single display-case reconstruction score is not calibrated as geological detection or recovery.", "El puntaje de reconstrucción de un solo caso visualizado no está calibrado como detección ni recuperación geológica."],
   baseline_improved: ["Model error improves on the declared baseline.", "El error del modelo mejora la referencia declarada."],
   baseline_not_improved: ["Model error does not improve on the declared baseline.", "El error del modelo no mejora la referencia declarada."],
   worse_than_baseline: ["Model error exceeds the baseline error.", "El error del modelo supera el error de referencia."],
@@ -78,7 +108,7 @@ export function targetDescription(run: Run, methodId: string, es: boolean): stri
     if (title) return title + " · " + (method.target.units === "normalized squared error" ? t("normalized squared error", "error cuadrático normalizado") : method.target.units) + " · " + method.target.dimensionality + (typeof method.target.dimensionality === "number" ? "D" : "");
   }
   if (methodId === "cnn") return t("Depth-integrated density · g/cm³ m; not a depth-resolved 3D body.", "Densidad integrada en profundidad · g/cm³ m; no un cuerpo 3D resuelto en profundidad.");
-  if (methodId === "autoencoder") return t("Observed gravity map reconstruction and normalized squared error; not subsurface geology.", "Reconstrucción del mapa de gravedad observado y error cuadrático normalizado; no geología del subsuelo.");
+  if (methodId === "autoencoder") return t("Interpolated network-input gravity map reconstruction and normalized squared error; not subsurface geology.", "Reconstrucción de la entrada gravimétrica interpolada de la red y error cuadrático normalizado; no geología del subsuelo.");
   if (methodId === "vector") return t("Three magnetization components; the volume displays their amplitude · SI. Amplitude alone does not validate direction.", "Tres componentes de magnetización; el volumen muestra su amplitud · SI. La amplitud no valida la dirección.");
   const targets = {
     gravity: t("Cell density contrast · g/cm³", "Contraste de densidad por celda · g/cm³"),

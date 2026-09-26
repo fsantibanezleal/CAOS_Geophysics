@@ -2,8 +2,8 @@
    navigation and controls. Widget patterns follow RotorVitals (ADR-0016/17/71). */
 .workbench {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: 304px minmax(0, 1fr);
+  gap: 1rem;
   align-items: stretch;
   overflow: hidden;
 }
@@ -15,9 +15,20 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  overflow: auto;
+  overflow: hidden;
   padding-right: 0.4rem;
   scrollbar-width: thin;
+}
+.sidebar-panel-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.25rem;
+  min-width: 0;
+}
+.sidebar-panel-switch .chip {
+  min-width: 0;
+  padding-inline: 0.25rem;
+  text-align: center;
 }
 .instrument-brand h1 {
   font-size: 1.1rem;
@@ -161,13 +172,24 @@
 .earth-view {
   display: flex;
   flex-direction: column;
+  position: relative;
   min-height: 420px;
   height: 100%;
 }
 .scene-toolbar {
-  flex-wrap: wrap;
-  margin-bottom: 0.6rem;
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  z-index: 2;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
   font-size: 0.82rem;
+}
+.earth-view .scene-label,
+.earth-view .scene-compass {
+  top: 3.6rem;
 }
 .scene-toolbar label {
   display: flex;
@@ -196,6 +218,18 @@
   color: var(--color-accent-fg);
   border-color: transparent;
   font-weight: 600;
+}
+/* The shared architecture modal leaves this full-size control at browser
+   defaults; use the shell's theme tokens so its label remains readable. */
+[role="dialog"] button[aria-controls$="-diagram"] {
+  color: var(--color-fg);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+[role="dialog"] button[aria-controls$="-diagram"]:hover {
+  border-color: var(--color-accent);
 }
 .earth-scene {
   position: relative;
@@ -281,6 +315,23 @@
   font-size: 0.82rem;
   color: var(--color-fg-subtle);
 }
+.scene-settings {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 3;
+  max-width: min(30rem, calc(100% - 1.1rem));
+  padding: 0 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+.scene-settings[open] {
+  width: min(30rem, calc(100% - 1.1rem));
+}
+.scene-settings[open] .scene-adjustments {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 .scene-adjustments {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -320,7 +371,7 @@
   margin-bottom: 0.5rem;
 }
 .science-plot figcaption output {
-  font: 0.72rem var(--font-mono);
+  font: 0.8rem var(--font-mono);
   color: var(--color-fg-subtle);
   max-width: 55%;
 }
@@ -395,7 +446,7 @@
 }
 .curve svg text {
   fill: var(--color-fg-subtle);
-  font: 11px var(--font-mono);
+  font: 13px var(--font-mono);
 }
 .chart-grid {
   stroke: var(--color-border);
@@ -410,7 +461,7 @@
   gap: 0.6rem;
   flex-wrap: wrap;
   justify-content: flex-end;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   color: var(--color-fg-subtle);
 }
 .curve-legend span:first-child {
@@ -712,10 +763,12 @@
   background: var(--color-bad);
   pointer-events: none;
 }
-@media (max-width: 1100px) {
+@media (max-width: 1400px) {
   .workbench {
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 272px minmax(0, 1fr);
   }
+}
+@media (max-width: 1100px) {
   .scene-adjustments,
   .three-plots {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -735,10 +788,22 @@
     gap: 0.75rem;
   }
   .instrument-sidebar {
-    max-height: 32dvh;
+    max-height: none;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0.6rem;
+    align-content: start;
+  }
+  .instrument-sidebar.expanded {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    padding: 1.25rem;
+    background: var(--color-bg);
+    overflow-y: auto;
+  }
+  .sidebar-panel-switch {
+    grid-column: 1/-1;
   }
   .instrument-sidebar:not(.expanded)
     > :not(.select-control):not(.mobile-controls-toggle) {
@@ -764,6 +829,25 @@
   .earth-view {
     height: auto;
     min-height: 0;
+  }
+  .scene-toolbar {
+    position: static;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+  .scene-settings {
+    position: static;
+    max-width: none;
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+  .scene-settings[open] {
+    width: auto;
+  }
+  .earth-view .scene-label,
+  .earth-view .scene-compass {
+    top: 0.75rem;
   }
   .earth-scene {
     height: 220px;

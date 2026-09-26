@@ -1,9 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 530" role="img" aria-label="Control dependencies">
+<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 727" role="img" aria-label="Browser control dependency graph for selecting, replaying, viewing, and exporting geophysical results">
 <style>
-text{fill:var(--color-fg);font:14px var(--font-sans)} .heading{font-weight:600;font-size:16px}
-.box{fill:var(--color-surface);stroke:var(--color-border)} .active{fill:var(--color-accent-soft);stroke:var(--color-accent)}
-.edge{stroke:var(--color-fg-subtle);stroke-width:1.5;fill:none}.boundary{stroke:var(--color-border);stroke-dasharray:5 5;fill:none}
-.l-es{display:none} [data-arch-lang="es"] .l-en{display:none} [data-arch-lang="es"] .l-es{display:inline}
-</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="var(--color-fg-subtle)"/></marker></defs>
-<text x="24" y="32" class="l-en heading">Control dependencies</text><text x="24" y="32" class="l-es heading">Dependencias de los controles</text><g transform="translate(24,75)"><rect width="280" height="120" rx="8" class="active"/><text x="16" y="28" class="l-en heading">Experiment selection</text><text x="16" y="28" class="l-es heading">Selección experimental</text><text x="16" y="55" class="l-en ">Geological case + condition</text><text x="16" y="55" class="l-es ">Caso geológico + condición</text><text x="16" y="79" class="l-en ">Loads a different computed result</text><text x="16" y="79" class="l-es ">Carga un resultado calculado distinto</text></g><g transform="translate(24,235)"><rect width="280" height="120" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Algorithm selection</text><text x="16" y="28" class="l-es heading">Selección del algoritmo</text><text x="16" y="55" class="l-en ">Select model, prediction, metrics</text><text x="16" y="55" class="l-es ">Selecciona modelo, predicción, métricas</text><text x="16" y="79" class="l-en ">Reset recorded-state index</text><text x="16" y="79" class="l-es ">Reinicia índice de estado guardado</text></g><g transform="translate(24,395)"><rect width="280" height="110" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Camera and display</text><text x="16" y="28" class="l-es heading">Cámara y visualización</text><text x="16" y="55" class="l-en ">Orbit step, opacity, cut, gain</text><text x="16" y="55" class="l-es ">Paso angular, opacidad, corte, ganancia</text><text x="16" y="79" class="l-en ">No change to physical properties</text><text x="16" y="79" class="l-es ">No cambia propiedades físicas</text></g><g transform="translate(390,75)"><rect width="546" height="120" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Loaded artifact</text><text x="16" y="28" class="l-es heading">Resultado cargado</text><text x="16" y="55" class="l-en ">Truth, survey, solutions and numerical provenance</text><text x="16" y="55" class="l-es ">Verdad, levantamiento, soluciones y procedencia numérica</text><text x="16" y="79" class="l-en ">Abort the previous request when selection changes</text><text x="16" y="79" class="l-es ">Cancela la solicitud anterior al cambiar selección</text></g><g transform="translate(390,235)"><rect width="546" height="120" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Recorded-state playback</text><text x="16" y="28" class="l-es heading">Reproducción de estados guardados</text><text x="16" y="55" class="l-en ">Acoustic time: wavefields every 24 ms</text><text x="16" y="55" class="l-es ">Tiempo acústico: campos cada 24 ms</text><text x="16" y="79" class="l-en ">Optimizer states: spacing depends on the algorithm</text><text x="16" y="79" class="l-es ">Estados iterativos: intervalo según el algoritmo</text></g><g transform="translate(390,395)"><rect width="546" height="110" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Rendered view and export</text><text x="16" y="28" class="l-es heading">Vista y exportación</text><text x="16" y="55" class="l-en ">Pointer readout → nearest computed cell / sample</text><text x="16" y="55" class="l-es ">Lectura del cursor → celda / muestra calculada cercana</text><text x="16" y="79" class="l-en ">Export includes the complete result, not a screenshot</text><text x="16" y="79" class="l-es ">Exportar incluye resultado completo, no captura</text></g><path d="M304 130H380" class="edge" marker-end="url(#a)"/><path d="M304 290H380" class="edge" marker-end="url(#a)"/><path d="M304 445H380" class="edge" marker-end="url(#a)"/><path d="M663 195V225" class="edge" marker-end="url(#a)"/><path d="M663 355V385" class="edge" marker-end="url(#a)"/>
+  text{fill:var(--color-fg);font-family:var(--font-sans)}
+  .head{font-size:19px;font-weight:700}.kicker{font:600 11px var(--font-mono);fill:var(--color-accent)}
+  .ttl{font-size:14px;font-weight:650}.it{font-size:12.5px}.cd{font:11.5px var(--font-mono);fill:var(--color-accent)}
+  .mu,.lbl{font-size:11px;fill:var(--color-fg-subtle)}.lbl{font-weight:600}
+  .bx{fill:var(--color-surface-2);stroke:var(--color-border);stroke-width:1.3}
+  .bx-hi{fill:var(--color-accent-soft);stroke:var(--color-accent)}.bx-web{stroke:var(--color-good)}
+  .bx-gate{stroke:var(--color-warn)}.band{fill:var(--color-surface);stroke:var(--color-border)}
+  .flow{fill:none;stroke:var(--color-fg-subtle);stroke-width:1.5}.rule{stroke:var(--color-border)}
+  svg .l-es{display:none}[data-arch-lang="es"] svg .l-en{display:none}[data-arch-lang="es"] svg .l-es{display:inline}
+</style>
+<defs><marker id="arrow-web" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5 1 9" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5"/></marker></defs>
+<text x="24" y="32" class="kicker l-neutral">BROWSER DEPENDENCIES / 03</text>
+<text x="24" y="59" class="l-en head">Controls that change data versus controls that change display</text>
+<text x="24" y="59" class="l-es head">Controles que cambian datos y controles que cambian la vista</text>
+<text x="24" y="80" class="mu l-en">Only selection fetches another inverse result. Rendering controls never rewrite its numerical arrays.</text>
+<text x="24" y="80" class="mu l-es">Sólo la selección carga otro resultado inverso. Los controles visuales no reescriben arreglos.</text>
+
+<rect x="24" y="104" width="256" height="166" rx="8" class="bx bx-hi"/>
+<text x="38" y="129" class="ttl l-en">1 · Case + condition</text><text x="38" y="129" class="ttl l-es">1 · Caso + condición</text>
+<text x="38" y="151" class="cd l-neutral">Workbench.tsx</text>
+<line x1="38" y1="161" x2="266" y2="161" class="rule"/>
+<text x="38" y="184" class="it l-en">family → case → variant</text><text x="38" y="184" class="it l-es">familia → caso → variante</text>
+<text x="38" y="207" class="it l-neutral">reference / contrast / noise</text>
+<text x="38" y="230" class="it l-neutral">acquisition / coverage / regularization</text>
+<text x="38" y="252" class="mu l-en">Change aborts an obsolete request.</text><text x="38" y="252" class="mu l-es">El cambio cancela la petición previa.</text>
+<path d="M280 186H302" class="flow" marker-end="url(#arrow-web)"/>
+<text x="277" y="98" class="lbl l-en">lookup</text><text x="277" y="98" class="lbl l-es">buscar</text>
+
+<rect x="310" y="104" width="256" height="166" rx="8" class="bx"/>
+<text x="324" y="129" class="ttl l-en">2 · Catalog resolves path</text><text x="324" y="129" class="ttl l-es">2 · Catálogo resuelve ruta</text>
+<text x="324" y="151" class="cd l-neutral">science.ts · catalog.json</text>
+<line x1="324" y1="161" x2="552" y2="161" class="rule"/>
+<text x="324" y="184" class="it l-en">case ID + variant ID → path</text><text x="324" y="184" class="it l-es">ID caso + variante → ruta</text>
+<text x="324" y="207" class="it l-en">Load one computed JSON run</text><text x="324" y="207" class="it l-es">Cargar un JSON calculado</text>
+<text x="324" y="230" class="it l-en">Provenance, units, method keys</text><text x="324" y="230" class="it l-es">Procedencia, unidades, métodos</text>
+<text x="324" y="252" class="mu l-en">No re-run of SimPEG or Deepwave.</text><text x="324" y="252" class="mu l-es">No reejecuta SimPEG ni Deepwave.</text>
+<path d="M566 186H588" class="flow" marker-end="url(#arrow-web)"/>
+<text x="572" y="98" class="lbl l-neutral">fetch</text>
+
+<rect x="596" y="104" width="260" height="166" rx="8" class="bx bx-web"/>
+<text x="610" y="129" class="ttl l-en">3 · Stable run arrays</text><text x="610" y="129" class="ttl l-es">3 · Arreglos del resultado</text>
+<text x="610" y="151" class="cd l-neutral">Run · methods[id] · evaluation</text>
+<line x1="610" y1="161" x2="842" y2="161" class="rule"/>
+<text x="610" y="184" class="it l-en">truth, observed, prediction</text><text x="610" y="184" class="it l-es">verdad, datos, predicción</text>
+<text x="610" y="207" class="it l-en">model, residual, solver states</text><text x="610" y="207" class="it l-es">modelo, residuo, estados</text>
+<text x="610" y="230" class="it l-en">separate fit / recovery verdicts</text><text x="610" y="230" class="it l-es">ajuste / recuperación separados</text>
+<text x="610" y="252" class="mu l-en">Case-level AE claim can be unresolved.</text><text x="610" y="252" class="mu l-es">AE del caso puede no resolverse.</text>
+
+<path d="M726 270V296H438V312" class="flow" marker-end="url(#arrow-web)"/>
+<text x="470" y="293" class="lbl l-en">method key and recorded states</text><text x="470" y="293" class="lbl l-es">método y estados guardados</text>
+<rect x="24" y="320" width="832" height="203" rx="8" class="band"/>
+<text x="40" y="343" class="kicker l-en">VIEW / PLAYBACK BRANCHES FROM THE SAME RUN</text><text x="40" y="343" class="kicker l-es">VISTA / REPRODUCCIÓN DEL MISMO RESULTADO</text>
+<rect x="40" y="360" width="252" height="145" rx="6" class="bx"/>
+<text x="53" y="384" class="ttl l-en">Method selection</text><text x="53" y="384" class="ttl l-es">Selección de método</text>
+<text x="53" y="406" class="cd l-neutral">Workbench.tsx · methodId</text>
+<text x="53" y="430" class="it l-en">Switches estimate and prediction</text><text x="53" y="430" class="it l-es">Cambia estimación y predicción</text>
+<text x="53" y="453" class="it l-en">Resets recorded-state cursor</text><text x="53" y="453" class="it l-es">Reinicia cursor de estados</text>
+<text x="53" y="480" class="mu l-en">No optimizer runs on selection.</text><text x="53" y="480" class="mu l-es">No ejecuta optimizador.</text>
+<rect x="308" y="360" width="252" height="145" rx="6" class="bx bx-web"/>
+<text x="321" y="384" class="ttl l-en">Time or iteration replay</text><text x="321" y="384" class="ttl l-es">Tiempo o iteración guardada</text>
+<text x="321" y="406" class="cd l-neutral">wavefields[] · methods[].frames[]</text>
+<text x="321" y="430" class="it l-en">Acoustic frame: physical time</text><text x="321" y="430" class="it l-es">Onda: tiempo físico</text>
+<text x="321" y="453" class="it l-en">Inverse frame: saved iteration</text><text x="321" y="453" class="it l-es">Inversión: iteración guardada</text>
+<text x="321" y="480" class="mu l-en">Final prediction stays final-model.</text><text x="321" y="480" class="mu l-es">Predicción final no se altera.</text>
+<rect x="576" y="360" width="264" height="145" rx="6" class="bx bx-web"/>
+<text x="589" y="384" class="ttl l-en">Camera + display only</text><text x="589" y="384" class="ttl l-es">Cámara + visualización</text>
+<text x="589" y="406" class="cd l-neutral">EarthScene.tsx · science.ts</text>
+<text x="589" y="430" class="it l-en">Orbit step, northing cut, threshold</text><text x="589" y="430" class="it l-es">Paso angular, corte, umbral</text>
+<text x="589" y="453" class="it l-en">Gain changes colour clipping</text><text x="589" y="453" class="it l-es">Ganancia cambia saturación</text>
+<text x="589" y="480" class="mu l-en">Properties and residuals unchanged.</text><text x="589" y="480" class="mu l-es">Propiedades y residuos intactos.</text>
+<path d="M292 432H304 M560 432H572" class="flow" marker-end="url(#arrow-web)"/>
+<text x="40" y="548" class="lbl l-en">render physical axes + units</text><text x="40" y="548" class="lbl l-es">representar ejes + unidades</text>
+<path d="M438 523V563" class="flow" marker-end="url(#arrow-web)"/>
+<rect x="24" y="570" width="518" height="113" rx="8" class="bx bx-web"/>
+<text x="38" y="594" class="ttl l-en">Scientific view + complete JSON export</text><text x="38" y="594" class="ttl l-es">Vista científica + exportación JSON completa</text>
+<text x="38" y="617" class="cd l-neutral">Workbench.tsx · EarthScene.tsx</text>
+<text x="38" y="641" class="it l-en">3D cells / 1D impedance / 2D waves by family</text><text x="38" y="641" class="it l-es">Celdas 3D / impedancia 1D / ondas 2D</text>
+<text x="38" y="663" class="mu l-en">Export preserves original run, not camera state.</text><text x="38" y="663" class="mu l-es">Exportar conserva datos, no estado de cámara.</text>
+<rect x="556" y="570" width="300" height="113" rx="8" class="bx bx-gate"/>
+<text x="570" y="594" class="ttl l-en">Separate live MT forward path</text><text x="570" y="594" class="ttl l-es">Ruta MT directa independiente</text>
+<text x="570" y="617" class="cd l-neutral">mt.ts · Z(ω; ρ, h)</text>
+<text x="570" y="641" class="it l-en">Edit layers → recalculate curves</text><text x="570" y="641" class="it l-es">Editar capas → recalcular curvas</text>
+<text x="570" y="663" class="mu l-en">Not a live inverse or field-data fit.</text><text x="570" y="663" class="mu l-es">No invierte ni ajusta EDI real.</text>
+<text x="24" y="713" class="mu l-en">A changed angle samples a different camera direction, not a new acquisition azimuth.</text>
+<text x="24" y="713" class="mu l-es">Cambiar ángulo mueve la cámara, no el acimut de adquisición.</text>
 </svg>

@@ -46,8 +46,9 @@ PGI here means an explicit negative-log Gaussian-mixture petrophysical prior,
 not the SimPEG PGI optimizer. A two-class full-covariance mixture is fitted by EM
 to 640 original synthetic laboratory-like density/susceptibility pairs with seed
 68121. Samples, SHA-256, fitted weights/means/covariances and EM loss are exported.
-The samples do not use voxel labels. The decoupled case deliberately violates the
-shared-density/susceptibility prior and is retained as a negative control.
+The samples do not use voxel labels. The decoupled case deliberately violates
+both the structural-alignment assumption and the shared density/susceptibility
+mixture prior. Both coupled branches are retained as negative controls.
 Responsibilities are conditional mixture membership, not geological certainty.
 
 ## Conditional observation-noise ensembles

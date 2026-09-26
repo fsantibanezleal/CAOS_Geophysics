@@ -1,4 +1,4 @@
-# Scientific implementation: recovery revision 0.04.000
+# Scientific implementation: recovery revision 0.04.001
 
 Primary sources motivate the methods; actual objectives and settings are defined
 by the executable scripts and exported solver records. The [0.03 audit](audits/implementation-0.03.md)
@@ -36,6 +36,12 @@ to E/H ohms. Arbitrary rotation cannot fabricate independent component errors
 when covariance is absent. Original analytic fixtures test native units,
 negative-time SI data, axis rotation and a noisy rotated two-layer sounding.
 Generic inputs retain unknown truth; fixture targets remain separate labelled data.
+The separately sourced, 42-frequency Clear Lake EDI is released only as a
+measured tensor-compatibility screen. Its diagonal and antisymmetry residuals
+reject the declared necessary isotropic-1D criterion; no field inverse model
+or geological target is generated. The source EDI is hash-pinned and cited,
+but its units and complex-variance convention are explicit parser arguments,
+not metadata claimed to be declared by the file.
 See [full contract](../problem-types/mt-recovery.md) and [executed evidence](../problem-types/mt-recovery-validation.md).
 
 ## Acoustic full-waveform inversion
@@ -52,6 +58,9 @@ has explicit 3/5/8/14 Hz cutoffs, not a short moving average. Each stage has 28
 strong-Wolfe L-BFGS calls. Terminal updates, final prediction, model, last frame
 and objective records describe the same selected state. Raw waveform MSE,
 filtered stage objective and regional model errors are distinct quantities.
+FWI float32 arrays are exported with ten significant decimal digits so a saved
+model round-trips to the same simulator input; seven-digit display rounding
+would change receiver traces and invalidate exact forward replay.
 See [calibration, nominal recovery and remaining bias](../problem-types/02_fwi-recovery.md).
 
 ## Joint priors, learned inference and uncertainty
@@ -59,17 +68,23 @@ See [calibration, nominal recovery and remaining bias](../problem-types/02_fwi-r
 `joint.py` compares uncoupled, physical cross-gradient and Gaussian-mixture priors
 using matched observations, initialization and 80-call budgets. The physical cross
 penalty is normalized by its independent initial value; L-BFGS has a diagonal
-Hessian preconditioner. `petrophysics.py` fits 640 separate synthetic laboratory-like
+Hessian preconditioner. The coupled methods are compared to the optimized
+uncoupled solution for both density and susceptibility, including their
+active and withheld data residuals. `petrophysics.py` fits 640 separate synthetic laboratory-like
 pairs by EM. This explicit mixture prior is not a reproduction of SimPEG's PGI
 optimizer. Samples, parameters and conditional responsibilities are exported.
-The decoupled case violates the paired-property prior. Coupling can worsen recovery.
+The decoupled case violates the paired-property prior and is a negative
+control for both structural and mixture coupling. Coupling can worsen recovery.
 
 `learning.py` trains a column-density CNN and a 12-dimensional observation
 autoencoder with 800/160/160 disjoint training/validation/test realizations.
 The spatial L2 and CNN test receive identical noisy observations and the same
 physical target. Another 160 realizations calibrate the novelty threshold.
 Eighty withheld ring/crossed geometries test detection. Confusion counts and AUC
-are exported: the executed detector misses all 80 withheld examples. The CNN also
+are exported: the executed detector misses all 80 withheld examples. Individual
+display-case threshold crossings are not calibrated geological classifications.
+The autoencoder score compares reconstruction to its interpolated network input;
+raw-observation MSE is separately exported for omitted-station cases. The CNN also
 fails to beat the classical column inverse on the two displayed withheld references.
 Classical regularization is explicitly not an intervention on frozen checkpoints.
 
@@ -83,8 +98,16 @@ coverage is not assumed to equal the nominal 95% quantile span.
 
 `evaluation.py` separates active/held-out data error, baseline-relative model
 error, correlation, support/background error and centroid/direction error.
+Potential-field display thresholds are fixed per geological case using the
+90th percentile of the recovered reference IRLS property distribution (or the
+reference vector norm), then reused across all six conditions. Property and
+survey colour ranges are likewise case-fixed. These are display choices, not
+additional inverse constraints, numerical resolution, or recovery evidence.
 `validate_recovery.py` recomputes physical predictions and state identities and
 requires three nominal reference FWI cases to improve independent starts.
+FWI recovery also requires active and withheld noise-normalized waveform fit;
+an improved baseline alone is insufficient. Coupled methods use matched
+optimized uncoupled comparators for both properties.
 Failed variants remain visible. `catalog.py` rejects stale or missing runs.
 Static guards verify the full matrix, EDI hashes, checkpoints and verdicts.
 Numerical tests, rendered inspection, Git promotion and host verification are

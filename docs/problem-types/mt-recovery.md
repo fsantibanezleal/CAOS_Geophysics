@@ -1,9 +1,8 @@
 # MT recovery, strict EDI ingestion and conditional uncertainty
 
-Implemented for R-S04, R-S05 and the MT part of R-S07 on 2026-09-24. Files are
-plain scripts, not an internal Python package. All inversion tensors use CPU
-float64, including the per-sounding neural model. No canonical v2 arrays are
-changed by this work unit.
+Implemented for R-S04, R-S05 and the MT part of R-S07, with a measured-station
+screen added in 0.04.001. Files are plain scripts, not an internal Python package.
+All 1D inversion tensors use CPU float64, including the per-sounding neural model.
 
 ## Physical target and forward problem
 
@@ -125,7 +124,10 @@ and [reader source](https://github.com/MTgeophysics/mt_metadata/blob/main/mt_met
 Supported subset:
 
 - One ASCII/UTF-8 station; HEAD, INFO, DEFINEMEAS, four EX/EY/HX/HY measurements,
-  MTSECT, FREQ, all real/imag/variance blocks for xx/xy/yx/yy, and END.
+  MTSECT, FREQ, all real/imag/variance blocks for xx/xy/yx/yy, and END. An
+  optional fifth HZ channel and complete TX/TY tipper blocks may be retained
+  as ancillary data, never fitted in the 1D inverse. Missing tipper samples
+  retain a common explicit mask across all components and variances.
 - 2–512 unique positive frequencies in Hz. Every block has its declared count.
   Frequencies are sorted together with all tensor/error/angle arrays.
 - Finite values, positive variances, unique matching channel IDs, an orthogonal
@@ -153,8 +155,9 @@ document the factor-of-two distinction between complex and real-component
 variance and the missing-covariance problem for EDI rotations. Therefore an
 arbitrary angle is **preserved**, not silently rotated with guessed errors.
 An isotropic 1D tensor is invariant under common horizontal rotation, so direct
-fitting in the supplied frame is valid. Geographic conversion is supported only
-for exact multiples of 90°, which are signed permutations and do not mix errors.
+fitting in the supplied frame is valid. Geographic conversion requires an
+explicit geographic-north frame reference and is supported only for exact
+multiples of 90°, which are signed permutations and do not mix errors.
 Other requested re-rotations fail closed.
 
 Before inversion, diagonal component WRMS and conservative antisymmetry WRMS
@@ -166,8 +169,9 @@ One selected component, xy or sign-corrected yx, is fitted. The other off-diagon
 is evaluated separately as other_component_wrms; the components are not
 averaged with invented covariance. Diagonal-component inversion is rejected.
 
-Unsupported input is rejected: spectra, tipper/additional channels, incomplete
-tensors, missing errors, zero/negative errors, duplicate frequencies or blocks,
+Unsupported input is rejected: spectra, unsupported additional channels,
+incomplete tipper or impedance tensors, missing impedance errors, zero/negative
+valid errors, duplicate frequencies or blocks,
 sentinels, malformed tokens, unexplained units/signs, nonorthogonal layouts,
 mixed component frames and arbitrary covariance-free re-rotation. This strict
 subset is **not a general EDI field-processing package**.
@@ -192,6 +196,39 @@ manifest and returns truth=null, clean=null for supplied data.
 Ingestion preserves original metadata, source hash, source size, parser version,
 declared/supplied interpretation, frequency permutation and rotations. Source
 tensor components and their real-part SDs remain available alongside 1D output.
+
+## Measured Clear Lake station: screening, not inversion
+
+The [USGS Clear Lake data release](https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california)
+(DOI [10.5066/P14KAQ3M](https://doi.org/10.5066/P14KAQ3M), marked CC0)
+identifies the [EarthScope EMTF transfer-function collection](https://data.earthscope.org/app/products/portal/emtf/)
+(DOI [10.17611/DP/EMTF/GMEG/Clearlake](https://doi.org/10.17611/DP/EMTF/GMEG/Clearlake))
+as an alternate source. Station `cl061` was downloaded as a 16,411-byte EDI,
+SHA-256 `90c5c96cd69d6d29c866a768097cb3b38bc20e8b9c143e24bf10b2d253261e83`.
+Its INFO block says `Data Citation Required`; the release and transfer-function
+DOIs are therefore carried in the public screening record. The raw EDI is kept
+in ignored `data/downloads/clear-lake/`, not presented as an original asset.
+
+The file contains 42 frequencies, a full impedance tensor and tipper, with two
+tipper frequencies missing. The missing tipper values are retained as masks.
+Its time sign is declared positive. Impedance units `mt` and the historical
+complex-variance interpretation are **explicit supplied assumptions**, recorded
+in provenance because the EDI itself does not declare them. The tensor is kept
+in its supplied frame, without an unsupported covariance-free re-rotation.
+
+The necessary 1D screen yields diagonal WRMS 320.233 (`xx`) and 109.508 (`yy`),
+and conservative antisymmetry WRMS 267.600, all above the declared limit 3.
+The measured station is **not inverted as a 1D layered earth**. These scores
+reject this workflow's isotropic-1D approximation under the stated error
+interpretation; they do not establish a specific 2D/3D geological model.
+The public `inverse-earth/edi-screen/v1` artifact contains observed transfer
+functions, uncertainties, provenance and the failure, with `truth:null` and
+`methods:{}`. It is separate from the authored 1D fixture inversions and from
+the 20 synthetic canonical cases.
+
+Reproduce after downloading the station EDI into the ignored path:
+
+    .venv-pipeline/Scripts/python data-pipeline/edi.py data/downloads/clear-lake/USGS-GMEG.2022.cl061.edi --screen-only --units mt --variance-convention complex --rotation preserve --output data/experiments/clear-lake-cl061-screen.json
 
 ## Conditional parametric bootstrap
 

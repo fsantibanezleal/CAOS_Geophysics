@@ -28,12 +28,20 @@ export function metricInfo(
       meaning: ["CNN column RMSE divided by the matched spatial L2 column RMSE. Above one means the CNN is worse for this case.", "RMSE de columna CNN dividido por RMSE de columna L2 espacial comparable. Mayor que uno significa peor CNN en este caso."],
     },
     independent_model_rmse: {
-      name: ["Independent density-inversion RMSE", "RMSE de inversión de densidad independiente"], unit: "g/cm³",
-      meaning: ["Density RMSE of the independent spatial L2 initialization used by all joint methods.", "RMSE de densidad de la inicialización L2 espacial independiente usada en todos los métodos conjuntos."],
+      name: ["Optimized uncoupled density RMSE", "RMSE de densidad sin acoplamiento optimizada"], unit: "g/cm³",
+      meaning: ["Density RMSE of the matched optimized uncoupled gravity–magnetic solution on the same observations, not the spatial L2 starting model.", "RMSE de densidad de la solución gravimétrica–magnética sin acoplamiento, optimizada y comparable, con las mismas observaciones; no del modelo inicial L2 espacial."],
     },
     independent_baseline_ratio: {
-      name: ["Joint / independent density error", "Error de densidad conjunto / independiente"], unit: "1",
-      meaning: ["Joint density RMSE divided by independent-inversion density RMSE. Below one is improvement; structural simplicity alone is not improvement.", "RMSE de densidad conjunta dividido por RMSE independiente. Menor que uno mejora; simplificar estructura no basta."],
+      name: ["Coupled / uncoupled density RMSE", "RMSE de densidad acoplada / sin acoplamiento"], unit: "1",
+      meaning: ["Coupled density RMSE divided by the matched optimized uncoupled density RMSE. Below one improves that baseline; structural simplicity alone does not.", "RMSE de densidad acoplada dividido por RMSE de densidad sin acoplamiento optimizada y comparable. Menor que uno mejora esa referencia; simplificar estructura no basta."],
+    },
+    independent_magnetic_model_rmse: {
+      name: ["Optimized uncoupled susceptibility RMSE", "RMSE de susceptibilidad sin acoplamiento optimizada"], unit: "SI",
+      meaning: ["Susceptibility RMSE of the matched optimized uncoupled gravity–magnetic solution, evaluated on the same synthetic target and cells.", "RMSE de susceptibilidad de la solución gravimétrica–magnética sin acoplamiento, optimizada y comparable, evaluada en el mismo objetivo sintético y celdas."],
+    },
+    independent_magnetic_baseline_ratio: {
+      name: ["Coupled / uncoupled susceptibility RMSE", "RMSE de susceptibilidad acoplada / sin acoplamiento"], unit: "1",
+      meaning: ["Coupled susceptibility RMSE divided by the matched optimized uncoupled susceptibility RMSE. Below one improves that baseline; a lower cross-gradient alone does not.", "RMSE de susceptibilidad acoplada dividido por RMSE de susceptibilidad sin acoplamiento optimizada y comparable. Menor que uno mejora esa referencia; un gradiente cruzado menor no basta."],
     },
     magnetic_model_rmse: {
       name: ["Susceptibility model RMSE", "RMSE del modelo de susceptibilidad"], unit: "SI",
@@ -212,8 +220,16 @@ export function metricInfo(
       ],
       unit: "1",
       meaning: [
-        "Mean squared autoencoder reconstruction residual divided by training-observation variance. A high score can reflect noise or acquisition shift; a low score does not prove familiar geology.",
-        "Residuo cuadrático medio del autoencoder dividido por varianza de entrenamiento. Un valor alto puede reflejar ruido o adquisición; uno bajo no prueba geología conocida.",
+        "Mean squared difference between reconstruction and interpolated network input, divided by training-observation variance. A high score can reflect noise or acquisition shift; this case score is not calibrated as geological detection.",
+        "Diferencia cuadrática media entre reconstrucción y entrada interpolada de la red, dividida por varianza de observaciones de entrenamiento. Un valor alto puede reflejar ruido o adquisición; este puntaje no está calibrado como detección geológica.",
+      ],
+    },
+    raw_observation_mse: {
+      name: ["Reconstruction versus raw observations", "Reconstrucción frente a observaciones originales"],
+      unit: "1",
+      meaning: [
+        "Mean squared difference between reconstruction and the recorded observation map, divided by training-observation variance. Unlike the network-input score, this includes differences at omitted stations before interpolation and is diagnostic only.",
+        "Diferencia cuadrática media entre reconstrucción y mapa observado original, dividida por varianza de entrenamiento. A diferencia del puntaje de entrada, incluye diferencias en estaciones omitidas antes de interpolar y sólo es diagnóstica.",
       ],
     },
     threshold: {
@@ -223,8 +239,8 @@ export function metricInfo(
       ],
       unit: "1",
       meaning: [
-        "An empirical independent-calibration reconstruction-error quantile, frozen before test evaluation. Not a confidence level or a geological detection probability.",
-        "Cuantil empírico independiente de error de reconstrucción, fijado antes de prueba. No es nivel de confianza ni probabilidad de detección geológica.",
+        "An empirical independent-calibration reconstruction-error quantile, frozen before test evaluation. Calibration covers the original contrast, noise and acquisition only. It is not a confidence level or geological detection probability.",
+        "Cuantil empírico independiente de error de reconstrucción, fijado antes de prueba. La calibración sólo cubre contraste, ruido y adquisición originales. No es nivel de confianza ni probabilidad de detección geológica.",
       ],
     },
     above_threshold: {
@@ -234,8 +250,8 @@ export function metricInfo(
       ],
       unit: "",
       meaning: [
-        "True only when mean reconstruction error exceeds the fixed validation threshold. False may be a missed unfamiliar geometry.",
-        "Verdadero sólo si el error medio supera el umbral fijo. Falso puede corresponder a una geometría desconocida no detectada.",
+        "Literal score comparison only. This case-level Boolean is not calibrated as geological detection, even under the reference condition; changed contrast, noise or acquisition further limit interpretation.",
+        "Sólo comparación literal del puntaje. Este booleano de caso no está calibrado como detección geológica, incluso en referencia; contraste, ruido o adquisición modificados limitan aún más su interpretación.",
       ],
     },
   };
@@ -271,7 +287,7 @@ export function metricInfo(
         unit: item.unit,
         description: item.meaning[es ? 1 : 0],
       }
-    : { label: es ? "Diagnóstico adicional del evaluador" : "Additional evaluator diagnostic", unit: "", description: es ? "Definición pendiente de sincronización con el contrato del evaluador; consulte la exportación." : "Definition pending synchronization with the evaluator contract; consult the exported result." };
+    : { label: key, unit: "", description: es ? "Esta versión no registra una definición para esta clave exportada. No interprete el valor sólo por su nombre." : "This build has no registered definition for this exported key. Do not infer its meaning from the name alone." };
 }
 export function historyInfo(method: string, es: boolean) {
   const learned = ["cnn", "autoencoder"].includes(method);

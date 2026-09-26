@@ -46,6 +46,12 @@ export function propertyScale(run: Run, methodId: string, secondary = false): Pr
   return scale;
 }
 
+/** A catalogue-wide scale keeps condition changes visible in the same units. */
+export function casePropertyScale(run: Run, methodId: string, scales?: Record<string, PropertyScale>): PropertyScale {
+  const group = methodId === "vector" ? "vector-amplitude" : "volume";
+  return scales?.[group] ?? propertyScale(run, methodId);
+}
+
 export function absoluteThreshold(scale: PropertyScale, fraction: number): number {
   return scale.maximum * Math.max(0, Math.min(1, fraction));
 }

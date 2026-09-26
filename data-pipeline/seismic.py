@@ -159,14 +159,22 @@ def invert_observations(observed, initial, frequency=8., *, iterations=DEFAULT_I
         raise ValueError("At least one optimizer call per stage is required")
     if observed.ndim != 3 or not torch.isfinite(observed).all():
         raise ValueError("Finite [shot,receiver,time] observations required")
+    if observed.shape[0] != len(SOURCE_X) or observed.shape[1] < 3 or observed.shape[2] < 1:
+        raise ValueError("Observations must contain every configured shot, at least three receivers and time samples")
     if tuple(initial.shape) != SEISMIC_SHAPE:
         raise ValueError("Canonical inverse mesh must remain 128 by 96")
+    if not torch.isfinite(initial).all() or initial.device != observed.device or initial.dtype != observed.dtype:
+        raise ValueError("Initial model and observations must be finite with matching device and dtype")
     if active is None:
         active = torch.arange(observed.shape[1], device=observed.device) % 5 != 2
-    if active.dtype != torch.bool or not active.any() or active.all():
+    if (active.ndim != 1 or active.shape[0] != observed.shape[1]
+            or active.device != observed.device or active.dtype != torch.bool
+            or not active.any() or active.all()):
         raise ValueError("Both fitted and withheld receivers are required")
     with torch.no_grad():
         initial_pred = simulate(initial, frequency, observed.shape[1], observed.shape[-1])
+    if initial_pred.shape != observed.shape:
+        raise ValueError("Forward acquisition does not match the supplied shot gathers")
     background, bg_records, bg_frames, bg_indices, bg_calls = _run_stage(
         initial, observed, active, frequency, CONTROL_GRIDS[0], CUTOFFS_HZ[0], beta, iterations,
         progress=progress)
@@ -240,20 +248,26 @@ def recovery_metrics(model, truth, initial, predicted, observed, initial_predict
 
 
 def recovery_evaluation(metrics, challenge=False):
-    reasons = []
+    failures = []
     if metrics["model_rmse_ratio"] >= 1:
-        reasons.append("whole_model_not_improved")
+        failures.append("whole_model_not_improved")
     if metrics["active_relative_mse"] >= metrics["initial_active_relative_mse"]:
-        reasons.append("waveform_not_improved")
+        failures.append("waveform_not_improved")
     if metrics["withheld_relative_mse"] >= metrics["initial_withheld_relative_mse"]:
-        reasons.append("withheld_data_not_improved")
-    status = "failed" if reasons else "recovered"
+        failures.append("withheld_data_not_improved")
+    unresolved = []
+    if metrics["active_wrms"] > 2:
+        unresolved.append("active_data_misfit_above_declared_noise")
+    if metrics["withheld_wrms"] > 2:
+        unresolved.append("withheld_data_misfit_above_declared_noise")
+    status = "failed" if failures else ("unresolved" if unresolved else "recovered")
+    reasons = failures + unresolved
     if challenge:
         status = "negative-control"
         reasons.append("salt_cycle_skipping_challenge")
     return dict(status=status, reason_codes=reasons,
-                criterion="whole-model, active waveform and withheld waveform improve the independent start",
-                scope="synthetic baseline improvement, not exact geology or field validation",
+                criterion="whole-model and active/withheld waveform improve the independent start; active/withheld WRMS <= 2",
+                scope="synthetic baseline improvement and declared-noise consistency, not exact geology or field validation",
                 optimizer_status="finite_budget")
 
 

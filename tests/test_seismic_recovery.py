@@ -49,6 +49,28 @@ def test_spatial_regularization_and_initial_are_physical():
     assert "truth" not in inspect.signature(seismic.invert_observations).parameters
 
 
+def test_inverse_rejects_incomplete_acquisition_before_propagation(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Invalid acquisition reached the wave propagator')
+    monkeypatch.setattr(seismic, 'simulate', forbidden)
+    start=torch.tensor(seismic.independent_start())
+    observations=torch.ones(3,10,64)
+    with pytest.raises(ValueError,match='every configured shot'):
+        seismic.invert_observations(observations[:1],start,iterations=1)
+    with pytest.raises(ValueError,match='every configured shot'):
+        seismic.invert_observations(observations[:2],start,iterations=1)
+    with pytest.raises(ValueError,match='receivers'):
+        seismic.invert_observations(observations[:,:2],start,iterations=1)
+    with pytest.raises(ValueError,match='matching device and dtype'):
+        seismic.invert_observations(observations.double(),start,iterations=1)
+    with pytest.raises(ValueError,match='fitted and withheld'):
+        seismic.invert_observations(observations,start,active=torch.ones(9,dtype=torch.bool),iterations=1)
+    active=torch.arange(10)%5 != 2
+    monkeypatch.setattr(seismic,'simulate',lambda *args,**kwargs: torch.ones(3,9,64))
+    with pytest.raises(ValueError,match='Forward acquisition'):
+        seismic.invert_observations(observations,start,active=active,iterations=1)
+
+
 def test_withheld_samples_do_not_influence_inverse_and_terminal_is_saved(monkeypatch):
     # Algebraic surrogate tests bookkeeping/leakage, NOT acoustic correctness.
     def algebraic(v, frequency=8., receivers=10, nt=256, *args, **kwargs):
@@ -76,12 +98,27 @@ def test_withheld_samples_do_not_influence_inverse_and_terminal_is_saved(monkeyp
 
 def test_failed_and_negative_control_outcomes_are_not_relabelled_success():
     metrics = dict(model_rmse_ratio=1.1, active_relative_mse=.01, initial_active_relative_mse=.2,
-                   withheld_relative_mse=.02, initial_withheld_relative_mse=.3)
+                   withheld_relative_mse=.02, initial_withheld_relative_mse=.3,
+                   active_wrms=1.2, withheld_wrms=1.3)
     assert seismic.recovery_evaluation(metrics)['status'] == 'failed'
     result = seismic.recovery_evaluation(metrics, challenge=True)
     assert result['status'] == 'negative-control'
     assert 'whole_model_not_improved' in result['reason_codes']
     assert 'salt_cycle_skipping_challenge' in result['reason_codes']
+
+
+def test_waveform_improvement_with_noise_incompatible_fit_is_unresolved():
+    metrics=dict(model_rmse_ratio=.7,active_relative_mse=.02,initial_active_relative_mse=.3,
+                 withheld_relative_mse=.03,initial_withheld_relative_mse=.4,
+                 active_wrms=3.2,withheld_wrms=3.4)
+    result=seismic.recovery_evaluation(metrics)
+    assert result['status']=='unresolved'
+    assert result['reason_codes']==[
+        'active_data_misfit_above_declared_noise',
+        'withheld_data_misfit_above_declared_noise']
+    metrics['active_wrms']=1.9;metrics['withheld_wrms']=2.
+    assert seismic.recovery_evaluation(metrics)['status']=='recovered'
+    assert seismic.recovery_evaluation(metrics,challenge=True)['status']=='negative-control'
 
 
 def test_model_region_and_withheld_metrics_against_direct_arrays():
@@ -167,8 +204,15 @@ def test_reference_recovery_state_and_forward_replay(case_id):
     assert torch.cuda.is_available(), 'Scientific release gate requires actual CUDA execution'
     torch.set_num_threads(4)
     case = next(c for c in registry() if c['id'] == case_id)
+    artifact_directory = os.environ.get('FWI_RECOVERY_ARTIFACTS')
     probe_directory = os.environ.get('FWI_RECOVERY_PROBES')
-    if probe_directory:
+    if artifact_directory:
+        from provenance import generator_fingerprint
+        run = json.loads((Path(artifact_directory)/case_id/'reference.json').read_text())
+        provenance = run['provenance']
+        assert provenance['generator_fingerprint'] == generator_fingerprint(
+            'seismic', version=provenance['version']), 'Stale scientific solver'
+    elif probe_directory:
         run = json.loads((Path(probe_directory)/f'fwi-{case_id}-reference.json').read_text())
         source = (ROOT/'data-pipeline/seismic.py').read_bytes()
         digest = hashlib.sha256(source).hexdigest()
@@ -192,16 +236,27 @@ def test_reference_recovery_state_and_forward_replay(case_id):
         clean = seismic.simulate(torch.tensor(truth.T, device='cuda', dtype=torch.float32),
                                  run['frequency'], nt=run['parameters']['record_samples'])
         obs = clean+torch.randn_like(clean)*run['parameters']['noise_sigma']
-    for result in run['methods'].values():
+    expected_statuses = {
+        'FWI_LAYERED': {'fwi-l2': 'recovered', 'fwi-multiscale': 'recovered'},
+        'FWI_FAULT': {'fwi-l2': 'unresolved', 'fwi-multiscale': 'recovered'},
+        'FWI_NOISY': {'fwi-l2': 'unresolved', 'fwi-multiscale': 'unresolved'},
+        'FWI_CYCLE_SKIP': {'fwi-l2': 'negative-control', 'fwi-multiscale': 'negative-control'},
+    }
+    for method_id, result in run['methods'].items():
         model = np.asarray(result['model'])
         rmse = np.sqrt(np.mean((model-truth)**2))
         assert result['metrics']['velocity_rmse'] == pytest.approx(rmse, rel=1e-6)
         assert result['metrics']['initial_velocity_rmse'] == pytest.approx(initial_rmse, rel=1e-6)
         if case_id != 'FWI_CYCLE_SKIP':
             assert rmse < initial_rmse, 'Nominal whole-model recovery must improve the independent start'
-            assert result['evaluation']['status'] == 'recovered'
-        else:
-            assert result['evaluation']['status'] == 'negative-control'
+        assert result['evaluation'] == seismic.recovery_evaluation(
+            result['metrics'], challenge=case_id == 'FWI_CYCLE_SKIP')
+        assert result['evaluation']['status'] == expected_statuses[case_id][method_id]
+        if result['evaluation']['status'] == 'recovered':
+            assert result['metrics']['active_wrms'] <= 2
+            assert result['metrics']['withheld_wrms'] <= 2
+        if result['evaluation']['status'] == 'unresolved':
+            assert max(result['metrics']['active_wrms'], result['metrics']['withheld_wrms']) > 2
         identity = result['state_identity']
         np.testing.assert_array_equal(model, result['frames'][identity['final_frame_index']])
         assert identity['predictions'] == 'final-model'

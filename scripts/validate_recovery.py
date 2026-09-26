@@ -14,6 +14,7 @@ from evaluation import model_metrics
 
 def validate(data,report):
     catalog=json.loads((data/'catalog.json').read_text(encoding='utf-8'))
+    training=json.loads((data/'models/training.json').read_text(encoding='utf-8'))
     rows=[];failures=[];nominal={};cache={}
     for case in catalog['cases']:
         for entry in case['variants']:
@@ -51,13 +52,33 @@ def validate(data,report):
                             expected=np.sqrt(np.mean(((prediction-observed)[~active]/sigma)**2))
                             np.testing.assert_allclose(expected,method['metrics']['heldout_wrms'],rtol=2e-4,atol=2e-5)
                         if 'magnetic_model' in method:
-                            np.testing.assert_allclose(Gm@method['magnetic_model'],method['magnetic_predicted'],rtol=2e-5,atol=1e-5)
+                            magnetic_prediction=Gm@method['magnetic_model']
+                            np.testing.assert_allclose(magnetic_prediction,method['magnetic_predicted'],rtol=2e-5,atol=1e-5)
+                            magnetic_observed=np.asarray(run['magnetic_survey']['observed'])
+                            magnetic_sigma=float(run['magnetic_survey']['sigma'])
+                            active=np.asarray(run['survey']['active'],bool)
+                            magnetic_wrms=float(np.sqrt(np.mean(((magnetic_prediction-magnetic_observed)[active]/magnetic_sigma)**2)))
+                            np.testing.assert_allclose(magnetic_wrms,method['metrics']['magnetic_wrms'],rtol=2e-4,atol=2e-5)
+                            if (~active).any():
+                                held=float(np.sqrt(np.mean(((magnetic_prediction-magnetic_observed)[~active]/magnetic_sigma)**2)))
+                                np.testing.assert_allclose(held,method['metrics']['magnetic_heldout_wrms'],rtol=2e-4,atol=2e-5)
                     if case['family']=='mt':
                         from electromagnetics import impedance
                         prediction=impedance(model,run['thickness'],np.asarray(run['frequencies']))
                         np.testing.assert_allclose(prediction.real,method['predicted']['real'],rtol=3e-5,atol=1e-10)
                         np.testing.assert_allclose(prediction.imag,method['predicted']['imag'],rtol=3e-5,atol=1e-10)
+                    if key=='autoencoder':
+                        network_input=np.asarray(method['network_input'])
+                        prediction=np.asarray(method['predicted'])
+                        residual=np.asarray(method['residual'])
+                        np.testing.assert_allclose(network_input-prediction,residual,rtol=2e-5,atol=1e-5)
+                        errors=(residual/float(training['input_scale']))**2
+                        np.testing.assert_allclose(errors,np.asarray(method['model']).ravel(),rtol=2e-5,atol=1e-6)
+                        np.testing.assert_allclose(float(np.mean(errors)),method['metrics']['reconstruction_mse'],rtol=2e-5)
+                        assert verdict==dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
                     if case['family']=='seismic':
+                        from seismic import recovery_evaluation
+                        assert verdict==recovery_evaluation(method['metrics'],challenge=case['geometry']=='salt'), 'Seismic verdict disagrees with measured/model criteria'
                         truth=np.asarray(run['truth']);initial=np.asarray(run['initial'])
                         ratio=model_metrics(model,truth,initial)['baseline_ratio']
                         if entry['id']=='reference' and case['geometry'] in ('layers','normal_fault','channel'):
@@ -65,6 +86,16 @@ def validate(data,report):
                     if key=='pgi':
                         np.testing.assert_allclose(np.sum(method['prior_membership'],axis=1),1.,atol=2e-6)
                         assert method['petrophysical_prior']['sample_sha256']
+                    if case['family']=='joint' and key in ('joint','pgi'):
+                        baseline=run['methods']['joint-uncoupled']['metrics']
+                        np.testing.assert_allclose(method['metrics']['independent_model_rmse'],baseline['model_rmse'],rtol=2e-5)
+                        np.testing.assert_allclose(method['metrics']['independent_magnetic_model_rmse'],baseline['magnetic_model_rmse'],rtol=2e-5)
+                        if case['geometry']=='conflict':
+                            assert verdict['status']=='negative-control'
+                        elif verdict['status']=='recovered':
+                            assert method['metrics']['independent_baseline_ratio']<1
+                            assert method['metrics']['independent_magnetic_baseline_ratio']<1
+                            assert method['metrics']['magnetic_wrms']<=2
                     if method.get('uncertainty'):
                         u=method['uncertainty'];assert u['members']>=16
                         assert np.asarray(u['lower']).shape==model.shape

@@ -1,1 +1,1 @@
-{"schema":"inverse-earth.release/v2","version":"0.04.000","complete":true,"cases":20,"runs":120,"methods":348,"synthetic":true,"engines":["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27","mt-metadata 1.0.10"]}
+{"schema":"inverse-earth.release/v2","version":"0.04.001","complete":true,"cases":20,"runs":120,"methods":348,"synthetic":true,"engines":["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27","mt-metadata 1.0.10"]}

@@ -833,8 +833,8 @@ export function Experiments() {
                 <MethodDiagram kind="protocol" />
                 <p>
                   {t(
-                    "Training, validation and test contain 800, 160 and 160 independent complete realizations. Input normalization is fitted only on training data. Validation selects checkpoints and sets the autoencoder threshold; the test set does neither. Oblique and ring geometries are withheld from the generator families. No field observations enter network training.",
-                    "Entrenamiento, validación y prueba contienen 800, 160 y 160 realizaciones completas independientes. Sólo entrenamiento fija la normalización. Validación selecciona checkpoints y umbral; prueba no hace ninguna de esas tareas. Geometrías oblicua y anular quedan excluidas del generador. No se entrena con observaciones de campo.",
+                    "Training, validation and test contain 800, 160 and 160 independent complete realizations. Input normalization is fitted only on training data. Validation selects checkpoints; a separate original-condition calibration fixes the autoencoder score threshold before aggregate test evaluation. Neither threshold crossing nor a single display-case score establishes geological detection. Oblique and ring geometries are withheld from the generator families. No field observations enter network training.",
+                    "Entrenamiento, validación y prueba contienen 800, 160 y 160 realizaciones completas independientes. Sólo entrenamiento fija la normalización. Validación selecciona checkpoints; una calibración separada con condiciones originales fija el umbral del puntaje del autoencoder antes de la prueba agregada. Ni cruzar el umbral ni el puntaje de un solo caso establecen detección geológica. Geometrías oblicua y anular quedan excluidas del generador. No se entrena con observaciones de campo.",
                   )}
                 </p>
                 <div className="table-scroll">
@@ -881,6 +881,11 @@ export function Experiments() {
                             "Enlace a fuente; archivos sin redistribuir",
                           )}
                         </td>
+                      </tr>
+                      <tr>
+                        <td>{t("USGS Clear Lake MT station cl061", "Estación MT USGS Clear Lake cl061")}</td>
+                        <td>{t("Measured tensor screen only; no 1D inversion or geological target", "Sólo control tensorial medido; sin inversión 1D ni objetivo geológico")}</td>
+                        <td><a href="https://doi.org/10.5066/P14KAQ3M" target="_blank" rel="noopener noreferrer">{t("USGS CC0 release; station EDI requests citation", "Publicación USGS CC0; el EDI solicita cita")}</a></td>
                       </tr>
                       <tr>
                         <td>
@@ -1083,7 +1088,7 @@ export function Benchmark() {
                           >
                             {metricValue(v.methods[selectedMethod]?.metrics[selectedMetric]) === undefined ? t("Unavailable", "No disponible") : format(metricValue(v.methods[selectedMethod]?.metrics[selectedMetric])!)}
                           </a>
-                          {v.methods[selectedMethod] && <><EvaluationStatus method={v.methods[selectedMethod]} /><ApplicabilityWarning method={v.methods[selectedMethod]} /></>}
+                          {v.methods[selectedMethod] && <><EvaluationStatus method={v.methods[selectedMethod]} methodId={selectedMethod} variant={v.id} /><ApplicabilityWarning method={v.methods[selectedMethod]} /></>}
                         </td>
                       ))}
                     </tr>
@@ -1147,7 +1152,7 @@ export function Benchmark() {
                                 ),
                               )
                             : "–"}
-                          {c.variants[0].methods[k] && <EvaluationStatus method={c.variants[0].methods[k]} />}
+                          {c.variants[0].methods[k] && <EvaluationStatus method={c.variants[0].methods[k]} methodId={k} variant={c.variants[0].id} />}
                         </td>
                       ))}
                     </tr>
@@ -1164,14 +1169,24 @@ export function Benchmark() {
             >
               {family === "learned"
                 ? t(
-                    "CNN column error is comparable only with the exported classical column projection on the same observations and target, not with 3D cell RMSE or autoencoder observation error. The comparison retains signs and physical units, and shows the CNN/classical ratio. Withheld-family misses remain visible in the detector confusion counts.",
-                    "El error de columna CNN sólo se compara con la proyección clásica exportada en las mismas observaciones y objetivo, no con RMSE 3D ni error de observaciones del autoencoder. Se conservan signos y unidades y se muestra razón CNN/clásico. Fallos de familias omitidas permanecen en la matriz del detector.",
+                    "CNN column error is comparable only with the exported classical column projection on the same observations and target, not with 3D cell RMSE or autoencoder observation error. The comparison retains signs and physical units, and shows the CNN/classical ratio. Autoencoder display-case threshold crossings are score comparisons, not calibrated geological detections. The separate 80-case aggregate detector test retains its misses in the confusion counts.",
+                    "El error de columna CNN sólo se compara con la proyección clásica exportada en las mismas observaciones y objetivo, no con RMSE 3D ni error de observaciones del autoencoder. Se conservan signos y unidades y se muestra razón CNN/clásico. Cruzar el umbral en un caso del autoencoder compara puntajes, no demuestra detección geológica calibrada. La prueba agregada independiente del detector en 80 casos conserva sus fallos en la matriz.",
                   )
                 : family === "mt"
                   ? t(
                       "The three MT solvers share resistivity bounds, starting profile and complete real-component objective normalization. Their parameterizations and optimizer budgets differ. Data agreement, local identifiability and known synthetic layer recovery are separate diagnostics; bootstrap spread is conditional, not posterior uncertainty.",
                       "Los tres métodos MT comparten cotas, perfil inicial y normalización completa por componente real. Difieren en parametrización y presupuesto. Ajuste, identificabilidad local y recuperación sintética son diagnósticos separados; dispersión bootstrap es condicional, no incertidumbre posterior.",
                     )
+                  : family === "joint"
+                    ? t(
+                        "Compare density and susceptibility RMSE separately with the matched optimized uncoupled baseline. Active and withheld gravity and magnetic noise-normalized data fits are additional gates; a lower cross-gradient or better density alone is insufficient. The conflicting-boundary case is a negative control, not verified recovery.",
+                        "Compare por separado RMSE de densidad y susceptibilidad con la referencia desacoplada optimizada y comparable. Los ajustes gravimétricos y magnéticos normalizados por ruido, activos y omitidos, son condiciones adicionales; reducir el gradiente cruzado o mejorar sólo densidad no basta. El caso de límites incompatibles es control negativo, no recuperación verificada.",
+                      )
+                  : family === "seismic"
+                    ? t(
+                        "Velocity and waveform improvement over initial baselines do not alone resolve FWI recovery. Inspect active and withheld noise-normalized waveform residuals against their declared fit threshold of 2; either may leave a case unresolved despite improvement. Limited illumination and cycle skipping remain separate limitations.",
+                        "Mejorar velocidad y onda respecto a referencias iniciales no resuelve por sí solo la recuperación FWI. Compare residuos de onda normalizados por ruido en receptores activos y omitidos con el umbral declarado de 2; cualquiera puede dejar un caso sin resolver pese a mejorar. Iluminación limitada y salto de ciclos son límites adicionales.",
+                      )
                   : t(
                       "The condition matrix consists of separate seeded experiments, not posterior samples. When an explicit noise ensemble is supplied, its conditioning and measured coverage are displayed separately. Use active and withheld residuals, baseline model error and the stated assumptions together; one synthetic geometry cannot establish field performance.",
                       "La matriz contiene experimentos con semillas separadas, no muestras posteriores. Cuando se aporta conjunto de ruido explícito se muestran aparte condicionamiento y cobertura medida. Considere residuos activos/omitidos, error respecto a referencia y supuestos; una geometría sintética no establece rendimiento de campo.",

@@ -2070,7 +2070,7 @@
     "source_bytes": 8935,
     "parser": "mt_metadata.transfer_functions.io.edi.EDI",
     "parser_version": "1.0.10",
-    "preflight": "strict impedance-only EDI v1",
+    "preflight": "strict full-impedance EDI with optional validated ancillary tipper v2",
     "original_units": "mt",
     "output_units": "ohm",
     "units_multiplier_to_ohm": 0.0012566370614359172,
@@ -2085,6 +2085,7 @@
       "variance_convention": null
     },
     "rotation_action": "none; tensor and marginal errors remain in supplied common frame",
+    "rotation_reference": null,
     "original_rotation_deg": [
       0.0,
       0.0,
@@ -2111,6 +2112,8 @@
       0.0,
       0.0
     ],
+    "tipper_present": false,
+    "tipper_used_in_1d_inversion": false,
     "frequency_permutation": [
       23,
       22,
