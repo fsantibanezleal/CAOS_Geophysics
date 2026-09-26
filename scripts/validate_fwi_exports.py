@@ -73,5 +73,5 @@ if __name__ == '__main__':
     result = validate(args.data, args.cases, args.variants)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
-        args.report.write_text(json.dumps(result, indent=2), encoding='utf-8')
+        args.report.write_text(json.dumps(result, indent=2), encoding='utf-8', newline='\n')
     print(f'PASS {result["conditions"]} FWI conditions / {result["method_results"]} CUDA model replays')

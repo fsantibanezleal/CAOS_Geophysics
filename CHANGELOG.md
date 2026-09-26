@@ -11,6 +11,7 @@ All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 - Enlarges the case instrument under the existing CAOS shell, adds measured EDI source/plots, bilingual evidence and verdicts, responsive legible scientific axes, and desktop/mobile interaction tests.
 - Fixes each potential-field case's property and survey colour ranges across all six conditions; the default inverse isosurface threshold derives from the recovered reference distribution instead of the truth maximum. Replaces the five architecture diagrams with method, execution-lane, and provenance contracts rendered in both languages and themes.
 - Adds an explicit 20-case/120-condition/348-result source-matched artifact contract, candidate-only release assembly, and a safer VPS release switch. Existing failed and unresolved scientific outcomes remain visible.
+- Emits recovery and FWI replay receipts with LF line endings on Windows as well as Linux; a regression gate prevents local/Pages-host byte divergence in release evidence.
 
 ## [0.04.000] - 2026-09-26
 
