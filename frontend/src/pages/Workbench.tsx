@@ -96,7 +96,7 @@ export default function Workbench() {
   const [representation, setRepresentation] = useState<"surface" | "cells">(
     "surface",
   );
-  const [threshold, setThreshold] = useState(0.35);
+  const [threshold, setThreshold] = useState<number | null>(null);
   const [opacity, setOpacity] = useState(1);
   const [survey, setSurvey] = useState(true);
   const [angle, setAngle] = useState(0);
@@ -200,6 +200,10 @@ export default function Workbench() {
     if (!run || !method) return sharedScale([]);
     return casePropertyScale(run, methodId, entry?.display_scales);
   }, [run, methodId, method, entry]);
+  const thresholdGroup = methodId === "vector" ? "vector-amplitude" : "volume";
+  const displayThreshold = threshold === null
+    ? entry?.default_thresholds?.[thresholdGroup] ?? absoluteThreshold(comparisonScale, 0.35)
+    : absoluteThreshold(comparisonScale, threshold);
   const displayedModel = useMemo(() => method ? selectedModel(method, modelState, frame) : [], [method, modelState, frame]);
   const values = useMemo(() => !run ? [] : flatten(mode === "truth" ? physicalTarget(run, methodId) : displayedModel), [run, displayedModel, mode, methodId]);
   const returnToFinal = () => {
@@ -226,6 +230,7 @@ export default function Workbench() {
     setFrame(0);
     setReset((n) => n + 1);
     setCut(960);
+    setThreshold(null);
     setPlaying(false);
   };
   const lesson = lessons[selected];
@@ -346,7 +351,7 @@ export default function Workbench() {
             }
             onCell={pickCell}
             representation={representation}
-            threshold={absoluteThreshold(comparisonScale, threshold)}
+            threshold={displayThreshold}
             range={comparisonScale.range}
           />
           <div className="scene-bottom">
@@ -358,8 +363,8 @@ export default function Workbench() {
             <span>
               {run.grid.shape.slice().reverse().join(" × ")} {t("computed cells", "celdas calculadas")}; Δx, Δy, Δz = {run.grid.spacing.join(", ")} m.{" "}
               {entry?.display_scales ? t(
-                "Model colour and threshold fixed across six conditions, methods and replay states; interpolated surfaces add no resolution.",
-                "Color y umbral del modelo fijos entre seis condiciones, métodos y estados; las superficies interpoladas no agregan resolución.",
+                "Model colours and the reference-inverse display threshold are fixed across six conditions for each property; the threshold is adjustable. Interpolated surfaces add no resolution.",
+                "El color y el umbral de visualización derivado de la inversión de referencia son fijos entre seis condiciones para cada propiedad; el umbral es ajustable. Las superficies interpoladas no agregan resolución.",
               ) : t(
                 "Fixed colour scale and absolute threshold across target, methods and saved states. A surface interpolates computed cells; it does not add resolution.",
                 "Escala y umbral absoluto fijos entre objetivo, métodos y estados. La superficie interpola celdas calculadas; no agrega resolución.",
@@ -395,7 +400,7 @@ export default function Workbench() {
               </label>
               <Range
                 label={t("Property threshold", "Umbral de propiedad")}
-                value={absoluteThreshold(comparisonScale, threshold)}
+                value={displayThreshold}
                 min={0}
                 max={comparisonScale.maximum || 1}
                 step={(comparisonScale.maximum || 1) / 100}

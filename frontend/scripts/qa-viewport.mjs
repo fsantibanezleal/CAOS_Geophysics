@@ -170,7 +170,10 @@ for (const id of families) {
     if (selected !== variant) failures.push(`${id}/${variant}: selected UI variant ${selected}`);
     const artifact = conditionResponses.get(`${id}/${variant}`);
     if (!artifact) failures.push(`${id}/${variant}: no matching artifact response`);
-    const run = artifact ? await artifact.json() : null;
+    // Chromium evicts large FWI response bodies from the inspector cache after
+    // navigation. The observed browser request proves hydration; independently
+    // fetch its URL for the identity/metric assertion without that cache limit.
+    const run = artifact ? await (await fetch(artifact.url())).json() : null;
     if (run && (run.id !== id || run.variant !== variant)) failures.push(`${id}/${variant}: artifact identity ${run.id}/${run.variant}`);
     const viz = page.locator(rendered[id.startsWith('GRAVITY') ? 'gravity' : id.startsWith('MAGNETIC') ? 'magnetics' : id.startsWith('MT_') ? 'mt' : id.startsWith('FWI') ? 'seismic' : id.startsWith('JOINT') ? 'joint' : 'learned']).first();
     await viz.waitFor({ state: 'visible' });

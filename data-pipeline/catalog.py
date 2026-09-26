@@ -26,6 +26,13 @@ def display_scale(extrema):
     return dict(range=[-maximum,maximum] if signed else [0,maximum],maximum=maximum,signed=signed)
 
 
+def absolute_percentile(values, fraction=0.9):
+    ordered=sorted(abs(float(value)) for value in values)
+    if not ordered or not all(math.isfinite(value) for value in ordered):
+        raise ValueError('Invalid inverse model for display threshold')
+    return ordered[int((len(ordered)-1)*fraction)]
+
+
 def assemble(root,allow_partial=False):
     cases=[];missing=[]
     for case in registry():
@@ -42,6 +49,12 @@ def assemble(root,allow_partial=False):
                 raise ValueError(f'Stale scientific source/settings: {path}')
             if (run['id'],run['variant'])!=(case['id'],vid):raise ValueError('Identity mismatch')
             if case['family'] in ('gravity','magnetics','joint'):
+                if vid=='reference':
+                    # Only the recovered reference models set the display
+                    # threshold; truth never enters this presentation choice.
+                    entry['default_thresholds']={'volume':absolute_percentile(run['methods']['irls']['model'])}
+                    if case['family']=='magnetics':
+                        entry['default_thresholds']['vector-amplitude']=absolute_percentile(run['methods']['vector']['model'])
                 update_extrema(volume_stats,run['truth'])
                 if case['family']=='joint':update_extrema(secondary_stats,run['secondary_truth'])
                 survey_max_abs=max(survey_max_abs,*(abs(v) for v in run['survey']['observed']))
@@ -67,7 +80,9 @@ def assemble(root,allow_partial=False):
             entry['survey_max_abs']=survey_max_abs*(1+1e-6)
         if entry['variants']:cases.append(entry)
     if missing and not allow_partial:raise ValueError('Incomplete matrix: '+', '.join(missing))
-    save(root/'catalog.json',dict(schema='inverse-earth.catalog/v2',version=RELEASE_VERSION,complete=not missing,cases=cases))
+    # FWI run metrics are exported at ten digits for float32 replay; the catalog
+    # must preserve those exact values for its run-to-summary identity contract.
+    save(root/'catalog.json',dict(schema='inverse-earth.catalog/v2',version=RELEASE_VERSION,complete=not missing,cases=cases),significant_digits=10)
     save(root/'release.json',dict(schema='inverse-earth.release/v2',version=RELEASE_VERSION,complete=not missing,cases=len(cases),
         runs=sum(len(c['variants']) for c in cases),methods=sum(len(v['methods']) for c in cases for v in c['variants']),synthetic=True,
         engines=['SimPEG 0.25.2','SciPy 1.15.2','PyTorch 2.14.0+cu126','Deepwave 0.0.27','mt-metadata 1.0.10']))

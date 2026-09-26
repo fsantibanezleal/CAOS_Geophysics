@@ -236,17 +236,27 @@ def test_reference_recovery_state_and_forward_replay(case_id):
         clean = seismic.simulate(torch.tensor(truth.T, device='cuda', dtype=torch.float32),
                                  run['frequency'], nt=run['parameters']['record_samples'])
         obs = clean+torch.randn_like(clean)*run['parameters']['noise_sigma']
-    for result in run['methods'].values():
+    expected_statuses = {
+        'FWI_LAYERED': {'fwi-l2': 'recovered', 'fwi-multiscale': 'recovered'},
+        'FWI_FAULT': {'fwi-l2': 'unresolved', 'fwi-multiscale': 'recovered'},
+        'FWI_NOISY': {'fwi-l2': 'unresolved', 'fwi-multiscale': 'unresolved'},
+        'FWI_CYCLE_SKIP': {'fwi-l2': 'negative-control', 'fwi-multiscale': 'negative-control'},
+    }
+    for method_id, result in run['methods'].items():
         model = np.asarray(result['model'])
         rmse = np.sqrt(np.mean((model-truth)**2))
         assert result['metrics']['velocity_rmse'] == pytest.approx(rmse, rel=1e-6)
         assert result['metrics']['initial_velocity_rmse'] == pytest.approx(initial_rmse, rel=1e-6)
         if case_id != 'FWI_CYCLE_SKIP':
             assert rmse < initial_rmse, 'Nominal whole-model recovery must improve the independent start'
-            expected_status = 'unresolved' if case_id == 'FWI_NOISY' else 'recovered'
-            assert result['evaluation']['status'] == expected_status
-        else:
-            assert result['evaluation']['status'] == 'negative-control'
+        assert result['evaluation'] == seismic.recovery_evaluation(
+            result['metrics'], challenge=case_id == 'FWI_CYCLE_SKIP')
+        assert result['evaluation']['status'] == expected_statuses[case_id][method_id]
+        if result['evaluation']['status'] == 'recovered':
+            assert result['metrics']['active_wrms'] <= 2
+            assert result['metrics']['withheld_wrms'] <= 2
+        if result['evaluation']['status'] == 'unresolved':
+            assert max(result['metrics']['active_wrms'], result['metrics']['withheld_wrms']) > 2
         identity = result['state_identity']
         np.testing.assert_array_equal(model, result['frames'][identity['final_frame_index']])
         assert identity['predictions'] == 'final-model'

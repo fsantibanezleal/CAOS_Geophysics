@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 from rebuild import jsonable
-from catalog import display_scale,update_extrema
+from catalog import absolute_percentile,display_scale,update_extrema
 
 
 SCRIPT=Path(__file__).resolve().parents[1]/'scripts/check_artifacts.py'
@@ -55,3 +55,9 @@ def test_case_display_scale_preserves_cross_condition_amplitude():
     assert scale['signed'] and scale['maximum']>1.3
     assert scale['range']==[-scale['maximum'],scale['maximum']]
     assert scale['maximum']==pytest.approx(1.3,rel=2e-6)
+
+
+def test_reference_inverse_percentile_is_absolute_and_not_truth_driven():
+    assert absolute_percentile([-4.,0.,1.,10.],0.9)==4.
+    with pytest.raises(ValueError,match='Invalid inverse model'):
+        absolute_percentile([float('nan')])

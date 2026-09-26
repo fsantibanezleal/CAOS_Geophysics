@@ -80,6 +80,11 @@ def validate():
                 assert 'volume' in case['display_scales']
                 lo,hi=case['display_scales']['volume']['range']
                 assert lo<=min(numbers(run['truth'])) and max(numbers(run['truth']))<=hi
+                assert 0<case['default_thresholds']['volume']<case['display_scales']['volume']['maximum']
+                if variant['id']=='reference':
+                    reference_values=sorted(abs(v) for v in numbers(run['methods']['irls']['model']))
+                    expected=reference_values[int((len(reference_values)-1)*0.9)]
+                    assert math.isclose(case['default_thresholds']['volume'],expected,rel_tol=1e-9)
                 if case['family']=='joint':
                     lo,hi=case['display_scales']['secondary']['range']
                     assert lo<=min(numbers(run['secondary_truth'])) and max(numbers(run['secondary_truth']))<=hi
@@ -110,6 +115,11 @@ def validate():
                     if case['family']=='joint' and method.get('magnetic_model'):
                         lo,hi=case['display_scales']['secondary']['range']
                         assert lo<=min(numbers(method['magnetic_model'])) and max(numbers(method['magnetic_model']))<=hi
+                    if key in ('irls','vector'):
+                        threshold_group='vector-amplitude' if key=='vector' else 'volume'
+                        default_threshold=case['default_thresholds'][threshold_group]
+                        assert 0<default_threshold<case['display_scales'][threshold_group]['maximum']
+                        assert max(abs(v) for v in numbers(method['model']))>default_threshold, f'{case["id"]}/{variant["id"]}/{key}: default scene would be empty'
                 assert method['target'] and method['state_identity']['predictions']=='final-model'
                 if method['frames']:assert method['frames'][-1]==method['model'],'Last replay state differs from final model'
                 if key=='autoencoder':
