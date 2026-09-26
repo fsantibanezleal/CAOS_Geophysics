@@ -118,8 +118,9 @@ def main():
                 methods={k:{"name":v["name"],"name_es":v["name_es"],"metrics":v["metrics"],"evaluation":v.get('evaluation'),"target":v.get('target'),"applicability":v.get('applicability')} for k,v in result["methods"].items()},runtime_seconds=result["runtime_seconds"]))
             print(f"OK {path.name} {path.stat().st_size//1024} KiB {time.perf_counter()-start:.1f}s",flush=True)
         catalog.append(entry)
-    save(out/"catalog.json",dict(schema="inverse-earth.catalog/v2",version=RELEASE_VERSION,cases=catalog))
-    save(out/"release.json",dict(schema="inverse-earth.release/v2",version=RELEASE_VERSION,cases=len(catalog),runs=sum(len(c["variants"]) for c in catalog),methods=sum(len(v["methods"]) for c in catalog for v in c["variants"]),synthetic=True,engines=["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27"]))
+    complete=len(catalog)==20 and all(len(c['variants'])==6 for c in catalog)
+    save(out/"catalog.json",dict(schema="inverse-earth.catalog/v2",version=RELEASE_VERSION,complete=complete,cases=catalog))
+    save(out/"release.json",dict(schema="inverse-earth.release/v2",version=RELEASE_VERSION,complete=complete,cases=len(catalog),runs=sum(len(c["variants"]) for c in catalog),methods=sum(len(v["methods"]) for c in catalog for v in c["variants"]),synthetic=True,engines=["SimPEG 0.25.2","SciPy 1.15.2","PyTorch 2.14.0+cu126","Deepwave 0.0.27","mt-metadata 1.0.10"]))
 
 
 if __name__=="__main__":

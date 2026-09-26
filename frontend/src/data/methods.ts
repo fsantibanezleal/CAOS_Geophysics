@@ -43,10 +43,7 @@ export const chapters: Chapter[] = [
         "The reference survey contains 256 stations. There are 10,752 scalar cell values, or 32,256 vector components, so data fit cannot identify a unique model. In matrix terms, directions in or near the null space change the earth model while changing the survey response little. Deep and small bodies are especially weakly constrained. The refined mesh reduces geometric stair-stepping; it does not increase the resolving power of the survey. No topography correction, regional-field estimation or geological boundary parameterization is fitted in these cases.",
         "El levantamiento de referencia contiene 256 estaciones frente a 10.752 valores escalares o 32.256 componentes vectoriales. Por tanto, el ajuste no identifica un modelo único. Las direcciones del espacio nulo o casi nulo modifican el subsuelo con poco cambio en los datos. Cuerpos profundos y pequeños quedan especialmente mal restringidos. Refinar la malla reduce escalones geométricos, pero no aumenta la resolución del levantamiento. Estos casos no ajustan topografía, campo regional ni superficies geológicas parametrizadas.",
       ),
-      T(
-        "Sensitivity scaling changes the model coordinates before inversion, reducing the strong preference for shallow cells. L2 then penalizes the size of those scaled coefficients. IRLS repeatedly changes the diagonal penalty so that small coefficients are penalized more strongly than large ones. Neither implementation contains a spatial-gradient smoothness term or positivity constraint. Their differences therefore reflect the chosen coefficient penalty, not a test of every smooth or sparse inversion method. Density errors use g/cm³; scalar magnetic errors use dimensionless SI susceptibility.",
-        "La escala por sensibilidad cambia las coordenadas del modelo antes de invertir y reduce la preferencia por celdas someras. L2 penaliza el tamaño de esos coeficientes escalados. IRLS modifica repetidamente la penalización diagonal para penalizar más los coeficientes pequeños. Ninguna implementación incluye suavidad por gradiente espacial ni positividad. Las diferencias reflejan esa penalización particular, no una comparación de todos los métodos suaves o dispersos. Los errores de densidad usan g/cm³; los magnéticos escalares, susceptibilidad SI adimensional.",
-      ),
+      ["The inverse now whitens observations by noise sigma and penalizes both depth-weighted cell size and derivatives in metres. Horizontal correlation lengths are 240 m; the vertical length is 140 m. An independent calibration fixed the weak depth exponent at 0.375. Discrepancy selects beta without access to display truth. IRLS reweights the smallness term four times while preserving spatial L2 derivatives. Neither method imposes positivity or known body masks, so negative or misplaced estimates remain visible and receive explicit recovery verdicts.","La inversión ahora blanquea observaciones por sigma y penaliza tamaño ponderado por profundidad y derivadas por metro. Las longitudes horizontales son 240 m y la vertical 140 m. Calibración independiente fijó exponente débil 0,375. La discrepancia elige beta sin verdad del caso. IRLS repesa tamaño cuatro veces conservando derivadas L2. No hay positividad ni máscaras de cuerpos conocidas; estimados negativos o desplazados permanecen visibles con veredictos explícitos."],
     ],
     equations: [
       E(
@@ -65,136 +62,151 @@ export const chapters: Chapter[] = [
       "Propiedades constantes en prismas rectangulares; superposición lineal; sin desmagnetización ni separación inducida–remanente. La susceptibilidad escalar puede ser negativa porque no hay restricciones. El error de modelo requiere la verdad sintética y no está disponible para un subsuelo de campo desconocido.",
     ),
     algorithms: [
-      {
-        id: "l2",
-        title: T("Sensitivity-scaled L2", "L2 escalada por sensibilidad"),
-        explanation: T(
-          "The inverse is solved in data space, where the matrix has one row per active receiver. This is an exact quadratic minimizer for the stated transformed objective, not a call to SimPEG’s inversion directives. Noise standard deviations normalize the reported WRMS but do not enter this linear solve.",
-          "La inversión se resuelve en el espacio de datos, con una fila por receptor activo. Es el minimizador cuadrático del objetivo transformado indicado, no una llamada a las directivas de inversión de SimPEG. La desviación de ruido normaliza WRMS, pero no entra en esta solución lineal.",
-        ),
-        equation: E(
-          String.raw`\begin{aligned}s_j&=\|G_{:j}\|_2,&W_{jj}&=\frac1{\max(s_j,0.06\max s)}\\a&=\|GW\|_F/\sqrt N,&A&=GW/a,\quad b=d/a\\q&=A^T(AA^T+\beta I)^{-1}b,&m&=Wq\end{aligned}`,
-          "N is the active station count; s is column sensitivity; W rescales model coefficients; a normalizes the operator; β is the coefficient penalty. This minimizes ‖Aq−b‖² + β‖q‖². The matrix inverse denotes a linear solve, not explicit inversion.",
-          "N es el número de estaciones activas; s es sensibilidad por columna; W escala coeficientes; a normaliza el operador; β penaliza su tamaño. Se minimiza ‖Aq−b‖² + β‖q‖². La inversa matricial representa una solución lineal, no inversión explícita.",
-        ),
-        steps: [
-          T(
-            "Select active rows of G and the observed vector; retain all rows for the final prediction map.",
-            "Seleccionar filas activas de G y observaciones; conservar todas las filas para el mapa de predicción.",
-          ),
-          T(
-            "Compute column norms, apply the 6% sensitivity floor and construct A and b.",
-            "Calcular normas de columna, aplicar el piso del 6% y construir A y b.",
-          ),
-          T(
-            "Solve the positive-definite data-space system with SciPy; recover m = Wq.",
-            "Resolver el sistema definido positivo con SciPy; recuperar m = Wq.",
-          ),
-          T(
-            "Predict Gm, export observed − predicted residuals and evaluate property error against the known model.",
-            "Predecir Gm, exportar observación − predicción y evaluar error de propiedad contra el modelo conocido.",
-          ),
-        ],
-        settings: T(
-          "One linear solve. β = 0.018, or 0.25 in the stronger-regularization condition. Receiver height 60 m, or 180 m in the acquisition condition. No discrepancy-principle stopping or β search is performed.",
-          "Una solución lineal. β = 0,018 o 0,25 con regularización mayor. Altura de receptores 60 m o 180 m en adquisición modificada. No hay parada por discrepancia ni búsqueda de β.",
-        ),
-        history: T(
-          "One value: mean squared noise-normalized residual over active receivers. It omits the model penalty and is not an optimization trajectory.",
-          "Un valor: media del residuo normalizado al cuadrado sobre receptores activos. Excluye la penalización del modelo y no es una trayectoria iterativa.",
-        ),
-        limitation: T(
-          "A low WRMS can accompany a large density error. Canonical cases do not whiten residuals by sigma; the separate CSV-ingestion path explicitly weights rows before calling this solver.",
-          "Un WRMS bajo puede acompañar un error de densidad alto. Los casos canónicos no blanquean residuos por sigma; la ruta separada de ingesta CSV pondera filas antes de llamar al solver.",
-        ),
-      },
-      {
-        id: "irls",
-        title: T("Sparse IRLS", "IRLS dispersa"),
-        explanation: T(
-          "IRLS replaces one nonlinear sparsity penalty by a sequence of diagonal quadratic penalties. The initial weights are one, so the first solution equals L2. Subsequent weights are functions of the previous scaled coefficients q, not physical density or its spatial gradient.",
-          "IRLS aproxima una penalización no lineal de dispersión mediante penalizaciones cuadráticas diagonales. Los pesos iniciales son uno, por lo que el primer resultado coincide con L2. Los siguientes pesos dependen de los coeficientes escalados q, no de la densidad física ni de su gradiente.",
-        ),
-        equation: E(
-          String.raw`\begin{aligned}C_k&=\operatorname{diag}(1/w^{(k)}),\quad q_k=C_kA^T(AC_kA^T+\beta I)^{-1}b\\\epsilon_k&=\max(0.12\|q_k\|_\infty,10^{-10})\\\widetilde w_j&=(q_{k,j}^2+\epsilon_k^2)^{-1/2},\quad w_j^{(k+1)}=\widetilde w_j/\operatorname{median}(\widetilde w)\end{aligned}`,
-          "A, b and β use the L2 scaling. C is inverse penalty weight; ε prevents singular weights near zero; k indexes the eight solves. The quadratic subproblem penalizes Σⱼwⱼqⱼ².",
-          "A, b y β usan la escala L2. C es peso inverso; ε evita pesos singulares cerca de cero; k recorre ocho soluciones. El subproblema penaliza Σⱼwⱼqⱼ².",
-        ),
-        steps: [
-          T(
-            "Initialize all diagonal weights to one.",
-            "Inicializar pesos diagonales en uno.",
-          ),
-          T(
-            "Solve the data-space quadratic system for the current inverse weights.",
-            "Resolver el sistema cuadrático con los pesos inversos actuales.",
-          ),
-          T(
-            "Save the model and normalized data error; recompute ε and median-normalized weights.",
-            "Guardar modelo y error de datos normalizado; recalcular ε y pesos normalizados por su mediana.",
-          ),
-          T(
-            "Repeat for eight solves and return the last model, without selecting by known-truth error.",
-            "Repetir ocho soluciones y devolver la última, sin seleccionar por error contra la verdad.",
-          ),
-        ],
-        settings: T(
-          "Eight solves, sensitivity floor 6%, ε factor 0.12, numerical floor 10⁻¹⁰. β stays fixed throughout. The changing ε and median normalization mean the trace is not monotone minimization of one fixed penalty.",
-          "Ocho soluciones, piso de sensibilidad 6%, factor de ε 0,12 y piso numérico 10⁻¹⁰. β permanece fijo. Cambiar ε y normalizar por mediana significa que la trayectoria no minimiza monótonamente una penalización fija.",
-        ),
-        history: T(
-          "Eight active-station mean squared normalized data residuals. These do not include the changing sparsity penalty.",
-          "Ocho medias de residuos de datos normalizados al cuadrado en estaciones activas. No incluyen la penalización de dispersión variable.",
-        ),
-        limitation: T(
-          "Compact support is a prior preference, not evidence that a recovered body has sharp geological boundaries. Eight updates are a fixed compute budget, not a convergence certificate.",
-          "El soporte compacto es una preferencia del prior, no evidencia de límites geológicos abruptos. Ocho actualizaciones son un presupuesto fijo, no un certificado de convergencia.",
-        ),
-      },
-      {
-        id: "vector",
-        title: T("Vector magnetization", "Magnetización vectorial"),
-        explanation: T(
-          "The vector solve replaces each scalar susceptibility with three effective susceptibility components. The same sensitivity-scaled L2 algebra is applied to the concatenated operator. The remanent case generates observations using a direction proportional to (0.80, −0.55, 0.23), rather than the inducing-field direction.",
-          "La solución vectorial sustituye cada susceptibilidad escalar por tres componentes efectivas. Se aplica la misma solución L2 escalada a un operador concatenado. El caso remanente genera observaciones con dirección proporcional a (0,80; −0,55; 0,23), no con la dirección inductora.",
-        ),
-        equation: E(
-          String.raw`d=\begin{bmatrix}G_x&G_y&G_z\end{bmatrix}\begin{bmatrix}m_x\\m_y\\m_z\end{bmatrix},\qquad m_{amp,j}=\sqrt{m_{x,j}^2+m_{y,j}^2+m_{z,j}^2}`,
-          "Gₓ, Gᵧ, G𝓏 map the effective susceptibility components to TMI (nT). The displayed amplitude is dimensionless effective susceptibility, not magnetization in A/m. Component blocks are concatenated before solving.",
-          "Gₓ, Gᵧ y G𝓏 transforman componentes de susceptibilidad efectiva a TMI (nT). La amplitud mostrada es susceptibilidad efectiva adimensional, no magnetización en A/m. Los bloques se concatenan antes de resolver.",
-        ),
-        steps: [
-          T(
-            "Build the three-component SimPEG prism operator at the same stations.",
-            "Construir el operador prismático vectorial de SimPEG en las mismas estaciones.",
-          ),
-          T(
-            "Apply the active-station mask and solve with the L2 sensitivity transformation.",
-            "Aplicar la máscara de estaciones y resolver con la transformación L2.",
-          ),
-          T(
-            "Separate component blocks and compute the magnitude per cell for display.",
-            "Separar componentes y calcular la magnitud por celda para visualizar.",
-          ),
-          T(
-            "Evaluate the full vector forward response; do not predict TMI from the magnitude alone.",
-            "Evaluar la respuesta vectorial completa; no predecir TMI usando sólo la magnitud.",
-          ),
-        ],
-        settings: T(
-          "32,256 components; 256 observations, or 128 with reduced coverage. Same β and inducing field as scalar inversion. No direction or positivity bounds.",
-          "32.256 componentes; 256 observaciones o 128 con cobertura reducida. Mismos β y campo inductor que la inversión escalar. Sin cotas de dirección ni positividad.",
-        ),
-        history: T(
-          "One data-error value. No vector-model iteration frames are exported.",
-          "Un valor de error de datos. No se exportan cuadros iterativos vectoriales.",
-        ),
-        limitation: T(
-          "The larger parameter space can reduce residuals without identifying the correct direction. The benchmark exports no directional accuracy metric; scalar and vector model errors must not be treated as equivalent.",
-          "El espacio de parámetros mayor puede reducir residuos sin identificar la dirección correcta. No se exporta una métrica de precisión direccional; los errores de modelo escalar y vectorial no son equivalentes.",
-        ),
-      },
+  {
+    "id": "l2",
+    "title": [
+      "Spatially regularized L2",
+      "L2 con regularización espacial"
     ],
+    "explanation": [
+      "The solve whitens each observation and operator row by its supplied standard deviation. A sparse positive spatial precision combines cell smallness and first derivatives in physical metres. SimPEG supplies the exact prism operator; the data-space quadratic optimizer and discrepancy selection are implemented locally, not by SimPEG inversion directives.",
+      "Se blanquean datos y filas del operador por su desviación estándar. Una precisión espacial dispersa positiva combina tamaño de celda y primeras derivadas en metros. SimPEG aporta el operador prismático; la optimización cuadrática y selección por discrepancia son locales, no directivas de inversión de SimPEG."
+    ],
+    "equation": {
+      "tex": "A=W_dG,\\ b=W_dd,\\quad \\widehat m=Q^{-1}A^T(AQ^{-1}A^T+\\beta I)^{-1}b,\\quad Q=\\mathrm{diag}(w^2)+\\sum_{\\alpha} \\ell_\\alpha^2D_\\alpha^T\\mathrm{diag}(w_{\\mathrm{face}}^2)D_\\alpha",
+      "caption": [
+        "Wd = diag(1/σ); Dα differentiates cell values per metre; ℓα is correlation length; w is the unit-RMS depth weight proportional to (depth+dz)^−0.375; face weights average adjacent squared weights. Beta balances whitened data and spatial precision.",
+        "Wd = diag(1/σ); Dα deriva valores por metro; ℓα es longitud de correlación; w es peso de profundidad de RMS unitario proporcional a (profundidad+dz)^−0,375; se promedian pesos cuadrados en caras. Beta equilibra datos blanqueados y precisión espacial."
+      ]
+    },
+    "steps": [
+      [
+        "Whiten active survey rows with the recorded noise standard deviations; reserve omitted rows for evaluation.",
+        "Blanquear filas activas con desviaciones registradas; reservar filas omitidas para evaluación."
+      ],
+      [
+        "Factor the sparse physical precision and form the symmetric data-space eigensystem.",
+        "Factorizar la precisión física dispersa y formar el sistema propio simétrico de datos."
+      ],
+      [
+        "Search beta by discrepancy, multiply by the declared experimental strength, and solve the quadratic inverse.",
+        "Buscar beta por discrepancia, multiplicar por fuerza experimental declarada y resolver la inversión cuadrática."
+      ],
+      [
+        "Predict all stations and separately evaluate active, held-out, model-support, background and baseline errors.",
+        "Predecir todas las estaciones y evaluar por separado errores activos, omitidos, soporte, fondo y referencia."
+      ]
+    ],
+    "settings": [
+      "Physical correlation lengths: 240 m east, 240 m north, 140 m vertical. Depth exponent 0.375 was frozen using independent calibration seeds 67081/67082. Beta is selected from mean squared whitened residual = 1; the regularization variant multiplies it by 0.25/0.018.",
+      "Longitudes físicas: 240 m este, 240 m norte y 140 m vertical. Exponente de profundidad 0,375 fijado con semillas independientes 67081/67082. Beta se elige por residuo blanqueado cuadrático medio = 1; la variante lo multiplica por 0,25/0,018."
+    ],
+    "history": [
+      "The trace is mean squared whitened residual on active stations; model penalties are excluded. Saved states and final predictions share explicit state identities.",
+      "La trayectoria es residuo blanqueado cuadrático medio en estaciones activas; excluye penalizaciones. Estados guardados y predicciones finales tienen identidad explícita."
+    ],
+    "limitation": [
+      "This is an unconstrained spatial L2 prior, not a uniqueness proof. No positivity, depth-boundary fit or true-mask constraint is imposed. Conditional noise ensembles keep beta and prior fixed and exclude geological ambiguity and bias.",
+      "Es un prior L2 espacial sin restricciones, no prueba de unicidad. No se impone positividad, ajuste de interfaces ni máscara verdadera. Los conjuntos de ruido fijan beta y prior y excluyen ambigüedad geológica y sesgo."
+    ]
+  },
+  {
+    "id": "irls",
+    "title": [
+      "Spatial L1/L2 IRLS",
+      "IRLS espacial L1/L2"
+    ],
+    "explanation": [
+      "IRLS adds a smoothed L1 smallness preference while retaining the same physical L2 derivative penalty. The first solve uses unit smallness weights. Later solves derive weights from the preceding estimate only; synthetic truth is never used by the inverse. This is not a total-variation method.",
+      "IRLS añade preferencia L1 suavizada en tamaño conservando la misma penalización L2 de derivadas físicas. La primera solución usa pesos unitarios; después se calculan sólo del estimado anterior. La verdad sintética nunca entra en la inversión. No es variación total."
+    ],
+    "equation": {
+      "tex": "\\epsilon_k=\\max(0.15\\,P_{95}(|m_k|),10^{-12}),\\quad c_j=(m_{k,j}^2+\\epsilon_k^2)^{-1/2}/\\operatorname{median}(c),\\quad Q_k=\\mathrm{diag}(w^2c)+Q_{\\mathrm{spatial}}",
+      "caption": [
+        "P95 is the 95th percentile of estimated absolute property; epsilon stabilizes weights. Median normalization applies to unnormalized c. Only the smallness block is reweighted; Qspatial contains fixed physical derivatives.",
+        "P95 es percentil 95 de propiedad absoluta estimada; epsilon estabiliza pesos. La normalización por mediana se aplica a c sin normalizar. Sólo cambia el bloque de tamaño; Qespacial conserva derivadas físicas."
+      ]
+    },
+    "steps": [
+      [
+        "Start with the same uncertainty-weighted spatial L2 system.",
+        "Comenzar con el mismo sistema L2 espacial ponderado por incertidumbre."
+      ],
+      [
+        "Derive stabilized smallness weights from the current estimate; keep spatial derivative weights fixed.",
+        "Derivar pesos estabilizados de tamaño del estimado; mantener pesos de derivadas espaciales."
+      ],
+      [
+        "Reselect discrepancy beta for each quadratic subproblem and record its objective and residual.",
+        "Reelegir beta por discrepancia en cada subproblema y registrar objetivo y residuo."
+      ],
+      [
+        "After four solves, export the last evaluated model and its complete station predictions.",
+        "Tras cuatro soluciones, exportar el último modelo evaluado y predicciones completas."
+      ]
+    ],
+    "settings": [
+      "Four solves. Epsilon = max(0.15 × estimate absolute-property percentile 95, 10⁻¹²); inverse-root weights divided by their median. Physical lengths and frozen depth prior match L2; beta is recalibrated in each subproblem.",
+      "Cuatro soluciones. Epsilon = max(0,15 × percentil 95 de propiedad absoluta estimada, 10⁻¹²); pesos inversos normalizados por mediana. Longitudes y prior de profundidad coinciden con L2; beta se recalibra por subproblema."
+    ],
+    "history": [
+      "The trace is mean squared whitened residual on active stations; model penalties are excluded. Saved states and final predictions share explicit state identities.",
+      "La trayectoria es residuo blanqueado cuadrático medio en estaciones activas; excluye penalizaciones. Estados guardados y predicciones finales tienen identidad explícita."
+    ],
+    "limitation": [
+      "Changing weights, epsilon and discrepancy beta means the trace is not convergence of one fixed objective. Sparse-looking support does not establish correct depth or interfaces; evaluate the held-out and support errors.",
+      "Al cambiar pesos, epsilon y beta, la trayectoria no demuestra convergencia de un objetivo fijo. El soporte compacto no establece profundidad ni interfaces correctas; evalúe datos omitidos y error del soporte."
+    ]
+  },
+  {
+    "id": "vector",
+    "title": [
+      "Vector magnetization",
+      "Magnetización vectorial"
+    ],
+    "explanation": [
+      "Three effective magnetization components replace scalar susceptibility. The operator concatenates component sensitivities and the prior repeats the physical precision for each block. The displayed volume is vector amplitude, not induced scalar susceptibility; direction errors require all three exported components.",
+      "Tres componentes efectivas sustituyen la susceptibilidad escalar. El operador concatena sensibilidades y el prior repite la precisión física por bloque. El volumen muestra amplitud vectorial, no susceptibilidad inducida; los errores de dirección requieren las tres componentes."
+    ],
+    "equation": {
+      "tex": "G_v=[G_x\\ G_y\\ G_z],\\quad Q_v=\\mathrm{blockdiag}(Q,Q,Q),\\quad |m_j|=\\sqrt{m_{x,j}^2+m_{y,j}^2+m_{z,j}^2}",
+      "caption": [
+        "Gv maps three component blocks to TMI; Qv uses the same physical prior per component. The scene displays amplitude in effective SI units, while mean direction error is evaluated on known target support.",
+        "Gv transforma tres bloques en TMI; Qv aplica el mismo prior físico por componente. La escena muestra amplitud efectiva SI; el error angular medio se evalúa en el soporte del objetivo conocido."
+      ]
+    },
+    "steps": [
+      [
+        "Build the three-component magnetic operator for the same station geometry and inducing field.",
+        "Construir operador magnético de tres componentes con las mismas estaciones y campo inductor."
+      ],
+      [
+        "Whiten active survey rows with the recorded noise standard deviations; reserve omitted rows for evaluation.",
+        "Blanquear filas activas con desviaciones registradas; reservar filas omitidas para evaluación."
+      ],
+      [
+        "Factor the sparse physical precision and form the symmetric data-space eigensystem.",
+        "Factorizar la precisión física dispersa y formar el sistema propio simétrico de datos."
+      ],
+      [
+        "Export the final vector field, scalar amplitudes and target-support angular error; no scalar replay is substituted for vector states.",
+        "Exportar vectores finales, amplitudes y error angular en soporte; no sustituir estados vectoriales por reproducción escalar."
+      ]
+    ],
+    "settings": [
+      "Physical correlation lengths: 240 m east, 240 m north, 140 m vertical. Depth exponent 0.375 was frozen using independent calibration seeds 67081/67082. Beta is selected from mean squared whitened residual = 1; the regularization variant multiplies it by 0.25/0.018.",
+      "Longitudes físicas: 240 m este, 240 m norte y 140 m vertical. Exponente de profundidad 0,375 fijado con semillas independientes 67081/67082. Beta se elige por residuo blanqueado cuadrático medio = 1; la variante lo multiplica por 0,25/0,018."
+    ],
+    "history": [
+      "The trace is mean squared whitened residual on active stations; model penalties are excluded. Saved states and final predictions share explicit state identities.",
+      "La trayectoria es residuo blanqueado cuadrático medio en estaciones activas; excluye penalizaciones. Estados guardados y predicciones finales tienen identidad explícita."
+    ],
+    "limitation": [
+      "32,256 vector unknowns remain constrained by at most 256 observations. Scalar amplitudes do not show direction. Remanence recovery must be assessed using component and angular errors, not data fit alone.",
+      "32.256 incógnitas vectoriales quedan restringidas por hasta 256 observaciones. Amplitudes escalares no muestran dirección. La remanencia debe evaluarse con errores de componentes y ángulo, no sólo ajuste."
+    ]
+  }
+],
   },
   {
     id: "mt",
@@ -214,8 +226,8 @@ export const chapters: Chapter[] = [
         "La frecuencia controla una distribución amplia de sensibilidad. En un conductor homogéneo, la penetración crece con la raíz de resistividad dividida por frecuencia; las capas no mantienen una correspondencia única frecuencia–profundidad. Un conductor delgado puede quedar restringido principalmente por su conductancia, espesor dividido por resistividad. Como el espesor es fijo aquí, no se explora toda esa compensación. Reducir frecuencias o extender la banda baja cambia la información disponible, no sólo la curva.",
       ),
       T(
-        "All three inversions fit real and imaginary impedance, not apparent resistivity and phase independently. They differ in parameterization, optimization and relative regularization scaling. Bounded least squares uses sums of real residual components; the differentiable solvers use means of complex squared residuals and means of layer differences. The same numeric β therefore does not impose the same relative smoothing. The neural method optimizes a small network separately for each sounding; it is neither a pretrained inverse nor an independent PDE-residual PINN.",
-        "Las tres inversiones ajustan partes real e imaginaria de impedancia, no resistividad aparente y fase independientemente. Difieren en parametrización, optimización y escala relativa de regularización. Mínimos cuadrados acotados usa sumas de componentes reales; los diferenciables usan medias del residuo complejo cuadrado y diferencias entre capas. Un mismo β numérico no impone igual suavizado relativo. La red pequeña se optimiza por sondeo: no es un inversor preentrenado ni una PINN con residuo diferencial independiente.",
+        "All three inversions fit real and imaginary impedance with the same mean-of-real-components objective, bounds 1–6000 Ω m, initial 100 Ω m and beta. Data and regularization scaling are now matched. TRF, projected Adam and the per-sounding neural parameterization differ in optimizer and feasible parameterization, not loss normalization. Every saved model is independently evaluated after its update; the final selected model is appended and generates all final curves.",
+        "Las tres inversiones ajustan partes real e imaginaria con el mismo objetivo medio por componentes reales, cotas 1–6000 Ω m, inicio 100 Ω m y beta. Se igualan escalas de datos y regularización. TRF, Adam proyectado y red por sondeo difieren en optimizador y parametrización, no normalización. Cada modelo guardado se evalúa después de actualizar; el final se añade y genera todas las curvas.",
       ),
     ],
     equations: [
@@ -235,139 +247,151 @@ export const chapters: Chapter[] = [
       "Fuente de onda plana, capas isotrópicas no magnéticas, espesores conocidos, sin estructura lateral, desplazamiento estático ni distorsión galvánica. Se agrega ruido gaussiano independiente a cada componente de impedancia. Con esta convención, el WRMS complejo esperado en la respuesta verdadera es cercano a √2, no a 1.",
     ),
     algorithms: [
-      {
-        id: "mt-lm",
-        title: T("Bounded TRF least squares", "Mínimos cuadrados TRF acotados"),
-        explanation: T(
-          "The optimization variable is x = ln ρ. A real residual vector concatenates real impedance error, imaginary impedance error and first differences of x. SciPy uses its trust-region reflective algorithm with a finite-difference Jacobian. The legacy data identifier contains “lm”, but the implemented optimizer is TRF, not Levenberg–Marquardt.",
-          "La variable es x = ln ρ. Un vector real concatena errores real e imaginario de impedancia y primeras diferencias de x. SciPy usa región de confianza reflectiva con jacobiano por diferencias finitas. El identificador histórico contiene «lm», pero el optimizador es TRF, no Levenberg–Marquardt.",
-        ),
-        equation: E(
-          String.raw`r(x)=\begin{bmatrix}\Re((Z(e^x)-Z_{obs})/\sigma)\\\Im((Z(e^x)-Z_{obs})/\sigma)\\\sqrt\beta Dx\end{bmatrix},\quad \min_{0\leq x\leq\ln6000}\tfrac12\|r(x)\|^2`,
-          "Z uses active frequencies; σ is the component noise standard deviation; D takes adjacent layer differences. Resistivity is bounded to 1–6,000 Ω m. The regularizer acts on natural log resistivity.",
-          "Z usa frecuencias activas; σ es desviación de ruido por componente; D diferencia capas adyacentes. Resistividad acotada a 1–6.000 Ω m. El regularizador actúa sobre logaritmo natural de resistividad.",
-        ),
-        steps: [
-          T(
-            "Initialize every layer at 100 Ω m and evaluate the upward impedance recursion.",
-            "Inicializar cada capa en 100 Ω m y evaluar la recursión ascendente.",
-          ),
-          T(
-            "Construct the real residual and estimate its Jacobian using two-point finite differences.",
-            "Construir el residuo real y estimar su jacobiano por diferencias de dos puntos.",
-          ),
-          T(
-            "Solve a bounded trust-region subproblem; accept or reject the candidate according to actual reduction.",
-            "Resolver un subproblema acotado de región de confianza; aceptar o rechazar según reducción real.",
-          ),
-          T(
-            "Return SciPy’s final parameter vector; predict all frequencies, including omitted ones.",
-            "Devolver el vector final de SciPy; predecir todas las frecuencias, incluidas las omitidas.",
-          ),
-        ],
-        settings: T(
-          "max_nfev = 160; SciPy 1.15.2 defaults ftol = xtol = gtol = 10⁻⁸. β = 0.001 or 0.3. There are 36 log-spaced frequencies from 0.01 to 100 Hz; reduced coverage retains 18.",
-          "max_nfev = 160; tolerancias predeterminadas de SciPy 1.15.2: ftol = xtol = gtol = 10⁻⁸. β = 0,001 o 0,3. Hay 36 frecuencias logarítmicas de 0,01 a 100 Hz; cobertura reducida retiene 18.",
-        ),
-        history: T(
-          "Mean squared concatenated residual at saved function evaluations, including finite-difference probes. The index is not a count of accepted optimizer iterations.",
-          "Media cuadrática del residuo concatenado en evaluaciones guardadas, incluidas perturbaciones del jacobiano. El índice no cuenta iteraciones aceptadas.",
-        ),
-        limitation: T(
-          "Stopping at a tolerance or evaluation limit establishes neither a global minimum nor unique layer resistivities. Thickness uncertainty is excluded.",
-          "Parar por tolerancia o límite de evaluaciones no establece mínimo global ni resistividades únicas. Se excluye incertidumbre de espesores.",
-        ),
-      },
-      {
-        id: "mt-adam",
-        title: T("Differentiable impedance", "Impedancia diferenciable"),
-        explanation: T(
-          "Complex PyTorch operations differentiate the same recursion with respect to log resistivity. Adam updates the layer parameters directly. This avoids a finite-difference Jacobian but does not alter the electromagnetic assumptions or remove non-uniqueness.",
-          "Las operaciones complejas de PyTorch diferencian la misma recursión respecto a log resistividad. Adam actualiza directamente los parámetros por capa. Esto evita el jacobiano por diferencias finitas, pero no cambia los supuestos electromagnéticos ni elimina la no unicidad.",
-        ),
-        equation: E(
-          String.raw`J(x)=\frac1{N_f}\sum_{i\in\mathcal A}\left|\frac{Z_i(e^x)-Z_i^{obs}}{\sigma_i}\right|^2+\frac\beta{n-1}\sum_{j=1}^{n-1}(x_{j+1}-x_j)^2`,
-          "𝒜 is the active frequency set with Nf entries; n is layer count; x is ln ρ. Means, rather than sums, define this objective. The gradient is taken through complex arithmetic to real x.",
-          "𝒜 es el conjunto activo con Nf frecuencias; n es el número de capas; x es ln ρ. Este objetivo usa medias, no sumas. El gradiente atraviesa aritmética compleja hasta x real.",
-        ),
-        steps: [
-          T(
-            "Initialize x = ln 100 in float64 on the available compute device.",
-            "Inicializar x = ln 100 en float64 sobre el dispositivo disponible.",
-          ),
-          T(
-            "Evaluate complex impedance and the mean-normalized objective.",
-            "Evaluar impedancia compleja y objetivo normalizado por medias.",
-          ),
-          T(
-            "Backpropagate the objective and apply an Adam update to x.",
-            "Retropropagar el objetivo y aplicar una actualización Adam a x.",
-          ),
-          T(
-            "Run 250 updates; retain the model associated with the smallest recorded loss.",
-            "Ejecutar 250 actualizaciones; conservar el modelo asociado a la menor pérdida registrada.",
-          ),
-        ],
-        settings: T(
-          "Adam learning rate 0.06; 250 updates; β = 0.001 or 0.3; initial 100 Ω m. Exponentiation enforces positivity but no upper resistivity bound is applied.",
-          "Tasa Adam 0,06; 250 actualizaciones; β = 0,001 o 0,3; inicio 100 Ω m. Exponenciar asegura positividad, pero no impone cota superior.",
-        ),
-        history: T(
-          "Objective sampled every 10 updates. In this direct-parameter implementation saved parameter snapshots are copied after the update; recorded loss was evaluated before it.",
-          "Objetivo muestreado cada 10 actualizaciones. En esta parametrización directa, los parámetros se copian después de actualizar; la pérdida se evaluó antes.",
-        ),
-        limitation: T(
-          "This comparison also changes constraints and relative penalty scaling versus TRF. It cannot isolate optimizer performance alone.",
-          "La comparación cambia también restricciones y escala relativa de penalización respecto a TRF. No aísla únicamente el rendimiento del optimizador.",
-        ),
-      },
-      {
-        id: "mt-neural",
-        title: T(
-          "Per-sounding neural inversion",
-          "Inversión neuronal por sondeo",
-        ),
-        explanation: T(
-          "A small network maps normalized layer index to log resistivity. Its weights, rather than independent layer values, are optimized through the impedance recursion. This is a low-dimensional coupling of the layer values: the network is fitted anew for every sounding and never sees a target resistivity profile.",
-          "Una red pequeña transforma el índice normalizado de capa en log resistividad. Sus pesos, no valores independientes por capa, se optimizan a través de la recursión. La red acopla las resistividades y se ajusta nuevamente para cada sondeo, sin usar un perfil objetivo de resistividad.",
-        ),
-        equation: E(
-          String.raw`u_j=\frac{j-1}{n-1},\quad x_j=1+7\,\operatorname{sigmoid}(f_\theta(u_j)),\quad \min_\theta J(x(\theta))`,
-          "uⱼ is normalized layer index, not physical depth; fθ is a 1→24→24→1 tanh network. xⱼ = ln ρⱼ is bounded between 1 and 8, so resistivity lies between e and e⁸ Ω m. J is the differentiable-impedance objective.",
-          "uⱼ es índice normalizado, no profundidad física; fθ es una red tanh 1→24→24→1. xⱼ = ln ρⱼ queda entre 1 y 8, por lo que ρ queda entre e y e⁸ Ω m. J es el objetivo de impedancia diferenciable.",
-        ),
-        steps: [
-          T(
-            "Initialize network weights with the case seed and create normalized layer-index inputs.",
-            "Inicializar pesos con la semilla del caso y entradas de índice normalizado.",
-          ),
-          T(
-            "Map outputs through the bounded log-resistivity transform.",
-            "Transformar salidas a log resistividad acotada.",
-          ),
-          T(
-            "Evaluate impedance and differentiate the loss through both recursion and network.",
-            "Evaluar impedancia y diferenciar la pérdida a través de recursión y red.",
-          ),
-          T(
-            "Apply 420 Adam updates and select the lowest evaluated-loss resistivity profile.",
-            "Aplicar 420 actualizaciones Adam y seleccionar el perfil con menor pérdida evaluada.",
-          ),
-        ],
-        settings: T(
-          "Float64; tanh hidden activations; Adam learning rate 0.025; 420 updates. β = 0.001 or 0.3. The forward operator is analytical layered impedance, not a learned emulator.",
-          "Float64; activaciones ocultas tanh; tasa Adam 0,025; 420 actualizaciones. β = 0,001 o 0,3. El operador directo es impedancia estratificada analítica, no un emulador aprendido.",
-        ),
-        history: T(
-          "Pre-update objective and network-produced resistivities sampled every 10 steps. The stored final profile is the best evaluated profile, not necessarily the last saved frame.",
-          "Objetivo y resistividades producidas por la red antes de actualizar, cada 10 pasos. El perfil final es el mejor evaluado, no necesariamente el último cuadro.",
-        ),
-        limitation: T(
-          "No pretrained transfer, learned uncertainty or layer-thickness estimation is provided. Index-based coupling is a parameterization choice, not a geological law.",
-          "No hay transferencia preentrenada, incertidumbre aprendida ni estimación de espesores. Acoplar por índice es una elección de parametrización, no una ley geológica.",
-        ),
-      },
+  {
+    "id": "mt-lm",
+    "title": [
+      "Bounded trust-region least squares (TRF)",
+      "Mínimos cuadrados acotados (TRF)"
     ],
+    "explanation": [
+      "SciPy’s trust-region reflective algorithm fits the complex layered impedance via stacked real residuals. Data residuals are divided by √(2NA), and adjacent log-layer differences by √(L−1). Thus twice SciPy’s reported cost is the common complete objective J. This is TRF, not Levenberg–Marquardt.",
+      "TRF de SciPy ajusta impedancia estratificada con residuos reales apilados. Los residuos se dividen por √(2NA) y las diferencias logarítmicas por √(L−1). Dos veces el costo de SciPy equivale al objetivo completo J. Es TRF, no Levenberg–Marquardt."
+    ],
+    "equation": {
+      "tex": "J(x)=\\frac1{2N_A}\\sum_{i\\in A}\\left[\\left(\\frac{\\Re\\Delta Z_i}{\\sigma_i}\\right)^2+\\left(\\frac{\\Im\\Delta Z_i}{\\sigma_i}\\right)^2\\right]+\\frac{\\beta}{L-1}\\sum_{j=1}^{L-1}(x_{j+1}-x_j)^2,\\quad 0\\le x_j\\le\\ln6000",
+      "caption": [
+        "x = ln resistivity; ΔZi is predicted minus observed impedance; sigma is uncertainty of each independent real component; NA is active-frequency count; L is layer count. The spatial term is zero for one layer. All three solvers minimize this same J.",
+        "x = ln resistividad; ΔZi es impedancia predicha menos observada; sigma es incertidumbre por componente real; NA es cantidad de frecuencias activas; L cuenta capas. El prior es cero para una capa. Los tres métodos minimizan el mismo J."
+      ]
+    },
+    "steps": [
+      [
+        "Validate positive frequencies, thicknesses, uncertainties and common resistivity bounds; initialize every layer at 100 Ω m.",
+        "Validar frecuencias, espesores, incertidumbres y cotas positivas; iniciar cada capa en 100 Ω m."
+      ],
+      [
+        "Apply exactly the same active-frequency real-component normalization and mean adjacent-log-layer penalty.",
+        "Aplicar idéntica normalización real en frecuencias activas y penalización media de diferencias logarítmicas."
+      ],
+      [
+        "Evaluate every saved physical model independently with its own complete objective, avoiding mutable parameter aliases.",
+        "Evaluar cada modelo físico guardado con su propio objetivo completo, evitando alias de parámetros mutables."
+      ],
+      [
+        "Append the selected final model and freshly computed objective; calculate final curves from that identical state.",
+        "Añadir modelo final seleccionado y objetivo recalculado; obtener curvas finales del mismo estado."
+      ]
+    ],
+    "settings": [
+      "CPU float64; bounds 1–6000 Ω m; common initial 100 Ω m; max_nfev 400; ftol = xtol = gtol = 10⁻¹⁰; β = 0.001, or 0.3 for stronger regularization. Canonical soundings use 36 frequencies, or 18 active in coverage tests.",
+      "CPU float64; cotas 1–6000 Ω m; inicio común 100 Ω m; max_nfev 400; ftol = xtol = gtol = 10⁻¹⁰; β = 0,001 o 0,3 con regularización mayor. Sondeos canónicos de 36 frecuencias, 18 activas en cobertura."
+    ],
+    "history": [
+      "Recorded complete J includes residual evaluations that may be rejected optimizer trials, not just accepted iterations. The final entry is the selected returned model evaluated again; it matches the final curves.",
+      "J completo registrado incluye evaluaciones residuales que pueden ser ensayos rechazados, no sólo iteraciones aceptadas. La última entrada reevalúa el modelo devuelto y coincide con las curvas finales."
+    ],
+    "limitation": [
+      "Layer thicknesses remain prescribed, and low impedance residual does not establish unique resistivities. Local identifiability and bounds are evaluated separately. Conditional bootstrap intervals exclude thickness, dimensionality and correlated-noise uncertainty.",
+      "Los espesores son prescritos y un residuo bajo no establece resistividades únicas. Se evalúan identificabilidad local y cotas por separado. Intervalos bootstrap excluyen incertidumbre de espesores, dimensionalidad y ruido correlacionado."
+    ]
+  },
+  {
+    "id": "mt-adam",
+    "title": [
+      "Projected Adam impedance inversion",
+      "Inversión de impedancia por Adam proyectado"
+    ],
+    "explanation": [
+      "CPU PyTorch differentiates the same complex recursion and objective. Adam updates log resistivities, then projects them onto the same log bounds as TRF. Every candidate is copied after the update and evaluated afresh; minimum complete objective selects the returned model without reading geological truth.",
+      "PyTorch CPU diferencia la misma recursión y objetivo. Adam actualiza log resistividades y las proyecta a las mismas cotas que TRF. Cada candidato se copia después de actualizar y se reevalúa; el mínimo objetivo completo selecciona el retorno sin leer verdad geológica."
+    ],
+    "equation": {
+      "tex": "J(x)=\\frac1{2N_A}\\sum_{i\\in A}\\left[\\left(\\frac{\\Re\\Delta Z_i}{\\sigma_i}\\right)^2+\\left(\\frac{\\Im\\Delta Z_i}{\\sigma_i}\\right)^2\\right]+\\frac{\\beta}{L-1}\\sum_{j=1}^{L-1}(x_{j+1}-x_j)^2,\\quad 0\\le x_j\\le\\ln6000",
+      "caption": [
+        "x = ln resistivity; ΔZi is predicted minus observed impedance; sigma is uncertainty of each independent real component; NA is active-frequency count; L is layer count. The spatial term is zero for one layer. All three solvers minimize this same J.",
+        "x = ln resistividad; ΔZi es impedancia predicha menos observada; sigma es incertidumbre por componente real; NA es cantidad de frecuencias activas; L cuenta capas. El prior es cero para una capa. Los tres métodos minimizan el mismo J."
+      ]
+    },
+    "steps": [
+      [
+        "Validate positive frequencies, thicknesses, uncertainties and common resistivity bounds; initialize every layer at 100 Ω m.",
+        "Validar frecuencias, espesores, incertidumbres y cotas positivas; iniciar cada capa en 100 Ω m."
+      ],
+      [
+        "Apply exactly the same active-frequency real-component normalization and mean adjacent-log-layer penalty.",
+        "Aplicar idéntica normalización real en frecuencias activas y penalización media de diferencias logarítmicas."
+      ],
+      [
+        "Evaluate every saved physical model independently with its own complete objective, avoiding mutable parameter aliases.",
+        "Evaluar cada modelo físico guardado con su propio objetivo completo, evitando alias de parámetros mutables."
+      ],
+      [
+        "Append the selected final model and freshly computed objective; calculate final curves from that identical state.",
+        "Añadir modelo final seleccionado y objetivo recalculado; obtener curvas finales del mismo estado."
+      ]
+    ],
+    "settings": [
+      "1,200 updates; initial learning rate 0.06, multiplied by 1/2 after half the fixed budget and 1/4 after three quarters. Common 1–6000 Ω m bounds and β. Save every 20 updates and append the selected final state.",
+      "1.200 actualizaciones; tasa inicial 0,06, multiplicada por 1/2 tras mitad de presupuesto y 1/4 tras tres cuartos. Cotas comunes 1–6000 Ω m y β. Guardar cada 20 pasos y añadir estado final seleccionado."
+    ],
+    "history": [
+      "Complete matched J at the initial model and recorded post-update states, then at the minimum-objective selected model. A finite budget is not a convergence certificate; model and loss always refer to the same copied array.",
+      "J completo equivalente en modelo inicial y estados posteriores guardados, luego en el modelo de menor objetivo. Presupuesto finito no certifica convergencia; modelo y pérdida usan la misma matriz copiada."
+    ],
+    "limitation": [
+      "Layer thicknesses remain prescribed, and low impedance residual does not establish unique resistivities. Local identifiability and bounds are evaluated separately. Conditional bootstrap intervals exclude thickness, dimensionality and correlated-noise uncertainty.",
+      "Los espesores son prescritos y un residuo bajo no establece resistividades únicas. Se evalúan identificabilidad local y cotas por separado. Intervalos bootstrap excluyen incertidumbre de espesores, dimensionalidad y ruido correlacionado."
+    ]
+  },
+  {
+    "id": "mt-neural",
+    "title": [
+      "Per-sounding physics-guided neural inversion",
+      "Inversión neuronal física por sondeo"
+    ],
+    "explanation": [
+      "A 1–24–24–1 tanh network takes normalized layer index and predicts a bounded log-resistivity residual about the same 100 Ω m initial model. The last layer starts at zero so all solvers share exactly the initial profile. The network is optimized separately for each sounding using the analytical impedance recursion; it is neither a pretrained inverse nor a PDE-residual PINN.",
+      "Una red tanh 1–24–24–1 usa índice normalizado de capa y predice un residuo logarítmico acotado respecto al mismo inicio 100 Ω m. La última capa inicia en cero para compartir perfil inicial exacto. Se optimiza por sondeo con recursión analítica; no es inversor preentrenado ni PINN con residuo diferencial."
+    ],
+    "equation": {
+      "tex": "x_j=x_{\\min}+(x_{\\max}-x_{\\min})\\,\\sigma\\!\\left[\\operatorname{logit}\\frac{x_j^0-x_{\\min}}{x_{\\max}-x_{\\min}}+N_\\theta(j/(L-1))\\right]",
+      "caption": [
+        "x is log resistivity; xmin = 0 and xmax = ln6000; x0 = ln100; sigma is logistic sigmoid. The objective is the same J as TRF and direct Adam. Normalized input for one layer is zero.",
+        "x es log resistividad; xmin = 0, xmax = ln6000 y x0 = ln100; sigma es sigmoide logística. El objetivo es el mismo J de TRF y Adam directo. Para una capa, entrada normalizada cero."
+      ]
+    },
+    "steps": [
+      [
+        "Validate positive frequencies, thicknesses, uncertainties and common resistivity bounds; initialize every layer at 100 Ω m.",
+        "Validar frecuencias, espesores, incertidumbres y cotas positivas; iniciar cada capa en 100 Ω m."
+      ],
+      [
+        "Apply exactly the same active-frequency real-component normalization and mean adjacent-log-layer penalty.",
+        "Aplicar idéntica normalización real en frecuencias activas y penalización media de diferencias logarítmicas."
+      ],
+      [
+        "Evaluate every saved physical model independently with its own complete objective, avoiding mutable parameter aliases.",
+        "Evaluar cada modelo físico guardado con su propio objetivo completo, evitando alias de parámetros mutables."
+      ],
+      [
+        "Append the selected final model and freshly computed objective; calculate final curves from that identical state.",
+        "Añadir modelo final seleccionado y objetivo recalculado; obtener curvas finales del mismo estado."
+      ]
+    ],
+    "settings": [
+      "CPU float64; seeded 1–24–24–1 network; 1,800 Adam updates; initial rate 0.015 with the same half/quarter schedule; tanh hidden activations. The common bounded objective uses no target layer resistivities.",
+      "CPU float64; red 1–24–24–1 con semilla; 1.800 pasos Adam; tasa 0,015 con el mismo esquema mitad/cuarto; activaciones tanh. El objetivo acotado común no utiliza resistividades objetivo."
+    ],
+    "history": [
+      "Complete matched objective recorded every 20 post-update states and for the selected minimum-objective model. These are per-sounding optimization states, not a training dataset learning curve.",
+      "Objetivo completo común cada 20 estados posteriores y en el modelo de menor objetivo seleccionado. Son estados de optimización por sondeo, no curva de entrenamiento de un conjunto."
+    ],
+    "limitation": [
+      "Layer thicknesses remain prescribed, and low impedance residual does not establish unique resistivities. Local identifiability and bounds are evaluated separately. Conditional bootstrap intervals exclude thickness, dimensionality and correlated-noise uncertainty.",
+      "Los espesores son prescritos y un residuo bajo no establece resistividades únicas. Se evalúan identificabilidad local y cotas por separado. Intervalos bootstrap excluyen incertidumbre de espesores, dimensionalidad y ruido correlacionado."
+    ]
+  }
+],
   },
   {
     id: "seismic",
@@ -379,16 +403,16 @@ export const chapters: Chapter[] = [
         "La inversión de onda completa estima velocidad ajustando historias de presión en receptores para fuentes conocidas. El problema directo propaga ondas por una velocidad candidata. Las interfaces cambian la velocidad y generan reflexión y transmisión; discontinuidades laterales difractan. A diferencia de campos potenciales, la relación entre velocidad y serie temporal es no lineal. Aquí la aproximación acústica supone densidad constante y excluye ondas de corte, atenuación y superficie libre.",
       ),
       T(
-        "Deepwave evaluates a finite-difference acoustic propagator on 128 × 96 nodes at 12.5 m spacing. Three sources at 75 m depth illuminate the layered, faulted, salt and gas-channel models. Forty receivers, or twenty under reduced coverage, lie at the same depth. The record lasts 1.1 s at a computational time step of 0.5 ms. Exported receiver traces are sampled every 4 ms; wavefield images every 24 ms. Those display samples are not the internal time integration step.",
-        "Deepwave evalúa un propagador acústico de diferencias finitas en 128 × 96 nodos separados 12,5 m. Tres fuentes a 75 m iluminan modelos estratificado, fallado, salino y de canal de gas. Cuarenta receptores, o veinte con cobertura reducida, están a igual profundidad. El registro dura 1,1 s con paso de cálculo de 0,5 ms. Las trazas se exportan cada 4 ms y campos cada 24 ms. El muestreo visual no es el paso de integración.",
+        "Deepwave evaluates a finite-difference acoustic propagator on 128 × 96 nodes at 12.5 m spacing. Three sources at 75 m depth illuminate the layered, faulted, salt and gas-channel models. Forty receivers, or twenty under reduced coverage, lie at the same depth. The record lasts 1.6 s at a computational time step of 0.5 ms. Exported receiver traces are sampled every 4 ms; wavefield images every 24 ms. Those display samples are not the internal time integration step.",
+        "Deepwave evalúa un propagador acústico de diferencias finitas en 128 × 96 nodos separados 12,5 m. Tres fuentes a 75 m iluminan modelos estratificado, fallado, salino y de canal de gas. Cuarenta receptores, o veinte con cobertura reducida, están a igual profundidad. El registro dura 1,6 s con paso de cálculo de 0,5 ms. Las trazas se exportan cada 4 ms y campos cada 24 ms. El muestreo visual no es el paso de integración.",
       ),
       T(
         "Automatic differentiation computes the derivative of the discrete receiver loss with respect to velocity parameters. Its adjoint interpretation is to propagate data residual information backward and combine it with the forward wavefield. A directional finite-difference test checks that this gradient agrees with perturbations of the implemented simulator. This test verifies a derivative, not a correct recovered geology. Limited illumination and the oscillatory waveform objective can leave the model far from truth despite substantial loss reduction.",
         "La diferenciación automática calcula la derivada de la pérdida discreta respecto a parámetros de velocidad. Su interpretación adjunta propaga información del residuo hacia atrás y la combina con el campo directo. Una prueba direccional por diferencias finitas verifica acuerdo con perturbaciones del simulador. Verifica la derivada, no la geología recuperada. La iluminación limitada y el objetivo oscilatorio pueden dejar un modelo lejos de la verdad pese a reducir mucho la pérdida.",
       ),
       T(
-        "Cycle skipping occurs when predicted and observed events are so misaligned that a local update matches the wrong oscillation. The continuation variant first compares moving-average-filtered traces, then reduces the averaging window. This is a specific time-domain continuation strategy, not a complete frequency-domain inversion. It uses the same initial depth trend as direct FWI, rather than a smoothed true model. Both methods receive 28 updates, so their final states are finite-budget reconstructions, not claimed converged global solutions.",
-        "El salto de ciclo aparece cuando eventos predichos y observados están tan desalineados que una actualización local ajusta otra oscilación. La variante de continuación compara primero trazas promediadas y reduce luego la ventana. Es una estrategia temporal específica, no una inversión completa en frecuencia. Usa la misma tendencia inicial con profundidad que FWI directa, no la verdad suavizada. Ambas reciben 28 actualizaciones: son reconstrucciones con presupuesto finito, no soluciones globales convergidas.",
+        "Cycle skipping arises when a local update matches the wrong oscillation. Both methods first fit a data-only 1D background from an independent depth trend, then refine spatial controls under an identical physical-gradient prior. One branch uses full-band traces; the other uses a fixed 3, 5, 8, 14 Hz schedule selected on separate calibration geometry. Each stage receives 28 L-BFGS calls; stages and accepted states are recorded. A finite budget does not certify a global solution, and withheld receiver data never select the model.",
+        "El salto de ciclo aparece al ajustar una oscilación equivocada. Ambos métodos ajustan primero un fondo 1D desde tendencia independiente y refinan controles espaciales con el mismo prior físico. Una rama usa banda completa y otra secuencia 3, 5, 8, 14 Hz fijada con geometría separada. Cada etapa recibe 28 llamadas L-BFGS; se registran etapas y estados aceptados. Presupuesto finito no certifica solución global, y receptores omitidos nunca seleccionan modelo.",
       ),
     ],
     equations: [
@@ -408,184 +432,300 @@ export const chapters: Chapter[] = [
       "Ondícula conocida, geometría fija, densidad constante y propagación bidimensional. Las fronteras PML absorben ondas; no hay reflexión de superficie libre. La animación muestra el cálculo directo del modelo conocido, no incertidumbre ni la iteración inversa actual.",
     ),
     algorithms: [
-      {
-        id: "fwi-l2",
-        title: T("Direct waveform L2", "L2 de onda directa"),
-        explanation: T(
-          "The objective compares all shot, receiver and time samples after normalizing by observed mean-square amplitude. A velocity-difference penalty discourages roughness. Deepwave supplies the discrete propagation gradient; Adam updates the bounded velocity parameter.",
-          "El objetivo compara todos los disparos, receptores y tiempos, normalizado por amplitud cuadrática media observada. Una penalización de diferencias de velocidad desalienta rugosidad. Deepwave aporta el gradiente de propagación y Adam actualiza el parámetro acotado.",
-        ),
-        equation: E(
-          String.raw`J_w(v)=\frac{\operatorname{mean}[(L_wF(v)-L_wd)^2]}{\operatorname{mean}(d^2)}+\frac{4\beta}{10^6}\left[\operatorname{mean}[(D_xv)^2]+\operatorname{mean}[(D_zv)^2]\right]`,
-          "F maps velocity to receiver traces; d is observed pressure amplitude; Lw is a moving average of width w samples; Dₓ and D𝓏 are adjacent cell differences. The factor 4 preserves the derivative scale when cell spacing is halved.",
-          "F transforma velocidad en trazas; d es amplitud observada; Lw es promedio móvil de w muestras; Dₓ y D𝓏 son diferencias de celdas adyacentes. El factor 4 conserva la escala de derivadas al reducir a la mitad el espaciamiento.",
-        ),
-        steps: [
-          T(
-            "Initialize v = 1,800 + 11 iz m/s, with iz the depth-node index; transform to the unconstrained parameter.",
-            "Inicializar v = 1.800 + 11 iz m/s, con iz índice vertical; transformar al parámetro no acotado.",
-          ),
-          T(
-            "Propagate all three shots; compute waveform and regularization terms.",
-            "Propagar tres disparos; calcular términos de onda y regularización.",
-          ),
-          T(
-            "Differentiate, clip the parameter-gradient norm to 10, and take one Adam update.",
-            "Diferenciar, limitar norma del gradiente a 10 y aplicar Adam.",
-          ),
-          T(
-            "After 28 updates, return the evaluated model with the lowest unfiltered relative waveform MSE.",
-            "Tras 28 actualizaciones, devolver el modelo evaluado con menor MSE relativo de onda sin filtrar.",
-          ),
-        ],
-        settings: T(
-          "Adam rate 0.045; β = 0.002 or 0.06; w = 1. Fourth-order spatial differences, 24-cell PML (300 m), dt = 0.5 ms, 2,200 steps. Ricker source 8 Hz, 9 Hz for salt, or 5 Hz in the acquisition variant.",
-          "Tasa Adam 0,045; β = 0,002 o 0,06; w = 1. Diferencias espaciales de cuarto orden, PML de 24 celdas (300 m), dt = 0,5 ms, 2.200 pasos. Ricker de 8 Hz, 9 Hz en sal o 5 Hz en adquisición modificada.",
-        ),
-        history: T(
-          "Unfiltered relative waveform MSE at each pre-update model. It excludes the roughness penalty. Velocity frames are saved every two updates; the selected final model need not equal the last frame.",
-          "MSE relativo de onda sin filtrar en cada modelo previo a actualizar. Excluye rugosidad. Se guardan velocidades cada dos actualizaciones; el modelo final seleccionado puede diferir del último cuadro.",
-        ),
-        limitation: T(
-          "The best data fit can retain incorrect velocity and interfaces. Neither monotonic loss nor 28 updates certify convergence, and source estimation is not included.",
-          "El mejor ajuste puede mantener velocidad e interfaces incorrectas. Ni pérdida monótona ni 28 pasos certifican convergencia; no se estima la fuente.",
-        ),
-      },
-      {
-        id: "fwi-multiscale",
-        title: T(
-          "Moving-average continuation",
-          "Continuación por promedio móvil",
-        ),
-        explanation: T(
-          "This variant uses the same wave propagator, parameterization and optimizer as direct FWI. Only the temporal averaging operator in the fitted data term changes with iteration. The filter reduces rapid oscillations but is not an ideal low-pass filter and does not add missing low-frequency observations.",
-          "Esta variante usa el mismo propagador, parametrización y optimizador que FWI directa. Sólo cambia el promedio temporal en el término ajustado. El filtro reduce oscilaciones rápidas, pero no es un filtro ideal ni agrega observaciones de baja frecuencia ausentes.",
-        ),
-        equation: E(
-          String.raw`(L_wd)_t=\frac1w\sum_{k=-(w-1)/2}^{(w-1)/2}d_{t+k},\qquad w(i)=\begin{cases}41&0\leq i<9\\17&9\leq i<18\\1&18\leq i<28\end{cases}`,
-          "i is zero-based optimizer step, t time index and w window width in internal 0.5 ms samples. Trace ends use replicated boundary samples. The first two windows span 20 ms and 8 ms between their endpoints.",
-          "i es paso de optimización desde cero, t índice temporal y w ancho en muestras internas de 0,5 ms. Los extremos replican muestras de borde. Las dos primeras ventanas abarcan 20 ms y 8 ms entre extremos.",
-        ),
-        steps: [
-          T(
-            "Apply the same averaging filter to predictions and observations.",
-            "Aplicar el mismo promedio a predicciones y observaciones.",
-          ),
-          T(
-            "Optimize the filtered loss for steps 0–8, then reduce the window for steps 9–17.",
-            "Optimizar pérdida filtrada en pasos 0–8; reducir ventana en 9–17.",
-          ),
-          T(
-            "Use unfiltered traces for the final ten updates.",
-            "Usar trazas sin filtrar en las diez actualizaciones finales.",
-          ),
-          T(
-            "Select the final model using unfiltered data error across all evaluated steps.",
-            "Seleccionar el modelo final por error sin filtrar entre todos los pasos evaluados.",
-          ),
-        ],
-        settings: T(
-          "28 updates with widths 41 → 17 → 1; all other constants match direct FWI. The source wavelet itself is unchanged during this schedule.",
-          "28 actualizaciones con anchos 41 → 17 → 1; las demás constantes coinciden con FWI directa. La ondícula no cambia durante esta secuencia.",
-        ),
-        history: T(
-          "The plotted curve is always unfiltered relative MSE. Changes at filter transitions are not changes of the plotted metric, although the optimized objective changes.",
-          "La curva muestra siempre MSE relativo sin filtrar. En las transiciones cambia el objetivo optimizado, no la definición de la métrica graficada.",
-        ),
-        limitation: T(
-          "Averaging is a limited continuation strategy. Salt-boundary errors can persist even if the final waveform error is lower than direct FWI.",
-          "El promedio es una estrategia de continuación limitada. Pueden persistir errores del límite salino aunque el error de onda sea menor que en FWI directa.",
-        ),
-      },
+  {
+    "id": "fwi-l2",
+    "title": [
+      "Full-band acoustic FWI",
+      "FWI acústica de banda completa"
     ],
+    "explanation": [
+      "After the shared data-only 1D background, this comparator uses full-band waveforms on every 2D control grid. It shares priors, initialization, receivers and optimizer-call budget with frequency continuation. Both branches use bounded multiresolution logits, not the old full-grid Adam parameterization.",
+      "Después del fondo 1D compartido ajustado sólo a datos, este comparador usa banda completa en cada malla 2D. Comparte prior, inicio, receptores y llamadas con continuación. Ambas ramas usan logits multirresolución acotados, no la antigua parametrización Adam de malla completa."
+    ],
+    "equation": {
+      "tex": "\\Phi(q)=\\frac{\\operatorname{mean}_{A,s,t}|L_{f_c}(F(v(q))-d)|^2}{\\operatorname{mean}_{A,s,t}|L_{f_c}d|^2}+\\beta\\sum_{\\alpha=x,z}\\operatorname{mean}\\left(\\frac{\\Delta_\\alpha v}{10\\,\\Delta\\alpha}\\right)^2,\\quad v(q)=1400+3000\\,\\sigma(Bq)",
+      "caption": [
+        "A denotes active receivers; F is constant-density propagation; d is measured synthetic pressure; Lfc is the cutoff filter; B bilinearly interpolates control logits. Gradient scales are 100 m and 1000 m/s. This energy-normalized objective is not a colored-noise likelihood.",
+        "A son receptores activos; F es propagación de densidad constante; d es presión sintética medida; Lfc es filtro de corte; B interpola bilinealmente logits. Escalas de gradiente: 100 m y 1000 m/s. El objetivo normalizado por energía no es verosimilitud de ruido coloreado."
+      ]
+    },
+    "steps": [
+      [
+        "Start from the independent 1800 + 0.88 z m/s trend and fit a laterally constant 1 × 12 logit control grid at 3 Hz.",
+        "Partir de tendencia independiente 1800 + 0,88 z m/s y ajustar controles logit 1 × 12 lateralmente constantes a 3 Hz."
+      ],
+      [
+        "Refine to 9 × 12, 17 × 24 and 33 × 48 controls with aligned endpoints; never initialize from smoothed truth.",
+        "Refinar controles 9 × 12, 17 × 24 y 33 × 48 con extremos alineados; nunca iniciar desde verdad suavizada."
+      ],
+      [
+        "Optimize active receiver data only with L-BFGS strong-Wolfe; evaluate each accepted update including the terminal update.",
+        "Optimizar sólo receptores activos con L-BFGS strong-Wolfe; evaluar cada actualización aceptada incluida la terminal."
+      ],
+      [
+        "Export terminal model, identical final frame and recomputed predictions; score whole-model and withheld errors separately.",
+        "Exportar modelo terminal, cuadro final idéntico y predicciones recalculadas; evaluar modelo total y datos omitidos por separado."
+      ]
+    ],
+    "settings": [
+      "28 L-BFGS calls per stage, four stages; history size 15. CPU/GPU propagator: fourth-order spatial differences, dt 0.5 ms, 3,200 samples (1.6 s), 300 m PML, fixed maximum propagation velocity 4600 m/s. Inverse bounds 1400–4400 m/s; β 0.001 or 0.03. Every fifth receiver (index mod 5 = 2) is withheld.",
+      "28 llamadas L-BFGS por etapa, cuatro etapas; memoria 15. Propagador CPU/GPU de cuarto orden, dt 0,5 ms, 3.200 muestras (1,6 s), PML 300 m, velocidad máxima de propagación fija 4600 m/s. Cotas inversas 1400–4400 m/s; β 0,001 o 0,03. Se omite cada quinto receptor (índice mod 5 = 2)."
+    ],
+    "history": [
+      "Raw full-band relative waveform MSE at evaluated stage-entry and accepted-call states. Filtered objective and regularization are separate exported history terms. Frames map explicitly to history records; final model and predictions use the same terminal state.",
+      "MSE relativo sin filtrar en entradas de etapa y estados de llamadas aceptadas. Objetivo filtrado y regularización se exportan aparte. Los cuadros se enlazan a registros; modelo final y predicciones usan el mismo estado terminal."
+    ],
+    "limitation": [
+      "Finite-budget baseline improvement is not exact geology, uniqueness or field performance. The known source and same-operator synthetic observations simplify the inverse. Salt remains a declared cycle-skipping challenge with failures visible; source estimation and elastic physics are excluded.",
+      "Mejorar referencia con presupuesto finito no es geología exacta, unicidad ni rendimiento de campo. Fuente conocida y mismo operador sintético simplifican la inversión. La sal mantiene desafío de salto de ciclos y fallos visibles; no se estima fuente ni física elástica."
+    ]
   },
   {
-    id: "joint",
-    title: T("Joint inversion", "Inversión conjunta"),
-    refs: ["crossgradient", "adam"],
-    paragraphs: [
-      T(
-        "Joint inversion combines gravity and magnetic observations while retaining separate density and susceptibility models. These properties can share lithological boundaries without being proportional in value. A cross-gradient penalty encodes that structural hypothesis: it is small where the two property gradients are parallel, antiparallel, or one gradient vanishes. It therefore cannot distinguish matching boundaries from locally constant models on its own. Independent data-fit terms are necessary to prevent a structurally simple but unsupported reconstruction.",
-        "La inversión conjunta combina gravedad y magnetismo conservando modelos separados de densidad y susceptibilidad. Pueden compartir límites litológicos sin valores proporcionales. El gradiente cruzado representa esa hipótesis: es pequeño si los gradientes son paralelos, antiparalelos o alguno se anula. Por sí solo no distingue límites coincidentes de modelos localmente constantes. Los ajustes independientes son necesarios para evitar una reconstrucción simple pero no sustentada.",
-      ),
-      T(
-        "Density is normalized by 0.5 g/cm³ and susceptibility by 0.03 SI before coupling. Without such scales, changing the units would change the relative strength of the structural term. The implementation takes finite differences in cell-index coordinates, not derivatives divided by physical metres. Coupling weights are consequently tied to this discretization and cannot be transferred unchanged to a differently spaced mesh as physical constants. The displayed cross-gradient magnitude is also not a geological probability.",
-        "La densidad se normaliza por 0,5 g/cm³ y la susceptibilidad por 0,03 SI antes de acoplar. Sin escalas, cambiar unidades alteraría la fuerza relativa del término estructural. Se calculan diferencias en índices de celda, no derivadas divididas por metros. Los pesos de acoplamiento dependen de esta discretización y no pueden transferirse como constantes físicas a otra malla. La magnitud mostrada tampoco es probabilidad geológica.",
-      ),
-      T(
-        "The shared-contact case assigns density and susceptibility to the same inclined unit. The conflicting case separates a dense body from a magnetic dyke. These are complementary tests of the structural assumption: the latter can reveal information being imposed by coupling rather than supported by both surveys. Compare each property’s data residual with density error and the structural penalty. A decrease in cross-gradient is expected when coupling is strengthened, but it is not itself evidence of a more accurate earth model.",
-        "El caso compartido asigna densidad y susceptibilidad a la misma unidad inclinada. El caso conflictivo separa un cuerpo denso de un dique magnético. Son pruebas complementarias: el segundo puede revelar información impuesta por el acoplamiento y no sustentada por ambos levantamientos. Compare residuos de ambas propiedades con error de densidad y penalización estructural. Reducir gradiente cruzado al reforzar acoplamiento no demuestra por sí solo mayor precisión geológica.",
-      ),
-      T(
-        "The initial density comes from the scalar L2 solve; susceptibility is initialized by a separate magnetic L2 solve. Adam then updates both normalized fields together for a fixed budget. There is no petrophysical Gaussian-mixture model, rock-type classification or equality constraint between density and susceptibility. Those would define different joint inversion methods. The output contains both recovered properties and predictions, allowing the two data fits to be checked separately rather than combined into a single quality score.",
-        "La densidad inicial proviene de L2 escalar y la susceptibilidad de una inversión magnética independiente. Adam actualiza ambos campos normalizados durante un presupuesto fijo. No hay mezcla gaussiana petrofísica, clasificación de litologías ni igualdad entre densidad y susceptibilidad: serían otros métodos conjuntos. La salida contiene ambas propiedades y predicciones, permitiendo verificar los ajustes por separado y no como un único puntaje de calidad.",
-      ),
+    "id": "fwi-multiscale",
+    "title": [
+      "Frequency-continuation acoustic FWI",
+      "FWI acústica con continuación en frecuencia"
     ],
-    equations: [
-      E(
-        String.raw`a=\Delta\rho/0.5,\qquad b=\chi/0.03,\qquad \mathbf c=\nabla_i a\times\nabla_i b`,
-        "a and b are normalized density and susceptibility; ∇ᵢ differentiates in cell-index coordinates; c is their cross-gradient. Density uses g/cm³ and susceptibility SI.",
-        "a y b son densidad y susceptibilidad normalizadas; ∇ᵢ diferencia por índice de celda; c es su gradiente cruzado. Densidad en g/cm³ y susceptibilidad SI.",
-      ),
-      E(
-        String.raw`\|\mathbf c\|^2=\|\nabla_i a\|^2\|\nabla_i b\|^2-(\nabla_i a\cdot\nabla_i b)^2`,
-        "The coupling vanishes for parallel or antiparallel gradients and also when either gradient is zero. It constrains orientation, not equality of property values.",
-        "El acoplamiento se anula para gradientes paralelos o antiparalelos y cuando alguno vale cero. Restringe orientación, no igualdad de propiedades.",
-      ),
+    "explanation": [
+      "Zero-phase sixth-order Butterworth amplitude filtering selects physical cutoff frequencies, replacing the ineffective moving-average windows. Both observed and predicted traces use the same zero-padded FFT filter. The 3 Hz background is followed by 5, 8 and 14 Hz 2D stages, at the same spatial grids and compute budget as the full-band comparator.",
+      "El filtrado de amplitud Butterworth de orden seis y fase cero selecciona cortes físicos, sustituyendo ventanas móviles ineficaces. Trazas observadas y predichas usan el mismo filtro FFT con ceros. Al fondo 3 Hz siguen etapas 2D de 5, 8 y 14 Hz con iguales mallas y presupuesto que banda completa."
     ],
-    assumptions: T(
-      "Shared boundaries are an explicit hypothesis, not a universal relation between density and magnetism. Synthetic independent noise and a common rectangular mesh are assumed. No posterior uncertainty or petrophysically guided inversion is implemented.",
-      "Los límites compartidos son una hipótesis, no una relación universal entre densidad y magnetismo. Se supone ruido sintético independiente y una malla rectangular común. No se implementan incertidumbre posterior ni inversión guiada petrofísicamente.",
-    ),
-    algorithms: [
-      {
-        id: "joint",
-        title: T(
-          "Cross-gradient optimization",
-          "Optimización de gradiente cruzado",
-        ),
-        explanation: T(
-          "Two noise-normalized data terms, a cross-gradient term and a smallness penalty form one differentiable objective. Active-station masks are applied to both surveys before optimization. Final WRMS values are evaluated over all stations, so under reduced coverage they also contain held-out locations.",
-          "Dos términos normalizados por ruido, gradiente cruzado y penalización de tamaño forman un objetivo diferenciable. La máscara se aplica a ambos levantamientos antes de optimizar. Los WRMS finales usan todas las estaciones y, con cobertura reducida, incluyen posiciones excluidas del ajuste.",
-        ),
-        equation: E(
-          String.raw`J(a,b)=\left\langle\left(\frac{0.5G_ga-d_g}{\sigma_g}\right)^2\right\rangle+\left\langle\left(\frac{0.03G_mb-d_m}{\sigma_m}\right)^2\right\rangle+\lambda\langle c_k^2\rangle+0.015(\langle a^2\rangle+\langle b^2\rangle)`,
-          "Gg and Gm are gravity and magnetic operators; d and σ are observations and component noise; angle brackets are arithmetic means. The cross term averages squared components over all cells and three directions.",
-          "Gg y Gm son operadores de gravedad y magnetismo; d y σ son observaciones y ruido; los corchetes indican medias. El término cruzado promedia componentes cuadrados sobre celdas y tres direcciones.",
-        ),
-        steps: [
-          T(
-            "Initialize density from the selected L2 result and susceptibility with β = 0.04 magnetic L2.",
-            "Inicializar densidad con L2 del caso y susceptibilidad con L2 magnética de β = 0,04.",
-          ),
-          T(
-            "Normalize property fields and compute central interior / one-sided boundary differences.",
-            "Normalizar propiedades y calcular diferencias centrales interiores y unilaterales en bordes.",
-          ),
-          T(
-            "Backpropagate the complete objective and update both fields with Adam.",
-            "Retropropagar el objetivo completo y actualizar ambos campos con Adam.",
-          ),
-          T(
-            "Return the final fields after 180 updates and evaluate separate gravity and magnetic predictions.",
-            "Devolver campos finales tras 180 actualizaciones y evaluar predicciones de gravedad y magnetismo.",
-          ),
-        ],
-        settings: T(
-          "Adam rate 0.008; 180 updates; λ = 4 or 25; smallness coefficient 0.015. There is no automatic coupling-weight selection or early stopping.",
-          "Tasa Adam 0,008; 180 actualizaciones; λ = 4 o 25; coeficiente de tamaño 0,015. Sin selección automática de acoplamiento ni parada temprana.",
-        ),
-        history: T(
-          "Total objective every six updates. Recorded objective is pre-update; density frames are post-update. The final structural metric is mean vector magnitude, not the squared-component penalty used for fitting.",
-          "Objetivo total cada seis actualizaciones. Pérdida previa a actualizar y cuadros posteriores. La métrica estructural final es media de magnitudes vectoriales, no la penalización de componentes cuadrados del ajuste.",
-        ),
-        limitation: T(
-          "A wrong shared-structure prior can bias either property. Lower total loss does not imply lower density error, and the cross-gradient scale depends on the mesh.",
-          "Un prior estructural incorrecto puede sesgar cualquiera de las propiedades. Menor pérdida no implica menor error de densidad; la escala del gradiente cruzado depende de la malla.",
-        ),
-      },
+    "equation": {
+      "tex": "H(f;f_c)=\\left[1+(|f|/f_c)^{12}\\right]^{-1/2},\\quad L_{f_c}d=\\mathrm{crop}\\,\\mathcal F^{-1}\\!\\left(H\\,\\mathcal F(\\mathrm{pad}(d))\\right)",
+      "caption": [
+        "fc is cutoff in Hz; FFT padding reaches a power of two at least twice the trace length; output is cropped to the original record. The filter is zero-phase, not a causal IIR or moving average, and cannot create absent low-frequency information.",
+        "fc es corte en Hz; se rellena a potencia de dos al menos doble del largo y se recorta al registro original. Es fase cero, no IIR causal ni promedio móvil; no crea información baja ausente."
+      ]
+    },
+    "steps": [
+      [
+        "Start from the independent 1800 + 0.88 z m/s trend and fit a laterally constant 1 × 12 logit control grid at 3 Hz.",
+        "Partir de tendencia independiente 1800 + 0,88 z m/s y ajustar controles logit 1 × 12 lateralmente constantes a 3 Hz."
+      ],
+      [
+        "Refine to 9 × 12, 17 × 24 and 33 × 48 controls with aligned endpoints; never initialize from smoothed truth.",
+        "Refinar controles 9 × 12, 17 × 24 y 33 × 48 con extremos alineados; nunca iniciar desde verdad suavizada."
+      ],
+      [
+        "Optimize active receiver data only with L-BFGS strong-Wolfe; evaluate each accepted update including the terminal update.",
+        "Optimizar sólo receptores activos con L-BFGS strong-Wolfe; evaluar cada actualización aceptada incluida la terminal."
+      ],
+      [
+        "Export terminal model, identical final frame and recomputed predictions; score whole-model and withheld errors separately.",
+        "Exportar modelo terminal, cuadro final idéntico y predicciones recalculadas; evaluar modelo total y datos omitidos por separado."
+      ]
     ],
+    "settings": [
+      "Cutoffs 3 → 5 → 8 → 14 Hz at control grids 1 × 12 → 9 × 12 → 17 × 24 → 33 × 48. The independent calibration froze this schedule before nominal evaluation. All propagation, regularization and call-budget settings match the comparator.",
+      "Cortes 3 → 5 → 8 → 14 Hz en controles 1 × 12 → 9 × 12 → 17 × 24 → 33 × 48. Calibración independiente fijó la secuencia antes de evaluar casos nominales. Propagación, regularización y presupuesto coinciden con comparador."
+    ],
+    "history": [
+      "Raw full-band relative waveform MSE at evaluated stage-entry and accepted-call states. Filtered objective and regularization are separate exported history terms. Frames map explicitly to history records; final model and predictions use the same terminal state.",
+      "MSE relativo sin filtrar en entradas de etapa y estados de llamadas aceptadas. Objetivo filtrado y regularización se exportan aparte. Los cuadros se enlazan a registros; modelo final y predicciones usan el mismo estado terminal."
+    ],
+    "limitation": [
+      "Finite-budget baseline improvement is not exact geology, uniqueness or field performance. The known source and same-operator synthetic observations simplify the inverse. Salt remains a declared cycle-skipping challenge with failures visible; source estimation and elastic physics are excluded.",
+      "Mejorar referencia con presupuesto finito no es geología exacta, unicidad ni rendimiento de campo. Fuente conocida y mismo operador sintético simplifican la inversión. La sal mantiene desafío de salto de ciclos y fallos visibles; no se estima fuente ni física elástica."
+    ]
+  }
+],
   },
+  {
+  "id": "joint",
+  "title": [
+    "Structural and petrophysical inversion",
+    "Inversión estructural y petrofísica"
+  ],
+  "refs": [
+    "crossgradient",
+    "astic2020",
+    "cockett2015"
+  ],
+  "paragraphs": [
+    [
+      "Gravity and magnetic observations constrain different physical properties. Their shared boundaries are a hypothesis, not a universal law. The application now compares an uncoupled multi-property baseline, physical cross-gradient coupling and a distinct Gaussian-mixture petrophysical prior. All three use the same active data, uncertainty, starting estimates, spatial precisions and optimizer budget. This matched comparison isolates the added prior instead of confounding coupling with different initialization or penalties.",
+      "Gravedad y magnetismo restringen propiedades distintas. Compartir límites es una hipótesis, no ley universal. Se comparan una referencia multipropiedad desacoplada, gradiente cruzado físico y un prior petrofísico diferente de mezcla gaussiana. Los tres usan datos, incertidumbre, estimados iniciales, precisiones espaciales y presupuesto iguales. Así se aísla el prior añadido sin confundirlo con inicialización o penalizaciones."
+    ],
+    [
+      "For structural coupling, density is normalized by 0.5 g/cm³ and susceptibility by 0.03 SI. Derivatives divide differences by physical cell spacing in metres. The mean squared cross-gradient is multiplied by 240⁴ and divided by its value at the matched independent initialization (floor 10⁻¹²). A diagonal quadratic-Hessian preconditioner scales optimizer variables. This normalization uses no target truth. Parallel, antiparallel or vanishing gradients all make the penalty small; this is not proof of matching interfaces. Inspect density and susceptibility recovery, active and omitted station errors, and change relative to the independent model.",
+      "En acoplamiento estructural se normaliza densidad por 0,5 g/cm³ y susceptibilidad por 0,03 SI. Derivadas dividen diferencias por espaciamiento en metros. La media del gradiente cruzado cuadrado se multiplica por 240⁴ y divide por su valor en la inicialización independiente común (piso 10⁻¹²). Un precondicionador Hessiano diagonal escala variables. Esta normalización no usa verdad objetivo. Gradientes paralelos, antiparalelos o nulos reducen la penalización sin probar interfaces correctas. Inspeccione ambas propiedades, estaciones activas/omitidas y cambio respecto al modelo independiente."
+    ],
+    [
+      "The petrophysical branch minimizes the actual negative log density of a fitted two-class full-covariance Gaussian mixture. Its 640 density/susceptibility pairs are original synthetic laboratory-like samples generated independently with seed 68121. EM fits weights, means and covariances before inversion; it does not see display-case voxel labels. This explicit likelihood formulation is inspired by petrophysically guided inversion, but it does not invoke SimPEG’s PGI optimizer or dynamically update the mixture during the geological inversion.",
+      "La rama petrofísica minimiza la densidad logarítmica negativa real de una mezcla gaussiana de dos clases con covarianza completa. Sus 640 pares densidad/susceptibilidad son muestras sintéticas originales tipo laboratorio con semilla independiente 68121. EM ajusta pesos, medias y covarianzas antes de invertir y no ve etiquetas de celdas del caso. Esta formulación se inspira en inversión guiada petrofísicamente; no invoca el optimizador PGI de SimPEG ni actualiza dinámicamente la mezcla."
+    ],
+    [
+      "The shared-contact and conflicting-boundary cases test the prior in different regimes. In the latter, an independently dense body and magnetic dyke deliberately violate the coupled petrophysical relation. That output remains visible as a negative control. Mixture responsibilities express relative compatibility of the recovered property pair with each prior component; they are not observed rock types or probabilities that the inferred geology is true. A lower complete objective is not sufficient to establish improved recovery.",
+      "Los casos de contacto compartido y límites conflictivos prueban regímenes distintos. En el segundo, un cuerpo denso y dique magnético separados violan deliberadamente la relación petrofísica; la salida se conserva como control negativo. Las responsabilidades expresan compatibilidad relativa del par recuperado con cada componente; no son litologías observadas ni probabilidades de geología verdadera. Reducir el objetivo no establece por sí solo mejor recuperación."
+    ]
+  ],
+  "equations": [
+    {
+      "tex": "J_0=\\frac{\\|W_g(G_g\\rho-d_g)\\|^2}{N_g}+\\frac{\\|W_m(G_m\\chi-d_m)\\|^2}{N_m}+\\frac{\\beta_g}{N_g}\\rho^TQ\\rho+\\frac{\\beta_m}{N_m}\\chi^TQ\\chi",
+      "caption": [
+        "ρ is density contrast and χ susceptibility; Wg/Wm whiten observations; Ng/Nm count active stations; Q is physical spatial precision. Each beta is selected independently before joint optimization.",
+        "ρ es contraste de densidad y χ susceptibilidad; Wg/Wm blanquean datos; Ng/Nm cuentan estaciones activas; Q es precisión espacial física. Cada beta se selecciona antes de optimización conjunta."
+      ]
+    },
+    {
+      "tex": "\\mathbf c=\\nabla(\\rho/0.5)\\times\\nabla(\\chi/0.03),\\quad J_{\\rm cross}=J_0+\\lambda\\,C/C_0,\\quad C=240^4\\operatorname{mean}(\\mathbf c^2)",
+      "caption": [
+        "Gradients are per metre. The mean runs over the three cross-product components and all cells. C₀ is max(C at the independent initialization, 10⁻¹²); lambda controls structural coupling, not property equality.",
+        "Gradientes por metro. La media recorre tres componentes del producto cruz y todas las celdas. C₀ es max(C inicial independiente, 10⁻¹²); lambda controla estructura, no igualdad de propiedades."
+      ]
+    }
+  ],
+  "assumptions": [
+    "Common flat mesh, independently noisy surveys and fixed priors. Conflicting lithologies can invalidate the structural or petrophysical hypothesis. Neither the optimized model nor its mixture membership is a geological posterior sample.",
+    "Malla plana común, ruido independiente y priors fijos. Litologías conflictivas pueden invalidar hipótesis estructurales o petrofísicas. Ni el modelo optimizado ni su pertenencia son muestras posteriores geológicas."
+  ],
+  "algorithms": [
+    {
+      "id": "joint-uncoupled",
+      "title": [
+        "Matched uncoupled inversion",
+        "Inversión desacoplada comparable"
+      ],
+      "explanation": [
+        "Both properties are optimized under their own noise-weighted data and spatial terms, with no structural or mixture coupling. This is the baseline for interpreting whether an added multi-property prior improves recovery under the same numerical budget.",
+        "Se optimizan ambas propiedades con sus términos de datos y espacio ponderados, sin acoplamiento estructural ni mezcla. Es la referencia para determinar si añadir un prior multipropiedad mejora recuperación con igual presupuesto."
+      ],
+      "equation": {
+        "tex": "J_0=\\frac{\\|W_g(G_g\\rho-d_g)\\|^2}{N_g}+\\frac{\\|W_m(G_m\\chi-d_m)\\|^2}{N_m}+\\frac{\\beta_g}{N_g}\\rho^TQ\\rho+\\frac{\\beta_m}{N_m}\\chi^TQ\\chi",
+        "caption": [
+          "ρ is density contrast and χ susceptibility; Wg/Wm whiten observations; Ng/Nm count active stations; Q is physical spatial precision. Each beta is selected independently before joint optimization.",
+          "ρ es contraste de densidad y χ susceptibilidad; Wg/Wm blanquean datos; Ng/Nm cuentan estaciones activas; Q es precisión espacial física. Cada beta se selecciona antes de optimización conjunta."
+        ]
+      },
+      "steps": [
+        [
+          "Initialize density and susceptibility from matched independent spatial L2 solves, with the same active observations.",
+          "Inicializar densidad y susceptibilidad desde L2 espaciales independientes con las mismas observaciones activas."
+        ],
+        [
+          "Evaluate the separate whitened data means and physical spatial precisions; add only the selected coupling term.",
+          "Evaluar medias de datos blanqueados y precisiones espaciales separadas; añadir sólo el acoplamiento seleccionado."
+        ],
+        [
+          "Apply a strong-Wolfe L-BFGS update and save an independently evaluated objective/model pair.",
+          "Aplicar actualización L-BFGS strong-Wolfe y guardar un par objetivo/modelo evaluado independientemente."
+        ],
+        [
+          "Export both property models, predictions and recovery metrics; compare with the matched uncoupled output.",
+          "Exportar ambas propiedades, predicciones y métricas; comparar con la salida desacoplada equivalente."
+        ]
+      ],
+      "settings": [
+        "Diagonal quadratic-Hessian preconditioning; CPU float64 L-BFGS, strong-Wolfe line search, 80 steps, history size 15, gradient tolerance 10⁻¹⁰ and change tolerance 10⁻¹². Both properties start from separate spatial L2 solves. Gravity and magnetic beta are separately selected by discrepancy. Coupling weight is 1, or 4 in the regularization condition.",
+        "Precondicionamiento Hessiano cuadrático diagonal; L-BFGS CPU float64 con búsqueda strong-Wolfe, 80 pasos, memoria 15, tolerancia de gradiente 10⁻¹⁰ y cambio 10⁻¹². Ambas propiedades parten de L2 espacial independiente. Beta gravimétrica y magnética se eligen por discrepancia. Acoplamiento 1 o 4 con regularización mayor."
+      ],
+      "history": [
+        "Complete objective after accepted optimizer updates, saved every eight steps and at the final state. Data, spatial, cross-gradient and mixture terms are exported separately; a mixture negative-log density can be negative and is not a normalized error.",
+        "Objetivo completo después de actualizaciones aceptadas, guardado cada ocho pasos y al final. Se exportan términos de datos, espacial, gradiente cruzado y mezcla; la densidad logarítmica negativa puede ser negativa y no es error normalizado."
+      ],
+      "limitation": [
+        "Independent priors cannot determine unobserved shared geology. Compare full-model, support and omitted-data errors rather than accepting a small fitted residual.",
+        "Los priors independientes no determinan geología compartida no observada. Compare errores de modelo, soporte y datos omitidos en vez de aceptar un residuo ajustado pequeño."
+      ]
+    },
+    {
+      "id": "joint",
+      "title": [
+        "Physical cross-gradient inversion",
+        "Inversión por gradiente cruzado físico"
+      ],
+      "explanation": [
+        "A dimensionless physical cross-gradient penalty is added to the matched baseline. Density and susceptibility stay separate variables; no pointwise proportionality is imposed. The reported structural diagnostic uses physical properties, whereas the optimizer couples normalized properties.",
+        "Se añade gradiente cruzado físico adimensional a la referencia equivalente. Densidad y susceptibilidad siguen separadas; no se impone proporcionalidad puntual. El diagnóstico usa propiedades físicas, mientras el objetivo acopla propiedades normalizadas."
+      ],
+      "equation": {
+        "tex": "J_{\\rm cross}=J_0+\\lambda\\frac{240^4\\operatorname{mean}[(\\nabla(\\rho/0.5)\\times\\nabla(\\chi/0.03))^2]}{C_0}",
+        "caption": [
+          "J0 is the uncoupled objective; lambda is 1 or 4; physical spacings are 80, 80 and 70 m. C₀ is the scaled cross penalty at the matched independent initial model, floored at 10⁻¹². It is fixed during inversion, not tuned to the target.",
+          "J0 es objetivo desacoplado; lambda vale 1 o 4; espaciamientos físicos 80, 80 y 70 m. C₀ es la penalización escalada en el inicio independiente común, con piso 10⁻¹². Se fija durante la inversión, no se ajusta al objetivo."
+        ]
+      },
+      "steps": [
+        [
+          "Initialize density and susceptibility from matched independent spatial L2 solves, with the same active observations.",
+          "Inicializar densidad y susceptibilidad desde L2 espaciales independientes con las mismas observaciones activas."
+        ],
+        [
+          "Evaluate the separate whitened data means and physical spatial precisions; add only the selected coupling term.",
+          "Evaluar medias de datos blanqueados y precisiones espaciales separadas; añadir sólo el acoplamiento seleccionado."
+        ],
+        [
+          "Apply a strong-Wolfe L-BFGS update and save an independently evaluated objective/model pair.",
+          "Aplicar actualización L-BFGS strong-Wolfe y guardar un par objetivo/modelo evaluado independientemente."
+        ],
+        [
+          "Export both property models, predictions and recovery metrics; compare with the matched uncoupled output.",
+          "Exportar ambas propiedades, predicciones y métricas; comparar con la salida desacoplada equivalente."
+        ]
+      ],
+      "settings": [
+        "Diagonal quadratic-Hessian preconditioning; CPU float64 L-BFGS, strong-Wolfe line search, 80 steps, history size 15, gradient tolerance 10⁻¹⁰ and change tolerance 10⁻¹². Both properties start from separate spatial L2 solves. Gravity and magnetic beta are separately selected by discrepancy. Coupling weight is 1, or 4 in the regularization condition.",
+        "Precondicionamiento Hessiano cuadrático diagonal; L-BFGS CPU float64 con búsqueda strong-Wolfe, 80 pasos, memoria 15, tolerancia de gradiente 10⁻¹⁰ y cambio 10⁻¹². Ambas propiedades parten de L2 espacial independiente. Beta gravimétrica y magnética se eligen por discrepancia. Acoplamiento 1 o 4 con regularización mayor."
+      ],
+      "history": [
+        "Complete objective after accepted optimizer updates, saved every eight steps and at the final state. Data, spatial, cross-gradient and mixture terms are exported separately; a mixture negative-log density can be negative and is not a normalized error.",
+        "Objetivo completo después de actualizaciones aceptadas, guardado cada ocho pasos y al final. Se exportan términos de datos, espacial, gradiente cruzado y mezcla; la densidad logarítmica negativa puede ser negativa y no es error normalizado."
+      ],
+      "limitation": [
+        "Parallel gradients and flat fields can both satisfy the structural term. Failure to improve independent density recovery is reported as unresolved even when the coupling term decreases.",
+        "Gradientes paralelos y campos constantes satisfacen el término estructural. No mejorar la densidad independiente se informa como no resuelto aunque disminuya acoplamiento."
+      ]
+    },
+    {
+      "id": "pgi",
+      "title": [
+        "Gaussian-mixture petrophysical inversion",
+        "Inversión petrofísica de mezcla gaussiana"
+      ],
+      "explanation": [
+        "The prior evaluates recovered density and susceptibility in their original physical units against an independently fitted Gaussian mixture. Strong-Wolfe L-BFGS differentiates the complete mixture log likelihood together with data and spatial terms; class responsibilities are exported, not invented by the renderer.",
+        "El prior evalúa densidad y susceptibilidad recuperadas en unidades físicas frente a una mezcla ajustada independientemente. L-BFGS diferencia la verosimilitud completa junto con datos y espacio; se exportan responsabilidades, no se inventan en la vista."
+      ],
+      "equation": {
+        "tex": "J_{\\rm PGI}=J_0-\\frac{\\eta}{M}\\sum_{j=1}^M\\log\\left[\\sum_{k=1}^{2}\\pi_k\\,\\mathcal N\\!\\left((\\rho_j,\\chi_j);\\mu_k,\\Sigma_k\\right)\\right]",
+        "caption": [
+          "M is cell count; πk, μk and Σk are independently fitted weights, physical-property means and full covariances. Eta is mixture strength, 1 or 4. The mixture is fixed throughout inversion.",
+          "M es cantidad de celdas; πk, μk y Σk son pesos, medias físicas y covarianzas completas ajustados independientemente. Eta es fuerza 1 o 4. La mezcla se fija durante la inversión."
+        ]
+      },
+      "steps": [
+        [
+          "Fit the two-component full-covariance GMM to 640 independent petrophysical samples using EM.",
+          "Ajustar mezcla de dos componentes y covarianza completa a 640 muestras independientes mediante EM."
+        ],
+        [
+          "Initialize density and susceptibility from matched independent spatial L2 solves, with the same active observations.",
+          "Inicializar densidad y susceptibilidad desde L2 espaciales independientes con las mismas observaciones activas."
+        ],
+        [
+          "Evaluate the separate whitened data means and physical spatial precisions; add only the selected coupling term.",
+          "Evaluar medias de datos blanqueados y precisiones espaciales separadas; añadir sólo el acoplamiento seleccionado."
+        ],
+        [
+          "Minimize the complete objective and export physical-property estimates, prior parameters and normalized responsibilities.",
+          "Minimizar objetivo completo y exportar propiedades, parámetros del prior y responsabilidades normalizadas."
+        ]
+      ],
+      "settings": [
+        "Diagonal quadratic-Hessian preconditioning; CPU float64 L-BFGS, strong-Wolfe line search, 80 steps, history size 15, gradient tolerance 10⁻¹⁰ and change tolerance 10⁻¹². Both properties start from separate spatial L2 solves. Gravity and magnetic beta are separately selected by discrepancy. Coupling weight is 1, or 4 in the regularization condition.",
+        "Precondicionamiento Hessiano cuadrático diagonal; L-BFGS CPU float64 con búsqueda strong-Wolfe, 80 pasos, memoria 15, tolerancia de gradiente 10⁻¹⁰ y cambio 10⁻¹². Ambas propiedades parten de L2 espacial independiente. Beta gravimétrica y magnética se eligen por discrepancia. Acoplamiento 1 o 4 con regularización mayor."
+      ],
+      "history": [
+        "Complete objective after accepted optimizer updates, saved every eight steps and at the final state. Data, spatial, cross-gradient and mixture terms are exported separately; a mixture negative-log density can be negative and is not a normalized error.",
+        "Objetivo completo después de actualizaciones aceptadas, guardado cada ocho pasos y al final. Se exportan términos de datos, espacial, gradiente cruzado y mezcla; la densidad logarítmica negativa puede ser negativa y no es error normalizado."
+      ],
+      "limitation": [
+        "Original synthetic sample pairs are not field rock measurements. A misspecified mixture can bias both properties; the conflicting case is a deliberate negative control. This is not SimPEG’s PGI optimization implementation.",
+        "Los pares sintéticos originales no son mediciones de rocas de campo. Una mezcla incorrecta sesga ambas propiedades; el caso conflictivo es control negativo. No es la implementación del optimizador PGI de SimPEG."
+      ]
+    }
+  ]
+},
   {
     id: "cnn",
     title: T("Inverse CNN", "CNN inversa"),
@@ -604,8 +744,8 @@ export const chapters: Chapter[] = [
         "La escala de entrada es la desviación estándar de observaciones limpias de entrenamiento. Se agrega ruido gaussiano del 2% de esa escala a las tres particiones antes de normalizar. El objetivo se divide por 400 g/cm³ m. Usar estadísticas de prueba filtraría información; aquí no ocurre. La salida vuelve a unidades físicas antes de calcular RMSE de columna. Las estaciones ausentes se interpolan linealmente con relleno de borde por vecino cercano, porque la red requiere una imagen completa.",
       ),
       T(
-        "The validation set selects the checkpoint with lowest mean squared target error. The held-out test set evaluates that selected checkpoint once; it does not choose epochs. A classical projection baseline is also reported, but its present evaluation uses clean observations while the CNN test uses noisy input, and its regularization is fixed rather than tuned. Consequently the table is not a noise-matched ranking or a state-of-the-art claim. Comparing one visually sharper image cannot establish transfer to field geology.",
-        "Validación selecciona el checkpoint de menor error cuadrático. La prueba independiente evalúa ese checkpoint sin seleccionar épocas. También se informa una proyección clásica, pero usa observaciones limpias mientras la CNN recibe ruido, y su regularización es fija, no calibrada. Por ello, la tabla no es una comparación con ruido igualado ni un resultado de estado del arte. Una imagen más definida tampoco establece transferencia a geología de campo.",
+        "The validation set selects the lowest-MSE checkpoint. The held-out test evaluates that checkpoint and a noise-aware spatial L2 comparator on exactly identical noisy observations, then projects the classical estimate onto the same 24 × 28 column target. Input hashes and per-realization errors make that comparison inspectable. Neither a lower average nor a sharper map establishes field transfer; withheld oblique and ring cases retain their individual failures.",
+        "Validación selecciona el checkpoint de menor MSE. Prueba evalúa ese checkpoint y un comparador espacial L2 con idénticas observaciones ruidosas, proyectando el modelo clásico al mismo objetivo de columnas 24 × 28. Se exportan hashes de entradas y errores por realización. Un promedio menor o imagen más definida no demuestra transferencia de campo; los casos oblicuo y anular omitidos conservan sus fallos individuales.",
       ),
     ],
     equations: [
@@ -687,8 +827,8 @@ export const chapters: Chapter[] = [
         "Se usan las mismas particiones disjuntas de observaciones, pero sin objetivo de propiedades. El codificador conecta 256 estaciones con 64 rasgos y después 12 latentes; el decodificador retorna por 64 a 256. La inferencia es determinista. No hay distribución latente probabilística, objetivo variacional, clases geológicas ni ensamble. El mapa de error cuadrado localiza desajuste de observaciones, no probabilidad de anomalía subterránea.",
       ),
       T(
-        "The anomaly threshold is the 99th percentile of mean reconstruction error on validation realizations. This defines an empirical threshold for that generator and noise distribution only. It is not a 99% confidence interval, and it does not guarantee a 1% false-positive rate on another survey. The threshold is fixed before the separate test set and the withheld geometries are evaluated. Sensitivity to unfamiliar geology must be assessed against those cases, including failures to exceed the threshold.",
-        "El umbral es el percentil 99 del error medio de reconstrucción en validación. Es un umbral empírico para ese generador y ruido, no un intervalo de confianza del 99% ni garantía de 1% de falsos positivos en otro levantamiento. Se fija antes de evaluar prueba y geometrías excluidas. La sensibilidad a geología desconocida debe evaluarse con esos casos, incluyendo cuando no superan el umbral.",
+        "The novelty threshold is the 99th percentile of errors on a separate 160-realization calibration set, seed 49001, not the checkpoint-selection validation set. The frozen threshold is tested against 160 independent generator-distribution examples and 80 withheld-family realizations, seed 59001. Sensitivity, specificity, misses, false alarms and pairwise ROC AUC are recorded. These measurements are specific to the generator and noise law, not calibrated probabilities of geological correctness.",
+        "El umbral es el percentil 99 de errores en 160 realizaciones de calibración separadas, semilla 49001, no de validación de pesos. Se prueba con 160 ejemplos independientes del generador y 80 realizaciones de familias omitidas, semilla 59001. Se registran sensibilidad, especificidad, fallos, falsas alarmas y ROC AUC. Son medidas específicas del generador y ruido, no probabilidades calibradas de corrección geológica.",
       ),
       T(
         "The workbench reports both the case score and threshold. The comparison is a testable detector decision, not an assurance of reliability. Under missing coverage the network input is interpolated, whereas the displayed error compares the reconstructed map against all recorded stations, including omitted ones. This distinction matters when attributing a high score to novelty rather than preprocessing. Results should be read alongside input coverage, observation noise and the inverse CNN’s separate column error.",
@@ -702,14 +842,14 @@ export const chapters: Chapter[] = [
         "x es el mapa normalizado; E y D son codificador y decodificador; θ son pesos. La pérdida promedia error cuadrático normalizado entre estaciones.",
       ),
       E(
-        String.raw`\tau=Q_{0.99}\{J_{AE}(x):x\in validation\},\qquad flag(x)=\mathbf1[J_{AE}(x)>\tau]`,
-        "τ is the empirical validation threshold; Q is a sample quantile; flag is a binary threshold decision. It is not a posterior probability or a geological classification.",
-        "τ es el umbral empírico de validación; Q un cuantil muestral; flag una decisión binaria. No es probabilidad posterior ni clasificación geológica.",
+        String.raw`\tau=Q_{0.99}\{J_{AE}(x):x\in calibration\},\qquad flag(x)=\mathbf1[J_{AE}(x)>\tau]`,
+        "τ is the empirical independent-calibration threshold; Q is a sample quantile; flag is a binary threshold decision. It is not a posterior probability or a geological classification.",
+        "τ es el umbral empírico de calibración independiente; Q un cuantil muestral; flag una decisión binaria. No es probabilidad posterior ni clasificación geológica.",
       ),
     ],
     assumptions: T(
-      "Observation reconstruction is only a candidate novelty signal. Unfamiliar geometries may produce familiar gravity maps and remain below threshold. No calibrated geological detection rate can be inferred from two withheld examples.",
-      "Reconstruir observaciones es sólo una señal candidata de novedad. Geometrías desconocidas pueden generar mapas familiares y quedar bajo el umbral. Dos ejemplos excluidos no permiten inferir una tasa geológica calibrada de detección.",
+      "Observation reconstruction is only a candidate novelty signal. Unfamiliar geometries may produce familiar gravity maps and remain below threshold. The independent 80-realization withheld-family test measures detection under its generator only; misses must be retained.",
+      "Reconstruir observaciones es sólo una señal candidata de novedad. Geometrías desconocidas pueden generar mapas familiares y quedar bajo el umbral. La prueba de 80 realizaciones omitidas mide detección sólo bajo su generador; se conservan todos los fallos.",
     ),
     algorithms: [
       {
@@ -734,8 +874,8 @@ export const chapters: Chapter[] = [
             "Entrenar la red 256→64→12→64→256 para reconstruir su entrada.",
           ),
           T(
-            "Select the minimum-validation-MSE checkpoint and calculate validation error quantile 0.99.",
-            "Seleccionar mínimo MSE de validación y calcular cuantil 0,99 de sus errores.",
+            "Select the minimum-validation-MSE checkpoint; compute the 0.99 error quantile on a separate 160-realization calibration set.",
+            "Seleccionar mínimo MSE de validación; calcular cuantil de error 0,99 en 160 realizaciones separadas de calibración.",
           ),
           T(
             "Compute test and case reconstruction errors; compare scores with the frozen threshold.",
