@@ -1,9 +1,98 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 530" role="img" aria-label="Artifact array contracts">
+<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 834" role="img" aria-label="Input and release data contracts separating local survey, measured EDI, and synthetic cases">
 <style>
-text{fill:var(--color-fg);font:14px var(--font-sans)} .heading{font-weight:600;font-size:16px}
-.box{fill:var(--color-surface);stroke:var(--color-border)} .active{fill:var(--color-accent-soft);stroke:var(--color-accent)}
-.edge{stroke:var(--color-fg-subtle);stroke-width:1.5;fill:none}.boundary{stroke:var(--color-border);stroke-dasharray:5 5;fill:none}
-.l-es{display:none} [data-arch-lang="es"] .l-en{display:none} [data-arch-lang="es"] .l-es{display:inline}
-</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="var(--color-fg-subtle)"/></marker></defs>
-<text x="24" y="32" class="l-en heading">Artifact array contracts</text><text x="24" y="32" class="l-es heading">Contratos de arreglos</text><g transform="translate(24,72)"><rect width="440" height="130" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Potential-field volumes</text><text x="16" y="28" class="l-es heading">Volúmenes de campos potenciales</text><text x="16" y="55" class="l-en ">Flattened [z, northing, easting]; easting is fastest</text><text x="16" y="55" class="l-es ">Vector [z, norte, este]; este varía más rápido</text><text x="16" y="79" class="l-en ">16 × 24 × 28 cells; spacing 70 × 80 × 80 m</text><text x="16" y="79" class="l-es ">16 × 24 × 28 celdas; pasos 70 × 80 × 80 m</text><text x="16" y="103" class="l-en ">Origin, centres, units and station coordinates</text><text x="16" y="103" class="l-es ">Origen, centros, unidades y coordenadas</text></g><g transform="translate(496,72)"><rect width="440" height="130" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Seismic arrays</text><text x="16" y="28" class="l-es heading">Arreglos sísmicos</text><text x="16" y="55" class="l-en ">Velocity and wavefield: [depth, distance]</text><text x="16" y="55" class="l-es ">Velocidad y ondas: [profundidad, distancia]</text><text x="16" y="79" class="l-en ">Receiver data: [shot, receiver, time]</text><text x="16" y="79" class="l-es ">Receptores: [disparo, receptor, tiempo]</text><text x="16" y="103" class="l-en ">12.5 m grid; 4 ms exported receiver samples</text><text x="16" y="103" class="l-es ">Malla 12,5 m; muestras de receptores de 4 ms</text></g><g transform="translate(24,252)"><rect width="440" height="120" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Layered-earth responses</text><text x="16" y="28" class="l-es heading">Respuestas estratificadas</text><text x="16" y="55" class="l-en ">n resistivities and n−1 thicknesses</text><text x="16" y="55" class="l-es ">n resistividades y n−1 espesores</text><text x="16" y="79" class="l-en ">Real / imaginary impedance, Ω</text><text x="16" y="79" class="l-es ">Impedancia real / imaginaria, Ω</text><text x="16" y="103" class="l-en ">Apparent resistivity Ω m; phase degrees</text><text x="16" y="103" class="l-es ">Resistividad aparente Ω m; fase grados</text></g><g transform="translate(496,252)"><rect width="440" height="120" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Model checkpoints</text><text x="16" y="28" class="l-es heading">Pesos entrenados</text><text x="16" y="55" class="l-en ">Named tensors, dimensions and values</text><text x="16" y="55" class="l-es ">Tensores nombrados, dimensiones y valores</text><text x="16" y="79" class="l-en ">Training-only input normalization</text><text x="16" y="79" class="l-es ">Normalización sólo de entrenamiento</text><text x="16" y="103" class="l-en ">Validation selection; separate test errors</text><text x="16" y="103" class="l-es ">Selección por validación; prueba separada</text></g><g transform="translate(220,420)"><rect width="520" height="90" rx="8" class="active"/><text x="16" y="28" class="l-en heading">Release integrity</text><text x="16" y="28" class="l-es heading">Integridad de publicación</text><text x="16" y="55" class="l-en ">Identity + finite values + SHA-256 + byte size</text><text x="16" y="55" class="l-es ">Identidad + valores finitos + SHA-256 + tamaño</text></g><path d="M244 202V242" class="edge" marker-end="url(#a)"/><path d="M716 202V242" class="edge" marker-end="url(#a)"/><path d="M244 372V400H480V410" class="edge" marker-end="url(#a)"/><path d="M716 372V400H480" class="edge" marker-end="url(#a)"/>
+  text{fill:var(--color-fg);font-family:var(--font-sans)}
+  .head{font-size:19px;font-weight:700}.kicker{font:600 11px var(--font-mono);fill:var(--color-accent)}
+  .ttl{font-size:14px;font-weight:650}.it{font-size:12.5px}.cd{font:11.5px var(--font-mono);fill:var(--color-accent)}
+  .mu,.lbl{font-size:11px;fill:var(--color-fg-subtle)}.lbl{font-weight:600}
+  .band{fill:var(--color-surface);stroke:var(--color-border)}
+  .bx{fill:var(--color-surface-2);stroke:var(--color-border);stroke-width:1.3}
+  .bx-hi{fill:var(--color-accent-soft);stroke:var(--color-accent)}
+  .bx-web{stroke:var(--color-good)}.bx-gate{stroke:var(--color-warn)}
+  .flow{fill:none;stroke:var(--color-fg-subtle);stroke-width:1.5}.rule{stroke:var(--color-border)}
+  svg .l-es{display:none}[data-arch-lang="es"] svg .l-en{display:none}[data-arch-lang="es"] svg .l-es{display:inline}
+</style>
+<defs><marker id="arrow-contract" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5 1 9" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5"/></marker></defs>
+<text x="24" y="32" class="kicker l-neutral">INPUT → ARTIFACT CONTRACTS / 05</text>
+<text x="24" y="59" class="l-en head">Three source classes; no inferred field truth</text><text x="24" y="59" class="l-es head">Tres clases de fuente; sin verdad de campo inferida</text>
+<text x="24" y="80" class="mu l-en">Measured observations, EDI transfer functions and generated geology enter different contracts.</text>
+<text x="24" y="80" class="mu l-es">Observaciones, funciones EDI y geología generada entran en contratos distintos.</text>
+
+<text x="24" y="112" class="kicker l-en">A · SOURCE / LOCAL VALIDATION</text><text x="24" y="112" class="kicker l-es">A · FUENTE / VALIDACIÓN LOCAL</text>
+<rect x="24" y="125" width="268" height="185" rx="8" class="bx"/>
+<text x="38" y="149" class="ttl l-en">User gravity / magnetic CSV</text><text x="38" y="149" class="ttl l-es">CSV gravimétrico / magnético</text>
+<text x="38" y="171" class="cd l-neutral">ingest.py · user-survey/v2</text>
+<line x1="38" y1="181" x2="278" y2="181" class="rule"/>
+<text x="38" y="205" class="it l-neutral">east_m, north_m, up_m, value, sigma</text>
+<text x="38" y="228" class="it l-en">≥4 finite, unique stations; σ &gt; 0</text><text x="38" y="228" class="it l-es">≥4 estaciones únicas, finitas; σ &gt; 0</text>
+<text x="38" y="251" class="it l-en">Local SimPEG L2 / IRLS inversion</text><text x="38" y="251" class="it l-es">Inversión SimPEG L2 / IRLS local</text>
+<text x="38" y="275" class="mu l-en">No truth; not a published case.</text><text x="38" y="275" class="mu l-es">Sin verdad; no es caso publicado.</text>
+<text x="38" y="296" class="mu l-en">Terrain and regional effects are not solved.</text><text x="38" y="296" class="mu l-es">Relieve y campo regional no resueltos.</text>
+<rect x="306" y="125" width="268" height="185" rx="8" class="bx bx-gate"/>
+<text x="320" y="149" class="ttl l-en">Measured EDI tensor</text><text x="320" y="149" class="ttl l-es">Tensor EDI medido</text>
+<text x="320" y="171" class="cd l-neutral">edi.py · edi-screen/v1</text>
+<line x1="320" y1="181" x2="560" y2="181" class="rule"/>
+<text x="320" y="205" class="it l-en">Blocks, units, rotations, variance</text><text x="320" y="205" class="it l-es">Bloques, unidades, giro, varianza</text>
+<text x="320" y="228" class="it l-neutral">Zxy vs −Zyx · Zxx / Zyy</text>
+<text x="320" y="251" class="it l-en">Tensor compatibility gate</text><text x="320" y="251" class="it l-es">Control de compatibilidad tensorial</text>
+<text x="320" y="275" class="mu l-en">Failed screen → no 1D inversion.</text><text x="320" y="275" class="mu l-es">Filtro fallido → sin inversión 1D.</text>
+<text x="320" y="296" class="mu l-neutral">truth: null · methods: {}</text>
+<rect x="588" y="125" width="268" height="185" rx="8" class="bx bx-hi"/>
+<text x="602" y="149" class="ttl l-en">Generated geological cases</text><text x="602" y="149" class="ttl l-es">Casos geológicos generados</text>
+<text x="602" y="171" class="cd l-neutral">geology.py · rebuild.py</text>
+<line x1="602" y1="181" x2="842" y2="181" class="rule"/>
+<text x="602" y="205" class="it l-en">20 cases × 6 controlled variants</text><text x="602" y="205" class="it l-es">20 casos × 6 variantes controladas</text>
+<text x="602" y="228" class="it l-en">Geometry, survey, seed, units</text><text x="602" y="228" class="it l-es">Geometría, encuesta, semilla</text>
+<text x="602" y="251" class="it l-en">Forward → noise/mask → inversion</text><text x="602" y="251" class="it l-es">Directo → ruido/máscara → inversor</text>
+<text x="602" y="275" class="mu l-en">Truth held out from estimator.</text><text x="602" y="275" class="mu l-es">Verdad oculta al estimador.</text>
+<text x="602" y="296" class="mu l-en">Synthetic truth ≠ field truth.</text><text x="602" y="296" class="mu l-es">Verdad sintética ≠ de campo.</text>
+
+<path d="M158 310V337 M440 310V337 M722 310V337" class="flow" marker-end="url(#arrow-contract)"/>
+<text x="42" y="335" class="lbl l-en">local JSON only</text><text x="42" y="335" class="lbl l-es">JSON sólo local</text>
+<text x="326" y="335" class="lbl l-en">screen artifact</text><text x="326" y="335" class="lbl l-es">artefacto filtro</text>
+<text x="609" y="335" class="lbl l-en">120 run artifacts</text><text x="609" y="335" class="lbl l-es">120 resultados</text>
+<text x="24" y="369" class="kicker l-en">B · RESULT CONTRACTS / NOT INTERCHANGEABLE</text><text x="24" y="369" class="kicker l-es">B · CONTRATOS DE RESULTADOS / NO INTERCAMBIABLES</text>
+<rect x="24" y="382" width="268" height="126" rx="8" class="bx"/>
+<text x="38" y="406" class="ttl l-en">Local user survey</text><text x="38" y="406" class="ttl l-es">Encuesta local del usuario</text>
+<text x="38" y="428" class="cd l-neutral">input_sha256 · mesh · results</text>
+<text x="38" y="452" class="it l-en">Observed, predicted, residual</text><text x="38" y="452" class="it l-es">Observado, predicho, residuo</text>
+<text x="38" y="478" class="mu l-en">External tutorials remain local/ignored.</text><text x="38" y="478" class="mu l-es">Tutoriales externos quedan locales.</text>
+<rect x="306" y="382" width="268" height="126" rx="8" class="bx bx-gate"/>
+<text x="320" y="406" class="ttl l-en">Measured-data screen</text><text x="320" y="406" class="ttl l-es">Filtro de datos medidos</text>
+<text x="320" y="428" class="cd l-neutral">edi/manifest.json · field_screens[]</text>
+<text x="320" y="452" class="it l-en">Real/imag Z, ρₐ, phase, σ</text><text x="320" y="452" class="it l-es">Z real/im, ρₐ, fase, σ</text>
+<text x="320" y="478" class="mu l-en">When bundled: DOI, no inferred section.</text><text x="320" y="478" class="mu l-es">Si se incluye: DOI, sin sección inferida.</text>
+<rect x="588" y="382" width="268" height="126" rx="8" class="bx bx-hi"/>
+<text x="602" y="406" class="ttl l-en">Canonical synthetic run</text><text x="602" y="406" class="ttl l-es">Resultado sintético canónico</text>
+<text x="602" y="428" class="cd l-neutral">inverse-earth/v2 · catalog.json</text>
+<text x="602" y="452" class="it l-en">truth, survey, methods, metrics</text><text x="602" y="452" class="it l-es">verdad, encuesta, métricas</text>
+<text x="602" y="478" class="mu l-en">Prediction and residual per method.</text><text x="602" y="478" class="mu l-es">Predicción y residuo por método.</text>
+
+<rect x="24" y="538" width="832" height="167" rx="8" class="band"/>
+<text x="40" y="562" class="kicker l-en">C · ARRAY ORIENTATION IS PART OF THE CONTRACT</text><text x="40" y="562" class="kicker l-es">C · ORIENTACIÓN DE ARREGLOS ES PARTE DEL CONTRATO</text>
+<rect x="40" y="578" width="250" height="108" rx="6" class="bx"/>
+<text x="53" y="602" class="ttl l-en">Potential volume</text><text x="53" y="602" class="ttl l-es">Volumen potencial</text>
+<text x="53" y="626" class="cd l-neutral">[z, northing, easting]</text>
+<text x="53" y="648" class="it l-en">easting varies fastest</text><text x="53" y="648" class="it l-es">este varía más rápido</text>
+<text x="53" y="671" class="mu l-neutral">16 × 24 × 28 · cell centres</text>
+<rect x="306" y="578" width="250" height="108" rx="6" class="bx"/>
+<text x="319" y="602" class="ttl l-en">Seismic arrays</text><text x="319" y="602" class="ttl l-es">Arreglos sísmicos</text>
+<text x="319" y="626" class="cd l-neutral">v: [depth, distance]</text>
+<text x="319" y="648" class="cd l-neutral">d: [shot, receiver, time]</text>
+<text x="319" y="671" class="mu l-en">4 ms traces; 24 ms wave snapshots</text><text x="319" y="671" class="mu l-es">trazas 4 ms; ondas cada 24 ms</text>
+<rect x="572" y="578" width="268" height="108" rx="6" class="bx"/>
+<text x="585" y="602" class="ttl l-en">MT + learned arrays</text><text x="585" y="602" class="ttl l-es">Arreglos MT y aprendidos</text>
+<text x="585" y="626" class="cd l-neutral">ρ[n], h[n−1], Z(ω) [Ω]</text>
+<text x="585" y="648" class="it l-en">Checkpoints: named tensor shapes</text><text x="585" y="648" class="it l-es">Pesos: formas de tensores</text>
+<text x="585" y="671" class="mu l-en">Training normalization / split logged</text><text x="585" y="671" class="mu l-es">Normalización / partición registrada</text>
+<path d="M722 508V527" class="flow" marker-end="url(#arrow-contract)"/>
+<text x="568" y="526" class="lbl l-en">validate shape + axes</text><text x="568" y="526" class="lbl l-es">validar forma + ejes</text>
+<path d="M440 705V725" class="flow" marker-end="url(#arrow-contract)"/>
+<text x="483" y="722" class="lbl l-en">copy files, no computation</text><text x="483" y="722" class="lbl l-es">copiar, sin recalcular</text>
+<rect x="24" y="735" width="832" height="75" rx="8" class="bx bx-web"/>
+<text x="40" y="758" class="ttl l-en">D · Release gate → static browser reader</text><text x="40" y="758" class="ttl l-es">D · Control de publicación → lector web estático</text>
+<text x="40" y="780" class="cd l-neutral">copy-data.mjs → data/v2/* → science.ts · EdiFixtures.tsx</text>
+<text x="40" y="800" class="it l-en">Check identity, finite values, schema, SHA-256 and bytes; display provenance and explicit non-claims.</text>
+<text x="40" y="800" class="it l-es">Verificar identidad, finitud, esquema, SHA-256 y bytes; mostrar fuente y límites.</text>
+<text x="24" y="826" class="mu l-en">The user-survey CSV workflow is a local script, not an upload or server-side service in this release.</text>
+<text x="24" y="826" class="mu l-es">El flujo CSV es un script local, no carga web ni servicio remoto en esta publicación.</text>
 </svg>

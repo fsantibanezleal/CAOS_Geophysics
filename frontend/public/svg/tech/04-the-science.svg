@@ -1,9 +1,114 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 530" role="img" aria-label="Forward and inverse operators">
+<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 871" role="img" aria-label="Forward, inverse, joint, and learned geophysics methods with validation limits">
 <style>
-text{fill:var(--color-fg);font:14px var(--font-sans)} .heading{font-weight:600;font-size:16px}
-.box{fill:var(--color-surface);stroke:var(--color-border)} .active{fill:var(--color-accent-soft);stroke:var(--color-accent)}
-.edge{stroke:var(--color-fg-subtle);stroke-width:1.5;fill:none}.boundary{stroke:var(--color-border);stroke-dasharray:5 5;fill:none}
-.l-es{display:none} [data-arch-lang="es"] .l-en{display:none} [data-arch-lang="es"] .l-es{display:inline}
-</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="var(--color-fg-subtle)"/></marker></defs>
-<text x="24" y="32" class="l-en heading">Forward and inverse operators</text><text x="24" y="32" class="l-es heading">Operadores directos e inversos</text><g transform="translate(24,80)"><rect width="274" height="110" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Known model mtrue</text><text x="16" y="28" class="l-es heading">Modelo conocido mreal</text><text x="16" y="55" class="l-en ">Geometry + physical properties</text><text x="16" y="55" class="l-es ">Geometría + propiedades físicas</text><text x="16" y="79" class="l-en ">Used for synthetic evaluation</text><text x="16" y="79" class="l-es ">Se usa para evaluación sintética</text></g><g transform="translate(343,80)"><rect width="274" height="110" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Forward operator F</text><text x="16" y="28" class="l-es heading">Operador directo F</text><text x="16" y="55" class="l-en ">Prisms / impedance / wave equation</text><text x="16" y="55" class="l-es ">Prismas / impedancia / ecuación de onda</text><text x="16" y="79" class="l-en ">dclean = F(mtrue)</text><text x="16" y="79" class="l-es ">dlimpio = F(mreal)</text></g><g transform="translate(662,80)"><rect width="274" height="110" rx="8" class="active"/><text x="16" y="28" class="l-en heading">Observed data d</text><text x="16" y="28" class="l-es heading">Datos observados d</text><text x="16" y="55" class="l-en ">Seeded noise + coverage mask</text><text x="16" y="55" class="l-es ">Ruido con semilla + máscara</text><text x="16" y="79" class="l-en ">d = dclean + ε</text><text x="16" y="79" class="l-es ">d = dlimpio + ε</text></g><path d="M298 135H333" class="edge" marker-end="url(#a)"/><path d="M617 135H652" class="edge" marker-end="url(#a)"/><g transform="translate(662,295)"><rect width="274" height="125" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Inverse problem</text><text x="16" y="28" class="l-es heading">Problema inverso</text><text x="16" y="55" class="l-en ">Data residual + model penalty</text><text x="16" y="55" class="l-es ">Residuo de datos + penalización</text><text x="16" y="79" class="l-en ">Minimize the specified objective</text><text x="16" y="79" class="l-es ">Minimiza el objetivo especificado</text><text x="16" y="103" class="l-en ">Return estimated properties m̂</text><text x="16" y="103" class="l-es ">Devuelve propiedades estimadas m̂</text></g><g transform="translate(343,295)"><rect width="274" height="125" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Predicted response F(m̂)</text><text x="16" y="28" class="l-es heading">Respuesta predicha F(m̂)</text><text x="16" y="55" class="l-en ">Same physical forward operator</text><text x="16" y="55" class="l-es ">Mismo operador físico directo</text><text x="16" y="79" class="l-en ">Evaluate data-space error</text><text x="16" y="79" class="l-es ">Evalúa error en espacio de datos</text><text x="16" y="103" class="l-en ">Model penalty is not data error</text><text x="16" y="103" class="l-es ">Penalización no es error de datos</text></g><g transform="translate(24,295)"><rect width="274" height="125" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Known-model error</text><text x="16" y="28" class="l-es heading">Error de modelo conocido</text><text x="16" y="55" class="l-en ">Compare m̂ with mtrue</text><text x="16" y="55" class="l-es ">Compara m̂ con mreal</text><text x="16" y="79" class="l-en ">Only available for synthetic truth</text><text x="16" y="79" class="l-es ">Sólo con verdad sintética</text><text x="16" y="103" class="l-en ">Different target from residual fit</text><text x="16" y="103" class="l-es ">Distinto del ajuste de residuos</text></g><path d="M800 190V285" class="edge" marker-end="url(#a)"/><path d="M662 357H627" class="edge" marker-end="url(#a)"/><path d="M343 357H308" class="edge" marker-end="url(#a)"/><path d="M162 190V285" class="edge" marker-end="url(#a)"/><path d="M480 295V238H790" class="edge" marker-end="url(#a)"/><text x="24" y="480" class="l-en ">A low residual does not eliminate the null space or validate a geological interpretation.</text><text x="24" y="480" class="l-es ">Un residuo bajo no elimina el espacio nulo ni valida una interpretación geológica.</text>
+  text{fill:var(--color-fg);font-family:var(--font-sans)}
+  .head{font-size:19px;font-weight:700}.kicker{font:600 11px var(--font-mono);fill:var(--color-accent)}
+  .ttl{font-size:14px;font-weight:650}.it{font-size:12.5px}.cd{font:11.5px var(--font-mono);fill:var(--color-accent)}
+  .eq{font:12.5px var(--font-mono);fill:var(--color-fg)}
+  .mu,.lbl{font-size:11px;fill:var(--color-fg-subtle)}.lbl{font-weight:600}
+  .band{fill:var(--color-surface);stroke:var(--color-border)}
+  .bx{fill:var(--color-surface-2);stroke:var(--color-border);stroke-width:1.3}
+  .bx-hi{fill:var(--color-accent-soft);stroke:var(--color-accent)}.bx-compute{stroke:var(--color-accent-2)}
+  .bx-web{stroke:var(--color-good)}.bx-gate{stroke:var(--color-warn)}
+  .flow{fill:none;stroke:var(--color-fg-subtle);stroke-width:1.5}.rule{stroke:var(--color-border)}
+  svg .l-es{display:none}[data-arch-lang="es"] svg .l-en{display:none}[data-arch-lang="es"] svg .l-es{display:inline}
+</style>
+<defs><marker id="arrow-science" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5 1 9" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5"/></marker></defs>
+<text x="24" y="32" class="kicker l-neutral">METHODS AND EVIDENCE / 04</text>
+<text x="24" y="59" class="l-en head">Forward physics → inverse estimate → independent checks</text>
+<text x="24" y="59" class="l-es head">Física directa → estimación inversa → controles independientes</text>
+<text x="24" y="80" class="mu l-en">Truth is available only in the generated synthetic cases. A small data residual is not geological recovery.</text>
+<text x="24" y="80" class="mu l-es">La verdad existe sólo en casos sintéticos. Un residuo pequeño no demuestra recuperación geológica.</text>
+
+<rect x="24" y="101" width="832" height="116" rx="8" class="band"/>
+<text x="40" y="123" class="kicker l-en">COMMON EXPERIMENT PROTOCOL · rebuild.py</text><text x="40" y="123" class="kicker l-es">PROTOCOLO EXPERIMENTAL · rebuild.py</text>
+<rect x="40" y="140" width="144" height="48" rx="5" class="bx"/>
+<text x="51" y="159" class="it l-en">Geology mₜ</text><text x="51" y="159" class="it l-es">Geología mₜ</text>
+<text x="51" y="176" class="mu l-en">seed + units</text><text x="51" y="176" class="mu l-es">semilla + unidades</text>
+<rect x="204" y="140" width="144" height="48" rx="5" class="bx"/>
+<text x="215" y="159" class="it l-neutral">F(mₜ) → d₀</text>
+<text x="215" y="176" class="mu l-en">survey geometry</text><text x="215" y="176" class="mu l-es">geometría encuesta</text>
+<rect x="368" y="140" width="144" height="48" rx="5" class="bx"/>
+<text x="379" y="159" class="it l-en">Noise + mask</text><text x="379" y="159" class="it l-es">Ruido + máscara</text>
+<text x="379" y="176" class="mu l-neutral">d = M(d₀ + ε)</text>
+<rect x="532" y="140" width="144" height="48" rx="5" class="bx bx-hi"/>
+<text x="543" y="159" class="it l-en">Inverse m̂</text><text x="543" y="159" class="it l-es">Inversión m̂</text>
+<text x="543" y="176" class="mu l-en">no access to mₜ</text><text x="543" y="176" class="mu l-es">sin acceso a mₜ</text>
+<rect x="696" y="140" width="144" height="48" rx="5" class="bx bx-gate"/>
+<text x="707" y="159" class="it l-en">Evaluate</text><text x="707" y="159" class="it l-es">Evaluar</text>
+<text x="707" y="176" class="mu l-en">fit ≠ recovery</text><text x="707" y="176" class="mu l-es">ajuste ≠ modelo</text>
+<path d="M184 164H200 M348 164H364 M512 164H528 M676 164H692" class="flow" marker-end="url(#arrow-science)"/>
+<text x="40" y="199" class="lbl l-en">Inputs and metrics carry their own physical units; observation masks define the fitted population.</text>
+<text x="40" y="199" class="lbl l-es">Entradas y métricas conservan unidades físicas; máscaras definen qué datos se ajustan.</text>
+
+<text x="24" y="239" class="kicker l-en">PHYSICS-BASED METHODS</text><text x="24" y="239" class="kicker l-es">MÉTODOS BASADOS EN FÍSICA</text>
+<rect x="24" y="252" width="268" height="188" rx="8" class="bx bx-compute"/>
+<text x="38" y="276" class="ttl l-en">Gravity / magnetic inversion</text><text x="38" y="276" class="ttl l-es">Inversión gravimétrica / magnética</text>
+<text x="38" y="298" class="cd l-neutral">potential.py · spatial_inverse.py</text>
+<line x1="38" y1="308" x2="278" y2="308" class="rule"/>
+<text x="38" y="331" class="eq l-neutral">d = Gm + ε</text>
+<text x="38" y="354" class="it l-en">SimPEG integral sensitivity on 3D cells</text><text x="38" y="354" class="it l-es">Sensibilidad integral SimPEG en 3D</text>
+<text x="38" y="377" class="it l-en">Whitened fit + spatial regularization</text><text x="38" y="377" class="it l-es">Ajuste ponderado + regularización</text>
+<text x="38" y="400" class="mu l-en">Sparse station coverage limits recovery.</text><text x="38" y="400" class="mu l-es">Cobertura escasa limita recuperación.</text>
+<text x="38" y="421" class="mu l-en">Density and χ have different units.</text><text x="38" y="421" class="mu l-es">Densidad y χ tienen unidades distintas.</text>
+<rect x="306" y="252" width="268" height="188" rx="8" class="bx bx-compute"/>
+<text x="320" y="276" class="ttl l-en">Layered-earth MT</text><text x="320" y="276" class="ttl l-es">MT de capas horizontales</text>
+<text x="320" y="298" class="cd l-neutral">electromagnetics.py · edi.py</text>
+<line x1="320" y1="308" x2="560" y2="308" class="rule"/>
+<text x="320" y="331" class="eq l-neutral">Zⱼ = Wⱼ (Zⱼ₊₁ + Wⱼtanh kⱼhⱼ)</text>
+<text x="320" y="350" class="eq l-neutral">       / (Wⱼ + Zⱼ₊₁tanh kⱼhⱼ)</text>
+<text x="320" y="377" class="it l-en">Fit complex Z with bounded TRF / Adam</text><text x="320" y="377" class="it l-es">Ajustar Z complejo con TRF / Adam</text>
+<text x="320" y="400" class="mu l-en">Fixed h; tensor screen before 1D fit.</text><text x="320" y="400" class="mu l-es">h fijo; validar tensor antes de 1D.</text>
+<text x="320" y="421" class="mu l-en">Measured EDI can fail eligibility.</text><text x="320" y="421" class="mu l-es">EDI medido puede no ser apto.</text>
+<rect x="588" y="252" width="268" height="188" rx="8" class="bx bx-compute"/>
+<text x="602" y="276" class="ttl l-en">Acoustic full-waveform inversion</text><text x="602" y="276" class="ttl l-es">Inversión de onda completa</text>
+<text x="602" y="298" class="cd l-neutral">seismic.py · Deepwave</text>
+<line x1="602" y1="308" x2="842" y2="308" class="rule"/>
+<text x="602" y="331" class="eq l-neutral">v⁻² ∂²ₜu − ∇²u = s</text>
+<text x="602" y="354" class="it l-en">L-BFGS; full band vs 3→5→8→14 Hz</text><text x="602" y="354" class="it l-es">L-BFGS; banda total vs 3→5→8→14 Hz</text>
+<text x="602" y="377" class="it l-en">Multiresolution bounded velocity</text><text x="602" y="377" class="it l-es">Velocidad acotada multirresolución</text>
+<text x="602" y="400" class="mu l-en">Active + withheld receiver fit gated.</text><text x="602" y="400" class="mu l-es">Ajuste activo y reservado se evalúa.</text>
+<text x="602" y="421" class="mu l-en">Snapshots are not a live PDE solve.</text><text x="602" y="421" class="mu l-es">Fotogramas no son cálculo en vivo.</text>
+
+<text x="24" y="482" class="kicker l-en">COUPLED AND LEARNED METHODS</text><text x="24" y="482" class="kicker l-es">MÉTODOS ACOPLADOS Y APRENDIDOS</text>
+<rect x="24" y="495" width="268" height="188" rx="8" class="bx bx-compute"/>
+<text x="38" y="519" class="ttl l-en">Joint gravity + magnetics</text><text x="38" y="519" class="ttl l-es">Gravedad + magnetismo conjunto</text>
+<text x="38" y="541" class="cd l-neutral">joint.py</text>
+<line x1="38" y1="551" x2="278" y2="551" class="rule"/>
+<text x="38" y="574" class="eq l-neutral">Rₓ = ‖∇ρ × ∇χ‖²</text>
+<text x="38" y="597" class="it l-en">Cross-gradient or Gaussian mixture</text><text x="38" y="597" class="it l-es">Gradiente cruzado o mezcla GMM</text>
+<text x="38" y="620" class="it l-en">Compare matched uncoupled baseline</text><text x="38" y="620" class="it l-es">Comparar base independiente</text>
+<text x="38" y="643" class="mu l-en">Both properties + magnetic fit gated.</text><text x="38" y="643" class="mu l-es">Ambas propiedades y ajuste magnético.</text>
+<text x="38" y="664" class="mu l-en">Coupling alone does not prove gain.</text><text x="38" y="664" class="mu l-es">Acoplar no demuestra mejora.</text>
+<rect x="306" y="495" width="268" height="188" rx="8" class="bx bx-compute"/>
+<text x="320" y="519" class="ttl l-en">CNN column-density estimator</text><text x="320" y="519" class="ttl l-es">CNN de densidad integrada</text>
+<text x="320" y="541" class="cd l-neutral">learning.py · models/training.json</text>
+<line x1="320" y1="551" x2="560" y2="551" class="rule"/>
+<text x="320" y="574" class="eq l-neutral">c(x,y) = Σᶻ ρ(x,y,z) Δz</text>
+<text x="320" y="597" class="it l-en">Observations → 2D density column</text><text x="320" y="597" class="it l-es">Datos → columna 2D de densidad</text>
+<text x="320" y="620" class="it l-en">Disjoint train / validation / test</text><text x="320" y="620" class="it l-es">Entrenamiento / val. / prueba disjuntos</text>
+<text x="320" y="643" class="mu l-en">No 3D reconstruction from this CNN.</text><text x="320" y="643" class="mu l-es">Esta CNN no reconstruye 3D.</text>
+<text x="320" y="664" class="mu l-en">Compare on the same column target.</text><text x="320" y="664" class="mu l-es">Comparar la misma columna objetivo.</text>
+<rect x="588" y="495" width="268" height="188" rx="8" class="bx bx-gate"/>
+<text x="602" y="519" class="ttl l-en">Observation autoencoder</text><text x="602" y="519" class="ttl l-es">Autoencoder de observaciones</text>
+<text x="602" y="541" class="cd l-neutral">learning.py · detection_validation</text>
+<line x1="602" y1="551" x2="842" y2="551" class="rule"/>
+<text x="602" y="574" class="eq l-neutral">score = mean (x − AE(x))²</text>
+<text x="602" y="597" class="it l-en">Reconstruct normalized network input</text><text x="602" y="597" class="it l-es">Reconstruir entrada normalizada</text>
+<text x="602" y="620" class="it l-en">Threshold = score comparison only</text><text x="602" y="620" class="it l-es">Umbral = comparación de puntaje</text>
+<text x="602" y="643" class="mu l-en">Case-level geology is uncalibrated.</text><text x="602" y="643" class="mu l-es">Geología del caso no calibrada.</text>
+<text x="602" y="664" class="mu l-en">Aggregate detector failure retained.</text><text x="602" y="664" class="mu l-es">Fallo global del detector se conserva.</text>
+
+<rect x="24" y="724" width="832" height="119" rx="8" class="band"/>
+<text x="40" y="748" class="kicker l-en">THREE DIFFERENT EVIDENCE QUESTIONS</text><text x="40" y="748" class="kicker l-es">TRES PREGUNTAS DE EVIDENCIA DISTINTAS</text>
+<rect x="40" y="761" width="255" height="64" rx="5" class="bx bx-web"/>
+<text x="53" y="783" class="ttl l-en">Data space</text><text x="53" y="783" class="ttl l-es">Espacio de datos</text>
+<text x="53" y="804" class="it l-en">F(m̂) − d; active / withheld</text><text x="53" y="804" class="it l-es">F(m̂) − d; activos / reservados</text>
+<rect x="313" y="761" width="255" height="64" rx="5" class="bx bx-web"/>
+<text x="326" y="783" class="ttl l-en">Model space · synthetic only</text><text x="326" y="783" class="ttl l-es">Modelo · sólo sintético</text>
+<text x="326" y="804" class="it l-en">m̂ − mₜ against same target</text><text x="326" y="804" class="it l-es">m̂ − mₜ con objetivo común</text>
+<rect x="586" y="761" width="254" height="64" rx="5" class="bx bx-gate"/>
+<text x="599" y="783" class="ttl l-en">Calibration and scope</text><text x="599" y="783" class="ttl l-es">Calibración y alcance</text>
+<text x="599" y="804" class="it l-en">No claim beyond tested population</text><text x="599" y="804" class="it l-es">Sin extrapolar fuera de pruebas</text>
+<text x="24" y="859" class="mu l-en">A failed or inapplicable gate remains unresolved; plots do not override the recorded numerical evaluation.</text>
+<text x="24" y="859" class="mu l-es">Un criterio fallido o inaplicable queda sin resolver; la gráfica no sustituye la evaluación numérica.</text>
 </svg>
