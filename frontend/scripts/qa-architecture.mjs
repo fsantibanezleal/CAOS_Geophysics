@@ -3,7 +3,7 @@
  * Screenshots go to the OS temp directory, never the repository.
  */
 import { chromium } from '@playwright/test';
-import { readFileSync, mkdtempSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +20,8 @@ const labels = [
   'Input and release data contracts separating local survey, measured EDI, and synthetic cases',
 ];
 const raw = files.map((file) => readFileSync(join(frontend, 'public/svg/tech', file), 'utf8'));
-const shots = mkdtempSync(join(tmpdir(), 'geophysics-architecture-'));
+const shots = process.env.QA_OUTPUT ? resolve(process.env.QA_OUTPUT) : mkdtempSync(join(tmpdir(), 'geophysics-architecture-'));
+mkdirSync(shots, { recursive: true });
 const errors = [];
 
 raw.forEach((svg, i) => {

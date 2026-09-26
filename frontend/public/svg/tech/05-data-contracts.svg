@@ -60,7 +60,7 @@
 <text x="320" y="406" class="ttl l-en">Measured-data screen</text><text x="320" y="406" class="ttl l-es">Filtro de datos medidos</text>
 <text x="320" y="428" class="cd l-neutral">edi/manifest.json · field_screens[]</text>
 <text x="320" y="452" class="it l-en">Real/imag Z, ρₐ, phase, σ</text><text x="320" y="452" class="it l-es">Z real/im, ρₐ, fase, σ</text>
-<text x="320" y="478" class="mu l-en">When bundled: DOI, no inferred section.</text><text x="320" y="478" class="mu l-es">Si se incluye: DOI, sin sección inferida.</text>
+  <text x="320" y="478" class="mu l-en">Cited DOI; no inferred section.</text><text x="320" y="478" class="mu l-es">DOI citado; sin sección inferida.</text>
 <rect x="588" y="382" width="268" height="126" rx="8" class="bx bx-hi"/>
 <text x="602" y="406" class="ttl l-en">Canonical synthetic run</text><text x="602" y="406" class="ttl l-es">Resultado sintético canónico</text>
 <text x="602" y="428" class="cd l-neutral">inverse-earth/v2 · catalog.json</text>
