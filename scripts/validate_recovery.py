@@ -113,7 +113,7 @@ def validate(data,report):
                  catalog_sha256=hashlib.sha256((data/'catalog.json').read_bytes()).hexdigest(),results=len(rows),failures=failures,
                  nominal_fwi_ratios=nominal,status='PASS' if not failures else 'FAIL',verdicts=rows,
                  claim='Contract and declared numerical gates only; retained unresolved and negative-control results are not recovery successes')
-    report.parent.mkdir(parents=True,exist_ok=True);report.write_text(json.dumps(receipt,indent=2),encoding='utf-8')
+    report.parent.mkdir(parents=True,exist_ok=True);report.write_text(json.dumps(receipt,indent=2),encoding='utf-8',newline='\n')
     print(receipt['status'],len(rows),'results;',len(failures),'failed gates',flush=True)
     return not failures
 

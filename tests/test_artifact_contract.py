@@ -61,3 +61,10 @@ def test_reference_inverse_percentile_is_absolute_and_not_truth_driven():
     assert absolute_percentile([-4.,0.,1.,10.],0.9)==4.
     with pytest.raises(ValueError,match='Invalid inverse model'):
         absolute_percentile([float('nan')])
+
+
+@pytest.mark.parametrize('name',['validation.json','fwi-replay.json'])
+def test_release_evidence_uses_platform_stable_lf(name):
+    path=contract.ROOT/name
+    assert path.is_file()
+    assert b'\r\n' not in path.read_bytes(),f'{name} would differ between Windows build and GitHub Pages'
