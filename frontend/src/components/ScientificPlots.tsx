@@ -255,9 +255,23 @@ export function Plot({
   band?: Band;
 }) {
   const [pick, setPick] = useState<number | null>(null);
-  const w = 640,
-    h = 270,
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [w, setWidth] = useState(640);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const update = () => {
+      const next = Math.max(280, Math.round(svg.getBoundingClientRect().width));
+      setWidth(current => current === next ? current : next);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(svg);
+    update();
+    return () => observer.disconnect();
+  }, []);
+  const h = 270,
     p = { l: 64, r: 22, t: 20, b: 42 };
+  const ticks = w < 480 ? 4 : 5;
   const tx = (v: number) => (logX ? Math.log10(Math.max(v, 1e-20)) : v),
     ty = (v: number) => (logY ? Math.log10(Math.max(v, 1e-20)) : v);
   const xr = extent(x.map(tx)),
@@ -284,6 +298,7 @@ export function Plot({
         </output>
       </figcaption>
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${w} ${h}`}
         role="img"
         aria-label={title}
@@ -297,8 +312,8 @@ export function Plot({
           setPick(near);
         }}
       >
-        {Array.from({ length: 5 }, (_, i) => {
-          const a = i / 4,
+        {Array.from({ length: ticks }, (_, i) => {
+          const a = i / (ticks - 1),
             yv = yr[0] + a * (yr[1] - yr[0]),
             xv = xr[0] + a * (xr[1] - xr[0]);
           return (

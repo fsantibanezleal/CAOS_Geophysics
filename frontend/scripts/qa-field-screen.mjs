@@ -27,6 +27,8 @@ try {
     await page.getByRole('tab', { name: item.lang === 'es' ? 'Archivos EDI e inversión' : 'EDI fixtures and inversion', exact: true }).click();
     const screen = page.locator('[data-source-kind="measured-edi-screen"]');
     await screen.waitFor();
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-source-kind="measured-edi-screen"] .curve svg')]
+      .every(svg => Math.abs(svg.viewBox.baseVal.width - svg.getBoundingClientRect().width) < 2));
     if (await screen.getByText('WRMS Zxx').count() !== 1) errors.push(`${item.name}: missing measured tensor score`);
     if (await screen.getByText('42', { exact: true }).count() !== 1) errors.push(`${item.name}: frequency count is not 42`);
     if (await screen.getByText('No', { exact: true }).count() < 1) errors.push(`${item.name}: screen does not disclose absent inversion`);
@@ -34,13 +36,15 @@ try {
     if (await link.count() !== 1) errors.push(`${item.name}: missing USGS release DOI link`);
     const measured = await screen.evaluate(element => ({ text: element.textContent, width: element.getBoundingClientRect().width }));
     if (!measured.text.includes('267.6')) errors.push(`${item.name}: measured antisymmetry score absent`);
-    await screen.scrollIntoViewIfNeeded();
+    await screen.evaluate(element => element.scrollIntoView({ block: 'start' }));
     const layout = await page.evaluate(() => {
       const box = document.querySelector('[data-source-kind="measured-edi-screen"]').getBoundingClientRect();
       return { documentWidth: document.documentElement.scrollWidth, documentHeight: document.documentElement.scrollHeight,
         screenTop: Math.round(box.top + scrollY), screenHeight: Math.round(box.height) };
     });
-    await page.screenshot({ path: resolve(output, `${item.name}.png`), fullPage: false });
+    await page.screenshot({ path: resolve(output, `${item.name}-curves.png`), fullPage: false });
+    await screen.getByText('WRMS Zxx').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: resolve(output, `${item.name}-verdict.png`), fullPage: false });
     rows.push({ ...item, screenWidth: measured.width, ...layout });
     await context.close();
   }
