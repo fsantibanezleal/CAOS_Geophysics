@@ -19,6 +19,7 @@ REUSABLE_VERSIONS = {'0.04.000', RELEASE_VERSION}
 
 def annotate(result, case, runtime, iterations=28, epochs=180):
     result['runtime_seconds']=runtime
+    result['export_precision_significant_digits']=10 if case['family']=='seismic' else 7
     result['provenance']={**result.get('provenance',{}),'source':'Original geological constructors','license':'CC-BY-4.0',
                           'seed':case['seed'],'version':RELEASE_VERSION,'synthetic':True,
                           'generator_fingerprint':generator_fingerprint(case['family'],iterations,epochs,RELEASE_VERSION)}
@@ -27,25 +28,25 @@ def annotate(result, case, runtime, iterations=28, epochs=180):
     return result
 
 
-def jsonable(value):
+def jsonable(value,significant_digits=7):
     if isinstance(value,np.ndarray):
-        return jsonable(value.tolist())
+        return jsonable(value.tolist(),significant_digits)
     if isinstance(value,dict):
-        return {k:jsonable(v) for k,v in value.items()}
+        return {k:jsonable(v,significant_digits) for k,v in value.items()}
     if isinstance(value,(list,tuple)):
-        return [jsonable(v) for v in value]
+        return [jsonable(v,significant_digits) for v in value]
     if isinstance(value,(float,np.floating)):
         if not np.isfinite(value):
             raise ValueError("Non-finite scientific artifact")
-        return float(f"{value:.7g}")
+        return float(f"{value:.{significant_digits}g}")
     if isinstance(value,np.integer):
         return int(value)
     return value
 
 
-def save(path,obj):
+def save(path,obj,significant_digits=7):
     path.parent.mkdir(parents=True,exist_ok=True)
-    path.write_text(json.dumps(jsonable(obj),ensure_ascii=False,separators=(",",":")),encoding="utf-8")
+    path.write_text(json.dumps(jsonable(obj,significant_digits),ensure_ascii=False,separators=(",",":")),encoding="utf-8")
     return dict(sha256=hashlib.sha256(path.read_bytes()).hexdigest(),bytes=path.stat().st_size)
 
 
@@ -81,6 +82,7 @@ def main():
             existing=json.loads(path.read_text(encoding='utf-8')) if args.resume and path.exists() else None
             prior=existing.get('provenance',{}) if existing else {}
             if (existing and prior.get('version') in REUSABLE_VERSIONS and
+                    (case['family']!='seismic' or existing.get('export_precision_significant_digits')==10) and
                     prior.get('generator_fingerprint')==generator_fingerprint(case['family'],args.iterations,args.epochs,prior['version'])):
                 result=existing
             else:
@@ -114,7 +116,7 @@ def main():
                                 learned=train(cache[60][0],cache[60][2],out/"models",args.epochs)
                         result=attach(result,learned)
                 annotate(result,case,time.perf_counter()-start,args.iterations,args.epochs)
-                save(path,result)
+                save(path,result,significant_digits=result['export_precision_significant_digits'])
             entry["variants"].append(dict(id=vid,name=label,name_es=label_es,path=f"{case['id']}/{vid}.json",sha256=hashlib.sha256(path.read_bytes()).hexdigest(),bytes=path.stat().st_size,
                 methods={k:{"name":v["name"],"name_es":v["name_es"],"metrics":v["metrics"],"evaluation":v.get('evaluation'),"target":v.get('target'),"applicability":v.get('applicability')} for k,v in result["methods"].items()},runtime_seconds=result["runtime_seconds"]))
             print(f"OK {path.name} {path.stat().st_size//1024} KiB {time.perf_counter()-start:.1f}s",flush=True)

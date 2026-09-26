@@ -2,7 +2,10 @@
 import importlib.util
 from pathlib import Path
 
+import numpy as np
 import pytest
+from rebuild import jsonable
+from catalog import display_scale,update_extrema
 
 
 SCRIPT=Path(__file__).resolve().parents[1]/'scripts/check_artifacts.py'
@@ -36,3 +39,16 @@ def test_catalogue_only_method_mismatch_is_rejected():
     expected=contract.EXPECTED_METHODS['mt']
     with pytest.raises(AssertionError,match='missing or unexpected catalogue methods'):
         contract.assert_method_matrix('mt',expected,expected-{'mt-neural'})
+
+
+def test_fwi_export_precision_round_trips_float32_state():
+    model_value=np.float32(2100.1234)
+    assert np.float32(jsonable(float(model_value),10))==model_value
+    assert np.float32(jsonable(float(model_value),7))!=model_value
+
+
+def test_case_display_scale_preserves_cross_condition_amplitude():
+    stats=[0.,0.]
+    update_extrema(stats,[[-0.2,0.4],[0.8]])
+    update_extrema(stats,[[-0.5,1.3]])
+    assert display_scale(stats)==dict(range=[-1.3,1.3],maximum=1.3,signed=True)

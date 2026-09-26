@@ -55,6 +55,8 @@ export type Case = {
   name_es: string;
   geometry: string;
   seed: number;
+  display_scales?: Record<string, { range: [number, number]; maximum: number; signed: boolean }>;
+  survey_max_abs?: number;
   variants: Variant[];
 };
 export type Catalog = {

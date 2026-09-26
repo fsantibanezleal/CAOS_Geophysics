@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import { absoluteThreshold, curvePath, membershipField, physicalTarget, propertyScale, selectedModel, sharedScale, uncertaintyProblem } from "../recovery";
+import { absoluteThreshold, casePropertyScale, curvePath, membershipField, physicalTarget, propertyScale, selectedModel, sharedScale, uncertaintyProblem } from "../recovery";
 import { evaluationLabel, evaluationPresentation, evaluationReason, provenanceDescription, targetDescription } from "../data/evidence";
 import { metricInfo, metricValue, methodName } from "../data/metrics";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, UncertaintyView } from "../components/ScientificEvidence";
@@ -27,6 +27,13 @@ describe("physical comparison and state identity", () => {
     expect(propertyScale(r, "l2").range).toEqual([-3, 3]);
     expect(absoluteThreshold(propertyScale(r, "l2"), .2)).toBeCloseTo(.6);
     expect(absoluteThreshold(propertyScale(r, "irls"), .2)).toBeCloseTo(.6);
+  });
+  it("uses a fixed case scale when comparing different acquisition conditions", () => {
+    const r = run();
+    const scales = { volume: { range: [-5, 5] as [number, number], maximum: 5, signed: true }, "vector-amplitude": { range: [0, 8] as [number, number], maximum: 8, signed: false } };
+    expect(casePropertyScale(r, "l2", scales).range).toEqual([-5, 5]);
+    expect(casePropertyScale(r, "vector", scales).range).toEqual([0, 8]);
+    expect(casePropertyScale(r, "l2").range).toEqual([-3, 3]);
   });
   it("keeps negative CNN estimates visible without mixing column and cell units", () => {
     const r = run({ family: "learned", column_truth: [[4, 8]], methods: { cnn: method({ model: [[-10, 2]], frames: [] }), l2: method({ model: [1000, 2000] }) } });

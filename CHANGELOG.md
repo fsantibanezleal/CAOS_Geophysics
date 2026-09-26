@@ -2,6 +2,15 @@
 
 All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
+## [0.04.001] - 2026-09-26
+
+- Adds a source-hashed, 42-frequency measured Clear Lake EDI tensor screen with explicit unit/variance assumptions, DOI attribution, and a failed necessary isotropic-1D test. It exports no field inversion or geological target; the original synthetic inversion fixtures remain separate.
+- Compares coupled joint inversions with an optimized uncoupled baseline for both density and susceptibility. The conflicting-boundary structural and mixture cases remain negative controls.
+- Requires active and withheld noise-normalized waveform fit for FWI recovery. Serializes FWI float32 model states at ten significant digits and replays all 48 final models on CUDA to verify observations, predictions, residuals, metrics and verdicts.
+- Corrects autoencoder coverage scoring against the interpolated network input. Raw-observation discrepancy is separate; individual threshold crossings no longer imply calibrated geological detection.
+- Enlarges the case instrument under the existing CAOS shell, adds measured EDI source/plots, bilingual evidence and verdicts, responsive legible scientific axes, and desktop/mobile interaction tests.
+- Adds an explicit 20-case/120-condition/348-result source-matched artifact contract, candidate-only release assembly, and a safer VPS release switch. Existing failed and unresolved scientific outcomes remain visible.
+
 ## [0.04.000] - 2026-09-26
 
 - Regenerates 120 conditions and 348 method results with noise-weighted spatial potential inverses, physical cross-gradient and independently fitted two-property Gaussian-mixture prior.

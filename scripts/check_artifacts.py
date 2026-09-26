@@ -47,6 +47,13 @@ def finite(obj):
         for v in obj: finite(v)
 
 
+def numbers(obj):
+    if isinstance(obj,list):
+        for value in obj:yield from numbers(value)
+    elif isinstance(obj,(int,float)):
+        yield float(obj)
+
+
 def validate():
     catalog=json.loads((ROOT/"catalog.json").read_text(encoding="utf-8"))
     assert catalog["schema"]=="inverse-earth.catalog/v2"
@@ -67,6 +74,17 @@ def validate():
             finite(run)
             assert run["schema"]=="inverse-earth/v2" and run["id"]==case["id"] and run["variant"]==variant["id"]
             assert run['family']==case['family'] and run['geometry']==case['geometry'] and run['seed']==case['seed'],'Case identity mismatch'
+            if case['family'] in ('gravity','magnetics','joint'):
+                assert 0<case['survey_max_abs']<math.inf
+                assert max(abs(v) for v in run['survey']['observed'])<=case['survey_max_abs']*(1+1e-12)
+                assert 'volume' in case['display_scales']
+                lo,hi=case['display_scales']['volume']['range']
+                assert lo<=min(numbers(run['truth'])) and max(numbers(run['truth']))<=hi
+                if case['family']=='joint':
+                    lo,hi=case['display_scales']['secondary']['range']
+                    assert lo<=min(numbers(run['secondary_truth'])) and max(numbers(run['secondary_truth']))<=hi
+            if case['family']=='seismic':
+                assert run.get('export_precision_significant_digits')==10,'FWI model export must round-trip float32 forward states'
             run_version=run['provenance']['version']
             assert run_version in {catalog['version'],'0.04.000'},'Unexpected run version'
             assert run['provenance']['generator_fingerprint']==generator_fingerprint(case['family'],version=run_version),'Stale scientific source/settings'
@@ -81,6 +99,17 @@ def validate():
                 assert method["metrics"]==variant["methods"][key]["metrics"]
                 assert method['evaluation']['status'] in ('recovered','unresolved','failed','negative-control')
                 assert method['evaluation']==variant['methods'][key]['evaluation']
+                if case['family'] in ('gravity','magnetics','joint'):
+                    group='vector-amplitude' if key=='vector' else 'volume'
+                    scale=case['display_scales'][group]
+                    lo,hi=scale['range']
+                    assert scale['maximum']>0 and math.isfinite(scale['maximum'])
+                    assert lo<=min(numbers(method['model'])) and max(numbers(method['model']))<=hi
+                    for frame in method['frames']:
+                        assert lo<=min(numbers(frame)) and max(numbers(frame))<=hi
+                    if case['family']=='joint' and method.get('magnetic_model'):
+                        lo,hi=case['display_scales']['secondary']['range']
+                        assert lo<=min(numbers(method['magnetic_model'])) and max(numbers(method['magnetic_model']))<=hi
                 assert method['target'] and method['state_identity']['predictions']=='final-model'
                 if method['frames']:assert method['frames'][-1]==method['model'],'Last replay state differs from final model'
                 if key=='autoencoder':

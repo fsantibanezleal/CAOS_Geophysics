@@ -12,6 +12,7 @@ export function EarthScene({
   opacity,
   cut,
   showSurvey,
+  surveyMaxAbs,
   angle,
   speed,
   playing,
@@ -27,6 +28,7 @@ export function EarthScene({
   opacity: number;
   cut: number;
   showSurvey: boolean;
+  surveyMaxAbs?: number;
   angle: number;
   speed: number;
   playing: boolean;
@@ -184,7 +186,7 @@ export function EarthScene({
     grid.scale.z = 1.92 / 2.24;
     scene.add(grid);
     const surveyValues = run.survey.observed;
-    const observedMax = Math.max(...surveyValues.map(Math.abs));
+    const observedMax = surveyMaxAbs && surveyMaxAbs > 0 ? surveyMaxAbs : Math.max(...surveyValues.map(Math.abs));
     if (showSurvey) {
       const geom = new THREE.PlaneGeometry(0.132, 0.12);
       geom.rotateX(-Math.PI / 2);
@@ -396,6 +398,7 @@ export function EarthScene({
     opacity,
     cut,
     showSurvey,
+    surveyMaxAbs,
     angle,
     reset,
     onCell,

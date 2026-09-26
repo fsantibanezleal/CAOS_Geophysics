@@ -28,7 +28,7 @@ import {
 } from "../science";
 import { methodName, metricInfo, historyInfo } from "../data/metrics";
 import { lessons } from "../data/lessons";
-import { absoluteThreshold, physicalTarget, propertyScale, selectedModel, sharedScale, type ModelState } from "../recovery";
+import { absoluteThreshold, casePropertyScale, physicalTarget, selectedModel, sharedScale, type ModelState } from "../recovery";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, TargetEvidence, UncertaintyView } from "../components/ScientificEvidence";
 import { provenanceDescription } from "../data/evidence";
 
@@ -196,7 +196,10 @@ export default function Workbench() {
         : ([-1, 1] as [number, number]),
     [run],
   );
-  const comparisonScale = useMemo(() => run && method ? propertyScale(run, methodId) : sharedScale([]), [run, methodId, method]);
+  const comparisonScale = useMemo(() => {
+    if (!run || !method) return sharedScale([]);
+    return casePropertyScale(run, methodId, entry?.display_scales);
+  }, [run, methodId, method, entry]);
   const displayedModel = useMemo(() => method ? selectedModel(method, modelState, frame) : [], [method, modelState, frame]);
   const values = useMemo(() => !run ? [] : flatten(mode === "truth" ? physicalTarget(run, methodId) : displayedModel), [run, displayedModel, mode, methodId]);
   const returnToFinal = () => {
@@ -331,6 +334,7 @@ export default function Workbench() {
             opacity={opacity}
             cut={cut}
             showSurvey={survey}
+            surveyMaxAbs={entry?.survey_max_abs}
             angle={angle}
             speed={speed}
             playing={orbit}
@@ -353,10 +357,14 @@ export default function Workbench() {
             />
             <span>
               {run.grid.shape.slice().reverse().join(" × ")} {t("computed cells", "celdas calculadas")}; Δx, Δy, Δz = {run.grid.spacing.join(", ")} m.{" "}
-              {t(
+              {entry?.display_scales ? t(
+                "Model colour and threshold fixed across six conditions, methods and replay states; interpolated surfaces add no resolution.",
+                "Color y umbral del modelo fijos entre seis condiciones, métodos y estados; las superficies interpoladas no agregan resolución.",
+              ) : t(
                 "Fixed colour scale and absolute threshold across target, methods and saved states. A surface interpolates computed cells; it does not add resolution.",
                 "Escala y umbral absoluto fijos entre objetivo, métodos y estados. La superficie interpola celdas calculadas; no agrega resolución.",
               )}
+              {survey && entry?.survey_max_abs ? ` ${t("Survey colours", "Colores del levantamiento")} ±${format(entry.survey_max_abs)} ${run.data_units}.` : ""}
             </span>
           </div>
           <details className="scene-settings">
@@ -526,7 +534,7 @@ export default function Workbench() {
               />
             ))}
           </div>
-          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} />}
+          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} caseRange={entry?.display_scales?.secondary?.range} />}
           {history}
         </div>
       );

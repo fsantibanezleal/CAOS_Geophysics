@@ -58,6 +58,9 @@ has explicit 3/5/8/14 Hz cutoffs, not a short moving average. Each stage has 28
 strong-Wolfe L-BFGS calls. Terminal updates, final prediction, model, last frame
 and objective records describe the same selected state. Raw waveform MSE,
 filtered stage objective and regional model errors are distinct quantities.
+FWI float32 arrays are exported with ten significant decimal digits so a saved
+model round-trips to the same simulator input; seven-digit display rounding
+would change receiver traces and invalidate exact forward replay.
 See [calibration, nominal recovery and remaining bias](../problem-types/02_fwi-recovery.md).
 
 ## Joint priors, learned inference and uncertainty

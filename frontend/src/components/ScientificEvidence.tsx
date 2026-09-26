@@ -121,7 +121,7 @@ export function UncertaintyView({ run, method, section }: { run: Run; method: Me
   </section>;
 }
 
-export function PetrophysicalView({ run, methodId, section }: { run: Run; methodId: string; section: number }) {
+export function PetrophysicalView({ run, methodId, section, caseRange }: { run: Run; methodId: string; section: number; caseRange?: [number, number] }) {
   const es = useShellLang() === "es";
   const t = (a: string, b: string) => es ? b : a;
   const [component, setComponent] = useState(0);
@@ -131,7 +131,7 @@ export function PetrophysicalView({ run, methodId, section }: { run: Run; method
   const classes = method.prior_membership?.[0]?.length ?? method.responsibilities?.[0]?.length ?? 0;
   const chosen = Math.min(component, classes - 1);
   const membership = membershipField(method, chosen, secondary.length);
-  const range = propertyScale(run, methodId, true).range;
+  const range = caseRange ?? propertyScale(run, methodId, true).range;
   const map = (values: number[], title: string, unit: string, bounds?: [number, number]) => <Heatmap data={sliceVolume(values, run.grid!.shape, section)} title={title} unit={unit} range={bounds} xLabel={t("Easting · m", "Este · m")} yLabel={t("Depth · m", "Profundidad · m")} xRange={[-1120, 1120]} yRange={[0, 1120]} />;
   return <section className="evidence-layout">
     <h3>{t("Secondary property and petrophysical prior", "Propiedad secundaria y prior petrofísico")}</h3>

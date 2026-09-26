@@ -1,12 +1,24 @@
 /** Rendered viewport, condition, and transfer audit against a local preview. */
 import { chromium } from '@playwright/test';
 import { createHash } from 'node:crypto';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const base = process.env.QA_BASE ?? 'http://127.0.0.1:5179';
+const output = resolve(process.env.QA_OUTPUT ?? '../data/experiments/browser-viewport');
+mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader'] });
 const failures = [];
 const measurements = [];
-const families = ['GRAVITY_INTRUSION', 'MAGNETIC_DYKE', 'MT_RESISTIVE', 'FWI_LAYERED', 'JOINT_SHARED', 'LEARNED_CNN', 'LEARNED_AUTOENCODER'];
+const performanceRows = [];
+const caseVariations = [];
+const families = [
+  'GRAVITY_INTRUSION', 'GRAVITY_DEEP_BODY', 'GRAVITY_NOISY', 'GRAVITY_TILTED',
+  'MAGNETIC_DYKE', 'MAGNETIC_REMANENCE', 'MAGNETIC_DEEP', 'MAGNETIC_NOISY',
+  'MT_RESISTIVE', 'MT_CONDUCTIVE', 'MT_MIXED', 'MT_NOISY',
+  'FWI_LAYERED', 'FWI_FAULT', 'FWI_CYCLE_SKIP', 'FWI_NOISY',
+  'JOINT_SHARED', 'JOINT_CONFLICT', 'LEARNED_CNN', 'LEARNED_AUTOENCODER',
+];
 const variants = ['reference', 'contrast', 'noise', 'acquisition', 'coverage', 'regularization'];
 
 async function paint(page) {
@@ -105,7 +117,8 @@ for (const [width, height] of [[390, 844], [1600, 900]]) {
   await page.waitForLoadState('networkidle');
   const defaultTransfer = await transferSummary(transfers);
   const defaultCanvas = await page.locator('.earth-scene canvas').evaluate((canvas) => ({ width: canvas.width, height: canvas.height }));
-  console.log('PERFORMANCE', JSON.stringify({ width, case: 'GRAVITY_INTRUSION', firstPaintReadyMs: defaultMs, ...defaultTransfer, canvas: defaultCanvas }));
+  performanceRows.push({ width, case: 'GRAVITY_INTRUSION', firstPaintReadyMs: defaultMs, ...defaultTransfer, canvas: defaultCanvas });
+  console.log('PERFORMANCE', JSON.stringify(performanceRows.at(-1)));
   transfers.length = 0;
   start = performance.now();
   await page.getByLabel('Geological case', { exact: true }).selectOption('FWI_LAYERED');
@@ -116,7 +129,8 @@ for (const [width, height] of [[390, 844], [1600, 900]]) {
   await page.waitForLoadState('networkidle');
   const fwiTransfer = await transferSummary(transfers);
   const fwiCanvas = await page.locator('.seismic-view canvas').first().evaluate((canvas) => ({ width: canvas.width, height: canvas.height }));
-  console.log('PERFORMANCE', JSON.stringify({ width, case: 'FWI_LAYERED', firstPaintReadyMs: fwiMs, incrementalTransfer: fwiTransfer, canvas: fwiCanvas }));
+  performanceRows.push({ width, case: 'FWI_LAYERED', firstPaintReadyMs: fwiMs, incrementalTransfer: fwiTransfer, canvas: fwiCanvas });
+  console.log('PERFORMANCE', JSON.stringify(performanceRows.at(-1)));
   await context.close();
 }
 
@@ -168,9 +182,11 @@ for (const id of families) {
     console.log('CONDITION', JSON.stringify({ id, variant, methods: methodCount, visualHash, metricHash, metricCount: Object.keys(metrics).length }));
   }
   if (visualHashes.size < 2) failures.push(`${id}: all six rendered visualizations identical`);
-  console.log('FAMILY_VARIATION', JSON.stringify({ id, distinctVisuals: visualHashes.size, distinctMetricViews: metricHashes.size }));
+  caseVariations.push({ id, distinctVisuals: visualHashes.size, distinctMetricViews: metricHashes.size });
+  console.log('FAMILY_VARIATION', JSON.stringify(caseVariations.at(-1)));
 }
 await context.close();
 await browser.close();
+writeFileSync(resolve(output, 'report.json'), JSON.stringify({ base, measurements, performanceRows, caseVariations, failures }, null, 2));
 console.log('FAILURES', JSON.stringify(failures));
 if (failures.length) process.exitCode = 1;

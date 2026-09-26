@@ -2,15 +2,34 @@
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 from geology import registry,VARIANTS
 from rebuild import generator_fingerprint,save,RELEASE_VERSION,REUSABLE_VERSIONS
+
+
+def update_extrema(stats, values):
+    if isinstance(values, list):
+        for value in values:
+            update_extrema(stats, value)
+    elif values is not None:
+        value=float(values)
+        if not math.isfinite(value):raise ValueError('Non-finite display-scale value')
+        stats[0]=min(stats[0],value);stats[1]=max(stats[1],value)
+
+
+def display_scale(extrema):
+    lo,hi=extrema
+    maximum=max(abs(lo),abs(hi)) or 1.
+    signed=lo<0
+    return dict(range=[-maximum,maximum] if signed else [0,hi or 1.],maximum=maximum,signed=signed)
 
 
 def assemble(root,allow_partial=False):
     cases=[];missing=[]
     for case in registry():
         entry={**case,'variants':[]}
+        volume_stats=[0.,0.];vector_stats=[0.,0.];secondary_stats=[0.,0.];survey_max_abs=0.
         for vid,name,name_es in VARIANTS:
             path=root/case['id']/f'{vid}.json'
             if not path.exists():
@@ -21,10 +40,30 @@ def assemble(root,allow_partial=False):
             if version not in REUSABLE_VERSIONS or provenance.get('generator_fingerprint')!=generator_fingerprint(case['family'],version=version):
                 raise ValueError(f'Stale scientific source/settings: {path}')
             if (run['id'],run['variant'])!=(case['id'],vid):raise ValueError('Identity mismatch')
+            if case['family'] in ('gravity','magnetics','joint'):
+                update_extrema(volume_stats,run['truth'])
+                if case['family']=='joint':update_extrema(secondary_stats,run['secondary_truth'])
+                survey_max_abs=max(survey_max_abs,*(abs(v) for v in run['survey']['observed']))
+                for method_id,method in run['methods'].items():
+                    stats=vector_stats if method_id=='vector' else volume_stats
+                    update_extrema(stats,method['model'])
+                    for frame in method.get('frames',[]):update_extrema(stats,frame)
+                    if method.get('uncertainty'):
+                        update_extrema(stats,method['uncertainty']['lower'])
+                        update_extrema(stats,method['uncertainty']['upper'])
+                    if method_id=='vector' and method.get('vector_truth'):
+                        update_extrema(stats,[math.hypot(*components) for components in method['vector_truth']])
+                    if case['family']=='joint':
+                        update_extrema(secondary_stats,method.get('magnetic_model',method.get('secondary_model')))
             if case['family']=='seismic' and vid=='contrast':name,name_es='Velocity contrast ×1.15','Contraste de velocidad ×1,15'
             entry['variants'].append(dict(id=vid,name=name,name_es=name_es,path=f"{case['id']}/{vid}.json",
                 sha256=hashlib.sha256(raw).hexdigest(),bytes=len(raw),runtime_seconds=run['runtime_seconds'],
                 methods={k:{name:v.get(name) for name in ('name','name_es','metrics','evaluation','target','applicability')} for k,v in run['methods'].items()}))
+        if case['family'] in ('gravity','magnetics','joint') and entry['variants']:
+            entry['display_scales']={'volume':display_scale(volume_stats)}
+            if case['family']=='magnetics':entry['display_scales']['vector-amplitude']=display_scale(vector_stats)
+            if case['family']=='joint':entry['display_scales']['secondary']=display_scale(secondary_stats)
+            entry['survey_max_abs']=survey_max_abs
         if entry['variants']:cases.append(entry)
     if missing and not allow_partial:raise ValueError('Incomplete matrix: '+', '.join(missing))
     save(root/'catalog.json',dict(schema='inverse-earth.catalog/v2',version=RELEASE_VERSION,complete=not missing,cases=cases))

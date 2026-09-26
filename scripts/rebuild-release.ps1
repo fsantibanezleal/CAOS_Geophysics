@@ -38,5 +38,6 @@ Invoke-ReleasePython @('scripts/build_field_screen.py', '--source', $SourcePath,
 Invoke-ReleasePython @('data-pipeline/catalog.py', '--root', $CandidateRoot)
 Invoke-ReleasePython @('scripts/check_artifacts.py', '--data', $CandidateRoot)
 Invoke-ReleasePython @('scripts/validate_recovery.py', '--data', $CandidateRoot, '--report', (Join-Path $CandidateRoot 'validation.json'))
+Invoke-ReleasePython @('scripts/validate_fwi_exports.py', '--data', $CandidateRoot, '--report', (Join-Path $CandidateRoot 'fwi-replay.json'))
 Write-Host "Candidate release validated: $CandidateRoot"
 Write-Host 'Canonical data/derived/v2, Git branches and public hosts were not changed.'
