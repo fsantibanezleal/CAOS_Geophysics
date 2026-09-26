@@ -36,6 +36,11 @@ def spatial_energy(model,weight):
     return value
 
 
+def structural_negative_control(method, geometry):
+    """Conflicting property boundaries challenge either coupled prior, not the uncoupled fit."""
+    return geometry == 'conflict' and method in ('joint', 'pgi')
+
+
 def attach(run,cache,iterations=80):
     mesh,_,Gg,Gm=cache[run['parameters']['height_m']]
     torch.set_num_threads(2)
@@ -90,12 +95,26 @@ def attach(run,cache,iterations=80):
         a,b=qa.detach()*pa,qb.detach()*pb
         density=(a*.5).numpy();susceptibility=(b*.03).numpy()
         cross=cross_gradient(a*.5,b*.03).square().sum(0).sqrt().numpy()
+        mismatched_prior=structural_negative_control(key,run['geometry'])
         metrics,verdict=evaluate(density,rho,Gg@density,dg,sg,mask,centers=mesh.cell_centers,
-                                 negative_control=key=='pgi' and run['geometry']=='conflict')
-        initial_error=model_metrics(initial_a*.5,rho)['model_rmse']
+                                 negative_control=mismatched_prior)
+        if mismatched_prior:
+            verdict['reason_codes'].remove('deliberately-misspecified-physical-model')
+            verdict['reason_codes'].append('structural-coupling-prior-conflicts-with-reference')
+        magnetic_error=model_metrics(susceptibility,chi)['model_rmse']
+        if key == 'joint-uncoupled':
+            independent_error = metrics['model_rmse']
+            independent_magnetic_error = magnetic_error
+        else:
+            baseline = run['methods']['joint-uncoupled']['metrics']
+            independent_error = baseline['model_rmse']
+            independent_magnetic_error = baseline['magnetic_model_rmse']
         metrics.update(magnetic_wrms=float(np.sqrt(np.mean(((Gm@susceptibility-dm)[mask]/sigma)**2))),
-                       magnetic_model_rmse=model_metrics(susceptibility,chi)['model_rmse'],
-                       independent_model_rmse=initial_error,independent_baseline_ratio=metrics['model_rmse']/max(initial_error,1e-30),
+                       magnetic_model_rmse=magnetic_error,
+                       independent_model_rmse=independent_error,
+                       independent_baseline_ratio=metrics['model_rmse']/max(independent_error,1e-30),
+                       independent_magnetic_model_rmse=independent_magnetic_error,
+                       independent_magnetic_baseline_ratio=magnetic_error/max(independent_magnetic_error,1e-30),
                        cross_gradient=float(cross.mean()))
         if (~mask).any():metrics['magnetic_heldout_wrms']=float(np.sqrt(np.mean(((Gm@susceptibility-dm)[~mask]/sigma)**2)))
         if key!='joint-uncoupled' and metrics['independent_baseline_ratio']>=1 and verdict['status']!='negative-control':
@@ -105,6 +124,7 @@ def attach(run,cache,iterations=80):
                     cross_gradient=cross.ravel().tolist(),history=history,frames=frames,objective_terms=terms,metrics=metrics,evaluation=verdict,device='cpu',
                     solver=dict(optimizer='Diagonal-Hessian preconditioned L-BFGS strong Wolfe',iterations=iterations,cross_gradient_weight=coupling,mixture_weight=petro,
                                 gravity_beta=bg*mask.sum(),magnetic_beta=bm*mask.sum(),cross_gradient_spacing_m=list(VOLUME_SPACING),cross_gradient_initial_scale=cross_scale,
+                                matched_baseline_method='joint-uncoupled',
                                 objective_terms=['whitened data means','physical spatial priors','cross gradient normalized by matched independent initial value','mean negative log mixture density']),
                     target=dict(quantity='density contrast with jointly estimated susceptibility',units='g/cm³',dimensionality=3,provenance='Independent original synthetic geological reference'),
                     state_identity=dict(final_frame_index=len(frames)-1,selected_iteration=iterations,frame_quantity='density contrast',predictions='final-model'))

@@ -49,6 +49,28 @@ def test_spatial_regularization_and_initial_are_physical():
     assert "truth" not in inspect.signature(seismic.invert_observations).parameters
 
 
+def test_inverse_rejects_incomplete_acquisition_before_propagation(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Invalid acquisition reached the wave propagator')
+    monkeypatch.setattr(seismic, 'simulate', forbidden)
+    start=torch.tensor(seismic.independent_start())
+    observations=torch.ones(3,10,64)
+    with pytest.raises(ValueError,match='every configured shot'):
+        seismic.invert_observations(observations[:1],start,iterations=1)
+    with pytest.raises(ValueError,match='every configured shot'):
+        seismic.invert_observations(observations[:2],start,iterations=1)
+    with pytest.raises(ValueError,match='receivers'):
+        seismic.invert_observations(observations[:,:2],start,iterations=1)
+    with pytest.raises(ValueError,match='matching device and dtype'):
+        seismic.invert_observations(observations.double(),start,iterations=1)
+    with pytest.raises(ValueError,match='fitted and withheld'):
+        seismic.invert_observations(observations,start,active=torch.ones(9,dtype=torch.bool),iterations=1)
+    active=torch.arange(10)%5 != 2
+    monkeypatch.setattr(seismic,'simulate',lambda *args,**kwargs: torch.ones(3,9,64))
+    with pytest.raises(ValueError,match='Forward acquisition'):
+        seismic.invert_observations(observations,start,active=active,iterations=1)
+
+
 def test_withheld_samples_do_not_influence_inverse_and_terminal_is_saved(monkeypatch):
     # Algebraic surrogate tests bookkeeping/leakage, NOT acoustic correctness.
     def algebraic(v, frequency=8., receivers=10, nt=256, *args, **kwargs):
@@ -76,12 +98,27 @@ def test_withheld_samples_do_not_influence_inverse_and_terminal_is_saved(monkeyp
 
 def test_failed_and_negative_control_outcomes_are_not_relabelled_success():
     metrics = dict(model_rmse_ratio=1.1, active_relative_mse=.01, initial_active_relative_mse=.2,
-                   withheld_relative_mse=.02, initial_withheld_relative_mse=.3)
+                   withheld_relative_mse=.02, initial_withheld_relative_mse=.3,
+                   active_wrms=1.2, withheld_wrms=1.3)
     assert seismic.recovery_evaluation(metrics)['status'] == 'failed'
     result = seismic.recovery_evaluation(metrics, challenge=True)
     assert result['status'] == 'negative-control'
     assert 'whole_model_not_improved' in result['reason_codes']
     assert 'salt_cycle_skipping_challenge' in result['reason_codes']
+
+
+def test_waveform_improvement_with_noise_incompatible_fit_is_unresolved():
+    metrics=dict(model_rmse_ratio=.7,active_relative_mse=.02,initial_active_relative_mse=.3,
+                 withheld_relative_mse=.03,initial_withheld_relative_mse=.4,
+                 active_wrms=3.2,withheld_wrms=3.4)
+    result=seismic.recovery_evaluation(metrics)
+    assert result['status']=='unresolved'
+    assert result['reason_codes']==[
+        'active_data_misfit_above_declared_noise',
+        'withheld_data_misfit_above_declared_noise']
+    metrics['active_wrms']=1.9;metrics['withheld_wrms']=2.
+    assert seismic.recovery_evaluation(metrics)['status']=='recovered'
+    assert seismic.recovery_evaluation(metrics,challenge=True)['status']=='negative-control'
 
 
 def test_model_region_and_withheld_metrics_against_direct_arrays():
@@ -199,7 +236,8 @@ def test_reference_recovery_state_and_forward_replay(case_id):
         assert result['metrics']['initial_velocity_rmse'] == pytest.approx(initial_rmse, rel=1e-6)
         if case_id != 'FWI_CYCLE_SKIP':
             assert rmse < initial_rmse, 'Nominal whole-model recovery must improve the independent start'
-            assert result['evaluation']['status'] == 'recovered'
+            expected_status = 'unresolved' if case_id == 'FWI_NOISY' else 'recovered'
+            assert result['evaluation']['status'] == expected_status
         else:
             assert result['evaluation']['status'] == 'negative-control'
         identity = result['state_identity']
