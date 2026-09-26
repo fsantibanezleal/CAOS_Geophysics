@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 from pathlib import Path
 import numpy as np
 import pytest
@@ -12,7 +13,7 @@ from learning import InverseCNN,ObservationAE,load_checkpoint,generate
 from seismic import simulate
 
 ROOT=Path(__file__).resolve().parents[1]
-DATA=ROOT/"data/derived/v2"
+DATA=Path(os.environ.get('INVERSE_EARTH_DATA',ROOT/"data/derived/v2"))
 
 
 def test_mt_halfspace_and_split_homogeneous_layer():

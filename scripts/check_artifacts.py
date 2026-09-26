@@ -3,6 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import math
+import argparse
 
 ROOT=Path(__file__).resolve().parents[1]/"data/derived/v2"
 
@@ -41,6 +42,10 @@ def validate():
             for key,method in run["methods"].items():
                 assert method["model"] and method["history"] and method["metrics"]
                 assert method["metrics"]==variant["methods"][key]["metrics"]
+                assert method['evaluation']['status'] in ('recovered','unresolved','failed','negative-control')
+                assert method['evaluation']==variant['methods'][key]['evaluation']
+                assert method['target'] and method['state_identity']['predictions']=='final-model'
+                if method['frames']:assert method['frames'][-1]==method['model'],'Last replay state differs from final model'
                 cells+=1
             runs+=1
     training=json.loads((ROOT/"models/training.json").read_text())
@@ -48,9 +53,23 @@ def validate():
     for model in training["models"].values():
         assert hashlib.sha256((ROOT/model["checkpoint"]).read_bytes()).hexdigest()==model["sha256"]
     release=json.loads((ROOT/"release.json").read_text())
+    assert release['complete'] and catalog['complete']
     assert (runs,cells)==(release["runs"],release["methods"])
+    edi=json.loads((ROOT/'edi/manifest.json').read_text())
+    assert len(edi['fixtures'])==3 and len(edi['calibration'])==2
+    for entry in edi['fixtures']+edi['calibration']:
+        path=(ROOT/'edi'/entry['artifact']).resolve()
+        assert path.is_relative_to((ROOT/'edi').resolve())
+        assert hashlib.sha256(path.read_bytes()).hexdigest()==entry['artifact_sha256']
+        if 'source' in entry:
+            source=(ROOT/'edi'/entry['source']).resolve()
+            assert source.is_relative_to((ROOT/'edi').resolve())
+            assert hashlib.sha256(source.read_bytes()).hexdigest()==entry['source_sha256']
+    assert training['comparison']['noisy_test_sha256'] and training['novelty_evaluation']
     print(f"PASS: {len(geometries)} distinct truths / {runs} experiments / {cells} method results; all SHA-256 and sizes match")
     return dict(cases=len(geometries),runs=runs,method_results=cells)
 
 
-if __name__=="__main__":validate()
+if __name__=="__main__":
+    parser=argparse.ArgumentParser();parser.add_argument('--data',type=Path,default=ROOT)
+    ROOT=parser.parse_args().data.resolve();validate()

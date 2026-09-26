@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" role="img" aria-labelledby="title desc">
+  <title id="title">Acoustic inversion and separate recovery evaluation</title>
+  <desc id="desc">Observed pressure and an independent trend feed a one-dimensional background solve followed by two matched two-dimensional inversions. Synthetic truth enters only the forward data generator and the final evaluator.</desc>
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="currentColor"/></marker></defs>
+  <style>svg{color:var(--text,#24292f);background:var(--bg,#fff);font-family:system-ui,sans-serif}rect{fill:var(--surface,#f6f8fa);stroke:var(--border,#8c959f)}text{fill:currentColor;font-size:16px}.small{font-size:14px}.heading{font-weight:600}.edge{fill:none;stroke:currentColor;stroke-width:1.5;marker-end:url(#arrow)}.eval{stroke-dasharray:6 5}</style>
+  <text x="28" y="30" class="heading">Acoustic pressure fitting and velocity recovery are distinct tests</text>
+  <rect x="30" y="65" width="190" height="75" rx="5"/><text x="45" y="92" class="heading">Synthetic velocity truth</text><text x="45" y="117" class="small">Not an inverse input</text>
+  <rect x="270" y="65" width="190" height="75" rx="5"/><text x="285" y="92" class="heading">Deepwave + noise</text><text x="285" y="117" class="small">Known source; pressure data</text>
+  <rect x="510" y="65" width="210" height="75" rx="5"/><text x="525" y="92" class="heading">Fit / withheld receivers</text><text x="525" y="117" class="small">Withheld traces: evaluation only</text>
+  <path class="edge" d="M220 102H270M460 102H510"/>
+  <rect x="30" y="205" width="190" height="75" rx="5"/><text x="45" y="232" class="heading">Independent initial trend</text><text x="45" y="257" class="small">v = 1800 + 0.88 z m/s</text>
+  <rect x="270" y="205" width="240" height="75" rx="5"/><text x="285" y="232" class="heading">Data-only 1D background</text><text x="285" y="257" class="small">3 Hz; 12 vertical controls</text>
+  <path class="edge" d="M220 242H270M615 140V173H390V205"/>
+  <rect x="570" y="192" width="350" height="105" rx="5"/><text x="585" y="218" class="heading">Matched multiresolution 2D FWI</text><text x="585" y="242" class="small">Full band / 5, 8, 14 Hz continuation</text><text x="585" y="265" class="small">Same background, bounds, prior, call budget</text><text x="585" y="286" class="small">Final model = final stored frame</text>
+  <path class="edge" d="M510 242H570"/>
+  <rect x="270" y="355" width="650" height="75" rx="5"/><text x="285" y="382" class="heading">Independent evaluation, not optimizer feedback</text><text x="285" y="407" class="small">Initial/model/depth-region RMSE; active/withheld pressure errors; failure reasons</text>
+  <path class="edge" d="M745 297V355"/><path class="edge eval" d="M125 140V392H270M720 102H960V392H920"/>
+</svg>

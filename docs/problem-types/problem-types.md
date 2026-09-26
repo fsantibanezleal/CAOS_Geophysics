@@ -16,9 +16,9 @@ Three solvers fit complex observations: bounded log-resistivity least squares, A
 
 ## Acoustic FWI
 
-Deepwave solves the constant-density 2D acoustic equation with fourth-order spatial differences and absorbing boundaries. Three Ricker shots, 40 (or 20) receivers, 25 m cells and 1 ms integration produce 1.1 s records. Saved pressure frames are 24 ms apart; displayed gathers are sampled at 4 ms. Coordinates and dimensions are explicit.
+Deepwave solves constant-density 2D acoustics with fourth-order spatial differences, 12.5 m sampling and 0.5 ms integration. Three known Ricker shots and 40 (or 20) receivers produce 1.6 s records. Every fifth receiver is withheld from inversion. Exported gathers retain 4 ms sampling and pressure frames 24 ms spacing.
 
-A bounded sigmoid parameterization permits velocities 1400–4400 m/s. Adam makes 28 updates from the declared depth trend 1800+22×depth-index. The direct method fits waveforms; continuation uses moving-average low-pass windows 21,9,1. The retained model minimizes the full-band data loss over evaluated models. A squared neighbour-difference penalty discourages rough velocity. Automatic differentiation is checked against a double-precision directional finite difference on CUDA. Model error can remain large after a strong data-fit improvement.
+Both corrected methods start from the independent 1800+0.88z m/s trend. A data-only 3 Hz one-dimensional background solve precedes three two-dimensional control-grid stages. Bounded velocity parameterization permits 1400 to 4400 m/s; L-BFGS uses a declared finite budget of 28 calls per stage. The continuation method uses actual 5, 8 and 14 Hz Butterworth-amplitude FFT cutoffs; the matched comparator uses full-band data after the shared background. Spatial regularization uses physical gradients. The final evaluated model is exactly the final stored frame, and predictions/history are paired to that state. Whole-model recovery relative to the initial trend and active/withheld waveform errors are separate acceptance criteria. Salt remains a cycle-skipping challenge, not a promised recovery. [Full equations, calibration, contracts and validation](02_fwi-recovery.md).
 
 ## Joint inversion
 

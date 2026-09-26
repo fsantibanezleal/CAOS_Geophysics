@@ -31,12 +31,27 @@ def verify(origin):
         assert len(data)==v['bytes'] and hashlib.sha256(data).hexdigest()==v['sha256'],v['path']
         return v['path']
     with ThreadPoolExecutor(max_workers=6) as pool:checked=list(pool.map(check,variants))
+    edi_root=root/'data/derived/v2/edi'
+    edi_manifest=fetch(base+'data/v2/edi/manifest.json')
+    assert edi_manifest== (edi_root/'manifest.json').read_bytes(),'EDI manifest differs from local release: '+base
+    edi=json.loads(edi_manifest)
+    edi_files=set()
+    for entry in edi['fixtures']+edi['calibration']:
+        for field, digest_field in [('artifact','artifact_sha256'),('source','source_sha256')]:
+            if field not in entry:continue
+            name=entry[field]
+            assert '/' not in name and '\\' not in name and name not in ('.','..'),'Unsafe EDI path: '+name
+            data=fetch(base+'data/v2/edi/'+name)
+            assert data==(edi_root/name).read_bytes(),'EDI file differs from local release: '+name
+            assert hashlib.sha256(data).hexdigest()==entry[digest_field],'EDI hash mismatch: '+name
+            edi_files.add(name)
+    assert fetch(base+'data/v2/release.json')==(root/'data/derived/v2/release.json').read_bytes(),'Release record differs from local release: '+base
     index=(root/'frontend/dist/index.html').read_bytes()
     for route in ['', 'introduction/','methodology/','implementation/','experiments/','benchmark/']:
         assert fetch(base+route)==index,'Direct route build mismatch: '+route
     for name in ['cnn.json','autoencoder.json','training.json']:
         assert fetch(base+'data/v2/models/'+name)==(root/'data/derived/v2/models'/name).read_bytes()
-    result=dict(origin=base,https_verified=base.startswith('https://'),cases=len(catalog['cases']),verified_experiments=len(checked),verified_routes=6,verified_model_files=3,catalog_sha256=hashlib.sha256(catalog_raw).hexdigest(),index_sha256=hashlib.sha256(index).hexdigest())
+    result=dict(origin=base,https_verified=base.startswith('https://'),cases=len(catalog['cases']),verified_experiments=len(checked),verified_edi_files=len(edi_files),verified_routes=6,verified_model_files=3,catalog_sha256=hashlib.sha256(catalog_raw).hexdigest(),index_sha256=hashlib.sha256(index).hexdigest())
     print(json.dumps(result),flush=True)
     return result
 

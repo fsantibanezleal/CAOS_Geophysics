@@ -28,6 +28,9 @@ import {
 } from "../science";
 import { methodName, metricInfo, historyInfo } from "../data/metrics";
 import { lessons } from "../data/lessons";
+import { absoluteThreshold, physicalTarget, propertyScale, selectedModel, sharedScale, type ModelState } from "../recovery";
+import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, TargetEvidence, UncertaintyView } from "../components/ScientificEvidence";
+import { provenanceDescription } from "../data/evidence";
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -87,7 +90,7 @@ export default function Workbench() {
   const [methodId, setMethodId] = useState("irls");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState("truth");
+  const [mode, setMode] = useState("recovered");
   const [section, setSection] = useState(12);
   const [cut, setCut] = useState(960);
   const [representation, setRepresentation] = useState<"surface" | "cells">(
@@ -102,12 +105,13 @@ export default function Workbench() {
   const [orbit, setOrbit] = useState(false);
   const [reset, setReset] = useState(0);
   const [frame, setFrame] = useState(0);
+  const [modelState, setModelState] = useState<ModelState>("final");
   const [playing, setPlaying] = useState(false);
   const [blend, setBlend] = useState(0);
   const [shot, setShot] = useState(1);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [gain, setGain] = useState(8);
-  const [playbackKind, setPlaybackKind] = useState("wave");
+  const [playbackKind, setPlaybackKind] = useState("inverse");
   useEffect(() => {
     const controller = new AbortController();
     loadArtifact<Catalog>("catalog.json", controller.signal)
@@ -118,11 +122,13 @@ export default function Workbench() {
     return () => controller.abort();
   }, []);
   const entry = catalog?.cases.find((c) => c.id === selected);
-  const artifact = entry?.variants.find((v) => v.id === variant);
+  const artifact = entry?.variants.find((v) => v.id === variant) ?? entry?.variants[0];
   useEffect(() => {
     if (!artifact) return;
     const controller = new AbortController();
     setLoading(true);
+    setModelState("final");
+    setPlaybackKind("inverse");
     setError("");
     setPlaying(false);
     setFrame(0);
@@ -138,13 +144,9 @@ export default function Workbench() {
           learned: selected === "LEARNED_AUTOENCODER" ? "autoencoder" : "cnn",
         }[r.family];
         const nextId =
-          run?.id === r.id && r.methods[methodId] ? methodId : preferred;
+          run?.id === r.id && r.methods[methodId] ? methodId : r.methods[preferred] ? preferred : Object.keys(r.methods)[0];
         setMethodId(nextId);
-        setFrame(
-          r.family === "seismic" && playbackKind === "wave"
-            ? Math.floor((r.wavefields?.length ?? 1) * 0.4)
-            : Math.max(0, r.methods[nextId].frames.length - 1),
-        );
+        setFrame(0);
         setLoading(false);
       })
       .catch((e) => {
@@ -193,17 +195,15 @@ export default function Workbench() {
         : ([-1, 1] as [number, number]),
     [run],
   );
-  const values = useMemo(
-    () =>
-      !run || !method
-        ? []
-        : flatten(
-            mode === "truth"
-              ? run.truth
-              : (method.frames[frame] ?? method.model),
-          ),
-    [run, method, frame, mode],
-  );
+  const comparisonScale = useMemo(() => run && method ? propertyScale(run, methodId) : sharedScale([]), [run, methodId, method]);
+  const displayedModel = useMemo(() => method ? selectedModel(method, modelState, frame) : [], [method, modelState, frame]);
+  const values = useMemo(() => !run ? [] : flatten(mode === "truth" ? physicalTarget(run, methodId) : displayedModel), [run, displayedModel, mode, methodId]);
+  const returnToFinal = () => {
+    setModelState("final"); setPlaying(false); setPlaybackKind("inverse"); setMode("recovered");
+  };
+  const displayedState = modelState === "final"
+    ? t("Selected final model", "Modelo final seleccionado")
+    : t("Model replay · saved state", "Reproducción del modelo · estado guardado") + " " + (frame + 1);
   const pickCell = useCallback(
     (i: number) => {
       if (run?.grid)
@@ -214,7 +214,9 @@ export default function Workbench() {
   const select = (id: string) => {
     setSelected(id);
     setVariant("reference");
-    setMode("truth");
+    setMode("recovered");
+    setModelState("final");
+    setPlaybackKind("inverse");
     setFrame(0);
     setReset((n) => n + 1);
     setCut(960);
@@ -241,13 +243,13 @@ export default function Workbench() {
     recovery: React.ReactNode = null;
   if (run && method) {
     const final = flatten(method.model);
-    const truth = flatten(run.truth);
+    const truth = flatten(physicalTarget(run, methodId));
     const h = historyInfo(methodId, es);
     const history = (
       <div className="convergence-panel">
         <Plot
           title={h.label}
-          x={indices(method.history.length).map((i) => i * h.stride)}
+          x={method.history_indices ?? method.states?.map(s => s.step) ?? indices(method.history.length).map((i) => i * h.stride)}
           series={[{ name: h.label, values: method.history }]}
           xLabel={h.axis}
           yLabel={h.label + " · 1"}
@@ -265,7 +267,7 @@ export default function Workbench() {
                   ? value
                     ? t("Yes", "Sí")
                     : t("No", "No")
-                  : format(value)}{" "}
+                  : value == null ? t("Unavailable", "No disponible") : format(value)}{" "}
                 {metricInfo(key, run.family, methodId, es).unit}
               </strong>
             </div>
@@ -282,7 +284,7 @@ export default function Workbench() {
     );
     if (physical && run.grid && run.survey) {
       const s = run.survey;
-      const bounds = signed(s.observed);
+      const bounds = sharedScale([s.observed, ...Object.values(run.methods).flatMap(m => Array.isArray(m.predicted) && !Array.isArray(m.predicted[0]) ? [m.predicted as number[]] : [])], true).range;
       const predicted = method.predicted as number[];
       earth = (
         <div className="earth-view">
@@ -290,18 +292,18 @@ export default function Workbench() {
             <div className="segmented">
               <button
                 className={`chip ${mode === "truth" ? "on" : ""}`}
-                onClick={() => setMode("truth")}
+                onClick={() => { setMode("truth"); setPlaying(false); }}
               >
-                {t("Known geology", "Geología conocida")}
+                {t("Synthetic target", "Objetivo sintético")}
               </button>
               <button
                 className={`chip ${mode === "recovered" ? "on" : ""}`}
                 onClick={() => {
                   setMode("recovered");
-                  setFrame(Math.max(0, count - 1));
+                  returnToFinal();
                 }}
               >
-                {t("Recovered", "Recuperada")}
+                {t("Final model", "Modelo final")}
               </button>
             </div>
             <label>
@@ -332,29 +334,25 @@ export default function Workbench() {
             reset={reset}
             label={
               mode === "truth"
-                ? t("Known geology", "Geología conocida")
-                : t("Recovered model", "Modelo recuperado")
+                ? t("Synthetic target", "Objetivo sintético")
+                : displayedState
             }
             onCell={pickCell}
             representation={representation}
-            threshold={threshold}
+            threshold={absoluteThreshold(comparisonScale, threshold)}
+            range={comparisonScale.range}
           />
           <div className="scene-bottom">
             <Legend
-              range={
-                extent(values)[0] < -signed(values)[1] * 0.1
-                  ? signed(values)
-                  : [0, signed(values)[1]]
-              }
-              unit={run.units}
-              palette={
-                extent(values)[0] < -signed(values)[1] * 0.1 ? "field" : "earth"
-              }
+              range={comparisonScale.range}
+              unit={method.target?.units ?? run.units}
+              palette={comparisonScale.signed ? "field" : "earth"}
             />
             <span>
+              {run.grid.shape.slice().reverse().join(" × ")} {t("computed cells", "celdas calculadas")}; Δx, Δy, Δz = {run.grid.spacing.join(", ")} m.{" "}
               {t(
-                "Surface interpolates the computed cell values; it does not add numerical resolution.",
-                "La superficie interpola valores calculados; no agrega resolución numérica.",
+                "Fixed colour scale and absolute threshold across target, methods and saved states. A surface interpolates computed cells; it does not add resolution.",
+                "Escala y umbral absoluto fijos entre objetivo, métodos y estados. La superficie interpola celdas calculadas; no agrega resolución.",
               )}
             </span>
           </div>
@@ -386,12 +384,12 @@ export default function Workbench() {
               </label>
               <Range
                 label={t("Property threshold", "Umbral de propiedad")}
-                value={Math.round(threshold * 100)}
-                min={5}
-                max={90}
-                step={5}
-                unit="% |m|max"
-                onChange={(v) => setThreshold(v / 100)}
+                value={absoluteThreshold(comparisonScale, threshold)}
+                min={0}
+                max={comparisonScale.maximum || 1}
+                step={(comparisonScale.maximum || 1) / 100}
+                unit={method.target?.units ?? run.units}
+                onChange={(v) => setThreshold(v / (comparisonScale.maximum || 1))}
               />
               <Range
                 label={t("Northing cut", "Corte norte")}
@@ -451,7 +449,7 @@ export default function Workbench() {
           <div className="three-plots">
             {[
               [s.observed, t("Observed field", "Campo observado")],
-              [predicted, t("Predicted field", "Campo predicho")],
+              [predicted, t("Final-model predicted field", "Campo predicho por el modelo final")],
               [
                 method.residual as number[],
                 t("Data residual", "Residuo de datos"),
@@ -517,7 +515,7 @@ export default function Workbench() {
                 data={sliceVolume(v as number[], run.grid!.shape, section)}
                 title={title as string}
                 unit={run.units}
-                range={signed(truth)}
+                range={comparisonScale.range}
                 xLabel={t("Easting · m", "Este · m")}
                 yLabel={t("Depth · m", "Profundidad · m")}
                 xRange={[-1120, 1120]}
@@ -525,43 +523,7 @@ export default function Workbench() {
               />
             ))}
           </div>
-          {run.family === "joint" && method.secondary_model && (
-            <div className="two-plots">
-              <Heatmap
-                title={t(
-                  "Recovered susceptibility",
-                  "Susceptibilidad recuperada",
-                )}
-                data={sliceVolume(
-                  method.secondary_model,
-                  run.grid.shape,
-                  section,
-                )}
-                unit="SI"
-                xLabel="E · m"
-                yLabel={t("Depth · m", "Profundidad · m")}
-                xRange={[-1120, 1120]}
-                yRange={[0, 1120]}
-              />
-              <Heatmap
-                title={t(
-                  "Structural disagreement |∇ρ × ∇χ|",
-                  "Desacuerdo estructural |∇ρ × ∇χ|",
-                )}
-                data={sliceVolume(
-                  method.cross_gradient!,
-                  run.grid.shape,
-                  section,
-                )}
-                unit={t("normalized", "normalizado")}
-                xLabel="E · m"
-                yLabel={t("Depth · m", "Profundidad · m")}
-                xRange={[-1120, 1120]}
-                yRange={[0, 1120]}
-                palette="error"
-              />
-            </div>
-          )}
+          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} />}
           {history}
         </div>
       );
@@ -569,6 +531,7 @@ export default function Workbench() {
       const obs = run.observed as Curves,
         fit = method.predicted as Curves;
       const f = run.frequencies!;
+      const resistivityRange = extent([truth, ...Object.values(run.methods).flatMap(m => [flatten(m.model), ...m.frames.map(flatten)])].flat().filter(v => v > 0).map(Math.log10));
       const curves = (
         key: keyof Curves,
         title: string,
@@ -596,12 +559,10 @@ export default function Workbench() {
         <div className="mt-view">
           <div className="mt-column">
             <LayerColumn
-              rho={(method.frames[frame] as number[]) ?? final}
+              rho={flatten(displayedModel)}
               thickness={run.thickness!}
-              title={t(
-                "Recovered earth · replay",
-                "Tierra recuperada · reproducción",
-              )}
+              range={resistivityRange}
+              title={displayedState}
             />
             <p className="plot-note">
               {t(
@@ -620,8 +581,8 @@ export default function Workbench() {
             {curves("phase", t("Impedance phase", "Fase de impedancia"), "°")}
             <p className="plot-note">
               {t(
-                "Curves show the final fitted solution. Column animation follows saved optimizer evaluations.",
-                "Las curvas muestran la solución final. La columna animada sigue evaluaciones guardadas del optimizador.",
+                "Impedance curves and metrics always use the selected final model. Model replay changes only the layer column; no replay-frame predictions are claimed.",
+                "Las curvas de impedancia y métricas siempre usan el modelo final seleccionado. La reproducción sólo cambia la columna; no se muestran predicciones del cuadro.",
               )}
             </p>
           </div>
@@ -643,11 +604,13 @@ export default function Workbench() {
             <LayerColumn
               rho={truth}
               thickness={run.thickness!}
+              range={resistivityRange}
               title={t("Known resistivities", "Resistividades conocidas")}
             />
             <LayerColumn
               rho={final}
               thickness={run.thickness!}
+              range={resistivityRange}
               title={t("Recovered resistivities", "Resistividades recuperadas")}
             />
           </div>
@@ -668,7 +631,7 @@ export default function Workbench() {
       const savedWave =
         playbackKind === "wave"
           ? run.wavefields![Math.min(frame, count - 1)]
-          : (method.frames[Math.min(frame, count - 1)] as number[][]);
+          : (displayedModel as number[][]);
       const wave =
         playbackKind === "wave" && playing && blend > 0
           ? savedWave.map((row, y) =>
@@ -684,7 +647,7 @@ export default function Workbench() {
         fullWaveRange[0] / gain,
         fullWaveRange[1] / gain,
       ];
-      const bounds = extent(truth);
+      const bounds = comparisonScale.range;
       const vel = (data: number[][], title: string) => (
         <Heatmap
           data={data}
@@ -758,7 +721,7 @@ export default function Workbench() {
               <strong>
                 {playbackKind === "wave"
                   ? ((frame + blend) * run.wavefield_dt!).toFixed(3)
-                  : frame * 2}{" "}
+                  : modelState === "final" ? method.state_identity?.selected_iteration ?? t("final", "final") : method.frame_history_indices?.[frame] ?? method.frame_indices?.[frame] ?? frame + 1}{" "}
                 <small>
                   {playbackKind === "wave" ? "s" : t("update", "paso")}
                 </small>
@@ -831,7 +794,7 @@ export default function Workbench() {
       recovery = (
         <div className="evidence-layout">
           <div className="three-plots">
-            {vel(run.initial!, t("Starting model", "Modelo inicial"))}
+            {run.initial && vel(run.initial as number[][], t("Starting model", "Modelo inicial"))}
             {vel(
               method.model as number[][],
               t("Recovered velocity", "Velocidad recuperada"),
@@ -860,9 +823,11 @@ export default function Workbench() {
       const errorMap = cnn
         ? (method.residual as unknown as number[][])
         : (method.model as number[][]);
-      const bounds = extent(ref.flat());
+      const classicalColumns = cnn ? Object.entries(run.methods).filter(([, m]) => m.column_model) : [];
+      const bounds = sharedScale([ref, predicted, ...classicalColumns.map(([, m]) => m.column_model!)], cnn).range;
       earth = (
         <div className="learned-view">
+          <ApplicabilityWarning method={method} />
           <div className="learning-contract">
             <span className="small-caps">
               {cnn ? "CNN · 800 / 160 / 160" : "AUTOENCODER · LATENT 12"}
@@ -923,6 +888,12 @@ export default function Workbench() {
               palette={cnn ? "field" : "error"}
             />
           </div>
+          {!!classicalColumns.length && <section>
+            <h3>{t("Matched classical column estimates", "Estimaciones clásicas de columna comparables")}</h3>
+            <p className="plot-note">{t("These are exported depth integrals of the classical 3D estimates, compared with the same column target and observations as the CNN. All column maps share the same signed physical colour scale.", "Son integrales de profundidad exportadas de estimados 3D clásicos, comparadas con el mismo objetivo y observaciones que la CNN. Todos los mapas comparten escala física con signo.")}</p>
+            <div className="two-plots">{classicalColumns.map(([id, m]) => <Heatmap key={id} data={m.column_model!} title={methodName(id, es)} unit="g/cm³ m" range={bounds} xLabel="E · m" yLabel="N · m" xRange={[-1120,1120]} yRange={[-960,960]} />)}</div>
+          </section>}
+          {!cnn && <DetectionEvidence data={method.detection_validation} />}
           <p className="plot-note">
             {t(
               "Oblique and ring geometries are excluded from training. Weights are selected on validation data, never on this case.",
@@ -1016,6 +987,8 @@ export default function Workbench() {
               setMethodId(e.target.value);
               setFrame(0);
               setPlaying(false);
+              setModelState("final");
+              setPlaybackKind("inverse");
             }}
           >
             {Object.entries(run?.methods ?? {}).map(([id, m]) => (
@@ -1026,6 +999,7 @@ export default function Workbench() {
           </select>
         </label>
         <div className="playback">
+          <button className="btn" aria-pressed={modelState === "final" && playbackKind === "inverse"} onClick={returnToFinal}>{t("Show final model", "Mostrar modelo final")}</button>
           {run?.family === "seismic" && (
             <>
               <label className="select-control">
@@ -1038,6 +1012,7 @@ export default function Workbench() {
                     setPlaybackKind(e.target.value);
                     setFrame(0);
                     setPlaying(false);
+                    setModelState(e.target.value === "wave" ? "final" : "replay");
                   }}
                 >
                   <option value="wave">
@@ -1081,7 +1056,8 @@ export default function Workbench() {
               }
               onClick={() => {
                 setPlaying((v) => !v);
-                if (run?.family !== "seismic") setMode("recovered");
+                if (playbackKind !== "wave") setModelState("replay");
+                setMode("recovered");
               }}
             >
               {playing ? <Pause size={19} /> : <Play size={19} />}
@@ -1097,11 +1073,12 @@ export default function Workbench() {
               onChange={(e) => {
                 setFrame(+e.target.value);
                 setPlaying(false);
+                if (playbackKind !== "wave") setModelState("replay");
                 setMode("recovered");
               }}
             />
             <output>
-              {count ? `${frame + 1}/${count}` : t("final", "final")}
+              {modelState === "final" && playbackKind !== "wave" ? t("final", "final") : count ? `${frame + 1}/${count}` : t("final", "final")}
             </output>
           </div>
           <small>
@@ -1130,6 +1107,7 @@ export default function Workbench() {
               setFrame(0);
               setPlaying(false);
               setOrbit(false);
+              returnToFinal();
               setCut(960);
               setOpacity(1);
             }}
@@ -1144,7 +1122,7 @@ export default function Workbench() {
         </div>
         <div className="source-caption">
           <span className="source-dot" />
-          {t("Original synthetic geology", "Geología sintética original")}
+          {run?.provenance.synthetic ? t("Constructed synthetic target", "Objetivo sintético construido") : t("External observations", "Observaciones externas")}
           <small>
             {run?.engine} · {run?.provenance?.version}
             <br />
@@ -1153,6 +1131,8 @@ export default function Workbench() {
               "Cálculo offline / inspección interactiva",
             )}
           </small>
+          {run && <p>{provenanceDescription(run, es)}</p>}
+          {method && <EvaluationStatus method={method} />}
         </div>
       </aside>
       <section className="instrument-main">
@@ -1192,17 +1172,17 @@ export default function Workbench() {
                 {
                   id: "earth",
                   label: t("Model", "Modelo"),
-                  content: earth,
+                  content: <>{run.family !== "learned" && <p className="plot-note" role="status">{playbackKind === "wave" && run.family === "seismic" ? t("Synthetic-target wavefield; not propagation in the recovered model.", "Campo de ondas del objetivo sintético; no propagación en el modelo recuperado.") : mode === "truth" && physical ? t("Constructed synthetic target", "Objetivo sintético construido") : displayedState}. {t("Data predictions and evaluation remain at the selected final model.", "Las predicciones y evaluación corresponden al modelo final seleccionado.")}</p>}{earth}</>,
                 },
                 {
                   id: "observations",
                   label: t("Data", "Datos"),
-                  content: measurements,
+                  content: <div className="evidence-layout"><p className="plot-note">{t("Predictions and residuals are evaluated at the selected final model. Scrubbing a model replay does not recompute these data.", "Predicciones y residuos se evalúan en el modelo final seleccionado. Mover la reproducción del modelo no recalcula estos datos.")}</p>{measurements}</div>,
                 },
                 {
                   id: "recovery",
                   label: t("Inversion", "Inversión"),
-                  content: recovery,
+                  content: <div className="evidence-layout"><TargetEvidence run={run} methodId={methodId} />{recovery}<UncertaintyView run={run} method={method} section={section} /></div>,
                 },
                 {
                   id: "question",
@@ -1222,41 +1202,8 @@ export default function Workbench() {
                         {methodName(methodId, es)} ·{" "}
                         {es ? artifact?.name_es : artifact?.name}
                       </p>
-                      <dl className="parameter-ledger">
-                        {Object.entries(method.metrics).map(([key, value]) => {
-                          const info = metricInfo(
-                            key,
-                            run.family,
-                            methodId,
-                            es,
-                          );
-                          return (
-                            <div key={key}>
-                              <dt>{info.label}</dt>
-                              <dd>
-                                {typeof value === "boolean"
-                                  ? value
-                                    ? t("Yes", "Sí")
-                                    : t("No", "No")
-                                  : format(value)}{" "}
-                                {info.unit}
-                              </dd>
-                            </div>
-                          );
-                        })}
-                      </dl>
-                      {Object.keys(method.metrics).map((key) => (
-                        <p className="plot-note" key={key}>
-                          <strong>
-                            {metricInfo(key, run.family, methodId, es).label}
-                            :{" "}
-                          </strong>
-                          {
-                            metricInfo(key, run.family, methodId, es)
-                              .description
-                          }
-                        </p>
-                      ))}
+                      <TargetEvidence run={run} methodId={methodId} />
+                      <EvidenceMetrics run={run} methodId={methodId} />
                       <h3>
                         {t("Recorded trajectory", "Trayectoria registrada")}
                       </h3>
@@ -1330,7 +1277,7 @@ export default function Workbench() {
                                 } as Record<string, string>
                               )[k] ?? k}
                             </dt>
-                            <dd>{format(v)}</dd>
+                            <dd>{typeof v === "number" ? format(v) : typeof v === "boolean" ? v ? t("Yes", "Sí") : t("No", "No") : Array.isArray(v) ? v.map(format).join(", ") : v}</dd>
                           </div>
                         ))}
                       </dl>

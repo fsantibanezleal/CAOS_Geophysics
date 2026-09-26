@@ -18,8 +18,8 @@ describe("scientific explanations and canonical presentation", () => {
       "ae",
     ]);
     const methods = chapters.flatMap((c) => c.algorithms);
-    expect(methods).toHaveLength(11);
-    expect(new Set(methods.map((m) => m.id)).size).toBe(11);
+    expect(methods).toHaveLength(13);
+    expect(new Set(methods.map((m) => m.id)).size).toBe(13);
     for (const c of chapters) {
       expect(c.paragraphs.length).toBeGreaterThanOrEqual(3);
       for (const pair of [c.title, ...c.paragraphs, c.assumptions])
@@ -86,13 +86,13 @@ describe("scientific explanations and canonical presentation", () => {
     expect(methodName("mt-lm", false)).toMatch(/trust.region|TRF/i);
     expect(historyInfo("mt-lm", false).axis).toBe("Residual evaluation");
     expect(historyInfo("cnn", false).stride).toBe(5);
-    expect(historyInfo("joint", false).stride).toBe(6);
+    expect(historyInfo("joint", false).stride).toBe(1);
     expect(metricInfo("wrms", "mt").description).toContain("√2");
     expect(metricInfo("wrms", "gravity").description).toContain(
       "active stations only",
     );
     expect(metricInfo("wrms", "joint", "joint").description).toContain(
-      "all gravity stations",
+      "active gravity stations",
     );
   });
 });

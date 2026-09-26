@@ -428,6 +428,39 @@
   display: grid;
   gap: 1rem;
 }
+.evidence-layout {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.evidence-layout > * {
+  min-width: 0;
+}
+.evidence-layout code {
+  overflow-wrap: anywhere;
+}
+.evaluation-status {
+  padding: 0.4rem 0.6rem;
+  border-left: 2px solid var(--color-border);
+  font-size: 0.8rem;
+  min-width: 0;
+}
+.evaluation-status[data-evaluation="failed"] {
+  border-left-color: var(--color-bad);
+}
+.evaluation-status[data-evaluation="unresolved"],
+.evaluation-status[data-evaluation="negative-control"] {
+  border-left-color: var(--color-warn);
+}
+.evaluation-status summary {
+  cursor: pointer;
+  color: var(--color-fg-subtle);
+}
+.evaluation-status ul {
+  padding-left: 1.2rem;
+}
+.target-evidence {
+  min-width: 0;
+}
 .two-plots,
 .three-plots,
 .two-columns {

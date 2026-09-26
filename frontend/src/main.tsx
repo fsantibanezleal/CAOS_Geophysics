@@ -47,7 +47,7 @@ const config: ShellConfig = {
     { path: "/benchmark", en: "Benchmark", es: "Benchmark" },
   ],
   links: { github: "https://github.com/fsantibanezleal/CAOS_Geophysics" },
-  version: "0.03.000",
+  version: "0.04.000",
   architecture,
   fixedRoutes: ["/"],
   footer: {

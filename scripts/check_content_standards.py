@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,6 +29,7 @@ SELF = "scripts/check_content_standards.py"
 
 BANNED_DASHES = {0x2014, 0x2015}  # em dash, horizontal bar
 EMOJI_SELECTOR = 0xFE0F
+BANNED = re.compile('[\u2014\u2015\U0001f000-\U0001faff\ufe0f]')
 
 
 def is_emoji(cp: int) -> bool:
@@ -57,7 +59,10 @@ def main() -> int:
         except (OSError, UnicodeDecodeError):
             continue
         for lineno, line in enumerate(lines, 1):
-            for col, ch in enumerate(line, 1):
+            # Scan large numeric artifacts in the regex engine, not one Python
+            # call per character. The tracked scope and forbidden set are unchanged.
+            for match in BANNED.finditer(line):
+                col, ch = match.start()+1, match.group()
                 cp = ord(ch)
                 if cp in BANNED_DASHES:
                     hits.append(f"  {rel}:{lineno}:{col}  em-dash (U+{cp:04X})")

@@ -2,6 +2,15 @@
 
 All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
+## [0.04.000] - 2026-09-26
+
+- Regenerates 120 conditions and 348 method results with noise-weighted spatial potential inverses, physical cross-gradient and independently fitted two-property Gaussian-mixture prior.
+- Adds matched full-band and frequency-continuation FWI with 1.6 s traces, withheld receivers, accepted-state replay, and explicit recovery and cycle-skipping verdicts.
+- Matches MT objectives across TRF, Adam and neural parameterizations; adds provenance-preserving EDI fixtures, strict ingestion and fixed-thickness conditional uncertainty.
+- Retrains the CNN and autoencoder with disjoint calibration/test roles and the same noisy observations for classical comparison. Records the autoencoder's 0/80 withheld-family detection result.
+- Adds per-method recovery criteria, PGI/EDI/uncertainty views, common physical colour scales and selected-final versus replay state disclosure. The numerical matrix, artifacts and rendered local browser routes passed their stated gates.
+- Retains unresolved and failed cases. No field validation, calibrated geological posterior, or new inverse algorithm is claimed.
+
 ## [0.03.000] - 2026-09-24
 
 The `VERSION` file of this release read `0.02.000` until 2026-09-26; the tag, the manifest and this

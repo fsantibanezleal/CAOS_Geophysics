@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useShellLang } from "@fasl-work/caos-app-shell";
 import { color, extent, format, type Palette } from "../science";
+import { curvePath, intervalPath } from "../recovery";
 
 export function Legend({
   range,
@@ -80,7 +81,8 @@ export function Heatmap({
         pixels.fillStyle = color(data[y][x], bounds, palette);
         pixels.fillRect(x, y, 1, 1);
       }
-    ctx.imageSmoothingEnabled = palette !== "velocity";
+    // Each raster pixel is an exported sample; do not interpolate fake resolution.
+    ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(source, 0, 0, c.width, c.height);
   }, [data, palette, bounds[0], bounds[1], rows, cols]);
@@ -219,6 +221,7 @@ type Series = {
   dashed?: boolean;
   points?: boolean;
 };
+export type Band = { name: string; lower: number[]; upper: number[] };
 export function Plot({
   x,
   series,
@@ -227,6 +230,7 @@ export function Plot({
   yLabel,
   logX = false,
   logY = false,
+  band,
 }: {
   x: number[];
   series: Series[];
@@ -235,6 +239,7 @@ export function Plot({
   yLabel: string;
   logX?: boolean;
   logY?: boolean;
+  band?: Band;
 }) {
   const [pick, setPick] = useState<number | null>(null);
   const w = 640,
@@ -243,7 +248,7 @@ export function Plot({
   const tx = (v: number) => (logX ? Math.log10(Math.max(v, 1e-20)) : v),
     ty = (v: number) => (logY ? Math.log10(Math.max(v, 1e-20)) : v);
   const xr = extent(x.map(tx)),
-    yr = extent(series.flatMap((s) => s.values.map(ty)));
+    yr = extent([...series.flatMap((s) => s.values.map(ty)), ...(band ? [...band.lower, ...band.upper].map(ty) : [])]);
   const pad = (yr[1] - yr[0]) * 0.08;
   yr[0] -= pad;
   yr[1] += pad;
@@ -264,7 +269,7 @@ export function Plot({
           {pick === null
             ? yLabel
             : series
-                .map((s) => `${s.name}: ${format(s.values[pick] ?? 0)}`)
+                .map((s) => `${s.name}: ${format(s.values[pick])}`)
                 .join(" · ")}
         </output>
       </figcaption>
@@ -312,13 +317,16 @@ export function Plot({
             </g>
           );
         })}
+        {band && <path
+          aria-label={band.name}
+          d={intervalPath(x, band.lower, band.upper, X, Y)}
+          fill="var(--color-accent)" fillOpacity="0.16" stroke="var(--color-accent)" strokeWidth="0.8"
+        />}
         {series.map((s, j) => (
           <g key={s.name}>
             {!s.points && (
               <path
-                d={s.values
-                  .map((v, i) => `${i ? "L" : "M"}${X(x[i])},${Y(v)}`)
-                  .join(" ")}
+                d={curvePath(x, s.values, X, Y)}
                 fill="none"
                 stroke={s.color ?? hues[j % 3]}
                 strokeWidth="2.3"
@@ -327,7 +335,7 @@ export function Plot({
             )}{" "}
             {(s.points || s.values.length === 1 || pick !== null) &&
               s.values.map((v, i) =>
-                s.points || s.values.length === 1 || i === pick ? (
+                Number.isFinite(v) && Number.isFinite(x[i]) && (s.points || s.values.length === 1 || i === pick) ? (
                   <circle
                     key={i}
                     cx={X(x[i])}
@@ -363,6 +371,7 @@ export function Plot({
             {s.name}
           </span>
         ))}
+        {band && <span>{band.name}{pick !== null ? `: ${format(band.lower[pick])} – ${format(band.upper[pick])}` : ""}</span>}
       </div>
     </figure>
   );
@@ -373,11 +382,13 @@ export function LayerColumn({
   comparison,
   thickness,
   title,
+  range = [0, 4],
 }: {
   rho: number[];
   comparison?: number[];
   thickness: number[];
   title: string;
+  range?: [number, number];
 }) {
   const full = [
       ...thickness,
@@ -401,7 +412,7 @@ export function LayerColumn({
               className="earth-layer"
               style={{
                 flexGrow: full[i] / total,
-                background: color(Math.log10(v), [0, 4], "velocity"),
+                background: color(Math.log10(v), range, "velocity"),
               }}
             >
               <span>{Math.round(top)} m</span>

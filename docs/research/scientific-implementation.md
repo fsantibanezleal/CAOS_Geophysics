@@ -1,98 +1,91 @@
-# Source-to-content dossier: 2026-09-24
+# Scientific implementation: recovery revision 0.04.000
 
-The audit began at baseline 9b8f47e and was updated after the authorized spatial refinement.
-All canonical results and neural checkpoints were regenerated for 0.03.000. The public site explains these algorithms,
-not more sophisticated algorithms from related literature.
+Primary sources motivate the methods; actual objectives and settings are defined
+by the executable scripts and exported solver records. The [0.03 audit](audits/implementation-0.03.md)
+is preserved to distinguish corrections from retrospective relabelling.
 
-## Potential fields
+## Integral gravity and magnetic inverses
 
-`potential.py`: SimPEG 0.25.2 `Simulation3DIntegral`, geoana engine, gz and linearized TMI.
-28×24×16 prisms, 80×80×70 m. Receivers 16×16 at 60/180 m. Gravity g/cm³→mGal;
-susceptibility SI→nT. Inducing field 50,000 nT, inclination 60°, declination 12°.
-Let s_j=||G_:j||₂, W_jj=1/max(s_j,0.06 max s). Set a=||GW||F/sqrt(N), A=GW/a,
-b=d/a. For diagonal H, minimize ||Aq-b||²+β qᵀHq; C=H⁻¹ and
-q=C Aᵀ(ACAᵀ+βI)⁻¹b, m=Wq. L2: H=I, one solve. IRLS: eight solves,
-ε=max(0.12 max|q|,1e-10), H_jj=(q_j²+ε²)^(-1/2), divided by median(H).
-β=.018/.25. No derivative smoothness, bounds, positivity, β cooling, noise-whitening or stopping
-test. Sigma is used for WRMS reporting only. Vector magnetization concatenates three component
-blocks; displayed magnitude is effective susceptibility, not A/m. Scalar reference truth is not a
-direction-error oracle. Remanent direction is normalized [0.80,-0.55,0.23].
+`potential.py` uses SimPEG rectangular-prism gz and linearized TMI operators on
+28×24×16 cells. Coordinates are east/north/up in metres, flattening x-fast.
+Density contrast is g/cm³, gz mGal positive upward, susceptibility SI and TMI nT.
+The inducing field is 50,000 nT at inclination 60°, declination 12°.
+The 16×16 receiver grid is at 60 m or 180 m height.
 
-Primary context verified: [SimPEG gravity tutorial](https://simpeg.xyz/user-tutorials/inv-gravity-anomaly-3d/).
-The custom data-space solve is derived from the local source; the tutorial's directive-driven
-optimization must not be attributed to this implementation.
+`spatial_inverse.py` minimizes `||Wd(Gm-d)||² + beta m'Qm`, with `Wd=diag(1/sigma)`
+and physical spatial derivatives of length 240/240/140 m. Independent calibration
+selects depth exponent 0.375. Discrepancy selects beta before the declared strength
+multiplier. Four IRLS updates modify smoothed L1 smallness and retain spatial L2
+derivatives. No positivity, terrain correction or regional removal is implied.
+Vector inversion estimates three normalized-magnetization components. Amplitude
+and direction errors are separate. Choclo independently checks gravity/magnetic
+signs, scales and vector conventions. See [objective and calibration](../problem-types/03_potential-recovery.md).
 
-## Magnetotellurics
+## Layered magnetotellurics and EDI
 
-`electromagnetics.py`: μ=4π10⁻⁷ H/m, ω=2πf; halfspace Z=√(iωμρ). Upward recursion with
-k=√(iωμ/ρ), w=√(iωμρ), t=tanh(kh), Z_j=w_j(Z_(j+1)+w_j t)/(w_j+Z_(j+1)t).
-ρa=|Z|²/(μω), phase=arg Z. Known thicknesses, only resistivities inverted. 36 log frequencies
-0.01–100 Hz, acquisition .001–100, coverage alternate18. Noise independent real/imag components
-with σ=.025|Z| or .10|Z|. Complex WRMS expectation at truth is √2, not1.
+`electromagnetics.py` propagates E/H impedance upward from a half-space, with
+exp(+iωt), known thicknesses and isotropic layers. Bounded TRF, projected Adam
+and the per-sounding neural parameterization share a mean-of-real-component-squares
+objective, adjacent log-resistivity penalty, 1–6000 Ω m bounds and 100 Ω m start.
+The legacy `mt-lm` key is TRF, not LM. Saved states are copied and reevaluated
+after updates; rejected TRF residual evaluations are identified explicitly.
 
-SciPy `least_squares` default is TRF, two-point Jacobian, linear loss; NOT LM despite legacy key.
-Residual concatenates real/sigma, imag/sigma and √β diff(logρ), bounds1–6000Ωm,
-initial100Ωm, max_nfev160, default ftol/xtol/gtol1e-8. Saved residual evaluations include finite
-difference probes and are not accepted iterations. Adam direct logρ:250steps/.06, no bounds;
-neural:1→24→24→1 tanh, logρ=1+7 sigmoid(net(index)),420steps/.025, no pretrained inverse.
-These minimize mean|r|²+β mean(diff(logρ)²), not the same relative penalty as TRF's sums.
-Every10steps stored, minimum recorded objective selected. The direct-Adam tensor is modified in place
-before a frame is copied; do not claim exact frame/history equality. MT result metrics include ALL
-frequencies, including omitted coverage frequencies.
+`edi.py` wraps the official mt-metadata parser with strict units, time-convention,
+frequency, error, component and rotation validation. Native E/B units convert
+to E/H ohms. Arbitrary rotation cannot fabricate independent component errors
+when covariance is absent. Original analytic fixtures test native units,
+negative-time SI data, axis rotation and a noisy rotated two-layer sounding.
+Generic inputs retain unknown truth; fixture targets remain separate labelled data.
+See [full contract](../problem-types/mt-recovery.md) and [executed evidence](../problem-types/mt-recovery-validation.md).
 
-Primary references verified: [SciPy 1.15.2 TRF API](https://docs.scipy.org/doc/scipy-1.15.2/reference/generated/scipy.optimize.least_squares.html),
-[physics-guided MT paper](https://arxiv.org/abs/2410.15274). The latter motivates per-sounding
-optimization, not a reproduction claim.
+## Acoustic full-waveform inversion
 
-## Seismic
+`seismic.py` uses Deepwave finite differences and automatic derivatives on 128×96
+samples at 12.5 m, 0.5 ms integration, 1.6 s records, three known Ricker sources
+and 300 m absorbing layers. The independent start is `1800+0.88z` m/s. Every
+fifth receiver is withheld from objectives and selection.
 
-`seismic.py`: constant-density acoustic Deepwave, grid128x×96z,12.5m,dt0.5ms,nt2200,
-fourth-order spatial accuracy,PML24,max_vel4600. Sources at(300,75),(800,75),(1275,75)m;
-40receivers at integer grid indices from linspace(6,120). Ricker8Hz (salt9Hz), acquisition5Hz.
-v0=1800+11iz; v=1400+3000 sigmoid(p). Objective mean|Lw(pred)-Lw(obs)|²/mean|obs|²
-+4β[mean((Dxv)²)+mean((Dzv)²)]/1e6. D are cell differences, not derivatives per metre.
-Adam28steps,lr.045, gradient norm clip10, β.002/.06. Moving average widths41steps0–8,
-17steps9–17,1steps18–27, replicate padding. Direct variant always1. Source frequency does not
-change during continuation. Selected model minimizes raw unfiltered normalized waveform MSE
-among pre-update predictions. History is that raw MSE; pressure snapshots every24ms, gathers4ms.
-No elastic modes, attenuation, density inversion, free surface or posterior uncertainty.
+A data-only 1D background precedes control grids 9×12, 17×24 and 33×48, bounded
+to 1400–4400 m/s. Matched full-band and continuation inverses share background,
+spatial budget and regularization. The sixth-order Butterworth-amplitude filter
+has explicit 3/5/8/14 Hz cutoffs, not a short moving average. Each stage has 28
+strong-Wolfe L-BFGS calls. Terminal updates, final prediction, model, last frame
+and objective records describe the same selected state. Raw waveform MSE,
+filtered stage objective and regional model errors are distinct quantities.
+See [calibration, nominal recovery and remaining bias](../problem-types/02_fwi-recovery.md).
 
-Primary reference: [Deepwave FWI example](https://ausargeo.com/deepwave/example_fwi).
-The local moving average differs from the example's frequency-filter implementation.
+## Joint priors, learned inference and uncertainty
 
-## Joint
+`joint.py` compares uncoupled, physical cross-gradient and Gaussian-mixture priors
+using matched observations, initialization and 80-call budgets. The physical cross
+penalty is normalized by its independent initial value; L-BFGS has a diagonal
+Hessian preconditioner. `petrophysics.py` fits 640 separate synthetic laboratory-like
+pairs by EM. This explicit mixture prior is not a reproduction of SimPEG's PGI
+optimizer. Samples, parameters and conditional responsibilities are exported.
+The decoupled case violates the paired-property prior. Coupling can worsen recovery.
 
-`joint.py`: a=ρ/.5,b=χ/.03; loss=mean((Gg*.5a-dg)/σg)²+mean((Gm*.03b-dm)/σm)²
-+λ mean((∇a×∇b)²)+.015(mean a²+mean b²). `torch.gradient` in [z,north,east] cell indices,
-central interior/one-sided boundary; no spacing argument. λ4/25,180Adamsteps,lr.008.
-Starts density from case L2 and susceptibility from independent solve β.04. Final model returned,
-history every6steps,total objective; frames post-update but loss pre-update.
-Cross-gradient metric is mean vector norm, while penalty is mean squared components.
-Both data sets masked for optimization; final joint WRMS includes all stations.
+`learning.py` trains a column-density CNN and a 12-dimensional observation
+autoencoder with 800/160/160 disjoint training/validation/test realizations.
+The spatial L2 and CNN test receive identical noisy observations and the same
+physical target. Another 160 realizations calibrate the novelty threshold.
+Eighty withheld ring/crossed geometries test detection. Confusion counts and AUC
+are exported: the executed detector misses all 80 withheld examples. The CNN also
+fails to beat the classical column inverse on the two displayed withheld references.
+Classical regularization is explicitly not an intervention on frozen checkpoints.
 
-Reference: [SimPEG cross-gradient tutorial](https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13-joint_inversion/plot_inv_3_cross_gradient_pf.html).
-This app's normalized cell-index penalty is not the tutorial's mesh-weighted objective or PGI.
+Potential-field ensembles perturb observations at fixed prior and selected beta;
+MT ensembles re-invert complex-Gaussian resamples around the selected TRF model.
+These are conditional repeatability intervals, not posterior geology. Independent
+calibration measures coverage, including regularization bias and noncoverage;
+coverage is not assumed to equal the nominal 95% quantile span.
 
-## Learning
+## Release gates
 
-`learning.py`: train/validation/test800/160/160; seeds18001/29001/39001, model seed7721,
-noise seed5001. Four generator families, whole-realization split; oblique/ring excluded. Scale
-s_d=SD(clean training observations), noisy input=(d+N(0,.02s_d))/s_d, targetsΣ_zρ*70/400.
-CNN conv1→16→24,kernel3,padding1,GELU,adaptivepool4×4,flatten384,linear96,GELU,linear672.
-AE flatten256→64→12→64→256,GELU between hidden layers. Adam lr.001,batch64,180epochs,
-best validation MSE checkpoint, no test selection. Training history stores last minibatch loss,
-not epoch-average; validation history sampled every5epochs. AE threshold validation99th percentile.
-The scores and frozen threshold are recorded separately for the withheld oblique and ring cases.
-A below-threshold score on either is a missed unfamiliar geometry, not proof of in-distribution geology. CNN target is a column, not a3D reconstruction.
-Classical held-out baseline uses CLEAN observations while CNN uses noisy inputs, with fixed untuned
-regularization. Show numbers but explicitly disallow a controlled superiority claim.
-
-Algorithm reference: [Adam original paper](https://arxiv.org/abs/1412.6980). Architectures and all
-training constants are original local implementation details, not InversionNet/OpenFWI reproductions.
-
-## Editorial rule
-
-Every result explanation identifies observable, units, comparison population and an inference limit.
-Remove slogans, competitive claims about visual quality, and assurances about being a real instrument.
-Keep setup/hosting in the architecture dialog and reproduction documentation; scientific implementation
-must explain equations, discrete updates, stopping criteria and saved-state semantics first.
+`evaluation.py` separates active/held-out data error, baseline-relative model
+error, correlation, support/background error and centroid/direction error.
+`validate_recovery.py` recomputes physical predictions and state identities and
+requires three nominal reference FWI cases to improve independent starts.
+Failed variants remain visible. `catalog.py` rejects stale or missing runs.
+Static guards verify the full matrix, EDI hashes, checkpoints and verdicts.
+Numerical tests, rendered inspection, Git promotion and host verification are
+separate stages. A successful build alone is not scientific validation.

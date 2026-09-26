@@ -1,0 +1,147 @@
+{
+  "schema": "inverse-earth/edi-bundle/v1",
+  "fixtures": [
+    {
+      "id": "HALFSPACE_100_NATIVE",
+      "label": "halfspace-100-native",
+      "synthetic": true,
+      "target": {
+        "quantity": "electrical resistivity",
+        "units": "ohm m",
+        "dimensionality": "1D fixed-thickness layers",
+        "provenance": "independent analytic synthetic oracle"
+      },
+      "truth_ohm_m": [
+        100.0
+      ],
+      "thickness_m": [],
+      "source": "halfspace-100-native.edi",
+      "source_sha256": "904f1e183f665ed642ff07d42ac3c1d7a4569b9590abe1d111401110db650039",
+      "artifact": "halfspace-100-native.json",
+      "artifact_sha256": "a12f781901f0db6076e31baff028269a987be217d7f33bb862758499b095ddee",
+      "noise_added": false,
+      "noise_seed": 67101,
+      "input_units": "mt",
+      "rotation_deg": 0.0,
+      "sign_convention": "+",
+      "selected_component": "xy",
+      "metrics": {
+        "wrms": 9.542363873931626e-15,
+        "active_component_wrms": 6.747470203806586e-15,
+        "withheld_component_wrms": null,
+        "initial_component_wrms": 2.7628953912672546e-15,
+        "objective": 4.552835415125769e-29,
+        "data_objective": 4.552835415125769e-29,
+        "regularization_objective": 0.0,
+        "other_component_wrms": 6.747470203806586e-15
+      }
+    },
+    {
+      "id": "HALFSPACE_500_OHM_NEGATIVE",
+      "label": "halfspace-500-ohm-negative",
+      "synthetic": true,
+      "target": {
+        "quantity": "electrical resistivity",
+        "units": "ohm m",
+        "dimensionality": "1D fixed-thickness layers",
+        "provenance": "independent analytic synthetic oracle"
+      },
+      "truth_ohm_m": [
+        500.0
+      ],
+      "thickness_m": [],
+      "source": "halfspace-500-ohm-negative.edi",
+      "source_sha256": "0b87a08400424934c7e528f55d5b136ea23e3bcebe9f0fcdd089b6bf4181be9d",
+      "artifact": "halfspace-500-ohm-negative.json",
+      "artifact_sha256": "0eb7a36de58d68d7e33ae80c0ef2338a21991a6fe9f2790dea862e1fff0c1862",
+      "noise_added": false,
+      "noise_seed": 67102,
+      "input_units": "ohm",
+      "rotation_deg": 90.0,
+      "sign_convention": "-",
+      "selected_component": "xy",
+      "metrics": {
+        "wrms": 4.099845919151774e-14,
+        "active_component_wrms": 2.899028851252213e-14,
+        "withheld_component_wrms": null,
+        "initial_component_wrms": 15.635160606788382,
+        "objective": 8.404368280392726e-28,
+        "data_objective": 8.404368280392726e-28,
+        "regularization_objective": 0.0,
+        "other_component_wrms": 2.899028851252213e-14
+      }
+    },
+    {
+      "id": "TWO_LAYER_NOISY_ROTATED",
+      "label": "two-layer-noisy-rotated",
+      "synthetic": true,
+      "target": {
+        "quantity": "electrical resistivity",
+        "units": "ohm m",
+        "dimensionality": "1D fixed-thickness layers",
+        "provenance": "independent analytic synthetic oracle"
+      },
+      "truth_ohm_m": [
+        120.0,
+        12.0
+      ],
+      "thickness_m": [
+        350.0
+      ],
+      "source": "two-layer-noisy-rotated.edi",
+      "source_sha256": "0d6b0fab71efe69d183445070aba1181604333f00fb6781bf6d2c9d9d2ee5e95",
+      "artifact": "two-layer-noisy-rotated.json",
+      "artifact_sha256": "dc61c9be0ed8594c0bab59354eaf30e01a37af3cbc798c69b3b51cca7cd4c9a5",
+      "noise_added": true,
+      "noise_seed": 67201,
+      "input_units": "mt",
+      "rotation_deg": 27.0,
+      "sign_convention": "+",
+      "selected_component": "xy",
+      "metrics": {
+        "wrms": 1.5269150024762834,
+        "active_component_wrms": 1.079691952546454,
+        "withheld_component_wrms": null,
+        "initial_component_wrms": 38.641562568802726,
+        "objective": 1.1712015957214204,
+        "data_objective": 1.1657347123935742,
+        "regularization_objective": 0.005466883327846167,
+        "other_component_wrms": 1.1690455431298805
+      }
+    }
+  ],
+  "license": "CC0-1.0",
+  "calibration": [
+    {
+      "id": "halfspace",
+      "artifact": "calibration-halfspace.json",
+      "artifact_sha256": "047a413bb2ab1eb17f9442497852bcd19926e0535b4403c6353a1612c96575e4",
+      "synthetic": true,
+      "realizations": 48,
+      "coverage_per_layer": [
+        0.9166666666666666
+      ],
+      "failures": 0,
+      "seed": 95317,
+      "applicability": "These independently seeded synthetic calibration models only; not field coverage."
+    },
+    {
+      "id": "two-layer",
+      "artifact": "calibration-two-layer.json",
+      "artifact_sha256": "9a9138fedc5d3e8f87c4616ede81e08e6ee18a75f86712e51607007156fd99e1",
+      "synthetic": true,
+      "realizations": 48,
+      "coverage_per_layer": [
+        0.875,
+        1.0
+      ],
+      "failures": 0,
+      "seed": 95318,
+      "applicability": "These independently seeded synthetic calibration models only; not field coverage."
+    }
+  ],
+  "parser_dependency": "mt-metadata==1.0.10",
+  "artifact_schema": "inverse-earth/edi-1d/v1",
+  "provenance": "Original analytic synthetic transfer functions; not downloaded field data",
+  "uncertainty": "Per-artifact TRF conditional parametric bootstrap, no empirical coverage inferred here"
+}
