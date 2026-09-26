@@ -9,9 +9,10 @@ import hashlib
 import numpy as np
 import torch
 from torch import nn
-from scipy.linalg import solve
 from scipy.interpolate import griddata
 from geology import VOLUME_SHAPE, VOLUME_SPACING
+from potential import invert
+from evaluation import model_metrics
 
 
 class InverseCNN(nn.Module):
@@ -54,6 +55,25 @@ def generate(centers,count,seed):
     return np.asarray(models)
 
 
+def generate_ood(centers,count=80,seed=59001):
+    """Held-out geometric families; never used to fit weights or thresholds."""
+    rng=np.random.default_rng(seed)
+    x,y,u=centers.T;z=-u;models=[]
+    for i in range(count):
+        cx,cy=rng.uniform(-250,250,2);depth=rng.uniform(250,650)
+        radius=rng.uniform(280,550);width=rng.uniform(70,180)
+        angle=rng.uniform(-np.pi,np.pi)
+        xx=(x-cx)*np.cos(angle)+(y-cy)*np.sin(angle)
+        yy=-(x-cx)*np.sin(angle)+(y-cy)*np.cos(angle)
+        if i%2==0:
+            distance=np.sqrt((xx/1.25)**2+yy**2)
+            mask=(distance>radius)&(distance<radius+width)&(z>depth-150)&(z<depth+250)
+        else:
+            mask=((abs(xx)<width)&(abs(yy)<650)&(z>depth-150)&(z<depth+250))|((abs(yy)<width)&(abs(xx)<650)&(z>depth)&(z<depth+350))
+        models.append(mask.astype(float)*rng.uniform(.25,.65))
+    return np.asarray(models)
+
+
 def checkpoint(model,path):
     state={name:dict(shape=list(value.shape),values=value.detach().cpu().numpy().ravel().tolist()) for name,value in model.state_dict().items()}
     path.write_text(json.dumps(state,separators=(",",":")))
@@ -79,7 +99,8 @@ def train(mesh,G,outdir,epochs=180):
     target_scale=400.0
     targets=[m.reshape(-1,*VOLUME_SHAPE).sum(1)*VOLUME_SPACING[2]/target_scale for m in models]
     rng=np.random.default_rng(5001)
-    xx=[torch.tensor((d+rng.normal(0,.02*scale,d.shape))/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16) for d in observations]
+    noisy=[d+rng.normal(0,.02*scale,d.shape) for d in observations]
+    xx=[torch.tensor(d/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16) for d in noisy]
     yy=[torch.tensor(v,dtype=torch.float32,device=device) for v in targets]
     cnn=InverseCNN().to(device); ae=ObservationAE().to(device)
     records={}
@@ -100,6 +121,7 @@ def train(mesh,G,outdir,epochs=180):
                 best=validation;best_state={k:v.detach().clone() for k,v in model.state_dict().items()}
             if epoch%5==0:
                 history.append(dict(epoch=epoch,train=float(loss.detach()),validation=validation))
+            if epoch%20==0:print(f'TRAIN {name} epoch {epoch}/{epochs}: validation={validation:.6g}',flush=True)
         model.load_state_dict(best_state)
         with torch.no_grad():
             pred=model(xx[2]);target=yy[2] if name=="cnn" else xx[2]
@@ -107,17 +129,36 @@ def train(mesh,G,outdir,epochs=180):
         sha=checkpoint(model,outdir/f"{name}.json")
         records[name]=dict(checkpoint=f"models/{name}.json",sha256=sha,validation_mse=best,test_mse=float(errors.mean()),test_errors=errors.tolist(),history=history)
     # The classical baseline solves the same observation-to-column target on the test cases.
-    sensitivity=np.maximum(np.linalg.norm(G,axis=0),np.linalg.norm(G,axis=0).max()*.06)
-    A=G/sensitivity
-    classical=(A.T@solve(A@A.T+.08*np.eye(256),observations[2].T,assume_a="pos")).T/sensitivity
+    classical=np.array([invert(G,data,.02*scale)['model'] for data in noisy[2]])
     classic_projection=classical.reshape(-1,*VOLUME_SHAPE).sum(1)*VOLUME_SPACING[2]
     truth_projection=targets[2]*target_scale
+    # Threshold calibration is disjoint from early-stopping validation and test.
+    calibration=generate(mesh.cell_centers,160,49001)@G.T
+    calibration+=np.random.default_rng(49002).normal(0,.02*scale,calibration.shape)
+    ood=generate_ood(mesh.cell_centers)@G.T
+    ood+=np.random.default_rng(59002).normal(0,.02*scale,ood.shape)
     with torch.no_grad():
-        val_error=(ae(xx[1])-xx[1]).square().flatten(1).mean(1).cpu().numpy()
-    threshold=float(np.quantile(val_error,.99))
+        cal_x=torch.tensor(calibration/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16)
+        ood_x=torch.tensor(ood/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16)
+        calibration_error=(ae(cal_x)-cal_x).square().flatten(1).mean(1).cpu().numpy()
+        ood_error=(ae(ood_x)-ood_x).square().flatten(1).mean(1).cpu().numpy()
+    threshold=float(np.quantile(calibration_error,.99))
+    id_error=np.asarray(records['autoencoder']['test_errors'])
+    detection=dict(calibration_seed=49001,calibration_count=160,ood_seed=59001,ood_count=80,
+                   threshold_policy='99th percentile of separate in-distribution calibration reconstruction errors',
+                   calibration_errors=calibration_error.tolist(),id_test_errors=id_error.tolist(),ood_test_errors=ood_error.tolist(),
+                   true_positive=int(np.sum(ood_error>threshold)),false_negative=int(np.sum(ood_error<=threshold)),
+                   false_positive=int(np.sum(id_error>threshold)),true_negative=int(np.sum(id_error<=threshold)),
+                   sensitivity=float(np.mean(ood_error>threshold)),specificity=float(np.mean(id_error<=threshold)),
+                   roc_auc=float(np.mean(ood_error[:,None]>id_error[None,:])+.5*np.mean(ood_error[:,None]==id_error[None,:])),
+                   limitation='Reconstruction error is not a universal out-of-distribution detector; missed withheld geometries are retained')
     metadata=dict(schema="inverse-earth.learning/v2",device=device,gpu=torch.cuda.get_device_name(0) if device=="cuda" else None,
         seeds=seeds,split_counts=counts,split_policy="Disjoint generator seeds; complete realization assigned to one split; oblique and ring geometries withheld from training",input_scale=scale,target_scale=target_scale,novelty_threshold=threshold,
-        models=records,classical_test_mse=float(np.mean((classic_projection-truth_projection)**2)),cnn_test_mse=records["cnn"]["test_mse"]*target_scale**2,units="(g/cm³ m)²")
+        models=records,classical_test_mse=float(np.mean((classic_projection-truth_projection)**2)),cnn_test_mse=records["cnn"]["test_mse"]*target_scale**2,units="(g/cm³ m)²",
+        classical_test_errors=np.mean((classic_projection-truth_projection)**2,axis=(1,2)).tolist(),
+        comparison=dict(input='Exactly identical seeded noisy observations for classical and CNN inverses',noise_sigma=.02*scale,
+                        noisy_test_sha256=hashlib.sha256(noisy[2].astype('<f8').tobytes()).hexdigest(),target='Depth-integrated density on the identical 24 by 28 grid',classical='Noise-aware spatial L2 with discrepancy-selected beta'),
+        novelty_evaluation=detection)
     (outdir/"training.json").write_text(json.dumps(metadata,separators=(",",":")))
     return cnn,ae,metadata
 
@@ -143,4 +184,23 @@ def attach(run,bundle):
     run["column_truth"]=truth.tolist()
     run["methods"]["cnn"]=dict(name="CNN column-density inversion",name_es="Inversión CNN de densidad integrada",model=column.tolist(),predicted=[],residual=(column-truth).tolist(),history=[v["validation"] for v in meta["models"]["cnn"]["history"]],frames=[],metrics=dict(column_rmse=float(np.sqrt(np.mean((column-truth)**2)))),checkpoint=meta["models"]["cnn"]["sha256"],units="g/cm³ m")
     run["methods"]["autoencoder"]=dict(name="Observation autoencoder",name_es="Autoencoder de observaciones",model=error.tolist(),predicted=reconstruction.ravel().tolist(),residual=(observed-reconstruction).ravel().tolist(),history=[v["validation"] for v in meta["models"]["autoencoder"]["history"]],frames=[],metrics=dict(reconstruction_mse=float(error.mean()),threshold=meta["novelty_threshold"],above_threshold=bool(error.mean()>meta["novelty_threshold"])),checkpoint=meta["models"]["autoencoder"]["sha256"],units="normalized squared error")
+    for method_id in ('l2','irls'):
+        projection=np.asarray(run['methods'][method_id]['model']).reshape(VOLUME_SHAPE).sum(0)*VOLUME_SPACING[2]
+        run['methods'][method_id]['column_model']=projection.tolist()
+        run['methods'][method_id]['metrics']['column_rmse']=float(np.sqrt(np.mean((projection-truth)**2)))
+    cnn_method=run['methods']['cnn'];ae_method=run['methods']['autoencoder']
+    cnn_method['metrics'].update(model_metrics(column,truth))
+    cnn_method['metrics']['classical_column_rmse']=run['methods']['l2']['metrics']['column_rmse']
+    cnn_method['metrics']['classical_baseline_ratio']=cnn_method['metrics']['column_rmse']/max(cnn_method['metrics']['classical_column_rmse'],1e-30)
+    cnn_method['evaluation']=dict(status='unresolved' if cnn_method['metrics']['classical_baseline_ratio']>=1 else 'recovered',
+                                  reason_codes=['held-out-geological-family','column-target-not-three-dimensional-recovery']+(['does-not-improve-classical-baseline'] if cnn_method['metrics']['classical_baseline_ratio']>=1 else []))
+    if cnn_method['metrics']['baseline_ratio']>=1:cnn_method['evaluation']['status']='failed'
+    cnn_method['target']=dict(quantity='depth-integrated density contrast',units='g/cm³ m',dimensionality=2,provenance='Depth integral of original synthetic volume; not a reconstructed depth profile')
+    ae_method['evaluation']=dict(status='recovered' if ae_method['metrics']['above_threshold'] else 'failed',
+                                 reason_codes=['withheld-geometric-family-detected' if ae_method['metrics']['above_threshold'] else 'withheld-geometric-family-missed'])
+    ae_method['target']=dict(quantity='normalized observation reconstruction error',units='normalized squared error',dimensionality=2,provenance='Known withheld geometry; no subsurface recovery claim')
+    ae_method['detection_validation']=meta['novelty_evaluation']
+    for method in (cnn_method,ae_method):
+        method['applicability']=dict(varied_parameter=run['variant']!='regularization',reason='Frozen checkpoint; regularization changes classical comparator only' if run['variant']=='regularization' else 'Fixed checkpoint evaluated on modified observations')
+        method['state_identity']=dict(final_frame_index=None,selected_iteration=None,frame_quantity='checkpoint inference',predictions='final-model')
     return run

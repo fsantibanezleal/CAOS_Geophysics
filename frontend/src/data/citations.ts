@@ -1,6 +1,7 @@
 import type { Citation } from "@fasl-work/caos-app-shell";
 
 export const CITATIONS: Citation[] = [
+  { id: "astic2020", label: "Astic, Heagy and Oldenburg 2020", citation: "Astic, T., Heagy, L. J. and Oldenburg, D. W. Petrophysically and geologically guided multi-physics inversion using a dynamic Gaussian mixture model. Geophysical Journal International, 224(1), 40–68.", doi: "10.1093/gji/ggaa378", url: "https://arxiv.org/abs/2002.09515" },
   {
     id: "simpeggravity",
     label: "SimPEG gravity inversion",

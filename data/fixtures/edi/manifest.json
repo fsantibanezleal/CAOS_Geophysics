@@ -1,0 +1,93 @@
+{
+  "schema": "inverse-earth/edi-fixtures/v1",
+  "created": "2026-09-24",
+  "license": "CC0-1.0",
+  "generator": "data/fixtures/edi/generate_fixtures.py",
+  "generator_sha256": "fa066e685d86e12b0a355247f6473d1ab35e584c5f7458b18bb92f6fa192423e",
+  "fixtures": [
+    {
+      "id": "HALFSPACE_100_NATIVE",
+      "path": "halfspace-100-native.edi",
+      "sha256": "904f1e183f665ed642ff07d42ac3c1d7a4569b9590abe1d111401110db650039",
+      "bytes": 8935,
+      "data_kind": "original synthetic transfer functions; not field measurements",
+      "target": {
+        "quantity": "electrical resistivity",
+        "units": "ohm m",
+        "dimensionality": "1D fixed-thickness layers",
+        "provenance": "independent analytic synthetic oracle"
+      },
+      "truth_ohm_m": [
+        100.0
+      ],
+      "thickness_m": [],
+      "noise_seed": 67101,
+      "noise_added": false,
+      "noise_law": "none; positive 2.5% declared test errors",
+      "units": "mt",
+      "sign_convention": "+",
+      "rotation_deg": 0.0,
+      "variance_convention": "complex",
+      "expected_artifact": "data/experiments/edi/halfspace-100-native.json",
+      "command": ".venv-pipeline/Scripts/python data-pipeline/edi.py data/fixtures/edi/halfspace-100-native.edi --bootstrap-samples 128 --output data/experiments/edi/halfspace-100-native.json"
+    },
+    {
+      "id": "HALFSPACE_500_OHM_NEGATIVE",
+      "path": "halfspace-500-ohm-negative.edi",
+      "sha256": "0b87a08400424934c7e528f55d5b136ea23e3bcebe9f0fcdd089b6bf4181be9d",
+      "bytes": 8960,
+      "data_kind": "original synthetic transfer functions; not field measurements",
+      "target": {
+        "quantity": "electrical resistivity",
+        "units": "ohm m",
+        "dimensionality": "1D fixed-thickness layers",
+        "provenance": "independent analytic synthetic oracle"
+      },
+      "truth_ohm_m": [
+        500.0
+      ],
+      "thickness_m": [],
+      "noise_seed": 67102,
+      "noise_added": false,
+      "noise_law": "none; positive 2.5% declared test errors",
+      "units": "ohm",
+      "sign_convention": "-",
+      "rotation_deg": 90.0,
+      "variance_convention": "complex",
+      "expected_artifact": "data/experiments/edi/halfspace-500-ohm-negative.json",
+      "command": ".venv-pipeline/Scripts/python data-pipeline/edi.py data/fixtures/edi/halfspace-500-ohm-negative.edi --bootstrap-samples 128 --output data/experiments/edi/halfspace-500-ohm-negative.json"
+    },
+    {
+      "id": "TWO_LAYER_NOISY_ROTATED",
+      "path": "two-layer-noisy-rotated.edi",
+      "sha256": "0d6b0fab71efe69d183445070aba1181604333f00fb6781bf6d2c9d9d2ee5e95",
+      "bytes": 8987,
+      "data_kind": "original synthetic transfer functions; not field measurements",
+      "target": {
+        "quantity": "electrical resistivity",
+        "units": "ohm m",
+        "dimensionality": "1D fixed-thickness layers",
+        "provenance": "independent analytic synthetic oracle"
+      },
+      "truth_ohm_m": [
+        120.0,
+        12.0
+      ],
+      "thickness_m": [
+        350.0
+      ],
+      "noise_seed": 67201,
+      "noise_added": true,
+      "noise_law": "independent real and imaginary Gaussian parts, SD=0.025*abs(clean off-diagonal Z)",
+      "units": "mt",
+      "sign_convention": "+",
+      "rotation_deg": 27.0,
+      "variance_convention": "complex",
+      "expected_artifact": "data/experiments/edi/two-layer-noisy-rotated.json",
+      "command": ".venv-pipeline/Scripts/python data-pipeline/edi.py data/fixtures/edi/two-layer-noisy-rotated.edi --thickness 350.0 --bootstrap-samples 128 --output data/experiments/edi/two-layer-noisy-rotated.json"
+    }
+  ],
+  "parser_dependency": "mt-metadata==1.0.10",
+  "target_policy": "Fixture truth is for independent evaluation only; the EDI inversion does not read this manifest.",
+  "public_artifacts": "Integration owner promotes validated output; these commands never write canonical data/derived/v2."
+}

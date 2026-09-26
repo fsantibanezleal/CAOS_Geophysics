@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { color, extent, format, type Run } from "../science";
+import { color, format, type Run } from "../science";
 import { useShellLang } from "@fasl-work/caos-app-shell";
 import { isosurface } from "../isosurface";
 
@@ -19,7 +19,8 @@ export function EarthScene({
   label,
   onCell,
   representation = "surface",
-  threshold = 0.35,
+  threshold,
+  range,
 }: {
   run: Run;
   values: number[];
@@ -33,7 +34,8 @@ export function EarthScene({
   label: string;
   onCell?: (i: number) => void;
   representation?: "surface" | "cells";
-  threshold?: number;
+  threshold: number;
+  range: [number, number];
 }) {
   const es = useShellLang() === "es";
   const host = useRef<HTMLDivElement>(null);
@@ -94,15 +96,12 @@ export function EarthScene({
     const sun = new THREE.DirectionalLight(0xffffff, 2);
     sun.position.set(-3, 5, 4);
     scene.add(sun);
-    const bounds = extent(values);
-    const max = Math.max(...values.map(Math.abs));
-    const diverging = bounds[0] < -max * 0.1;
+    const diverging = range[0] < 0;
     const palette = diverging ? "field" : "earth";
-    const range: [number, number] = diverging ? [-max, max] : [0, max];
     const indices: number[] = [];
     for (let i = 0; i < values.length; i++) {
       if (
-        Math.abs(values[i]) > max * threshold &&
+        Math.abs(values[i]) > threshold &&
         run.grid.centers[i][1] <= cut
       )
         indices.push(i);
@@ -132,9 +131,9 @@ export function EarthScene({
     voxels.visible = representation === "cells";
     scene.add(voxels);
     const surfaces: THREE.Mesh[] = [];
-    if (representation === "surface" && max > 0)
+    if (representation === "surface" && threshold > 0)
       for (const sign of [1, -1]) {
-        if (!values.some((v) => v * sign > max * threshold)) continue;
+        if (!values.some((v) => v * sign > threshold)) continue;
         const rawGeometry = new THREE.BufferGeometry();
         rawGeometry.setAttribute(
           "position",
@@ -144,7 +143,7 @@ export function EarthScene({
               run.grid.shape,
               run.grid.origin!,
               spacing,
-              max * threshold,
+              threshold,
             ),
             3,
           ),
@@ -155,7 +154,7 @@ export function EarthScene({
         const surface = new THREE.Mesh(
           meshGeometry,
           new THREE.MeshStandardMaterial({
-            color: color(sign * max * threshold, range, palette),
+            color: color(sign * threshold, range, palette),
             roughness: 0.65,
             side: THREE.DoubleSide,
             transparent: opacity < 1,
@@ -403,6 +402,8 @@ export function EarthScene({
     es,
     representation,
     threshold,
+    range[0],
+    range[1],
   ]);
   return (
     <div

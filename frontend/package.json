@@ -1,7 +1,7 @@
 {
   "name": "inverse-earth-studio-web",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "scripts": {
     "dev": "node copy-data.mjs && vite --host 127.0.0.1",
@@ -20,6 +20,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/node": "^24.9.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
