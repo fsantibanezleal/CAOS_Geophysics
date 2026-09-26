@@ -3,7 +3,7 @@
  * Screenshots go to the OS temp directory, never the repository.
  */
 import { chromium } from '@playwright/test';
-import { readFileSync, mkdtempSync, mkdirSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,7 @@ const raw = files.map((file) => readFileSync(join(frontend, 'public/svg/tech', f
 const shots = process.env.QA_OUTPUT ? resolve(process.env.QA_OUTPUT) : mkdtempSync(join(tmpdir(), 'geophysics-architecture-'));
 mkdirSync(shots, { recursive: true });
 const errors = [];
+const checks = [];
 
 raw.forEach((svg, i) => {
   if (/#[0-9a-f]{3,8}\b/i.test(svg)) errors.push(`${files[i]}: hard-coded colour`);
@@ -97,6 +98,7 @@ try {
           return { pairs: groups.size, visibleEn, visibleEs, violations };
         }, lang);
         for (const violation of result.violations) errors.push(`${files[i]} ${theme}/${lang}: ${violation}`);
+        checks.push({ file: files[i], theme, lang, pairs: result.pairs, visibleLabels: lang === 'en' ? result.visibleEn : result.visibleEs, violations: result.violations });
         if (i === 0 && lang === 'es') {
           const title = await dialog.getByRole('tab').first().innerText();
           if (!/Modelos físicos/.test(title)) errors.push(`Spanish tab did not change: ${title}`);
@@ -143,6 +145,7 @@ try {
 } finally {
   await browser.close();
 }
+writeFileSync(join(shots, 'report.json'), JSON.stringify({ base, checks, mobileFullSizeInteractions: 20, errors }, null, 2));
 console.log(`Architecture screenshots: ${shots}`);
 if (errors.length) {
   console.error(errors.join('\n'));

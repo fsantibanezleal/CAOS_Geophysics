@@ -9,5 +9,6 @@ This wiki is the durable technical record of the workbench. It explains what the
 - [Cases](cases/README.md): category taxonomy and 20-case coverage matrix.
 - [Guides](guides/README.md): setup, precompute, GPU, and bring-your-own-data workflows.
 - [Manuscript](../manuscripts/geophysics-identifiability/README.md): research framing and evidence plan.
+- [0.04.001 scientific and browser validation](validation/scientific-ui-0.04.001.md): candidate/canonical hashes, numerical gates, rendered inspection and remaining limits. Public deployment is recorded separately.
 
 The public UI is bilingual English and Spanish. Technical source and documentation remain English for reproducibility.

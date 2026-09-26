@@ -1,0 +1,15 @@
+[
+  {
+    "origin": "http://127.0.0.1:5180/",
+    "https_verified": false,
+    "cases": 20,
+    "verified_experiments": 120,
+    "verified_edi_files": 9,
+    "verified_routes": 6,
+    "verified_model_files": 3,
+    "verified_release_evidence_files": 2,
+    "verified_static_ui_files": 10,
+    "catalog_sha256": "0a4af8d5bd19f6570b4f8572e9eccdc12a20bbcd1d372a318eb3695717f2cc23",
+    "index_sha256": "466ac797dd00f938444d9862ee3342c304e883e8ed1e3c7c8a539c124391bd00"
+  }
+]

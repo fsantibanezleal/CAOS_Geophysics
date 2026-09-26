@@ -1,0 +1,980 @@
+{
+  "base": "http://127.0.0.1:5180",
+  "measurements": [
+    {
+      "name": "app / model",
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": {
+        "height": 657,
+        "content": 657
+      },
+      "tabRows": [
+        1
+      ],
+      "views": [
+        {
+          "selector": "earth-scene",
+          "width": 952,
+          "height": 539,
+          "area": 513336
+        }
+      ]
+    },
+    {
+      "name": "introduction",
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "methodology",
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "implementation",
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "experiments",
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "benchmark",
+      "width": 1280,
+      "height": 800,
+      "theme": "light",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": [
+        {
+          "selector": "science-plot curve",
+          "width": 1152,
+          "height": 370,
+          "area": 426060
+        }
+      ]
+    },
+    {
+      "name": "app / model",
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": {
+        "height": 657,
+        "content": 657
+      },
+      "tabRows": [
+        1
+      ],
+      "views": [
+        {
+          "selector": "earth-scene",
+          "width": 952,
+          "height": 539,
+          "area": 513336
+        }
+      ]
+    },
+    {
+      "name": "introduction",
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "methodology",
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "implementation",
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "experiments",
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "benchmark",
+      "width": 1280,
+      "height": 800,
+      "theme": "dark",
+      "viewport": [
+        1280,
+        800
+      ],
+      "document": [
+        1280,
+        800
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": [
+        {
+          "selector": "science-plot curve",
+          "width": 1152,
+          "height": 370,
+          "area": 426060
+        }
+      ]
+    },
+    {
+      "name": "app / model",
+      "width": 1600,
+      "height": 900,
+      "theme": "light",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": {
+        "height": 757,
+        "content": 757
+      },
+      "tabRows": [
+        1
+      ],
+      "views": [
+        {
+          "selector": "earth-scene",
+          "width": 1240,
+          "height": 658,
+          "area": 815378
+        }
+      ]
+    },
+    {
+      "name": "introduction",
+      "width": 1600,
+      "height": 900,
+      "theme": "light",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "methodology",
+      "width": 1600,
+      "height": 900,
+      "theme": "light",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "implementation",
+      "width": 1600,
+      "height": 900,
+      "theme": "light",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "experiments",
+      "width": 1600,
+      "height": 900,
+      "theme": "light",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "benchmark",
+      "width": 1600,
+      "height": 900,
+      "theme": "light",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": [
+        {
+          "selector": "science-plot curve",
+          "width": 1152,
+          "height": 370,
+          "area": 426060
+        }
+      ]
+    },
+    {
+      "name": "app / model",
+      "width": 1600,
+      "height": 900,
+      "theme": "dark",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": {
+        "height": 757,
+        "content": 757
+      },
+      "tabRows": [
+        1
+      ],
+      "views": [
+        {
+          "selector": "earth-scene",
+          "width": 1240,
+          "height": 658,
+          "area": 815378
+        }
+      ]
+    },
+    {
+      "name": "introduction",
+      "width": 1600,
+      "height": 900,
+      "theme": "dark",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "methodology",
+      "width": 1600,
+      "height": 900,
+      "theme": "dark",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "implementation",
+      "width": 1600,
+      "height": 900,
+      "theme": "dark",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "experiments",
+      "width": 1600,
+      "height": 900,
+      "theme": "dark",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "benchmark",
+      "width": 1600,
+      "height": 900,
+      "theme": "dark",
+      "viewport": [
+        1600,
+        900
+      ],
+      "document": [
+        1600,
+        900
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": [
+        {
+          "selector": "science-plot curve",
+          "width": 1152,
+          "height": 370,
+          "area": 426060
+        }
+      ]
+    },
+    {
+      "name": "app / model",
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": {
+        "height": 1297,
+        "content": 1297
+      },
+      "tabRows": [
+        1
+      ],
+      "views": [
+        {
+          "selector": "earth-scene",
+          "width": 2200,
+          "height": 1198,
+          "area": 2634638
+        }
+      ]
+    },
+    {
+      "name": "introduction",
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "methodology",
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "implementation",
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "experiments",
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "benchmark",
+      "width": 2560,
+      "height": 1440,
+      "theme": "light",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": [
+        {
+          "selector": "science-plot curve",
+          "width": 1152,
+          "height": 370,
+          "area": 426060
+        }
+      ]
+    },
+    {
+      "name": "app / model",
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": {
+        "height": 1297,
+        "content": 1297
+      },
+      "tabRows": [
+        1
+      ],
+      "views": [
+        {
+          "selector": "earth-scene",
+          "width": 2200,
+          "height": 1198,
+          "area": 2634638
+        }
+      ]
+    },
+    {
+      "name": "introduction",
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "methodology",
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": []
+    },
+    {
+      "name": "implementation",
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "experiments",
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [
+        1
+      ],
+      "views": []
+    },
+    {
+      "name": "benchmark",
+      "width": 2560,
+      "height": 1440,
+      "theme": "dark",
+      "viewport": [
+        2560,
+        1440
+      ],
+      "document": [
+        2560,
+        1440
+      ],
+      "rail": null,
+      "tabRows": [],
+      "views": [
+        {
+          "selector": "science-plot curve",
+          "width": 1152,
+          "height": 370,
+          "area": 426060
+        }
+      ]
+    }
+  ],
+  "performanceRows": [
+    {
+      "width": 390,
+      "case": "GRAVITY_INTRUSION",
+      "firstPaintReadyMs": 4835,
+      "bodyBytes": 1001018,
+      "headerBytes": 2613,
+      "requests": 8,
+      "largest": [
+        {
+          "url": "/data/v2/GRAVITY_INTRUSION/reference.json",
+          "bodyBytes": 551819,
+          "headerBytes": 305
+        },
+        {
+          "url": "/assets/index-DypgWtOd.js",
+          "bodyBytes": 171575,
+          "headerBytes": 355
+        },
+        {
+          "url": "/assets/three-BHcO_Z3U.js",
+          "bodyBytes": 123713,
+          "headerBytes": 355
+        },
+        {
+          "url": "/assets/shell-CZaFSJ5F.js",
+          "bodyBytes": 84937,
+          "headerBytes": 355
+        },
+        {
+          "url": "/data/v2/catalog.json",
+          "bodyBytes": 36328,
+          "headerBytes": 304
+        }
+      ],
+      "canvas": {
+        "width": 350,
+        "height": 220
+      }
+    },
+    {
+      "width": 390,
+      "case": "FWI_LAYERED",
+      "firstPaintReadyMs": 7762,
+      "incrementalTransfer": {
+        "bodyBytes": 7938430,
+        "headerBytes": 306,
+        "requests": 1,
+        "largest": [
+          {
+            "url": "/data/v2/FWI_LAYERED/reference.json",
+            "bodyBytes": 7938430,
+            "headerBytes": 306
+          }
+        ]
+      },
+      "canvas": {
+        "width": 1024,
+        "height": 768
+      }
+    },
+    {
+      "width": 1600,
+      "case": "GRAVITY_INTRUSION",
+      "firstPaintReadyMs": 1485,
+      "bodyBytes": 1001018,
+      "headerBytes": 2613,
+      "requests": 8,
+      "largest": [
+        {
+          "url": "/data/v2/GRAVITY_INTRUSION/reference.json",
+          "bodyBytes": 551819,
+          "headerBytes": 305
+        },
+        {
+          "url": "/assets/index-DypgWtOd.js",
+          "bodyBytes": 171575,
+          "headerBytes": 355
+        },
+        {
+          "url": "/assets/three-BHcO_Z3U.js",
+          "bodyBytes": 123713,
+          "headerBytes": 355
+        },
+        {
+          "url": "/assets/shell-CZaFSJ5F.js",
+          "bodyBytes": 84937,
+          "headerBytes": 355
+        },
+        {
+          "url": "/data/v2/catalog.json",
+          "bodyBytes": 36328,
+          "headerBytes": 304
+        }
+      ],
+      "canvas": {
+        "width": 1240,
+        "height": 657
+      }
+    },
+    {
+      "width": 1600,
+      "case": "FWI_LAYERED",
+      "firstPaintReadyMs": 3377,
+      "incrementalTransfer": {
+        "bodyBytes": 7938430,
+        "headerBytes": 306,
+        "requests": 1,
+        "largest": [
+          {
+            "url": "/data/v2/FWI_LAYERED/reference.json",
+            "bodyBytes": 7938430,
+            "headerBytes": 306
+          }
+        ]
+      },
+      "canvas": {
+        "width": 1024,
+        "height": 768
+      }
+    }
+  ],
+  "caseVariations": [
+    {
+      "id": "GRAVITY_INTRUSION",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "GRAVITY_DEEP_BODY",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "GRAVITY_NOISY",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "GRAVITY_TILTED",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MAGNETIC_DYKE",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MAGNETIC_REMANENCE",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MAGNETIC_DEEP",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MAGNETIC_NOISY",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MT_RESISTIVE",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MT_CONDUCTIVE",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MT_MIXED",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "MT_NOISY",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "FWI_LAYERED",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "FWI_FAULT",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "FWI_CYCLE_SKIP",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "FWI_NOISY",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "JOINT_SHARED",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "JOINT_CONFLICT",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "LEARNED_CNN",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 6
+    },
+    {
+      "id": "LEARNED_AUTOENCODER",
+      "distinctVisuals": 6,
+      "distinctMetricViews": 5
+    }
+  ],
+  "failures": []
+}

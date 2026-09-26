@@ -1,0 +1,167 @@
+{
+  "base": "http://127.0.0.1:5180",
+  "checks": [
+    {
+      "file": "01-the-app.svg",
+      "theme": "light",
+      "lang": "en",
+      "pairs": 37,
+      "visibleLabels": 37,
+      "violations": []
+    },
+    {
+      "file": "02-lanes.svg",
+      "theme": "light",
+      "lang": "en",
+      "pairs": 35,
+      "visibleLabels": 35,
+      "violations": []
+    },
+    {
+      "file": "03-web-flow.svg",
+      "theme": "light",
+      "lang": "en",
+      "pairs": 38,
+      "visibleLabels": 38,
+      "violations": []
+    },
+    {
+      "file": "04-the-science.svg",
+      "theme": "light",
+      "lang": "en",
+      "pairs": 51,
+      "visibleLabels": 51,
+      "violations": []
+    },
+    {
+      "file": "05-data-contracts.svg",
+      "theme": "light",
+      "lang": "en",
+      "pairs": 44,
+      "visibleLabels": 44,
+      "violations": []
+    },
+    {
+      "file": "01-the-app.svg",
+      "theme": "light",
+      "lang": "es",
+      "pairs": 37,
+      "visibleLabels": 37,
+      "violations": []
+    },
+    {
+      "file": "02-lanes.svg",
+      "theme": "light",
+      "lang": "es",
+      "pairs": 35,
+      "visibleLabels": 35,
+      "violations": []
+    },
+    {
+      "file": "03-web-flow.svg",
+      "theme": "light",
+      "lang": "es",
+      "pairs": 38,
+      "visibleLabels": 38,
+      "violations": []
+    },
+    {
+      "file": "04-the-science.svg",
+      "theme": "light",
+      "lang": "es",
+      "pairs": 51,
+      "visibleLabels": 51,
+      "violations": []
+    },
+    {
+      "file": "05-data-contracts.svg",
+      "theme": "light",
+      "lang": "es",
+      "pairs": 44,
+      "visibleLabels": 44,
+      "violations": []
+    },
+    {
+      "file": "01-the-app.svg",
+      "theme": "dark",
+      "lang": "en",
+      "pairs": 37,
+      "visibleLabels": 37,
+      "violations": []
+    },
+    {
+      "file": "02-lanes.svg",
+      "theme": "dark",
+      "lang": "en",
+      "pairs": 35,
+      "visibleLabels": 35,
+      "violations": []
+    },
+    {
+      "file": "03-web-flow.svg",
+      "theme": "dark",
+      "lang": "en",
+      "pairs": 38,
+      "visibleLabels": 38,
+      "violations": []
+    },
+    {
+      "file": "04-the-science.svg",
+      "theme": "dark",
+      "lang": "en",
+      "pairs": 51,
+      "visibleLabels": 51,
+      "violations": []
+    },
+    {
+      "file": "05-data-contracts.svg",
+      "theme": "dark",
+      "lang": "en",
+      "pairs": 44,
+      "visibleLabels": 44,
+      "violations": []
+    },
+    {
+      "file": "01-the-app.svg",
+      "theme": "dark",
+      "lang": "es",
+      "pairs": 37,
+      "visibleLabels": 37,
+      "violations": []
+    },
+    {
+      "file": "02-lanes.svg",
+      "theme": "dark",
+      "lang": "es",
+      "pairs": 35,
+      "visibleLabels": 35,
+      "violations": []
+    },
+    {
+      "file": "03-web-flow.svg",
+      "theme": "dark",
+      "lang": "es",
+      "pairs": 38,
+      "visibleLabels": 38,
+      "violations": []
+    },
+    {
+      "file": "04-the-science.svg",
+      "theme": "dark",
+      "lang": "es",
+      "pairs": 51,
+      "visibleLabels": 51,
+      "violations": []
+    },
+    {
+      "file": "05-data-contracts.svg",
+      "theme": "dark",
+      "lang": "es",
+      "pairs": 44,
+      "visibleLabels": 44,
+      "violations": []
+    }
+  ],
+  "mobileFullSizeInteractions": 20,
+  "errors": []
+}

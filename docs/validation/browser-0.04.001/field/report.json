@@ -1,0 +1,29 @@
+{
+  "rows": [
+    {
+      "name": "desktop-en-light",
+      "width": 1440,
+      "height": 960,
+      "lang": "en",
+      "theme": "light",
+      "screenWidth": 1152,
+      "documentWidth": 1440,
+      "documentHeight": 960,
+      "screenTop": 0,
+      "screenHeight": 2053
+    },
+    {
+      "name": "mobile-es-dark",
+      "width": 390,
+      "height": 844,
+      "lang": "es",
+      "theme": "dark",
+      "screenWidth": 342,
+      "documentWidth": 390,
+      "documentHeight": 844,
+      "screenTop": 0,
+      "screenHeight": 3256
+    }
+  ],
+  "errors": []
+}

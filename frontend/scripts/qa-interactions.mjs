@@ -1,6 +1,6 @@
 /** Route, tab, architecture, mobile controls and rendered screenshot audit. */
 import { chromium } from '@playwright/test';
-import { mkdirSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -113,6 +113,7 @@ await mobile.page.getByRole('button', { name: /Cerrar controles/ }).click();
 await architecture(mobile.page, 'es');
 await mobile.context.close();
 await browser.close();
+writeFileSync(join(output, 'report.json'), JSON.stringify({ base, screenshots: screenshots.map(path => path.split(/[\\/]/).at(-1)), mobileExpanded: expanded, failures }, null, 2));
 console.log('SCREENSHOTS', JSON.stringify(screenshots));
 console.log('MOBILE_EXPANDED', JSON.stringify(expanded));
 console.log('FAILURES', JSON.stringify(failures));
