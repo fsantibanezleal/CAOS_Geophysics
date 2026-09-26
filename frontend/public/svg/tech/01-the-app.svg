@@ -1,9 +1,90 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 530" role="img" aria-label="Physical models and result views">
+<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 680" role="img" aria-label="Geophysical models, result structure, and build lifecycle">
 <style>
-text{fill:var(--color-fg);font:14px var(--font-sans)} .heading{font-weight:600;font-size:16px}
-.box{fill:var(--color-surface);stroke:var(--color-border)} .active{fill:var(--color-accent-soft);stroke:var(--color-accent)}
-.edge{stroke:var(--color-fg-subtle);stroke-width:1.5;fill:none}.boundary{stroke:var(--color-border);stroke-dasharray:5 5;fill:none}
-.l-es{display:none} [data-arch-lang="es"] .l-en{display:none} [data-arch-lang="es"] .l-es{display:inline}
-</style><defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10" fill="none" stroke="var(--color-fg-subtle)"/></marker></defs>
-<text x="24" y="32" class="l-en heading">Physical models and result views</text><text x="24" y="32" class="l-es heading">Modelos físicos y vistas del resultado</text><g transform="translate(24,65)"><rect width="280" height="115" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Potential fields</text><text x="16" y="28" class="l-es heading">Campos potenciales</text><text x="16" y="55" class="l-en ">3D prisms · density / susceptibility</text><text x="16" y="55" class="l-es ">Prismas 3D · densidad / susceptibilidad</text><text x="16" y="79" class="l-en ">28 × 24 × 16 cells</text><text x="16" y="79" class="l-es ">28 × 24 × 16 celdas</text></g><g transform="translate(340,65)"><rect width="280" height="115" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Magnetotellurics</text><text x="16" y="28" class="l-es heading">Magnetotelúrica</text><text x="16" y="55" class="l-en ">Horizontal layers and half-space</text><text x="16" y="55" class="l-es ">Capas horizontales y semiespacio</text><text x="16" y="79" class="l-en ">Complex impedance · 36 frequencies</text><text x="16" y="79" class="l-es ">Impedancia compleja · 36 frecuencias</text></g><g transform="translate(656,65)"><rect width="280" height="115" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Acoustic waves</text><text x="16" y="28" class="l-es heading">Ondas acústicas</text><text x="16" y="55" class="l-en ">128 × 96 velocity nodes</text><text x="16" y="55" class="l-es ">128 × 96 nodos de velocidad</text><text x="16" y="79" class="l-en ">3 shots · 40 or 20 receivers</text><text x="16" y="79" class="l-es ">3 disparos · 40 o 20 receptores</text></g><path d="M164 180V205H480V232" class="edge" marker-end="url(#a)"/><path d="M480 180V232" class="edge" marker-end="url(#a)"/><path d="M796 180V205H480" class="edge" marker-end="url(#a)"/><g transform="translate(210,240)"><rect width="540" height="115" rx="8" class="active"/><text x="16" y="28" class="l-en heading">Computed result</text><text x="16" y="28" class="l-es heading">Resultado calculado</text><text x="16" y="55" class="l-en ">Known properties → observations → inverse model</text><text x="16" y="55" class="l-es ">Propiedades conocidas → observaciones → modelo inverso</text><text x="16" y="79" class="l-en ">Predicted data, residuals, metrics and recorded states</text><text x="16" y="79" class="l-es ">Datos predichos, residuos, métricas y estados registrados</text></g><path d="M480 355V380H243V392" class="edge" marker-end="url(#a)"/><path d="M480 380H717V392" class="edge" marker-end="url(#a)"/><g transform="translate(24,400)"><rect width="438" height="110" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Model and data</text><text x="16" y="28" class="l-es heading">Modelo y datos</text><text x="16" y="55" class="l-en ">Isosurfaces / cell view · sections · impedance</text><text x="16" y="55" class="l-es ">Isosuperficies / celdas · cortes · impedancia</text><text x="16" y="79" class="l-en ">Wavefields and receiver traces</text><text x="16" y="79" class="l-es ">Campos de onda y trazas de receptores</text></g><g transform="translate(498,400)"><rect width="438" height="110" rx="8" class="box"/><text x="16" y="28" class="l-en heading">Inversion and case analysis</text><text x="16" y="28" class="l-es heading">Inversión y análisis del caso</text><text x="16" y="55" class="l-en ">Property error · data error · optimizer history</text><text x="16" y="55" class="l-es ">Error de propiedad · de datos · historia iterativa</text><text x="16" y="79" class="l-en ">Assumptions, controls and interpretation limits</text><text x="16" y="79" class="l-es ">Supuestos, controles y límites interpretativos</text></g>
+  text{fill:var(--color-fg);font-family:var(--font-sans)}
+  .head{font-size:19px;font-weight:700}.kicker{font:600 11px var(--font-mono);fill:var(--color-accent)}
+  .ttl{font-size:14px;font-weight:650}.sub{font-size:12px;fill:var(--color-fg-subtle)}
+  .it{font-size:12.5px}.cd{font:11.5px var(--font-mono);fill:var(--color-accent)}
+  .mu,.lbl{font-size:11px;fill:var(--color-fg-subtle)}.lbl{font-weight:600}
+  .bx{fill:var(--color-surface-2);stroke:var(--color-border);stroke-width:1.3}
+  .bx-hi{fill:var(--color-accent-soft);stroke:var(--color-accent)}
+  .bx-compute{stroke:var(--color-accent-2)}.bx-web{stroke:var(--color-good)}
+  .band{fill:var(--color-surface);stroke:var(--color-border)}
+  .flow{fill:none;stroke:var(--color-fg-subtle);stroke-width:1.5}
+  .rule{stroke:var(--color-border);stroke-width:1}
+  svg .l-es{display:none}[data-arch-lang="es"] svg .l-en{display:none}[data-arch-lang="es"] svg .l-es{display:inline}
+</style>
+<defs><marker id="arrow-app" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5 1 9" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5"/></marker></defs>
+<text x="24" y="32" class="kicker l-neutral">INVERSE EARTH STUDIO / 01</text>
+<text x="24" y="59" class="l-en head">Physical targets and numerical record</text>
+<text x="24" y="59" class="l-es head">Objetivos físicos y registro numérico</text>
+<text x="24" y="80" class="sub l-en">Three distinct forward problems; the common format does not make their physics interchangeable.</text>
+<text x="24" y="80" class="sub l-es">Tres problemas directos distintos; un formato común no iguala sus modelos físicos.</text>
+
+<rect x="24" y="102" width="268" height="190" rx="8" class="bx bx-compute"/>
+<text x="38" y="125" class="ttl l-en">Potential fields · 3D cells</text><text x="38" y="125" class="ttl l-es">Campos potenciales · celdas 3D</text>
+<text x="38" y="147" class="cd l-neutral">potential.py · joint.py</text>
+<line x1="38" y1="159" x2="278" y2="159" class="rule"/>
+<text x="38" y="180" class="it l-en">Density ρ → gravity gᶻ (mGal)</text><text x="38" y="180" class="it l-es">Densidad ρ → gravedad gᶻ (mGal)</text>
+<text x="38" y="201" class="it l-en">Susceptibility χ → magnetic TMI (nT)</text><text x="38" y="201" class="it l-es">Susceptibilidad χ → TMI magnética (nT)</text>
+<text x="38" y="222" class="it l-neutral">16 × 24 × 28 · SimPEG</text>
+<text x="38" y="244" class="mu l-en">Joint inversion couples recovered ρ and χ.</text><text x="38" y="244" class="mu l-es">Inversión conjunta acopla ρ y χ estimadas.</text>
+<text x="38" y="266" class="mu l-en">CNN / AE use gravity observations.</text><text x="38" y="266" class="mu l-es">CNN / AE usan datos gravimétricos.</text>
+
+<rect x="306" y="102" width="268" height="190" rx="8" class="bx bx-compute"/>
+<text x="320" y="125" class="ttl l-en">Magnetotellurics · 1D layers</text><text x="320" y="125" class="ttl l-es">Magnetotelúrica · capas 1D</text>
+<text x="320" y="147" class="cd l-neutral">electromagnetics.py · edi.py</text>
+<line x1="320" y1="159" x2="560" y2="159" class="rule"/>
+<text x="320" y="180" class="it l-neutral">ρ₁…ρₙ + h₁…hₙ₋₁ → Z(ω)</text>
+<text x="320" y="201" class="it l-en">Complex impedance → ρₐ, phase</text><text x="320" y="201" class="it l-es">Impedancia compleja → ρₐ, fase</text>
+<text x="320" y="222" class="it l-en">TRF / Adam with fixed layer thickness</text><text x="320" y="222" class="it l-es">TRF / Adam con espesores fijos</text>
+<text x="320" y="244" class="mu l-en">Field EDI screen ≠ eligible 1D inverse.</text><text x="320" y="244" class="mu l-es">Filtro EDI real ≠ inversión 1D admisible.</text>
+<text x="320" y="266" class="mu l-en">Tensor consistency is checked first.</text><text x="320" y="266" class="mu l-es">Primero se verifica el tensor.</text>
+
+<rect x="588" y="102" width="268" height="190" rx="8" class="bx bx-compute"/>
+<text x="602" y="125" class="ttl l-en">Acoustic waves · 2D section</text><text x="602" y="125" class="ttl l-es">Ondas acústicas · sección 2D</text>
+<text x="602" y="147" class="cd l-neutral">seismic.py · Deepwave</text>
+<line x1="602" y1="159" x2="842" y2="159" class="rule"/>
+<text x="602" y="180" class="it l-en">Velocity v(x,z) → shot gathers</text><text x="602" y="180" class="it l-es">Velocidad v(x,z) → registros</text>
+<text x="602" y="201" class="it l-neutral">96 × 128 · Deepwave / PyTorch</text>
+<text x="602" y="222" class="it l-en">Full-band vs frequency-continuation FWI</text><text x="602" y="222" class="it l-es">FWI banda total vs continuación</text>
+<text x="602" y="244" class="mu l-en">Wavefields and receiver traces exported.</text><text x="602" y="244" class="mu l-es">Ondas y trazas receptoras exportadas.</text>
+<text x="602" y="266" class="mu l-en">Velocity recovery is not density mapping.</text><text x="602" y="266" class="mu l-es">Recuperar velocidad no estima densidad.</text>
+
+<path d="M158 292V317 M440 292V317 M722 292V317 M158 317H722 M440 317V337" class="flow" marker-end="url(#arrow-app)"/>
+<text x="24" y="318" class="lbl l-en">solver output</text><text x="24" y="318" class="lbl l-es">salida numérica</text>
+<rect x="24" y="344" width="832" height="155" rx="8" class="band"/>
+<text x="40" y="368" class="kicker l-en">ONE ARTIFACT PER CASE × CONDITION</text><text x="40" y="368" class="kicker l-es">UN ARTEFACTO POR CASO × CONDICIÓN</text>
+<rect x="40" y="382" width="193" height="99" rx="6" class="bx"/>
+<text x="52" y="403" class="ttl l-en">Known synthetic target</text><text x="52" y="403" class="ttl l-es">Objetivo sintético</text>
+<text x="52" y="426" class="it l-en">geometry + properties</text><text x="52" y="426" class="it l-es">geometría + propiedades</text>
+<text x="52" y="449" class="mu l-en">never an inverse input</text><text x="52" y="449" class="mu l-es">no entra al inversor</text>
+<rect x="243" y="382" width="193" height="99" rx="6" class="bx"/>
+<text x="255" y="403" class="ttl l-en">Acquisition + data</text><text x="255" y="403" class="ttl l-es">Adquisición + datos</text>
+<text x="255" y="426" class="it l-en">survey · mask · noise</text><text x="255" y="426" class="it l-es">estaciones · máscara · ruido</text>
+<text x="255" y="449" class="mu l-en">seed and units retained</text><text x="255" y="449" class="mu l-es">semilla y unidades</text>
+<rect x="446" y="382" width="193" height="99" rx="6" class="bx bx-hi"/>
+<text x="458" y="403" class="ttl l-en">Inverse methods</text><text x="458" y="403" class="ttl l-es">Métodos inversos</text>
+<text x="458" y="426" class="it l-en">estimate + prediction</text><text x="458" y="426" class="it l-es">estimación + predicción</text>
+<text x="458" y="449" class="mu l-en">states, objective, solver</text><text x="458" y="449" class="mu l-es">estados, objetivo, solver</text>
+<rect x="649" y="382" width="191" height="99" rx="6" class="bx bx-web"/>
+<text x="661" y="403" class="ttl l-en">Evaluation + view</text><text x="661" y="403" class="ttl l-es">Evaluación + vista</text>
+<text x="661" y="426" class="it l-en">residual vs model error</text><text x="661" y="426" class="it l-es">residuo vs error modelo</text>
+<text x="661" y="449" class="mu l-en">separate verdict gates</text><text x="661" y="449" class="mu l-es">criterios separados</text>
+<path d="M233 432H239 M436 432H442 M639 432H645" class="flow" marker-end="url(#arrow-app)"/>
+
+<text x="24" y="533" class="kicker l-en">DESIGN / BUILD CHAIN</text><text x="24" y="533" class="kicker l-es">CADENA DE DISEÑO / PRODUCCIÓN</text>
+<rect x="24" y="548" width="832" height="101" rx="8" class="band"/>
+<text x="38" y="572" class="cd l-neutral">geology.py</text>
+<text x="38" y="592" class="it l-en">define cases</text><text x="38" y="592" class="it l-es">definir casos</text>
+<path d="M157 582H179" class="flow" marker-end="url(#arrow-app)"/>
+<text x="190" y="572" class="cd l-neutral">rebuild.py</text>
+<text x="190" y="592" class="it l-en">solve + evaluate</text><text x="190" y="592" class="it l-es">resolver + evaluar</text>
+<path d="M337 582H359" class="flow" marker-end="url(#arrow-app)"/>
+<text x="370" y="572" class="cd l-neutral">catalog.json</text>
+<text x="370" y="592" class="it l-en">bake + checksum</text><text x="370" y="592" class="it l-es">exportar + verificar</text>
+<path d="M527 582H549" class="flow" marker-end="url(#arrow-app)"/>
+<text x="560" y="572" class="cd l-neutral">main.tsx · Vite</text>
+<text x="560" y="592" class="it l-en">build SPA → static hosts</text><text x="560" y="592" class="it l-es">SPA → hosts estáticos</text>
+<text x="38" y="632" class="mu l-en">Real measured EDI is a separate screening record: truth = null; incompatible tensor → no 1D inverse.</text>
+<text x="38" y="632" class="mu l-es">EDI medido es un filtro aparte: truth = null; tensor incompatible → sin inversión 1D.</text>
 </svg>
