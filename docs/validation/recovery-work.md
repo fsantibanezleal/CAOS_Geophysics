@@ -1,7 +1,8 @@
 # Scientific recovery execution ledger
 
-This is implementation evidence, not a deployment receipt. Production remains
-0.03.000 until the complete replacement matrix passes numerical and browser gates.
+This is a historical pre-release implementation ledger for the 0.04 candidate,
+not a current deployment receipt. Its production-state sentence was superseded
+by the 0.04 release and deployment records.
 
 ## Potential-field and joint correction
 

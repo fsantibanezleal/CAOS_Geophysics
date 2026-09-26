@@ -36,7 +36,7 @@ def verify(origin):
     assert edi_manifest== (edi_root/'manifest.json').read_bytes(),'EDI manifest differs from local release: '+base
     edi=json.loads(edi_manifest)
     edi_files=set()
-    for entry in edi['fixtures']+edi['calibration']:
+    for entry in edi['fixtures']+edi['calibration']+edi.get('field_screens',[]):
         for field, digest_field in [('artifact','artifact_sha256'),('source','source_sha256')]:
             if field not in entry:continue
             name=entry[field]

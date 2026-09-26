@@ -436,6 +436,31 @@ def read_edi(path, *, units=None, sign_convention=None, variance_convention=None
     return EDISounding(frequency, tensor, sigma, angle, provenance, metadata, _compatibility(tensor, sigma))
 
 
+def screen_edi(path, *, output=None, **read_options):
+    """Export observed transfer functions and a necessary 1D screen, with no inverse."""
+    sounding=read_edi(path,**read_options)
+    curves_by_component={}
+    for component in ('xy','yx'):
+        observed,sigma=sounding.select(component)
+        curves_by_component[component]={**curves(observed,sounding.frequencies),
+                                        'sigma_real_imag_ohm':sigma.tolist()}
+    result=dict(
+        schema='inverse-earth/edi-screen/v1',id=sounding.metadata['header']['DATAID'],
+        family='mt',source_kind='measured EDI transfer functions',truth=None,methods={},
+        inversion_performed=False,one_d_fit_performed=False,
+        one_d_inversion_eligible=bool(sounding.compatibility['passes_screen']),
+        interpretation='Necessary isotropic-1D tensor consistency screen, not proof of geological dimensionality',
+        frequencies_hz=sounding.frequencies.tolist(),observed=curves_by_component,
+        tensor=dict(real=sounding.tensor.real.tolist(),imag=sounding.tensor.imag.tolist(),
+                    sigma=sounding.sigma.tolist(),rotation_deg=sounding.rotation_deg.tolist()),
+        compatibility=sounding.compatibility,provenance=sounding.provenance,
+        metadata=sounding.metadata)
+    if output is not None:
+        destination=Path(output);destination.parent.mkdir(parents=True,exist_ok=True)
+        destination.write_text(json.dumps(result,indent=2,allow_nan=False)+'\n',encoding='utf-8',newline='\n')
+    return result
+
+
 def invert_edi(path, thickness, *, component="xy", output=None, beta=.001, initial=None,
                methods=("mt-lm",), seed=61001, bootstrap_samples=128, **read_options):
     """Validate full tensor and execute an actual bounded, fixed-thickness 1D inverse."""
@@ -550,6 +575,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path, nargs="?")
     parser.add_argument("--fixture-bundle", action="store_true", help="Export all original fixtures; --output is a directory")
+    parser.add_argument("--screen-only", action="store_true", help="Export the measured tensor and 1D-consistency screen without an inverse")
     parser.add_argument("--thickness", nargs="*", type=float, default=[], help="Finite-layer thicknesses in metres; omit for half-space")
     parser.add_argument("--component", choices=("xy", "yx"), default="xy")
     parser.add_argument("--units", choices=("mt", "ohm"), help="Explicit missing-unit interpretation, recorded in provenance")
@@ -567,6 +593,8 @@ def main():
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     if args.fixture_bundle:
+        if args.screen_only:
+            parser.error('--fixture-bundle and --screen-only are separate operations')
         if args.source is not None:
             parser.error("Do not supply source together with --fixture-bundle")
         try:
@@ -580,6 +608,20 @@ def main():
         parser.error("Supply an EDI source or --fixture-bundle")
     if args.calibration_realizations:
         parser.error("--calibration-realizations is only supported with --fixture-bundle")
+    if args.screen_only:
+        if args.thickness or args.all_methods:
+            parser.error('Screen-only does not fit a layer model or select inverse methods')
+        try:
+            result=screen_edi(args.source,output=args.output,units=args.units,
+                              sign_convention=args.sign_convention,
+                              variance_convention=args.variance_convention,
+                              rotation=args.rotation,rotation_reference=args.rotation_reference)
+        except (EDIError,ValueError,OSError) as error:
+            parser.exit(2,f"EDI rejected: {error}\n")
+        print(json.dumps(dict(output=str(args.output),source_sha256=result['provenance']['source_sha256'],
+                              one_d_inversion_eligible=result['one_d_inversion_eligible'],
+                              compatibility=result['compatibility']),allow_nan=False))
+        return
     methods = ("mt-lm", "mt-adam", "mt-neural") if args.all_methods else ("mt-lm",)
     try:
         result = invert_edi(args.source, args.thickness, component=args.component, output=args.output,

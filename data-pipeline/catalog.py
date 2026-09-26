@@ -4,7 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 from geology import registry,VARIANTS
-from rebuild import generator_fingerprint,save,RELEASE_VERSION
+from rebuild import generator_fingerprint,save,RELEASE_VERSION,REUSABLE_VERSIONS
 
 
 def assemble(root,allow_partial=False):
@@ -16,7 +16,9 @@ def assemble(root,allow_partial=False):
             if not path.exists():
                 missing.append(f"{case['id']}/{vid}");continue
             raw=path.read_bytes();run=json.loads(raw)
-            if run.get('provenance',{}).get('generator_fingerprint')!=generator_fingerprint(case['family']):
+            provenance=run.get('provenance',{})
+            version=provenance.get('version')
+            if version not in REUSABLE_VERSIONS or provenance.get('generator_fingerprint')!=generator_fingerprint(case['family'],version=version):
                 raise ValueError(f'Stale scientific source/settings: {path}')
             if (run['id'],run['variant'])!=(case['id'],vid):raise ValueError('Identity mismatch')
             if case['family']=='seismic' and vid=='contrast':name,name_es='Velocity contrast ×1.15','Contraste de velocidad ×1,15'

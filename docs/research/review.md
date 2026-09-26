@@ -1,4 +1,4 @@
-# Research and implementation review · 2026-09-23
+# Research and implementation review · updated 2026-09-26
 
 ## Course as a source, not a product template
 
@@ -16,14 +16,14 @@ The topic sequence is useful; the earlier app's repeated central anomaly and dec
 | [Choclo kernels](https://www.fatiando.org/choclo/latest/overview.html) | SI potential-field prism kernels and coordinate conventions | Independent gravity certificate, converting kg/m³ and m/s² to g/cm³ and mGal |
 | [Heagy et al. 2017](https://doi.org/10.1016/j.cageo.2017.06.018) | Electromagnetic simulation/inversion architecture | Context for complex response fitting and differentiable inversion |
 | [Goyes-Peñafiel et al.](https://arxiv.org/abs/2410.15274v3), [published DOI](https://doi.org/10.1109/LGRS.2025.3528767) | Physics-guided unsupervised 1D MT inversion via a differentiable forward operator | Original small PyTorch per-sounding network; not a reproduction of their TensorFlow architecture or published accuracy claims |
-| [MTpy-v2 documentation](https://mtpy-v2.readthedocs.io/en/stable/index.html) | MT metadata, EDI and processing workflows | Reference only. The v2 browser imports layered models, not EDI field data |
+| [MTpy-v2 documentation](https://mtpy-v2.readthedocs.io/en/stable/index.html) | MT metadata, EDI and processing workflows | Strict local EDI parsing/inversion with explicit units, frame and uncertainty validation; the browser replays authored analytic fixtures and does not claim field inversion |
 | [MTH5](https://doi.org/10.1016/j.cageo.2022.105102) | Structured MT data/provenance format | Reference for future field-data interoperability, not an implemented HDF5 pathway |
 | [Virieux and Operto 2009](https://doi.org/10.1190/1.3238367) | FWI assumptions, illumination, nonlinearity and cycle skipping | Explicit acoustic/limited-shot scope; model error accompanies waveform loss |
-| [Deepwave FWI documentation](https://ausargeo.com/deepwave/example_fwi) | Differentiable propagation, bounded velocity, frequency continuation | Compiled CUDA forward/adjoint; 28 Adam updates and moving-average continuation, not the tutorial's full multiband Butterworth/L-BFGS procedure |
+| [Deepwave FWI documentation](https://ausargeo.com/deepwave/example_fwi) | Differentiable propagation, bounded velocity, frequency continuation | Compiled CUDA forward/adjoint; independently initialized background fit followed by bounded L-BFGS spatial stages; 5/8/14 Hz Butterworth continuation is compared with a matched full-band route |
 | [Deepwave source](https://github.com/ar4/deepwave) | Runtime API and differentiable propagator | Pinned local 0.0.27 with actual CUDA gradient tests |
 | [Devito FWI tutorial](https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html) | Symbolic finite differences and adjoint modeling | Alternative surveyed; not a v2 execution engine |
 | [SimPEG joint inversion tutorial](https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13-joint_inversion/plot_inv_3_cross_gradient_pf.html) | Structural coupling between potential-field models | Dimensionless cross-gradient penalty; shared and conflicting structures |
-| [SimPEG PGI](https://docs.simpeg.xyz/v0.25.0/content/api/generated/simpeg.regularization.PGI.html) | Petrophysically guided mixture priors | Surveyed, not implemented or presented as an available method |
+| [SimPEG PGI](https://docs.simpeg.xyz/v0.25.2/content/user-guide/examples/10-pgi/plot_inv_0_PGI_Linear_1D.html) | Petrophysically guided mixture priors | Original independently fitted two-property full-covariance Gaussian-mixture likelihood implemented as a separate inversion branch; not SimPEG's PGI optimizer or dynamic mixture updates |
 | [InversionNet](https://doi.org/10.1109/TCI.2019.2956866) | Learned observation-to-model inversion and training-distribution dependence | Conceptual comparison only; our network predicts gravity column density, not seismic velocity |
 | [OpenFWI](https://github.com/lanl/OpenFWI) | Diverse benchmark families and learned baseline evaluation | Motivates held-out geometry tests. No OpenFWI accuracy, trained weights or field generalization is claimed |
 | [Implicit representation FWI](https://doi.org/10.1029/2022JB025964) | Neural parameterizations as inverse priors | Related work; not implemented |
@@ -33,7 +33,7 @@ The topic sequence is useful; the earlier app's repeated central anomaly and dec
 
 Sparse regularization, vector magnetization, differentiable wave propagation, structural coupling and learned priors are established techniques. A polished interface does not make them new algorithms. Contemporary field-scale systems address terrain, anisotropy, elastic physics, realistic noise, instrument response, uncertainty and much larger acquisition/model spaces. This repository intentionally exposes a bounded synthetic investigation suite with exact provenance rather than implying parity with those systems.
 
-The implemented CNN/autoencoder are compact baselines, not SOTA neural architectures. The CNN learns a depth-integrated target to avoid presenting a learned 3D reconstruction as identifiable from one gravity map. Its classical comparison is deliberately described in full, including the favourable noise-free baseline input. The autoencoder score is an empirical distribution-shift diagnostic, not calibrated epistemic uncertainty.
+The implemented CNN/autoencoder are compact baselines, not SOTA neural architectures. The CNN learns a depth-integrated target to avoid presenting a learned 3D reconstruction as identifiable from one gravity map. Its classical comparison uses exactly the same seeded noisy test observations and column target; neither method was exhaustively tuned. The autoencoder's separate 80-realization withheld-family test detects 0/80 at its independently calibrated threshold. Case-level flags are not validated geological classifications; the score also responds to contrast, noise, acquisition and coverage preprocessing. It is not calibrated epistemic uncertainty.
 
 ## Scientific demonstration and manuscript decision
 
@@ -41,7 +41,7 @@ The useful demonstration is the contrast between visually persuasive models and 
 
 ## Acquisition and licensing
 
-Two separately pinned SimPEG tutorial archives contain 289 observations each. Local preprocessing checks hashes, rejects nonfinite/duplicate data, assigns an explicitly assumed noise floor, and writes ignored NPZ files. No source archive or derived observation table is republished until upstream redistribution rights are resolved. Public experiments use original geological constructors and independently generated physical responses. URLs, SHA-256 and transformations are in `data/source-ledger.json` and `data/external-preprocessing.json`.
+Two separately pinned SimPEG tutorial archives contain 289 observations each. Local preprocessing checks hashes, rejects nonfinite/duplicate data, assigns an explicitly assumed noise floor, and writes ignored NPZ files. Neither those source archives nor their derived observation tables are republished until upstream redistribution rights are resolved. Separately, the USGS CC0 Clear Lake release identifies an EarthScope EMTF transfer function for measured station `cl061`; its EDI requires data citation. The published derivative is an observed-tensor 1D-consistency screening record, not a 1D inversion or claimed geological interpretation. Public canonical inversions still use original geological constructors and independently generated physical responses. URLs, SHA-256 and transformations are in `data/source-ledger.json`, `data/external-preprocessing.json` and the [EDI method record](../problem-types/mt-recovery.md).
 
 ## Reproducibility versus illustration
 

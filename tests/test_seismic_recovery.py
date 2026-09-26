@@ -204,8 +204,15 @@ def test_reference_recovery_state_and_forward_replay(case_id):
     assert torch.cuda.is_available(), 'Scientific release gate requires actual CUDA execution'
     torch.set_num_threads(4)
     case = next(c for c in registry() if c['id'] == case_id)
+    artifact_directory = os.environ.get('FWI_RECOVERY_ARTIFACTS')
     probe_directory = os.environ.get('FWI_RECOVERY_PROBES')
-    if probe_directory:
+    if artifact_directory:
+        from provenance import generator_fingerprint
+        run = json.loads((Path(artifact_directory)/case_id/'reference.json').read_text())
+        provenance = run['provenance']
+        assert provenance['generator_fingerprint'] == generator_fingerprint(
+            'seismic', version=provenance['version']), 'Stale scientific solver'
+    elif probe_directory:
         run = json.loads((Path(probe_directory)/f'fwi-{case_id}-reference.json').read_text())
         source = (ROOT/'data-pipeline/seismic.py').read_bytes()
         digest = hashlib.sha256(source).hexdigest()

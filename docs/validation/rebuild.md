@@ -8,7 +8,7 @@ The v1 interface and repeated analytic results were rejected. This is the histor
 
 SimPEG's small prism matrix is float32, so its linearity tolerance reflects float32 precision. JSON uses seven significant digits; residual tests include an absolute scale-aware cancellation floor. These are representation tolerances, not data-noise acceptance thresholds.
 
-`scripts/check_artifacts.py` checks 20 distinct reference truth hashes, 120 experiments, 324 method results, all schemas/identities/metrics, SHA-256, sizes and both checkpoint hashes. The browser unit suite tests array orientation, plot bounds, input rejection and live-MT parity over all 24 truth soundings.
+`scripts/check_artifacts.py` checks 20 distinct reference truth hashes, 120 experiments, 348 method results, the explicit family-by-method matrix, all schemas/identities/metrics, SHA-256, sizes and both checkpoint hashes. The browser unit suite tests array orientation, plot bounds, input rejection and live-MT parity over all 24 truth soundings.
 
 Detailed results are in [results.md](results.md); source hashes and machine-readable metrics are in [metrics.json](metrics.json). External source preprocessing records both 289-station observation tables and their transformation hashes in `data/external-preprocessing.json`.
 
@@ -18,7 +18,7 @@ Detailed results are in [results.md](results.md); source hashes and machine-read
 - MT layer thickness is disclosed as known. There are no posterior error bands.
 - Neural MT is per-sounding optimization, not a pretrained universal inverse.
 - FWI is constant-density 2D acoustics with a finite 28-update budget and known source.
-- Cross-gradient uses normalized cell-index derivatives, not physical gradient units.
+- Cross-gradient uses the declared 80, 80 and 70 m cell spacings; its inverse penalty is normalized against the matched independent starting model, while the displayed raw-property magnitude retains physical-gradient units.
 - The CNN predicts column density, not 3D depth.
 - The autoencoder misses the two withheld reference geometries at its stated threshold. That negative result is retained, not relabelled as successful novelty detection.
 - Seismic colour gain clips only the display. Canvas interpolation does not increase numerical resolution.

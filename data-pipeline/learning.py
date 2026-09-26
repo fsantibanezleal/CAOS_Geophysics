@@ -87,6 +87,22 @@ def load_checkpoint(model,path):
     return model
 
 
+def load_bundle(source,device=None):
+    """Reuse immutable, hash-checked training evidence for case-only rebuilds."""
+    source=Path(source)
+    meta=json.loads((source/'training.json').read_text(encoding='utf-8'))
+    if meta.get('schema')!='inverse-earth.learning/v2':
+        raise ValueError('Unsupported training ledger schema')
+    models=[]
+    for name,kind in [('cnn',InverseCNN),('autoencoder',ObservationAE)]:
+        entry=meta['models'][name]
+        path=source/Path(entry['checkpoint']).name
+        if hashlib.sha256(path.read_bytes()).hexdigest()!=entry['sha256']:
+            raise ValueError(f'Checkpoint hash mismatch: {name}')
+        models.append(load_checkpoint(kind(),path).to(device or ('cuda' if torch.cuda.is_available() else 'cpu')))
+    return *models,meta
+
+
 def train(mesh,G,outdir,epochs=180):
     device="cuda" if torch.cuda.is_available() else "cpu"
     torch.manual_seed(7721)
@@ -180,10 +196,13 @@ def attach(run,bundle):
         column=cnn(x)[0].cpu().numpy()*meta["target_scale"]
         reconstruction=ae(x)[0,0].cpu().numpy()*meta["input_scale"]
     observed=np.asarray(run["survey"]["observed"]).reshape(16,16)
-    error=(reconstruction-observed)**2/meta["input_scale"]**2
+    network_input=observed_input.reshape(16,16)
+    # The detector was calibrated against the tensor supplied to the network.
+    # In a coverage experiment this is an interpolated map, not the full survey.
+    error=(reconstruction-network_input)**2/meta["input_scale"]**2
     run["column_truth"]=truth.tolist()
     run["methods"]["cnn"]=dict(name="CNN column-density inversion",name_es="Inversión CNN de densidad integrada",model=column.tolist(),predicted=[],residual=(column-truth).tolist(),history=[v["validation"] for v in meta["models"]["cnn"]["history"]],frames=[],metrics=dict(column_rmse=float(np.sqrt(np.mean((column-truth)**2)))),checkpoint=meta["models"]["cnn"]["sha256"],units="g/cm³ m")
-    run["methods"]["autoencoder"]=dict(name="Observation autoencoder",name_es="Autoencoder de observaciones",model=error.tolist(),predicted=reconstruction.ravel().tolist(),residual=(observed-reconstruction).ravel().tolist(),history=[v["validation"] for v in meta["models"]["autoencoder"]["history"]],frames=[],metrics=dict(reconstruction_mse=float(error.mean()),threshold=meta["novelty_threshold"],above_threshold=bool(error.mean()>meta["novelty_threshold"])),checkpoint=meta["models"]["autoencoder"]["sha256"],units="normalized squared error")
+    run["methods"]["autoencoder"]=dict(name="Observation autoencoder",name_es="Autoencoder de observaciones",model=error.tolist(),predicted=reconstruction.ravel().tolist(),residual=(network_input-reconstruction).ravel().tolist(),network_input=network_input.ravel().tolist(),history=[v["validation"] for v in meta["models"]["autoencoder"]["history"]],frames=[],metrics=dict(reconstruction_mse=float(error.mean()),threshold=meta["novelty_threshold"],above_threshold=bool(error.mean()>meta["novelty_threshold"]),raw_observation_mse=float(np.mean((reconstruction-observed)**2)/meta["input_scale"]**2)),checkpoint=meta["models"]["autoencoder"]["sha256"],units="normalized squared error")
     for method_id in ('l2','irls'):
         projection=np.asarray(run['methods'][method_id]['model']).reshape(VOLUME_SHAPE).sum(0)*VOLUME_SPACING[2]
         run['methods'][method_id]['column_model']=projection.tolist()
@@ -196,9 +215,11 @@ def attach(run,bundle):
                                   reason_codes=['held-out-geological-family','column-target-not-three-dimensional-recovery']+(['does-not-improve-classical-baseline'] if cnn_method['metrics']['classical_baseline_ratio']>=1 else []))
     if cnn_method['metrics']['baseline_ratio']>=1:cnn_method['evaluation']['status']='failed'
     cnn_method['target']=dict(quantity='depth-integrated density contrast',units='g/cm³ m',dimensionality=2,provenance='Depth integral of original synthetic volume; not a reconstructed depth profile')
-    ae_method['evaluation']=dict(status='recovered' if ae_method['metrics']['above_threshold'] else 'failed',
-                                 reason_codes=['withheld-geometric-family-detected' if ae_method['metrics']['above_threshold'] else 'withheld-geometric-family-missed'])
-    ae_method['target']=dict(quantity='normalized observation reconstruction error',units='normalized squared error',dimensionality=2,provenance='Known withheld geometry; no subsurface recovery claim')
+    # The single-case threshold flag is a score comparison, not a validated
+    # geological-family classification: the display cases have different
+    # amplitude/noise/acquisition laws from the separate detector test cohort.
+    ae_method['evaluation']=dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
+    ae_method['target']=dict(quantity='normalized network-input reconstruction error',units='normalized squared error',dimensionality=2,provenance='Autoencoder input after any coverage interpolation; no subsurface recovery claim')
     ae_method['detection_validation']=meta['novelty_evaluation']
     for method in (cnn_method,ae_method):
         method['applicability']=dict(varied_parameter=run['variant']!='regularization',reason='Frozen checkpoint; regularization changes classical comparator only' if run['variant']=='regularization' else 'Fixed checkpoint evaluated on modified observations')

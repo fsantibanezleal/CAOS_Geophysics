@@ -14,6 +14,7 @@ from evaluation import model_metrics
 
 def validate(data,report):
     catalog=json.loads((data/'catalog.json').read_text(encoding='utf-8'))
+    training=json.loads((data/'models/training.json').read_text(encoding='utf-8'))
     rows=[];failures=[];nominal={};cache={}
     for case in catalog['cases']:
         for entry in case['variants']:
@@ -57,6 +58,15 @@ def validate(data,report):
                         prediction=impedance(model,run['thickness'],np.asarray(run['frequencies']))
                         np.testing.assert_allclose(prediction.real,method['predicted']['real'],rtol=3e-5,atol=1e-10)
                         np.testing.assert_allclose(prediction.imag,method['predicted']['imag'],rtol=3e-5,atol=1e-10)
+                    if key=='autoencoder':
+                        network_input=np.asarray(method['network_input'])
+                        prediction=np.asarray(method['predicted'])
+                        residual=np.asarray(method['residual'])
+                        np.testing.assert_allclose(network_input-prediction,residual,rtol=2e-5,atol=1e-5)
+                        errors=(residual/float(training['input_scale']))**2
+                        np.testing.assert_allclose(errors,np.asarray(method['model']).ravel(),rtol=2e-5,atol=1e-6)
+                        np.testing.assert_allclose(float(np.mean(errors)),method['metrics']['reconstruction_mse'],rtol=2e-5)
+                        assert verdict==dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
                     if case['family']=='seismic':
                         truth=np.asarray(run['truth']);initial=np.asarray(run['initial'])
                         ratio=model_metrics(model,truth,initial)['baseline_ratio']

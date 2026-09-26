@@ -117,8 +117,19 @@ def attach(run,cache,iterations=80):
                        independent_magnetic_baseline_ratio=magnetic_error/max(independent_magnetic_error,1e-30),
                        cross_gradient=float(cross.mean()))
         if (~mask).any():metrics['magnetic_heldout_wrms']=float(np.sqrt(np.mean(((Gm@susceptibility-dm)[~mask]/sigma)**2)))
-        if key!='joint-uncoupled' and metrics['independent_baseline_ratio']>=1 and verdict['status']!='negative-control':
-            verdict['status']='unresolved';verdict['reason_codes'].append('coupling-does-not-improve-independent-density-recovery')
+        if key!='joint-uncoupled' and verdict['status']!='negative-control':
+            comparison_failures=[]
+            if metrics['independent_baseline_ratio']>=1:
+                comparison_failures.append('coupling-does-not-improve-independent-density-recovery')
+            if metrics['independent_magnetic_baseline_ratio']>=1:
+                comparison_failures.append('coupling-does-not-improve-independent-susceptibility-recovery')
+            if metrics['magnetic_wrms']>2:
+                comparison_failures.append('magnetic-data-misfit-above-noise')
+            if metrics.get('magnetic_heldout_wrms',0)>2:
+                comparison_failures.append('magnetic-withheld-data-not-predicted')
+            if comparison_failures and verdict['status']=='recovered':
+                verdict['status']='unresolved'
+            verdict['reason_codes'].extend(comparison_failures)
         method=dict(name=name,name_es=name_es,model=density.tolist(),secondary_model=susceptibility.tolist(),magnetic_model=susceptibility.tolist(),
                     predicted=(Gg@density).tolist(),residual=(dg-Gg@density).tolist(),magnetic_predicted=(Gm@susceptibility).tolist(),
                     cross_gradient=cross.ravel().tolist(),history=history,frames=frames,objective_terms=terms,metrics=metrics,evaluation=verdict,device='cpu',

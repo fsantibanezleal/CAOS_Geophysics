@@ -14,6 +14,11 @@ EDI ingestion and inversion are a separate local path in `edi.py`. Units, signs,
 tensor axes and uncertainty conventions are validated before inversion. Generic
 `inverse-earth/edi-1d/v1` retains `truth:null`; original fixture truths are labelled
 separately at `data/derived/v2/edi/manifest.json`. See [the EDI contract](../problem-types/mt-recovery.md).
+The separate `inverse-earth/edi-screen/v1` measured-station artifact contains
+observed full-tensor curves, uncertainties, parser provenance and the necessary
+1D-consistency screen. It has `truth:null`, `methods:{}` and
+`inversion_performed:false`; a failed screen is never converted into a layered
+model. The manifest's `field_screens` entry carries its hash and source citation.
 
 The browser accepts JSON `{rho:[...], thickness:[...]}`: 2–8 resistivity values in [1,10000] Ω m; one fewer finite thickness values in [10,2000] m. Invalid shape, range, type or >100 kB files are rejected with a visible error. The last layer is a half-space. Frequencies are positive and logarithmically sampled. No input is uploaded to a server. Export includes model, frequencies, real/imaginary impedance, apparent resistivity and phase.
 
@@ -23,7 +28,7 @@ Schema `inverse-earth/v2` includes case identity, family, variant, seed, engine,
 
 Array order is contractual: volumes flatten x-fast from `[z,northing,easting]`, with z increasing upward; plotted sections reverse z to depth-down. Seismic velocity and pressure are `[depth,distance]`. Gathers are `[shot,receiver,time]`. Column density is `[northing,easting]`. Predictions and residuals refer to final selected models; replay frames are separately labelled.
 
-Each method carries named parameters, model, prediction, residual, recorded objective and states, and metrics. CNN predicts a 2D column, not a 3D model. Autoencoder `model` is normalized squared observation error. Vector magnetic `model` is the component norm, accompanied by vectors.
+Each method carries named parameters, model, prediction, residual, recorded objective and states, and metrics. CNN predicts a 2D column, not a 3D model. Autoencoder `model` is normalized squared error against its actual network input; on the coverage variant that input is an interpolated station map, and a separate `raw_observation_mse` is supplied. The case threshold flag is not a calibrated geological verdict. Vector magnetic `model` is the component norm, accompanied by vectors.
 
 Recovery adds `target`, `evaluation.status/reason_codes`, `state_identity`, `solver`,
 optional conditional `uncertainty`, and optional `applicability`. The final replay
@@ -37,7 +42,10 @@ the classical regularization condition as not an intervention on the network.
 `catalog.json` contains 20 cases × 6 variants, relative artifact paths, byte sizes, SHA-256, names and metric summaries. `release.json` counts actual experiments and method results. The guard rejects nonfinite values, duplicate reference truth hashes, missing variants, drifted identities/hashes/sizes, metric mismatches and checkpoint drift. It does not certify scientific adequacy by itself; the numerical and rendered tests are separate gates.
 
 Both manifests require `complete:true` for promotion. Family-specific source/settings
-fingerprints reject stale resumed runs. Catalogue verdicts exactly match per-run
+fingerprints reject stale resumed runs. A release may reuse an unchanged earlier
+run only when its original version and scientific-source fingerprint still match;
+the run retains its generation version rather than claiming a new solve.
+Catalogue verdicts exactly match per-run
 evaluations. The EDI bundle has separate hashes; it is not counted as another
 known-truth canonical geophysical case.
 

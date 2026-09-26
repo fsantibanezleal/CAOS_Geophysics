@@ -8,13 +8,25 @@ import sys
 import numpy as np
 import pytest
 
-from edi import EDIError, MT_TO_OHM, build_fixture_bundle, invert_edi, read_edi
+from edi import EDIError, MT_TO_OHM, build_fixture_bundle, invert_edi, read_edi, screen_edi
 from electromagnetics import MU
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT/"data/fixtures/edi"
 NATIVE = FIXTURES/"halfspace-100-native.edi"
 NEGATIVE = FIXTURES/"halfspace-500-ohm-negative.edi"
+
+
+def test_screen_only_preserves_observations_without_inventing_an_inverse(tmp_path):
+    output=tmp_path/'screen.json'
+    result=screen_edi(NATIVE,output=output)
+    assert result['schema']=='inverse-earth/edi-screen/v1'
+    assert result['truth'] is None and result['methods']=={}
+    assert result['inversion_performed'] is False
+    assert result['one_d_inversion_eligible'] is True
+    assert len(result['frequencies_hz'])==24
+    assert result['provenance']['source_sha256']==hashlib.sha256(NATIVE.read_bytes()).hexdigest()
+    assert json.loads(output.read_text(encoding='utf-8'))==result
 
 
 def altered(tmp_path, replacement):

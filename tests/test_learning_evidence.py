@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import numpy as np
 import pytest
-from learning import generate
+from learning import attach,generate,load_bundle
 from potential import operators,invert
 from geology import VOLUME_SHAPE,VOLUME_SPACING
 
@@ -50,3 +50,33 @@ def test_frozen_regularization_is_marked_not_a_neural_intervention():
             assert regular['methods'][key]['applicability']['varied_parameter'] is False
             np.testing.assert_array_equal(reference['methods'][key]['model'],regular['methods'][key]['model'])
             assert regular['methods'][key]['target'] and regular['methods'][key]['evaluation']
+
+
+@pytest.mark.parametrize('case',('LEARNED_CNN','LEARNED_AUTOENCODER'))
+@pytest.mark.parametrize('variant',('reference','contrast','noise','acquisition','coverage','regularization'))
+def test_case_score_is_input_consistent_and_not_a_geological_verdict(case,variant):
+    run=json.loads((DATA/case/f'{variant}.json').read_text(encoding='utf-8'))
+    attach(run,load_bundle(DATA/'models',device='cpu'))
+    method=run['methods']['autoencoder']
+    net=np.asarray(method['network_input']);pred=np.asarray(method['predicted'])
+    residual=np.asarray(method['residual']);errors=np.asarray(method['model'])
+    scale=json.loads((DATA/'models/training.json').read_text())['input_scale']
+    np.testing.assert_allclose(residual,net-pred,atol=1e-5)
+    np.testing.assert_allclose(errors.ravel(),(residual/scale)**2,atol=1e-6)
+    assert method['metrics']['reconstruction_mse']==pytest.approx(float(errors.mean()))
+    assert method['evaluation']==dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
+    if variant=='coverage':
+        assert not np.array_equal(net,np.asarray(run['survey']['observed']))
+        assert method['metrics']['raw_observation_mse']!=pytest.approx(method['metrics']['reconstruction_mse'])
+    else:
+        np.testing.assert_array_equal(net,run['survey']['observed'])
+
+
+def test_frozen_bundle_rejects_tampered_checkpoint(tmp_path):
+    import shutil
+    for name in ('training.json','cnn.json','autoencoder.json'):
+        shutil.copyfile(DATA/'models'/name,tmp_path/name)
+    with (tmp_path/'cnn.json').open('ab') as file:
+        file.write(b' ')
+    with pytest.raises(ValueError,match='Checkpoint hash mismatch: cnn'):
+        load_bundle(tmp_path,device='cpu')
