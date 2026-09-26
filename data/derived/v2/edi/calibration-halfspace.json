@@ -1,0 +1,1054 @@
+{
+  "kind": "independent_seeded_conditional_bootstrap_coverage",
+  "seed": 95317,
+  "calibration_model": [
+    230.0
+  ],
+  "confidence": 0.95,
+  "realizations": 48,
+  "fixed_thickness_m": [],
+  "frequencies_hz": [
+    0.01,
+    0.014924955450518291,
+    0.022275429519995574,
+    0.03324597932270942,
+    0.04961947603002903,
+    0.07405684692262435,
+    0.11052951411260215,
+    0.16496480740980207,
+    0.24620924014946255,
+    0.3674661940736688,
+    0.5484416576121018,
+    0.8185467307069029,
+    1.2216773489967918,
+    1.8233480008684404,
+    2.7213387683753085,
+    4.061585988376979,
+    6.061898993497572,
+    9.047357242349293,
+    13.503140378698722,
+    20.15337685941733,
+    30.07882518043099,
+    44.89251258218603,
+    67.0018750350959,
+    100.0
+  ],
+  "sigma_per_real_component": [
+    0.000170458544393665,
+    0.00020824534262870465,
+    0.0002544086181235646,
+    0.00031080524615113365,
+    0.0003797037291722122,
+    0.0004638754452593041,
+    0.0005667061242290932,
+    0.0006923320355084453,
+    0.0008458063657655101,
+    0.0010333024786930193,
+    0.0012623622328815024,
+    0.0015421993461403446,
+    0.001884070008817322,
+    0.002301725653696308,
+    0.0028119660947256153,
+    0.0034353152840732506,
+    0.00419684686921477,
+    0.005127192757327786,
+    0.006263775255567761,
+    0.007652312348933728,
+    0.009348656664140769,
+    0.011421042090128687,
+    0.013952828423449198,
+    0.017045854439366504
+  ],
+  "beta": 0.001,
+  "bounds_ohm_m": [
+    1.0,
+    6000.0
+  ],
+  "initial_model": [
+    100.0
+  ],
+  "sampling_law": "independent Gaussian real/imaginary errors with supplied fixed sigma",
+  "bootstrap_samples_per_realization": 128,
+  "failures": 0,
+  "coverage_per_layer": [
+    0.9166666666666666
+  ],
+  "coverage_monte_carlo_standard_error": [
+    0.039892796156514095
+  ],
+  "coverage_wilson95_lower": [
+    0.8044669820963272
+  ],
+  "coverage_wilson95_upper": [
+    0.9671162431819081
+  ],
+  "mean_width_ohm_m": [
+    13.901310229615754
+  ],
+  "bias_ohm_m": [
+    -0.12046161044002683
+  ],
+  "rows": [
+    {
+      "realization": 0,
+      "noise_seed": 2699724828,
+      "bootstrap_seed": 4094102915,
+      "model": [
+        231.64383089544694
+      ],
+      "interval_ohm_m": [
+        [
+          225.72564894882183
+        ],
+        [
+          239.08985533897533
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 1,
+      "noise_seed": 4077733800,
+      "bootstrap_seed": 1639436105,
+      "model": [
+        227.11533717631897
+      ],
+      "interval_ohm_m": [
+        [
+          219.45343180769436
+        ],
+        [
+          234.0729616521377
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 2,
+      "noise_seed": 2305213140,
+      "bootstrap_seed": 3292512056,
+      "model": [
+        228.16412408513034
+      ],
+      "interval_ohm_m": [
+        [
+          220.74841014771815
+        ],
+        [
+          235.11470624778866
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 3,
+      "noise_seed": 1167061208,
+      "bootstrap_seed": 2979452951,
+      "model": [
+        231.78677486242606
+      ],
+      "interval_ohm_m": [
+        [
+          225.52002309347026
+        ],
+        [
+          239.21174893734786
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 4,
+      "noise_seed": 1545103305,
+      "bootstrap_seed": 667122104,
+      "model": [
+        224.1322707692369
+      ],
+      "interval_ohm_m": [
+        [
+          217.8546728647389
+        ],
+        [
+          230.69489886768375
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 5,
+      "noise_seed": 1118930791,
+      "bootstrap_seed": 1021061532,
+      "model": [
+        224.18962882024496
+      ],
+      "interval_ohm_m": [
+        [
+          216.87335376438293
+        ],
+        [
+          231.2661575773176
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 6,
+      "noise_seed": 1073075567,
+      "bootstrap_seed": 2382733429,
+      "model": [
+        235.43221114316876
+      ],
+      "interval_ohm_m": [
+        [
+          229.91824151780654
+        ],
+        [
+          242.21068670173597
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 7,
+      "noise_seed": 2477638024,
+      "bootstrap_seed": 3984900602,
+      "model": [
+        229.0381359680452
+      ],
+      "interval_ohm_m": [
+        [
+          221.30751824781072
+        ],
+        [
+          236.84899316408308
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 8,
+      "noise_seed": 2095596209,
+      "bootstrap_seed": 2563776131,
+      "model": [
+        230.579901234915
+      ],
+      "interval_ohm_m": [
+        [
+          223.4948960197238
+        ],
+        [
+          237.40253600655984
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 9,
+      "noise_seed": 1165462389,
+      "bootstrap_seed": 4051516133,
+      "model": [
+        230.32617472707554
+      ],
+      "interval_ohm_m": [
+        [
+          222.8018770938786
+        ],
+        [
+          237.67766401613244
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 10,
+      "noise_seed": 3652893314,
+      "bootstrap_seed": 4265088638,
+      "model": [
+        224.79993783283484
+      ],
+      "interval_ohm_m": [
+        [
+          216.81618981166682
+        ],
+        [
+          231.54326543850425
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 11,
+      "noise_seed": 3060024673,
+      "bootstrap_seed": 1114823561,
+      "model": [
+        232.38849282617986
+      ],
+      "interval_ohm_m": [
+        [
+          224.837282997467
+        ],
+        [
+          239.08149642502437
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 12,
+      "noise_seed": 1313983883,
+      "bootstrap_seed": 1746814473,
+      "model": [
+        232.4412969271181
+      ],
+      "interval_ohm_m": [
+        [
+          226.3206350594044
+        ],
+        [
+          240.71626631296104
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 13,
+      "noise_seed": 2497446750,
+      "bootstrap_seed": 3867676220,
+      "model": [
+        235.45543501759798
+      ],
+      "interval_ohm_m": [
+        [
+          227.75073826967537
+        ],
+        [
+          242.1477405545092
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 14,
+      "noise_seed": 3504534667,
+      "bootstrap_seed": 1551015013,
+      "model": [
+        226.10811074175174
+      ],
+      "interval_ohm_m": [
+        [
+          220.7991910842648
+        ],
+        [
+          233.5520408023006
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 15,
+      "noise_seed": 4157727006,
+      "bootstrap_seed": 3745579676,
+      "model": [
+        233.0260735815812
+      ],
+      "interval_ohm_m": [
+        [
+          225.5714728245628
+        ],
+        [
+          239.5775769790112
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 16,
+      "noise_seed": 3547092344,
+      "bootstrap_seed": 3949585867,
+      "model": [
+        223.38988479658127
+      ],
+      "interval_ohm_m": [
+        [
+          216.5514136051918
+        ],
+        [
+          229.36374844997866
+        ]
+      ],
+      "covered": [
+        false
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 17,
+      "noise_seed": 1026753400,
+      "bootstrap_seed": 2722372821,
+      "model": [
+        237.80208118033084
+      ],
+      "interval_ohm_m": [
+        [
+          231.35696170594505
+        ],
+        [
+          245.98346435016532
+        ]
+      ],
+      "covered": [
+        false
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 18,
+      "noise_seed": 3571228315,
+      "bootstrap_seed": 3698879689,
+      "model": [
+        225.67901319595427
+      ],
+      "interval_ohm_m": [
+        [
+          217.5698482811776
+        ],
+        [
+          232.80417291424064
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 19,
+      "noise_seed": 2170560886,
+      "bootstrap_seed": 1954479286,
+      "model": [
+        229.81653940596942
+      ],
+      "interval_ohm_m": [
+        [
+          223.6109055975799
+        ],
+        [
+          235.88506622860973
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 20,
+      "noise_seed": 3278273000,
+      "bootstrap_seed": 1116739680,
+      "model": [
+        222.62930551563593
+      ],
+      "interval_ohm_m": [
+        [
+          214.7916347459538
+        ],
+        [
+          230.20313691736877
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 21,
+      "noise_seed": 1319916057,
+      "bootstrap_seed": 1101239208,
+      "model": [
+        235.50161375313547
+      ],
+      "interval_ohm_m": [
+        [
+          228.25688353951418
+        ],
+        [
+          239.9704575313163
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 22,
+      "noise_seed": 2117614208,
+      "bootstrap_seed": 1151828790,
+      "model": [
+        235.27863372210697
+      ],
+      "interval_ohm_m": [
+        [
+          227.89043116388052
+        ],
+        [
+          241.3517981114007
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 23,
+      "noise_seed": 3821769641,
+      "bootstrap_seed": 2885623723,
+      "model": [
+        227.88870344285408
+      ],
+      "interval_ohm_m": [
+        [
+          222.1762989187301
+        ],
+        [
+          234.74635910992242
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 24,
+      "noise_seed": 2014880781,
+      "bootstrap_seed": 2817607770,
+      "model": [
+        230.81824914469115
+      ],
+      "interval_ohm_m": [
+        [
+          223.45742049691685
+        ],
+        [
+          237.31872636169018
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 25,
+      "noise_seed": 784888751,
+      "bootstrap_seed": 939882480,
+      "model": [
+        228.84342730890418
+      ],
+      "interval_ohm_m": [
+        [
+          222.73959978924032
+        ],
+        [
+          235.93881088395955
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 26,
+      "noise_seed": 225545238,
+      "bootstrap_seed": 3704101821,
+      "model": [
+        226.60569356373415
+      ],
+      "interval_ohm_m": [
+        [
+          220.7833067951342
+        ],
+        [
+          234.00976736300305
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 27,
+      "noise_seed": 2719466038,
+      "bootstrap_seed": 242112341,
+      "model": [
+        227.53877602624203
+      ],
+      "interval_ohm_m": [
+        [
+          220.2066072406814
+        ],
+        [
+          236.28418446212928
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 28,
+      "noise_seed": 2093381162,
+      "bootstrap_seed": 152759416,
+      "model": [
+        226.4940469485132
+      ],
+      "interval_ohm_m": [
+        [
+          218.60511887011853
+        ],
+        [
+          233.95304746015896
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 29,
+      "noise_seed": 932318558,
+      "bootstrap_seed": 621739952,
+      "model": [
+        225.2149138956515
+      ],
+      "interval_ohm_m": [
+        [
+          218.4360283166832
+        ],
+        [
+          231.2824125045607
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 30,
+      "noise_seed": 1626102351,
+      "bootstrap_seed": 4021620920,
+      "model": [
+        227.92849597750643
+      ],
+      "interval_ohm_m": [
+        [
+          221.43269326796877
+        ],
+        [
+          234.22599405701172
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 31,
+      "noise_seed": 1807569346,
+      "bootstrap_seed": 3450985984,
+      "model": [
+        224.95384376909314
+      ],
+      "interval_ohm_m": [
+        [
+          218.63475852237215
+        ],
+        [
+          232.14631971446977
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 32,
+      "noise_seed": 1280217746,
+      "bootstrap_seed": 4290004161,
+      "model": [
+        233.01939224369372
+      ],
+      "interval_ohm_m": [
+        [
+          226.85098747957682
+        ],
+        [
+          241.0073455061646
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 33,
+      "noise_seed": 3710579996,
+      "bootstrap_seed": 2753024687,
+      "model": [
+        233.2011630752262
+      ],
+      "interval_ohm_m": [
+        [
+          226.2796582048028
+        ],
+        [
+          240.68487793586664
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 34,
+      "noise_seed": 758487396,
+      "bootstrap_seed": 64740640,
+      "model": [
+        233.4431277666708
+      ],
+      "interval_ohm_m": [
+        [
+          226.10973686959582
+        ],
+        [
+          240.89021381737157
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 35,
+      "noise_seed": 1903888860,
+      "bootstrap_seed": 3221752618,
+      "model": [
+        229.23473248735615
+      ],
+      "interval_ohm_m": [
+        [
+          222.1135491914135
+        ],
+        [
+          236.34685260043713
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 36,
+      "noise_seed": 3083145997,
+      "bootstrap_seed": 828746663,
+      "model": [
+        230.2856533324876
+      ],
+      "interval_ohm_m": [
+        [
+          223.46213884549013
+        ],
+        [
+          237.71991858457426
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 37,
+      "noise_seed": 696645812,
+      "bootstrap_seed": 4236460968,
+      "model": [
+        235.96452954771405
+      ],
+      "interval_ohm_m": [
+        [
+          227.39493219839142
+        ],
+        [
+          242.63919558427526
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 38,
+      "noise_seed": 1936848483,
+      "bootstrap_seed": 1600200493,
+      "model": [
+        239.46317147241257
+      ],
+      "interval_ohm_m": [
+        [
+          230.94399357737404
+        ],
+        [
+          247.04796587422962
+        ]
+      ],
+      "covered": [
+        false
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 39,
+      "noise_seed": 189002600,
+      "bootstrap_seed": 642447675,
+      "model": [
+        229.22606342302822
+      ],
+      "interval_ohm_m": [
+        [
+          222.2385021216969
+        ],
+        [
+          235.2358294978294
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 40,
+      "noise_seed": 113477609,
+      "bootstrap_seed": 433137997,
+      "model": [
+        230.2226748074059
+      ],
+      "interval_ohm_m": [
+        [
+          224.11571916810138
+        ],
+        [
+          236.1035804979922
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 41,
+      "noise_seed": 2751555429,
+      "bootstrap_seed": 4235612612,
+      "model": [
+        231.8373431569504
+      ],
+      "interval_ohm_m": [
+        [
+          224.34869767559854
+        ],
+        [
+          238.35965222085173
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 42,
+      "noise_seed": 2103928266,
+      "bootstrap_seed": 2804770299,
+      "model": [
+        232.91322753533177
+      ],
+      "interval_ohm_m": [
+        [
+          225.44834723029473
+        ],
+        [
+          241.2686574580021
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 43,
+      "noise_seed": 3754170737,
+      "bootstrap_seed": 2724596545,
+      "model": [
+        233.75120205017248
+      ],
+      "interval_ohm_m": [
+        [
+          226.76742477246717
+        ],
+        [
+          240.93619647019688
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 44,
+      "noise_seed": 2322677826,
+      "bootstrap_seed": 4123113400,
+      "model": [
+        230.31524276369092
+      ],
+      "interval_ohm_m": [
+        [
+          223.75231810995808
+        ],
+        [
+          236.70166473146492
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 45,
+      "noise_seed": 1795423507,
+      "bootstrap_seed": 2510326918,
+      "model": [
+        227.14423742735806
+      ],
+      "interval_ohm_m": [
+        [
+          221.56038844636223
+        ],
+        [
+          234.51587798230312
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 46,
+      "noise_seed": 2815463139,
+      "bootstrap_seed": 3812187548,
+      "model": [
+        222.53650424062383
+      ],
+      "interval_ohm_m": [
+        [
+          216.21251113730855
+        ],
+        [
+          228.67201989055303
+        ]
+      ],
+      "covered": [
+        false
+      ],
+      "bootstrap_completed": 128
+    },
+    {
+      "realization": 47,
+      "noise_seed": 327641857,
+      "bootstrap_seed": 3369133124,
+      "model": [
+        228.6486191127796
+      ],
+      "interval_ohm_m": [
+        [
+          221.71970272436977
+        ],
+        [
+          235.06908309036257
+        ]
+      ],
+      "covered": [
+        true
+      ],
+      "bootstrap_completed": 128
+    }
+  ],
+  "statement": "Measured coverage on this specified model/noise law only; no threshold tuning or field-coverage guarantee."
+}

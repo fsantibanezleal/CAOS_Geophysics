@@ -378,7 +378,7 @@ def invert_edi(path, thickness, *, component="xy", output=None, beta=.001, initi
         if destination.resolve() == Path(path).resolve():
             raise EDIError("Output must not overwrite the source EDI")
         destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(json.dumps(run, indent=2, allow_nan=False)+"\n", encoding="utf-8")
+        destination.write_text(json.dumps(run, indent=2, allow_nan=False)+"\n", encoding="utf-8", newline="\n")
     return run
 
 
@@ -430,7 +430,7 @@ def build_fixture_bundle(output_directory, *, bootstrap_samples=128, seed=61001,
                 seed=calibration_seed, beta=.001)
             filename = f"calibration-{label}.json"
             path = output_root/filename
-            path.write_text(json.dumps(evidence, indent=2, allow_nan=False)+"\n", encoding="utf-8")
+            path.write_text(json.dumps(evidence, indent=2, allow_nan=False)+"\n", encoding="utf-8", newline="\n")
             calibration.append(dict(
                 id=label, artifact=filename, artifact_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
                 synthetic=True, realizations=calibration_realizations,
@@ -446,7 +446,7 @@ def build_fixture_bundle(output_directory, *, bootstrap_samples=128, seed=61001,
         provenance="Original analytic synthetic transfer functions; not downloaded field data",
         uncertainty="Per-artifact TRF conditional parametric bootstrap, no empirical coverage inferred here",
     )
-    (output_root/"manifest.json").write_text(json.dumps(bundle, indent=2, allow_nan=False)+"\n", encoding="utf-8")
+    (output_root/"manifest.json").write_text(json.dumps(bundle, indent=2, allow_nan=False)+"\n", encoding="utf-8", newline="\n")
     return bundle
 
 

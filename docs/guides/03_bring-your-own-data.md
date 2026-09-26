@@ -1,6 +1,8 @@
 # Bring your own observations
 
-For layered forward modelling, open Experiments and import JSON with `rho` and `thickness` arrays. Inputs stay inside your browser. Export includes calculated complex impedance, apparent resistivity and phase. This is not an EDI inversion interface.
+For layered forward modelling, open Experiments and import JSON with `rho` and `thickness` arrays. Inputs stay inside your browser. Export includes calculated complex impedance, apparent resistivity and phase. The EDI tab replays three original, locally inverted synthetic fixtures; it does not accept arbitrary EDI uploads in the browser.
+
+For a local EDI inversion, use the project Python environment and `python data-pipeline/edi.py sounding.edi --thickness 350 --output data/raw/user-edi.json`, replacing the finite-layer thickness with the independently specified model for your sounding. The parser checks tensor components, units, sign convention, frequencies, errors and orientation before fixed-thickness 1D inversion. Read `python data-pipeline/edi.py --help` for component, variance and unit options. Unknown geology remains `truth: null`. Arbitrary tensor rotation without covariance and data incompatible with the declared 1D model are rejected.
 
 For gravity or magnetics, prepare CSV with exact headers `east_m,north_m,up_m,value,sigma`. Run `python data-pipeline/ingest.py --csv survey.csv --family gravity --output data/raw/user-inversion.json`. Coordinates must be Cartesian ENU metres; gravity is upward gz in mGal, magnetics TMI in nT. Explicit errors reject nonfinite values, nonpositive sigma and duplicate stations. Do not submit geographic longitude/latitude as metres.
 

@@ -16,8 +16,10 @@ async function capture(name){
   await page.screenshot({path:resolve(output,`${name}.png`),fullPage:false});
   const layout=await page.evaluate(()=>({width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,
     canvas:[...document.querySelectorAll('canvas')].map(c=>({width:c.width,height:c.height})),
-    fonts:[...new Set([...document.querySelectorAll('h1,h2,button,label')].map(e=>getComputedStyle(e).fontFamily))]}));
+    fonts:[...new Set([...document.querySelectorAll('h1,h2,button,label')].map(e=>getComputedStyle(e).fontFamily))],
+    offscreenText:[...document.querySelectorAll('main h1,main h2,main p')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&(r.left<-1||r.right>innerWidth+1)}).slice(0,8).map(e=>({tag:e.tagName,text:e.textContent?.slice(0,72),left:Math.round(e.getBoundingClientRect().left),right:Math.round(e.getBoundingClientRect().right)}))}));
   if(layout.scrollWidth>layout.width+1)errors.push(`Horizontal document overflow: ${name}`);
+  if(layout.offscreenText.length)errors.push(`Clipped text: ${name}: ${JSON.stringify(layout.offscreenText)}`);
   rows.push({name,...layout});console.log('CAPTURE',name,JSON.stringify(layout),{errors:errors.length});
 }
 await page.goto(base,{waitUntil:'networkidle'});
@@ -30,7 +32,7 @@ await page.getByRole('button',{name:'Play',exact:true}).click();
 await page.getByText(/Model replay · saved state/).first().waitFor();
 await page.getByRole('button',{name:'Pause',exact:true}).click();
 await capture('desktop-replay');
-await page.getByRole('checkbox',{name:'Show final model',exact:true}).check();
+await page.getByRole('button',{name:'Show final model',exact:true}).click();
 await page.getByLabel('Geological case',{exact:true}).selectOption('JOINT_SHARED');
 await page.getByLabel('Inverse method',{exact:true}).selectOption('pgi');
 await page.getByRole('tab',{name:'Inversion',exact:true}).click();
@@ -49,8 +51,12 @@ for(const route of ['introduction','methodology','implementation','experiments',
   await capture(`desktop-${route}`);
 }
 await page.goto(`${base}/experiments`,{waitUntil:'networkidle'});
-const edi=page.getByText('Original synthetic EDI fixtures',{exact:true});
-if(await edi.count()){await edi.scrollIntoViewIfNeeded();await capture('desktop-edi');}
+await page.getByRole('tab',{name:'MT forward and EDI evidence',exact:true}).click();
+await page.getByRole('tab',{name:'EDI fixtures and inversion',exact:true}).click();
+const edi=page.getByText('Original synthetic EDI fixture',{exact:true});
+await edi.waitFor();
+await edi.scrollIntoViewIfNeeded();
+await capture('desktop-edi');
 await page.getByRole('button',{name:'Switch language',exact:true}).click();
 await page.getByRole('button',{name:'Cambiar claro / oscuro',exact:true}).click();
 await page.setViewportSize({width:390,height:844});

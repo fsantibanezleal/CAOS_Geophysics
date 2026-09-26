@@ -1,6 +1,6 @@
 # Rebuild validation
 
-The v1 interface and repeated analytic results were rejected. Validation here refers only to v2. Numerical, artifact, browser, CI and deployment gates are separate; one does not substitute for another.
+The v1 interface and repeated analytic results were rejected. This is the historical 0.02 replacement receipt; its counts and limitations are not the 0.04 release. See [the 0.04 numerical verdicts](recovery.json) and [rendered acceptance](scientific-ui-0.04.md) for current evidence. Numerical, artifact, browser, CI and deployment gates are separate; one does not substitute for another.
 
 ## Numerical evidence
 

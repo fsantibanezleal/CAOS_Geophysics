@@ -428,6 +428,16 @@
   display: grid;
   gap: 1rem;
 }
+.evidence-layout {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.evidence-layout > * {
+  min-width: 0;
+}
+.evidence-layout code {
+  overflow-wrap: anywhere;
+}
 .evaluation-status {
   padding: 0.4rem 0.6rem;
   border-left: 2px solid var(--color-border);

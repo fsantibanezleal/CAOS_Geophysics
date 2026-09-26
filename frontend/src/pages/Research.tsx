@@ -965,7 +965,7 @@ export function Benchmark() {
         "relative_mse",
         "reconstruction_mse",
       ].find((k) => metrics.includes(k)) ?? metrics[0]);
-  const info = metricInfo(selectedMetric, family, selectedMethod, es);
+  const info = metricInfo(selectedMetric ?? "", family, selectedMethod, es);
   return (
     <div className="page-body prose">
       <Head

@@ -1,6 +1,6 @@
 # Replacement acceptance record
 
-Date: 2026-09-24. This record maps the replacement SDD to executed checks, not to the rejected v1 completion claim.
+Date: 2026-09-24. Historical 0.02/0.03 replacement record. The current 0.04 recovery requirements and evidence are in [the recovery SDD](features/scientific-recovery/requirements.md) and [local rendered acceptance](../validation/scientific-ui-0.04.md). The counts below describe the earlier release.
 
 | Requirement | Executed evidence |
 |---|---|
