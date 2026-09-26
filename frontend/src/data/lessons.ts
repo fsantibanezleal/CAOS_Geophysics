@@ -360,8 +360,8 @@ export const lessons: Record<string, Lesson> = {
       "Un dique anular queda fuera del entrenamiento. El autoencoder usa un cuello de 12 dimensiones y destaca errores de reconstrucción.",
     ],
     [
-      "Compare the error against a validation-set threshold and test whether added noise alone triggers it.",
-      "Compare error y umbral de validación; evalúe si sólo agregar ruido lo supera.",
+      "Compare the score with the independent-calibration threshold; inspect the separate 80-case withheld-family evaluation before interpreting detection.",
+      "Compare el puntaje con el umbral de calibración independiente; examine la evaluación separada de 80 casos de familias omitidas antes de interpretar detección.",
     ],
     [
       "An anomaly score is not a probability of geological novelty and may respond to acquisition shift.",

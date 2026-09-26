@@ -1,22 +1,24 @@
 import { useState } from "react";
 import { useShellLang } from "@fasl-work/caos-app-shell";
-import { evaluationLabel, evaluationReason, targetProvenance, targetDescription } from "../data/evidence";
+import { evaluationPresentation, evaluationReason, targetProvenance, targetDescription } from "../data/evidence";
 import { metricInfo } from "../data/metrics";
 import { flatten, format, sliceVolume, type DetectionValidation, type Method, type ModelArray, type Run } from "../science";
 import { membershipField, propertyScale, sharedScale, uncertaintyProblem } from "../recovery";
 import { PotentialCalibration } from "./PotentialCalibration";
 import { Heatmap, Plot } from "./ScientificPlots";
 
-export function EvaluationStatus({ method }: { method: Pick<Method, "evaluation"> }) {
+export function EvaluationStatus({ method, methodId, variant, compact = false }: { method: Pick<Method, "evaluation">; methodId?: string; variant?: string; compact?: boolean }) {
   const es = useShellLang() === "es";
   const evaluation = method.evaluation;
-  return <div className="evaluation-status" data-evaluation={evaluation?.status ?? "unassessed"}>
-    <strong>{evaluationLabel(evaluation?.status, es)}</strong>
-    {!!evaluation?.reason_codes?.length && <details>
+  const display = evaluationPresentation(evaluation, methodId, variant, es);
+  return <div className="evaluation-status" data-evaluation={display.status}>
+    <strong>{display.label}</strong>
+    {!compact && display.note && <p className="plot-note">{display.note}</p>}
+    {!compact && !!display.reasonCodes.length && <details>
       <summary>{es ? "Criterios de evaluación" : "Evaluation criteria"}</summary>
-      <ul>{evaluation.reason_codes.map(code => <li key={code}>{evaluationReason(code, es)}</li>)}</ul>
+      <ul>{display.reasonCodes.map(code => <li key={code}>{evaluationReason(code, es)}</li>)}</ul>
     </details>}
-    {!evaluation && <p className="plot-note">{es ? "Este artefacto no contiene un veredicto de recuperación. Ajustar datos o ejecutar sin errores no lo sustituye." : "This artifact has no recovery verdict. Data fit or successful execution does not supply one."}</p>}
+    {!compact && !evaluation && methodId !== "autoencoder" && <p className="plot-note">{es ? "Este artefacto no contiene un veredicto de recuperación. Ajustar datos o ejecutar sin errores no lo sustituye." : "This artifact has no recovery verdict. Data fit or successful execution does not supply one."}</p>}
   </div>;
 }
 
@@ -39,7 +41,7 @@ export function TargetEvidence({ run, methodId }: { run: Run; methodId: string }
     <p><strong>{es ? "Objetivo estimado: " : "Estimated target: "}</strong>{targetDescription(run, methodId, es)}</p>
     <p className="plot-note">{targetProvenance(run, methodId, es)}</p>
     <ApplicabilityWarning method={run.methods[methodId]} />
-    <EvaluationStatus method={run.methods[methodId]} />
+    <EvaluationStatus method={run.methods[methodId]} methodId={methodId} variant={run.variant} />
   </div>;
 }
 

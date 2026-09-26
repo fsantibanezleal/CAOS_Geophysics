@@ -77,6 +77,7 @@ export type Method = MethodSummary & {
   cross_gradient?: number[];
   predicted: number[] | number[][][] | Curves;
   residual: number[] | number[][][] | Curves;
+  network_input?: number[];
   history: number[];
   frames: (number[] | number[][])[];
   vectors?: number[][];

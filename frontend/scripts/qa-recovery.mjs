@@ -28,6 +28,7 @@ await capture('desktop-gravity-final');
 await page.getByRole('button',{name:'Synthetic target',exact:true}).click();
 await capture('desktop-gravity-truth');
 await page.getByRole('button',{name:'Final model',exact:true}).click();
+await page.getByRole('button',{name:'Replay',exact:true}).click();
 await page.getByRole('button',{name:'Play',exact:true}).click();
 await page.getByText(/Model replay · saved state/).first().waitFor();
 await page.getByRole('button',{name:'Pause',exact:true}).click();
