@@ -10,5 +10,6 @@ This wiki is the durable technical record of the workbench. It explains what the
 - [Guides](guides/README.md): setup, precompute, GPU, and bring-your-own-data workflows.
 - [Manuscript](../manuscripts/geophysics-identifiability/README.md): research framing and evidence plan.
 - [0.04.001 scientific and browser validation](validation/scientific-ui-0.04.001.md): candidate/canonical hashes, numerical gates, rendered inspection and remaining limits. Public deployment is recorded separately.
+- [0.04.001 public deployment](validation/deployment-0.04.001.md): corrected main/CI/Pages and VPS release identifiers, exact-byte TLS receipts and production browser checks.
 
 The public UI is bilingual English and Spanish. Technical source and documentation remain English for reproducibility.

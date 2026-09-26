@@ -1,0 +1,282 @@
+{
+  "base": "https://geophysics.ml.fasl-work.com/",
+  "rows": [
+    {
+      "name": "desktop-gravity-final",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 1080,
+          "height": 699
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-gravity-truth",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 1080,
+          "height": 699
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-replay",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 1080,
+          "height": 699
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-gravity-faulted-contact",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 1080,
+          "height": 699
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-magnetic-dyke",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 1080,
+          "height": 699
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-pgi",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 224,
+          "height": 128
+        },
+        {
+          "width": 224,
+          "height": 128
+        },
+        {
+          "width": 224,
+          "height": 128
+        },
+        {
+          "width": 224,
+          "height": 128
+        },
+        {
+          "width": 224,
+          "height": 128
+        },
+        {
+          "width": 224,
+          "height": 128
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-mt-uncertainty",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-fwi-model",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 1024,
+          "height": 768
+        },
+        {
+          "width": 1024,
+          "height": 768
+        },
+        {
+          "width": 320,
+          "height": 3200
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-signed-cnn",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [
+        {
+          "width": 224,
+          "height": 192
+        },
+        {
+          "width": 224,
+          "height": 192
+        },
+        {
+          "width": 224,
+          "height": 192
+        },
+        {
+          "width": 224,
+          "height": 192
+        },
+        {
+          "width": 224,
+          "height": 192
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-introduction",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-methodology",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-implementation",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-experiments",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-benchmark",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "desktop-edi",
+      "width": 1440,
+      "height": 960,
+      "scrollWidth": 1440,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "mobile-es-experiments",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "canvas": [],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    },
+    {
+      "name": "mobile-es-workbench",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "canvas": [
+        {
+          "width": 350,
+          "height": 220
+        }
+      ],
+      "fonts": [
+        "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif"
+      ],
+      "offscreenText": []
+    }
+  ],
+  "errors": []
+}
