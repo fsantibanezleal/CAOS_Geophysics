@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node copy-data.mjs && vite --host 127.0.0.1",
     "build": "tsc --noEmit && node copy-data.mjs && vite build && node -e \"require('node:fs').copyFileSync('dist/index.html','dist/404.html')\" && node create-route-entrypoints.mjs",
+    "build:single-origin": "tsc --noEmit && node copy-data.mjs && vite build --mode single-origin && node -e \"require('node:fs').copyFileSync('dist/index.html','dist/404.html')\"",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run"
   },

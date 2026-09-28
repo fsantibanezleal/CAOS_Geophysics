@@ -13,11 +13,11 @@ const frontend = resolve(here, '..');
 const base = process.env.QA_BASE ?? 'http://127.0.0.1:5179';
 const files = ['01-the-app.svg', '02-lanes.svg', '03-web-flow.svg', '04-the-science.svg', '05-data-contracts.svg'];
 const labels = [
-  'Geophysical models, result structure, and build lifecycle',
-  'Offline computation, artifact bridge, static hosts, and browser execution lanes',
-  'Browser control dependency graph for selecting, replaying, viewing, and exporting geophysical results',
-  'Forward, inverse, joint, and learned geophysics methods with validation limits',
-  'Input and release data contracts separating local survey, measured EDI, and synthetic cases',
+  'Approved source to result system and legacy release boundary',
+  'Approved local, worker, replay and browser execution lanes',
+  'Approved selected project, API eligibility, result and export flow',
+  'Approved scientific method ladder and independent evidence oracles',
+  'Approved source, dataset, job and result evidence contracts',
 ];
 const raw = files.map((file) => readFileSync(join(frontend, 'public/svg/tech', file), 'utf8'));
 const shots = process.env.QA_OUTPUT ? resolve(process.env.QA_OUTPUT) : mkdtempSync(join(tmpdir(), 'geophysics-architecture-'));
@@ -101,7 +101,7 @@ try {
         checks.push({ file: files[i], theme, lang, pairs: result.pairs, visibleLabels: lang === 'en' ? result.visibleEn : result.visibleEs, violations: result.violations });
         if (i === 0 && lang === 'es') {
           const title = await dialog.getByRole('tab').first().innerText();
-          if (!/Modelos físicos/.test(title)) errors.push(`Spanish tab did not change: ${title}`);
+          if (title !== 'Sistema') errors.push(`Spanish tab did not change: ${title}`);
         }
         console.log(JSON.stringify({ file: files[i], theme, lang, pairs: result.pairs, visible: lang === 'en' ? result.visibleEn : result.visibleEs, issues: result.violations.length }));
         await dialog.screenshot({ path: join(shots, `${String(i + 1).padStart(2, '0')}-modal-${theme}-${lang}.png`) });
