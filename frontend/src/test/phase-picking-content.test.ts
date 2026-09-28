@@ -57,7 +57,7 @@ describe("M08/M13 scientific content", () => {
         expect(text.toLowerCase()).toContain(term.toLowerCase());
       expect(text.toLowerCase()).toContain(lang === 0 ? "four downsampling stages" : "cuatro etapas descendentes");
       expect(text).toContain(lang === 0 ? "cross-entropy" : "entropía cruzada");
-      expect(text).toContain(lang === 0 ? "No M13 model is trained" : "Ningún M13 está entrenado");
+      expect(text).toContain(lang === 0 ? "A frozen M13 checkpoint" : "checkpoint M13");
     }
     expect(method.theory.equations[2].tex).toContain("\\log q_{k,n}");
   });
@@ -67,7 +67,7 @@ describe("M08/M13 scientific content", () => {
     for (const phrase of ["event-and-station-disjoint", "Bridge recordings", "same held-out", "one-to-one", "P/S confusion", "calibration", "abstention"])
       expect(text.toLowerCase()).toContain(phrase.toLowerCase());
     expect(text).toContain("The published PhaseNet split was stratified by station recordings");
-    expect(text).toContain("No such checkpoint or result exists");
+    expect(text).toContain("The frozen M13 checkpoint and M08 comparator were scored");
     expect(source("../../../docs/design/features/phase-picking-content/research.md")).toContain("does **not** establish mutually exclusive event IDs");
   });
 
@@ -106,8 +106,8 @@ describe("M08/M13 scientific content", () => {
     const content = source("../components/PhasePickingContent.tsx") + source("../components/PhasePickingDiagram.tsx");
     expect(content).not.toMatch(/fetch\(|ApiClient|WebSocket|<button/i);
     expect(allText("m08", 0)).toContain("No local M08 short/long window lengths");
-    expect(allText("m13", 0)).toContain("No M13 model is trained, fine-tuned, exported or available to run");
-    expect(allText("m13", 0)).toContain("not local results");
+    expect(allText("m13", 0)).toContain("this frontend branch carries no model or field waveform bytes");
+    expect(allText("m13", 0)).toContain("browser parity verdict");
   });
 
   it("wiki_source_links", () => {
@@ -116,6 +116,6 @@ describe("M08/M13 scientific content", () => {
     expect(source("../../../docs/problem-types/problem-types.md")).toContain("phase-picking.md");
     for (const url of ["https://doi.org/10.1093/gji/ggy423", "https://doi.org/10.1785/bssa0680051521", "https://doi.org/10.1785/0120080019", "https://docs.obspy.org/"])
       expect(wiki).toContain(url);
-    expect(wiki).toContain("has not yet established an M08 field-pick result");
+    expect(wiki).toContain("5,926 are QC-valid and 74 QC rejections");
   });
 });

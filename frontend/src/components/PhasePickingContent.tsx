@@ -1,6 +1,7 @@
 import { Callout, Cite, Equation, Refs, useShellLang } from "@fasl-work/caos-app-shell";
 import { phasePickers, type PickerId, type PickerSection } from "../data/phase-picking";
 import { PhasePickingDiagram } from "./PhasePickingDiagram";
+import { Link } from "react-router";
 
 export function PhasePickingContent({ method, view }: { method: PickerId; view: "theory" | "implementation" }) {
   const es = useShellLang() === "es";
@@ -30,6 +31,9 @@ export function PhasePickingContent({ method, view }: { method: PickerId; view: 
         </>
       )}
       <PhasePickingDiagram method={method} />
+      {method === "m13" && view === "implementation" && <p>
+        <Link to="/benchmark#phase-picker">{es ? "Abrir inferencia P/S en Benchmark" : "Open P/S inference in Benchmark"}</Link>
+      </p>}
       <Callout variant="honest" title={section.calloutTitle[i]}>{section.callout[i]}</Callout>
       <Refs ids={section.refs} label={es ? "Referencias" : "References"} />
     </article>
