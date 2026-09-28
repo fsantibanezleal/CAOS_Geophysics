@@ -16,6 +16,7 @@ import { LiveMT } from "../components/LiveMT";
 import { chapters, type Algorithm, type Chapter } from "../data/methods";
 import { phasePickers } from "../data/phase-picking";
 import { PhasePickingContent } from "../components/PhasePickingContent";
+import { PhasePickerPanel } from "../components/PhasePickerPanel";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
@@ -403,8 +404,8 @@ export function Methodology() {
         )}
       >
         {t(
-          "The six released synthetic-method chapters remain available alongside source-backed designs for classical M08 and learned M13 earthquake arrival picking. Grouped navigation separates field response, wave physics and learned inference. M08/M13 describe their equations and evaluation requirements, not an already trained or online phase-picking operation.",
-          "Los seis capítulos sintéticos publicados siguen disponibles junto a diseños basados en fuentes para llegadas sísmicas clásicas M08 y aprendidas M13. La navegación agrupa campos, ondas e inferencia aprendida. M08/M13 explican ecuaciones y pruebas necesarias, no un detector entrenado o disponible en línea.",
+          "The six released synthetic-method chapters remain available alongside classical M08 and learned M13 earthquake arrival picking. Grouped navigation separates field response, wave physics and learned inference. M13 has a frozen offline checkpoint and a conditional browser execution path; model bytes and browser parity evidence are supplied separately.",
+          "Los seis capítulos sintéticos publicados siguen disponibles junto a detección clásica M08 y aprendida M13 de llegadas sísmicas. La navegación agrupa campos, ondas e inferencia aprendida. M13 tiene checkpoint offline congelado y una vía web condicional; modelo y prueba de paridad se aportan por separado.",
         )}
       </Head>
       <Tabs ariaLabel={t("Methodology groups", "Grupos de metodología")} tabs={groups} />
@@ -614,8 +615,8 @@ export function Implementation() {
         )}
       >
         {t(
-          "The released synthetic algorithms retain their exact numerical settings and saved histories. The new M08 and M13 sections specify a separately gated earthquake-picking workflow, including waveform units, split discipline and same-trace evaluation. They do not imply that a field picker, trained checkpoint or browser inference is already available.",
-          "Los algoritmos sintéticos publicados conservan configuración e historiales exactos. Las secciones M08 y M13 especifican un flujo sísmico sujeto a pruebas aparte, con unidades, particiones y comparación sobre la misma traza. No implican que ya exista detector de campo, checkpoint entrenado o inferencia web.",
+          "The released synthetic algorithms retain their numerical settings and saved histories. M08 and M13 document the separately sealed earthquake-picking workflow, waveform units, disjoint groups and same-trace evaluation. The Benchmark page can execute a supplied M13 ONNX model in the browser; its assets and parity verdict have a separate gate.",
+          "Los algoritmos sintéticos publicados conservan configuración e historiales. M08 y M13 documentan el flujo sísmico sellado por separado, unidades, grupos disjuntos y evaluación en las mismas trazas. Benchmark puede ejecutar un ONNX M13 aportado en el navegador; sus archivos y veredicto de paridad tienen otra prueba.",
         )}
       </Head>
       <Tabs
@@ -1012,6 +1013,7 @@ export function Benchmark() {
           "Los resultados se evalúan contra modelos sintéticos conocidos. Seleccione familia, algoritmo y métrica para comparar seis condiciones en cada geometría. Las métricas tienen distintas poblaciones y unidades; mejorar ajuste no equivale a mejorar propiedades recuperadas.",
         )}
       </Head>
+      <PhasePickerPanel />
       {error && <p role="alert">{error}</p>}
       <div className="benchmark-controls">
         <label className="select-control">

@@ -140,8 +140,8 @@ export const phasePickers: readonly PickerContent[] = [
           "zhu2019",
         ),
         P(
-          "The paper subtracts the mean and divides by standard deviation separately for each component. Therefore the network tensor is dimensionless. The raw MiniSEED values may be digital counts, while an epoch-corrected derivative may carry ground velocity in m/s; those are different data products and must not be mixed across training and inference. The actual trained checkpoint must declare component order, input unit and preprocessing recipe. A zero-variance, absent, clipped or gap-filled channel is a quality failure requiring an explicit policy, not a silently valid three-component example.",
-          "El artículo resta la media y divide por desviación estándar en cada componente. Por ello, el tensor de red no tiene dimensión. MiniSEED crudo puede estar en conteos digitales, mientras una derivada corregida por época puede expresar velocidad del suelo en m/s; son productos distintos y no se mezclan entre entrenamiento e inferencia. El checkpoint real debe declarar orden de componentes, unidad y receta. Canal ausente, saturado, rellenado o de varianza nula exige una política explícita de calidad, no un ejemplo triple aceptado en silencio.",
+          "The paper subtracts the mean and divides by standard deviation separately for each component. The local M13 contract instead subtracts the float64 trace mean, casts to float32 and divides by each component's peak centred count; the 6000-sample E/N/Z tensor is dimensionless. Raw unrestituted counts and response-corrected velocity in m/s are different data products and cannot be mixed. A zero-variance, absent, clipped or gap-filled channel is a quality failure, not a silently valid three-component example.",
+          "El artículo resta la media y divide por desviación estándar en cada componente. El contrato M13 local resta la media float64, convierte a float32 y divide por el máximo absoluto de conteos centrados de cada componente; el tensor E/N/Z de 6000 muestras no tiene dimensión. Conteos sin corregir y velocidad corregida en m/s son productos distintos y no se mezclan. Canal de varianza nula, ausente, saturado o rellenado es una falla de calidad, no un ejemplo triple válido.",
           "zhu2019",
         ),
         P(
@@ -155,8 +155,8 @@ export const phasePickers: readonly PickerContent[] = [
           "zhu2019",
         ),
         P(
-          "The published PhaseNet split was stratified by station recordings; it does not demonstrate the event-and-station-disjoint generalization required for this product. The proposed stricter test assigns event IDs and station identities to separate train, validation and test sets before fitting or selecting anything. Bridge recordings whose event and station belong to different partitions are counted and withheld rather than copied between sets. On exactly the same eligible held-out traces and analyst labels, M13 is compared with the frozen M08 classical baseline, with phase-specific misses, P/S confusion, timing residuals, SNR and instrument strata, and empirical score calibration. No such checkpoint or result exists in this content unit.",
-          "La división publicada de PhaseNet estratificó registros por estación; no demuestra generalización con eventos y estaciones disjuntos exigida aquí. La prueba propuesta asigna IDs de evento y estaciones a conjuntos separados de entrenamiento, validación y prueba antes de ajustar o elegir nada. Registros puente con evento y estación en particiones distintas se cuentan y excluyen, sin copiarlos entre conjuntos. Sobre exactamente las mismas trazas admisibles y marcas humanas reservadas, M13 se compara con M08 congelado: omisiones por fase, confusión P/S, residuos temporales, estratos de señal/ruido e instrumento, y calibración empírica. No existe tal checkpoint ni resultado en esta unidad de contenido.",
+          "The published PhaseNet split was stratified by station recordings; it does not demonstrate the event-and-station-disjoint generalization required here. The local STEAD selection assigns event IDs and station identities to separate train, development and test sets before fitting. Bridge recordings are withheld rather than copied between sets. The frozen M13 checkpoint and M08 comparator were scored on the same 6,000 selected held-out traces, retaining QC failures and phase misses; the 24 browser-display selections are a separate metadata-selected subset. Their browser parity and calibration cannot be inferred from offline scores.",
+          "La división publicada de PhaseNet estratificó registros por estación; no demuestra la generalización con eventos y estaciones disjuntos exigida aquí. La selección STEAD local asigna eventos y estaciones a entrenamiento, desarrollo y prueba antes de ajustar. Los registros puente se excluyen. El checkpoint M13 congelado y M08 se evaluaron en las mismas 6.000 trazas reservadas, con fallas de calidad y omisiones; las 24 de visualización web son una submuestra elegida por metadatos. La paridad web y calibración no se infieren de las cifras offline.",
           "zhu2019",
         ),
       ],
@@ -179,8 +179,8 @@ export const phasePickers: readonly PickerContent[] = [
       ],
       calloutTitle: T("Reference architecture, not a trained product", "Arquitectura de referencia, no modelo entrenado"),
       callout: T(
-        "The 100 Hz, 3001-sample input, four-stage U-Net and 0.1 s label width are reported from Zhu and Beroza, not validated local configuration or scores. Softmax height is not calibrated pick uncertainty. Rights-cleared traces, checkpoint identity, disjoint evaluation and browser parity remain absent.",
-        "La entrada de 100 Hz y 3001 muestras, U-Net de cuatro etapas y ancho de etiqueta de 0,1 s provienen de Zhu y Beroza; no son configuración ni métricas locales validadas. La altura softmax no es incertidumbre calibrada. Faltan trazas con derechos, identidad de checkpoint, evaluación disjunta y paridad web.",
+        "The 3001-sample input, four-stage U-Net and 0.1 s label width are reference-paper settings, not the selected 6000-sample local model. Softmax height is not calibrated pick uncertainty. The separate browser parity gate must compare the exact frozen ONNX export with real held-out traces before a browser accuracy claim.",
+        "La entrada de 3001 muestras, U-Net de cuatro etapas y ancho de etiqueta de 0,1 s son parámetros del artículo, no del modelo local de 6000 muestras. Softmax no es incertidumbre calibrada. La paridad web debe comparar el ONNX congelado con trazas reales reservadas antes de afirmar precisión web.",
       ),
       refs: ["zhu2019", "phasenetofficial", "obspyresponse"],
     },
@@ -188,8 +188,8 @@ export const phasePickers: readonly PickerContent[] = [
       title: T("M13 training, inference and comparison contract", "M13: contrato de entrenamiento, inferencia y comparación"),
       paragraphs: [
         P(
-          "No M13 model is trained, fine-tuned, exported or available to run in this frontend. An eventual training record must name the permitted waveform and analyst-pick sources, exact trace/StationXML hashes, event and station IDs, split manifest, component order, sample rate, response and filter decisions, channel/gap exclusions, code/environment digest, seed and checkpoint hash. The official MIT implementation is a candidate, not a shortcut to a local scientific verdict; pretrained weights and field-data redistribution need separate rights decisions.",
-          "Ningún M13 está entrenado, ajustado, exportado ni ejecutable en esta interfaz. Un futuro registro debe identificar fuentes autorizadas de ondas y marcas, hashes de trazas/StationXML, IDs de evento y estación, partición, orden de canales, frecuencia, decisiones de respuesta/filtro, exclusiones, digest de código/entorno, semilla y hash de checkpoint. La implementación oficial MIT es candidata, no atajo a veredicto local; pesos preentrenados y redistribución de campo exigen decisiones de derechos aparte.",
+          "A frozen M13 checkpoint and ONNX export are produced by the separate STEAD pipeline; this frontend branch carries no model or field waveform bytes. The browser can execute a supplied ONNX file or a separately reviewed asset manifest. Its trace and model hashes, E/N/Z order, 100 Hz rate, 6000-sample window, unrestituted-count normalization, 0.8 thresholds and 0.4 s P–S separation must agree with the frozen receipt. Loading a model alone does not establish field accuracy or browser parity.",
+          "El procesamiento STEAD separado produce checkpoint M13 y ONNX congelados; esta rama web no contiene modelo ni trazas de campo. El navegador puede ejecutar un ONNX aportado o un manifiesto revisado por separado. Hashes, orden E/N/Z, 100 Hz, ventana de 6000 muestras, normalización de conteos sin corregir, umbrales 0,8 y separación P–S de 0,4 s deben coincidir con el registro congelado. Cargar un modelo no demuestra precisión de campo ni paridad web.",
           "phasenetofficial",
         ),
         P(
@@ -198,8 +198,8 @@ export const phasePickers: readonly PickerContent[] = [
           "zhu2019",
         ),
         P(
-          "The reference 100 Hz, 3001-sample, four-stage network and Gaussian target are an inspectable starting design, not frozen local hyperparameters. A selected implementation must specify anti-alias resampling, input representation in counts or corrected m/s, component order, per-component standardization and missing-channel policy, train-only augmentation, class/label construction, optimizer and stopping selection. The selected checkpoint is validated on untouched data after tuning; paper numbers cannot be pasted into this product's Benchmark.",
-          "Los 100 Hz, 3001 muestras, cuatro etapas y objetivo gaussiano son diseño de partida inspeccionable, no hiperparámetros locales congelados. La implementación elegida debe fijar remuestreo antialias, entrada en conteos o m/s corregidos, orden de componentes, estandarización, política de canal ausente, aumentos sólo de entrenamiento, clases/etiquetas, optimizador y parada. El checkpoint elegido se valida en datos intactos tras ajustar; las cifras del artículo no se trasladan al Benchmark.",
+          "The local PhaseNet-family encoder-decoder accepts 100 Hz, 6000-sample E/N/Z unrestituted-count windows. It subtracts each float64 component mean after casting to float32, divides by the float32 peak absolute centred count, rejects flat or exactly duplicated components, and outputs N/P/S softmax scores. This differs from the published 3001-sample reference architecture and standard-deviation normalization. There is no browser resampling or missing-channel fill.",
+          "La red local tipo PhaseNet recibe ventanas E/N/Z de 6000 muestras a 100 Hz en conteos sin corregir. Resta la media float64 de cada componente tras convertir a float32, divide por su máximo absoluto float32 de conteos centrados y rechaza componentes planas o duplicadas exactamente. Entrega puntajes softmax N/P/S. Esto difiere del artículo de 3001 muestras y normalización por desviación estándar. El navegador no remuestrea ni rellena canales.",
           "zhu2019",
         ),
         P(
@@ -208,15 +208,15 @@ export const phasePickers: readonly PickerContent[] = [
           "phasenetofficial",
         ),
         P(
-          "The M13 versus M08 test uses identical real held-out trace IDs, windows, QC flags and analyst picks, and reports all exclusions. For each phase it counts one-to-one true picks, false picks and missed arrivals within a predeclared time tolerance, P/S swaps, signed and absolute time errors, score calibration and degradation by signal-to-noise ratio, instrument and missing-channel state. M08 and M13 may have distinct declared transforms, but neither may select favourable test windows. Browser inference is a separate later gate: exported model outputs on the same held-out arrays must match the canonical checkpoint within a measured tolerance and latency/memory budget before any live control appears.",
-          "M13 frente a M08 usa idénticas IDs de trazas reales reservadas, ventanas, banderas QC y marcas humanas; informa todas las exclusiones. Por fase cuenta aciertos uno a uno, falsas marcas y omisiones dentro de tolerancia declarada, intercambios P/S, errores con signo y absolutos, calibración y degradación según señal/ruido, instrumento y canal ausente. Pueden tener transformaciones declaradas distintas, pero ninguno elige ventanas favorables de prueba. Inferencia web es una prueba posterior: el modelo exportado debe concordar con checkpoint canónico en los mismos arreglos dentro de tolerancia y presupuesto medidos antes de mostrar control en vivo.",
+          "The sealed M13 versus M08 test uses identical real held-out trace IDs, windows, QC flags and analyst picks and reports all exclusions across 6,000 selected records. The separate 24-record browser subset contains 23 QC-valid normalized waveforms and one flat-component QC rejection; the rejection stays visible and is never replaced after scoring. Browser inference is an additional gate: probabilities on those 23 arrays must differ from frozen PyTorch by at most 0.001 and picked peaks by at most one 0.01 s sample. Offline metrics cannot substitute for this check.",
+          "La prueba sellada M13 frente a M08 usa las mismas trazas reales reservadas, ventanas, banderas QC y marcas humanas, y conserva exclusiones en 6.000 registros. La submuestra web de 24 contiene 23 ondas normalizadas válidas y una rechazada por componente plana; la rechazada sigue visible y no se sustituye tras conocer resultados. La inferencia web exige diferencias de probabilidad ≤0,001 frente a PyTorch y máximos a una muestra de 0,01 s o menos. Las métricas offline no sustituyen esta prueba.",
           "zhu2019",
         ),
       ],
       equations: [
-        E(String.raw`\widehat t_{\phi}=t_0+\frac{\arg\max_{n\in W_{\phi}}q_{\phi,n}}{f_s},\qquad \phi\in\{P,S\}`,
-          "q is the phase score, Wφ a declared eligible sample window, and fₛ the sampling rate in Hz. The peak becomes a pick only after threshold, quality and abstention rules pass.",
-          "q es puntaje de fase; Wφ es ventana admisible y fₛ frecuencia en Hz. El máximo sólo se vuelve marca tras umbral, calidad y abstención."),
+        E(String.raw`\widehat t_{\phi}=t_0+\frac{\arg\max_{0\le n<6000}q_{\phi,n}}{100},\qquad \phi\in\{P,S\}`,
+          "q is the uncalibrated phase score at sample n; t₀ is window start in seconds. The global peak becomes a candidate only at score ≥0.8; S abstains when its peak is less than 40 samples after an accepted P.",
+          "q es puntaje de fase sin calibrar en muestra n; t₀ es inicio de ventana en segundos. El máximo global sólo es candidato con puntaje ≥0,8; S se abstiene si está a menos de 40 muestras de P aceptada."),
         E(String.raw`\mathcal E_{\rm event}^{a}\cap\mathcal E_{\rm event}^{b}=\varnothing,\quad\mathcal S_{\rm station}^{a}\cap\mathcal S_{\rm station}^{b}=\varnothing\quad(a\ne b)`,
           "E and S are event and station identity sets for any two train, validation or test partitions a,b. Bridge recordings are excluded and counted; the published PhaseNet split is not this stricter gate.",
           "E y S son conjuntos de eventos y estaciones para dos particiones a,b cualesquiera. Se excluyen y cuentan registros puente; la división publicada de PhaseNet no equivale a esta prueba estricta."),
@@ -225,24 +225,24 @@ export const phasePickers: readonly PickerContent[] = [
           "TP, FP y FN son marcas emparejadas, falsas y omitidas en toda la población reservada admisible. Denominadores indefinidos quedan no aplicables, nunca cero o puntaje perfecto inventado."),
       ],
       symbols: [
-        T("qφ,n: dimensionless P/S score at sample n; Wφ: eligible phase window.", "qφ,n: puntaje P/S sin dimensión en muestra n; Wφ: ventana admisible."),
-        T("t̂φ: candidate UTC arrival; t₀: window start; fₛ: samples/s.", "t̂φ: llegada UTC candidata; t₀: inicio; fₛ: muestras/s."),
+        T("qφ,n: dimensionless P/S score at sample n; n: 0 to 5999 at 100 Hz.", "qφ,n: puntaje P/S sin dimensión en muestra n; n: 0 a 5999 a 100 Hz."),
+        T("t̂φ: candidate arrival relative to window start t₀, in seconds.", "t̂φ: llegada candidata relativa al inicio t₀ de la ventana, en segundos."),
         T("E/S: event/station ID sets, not wave-energy or S-phase symbols in the split equation.", "E/S: conjuntos de IDs de eventos/estaciones en ecuación de partición, no energía ni fase S."),
         T("TP/FP/FN: matched, false and missed picks under a fixed per-phase tolerance.", "TP/FP/FN: marcas acertadas, falsas y omitidas con tolerancia fija por fase."),
       ],
       steps: [
         T("Resolve waveform, phase-label, StationXML and checkpoint rights; hash all permitted originals.", "Resolver derechos de ondas, marcas, StationXML y checkpoint; hashear originales permitidos."),
         T("Partition by both event and station IDs, exclude bridges, and freeze the manifest before fitting transforms.", "Particionar por eventos y estaciones, excluir puentes y congelar manifiesto antes de ajustar."),
-        T("Select and record input unit, three-channel order, 100 Hz reference or justified alternative, windowing and QC.", "Fijar unidad, orden de tres canales, referencia de 100 Hz o alternativa justificada, ventanas y QC."),
+        T("Record unrestituted counts, E/N/Z order, 100 Hz, 6000-sample window and rejected channel QC.", "Registrar conteos sin corregir, orden E/N/Z, 100 Hz, ventana de 6000 muestras y canales rechazados por QC."),
         T("Construct analyst-centred P/S/background targets and train or fine-tune with validation-only model selection.", "Construir objetivos P/S/fondo centrados en analista y entrenar/ajustar con selección sólo de validación."),
         T("Freeze checkpoint hash, preprocessing, thresholds, peak distance and abstention; export full score arrays.", "Congelar hash, proceso, umbrales, distancia entre máximos y abstención; exportar puntajes completos."),
         T("Evaluate event/station-disjoint held-out traces against M08 on identical windows and labels, retaining failures.", "Evaluar trazas reservadas disjuntas frente a M08 en ventanas y marcas idénticas, conservando fallas."),
-        T("Gate any future browser export on same-array canonical parity, latency, memory and rights checks.", "Condicionar futura exportación web a paridad en mismos arreglos, latencia, memoria y derechos."),
+        T("Run browser ONNX parity against frozen PyTorch arrays on all 23 QC-valid display traces, preserving the 24th exclusion.", "Probar paridad ONNX web frente a arreglos PyTorch en las 23 trazas válidas y conservar la exclusión número 24."),
       ],
       calloutTitle: T("Unverified implementation and uncertainty", "Implementación e incertidumbre no verificadas"),
       callout: T(
-        "There is no trained product checkpoint, field metric, live browser picker or calibrated uncertainty here. The official reference architecture and paper's numbers are not local results. Event/station rights and split feasibility, negative/OOD controls, full M08 comparison and browser parity still have to be demonstrated.",
-        "Aquí no hay checkpoint del producto, métrica de campo, detector web en vivo ni incertidumbre calibrada. La arquitectura oficial y cifras del artículo no son resultados locales. Derechos y factibilidad de partición, controles negativos/fuera de distribución, comparación M08 y paridad web aún deben demostrarse.",
+        "This sidecar contains executable browser inference but no bundled model or waveform. The selected model's offline held-out metrics are separate from a browser parity verdict; local file uploads have unverified provenance. Softmax scores remain uncalibrated, and an analyst pick is a fallible reference rather than geological truth.",
+        "Esta rama contiene inferencia web ejecutable, sin modelo ni onda incluidos. Las métricas offline del modelo son distintas del veredicto de paridad web; archivos locales tienen procedencia sin verificar. Softmax sigue sin calibrar y la marca de analista es referencia falible, no verdad geológica.",
       ),
       refs: ["zhu2019", "phasenetofficial", "obspyresponse"],
     },

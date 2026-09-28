@@ -24,6 +24,8 @@ jobs:
         run: ruff check data-pipeline tests
       - name: CONTRACT 2, manifests <-> artifacts consistent (no drift)
         run: python scripts/check_artifacts.py
+      - name: M13 committed browser-asset integrity (no training)
+        run: python scripts/check_phase_assets.py
 
   guards:
     runs-on: ubuntu-latest

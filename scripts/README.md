@@ -11,6 +11,7 @@ These scripts make the complete local workflow reproducible on Windows PowerShel
 | `dev.ps1` / `dev.sh` | Copy canonical replay artifacts into the frontend and run Vite. |
 | `local.ps1` / `local.sh` | Build, test, lint, validate artifacts, and stop the local server. |
 | `check_artifacts.py` | Enforce the processing to web manifest and byte-size contract. |
+| `check_phase_assets.py` | Check the committed M13 ONNX, real-trace, QC and benchmark byte/hash contract without training or source downloads. |
 | `validate_fwi_exports.py` | On local CUDA, replay all 24 seismic conditions and independently check 48 saved final models, receiver predictions, residuals, metrics and verdicts. Not run by CPU-only CI. |
 | `check_template_residue.py` | Ensure the instantiated repository has no archetype example cases or placeholder sources. |
 | `check_content_standards.py` | Reject em-dashes and pictographic emoji in tracked repository content. |
