@@ -14,6 +14,8 @@ For angular frequency ω, permeability μ and resistivity ρ, the half-space imp
 
 Three solvers fit complex observations: bounded log-resistivity least squares, Adam on log resistivity, and a tanh neural parameterization differentiated through the same recursion. The layer thicknesses are known. A first-difference log-resistivity penalty controls roughness. The neural solution is optimized per sounding and is not a pretrained general inverse. Objective evaluations are labelled as such; they are not necessarily accepted least-squares iterations.
 
+Measured EDI transfer functions require a separate source, geometry, error and full-tensor admission before those layered solvers apply. The [M06 AusLAMP C15 study](mt-field-admission.md) documents a rights-cleared station with an upstream phase-tensor `1-D` screening label that nevertheless fails the predeclared complex-tensor gate. No field 1D inverse or geological truth is claimed.
+
 ## Acoustic FWI
 
 Deepwave solves constant-density 2D acoustics with fourth-order spatial differences, 12.5 m sampling and 0.5 ms integration. Three known Ricker shots and 40 (or 20) receivers produce 1.6 s records. Every fifth receiver is withheld from inversion. Exported gathers retain 4 ms sampling and pressure frames 24 ms spacing.

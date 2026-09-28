@@ -75,6 +75,27 @@
       "use": "Measured 42-frequency tensor QC only; necessary isotropic-1D screen rejects layered inversion."
     },
     {
+      "source_id": "auslamp-nsw-c15",
+      "name": "AusLAMP New South Wales C15 measured EDI",
+      "provider": "Geoscience Australia / AusMT",
+      "provider_url": "https://ausmt.auscope.org.au/surveys/auslamp-nsw-2016-21",
+      "object_url": "https://ausmt.auscope.org.au/data/edi/auslamp-nsw-2016-21/C15.edi",
+      "acquisition": "manual",
+      "format": "edi-transfer-function",
+      "expected_bytes": 23021,
+      "sha256": "353953564964015c59eaaa0ce8f808ebec48af0d51c11759a14c21be00b20a8f",
+      "raw_path": "data/downloads/auslamp-nsw/C15.edi",
+      "rights_decision": "mirror",
+      "rights_statement": "AusMT survey and station records license this EDI CC BY 4.0 with Geoscience Australia attribution. This branch stores raw bytes only in ignored local storage and publishes no raw mirror.",
+      "citation": "Kyi, D., Jiang, W., Hitchman, A., and Stolz, N., AusLAMP New South Wales, Geoscience Australia Record 2020/011, doi:10.11636/Record.2020.011; AusMT survey auslamp-nsw-2016-21, station C15.",
+      "release_doi": "10.11636/Record.2020.011",
+      "station_record": "https://ausmt.auscope.org.au/data/products/auslamp-nsw-2016-21/C15/station.json",
+      "station_record_sha256": "50b82ab1c9326414e1dabc418470fc1cb956b4ed039d63864c44571760560444",
+      "dimensionality_record": "https://ausmt.auscope.org.au/data/products/auslamp-nsw-2016-21/C15/dimensionality.json",
+      "dimensionality_record_sha256": "412b267270b8f86f52233025fa0b4ccdba3f92b40d172a5d53697689c621e590",
+      "use": "Measured 35-frequency MT tensor candidate for M06 admission QC only; provider phase-tensor 1-D screen is superseded by failed independent full-complex-tensor eligibility. No layered inverse."
+    },
+    {
       "source_id": "pygimli-slagdump",
       "name": "pyGIMLi Slagdump ERT profile 11",
       "provider": "pyGIMLi example-data",

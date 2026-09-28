@@ -28,7 +28,7 @@ def _test_ledger(tmp_path, payload=b"verified local bytes", *, mode="manual"):
 def test_ledger_contract_and_rights():
     records = load_ledger()
     assert set(records) == {"simpeg-gravity", "simpeg-magnetics", "original-synthetic",
-                            "clear-lake-cl061", "pygimli-slagdump", "pygimli-koenigsee",
+                            "clear-lake-cl061", "auslamp-nsw-c15", "pygimli-slagdump", "pygimli-koenigsee",
                             "stead-metadata"}
     assert {record["rights_decision"] for record in records.values()} <= {
         "mirror", "provider-link-only", "derivative-only", "forbidden"}
@@ -120,6 +120,19 @@ def test_clear_lake_source_pin():
     assert screen["id"] == "cl061" and len(screen["frequencies_hz"]) == 42
     assert screen["one_d_inversion_eligible"] is False
     assert screen["inversion_performed"] is False and screen["methods"] == {} and screen["truth"] is None
+
+
+def test_auslamp_c15_source_contract():
+    station = load_ledger()["auslamp-nsw-c15"]
+    assert station["acquisition"] == "manual"
+    assert station["format"] == "edi-transfer-function"
+    assert station["object_url"] == "https://ausmt.auscope.org.au/data/edi/auslamp-nsw-2016-21/C15.edi"
+    assert station["expected_bytes"] == 23021
+    assert station["sha256"] == "353953564964015c59eaaa0ce8f808ebec48af0d51c11759a14c21be00b20a8f"
+    assert station["rights_decision"] == "mirror"
+    assert "CC BY 4.0" in station["rights_statement"]
+    assert station["station_record_sha256"] == "50b82ab1c9326414e1dabc418470fc1cb956b4ed039d63864c44571760560444"
+    assert station["dimensionality_record_sha256"] == "412b267270b8f86f52233025fa0b4ccdba3f92b40d172a5d53697689c621e590"
 
 
 def test_pygimli_provider_links_and_pins():
