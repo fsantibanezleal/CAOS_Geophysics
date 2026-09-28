@@ -1,7 +1,7 @@
 # Authenticated project and raw-asset API tasks
 
 - [x] R-API-01, R-API-02: pin the documented FastAPI Users stack; migrate users/tokens; wire SMTP callbacks, cookie auth, CSRF and persistent rate limits.
-- [x] R-API-03, R-API-10: migrate and implement owner-scoped project CRUD; reject schema drift at startup; keep jobs absent.
+- [x] R-API-03, R-API-10: migrate and implement owner-scoped project CRUD; reject schema drift at startup; keep solver jobs absent. The later processing-only job unit is specified separately.
 - [x] R-API-04 through R-API-07: implement staged immutable uploads, envelope/physical metadata checks and transactional quota. The original R-API-11 orphan sweep is superseded by the fail-closed review follow-up below.
 - [x] R-API-08, R-API-09: implement verifiable export, exact raw-file deletion and receipts. The earlier backup-purge behavior was withdrawn by the review gate below.
 - [x] R-API-01 through R-API-11: run every exact named test gate in `requirements.md`; `python -m pytest tests/api --tb=short` passed 29 tests on 2026-09-27. This includes the negative ownership, CSRF/origin, rate, malformed metadata, MIME, size, quota, tamper, migration, interrupted-file and no-job checks.

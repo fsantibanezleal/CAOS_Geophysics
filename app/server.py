@@ -15,6 +15,7 @@ from app.config import Settings
 from app.database import make_engine, reconcile_private_files, require_migration_head
 from app.errors import ApiError, api_error_handler
 from app.projects import install_project_routes
+from app.processing import install_processing_routes
 from app.security import install_security
 
 
@@ -46,4 +47,5 @@ def create_app(settings: Settings, mail_sender: MailSender | None = None) -> Fas
     current_user, get_session = install_auth(app, settings, mail_sender)
     install_security(app, settings)
     install_project_routes(app, settings, current_user, get_session)
+    install_processing_routes(app, settings, current_user, get_session)
     return app

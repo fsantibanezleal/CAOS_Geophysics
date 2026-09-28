@@ -18,19 +18,20 @@ def test_upgrade_and_schema_guard(harness):
     config = Config("app/alembic.ini")
     command.check(config)
     with sqlite3.connect(harness.settings.database_path) as db:
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "0002_private_storage_permission"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "0003_processing_jobs"
         db.execute("UPDATE alembic_version SET version_num='stale'")
     async def capture(_a, _b, _c):
         return None
-    with pytest.raises(RuntimeError, match="not 0002_private_storage_permission"):
+    with pytest.raises(RuntimeError, match="not 0003_processing_jobs"):
         with TestClient(create_app(harness.settings, capture)):
             pass
 
 
-def test_no_job_route(harness):
+def test_no_solver_job_route(harness):
     harness.account()
     paths = set(harness.app.openapi()["paths"])
-    assert not any("/jobs" in path for path in paths)
+    assert "/api/projects/{project_id}/jobs" in paths
+    assert not any(path.startswith("/api/jobs") for path in paths)
     assert harness.request("POST", "/api/jobs").status_code == 404
 
 
@@ -73,3 +74,4 @@ def test_upgrade_does_not_invent_historical_storage_permission(tmp_path: Path, m
     with sqlite3.connect(db_path) as db:
         assert db.execute("SELECT private_storage_permission FROM source_records WHERE id=?", (source_id,)).fetchone() == (None,)
         assert db.execute("SELECT asset_manifest FROM deletion_receipts").fetchone() == (None,)
+        assert db.execute("SELECT derived_manifest FROM deletion_receipts").fetchone() == (None,)

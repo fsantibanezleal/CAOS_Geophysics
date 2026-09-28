@@ -17,6 +17,11 @@ from app.server import create_app
 
 
 GRAVITY_CSV = b"station,x,y,z,g\nS1,0,0,100,9.81\nS2,10,0,100,9.80\n"
+PROCESSED_GRAVITY_CSV = (
+    b"station,x,y,z,g,sigma\n"
+    b"S1,0,0,100,1,0.1\nS2,10,0,100,2,0.1\nS3,20,0,100,3,0.1\n"
+    b"S4,30,0,100,4,0.1\nS5,40,0,100,100,0.1\n"
+)
 
 
 def gravity_metadata(body: bytes = GRAVITY_CSV) -> dict:
@@ -39,6 +44,12 @@ def gravity_metadata(body: bytes = GRAVITY_CSV) -> dict:
             },
         },
     }
+
+
+def processed_gravity_metadata(body: bytes = PROCESSED_GRAVITY_CSV) -> dict:
+    metadata = gravity_metadata(body)
+    metadata["physical"]["geometry"]["sigma_column"] = "sigma"
+    return metadata
 
 
 class ApiHarness:
@@ -85,12 +96,23 @@ class ApiHarness:
             headers={"Content-Type": meta["mime"], "X-Asset-Metadata": json.dumps(meta)},
         )
 
+    def processed_dataset(self, project_id: str, body: bytes = PROCESSED_GRAVITY_CSV, metadata: dict | None = None):
+        asset = self.upload(project_id, body, metadata or processed_gravity_metadata(body))
+        assert asset.status_code == 201, asset.text
+        dataset = self.request(
+            "POST", f"/api/projects/{project_id}/datasets", json={"asset_id": asset.json()["asset_id"]},
+        )
+        assert dataset.status_code == 201, dataset.text
+        return asset.json(), dataset.json()
+
 
 @pytest.fixture
 def make_harness(tmp_path: Path, monkeypatch):
     clients: list[ApiHarness] = []
 
-    def create(*, max_upload_bytes: int = 200 * 1024 * 1024, account_quota_bytes: int = 1024 * 1024 * 1024):
+    def create(*, max_upload_bytes: int = 200 * 1024 * 1024, account_quota_bytes: int = 1024 * 1024 * 1024,
+               worker_memory_bytes: int = 2 * 1024 * 1024 * 1024, worker_scratch_bytes: int = 1024 * 1024 * 1024,
+               worker_wall_seconds: int = 600, max_queued_jobs: int = 32):
         root = tmp_path / f"case-{len(clients)}"
         private = root / "private"
         private.mkdir(parents=True)
@@ -102,6 +124,8 @@ def make_harness(tmp_path: Path, monkeypatch):
             data_dir=private, db_path=db, auth_secret="test-secret-with-at-least-32-characters-123456",
             public_origin="http://testserver", cookie_secure=False,
             max_upload_bytes=max_upload_bytes, account_quota_bytes=account_quota_bytes,
+            worker_memory_bytes=worker_memory_bytes, worker_scratch_bytes=worker_scratch_bytes,
+            worker_wall_seconds=worker_wall_seconds, max_queued_jobs=max_queued_jobs,
         )
         messages = []
 

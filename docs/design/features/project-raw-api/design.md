@@ -38,4 +38,4 @@ The merged frontend mirror currently requires a private `storage_key`, a non-nul
 - `/api/auth/csrf`, `/api/auth/register`, `/api/auth/verify/*`, `/api/auth/reset-password/*`, `/api/auth/cookie/login`, `/api/auth/cookie/logout`, `/api/auth/me`.
 - `GET/POST /api/projects`; `GET/PATCH/DELETE /api/projects/{id}`; `GET/POST /api/projects/{id}/assets`; `GET /api/projects/{id}/assets/{asset_id}` and `/download`; `GET /api/projects/{id}/export`.
 - JSON errors use a stable `code`, `message`, and optional `fields`; 401 means no valid account, 403 means CSRF/verification, 404 hides foreign IDs, 413 means upload too large, 415 means format/MIME, 422 means metadata, 429 means rate, 507 means quota. The auth library's standard error bodies remain its own contract.
-- There is no `/jobs` router or success-shaped placeholder. The separate numerical/worker unit will consume an explicitly versioned dataset contract later.
+- This raw-asset unit has no solver submission router or success-shaped placeholder. The later [processing-job unit](../project-processing-jobs/design.md) adds `/api/projects/{id}/jobs` for flag-only QC on a typed gravity dataset; it is not a solver endpoint.

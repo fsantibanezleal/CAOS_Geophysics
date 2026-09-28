@@ -8,10 +8,14 @@ from sqlalchemy import event, func, select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import Settings
-from app.models import AccountUsage, DeletionReceipt, RawAsset
+from app.models import AccountUsage, DeletionReceipt, ObservationDataset, ProcessingJob, RawAsset
+from app.processing_contract import (
+    dataset_key, result_key,
+    validate_dataset_identity, validate_result_identity, verified_json,
+)
 
 
-MIGRATION_HEAD = "0002_private_storage_permission"
+MIGRATION_HEAD = "0003_processing_jobs"
 
 
 def make_engine(settings: Settings):
@@ -59,7 +63,7 @@ async def reconcile_private_files(settings: Settings, sessions: async_sessionmak
             raise RuntimeError("private_recovery_required: account quota counter differs from stored assets")
         if any(owner_id not in totals and count != 0 for owner_id, count in usage.items()):
             raise RuntimeError("private_recovery_required: account quota counter has no matching assets")
-        for name in (".staging", ".exports", ".deleting"):
+        for name in (".staging", ".exports", ".deleting", ".job-staging"):
             directory = root / name
             if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
                 raise RuntimeError(f"private_recovery_required: unexpected {name} entry")
@@ -81,6 +85,47 @@ async def reconcile_private_files(settings: Settings, sessions: async_sessionmak
         for key in keys:
             if key not in observed or not checked_storage_path(settings, key).is_file():
                 raise RuntimeError(f"private_recovery_required: stored raw asset is missing: {key}")
+        derived_keys: set[str] = set()
+        datasets = (await session.execute(select(ObservationDataset))).scalars().all()
+        for dataset in datasets:
+            key = dataset_key(str(dataset.owner_id), dataset.project_id, dataset.id)
+            if dataset.storage_key != key:
+                raise RuntimeError("private_recovery_required: dataset key disagrees with identity")
+            try:
+                payload = verified_json(settings, key, dataset.sha256, dataset.byte_count)
+                validate_dataset_identity(payload, dataset)
+            except Exception as exc:
+                raise RuntimeError("private_recovery_required: dataset bytes or schema changed") from exc
+            derived_keys.add(key)
+        jobs = (await session.execute(select(ProcessingJob))).scalars().all()
+        for job in jobs:
+            if job.state == "succeeded":
+                key = result_key(str(job.owner_id), job.project_id, job.id)
+                if job.result_key != key or not job.result_sha256 or job.result_bytes is None:
+                    raise RuntimeError("private_recovery_required: result receipt is incomplete")
+                try:
+                    payload = verified_json(settings, key, job.result_sha256, job.result_bytes)
+                    validate_result_identity(payload, job)
+                except Exception as exc:
+                    raise RuntimeError("private_recovery_required: result bytes or schema changed") from exc
+                derived_keys.add(key)
+            elif any(value is not None for value in (job.result_key, job.result_sha256, job.result_bytes)):
+                raise RuntimeError("private_recovery_required: non-success job has result bytes")
+        derived_root = root / "derived"
+        if derived_root.is_symlink() or (derived_root.exists() and not derived_root.is_dir()):
+            raise RuntimeError("private_recovery_required: invalid derived directory")
+        derived_observed: set[str] = set()
+        if derived_root.is_dir():
+            for path in derived_root.rglob("*"):
+                if path.is_symlink() or not (path.is_file() or path.is_dir()):
+                    raise RuntimeError("private_recovery_required: unsafe derived storage entry")
+                if path.is_file():
+                    key = path.relative_to(root).as_posix()
+                    if key not in derived_keys:
+                        raise RuntimeError(f"private_recovery_required: unreferenced derivative: {key}")
+                    derived_observed.add(key)
+        if derived_observed != derived_keys:
+            raise RuntimeError("private_recovery_required: referenced derivative is missing")
         for owner_id, project_id in deleted:
             backup = root / ".backups" / str(owner_id) / project_id
             if backup.exists() or backup.is_symlink():

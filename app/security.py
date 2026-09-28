@@ -58,6 +58,10 @@ def install_security(app: FastAPI, settings: Settings) -> None:
             scope, window, limit = "auth", 600, 10
         elif request.method == "POST" and path.endswith("/assets"):
             scope, window, limit = "upload", 3600, 20
+        elif request.method == "POST" and path.endswith("/datasets"):
+            scope, window, limit = "dataset", 3600, 20
+        elif request.method == "POST" and path.endswith("/jobs"):
+            scope, window, limit = "processing_jobs", 3600, 30
         if scope is not None:
             ip = request.client.host if request.client else "unknown"
             key = hmac.new(settings.auth_secret.encode(), ip.encode(), hashlib.sha256).hexdigest()
