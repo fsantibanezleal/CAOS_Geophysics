@@ -72,6 +72,41 @@ class ExtractedPhaseDataset(Dataset):
         return torch.from_numpy(values), int(p_index), int(s_index), record["trace_id"]
 
 
+def audit_exact_waveform_overlap(
+    train: ExtractedPhaseDataset, dev: ExtractedPhaseDataset,
+) -> dict:
+    """Reject exact normalized trace reuse across the independent partitions.
+
+    The metadata split already excludes shared event and station IDs, but a
+    duplicated source waveform could still be assigned under new metadata.
+    Hashing the complete normalized float32 array is deliberately conservative:
+    a gain/offset copy also collides after the frozen normalization step.
+    """
+    seen: dict[bytes, tuple[str, int]] = {}
+    within = {"train": 0, "dev": 0}
+    for partition, dataset in (("train", train), ("dev", dev)):
+        for index in dataset.valid_indices:
+            digest = hashlib.sha256(dataset.array[index].tobytes(order="C")).digest()
+            previous = seen.get(digest)
+            if previous is not None:
+                if previous[0] != partition:
+                    raise ValueError(
+                        "exact normalized waveform crosses train/dev partitions "
+                        f"at {previous[0]} row {previous[1]} and {partition} row {index}"
+                    )
+                within[partition] += 1
+            else:
+                seen[digest] = (partition, index)
+    return {
+        "schema": "caos.phase-exact-waveform-overlap.v1",
+        "basis": "SHA-256 of each complete 3x6000 normalized float32 E/N/Z array",
+        "train_valid": len(train),
+        "dev_valid": len(dev),
+        "within_partition_duplicates": within,
+        "cross_partition_duplicates": 0,
+    }
+
+
 def _augment_shift(values: torch.Tensor, p: torch.Tensor, s: torch.Tensor,
                    generator: torch.Generator) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Train-only broad translation, padding solely from pre-event quiet samples.
@@ -230,6 +265,7 @@ def train(
         raise FileExistsError("per-epoch state exists; use --resume after verifying it")
     train_set = ExtractedPhaseDataset(extraction_dir, "train")
     dev_set = ExtractedPhaseDataset(extraction_dir, "dev")
+    overlap_audit = audit_exact_waveform_overlap(train_set, dev_set)
     test_selection_hash = _selection_hashes(selection_manifest, train_set, dev_set)
     torch.manual_seed(seed)
     np.random.seed(seed)
@@ -255,6 +291,7 @@ def train(
               "train_selection_sha256": train_set.index["selection_sha256"],
               "dev_selection_sha256": dev_set.index["selection_sha256"],
               "test_selection_sha256": test_selection_hash,
+              "overlap_audit": overlap_audit,
               "code_sha256": code_sha256, "model_code_sha256": model_code_sha256,
               "torch": str(torch.__version__)}
     best_loss = float("inf")
@@ -368,6 +405,7 @@ def train(
         "train_valid": len(train_set), "dev_valid": len(dev_set),
         "train_qc_rejected": len(train_set.index["members"]) - len(train_set),
         "dev_qc_rejected": len(dev_set.index["members"]) - len(dev_set),
+        "exact_waveform_overlap": overlap_audit,
         "epochs_requested": epochs,
         "training_code_sha256": code_sha256,
         "model_code_sha256": model_code_sha256,

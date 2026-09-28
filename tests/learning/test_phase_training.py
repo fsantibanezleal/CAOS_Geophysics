@@ -12,7 +12,8 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 import train_stead_phase as trainer  # noqa: E402
 from train_stead_phase import (  # noqa: E402
-    ExtractedPhaseDataset, _augment_shift, _score_rows, select_dev_thresholds,
+    ExtractedPhaseDataset, _augment_shift, _score_rows,
+    audit_exact_waveform_overlap, select_dev_thresholds,
 )
 from stead_phase import file_sha256  # noqa: E402
 
@@ -60,6 +61,38 @@ def test_training_shift_preserves_arrival_alignment_without_shifting_noise_label
     assert new_s[0] - new_p[0] == 1000
     assert (int(new_p[1]), int(new_s[1])) == (-1, -1)
     assert p.tolist() == [1000, -1] and s.tolist() == [2000, -1]
+
+
+def test_exact_normalized_waveform_overlap_is_a_pretraining_gate(tmp_path: Path):
+    def write_partition(partition: str, values: np.ndarray, root: Path = tmp_path) -> ExtractedPhaseDataset:
+        root.mkdir(parents=True, exist_ok=True)
+        array_path = root / f"stead-{partition}-normalized.npy"
+        np.save(array_path, values)
+        (root / f"stead-{partition}-index.json").write_text(json.dumps({
+            "schema": "caos.stead-phase-local-array.v1",
+            "partition": partition,
+            "array_shape": list(values.shape),
+            "array_sha256": file_sha256(array_path),
+            "members": [
+                {"valid": True, "member": {"trace_id": f"{partition}-{index}"}}
+                for index in range(len(values))
+            ],
+        }), encoding="utf-8")
+        return ExtractedPhaseDataset(root, partition)
+
+    train_values = np.zeros((2, 3, 6000), dtype=np.float32)
+    train_values[:, 0, 500] = 1
+    train = write_partition("train", train_values)
+    dev_values = np.zeros((1, 3, 6000), dtype=np.float32)
+    dev_values[0, 1, 800] = 1
+    dev = write_partition("dev", dev_values, tmp_path / "replacement")
+    report = audit_exact_waveform_overlap(train, dev)
+    assert report["within_partition_duplicates"] == {"train": 1, "dev": 0}
+    assert report["cross_partition_duplicates"] == 0
+    dev_values[0] = train_values[0]
+    dev = write_partition("dev", dev_values)
+    with pytest.raises(ValueError, match="crosses train/dev"):
+        audit_exact_waveform_overlap(train, dev)
 
 
 def test_train_only_translation_breaks_narrow_stead_p_clock():
