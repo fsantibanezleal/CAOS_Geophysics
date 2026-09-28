@@ -54,6 +54,7 @@ class SourceInput(BaseModel):
     citation: str | None = Field(default=None, max_length=2000)
     rights_statement: str = Field(min_length=10, max_length=4000)
     rights_decision: Literal["mirror", "provider-link-only", "derivative-only", "forbidden"]
+    private_storage_permission: Literal["attested"]
     attribution: str = Field(min_length=1, max_length=2000)
     expected_bytes: int | None = Field(default=None, gt=0)
     expected_sha256: str | None = Field(default=None, pattern=r"^[0-9a-fA-F]{64}$")

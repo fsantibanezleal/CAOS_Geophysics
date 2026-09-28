@@ -55,6 +55,7 @@ class SourceRecord(Base):
     retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     rights_statement: Mapped[str] = mapped_column(Text)
     rights_decision: Mapped[str] = mapped_column(String(32))
+    private_storage_permission: Mapped[str | None] = mapped_column(String(16), nullable=True)
     declared_format: Mapped[str] = mapped_column(String(32))
     expected_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     sha256: Mapped[str] = mapped_column(String(64))
@@ -105,4 +106,5 @@ class DeletionReceipt(Base):
     owner_id: Mapped[UUID] = mapped_column(GUID(), ForeignKey("user.id"), index=True)
     deleted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     asset_hashes: Mapped[list[str]] = mapped_column(JSON)
+    asset_manifest: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
     backup_purge_status: Mapped[str] = mapped_column(String(40))

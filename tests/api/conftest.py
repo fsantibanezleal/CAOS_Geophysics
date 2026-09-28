@@ -24,7 +24,8 @@ def gravity_metadata(body: bytes = GRAVITY_CSV) -> dict:
         "filename": "stations.csv", "mime": "text/csv", "format": "gravity_csv",
         "source": {
             "provider": "User upload", "rights_statement": "I have permission to store this original privately.",
-            "rights_decision": "mirror", "attribution": "Test survey", "expected_bytes": len(body),
+            "rights_decision": "mirror", "private_storage_permission": "attested",
+            "attribution": "Test survey", "expected_bytes": len(body),
             "expected_sha256": hashlib.sha256(body).hexdigest(),
         },
         "physical": {
@@ -47,6 +48,12 @@ class ApiHarness:
         self.settings = settings
         self.messages = messages
         self.csrf = ""
+        self.closed = False
+
+    def close(self) -> None:
+        if not self.closed:
+            self.client.__exit__(None, None, None)
+            self.closed = True
 
     def request(self, method: str, path: str, *, headers: dict | None = None, **kwargs):
         if method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
@@ -81,7 +88,7 @@ class ApiHarness:
 
 @pytest.fixture
 def make_harness(tmp_path: Path, monkeypatch):
-    clients: list[TestClient] = []
+    clients: list[ApiHarness] = []
 
     def create(*, max_upload_bytes: int = 200 * 1024 * 1024, account_quota_bytes: int = 1024 * 1024 * 1024):
         root = tmp_path / f"case-{len(clients)}"
@@ -104,13 +111,14 @@ def make_harness(tmp_path: Path, monkeypatch):
         app = create_app(settings, capture)
         client = TestClient(app)
         client.__enter__()
-        clients.append(client)
-        return ApiHarness(client, app, settings, messages)
+        harness = ApiHarness(client, app, settings, messages)
+        clients.append(harness)
+        return harness
 
     yield create
 
     for client in reversed(clients):
-        client.__exit__(None, None, None)
+        client.close()
 
 
 @pytest.fixture

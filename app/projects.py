@@ -23,34 +23,19 @@ from app.errors import ApiError
 from app.formats import FORMAT_MAX_BYTES, validate_declared_metadata, validate_file_envelope
 from app.models import AccountUsage, DeletionReceipt, Project, RawAsset, SourceRecord, User, utcnow
 from app.schemas import ProjectCreate, ProjectUpdate, RawUploadInput
+from app.views import RawAssetListView, RawAssetView, asset_view, stored_utc
 
 
 def _project_json(project: Project) -> dict:
     return {
         "id": project.id, "name": project.name, "description": project.description,
-        "created_at": project.created_at.isoformat(), "updated_at": project.updated_at.isoformat(),
-    }
-
-
-def _source_json(source: SourceRecord) -> dict:
-    return {
-        "source_id": source.id, "original_filename": source.original_filename, "version": source.version,
-        "provider": source.provider, "exact_url": source.exact_url,
-        "doi": source.doi, "citation": source.citation, "retrieved_at": source.retrieved_at.isoformat(),
-        "rights_statement": source.rights_statement, "rights_decision": source.rights_decision,
-        "declared_format": source.declared_format, "expected_bytes": source.expected_bytes,
-        "sha256": source.sha256, "attribution": source.attribution,
+        "created_at": stored_utc(project.created_at).isoformat().replace("+00:00", "Z"),
+        "updated_at": stored_utc(project.updated_at).isoformat().replace("+00:00", "Z"),
     }
 
 
 def _asset_json(asset: RawAsset, source: SourceRecord) -> dict:
-    return {
-        "asset_id": asset.id, "project_id": asset.project_id, "source": _source_json(source),
-        "filename": asset.filename, "mime": asset.client_mime, "detected_format": asset.detected_format,
-        "byte_count": asset.byte_count, "sha256": asset.sha256, "physical_metadata": asset.physical_metadata,
-        "validation_status": asset.validation_status, "created_at": asset.created_at.isoformat(),
-        "download_url": f"/api/projects/{asset.project_id}/assets/{asset.id}/download",
-    }
+    return asset_view(asset, source).model_dump(mode="json")
 
 
 async def _owned_project(session: AsyncSession, project_id: str, user: User) -> Project:
@@ -101,9 +86,55 @@ def _sha256(path: Path) -> str:
 
 
 def _verified_file(settings: Settings, asset: RawAsset) -> Path:
+    if asset.storage_key != f"projects/{asset.owner_id}/{asset.project_id}/{asset.id}":
+        raise ApiError(409, "raw_integrity_failed", "Stored original path disagrees with its upload receipt")
     path = checked_storage_path(settings, asset.storage_key)
     if not path.is_file() or path.stat().st_size != asset.byte_count or _sha256(path) != asset.sha256:
         raise ApiError(409, "raw_integrity_failed", "Stored original differs from its upload receipt")
+    return path
+
+
+def _exact_project_directory(settings: Settings, owner_id: str, project_id: str, assets: list[RawAsset]) -> Path:
+    try:
+        directory = checked_storage_path(settings, f"projects/{owner_id}/{project_id}/__probe__").parent
+    except RuntimeError as exc:
+        raise ApiError(409, "raw_state_unresolved", "Project raw storage requires operator review") from exc
+    if not directory.exists():
+        if assets:
+            raise ApiError(409, "raw_state_unresolved", "Project raw files are missing")
+        return directory
+    if directory.is_symlink() or not directory.is_dir():
+        raise ApiError(409, "raw_state_unresolved", "Project raw storage requires operator review")
+    expected = {directory / asset.id for asset in assets}
+    actual = set(directory.iterdir())
+    if actual != expected or any(path.is_symlink() or not path.is_file() for path in actual):
+        raise ApiError(409, "raw_state_unresolved", "Project contains unreferenced or unsafe raw bytes")
+    for asset in assets:
+        _verified_file(settings, asset)
+    return directory
+
+
+def _purge_exact_deletion_directory(directory: Path, assets: list[RawAsset]) -> None:
+    expected = {directory / asset.id: asset for asset in assets}
+    if set(directory.iterdir()) != set(expected):
+        raise RuntimeError("private_recovery_required: deletion directory contains unknown bytes")
+    for path, asset in expected.items():
+        if path.is_symlink() or not path.is_file() or path.stat().st_size != asset.byte_count or _sha256(path) != asset.sha256:
+            raise RuntimeError("private_recovery_required: deletion directory bytes changed")
+    for path in expected:
+        path.unlink()
+    directory.rmdir()
+
+
+def _checked_backup_directory(settings: Settings, owner_id: str, project_id: str) -> Path:
+    path = settings.data_dir / ".backups" / owner_id / project_id
+    if not path.resolve(strict=False).is_relative_to(settings.data_dir.resolve()):
+        raise ApiError(409, "backup_state_unresolved", "API-managed backup path requires operator review")
+    for item in (path, path.parent, path.parent.parent):
+        if item.is_symlink():
+            raise ApiError(409, "backup_state_unresolved", "API-managed backup path requires operator review")
+    if path.exists() and not path.is_dir():
+        raise ApiError(409, "backup_state_unresolved", "API-managed backup path requires operator review")
     return path
 
 
@@ -111,7 +142,7 @@ def _make_export(path: Path, project: dict, rows: list[tuple[dict, Path]]) -> No
     manifest = {"schema_version": 1, "project": project, "raw_assets": []}
     with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED, allowZip64=True) as archive:
         for asset, source in rows:
-            member = f"raw/{asset['asset_id']}/{asset['filename']}"
+            member = f"raw/{asset['asset_id']}/{asset['original_filename']}"
             digest = hashlib.sha256()
             count = 0
             with source.open("rb") as input_file, archive.open(member, "w", force_zip64=True) as output:
@@ -163,7 +194,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         await session.commit()
         return _project_json(project)
 
-    @router.get("/{project_id}/assets")
+    @router.get("/{project_id}/assets", response_model=RawAssetListView)
     async def list_assets(project_id: str, user: User = Depends(current_user), session: AsyncSession = Depends(get_session)):
         await _owned_project(session, project_id, user)
         rows = (await session.execute(
@@ -173,7 +204,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         )).all()
         return {"assets": [_asset_json(asset, source) for asset, source in rows]}
 
-    @router.get("/{project_id}/assets/{asset_id}")
+    @router.get("/{project_id}/assets/{asset_id}", response_model=RawAssetView)
     async def get_asset(
         project_id: str, asset_id: str, user: User = Depends(current_user), session: AsyncSession = Depends(get_session),
     ):
@@ -192,15 +223,15 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         response.headers["X-Content-Type-Options"] = "nosniff"
         return response
 
-    @router.post("/{project_id}/assets", status_code=201)
+    @router.post("/{project_id}/assets", status_code=201, response_model=RawAssetView)
     async def upload_asset(
         project_id: str, request: Request, user: User = Depends(current_user), session: AsyncSession = Depends(get_session),
     ):
         await _owned_project(session, project_id, user)
         meta = _parse_upload_header(request.headers.get("x-asset-metadata"))
         validate_declared_metadata(meta)
-        if meta.source.rights_decision != "mirror":
-            raise ApiError(422, "rights_not_mirrorable", "Private raw storage requires a mirror rights decision", ["source.rights_decision"])
+        if meta.source.rights_decision == "forbidden":
+            raise ApiError(422, "rights_forbidden", "Forbidden sources cannot be stored", ["source.rights_decision"])
         if request.headers.get("content-type", "").split(";", 1)[0].strip() != meta.mime:
             raise ApiError(415, "mime_format_mismatch", "Content-Type and declared MIME must agree")
         byte_limit = min(settings.max_upload_bytes, FORMAT_MAX_BYTES[meta.format])
@@ -211,6 +242,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         stage_dir.mkdir(parents=True, exist_ok=True)
         stage = stage_dir / f"{uuid.uuid4()}.part"
         moved: Path | None = None
+        commit_attempted = False
         committed = False
         digest = hashlib.sha256()
         byte_count = 0
@@ -266,7 +298,8 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
                 version=source_version, provider=meta.source.provider,
                 exact_url=None, doi=meta.source.doi, citation=meta.source.citation,
                 retrieved_at=now, rights_statement=meta.source.rights_statement,
-                rights_decision=meta.source.rights_decision, declared_format=meta.format,
+                rights_decision=meta.source.rights_decision,
+                private_storage_permission=meta.source.private_storage_permission, declared_format=meta.format,
                 expected_bytes=byte_count, sha256=sha, attribution=meta.source.attribution,
             )
             asset = RawAsset(
@@ -286,13 +319,14 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
                 raise RuntimeError("new asset storage key already exists")
             await asyncio.to_thread(os.replace, stage, target)
             moved = target
+            commit_attempted = True
             await session.commit()
             committed = True
             return _asset_json(asset, source)
         finally:
             if not committed:
                 await session.rollback()
-                if moved is not None:
+                if moved is not None and not commit_attempted:
                     moved.unlink(missing_ok=True)
             stage.unlink(missing_ok=True)
 
@@ -341,13 +375,18 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         assets = (await session.execute(select(RawAsset).where(
             RawAsset.project_id == project_id, RawAsset.owner_id == user.id,
         ))).scalars().all()
+        assets.sort(key=lambda item: item.id)
         hashes = [item.sha256 for item in assets]
+        manifest = [{"asset_id": item.id, "sha256": item.sha256, "byte_count": item.byte_count} for item in assets]
         used = sum(item.byte_count for item in assets)
-        project_dir = settings.data_dir / "projects" / str(user.id) / project_id
+        project_dir = await asyncio.to_thread(_exact_project_directory, settings, str(user.id), project_id, assets)
+        backup = _checked_backup_directory(settings, str(user.id), project_id)
         deleting_dir = settings.data_dir / ".deleting" / f"{user.id}--{project_id}"
+        if deleting_dir.parent.is_symlink():
+            raise ApiError(409, "raw_state_unresolved", "Deletion recovery path requires operator review")
         deleting_dir.parent.mkdir(parents=True, exist_ok=True)
-        if deleting_dir.exists():
-            raise RuntimeError("project deletion recovery directory already exists")
+        if deleting_dir.exists() or deleting_dir.is_symlink():
+            raise ApiError(409, "raw_state_unresolved", "Project deletion recovery directory already exists")
         renamed = False
         try:
             if project_dir.exists():
@@ -363,7 +402,8 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
                     raise RuntimeError("account quota counter is inconsistent")
             receipt = DeletionReceipt(
                 id=str(uuid.uuid4()), project_id=project_id, owner_id=user.id,
-                deleted_at=utcnow(), asset_hashes=hashes, backup_purge_status="external_pending",
+                deleted_at=utcnow(), asset_hashes=hashes, asset_manifest=manifest,
+                backup_purge_status="external_pending",
             )
             session.add(receipt)
             await session.commit()
@@ -373,8 +413,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
                 deleting_dir.rename(project_dir)
             raise
         if renamed:
-            await asyncio.to_thread(shutil.rmtree, deleting_dir)
-        backup = settings.data_dir / ".backups" / str(user.id) / project_id
+            await asyncio.to_thread(_purge_exact_deletion_directory, deleting_dir, assets)
         if backup.exists():
             await asyncio.to_thread(shutil.rmtree, backup)
         return {"deleted": True, "project_id": project_id, "receipt_id": receipt.id, "external_backup_status": "pending_reconciliation"}

@@ -5,14 +5,15 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import os
-import time
+import sqlite3
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.database import reconcile_private_files
+from app.database import make_engine, reconcile_private_files
+from app.models import RawAsset
 from tests.api.conftest import GRAVITY_CSV, gravity_metadata
 
 
@@ -87,18 +88,16 @@ def test_stream_limit_without_content_length(make_harness):
     assert not list((harness.settings.data_dir / ".staging").iterdir())
 
 
-def test_reconcile_orphaned_bytes(harness):
+def test_startup_preserves_orphaned_bytes(harness):
     harness.account()
     project = harness.project()
     asset = harness.upload(project["id"]).json()
-    stage = harness.settings.data_dir / ".staging" / "crash.part"
-    stage.write_bytes(b"uncommitted")
-    os.utime(stage, (time.time() - 7200, time.time() - 7200))
     project_path = next((harness.settings.data_dir / "projects").glob("*/*"))
     orphan = project_path / str(uuid.uuid4())
     orphan.write_bytes(b"orphan")
-    asyncio.run(reconcile_private_files(harness.settings, harness.app.state.sessions))
-    assert not stage.exists() and not orphan.exists()
+    with pytest.raises(RuntimeError, match="unreferenced raw bytes"):
+        asyncio.run(reconcile_private_files(harness.settings, harness.app.state.sessions))
+    assert orphan.read_bytes() == b"orphan"
     assert harness.client.get(f"/api/projects/{project['id']}/assets/{asset['asset_id']}").status_code == 200
 
 
@@ -114,17 +113,86 @@ def test_raw_tamper_fails_download_and_export(harness):
     assert exported.status_code == 409 and exported.json()["code"] == "raw_integrity_failed"
 
 
-def test_reconcile_interrupted_delete_and_missing_asset(harness):
+def test_startup_preserves_interrupted_delete(harness):
     harness.account()
     project = harness.project()
     harness.upload(project["id"])
     original = next((harness.settings.data_dir / "projects").glob("*/*"))
+    raw = next(original.iterdir())
+    original_bytes = raw.read_bytes()
     moved = harness.settings.data_dir / ".deleting" / f"{original.parent.name}--{project['id']}"
     moved.parent.mkdir(exist_ok=True)
     original.rename(moved)
+    with pytest.raises(RuntimeError, match="preserved .deleting"):
+        asyncio.run(reconcile_private_files(harness.settings, harness.app.state.sessions))
+    assert not original.exists() and (moved / raw.name).read_bytes() == original_bytes
+
+
+def test_startup_detects_older_db_restore(harness, tmp_path):
+    harness.account()
+    project = harness.project()
+    first = harness.upload(project["id"]).json()
+    snapshot = tmp_path / "older-api.sqlite3"
+    with sqlite3.connect(harness.settings.database_path) as live, sqlite3.connect(snapshot) as copy:
+        live.backup(copy)
+    second = harness.upload(project["id"]).json()
+    second_file = next(path for path in (harness.settings.data_dir / "projects").glob("*/*/*") if path.name == second["asset_id"])
+    second_bytes = second_file.read_bytes()
+    harness.close()
+    with sqlite3.connect(snapshot) as copy, sqlite3.connect(harness.settings.database_path) as restored:
+        copy.backup(restored)
+        assert restored.execute("SELECT COUNT(*) FROM raw_assets").fetchone()[0] == 1
+    engine = make_engine(harness.settings)
+    sessions = async_sessionmaker(engine, expire_on_commit=False)
+
+    async def audit() -> None:
+        try:
+            await reconcile_private_files(harness.settings, sessions)
+        finally:
+            await engine.dispose()
+
+    with pytest.raises(RuntimeError, match="unreferenced raw bytes"):
+        asyncio.run(audit())
+    assert second_file.read_bytes() == second_bytes
+    assert first["asset_id"] != second["asset_id"]
+
+
+def test_upload_commit_ack_loss_preserves_bytes(harness, monkeypatch):
+    harness.account()
+    project = harness.project()
+    actual_commit = AsyncSession.commit
+
+    async def commit_with_lost_ack(session):
+        uploading = any(isinstance(item, RawAsset) for item in session.identity_map.values())
+        await actual_commit(session)
+        if uploading:
+            raise RuntimeError("simulated lost commit acknowledgement")
+
+    monkeypatch.setattr(AsyncSession, "commit", commit_with_lost_ack)
+    with pytest.raises(RuntimeError, match="simulated lost commit acknowledgement"):
+        harness.upload(project["id"])
+    with sqlite3.connect(harness.settings.database_path) as db:
+        assert db.execute("SELECT COUNT(*) FROM raw_assets").fetchone()[0] == 1
+    raw = next((harness.settings.data_dir / "projects").glob("*/*/*"))
+    assert raw.read_bytes() == GRAVITY_CSV
     asyncio.run(reconcile_private_files(harness.settings, harness.app.state.sessions))
-    assert original.exists() and not moved.exists()
-    raw = next(original.iterdir())
+
+
+def test_startup_rejects_missing_referenced_asset(harness):
+    harness.account()
+    project = harness.project()
+    harness.upload(project["id"])
+    raw = next((harness.settings.data_dir / "projects").glob("*/*/*"))
     raw.unlink()
     with pytest.raises(RuntimeError, match="stored raw asset is missing"):
         asyncio.run(reconcile_private_files(harness.settings, harness.app.state.sessions))
+
+
+@pytest.mark.parametrize("directory", [".staging", ".exports"])
+def test_startup_preserves_abandoned_transfer_bytes(harness, directory):
+    path = harness.settings.data_dir / directory / "abandoned.bin"
+    path.parent.mkdir(exist_ok=True)
+    path.write_bytes(b"unattributed original")
+    with pytest.raises(RuntimeError, match="private_recovery_required"):
+        asyncio.run(reconcile_private_files(harness.settings, harness.app.state.sessions))
+    assert path.read_bytes() == b"unattributed original"

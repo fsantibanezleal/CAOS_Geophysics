@@ -4,17 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import shutil
-import time
-
 from sqlalchemy import event, func, select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.config import Settings
-from app.models import AccountUsage, DeletionReceipt, Project, RawAsset
+from app.models import AccountUsage, DeletionReceipt, RawAsset
 
 
-MIGRATION_HEAD = "0001_api_foundation"
+MIGRATION_HEAD = "0002_private_storage_permission"
 
 
 def make_engine(settings: Settings):
@@ -42,64 +39,53 @@ async def require_migration_head(engine) -> None:
 
 
 async def reconcile_private_files(settings: Settings, sessions: async_sessionmaker) -> None:
+    """Read-only startup audit: unknown private bytes require operator recovery."""
     root = settings.data_dir
-    staging = root / ".staging"
-    staging.mkdir(parents=True, exist_ok=True)
-    (root / "projects").mkdir(parents=True, exist_ok=True)
-    cutoff = time.time() - 3600
-    for entry in staging.iterdir():
-        if entry.is_file() and not entry.is_symlink() and entry.stat().st_mtime < cutoff:
-            entry.unlink()
-    exports = root / ".exports"
-    if exports.exists():
-        for entry in exports.iterdir():
-            if entry.is_file() and not entry.is_symlink() and entry.stat().st_mtime < cutoff:
-                entry.unlink()
     async with sessions() as session:
         await session.execute(text("BEGIN IMMEDIATE"))
-        keys = set((await session.execute(select(RawAsset.storage_key))).scalars().all())
-        projects = set((await session.execute(select(Project.id))).scalars().all())
+        asset_rows = (await session.execute(select(
+            RawAsset.id, RawAsset.owner_id, RawAsset.project_id, RawAsset.storage_key,
+        ))).all()
+        for asset_id, owner_id, project_id, storage_key in asset_rows:
+            if storage_key != f"projects/{owner_id}/{project_id}/{asset_id}":
+                raise RuntimeError("private_recovery_required: raw storage key disagrees with asset identity")
+        keys = {storage_key for _asset_id, _owner_id, _project_id, storage_key in asset_rows}
         deleted = (await session.execute(select(DeletionReceipt.owner_id, DeletionReceipt.project_id))).all()
         totals = dict((await session.execute(
             select(RawAsset.owner_id, func.sum(RawAsset.byte_count)).group_by(RawAsset.owner_id)
         )).all())
         usage = dict((await session.execute(select(AccountUsage.user_id, AccountUsage.raw_bytes))).all())
         if any(usage.get(owner_id, 0) != count for owner_id, count in totals.items()):
-            raise RuntimeError("account raw-byte quota counter differs from stored assets")
+            raise RuntimeError("private_recovery_required: account quota counter differs from stored assets")
         if any(owner_id not in totals and count != 0 for owner_id, count in usage.items()):
-            raise RuntimeError("account raw-byte quota counter has no matching assets")
-        deleting = root / ".deleting"
-        deleting.mkdir(parents=True, exist_ok=True)
-        for path in deleting.iterdir():
-            if not path.is_dir() or path.is_symlink():
-                raise RuntimeError("unexpected deletion recovery entry")
-            if "--" not in path.name:
-                raise RuntimeError("cannot recover interrupted project deletion")
-            owner_id, project_id = path.name.split("--", 1)
-            if project_id in projects:
-                destination = root / "projects" / owner_id / project_id
-                if destination.exists():
-                    raise RuntimeError("project deletion recovery collision")
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                path.rename(destination)
-            else:
-                shutil.rmtree(path)
-        for path in (root / "projects").glob("*/*/*"):
-            if path.is_file() and not path.is_symlink():
-                key = path.relative_to(root).as_posix()
-                if key not in keys:
-                    path.unlink()
+            raise RuntimeError("private_recovery_required: account quota counter has no matching assets")
+        for name in (".staging", ".exports", ".deleting"):
+            directory = root / name
+            if directory.is_symlink() or (directory.exists() and not directory.is_dir()):
+                raise RuntimeError(f"private_recovery_required: unexpected {name} entry")
+            if directory.is_dir() and next(directory.iterdir(), None) is not None:
+                raise RuntimeError(f"private_recovery_required: inspect preserved {name} bytes")
+        projects_root = root / "projects"
+        if projects_root.is_symlink() or (projects_root.exists() and not projects_root.is_dir()):
+            raise RuntimeError("private_recovery_required: invalid projects directory")
+        observed: set[str] = set()
+        if projects_root.is_dir():
+            for path in projects_root.rglob("*"):
+                if path.is_symlink() or not (path.is_file() or path.is_dir()):
+                    raise RuntimeError("private_recovery_required: unsafe project storage entry")
+                if path.is_file():
+                    key = path.relative_to(root).as_posix()
+                    if key not in keys:
+                        raise RuntimeError(f"private_recovery_required: unreferenced raw bytes: {key}")
+                    observed.add(key)
         for key in keys:
-            if not checked_storage_path(settings, key).is_file():
-                raise RuntimeError(f"stored raw asset is missing: {key}")
+            if key not in observed or not checked_storage_path(settings, key).is_file():
+                raise RuntimeError(f"private_recovery_required: stored raw asset is missing: {key}")
         for owner_id, project_id in deleted:
             backup = root / ".backups" / str(owner_id) / project_id
-            if backup.is_dir() and not backup.is_symlink():
-                shutil.rmtree(backup)
-        for directory in sorted((root / "projects").glob("*/*"), reverse=True):
-            if directory.is_dir() and not directory.is_symlink() and not any(directory.iterdir()):
-                directory.rmdir()
-        await session.commit()
+            if backup.exists() or backup.is_symlink():
+                raise RuntimeError("private_recovery_required: deleted-project backup remains")
+        await session.rollback()
 
 
 def checked_storage_path(settings: Settings, storage_key: str) -> Path:
