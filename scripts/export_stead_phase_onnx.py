@@ -185,6 +185,11 @@ def export(
 
 
 def main() -> None:
+    # PyTorch's exporter prints Unicode status glyphs even with verbose=False.
+    # A legacy Windows console may use cp1252; escape unsupported glyphs in
+    # progress text instead of aborting a mathematically valid export.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(errors="backslashreplace")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--extraction-dir", type=Path, default=ROOT / "data/raw/phase/extracted")
     parser.add_argument("--frozen-receipt", type=Path, default=ROOT / "data/raw/phase/models/phase-freeze.json")
