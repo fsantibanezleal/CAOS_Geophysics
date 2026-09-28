@@ -17,7 +17,7 @@ The original [STEAD repository](https://github.com/smousavi05/STEAD) declares CC
 - Preserve the source ZIP unchanged and hash before parsing. Reject excess entries, absolute/parent paths, oversized uncompressed total, duplicate names and unexpectedly shaped entries. Read NPZ members without extracting to a web-served directory; `allow_pickle=False`.
 - Require explicit sampling interval and units, numeric finite waveform, bounded dimensions, phase indices in range with P before S, trace ID, event ID, station ID and channel description. Never impute an absent component as a measured zero; mark it absent. Do not infer response-corrected velocity from a unit string alone.
 - The fixture metadata declares `dt=0.01 s`, P near sample 6000, S from samples 6052–7327, and mixed `m/s` and `m/s**2` units. These cannot be pooled as one physical-amplitude feature without an explicit transform. Per-trace scale-normalized picking is allowed with units still recorded, and unit-stratified metrics required. **Do not train M13 on this 100-trace archive:** nearly fixed P index would permit a clock-position shortcut unrelated to waveform physics.
-- Canonical model input is a declared 4096-sample window at 100 Hz that includes both labelled phases in the fixture; the indexing transform and any truncation are recorded. For user data, no silent resampling, component rotation or response removal. Explicit preprocessing and QC precede inference.
+- The official 100-trace fixture uses a declared 4096-sample engineering window at 100 Hz; its indexing transform and truncation are recorded and it is never used to fit M13. The real STEAD model input is the mirror's full 6000-sample, 100 Hz waveform in declared E/N/Z order, with instrument counts not response-corrected velocity. These contracts are not silently interchanged. For user data, no silent resampling, component rotation or response removal. Explicit preprocessing and QC precede inference.
 
 ## Leakage-safe evaluation and classical comparator
 
@@ -49,6 +49,8 @@ R-PH-006 IF source or model redistribution rights remain unresolved, THE release
 R-PH-007 WHEN the STEAD mirror's bucketed waveform file is read, THE adapter SHALL require the complete pinned byte/hash receipt, declared 100 Hz sample rate, counts without response restitution, Z/N/E orientation and a bounded trace slice; IF any contract fails, THEN no waveform SHALL enter training or evaluation. Gate: `tests/learning/test_stead_waveforms.py::test_bucket_reader_and_rejections` followed by an independent SeisBench read on the verified source.
 
 R-PH-008 BEFORE reading waveforms for model fitting, THE metadata selector SHALL partition events and stations jointly, assign noise by station, retain no cross-partition trace, and apply a fixed hash rank independent of amplitude or SNR. Gate: `tests/learning/test_stead_waveforms.py::test_joint_metadata_selection` and full-source manifest counts.
+
+R-PH-009 WHEN a learned architecture is initialized, THE model SHALL enforce its declared input sampling/channel/window order, produce differentiable N/P/S logits and explicit phase/noise targets, and never import pretrained weights silently. Gate: `tests/learning/test_phase_model.py::test_phase_unet_tensor_contract_and_gradient` and `::test_arrival_targets_and_noise_are_declared`. Passing this architecture gate is not a trained-checkpoint or accuracy verdict.
 
 ## Acceptance sequence
 
