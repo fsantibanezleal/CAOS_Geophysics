@@ -1,0 +1,33 @@
+# Authenticated project and raw-asset API requirements
+
+Date: 2026-09-27. Parent: `docs/design/SDD.md`, especially R-002, R-003 and section 8. This unit owns accounts, projects and immutable uploaded originals. It does not create a validated observation dataset, processing run or solver job.
+
+R-API-01 THE API SHALL use library-managed password hashing, registration, email verification, password reset and revocable database-backed cookie sessions, and SHALL require a verified account for project data. Gate: `tests/api/test_auth.py::test_register_verify_reset_login_logout`.
+
+R-API-02 IF an unsafe browser request lacks a matching CSRF token or same-origin evidence, THEN THE API SHALL reject it; IF an authentication or upload client exceeds its rate limit, THEN THE API SHALL return a retryable 429. Gate: `tests/api/test_security.py::test_csrf_origin_and_rate_limits`.
+
+R-API-03 WHEN a verified account creates, lists, reads or updates a project, THE API SHALL expose only that account's projects and use an indistinguishable 404 for another owner's IDs. Gate: `tests/api/test_projects.py::test_owner_scoped_crud`.
+
+R-API-04 WHEN an owner uploads an original, THE API SHALL stream it to private staging, calculate SHA-256, store the exact bytes under an opaque immutable key, and record a source and receipt with owner, rights, size and hash. Gate: `tests/api/test_assets.py::test_raw_immutable_and_receipt`.
+
+R-API-05 IF an upload is empty, over 200 MiB, an archive, an unsupported format, or its declared MIME disagrees with detected content, THEN THE API SHALL reject it without storing bytes or charging quota. Gate: `tests/api/test_assets.py::test_rejected_bytes_and_mime_leave_no_asset`.
+
+R-API-06 IF physical units, coordinate frame, datum, vertical sign, epoch, component orientation or format-specific geometry are missing or invalid, THEN THE API SHALL reject the upload with field-specific reasons and SHALL never infer them. Gate: `tests/api/test_metadata.py::test_missing_physical_metadata_rejection`.
+
+R-API-07 WHILE an account has stored raw bytes, WHEN it uploads more data, THE API SHALL enforce a transactional 1 GiB per-account quota and SHALL keep concurrent uploads from oversubscribing it. Gate: `tests/api/test_assets.py::test_quota_and_parallel_uploads`.
+
+R-API-08 WHEN an owner downloads an asset or exports a project, THE API SHALL serve only owned original bytes and a ZIP manifest with SHA-256, source, rights and physical metadata so an independent reader can verify every member. Gate: `tests/api/test_export_delete.py::test_export_manifest_and_owned_bytes`.
+
+R-API-09 WHEN an owner permanently deletes a project, THE API SHALL first refuse unexpected files, changed bytes, or any existing `.backups/<owner>/<project>` entry (no API manifest proves its ownership or content). A refusal SHALL preserve the project, its raw bytes, backup bytes and quota, and SHALL NOT issue a deletion receipt. With no such backup entry, the API SHALL durably commit a deletion receipt, remove only its verified DB-listed raw files and make every old URL inaccessible. Neither the receipt nor DELETE response SHALL claim backup erasure; backup inventory, retention, purge and tombstone-aware restore remain an explicit operator procedure outside this API. Gates: `tests/api/test_export_delete.py::test_delete_erases_project_and_bytes`, `tests/api/test_export_delete.py::test_delete_refuses_unknown_project_bytes`, `tests/api/test_export_delete.py::test_delete_refuses_unverified_backup_bytes`, and `tests/api/test_export_delete.py::test_delete_refuses_empty_backup_directory`.
+
+R-API-10 THE API SHALL start only on the committed SQLite migration head, and SHALL expose no job submission route in this unit. Gate: `tests/api/test_migrations.py::test_upgrade_and_schema_guard` and `tests/api/test_migrations.py::test_no_job_route`.
+
+R-API-11 IF startup finds an orphaned raw file, staged/export byte file, interrupted deletion directory, deleted-project backup or DB row with missing bytes, THEN THE API SHALL fail closed with a recovery-required diagnostic, preserve every byte, and expose no partial asset. Startup SHALL NOT unlink, rename or recursively remove unknown state. A failed or unacknowledged upload commit SHALL NOT erase its moved bytes. Gate: `tests/api/test_assets.py::test_startup_preserves_orphaned_bytes`, `tests/api/test_assets.py::test_startup_preserves_interrupted_delete`, `tests/api/test_assets.py::test_startup_detects_older_db_restore`, `tests/api/test_assets.py::test_upload_commit_ack_loss_preserves_bytes`, and `tests/api/test_export_delete.py::test_startup_preserves_postcommit_deletion_recovery`.
+
+R-API-12 WHEN an authenticated owner receives a raw-asset receipt or project export, THE API SHALL use a versioned explicit source/asset view with source location, owner/project/source IDs, original filename, MIME, rights, checksum, physical metadata, receipt and download URL. The view SHALL omit the private storage key and filesystem path; the internal key SHALL match the asset identity; `raw_metadata_checked` SHALL NOT be recast as a scientifically valid dataset. Gate: `tests/api/test_views.py::test_source_and_asset_view_contract`, `tests/api/test_views.py::test_private_storage_key_never_serialized`, and `tests/api/test_views.py::test_private_storage_key_drift_fails_closed`.
+
+R-API-13 WHEN a user uploads to a private project, THE API SHALL require an explicit private-storage authorization attestation separately from the declared public rights decision. `provider-link-only` and `derivative-only` may be stored privately for the authenticated owner with that attestation, but SHALL NOT make raw bytes public; `forbidden` SHALL be rejected. An upgrade SHALL NOT fabricate an attestation for prior rows. Gate: `tests/api/test_rights.py::test_private_storage_permission_is_not_public_mirror` and `tests/api/test_migrations.py::test_upgrade_does_not_invent_historical_storage_permission`.
+
+Pending integration gate INT-API-FE-01: the merged `frontend/src/api/contracts.ts` parser currently expects an internal `storage_key`, non-null citation and a `valid` status. Those expectations conflict with the safe API projection and raw-only status. The frontend integration owner must revise its mirror/adapter and add `frontend/src/test/api-live-contract-parity.test.ts` against the versioned API view before any live-client or SDD parity claim. This gate is not discharged by the API tests or this branch.
+
+The parent SDD's catalogue, dataset processing, method eligibility, jobs, numerical results, worker, frontend and cutover gates remain separate units. A complete raw-upload receipt means byte and metadata-envelope integrity only; it is not a modelling QC verdict.
