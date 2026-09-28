@@ -5,9 +5,9 @@ const hash = "a".repeat(64);
 const array = (values: number[], unit = "mGal", axis_order = ["station"], shape = [2]) => ({ axis_order, shape, values, unit });
 const axis = { name: "station", size: 2, unit: "1", direction: "increasing" };
 const source = {
-  source_id: "src-1", provider: "USGS", location: { kind: "url", url: "https://example.org/data.csv" },
-  doi: "10.5066/example", citation: "Provider source", retrieved_at: "2026-09-27T00:00:00Z",
-  rights_statement: "Provider link only", rights_decision: "provider-link-only", declared_format: "csv",
+  schema_version: "geophysics.source-record-view/v1", source_id: "src-1", version: 1, provider: "USGS", location: { kind: "upload", filename: "survey.csv" },
+  doi: "10.5066/example", citation: null, retrieved_at: "2026-09-27T00:00:00Z",
+  rights_statement: "Provider link only", rights_decision: "provider-link-only", private_storage_permission: "attested", declared_format: "gravity_csv",
   expected_bytes: 120, sha256: hash, attribution: "USGS",
 };
 const dataset = {
@@ -31,9 +31,10 @@ const job = {
   measured: { wall_seconds: null, peak_rss_bytes: null, scratch_bytes: null }, error: null,
 };
 const rawAsset = {
-  asset_id: "asset-1", owner_id: "owner-1", project_id: "project-1", source_id: "src-1",
-  original_filename: "survey.csv", mime_type: "text/csv", detected_format: "gravity-csv",
-  byte_count: 120, sha256: hash, storage_key: "project-1/raw/asset-1", receipt: "2026-09-27T00:00:00Z", validation_status: "valid",
+  schema_version: "geophysics.raw-asset-view/v1", asset_id: "asset-1", owner_id: "owner-1", project_id: "project-1", source_id: "src-1", source,
+  original_filename: "survey.csv", mime_type: "text/csv", detected_format: "gravity_csv",
+  byte_count: 120, sha256: hash, physical_metadata: { coordinate_reference: "epsg", epsg: 32719, local_crs: null, axis_order: "xy", horizontal_datum: "WGS84", vertical_datum: "survey benchmark", vertical_positive: "up", horizontal_unit: "m", vertical_unit: "m", measurement_unit: "mGal", epoch_utc: "2026-09-27T00:00:00Z", component_frame: "local vertical down", geometry: { station_id_column: "station" } }, created_at: "2026-09-27T00:00:00Z",
+  receipt: "/api/projects/project-1/assets/asset-1", download_url: "/api/projects/project-1/assets/asset-1/download", validation_status: "raw_metadata_checked",
 };
 const processingRun = {
   run_id: "processing-1", input_dataset_versions: [{ dataset_id: "ds-1", version: 1 }],
