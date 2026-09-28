@@ -232,7 +232,7 @@ export function PhasePickerPanel() {
     ? scores.reasons[phase] === "ps-separation"
       ? t("abstained: S−P < 0.4 s", "abstención: S−P < 0,4 s")
       : t("abstained: peak < 0.8", "abstención: máximo < 0,8")
-    : scores ? `${formatTime(scores.picks[phase]!)} · ${scores.peaks[phase].toFixed(4)}` : "—";
+    : scores ? `${formatTime(scores.picks[phase]!)} · ${scores.peaks[phase].toFixed(4)}` : t("not computed", "sin cálculo");
 
   return <section id="phase-picker" className="phase-picker" aria-label={t("M13 browser phase picker", "Detector de fases M13 en navegador")}>
     <div className="phase-heading">
@@ -291,7 +291,7 @@ export function PhasePickerPanel() {
       </div>
       <p className="plot-note">{t("Arrival selection used all 6,000 raw ONNX output samples before display reduction. Solid markers are accepted model picks; dashed markers are STEAD analyst references, not ground truth. A missing marker is an abstention or a missing reference.",
         "Las llegadas se eligieron con las 6.000 muestras originales de ONNX antes de reducir la visualización. Marcas continuas: predicciones aceptadas; discontinuas: referencias de analista STEAD, no verdad física. Marca ausente: abstención o referencia inexistente.")}</p>
-      {record && <p className="plot-note">{t("STEAD analyst reference", "Referencia de analista STEAD")}: P {record.analyst_p_s == null ? "—" : `${record.analyst_p_s.toFixed(2)} s`} · S {record.analyst_s_s == null ? "—" : `${record.analyst_s_s.toFixed(2)} s`}.</p>}
+      {record && <p className="plot-note">{t("STEAD analyst reference", "Referencia de analista STEAD")}: P {record.analyst_p_s == null ? t("not recorded", "sin registro") : `${record.analyst_p_s.toFixed(2)} s`} · S {record.analyst_s_s == null ? t("not recorded", "sin registro") : `${record.analyst_s_s.toFixed(2)} s`}.</p>}
     </>}
     {benchmark && modelSource === "curated" && <div className="phase-benchmark">
       <h3>{t("Offline held-out P/S benchmark", "Benchmark P/S reservado offline")}</h3>
@@ -306,7 +306,7 @@ export function PhasePickerPanel() {
           const row = benchmark.nominal[method][phase];
           return <tr key={`${method}-${phase}`}><td>{method}</td><td>{phase}</td>
             <td>{row.f1_at_0p5s.toFixed(4)}</td><td>{row.correct_within_0p5s} / {row.reference_count}</td>
-            <td>{row.timing_absolute_median_s === null ? "—" : `${row.timing_absolute_median_s.toFixed(2)} s`}</td></tr>;
+            <td>{row.timing_absolute_median_s === null ? t("not available", "no disponible") : `${row.timing_absolute_median_s.toFixed(2)} s`}</td></tr>;
         }))}
       </tbody></table></div>
     </div>}
