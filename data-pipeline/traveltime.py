@@ -31,6 +31,11 @@ INVERSE_OPTIONS = {"secNodes": 3, "paraMaxCellSize": 5.0, "zWeight": 0.2,
                    "vTop": 500.0, "vBottom": 5000.0, "lam": 20.0, "maxIter": 20}
 ALTERNATE_START_OPTIONS = {**INVERSE_OPTIONS, "vTop": 700.0, "vBottom": 3500.0}
 FINER_MESH_OPTIONS = {**INVERSE_OPTIONS, "paraMaxCellSize": 2.5}
+CGLS_MAX_ITER = 1000
+CGLS_TOLERANCE = 1e-20  # Absolute squared residual of the inner linear solve.
+REPEAT_TIME_ATOL_S = 1e-5  # 0.01 ms, below the apparent 0.05 ms pick increment.
+REPEAT_VELOCITY_ATOL_M_S = 0.1
+REPEAT_VELOCITY_RTOL = 1e-4
 
 
 class TraveltimeError(ValueError):
@@ -330,6 +335,11 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
         raise TraveltimeError("pyGIMLi training container changed the fixed whole-shot partition")
     train["err"] = sigma[training]  # pyGIMLi's traveltime manager expects absolute seconds here.
     manager = tt.TravelTimeManager(train)
+    inner = manager.inv.inv
+    inner.setMaxCGLSIter(CGLS_MAX_ITER)
+    inner.setCGLSTolerance(CGLS_TOLERANCE)
+    if inner.maxCGLSIter() != CGLS_MAX_ITER or inner.maxCGLSTolerance() != CGLS_TOLERANCE:
+        raise TraveltimeError("pyGIMLi did not retain the pinned inner CGLS convergence settings")
     velocity = np.asarray(manager.invert(train, verbose=False, **options), dtype=float)
     if velocity.size < 2 or not np.all(np.isfinite(velocity)) or np.any(velocity <= 0):
         raise TraveltimeError("pyGIMLi inverse returned invalid positive velocity")
@@ -449,14 +459,19 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
     report["engine"] = {"pygimli_distribution": importlib.metadata.version("pygimli"),
                         "pgcore_distribution": importlib.metadata.version("pgcore"),
                         "numpy": np.__version__, "scipy": importlib.metadata.version("scipy"),
-                        "thread_count": 1, "options": INVERSE_OPTIONS}
+                        "thread_count": 1,
+                        "cgls_max_iterations": CGLS_MAX_ITER,
+                        "cgls_residual_squared_tolerance": CGLS_TOLERANCE,
+                        "options": INVERSE_OPTIONS}
     report["environment_versions_sha256"] = hashlib.sha256(json.dumps(
         {key: value for key, value in report["engine"].items() if key != "options"},
         sort_keys=True).encode()).hexdigest()
     report["split"] = {name: _split_record(name, parts) for name, parts in splits.items()}
     report["configuration_sha256"] = hashlib.sha256(json.dumps(
         {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
-         "finer_mesh": FINER_MESH_OPTIONS, "weight_rule": report["weighting"]["sigma_t_s"],
+         "finer_mesh": FINER_MESH_OPTIONS, "cgls_max_iterations": CGLS_MAX_ITER,
+         "cgls_residual_squared_tolerance": CGLS_TOLERANCE,
+         "weight_rule": report["weighting"]["sigma_t_s"],
          "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}},
         sort_keys=True).encode()).hexdigest()
     report["observations"] = {"sensor_xy_m": survey.sensor_xy_m.tolist(),
@@ -515,13 +530,44 @@ def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse"
                     for key in ("parameter_mesh_sha256", "forward_mesh_sha256"):
                         if before[key] != now[key]:
                             raise TraveltimeError(f"M09 rerun changed {name} {key}: {output}")
-                    if not np.allclose(before["predicted_t_s"], now["predicted_t_s"], rtol=0.02, atol=1e-5):
+                    if before["iterations"] != now["iterations"] or before["stopping_reason"] != now["stopping_reason"]:
+                        raise TraveltimeError(f"M09 rerun changed {name} inverse stopping: {output}")
+                    if not np.allclose(before["model_cell_center_xy_m"], now["model_cell_center_xy_m"],
+                                       rtol=0, atol=1e-8):
+                        raise TraveltimeError(f"M09 rerun changed {name} ordered model cells: {output}")
+                    if not np.allclose(before["model_velocity_m_s"], now["model_velocity_m_s"],
+                                       rtol=REPEAT_VELOCITY_RTOL, atol=REPEAT_VELOCITY_ATOL_M_S):
+                        delta = np.max(np.abs(np.asarray(before["model_velocity_m_s"])
+                                              - np.asarray(now["model_velocity_m_s"])))
+                        raise TraveltimeError(f"M09 rerun changed {name} velocity model "
+                                              f"(maximum {delta:.4f} m/s): {output}")
+                    if not np.allclose(before["predicted_t_s"], now["predicted_t_s"],
+                                       rtol=0, atol=REPEAT_TIME_ATOL_S):
                         delta = np.max(np.abs(np.asarray(before["predicted_t_s"])
                                               - np.asarray(now["predicted_t_s"])))
                         raise TraveltimeError(f"M09 rerun changed {name} forward times beyond tolerance "
                                               f"(maximum {1000 * delta:.4f} ms): {output}")
-                    if not math.isclose(before["heldout_rmse_s"], now["heldout_rmse_s"], rel_tol=0.02, abs_tol=1e-6):
-                        raise TraveltimeError(f"M09 rerun changed {name} held-out RMSE beyond 2%: {output}")
+                    if not math.isclose(before["heldout_rmse_s"], now["heldout_rmse_s"],
+                                        rel_tol=0, abs_tol=REPEAT_TIME_ATOL_S):
+                        raise TraveltimeError(f"M09 rerun changed {name} held-out RMSE beyond 0.01 ms: {output}")
+            old_sensitivity = old.get("sensitivity")
+            new_sensitivity = report.get("sensitivity")
+            if old_sensitivity is None and new_sensitivity is None and old["inverse_status"] != "passed":
+                pass  # An identically failed fit did not reach sensitivity runs.
+            elif old_sensitivity is None or new_sensitivity is None:
+                raise TraveltimeError(f"M09 rerun lost sensitivity evidence: {output}")
+            else:
+                for name in ("alternate_gradient_start", "finer_parameter_mesh"):
+                    before = old_sensitivity.get(name)
+                    now = new_sensitivity.get(name)
+                    if before is None or now is None:
+                        raise TraveltimeError(f"M09 rerun lost {name} sensitivity evidence: {output}")
+                    for key in ("parameter_mesh_sha256", "forward_mesh_sha256", "iterations", "stopping_reason"):
+                        if before[key] != now[key]:
+                            raise TraveltimeError(f"M09 rerun changed {name} {key}: {output}")
+                    if not math.isclose(before["heldout_rmse_s"], now["heldout_rmse_s"],
+                                        rel_tol=0, abs_tol=REPEAT_TIME_ATOL_S):
+                        raise TraveltimeError(f"M09 rerun changed {name} held-out RMSE beyond 0.01 ms: {output}")
         return output
     payload = (json.dumps(report, indent=2, allow_nan=False) + "\n").encode("utf-8")
     digest = hashlib.sha256(payload).hexdigest()

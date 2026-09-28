@@ -1,9 +1,12 @@
 """Independent homogeneous oracle and predeclared whole-shot M09 gates."""
 
+from copy import deepcopy
 import hashlib
 import json
 import math
 from pathlib import Path
+import subprocess
+import sys
 
 import numpy as np
 import pytest
@@ -86,6 +89,9 @@ def test_field_receipt_and_uncertainty_boundary(field_result):
     assert result["uncertainty_status"] == "assumed-not-calibrated"
     assert result["qc"]["reciprocal_status"] == "not_available"
     assert result["weighting"]["chi_square_meaning"].startswith("conditional")
+    assert result["engine"]["thread_count"] == 1
+    assert result["engine"]["cgls_max_iterations"] == 1000
+    assert result["engine"]["cgls_residual_squared_tolerance"] == 1e-20
     for digest in (result["source_sha256"], result["code_sha256"],
                    result["configuration_sha256"], result["environment_versions_sha256"],
                    *(model[key] for model in result["inverse"].values()
@@ -102,6 +108,48 @@ def test_field_receipt_and_uncertainty_boundary(field_result):
     saved = json.loads(target.read_text(encoding="utf-8"))
     assert saved["source_sha256"] == result["source_sha256"]
     assert saved["inverse_status"] == result["inverse_status"]
+
+
+def test_independent_process_fit_reproducibility():
+    if not RAW.exists():
+        pytest.skip("rights-restricted .sgt absent; run documented local acquisition")
+    pytest.importorskip("pygimli")
+    code = """
+import json
+from pathlib import Path
+import sys
+sys.path.insert(0, 'data-pipeline')
+import traveltime as m
+path = Path('data/downloads/pygimli/koenigsee.sgt')
+survey = m.parse_sgt(path)
+tt, data = m._pygimli_data(path, survey)
+fit = m._invert_once(tt, data, survey, m.shot_splits(survey)['interleaved'],
+                     m.INVERSE_OPTIONS, retain_arrays=True)
+print('M09_RESULT=' + json.dumps(fit, allow_nan=False))
+"""
+
+    def fresh_fit():
+        completed = subprocess.run([sys.executable, "-c", code], cwd=ROOT, capture_output=True,
+                                   text=True, check=True, timeout=180)
+        payload = [line.removeprefix("M09_RESULT=") for line in completed.stdout.splitlines()
+                   if line.startswith("M09_RESULT=")]
+        assert len(payload) == 1, completed.stdout + completed.stderr
+        return json.loads(payload[0])
+
+    first, second = fresh_fit(), fresh_fit()
+    assert first["parameter_mesh_sha256"] == second["parameter_mesh_sha256"]
+    assert first["forward_mesh_sha256"] == second["forward_mesh_sha256"]
+    assert first["iterations"] == second["iterations"]
+    assert first["stopping_reason"] == second["stopping_reason"]
+    assert np.allclose(first["model_cell_center_xy_m"], second["model_cell_center_xy_m"],
+                       rtol=0, atol=1e-8)
+    assert np.allclose(first["model_velocity_m_s"], second["model_velocity_m_s"],
+                       rtol=pipeline.REPEAT_VELOCITY_RTOL,
+                       atol=pipeline.REPEAT_VELOCITY_ATOL_M_S)
+    assert np.allclose(first["predicted_t_s"], second["predicted_t_s"],
+                       rtol=0, atol=pipeline.REPEAT_TIME_ATOL_S)
+    assert abs(first["heldout_rmse_s"] - second["heldout_rmse_s"]) <= pipeline.REPEAT_TIME_ATOL_S
+    assert first["heldout_improvement"] >= 0.10 and second["heldout_improvement"] >= 0.10
 
 
 def test_whole_shot_splits_and_failure_gate(field_result, monkeypatch):
@@ -164,3 +212,46 @@ def test_failed_receipt_is_retained_and_checksums_guard_it(tmp_path):
     target.write_text(target.read_text(encoding="utf-8") + "drift", encoding="utf-8")
     with pytest.raises(TraveltimeError, match="checksum drift"):
         pipeline.save_local_receipt(report, root=tmp_path, kind="failed-test")
+
+
+def test_receipt_repeat_rejects_model_prediction_and_sensitivity_drift(tmp_path):
+    model = {"parameter_mesh_sha256": "a" * 64, "forward_mesh_sha256": "b" * 64,
+             "iterations": 4, "stopping_reason": "objective-stagnation",
+             "model_cell_center_xy_m": [[0.0, -1.0], [1.0, -1.0]],
+             "model_velocity_m_s": [1000.0, 1500.0],
+             "predicted_t_s": [0.001, 0.002], "heldout_rmse_s": 0.001}
+    sensitivity = {key: {"parameter_mesh_sha256": "a" * 64,
+                         "forward_mesh_sha256": "b" * 64,
+                         "iterations": 4, "stopping_reason": "objective-stagnation",
+                         "heldout_rmse_s": 0.001}
+                   for key in ("alternate_gradient_start", "finer_parameter_mesh")}
+    report = {"schema": "test-repeated-m09", "source_sha256": "0" * 64,
+              "code_sha256": "1" * 64, "qc": {"pick_count": 2},
+              "unit_basis": "test", "inverse_status": "passed",
+              "configuration_sha256": "2" * 64, "environment_versions_sha256": "3" * 64,
+              "split": {name: {"sha256": "4" * 64}
+                        for name in ("interleaved", "central_block")},
+              "inverse": {name: deepcopy(model) for name in ("interleaved", "central_block")},
+              "sensitivity": sensitivity}
+    target = pipeline.save_local_receipt(report, root=tmp_path, kind="repeat-test")
+    original = target.read_bytes()
+    assert pipeline.save_local_receipt(report, root=tmp_path, kind="repeat-test") == target
+    for section, key, value, expected in (
+        ("inverse", "predicted_t_s", [0.00102, 0.002], "forward times"),
+        ("inverse", "model_velocity_m_s", [1002.0, 1500.0], "velocity model"),
+        ("sensitivity", "heldout_rmse_s", 0.00102, "finer_parameter_mesh"),
+    ):
+        changed = deepcopy(report)
+        name = "interleaved" if section == "inverse" else "finer_parameter_mesh"
+        changed[section][name][key] = value
+        with pytest.raises(TraveltimeError, match=expected):
+            pipeline.save_local_receipt(changed, root=tmp_path, kind="repeat-test")
+        assert target.read_bytes() == original
+
+    partial = deepcopy(report)
+    partial["inverse_status"] = "not-converged"
+    partial["inverse_reason"] = "blocked fit failed before sensitivity"
+    del partial["inverse"]["central_block"]
+    del partial["sensitivity"]
+    failed_path = pipeline.save_local_receipt(partial, root=tmp_path, kind="partial-test")
+    assert pipeline.save_local_receipt(partial, root=tmp_path, kind="partial-test") == failed_path
