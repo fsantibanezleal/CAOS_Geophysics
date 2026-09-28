@@ -305,10 +305,10 @@ def evaluate(
         "qc_failures": [{"trace_id": members[i].trace_id, "reason": entry.get("reason")}
                         for i, entry in enumerate(index["members"]) if entry.get("valid") is not True],
     }
-    private_predictions_path.write_text(json.dumps(private_ledger, sort_keys=True) + "\n", encoding="utf-8")
+    private_predictions_path.write_bytes((json.dumps(private_ledger, sort_keys=True) + "\n").encode("utf-8"))
     report["private_predictions_sha256"] = file_sha256(private_predictions_path)
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    report_path.write_bytes((json.dumps(report, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     return {"report_path": str(report_path), "selected": len(members),
             "valid": len(valid_indices), "qc_rejected": report["qc_rejected"],
             "nominal": report["metrics"]["nominal"]}
