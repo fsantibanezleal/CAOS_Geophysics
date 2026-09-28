@@ -1,0 +1,5 @@
+# M12 experimental CPU checkpoint
+
+This directory retains a 121,340-byte, locally trained NumPy checkpoint and its full, 160+80+80+160 held-out receipt. It is **experimental negative evidence**, not a canonical web artifact, product release or field model. The frozen checkpoint was selected at epoch 39 of 40 from validation only. Its SHA-256 is `a06a29fc9b64e1797d9b96db10053097816256fa32b578ceb19c301b19b5a99d` and the training source SHA-256 is `2b9ed95d3ba7b1b0f9f80167fa610640dc75c8a142dafb9f7f09791b96a1fd44`.
+
+Run `./scripts/run_m12_velocity.ps1 -Verify -Output models/experimental/m12-velocity-cpu-20260928` from the repository root in a compatible local environment. The verifier regenerates synthetic cohorts from the fixed seeds and checks every per-record model and independent-forward metric. See the [M12 method chapter](../../../docs/problem-types/04_learned-velocity-validation.md) and [convergence record](../../../docs/design/features/m12-velocity-validation/convergence.md). Do not copy these weights to `data/derived`, frontend, API, or a public deployment as a successful inverse.
