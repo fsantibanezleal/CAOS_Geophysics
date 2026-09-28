@@ -235,6 +235,26 @@ def _save_resume_state(path: Path, state: dict) -> None:
         staged.unlink(missing_ok=True)
 
 
+def _bounded_amp_step(model: torch.nn.Module, optimizer: torch.optim.Optimizer,
+                      scaler: torch.amp.GradScaler) -> bool:
+    """Back off one overflowing fp16 batch without applying a corrupt update.
+
+    A dynamic scaler may legitimately grow after 2000 finite updates and then
+    overflow. The caller records and bounds skips; persistent overflow fails.
+    """
+    scaler.unscale_(optimizer)
+    gradients = [parameter.grad for parameter in model.parameters()
+                 if parameter.grad is not None]
+    norm = torch.nn.utils.get_total_norm(gradients, error_if_nonfinite=False)
+    if not bool(torch.isfinite(norm)):
+        scaler.update(new_scale=scaler.get_scale() * 0.5)
+        return False
+    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True)
+    scaler.step(optimizer)
+    scaler.update()
+    return True
+
+
 def train(
     extraction_dir: Path,
     selection_manifest: Path,
@@ -322,6 +342,7 @@ def train(
     for epoch in range(start_epoch, epochs + 1):
         model.train()
         epoch_losses = []
+        amp_skipped_steps = 0
         for values, p, s, _trace_ids in train_loader:
             values, p, s = _augment_shift(values, p, s, generator)
             values = values.to(device, non_blocking=True)
@@ -334,16 +355,18 @@ def train(
                 loss = weighted_soft_cross_entropy(logits, target)
             if not torch.isfinite(loss):
                 raise FloatingPointError("nonfinite M13 training loss")
-            scaler.scale(loss).backward()
-            scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0, error_if_nonfinite=True)
-            scaler.step(optimizer)
-            scaler.update()
             epoch_losses.append(float(loss.detach()))
+            scaler.scale(loss).backward()
+            if not _bounded_amp_step(model, optimizer, scaler):
+                amp_skipped_steps += 1
+                if amp_skipped_steps > max(10, (len(train_loader) + 99) // 100):
+                    raise FloatingPointError("persistent M13 fp16 gradient overflow")
         scheduler.step()
         dev_loss, _ = _dev_summary(model, dev_loader, device)
         row = {"epoch": epoch, "train_loss": float(np.mean(epoch_losses)),
-               "dev_loss": dev_loss, "learning_rate": scheduler.get_last_lr()[0]}
+               "dev_loss": dev_loss, "learning_rate": scheduler.get_last_lr()[0],
+               "amp_skipped_steps": amp_skipped_steps,
+               "optimizer_updates": len(epoch_losses) - amp_skipped_steps}
         history.append(row)
         print(json.dumps(row), flush=True)
         if dev_loss < best_loss:

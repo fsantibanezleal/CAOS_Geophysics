@@ -12,7 +12,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 import train_stead_phase as trainer  # noqa: E402
 from train_stead_phase import (  # noqa: E402
-    ExtractedPhaseDataset, _augment_shift, _score_rows,
+    ExtractedPhaseDataset, _augment_shift, _bounded_amp_step, _score_rows,
     audit_exact_waveform_overlap, select_dev_thresholds,
 )
 from stead_phase import file_sha256  # noqa: E402
@@ -93,6 +93,27 @@ def test_exact_normalized_waveform_overlap_is_a_pretraining_gate(tmp_path: Path)
     dev = write_partition("dev", dev_values)
     with pytest.raises(ValueError, match="crosses train/dev"):
         audit_exact_waveform_overlap(train, dev)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="local CUDA AMP gate")
+def test_amp_overflow_backs_off_without_applying_a_corrupt_update():
+    model = torch.nn.Linear(1, 1).cuda()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    scaler = torch.amp.GradScaler("cuda")
+    before = [parameter.detach().clone() for parameter in model.parameters()]
+    value = model(torch.ones((1, 1), device="cuda")).square().sum()
+    scaler.scale(value).backward()
+    next(iter(model.parameters())).grad.fill_(float("inf"))
+    initial_scale = scaler.get_scale()
+    assert _bounded_amp_step(model, optimizer, scaler) is False
+    assert scaler.get_scale() == initial_scale * 0.5
+    assert all(torch.equal(parameter, previous)
+               for parameter, previous in zip(model.parameters(), before, strict=True))
+    optimizer.zero_grad(set_to_none=True)
+    scaler.scale(model(torch.ones((1, 1), device="cuda")).square().sum()).backward()
+    assert _bounded_amp_step(model, optimizer, scaler) is True
+    assert any(not torch.equal(parameter, previous)
+               for parameter, previous in zip(model.parameters(), before, strict=True))
 
 
 def test_train_only_translation_breaks_narrow_stead_p_clock():
