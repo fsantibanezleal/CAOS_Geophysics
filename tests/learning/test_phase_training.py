@@ -10,6 +10,7 @@ import torch
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+import train_stead_phase as trainer  # noqa: E402
 from train_stead_phase import (  # noqa: E402
     ExtractedPhaseDataset, _augment_shift, _score_rows, select_dev_thresholds,
 )
@@ -75,3 +76,76 @@ def test_dev_threshold_avoids_false_noise_picks_and_counts_timing_error():
     assert _score_rows(wrong, 0.5, 0.5)["counts"]["P"] == {
         "tp": 0, "fp": 1, "fn": 1,
     }
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="local CUDA training gate")
+def test_private_epoch_state_resumes_without_opening_test(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(trainer, "ROOT", tmp_path)
+    extraction = tmp_path / "data/raw/phase/extracted"
+    output = tmp_path / "data/raw/phase/models"
+    extraction.mkdir(parents=True)
+    source_hash = "a" * 64
+    split_hashes = {"train": "b" * 64, "dev": "c" * 64, "test": "d" * 64}
+    for partition in ("train", "dev"):
+        values = np.random.default_rng(8 if partition == "train" else 9).normal(
+            size=(2, 3, 6000)).astype(np.float32)
+        array_path = extraction / f"stead-{partition}-normalized.npy"
+        np.save(array_path, values)
+        (extraction / f"stead-{partition}-index.json").write_text(json.dumps({
+            "schema": "caos.stead-phase-local-array.v1", "partition": partition,
+            "array_shape": [2, 3, 6000], "array_sha256": file_sha256(array_path),
+            "selection_sha256": split_hashes[partition],
+            "waveform_source_sha256": source_hash,
+            "members": [
+                {"valid": True, "member": {"trace_id": f"{partition}-quake",
+                                            "p_index": 1000, "s_index": 2000}},
+                {"valid": True, "member": {"trace_id": f"{partition}-noise",
+                                            "p_index": None, "s_index": None}},
+            ],
+        }), encoding="utf-8")
+    manifest = tmp_path / "data/raw/phase/selection.json"
+    manifest.write_text(json.dumps({
+        "schema": "caos.stead-phase-members.v1",
+        "report": {"selected": {
+            partition: {"ids_sha256": digest} for partition, digest in split_hashes.items()
+        }},
+    }), encoding="utf-8")
+    original_save = trainer._save_resume_state
+    state_calls = 0
+
+    def stop_after_first(path, state):
+        nonlocal state_calls
+        original_save(path, state)
+        state_calls += 1
+        if state_calls == 1:
+            raise RuntimeError("simulated interruption after durable epoch")
+
+    prior = torch.are_deterministic_algorithms_enabled()
+    monkeypatch.setattr(trainer, "_save_resume_state", stop_after_first)
+    try:
+        with pytest.raises(RuntimeError, match="simulated interruption"):
+            trainer.train(extraction, manifest, output, epochs=2, batch_size=2)
+        assert (output / "phase-resume-state.pt").is_file()
+        assert not (output / "phase-model.pt").exists()
+        monkeypatch.setattr(trainer, "_save_resume_state", original_save)
+        result = trainer.train(extraction, manifest, output, epochs=2, batch_size=2, resume=True)
+        receipt = json.loads((output / "phase-freeze.json").read_text(encoding="utf-8"))
+        assert result["checkpoint_sha256"] == file_sha256(output / "phase-model.pt")
+        assert receipt["frozen_before_test"] is True
+        assert receipt["test_waveforms_opened"] is False
+        assert len(receipt["history"]) == 2
+        direct_output = tmp_path / "data/raw/phase/models-direct"
+        direct = trainer.train(extraction, manifest, direct_output, epochs=2, batch_size=2)
+        resumed_weights = torch.load(output / "phase-model.pt", map_location="cpu",
+                                     weights_only=True)["model"]
+        direct_weights = torch.load(direct_output / "phase-model.pt", map_location="cpu",
+                                    weights_only=True)["model"]
+        assert result["chosen_epoch"] == direct["chosen_epoch"]
+        assert result["p_threshold"] == direct["p_threshold"]
+        assert result["s_threshold"] == direct["s_threshold"]
+        assert all(torch.equal(resumed_weights[key], direct_weights[key])
+                   for key in resumed_weights)
+        with pytest.raises(FileExistsError, match="never overwrite"):
+            trainer.train(extraction, manifest, output, epochs=2, batch_size=2, resume=True)
+    finally:
+        torch.use_deterministic_algorithms(prior)

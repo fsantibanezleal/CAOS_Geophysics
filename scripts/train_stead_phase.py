@@ -9,10 +9,13 @@ from __future__ import annotations
 
 import argparse
 from copy import deepcopy
+import hashlib
 import json
+import os
 from pathlib import Path
 import random
 import sys
+import tempfile
 
 import numpy as np
 import torch
@@ -173,6 +176,18 @@ def _selection_hashes(path: Path, train: ExtractedPhaseDataset, dev: ExtractedPh
     return selected["test"]["ids_sha256"]
 
 
+def _save_resume_state(path: Path, state: dict) -> None:
+    """Replace only this script's private per-epoch continuation checkpoint."""
+    fd, name = tempfile.mkstemp(prefix=".phase-train-", suffix=".pt", dir=path.parent)
+    os.close(fd)
+    staged = Path(name)
+    try:
+        torch.save(state, staged)
+        os.replace(staged, path)
+    finally:
+        staged.unlink(missing_ok=True)
+
+
 def train(
     extraction_dir: Path,
     selection_manifest: Path,
@@ -181,6 +196,7 @@ def train(
     epochs: int = 12,
     batch_size: int = 16,
     seed: int = 41027,
+    resume: bool = False,
 ) -> dict:
     if not torch.cuda.is_available():
         raise RuntimeError("real STEAD model training requires the local CUDA GPU")
@@ -191,8 +207,15 @@ def train(
         raise ValueError("checkpoints and training ledger must stay in ignored data/raw/")
     checkpoint_path = output_dir / "phase-model.pt"
     receipt_path = output_dir / "phase-freeze.json"
+    resume_path = output_dir / "phase-resume-state.pt"
     if checkpoint_path.exists() or receipt_path.exists():
         raise FileExistsError("training output exists; never overwrite a frozen model")
+    if resume_path.is_symlink():
+        raise ValueError("private training continuation state cannot be a symlink")
+    if resume and not resume_path.is_file():
+        raise FileNotFoundError("resume requested but no private per-epoch state exists")
+    if not resume and resume_path.exists():
+        raise FileExistsError("per-epoch state exists; use --resume after verifying it")
     train_set = ExtractedPhaseDataset(extraction_dir, "train")
     dev_set = ExtractedPhaseDataset(extraction_dir, "dev")
     test_selection_hash = _selection_hashes(selection_manifest, train_set, dev_set)
@@ -212,11 +235,42 @@ def train(
     optimizer = torch.optim.AdamW(model.parameters(), lr=2e-4, weight_decay=1e-4)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
     scaler = torch.amp.GradScaler("cuda")
+    code_sha256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    model_code_sha256 = hashlib.sha256(
+        Path(sys.modules[PhaseUNet.__module__].__file__).read_bytes()).hexdigest()
+    config = {"epochs": epochs, "batch_size": batch_size, "seed": seed,
+              "source_sha256": train_set.index["waveform_source_sha256"],
+              "train_selection_sha256": train_set.index["selection_sha256"],
+              "dev_selection_sha256": dev_set.index["selection_sha256"],
+              "test_selection_sha256": test_selection_hash,
+              "code_sha256": code_sha256, "model_code_sha256": model_code_sha256,
+              "torch": str(torch.__version__)}
     best_loss = float("inf")
     best_state = None
     chosen_epoch = 0
     history: list[dict] = []
-    for epoch in range(1, epochs + 1):
+    start_epoch = 1
+    output_dir.mkdir(parents=True, exist_ok=True)
+    if resume:
+        state = torch.load(resume_path, map_location="cpu", weights_only=True)
+        if state.get("schema") != "caos.phase-train-resume.v1" or state.get("config") != config:
+            raise ValueError("private training state differs from code, source, split or hyperparameters")
+        model.load_state_dict(state["model"], strict=True)
+        optimizer.load_state_dict(state["optimizer"])
+        scheduler.load_state_dict(state["scheduler"])
+        scaler.load_state_dict(state["scaler"])
+        best_loss = state["best_loss"]
+        best_state = state["best_state"]
+        chosen_epoch = state["chosen_epoch"]
+        history = state["history"]
+        start_epoch = state["epoch"] + 1
+        if start_epoch < 2 or start_epoch > epochs + 1 or len(history) != start_epoch - 1:
+            raise ValueError("private training state has an invalid epoch history")
+        generator.set_state(state["loader_rng"])
+        torch.set_rng_state(state["torch_cpu_rng"])
+        torch.cuda.set_rng_state_all(state["torch_cuda_rng"])
+        random.setstate(state["python_rng"])
+    for epoch in range(start_epoch, epochs + 1):
         model.train()
         epoch_losses = []
         for values, p, s, _trace_ids in train_loader:
@@ -247,12 +301,28 @@ def train(
             best_loss = dev_loss
             chosen_epoch = epoch
             best_state = deepcopy({key: value.detach().cpu() for key, value in model.state_dict().items()})
+        _save_resume_state(resume_path, {
+            "schema": "caos.phase-train-resume.v1",
+            "config": config,
+            "epoch": epoch,
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "scheduler": scheduler.state_dict(),
+            "scaler": scaler.state_dict(),
+            "best_loss": best_loss,
+            "best_state": best_state,
+            "chosen_epoch": chosen_epoch,
+            "history": history,
+            "loader_rng": generator.get_state(),
+            "torch_cpu_rng": torch.get_rng_state(),
+            "torch_cuda_rng": torch.cuda.get_rng_state_all(),
+            "python_rng": random.getstate(),
+        })
     if best_state is None:
         raise RuntimeError("no finite development-selected checkpoint")
     model.load_state_dict(best_state)
     dev_loss, dev_rows = _dev_summary(model, dev_loader, device)
     thresholds = select_dev_thresholds(dev_rows)
-    output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint = {
         "schema": "caos.phase-picking-checkpoint.v1",
         "model": best_state,
@@ -266,6 +336,8 @@ def train(
         "source_sha256": train_set.index["waveform_source_sha256"],
         "train_selection_sha256": train_set.index["selection_sha256"],
         "dev_selection_sha256": dev_set.index["selection_sha256"],
+        "training_code_sha256": code_sha256,
+        "model_code_sha256": model_code_sha256,
     }
     torch.save(checkpoint, checkpoint_path)
     checkpoint_sha = file_sha256(checkpoint_path)
@@ -285,6 +357,8 @@ def train(
         "train_qc_rejected": len(train_set.index["members"]) - len(train_set),
         "dev_qc_rejected": len(dev_set.index["members"]) - len(dev_set),
         "epochs_requested": epochs,
+        "training_code_sha256": code_sha256,
+        "model_code_sha256": model_code_sha256,
         "history": history,
         "software": {"torch": torch.__version__, "cuda": torch.version.cuda,
                      "numpy": np.__version__},
@@ -306,9 +380,12 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=12)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--seed", type=int, default=41027)
+    parser.add_argument("--resume", action="store_true",
+                        help="Continue only an exact code/source/split/config private epoch state")
     args = parser.parse_args()
     print(json.dumps(train(args.extraction_dir, args.selection_manifest, args.output_dir,
-                           epochs=args.epochs, batch_size=args.batch_size, seed=args.seed), indent=2))
+                           epochs=args.epochs, batch_size=args.batch_size, seed=args.seed,
+                           resume=args.resume), indent=2))
 
 
 if __name__ == "__main__":

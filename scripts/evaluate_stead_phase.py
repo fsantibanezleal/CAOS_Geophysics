@@ -118,9 +118,13 @@ def _load_locked_test(extraction_dir: Path, manifest: Path, receipt_path: Path,
         receipt_path.parent / receipt["checkpoint_filename"],
         map_location="cpu", weights_only=True,
     )
+    model_code_sha256 = hashlib.sha256(
+        Path(sys.modules[PhaseUNet.__module__].__file__).read_bytes()).hexdigest()
     if (checkpoint.get("schema") != "caos.phase-picking-checkpoint.v1"
             or checkpoint.get("source_sha256") != index["waveform_source_sha256"]
             or checkpoint.get("chosen_epoch") != receipt["chosen_epoch"]
+            or checkpoint.get("model_code_sha256") != model_code_sha256
+            or receipt.get("model_code_sha256") != model_code_sha256
             or checkpoint.get("input", {}).get("shape") != [3, SAMPLES]):
         raise ValueError("frozen checkpoint content disagrees with source or receipt")
     return members, index, array, receipt, checkpoint, checkpoint_hash

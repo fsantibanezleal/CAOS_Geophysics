@@ -1,5 +1,6 @@
 """Native export parity on a synthetic contract fixture, not a field score."""
 
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -27,6 +28,8 @@ def test_frozen_checkpoint_exports_once_with_native_dev_parity(tmp_path: Path, m
     np.save(array_path, values)
     source_hash = "a" * 64
     dev_hash = "b" * 64
+    model_code_sha256 = hashlib.sha256(
+        Path(sys.modules[PhaseUNet.__module__].__file__).read_bytes()).hexdigest()
     (extraction / "stead-dev-index.json").write_text(json.dumps({
         "schema": "caos.stead-phase-local-array.v1", "partition": "dev",
         "array_shape": [2, 3, 6000], "array_sha256": file_sha256(array_path),
@@ -43,6 +46,7 @@ def test_frozen_checkpoint_exports_once_with_native_dev_parity(tmp_path: Path, m
         "source_sha256": source_hash,
         "dev_selection_sha256": dev_hash,
         "chosen_epoch": 1,
+        "model_code_sha256": model_code_sha256,
         "input": {"shape": [3, 6000]},
     }, checkpoint)
     freeze = models / "phase-freeze.json"
@@ -52,6 +56,7 @@ def test_frozen_checkpoint_exports_once_with_native_dev_parity(tmp_path: Path, m
         "checkpoint_sha256": file_sha256(checkpoint),
         "waveform_source_sha256": source_hash,
         "chosen_epoch": 1,
+        "model_code_sha256": model_code_sha256,
         "p_threshold": 0.5, "s_threshold": 0.5,
     }), encoding="utf-8")
     result = exporter.export(

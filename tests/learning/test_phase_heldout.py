@@ -115,12 +115,15 @@ def test_locked_evaluator_matches_ids_and_writes_aggregate_once(tmp_path: Path, 
     array_path = extraction / "stead-test-normalized.npy"
     np.save(array_path, values)
     source_hash = "a" * 64
+    model_code_sha256 = hashlib.sha256(
+        Path(sys.modules[PhaseUNet.__module__].__file__).read_bytes()).hexdigest()
     checkpoint_path = models / "phase-model.pt"
     torch.save({
         "schema": "caos.phase-picking-checkpoint.v1",
         "model": PhaseUNet().state_dict(),
         "source_sha256": source_hash,
         "chosen_epoch": 1,
+        "model_code_sha256": model_code_sha256,
         "input": {"shape": [3, 6000]},
     }, checkpoint_path)
     checkpoint_hash = file_sha256(checkpoint_path)
@@ -132,6 +135,7 @@ def test_locked_evaluator_matches_ids_and_writes_aggregate_once(tmp_path: Path, 
         "waveform_source_sha256": source_hash,
         "test_selection_sha256": ids_hash,
         "chosen_epoch": 1, "p_threshold": 0.5, "s_threshold": 0.5,
+        "model_code_sha256": model_code_sha256,
     }), encoding="utf-8")
     (extraction / "stead-test-index.json").write_text(json.dumps({
         "schema": "caos.stead-phase-local-array.v1", "partition": "test",

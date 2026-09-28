@@ -52,7 +52,10 @@ class UpBlock(nn.Module):
         self.residual = ResidualBlock(outputs)
 
     def forward(self, values: torch.Tensor, skip: torch.Tensor) -> torch.Tensor:
-        values = F.interpolate(values, size=skip.shape[-1], mode="linear", align_corners=False)
+        # CUDA linear-interpolation backward is not deterministic in PyTorch.
+        # Exact-nearest upsampling followed by learned convolutions keeps the
+        # decoder trainable under the declared deterministic GPU policy.
+        values = F.interpolate(values, size=skip.shape[-1], mode="nearest-exact")
         return self.residual(self.project(torch.cat((values, skip), dim=1)))
 
 

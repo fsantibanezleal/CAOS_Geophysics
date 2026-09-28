@@ -117,9 +117,13 @@ def export(
     if file_sha256(checkpoint_path) != freeze.get("checkpoint_sha256"):
         raise ValueError("frozen checkpoint hash differs")
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=True)
+    model_code_sha256 = hashlib.sha256(
+        Path(sys.modules[PhaseUNet.__module__].__file__).read_bytes()).hexdigest()
     if (checkpoint.get("schema") != "caos.phase-picking-checkpoint.v1"
             or checkpoint.get("source_sha256") != freeze.get("waveform_source_sha256")
             or checkpoint.get("chosen_epoch") != freeze.get("chosen_epoch")
+            or checkpoint.get("model_code_sha256") != model_code_sha256
+            or freeze.get("model_code_sha256") != model_code_sha256
             or checkpoint.get("input", {}).get("shape") != [3, SAMPLES]):
         raise ValueError("checkpoint content differs from the freeze receipt")
     dataset = ExtractedPhaseDataset(extraction_dir, "dev")
