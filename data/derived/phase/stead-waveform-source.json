@@ -1,0 +1,40 @@
+{
+  "schema": "caos.stead-waveform-source.v1",
+  "retrieved_utc_date": "2026-09-28",
+  "dataset": "STEAD, Mousavi et al. 2019",
+  "citation_doi": "10.1109/ACCESS.2019.2947848",
+  "origin_url": "https://github.com/smousavi05/STEAD",
+  "mirror_url": "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/waveforms.hdf5",
+  "metadata_mirror_url": "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/metadata.csv",
+  "waveforms": {
+    "bytes": 91127786704,
+    "sha256": "4d73f567d9ea85fcdea5f2d8bf9cf47fd2e0c25b602793d41f56713efba62b1b",
+    "sha256_basis": "full local byte stream after a successful complete curl transfer; upstream does not publish a matching checksum",
+    "hdf5_groups": ["data", "data_format"],
+    "data_format": {
+      "component_order": "ZNE",
+      "dimension_order": "CW",
+      "sampling_rate_hz": 100,
+      "unit": "counts",
+      "instrument_response": "not restituted",
+      "measurement_label": "velocity"
+    },
+    "physical_unit_interpretation": "Unrestituted instrument counts, not velocity in metres per second"
+  },
+  "metadata": {
+    "bytes": 402560190,
+    "sha256": "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe"
+  },
+  "rights": {
+    "declared_license": "CC BY 4.0",
+    "original_license_url": "https://github.com/smousavi05/STEAD/blob/master/LICENSE",
+    "seisbench_dataset_declaration_url": "https://github.com/seisbench/seisbench/blob/main/seisbench/data/stead.py",
+    "mirror_license_notice_url": "https://seisbench.gfz-potsdam.de/mirror/LICENSE",
+    "release_decision": "private-local-source-only-pending-asset-level-attribution-review",
+    "required_release_attribution": "Mousavi et al. (2019), dataset/source URL, CC BY 4.0 link and modification notice"
+  },
+  "holdout_policy": "Metadata-only test selection is locked; test waveform bytes cannot be opened until a train/dev-selected checkpoint freeze receipt exists",
+  "repository_contains_raw_waveforms": false,
+  "model_trained_by_this_receipt": false,
+  "heldout_performance_established_by_this_receipt": false
+}

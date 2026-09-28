@@ -1,0 +1,47 @@
+{
+  "proposed_joint_hash_split": {
+    "caution": "This is metadata planning only; waveform bytes, QC and model generalization are not yet evaluated.",
+    "cross_partition_event_station_traces_quarantined": 320795,
+    "eligible_counts": {
+      "dev": 11777,
+      "test": 14754,
+      "train": 397686
+    },
+    "event_and_station_disjoint_by_construction": true,
+    "method": "independent deterministic event and station hashes; keep a trace only when their partitions match",
+    "salt": "caos-stead-station-event-v1"
+  },
+  "published_split_leakage_on_eligible_earthquakes": {
+    "events_in_multiple_partitions": 59820,
+    "interpretation": "Published trace-level split is not accepted as event/station independent.",
+    "stations_in_multiple_partitions": 1942,
+    "unique_events": 329151,
+    "unique_stations": 2481
+  },
+  "rows": {
+    "categories": {
+      "earthquake_local": 1030231,
+      "noise": 235426
+    },
+    "duplicate_original_trace_names": 0,
+    "earthquake_eligible_p_before_s": 745012,
+    "earthquake_invalid_order_or_range": 0,
+    "earthquake_missing_p": 66318,
+    "earthquake_missing_s": 285175,
+    "published_split": {
+      "dev": 63283,
+      "test": 126566,
+      "train": 1075808
+    },
+    "total": 1265657
+  },
+  "schema": "caos.stead-metadata-profile.v1",
+  "source": {
+    "bytes": 402560190,
+    "sha256": "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe",
+    "upstream_dataset": "STEAD, Mousavi et al. 2019, DOI 10.1109/ACCESS.2019.2947848",
+    "upstream_license": "CC BY 4.0, as declared by the original STEAD repository",
+    "url": "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/metadata.csv",
+    "waveforms_downloaded_by_this_receipt": false
+  }
+}

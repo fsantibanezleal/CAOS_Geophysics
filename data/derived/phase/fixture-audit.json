@@ -1,0 +1,140 @@
+{
+  "classical": {
+    "definition": "first and second 2.5-threshold STA/LTA upward crossings; 0.12 s STA, 1.2 s LTA, 0.4 s minimum P-S spacing",
+    "partitions": {
+      "dev": {
+        "M08_classical": {
+          "P": {
+            "correct_within_tolerance": 5,
+            "false_without_reference": 0,
+            "mean_signed_error_s": -8.431764705882351,
+            "median_absolute_error_s": 14.310000000000002,
+            "missed": 0,
+            "outside_tolerance": 12,
+            "picked_count": 17,
+            "recall": 0.29411764705882354,
+            "total": 17
+          },
+          "S": {
+            "correct_within_tolerance": 4,
+            "false_without_reference": 0,
+            "mean_signed_error_s": -6.6339999999999995,
+            "median_absolute_error_s": 4.999999999999998,
+            "missed": 2,
+            "outside_tolerance": 11,
+            "picked_count": 15,
+            "recall": 0.23529411764705882,
+            "total": 17
+          }
+        },
+        "trace_count": 17,
+        "unit_counts": {
+          "m/s": 10,
+          "m/s**2": 7
+        }
+      },
+      "test": {
+        "M08_classical": {
+          "P": {
+            "correct_within_tolerance": 1,
+            "false_without_reference": 0,
+            "mean_signed_error_s": -15.568571428571428,
+            "median_absolute_error_s": 16.81,
+            "missed": 1,
+            "outside_tolerance": 13,
+            "picked_count": 14,
+            "recall": 0.06666666666666667,
+            "total": 15
+          },
+          "S": {
+            "correct_within_tolerance": 1,
+            "false_without_reference": 0,
+            "mean_signed_error_s": -12.719285714285714,
+            "median_absolute_error_s": 15.009999999999998,
+            "missed": 1,
+            "outside_tolerance": 13,
+            "picked_count": 14,
+            "recall": 0.06666666666666667,
+            "total": 15
+          }
+        },
+        "trace_count": 15,
+        "unit_counts": {
+          "m/s": 14,
+          "m/s**2": 1
+        }
+      },
+      "train": {
+        "M08_classical": {
+          "P": {
+            "correct_within_tolerance": 9,
+            "false_without_reference": 0,
+            "mean_signed_error_s": -11.571475409836063,
+            "median_absolute_error_s": 14.179999999999996,
+            "missed": 0,
+            "outside_tolerance": 52,
+            "picked_count": 61,
+            "recall": 0.14754098360655737,
+            "total": 61
+          },
+          "S": {
+            "correct_within_tolerance": 4,
+            "false_without_reference": 0,
+            "mean_signed_error_s": -9.940819672131148,
+            "median_absolute_error_s": 10.85,
+            "missed": 0,
+            "outside_tolerance": 57,
+            "picked_count": 61,
+            "recall": 0.06557377049180328,
+            "total": 61
+          }
+        },
+        "trace_count": 61,
+        "unit_counts": {
+          "m/s": 50,
+          "m/s**2": 11
+        }
+      }
+    },
+    "phase_tolerance_s": 0.5,
+    "reference": "analyst labels contained in upstream NPZ/CSV; not geological ground truth"
+  },
+  "classification": "exploratory engineering-pilot; test partition inspected; not M13 acceptance or field generalization",
+  "limitations": [
+    "Only 100 upstream fixture traces; 7 have ambiguous component orientation and are quarantined.",
+    "The second classical trigger is a provisional S assignment, not a phase classifier.",
+    "No PhaseNet-family model is trained or evaluated by this receipt.",
+    "Rights for republishing raw waveforms or derived model weights remain unresolved.",
+    "All partitions were read during this pilot; they cannot be treated as a fresh untouched final test."
+  ],
+  "schema": "caos.phase-fixture-audit.v1",
+  "source": {
+    "bytes": 24935083,
+    "catalogue_trace_count": 100,
+    "eligible_unambiguous_trace_count": 93,
+    "quarantined_orientation_count": 7,
+    "raw_redistribution": "not authorized by this receipt; provider-link-only",
+    "sha256": "60476821a71697ded05884c225c75ae7e0099bd9a7b79c4e2bdc9e7b3a5706b3",
+    "url": "https://github.com/AI4EPS/PhaseNet/releases/download/test_data/test_data.zip"
+  },
+  "split": {
+    "member_sha256": "7a90dac8406320aa2bdd9729c704d445f074a2f613f8a2eebf1219ffa4cddc4d",
+    "partition_counts": {
+      "dev": 17,
+      "test": 15,
+      "train": 61
+    },
+    "partition_sha256": {
+      "dev": "ff0be59187ebbf97e3b5ec233e14a2bb98e0aa6f9a79e368f6567c06b6565220",
+      "test": "17d80cf6b2b320c323789dde6c1f6bb1f03c16e9d49504fcdc488da73bf4680c",
+      "train": "fb55e597fc856a414936dae78b222a724343cb17ac864a3d05c27f5e297eb1aa"
+    },
+    "salt": "phasenet-fixture-v1",
+    "station_and_event_disjoint": true
+  },
+  "window": {
+    "sample_interval_s": 0.01,
+    "samples": 4096,
+    "start_sample": 4096
+  }
+}

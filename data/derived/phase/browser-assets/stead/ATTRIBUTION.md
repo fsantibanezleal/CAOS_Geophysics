@@ -1,0 +1,9 @@
+# STEAD phase-picking browser assets
+
+The waveform source is STEAD: Mousavi, S. M., Sheng, Y., Zhu, W., and Beroza, G. C. (2019), *Stanford Earthquake Dataset (STEAD): A Global Data Set of Seismic Signals for AI*, IEEE Access. DOI: [10.1109/ACCESS.2019.2947848](https://doi.org/10.1109/ACCESS.2019.2947848). Original source: [STEAD repository](https://github.com/smousavi05/STEAD). The source dataset is licensed [CC BY 4.0](https://github.com/smousavi05/STEAD/blob/master/LICENSE); the local download came from the [SeisBench mirror](https://seisbench.gfz-potsdam.de/mirror/datasets/stead/).
+
+This package changes the source records. Selection used metadata-only event/station-disjoint partitions and a 24-record display subset fixed before test scoring. Source Z/N/E unrestituted instrument counts were reordered E/N/Z, and flat or exactly duplicated components were quarantined. The 23 usable 60-second records were mean-removed and divided by per-component peak centered count. The binary files are little-endian float32 dimensionless normalized counts, not velocity or acceleration. One selected noise record failed QC and has no binary waveform; it was not replaced.
+
+The ONNX model is an original PhaseNet-family architecture trained on the STEAD training partition. It is not the official pretrained PhaseNet model. The browser package includes the frozen [aggregate held-out benchmark](benchmark.json), model and waveform hashes in [manifest.json](manifest.json), and no private training arrays. The model scores are not calibrated event probabilities. Analyst picks are references, not geological truth.
+
+The browser parity gate is separate from the native ONNX gate. Until the browser test actually executes this exact model on the 23 valid held-out records and compares full probability arrays and peak samples, this package is not a browser-validated release.

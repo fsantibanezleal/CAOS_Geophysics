@@ -1,0 +1,5 @@
+# Local M13 checkpoint export and native ONNX parity lane (not CI or browser).
+# PyTorch/CUDA are installed by the repository's GPU setup step.
+onnx==1.23.0
+onnxscript==0.7.2
+onnxruntime==1.30.0

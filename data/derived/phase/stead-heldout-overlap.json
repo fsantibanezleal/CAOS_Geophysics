@@ -1,0 +1,26 @@
+{
+  "array_sha256": {
+    "dev": "cb9083408f60f0b462e6364e22b141b8226aabc7d5ec6572b51afb82453c30e0",
+    "test": "ca6fcffb462b965481df6087f38ee0aeb6b4e747275c54c7f64d0975b7cc8ec6",
+    "train": "de94b547bef5face121779b36c045d5f8052402ac40841b6697d70ce7c776f0b"
+  },
+  "basis": "SHA-256 of each complete 3x6000 normalized float32 E/N/Z array",
+  "checkpoint_sha256": "90765889d05093356aae2e193bab6bf3a8122744510ccd7f125f5215763d1f09",
+  "cross_partition_event_station_id_reuse": {},
+  "cross_partition_exact_duplicates": {},
+  "non_claim": "does not detect approximate copies, related events under other IDs or source label errors",
+  "performed_after_locked_heldout_scoring": true,
+  "schema": "caos.stead-phase-heldout-overlap.v1",
+  "status": "no-exact-cross-partition-overlap",
+  "valid": {
+    "dev": 5850,
+    "test": 5926,
+    "train": 64599
+  },
+  "waveform_source_sha256": "4d73f567d9ea85fcdea5f2d8bf9cf47fd2e0c25b602793d41f56713efba62b1b",
+  "within_partition_exact_duplicates": {
+    "dev": 0,
+    "test": 0,
+    "train": 0
+  }
+}
