@@ -14,6 +14,8 @@ import { MethodDiagram } from "../components/MethodDiagram";
 import { EdiFixtures } from "../components/EdiFixtures";
 import { LiveMT } from "../components/LiveMT";
 import { chapters, type Algorithm, type Chapter } from "../data/methods";
+import { phasePickers } from "../data/phase-picking";
+import { PhasePickingContent } from "../components/PhasePickingContent";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
@@ -366,6 +368,32 @@ function TheoryChapter({ chapter }: { chapter: Chapter }) {
 export function Methodology() {
   const t = useText();
   const i = useShellLang() === "es" ? 1 : 0;
+  const released = (ids: string[]) => chapters
+    .filter((chapter) => ids.includes(chapter.id))
+    .map((chapter) => ({ id: chapter.id, label: chapter.title[i], content: <TheoryChapter chapter={chapter} /> }));
+  const groups = [
+    {
+      id: "fields",
+      label: t("Fields", "Campo"),
+      content: <SubTabs orientation="vertical" ariaLabel={t("Field and MT methods", "Métodos de campos y MT")} tabs={released(["potential", "mt", "joint"])} />,
+    },
+    {
+      id: "waves",
+      label: t("Waves", "Ondas"),
+      content: <SubTabs orientation="vertical" ariaLabel={t("Waveform methods", "Métodos de ondas")} tabs={[
+        ...released(["seismic"]),
+        { id: "m08", label: phasePickers[0].title[i], content: <PhasePickingContent method="m08" view="theory" /> },
+      ]} />,
+    },
+    {
+      id: "learned",
+      label: t("Learning", "Aprendizaje"),
+      content: <SubTabs orientation="vertical" ariaLabel={t("Learned methods", "Métodos aprendidos")} tabs={[
+        ...released(["cnn", "ae"]),
+        { id: "m13", label: phasePickers[1].title[i], content: <PhasePickingContent method="m13" view="theory" /> },
+      ]} />,
+    },
+  ];
   return (
     <div className="page-body prose">
       <Head
@@ -375,19 +403,11 @@ export function Methodology() {
         )}
       >
         {t(
-          "These six sections explain what each method measures, its unknown parameters, the governing equations and the assumptions that limit interpretation. The Implementation page specifies the numerical algorithms and constants used to compute the results; the equations here distinguish the physical problem from its discretization.",
-          "Estas seis secciones explican lo que mide cada método, sus incógnitas, ecuaciones y supuestos. Implementación especifica los algoritmos numéricos y constantes usados para obtener resultados; aquí se distingue el problema físico de su discretización.",
+          "The six released synthetic-method chapters remain available alongside source-backed designs for classical M08 and learned M13 earthquake arrival picking. Grouped navigation separates field response, wave physics and learned inference. M08/M13 describe their equations and evaluation requirements, not an already trained or online phase-picking operation.",
+          "Los seis capítulos sintéticos publicados siguen disponibles junto a diseños basados en fuentes para llegadas sísmicas clásicas M08 y aprendidas M13. La navegación agrupa campos, ondas e inferencia aprendida. M08/M13 explican ecuaciones y pruebas necesarias, no un detector entrenado o disponible en línea.",
         )}
       </Head>
-      <SubTabs
-        orientation="vertical"
-        ariaLabel={t("Physical method families", "Familias de métodos físicos")}
-        tabs={chapters.map((c) => ({
-          id: c.id,
-          label: c.title[i],
-          content: <TheoryChapter chapter={c} />,
-        }))}
-      />
+      <Tabs ariaLabel={t("Methodology groups", "Grupos de metodología")} tabs={groups} />
     </div>
   );
 }
@@ -534,46 +554,54 @@ function ValidationSection() {
 export function Implementation() {
   const t = useText();
   const i = useShellLang() === "es" ? 1 : 0;
+  const algorithmsFor = (chapter: Chapter) => chapter.algorithms.map((algorithm) => ({
+    id: algorithm.id,
+    label: algorithm.title[i],
+    content: <AlgorithmSection algorithm={algorithm} chapter={chapter} />,
+  }));
   const groups = [
-    ...chapters
-      .slice(0, 4)
-      .map((c) => ({
-        id: c.id,
-        label: c.title[i],
-        content: (
-          <SubTabs
-            orientation="vertical"
-            ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")}
-            tabs={c.algorithms.map((a) => ({
-              id: a.id,
-              label: a.title[i],
-              content: <AlgorithmSection algorithm={a} chapter={c} />,
-            }))}
-          />
-        ),
-      })),
+    {
+      id: "fields",
+      label: t("Fields", "Campo"),
+      content: <SubTabs orientation="vertical" ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={chapters
+        .filter((chapter) => ["potential", "mt", "joint"].includes(chapter.id))
+        .map((chapter) => ({
+          id: chapter.id,
+          label: chapter.title[i],
+          content: <SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />,
+        }))} />,
+    },
+    {
+      id: "waves",
+      label: t("Waves", "Ondas"),
+      content: <SubTabs orientation="vertical" ariaLabel={t("Waveform algorithms", "Algoritmos de ondas")} tabs={[
+        ...algorithmsFor(chapters.find((chapter) => chapter.id === "seismic")!),
+        { id: "m08", label: phasePickers[0].title[i], content: <PhasePickingContent method="m08" view="implementation" /> },
+      ]} />,
+    },
     {
       id: "learning",
-      label: t("Neural models", "Modelos neuronales"),
+      label: t("Models", "Redes"),
       content: (
         <SubTabs
           orientation="vertical"
           ariaLabel={t("Neural algorithms", "Algoritmos neuronales")}
-          tabs={chapters
-            .slice(4)
-            .map((c) => ({
+          tabs={[
+            ...chapters.slice(4).map((c) => ({
               id: c.id,
               label: c.title[i],
               content: (
                 <AlgorithmSection algorithm={c.algorithms[0]} chapter={c} />
               ),
-            }))}
+            })),
+            { id: "m13", label: phasePickers[1].title[i], content: <PhasePickingContent method="m13" view="implementation" /> },
+          ]}
         />
       ),
     },
     {
       id: "validation",
-      label: t("Numerical checks", "Verificación numérica"),
+      label: t("Checks", "Pruebas"),
       content: <ValidationSection />,
     },
   ];
@@ -586,8 +614,8 @@ export function Implementation() {
         )}
       >
         {t(
-          "This page specifies how the implemented inverse calculations are performed: parameter transformations, discrete objectives, matrix solves or gradient updates, regularization, initialization and stopping rules. Each algorithm also identifies what its recorded history measures, because data error, penalized loss and validation error are different quantities.",
-          "Esta página especifica cómo se calculan las inversiones: transformaciones, objetivos discretos, soluciones matriciales o gradientes, regularización, inicialización y parada. También identifica qué mide cada historial: error de datos, pérdida penalizada y error de validación son cantidades distintas.",
+          "The released synthetic algorithms retain their exact numerical settings and saved histories. The new M08 and M13 sections specify a separately gated earthquake-picking workflow, including waveform units, split discipline and same-trace evaluation. They do not imply that a field picker, trained checkpoint or browser inference is already available.",
+          "Los algoritmos sintéticos publicados conservan configuración e historiales exactos. Las secciones M08 y M13 especifican un flujo sísmico sujeto a pruebas aparte, con unidades, particiones y comparación sobre la misma traza. No implican que ya exista detector de campo, checkpoint entrenado o inferencia web.",
         )}
       </Head>
       <Tabs

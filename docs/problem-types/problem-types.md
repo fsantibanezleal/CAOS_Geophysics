@@ -31,3 +31,7 @@ A CNN maps a normalized gravity map to depth-integrated density. Two convolution
 The classical comparator estimates the same column target from the same held-out models and receives exactly the same seeded noisy observations as the CNN (Gaussian noise at 2% of the training-observation scale). This is not a comprehensive hyperparameter-tuned SOTA benchmark. A separate 160-model set calibrates the autoencoder's 99th-percentile reconstruction-error threshold; an independent 80-model withheld-geometry set tests it. The tested detector misses all 80 withheld geometries. Case-level threshold flags are raw score comparisons, not validated geological classifications: contrast, acquisition, noise and station interpolation can change the score. Under reduced coverage, error is computed against the interpolated network input, while the raw-observation discrepancy is reported separately. No probabilistic confidence is claimed.
 
 Primary sources and methodological differences are recorded in [the review](../research/review.md). The UI methodology page contains the same implementation-specific assumptions in EN/ES.
+
+## Earthquake phase picking, approved design
+
+Classical M08 onset detection and learned M13 PhaseNet-family P/S picking are distinct from the current synthetic FWI and learned-inversion methods. Their units, equations, disjoint evaluation protocol and unimplemented release gates are documented in the [phase-picking design record](phase-picking.md). This is not a reported field-picking result.
