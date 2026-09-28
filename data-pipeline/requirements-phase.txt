@@ -1,0 +1,5 @@
+# Local M08/M13 research lane; install into the repository-ignored .venv-pipeline.
+# Torch/CUDA and NumPy are pinned by the root pipeline environment and validated
+# separately. This adapter reads rights-cleared STEAD HDF5 waveforms after the
+# source-byte receipt; no download occurs on install, test, CI or deployment.
+h5py==3.14.0

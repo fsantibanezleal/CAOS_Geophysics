@@ -1,0 +1,29 @@
+{
+  "chosen_using_trace_metadata_only": true,
+  "contains_trace_ids_or_waveform_samples": false,
+  "display_ids_sha256": "ceda44e51554dada9544e64645d9e792a8c926f9616288b5b05d4d3bf84a1839",
+  "earthquake_count": 16,
+  "earthquake_networks": [
+    "PB",
+    "NC",
+    "CI",
+    "BK",
+    "AZ",
+    "AV",
+    "GS",
+    "AK"
+  ],
+  "noise_count": 8,
+  "noise_networks": [
+    "NC",
+    "AV",
+    "CI",
+    "PB"
+  ],
+  "per_network": 2,
+  "purpose": "predeclared browser display and numerical parity; all 6000 selected test traces define accuracy",
+  "schema": "caos.stead-browser-selection-profile.v1",
+  "selection_salt": "caos-phase-browser-v1",
+  "test_performance_known_when_selected": false,
+  "test_selection_sha256": "dd9fbb2d08406d2a7316be838eba957d0bbfd1f4ffb167cc3470c9abc5b64f3e"
+}
