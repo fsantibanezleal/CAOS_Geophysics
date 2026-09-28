@@ -46,6 +46,8 @@ The [SeisBench format specification](https://seisbench.readthedocs.io/en/stable/
 
 The [CUDA training command](../../scripts/train_stead_phase.py) opens only hash-checked, QC-valid training and development arrays. It records optimizer and epoch losses, chooses a checkpoint by development loss, then fixes P/S peak thresholds by development macro-F1. The private freeze receipt binds the checkpoint bytes, full waveform source and untouched test inventory. The [held-out evaluator](../../scripts/evaluate_stead_phase.py) refuses test bytes without that receipt, compares M08 and M13 on the same trace IDs, and counts unreadable test waveforms as unpicked with a separate QC denominator. Its predeclared stress variants remove each channel or add deterministic noise; output includes per-phase tolerance confusion, timing, noise false alarms and network/channel strata. A two-row unit fixture checks this sequence but is **not** a field benchmark. Neither command has yet trained or scored the real HDF5 source. Softmax outputs remain uncalibrated scores unless a separate reliability study establishes calibration.
 
+The [ONNX exporter](../../scripts/export_stead_phase_onnx.py) binds the frozen checkpoint to a private model and checks native-runtime probabilities and peak times against hash-selected development traces. Native ONNX parity is **not** browser parity: the browser must later run this exact model on rights-cleared held-out real traces and meet the separate SDD tolerance. Its synthetic unit fixture is not field evidence. No ONNX model has yet been produced from a real trained checkpoint.
+
 ## Reproduce this bounded audit
 
 ```powershell
