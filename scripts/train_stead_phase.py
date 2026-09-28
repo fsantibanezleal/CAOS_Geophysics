@@ -74,23 +74,35 @@ class ExtractedPhaseDataset(Dataset):
 
 def _augment_shift(values: torch.Tensor, p: torch.Tensor, s: torch.Tensor,
                    generator: torch.Generator) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Train-only time translation with reflected boundaries, never label-centred."""
+    """Train-only broad translation, padding solely from pre-event quiet samples.
+
+    STEAD puts essentially every P in samples 400..1000. A narrow jitter would
+    let the network memorize clock position. Use analyst labels only to keep
+    both phases within [100, 5900]; they are never passed to inference.
+    """
     output = values.clone()
     p = p.clone()
     s = s.clone()
-    shifts = torch.randint(-400, 401, (len(values),), generator=generator)
-    for index, shift_tensor in enumerate(shifts):
-        shift = int(shift_tensor)
-        if p[index] >= 0 and (not 0 <= p[index] + shift < SAMPLES
-                              or not 0 <= s[index] + shift < SAMPLES):
-            continue
+    for index in range(len(values)):
+        if p[index] >= 0:
+            minimum = 100 - int(p[index])
+            maximum = SAMPLES - 101 - int(s[index])
+            if minimum > maximum:
+                raise ValueError("training phases leave no valid translated window")
+        else:
+            minimum, maximum = -2000, 2000
+        shift = int(torch.randint(minimum, maximum + 1, (1,), generator=generator))
+        quiet_length = max(32, min(200, int(p[index]) // 2 if p[index] >= 0 else 200))
+        phase_offset = int(torch.randint(0, quiet_length, (1,), generator=generator))
         if shift > 0:
             output[index, :, shift:] = values[index, :, :-shift]
-            output[index, :, :shift] = torch.flip(values[index, :, :shift], dims=(-1,))
+            quiet_indices = (torch.arange(shift) + phase_offset) % quiet_length
+            output[index, :, :shift] = values[index, :, quiet_indices]
         elif shift < 0:
             amount = -shift
             output[index, :, :-amount] = values[index, :, amount:]
-            output[index, :, -amount:] = torch.flip(values[index, :, -amount:], dims=(-1,))
+            quiet_indices = (torch.arange(amount) + phase_offset) % quiet_length
+            output[index, :, -amount:] = values[index, :, quiet_indices]
         if p[index] >= 0:
             p[index] += shift
             s[index] += shift

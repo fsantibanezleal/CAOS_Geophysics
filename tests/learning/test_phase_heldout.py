@@ -54,6 +54,11 @@ def test_stress_inputs_are_trace_bound_and_do_not_mutate_nominal_waveforms():
     noisy = _variant_batch(values, ["a", "b"], "noise_0p1")
     assert np.array_equal(noisy, _variant_batch(values, ["a", "b"], "noise_0p1"))
     assert not np.array_equal(noisy[0], noisy[1])
+    onset = np.zeros((1, 3, 6000), dtype=np.float32)
+    onset[0, 0, 700] = 1
+    translated = _variant_batch(onset, ["quake"], "shift_plus_800")
+    assert int(translated[0, 0].argmax()) == 1500
+    assert int(np.count_nonzero(translated)) == 1
     assert np.all(values == 1)
     with pytest.raises(ValueError, match="variant"):
         _variant_batch(values, ["a", "b"], "unsupported")
@@ -102,12 +107,19 @@ def test_locked_evaluator_matches_ids_and_writes_aggregate_once(tmp_path: Path, 
                     "test", "earthquake_local", "BH", 1000, 2000),
     ]
     ids_hash = hashlib.sha256("noise\nquake".encode()).hexdigest()
+    train_member = SteadMember(
+        "train-quake", "bucket1$2,:3,:6000", "train-event", "NW.TRAIN",
+        "train", "earthquake_local", "BH", 700, 1200,
+    )
+    train_hash = hashlib.sha256(train_member.trace_id.encode()).hexdigest()
     selection = private / "selection.json"
     selection.write_text(json.dumps({
         "schema": "caos.stead-phase-members.v1",
         "report": {"metadata_sha256": METADATA_SHA256,
-                   "selected": {"test": {"ids_sha256": ids_hash}}},
-        "members": {"test": [member.__dict__ for member in members]},
+                   "selected": {"test": {"ids_sha256": ids_hash},
+                                "train": {"ids_sha256": train_hash}}},
+        "members": {"test": [member.__dict__ for member in members],
+                    "train": [train_member.__dict__]},
     }), encoding="utf-8")
     values = np.zeros((2, 3, 6000), dtype=np.float32)
     values[1, 2, 1000:1050] = 1
@@ -156,8 +168,11 @@ def test_locked_evaluator_matches_ids_and_writes_aggregate_once(tmp_path: Path, 
     assert report["valid"] == 2 and report["noise_valid"] == 1
     assert report["private_predictions_sha256"] == file_sha256(private_predictions)
     assert set(report["metrics"]) == set(heldout.VARIANTS)
+    assert report["position_only_negative_control"]["train_median_P_s"] == 7.0
+    assert report["stress_population"]["shift_plus_800"]["selected_eligible"] == 2
     assert report["metrics"]["nominal"]["M08"]["P"]["reference_count"] == 1
     assert report["metrics"]["nominal"]["M13"]["P"]["reference_count"] == 1
+    assert report["metrics"]["shift_plus_800"]["M13"]["P"]["reference_count"] == 1
     with pytest.raises(FileExistsError, match="never overwrite"):
         heldout.evaluate(
             extraction, selection, receipt_path, report_path, private_predictions,

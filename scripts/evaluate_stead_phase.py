@@ -27,7 +27,7 @@ from phase_picking import classical_stalta_picks, evaluate_matched_picks  # noqa
 from stead_phase import file_sha256  # noqa: E402
 
 
-VARIANTS = ("nominal", "drop_E", "drop_N", "drop_Z", "noise_0p1")
+VARIANTS = ("nominal", "drop_E", "drop_N", "drop_Z", "noise_0p1", "shift_plus_800")
 
 
 def _variant_batch(base: np.ndarray, trace_ids: list[str], variant: str) -> np.ndarray:
@@ -42,6 +42,13 @@ def _variant_batch(base: np.ndarray, trace_ids: list[str], variant: str) -> np.n
                 f"caos-m13-heldout-noise-v1|{trace_id}".encode()).digest()[:8], "big")
             changed[index] += np.random.default_rng(seed).normal(
                 0, 0.1, changed[index].shape).astype(np.float32)
+    elif variant == "shift_plus_800":
+        changed[:, :, 800:] = base[:, :, :-800]
+        for index, trace_id in enumerate(trace_ids):
+            offset = int.from_bytes(hashlib.sha256(
+                f"caos-m13-heldout-shift-v1|{trace_id}".encode()).digest()[:8], "big") % 200
+            quiet_indices = (np.arange(800) + offset) % 200
+            changed[index, :, :800] = np.take(base[index, :, :200], quiet_indices, axis=1)
     return changed
 
 
@@ -154,6 +161,13 @@ def evaluate(
     members, index, array, receipt, checkpoint, checkpoint_hash = _load_locked_test(
         extraction_dir, manifest, receipt_path, private_root,
     )
+    train_members, _train_hash = _members(manifest, "train")
+    train_p = [member.p_index for member in train_members if member.p_index is not None]
+    train_s = [member.s_index for member in train_members if member.s_index is not None]
+    if not train_p or not train_s:
+        raise ValueError("position-only control requires the approved training labels")
+    position_prior = {"P": float(np.median(train_p)) * 0.01,
+                      "S": float(np.median(train_s)) * 0.01}
     model = PhaseUNet()
     model.load_state_dict(checkpoint["model"], strict=True)
     device = torch.device(device_name)
@@ -167,7 +181,7 @@ def evaluate(
     } for member in members}
     predictions = {variant: {method: {
         member.trace_id: {"P": None, "S": None} for member in members
-    } for method in ("M08", "M13")} for variant in VARIANTS}
+    } for method in ("M00", "M08", "M13")} for variant in VARIANTS}
     valid_indices = [i for i, entry in enumerate(index["members"]) if entry.get("valid") is True]
     failures = Counter(entry.get("reason", "unreported") for entry in index["members"]
                        if entry.get("valid") is not True)
@@ -192,9 +206,12 @@ def evaluate(
                         s_threshold=receipt["s_threshold"],
                     )
                     classical = classical_stalta_picks(values[local_index].T, sample_interval_s=0.01)
+                    predictions[variant]["M00"][trace_id] = position_prior
                     predictions[variant]["M13"][trace_id] = learned
                     predictions[variant]["M08"][trace_id] = classical
-                    row_predictions[trace_id][variant] = {"M08": classical, "M13": learned}
+                    row_predictions[trace_id][variant] = {
+                        "M00": position_prior, "M08": classical, "M13": learned,
+                    }
             for trace_id in trace_ids:
                 private_rows.append({"trace_id": trace_id, "labels": labels[trace_id],
                                      "variants": row_predictions[trace_id]})
@@ -202,6 +219,24 @@ def evaluate(
                               "valid_total": len(valid_indices)}), flush=True)
 
     noise_valid = sum(members[i].category == "noise" for i in valid_indices)
+    shift_eligible = {
+        member.trace_id for member in members
+        if member.category == "noise"
+        or (member.p_index is not None and member.p_index >= 200
+            and member.s_index is not None and member.s_index + 800 < SAMPLES)
+    }
+    metrics = {}
+    for variant, methods in predictions.items():
+        if variant == "shift_plus_800":
+            variant_labels = {trace_id: {
+                phase: value + 8.0 if value is not None else None
+                for phase, value in labels[trace_id].items()
+            } for trace_id in shift_eligible}
+            variant_methods = {method: {trace_id: picks[trace_id] for trace_id in shift_eligible}
+                               for method, picks in methods.items()}
+        else:
+            variant_labels, variant_methods = labels, methods
+        metrics[variant] = _summarize(variant_labels, variant_methods, noise_valid=noise_valid)
     report = {
         "schema": "caos.stead-phase-heldout-benchmark.v1",
         "status": "computed-on-real-heldout-waveforms",
@@ -216,12 +251,25 @@ def evaluate(
         "tolerance_s": 0.5,
         "classical_parameters": {"STA_s": 0.12, "LTA_s": 1.2,
                                  "trigger_ratio": 2.5, "minimum_PS_s": 0.4},
+        "position_only_negative_control": {
+            "method": "M00", "train_median_P_s": position_prior["P"],
+            "train_median_S_s": position_prior["S"],
+            "rule": "predict these fixed times on every QC-valid trace, including noise; no waveform input",
+        },
         "stress_protocol": {
             "nominal": "original trace-local normalized E/N/Z",
             "drop_E": "E component zero after normalization",
             "drop_N": "N component zero after normalization",
             "drop_Z": "Z component zero after normalization",
             "noise_0p1": "Gaussian sigma 0.1 per normalized sample, trace-ID hash seed",
+            "shift_plus_800": "move input 800 samples later with pre-window noise padding from first 200 samples; labels shift by 8 s for eligible records",
+        },
+        "stress_population": {
+            "shift_plus_800": {
+                "selected_eligible": len(shift_eligible),
+                "selected_excluded_p_before_200_or_s_after_5199": len(members) - len(shift_eligible),
+                "eligibility_rule_predeclared": True,
+            },
         },
         "selected": len(members), "valid": len(valid_indices),
         "qc_rejected": len(members) - len(valid_indices),
@@ -229,8 +277,7 @@ def evaluate(
         "noise_valid": noise_valid, "device": device_name,
         "software": {"torch": torch.__version__, "numpy": np.__version__},
         "metrics_include_qc_failures_as_unpicked": True,
-        "metrics": {variant: _summarize(labels, methods, noise_valid=noise_valid)
-                    for variant, methods in predictions.items()},
+        "metrics": metrics,
     }
     groups: dict[str, set[str]] = defaultdict(set)
     for member in members:

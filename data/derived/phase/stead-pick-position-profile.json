@@ -1,0 +1,81 @@
+{
+  "interpretation": "The selected train/dev P clock is a constructed-window prior. A learned picker must beat an input-free position baseline and survive predeclared time translation.",
+  "partitions": {
+    "dev": {
+      "P_between_400_and_1000_fraction": 1.0,
+      "P_between_400_and_1000_inclusive_count": 5000,
+      "P_sample_quantiles": [
+        400.0,
+        400.0,
+        500.0,
+        700.0,
+        800.0,
+        900.0,
+        1000.0
+      ],
+      "S_sample_quantiles": [
+        441.0,
+        656.0,
+        914.0,
+        1161.0,
+        1560.0,
+        2433.0,
+        4454.0
+      ],
+      "earthquake_count": 5000,
+      "noise_count": 1000,
+      "quantile_probabilities": [
+        0.0,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        1.0
+      ],
+      "selected_count": 6000,
+      "selection_sha256": "a438bfaba3c92b2ca072fcf8248e1bda8d805fa4b622a68aec4b8c1e8535b202"
+    },
+    "train": {
+      "P_between_400_and_1000_fraction": 1.0,
+      "P_between_400_and_1000_inclusive_count": 60000,
+      "P_sample_quantiles": [
+        400.0,
+        400.0,
+        500.0,
+        700.0,
+        800.0,
+        900.0,
+        1000.0
+      ],
+      "S_sample_quantiles": [
+        424.0,
+        638.0,
+        897.0,
+        1140.0,
+        1520.0,
+        2471.0,
+        5399.0
+      ],
+      "earthquake_count": 60000,
+      "noise_count": 5000,
+      "quantile_probabilities": [
+        0.0,
+        0.05,
+        0.25,
+        0.5,
+        0.75,
+        0.95,
+        1.0
+      ],
+      "selected_count": 65000,
+      "selection_sha256": "b38433b85401e4e7484490a8ed85c2d20b635a2b966f16f60f236c722c93b485"
+    }
+  },
+  "sample_rate_hz": 100,
+  "schema": "caos.stead-train-dev-pick-position.v1",
+  "selection_manifest_sha256": "36b2dd7037543936bd3e06898a8bff8ab99fbbbbf363083e491345df14429944",
+  "source": "STEAD metadata via SeisBench mirror",
+  "test_member_statistics_computed": false,
+  "test_waveforms_opened": false
+}

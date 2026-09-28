@@ -55,9 +55,23 @@ def test_training_shift_preserves_arrival_alignment_without_shifting_noise_label
     shifted, new_p, new_s = _augment_shift(values, p, s, torch.Generator().manual_seed(12))
     assert int(shifted[0, 0].argmax()) == int(new_p[0])
     assert int(shifted[0, 1].argmax()) == int(new_s[0])
+    assert int(torch.count_nonzero(shifted[0, 0])) == 1
+    assert int(torch.count_nonzero(shifted[0, 1])) == 1
     assert new_s[0] - new_p[0] == 1000
     assert (int(new_p[1]), int(new_s[1])) == (-1, -1)
     assert p.tolist() == [1000, -1] and s.tolist() == [2000, -1]
+
+
+def test_train_only_translation_breaks_narrow_stead_p_clock():
+    values = torch.zeros((32, 3, 6000), dtype=torch.float32)
+    p = torch.full((32,), 700)
+    s = torch.full((32,), 1200)
+    shifted, new_p, new_s = _augment_shift(values, p, s, torch.Generator().manual_seed(41027))
+    assert int(new_p.max() - new_p.min()) > 3500
+    assert torch.all(new_p >= 100)
+    assert torch.all(new_s <= 5899)
+    assert torch.all(new_s - new_p == 500)
+    assert shifted.shape == values.shape
 
 
 def test_dev_threshold_avoids_false_noise_picks_and_counts_timing_error():
