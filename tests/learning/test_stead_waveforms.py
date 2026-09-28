@@ -107,5 +107,11 @@ def test_bucket_reader_and_rejections(tmp_path):
     member = _fake_hdf(path, component_order="ENZ")
     with pytest.raises(SteadFormatError, match="component_order"):
         SteadHdfReader(path, expected_sha256=file_sha256(path), expected_bytes=path.stat().st_size)
+    member = _fake_hdf(path)
+    with h5py.File(path, "r+") as handle:
+        handle["data/bucket17"][0, 1] = handle["data/bucket17"][0, 0]
+    with SteadHdfReader(path, expected_sha256=file_sha256(path), expected_bytes=path.stat().st_size) as reader:
+        with pytest.raises(SteadFormatError, match="duplicated component"):
+            reader.read(member)
     assert hashlib.sha256(path.read_bytes()).hexdigest() == file_sha256(path)
     assert member.event_id == "event"

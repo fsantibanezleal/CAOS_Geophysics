@@ -52,6 +52,8 @@ R-PH-008 BEFORE reading waveforms for model fitting, THE metadata selector SHALL
 
 R-PH-009 WHEN a learned architecture is initialized, THE model SHALL enforce its declared input sampling/channel/window order, produce differentiable N/P/S logits and explicit phase/noise targets, and never import pretrained weights silently. Gate: `tests/learning/test_phase_model.py::test_phase_unet_tensor_contract_and_gradient` and `::test_arrival_targets_and_noise_are_declared`. Passing this architecture gate is not a trained-checkpoint or accuracy verdict.
 
+R-PH-010 WHEN a selected waveform fails source QC, THE local extractor SHALL retain its ID and typed failure, mask its array row and never replace it with a favourable trace; BEFORE any test waveform is opened, THE extractor SHALL require a private frozen checkpoint receipt binding the model file hash, test selection hash, source hash, chosen epoch and dev-selected thresholds. Gate: `tests/learning/test_stead_extraction.py::test_extraction_retains_qc_failures_without_replacement` and `::test_test_partition_cannot_be_opened_before_model_freeze` plus full-source extraction receipt.
+
 ## Acceptance sequence
 
 Source/rights receipt → parser and negative fixtures → deterministic split → classical baseline → GPU training with genuine checkpoint → held-out benchmark/degradation → export and local parity → browser parity and rendered QA → rights approval and public release. Each transition records failure as failure. No green unit test alone closes #83.

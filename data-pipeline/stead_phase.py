@@ -260,7 +260,7 @@ class SteadHdfReader:
         block = self._handle["data"][bucket]
         index = int(index_text)
         if (not isinstance(block, h5py.Dataset) or len(block.shape) != 3
-                or block.shape[1] < 3 or block.shape[2] < 6000 or index >= block.shape[0]):
+                or block.shape[1] != 3 or block.shape[2] < 6000 or index >= block.shape[0]):
             raise SteadFormatError("HDF5 bucket shape or trace index is invalid")
         zne = np.asarray(block[index, :3, :6000], dtype=np.float32)
         if zne.shape != (3, 6000) or not np.all(np.isfinite(zne)):
@@ -268,6 +268,10 @@ class SteadHdfReader:
         values = np.ascontiguousarray(zne[[2, 1, 0]].T)
         if np.any(np.ptp(values, axis=0) <= 0):
             raise SteadFormatError("HDF5 trace has a flat component; not three measured channels")
+        if (np.array_equal(values[:, 0], values[:, 1])
+                or np.array_equal(values[:, 0], values[:, 2])
+                or np.array_equal(values[:, 1], values[:, 2])):
+            raise SteadFormatError("HDF5 trace has an exactly duplicated component")
         return SteadWaveform(member, values)
 
 
