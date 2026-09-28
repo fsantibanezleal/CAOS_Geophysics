@@ -6,7 +6,6 @@ import asyncio
 import hashlib
 import json
 import os
-import shutil
 import uuid
 import zipfile
 from pathlib import Path
@@ -126,16 +125,15 @@ def _purge_exact_deletion_directory(directory: Path, assets: list[RawAsset]) -> 
     directory.rmdir()
 
 
-def _checked_backup_directory(settings: Settings, owner_id: str, project_id: str) -> Path:
+def _require_no_project_backup(settings: Settings, owner_id: str, project_id: str) -> None:
     path = settings.data_dir / ".backups" / owner_id / project_id
     if not path.resolve(strict=False).is_relative_to(settings.data_dir.resolve()):
-        raise ApiError(409, "backup_state_unresolved", "API-managed backup path requires operator review")
+        raise ApiError(409, "backup_state_unresolved", "Project backup path requires operator review")
     for item in (path, path.parent, path.parent.parent):
-        if item.is_symlink():
-            raise ApiError(409, "backup_state_unresolved", "API-managed backup path requires operator review")
-    if path.exists() and not path.is_dir():
-        raise ApiError(409, "backup_state_unresolved", "API-managed backup path requires operator review")
-    return path
+        if item.is_symlink() or (item != path and item.exists() and not item.is_dir()):
+            raise ApiError(409, "backup_state_unresolved", "Project backup path requires operator review")
+    if path.exists():
+        raise ApiError(409, "backup_reconciliation_required", "Project backup exists; operator reconciliation is required before deletion")
 
 
 def _make_export(path: Path, project: dict, rows: list[tuple[dict, Path]]) -> None:
@@ -380,7 +378,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         manifest = [{"asset_id": item.id, "sha256": item.sha256, "byte_count": item.byte_count} for item in assets]
         used = sum(item.byte_count for item in assets)
         project_dir = await asyncio.to_thread(_exact_project_directory, settings, str(user.id), project_id, assets)
-        backup = _checked_backup_directory(settings, str(user.id), project_id)
+        _require_no_project_backup(settings, str(user.id), project_id)
         deleting_dir = settings.data_dir / ".deleting" / f"{user.id}--{project_id}"
         if deleting_dir.parent.is_symlink():
             raise ApiError(409, "raw_state_unresolved", "Deletion recovery path requires operator review")
@@ -403,7 +401,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             receipt = DeletionReceipt(
                 id=str(uuid.uuid4()), project_id=project_id, owner_id=user.id,
                 deleted_at=utcnow(), asset_hashes=hashes, asset_manifest=manifest,
-                backup_purge_status="external_pending",
+                backup_purge_status="not_attempted",
             )
             session.add(receipt)
             await session.commit()
@@ -414,8 +412,9 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             raise
         if renamed:
             await asyncio.to_thread(_purge_exact_deletion_directory, deleting_dir, assets)
-        if backup.exists():
-            await asyncio.to_thread(shutil.rmtree, backup)
-        return {"deleted": True, "project_id": project_id, "receipt_id": receipt.id, "external_backup_status": "pending_reconciliation"}
+        return {
+            "deleted": True, "project_id": project_id, "receipt_id": receipt.id,
+            "backup_erasure_status": "not_attempted", "external_backup_status": "pending_reconciliation",
+        }
 
     app.include_router(router)
