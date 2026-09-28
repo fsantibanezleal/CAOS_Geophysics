@@ -32,6 +32,8 @@ The classical comparator estimates the same column target from the same held-out
 
 Primary sources and methodological differences are recorded in [the review](../research/review.md). The UI methodology page contains the same implementation-specific assumptions in EN/ES.
 
+M12 is a separate, bounded learned **first-arrival velocity** experiment. It uses different synthetic families and acquisition layouts, an independent travel-time quadrature oracle and a matched regularized ray inverse. Its first locked joint-family/acquisition result fails the classical comparison; it is not a waveform inversion or field-validated product result. See [M12 methods, equations, numerical result and limitations](04_learned-velocity-validation.md).
+
 ## Earthquake phase picking, approved design
 
 Classical M08 onset detection and learned M13 PhaseNet-family P/S picking are distinct from the current synthetic FWI and learned-inversion methods. Their units, equations, disjoint evaluation protocol and unimplemented release gates are documented in the [phase-picking design record](phase-picking.md). This is not a reported field-picking result.

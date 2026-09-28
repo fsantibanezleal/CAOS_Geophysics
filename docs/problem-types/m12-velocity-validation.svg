@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="360" viewBox="0 0 1060 360" role="img" aria-labelledby="title desc">
+  <title id="title">M12 held-out geometry and independent forward check</title>
+  <desc id="desc">Training families and acquisitions A/B lead to a frozen checkpoint; fault and salt families with acquisition C are held out. Both learned and classical maps are checked with an independent quadrature operator.</desc>
+  <style>
+    svg { color: #17324d; background: #f4f8fb; font-family: Arial, sans-serif; }
+    .box { fill: #ffffff; stroke: #47718b; stroke-width: 2; rx: 8; }
+    .hold { fill: #fff3e6; stroke: #a45b25; stroke-width: 2; rx: 8; }
+    .line { fill: none; stroke: #47718b; stroke-width: 2; marker-end: url(#arrow); }
+    .orange { stroke: #a45b25; }
+    .heading { fill: currentColor; font-size: 18px; font-weight: bold; }
+    .body { fill: currentColor; font-size: 15px; }
+    .small { fill: currentColor; font-size: 13px; }
+    @media (prefers-color-scheme: dark) {
+      svg { color: #e5eef5; background: #142536; }
+      .box { fill: #21384b; stroke: #8bb7d1; }
+      .hold { fill: #493622; stroke: #e0a674; }
+      .line { stroke: #8bb7d1; }
+      .orange { stroke: #e0a674; }
+    }
+  </style>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5 0 9Z" fill="#47718b"/></marker></defs>
+  <rect class="box" x="25" y="35" width="235" height="105"/>
+  <text class="heading" x="42" y="65">Train and validation</text>
+  <text class="body" x="42" y="93">Layer, lens, dip</text>
+  <text class="small" x="42" y="117">Acquisition layouts A/B</text>
+  <rect class="box" x="330" y="35" width="235" height="105"/>
+  <text class="heading" x="347" y="65">Frozen learned map</text>
+  <text class="body" x="347" y="93">Velocity on 16 x 16 grid</text>
+  <text class="small" x="347" y="117">Checkpoint selected on validation</text>
+  <path class="line" d="M260 86H329"/>
+  <rect class="hold" x="25" y="210" width="235" height="105"/>
+  <text class="heading" x="42" y="240">Locked joint test</text>
+  <text class="body" x="42" y="268">Fault and salt-like</text>
+  <text class="small" x="42" y="292">Acquisition layout C only</text>
+  <rect class="box" x="330" y="210" width="235" height="105"/>
+  <text class="heading" x="347" y="240">Matched classical map</text>
+  <text class="body" x="347" y="268">Regularized ray inverse</text>
+  <text class="small" x="347" y="292">Same noisy picks and geometry</text>
+  <path class="line orange" d="M260 263H329"/>
+  <rect class="box" x="650" y="103" width="380" height="145"/>
+  <text class="heading" x="670" y="137">Independent forward-data oracle Q</text>
+  <text class="body" x="670" y="167">Bilinear slowness quadrature</text>
+  <text class="body" x="670" y="192">Predicted versus identical noisy picks</text>
+  <text class="small" x="670" y="220">Separate from cell-length inverse A</text>
+  <path class="line" d="M565 87H615V148H649"/>
+  <path class="line" d="M565 263H615V205H649"/>
+</svg>

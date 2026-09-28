@@ -6,6 +6,7 @@ This wiki is the durable technical record of the workbench. It explains what the
 - [Frameworks](frameworks/frameworks.md): research-selected engines and why each is used.
 - [Problem types](problem-types/problem-types.md): gravity, magnetics, MT, FWI, learned, and joint methods.
 - [Earthquake phase-picking design](problem-types/phase-picking.md): M08 classical and M13 PhaseNet-family theory, units, evaluation and pending gates.
+- [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
 - [Source acquisition](guides/05_sources.md): reviewed provider links, immutable raw assets, rights, format dispatch and local receipts.
 - [Cases](cases/README.md): category taxonomy and 20-case coverage matrix.
