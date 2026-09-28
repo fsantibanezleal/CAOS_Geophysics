@@ -136,8 +136,9 @@ export function normalizeCounts(channels: readonly number[][]): Channels {
 
 function makeTrace(traceId: string, source: string, representation: Representation,
                    channelValues: [number[], number[], number[]], startUtc?: string): PhaseTrace {
-  const channels = channelValues.map(values => Float32Array.from(values)) as [Float32Array, Float32Array, Float32Array];
-  const normalized = representation === "counts" ? normalizeCounts(channelValues) : channels;
+  const normalized = representation === "counts"
+    ? normalizeCounts(channelValues)
+    : channelValues.map(values => Float32Array.from(values)) as [Float32Array, Float32Array, Float32Array];
   if (representation === "normalized") for (const channel of normalized) {
     let peak = 0;
     for (const value of channel) peak = Math.max(peak, Math.abs(value));
@@ -145,7 +146,9 @@ function makeTrace(traceId: string, source: string, representation: Representati
   }
   const input = new Float32Array(3 * PHASE_SAMPLES);
   normalized.forEach((values, channel) => input.set(values, channel * PHASE_SAMPLES));
-  return { traceId, source, representation, channels, input, startUtc };
+  // Plots and inference share the same normalized amplitudes. The declared
+  // representation still records whether the supplied file contained counts.
+  return { traceId, source, representation, channels: normalized, input, startUtc };
 }
 
 export function parseLocalTrace(value: unknown): PhaseTrace {

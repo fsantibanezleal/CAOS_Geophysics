@@ -46,6 +46,8 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(parsed.input.length).toBe(18000);
     expect([...parsed.input.slice(0, 4)]).toEqual([-1,1,-1,1]);
     expect([...parsed.input.slice(6000, 6004)]).toEqual([-1,1,-1,1]);
+    expect([...parsed.channels[0].slice(0, 4)]).toEqual([-1,1,-1,1]);
+    expect(parsed.channels[0][0]).toBe(parsed.input[0]);
     expect(normalizeCounts([channel(100, 2), channel(200, 3), channel(-40, 5)])[2][0]).toBe(-1);
     const normalized = local();
     normalized.representation = "normalized"; normalized.unit = "dimensionless";
