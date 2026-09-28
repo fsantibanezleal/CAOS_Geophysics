@@ -6,14 +6,17 @@ export type JobState = "queued" | "running" | "succeeded" | "failed" | "cancelle
 export type ExecutionLane = "online-cpu" | "client-live" | "offline-local" | "replay";
 
 export interface SourceRecord {
+  schema_version: "geophysics.source-record-view/v1";
   source_id: string;
+  version: number;
   provider: string;
-  location: { kind: "url"; url: string } | { kind: "upload"; filename: string };
+  location: { kind: "upload"; filename: string };
   doi: string | null;
-  citation: string;
+  citation: string | null;
   retrieved_at: string;
   rights_statement: string;
   rights_decision: RightsDecision;
+  private_storage_permission: "attested" | null;
   declared_format: string;
   expected_bytes: number | null;
   sha256: Sha256;
@@ -21,18 +24,39 @@ export interface SourceRecord {
 }
 
 export interface RawAsset {
+  schema_version: "geophysics.raw-asset-view/v1";
   asset_id: string;
   owner_id: string;
   project_id: string;
   source_id: string;
+  source: SourceRecord;
   original_filename: string;
   mime_type: string;
   detected_format: string;
   byte_count: number;
   sha256: Sha256;
-  storage_key: string;
+  physical_metadata: RawPhysicalMetadata;
+  created_at: string;
   receipt: string;
-  validation_status: "pending" | "valid" | "rejected";
+  download_url: string;
+  /** This checks only the upload envelope, not scientific dataset QC. */
+  validation_status: "raw_metadata_checked";
+}
+
+export interface RawPhysicalMetadata {
+  coordinate_reference: "epsg" | "local";
+  epsg: number | null;
+  local_crs: string | null;
+  axis_order: "xy" | "yx" | "lon_lat" | "lat_lon";
+  horizontal_datum: string;
+  vertical_datum: string;
+  vertical_positive: "up" | "down";
+  horizontal_unit: "m" | "km" | "degree";
+  vertical_unit: "m" | "ft";
+  measurement_unit: string;
+  epoch_utc: string;
+  component_frame: string;
+  geometry: Record<string, unknown>;
 }
 
 export interface AxisDimension {
@@ -209,6 +233,32 @@ function hashes(value: unknown, path: string): void {
   for (const [key, digest] of Object.entries(map)) sha(digest, `${path}.${key}`);
 }
 
+function exactKeys(value: Record<string, unknown>, expected: readonly string[], path: string): void {
+  const extras = Object.keys(value).filter(key => !expected.includes(key));
+  if (extras.length) fail(path, `unexpected field ${extras.join(", ")}`);
+  for (const key of expected) if (!(key in value)) fail(`${path}.${key}`, "missing field");
+}
+
+function rawPhysical(value: unknown): RawPhysicalMetadata {
+  const physical = object(value, "raw_asset.physical_metadata");
+  exactKeys(physical, ["coordinate_reference", "epsg", "local_crs", "axis_order", "horizontal_datum", "vertical_datum", "vertical_positive", "horizontal_unit", "vertical_unit", "measurement_unit", "epoch_utc", "component_frame", "geometry"], "raw_asset.physical_metadata");
+  choice(physical.coordinate_reference, ["epsg", "local"] as const, "raw_asset.physical_metadata.coordinate_reference");
+  if (physical.epsg !== null) integer(physical.epsg, "raw_asset.physical_metadata.epsg", 1000);
+  if (physical.local_crs !== null) nonempty(physical.local_crs, "raw_asset.physical_metadata.local_crs");
+  choice(physical.axis_order, ["xy", "yx", "lon_lat", "lat_lon"] as const, "raw_asset.physical_metadata.axis_order");
+  nonempty(physical.horizontal_datum, "raw_asset.physical_metadata.horizontal_datum");
+  nonempty(physical.vertical_datum, "raw_asset.physical_metadata.vertical_datum");
+  choice(physical.vertical_positive, ["up", "down"] as const, "raw_asset.physical_metadata.vertical_positive");
+  choice(physical.horizontal_unit, ["m", "km", "degree"] as const, "raw_asset.physical_metadata.horizontal_unit");
+  choice(physical.vertical_unit, ["m", "ft"] as const, "raw_asset.physical_metadata.vertical_unit");
+  nonempty(physical.measurement_unit, "raw_asset.physical_metadata.measurement_unit");
+  timestamp(physical.epoch_utc, "raw_asset.physical_metadata.epoch_utc");
+  nonempty(physical.component_frame, "raw_asset.physical_metadata.component_frame");
+  const geometry = object(physical.geometry, "raw_asset.physical_metadata.geometry");
+  if ("storage_key" in geometry) fail("raw_asset.physical_metadata.geometry", "unexpected private storage key");
+  return value as RawPhysicalMetadata;
+}
+
 function scalarParameters(value: unknown, path: string): void {
   for (const [name, parameter] of Object.entries(object(value, path))) {
     if (typeof parameter === "string") nonempty(parameter, `${path}.${name}`);
@@ -253,21 +303,21 @@ function sameShape(left: EvidenceArray, right: EvidenceArray, path: string): voi
 
 export function parseSourceRecord(value: unknown): SourceRecord {
   const source = object(value, "source");
+  exactKeys(source, ["schema_version", "source_id", "version", "provider", "location", "doi", "citation", "retrieved_at", "rights_statement", "rights_decision", "private_storage_permission", "declared_format", "expected_bytes", "sha256", "attribution"], "source");
+  choice(source.schema_version, ["geophysics.source-record-view/v1"] as const, "source.schema_version");
   nonempty(source.source_id, "source.source_id");
+  integer(source.version, "source.version", 1);
   nonempty(source.provider, "source.provider");
   const location = object(source.location, "source.location");
-  const kind = choice(location.kind, ["url", "upload"] as const, "source.location.kind");
-  if (kind === "url") {
-    const url = nonempty(location.url, "source.location.url");
-    let parsed: URL;
-    try { parsed = new URL(url); } catch { return fail("source.location.url", "invalid provider URL"); }
-    if (!/^https?:$/.test(parsed.protocol) || parsed.username || parsed.password) fail("source.location.url", "expected HTTP(S) provider URL without credentials");
-  } else nonempty(location.filename, "source.location.filename");
+  exactKeys(location, ["kind", "filename"], "source.location");
+  choice(location.kind, ["upload"] as const, "source.location.kind");
+  nonempty(location.filename, "source.location.filename");
   if (source.doi !== null) nonempty(source.doi, "source.doi");
-  nonempty(source.citation, "source.citation");
+  if (source.citation !== null) nonempty(source.citation, "source.citation");
   timestamp(source.retrieved_at, "source.retrieved_at");
   nonempty(source.rights_statement, "source.rights_statement");
   choice(source.rights_decision, ["mirror", "provider-link-only", "derivative-only", "forbidden"] as const, "source.rights_decision");
+  if (source.private_storage_permission !== null) choice(source.private_storage_permission, ["attested"] as const, "source.private_storage_permission");
   nonempty(source.declared_format, "source.declared_format");
   if (source.expected_bytes !== null) integer(source.expected_bytes, "source.expected_bytes", 0);
   sha(source.sha256, "source.sha256");
@@ -277,11 +327,21 @@ export function parseSourceRecord(value: unknown): SourceRecord {
 
 export function parseRawAsset(value: unknown): RawAsset {
   const asset = object(value, "raw_asset");
-  for (const field of ["asset_id", "owner_id", "project_id", "source_id", "original_filename", "mime_type", "detected_format", "storage_key", "receipt"])
+  exactKeys(asset, ["schema_version", "asset_id", "owner_id", "project_id", "source_id", "source", "original_filename", "mime_type", "detected_format", "byte_count", "sha256", "physical_metadata", "validation_status", "created_at", "receipt", "download_url"], "raw_asset");
+  choice(asset.schema_version, ["geophysics.raw-asset-view/v1"] as const, "raw_asset.schema_version");
+  for (const field of ["asset_id", "owner_id", "project_id", "source_id", "original_filename", "mime_type", "detected_format", "receipt", "download_url"])
     nonempty(asset[field], `raw_asset.${field}`);
   integer(asset.byte_count, "raw_asset.byte_count", 1);
   sha(asset.sha256, "raw_asset.sha256");
-  choice(asset.validation_status, ["pending", "valid", "rejected"] as const, "raw_asset.validation_status");
+  const source = parseSourceRecord(asset.source);
+  if (source.source_id !== asset.source_id || source.sha256 !== asset.sha256 || source.location.filename !== asset.original_filename || source.declared_format !== asset.detected_format)
+    fail("raw_asset.source", "source identity or original metadata disagrees with asset");
+  rawPhysical(asset.physical_metadata);
+  timestamp(asset.created_at, "raw_asset.created_at");
+  choice(asset.validation_status, ["raw_metadata_checked"] as const, "raw_asset.validation_status");
+  const receipt = `/api/projects/${asset.project_id}/assets/${asset.asset_id}`;
+  if (asset.receipt !== receipt || asset.download_url !== `${receipt}/download`)
+    fail("raw_asset.download_url", "owner receipt path disagrees with asset identity");
   return value as RawAsset;
 }
 
