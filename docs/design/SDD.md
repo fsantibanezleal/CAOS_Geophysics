@@ -1,7 +1,7 @@
 # Geophysics research platform: product software design document
 
 Date: 2026-09-27
-Status: DRAFT FOR FELIPE REVIEW. The 2026-09-27 replacement plan is validated by the user's "implement all" instruction; this SDD has not yet been reviewed. ADR-0075 prohibits product-code development until that separate review.
+Status: APPROVED by Felipe on 2026-09-27 for product implementation, including the subsequently disclosed Clear Lake QC-only and in-browser M13 parity clarifications. The 2026-09-27 replacement plan was validated by the user's "implement all" instruction.
 Repository: fsantibanezleal/CAOS_Geophysics (current name, not the proposed product identity).
 Public application: exactly one ML VPS origin after cutover. The existing 0.04.001 release remains live and is not evidence that this design is implemented.
 
@@ -179,7 +179,9 @@ R-019 WHEN the Benchmark runs learned M13 inference on real held-out traces in t
 - UI quality: fail release on shell/font/style divergence, scientific axes without units, unreadable EN/ES, no-op controls, decorative animation or missing user visual review.
 - Operational irreversibility: keep the old VPS release and Pages until the replacement origin has a verified rollback snapshot; retire Pages only after the single-VPS release is externally verified.
 
-Felipe review must resolve: (a) the six prescribed pages replacing the plan's lifecycle routes; (b) M13 as the second learned vertical; (c) final product/repository identity and hostname; (d) guest-read/account-write policy and numeric upload/storage/job limits; (e) the bounded online versus offline full-FWI/training boundary; (f) the source substitution rule for rights/capacity failures. Review outcome and date belong here before any product code. There is no approval recorded yet.
+Felipe explicitly approved the product SDD on 2026-09-27 in response to its review request for the six-page UI, M13 learned phase picker, account-gated writes, provisional resource limits and single-ML-VPS design. The approved decisions are: six prescribed pages in place of the plan's lifecycle routes; M13 as the second learned vertical; guest-read/account-write policy and stated provisional limits; bounded online CPU methods with full FWI/training offline; rights/capacity substitutions only by reviewed amendment. The final product/repository identity and hostname remain a separate owner choice, so cutover is held until selected. This SDD approval authorizes feature SDDs and code; it does not assert that any new method, dataset, online job or deployment already exists.
+
+Felipe separately approved including the Clear Lake cl061 QC-only finding and the requirement for parity-checked M13 inference on real held-out traces in the browser before this SDD was promoted.
 
 ## Research basis
 
