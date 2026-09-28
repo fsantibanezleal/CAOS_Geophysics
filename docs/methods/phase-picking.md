@@ -58,6 +58,26 @@ The first full-source CUDA attempt stopped after epoch 1 when the fp16 dynamic s
 
 The [ONNX exporter](../../scripts/export_stead_phase_onnx.py) binds the frozen checkpoint to a private model and checks native-runtime probabilities and peak times against hash-selected development traces. Native ONNX parity is **not** browser parity: the browser must later run this exact model on rights-cleared held-out real traces and meet the separate SDD tolerance. Its synthetic unit fixture is not field evidence. No ONNX model has yet been produced from a real trained checkpoint.
 
+## Reproduce the local STEAD pipeline
+
+The source requires over 92 GB before extracted arrays; choose a roomy local volume outside public web assets. The downloader keeps interrupted transfers as `.partial`, resumes them, and verifies complete byte counts and the locally pinned SHA-256 values. The separate SeisBench environment is an independent reader, not the CUDA training environment.
+
+```powershell
+$sourceDir = 'E:\CAOS_Geophysics\raw\stead'
+$sourceHash = '4d73f567d9ea85fcdea5f2d8bf9cf47fd2e0c25b602793d41f56713efba62b1b'
+./scripts/fetch-stead-phase.ps1 -Destination $sourceDir
+py -3.12 -m venv .venv-seisbench
+.\.venv-seisbench\Scripts\python.exe -m pip install -r data-pipeline/requirements-phase-seisbench.txt
+.\.venv-pipeline\Scripts\python.exe scripts/select_stead_phase.py --metadata "$sourceDir\metadata.csv"
+.\.venv-seisbench\Scripts\python.exe scripts/verify_stead_seisbench.py --source-dir $sourceDir
+.\.venv-pipeline\Scripts\python.exe scripts/extract_stead_phase.py --waveforms "$sourceDir\waveforms.hdf5" --waveform-sha256 $sourceHash --partition train
+.\.venv-pipeline\Scripts\python.exe scripts/extract_stead_phase.py --waveforms "$sourceDir\waveforms.hdf5" --waveform-sha256 $sourceHash --partition dev
+.\.venv-pipeline\Scripts\python.exe scripts/summarize_stead_phase_qc.py
+.\.venv-pipeline\Scripts\python.exe scripts/train_stead_phase.py --batch-size 32 --epochs 12 --output-dir data/raw/phase/models-new
+```
+
+The output directory must be new; a code change cannot resume an earlier source/code-bound training state. Inspect the private freeze receipt and train/development ledger before unlocking test extraction. Only then run `scripts/extract_stead_phase.py --partition test --frozen-checkpoint data/raw/phase/models-new/phase-freeze.json`, followed by `scripts/evaluate_stead_phase.py` and `scripts/export_stead_phase_onnx.py` with explicit paths to the same frozen receipt. These steps do not alone establish browser parity or release rights.
+
 ## Reproduce this bounded audit
 
 ```powershell
