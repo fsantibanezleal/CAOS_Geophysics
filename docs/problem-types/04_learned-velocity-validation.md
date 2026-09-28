@@ -45,6 +45,8 @@ The first complete local run selected neural epoch 39 of 40. The exact checkpoin
 
 The frozen validation 95th-percentile forward-residual threshold is 34.2220 ms. It flags only 43/160 joint OOD realizations and misses 117/160; on the independent in-distribution control it flags 5/160. This threshold is a synthetic score, not a field-calibrated novelty probability. The CNN loses badly to classical inversion even on the in-distribution control, so the primary failure is learned estimator performance; the increased fault/salt error adds a family-shift failure. The acquisition-only shift changes little relative to the already poor learned baseline. No held-out M12 advantage, full seismic inversion, external field generalization, geological truth recovery or calibrated uncertainty is claimed. The negative comparison is retained rather than tuning on the locked test.
 
+The joint cohort's family breakdown matters: 80 fault maps average 494.93 m/s learned versus 50.78 m/s classical map RMSE and 21.79 versus 2.13 ms oracle RMSE, with **zero** threshold flags. The 80 salt-like maps average 579.04 versus 140.46 m/s and 35.42 versus 2.55 ms, with 43 flags and 37 misses. Thus the residual flag cannot detect the fault-family failure at all, even though its velocity error is much worse than the comparator. The threshold should not be used to certify a result simply because a test map falls below it.
+
 ## Reproduction, interpretation and exercise
 
 Create an ignored local Python environment with NumPy 2.2.6, SciPy 1.15.2 and Torch 2.14.0. On Windows, from the repository root run:
