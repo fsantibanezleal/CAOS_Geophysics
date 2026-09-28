@@ -1,3 +1,5 @@
+import { artifactBase, deploymentMode } from './lib/deployment';
+
 export type Family =
   | "gravity"
   | "magnetics"
@@ -181,9 +183,7 @@ export type Run = {
     data_kind?: string;
   };
 };
-export const appBase = typeof location !== 'undefined' && location.pathname.startsWith("/CAOS_Geophysics")
-  ? "/CAOS_Geophysics/"
-  : "/";
+export const appBase = artifactBase(deploymentMode, typeof location === 'undefined' ? '/' : location.pathname);
 export async function loadArtifact<T>(
   path: string,
   signal?: AbortSignal,

@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 import {
   AppShell,
   applyTheme,
@@ -22,30 +22,28 @@ import {
   Experiments,
   Benchmark,
 } from "./pages";
+import { PRODUCT_ROUTES } from "./lib/routes";
+import { deploymentMode, routerBasename } from "./lib/deployment";
 
 applyTheme(readTheme());
 if (typeof localStorage !== "undefined" && !localStorage.getItem("caos.lang"))
   useLangStore.getState().setLang("en");
 
-const pagesBasePath =
-  typeof window !== "undefined" &&
-  window.location.pathname.startsWith("/CAOS_Geophysics")
-    ? "/CAOS_Geophysics"
-    : "";
+const pageElements = {
+  app: <Workbench />,
+  introduction: <Intro />,
+  methodology: <Methodology />,
+  implementation: <Implementation />,
+  experiments: <Experiments />,
+  benchmark: <Benchmark />,
+};
 
 const config: ShellConfig = {
   product: {
     name: "Inverse Earth Studio",
     mark: <Activity size={18} aria-hidden="true" />,
   },
-  routes: [
-    { path: "/", en: "App", es: "App" },
-    { path: "/introduction", en: "Introduction", es: "Introducción" },
-    { path: "/methodology", en: "Methodology", es: "Metodología" },
-    { path: "/implementation", en: "Implementation", es: "Implementación" },
-    { path: "/experiments", en: "Experiments", es: "Experimentos" },
-    { path: "/benchmark", en: "Benchmark", es: "Benchmark" },
-  ],
+  routes: PRODUCT_ROUTES.map(({ path, en, es }) => ({ path, en, es })),
   links: { github: "https://github.com/fsantibanezleal/CAOS_Geophysics" },
   version: "0.04.001",
   architecture,
@@ -72,17 +70,14 @@ const config: ShellConfig = {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter basename={pagesBasePath || "/"}>
+    <BrowserRouter basename={routerBasename(deploymentMode, window.location.pathname)}>
       <CitationsProvider items={CITATIONS}>
         <AppShell config={config}>
           <Routes>
-            <Route path="/" element={<Workbench />} />
-            <Route path="/introduction" element={<Intro />} />
-            <Route path="/methodology" element={<Methodology />} />
-            <Route path="/implementation" element={<Implementation />} />
-            <Route path="/experiments" element={<Experiments />} />
-            <Route path="/benchmark" element={<Benchmark />} />
-            <Route path="*" element={<Workbench />} />
+            {PRODUCT_ROUTES.map(({ id, path }) => (
+              <Route key={id} path={path} element={pageElements[id as keyof typeof pageElements]} />
+            ))}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AppShell>
       </CitationsProvider>

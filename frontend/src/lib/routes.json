@@ -1,0 +1,8 @@
+[
+  { "id": "app", "path": "/", "en": "App", "es": "App" },
+  { "id": "introduction", "path": "/introduction", "en": "Introduction", "es": "Introducción" },
+  { "id": "methodology", "path": "/methodology", "en": "Methodology", "es": "Metodología" },
+  { "id": "implementation", "path": "/implementation", "en": "Implementation", "es": "Implementación" },
+  { "id": "experiments", "path": "/experiments", "en": "Experiments", "es": "Experimentos" },
+  { "id": "benchmark", "path": "/benchmark", "en": "Benchmark", "es": "Benchmark" }
+]

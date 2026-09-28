@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 871" role="img" aria-label="Forward, inverse, joint, and learned geophysics methods with validation limits">
+<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 871" role="img" aria-label="Approved scientific method ladder and independent evidence oracles">
 <style>
   text{fill:var(--color-fg);font-family:var(--font-sans)}
   .head{font-size:19px;font-weight:700}.kicker{font:600 11px var(--font-mono);fill:var(--color-accent)}
@@ -13,14 +13,14 @@
   svg .l-es{display:none}[data-arch-lang="es"] svg .l-en{display:none}[data-arch-lang="es"] svg .l-es{display:inline}
 </style>
 <defs><marker id="arrow-science" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5 1 9" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5"/></marker></defs>
-<text x="24" y="32" class="kicker l-neutral">METHODS AND EVIDENCE / 04</text>
+<text x="24" y="32" class="kicker l-neutral">APPROVED TARGET / 04</text>
 <text x="24" y="59" class="l-en head">Forward physics → inverse estimate → independent checks</text>
 <text x="24" y="59" class="l-es head">Física directa → estimación inversa → controles independientes</text>
-<text x="24" y="80" class="mu l-en">Truth is available only in the generated synthetic cases. A small data residual is not geological recovery.</text>
-<text x="24" y="80" class="mu l-es">La verdad existe sólo en casos sintéticos. Un residuo pequeño no demuestra recuperación geológica.</text>
+<text x="24" y="80" class="mu l-en">Field data require predictive holdouts; only synthetic controls carry known subsurface truth.</text>
+<text x="24" y="80" class="mu l-es">Datos de campo exigen reservas predictivas; sólo controles sintéticos tienen verdad conocida.</text>
 
 <rect x="24" y="101" width="832" height="116" rx="8" class="band"/>
-<text x="40" y="123" class="kicker l-en">COMMON EXPERIMENT PROTOCOL · rebuild.py</text><text x="40" y="123" class="kicker l-es">PROTOCOLO EXPERIMENTAL · rebuild.py</text>
+<text x="40" y="123" class="kicker l-en">SYNTHETIC CONTROL PROTOCOL · INDEPENDENT FORWARD ORACLE</text><text x="40" y="123" class="kicker l-es">CONTROL SINTÉTICO · CRITERIO DIRECTO INDEPENDIENTE</text>
 <rect x="40" y="140" width="144" height="48" rx="5" class="bx"/>
 <text x="51" y="159" class="it l-en">Geology mₜ</text><text x="51" y="159" class="it l-es">Geología mₜ</text>
 <text x="51" y="176" class="mu l-en">seed + units</text><text x="51" y="176" class="mu l-es">semilla + unidades</text>
@@ -37,8 +37,8 @@
 <text x="707" y="159" class="it l-en">Evaluate</text><text x="707" y="159" class="it l-es">Evaluar</text>
 <text x="707" y="176" class="mu l-en">fit ≠ recovery</text><text x="707" y="176" class="mu l-es">ajuste ≠ modelo</text>
 <path d="M184 164H200 M348 164H364 M512 164H528 M676 164H692" class="flow" marker-end="url(#arrow-science)"/>
-<text x="40" y="199" class="lbl l-en">Inputs and metrics carry their own physical units; observation masks define the fitted population.</text>
-<text x="40" y="199" class="lbl l-es">Entradas y métricas conservan unidades físicas; máscaras definen qué datos se ajustan.</text>
+<text x="40" y="199" class="lbl l-en">Different forward/inverse discretizations avoid inverse crime; field truth is never invented.</text>
+<text x="40" y="199" class="lbl l-es">Discretizaciones distintas evitan crimen inverso; no se inventa verdad de campo.</text>
 
 <text x="24" y="239" class="kicker l-en">PHYSICS-BASED METHODS</text><text x="24" y="239" class="kicker l-es">MÉTODOS BASADOS EN FÍSICA</text>
 <rect x="24" y="252" width="268" height="188" rx="8" class="bx bx-compute"/>
@@ -66,8 +66,8 @@
 <text x="602" y="331" class="eq l-neutral">v⁻² ∂²ₜu − ∇²u = s</text>
 <text x="602" y="354" class="it l-en">L-BFGS; full band vs 3→5→8→14 Hz</text><text x="602" y="354" class="it l-es">L-BFGS; banda total vs 3→5→8→14 Hz</text>
 <text x="602" y="377" class="it l-en">Multiresolution bounded velocity</text><text x="602" y="377" class="it l-es">Velocidad acotada multirresolución</text>
-<text x="602" y="400" class="mu l-en">Active + withheld receiver fit gated.</text><text x="602" y="400" class="mu l-es">Ajuste activo y reservado se evalúa.</text>
-<text x="602" y="421" class="mu l-en">Snapshots are not a live PDE solve.</text><text x="602" y="421" class="mu l-es">Fotogramas no son cálculo en vivo.</text>
+<text x="602" y="400" class="mu l-en">Full M10 FWI stays local.</text><text x="602" y="400" class="mu l-es">M10 FWI completo queda local.</text>
+<text x="602" y="421" class="mu l-en">Frames are not a live PDE solve.</text><text x="602" y="421" class="mu l-es">Fotogramas no son cálculo vivo.</text>
 
 <text x="24" y="482" class="kicker l-en">COUPLED AND LEARNED METHODS</text><text x="24" y="482" class="kicker l-es">MÉTODOS ACOPLADOS Y APRENDIDOS</text>
 <rect x="24" y="495" width="268" height="188" rx="8" class="bx bx-compute"/>
@@ -80,23 +80,23 @@
 <text x="38" y="643" class="mu l-en">Both properties + magnetic fit gated.</text><text x="38" y="643" class="mu l-es">Ambas propiedades y ajuste magnético.</text>
 <text x="38" y="664" class="mu l-en">Coupling alone does not prove gain.</text><text x="38" y="664" class="mu l-es">Acoplar no demuestra mejora.</text>
 <rect x="306" y="495" width="268" height="188" rx="8" class="bx bx-compute"/>
-<text x="320" y="519" class="ttl l-en">CNN column-density estimator</text><text x="320" y="519" class="ttl l-es">CNN de densidad integrada</text>
-<text x="320" y="541" class="cd l-neutral">learning.py · models/training.json</text>
+<text x="320" y="519" class="ttl l-en">M12 · learned velocity inverse</text><text x="320" y="519" class="ttl l-es">M12 · inversión de velocidad</text>
+<text x="320" y="541" class="cd l-neutral">M12 · checkpoint + split hashes</text>
 <line x1="320" y1="551" x2="560" y2="551" class="rule"/>
-<text x="320" y="574" class="eq l-neutral">c(x,y) = Σᶻ ρ(x,y,z) Δz</text>
-<text x="320" y="597" class="it l-en">Observations → 2D density column</text><text x="320" y="597" class="it l-es">Datos → columna 2D de densidad</text>
-<text x="320" y="620" class="it l-en">Disjoint train / validation / test</text><text x="320" y="620" class="it l-es">Entrenamiento / val. / prueba disjuntos</text>
-<text x="320" y="643" class="mu l-en">No 3D reconstruction from this CNN.</text><text x="320" y="643" class="mu l-es">Esta CNN no reconstruye 3D.</text>
-<text x="320" y="664" class="mu l-en">Compare on the same column target.</text><text x="320" y="664" class="mu l-es">Comparar la misma columna objetivo.</text>
+<text x="320" y="574" class="eq l-neutral">v̂(x,z) = fθ(d)</text>
+<text x="320" y="597" class="it l-en">Disjoint geology/acquisition families</text><text x="320" y="597" class="it l-es">Familias geológicas disjuntas</text>
+<text x="320" y="620" class="it l-en">Same-input classical comparator</text><text x="320" y="620" class="it l-es">Comparación clásica misma entrada</text>
+<text x="320" y="643" class="mu l-en">Forward consistency is required.</text><text x="320" y="643" class="mu l-es">Se exige consistencia directa.</text>
+<text x="320" y="664" class="mu l-en">Synthetic training ≠ field validation.</text><text x="320" y="664" class="mu l-es">Entrenar sintético ≠ validar campo.</text>
 <rect x="588" y="495" width="268" height="188" rx="8" class="bx bx-gate"/>
-<text x="602" y="519" class="ttl l-en">Observation autoencoder</text><text x="602" y="519" class="ttl l-es">Autoencoder de observaciones</text>
-<text x="602" y="541" class="cd l-neutral">learning.py · detection_validation</text>
+<text x="602" y="519" class="ttl l-en">M13 · learned P/S picker</text><text x="602" y="519" class="ttl l-es">M13 · selector P/S aprendido</text>
+<text x="602" y="541" class="cd l-neutral">M13 · browser export parity</text>
 <line x1="602" y1="551" x2="842" y2="551" class="rule"/>
-<text x="602" y="574" class="eq l-neutral">score = mean (x − AE(x))²</text>
-<text x="602" y="597" class="it l-en">Reconstruct normalized network input</text><text x="602" y="597" class="it l-es">Reconstruir entrada normalizada</text>
-<text x="602" y="620" class="it l-en">Threshold = score comparison only</text><text x="602" y="620" class="it l-es">Umbral = comparación de puntaje</text>
-<text x="602" y="643" class="mu l-en">Case-level geology is uncalibrated.</text><text x="602" y="643" class="mu l-es">Geología del caso no calibrada.</text>
-<text x="602" y="664" class="mu l-en">Aggregate detector failure retained.</text><text x="602" y="664" class="mu l-es">Fallo global del detector se conserva.</text>
+<text x="602" y="574" class="eq l-neutral">P(P,S,N | trace)</text>
+<text x="602" y="597" class="it l-en">Event/station-disjoint real traces</text><text x="602" y="597" class="it l-es">Trazas reales de eventos distintos</text>
+<text x="602" y="620" class="it l-en">M08 classical on identical inputs</text><text x="602" y="620" class="it l-es">M08 clásico con la misma entrada</text>
+<text x="602" y="643" class="mu l-en">Timing and calibration checked.</text><text x="602" y="643" class="mu l-es">Tiempo y calibración evaluados.</text>
+<text x="602" y="664" class="mu l-en">Web use waits for parity gate.</text><text x="602" y="664" class="mu l-es">Web espera control de paridad.</text>
 
 <rect x="24" y="724" width="832" height="119" rx="8" class="band"/>
 <text x="40" y="748" class="kicker l-en">THREE DIFFERENT EVIDENCE QUESTIONS</text><text x="40" y="748" class="kicker l-es">TRES PREGUNTAS DE EVIDENCIA DISTINTAS</text>
@@ -109,6 +109,6 @@
 <rect x="586" y="761" width="254" height="64" rx="5" class="bx bx-gate"/>
 <text x="599" y="783" class="ttl l-en">Calibration and scope</text><text x="599" y="783" class="ttl l-es">Calibración y alcance</text>
 <text x="599" y="804" class="it l-en">No claim beyond tested population</text><text x="599" y="804" class="it l-es">Sin extrapolar fuera de pruebas</text>
-<text x="24" y="859" class="mu l-en">A failed or inapplicable gate remains unresolved; plots do not override the recorded numerical evaluation.</text>
-<text x="24" y="859" class="mu l-es">Un criterio fallido o inaplicable queda sin resolver; la gráfica no sustituye la evaluación numérica.</text>
+<text x="24" y="859" class="mu l-en">LIVE 0.04.001: synthetic replay and bounded browser MT only; M12/M13 target gates remain open.</text>
+<text x="24" y="859" class="mu l-es">LIVE 0.04.001: repetición sintética y MT web limitado; controles M12/M13 siguen abiertos.</text>
 </svg>

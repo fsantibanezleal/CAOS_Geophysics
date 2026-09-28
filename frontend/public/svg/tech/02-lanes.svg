@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 697" role="img" aria-label="Offline computation, artifact bridge, static hosts, and browser execution lanes">
+<svg xmlns="http://www.w3.org/2000/svg" class="arch-svg" width="880" viewBox="0 0 880 697" role="img" aria-label="Approved local, worker, replay and browser execution lanes">
 <style>
   text{fill:var(--color-fg);font-family:var(--font-sans)}
   .head{font-size:19px;font-weight:700}.kicker{font:600 11px var(--font-mono);fill:var(--color-accent)}
@@ -12,71 +12,71 @@
   svg .l-es{display:none}[data-arch-lang="es"] svg .l-en{display:none}[data-arch-lang="es"] svg .l-es{display:inline}
 </style>
 <defs><marker id="arrow-lanes" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5 1 9" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5"/></marker></defs>
-<text x="24" y="32" class="kicker l-neutral">EXECUTION BOUNDARY / 02</text>
+<text x="24" y="32" class="kicker l-neutral">APPROVED TARGET / 02</text>
 <text x="24" y="59" class="l-en head">Where each calculation actually runs</text><text x="24" y="59" class="l-es head">Dónde se ejecuta cada cálculo</text>
-<text x="24" y="80" class="mu l-en">The release transports results, not a remote solver endpoint.</text><text x="24" y="80" class="mu l-es">La publicación transporta resultados, no un servicio remoto de inversión.</text>
+<text x="24" y="80" class="mu l-en">One ML VPS origin is planned with a bounded CPU worker and a full local research lane.</text><text x="24" y="80" class="mu l-es">Se prevé un origen ML VPS con worker CPU acotado y una ruta local completa.</text>
 
 <rect x="24" y="97" width="832" height="212" rx="8" class="lane"/>
-<text x="40" y="119" class="kicker l-en">A · LOCAL SOURCE / CPU + CUDA WHEN SUPPORTED</text><text x="40" y="119" class="kicker l-es">A · CÓDIGO LOCAL / CPU + CUDA DONDE PROCEDA</text>
+<text x="40" y="119" class="kicker l-en">A · LOCAL OFFLINE / CPU + GPU</text><text x="40" y="119" class="kicker l-es">A · LOCAL FUERA DE LÍNEA / CPU + GPU</text>
 <rect x="40" y="136" width="256" height="153" rx="6" class="bx bx-compute"/>
-<text x="53" y="159" class="ttl l-en">Forward physics</text><text x="53" y="159" class="ttl l-es">Física directa</text>
-<text x="53" y="181" class="cd l-neutral">potential.py · electromagnetics.py</text>
-<text x="53" y="205" class="it l-en">SimPEG prism integrals; MT recursion</text><text x="53" y="205" class="it l-es">Prismas SimPEG; recursión MT</text>
-<text x="53" y="226" class="cd l-neutral">seismic.py · Deepwave</text>
-<text x="53" y="249" class="it l-en">Acoustic wave propagation</text><text x="53" y="249" class="it l-es">Propagación de ondas acústicas</text>
-<text x="53" y="273" class="mu l-en">Survey geometry + seed are inputs.</text><text x="53" y="273" class="mu l-es">Geometría y semilla son entradas.</text>
+<text x="53" y="159" class="ttl l-en">Full scientific pipeline</text><text x="53" y="159" class="ttl l-es">Proceso científico completo</text>
+<text x="53" y="181" class="cd l-neutral">ingest → preprocess → dataset</text>
+<text x="53" y="205" class="it l-en">Rights, format QC and split</text><text x="53" y="205" class="it l-es">Derechos, formato y partición</text>
+<text x="53" y="226" class="cd l-neutral">M01–M13 · pinned engines</text>
+<text x="53" y="249" class="it l-en">3D sweeps and FWI stay local</text><text x="53" y="249" class="it l-es">3D y FWI completos son locales</text>
+<text x="53" y="273" class="mu l-en">Same typed result contract.</text><text x="53" y="273" class="mu l-es">Mismo contrato de resultados.</text>
 <rect x="312" y="136" width="256" height="153" rx="6" class="bx bx-compute"/>
-<text x="325" y="159" class="ttl l-en">Inverse + learned solvers</text><text x="325" y="159" class="ttl l-es">Inversores y aprendizaje</text>
-<text x="325" y="181" class="cd l-neutral">spatial_inverse.py · joint.py</text>
-<text x="325" y="205" class="it l-en">Spatial, cross-gradient, GMM priors</text><text x="325" y="205" class="it l-es">Priors espacial, gradiente, GMM</text>
-<text x="325" y="226" class="cd l-neutral">seismic.py · learning.py</text>
-<text x="325" y="249" class="it l-en">L-BFGS FWI; CNN / AE training</text><text x="325" y="249" class="it l-es">FWI L-BFGS; entrenamiento CNN / AE</text>
-<text x="325" y="273" class="mu l-en">Training / wavefield compute is local.</text><text x="325" y="273" class="mu l-es">Entrenar y simular ondas es local.</text>
+<text x="325" y="159" class="ttl l-en">Training and deep solves</text><text x="325" y="159" class="ttl l-es">Entrenar y resolver a fondo</text>
+<text x="325" y="181" class="cd l-neutral">M10 FWI · M11 joint · M12/M13</text>
+<text x="325" y="205" class="it l-en">GPU when measured and available</text><text x="325" y="205" class="it l-es">GPU si está disponible y medida</text>
+<text x="325" y="226" class="cd l-neutral">checkpoint · split hashes</text>
+<text x="325" y="249" class="it l-en">M13 browser export needs parity</text><text x="325" y="249" class="it l-es">M13 web requiere paridad</text>
+<text x="325" y="273" class="mu l-en">No server-side training.</text><text x="325" y="273" class="mu l-es">Sin entrenar en servidor.</text>
 <rect x="584" y="136" width="256" height="153" rx="6" class="bx bx-gate"/>
-<text x="597" y="159" class="ttl l-en">Evaluation gate</text><text x="597" y="159" class="ttl l-es">Control de evaluación</text>
-<text x="597" y="181" class="cd l-neutral">rebuild.py · tests/run_validation.py</text>
-<text x="597" y="205" class="it l-en">Data fit ≠ recovery of truth</text><text x="597" y="205" class="it l-es">Ajuste de datos ≠ recuperación</text>
-<text x="597" y="226" class="it l-en">Active / withheld data where defined</text><text x="597" y="226" class="it l-es">Datos activos / reservados, si aplica</text>
-<text x="597" y="249" class="it l-en">Failed gate can remain unresolved</text><text x="597" y="249" class="it l-es">Un criterio fallido queda sin resolver</text>
-<text x="597" y="273" class="mu l-en">Verdict is exported with each method.</text><text x="597" y="273" class="mu l-es">Se exporta veredicto por método.</text>
+<text x="597" y="159" class="ttl l-en">Independent evidence</text><text x="597" y="159" class="ttl l-es">Evidencia independiente</text>
+<text x="597" y="181" class="cd l-neutral">oracle · holdout · hashes</text>
+<text x="597" y="205" class="it l-en">Synthetic truth only if generated</text><text x="597" y="205" class="it l-es">Verdad sólo si es sintética</text>
+<text x="597" y="226" class="it l-en">Field prediction on withheld data</text><text x="597" y="226" class="it l-es">Predicción de campo reservada</text>
+<text x="597" y="249" class="it l-en">Failed / unresolved kept visible</text><text x="597" y="249" class="it l-es">Fallos y dudas siguen visibles</text>
+<text x="597" y="273" class="mu l-en">No combined science score.</text><text x="597" y="273" class="mu l-es">Sin puntaje científico único.</text>
 <path d="M296 208H308 M568 208H580" class="flow" marker-end="url(#arrow-lanes)"/>
-<text x="209" y="302" class="lbl l-en">operators → solver</text><text x="209" y="302" class="lbl l-es">operadores → solver</text>
-<text x="489" y="302" class="lbl l-en">estimate → gate</text><text x="489" y="302" class="lbl l-es">estimación → control</text>
+<text x="209" y="302" class="lbl l-en">datasets → methods</text><text x="209" y="302" class="lbl l-es">datos → métodos</text>
+<text x="489" y="302" class="lbl l-en">results → oracle</text><text x="489" y="302" class="lbl l-es">resultados → criterio</text>
 <path d="M720 309V329" class="flow" marker-end="url(#arrow-lanes)"/>
-<text x="543" y="326" class="lbl l-en">serialize computed arrays only</text><text x="543" y="326" class="lbl l-es">serializar arreglos calculados</text>
+<text x="543" y="326" class="lbl l-en">release verified artifacts</text><text x="543" y="326" class="lbl l-es">publicar artefactos validados</text>
 
 <rect x="24" y="339" width="832" height="104" rx="8" class="lane"/>
-<text x="40" y="362" class="kicker l-en">B · IMMUTABLE ARTIFACT BRIDGE</text><text x="40" y="362" class="kicker l-es">B · PUENTE DE ARTEFACTOS INMUTABLES</text>
+<text x="40" y="362" class="kicker l-en">B · IMMUTABLE RESULT / REPLAY BRIDGE</text><text x="40" y="362" class="kicker l-es">B · RESULTADO INMUTABLE / REPRODUCCIÓN</text>
 <rect x="40" y="375" width="800" height="52" rx="6" class="bx bx-hi"/>
-<text x="54" y="397" class="cd l-neutral">catalog.json → data/v2/*.json · edi/manifest.json · models/training.json</text>
-<text x="54" y="416" class="it l-en">Identity, axes, units, SHA-256, byte counts, solver states and evaluation accompany the payload.</text>
-<text x="54" y="416" class="it l-es">Identidad, ejes, unidades, SHA-256, bytes, estados y evaluación acompañan los datos.</text>
+<text x="54" y="397" class="cd l-neutral">ResultArtifact · engine digest · input hashes · file SHA-256</text>
+<text x="54" y="416" class="it l-en">Observed, predicted, residual, model, units, coverage and rights remain together.</text>
+<text x="54" y="416" class="it l-es">Observado, predicho, residuo, modelo, unidades, cobertura y derechos juntos.</text>
 <path d="M300 443V475 M582 443V475" class="flow" marker-end="url(#arrow-lanes)"/>
-<text x="164" y="466" class="lbl l-en">copy exact files</text><text x="164" y="466" class="lbl l-es">copiar archivos</text>
-<text x="630" y="466" class="lbl l-en">browser fetch</text><text x="630" y="466" class="lbl l-es">solicitud web</text>
+<text x="164" y="466" class="lbl l-en">serve permitted results</text><text x="164" y="466" class="lbl l-es">servir resultados permitidos</text>
+<text x="630" y="466" class="lbl l-en">read / inspect</text><text x="630" y="466" class="lbl l-es">leer / inspeccionar</text>
 
 <rect x="24" y="483" width="268" height="174" rx="8" class="lane"/>
-<text x="40" y="506" class="kicker l-en">C · STATIC HOSTS</text><text x="40" y="506" class="kicker l-es">C · HOSTS ESTÁTICOS</text>
+<text x="40" y="506" class="kicker l-en">C · ONE ML VPS ORIGIN</text><text x="40" y="506" class="kicker l-es">C · UN ORIGEN ML VPS</text>
 <rect x="40" y="522" width="236" height="120" rx="6" class="bx"/>
-<text x="53" y="544" class="ttl l-neutral">GitHub Pages / ML VPS</text>
-<text x="53" y="566" class="it l-en">HTML, JS, SVG, JSON bytes</text><text x="53" y="566" class="it l-es">Bytes HTML, JS, SVG, JSON</text>
-<text x="53" y="588" class="it l-en">No FWI, GPU, or training API</text><text x="53" y="588" class="it l-es">Sin API FWI, GPU ni entrenamiento</text>
-<text x="53" y="612" class="mu l-en">Same static release at both hosts.</text><text x="53" y="612" class="mu l-es">Misma publicación en ambos hosts.</text>
+<text x="53" y="544" class="ttl l-neutral">FastAPI + CPU worker</text>
+<text x="53" y="566" class="it l-en">API admits bounded jobs</text><text x="53" y="566" class="it l-es">API admite tareas acotadas</text>
+<text x="53" y="588" class="it l-en">Worker computes separately</text><text x="53" y="588" class="it l-es">Worker calcula separado</text>
+<text x="53" y="612" class="mu l-en">No GPU or full FWI online.</text><text x="53" y="612" class="mu l-es">Sin GPU ni FWI completo web.</text>
 <path d="M292 571H308" class="flow" marker-end="url(#arrow-lanes)"/>
 <text x="295" y="555" class="lbl l-neutral">HTTP</text>
 
 <rect x="316" y="483" width="540" height="174" rx="8" class="lane"/>
-<text x="332" y="506" class="kicker l-en">D · BROWSER / LIVE USER SESSION</text><text x="332" y="506" class="kicker l-es">D · NAVEGADOR / SESIÓN INTERACTIVA</text>
+<text x="332" y="506" class="kicker l-en">D · BROWSER / SELECTED PROJECT</text><text x="332" y="506" class="kicker l-es">D · NAVEGADOR / PROYECTO ELEGIDO</text>
 <rect x="332" y="522" width="248" height="120" rx="6" class="bx bx-web"/>
-<text x="345" y="544" class="ttl l-en">Read and inspect baked data</text><text x="345" y="544" class="ttl l-es">Leer e inspeccionar datos</text>
+<text x="345" y="544" class="ttl l-en">Inspect real results</text><text x="345" y="544" class="ttl l-es">Inspeccionar resultados</text>
 <text x="345" y="566" class="cd l-neutral">Workbench.tsx · EarthScene.tsx</text>
-<text x="345" y="588" class="it l-en">Orbit, cut, plot, replay, export</text><text x="345" y="588" class="it l-es">Órbita, corte, gráfico, exportar</text>
-<text x="345" y="612" class="mu l-en">No replacement inverse solve.</text><text x="345" y="612" class="mu l-es">No resuelve otra inversión.</text>
+<text x="345" y="588" class="it l-en">Axes, linked views, export</text><text x="345" y="588" class="it l-es">Ejes, vistas ligadas, exportar</text>
+<text x="345" y="612" class="mu l-en">Replay labelled as replay.</text><text x="345" y="612" class="mu l-es">Repetición marcada como tal.</text>
 <rect x="592" y="522" width="248" height="120" rx="6" class="bx bx-web"/>
-<text x="605" y="544" class="ttl l-en">One live forward calculator</text><text x="605" y="544" class="ttl l-es">Un cálculo directo en vivo</text>
-<text x="605" y="566" class="cd l-neutral">mt.ts · Z(ω; ρ, h)</text>
-<text x="605" y="588" class="it l-en">Layer inputs → ρₐ and phase</text><text x="605" y="588" class="it l-es">Capas → ρₐ y fase</text>
-<text x="605" y="612" class="mu l-en">Parity-tested; not field inversion.</text><text x="605" y="612" class="mu l-es">Paridad validada; no inversión real.</text>
-<text x="24" y="684" class="mu l-en">GPU use is conditional on the local solver/device; a static host is never presented as a compute server.</text>
-<text x="24" y="684" class="mu l-es">La GPU depende del solver/equipo local; un host estático no se presenta como servidor de cálculo.</text>
+<text x="605" y="544" class="ttl l-en">Conditional client inference</text><text x="605" y="544" class="ttl l-es">Inferencia web condicional</text>
+<text x="605" y="566" class="cd l-neutral">M13 · exported phase picker</text>
+<text x="605" y="588" class="it l-en">Held-out real trace parity</text><text x="605" y="588" class="it l-es">Paridad con trazas reales</text>
+<text x="605" y="612" class="mu l-en">Not enabled before its gate.</text><text x="605" y="612" class="mu l-es">No se activa sin validar.</text>
+<text x="24" y="684" class="mu l-en">LIVE 0.04.001: Pages + ML VPS serve static replay and browser MT forward; no online job API.</text>
+<text x="24" y="684" class="mu l-es">LIVE 0.04.001: Pages + ML VPS sirven repetición estática y MT directo web; sin API de tareas.</text>
 </svg>
