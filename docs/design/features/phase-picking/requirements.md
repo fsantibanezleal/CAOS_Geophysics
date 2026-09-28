@@ -46,6 +46,10 @@ R-PH-005 WHEN an exported model is loaded in the browser, THE app SHALL match th
 
 R-PH-006 IF source or model redistribution rights remain unresolved, THE release SHALL keep raw/derived bytes private and mark M13 ineligible for a public curated case. Gate: source-rights ledger review and release asset scan.
 
+R-PH-007 WHEN the STEAD mirror's bucketed waveform file is read, THE adapter SHALL require the complete pinned byte/hash receipt, declared 100 Hz sample rate, counts without response restitution, Z/N/E orientation and a bounded trace slice; IF any contract fails, THEN no waveform SHALL enter training or evaluation. Gate: `tests/learning/test_stead_waveforms.py::test_bucket_reader_and_rejections` followed by an independent SeisBench read on the verified source.
+
+R-PH-008 BEFORE reading waveforms for model fitting, THE metadata selector SHALL partition events and stations jointly, assign noise by station, retain no cross-partition trace, and apply a fixed hash rank independent of amplitude or SNR. Gate: `tests/learning/test_stead_waveforms.py::test_joint_metadata_selection` and full-source manifest counts.
+
 ## Acceptance sequence
 
 Source/rights receipt → parser and negative fixtures → deterministic split → classical baseline → GPU training with genuine checkpoint → held-out benchmark/degradation → export and local parity → browser parity and rendered QA → rights approval and public release. Each transition records failure as failure. No green unit test alone closes #83.

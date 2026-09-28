@@ -1,0 +1,54 @@
+{
+  "caps": {
+    "dev": {
+      "earthquake_local": 5000,
+      "noise": 1000
+    },
+    "test": {
+      "earthquake_local": 5000,
+      "noise": 1000
+    },
+    "train": {
+      "earthquake_local": 60000,
+      "noise": 5000
+    }
+  },
+  "eligible_candidates": {
+    "dev/earthquake_local": 7934,
+    "dev/noise": 36989,
+    "test/earthquake_local": 10227,
+    "test/noise": 39156,
+    "train/earthquake_local": 244529,
+    "train/noise": 159281
+  },
+  "metadata_bytes": 402560190,
+  "metadata_sha256": "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe",
+  "partition_salt": "caos-stead-station-event-v1",
+  "rank_salt": "caos-stead-trace-rank-v1",
+  "reasons": {
+    "accepted": 498116,
+    "event-station-partition-conflict": 207190,
+    "missing-event-or-ordered-picks": 285175,
+    "missing-id-station-channel-or-unsupported-slice": 44,
+    "nonmanual-analyst-pick": 275132
+  },
+  "schema": "caos.stead-phase-selection.v1",
+  "selected": {
+    "dev": {
+      "earthquake_local": 5000,
+      "ids_sha256": "a438bfaba3c92b2ca072fcf8248e1bda8d805fa4b622a68aec4b8c1e8535b202",
+      "noise": 1000
+    },
+    "test": {
+      "earthquake_local": 5000,
+      "ids_sha256": "dd9fbb2d08406d2a7316be838eba957d0bbfd1f4ffb167cc3470c9abc5b64f3e",
+      "noise": 1000
+    },
+    "train": {
+      "earthquake_local": 60000,
+      "ids_sha256": "b38433b85401e4e7484490a8ed85c2d20b635a2b966f16f60f236c722c93b485",
+      "noise": 5000
+    }
+  },
+  "source_split_ignored": true
+}
