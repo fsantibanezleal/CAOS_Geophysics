@@ -80,6 +80,53 @@ class RawAsset(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class ObservationDataset(Base):
+    __tablename__ = "observation_datasets"
+    __table_args__ = (UniqueConstraint("raw_asset_id", "parser_version"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), index=True)
+    owner_id: Mapped[UUID] = mapped_column(GUID(), ForeignKey("user.id"), index=True)
+    raw_asset_id: Mapped[str] = mapped_column(String(36), ForeignKey("raw_assets.id"), index=True)
+    version: Mapped[int] = mapped_column(Integer)
+    parser_version: Mapped[str] = mapped_column(String(80))
+    modality: Mapped[str] = mapped_column(String(40))
+    row_count: Mapped[int] = mapped_column(Integer)
+    raw_sha256: Mapped[str] = mapped_column(String(64))
+    sha256: Mapped[str] = mapped_column(String(64))
+    byte_count: Mapped[int] = mapped_column(Integer)
+    storage_key: Mapped[str] = mapped_column(String(180), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ProcessingJob(Base):
+    __tablename__ = "processing_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), index=True)
+    owner_id: Mapped[UUID] = mapped_column(GUID(), ForeignKey("user.id"), index=True)
+    dataset_id: Mapped[str] = mapped_column(String(36), ForeignKey("observation_datasets.id"), index=True)
+    dataset_sha256: Mapped[str] = mapped_column(String(64))
+    method_id: Mapped[str] = mapped_column(String(80))
+    request_json: Mapped[dict] = mapped_column(JSON)
+    request_sha256: Mapped[str] = mapped_column(String(64))
+    preflight: Mapped[dict] = mapped_column(JSON)
+    state: Mapped[str] = mapped_column(String(20), index=True)
+    cancel_requested: Mapped[bool] = mapped_column(default=False)
+    worker_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    result_key: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    result_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    result_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    wall_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    peak_rss_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    scratch_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class AccountUsage(Base):
     __tablename__ = "account_usage"
 
@@ -107,4 +154,5 @@ class DeletionReceipt(Base):
     deleted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     asset_hashes: Mapped[list[str]] = mapped_column(JSON)
     asset_manifest: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
+    derived_manifest: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
     backup_purge_status: Mapped[str] = mapped_column(String(40))

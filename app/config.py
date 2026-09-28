@@ -25,6 +25,12 @@ class Settings:
     cookie_secure: bool = True
     max_upload_bytes: int = 200 * MIB
     account_quota_bytes: int = 1024 * MIB
+    max_dataset_bytes: int = 2 * MIB
+    max_dataset_rows: int = 4096
+    max_queued_jobs: int = 32
+    worker_memory_bytes: int = 2 * 1024 * MIB
+    worker_scratch_bytes: int = 1024 * MIB
+    worker_wall_seconds: int = 600
 
     def __post_init__(self) -> None:
         if len(self.auth_secret) < 32:
@@ -40,6 +46,10 @@ class Settings:
             raise ValueError("secure cookie requires an HTTPS public origin")
         if self.max_upload_bytes <= 0 or self.account_quota_bytes < self.max_upload_bytes:
             raise ValueError("invalid upload or account quota")
+        if (self.max_dataset_bytes <= 0 or self.max_dataset_rows < 4 or self.max_queued_jobs < 1
+                or self.worker_memory_bytes <= 0 or self.worker_scratch_bytes <= 0
+                or self.worker_wall_seconds <= 0):
+            raise ValueError("invalid processing limits")
         if not self.data_dir.is_absolute():
             raise ValueError("data_dir must be absolute")
         if self.db_path is not None and not self.db_path.is_absolute():
@@ -68,3 +78,29 @@ class Settings:
             smtp_password=os.environ["GEOPHYSICS_SMTP_PASSWORD"],
             smtp_from=os.environ["GEOPHYSICS_SMTP_FROM"],
         )
+
+
+@dataclass(frozen=True)
+class WorkerSettings:
+    """Storage-only worker configuration; no auth or SMTP secret is required."""
+
+    data_dir: Path
+    db_path: Path | None = None
+
+    def __post_init__(self) -> None:
+        if not self.data_dir.is_absolute() or (self.db_path is not None and not self.db_path.is_absolute()):
+            raise ValueError("worker data and database paths must be absolute")
+
+    @property
+    def database_path(self) -> Path:
+        return self.db_path or self.data_dir / "api.sqlite3"
+
+    @property
+    def database_url(self) -> str:
+        return "sqlite+aiosqlite:///" + self.database_path.as_posix()
+
+    @classmethod
+    def from_env(cls) -> "WorkerSettings":
+        data = Path(os.environ.get("GEOPHYSICS_DATA_DIR", "data/raw/api")).resolve()
+        db = os.environ.get("GEOPHYSICS_DB_PATH")
+        return cls(data_dir=data, db_path=Path(db).resolve() if db else None)
