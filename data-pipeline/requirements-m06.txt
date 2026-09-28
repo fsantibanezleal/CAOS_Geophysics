@@ -1,0 +1,7 @@
+# Isolated, offline M06 measured-EDI admission lane; no inversion engine.
+# Python 3.12. Keep the canonical pipeline and M07 environments separate.
+numpy==2.2.6
+scipy==1.15.2
+mt-metadata==1.0.10
+pytest==9.1.1
+ruff==0.15.18

@@ -226,6 +226,11 @@ functions, uncertainties, provenance and the failure, with `truth:null` and
 `methods:{}`. It is separate from the authored 1D fixture inversions and from
 the 20 synthetic canonical cases.
 
+The independent [M06 AusLAMP C15 admission study](mt-field-admission.md) is
+another measured-station QC-only result. Its provider phase-tensor `1-D` label
+fails a separate full-complex-tensor gate; C15 is not a replacement inverse for
+this Clear Lake negative control.
+
 Reproduce after downloading the station EDI into the ignored path:
 
     .venv-pipeline/Scripts/python data-pipeline/edi.py data/downloads/clear-lake/USGS-GMEG.2022.cl061.edi --screen-only --units mt --variance-convention complex --rotation preserve --output data/experiments/clear-lake-cl061-screen.json
