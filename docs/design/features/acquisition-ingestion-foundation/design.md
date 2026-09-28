@@ -1,0 +1,24 @@
+# Acquisition and ingestion foundation design
+
+## Boundary and data flow
+
+`data/source-ledger.json` is a reviewed, versioned allowlist. A caller selects a `source_id`, not a network URL. Acquirable external entries declare one exact HTTPS object URL or a manual-import link, pinned `bytes` and `sha256`, format, storage key under ignored `data/downloads/`, rights decision, citation and scientific use. Generated synthetic cases are a distinct non-file entry. The two SimPEG tutorial archives and Clear Lake `cl061` EDI are exact-object auto-fetch entries; Slagdump and Koenigsee are provider-link-only rights decisions with verified commit-pinned object links and local import only. A distinct `provider-link` acquisition mode records STEAD metadata without a storage key: its byte count/hash are user-reported, unverified here, and acquisition is explicitly disabled. It records no waveform asset. Link-only rights means no product-hosted raw mirror; it does not infer a raw-data licence from pyGIMLi's library-code licence.
+
+`data-pipeline/sources.py` validates the whole ledger before any I/O. `data-pipeline/acquire.py` selects an allowed record and either streams the exact reviewed object through a bounded HTTPS client or copies an explicitly supplied local file. It rejects unlisted IDs, URL overrides, redirects, provider-link metadata-only acquisition, unexpected size/hash and out-of-root storage keys. The only successful path is a verified immutable raw asset; an existing target is rechecked and reused only when its hash matches. A receipt under ignored `data/raw/acquisition/` records source ID, provider URL, file hash/size, storage key, rights decision, acquisition method and retrieval time. The receipt is write-once; reuse verifies it rather than changing it. Candidate files are staged under the ignored tree and atomically installed after verification.
+
+`data-pipeline/ingest.py` dispatches by the *ledger format*, cross-checking file signature/extension. The tar adapter inspects bounded member metadata without extracting a tree; exactly one expected `_data.obs` member is read, checked as a four-column finite station table, supplied with an explicitly assumed 3%-of-SD sigma, and stored as an ignored derivative with a preprocessing receipt. The EDI adapter calls the existing strict `edi.py` parser/screen with source-specific units=`mt`, variance=`complex`, rotation=`preserve`. It never fabricates a layered model, and Clear Lake's existing 42-frequency QC-only finding remains the scientific reference. Other declared formats receive a typed unsupported-adapter error while retaining their verified local raw asset. `--external` selects only the two auto-fetch tutorial archive IDs, preserving a batch command without silently treating manual/link-only entries as archives.
+
+No code in this unit changes the canonical `data/derived/v2` release, API, frontend or host. The existing `data/external-preprocessing.json` is a historical release receipt; new local receipts remain ignored. Neither raw nor local preprocessing products enter Git.
+
+## Failure and trust boundaries
+
+The ledger is reviewed repository configuration, not arbitrary runtime input. Fetches are HTTPS only, have exact source-specific object URLs, bounded bytes and timeouts, and allow only declared redirect destinations. Provider landing pages are never guessed into file URLs. Local imports must match the record's bytes and SHA-256. Malformed archives, redirects, hash drift, unsupported formats and absent local files fail with source-specific recovery text. Paths resolve inside the dedicated ignored roots; symlink or traversal escapes fail.
+
+Acquisition proves source identity at a byte level. It does not infer CRS, geology, line orientation or instrument uncertainty. The archive sigma is an experimental assumption, not measured instrument error. EDI is a processed transfer function, not raw EM time series. pyGIMLi Slagdump holds ERT resistance/electrode data and Koenigsee holds traveltime picks; neither is a waveform or an FWI input. Later verticals must add modality-specific contracts before modelling either source.
+
+## Gate sequence
+
+1. Validate ledger inventory, rights, verified pins and the STEAD reported-only boundary (`tests/data/test_sources.py`).
+2. Exercise local asset immutability, allowlist and failures without network (`tests/data/test_sources.py`).
+3. Exercise archive, EDI and unsupported-format dispatch (`tests/data/test_ingest_dispatch.py`).
+4. Run targeted tests, existing EDI tests, lint, documentation/ignore checks and an explicit convergence table. Exercise the exact Clear Lake provider URL and confirm its 16,411-byte hash and 42-frequency QC screen; if the provider is unavailable, report the live-file gate as unverified rather than simulating measured bytes.
