@@ -4,3 +4,4 @@
 - [Use the GPU lane](02_gpu.md).
 - [Bring another observation table](03_bring-your-own-data.md).
 - [Understand deployment](04_deployment.md).
+- [Acquire reviewed sources and inspect rights](05_sources.md).
