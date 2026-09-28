@@ -29,14 +29,14 @@
     "unit": "dimensionless normalized instrument counts"
   },
   "model": {
-    "bytes": 5866300,
+    "bytes": 5739696,
     "checkpoint_sha256": "90765889d05093356aae2e193bab6bf3a8122744510ccd7f125f5215763d1f09",
     "file": "model.onnx",
     "native_dev_max_abs_probability_error": 1.0728836059570312e-06,
     "native_dev_max_peak_error_samples": 0,
     "peak_rule": "global class argmax above threshold; S abstains when S-P < 0.4 s",
     "probabilities_calibrated": false,
-    "sha256": "5f8116a06c1e78393fcae03617152bef657dd8c79c26bfff899e34185d1e1d38",
+    "sha256": "4e5962ed0a9037e545991c218ae770ae7aff2c01f1e6a919c338705780ce5f4c",
     "thresholds": {
       "P": 0.8,
       "S": 0.8

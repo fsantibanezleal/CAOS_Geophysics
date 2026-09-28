@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import sys
 import tempfile
 import time
@@ -40,6 +41,37 @@ class PhaseProbabilities(nn.Module):
 
     def forward(self, waveform: torch.Tensor) -> torch.Tensor:
         return self.model(waveform).softmax(dim=1)
+
+
+def _strip_exporter_documentation(message) -> None:
+    """Remove nested ONNX debug strings, which contain absolute host paths.
+
+    ONNX 1.23's helper.strip_doc_string uses FieldDescriptor.label, which is
+    absent in the installed upb protobuf runtime. ListFields/is_repeated is
+    supported by both protobuf runtimes and visits only populated fields.
+    """
+    for field, value in message.ListFields():
+        if field.name == "doc_string":
+            message.ClearField(field.name)
+        elif field.name == "metadata_props" and field.is_repeated:
+            for index in range(len(value) - 1, -1, -1):
+                if value[index].key == "pkg.torch.onnx.stack_trace":
+                    del value[index]
+            for child in value:
+                _strip_exporter_documentation(child)
+        elif field.type == field.TYPE_MESSAGE:
+            children = value if field.is_repeated else (value,)
+            for child in children:
+                _strip_exporter_documentation(child)
+
+
+def _sanitize_export(stage: Path) -> None:
+    graph = onnx.load(str(stage))
+    _strip_exporter_documentation(graph)
+    encoded = graph.SerializeToString(deterministic=True)
+    if re.search(rb"[A-Za-z]:\\(?:[^\\\x00\r\n]{1,100}\\){2}", encoded):
+        raise ValueError("ONNX export still contains an absolute Windows path")
+    stage.write_bytes(encoded)
 
 
 def _parity(model: PhaseProbabilities, session: ort.InferenceSession,
@@ -146,6 +178,7 @@ def export(
             opset_version=18, dynamo=True, external_data=False,
             optimize=True,
         )
+        _sanitize_export(stage)
         onnx.checker.check_model(str(stage))
         session = ort.InferenceSession(str(stage), providers=["CPUExecutionProvider"])
         parity = _parity(

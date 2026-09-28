@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
+import onnx
 import pytest
 import torch
 
@@ -68,7 +69,34 @@ def test_frozen_checkpoint_exports_once_with_native_dev_parity(tmp_path: Path, m
     assert result["parity"]["max_probability_absolute_error"] <= 0.001
     assert result["parity"]["max_peak_time_error_samples"] <= 1
     assert result["onnx_sha256"] == file_sha256(models / "phase-model.onnx")
+    assert b"D:\\_Repos" not in (models / "phase-model.onnx").read_bytes()
     assert not result["heldout_test_opened"] and not result["browser_parity_claim"]
     with pytest.raises(FileExistsError, match="do not overwrite"):
         exporter.export(extraction, freeze, models, sample_count=2,
                         private_root=tmp_path / "data/raw")
+
+
+def test_exporter_debug_paths_are_removed_from_nested_onnx_docs(tmp_path: Path):
+    graph = onnx.helper.make_graph(
+        [onnx.helper.make_node("Identity", ["x"], ["y"])], "identity",
+        [onnx.helper.make_tensor_value_info("x", onnx.TensorProto.FLOAT, [1])],
+        [onnx.helper.make_tensor_value_info("y", onnx.TensorProto.FLOAT, [1])],
+    )
+    model = onnx.helper.make_model(graph)
+    model.graph.node[0].doc_string = "D:\\_Repos\\private\\path\\model.py"
+    trace = model.graph.node[0].metadata_props.add()
+    trace.key = "pkg.torch.onnx.stack_trace"
+    trace.value = "D:\\_Repos\\private\\path\\model.py"
+    retained = model.graph.node[0].metadata_props.add()
+    retained.key = "scientific.parameter"
+    retained.value = "fixed"
+    model.doc_string = "D:\\_Repos\\private\\path\\export.py"
+    path = tmp_path / "with-debug.onnx"
+    onnx.save_model(model, path)
+    exporter._sanitize_export(path)
+    cleaned = onnx.load(str(path))
+    assert cleaned.doc_string == ""
+    assert cleaned.graph.node[0].doc_string == ""
+    assert cleaned.graph.node[0].op_type == "Identity"
+    assert [(pair.key, pair.value) for pair in cleaned.graph.node[0].metadata_props] == [("scientific.parameter", "fixed")]
+    assert b"D:\\_Repos" not in path.read_bytes()

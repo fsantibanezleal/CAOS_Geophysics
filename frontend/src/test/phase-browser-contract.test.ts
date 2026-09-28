@@ -19,7 +19,7 @@ const manifest = () => ({
     file_dtype: "float32-little-endian", file_layout: "component-major; 6000 consecutive samples per component",
     unit: "dimensionless normalized instrument counts" },
   output: { shape: [1,3,6000], classes: ["N","P","S"] },
-  model: { file: "model.onnx", bytes: 5866300, sha256: hash, checkpoint_sha256: hash,
+  model: { file: "model.onnx", bytes: 5739696, sha256: hash, checkpoint_sha256: hash,
     thresholds: { P: 0.8, S: 0.8 } },
   benchmark: { file: "benchmark.json", sha256: hash, selected: 6000, qc_valid: 5926,
     tolerance_s: 0.5, reference: "STEAD manual P/S picks, not geological truth" },
