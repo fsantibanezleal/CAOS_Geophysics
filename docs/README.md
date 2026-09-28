@@ -9,6 +9,7 @@ This wiki is the durable technical record of the workbench. It explains what the
 - [Earthquake phase-picking design](problem-types/phase-picking.md): M08 classical and M13 PhaseNet-family theory, units, evaluation and pending gates.
 - [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
+- [Source to result](data-contract/01_source-to-result.md): rights, immutable raw bytes, typed observations, physical eligibility, processing and evidence boundaries, with a reproducible current API calculation.
 - [Source acquisition](guides/05_sources.md): reviewed provider links, immutable raw assets, rights, format dispatch and local receipts.
 - [Cases](cases/README.md): category taxonomy and 20-case coverage matrix.
 - [Guides](guides/README.md): setup, precompute, GPU, and bring-your-own-data workflows.
