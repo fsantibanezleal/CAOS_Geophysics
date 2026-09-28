@@ -1,0 +1,9 @@
+# FWI deterministic-replay investigation
+
+Date: 2026-09-28. Status: **isolated, release gate failing**. This branch is not a promoted solver or replacement of the 0.04.001 artifacts.
+
+The fixed FWI_FAULT synthetic observations and truth were byte-identical across fresh local runs, but default CUDA L-BFGS optimization gave materially different final models. Two independent runs with PyTorch deterministic algorithms and deterministic cuDNN settings produced identical model hashes: full-band active/withheld WRMS 2.271/2.361 (unresolved) and multiscale 1.746/1.832 (recovered). The scoped solver wrapper restores the caller's global settings and makes the fresh FWI_FAULT replay gate pass.
+
+The full four-case reference gate still fails. Under the same deterministic policy, FWI_LAYERED full-band is recovered (WRMS 1.170/1.193), but multiscale is unresolved (2.608/2.657); the current committed 0.04.001 artifact reports both recovered. FWI_NOISY and FWI_CYCLE_SKIP passed their existing outcome/replay checks in this run. Thus determinism alone is **not** a justified complete fix, and no threshold or expected outcome has been weakened to force a pass. The numerical change also invalidates the old solver fingerprint; all dependent artifacts would require an intentional full re-bake before promotion.
+
+The [issue audit](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/65) tracks this discrepancy. The ignored diagnostic receipts under data/raw/fwi-probes/ bind local source hash, model hashes, software, CUDA and WRMS without writing canonical release assets. A future schedule change must be physically justified, tested on independent cases, re-baked across the release matrix, and checked by forward replay, recovery/negative controls and browser artifact integrity before this branch can be merged.

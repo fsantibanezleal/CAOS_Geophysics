@@ -272,6 +272,28 @@ def recovery_evaluation(metrics, challenge=False):
 
 
 def solve_case(case, variant, iterations=DEFAULT_ITERATIONS, *, progress=None):
+    """Run the bounded inverse under a reproducible CUDA algorithm policy.
+
+    Deepwave gradient reductions can send L-BFGS down materially different
+    paths even when the synthetic observations are bitwise identical. Restore
+    the caller's global PyTorch flags after this single-case calculation.
+    """
+    previous_algorithms = torch.are_deterministic_algorithms_enabled()
+    previous_warn_only = torch.is_deterministic_algorithms_warn_only_enabled()
+    previous_cudnn_deterministic = torch.backends.cudnn.deterministic
+    previous_cudnn_benchmark = torch.backends.cudnn.benchmark
+    try:
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+        return _solve_case_deterministic(case, variant, iterations, progress=progress)
+    finally:
+        torch.use_deterministic_algorithms(previous_algorithms, warn_only=previous_warn_only)
+        torch.backends.cudnn.deterministic = previous_cudnn_deterministic
+        torch.backends.cudnn.benchmark = previous_cudnn_benchmark
+
+
+def _solve_case_deterministic(case, variant, iterations, *, progress=None):
     started = time.perf_counter()
     torch.manual_seed(case["seed"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -321,6 +343,7 @@ def solve_case(case, variant, iterations=DEFAULT_ITERATIONS, *, progress=None):
         receivers=(torch.linspace(6, 120, receivers).long()*12.5).tolist(), methods=methods,
         active_receivers=active.cpu().tolist(),
         parameters=dict(
+            deterministic_algorithms=True, cudnn_deterministic=True, cudnn_benchmark=False,
             frequency_hz=frequency, noise_fraction=noise, noise_sigma=sigma,
             receivers=receivers, regularization=beta, iterations=iterations,
             iterations_semantics="maximum L-BFGS calls per spatial stage (four stages)",
