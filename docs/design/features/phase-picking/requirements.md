@@ -58,6 +58,10 @@ R-PH-011 BEFORE GPU model fitting, THE trainer SHALL hash every complete QC-vali
 
 R-PH-012 IF fp16 dynamic scaling produces a non-finite gradient norm, THE trainer SHALL apply no optimizer update for that batch, halve the scale, count the skip and fail on persistent overflow rather than storing non-finite model weights. A changed trainer source SHALL require a fresh output directory rather than resuming an older code-bound state. Gate: `tests/learning/test_phase_training.py::test_amp_overflow_backs_off_without_applying_a_corrupt_update` and the real epoch ledger.
 
+R-PH-013 BEFORE extracting test waveforms, THE pipeline SHALL inspect the frozen model on development waveforms against M08 and the input-free training-median clock control, including the predeclared +800-sample translation. It SHALL mark this screen as non-independent because development selected the epoch and thresholds, and SHALL preserve the sealed test if the model fails the sanity check. Gate: `scripts/profile_stead_phase_dev.py` private aggregate receipt plus source/split/checkpoint hash checks.
+
+R-PH-014 BEFORE held-out scoring, THE pipeline SHALL lock a browser display/parity subset using only test metadata and a fixed hash rank, without selecting examples by waveform appearance or model success. The full held-out cohort remains the accuracy denominator. Gate: `scripts/select_stead_browser_subset.py` and the public ID-digest profile, with trace identities private until rights review.
+
 ## Acceptance sequence
 
 Source/rights receipt → parser and negative fixtures → deterministic split → classical baseline → GPU training with genuine checkpoint → held-out benchmark/degradation → export and local parity → browser parity and rendered QA → rights approval and public release. Each transition records failure as failure. No green unit test alone closes #83.
