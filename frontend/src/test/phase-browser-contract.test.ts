@@ -65,8 +65,12 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(() => parseLocalTrace(gaps)).toThrow(/Unsupported channel QC/);
     const duplicated = local(); duplicated.channels.N = duplicated.channels.E.slice();
     expect(() => parseLocalTrace(duplicated)).toThrow(/duplicates/);
+    const duplicateAtFloat32 = local(); duplicateAtFloat32.channels.N = duplicateAtFloat32.channels.E.map(value => value + 1e-8);
+    expect(() => parseLocalTrace(duplicateAtFloat32)).toThrow(/duplicates/);
     const flat = local(); flat.channels.Z.fill(0);
     expect(() => parseLocalTrace(flat)).toThrow(/flat/);
+    const flatAtFloat32 = local(); flatAtFloat32.channels.Z = flatAtFloat32.channels.Z.map((_, i) => 1 + (i % 2 ? 1e-9 : 0));
+    expect(() => parseLocalTrace(flatAtFloat32)).toThrow(/flat/);
   });
 
   it("accepts schema-accurate 23/1 manifest and forbids QC waveform substitution", () => {

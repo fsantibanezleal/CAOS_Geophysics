@@ -15,6 +15,7 @@ function argument(name) {
 }
 const assetsDir = argument('--assets');
 const oracleDir = argument('--oracle');
+const useServedAssets = args.includes('--served');
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const file = async (dir, name) => {
   if (basename(name) !== name || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(name))
@@ -55,7 +56,7 @@ try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   page.setDefaultTimeout(120000);
-  await page.route('**/data/phase/stead/**', async route => {
+  if (!useServedAssets) await page.route('**/data/phase/stead/**', async route => {
     const name = new URL(route.request().url()).pathname.split('/').at(-1);
     try {
       const bytes = await file(assetsDir, name);
@@ -65,15 +66,19 @@ try {
     }
   });
   await page.goto(origin, { waitUntil: 'domcontentloaded' });
-  await page.evaluate(async () => {
+  await page.evaluate(async expectedManifestHash => {
     const contract = await import('/src/phase-picker.ts');
     const runtime = await import('/src/phase-runtime.ts');
     const response = await fetch('/data/phase/stead/manifest.json');
-    const parsed = contract.parsePhaseManifest(await response.json());
+    if (!response.ok) throw new Error(`Served manifest HTTP ${response.status}`);
+    const manifestBytes = await response.arrayBuffer();
+    if (await contract.sha256(manifestBytes) !== expectedManifestHash)
+      throw new Error('Served manifest differs from the private frozen parity receipt');
+    const parsed = contract.parsePhaseManifest(JSON.parse(new TextDecoder().decode(manifestBytes)));
     const model = await contract.verifiedFetch(`/data/phase/stead/${parsed.model.file}`, parsed.model.sha256);
     if (model.byteLength !== parsed.model.bytes) throw new Error('Model byte count differs');
     window.__phaseParity = { contract, runtime, manifest: parsed, session: await runtime.createPhaseSession(model) };
-  });
+  }, receipt.asset_manifest_sha256);
   let maxAbs = 0, maxPeakSamples = 0, totalMs = 0;
   for (const [index, record] of manifest.records.entries()) {
     if (record.status === 'qc-rejected') {
@@ -122,6 +127,7 @@ try {
   await page.evaluate(() => window.__phaseParity.session.release());
   process.stdout.write(JSON.stringify({ status: 'pass', checked: 23, retainedQcFailure: 1,
     fullBenchmarkSelected: 6000, maxAbs, maxPeakSamples, meanBrowserInferenceMs: totalMs / 23,
+    assetDelivery: useServedAssets ? 'vite-publicDir' : 'playwright-route',
     manifestSha256: receipt.asset_manifest_sha256, modelSha256: receipt.onnx_sha256 }, null, 2) + '\n');
 } finally {
   await browser?.close();

@@ -111,11 +111,12 @@ function checkedChannels(channels: unknown, label: string): [number[], number[],
     return values as number[];
   }) as [number[], number[], number[]];
   for (let c = 0; c < 3; c++) {
-    const first = arrays[c][0];
-    if (arrays[c].every(value => value === first)) throw new Error(`${CHANNELS[c]} is flat; three measured components are required`);
+    const first = Math.fround(arrays[c][0]);
+    if (arrays[c].every(value => Math.fround(value) === first))
+      throw new Error(`${CHANNELS[c]} is flat at model input precision; three measured components are required`);
     for (let d = 0; d < c; d++)
-      if (arrays[c].every((value, i) => value === arrays[d][i]))
-        throw new Error(`${CHANNELS[c]} duplicates ${CHANNELS[d]}; missing channels cannot be filled`);
+      if (arrays[c].every((value, i) => Math.fround(value) === Math.fround(arrays[d][i])))
+        throw new Error(`${CHANNELS[c]} duplicates ${CHANNELS[d]} at model input precision; missing channels cannot be filled`);
   }
   return arrays;
 }

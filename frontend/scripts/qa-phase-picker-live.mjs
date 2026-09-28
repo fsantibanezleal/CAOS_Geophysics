@@ -7,6 +7,7 @@ import { preview } from 'vite';
 const index = process.argv.indexOf('--assets');
 if (index < 0 || !process.argv[index + 1]) throw new Error('Pass --assets <absolute canonical STEAD browser asset directory>');
 const assetsDir = resolve(process.argv[index + 1]);
+const useServedAssets = process.argv.includes('--served');
 const server = await preview({ preview: { host: '127.0.0.1', port: 0 } });
 let browser;
 try {
@@ -27,7 +28,7 @@ try {
     const page = await context.newPage();
     page.setDefaultTimeout(120000);
     page.on('pageerror', error => errors.push(`${sample.name}: ${error.message}`));
-    await page.route('**/data/phase/stead/**', async route => {
+    if (!useServedAssets) await page.route('**/data/phase/stead/**', async route => {
       const name = new URL(route.request().url()).pathname.split('/').at(-1);
       if (basename(name) !== name || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(name))
         throw new Error(`Unsafe asset name ${name}`);
@@ -82,7 +83,7 @@ try {
     process.stdout.write(`${sample.name}: real model run, waveform/probability plots and QC exclusion verified; ${JSON.stringify(fit)}\n`);
   }
   if (errors.length) throw new Error(errors.join('\n'));
-  process.stdout.write('Built-bundle M13 picker UI PASS; screenshots in frontend/dist\n');
+  process.stdout.write(`Built-bundle M13 picker UI PASS (${useServedAssets ? 'Vite publicDir' : 'Playwright asset route'}); screenshots in frontend/dist\n`);
 } finally {
   await browser?.close();
   await new Promise((done, reject) => server.httpServer.close(error => error ? reject(error) : done()));
