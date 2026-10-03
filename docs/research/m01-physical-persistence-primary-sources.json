@@ -1,0 +1,35 @@
+{
+  "schema": "caos.research-byte-receipts/v1",
+  "research_date": "2026-10-03",
+  "baseline_commit": "87eb9e9bd65e8a5cd1385d9c58e5ed32460461bb",
+  "kind": "docs-only actual HTTP response and local worktree byte fingerprints",
+  "capability_tested": false,
+  "implementation_started": false,
+  "primary_sources": [
+    {"url":"https://www.sqlite.org/datatype3.html","resolved_url":"https://www.sqlite.org/datatype3.html","status":200,"bytes":38701,"sha256":"4eaab766411136c123d392b2a931c69106a60a616f5a52536eacc79729816fe1","retrieved_at":"2026-10-03T11:22:08Z"},
+    {"url":"https://www.sqlite.org/foreignkeys.html","resolved_url":"https://www.sqlite.org/foreignkeys.html","status":200,"bytes":47276,"sha256":"f9cc6cefbdf18e07893b036365a2f3ca2a9a81fa41ed0849c7e4df214ccca8c0","retrieved_at":"2026-10-03T11:22:08Z"},
+    {"url":"https://www.sqlite.org/partialindex.html","resolved_url":"https://www.sqlite.org/partialindex.html","status":200,"bytes":327081,"sha256":"7fb393e3454552aa79224d51a1c9df804fcf3b53a2cac7e56a33cd10e2231f53","retrieved_at":"2026-10-03T11:22:09Z"},
+    {"url":"https://www.sqlite.org/wal.html","resolved_url":"https://www.sqlite.org/wal.html","status":200,"bytes":42143,"sha256":"f3467b530b883d4a00574fe1a898b3d121ed72764ae28cf66941080ac0badb9e","retrieved_at":"2026-10-03T11:22:09Z"},
+    {"url":"https://www.sqlite.org/pragma.html","resolved_url":"https://www.sqlite.org/pragma.html","status":200,"bytes":139778,"sha256":"b9bcb335ae818497f3fa05114a10492f64f35503f275da2264f2d5d436db3f5d","retrieved_at":"2026-10-03T11:22:09Z"},
+    {"url":"https://www.sqlite.org/lang_transaction.html","resolved_url":"https://www.sqlite.org/lang_transaction.html","status":200,"bytes":27068,"sha256":"b65dc308fd9e0ce471844c97366a4f5ad3a1f42833a3b19486ad7d6555a8e24e","retrieved_at":"2026-10-03T11:22:09Z"},
+    {"url":"https://docs.sqlalchemy.org/en/20/core/constraints.html","resolved_url":"https://docs.sqlalchemy.org/en/20/core/constraints.html","status":200,"bytes":565768,"sha256":"b3d3b93534c62b5886c9a3b5e2b2968860125d13a7642297ce388e15f9971fcc","retrieved_at":"2026-10-03T11:22:10Z"},
+    {"url":"https://docs.sqlalchemy.org/en/20/dialects/sqlite.html","resolved_url":"https://docs.sqlalchemy.org/en/20/dialects/sqlite.html","status":200,"bytes":265941,"sha256":"d6a14ba3d37930fde77add7da4f178c09a2c18144849c5538855171f9d05b85e","retrieved_at":"2026-10-03T11:22:10Z"},
+    {"url":"https://alembic.sqlalchemy.org/en/latest/batch.html","resolved_url":"https://alembic.sqlalchemy.org/en/latest/batch.html","status":200,"bytes":66484,"sha256":"5f52d1e2d800d4c811c8e01b7d95cc8c9f189785790e7ff421b3c34303e54f89","retrieved_at":"2026-10-03T11:22:11Z"},
+    {"url":"https://docs.python.org/3.12/library/json.html","resolved_url":"https://docs.python.org/3.12/library/json.html","status":200,"bytes":107891,"sha256":"1a5e4ba18342b32f5f174d129f9c226a21a9445a89384f13a3f33ec327c2b68f","retrieved_at":"2026-10-03T11:22:11Z"}
+  ],
+  "local_sources": [
+    {"path":"app/models.py","bytes":7809,"sha256":"6f467a846027b854b96101402a2da3036b9e9e6c3d07ed7b1c114bfc58b6d6bc"},
+    {"path":"app/migrations/versions/0001_api_foundation.py","bytes":5850,"sha256":"f595ce71642f8555c9a7e3e615aeccf1f642eaf2a1be09f8864b25a8797e52ae"},
+    {"path":"app/migrations/versions/0002_private_storage_permission.py","bytes":771,"sha256":"572a55739d70b0fc54f6bfdc3fa19ed3ab514fac2136feb817a3c8c89f2551ca"},
+    {"path":"app/migrations/versions/0003_processing_jobs.py","bytes":3631,"sha256":"06a9437a41e6665e1689cb85af0789c741e420dc380888139ed138c2abe4939f"},
+    {"path":"app/database.py","bytes":8242,"sha256":"ee4baa961ed7c9070158809588c6661f29d2a94ffb7d50751c4090c538453c3f"},
+    {"path":"app/processing_storage.py","bytes":5383,"sha256":"6deb7e6b515bd4ff310b32c392febbc0d6825e20699ff9401062039f1caa09a3"},
+    {"path":"app/projects.py","bytes":23816,"sha256":"5b49bb8180f6b659dceb64354740f4cd3866b5eeadc79bc06ac1aab0ace4ff08"},
+    {"path":"app/processing.py","bytes":22289,"sha256":"cd07136e17d20e2b5bc8f2d81ea4d20d991a423a4e220798a6728d4fb3626a5e"},
+    {"path":"app/worker.py","bytes":20777,"sha256":"8c1dbf10fb425a1ea1f1494718b65c810662b5a266aec222a4e2c2aa01337235"},
+    {"path":"app/processing_contract.py","bytes":10444,"sha256":"8f91e480f4fd40908c33e4edfe1c6c7672212374496dcb7e02d2b7d5554ab496"},
+    {"path":"app/config.py","bytes":4373,"sha256":"36f7e19489fa9ff86030bb705a4bdc02ed3f782d7599c4594f7a4a60f445ccb0"},
+    {"path":"scripts/ops_recovery.py","bytes":69747,"sha256":"e3ccf805d3eb1e2979923f7a58fbd5e465ad7090a2710fb52dc067a285ce42a4"},
+    {"path":"requirements-api.txt","bytes":578,"sha256":"d6016b7962d8bb2017a2d07f904735bee8473d96bbc31b26e763645db797a7e4"}
+  ]
+}
