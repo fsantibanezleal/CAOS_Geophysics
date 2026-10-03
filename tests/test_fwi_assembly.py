@@ -3,6 +3,7 @@ import hashlib
 import json
 
 import pytest
+import sys
 
 import assemble_fwi_candidate as assembly
 from geology import registry
@@ -98,6 +99,11 @@ def test_changed_family_modules_cannot_be_reused(monkeypatch):
     monkeypatch.setattr(assembly, 'baseline_bytes', lambda *_args: b'changed')
     with pytest.raises(ValueError, match='changed family'):
         assembly.family_proof('gravity', 'baseline')
+    with pytest.raises(ValueError, match='changed family'):
+        assembly.family_proof('mt', 'baseline')
+    assert assembly.family_proof('mt', 'baseline', fresh_mt=True)['unchanged'] is False
+    with pytest.raises(ValueError, match='changed family'):
+        assembly.family_proof('gravity', 'baseline', fresh_mt=True)
 
 
 def test_outputs_cannot_overwrite_or_overlap_any_input(tmp_path, monkeypatch):
@@ -134,3 +140,114 @@ def test_frozen_plan_drift_rejects_before_copy(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='Frozen assembly plan'):
         assembly.assemble(path)
     assert not destination.exists()
+
+
+@pytest.fixture
+def mt_handoff(tmp_path):
+    from geology import VARIANTS
+    mt, source = tmp_path/'mt', tmp_path/'source'
+    entries, cases = [], []
+    for case in registry():
+        if case['family'] != 'mt':
+            continue
+        variants = []
+        for variant, _, _ in VARIANTS:
+            relative = f'{case["id"]}/{variant}.json'
+            assembly.write_json(source/relative, dict(original=True))
+            assembly.write_json(mt/relative, dict(fresh=True))
+            raw = (mt/relative).read_bytes()
+            entry = dict(path=relative, sha256=assembly.sha(raw), bytes=len(raw), source_valid=True,
+                         reference_sha256=assembly.sha((source/relative).read_bytes()))
+            entries.append(entry)
+            variants.append(dict(id=variant, methods={'mt-lm': {}, 'mt-adam': {}, 'mt-nn': {}}, **entry))
+        cases.append(dict(id=case['id'], variants=variants))
+    assembly.write_json(mt/'catalog.json', dict(complete=False, cases=cases))
+    assembly.write_json(mt/'release.json', dict(complete=False, cases=4, runs=24, methods=72))
+    field = dict(artifact='edi/clear-lake-cl061-screen.json', source_sha256='source-pin', source_bytes=16411)
+    assembly.write_json(mt/field['artifact'], dict(truth=None, methods={}, inversion_performed=False,
+                       one_d_inversion_eligible=False, compatibility=dict(passes_screen=False)))
+    raw = (mt/field['artifact']).read_bytes()
+    field.update(sha256=assembly.sha(raw), bytes=len(raw))
+    entry = dict(artifact='clear-lake-cl061-screen.json', source_sha256=field['source_sha256'],
+                 source_bytes=field['source_bytes'], artifact_sha256=field['sha256'], artifact_bytes=field['bytes'],
+                 parser_source_sha256=assembly.sha((assembly.ROOT/'data-pipeline/edi.py').read_bytes()),
+                 one_d_inversion_eligible=False)
+    manifest = dict(fixtures=[dict(original=True)], calibration=[dict(original=True)], field_screens=[entry])
+    assembly.write_json(source/'edi/manifest.json', manifest)
+    assembly.write_json(mt/'edi/manifest.json', manifest)
+    names = ['data-pipeline/'+n for n in ('electromagnetics.py', 'edi.py', 'geology.py', 'provenance.py', 'rebuild.py', 'seismic.py')]
+    names += ['scripts/build_field_screen.py', 'scripts/validate_mt_replays.py']
+    receipt = dict(schema='inverse-earth/mt-source-reconciliation/v1', status='PASS', conditions=24,
+                   method_results=72, bootstrap_refits=3072, canonical_unchanged=True, artifacts=entries,
+                   source_sha256={n: assembly.sha((assembly.ROOT/n).read_bytes()) for n in names},
+                   catalog_sha256=assembly.sha((mt/'catalog.json').read_bytes()),
+                   release_sha256=assembly.sha((mt/'release.json').read_bytes()),
+                   edi_manifest_sha256=assembly.sha((mt/'edi/manifest.json').read_bytes()), field_screen=field)
+    assembly.write_json(mt/'mt-replay.json', receipt)
+    return mt, source, receipt
+
+
+def test_mt_handoff_binds_actual_bytes_and_does_not_relabel(mt_handoff):
+    mt, source, _ = mt_handoff
+    raw = (mt/'mt-replay.json').read_bytes()
+    proof = assembly.mt_contribution(mt, assembly.sha(raw), source)
+    assert len(proof['entries']) == 24
+    assert proof['inherited_edi_manifest_except_field_unchanged']
+    assert (mt/'mt-replay.json').read_bytes() == raw
+
+
+@pytest.mark.parametrize('fault', ['pin', 'source', 'duplicate', 'missing', 'reference', 'catalog',
+                                 'release', 'manifest', 'field-bytes', 'field-source', 'field-verdict'])
+def test_mt_handoff_rejects_stale_forged_or_incomplete_inputs(mt_handoff, fault):
+    mt, source, receipt = mt_handoff
+    if fault == 'source':
+        receipt['source_sha256']['data-pipeline/electromagnetics.py'] = 'stale'
+    elif fault == 'duplicate':
+        receipt['artifacts'][-1] = receipt['artifacts'][0]
+    elif fault == 'missing':
+        receipt['artifacts'].pop()
+    elif fault == 'reference':
+        receipt['artifacts'][0]['reference_sha256'] = 'other'
+    elif fault == 'catalog':
+        receipt['catalog_sha256'] = 'wrong'
+    elif fault == 'release':
+        value = assembly.read_json(mt/'release.json')
+        value['complete'] = True
+        assembly.write_json(mt/'release.json', value)
+        receipt['release_sha256'] = assembly.sha((mt/'release.json').read_bytes())
+    elif fault in ('manifest', 'field-source'):
+        value = assembly.read_json(mt/'edi/manifest.json')
+        if fault == 'manifest':
+            value['fixtures'] = []
+        else:
+            value['field_screens'][0]['source_sha256'] = 'another-station'
+        assembly.write_json(mt/'edi/manifest.json', value)
+        receipt['edi_manifest_sha256'] = assembly.sha((mt/'edi/manifest.json').read_bytes())
+    elif fault in ('field-bytes', 'field-verdict'):
+        value = assembly.read_json(mt/'edi/clear-lake-cl061-screen.json')
+        value['one_d_inversion_eligible'] = True
+        assembly.write_json(mt/'edi/clear-lake-cl061-screen.json', value)
+        if fault == 'field-verdict':
+            raw = (mt/'edi/clear-lake-cl061-screen.json').read_bytes()
+            receipt['field_screen'].update(sha256=assembly.sha(raw), bytes=len(raw))
+            manifest = assembly.read_json(mt/'edi/manifest.json')
+            manifest['field_screens'][0].update(artifact_sha256=assembly.sha(raw), artifact_bytes=len(raw))
+            assembly.write_json(mt/'edi/manifest.json', manifest)
+            receipt['edi_manifest_sha256'] = assembly.sha((mt/'edi/manifest.json').read_bytes())
+    assembly.write_json(mt/'mt-replay.json', receipt)
+    pin = 'wrong' if fault == 'pin' else assembly.sha((mt/'mt-replay.json').read_bytes())
+    with pytest.raises(ValueError):
+        assembly.mt_contribution(mt, pin, source)
+
+
+def test_full_replay_does_not_weaken_partial_matrix_gate():
+    sys.path.insert(0, str(assembly.ROOT/'scripts'))
+    from validate_fwi_mt_candidate import full_matrix
+    from validate_mt_replays import validate_matrix
+    catalog = assembly.read_json(assembly.ROOT/'data/derived/v2/catalog.json')
+    full_matrix(catalog)
+    with pytest.raises(AssertionError):
+        validate_matrix(catalog)
+    catalog['cases'][0]['variants'][1] = catalog['cases'][0]['variants'][0]
+    with pytest.raises(AssertionError, match='unique full matrix'):
+        full_matrix(catalog)
