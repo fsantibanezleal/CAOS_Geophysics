@@ -132,8 +132,12 @@ Reviewed runtime-pin manifest remains byte-identical at
 `a5aa08c23a80e15024e6499fab6805315d52dee185c5de1010b5f46e5c9f5819`.
 Later documentation/receipt edits must not be confused with changed code bytes.
 
-Exact existing interpreter, READ-ONLY, no creation/upgrade:
-`D:\_Repos\_Web_Projects\CAOS_Geophysics\.venv-pipeline\Scripts\python.exe`.
+Exact existing interpreter, READ-ONLY, no creation/upgrade: the product checkout's
+`.venv-pipeline/Scripts/python.exe`, with the pinned Windows CPython/runtime epoch.
+Resolve `$ExistingPipelinePython` to that trusted existing interpreter outside
+the scientific request. Keep machine-specific resolved paths in private run
+receipts, not public reproduction commands. A review worktree need not contain
+its own environment; do not install one merely to repeat this gate.
 Set process-only `PYTHONDONTWRITEBYTECODE=1`, `OPENBLAS_NUM_THREADS=1`,
 `OMP_NUM_THREADS=1`; main can use a new private scratch outside protected backups
 for pytest temporary outputs. The standalone new unit does not publish files.
@@ -142,7 +146,7 @@ for pytest temporary outputs. The standalone new unit does not publish files.
 $env:PYTHONDONTWRITEBYTECODE='1'
 $env:OPENBLAS_NUM_THREADS='1'
 $env:OMP_NUM_THREADS='1'
-& 'D:\_Repos\_Web_Projects\CAOS_Geophysics\.venv-pipeline\Scripts\python.exe' -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider
+& $ExistingPipelinePython -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider
 ```
 
 All **66** new controls pass. In particular seven metadata-preallocation
