@@ -1,6 +1,6 @@
 # M08 waveform user-data tasks and authorization
 
-Status: DOCS_ONLY / MAIN_FULL_READ_REQUIRED. User authorized deep primary research and a precise local scientific sub-SDD, not implementation. Plan comments: [#42](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/42#issuecomment-5969042894), [#50](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/50#issuecomment-5969043033).
+Status: INITIAL_LOCAL_IMPLEMENTATION_APPROVED / TEST_FIRST_PENDING. The original docs-only delegation is historical. MAIN explicitly approved the narrow initial science/input implementation after FULL reading d295925; see [exact authorization](implementation-approval.md). CLI/resource supervision and whole-method acceptance remain held. Plan comments: [#42](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/42#issuecomment-5969042894), [#50](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/50#issuecomment-5969043033).
 
 ## Authorized now
 
@@ -10,11 +10,11 @@ Status: DOCS_ONLY / MAIN_FULL_READ_REQUIRED. User authorized deep primary resear
 - [x] Persist primary research and actual documentation retrieval metadata, with waveform acquisition NOT_RUN.
 - [x] Persist complete proposed inputs/outputs/science/errors/resource/test/case design, with explicit algorithm and Ridgecrest annexes to the seven core review files.
 - [x] Persist/push science milestone242dec0 and open draft [PR142](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/142) against develop, with #42/#50 links. Final doc/source checks are in [review packet](review-packet.md) and its exact receipt; they are not scientific execution.
-- [ ] Full Main read and explicit scope/algorithm/engine/rights approval before any proposed module, test, fixture or runtime change.
+- [x] Full MAIN read at d295925 and explicit initial module/test/fixture/private-acquisition/fresh-environment approval, recorded before code.
 
 ## Held until that approval
 
-All proposed new modules, CLI, tests, authored fixtures and measured runtime lanes. Any dependency installation or environment creation requires approval; missing engines are blockers, never installs by inference. Field MiniSEED/StationXML/catalogue retrieval and publication need their explicit per-object plan and rights decisions. The calculation consumes user-declared local paths and must not contain an acquisition client.
+CLI/wrappers and resource helpers/tests/containment/telemetry remain held. Only the new files and fresh environment in the authorization are approved; missing/incompatible engines remain blockers, never silent fallback. Private exact-query field acquisition is approved after the selection seal; original publication still requires per-object MAIN review. The ordinary calculation receives bytes and must not contain an acquisition client.
 
 ## Not authorized by this unit
 
@@ -26,10 +26,10 @@ Historical checkpoint at851bc: the prior JSON unit was handed off at `76f7443`; 
 
 | Task | Requirement coverage | Required precursor / owner / evidence |
 | --- | --- | --- |
-| W08-A01 | All20 | Main FULL read of seven core files plus algorithms/case/receipt annexes; explicit exact module/test/engine/rights/resource authority. Still REQUIRED, NOT_APPROVED. |
+| W08-A01 | All20 | MAIN FULL read completed at d295925; initial science/input/test/engine/private-acquisition scope approved. CLI/resource/whole-method authority remains separate. |
 | W08-T01 | 001..007,016,017,019 | This local unit: authored format/grammar/lineage/preallocation tests first, real decoder positives later; no other owner file changes. NOT_STARTED. |
 | W08-T02 | 008..014 | This local unit: independent numerical/control tests and fixed oracle scales/equality cases first; actual compatible engines required to close. NOT_STARTED. |
-| W08-I01 | 001..014,016,017 | Only the three proposed ordinary modules and local CLI/wrappers after T01/T02. Missing ObsPy or native incompatibility is a blocker, no automatic install. NOT_STARTED. |
+| W08-I01 | 001..014,017 | Only the three approved ordinary modules after T01/T02; CLI/wrappers NOT authorized. Exact fresh compatibility environment approved; incompatibility requires review. NOT_STARTED. |
 | W08-R01 | 018,020 | This unit plus separately approved local containment/telemetry owner: fresh resource/cancel/crash/upper profiles, runtime-specific memory threshold remains UNSET until measured. NOT_RUN/CLOSED. |
 | W08-C01 | 015 | Main per-object rights/acquisition approval, presealed station/profile; authorized operator bounded external acquisition. Original bytes remain private and failures retained. NOT_ACQUIRED. |
 | W08-E01 | 014,015,019,020 | This unit independent source-valid replay/numerics plus Main final pinned review, actual receipts and all disclosed missing gates. NOT_RUN. |
