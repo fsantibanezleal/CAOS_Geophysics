@@ -11,6 +11,7 @@ Inclusive bounds; reject cap+1 before allocating the corresponding native tree/d
 | MiniSEED exact raw bytes | 1..16777216 bytes; no archive/compressed outer wrapper |
 | StationXML exact raw bytes | 1..2097152 bytes, strict UTF-8, no BOM, DTD/entity declarations/XInclude/external retrieval |
 | Request JSON local file | 1..65536 bytes, UTF-8/no BOM, decoded duplicate keys forbidden, finite native numbers, no bool-as-number; depth8/nodes4096/key64/value2048 UTF-8 bytes |
+| Request scientific identity | Compact sorted CPython ASCII canonical<=65536 bytes, pre-counted before copy/serialization/hash; this is NOT the original JSON byte hash |
 | Waveform scope | One exact network/station; 1..3 unique channel+location identities, all named in request; no extra channels or stations hidden in file |
 | Data records | At most4096; record length a power of two256..4096; one required blockette1000, optional single1001; other blockette kinds unsupported |
 | Sample encoding | MiniSEED2 codes1(int16),3(int32),10(STEIM1),11(STEIM2), integer counts only; quality D/R/Q/M preserved without treating it as calibration |
@@ -87,9 +88,13 @@ Selected latitude[-90,90], longitude[-180,180], finite elevation/depth in metres
 
 For water_level_db=null, the pinned engine reciprocates ALL non-DC H bins, including those where T=0. Require finite nonzero H and finite1/H there; otherwise QC-only `response_inverse_undefined`, not ignored0*infinity. With finite floor, zero H outside support is allowed with inverse0; zero H anywhere T>0 remains QC-only. No warning suppression or nan-to-zero repair.
 
+Every coefficient is finite real and every nonreal pole/zero has its exact complex-conjugate partner with equal multiplicity after native numeric parsing; no pairing tolerance or synthesized conjugate. This lane requires a real-valued sensor transfer function, rather than silently letting IRFFT invent the missing negative-frequency response. Retain an unmatched pair as `response_chain_inconsistent` QC-only. Malformed numeric grammar is instead rejected before any inventory/response call.
+
 ## 4. Result: `caos.local-waveform-result.v1`
 
 Terminal classification is fixed: wrong builtin types, raw/counter bounds, malformed grammar/headers/STEIM mismatch, unknown encodings/rates/leap time model, forbidden blockette/schema versions or invalid request/analysis bounds are `rejected` with the fixed input error. Parseable conditioning quality flags, gaps/overlaps, missing requested channels, incomplete/ambiguous response, orientation/unit/response warning/floor failures are `qc_only`. Unknown/forbidden local rights are checked before native decode and give `qc_only`/`rights_ineligible` with no decoded/physical array; approved public-SCSN is an external reviewed declaration, never something this helper authenticates. Structural scanning/hash alone is not an observation dataset. Missing/incompatible engine is `engine_unavailable`. Unexpected native child exit is `failed`; nonfinite numerical arrays/CF are `failed`/`numerical_failed`. Output overflow, cancellation and deadline are `resource_exceeded`, `cancelled`, `timed_out`. No terminal failure is recast as a successfully computed empty result.
+
+Type/raw/grammar checks precede engine availability. For a structurally valid but rights-ineligible source, retain that QC receipt without importing a scientific engine; do not diagnose a missing engine as observed field failure. Other raw QC requiring decoded samples remains UNRESOLVED if its actual decoder is unavailable. Selecting a public rights enum is only a local-use declaration: the independently retained operator/Main per-object review is REQUIRED for the original-case/publication gate, and cannot be certified by this ordinary function. Source/unit/response consistency is never waived by rights acceptance.
 
 Core `WaveformResult` has exactly `metadata` (native finite dict) and `arrays` (owned read-only NumPy arrays). Metadata root keys: `schema`, `method`, `status`, `sources`, `request`, `engines`, `channels`, `processing`, `qc`, `candidates`, `acceptance`, `field_truth`, `array_descriptors`. Schema/method fixed as above. Output manifest adds `metadata_sha256` and `execution_receipt`; no source filename/private path/user identity is exported.
 

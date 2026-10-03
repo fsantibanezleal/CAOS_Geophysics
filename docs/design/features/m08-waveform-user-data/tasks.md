@@ -9,7 +9,7 @@ Status: DOCS_ONLY / MAIN_FULL_READ_REQUIRED. User authorized deep primary resear
 - [x] Preserve JSON branch `76f7443550d988fbf6cd44ead732d0dfe063ecfa`, course ref `be4ec1cea4a02c25829ec902fbc86e53d313fe30`, private evidence and eleven diagnostic directories.
 - [x] Persist primary research and actual documentation retrieval metadata, with waveform acquisition NOT_RUN.
 - [x] Persist complete proposed inputs/outputs/science/errors/resource/test/case design, with explicit algorithm and Ridgecrest annexes to the seven core review files.
-- [ ] Check docs links, requirement-to-gate mapping, source invariance and docs-only scope; commit/push milestones and open draft PR against develop with issue links.
+- [x] Persist/push science milestone242dec0 and open draft [PR142](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/142) against develop, with #42/#50 links. Final doc/source checks are in [review packet](review-packet.md) and its exact receipt; they are not scientific execution.
 - [ ] Full Main read and explicit scope/algorithm/engine/rights approval before any proposed module, test, fixture or runtime change.
 
 ## Held until that approval
