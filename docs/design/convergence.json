@@ -1,0 +1,237 @@
+{
+  "schema": "geophysics.sdd-convergence/v1",
+  "sdd_path": "docs/design/SDD.md",
+  "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
+  "assessed_revision": "dce92a1d8693afd60a33ff429dfff59cad4de64d",
+  "assessed_at": "2026-10-03T05:47:51Z",
+  "release": {
+    "replacement_accepted": false,
+    "class": "legacy-static",
+    "application_origins": [
+      "https://geophysics.ml.fasl-work.com/",
+      "https://fsantibanezleal.github.io/CAOS_Geophysics/"
+    ],
+    "pages_publishes_application": true
+  },
+  "requirements": [
+    {
+      "id": "R-001",
+      "verdict": "unresolved",
+      "declared_gate": "tests/data/test_catalogue_sources.py::test_rights_links_and_hash_receipts.",
+      "note": "Local rights-aware acquisition is merged, but the complete catalogue and advertised field source set are not accepted.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-002",
+      "verdict": "unresolved",
+      "declared_gate": "tests/data/test_provenance.py::test_raw_immutable_and_owner_scoped.",
+      "note": "Authenticated immutable raw ownership is locally tested; product-wide source/format/host acceptance remains unexecuted.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-raw-api/tasks.md",
+          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-003",
+      "verdict": "unresolved",
+      "declared_gate": "tests/data/test_formats.py::test_missing_physical_metadata_rejection.",
+      "note": "Strict raw metadata and several local scientific parsers exist. Full modality ingestion and exact product gate are incomplete.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-raw-api/tasks.md",
+          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-004",
+      "verdict": "unresolved",
+      "declared_gate": "tests/data/test_provenance.py::test_transform_dag_roundtrip.",
+      "note": "Local hash-checked flag-only gravity datasets exist; the full physical processing DAG and uncertainty lineage are incomplete.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-processing-jobs/tasks.md",
+          "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-005",
+      "verdict": "unresolved",
+      "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
+      "note": "The API distinguishes flag-only QC from unimplemented solvers. End-to-end scientific eligibility for all uploaded modalities remains incomplete.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-processing-jobs/tasks.md",
+          "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-006",
+      "verdict": "unresolved",
+      "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
+      "note": "A child worker computes parameter-dependent robust gravity flags. This is not a correction or inversion; full submitted-data solves are pending.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-processing-jobs/tasks.md",
+          "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-007",
+      "verdict": "unresolved",
+      "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
+      "note": "Local cancellation, timeout and crash-recovery checks exist. Actual VPS upper-bound, concurrency and resource admission remain unexecuted.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-processing-jobs/tasks.md",
+          "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-008",
+      "verdict": "fail",
+      "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
+      "note": "M12 learned velocity lost to its matched classical baseline; FWI fresh-process reproducibility is under investigation. Complete M01-M13 acceptance is not achieved.",
+      "evidence": [
+        {
+          "path": "docs/design/features/m12-velocity-validation/convergence.md",
+          "sha256": "300fa2617be1edd3a682c6adf97259c166b520703f5f391f6057f92b9d867b00"
+        },
+        {
+          "path": "docs/design/features/m06-field-mt/convergence.md",
+          "sha256": "89bfb88e433262a152490c0aa379b419a33f3e6e00c3bd5223d3fbbf80188b0c"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-009",
+      "verdict": "unresolved",
+      "declared_gate": "tests/data/test_artifact_contract.py::test_truth_only_for_synthetic.",
+      "note": "Historical artifacts distinguish known synthetic truths from the measured MT screen. Full replacement artifact contract is not accepted.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-010",
+      "verdict": "unresolved",
+      "declared_gate": "tests/learning/test_split_and_benchmark.py::test_disjoint_groups_and_matched_inputs.",
+      "note": "M13 has frozen event/station-disjoint STEAD evidence and browser parity. M12 retains its failed independent family/acquisition benchmark; complete product acceptance remains open.",
+      "evidence": [
+        {
+          "path": "docs/design/features/m13-browser/design.md",
+          "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/convergence.md",
+          "sha256": "300fa2617be1edd3a682c6adf97259c166b520703f5f391f6057f92b9d867b00"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-011",
+      "verdict": "unresolved",
+      "declared_gate": "tests/data/test_export.py::test_bundle_roundtrip_and_rights.",
+      "note": "Raw-project and flag-QC bundles are locally checked. Scientific result bundle re-import across every method is incomplete.",
+      "evidence": [
+        {
+          "path": "docs/design/features/project-raw-api/tasks.md",
+          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+        },
+        {
+          "path": "docs/design/features/project-processing-jobs/tasks.md",
+          "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-012",
+      "verdict": "unresolved",
+      "declared_gate": "frontend/e2e/routes-shell.spec.ts plus scripts/check_single_origin.py::main.",
+      "note": "The development frontend uses the shared shell and six routes. Legacy Pages and VPS still both publish the old app; replacement one-origin release is unexecuted.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-013",
+      "verdict": "unresolved",
+      "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
+      "note": "Selected-case legacy views and some local M13 controls were tested. All new user-dataset linked views and controls have not converged.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-014",
+      "verdict": "unresolved",
+      "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
+      "note": "Legacy physical renderers and M13 waveforms exist. Full modality-specific user-result visualization and animation evidence remains incomplete.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-015",
+      "verdict": "unresolved",
+      "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
+      "note": "Several local desktop EN/light and phone ES/dark checks passed. All new panels, pointer navigation, reduced motion and complete language/theme/device matrix remain open.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-016",
+      "verdict": "unresolved",
+      "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
+      "note": "Source/provenance and M08/M13 chapters were merged. The complete deep M01-M13 bilingual wiki/course and source-to-content review remain incomplete.",
+      "evidence": [
+        {
+          "path": "docs/data-contract/01_source-to-result.md",
+          "sha256": "60b59df62d4c72572ccd2d95b11406a1065cc99b8bbcee902277c866902aba29"
+        }
+      ],
+      "receipts": []
+    },
+    {
+      "id": "R-017",
+      "verdict": "unresolved",
+      "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
+      "note": "Main remains legacy 0.04.001; no replacement cutover or Pages withdrawal occurred. Product identity, actual-host acceptance and restore evidence remain open.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-018",
+      "verdict": "unresolved",
+      "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
+      "note": "The ledger now explicitly records all 19 requirements; structural checks are not final convergence. Complete measured product gate receipts remain absent.",
+      "evidence": [],
+      "receipts": []
+    },
+    {
+      "id": "R-019",
+      "verdict": "unresolved",
+      "declared_gate": "frontend/e2e/phase-picker-live.spec.ts::real_trace_parity_and_matched_baseline plus tests/learning/test_live_export.py::test_onnx_offline_parity.",
+      "note": "Local Chromium inference on 23 valid held-out STEAD records passed parity; one flat record remains excluded. Full named release gates and deployment acceptance remain open.",
+      "evidence": [
+        {
+          "path": "docs/design/features/m13-browser/design.md",
+          "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+        }
+      ],
+      "receipts": []
+    }
+  ]
+}
