@@ -4,7 +4,14 @@ Latest completion: [combined acceptance](combined-acceptance.md) and
 [portable proof](../../../validation/fwi-mt-full-candidate-20261003.json).
 READY was received, full 72+24+24 assembly and owner independent numerical
 review passed at `421b999`. The older snapshots below remain historical.
-Canonical import is not executed; its separate guarded migration needs review.
+Canonical import is not executed. The [reviewed migration handoff](version-import-review.md)
+and [portable stage proof](../../../validation/fwi-container-migration-20261003.json)
+freeze final run3 plan/stage at `bb8e601`: main passed 39 import controls and
+20/120/348 artifact checks; final regression passed 339 pipeline tests with
+15 explicit skips and 85 focused controls. All reader/test jobs are complete.
+Main alone executes the exact reviewed plan; the private original backup must
+remain forever ignored and unstaged. No tool, plan, stage or scientific byte is
+changed by this evidence publication. Historical snapshots remain below.
 
 Date: 2026-10-03. Completed FWI evidence is persisted at `630e0c4` on
 `task/geophysics-fwi-regression`, draft PR #97. The standalone guarded assembler

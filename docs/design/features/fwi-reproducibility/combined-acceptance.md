@@ -33,6 +33,15 @@ and `mt-replay.json`
 This is owner independent numerical acceptance, not permission to execute
 canonical import. The owner next authorized designing/testing a guarded
 byte-preserving 0.04.002 container migration, requiring review before import.
+That bounded unit is now independently reviewed at `bb8e601`: main passed all
+39 import controls and the actual run3 20/120/348 artifact guard. The exact
+frozen plan/stage, explicit historical/current guard epoch and final regression
+are in the [migration handoff](version-import-review.md) and
+[portable stage proof](../../../validation/fwi-container-migration-20261003.json).
+All reader/test jobs have finished. Main owns execution; this worker has not
+imported canonical data. The original producer/fixture bytes and every negative
+remain preserved under the new header, with original private backup retained
+forever ignored/unstaged when main creates it. This is not host cutover.
 
 ## Assembly and full-source audit
 
