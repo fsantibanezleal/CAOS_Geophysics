@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="310" viewBox="0 0 960 310" role="img" aria-labelledby="title description">
+  <title id="title">Restricted maintenance capture and deletion-aware recovery</title>
+  <desc id="description">Stopped writers yield an encrypted snapshot. An independently latest cumulative authority and trusted hashes gate recovery to a new validated directory. Original backups remain restricted.</desc>
+  <style>
+    :root { --bg:#fff; --fg:#182431; --edge:#4b6278; --box:#eef3f7; --accent:#17664d; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#14202b; --fg:#e4edf5; --edge:#a2b9cd; --box:#25384a; --accent:#68d9b0; } }
+    text { fill:var(--fg); font:16px system-ui,sans-serif; }
+    .small { font-size:13px; } .box { fill:var(--box); stroke:var(--edge); stroke-width:1.5; }
+    .edge { fill:none; stroke:var(--edge); stroke-width:2; marker-end:url(#arrow); }
+  </style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--edge)"/></marker></defs>
+  <rect width="960" height="310" fill="var(--bg)"/>
+  <rect class="box" x="20" y="35" width="240" height="85" rx="8"/>
+  <text x="38" y="63">Stopped and masked writers</text><text class="small" x="38" y="88">Exact SQLite + immutable file inventory</text><text class="small" x="38" y="107">Fresh maintenance proof before/after</text>
+  <rect class="box" x="310" y="35" width="230" height="85" rx="8"/>
+  <text x="328" y="63">Encrypted old snapshot</text><text class="small" x="328" y="88">Schema, hashes, retention registration</text><text class="small" x="328" y="107">Original ciphertext is preserved</text>
+  <path class="edge" d="M260 77 H306"/>
+  <rect class="box" x="310" y="180" width="230" height="90" rx="8"/>
+  <text x="328" y="208">Latest cumulative authority</text><text class="small" x="328" y="232">All durable project tombstones</text><text class="small" x="328" y="252">Independent trusted hash + watermark</text>
+  <rect class="box" x="605" y="80" width="325" height="135" rx="8"/>
+  <text x="624" y="109">NEW validated restore directory</text><text class="small" x="624" y="134">Validate archive and DB/file identity first</text><text class="small" x="624" y="156">Apply all latest deletions; revoke sessions</text><text class="small" x="624" y="178">Verify survivors, quota and database integrity</text><text class="small" x="624" y="200">Write private success receipt last</text>
+  <path class="edge" d="M540 77 H572 V112 H601"/><path class="edge" d="M540 225 H572 V179 H601"/>
+  <text class="small" x="22" y="296">No service activation, production overwrite, automatic purge or host-drill claim.</text>
+</svg>
