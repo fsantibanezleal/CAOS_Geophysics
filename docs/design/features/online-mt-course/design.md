@@ -1,0 +1,27 @@
+# Online MT course design
+
+## Boundary and ownership
+
+Extend the two MT slots in `frontend/src/pages/Research.tsx`, keeping its Introduction, Experiments, Benchmark, other theory/algorithm sections and M08/M13 navigation unchanged. New scoped files: `frontend/src/components/OnlineMTCourse.tsx`, `OnlineMTDiagram.tsx`, `OnlineMTExercise.tsx`; `frontend/src/data/online-mt-course.ts`, `online-mt-worked.json`; tests `frontend/src/test/online-mt-course.test.ts`, `frontend/e2e/online-mt-course.spec.ts`, `frontend/playwright.mt-course.config.ts`, `tests/test_online_mt_course.py`. Only reference additions to the existing `frontend/src/data/citations.ts`. No global styles, main.tsx, App, processing widgets/contracts, parser, electromagnetics, FWI or canonical changes. Documentation: this feature folder, `docs/problem-types/05_online-mt-course.md`, `docs/guides/09_online-mt-course.md`, corresponding wiki landing links and `docs/validation/online-mt-course-review.md`.
+
+The shared shell 0.6.8 supplies Tabs/SubTabs, Equation/InlineMath, Callout, Figure, Cite/Refs, language and fonts/tokens. Compose existing method article/diagram classes. Each M05/M06 course has bounded topic navigation (at most six peers), rigorous translated text, math, units, limitations and references. Existing synthetic TRF/Adam/neural content remains separately labelled replay, not additional online methods. No global layout restyle or copied shell implementation.
+
+## Scientific specification
+
+M05 covers EDI transfer functions versus raw MTH5; strict all-block preflight and official reader agreement; source-byte receipt; co-oriented electric/magnetic axes, E/B to E/H, sign conjugation, marginal error meaning; common-frame preservation and exact signed permutations only; all-frequency diagonal/antisymmetry gate; ancillary tipper retained with missing mask but never inverted. cl061 is a measured negative control, not invented eligible data. Phase-tensor dimensionality is not a substitute for this screen.
+
+M06 derives quasi-static isotropic plane-wave Maxwell diffusion and the bottom-up complex tanh recurrence, halfspace and independent reflection formula. Fit x=ln(rho) with a real stacked residual and adjacent log-layer penalty, bounds 1..6000 ohm m, fixed h, TRF max_nfev400 and tolerances1e-10. Explicitly document SciPy1.15.2 default 2-point numerical Jacobian versus central-difference data-only sensitivity with epsilon1e-5. Sorted index%5==4 is withheld before every solve. Three starts (user, uniform30, uniform1000) are ranked by successful training objective only. The same mask drives the halfspace baseline, alternate beta and 0.8/1.2 thickness sensitivity; these are not posterior samples or holdout tuning. Bootstrap uses the selected response, independent real/imag Gaussian sigma, SeedSequence child seeds, fixed conditioning and 20..40 members online; resamples use max_nfev300, not400.
+
+The physical figure depicts horizontal induction, instrument axes, finite cover and infinite basement with depth/thickness and diffusion, not repository layout. Its labels and descriptions switch with EN/ES and colours inherit tokens. Rendered text bounding boxes are checked, not guessed from source.
+
+## Worked case and oracles
+
+Use the existing original noisy rotated fixture (120/12 ohm m, h350m). Preserve its exact source bytes/hash. Independently replay responses with the reflection coefficient expression, never a second tanh call. Actually run the existing bounded TRF on its parsed arrays and the exact online frozen mask/three starts for h350, h280, h420, halfspace and beta sensitivity. Save compact course-only observations/results and execution provenance. Known fixture truth is teaching/evaluation metadata, never input to the inverse; this static worked example is not a submitted online job. The course exercise switches among measured worked results and reveals reasoned answers. Tests recompute every displayed number and objective with independent algebra, execute bootstrap refits and retain the cl061 negative control from original ignored bytes when available (explicit source skip otherwise).
+
+## Admission and non-claims
+
+Read PR100 contracts/source at pinned7b69404 rather than import backend into this branch. Explain immutable owned source/dataset/M05 binding, private child, queue versus success, fail-closed admission/cancel/timeout, original hash/count and bundle three-member identity. M05:5MiB/2..512freq,768MiB/8MiB/90s. M06:5MiB/12..64freq,1or2layers, h2..4000m, beta0..1,20..40draws,1GiB/32MiB/300s reduced by configured ceilings. Report no API activation. Main's actual Linux work remains separate; reported free disk29.45% is below the approved30% gate. Do not promote product convergence.
+
+## Gates and kill criteria
+
+Stop on wrong sign/normalization, oracle disagreement above1e-11 relative, changed observations across thickness scenarios, held-out selection, source-hash drift, fabricated field target, missing bilingual caption/reference, SVG label bounds failure, console error or cross-scope diff. Numerical expected results use relative1e-7 and absolute1e-9 replay tolerances; source bytes are exact. Full EN/ES x light/dark x desktop/phone x ordinary/reduced-motion grid navigates both pages and all course topics from App using pointer moves/clicks, checks document containment and SVG labels, changes exercises and captures screenshots. Local-only tests/build; no CI training/bake, no merge/deploy.
