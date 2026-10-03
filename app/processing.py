@@ -17,6 +17,12 @@ from app.bundle import build_bundle
 from app.config import Settings
 from app.errors import ApiError
 from app.models import AccountUsage, ObservationDataset, ProcessingJob, User, utcnow
+from app.mt_contract import (
+    EDI_PARSER_VERSION, EDI_SOURCE_LIMIT, M05_ID, M06_ID, M05_MEMORY_BYTES,
+    M06_MEMORY_BYTES, M05_SCRATCH_BYTES, M06_SCRATCH_BYTES,
+    M05_WALL_SECONDS, M06_WALL_SECONDS, M05Parameters, M06Parameters,
+    parse_edi_envelope,
+)
 from app.processing_contract import (
     METHOD_ID, METHOD_MEMORY_BYTES, METHOD_SCRATCH_BYTES, METHOD_WALL_SECONDS,
     PARSER_VERSION, canonical_bytes, checked_derived_path, dataset_key,
@@ -42,7 +48,7 @@ class JobCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     dataset_id: uuid.UUID
     method_id: str = Field(min_length=1, max_length=80)
-    parameters: JobParameters
+    parameters: JobParameters | M05Parameters | M06Parameters
 
 
 def _date(value: datetime | None) -> str | None:
@@ -55,7 +61,8 @@ def _dataset_view(item: ObservationDataset) -> dict:
         "version": item.version, "schema": "geophysics.observation-dataset/v1",
         "modality": item.modality, "row_count": item.row_count, "parser_version": item.parser_version,
         "raw_sha256": item.raw_sha256, "sha256": item.sha256, "created_at": _date(item.created_at),
-        "qc_verdict": "parsed_for_flag_qc_only",
+        "qc_verdict": "awaiting_full_tensor_qc" if item.modality == "edi_transfer_function"
+                      else "parsed_for_flag_qc_only",
     }
 
 
@@ -116,6 +123,24 @@ def _result_payload(settings: Settings, job: ProcessingJob) -> dict:
     return payload
 
 
+async def _eligible_mt_qc(session: AsyncSession, settings: Settings, dataset: ObservationDataset,
+                          qc_job_id: str | None = None) -> tuple[ProcessingJob, dict] | None:
+    query = select(ProcessingJob).where(
+        ProcessingJob.owner_id == dataset.owner_id, ProcessingJob.project_id == dataset.project_id,
+        ProcessingJob.dataset_id == dataset.id, ProcessingJob.dataset_sha256 == dataset.sha256,
+        ProcessingJob.method_id == M05_ID, ProcessingJob.state == "succeeded",
+    )
+    if qc_job_id is not None:
+        query = query.where(ProcessingJob.id == qc_job_id)
+    rows = (await session.execute(query.order_by(ProcessingJob.created_at.desc()))).scalars().all()
+    for job in rows:
+        result = _result_payload(settings, job)
+        if (result.get("raw_sha256") == dataset.raw_sha256
+                and result["screen"].get("one_d_inversion_eligible") is True):
+            return job, result
+    return None
+
+
 def install_processing_routes(app, settings: Settings, current_user, get_session) -> None:
     router = APIRouter(prefix="/api/projects/{project_id}", tags=["processing"])
 
@@ -129,20 +154,27 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         await session.execute(text("BEGIN IMMEDIATE"))
         await session.refresh(user)
         asset, source = await _owned_asset(session, project_id, str(request.asset_id), user)
-        if asset.byte_count > settings.max_dataset_bytes:
-            raise ApiError(413, "dataset_too_large", "Gravity dataset exceeds the processing byte cap")
+        is_edi = asset.detected_format == "edi"
+        if asset.byte_count > (EDI_SOURCE_LIMIT if is_edi else settings.max_dataset_bytes):
+            raise ApiError(413, "dataset_too_large", "EDI exceeds the processing byte cap" if is_edi
+                           else "Gravity dataset exceeds the processing byte cap")
+        parser_version = EDI_PARSER_VERSION if is_edi else PARSER_VERSION
         existing = (await session.execute(select(ObservationDataset).where(
-            ObservationDataset.raw_asset_id == asset.id, ObservationDataset.parser_version == PARSER_VERSION,
+            ObservationDataset.raw_asset_id == asset.id, ObservationDataset.parser_version == parser_version,
         ))).scalar_one_or_none()
         if existing is not None:
             raise ApiError(409, "dataset_exists", "This raw asset already has an immutable processed dataset")
         raw_path = await asyncio.to_thread(_verified_file, settings, asset)
         raw = await asyncio.to_thread(raw_path.read_bytes)
         dataset_id = str(uuid.uuid4())
-        payload = parse_gravity_dataset(
-            raw, dataset_id=dataset_id, owner_id=str(user.id), project_id=project_id,
-            asset=asset, source=source, settings=settings,
-        )
+        if is_edi:
+            payload = parse_edi_envelope(raw, dataset_id=dataset_id, owner_id=str(user.id),
+                                         project_id=project_id, asset=asset, source=source)
+        else:
+            payload = parse_gravity_dataset(
+                raw, dataset_id=dataset_id, owner_id=str(user.id), project_id=project_id,
+                asset=asset, source=source, settings=settings,
+            )
         encoded = canonical_bytes(payload)
         raw_usage = (await session.execute(select(AccountUsage.raw_bytes).where(
             AccountUsage.user_id == user.id,
@@ -164,8 +196,10 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             created = True
             item = ObservationDataset(
                 id=dataset_id, project_id=project_id, owner_id=user.id, raw_asset_id=asset.id,
-                version=1, parser_version=PARSER_VERSION, modality="gravity_station",
-                row_count=len(payload["station_ids"]), raw_sha256=asset.sha256,
+                version=1, parser_version=parser_version,
+                modality="edi_transfer_function" if is_edi else "gravity_station",
+                row_count=payload["dimensions"]["frequency"] if is_edi else len(payload["station_ids"]),
+                raw_sha256=asset.sha256,
                 sha256=sha256(encoded), byte_count=len(encoded), storage_key=key, created_at=utcnow(),
             )
             session.add(item)
@@ -203,6 +237,24 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
     ):
         dataset = await _owned_dataset(session, project_id, dataset_id, user)
         _dataset_payload(settings, dataset)
+        if dataset.modality == "edi_transfer_function":
+            if not settings.mt_online_enabled:
+                return {"dataset_id": dataset.id, "methods": [], "unavailable": [
+                    {"method_id": method, "eligible": False, "lane": "pending_host_admission",
+                     "reason": "Actual ML VPS numerical and resource admission is not recorded"}
+                    for method in (M05_ID, M06_ID)]}
+            qualified = await _eligible_mt_qc(session, settings, dataset)
+            return {
+                "dataset_id": dataset.id,
+                "methods": [{"method_id": M05_ID, "eligible": True, "lane": "online_processing",
+                             "scope": "Full original EDI tensor QC; no inverse"}]
+                + ([{"method_id": M06_ID, "eligible": True, "lane": "online_processing",
+                     "qc_job_id": qualified[0].id, "scope": "conditional fixed-thickness 1D TRF"}]
+                   if qualified and 12 <= dataset.row_count <= 64 else []),
+                "unavailable": [] if qualified and 12 <= dataset.row_count <= 64 else [{
+                    "method_id": M06_ID, "eligible": False, "lane": "ineligible",
+                    "reason": "A passing M05 full-tensor screen and 12..64 frequencies are required"}],
+            }
         return {
             "dataset_id": dataset.id,
             "methods": [{"method_id": METHOD_ID, "eligible": True, "lane": "online_processing",
@@ -222,8 +274,37 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         await session.execute(text("BEGIN IMMEDIATE"))
         await session.refresh(user)
         dataset = await _owned_dataset(session, project_id, str(request.dataset_id), user)
-        _dataset_payload(settings, dataset)
-        if dataset.modality != "gravity_station" or request.method_id != METHOD_ID:
+        payload = _dataset_payload(settings, dataset)
+        mt = dataset.modality == "edi_transfer_function"
+        if mt:
+            if not settings.mt_online_enabled:
+                raise ApiError(409, "host_admission_pending", "MT online jobs require an actual ML VPS admission receipt")
+            asset, _source = await _owned_asset(session, project_id, dataset.raw_asset_id, user)
+            await asyncio.to_thread(_verified_file, settings, asset)
+            if request.method_id == M05_ID and isinstance(request.parameters, M05Parameters):
+                method_memory, method_scratch, method_wall = M05_MEMORY_BYTES, M05_SCRATCH_BYTES, M05_WALL_SECONDS
+                estimated_memory = 256 * 1024 * 1024 + 64 * payload["parent_raw_bytes"]
+                estimated_scratch = payload["parent_raw_bytes"] + 2 * 1024 * 1024
+                qc_screen_sha = None
+            elif request.method_id == M06_ID and isinstance(request.parameters, M06Parameters):
+                if not 12 <= dataset.row_count <= 64:
+                    raise ApiError(422, "method_ineligible", "M06 needs 12..64 original frequencies")
+                eligible = await _eligible_mt_qc(session, settings, dataset, str(request.parameters.qc_job_id))
+                if eligible is None:
+                    raise ApiError(422, "method_ineligible", "A passing M05 screen for this exact dataset is required")
+                method_memory, method_scratch, method_wall = M06_MEMORY_BYTES, M06_SCRATCH_BYTES, M06_WALL_SECONDS
+                estimated_memory = 384 * 1024 * 1024 + 2 * 1024 * 1024 * request.parameters.bootstrap_samples
+                estimated_scratch = (payload["parent_raw_bytes"] + 8 * 1024 * 1024
+                                     + 128 * 1024 * request.parameters.bootstrap_samples)
+                qc_screen_sha = sha256(canonical_bytes(eligible[1]["screen"]))
+            else:
+                raise ApiError(422, "method_ineligible", "Method or parameters are not eligible for this EDI")
+        elif dataset.modality == "gravity_station" and request.method_id == METHOD_ID and isinstance(request.parameters, JobParameters):
+            method_memory, method_scratch, method_wall = METHOD_MEMORY_BYTES, METHOD_SCRATCH_BYTES, METHOD_WALL_SECONDS
+            estimated_memory = 64 * 1024 * 1024 + 20 * dataset.byte_count
+            estimated_scratch = 4 * dataset.byte_count
+            qc_screen_sha = None
+        else:
             raise ApiError(422, "method_ineligible", "Method is not eligible for this dataset")
         active = (await session.execute(select(func.count()).select_from(ProcessingJob).where(
             ProcessingJob.owner_id == user.id, ProcessingJob.state.in_(["queued", "running"]),
@@ -235,30 +316,36 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         ))).scalar_one()
         if queued >= settings.max_queued_jobs:
             raise ApiError(429, "job_queue_full", "Processing queue is full")
-        estimated_memory = 64 * 1024 * 1024 + 20 * dataset.byte_count
-        memory = min(settings.worker_memory_bytes, METHOD_MEMORY_BYTES)
-        scratch = min(settings.worker_scratch_bytes, METHOD_SCRATCH_BYTES)
-        wall = min(settings.worker_wall_seconds, METHOD_WALL_SECONDS)
-        if estimated_memory > memory or 4 * dataset.byte_count > scratch:
+        memory = min(settings.worker_memory_bytes, method_memory)
+        scratch = min(settings.worker_scratch_bytes, method_scratch)
+        wall = min(settings.worker_wall_seconds, method_wall)
+        if estimated_memory > memory or estimated_scratch > scratch:
             raise ApiError(413, "job_resource_ineligible", "Dataset exceeds this method's resource limits")
         raw_usage = (await session.execute(select(AccountUsage.raw_bytes).where(
             AccountUsage.user_id == user.id,
         ))).scalar_one_or_none() or 0
-        if raw_usage + await account_derived_usage(session, user.id) + METHOD_SCRATCH_BYTES > settings.account_quota_bytes:
+        if raw_usage + await account_derived_usage(session, user.id) + method_scratch > settings.account_quota_bytes:
             raise ApiError(507, "account_quota_exceeded", "Account private-byte quota exceeded")
         job_id = str(uuid.uuid4())
         parameters = request.parameters.model_dump(mode="json")
         immutable = {
             "schema": "geophysics.processing-request/v1", "job_id": job_id,
             "project_id": project_id, "dataset_id": dataset.id, "dataset_sha256": dataset.sha256,
-            "method_id": METHOD_ID, "parameters": parameters,
+            "method_id": request.method_id, "parameters": parameters,
         }
+        if mt:
+            immutable.update(raw_asset_id=dataset.raw_asset_id, raw_sha256=dataset.raw_sha256)
+            if qc_screen_sha is not None:
+                immutable["qc_screen_sha256"] = qc_screen_sha
+        preflight = {"estimated_memory_bytes": estimated_memory, "memory_limit_bytes": memory,
+                     "scratch_limit_bytes": scratch, "wall_limit_seconds": wall}
+        if mt:
+            preflight["estimated_scratch_bytes"] = estimated_scratch
         item = ProcessingJob(
             id=job_id, project_id=project_id, owner_id=user.id,
-            dataset_id=dataset.id, dataset_sha256=dataset.sha256, method_id=METHOD_ID,
+            dataset_id=dataset.id, dataset_sha256=dataset.sha256, method_id=request.method_id,
             request_json=immutable, request_sha256=sha256(canonical_bytes(immutable)),
-            preflight={"estimated_memory_bytes": estimated_memory, "memory_limit_bytes": memory,
-                       "scratch_limit_bytes": scratch, "wall_limit_seconds": wall},
+            preflight=preflight,
             state="queued", cancel_requested=False, created_at=utcnow(),
         )
         session.add(item)
