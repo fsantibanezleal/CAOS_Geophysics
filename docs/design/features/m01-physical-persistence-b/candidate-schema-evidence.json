@@ -1,0 +1,65 @@
+{
+  "schema": "caos.local-physical-schema-milestone-evidence.v1",
+  "date": "2026-10-03",
+  "status": "CANDIDATE_ONLY",
+  "registration": "UNREGISTERED",
+  "runtime": false,
+  "path_amendment_pin": "7a28e89731101afa4bf2359377e23341a9a51098",
+  "revision": "0004_physical_persistence",
+  "down_revision": "0003_processing_jobs",
+  "ddl_sha256": "7496e07c6d4454a556e3b094b16ad458e06aa4cf57727e434dd7fb002fb59d86",
+  "ddl_objects": 57,
+  "default_runtime_head": "0003_processing_jobs",
+  "fixture_journal_mode": "delete",
+  "dependencies": {
+    "python": "3.12.10",
+    "alembic": "1.20.0",
+    "SQLAlchemy": "2.0.54",
+    "aiosqlite": "0.22.1",
+    "pytest": "9.1.1",
+    "fastapi": "0.141.1",
+    "fastapi-users-db-sqlalchemy": "7.0.0"
+  },
+  "sources": {
+    "app/physical_persistence.py": {
+      "bytes": 20133,
+      "sha256": "37281cd0af47128b72f9783834e2aafb00a826a97e9d716dfc5727bd0637ce2a",
+      "git_blob": "8aa9e6f157bf9c3493b00a09e766c10e5ce14fc5"
+    },
+    "app/migrations/candidates/0004_physical_persistence.py": {
+      "bytes": 8118,
+      "sha256": "910b5f1abebe45e27c492c6b37071e67db3fe4e6ebd54aec833a77315d3f0e17",
+      "git_blob": "83bfbf724b8b916e7cf64259cbc16b12ac77cf9c"
+    },
+    "tests/api/test_physical_persistence_schema.py": {
+      "bytes": 20891,
+      "sha256": "1cb20cdc3492231c2a0ea29385e764893a6ae0875a5d76562ce3c585c12bc623",
+      "git_blob": "c4f12ed1894611cd17586e30e5d07dbbe235c815"
+    }
+  },
+  "results": {
+    "initial_combined_schema_and_default_migrations": {"passed": 39, "warnings": 1},
+    "additional_pending_root_and_owned_parent": {"passed": 2, "warnings": 1},
+    "measured_ddl": {"passed": 1, "warnings": 1},
+    "foreign_key_failure_complete_fixture_rollback": {"passed": 1, "warnings": 1},
+    "full_api": {"status": "COLLECTION_FAILED", "errors": 3, "reason": "numpy_unavailable"},
+    "api_excluding_three_mt_modules_first": {"passed": 102, "failed": 1, "warnings": 1},
+    "timeout_test_isolated_retry": {"passed": 1, "warnings": 1},
+    "final_combined_schema_and_default_migrations": {"status": "PASS", "passed": 42, "warnings": 1},
+    "api_excluding_three_mt_modules_repeat": {"passed": 102, "failed": 1, "warnings": 1},
+    "staged_guards": {"status": "PASS", "content_standards": "PASS", "template_residue": "PASS", "ci_budget": "PASS", "cached_whitespace": "PASS"}
+  },
+  "commands": {
+    "schema_and_default_migrations": ".venv-api/Scripts/python.exe -m pytest tests/api/test_physical_persistence_schema.py tests/api/test_migrations.py -o addopts= -q --disable-warnings --tb=short",
+    "full_api": ".venv-api/Scripts/python.exe -m pytest tests/api -o addopts= -q --disable-warnings --tb=short",
+    "api_subset": ".venv-api/Scripts/python.exe -m pytest tests/api --ignore=tests/api/test_host_admission.py --ignore=tests/api/test_online_mt.py --ignore=tests/api/test_online_mt_benchmark.py -o addopts= -q --disable-warnings --tb=short",
+    "timeout_isolated": ".venv-api/Scripts/python.exe -m pytest tests/api/test_job_limits.py::test_cancel_timeout_failure_and_recovery -o addopts= -q --disable-warnings --tb=short"
+  },
+  "full_b_data": "INCOMPLETE_UNCOMMITTED",
+  "whole_gates_pb05_through_pb21": "CLOSED_NOT_RUN",
+  "native_build_registry": "EMPTY_UNREGISTERED",
+  "checkpoint_provider": "NOT_SET",
+  "production_activated": false,
+  "merged": false,
+  "deployed": false
+}
