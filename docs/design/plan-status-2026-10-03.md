@@ -2,6 +2,50 @@
 
 Assessment: 2026-10-03, 09:35 UTC. [Approved product SDD](SDD.md). This is a current implementation and preservation review, not release acceptance.
 
+## Latest accepted local-unit checkpoint, 12:14 UTC
+
+Develop `9918ea46aa0745ea91a546ff37593dc0a8c5bad2` integrates the independently
+reviewed forward recipe/evidence PR130 and bounded local physical JSON
+implementation/review/workflow PR127/131/134. Fresh CI37119234823,37122012553
+and37122172311 passed at their exact merged heads. Source merge's superseded
+CI37121972433 was cancelled by the following evidence merge, not a numerical
+failure or a passed run. CI checks guards/lint/artifacts/frontend contract;
+the actual scientific executions remain separately recorded.
+
+MAIN's final JSON integration passed179 tests with zero skips, including real
+core/adapter positives and the actual protected-author negative. All15 cold
+profiles passed; all15 producer original receipt byte hashes/native measurement
+values and independent raw/source/test/outcomes were verified. The
+[full independent record](../validation/physical-json-independent-review-2026-10-03.md)
+retains original versus final runs, astral decoded-text peak near111 MB and
+key-heavy public wrong-root rejection. The
+[local workflow guide](../guides/15_local_physical_json.md) was actually executed:
+12.000000000024315 mGal analytical correction and three false authority flags;
+its missing-user-file branch is not manufactured field evidence.
+
+Only narrow local design issue124 is closed. The verified tracker has50 open
+issues: original parent/48 children plus worker-accounting126. Full M01,
+potential-field ingestion and submitted-survey issues remain open. The ledger
+assessment now pins9918ea4 and adds R003's exact parser review while preserving
+18 unresolved/one failed whole requirement and replacement_accepted=false.
+Earlier09:35/11:14 checkpoints below retain their actual historical states.
+
+MAIN fully reviewed the exact seven-file M02 survey-L2 sub-SDD at48245d1 and
+seven-file pure worker-accounting sub-SDD plus parent delta at2c94da4 before
+narrowly authorizing their new local source/tests. Implementation is in progress,
+not numerical acceptance. The pure accounting unit can validate supplied traces
+only; runtime authorization alwaysfalse, native profiles remain CLOSED. MAIN
+also fully read persistence milestone A's nine-document packet ate67f7ff and
+accepted its DDL/custody proposal, not a migration: complete locked recovery,
+authority/source-policy milestone B remains required before schema code. M01
+scientific-course and waveform/response research remain separate pre-code work.
+
+The [new read-only host checkpoint](../validation/host-status-readonly-2026-10-03.md)
+records29.394254% available root disk, still below30%, and unchanged legacy
+release20260926235216. It is not a rerun of the40-job admission or public-service
+test. Main remains3981323, app version0.04.001; no source/provider data, production
+state, services, DNS, Pages or deployment changed in these local milestones.
+
 ## Later scoped execution checkpoint
 
 Develop `1b112bb258520a5679a865335cec30b6a97a1a0d` integrates the ordinary

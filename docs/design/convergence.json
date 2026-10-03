@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "1b112bb258520a5679a865335cec30b6a97a1a0d",
-  "assessed_at": "2026-10-03T11:14:22Z",
+  "assessed_revision": "9918ea46aa0745ea91a546ff37593dc0a8c5bad2",
+  "assessed_at": "2026-10-03T12:14:42Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -48,11 +48,15 @@
       "id": "R-003",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_formats.py::test_missing_physical_metadata_rejection.",
-      "note": "Strict raw metadata and several local scientific parsers exist. Full modality ingestion and exact product gate are incomplete.",
+      "note": "Strict raw metadata and several local scientific parsers exist. Local-only physical gravity JSON and its executed correction workflow are merged through PR127/131/134; independent final integration passed179 tests without skips and fifteen cold allocation/structural controls. No API/storage/worker/provider activation follows. Full modality ingestion and exact product gate are incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
           "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+        },
+        {
+          "path": "docs/validation/physical-json-independent-review-2026-10-03.md",
+          "sha256": "5463f9d6a3f6bf3c80b1bf3dd1dcdad018ac936f8a61107b6c4580dc0e7d71f9"
         }
       ],
       "receipts": []
