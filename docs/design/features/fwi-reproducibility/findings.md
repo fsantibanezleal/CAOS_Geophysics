@@ -227,3 +227,79 @@ fingerprint. The isolated 24-condition FWI candidate bake and CUDA export
 replay are separate release gates; old artifacts must not be relabeled or
 silently reused. The candidate is not a release and must not be merged into
 the published catalogue without a deliberate complete re-bake and review.
+
+## Complete source-consistent compatibility candidate
+
+After owner review of draft #97, the isolated 24-run fix was assembled into the
+entire legacy matrix, rather than leaving the canonical source-mismatch as the
+end of integration work. The [assembly design and requirements](assembly-plan.md)
+precede the guarded wrapper. Neither `catalog.assemble` nor `check_artifacts.py`
+was modified; neither the numerical sources nor thresholds changed again.
+
+`data/experiments/fwi-full-candidate-2026-10-03` contains 20 cases, 120
+conditions and 348 method results. Ninety-six non-seismic runs retain their
+original bytes and version-specific fingerprints. Each corresponding scientific
+module also matches the pinned pre-FWI develop source `dce92a1` byte-for-byte.
+Gravity/magnetics/MT retain 0.04.000 provenance; joint and learned runs retain
+0.04.001. All 24 seismic runs come exclusively from the precision-10 fresh
+candidate; no stale canonical seismic file is a fallback. Thirteen unchanged
+learned/EDI auxiliary files were copied and independently checked. The copied
+scientific/auxiliary data total 800,483,456 bytes, with no solver or training
+invoked by assembly.
+
+The unchanged artifact gate passes all 120 hashes/sizes, 348 method summaries,
+source fingerprints, checkpoint/EDI contracts and final-state identities.
+All 48 exported seismic final models again pass CUDA replay at the unchanged
+tolerances; the replay-report hash is identical to the precision-10 bake.
+With both `INVERSE_EARTH_DATA` and `FWI_RECOVERY_ARTIFACTS` set to the full
+candidate, all 179 tests pass in 63.40 s with no skips, errors or failures:
+150 original solver/data tests, 19 new assembly guard tests and 10 current
+convergence-checker tests. This exercises candidate learned checkpoint inference,
+MT impedance replay, artifact-cell residuals, FWI recovery and independent
+directional-derivative/stencil checks, not only catalogue metadata.
+The sixteen non-seismic catalogue entries are structurally identical to the
+original catalogue; only the four FWI entries change. Across the complete
+candidate there are 122 recovered, 184 unresolved, 6 failed and 36
+negative-control method results. A valid artifact matrix does not make those
+retained failures successful, nor establish the full replacement M01-M13 product.
+
+The assembly milestone `56cebd4` was persisted before conflict-free integration
+of `origin/develop` `2202ebd` at `0871c86`. That update changes no frozen
+assembly or scientific source. Its new SDD checker passes structural validation
+while retaining R-008 = fail and eighteen unresolved requirements. The
+convergence ledger is unchanged, not refreshed to claim this bounded FWI
+acceptance passes the broader R-008 gates.
+
+The ignored plan and receipt bind every selected file, unchanged-family module
+and auxiliary copy. A portable [full candidate receipt](../../../validation/fwi-full-candidate-2026-10-03.json)
+persists the fingerprint proofs, all 120 file diffs, gate source hashes,
+retained verdicts and independent validation hashes for owner review. Old
+`validation.json` and `fwi-replay.json` are explicitly excluded, not copied as
+new acceptance evidence.
+The final `acceptance.json` sidecar records completed numerical gates; the
+earlier assembly-stage snapshots retain their initially pending physics/test
+status. These are separate time-ordered receipts, not rewritten prior evidence.
+
+The compatibility catalogue's 0.04.001 format value is not a release assignment.
+`candidate.json` explicitly states unpublished, no canonical import, no assigned
+release version and next release required. The actual scientific release must
+receive the next version (expected patch 0.04.002, owner-controlled) with
+producer/gate-consistent provenance; version is part of the fingerprint.
+No old solver hash or run version has been rewritten in this candidate.
+
+```powershell
+python data-pipeline/assemble_fwi_candidate.py plan --output data/experiments/fwi-full-candidate-2026-10-03 --receipts data/experiments/fwi-full-assembly-receipts-2026-10-03
+python data-pipeline/assemble_fwi_candidate.py assemble --output data/experiments/fwi-full-candidate-2026-10-03 --receipts data/experiments/fwi-full-assembly-receipts-2026-10-03
+python scripts/check_artifacts.py --data data/experiments/fwi-full-candidate-2026-10-03
+python scripts/validate_fwi_exports.py --data data/experiments/fwi-full-candidate-2026-10-03 --report data/experiments/fwi-full-assembly-receipts-2026-10-03/cuda-replay.json
+$env:INVERSE_EARTH_DATA = (Resolve-Path data/experiments/fwi-full-candidate-2026-10-03).Path
+$env:FWI_RECOVERY_ARTIFACTS = $env:INVERSE_EARTH_DATA
+$fwiSolverSuite = git ls-tree -r --name-only f2bb280 tests | Where-Object { $_ -match '/test_[^/]+\.py$' }
+python -m pytest @fwiSolverSuite tests/test_fwi_assembly.py tests/test_sdd_convergence.py -q -o addopts='' --junitxml=data/experiments/fwi-full-assembly-receipts-2026-10-03/solver-tests.xml
+python scripts/check_sdd_convergence.py
+```
+
+Use distinct fresh candidate/receipts paths when reproducing; the wrapper refuses
+existing candidate trees, overlapping inputs or a changed frozen plan. Canonical
+import, next-version production and PR readiness remain the owner's independent
+review decision; no canonical data, convergence verdict or deployment is changed.

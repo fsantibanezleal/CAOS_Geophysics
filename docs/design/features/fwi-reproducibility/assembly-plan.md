@@ -74,11 +74,25 @@ of this assembly. Main owns version assignment, canonical import and PR readines
 ## Sequence and convergence record
 
 - [x] Audit current assembler and unchanged acceptance gate; specify isolated wrapper.
-- [ ] Freeze complete source-valid selection plan and family proofs.
-- [ ] Implement/test rejection paths, copy and hash-check the complete candidate.
-- [ ] Pass full artifact gate, original solver suite and all 48 CUDA replays.
-- [ ] Persist compact plan/diff/receipt, commit/push and update draft #97.
+- [x] Freeze complete source-valid selection plan and family proofs: 96 unchanged-family copies, 24 fresh seismic runs, 13 auxiliary files.
+- [x] Implement/test rejection paths, copy and hash-check the complete candidate: `56cebd4`, 19 assembly guard tests.
+- [x] Pass full artifact gate, original solver suite and all 48 CUDA replays: 20 cases / 120 conditions / 348 methods, 179 tests including 10 current convergence tests.
+- [x] Persist portable plan/diff/receipt and commit/push; draft #97 updated with full candidate acceptance and release boundaries.
 - [ ] Owner independent review, versioned release, canonical import: not authorized here.
 
 Detailed ignored outputs will live under `data/experiments/fwi-full-candidate-2026-10-03`
 and `data/experiments/fwi-full-assembly-receipts-2026-10-03`.
+
+## Measured convergence
+
+All A1-A6 candidate-level gates pass. The original and chosen file hashes match
+the frozen plan, all 96 reused files are byte-identical, the non-seismic source
+modules match the pinned baseline, and the candidate contains exactly the
+requested matrix. The unchanged artifact gate and CUDA export replay pass;
+179 local tests pass without skips, errors or failures. The portable evidence
+is [the full receipt](../../../validation/fwi-full-candidate-2026-10-03.json).
+`acceptance.json` is the later numerical acceptance sidecar; `candidate.json`
+and `assembly.json` retain their original assembly-stage snapshot without
+rewriting its initially pending physics/test status. Acceptance means a complete
+and source-consistent legacy candidate, not successful inversion in every case,
+replacement product convergence, an assigned new release, or canonical import.
