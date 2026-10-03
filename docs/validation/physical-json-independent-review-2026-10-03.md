@@ -168,6 +168,11 @@ Producer13 passed/one real-core skip and100 passed/two legacy skips remain
 separately attributed; the retained long-path fixture failure is not deleted or
 relabeled as a scientific failure. The existing reviewed M01 runtime supplies
 the independently executed real-core PASS above, not a mocked producer PASS.
+MAIN then verified all15 original producer receipt byte hashes and measurement
+values against the public packet, and matched all15 source/test/raw identities
+and structural outcomes against its independent run. The two-field follow-up
+`76f7443550d988fbf6cd44ead732d0dfe063ecfa` preserves original float values
+0.0/20250.0 instead of integer renderings; no measurement, source or test changed.
 
 The measured bounded local unit is suitable for this explicitly approved
 ordinary function milestone. It requires a caller that already owns bounded
