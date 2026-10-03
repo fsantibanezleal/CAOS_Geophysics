@@ -44,10 +44,12 @@ addopts so its actual summary is visible; no environment/config file change:
 <READ_ONLY_PYTHON> -B -m pytest --noconftest -p no:cacheprovider -o addopts= -q tests/worker_accounting/test_protocol.py
 ```
 
-Actual result:419 passed in0.55s, exit0, no skip/xfail. All12 exact named gates
+Actual result:419 passed in0.51s, exit0, no skip/xfail. All12 exact named gates
 in requirements pass, including supplemental parametrized negatives/positives.
 The duration is ordinary test-runner output, not measured native job CPU/time.
-Forbidden phase/event combinations are individually asserted; legal transitions
+Forbidden phase/event combinations are individually asserted with exact transition
+error codes and otherwise-valid trace/receipt prerequisites (no duplicate-receipt
+failure substituted for a phase failure); legal transitions
 use synthetic traces, not vacuous success rows. Golden counter expectations do
 not call converters-under-test to produce expected values. Both platform/lane
 thresholds, B+1 mismatch and first native-representable above-B finals are tested.

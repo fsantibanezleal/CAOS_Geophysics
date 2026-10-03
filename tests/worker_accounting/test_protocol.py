@@ -835,7 +835,10 @@ def test_transition_identity_and_replay_entire_phase_table(phase, event):
     # Known phase setup is internal to this synthetic test, never a public setter.
     trace = Trace()
     receipt = trace.finish()
-    trace.session.accept_receipt(encoded(receipt))
+    if event == "release":
+        trace.session.accept_receipt(encoded(receipt))
+    # Receipt events get a valid final trace with NO prior receipt: the forbidden
+    # phase must be the reason for rejection, not an unrelated duplicate guard.
     trace.session._phase = phase
     calls = {"contain": lambda: trace.session.assert_contained(ATTEMPT, TOKEN, 0),
         "start": lambda: trace.session.assert_started(ATTEMPT, TOKEN, 0),
@@ -846,7 +849,7 @@ def test_transition_identity_and_replay_entire_phase_table(phase, event):
         "final": lambda: trace.session.consume_final_sample(encoded(sample(sequence=5, at=NS20 * 5, empty=True))),
         "receipt": lambda: trace.session.accept_receipt(encoded(receipt)),
         "release": lambda: trace.session.accept_release(encoded(release(receipt)))}
-    rejected(calls[event])
+    rejected(calls[event], "accounting_transition_invalid")
     assert trace.session.phase == "FAILED_HELD"
     assert not trace.session.eligibility().protocol_eligible
 
