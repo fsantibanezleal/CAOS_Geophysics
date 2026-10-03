@@ -92,4 +92,16 @@ describe("online MT course", () => {
     const equations = (text: string) => [...text.split("function TheoryChapter")[0].matchAll(/tex=\{String\.raw`([^`]+)`\}/g)].map(m => m[1]);
     expect(equations(source("pages/Research.tsx"))).toEqual(equations(base));
   });
+  it("orthogonal fields in a right-handed x-depth section", () => {
+    const diagram = source("components/OnlineMTDiagram.tsx");
+    expect(diagram).toContain('data-mt-direction="x-right" d="M50 70H155"');
+    expect(diagram).toContain('data-mt-direction="z-down" d="M38 101V330"');
+    const outOfPlane = diagram.split('data-mt-direction="y-out-of-plane"')[1].split("</g>")[0];
+    expect(outOfPlane.match(/<circle /g)).toHaveLength(2);
+    expect(outOfPlane).toContain('cx="250" cy="70" r="12"');
+    expect(outOfPlane).toContain('cx="250" cy="70" r="3"');
+    expect(outOfPlane).not.toContain("<path");
+    for (const term of ["+y out of the page toward the viewer", "+z downward", "campos horizontales ortogonales", "no representan amplitudes"])
+      expect(diagram).toContain(term);
+  });
 });

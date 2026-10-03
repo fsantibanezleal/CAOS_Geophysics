@@ -37,6 +37,26 @@ async function capture(page: Page, region: Locator, stem: string) {
     await page.screenshot({ path: `${evidence}/${stem}-viewport-${slice++}.png` });
     if (y + limits.height >= limits.end || y >= limits.max) break;
   }
+  // Shared Equation preserves readable type with horizontal scrolling. Exercise
+  // that real interaction and capture every part, rather than accepting a crop.
+  const equations = region.locator(".equation");
+  for (let index = 0; index < await equations.count(); index++) {
+    const equation = equations.nth(index);
+    const size = await equation.evaluate(node => ({ width: node.clientWidth, max: node.scrollWidth - node.clientWidth }));
+    if (size.max <= 1) continue;
+    await equation.evaluate(node => { node.scrollLeft = 0; node.scrollIntoView({ block: "center", behavior: "instant" }); });
+    const bounds = await equation.boundingBox();
+    if (!bounds) throw new Error("Equation has no rendered bounds");
+    await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 30);
+    let left = 0, part = 0;
+    while (left < size.max - 1) {
+      await page.mouse.wheel(size.width * .75, 0);
+      await expect.poll(() => equation.evaluate(node => node.scrollLeft)).toBeGreaterThan(left);
+      left = await equation.evaluate(node => node.scrollLeft);
+      await page.screenshot({ path: `${evidence}/${stem}-equation-${index}-part-${part++}.png` });
+    }
+    await equation.evaluate(node => { node.scrollLeft = 0; });
+  }
 }
 
 for (const lang of ["en", "es"] as const) for (const theme of ["light", "dark"] as const)
@@ -92,6 +112,23 @@ for (const device of ["desktop", "phone"] as const) for (const motion of ["no-pr
             });
           });
           expect(violations, "Rendered SVG text must remain inside its viewBox").toEqual([]);
+          if (method === "m06") {
+            // Assert the rendered glyph geometry, not just an explanatory label.
+            const directions = await svg.evaluate(node => {
+              const ex = node.querySelector('[data-mt-direction="x-right"]') as SVGPathElement;
+              const z = node.querySelector('[data-mt-direction="z-down"]') as SVGPathElement;
+              const circles = [...node.querySelectorAll('[data-mt-direction="y-out-of-plane"] circle')] as SVGCircleElement[];
+              const start = ex.getPointAtLength(0), end = ex.getPointAtLength(ex.getTotalLength());
+              const top = z.getPointAtLength(0), bottom = z.getPointAtLength(z.getTotalLength());
+              return { exRight: end.x > start.x && end.y === start.y,
+                zDown: bottom.y > top.y && bottom.x === top.x,
+                hyDotCircle: circles.length === 2 && circles[0].r.baseVal.value > circles[1].r.baseVal.value
+                  && circles[0].cx.baseVal.value === circles[1].cx.baseVal.value && circles[0].cy.baseVal.value === circles[1].cy.baseVal.value,
+                hyPaths: node.querySelectorAll('[data-mt-direction="y-out-of-plane"] path').length };
+            });
+            expect(directions).toEqual({ exRight: true, zDown: true, hyDotCircle: true, hyPaths: 0 });
+            await expect(article).toContainText(lang === "es" ? "+y fuera de la página hacia el observador" : "+y out of the page toward the viewer");
+          }
           await expect(svg).toBeInViewport({ ratio: 1 });
           const labelSize = await svg.locator("text").first().evaluate(node => {
             const svg = node.closest("svg")!;
