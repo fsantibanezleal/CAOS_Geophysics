@@ -1,6 +1,6 @@
 # Physical root JSON boundary research
 
-Date: 2026-10-03. Status: design research only. Scope authorized by the owner's independent LOCAL-ONLY JSON seam instruction. Baseline: fetched `origin/develop` at `7e26d253ac7d3a3688cb6263f669a747681aa077`. No implementation or numerical admission was performed.
+Date: 2026-10-03. Initial research was design-only at baseline `7e26d253ac7d3a3688cb6263f669a747681aa077`. MAIN subsequently read all seven b124 documents and approved only the independent LOCAL-ONLY helper/tests/docs/evidence. The inspected scientific sources below remain unchanged. Actual implementation, local measurements and separately attributed independent review are recorded in the [review packet](review-packet.md); none constitutes numerical/method/host admission.
 
 ## Existing ordinary sources inspected
 

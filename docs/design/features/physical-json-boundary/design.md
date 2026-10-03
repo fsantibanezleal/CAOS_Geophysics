@@ -1,6 +1,6 @@
 # Local physical JSON ingestion design
 
-Date: 2026-10-03. Status: proposed, awaiting FULL main read and explicit approval. [Research](research.md) precedes this proposal. Baseline `7e26d253ac7d3a3688cb6263f669a747681aa077`; branch `task/geophysics-physical-json-sdd`. This milestone adds documentation only.
+Date: 2026-10-03. Status: local implementation candidate after MAIN's full b124 read and explicit approval recorded before code. [Research](research.md) precedes the design; approved limits and architecture remain unchanged. Baseline `7e26d253ac7d3a3688cb6263f669a747681aa077`; branch `task/geophysics-physical-json-sdd`. Actual execution is separated from design assumptions in the [review packet](review-packet.md).
 
 ## 1. Problem, scope and non-goals
 
@@ -55,6 +55,6 @@ It may accept otherwise well-formed roots with wrong numerical history, duplicat
 
 Use the safe typed exception contract in [contracts](contracts.md). Expected input failures expose no json.JSONDecodeError.doc, supplied key/value, source citation or context chain. Do not promise Python traceback-frame secret erasure: callers must not serialize traceback/locals. Catastrophic interpreter/resource failure is not silently turned into a valid dict or a misleading scientific failure. No global json monkeypatch, setrecursionlimit or set_int_max_str_digits.
 
-After approval, measure valid nominal, largest schema-valid root near the canonical cap, whitespace-padded raw upper boundary, and malformed/duplicate/overflow/deep/node/key/string/canonical overbounds. Record source/runtime/commands, exact input and scientific byte sizes, wall and CPU, peak allocations/RSS and whether materialization ran. There is no scratch I/O. Timings are local helper evidence, not worker/browser/host admission. Before measurement, all implementation/resource gates are NOT_RUN.
+Measure valid nominal, largest schema-valid root near the canonical cap, whitespace-padded raw upper boundary, and malformed/duplicate/overflow/deep/node/key/string/canonical overbounds. Include active decoded-key sets near the node/canonical limits and a literal astral scalar plus16-MiB whitespace: CPython's decoded text may use four bytes per code point even though most raw bytes are ASCII. Record source/runtime/commands, exact input and scientific byte sizes, wall and CPU, peak allocations/working-set and whether materialization ran. Separate fixture-build from helper allocation peaks; scanner-only generic JSON is not root acceptance. There is no helper scratch I/O. Actual measurements are in the review packet, not worker/browser/host admission or universal resource guarantees.
 
 Stop if preflight allocates a full tree, duplicate detection happens after overwrite, Unicode/int/float semantics drift, an overbound reaches materialization, scientific code is imported, private errors escape, existing sources change or a local PASS is promoted into vertical/field/host acceptance. No tolerance/hash rewriting or scope expansion is a remedy. See [validation](validation-plan.md) and [review packet](review-packet.md).

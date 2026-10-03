@@ -1,6 +1,6 @@
 # Local physical JSON boundary requirements
 
-Status: planned. ALL implementation gates below are NOT_RUN and proposed; the module and test file remain absent until FULL main review and explicit approval. Read [research](research.md), [design](design.md), [contracts](contracts.md), [validation](validation-plan.md) and [tasks](tasks.md) together.
+Status: exact requirements frozen after MAIN's full b124 review and explicit local-only implementation approval, recorded before code. The new module/tests now exist; actual per-gate execution and remaining review holds are in [tasks](tasks.md) and the [review packet](review-packet.md). Read [research](research.md), [design](design.md), [contracts](contracts.md) and [validation](validation-plan.md) together. This does not activate any caller or waive vertical gates.
 
 R-PJB01 THE local helper SHALL accept only exact built-in bytes and return only the newly decoded native gravity-stations-1 dict, without wrappers, defaults, copies, normalization or input mutation.
 Gate: tests/data/test_gravity_station_json.py::test_exact_bytes_and_native_return

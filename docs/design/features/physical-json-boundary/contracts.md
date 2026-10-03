@@ -1,6 +1,6 @@
-# Exact proposed local physical-root contracts
+# Exact local physical-root contracts
 
-Status: planned. This is an ordinary function contract, NOT an API/wire/storage contract. All key sets below are exact; extra/missing keys reject, except conditional keys explicitly named. Native numbers mean exact int or float, never bool/string/None, finite and unchanged. Nonblank text is validated with a whitespace test but never trimmed. Hash text means exactly 64 lowercase hex characters, not authenticated provenance.
+Status: approved frozen contract implemented by the local-only candidate; review/execution evidence is in the [review packet](review-packet.md). This is an ordinary function contract, NOT an API/wire/storage contract. All key sets below are exact; extra/missing keys reject, except conditional keys explicitly named. Native numbers mean exact int or float, never bool/string/None, finite and unchanged. Nonblank text is validated with a whitespace test but never trimmed. Hash text means exactly 64 lowercase hex characters, not authenticated provenance.
 
 ## 1. Fixed structural resource lane
 
@@ -68,7 +68,7 @@ There is no CorrectionConfig argument and no target/default application. A calle
 
 ## 5. Exact error surface
 
-Proposed `GravityStationsJsonError(ValueError)` exposes exactly the public contract fields code:str, field:str, message:str. `str(error)` and its sole args entry are the fixed message. No returned error dict, retryability/HTTP status, raw text, offset excerpt, offending key/value, input hash or caller path. Reject before calling methods on non-exact input types.
+`GravityStationsJsonError(ValueError)` exposes exactly the public contract fields code:str, field:str, message:str. `str(error)` and its sole args entry are the fixed message. No returned error dict, retryability/HTTP status, raw text, offset excerpt, offending key/value, input hash or caller path. Reject before calling methods on non-exact input types.
 
 | Code | Fixed message | Field |
 | --- | --- | --- |
