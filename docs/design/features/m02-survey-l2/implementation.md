@@ -68,3 +68,22 @@ content/template (867 tracked files), CI budget and existing artifact guard PASS
 seven reviewed files, base-integrity rules and untracked ignored backup checks
 PASS. Product ledger remains structurally valid with1 fail and18 unresolved.
 These are milestone checks, not full L2/resource/field or release acceptance.
+
+## Independent review and blocking metadata defect
+
+MAIN independently replayed8acab62's54 new controls and80 unchanged forward
+controls:134 PASS, zero skips. MAIN also authored a separate signed nonuniform
+six-cell/five-receiver Choclo and physical pairwise-regularization oracle; its
+objective/derivative results are separately attributed in the
+[new independent receipt](evidence/main-planner-tiny-review-20261003.json).
+Neither result is optimizer, complete inverse, field or host acceptance.
+
+MAIN executed the shared-empty-container counterexample:491531 compact UTF-8
+bytes versus262144 cap; the old preflight returned None. Producer replay on the
+unchanged planner confirms it. This blocks full resource acceptance even though
+the initial numerical controls remain valid. The
+[additive accounting proposal](metadata-accounting-review.md) awaits complete
+MAIN review before production metadata changes. Bounded red tests are authored
+and actually run; private aligned-row rejection is corrected in WIP. Optimizer
+work remains uncommitted and incomplete. No old receipt, reviewed packet,
+accepted forward, legacy engine, canonical data or installed runtime is changed.
