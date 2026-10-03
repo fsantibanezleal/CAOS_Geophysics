@@ -26,6 +26,8 @@ jobs:
         run: python scripts/check_artifacts.py
       - name: M13 committed browser-asset integrity (no training)
         run: python scripts/check_phase_assets.py
+      - name: Product requirement ledger integrity (not release acceptance)
+        run: python scripts/check_sdd_convergence.py
 
   guards:
     runs-on: ubuntu-latest
