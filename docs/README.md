@@ -7,7 +7,11 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [Architecture](architecture/architecture.md): system flow, determinism, lanes, and release boundary.
 - [Frameworks](frameworks/frameworks.md): research-selected engines and why each is used.
 - [Problem types](problem-types/problem-types.md): gravity, magnetics, MT, FWI, learned, and joint methods.
-- [M01 gravity station corrections](methods/gravity-processing.md): normal gravity, height/reference conventions, Bouguer plate and residual terrain terms, uncertainty propagation, independent oracles and explicit field-admission failures. This local unit does not yet provide the full transform or field modelling chain.
+- [M01 gravity station corrections](methods/gravity-processing.md): normal gravity, height/reference conventions, Bouguer plate and residual terrain terms, uncertainty propagation, independent oracles and explicit field-admission failures. Authenticated physical children and eligible field modelling remain incomplete.
+- [M01 equivalent-source transforms](methods/gravity-processing/02_equivalent-source-transforms.md): blocked Harmonica/Verde fitting and upward continuation, physical oracle controls and conditioning limits; these coefficients are not 3D density contrasts.
+- [Ordinary physical station adapter](guides/13_local_station_adapter.md): executable local correction recipe, exact native request/result identities and safe-error boundary, not an online worker claim.
+- [M02 submitted-survey research and plan](research/m02-survey-inversion-2026-10-03.md): verified engine/units/objective references and explicit unimplemented survey/inverse/resource/field gates.
+- [Paired source-bundle protocol](operations/03_paired_source_bundle.md): selected committed objects, archive/manifest identity and independent trust prerequisites; Linux restore remains unaccepted.
 - [M06 measured MT admission](problem-types/mt-field-admission.md): attributed field EDI, independent full-tensor QC, ineligible verdict, and exact local reproduction.
 - [M05/M06 online MT course](problem-types/05_online-mt-course.md): complete complex mathematics, source/variance/frame QC, actual TRF/array protocol, independent worked fixed-h/wrong-h controls and conditional limits.
 - [Use and reproduce the MT course](guides/09_online-mt-course.md): bilingual in-app exercises, exact numerical/render gates and separately pending host admission.

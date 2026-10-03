@@ -1,61 +1,74 @@
 # Replacement plan and scoped repository state
 
-Assessment: 2026-10-03. Product SDD: [approved design](SDD.md). This is an implementation-state review, not final scientific convergence or a deployment receipt.
+Assessment: 2026-10-03, 09:35 UTC. [Approved product SDD](SDD.md). This is a current implementation and preservation review, not release acceptance.
 
-## Revisions and preservation
+## Integrated revisions and independent review
 
-After fetching the product remote at 07:08 UTC, `origin/develop` is `afac8ab7b0be2df474406d1b17f0a165be9e0599`. Its [CI run 37104931366](https://github.com/fsantibanezleal/CAOS_Geophysics/actions/runs/37104931366) completed successfully. Scoped PRs #98 (ledger), #99 (station corrections), #103 (real project gravity-QC workbench) and #104 (pinned source intake) are merged. `origin/main` is `39813230478ed53bf5eb29cc21f07ed568767c64`: legacy 0.04.001. No rebuild release has been promoted or deployed. The public tracker contains 49 open issues, including parent #32 and 48 implementation/acceptance children. Approval is already recorded; their old "blocked until plan validation" prose is stale, not a renewed approval requirement.
+After scoped fetch, the assessed develop code/document baseline is `bc0c573daa511ba897dd0b21e315b8c1eef67413`. Main remains `39813230478ed53bf5eb29cc21f07ed568767c64`, legacy application 0.04.001. No replacement release, production private-state mutation, Pages withdrawal or name/DNS cutover occurred. The tracker still has 49 open issues: parent #32 and 48 children. Product SDD approval is already recorded; old issue wording about awaiting approval is stale, not new authority.
 
-| Worktree purpose | Branch state at review | Action and boundary |
+Since the initial plan audit, develop integrates source intake (#104), source-verified STEAD metadata (#110), strict MT recovery (#102), isolated recovery/source-verifier fixture (#112), their independent reviews (#113/#115), real local M01 transforms (#109), corrected canonical FWI/MT and original online-MT/parity ancestry (#97/#100/#106), measured failed host admission (#101), independent course/transform reviews (#116), scientific MT workbench (#111), tiny ADR repair (#117), paired source builder (#118), bilingual MT course (#114), exact ordinary M01 adapter (#119), and source-backed M02 research/plan only (#120). Earlier owner-data gravity/source/wiki units remain preserved.
+
+CI for scientific integration `6050100`, host integration `0a10b55` and independent review `62a6c81` passed (runs 37110797272, 37111200440, 37111370087). Workbench integration `46bd5e7`, CI 37111464038 failed ADR-0067 on six literal em-dash fallback/range separators. Reviewed three-file/four-line PR117 repaired labels only without changing true-zero/null semantics, endpoints, guards or physics. MAIN independently passed its content guard, 94 frontend tests and single-origin build; fresh CI 37112677175 at `cf086dc` passed. Later builder/course/adapter/plan CI also passed: 37112880054/37113095362/37113349687/37113454689. The original missed pre-merge gate/failure is retained, not relabelled from UI success.
+
+## Canonical science and preservation
+
+Main executed the reviewed guarded import after independent full scientific acceptance. New container 0.04.002 is not application-version promotion. The original 137-file tree remains byte-identical and permanently private/ignored; the corrected 139-file tree matches the reviewed stage. Exactly 53 canonical paths changed and two were added. Producer 0.04.000/0.04.001 identities and explicit source-version/guard policy remain intact.
+
+The accepted inventory is 20 cases / 120 conditions / 348 results: 72 unchanged producer conditions, 24 genuinely recomputed FWI and 24 freshly recomputed MT. Original independent 48 CUDA final-model replays, 4,038 MT objective states and 3,072 actual bootstrap refits remain separately pinned to unchanged scientific bytes, not relabelled as new executions. Retained verdicts: 122 recovered, 184 unresolved, six failed, 36 negative controls. Fresh post-import regressions passed 361 pipeline tests with 15 explicit skips, 85 focused controls without skips and 85 API tests with one opt-in skip; [execution proof](../validation/fwi-canonical-import-20261003.json) records exact counts/hashes.
+
+The original author archive, selected objects, original cl061, frozen M13 traces/checkpoint, failed measurements and older receipts remain protected. No raw field bytes, credentials, environments or private database were committed.
+
+## Scoped worktree and unit state
+
+| Unit | Reviewed/preserved state | Remaining boundary |
 | --- | --- | --- |
-| Browser M13/API foundation | PR #95 and #103 merged; new isolated MT scientific-workbench task | Trained-model export, owner processing and browser evidence preserved. M05/M06 scientific controls are being added separately. |
-| Phase pipeline | PR #84 merged; tracked work clean | Private waveform/checkpoint/oracle data remain ignored. No retraining or sealed-test resampling. |
-| Wiki foundation | PR #96 merged; pre-existing untracked browser test output | Protect unrelated test output; merged source-to-result documentation is retained. |
-| FWI regression | Pushed draft PR #97, `f97a971`; candidate assembler resumed | Optimizer/replay fixes and independently tested 24-case candidate preserved. Combine fresh MT outputs with all 120 cases before canonical import. |
-| Online EDI/MT | Pushed draft PR #100, `0970a09`; actual 24-case source reconciliation preserved | Default admission remains closed. Main review and combined artifact regression precede integration; no stale source-hash relabelling. |
-| Actual-host admission | Pushed draft PR #101, `6d291f4` | Restricted private Linux runs measured and preserved. Six controls pass; forty-job nominal distribution fails unchanged disk gate. No listener or production mutation. |
-| Backup/restore | Pushed PR #102, `02378f1`; explicit MT adapter continuation | Strict gravity-only local unit preserved. M05/M06 restore compatibility and actual-host drill remain pending; unknown variants stay rejected. |
-| Station corrections and source intake | PRs #99/#104 merged | 29 correction tests and 79 data checks independently rerun. Author field bytes remain physically ineligible; new gridding/continuation work uses a separate task. |
-| Product checkout | Historical evidence branch `3f5de5b`, tracked clean | Do not repurpose its historical branch or overwrite its local data. New convergence work is isolated. |
-| Older EDI/architecture audits | Clean, non-ancestor commits, but `git cherry` reports their patches already integrated | No duplicate cherry-pick or blind promotion. Preserve their branches and reference evidence. |
+| MT/FWI scientific integration | PR97 merged `6050100`; original PR100/106 ancestry retained and marked merged | Complete M10/user-input/course/animation and whole scientific-method acceptance remain open |
+| Local M01 corrections/transforms | PR99/109/119 merged; prior 89 controls plus fresh 223 adapter/core/transform/source regressions without skips, actual-author negative retained | Authenticated physical child DAG, transform worker/host and eligible field lineage remain open |
+| Owner gravity/MT workbench | PR103/111 merged; independent MT 94 unit tests and five real-worker browser tests; integration retest and isolated ADR repair passed | Whole-modality visual matrix and user acceptance remain open |
+| Source catalogue/intake | PR104/110 merged; full-file author/STEAD identity checks and missing/duplicate/leakage diagnostics retained | Complete field inventory, rights, physical metadata and advertised cases remain open |
+| M05/M06 course | PR114 merged; independent original 75 numeric/89 frontend/32 browser; final independent 77 numeric/101 frontend/build/content passes; producer separately reran 32 combined-style cases | Exact offline-import compatibility proof preserves old hashes and tolerances; complete deep M01-M13 course remains open |
+| Strict recovery and fixture | PR102/112 plus independent reviews merged; 180 local tests/two explicit Windows privilege skips | Actual Linux drill, production quiescence/key escrow, latest external deletion authority and host admission remain open |
+| Source-bundle builder | PR118 merged; MAIN 70 passes/one Windows privilege skip and separate independent 38-member Git-tree/blob/raw-archive verification | No host installation/LINUX restore or production trust claim; future child/result formats unsupported |
+| Exact M01 ordinary adapter | PR119 merged after MAIN full review and 223 passes without skips; real pinned core, safe errors and original identities | Shared API/storage/migration/worker/export/recovery integration separately owned; ordinary success is not an online job |
+| M02 submitted survey | PR120 persists researched 19-requirement local forward/L2/IRLS plan and prospective 48-control/96-outcome protocol | Exact survey schema/seeds/epsilon/stopping remain unimplemented; narrow forward-operator design is a separate task, not numerical acceptance |
+| Existing product checkout | Historical evidence branch `3f5de5b` remains unchanged | No repurposing, reset, raw-data sweep or unrelated promotion |
+| Older EDI/architecture audit branches | Patches already incorporated in earlier development | No duplicate cherry-pick or blind promotion |
 
-Local `develop` and `main` references were fast-forward fetched to their matching remote revisions without checking out or pushing the promotion-only branch. Historical task branches retain their identities; synchronizing the project is not rewriting every old feature branch to develop.
+Historical feature branches retain their identities. Synchronization fast-forwards relevant local trunk refs without checking out or pushing main; it does not rewrite every old branch. Each new task is scoped and validated before persistence. Pre-existing untracked diagnostic directories remain protected.
 
-Historical feature task lists describe their own narrower units. In particular [the old rebuild checklist](features/rebuild/tasks.md) is not an acceptance checklist for this SDD. Completed local units do not close whole-product requirements, field rights, host tests, or visual acceptance.
+## Method acceptance against the approved promise
 
-## Method status against the current promise
-
-| ID | Retained executable/evidence | Remaining acceptance work |
+| Method | Retained real execution | Outstanding full vertical |
 | --- | --- | --- |
-| M01 | Flag-only owner worker/UI; merged explicit normal/plate/terrain/reference/uncertainty station controls; pinned 2,929-row author-source profile | Equivalent-source/continuation chain, compatible field heights/errors, complete API lineage and independently validated maps. Missing values and duplicate diagnostics remain; no fabricated field eligibility. |
-| M02 | Original synthetic 3D prism/weighted spatial inverse | Strict submitted-survey workflow, gravity field case, independent holdouts and host admission. |
-| M03 | Raw magnetic envelope and local source ledger | Real flight/tie line processing, height/correction QC, blocked gridding validation and field case. |
-| M04 | Original induced-field synthetic forward/inverse | Uploaded field-vector/geometry contract, remanence controls, field workflow and bounded online admission. |
-| M05 | Full EDI parser/screens; draft owned immutable QC worker and fresh synthetic source reconciliation | Reviewed canonical candidate, online typed tensor instrument, multistation analysis and complete actual-host gate. Default admission is closed. |
-| M06 | Draft bounded multistart inverse with frozen holdouts/halfspace controls, conditional bootstrap and actual-host job samples | Combined candidate acceptance, full scientific UI/export, passing host headroom and operational restore. cl061 is freshly screened QC-only; no substituted field geology. |
-| M07 | Local topographic Slagdump adapter, parser, homogeneous/topography and heldout tests | Rights-controlled field release, full uploaded-electrode workflow, linked instrument and measured host limits. |
-| M08 | Matched classical comparator on locked STEAD traces | MiniSEED/StationXML response/epoch chain, catalogue arrivals and meaningful per-waveform user-data analysis. A weak baseline remains visible, not reclassified as successful. |
-| M09 | Local Koenigsee tomography, pinned CGLS controls and independent repeats | Rights-controlled field release, uploaded survey UI/worker, source/receiver/ray/residual/coverage views and host admission. |
-| M10 | Draft explicit LBFGS evaluation budget/deterministic replay fix, fresh 24-case bake and 48 CUDA replay controls | Combined 120-case acceptance, complete local FWI inputs/results/course and actual physical playback. Failed/unresolved salt controls remain visible. |
-| M11 | Matched independent and coupled original synthetic inverses | Accepted uploaded co-registration/weights/coupling contract and field study, disjoint-source controls and deep scientific interface. |
-| M12 | Actual trained checkpoint and complete negative family/acquisition benchmark | Learned seismic inversion remains unaccepted: the retained checkpoint loses to the matched classical model. A new predeclared protocol requires new untouched holdouts. |
-| M13 | Frozen real STEAD training/test, event/station separation, 23 valid browser records, one retained flat rejection and Chromium probability parity | Complete release integration, named end-to-end gates, full visual matrix and public one-origin deployment. Scores are uncalibrated and evidence is within STEAD, not cross-dataset field validation. |
+| M01 | Explicit station correction plus ordinary adapter; blocked Harmonica/Verde equivalent-source/upward transforms with three independent volume-prism controls | Exact uploaded physical correction/transform children, field metadata, hosted bounds and linked maps |
+| M02 | Original synthetic 3D prism/weighted inverse and researched prospective submitted-survey plan | Complete exact declared-survey forward/L2/IRLS, leakage-safe selection, measured local/GPU decision, field and host gates |
+| M03 | Magnetic raw envelope/source ledger | Actual flight/tie line processing, height/correction QC, blocked gridding and field case |
+| M04 | Original induced-field forward/inverse | Uploaded field-vector/geometry, remanence negatives, field workflow and admitted resources |
+| M05 | Merged original EDI tensor parser/QC worker and scientific view; actual cl061 rejection | Multistation/raw-to-TF scope and passing actual-host/public lifecycle |
+| M06 | Merged fixed-thickness multistart complex TRF, frozen frequency holdout, conditional actual refits, scientific views/exports | Host/operations, eligible field study, complete user-data scientific acceptance |
+| M07 | Local topographic Slagdump/parser/homogeneous/withheld controls | Rights-cleared field release, uploaded-electrode worker/views and measured host bounds |
+| M08 | Locked STEAD classical comparator and wiki | MiniSEED/StationXML epoch/response chain, arrivals and user waveform analysis |
+| M09 | Local Koenigsee/CGLS and independent repeats | Rights-cleared field release, uploaded geometry/rays/coverage/residual instrument and admission |
+| M10 | Corrected Deepwave optimization, deterministic CUDA replay and imported full artifacts | Complete local user-input FWI, course and physical playback; unresolved salt controls retained |
+| M11 | Matched independent/coupled synthetic inverses | Co-registration/weights/coupling user contract, field and disjoint-source controls |
+| M12 | Actual trained checkpoint and negative disjoint-family/acquisition benchmark | Efficacy failed; requires a new predeclared experiment with untouched holdouts, not tuned reclassification |
+| M13 | Real frozen event/station-disjoint STEAD training/test and 23 valid browser parity traces | Full release integration, resource/visual/user gates and single-origin deployment |
 
-M13 local browser maximum probability error is `4.41e-6` with no sample shift, from the [merged export verification](features/m13-browser/design.md). This does not change the negative M12 finding or fill other method cells. Every scientifically failed, ineligible or not-run case is retained separately.
+Synthetic recovery is not geological truth. Field artifacts retain truth=null. cl061 fails the all-frequency 1D screen and stays QC-only. M13 probability error 4.41e-6 with zero sample shift establishes local export parity, not calibrated probabilities or cross-dataset generalization. M12 failure is unchanged.
 
-## Requirements and release blocker
+## Host and release state
 
-[convergence.json](convergence.json) records all 19 current requirements, bound to the exact SDD digest and assessed source revision. Its initial verdict is 18 unresolved and R-008 failed because complete M01-M13 acceptance is absent and M12 failed its efficacy gate. Unresolved does not mean no code exists: it means the entire requirement's stated oracle has not passed. The structural checker accepts an honest incomplete ledger; `--require-release` must reject it.
+Actual isolated ML-host calculations used DynamicUser/private state/network and unchanged resource policies. Forty nominal jobs completed, but overall admission failed at 23,622,492,160 / 80,290,492,416 free bytes (29.42%) against 30%. Six actual limit/cancel/malformed/parent-kill/recovery controls passed separately. [Merged observations](../validation/actual-host-mt-2026-10-03.md) distinguish TestClient reads from public HTTPS and preserve failed outputs. Host admission is closed.
 
-Read-only VPS inspection at 2026-10-03 05:47:51 UTC found nginx active, current immutable release `20260926235216`, 7,751 MiB total/4,962 MiB available RAM, 624 MiB used swap and about 23 GiB free root disk. This is a host snapshot, not performance/admission evidence or external TLS/browser verification. GitHub's Pages API still identifies the legacy application URL. No API service was publicly activated and no second replacement site was created.
+Read-only inspection found the active VPS release `20260926235216` and legacy Pages still publishing. No new public listener was opened. The isolated official age 1.3.1 tools do not replace system age, create production keys or prove a restore. The actual Linux fixture remains unrun; local mocked systemd tests are not host evidence.
 
-Actual-host isolated MT admission subsequently ran under DynamicUser, private state/network, one-library-thread and explicit cgroup/process/file limits. All 40 nominal jobs completed: M05 p95 wall 8,651 ms/RSS 245,182,464 bytes; M06 p95 wall 8,511 ms/RSS 247,214,080 bytes. These calculations do not pass the overall gate: minimum free disk was 23,622,492,160 / 80,290,492,416 bytes (29.42%), below the unchanged 30% requirement. A separate six-test run passed upper-bound, malformed input, cancellation, limit and actual worker-kill/recovery controls in 114.75 s. The measured concurrent reads are private TestClient traffic, not public HTTP/TLS validation. [Draft PR #101](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/101) preserves commands, source pins, hashes and honest non-claims. No old releases or private admission outputs were deleted.
+Owner decisions remain pending on final identity, lossless compression of obsolete geophysics-only releases while retaining active plus two newest rollback releases, and approved SMTP provider/sender. Independently durable deletion acknowledgement and trusted latest off-host recovery authority remain unimplemented release prerequisites. No preselected answer is authority.
 
-Owner questions remain open for final identity, lossless compression of obsolete geophysics-only releases (active plus two latest rollback releases preserved), and an approved mail provider/sender. Pending choices do not stop isolated method work, but no preselected option is authorization and no cutover can bypass these dependencies.
+## Convergence and dependency order
 
-Next dependency sequence: recover and validate isolated numerical/backend edits; connect real authenticated processing/results; finish the scientific verticals, data acquisition and deep course; run complete numerical and visual case matrices; benchmark admitted jobs on the actual VPS; verify backup/restore and secure operations; select the final owner-approved identity; promote the accepted replacement, verify one VPS origin, then withdraw Pages. The public release is not ready while any of these accepted gates remain open.
+[convergence.json](convergence.json) retains 18 unresolved whole requirements and R008 failed. Evidence links describe actual scoped progress; their verdicts are not upgraded from a file, successful build or local unit pass.
 
-## Use the acceptance checker
+Current course/ordinary-adapter/source-bundle integration and ADR guards are complete as bounded units. Finish exact physical M01 API-child and M02 operator/survey/inverse contracts and their genuine implementations; implement all other remaining submitted-data verticals and source/field contracts; complete the M01-M13 wiki and numerical/visual matrices; obtain actual-host headroom, resources, security/restore/deletion/mail evidence; finalize owner-approved identity; only then promote the accepted product to main, verify its sole VPS origin and withdraw Pages.
 
 ```powershell
 python tests/test_sdd_convergence.py
@@ -63,4 +76,4 @@ python scripts/check_sdd_convergence.py
 python scripts/check_sdd_convergence.py --require-release
 ```
 
-The final command deliberately exits nonzero today. A gate receipt must identify the exact requirement, executable gate source hash, assessed source revision, real invocation and hashed measured outputs. Documentation notes, file presence or a build result cannot manufacture one. The checker validates identity/coverage/integrity; domain numerics, resource tests and rendered user experience still require their independent oracles.
+The final command deliberately rejects this incomplete release. Structural integrity does not execute scientific, resource, security, browser or user-acceptance gates.
