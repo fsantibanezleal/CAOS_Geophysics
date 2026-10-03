@@ -1,0 +1,36 @@
+{
+  "schema":"caos.research-byte-receipts/v1",
+  "research_date":"2026-10-03",
+  "protected_source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81",
+  "a_acceptance_commit":"8856f5d267f6c9d27764df55f0c06e5b8b39a5b3",
+  "capability_tested":false,
+  "implementation_started":false,
+  "external_checkpoint_provider":"NOT_SET",
+  "primary_sources":[
+    {"url":"https://man7.org/linux/man-pages/man2/flock.2.html","status":200,"bytes":17333,"sha256":"f46b6eb4cb7c9da8cbe5d7a425943323140da0d4b2b766b6e54d6bc436e6ba09","retrieved_at":"2026-10-03T11:59:08Z"},
+    {"url":"https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-lockfileex","status":200,"bytes":57267,"sha256":"adb3fcb04f1a53d63cc31e14919d0cbeae0bc6d1932e57172b23c546aada13fb","retrieved_at":"2026-10-03T11:59:09Z"},
+    {"url":"https://www.sqlite.org/c3ref/open.html","status":200,"bytes":19949,"sha256":"8101d41f7d357eff1ad36d6b5e120373067fe5670373d058f23c55405642d454","retrieved_at":"2026-10-03T11:59:10Z"},
+    {"url":"https://www.sqlite.org/pragma.html","status":200,"bytes":139778,"sha256":"b9bcb335ae818497f3fa05114a10492f64f35503f275da2264f2d5d436db3f5d","retrieved_at":"2026-10-03T11:59:10Z"},
+    {"url":"https://www.sqlite.org/wal.html","status":200,"bytes":42143,"sha256":"f3467b530b883d4a00574fe1a898b3d121ed72764ae28cf66941080ac0badb9e","retrieved_at":"2026-10-03T11:59:10Z"},
+    {"url":"https://docs.python.org/3.12/library/sqlite3.html","status":200,"bytes":310373,"sha256":"be9ed9540ac845f15db3cc7844472fa2902ece239c3123b369069edbf76b5e67","retrieved_at":"2026-10-03T11:59:10Z"}
+  ],
+  "sqlite_patch_amendment_sources":[
+    {"url":"https://sqlite.org/wal.html","status":200,"bytes":42143,"sha256":"f3467b530b883d4a00574fe1a898b3d121ed72764ae28cf66941080ac0badb9e","retrieved_at":"2026-10-03T13:46:40Z"},
+    {"url":"https://sqlite.org/src/info/863c171b76cd36e0","status":200,"bytes":31826,"sha256":"43f843f6db2d07c9b12e80278b17f7c08a4b2f4c1d868ea13283e5759c5f4206","retrieved_at":"2026-10-03T13:47:09Z"},
+    {"url":"https://sqlite.org/src/info/c7facf7ac58d2cda","status":200,"bytes":31613,"sha256":"845590b02573ab1ec93bd9e9628ef254a40307babc8c1b04b6cc691366b314aa","retrieved_at":"2026-10-03T13:47:09Z"}
+  ],
+  "unsuccessful_amendment_lookups":[
+    {"url":"https://www.sqlite.org/releaselog/3_44_6.html","status":404,"bytes":175,"sha256":"91019e626563185016918fe02018a26a3334f9aea57d87d9893ff696652f541b","retrieved_at":"2026-10-03T13:46:41Z"},
+    {"url":"https://www.sqlite.org/releaselog/3_50_7.html","status":404,"bytes":175,"sha256":"f7c90fd7ab0a9ac3059c31055e48ba1f3aea36d1281fdb81adfad32bcb790224","retrieved_at":"2026-10-03T13:46:42Z"}
+  ],
+  "git_sources":[
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"app/migrations/versions/0003_processing_jobs.py","git_blob":"a65d7a9b05fd2760a92a43266df6bf417e7358b6","bytes":3631,"sha256":"06a9437a41e6665e1689cb85af0789c741e420dc380888139ed138c2abe4939f"},
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"app/database.py","git_blob":"a72d71f8d5d8a6177f5b4077a35bfed31ff2136d","bytes":8242,"sha256":"ee4baa961ed7c9070158809588c6661f29d2a94ffb7d50751c4090c538453c3f"},
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"app/worker.py","git_blob":"17f784f9166d477c0429b9717d5040dfda6c2ce3","bytes":20777,"sha256":"8c1dbf10fb425a1ea1f1494718b65c810662b5a266aec222a4e2c2aa01337235"},
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"scripts/ops_recovery.py","git_blob":"17594265dca85f9508749c6e4e46d80f169a0277","bytes":69747,"sha256":"e3ccf805d3eb1e2979923f7a58fbd5e465ad7090a2710fb52dc067a285ce42a4"},
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"scripts/ops_source_pin.py","git_blob":"d8444550fd962810e69093007de154b34cb35b6b","bytes":10737,"sha256":"df7bcb705cbd12e32c3bd75b3fd5582d610fd0e8573a72e16288f897f70e8b1a"},
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"data-pipeline/gravity_processing.py","git_blob":"b3fd5a250aa4b9d62ff450e5f3674cbb4a00cceb","bytes":21976,"sha256":"7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321"},
+    {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"data-pipeline/gravity_transforms.py","git_blob":"d000e4b944383ab34b08399eadbe6cba3bc07cec","bytes":36289,"sha256":"d11d0f207c89c308c9f8711da2a31b84b8adaeb0c12597a5ecc89ce527fdecf0"},
+    {"source_commit":"452e90bcbb09db40e4fcd51b9b4854778eb79a29","path":"data-pipeline/gravity_station_adapter.py","git_blob":"5a42bc77b22f2636da5e7f8860ea311edfaa3e1f","bytes":16042,"sha256":"b770b16ef87e83dd92f65a90472145ef93a525a9cedf7f55ee3e6f20f8a10cf8"}
+  ]
+}
