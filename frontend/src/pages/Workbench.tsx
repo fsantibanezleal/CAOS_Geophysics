@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router";
 import {
   Download,
   Pause,
@@ -33,6 +34,7 @@ import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationSta
 import { provenanceDescription } from "../data/evidence";
 import { deploymentMode } from "../lib/deployment";
 import { ProjectDrawer } from "../components/ProjectDrawer";
+import { ProjectProcessingWorkbench } from "../components/ProjectProcessingWorkbench";
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -114,6 +116,17 @@ export default function Workbench() {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<"experiment" | "replay" | "evidence">("experiment");
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedProjectId = searchParams.get("project") ?? "";
+  const processingProjectId = deploymentMode === "single-origin" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedProjectId) ? requestedProjectId : "";
+  const selectProcessingProject = (id: string) => {
+    setSearchParams(current => {
+      const next = new URLSearchParams(current);
+      if (id) next.set("project", id); else next.delete("project");
+      return next;
+    }, {replace: true});
+    if (id) { setOrbit(false); setPlaying(false); }
+  };
   const projectLauncher = useRef<HTMLButtonElement>(null);
   const closeProjects = () => {
     setProjectsOpen(false);
@@ -951,6 +964,10 @@ export default function Workbench() {
       );
     }
   }
+  if (processingProjectId) return <>
+    <ProjectProcessingWorkbench key={processingProjectId} projectId={processingProjectId} es={es} onManage={() => setProjectsOpen(true)} onCurated={() => selectProcessingProject("")} />
+    {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOwnerCleared={() => selectProcessingProject("")} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
+  </>;
   return (
     <div className="page-body wide workbench">
       <aside className={`instrument-sidebar ${controlsOpen ? "expanded" : ""}`}>
@@ -1329,7 +1346,7 @@ export default function Workbench() {
           )
         )}
       </section>
-      {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} />}
+      {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
     </div>
   );
 }

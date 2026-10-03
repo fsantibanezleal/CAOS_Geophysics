@@ -1,13 +1,13 @@
 import type { RawUploadDeclaration } from "./lifecycle";
 
 type FieldKind = "text" | "integer" | "number" | "list" | "stationxml";
-export interface GeometryField { key: string; en: string; es: string; kind: FieldKind; positive?: boolean }
+export interface GeometryField { key: string; en: string; es: string; kind: FieldKind; positive?: boolean; optional?: boolean }
 interface FormatSpec { en: string; es: string; extensions: string[]; mimes: string[]; maxMiB: number; units: string[]; frames: string[]; geometry: GeometryField[] }
-const field = (key: string, en: string, es: string, kind: FieldKind = "text", positive = false): GeometryField => ({ key, en, es, kind, positive });
+const field = (key: string, en: string, es: string, kind: FieldKind = "text", positive = false, optional = false): GeometryField => ({ key, en, es, kind, positive, optional });
 const channels = field("channels", "Channel codes (comma-separated)", "Códigos de canal (separados por coma)", "list");
 
 export const FORMAT_SPECS = {
-  gravity_csv: { en: "Gravity station CSV", es: "CSV de estaciones gravimétricas", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["mGal", "m/s2"], frames: ["local vertical down", "local vertical up"], geometry: [field("station_id_column", "Station ID column", "Columna de estación"), field("x_column", "X column", "Columna X"), field("y_column", "Y column", "Columna Y"), field("z_column", "Z column", "Columna Z"), field("value_column", "Value column", "Columna de valor")] },
+  gravity_csv: { en: "Gravity station CSV", es: "CSV de estaciones gravimétricas", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["mGal", "m/s2"], frames: ["local vertical down", "local vertical up"], geometry: [field("station_id_column", "Station ID column", "Columna de estación"), field("x_column", "X column", "Columna X"), field("y_column", "Y column", "Columna Y"), field("z_column", "Z column", "Columna Z"), field("value_column", "Value column", "Columna de valor"), field("sigma_column", "Sigma column (required for flag QC)", "Columna sigma (necesaria para QC de marcas)", "text", false, true)] },
   magnetic_csv: { en: "Magnetic flight-line CSV", es: "CSV de líneas magnéticas", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["nT"], frames: ["total field", "ENU", "NED"], geometry: [field("line_id_column", "Line ID column", "Columna de línea"), field("x_column", "X column", "Columna X"), field("y_column", "Y column", "Columna Y"), field("z_column", "Z column", "Columna Z"), field("value_column", "Value column", "Columna de valor")] },
   traveltime_csv: { en: "Traveltime CSV", es: "CSV de tiempos de viaje", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["s", "ms"], frames: ["source-receiver"], geometry: [field("source_x_column", "Source X column", "Columna X fuente"), field("source_y_column", "Source Y column", "Columna Y fuente"), field("receiver_x_column", "Receiver X column", "Columna X receptor"), field("receiver_y_column", "Receiver Y column", "Columna Y receptor"), field("time_column", "Time column", "Columna de tiempo")] },
   ert_csv: { en: "ERT electrode CSV", es: "CSV de electrodos ERT", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["ohm", "V", "ohm.m"], frames: ["ABMN"], geometry: [field("a_column", "A electrode column", "Columna electrodo A"), field("b_column", "B electrode column", "Columna electrodo B"), field("m_column", "M electrode column", "Columna electrodo M"), field("n_column", "N electrode column", "Columna electrodo N"), field("electrode_count", "Electrode count", "Cantidad de electrodos", "integer", true)] },
@@ -84,7 +84,7 @@ export function prepareUpload(file: File | null, draft: UploadDraft, stationxmlA
   for (const geometryField of spec?.geometry ?? []) {
     const value = (draft.geometry[geometryField.key] ?? "").trim();
     const path = `physical.geometry.${geometryField.key}`;
-    if (!value) { errors.push(path); continue; }
+    if (!value) { if (!geometryField.optional) errors.push(path); continue; }
     if (geometryField.kind === "stationxml") {
       required(stationxmlAssets.includes(value), path);
       geometry[geometryField.key] = value;

@@ -130,22 +130,22 @@ function projectPath(projectId: string): string { return `/api/projects/${uuid(p
 export class LifecycleApi {
   constructor(private readonly api: ApiClient) {}
 
-  private async csrf(): Promise<string> {
-    const response = await this.api.requestJson("/api/auth/csrf", value => record(value, "csrf"));
+  private async csrf(signal?: AbortSignal): Promise<string> {
+    const response = await this.api.requestJson("/api/auth/csrf", value => record(value, "csrf"), { signal });
     return text(response.csrf_token, "csrf token");
   }
 
   /** Also serves as an availability probe before showing authentication controls. */
-  async probe(): Promise<AccountView | null> {
-    await this.csrf();
-    try { return await this.me(); }
+  async probe(signal?: AbortSignal): Promise<AccountView | null> {
+    await this.csrf(signal);
+    try { return await this.me(signal); }
     catch (error) {
       if (error instanceof Error && "status" in error && error.status === 401) return null;
       throw error;
     }
   }
 
-  me(): Promise<AccountView> { return this.api.requestJson("/api/auth/me", parseAccount); }
+  me(signal?: AbortSignal): Promise<AccountView> { return this.api.requestJson("/api/auth/me", parseAccount, { signal }); }
 
   async register(email: string, password: string): Promise<AccountView> {
     return this.api.requestJson("/api/auth/register", parseAccount, { method: "POST", csrfToken: await this.csrf(), body: { email, password } });
@@ -176,13 +176,13 @@ export class LifecycleApi {
     await this.api.requestEmpty("/api/auth/reset-password/reset-password", { method: "POST", csrfToken: await this.csrf(), body: JSON.stringify({ token, password }), headers: { "Content-Type": "application/json" } });
   }
 
-  projects(): Promise<ProjectView[]> { return this.api.requestJson("/api/projects", parseProjects); }
+  projects(signal?: AbortSignal): Promise<ProjectView[]> { return this.api.requestJson("/api/projects", parseProjects, { signal }); }
 
   async createProject(name: string, description: string): Promise<ProjectView> {
     return this.api.requestJson("/api/projects", parseProject, { method: "POST", csrfToken: await this.csrf(), body: { name, description } });
   }
 
-  assets(projectId: string): Promise<RawAsset[]> { return this.api.requestJson(`${projectPath(projectId)}/assets`, parseAssets); }
+  assets(projectId: string, signal?: AbortSignal): Promise<RawAsset[]> { return this.api.requestJson(`${projectPath(projectId)}/assets`, parseAssets, { signal }); }
 
   receipt(projectId: string, assetId: string): Promise<RawAsset> {
     return this.api.requestJson(`${projectPath(projectId)}/assets/${uuid(assetId, "asset id")}`, parseRawAsset);
