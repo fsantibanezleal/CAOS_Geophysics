@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "dce92a1d8693afd60a33ff429dfff59cad4de64d",
-  "assessed_at": "2026-10-03T05:47:51Z",
+  "assessed_revision": "afac8ab7b0be2df474406d1b17f0a165be9e0599",
+  "assessed_at": "2026-10-03T07:08:54Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -18,8 +18,11 @@
       "id": "R-001",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_catalogue_sources.py::test_rights_links_and_hash_receipts.",
-      "note": "Local rights-aware acquisition is merged, but the complete catalogue and advertised field source set are not accepted.",
-      "evidence": [],
+      "note": "Rights-aware pinned research-archive intake is merged. Actual Bartlett author bytes are acquired/profiled with missing values retained, but datum/errors and complete advertised source coverage remain unaccepted.",
+      "evidence": [{
+        "path": "docs/research/potential-source-intake-evidence-2026-10-03.json",
+        "sha256": "7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7"
+      }],
       "receipts": []
     },
     {
@@ -52,7 +55,7 @@
       "id": "R-004",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_provenance.py::test_transform_dag_roundtrip.",
-      "note": "Local hash-checked flag-only gravity datasets exist; the full physical processing DAG and uncertainty lineage are incomplete.",
+      "note": "Local explicit station correction, reference and uncertainty controls passed and were merged in PR99. The full uploaded physical processing DAG, transform chain and eligible field lineage remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -78,7 +81,7 @@
       "id": "R-006",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "A child worker computes parameter-dependent robust gravity flags. This is not a correction or inversion; full submitted-data solves are pending.",
+      "note": "The merged project workbench submits real owner datasets to the flag worker and verifies exported outputs. Flags are not corrections or inversions; bounded MT solves remain under review and all promised submitted-data methods are incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -91,7 +94,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Local cancellation, timeout and crash-recovery checks exist. Actual VPS upper-bound, concurrency and resource admission remain unexecuted.",
+      "note": "Actual-VPS isolated MT controls passed six cancellation/limit/crash checks. Forty nominal jobs completed but their overall admission failed free-disk headroom at 29.42% below the unchanged 30% threshold. Public-service and complete product admission remain open; draft PR101 retains the measured failure.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -104,7 +107,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity lost to its matched classical baseline; FWI fresh-process reproducibility is under investigation. Complete M01-M13 acceptance is not achieved.",
+      "note": "M12 learned velocity lost to its matched classical baseline. The FWI optimizer/replay correction and freshly recomputed MT outputs await a combined 120-case independent candidate review. Local M01 correction controls passed, but complete M01-M13 acceptance is not achieved.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -171,8 +174,11 @@
       "id": "R-013",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
-      "note": "Selected-case legacy views and some local M13 controls were tested. All new user-dataset linked views and controls have not converged.",
-      "evidence": [],
+      "note": "Real owner upload, dataset/job/result hydration, station selection, cancellation and downloaded gravity-QC bundle passed five local API/worker browser tests. MT scientific controls and all promised modality-linked views remain incomplete.",
+      "evidence": [{
+        "path": "docs/design/features/processing-workbench/validation.md",
+        "sha256": "1d7581dab9a26c489a9dbd2764417f39a27ce9e2865da0c03c321f40cd07200b"
+      }],
       "receipts": []
     },
     {
@@ -187,7 +193,7 @@
       "id": "R-015",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "Several local desktop EN/light and phone ES/dark checks passed. All new panels, pointer navigation, reduced motion and complete language/theme/device matrix remain open.",
+      "note": "The real gravity-QC workbench has 21 local EN/ES light/dark desktop/phone renders, with independent desktop/phone inspection and pointer/keyboard tests. Complete scientific panel, reduced-motion and language/theme/device matrices remain open.",
       "evidence": [],
       "receipts": []
     },
@@ -195,7 +201,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "Source/provenance and M08/M13 chapters were merged. The complete deep M01-M13 bilingual wiki/course and source-to-content review remain incomplete.",
+      "note": "Source/provenance, M08/M13 and literal M01 station-correction theory/oracles are merged. The complete deep M01-M13 bilingual wiki/course and source-to-content review remain incomplete.",
       "evidence": [
         {
           "path": "docs/data-contract/01_source-to-result.md",
@@ -208,7 +214,7 @@
       "id": "R-017",
       "verdict": "unresolved",
       "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
-      "note": "Main remains legacy 0.04.001; no replacement cutover or Pages withdrawal occurred. Product identity, actual-host acceptance and restore evidence remain open.",
+      "note": "Main remains legacy 0.04.001; no replacement cutover or Pages withdrawal occurred. Actual-host admission failed disk headroom. Final identity, mail delivery, deletion-aware actual-host restore and complete acceptance remain open.",
       "evidence": [],
       "receipts": []
     },
