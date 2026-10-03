@@ -1,6 +1,6 @@
 # M01 course staged ownership, validation and convergence
 
-Date: 2026-10-03. Status: MAIN approved B wiki-only content after full nine-document review at0c86844fbef91958e7688be9d60e4ab295955b5a; C remains unapproved. Approval is recorded below BEFORE content. Initial research committed/pushed at6ba07cb; original station-adapter ref9ce5cc97a9d3e3c77a9a893868d1e1b1b3c3d048 is preserved. Base4db6a1613373d139e4496b6392e605c36adfa978. No wider branch merge or product/source promotion is needed for this additive documentation unit.
+Date: 2026-10-03. Status: B authored wiki content self-reviewed and ready for FULL MAIN exact-pin review; NOT course acceptance. MAIN approved B ONLY after full nine-document review at0c86844fbef91958e7688be9d60e4ab295955b5a. Approval was committed/pushed at a614801d0dda0bd80bef4a76a1032794f8116e08 BEFORE any B path existed. C remains unapproved. Initial research committed/pushed at6ba07cb; original station-adapter ref9ce5cc97a9d3e3c77a9a893868d1e1b1b3c3d048 is preserved. Base4db6a1613373d139e4496b6392e605c36adfa978. No wider branch merge or product/source promotion is needed for this additive documentation unit.
 
 ## A. Current authorized research/sub-SDD unit
 
@@ -17,12 +17,13 @@ The user's confirmed authorization is: "APPROVE B wikiONLY EXACTtaskspaths docs/
 
 ## B. Separately approved authored wiki-only content
 
-Proposed exclusive owner: this M01 course unit after MAIN approval. New docs-only directory docs/methods/gravity-processing/scientific-course/ with README.md and six exact proposed chapter paths: 01_quantity-and-reference.md, 02_plate-and-terrain.md, 03_uncertainty-and-covariance.md, 04_equivalent-layer.md, 05_spatial-validation.md, 06_continuation-and-limits.md. Six original SVGs under its assets/ are named reference-surfaces.svg, plate-and-relief.svg, shared-errors.svg, mathematical-layer.svg, blocked-support.svg, continuation-spectrum.svg. MAIN must approve these prospective paths before B. No old guide/index rewrite is implicit. MAIN owns a later minimal wiki index link. No numerical fixture, source modification or frontend mount is authorized merely by B.
+Approved exclusive owner: this M01 course unit. The new docs-only directory docs/methods/gravity-processing/scientific-course/ contains README.md and the six exact chapters: 01_quantity-and-reference.md, 02_plate-and-terrain.md, 03_uncertainty-and-covariance.md, 04_equivalent-layer.md, 05_spatial-validation.md, 06_continuation-and-limits.md. Six original SVGs under assets/ are reference-surfaces.svg, plate-and-relief.svg, shared-errors.svg, mathematical-layer.svg, blocked-support.svg, continuation-spectrum.svg. These thirteen paths were authorized before creation. No old guide/index rewrite is implicit. MAIN owns a later minimal wiki index link. No numerical fixture, scientific source modification or frontend mount is authorized by B.
 
-1. Author full EN/ES chapter content, equations/captions, definitions/exercises and primary citations (R-MC02..07,11); do not copy this English planning prose as finished Spanish lessons.
-2. Author six distinct physical diagrams and review mathematical signs, reference surfaces, axes/units and mask meaning (R-MC03..07,11). Render/inspect SVGs in light/dark/mobile without inventing calculated metric images. Export screenshots only after actual QA with source pins; no old screenshot relabelling.
-3. Check cross-language scientific equivalence and real-user-file recipe syntax/limits against immutable source (R-MC01,10..14). Execution remains separately gated until MAIN explicitly authorizes local controls.
-4. Commit/push scoped B docs and submit full human content review. State WIKI_CONTENT_REVIEWED only if actually read, not COURSE_PASS or whole M01 accepted.
+- [x] Author full EN/ES chapters, derivations, literal definitions, worked reasoning/answers, negative cases and adjacent primary citations. Six physical questions are developed, not inferred from a word floor or file presence.
+- [x] Author six distinct physical diagrams; inspect reference heights, attraction signs, common primitive errors, mathematical versus physical sources, inner/outer support and spectral attenuation. Render/inspect actual light/dark/desktop/mobile captures; no numerical map is invented.
+- [x] Self-review source compatibility, bilingual meaning, unit conventions and recipe syntax against immutable code. MAIN's early WIP feedback prompted explicit mGal-dependent Ridge units, and process/approval narrative was moved out of user-facing chapters into this engineering ledger BEFORE the final pin.
+- [x] Complete documentation guards and exact source/scope/relative-link/AST/SVG/render-receipt checks below. Numerical recipes and future course tests remain NOT_RUN.
+- [ ] FULL MAIN read of the final pushed thirteen-path B content candidate and engineering convergence update. No C code, index, artifact producer, frontend mount, scientific rerun or deployment is authorized by this self-review.
 
 ## C. Separately approved course controls/evidence/frontend unit
 
@@ -57,20 +58,20 @@ The prospective course test file is absent. Existing control/test execution and 
 
 | Requirement | Design decision mapped here | Current execution verdict |
 | --- | --- | --- |
-| R-MC01 | Exact docs scope, immutable code and closed authority | NOT_RUN; proposal only |
-| R-MC02 | Q1, E01, no second elevation subtraction | NOT_RUN |
-| R-MC03 | Q1/Q2, E02, signed supplied terrain/datum contract | NOT_RUN |
-| R-MC04 | Q3, E03, covariance versus marginal bound | NOT_RUN |
-| R-MC05 | Q4, scaled scalar layer and conditional noise | NOT_RUN |
-| R-MC06 | Q5, unchanged nested blocked selection and oracle cases | NOT_RUN |
-| R-MC07 | Q6, E04, absolute height/support/precision/residual sign | NOT_RUN |
-| R-MC08 | Four explanatory controls, no owned-job claim | NOT_RUN |
-| R-MC09 | Eight-key index, exact scenario bindings/stale negatives | NOT_RUN |
-| R-MC10 | Existing paired/local Python workflows and exact-parent caveat | NOT_RUN |
-| R-MC11 | Six questions/physical figures with EN/ES definitions | NOT_RUN; no authored lessons yet |
-| R-MC12 | Shell-owned primitives, MAIN-owned mount, actual QA | NOT_RUN; mount unassigned |
-| R-MC13 | Negative matrix and retained field-ineligible boundaries | NOT_RUN |
-| R-MC14 | Explicit A/B/C approval checkpoints | A proposal awaiting MAIN; B/C unapproved |
+| R-MC01 | Exact docs scope, immutable code and closed authority | B scope/source self-check PASS; numerical/C gate NOT_RUN |
+| R-MC02 | Q1, E01, no second elevation subtraction | B theory self-reviewed; numerical/interactive gate NOT_RUN |
+| R-MC03 | Q1/Q2, E02, signed supplied terrain/datum contract | B theory self-reviewed; numerical/interactive gate NOT_RUN |
+| R-MC04 | Q3, E03, covariance versus marginal bound | B derivation self-reviewed; numerical/interactive gate NOT_RUN |
+| R-MC05 | Q4, scaled scalar layer and conditional noise | B estimator/unit derivation self-reviewed; numerical gate NOT_RUN |
+| R-MC06 | Q5, unchanged nested blocked selection and oracle cases | B algorithm/exercise self-reviewed; real blocked/oracle gate NOT_RUN |
+| R-MC07 | Q6, E04, absolute height/support/precision/residual sign | B derivation/limits self-reviewed; numerical gate NOT_RUN |
+| R-MC08 | Four explanatory controls, no owned-job claim | C explanatory controls NOT_IMPLEMENTED/NOT_RUN |
+| R-MC09 | Eight-key index, exact scenario bindings/stale negatives | C producer/index absent; NOT_RUN |
+| R-MC10 | Existing paired/local Python workflows and exact-parent caveat | Six B recipes ast.parse PASS only; execution NOT_RUN |
+| R-MC11 | Six questions/physical figures with EN/ES definitions | Actual B content/render self-review complete; FULL MAIN final read PENDING |
+| R-MC12 | Shell-owned primitives, MAIN-owned mount, actual QA | Documentation preview QA only; frontend mount/route gate NOT_RUN |
+| R-MC13 | Negative matrix and retained field-ineligible boundaries | B reasoned negatives self-reviewed; numerical negatives NOT_RUN |
+| R-MC14 | Explicit A/B/C approval checkpoints | A fully read, B authorized/content final review PENDING; C unapproved |
 
 Actual documentation guard results below certify only content/structure. The unchanged product ledger at this branch base has0 whole-requirement PASS,18UNRESOLVED and1FAIL; structural validity does not change those verdicts. No expected historical numerical count or old MAIN peer/JUnit receipt is a new course result. Final docs commit/remote head appears in the handoff, not a self-referential commit identifier inside its own file.
 
@@ -103,4 +104,33 @@ read-only scope/link/EARS/source/fenced-Python audit: PASS
 
 The stdin stdlib audit verified exactly9 added Markdown paths (two research plus seven feature), zero preexisting modifications,14 unique requirements/14 future named gates,25 resolved relative links,6 questions,3 Python blocks by ast.parse only,11 actual unchanged source SHA-256 pins, absent prospective course test file and original9ce5cc branch/ref preserved. Syntax validation does not execute the recipes or prove field admission. No browser/frontend build, numerical/unit test, plot/SVG generation, dataset/receipt emission, host call or protected-data inspection was performed for this documentation milestone.
 
-Scoped fetch confirmed requested4db6a16 is an ancestor of then-current develop2af61f9a2aa117f5f0bf678d0be52afd582065a0. This task keeps its requested base and immutable scientific pins rather than merging unrelated concurrent units. Later develop state, PR and final pushed head must be verified separately in the handoff. The seven-document feature packet plus both research files awaits FULL MAIN read; no first authored wiki lesson or code has been approved.
+Scoped fetch at the A checkpoint confirmed requested4db6a16 is an ancestor of then-current develop2af61f9a2aa117f5f0bf678d0be52afd582065a0. This task keeps its requested base and immutable scientific pins rather than merging unrelated concurrent units. The historical A checkpoint awaited full MAIN read; the later confirmed approval above supersedes that waiting state for B only. C is still unapproved. Final remote/head state is reported separately in the handoff.
+
+## Actual B content self-review and documentation preview QA
+
+This is an engineering record, not a public course acceptance label. Full MAIN review of the final B candidate is still pending. Public chapters teach physics/local interfaces without agent approval/stage narrative. Their bounded wiki-milestone note says recipes were syntax-checked, not executed; it must not be silently converted to an execution claim during later implementation.
+
+The self-review checked the following substantive content in BOTH languages:
+
+| Chapter and original figure | Mathematical/physical review |
+| --- | --- |
+| 01; reference-surfaces.svg | Somigliana endpoint substitutions; rotating normal field; co-located reference cancellation; compatible h=H+N; unit/sign/state and integer/history caveats |
+| 02; plate-and-relief.svg | Cylindrical Newton integral including exterior top-boundary limit; receiver versus thickness; D-B and T=B-A_topo; supplied residual versus DEM/curvature/processed principal facts; terrain:null validity |
+| 03; shared-errors.svg | a-transpose Sigma a; Cauchy-Schwarz marginal SD bound; one geoid primitive combined before abs/RSS; shared density covariance; conservative versus actual SD; MAD never removes rows |
+| 04; mathematical-layer.svg | Harmonic 1/r distinct from Newton prism kernel; scaled weighted Ridge stationarity; coefficient units/nonuniqueness; fixed mGal and implicit mGal^-2 penalty, not squared lambda or unit-independent damping |
+| 05; blocked-support.svg | Frozen outer geometry; rebuilt inner sources/plane/support; pooled supported normalized residual; covered denominator exercise; no holdout tuning/refit-all; null masks and original geometry |
+| 06; continuation-spectrum.svg | Source-free Laplace/Fourier attenuation; actual irregular-layer distinction; absolute heights including masked maximum; conditional L Sigma L-transpose; preset lowest qualifying height; no downward/no geological resolution claim |
+
+Verified the installed Verde least_squares.py read-only: StandardScaler with_mean=False, Ridge(alpha=damping,fit_intercept=False), sample_weight=weights. File SHA-256 a4eb01f891016a50be2451432842e0449ac924ec2fdfef8ecb182cc1f36ec090. Inspected installed sklearn weight-rescaling path and immutable transform Q construction without imports or execution. No lambda candidates, scientific code, pin or tolerance changed. JCGM100 and its linked official BIPM2026 amendment remain primary links; no copyrighted PDF copy is committed.
+
+Actual renderer: bundled Node24.19.0, read-only bundled Playwright/marked, existing installed Edge channel and read-only existing KaTeX. The default bundled headless executable was absent; selected installed Edge without downloading/installing a browser. A task-specific helper and all generated captures/receipts live outside Git in private scratch, not in frontend or science paths. The helper generated a documentation preview, NOT the product renderer/route. It used the inspected shell font family and light/dark palette without editing shell/global CSS.
+
+Final candidate preview rendered all7 pages and all6 SVGs in both light/dark themes at1000px and390px:52 actual captures. It rendered280 math expressions with strict KaTeX checks; zero detected page/text overflow, zero broken diagrams, zero math errors. Actual image inspection included physical diagram matrices and bilingual chapter samples; local code/equation containers scroll where needed. Initial clipping of the layer depth label and smaller visual overlaps were corrected before the final capture set; earlier scratch captures/receipts are preserved as history, not relabelled final evidence.
+
+Final private preview receipt basename candidate/render-qa.json, SHA-256 fbc98b262150b348c9ecd170d53ad45ae6c3fbf7b775c3f513ef694c1325b72e. It binds actual bytes/SHA of all13 B source files and all52 captures, theme/width/detected issues and actual execution time. Generated contact matrices only summarize those captures. It is a renderer receipt, not a scientific processing receipt, numerical metric record, private-source publication or hosted-browser acceptance.
+
+The stdlib source/scope audit passed: exactly13 approved B paths,47 resolved relative links,6 complete Python blocks parsed by ast.parse only,6 XML-valid script-free self-contained SVGs with bilingual title/description and theme rules,11 unchanged existing code/data/test SHA pins, original9ce5cc station-adapter ref preserved, future course test absent. No Python block, scientific import, test suite, control generator, source archive, numerical exporter or protected data was executed/read anew for B.
+
+Documentation gates with the existing owned CPython3.12.10, -B -S, no environment changes: content standards PASS; template residue PASS877 tracked files; CI budget PASS; ledger structure PASS with unchanged0 whole-requirement PASS/18UNRESOLVED/1FAIL; require-release EXPECTED FAIL; scoped whitespace PASS. These checks do not certify content from word counts or filenames: the physics/math self-review table and actual render observations above are separate, and FULL MAIN approval of the complete final text remains pending.
+
+Final commit/push/PR exact head is reported in the external handoff rather than self-referentially embedding its own commit ID. Freeze that head after handoff. Keep all thirteen B content bytes and prior receipts/images/history unchanged unless MAIN requests a specific follow-up. No C scientific producer/index/frontend/test source, API, solver, protected source, global CSS, acceptance ledger, merge or deployment is included.
