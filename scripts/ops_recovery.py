@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 import hashlib
 import io
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -37,6 +38,9 @@ PROOF_SCHEMA = "geophysics.maintenance-proof/v1"
 RECEIPT_SCHEMA = "geophysics.ops-receipt/v1"
 JSON_CAP = 16 * 1024 * 1024
 HASH_RE = re.compile(r"[0-9a-f]{64}")
+GRAVITY = "gravity.station-outlier-flags/v1"
+M05 = "mt.edi-full-tensor-qc/v1"
+M06 = "mt.edi-fixed-thickness-trf/v1"
 
 
 class RecoveryError(Exception):
@@ -71,8 +75,8 @@ def parse_json(raw: bytes):
         raise RecoveryError("invalid_json") from exc
 
 
-def fields(value, keys: str) -> None:
-    require(isinstance(value, dict) and set(value) == set(keys.split()), "unknown_contract_fields")
+def fields(value, keys: str, code="unknown_contract_fields") -> None:
+    require(isinstance(value, dict) and set(value) == set(keys.split()), code)
 
 
 def uuid(value) -> str:
@@ -466,6 +470,227 @@ def load_authority(age: Age, path: Path, expected_hash: str, scratch: Path, depl
     return value
 
 
+def number(value, low=-math.inf, high=math.inf):
+    return type(value) in (int, float) and math.isfinite(value) and low <= value <= high
+
+
+def vector(value, count, *, positive=False):
+    return (isinstance(value, list) and len(value) == count
+            and all(number(item) and (not positive or item > 0) for item in value))
+
+
+def dataset_contract(payload, row, parent, source):
+    code = "unknown_or_changed_dataset_schema"
+    common = ("schema dataset_id version owner_id project_id raw_asset_id parent_raw_sha256 parser_version "
+              "modality dimensions axis_order physical_metadata qc_verdict ")
+    require(type(payload.get("version")) is int and payload["version"] == 1, code)
+    require(isinstance(payload.get("physical_metadata"), dict), code)
+    require(payload.get("physical_metadata") == parse_json(parent["physical_metadata"].encode()), code)
+    count = row["row_count"]
+    require(type(count) is int, code)
+    if row["modality"] == "gravity_station":
+        fields(payload, common + "station_ids xyz_m observed_mgal sigma_mgal uncertainty_kind mask missing_reasons "
+               "correction_history rights_decision rights_statement attribution", code)
+        require(row["parser_version"] == "gravity-station-csv/v1" and parent["detected_format"] == "gravity_csv"
+                and 4 <= count <= 4096 and payload["dimensions"] == {"station": count}
+                and payload["axis_order"] == ["station"] and payload["qc_verdict"] == "parsed_for_flag_qc_only"
+                and payload["uncertainty_kind"] == "per_station_standard_deviation"
+                and payload["mask"] == [False] * count and all(type(item) is bool for item in payload["mask"])
+                and payload["missing_reasons"] == [None] * count and payload["correction_history"] == []
+                and vector(payload["observed_mgal"], count) and vector(payload["sigma_mgal"], count, positive=True)
+                and isinstance(payload["station_ids"], list) and len(payload["station_ids"]) == count
+                and all(isinstance(item, str) and item.strip() for item in payload["station_ids"])
+                and len(set(payload["station_ids"])) == count
+                and isinstance(payload["xyz_m"], list) and len(payload["xyz_m"]) == count
+                and all(vector(item, 3) for item in payload["xyz_m"])
+                and all(payload[name] == source[name] for name in ("rights_decision", "rights_statement", "attribution")), code)
+    elif row["modality"] == "edi_transfer_function":
+        fields(payload, common + "parent_raw_bytes source", code)
+        physical = payload["physical_metadata"]
+        geometry = physical.get("geometry", {})
+        require(isinstance(geometry, dict), code)
+        components = geometry.get("tensor_components")
+        require(row["parser_version"] == "edi-strict-envelope/v1" and parent["detected_format"] == "edi"
+                and 128 <= parent["byte_count"] <= 5 * 1024**2
+                and type(payload["parent_raw_bytes"]) is int and payload["parent_raw_bytes"] == parent["byte_count"]
+                and 2 <= count <= 512 and payload["dimensions"] == {"frequency": count}
+                and payload["axis_order"] == ["frequency"] and payload["qc_verdict"] == "awaiting_full_tensor_qc"
+                and type(geometry.get("frequency_count")) is int and geometry["frequency_count"] == count
+                and isinstance(geometry.get("station_id"), str) and geometry["station_id"].strip()
+                and isinstance(components, list) and all(isinstance(item, str) for item in components)
+                and len(set(components)) == len(components)
+                and set(components) in ({"Zxx", "Zxy", "Zyx", "Zyy"}, {"Zxx", "Zxy", "Zyx", "Zyy", "Tx", "Ty"})
+                and geometry.get("sign_convention") in ("+", "-")
+                and geometry.get("variance_convention") in ("complex", "per-real-component")
+                and number(geometry.get("rotation_degrees"))
+                and (physical.get("component_frame"), geometry.get("rotation_reference")) in
+                    (("instrument axes", "unspecified"), ("geographic ENU", "geographic-north"))
+                and physical.get("measurement_unit") in ("ohm", "mV/km/nT")
+                and payload["source"] == {name: source[name] for name in
+                    ("provider", "exact_url", "doi", "citation", "rights_decision", "rights_statement", "attribution")}, code)
+    else:
+        require(False, "unknown_dataset_modality")
+
+
+def job_contract(row, request, dataset):
+    code = "unknown_or_changed_job_contract"
+    method = row["method_id"]
+    names = "schema job_id project_id dataset_id dataset_sha256 method_id parameters"
+    if dataset["modality"] == "edi_transfer_function":
+        require(method in (M05, M06), "unknown_processing_method")
+        names += " raw_asset_id raw_sha256" + (" qc_screen_sha256" if method == M06 else "")
+    else:
+        require(method == GRAVITY, "unknown_processing_method")
+    fields(request, names, code)
+    require(request["schema"] == "geophysics.processing-request/v1"
+            and all(request[name] == row[name] for name in
+                    ("project_id", "dataset_id", "dataset_sha256", "method_id"))
+            and request["job_id"] == row["id"], code)
+    parameters = request["parameters"]
+    if method == GRAVITY:
+        fields(parameters, "threshold", code)
+        require(number(parameters["threshold"], 1, 10), code)
+    elif method == M05:
+        fields(parameters, "", code)
+    else:
+        fields(parameters, "qc_job_id thickness_m initial_ohm_m beta bootstrap_samples seed", code)
+        uuid(parameters["qc_job_id"])
+        thickness = parameters["thickness_m"]
+        initial = parameters["initial_ohm_m"]
+        require(isinstance(thickness, list) and len(thickness) <= 1
+                and all(number(item, 2, 4000) for item in thickness)
+                and isinstance(initial, list) and len(initial) == len(thickness) + 1
+                and all(number(item) and 1 < item < 6000 for item in initial)
+                and number(parameters["beta"], 0, 1)
+                and type(parameters["bootstrap_samples"]) is int and 20 <= parameters["bootstrap_samples"] <= 40
+                and type(parameters["seed"]) is int and 0 <= parameters["seed"] <= 2147483647, code)
+        digest(request["qc_screen_sha256"])
+    if method in (M05, M06):
+        require(request["raw_asset_id"] == dataset["raw_asset_id"]
+                and request["raw_sha256"] == dataset["raw_sha256"], code)
+
+
+def result_contract(payload, row, request, dataset):
+    code = "unknown_or_changed_result_schema"
+    common = "schema job_id dataset_id dataset_sha256 method_id request_sha256 parameters engine_sha256 axis_order dimensions "
+    digest(payload.get("engine_sha256"))
+    require(payload.get("axis_order") == dataset["axis_order"] and payload.get("dimensions") == dataset["dimensions"], code)
+    if row["method_id"] == GRAVITY:
+        fields(payload, common + "station_ids xyz_m observed_mgal sigma_mgal outlier_flag robust_score statistics "
+               "uncertainty_kind physical_metadata rights_decision rights_statement correction_history interpretation_limit", code)
+        require(all(payload[name] == dataset[name] for name in ("station_ids", "xyz_m", "observed_mgal", "sigma_mgal",
+                "uncertainty_kind", "physical_metadata", "rights_decision", "rights_statement")), code)
+        count = dataset["dimensions"]["station"]
+        require(isinstance(payload["outlier_flag"], list) and len(payload["outlier_flag"]) == count
+                and all(type(item) is bool for item in payload["outlier_flag"])
+                and vector(payload["robust_score"], count), code)
+        return
+    fields(payload, common + "raw_asset_id raw_sha256 raw_bytes parser_sha256 forward_sha256 environment environment_sha256 "
+           "frequency_hz physical_metadata source screen inverse qc_screen_sha256 truth interpretation_limit", code)
+    require(payload["raw_asset_id"] == dataset["raw_asset_id"] and payload["raw_sha256"] == dataset["parent_raw_sha256"]
+            and type(payload["raw_bytes"]) is int and payload["raw_bytes"] == dataset["parent_raw_bytes"]
+            and payload["physical_metadata"] == dataset["physical_metadata"] and payload["source"] == dataset["source"]
+            and payload["truth"] is None, code)
+    for name in ("parser_sha256", "forward_sha256", "environment_sha256"):
+        digest(payload[name])
+    environment = payload["environment"]
+    fields(environment, "python packages", code)
+    fields(environment["packages"], "numpy scipy mt-metadata pandas matplotlib xarray", code)
+    require(all(isinstance(value, str) and value for value in (environment["python"], *environment["packages"].values()))
+            and hashlib.sha256(canonical(environment)).hexdigest() == payload["environment_sha256"], code)
+    count = dataset["dimensions"]["frequency"]
+    frequency = payload["frequency_hz"]
+    require(vector(frequency, count, positive=True) and frequency == sorted(set(frequency)), code)
+    screen = payload["screen"]
+    fields(screen, "schema id family source_kind truth methods inversion_performed one_d_fit_performed "
+           "one_d_inversion_eligible interpretation frequencies_hz observed tensor compatibility provenance metadata", code)
+    geometry = dataset["physical_metadata"]["geometry"]
+    require(screen["schema"] == "inverse-earth/edi-screen/v1" and screen["id"] == geometry["station_id"]
+            and screen["family"] == "mt" and screen["truth"] is None and screen["methods"] == {}
+            and screen["inversion_performed"] is False and screen["one_d_fit_performed"] is False
+            and type(screen["one_d_inversion_eligible"]) is bool and screen["frequencies_hz"] == frequency, code)
+    tensor = screen["tensor"]
+    fields(tensor, "real imag sigma rotation_deg", code)
+    for name in ("real", "imag", "sigma"):
+        array = tensor[name]
+        require(isinstance(array, list) and len(array) == count and all(
+            isinstance(matrix, list) and len(matrix) == 2 and all(vector(line, 2, positive=name == "sigma")
+                                                                 for line in matrix) for matrix in array), code)
+    require(vector(tensor["rotation_deg"], count), code)
+    fields(screen["observed"], "xy yx", code)
+    for curve in screen["observed"].values():
+        fields(curve, "real imag apparent phase sigma_real_imag_ohm", code)
+        require(all(vector(values, count, positive=name == "sigma_real_imag_ohm") for name, values in curve.items()), code)
+    provenance = screen["provenance"]
+    fields(provenance, "source_file source_sha256 source_bytes parser parser_version preflight original_units output_units "
+           "units_multiplier_to_ohm original_sign_convention output_sign_convention variance_convention sigma_definition "
+           "error_assumption interpretation_arguments rotation_action rotation_reference original_rotation_deg tipper_present "
+           "tipper_used_in_1d_inversion frequency_permutation original_frequency_hz data_kind synthetic target_known", code)
+    fields(screen["compatibility"], "xx_component_wrms yy_component_wrms antisymmetry_conservative_wrms threshold "
+           "passes_screen criteria caveat", code)
+    require(screen["compatibility"]["passes_screen"] is screen["one_d_inversion_eligible"]
+            and screen["compatibility"]["threshold"] == 3
+            and all(number(screen["compatibility"][name], 0) for name in
+                    ("xx_component_wrms", "yy_component_wrms", "antisymmetry_conservative_wrms"))
+            and vector(provenance["original_rotation_deg"], count)
+            and all(abs((angle - geometry["rotation_degrees"] + 180) % 360 - 180) <= 1e-7
+                    for angle in provenance["original_rotation_deg"])
+            and provenance["rotation_reference"] == ("geographic-north" if
+                dataset["physical_metadata"]["component_frame"] == "geographic ENU" else None)
+            and provenance["tipper_present"] is (len(geometry["tensor_components"]) == 6), code)
+    require(isinstance(provenance, dict) and provenance.get("source_sha256") == payload["raw_sha256"]
+            and provenance.get("source_bytes") == payload["raw_bytes"] and provenance.get("target_known") is False
+            and provenance.get("output_units") == "ohm" and provenance.get("output_sign_convention") == "+"
+            and provenance.get("original_sign_convention") == geometry["sign_convention"]
+            and provenance.get("variance_convention") == geometry["variance_convention"]
+            and provenance.get("original_units") == {"ohm": "ohm", "mV/km/nT": "mt"}[dataset["physical_metadata"]["measurement_unit"]]
+            and provenance.get("tipper_used_in_1d_inversion") is False, code)
+    if row["method_id"] == M05:
+        require(payload["inverse"] is None and payload["qc_screen_sha256"] is None, code)
+        return
+    require(12 <= count <= 64 and screen["one_d_inversion_eligible"] is True
+            and payload["qc_screen_sha256"] == request["qc_screen_sha256"]
+            and payload["qc_screen_sha256"] == hashlib.sha256(canonical(screen)).hexdigest(), code)
+    inverse = payload["inverse"]
+    fields(inverse, "schema id family source_kind component geometry units data_units frequencies thickness observed sigma "
+           "active methods tensor compatibility provenance metadata parameters truth clean evaluation_protocol", code)
+    require(inverse["schema"] == "inverse-earth/edi-1d/v1" and inverse["truth"] is None and inverse["clean"] is None
+            and inverse["id"] == screen["id"] and inverse["family"] == "mt" and inverse["component"] == "xy"
+            and inverse["geometry"] == "operator-supplied fixed-thickness 1D model"
+            and inverse["units"] == "ohm m" and inverse["data_units"] == "ohm" and inverse["frequencies"] == frequency
+            and all(inverse[name] == screen[name] for name in ("tensor", "compatibility", "provenance", "metadata"))
+            and inverse["observed"] == {name: value for name, value in screen["observed"]["xy"].items()
+                                        if name != "sigma_real_imag_ohm"}
+            and inverse["sigma"] == screen["observed"]["xy"]["sigma_real_imag_ohm"], code)
+    params = request["parameters"]
+    active = [index % 5 != 4 for index in range(count)]
+    require(inverse["thickness"] == params["thickness_m"] and inverse["active"] == active
+            and all(type(item) is bool for item in inverse["active"])
+            and inverse["parameters"] == {"regularization": params["beta"], "bounds_ohm_m": [1.0, 6000.0], "component": "xy"}
+            and isinstance(inverse["evaluation_protocol"], dict) and inverse["evaluation_protocol"].get("training_mask") == active, code)
+    fields(inverse["methods"], "mt-lm", code)
+    method = inverse["methods"]["mt-lm"]
+    fields(method, "name name_es model predicted residual history frames metrics solver states device state objective "
+           "identifiability target state_identity evaluation uncertainty", code)
+    require(isinstance(method, dict) and vector(method.get("model"), len(params["thickness_m"]) + 1)
+            and all(1 <= value <= 6000 for value in method["model"]), code)
+    for name in ("predicted", "residual"):
+        fields(method.get(name), "real imag apparent phase", code)
+        require(all(vector(values, count) for values in method[name].values()), code)
+    uncertainty = method.get("uncertainty")
+    fields(uncertainty, "kind solver conditioning members quantiles lower upper mean std units target confidence interval_method "
+           "conditioning_model fixed_thickness_m bounds_ohm_m sigma_per_real_component active initial_model beta sampling_law "
+           "seed sample_seeds successful_seeds requested completed failures samples interval_ohm_m status limitations", code)
+    require(isinstance(uncertainty, dict) and uncertainty.get("status") == "computed"
+            and uncertainty.get("requested") == params["bootstrap_samples"]
+            and uncertainty.get("fixed_thickness_m") == params["thickness_m"]
+            and uncertainty.get("active") == active and uncertainty.get("conditioning_model") == method["model"]
+            and uncertainty.get("failures") == [] and uncertainty.get("completed") == params["bootstrap_samples"]
+            and isinstance(uncertainty.get("samples"), list) and len(uncertainty["samples"]) == params["bootstrap_samples"]
+            and all(vector(sample, len(method["model"])) and all(1 <= value <= 6000 for value in sample)
+                    for sample in uncertainty["samples"]), code)
+
+
 def inventory(connection, root: Path, limits: Limits) -> dict[str, dict]:
     validate_database(connection)
     for table in ("user", "access_tokens", "rate_windows", "account_usage", "projects", "raw_assets", "source_records",
@@ -481,15 +706,21 @@ def inventory(connection, root: Path, limits: Limits) -> dict[str, dict]:
     raw_rows = {row["id"]: dict(row) for row in connection.execute("SELECT * FROM raw_assets")}
     sources = {row["id"]: dict(row) for row in connection.execute("SELECT * FROM source_records")}
     datasets = {row["id"]: dict(row) for row in connection.execute("SELECT * FROM observation_datasets")}
+    qc_hashes = {}
+    jobs = {row["id"]: dict(row) for row in connection.execute("SELECT * FROM processing_jobs")}
     expected = {}
+    inventory_bytes = 0
 
     def add(row, key, kind, hash_field="sha256", bytes_field="byte_count"):
+        nonlocal inventory_bytes
         uuid(row["id"])
         require(projects.get(row["project_id"]) == row["owner_id"], "owner_identity_mismatch")
         require(row["storage_key" if kind != "result" else "result_key"] == key, "storage_identity_mismatch")
         member_name(key)
         require(key not in expected, "duplicate_storage_key")
         require(type(row[bytes_field]) is int and 0 <= row[bytes_field] <= limits.file, "file_limit")
+        inventory_bytes += row[bytes_field]
+        require(len(expected) + 2 <= limits.count and inventory_bytes <= limits.total, "inventory_limit")
         expected[key] = {"sha256": digest(row[hash_field]), "bytes": row[bytes_field],
                          "project_id": row["project_id"], "owner_id": row["owner_id"], "kind": kind}
 
@@ -513,18 +744,17 @@ def inventory(connection, root: Path, limits: Limits) -> dict[str, dict]:
                 and payload.get("project_id") == row["project_id"] and payload.get("version") == row["version"]
                 and payload.get("raw_asset_id") == row["raw_asset_id"]
                 and payload.get("parent_raw_sha256") == row["raw_sha256"]
-                and payload.get("parser_version") == row["parser_version"] and payload.get("modality") == row["modality"]
-                and payload.get("dimensions") == {"station": row["row_count"]}
-                and len(payload.get("observed_mgal", [])) == row["row_count"]
-                and len(payload.get("sigma_mgal", [])) == row["row_count"], "unknown_or_changed_dataset_schema")
+                and payload.get("parser_version") == row["parser_version"] and payload.get("modality") == row["modality"],
+                "unknown_or_changed_dataset_schema")
+        dataset_contract(payload, row, parent, sources[parent["source_id"]])
         require(canonical(payload) == (root / key).read_bytes(), "noncanonical_derivative")
-    for sql_row in connection.execute("SELECT * FROM processing_jobs"):
-        row = dict(sql_row)
+    for row in jobs.values():
         dataset = datasets.get(row["dataset_id"])
         require(dataset and dataset["owner_id"] == row["owner_id"] and dataset["project_id"] == row["project_id"]
                 and dataset["sha256"] == row["dataset_sha256"], "job_dataset_mismatch")
         request = parse_json(row["request_json"].encode())
         require(hashlib.sha256(canonical(request)).hexdigest() == row["request_sha256"], "job_request_mismatch")
+        job_contract(row, request, dataset)
         if row["state"] == "succeeded":
             key = f"derived/{row['owner_id']}/{row['project_id']}/results/{row['id']}.json"
             add(row, key, "result", "result_sha256", "result_bytes")
@@ -535,12 +765,24 @@ def inventory(connection, root: Path, limits: Limits) -> dict[str, dict]:
                     and payload.get("dataset_sha256") == row["dataset_sha256"]
                     and payload.get("method_id") == row["method_id"]
                     and payload.get("request_sha256") == row["request_sha256"]
-                    and payload.get("parameters") == request["parameters"]
-                    and not {"predicted", "model", "residual"} & set(payload), "unknown_or_changed_result_schema")
+                    and payload.get("parameters") == request["parameters"], "unknown_or_changed_result_schema")
+            # Keep at most one result/dataset body resident, not the complete scientific inventory.
+            result_contract(payload, row, request, read_json(root / dataset["storage_key"]))
+            if row["method_id"] == M05:
+                qc_hashes[row["id"]] = hashlib.sha256(canonical(payload["screen"])).hexdigest()
             require(canonical(payload) == (root / key).read_bytes(), "noncanonical_derivative")
         else:
             require(all(row[name] is None for name in ("result_key", "result_sha256", "result_bytes")),
                     "non_success_result")
+    for row in jobs.values():
+        if row["method_id"] != M06:
+            continue
+        request = parse_json(row["request_json"].encode())
+        qc = jobs.get(request["parameters"]["qc_job_id"])
+        require(qc and qc["method_id"] == M05 and qc["state"] == "succeeded"
+                and all(qc[name] == row[name] for name in ("owner_id", "project_id", "dataset_id", "dataset_sha256"))
+                and qc_hashes[qc["id"]] == request["qc_screen_sha256"],
+                "mt_qc_receipt_mismatch")
     totals = {}
     for row in raw_rows.values():
         totals[row["owner_id"]] = totals.get(row["owner_id"], 0) + row["byte_count"]

@@ -109,6 +109,19 @@ def test_encrypted_roundtrip(case):
         assert all(p.stat().st_mode & 0o077 == 0 for p in target.rglob("*"))
 
 
+@pytest.mark.parametrize("limit", ["bytes", "count"])
+def test_inventory_limit_precedes_derivative_reads(case, monkeypatch, limit):
+    def unexpected_read(*args):
+        raise AssertionError("Inventory ceiling must fail before loading derivative JSON")
+
+    monkeypatch.setattr(ops, "read_json", unexpected_read)
+    with closing(ops.open_database(Path(case.args.database))) as db:
+        total, maximum = db.execute("SELECT SUM(byte_count),MAX(byte_count) FROM raw_assets").fetchone()
+        limits = ops.Limits(total=total - 1, file=maximum) if limit == "bytes" else ops.Limits(count=1)
+        with pytest.raises(ops.RecoveryError, match="inventory_limit|database_row_limit"):
+            ops.inventory(db, Path(case.args.source), limits)
+
+
 def test_deleted_project_cannot_return(case):
     receipt = ops.capture(case.args)
     with TestClient(case.harness.app) as client:
