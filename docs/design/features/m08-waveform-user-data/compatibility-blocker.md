@@ -1,0 +1,23 @@
+# Initial implementation checkpoint: actual engine import failure
+
+Status: BLOCKED_PENDING_REVIEWED_DEPENDENCY_AMENDMENT, not an implementation/scientific acceptance handoff. MAIN authority was persisted at f116d12 before tests or environment creation. Test-first/source-selection checkpoint is `4cc0a70c04581561b0ff67e56d218802ef82f37e`. Historical d295925 docs/audit remain unchanged except the current task/authority supplement.
+
+## Actual executions and retained evidence
+
+Only absent ignored `.venv-m08-oct3` was created, using existing CPython 3.12.10. Measured existing pytest 9.0.3 was pinned before install. The approved four exact pins installed successfully with normal transitives; no other environment/global/user/site/VPS was altered. [Exact freeze, wheel/native hashes and private log identities](evidence/engine-compatibility-initial.json) record the actual resolved stack and pip report, not an assumed tag-compatible native binary.
+
+System-runtime test-first collection: RED, two missing-module errors, zero tests executed. Fresh owned-runtime repeat also RED, exit2, two missing `waveform_input` collection errors, zero tests executed; private XML/log retained. This expected absence failure is not a numerical PASS or completed full negative/oracle matrix. Initial tests/recipes are persisted for subsequent extension before their corresponding implementation; they do not yet establish complete coverage of any requirement.
+
+Actual compatibility smoke: FAIL, exit1, ObsPy1.4.2 import fails in installed `obspy/core/util/base.py:26` on `import pkg_resources`. The resolver installed setuptools84.0.0; `pkg_resources` is absent. `pip check` passes metadata constraints but does not prove import/native compatibility. No scientific/native decode/evalresp was executed, no three scientific modules created, no misleading successful stub/fallback supplied. Malformed-native/CLI/export/resource execution remains NOT_RUN.
+
+The [official Setuptools history](https://setuptools.pypa.io/en/stable/history.html#v82-0-0) records removal in82.0.0 and directs dependent environments to older versions. Proposed reviewed amendment: pin **setuptools81.0.0** (last release before removal) in the owned requirements, install ONLY into the owned fresh M08 environment, preserve this initial failed report/log and create distinct follow-up report/smoke. Keep ObsPy1.4.2/NumPy2.2.6/SciPy1.15.2/pytest9.0.3 unchanged; no monkey patch/vendor shim or package-source edit. This proposal is NOT approved/installed and is not a compatibility promise. Full actual authored MiniSEED decode/StationXML/evalresp/response-removal smoke is still required afterward; further incompatibility must again be retained and reviewed.
+
+## Original acquisition, not a live scientific fixture
+
+[Selection seal](evidence/ridgecrest-selection-seal.json) SHA `6c5356cb1ac3b3255de3aeab069d4fb90ca028a709410cae795d7b7800d36709` preceded provider access. Only the exact station, availability and dataselect queries were made serially, identity encoding, no redirect follow/decompression/retry/candidate substitution. All returned200: StationXML9388 bytes, availability181 bytes and MiniSEED32768 bytes. [Actual HTTP/raw-hash/current-rights receipt](evidence/ridgecrest-acquisition-initial.json) pins every body/length/header/time independently; none is declared scientifically eligible. Fresh originals remain private under ignored `data/experiments/m08-oct3-42b6e910`. Original/public derivative publication is not approved. Registry rights body retained; citation/cloud providers returned gzip despite identity so their bodies were not read/decompressed and their hashes remain null. Current official text was separately read, not relabelled as raw identity transfer.
+
+No phase source has been accessed; no prediction/QC scientific outcome is sealed because engine compatibility blocked first. HTTP200/byte hashes are acquisition evidence only. No fabricated sample rate, response unit, calibration, P/S prediction, sigma or field truth. The original candidate remains unchanged and unprocessed.
+
+## Unresolved scope
+
+All20 whole requirements remain unaccepted. Byte/science modules and complete initial-scope tests await engine amendment/review and real implementation. R-W08-015 original source processing/references pending; R-W08-016 CLI and R-W08-017 writer/reopen held; R-W08-018/020 native containment/telemetry/profile holds CLOSED. Library descriptors can be tested later but do not close writer/admission gates. No RSS/host/browser floor or universal cap claim. M13/MT/JSON/canonical/app/frontend/parity/source-ledger unchanged; eleven protected diagnostics and prior course/JSON refs preserved. Draft PR142 only; no merge/deployment/release.

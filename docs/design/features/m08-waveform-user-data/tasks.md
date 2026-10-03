@@ -1,6 +1,6 @@
 # M08 waveform user-data tasks and authorization
 
-Status: INITIAL_LOCAL_IMPLEMENTATION_APPROVED / TEST_FIRST_PENDING. The original docs-only delegation is historical. MAIN explicitly approved the narrow initial science/input implementation after FULL reading d295925; see [exact authorization](implementation-approval.md). CLI/resource supervision and whole-method acceptance remain held. Plan comments: [#42](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/42#issuecomment-5969042894), [#50](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/50#issuecomment-5969043033).
+Status: INITIAL_LOCAL_IMPLEMENTATION_APPROVED / ENGINE_COMPATIBILITY_BLOCKED. The original docs-only delegation is historical. MAIN explicitly approved the narrow initial science/input implementation after FULL reading d295925; see [exact authorization](implementation-approval.md) and [actual compatibility blocker/checkpoint](compatibility-blocker.md). CLI/resource supervision and whole-method acceptance remain held. Plan comments: [#42](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/42#issuecomment-5969042894), [#50](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/50#issuecomment-5969043033).
 
 ## Authorized now
 
@@ -33,5 +33,7 @@ Historical checkpoint at851bc: the prior JSON unit was handed off at `76f7443`; 
 | W08-R01 | 018,020 | This unit plus separately approved local containment/telemetry owner: fresh resource/cancel/crash/upper profiles, runtime-specific memory threshold remains UNSET until measured. NOT_RUN/CLOSED. |
 | W08-C01 | 015 | Main per-object rights/acquisition approval, presealed station/profile; authorized operator bounded external acquisition. Original bytes remain private and failures retained. NOT_ACQUIRED. |
 | W08-E01 | 014,015,019,020 | This unit independent source-valid replay/numerics plus Main final pinned review, actual receipts and all disclosed missing gates. NOT_RUN. |
+
+Current execution supplement: initial authored tests/recipes and exact dependency pins pushed4cc0a70; missing-module RED retained, not a completed full test matrix. Fresh approved environment installed exact pins plus measured transitives, but actual ObsPy import FAILED on missing pkg_resources (resolved setuptools84.0.0). Specific81.0.0 dependency amendment proposed, not installed/approved. No scientific modules exist. Original sealed exact queries acquired privately, actual receipts retained; no decode/evaluation/phase access or scientific/source acceptance. Earlier table NOT_STARTED/NOT_ACQUIRED entries are the historical design baseline; this supplement and blocker receipt record actual current progress without rewriting prior execution evidence.
 
 The test-first fixtures are authored controls, not originals or substitute field clearance. No W08 task can authorize API/worker/storage/UI/canonical/M13/env changes or waive physical-vertical/native host holds. All twenty proposed gate outcomes remain NOT_RUN at this documentation handoff.

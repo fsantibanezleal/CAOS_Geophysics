@@ -1,5 +1,4 @@
 """Independent numerical controls: no mocked successful physics or catalogue tuning."""
-import copy
 import cmath
 import hashlib
 import json
@@ -8,12 +7,11 @@ from pathlib import Path
 import sys
 
 import numpy as np
-import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "data-pipeline"))
 sys.path.insert(0, str(ROOT / "tests/data"))
-from test_waveform_input import source, inventory, request, rejected
+from test_waveform_input import source, inventory, request, record
 from waveform_processing import (process_waveform_record, candidate_intervals,
                                  compute_characteristic, welch_products, filter_products)
 from waveform_evaluation import references_from_stp, evaluate_waveform_candidates, seal_result
@@ -50,26 +48,39 @@ def test_independent_response_oracles_and_stabilization():
     result = process_waveform_record(source(), inventory(), request())
     np.testing.assert_allclose(result.arrays[(0, "response_real")], 1000, rtol=1e-10, atol=1e-9)
     np.testing.assert_allclose(result.arrays[(0, "response_imag")], 0, atol=1e-9)
-    # Independent centred least squares + direct DFT at a small actual-engine N=200.
+    # Independent centred least squares + FULL direct DFT/IDFT at N=200.
     req = request()
     req["conditioning_end_utc"] = "2020-01-01T00:00:10Z"
     req["analysis_start_utc"] = "2020-01-01T00:00:02Z"
     req["analysis_end_utc"] = "2020-01-01T00:00:08Z"
-    req["processing"].update(edge_guard_s=0., lta_s=.5, sta_s=.05, welch_segment_samples=64)
-    # Large-N operator oracle uses exact independent DFT bins, not production FFT.
-    counts = result.arrays[(0, "counts")].astype(float)
-    tau = np.array([(n - (len(counts) - 1) / 2) / 100 for n in range(len(counts))])
+    req["processing"].update(prefilter_hz=[.5, 1., 4., 6.], bandpass_hz=[1., 4.],
+                             filter_order=2, edge_guard_s=0., lta_s=.5,
+                             sta_s=.1, welch_segment_samples=64)
+    values = [round(1000*math.sin(2*math.pi*2*n/20)+3*n) for n in range(200)]
+    small = process_waveform_record(record(values, rate=20),
+        inventory().replace(b"<SampleRate>100", b"<SampleRate>20"), req)
+    counts = np.array(values, dtype=float)
+    tau = np.array([(n - (len(counts) - 1) / 2) / 20 for n in range(len(counts))])
     mean = sum(counts) / len(counts)
     slope = sum(tau[n] * (counts[n] - mean) for n in range(len(counts))) / sum(tau * tau)
-    x = (counts - mean - slope * tau) * result.arrays[(0, "time_taper")]
-    kfft = result.metadata["processing"]["channels"][0]["fft_samples"]
-    for k in (0, 80, 240, 1360):
-        d = sum(x[j] * cmath.exp(-2j * math.pi * k * j / kfft) for j in range(len(x)))
-        f = k * 100 / kfft
-        assert abs(f - result.arrays[(0, "response_frequency_hz")][k]) < 1e-12
-        if k == 240:
-            assert abs(d) > 1
-    # No full DFT-FFT self-comparison establishes the physical inverse gate alone.
+    q = math.floor(len(counts)*.05/2+.5)
+    taper = np.array([math.sin(math.pi*min(n,len(counts)-1-n)/(2*q))
+                     if min(n,len(counts)-1-n) <= q else 1 for n in range(len(counts))])
+    np.testing.assert_allclose(small.arrays[(0,"time_taper")],taper,rtol=1e-10,atol=1e-12)
+    x = (counts-mean-slope*tau)*taper
+    kfft = small.metadata["processing"]["channels"][0]["fft_samples"]
+    assert kfft == 400
+    transformed = direct_dft(np.concatenate([x, np.zeros(kfft-len(x))]))
+    weights = []
+    for k in range(kfft//2+1):
+        f=k*20/kfft
+        weights.append(0. if f<=.5 or f>=6 else .5*(1-math.cos(math.pi*(f-.5)/.5))
+                       if f<1 else 1. if f<=4 else .5*(1+math.cos(math.pi*(f-4)/2)))
+    positive = transformed*np.array(weights)/1000
+    full = list(positive)+[v.conjugate() for v in positive[-2:0:-1]]
+    oracle = np.array([(sum(full[k]*cmath.exp(2j*math.pi*k*n/kfft)
+                        for k in range(kfft))/kfft).real for n in range(200)])
+    np.testing.assert_allclose(small.arrays[(0,"physical_native")],oracle,rtol=1e-10,atol=1e-12)
 
 
 def test_sos_filter_oracle_edges_and_acausality():
