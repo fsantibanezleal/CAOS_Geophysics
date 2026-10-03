@@ -15,6 +15,9 @@ MAX_MEMBER_BYTES = 8 * 1024 * 1024
 
 
 def build_bundle(dataset: dict, result: dict, dataset_sha: str, result_sha: str) -> bytes:
+    if dataset.get("modality") == "edi_transfer_function":
+        from app.mt_bundle import build_mt_bundle
+        return build_mt_bundle(dataset, result, dataset_sha, result_sha)
     dataset_bytes = canonical_bytes(dataset)
     result_bytes = canonical_bytes(result)
     if sha256(dataset_bytes) != dataset_sha or sha256(result_bytes) != result_sha:
@@ -75,6 +78,10 @@ def verify_bundle(encoded: bytes) -> tuple[dict, dict, dict]:
         member = manifest["members"][name]
         if member != {"sha256": sha256(raw[name]), "bytes": len(raw[name])}:
             raise ValueError("processing bundle member hash mismatch")
+    if dataset.get("modality") == "edi_transfer_function":
+        from app.mt_bundle import verify_mt_contents
+        verify_mt_contents(manifest, dataset, result, sha256(raw["dataset.json"]))
+        return manifest, dataset, result
     if (not isinstance(dataset.get("dimensions"), dict)
             or not isinstance(result.get("parameters"), dict)
             or not isinstance(dataset.get("physical_metadata"), dict)):

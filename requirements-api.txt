@@ -11,3 +11,11 @@ uvicorn==0.54.0
 defusedxml==0.7.1
 pyproj==3.8.0
 psutil==7.2.2
+# Bounded M05/M06 worker: strict EDI reader plus SciPy TRF (Torch remains offline).
+numpy==2.2.6
+scipy==1.15.2
+mt-metadata==1.0.10
+# EDI reader's scientific dependencies, matched to the clean admission runtime.
+pandas==3.0.6
+matplotlib==3.11.2
+xarray==2026.9.0

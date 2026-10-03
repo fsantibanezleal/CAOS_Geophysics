@@ -463,14 +463,16 @@ def screen_edi(path, *, output=None, **read_options):
 
 
 def invert_edi(path, thickness, *, component="xy", output=None, beta=.001, initial=None,
-               methods=("mt-lm",), seed=61001, bootstrap_samples=128, **read_options):
+               methods=("mt-lm",), seed=61001, bootstrap_samples=128, active=None, **read_options):
     """Validate full tensor and execute an actual bounded, fixed-thickness 1D inverse."""
     sounding = read_edi(path, **read_options)
     if not sounding.compatibility["passes_screen"]:
         raise EDIError("Tensor fails the necessary 1D consistency screen; use a dimensionality-appropriate inverse")
     observed, sigma = sounding.select(component)
     f, h = sounding.frequencies, np.asarray(thickness, dtype=float)
-    fitted = invert_mt(h, f, observed, sigma, beta=beta, initial=initial, methods=methods, seed=seed)
+    fitted = invert_mt(h, f, observed, sigma, active=active, beta=beta, initial=initial,
+                       methods=methods, seed=seed)
+    mask = np.ones(len(f), dtype=bool) if active is None else np.asarray(active, dtype=bool)
     for method in fitted.values():
         pred = impedance(method["model"], h, f)
         other = "yx" if component == "xy" else "xy"
@@ -481,14 +483,14 @@ def invert_edi(path, thickness, *, component="xy", output=None, beta=.001, initi
         if "mt-lm" not in fitted:
             raise EDIError("Conditional bootstrap currently supports the TRF estimator only; select mt-lm")
         fitted["mt-lm"]["uncertainty"] = bootstrap_mt(
-            fitted["mt-lm"]["model"], h, f, sigma, initial=initial, beta=beta,
+            fitted["mt-lm"]["model"], h, f, sigma, active=mask, initial=initial, beta=beta,
             samples=bootstrap_samples, seed=seed+1)
     run = dict(
         schema="inverse-earth/edi-1d/v1", id=sounding.metadata["header"]["DATAID"],
         family="mt", source_kind="EDI transfer functions", component=component,
         geometry="operator-supplied fixed-thickness 1D model", units="ohm m", data_units="ohm",
         frequencies=f.tolist(), thickness=h.tolist(), observed=curves(observed, f),
-        sigma=sigma.tolist(), active=np.ones(len(f), dtype=bool).tolist(), methods=fitted,
+        sigma=sigma.tolist(), active=mask.tolist(), methods=fitted,
         tensor=dict(real=sounding.tensor.real.tolist(), imag=sounding.tensor.imag.tolist(),
                     sigma=sounding.sigma.tolist(), rotation_deg=sounding.rotation_deg.tolist()),
         compatibility=sounding.compatibility, provenance=sounding.provenance, metadata=sounding.metadata,
