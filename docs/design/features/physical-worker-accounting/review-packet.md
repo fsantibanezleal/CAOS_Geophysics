@@ -1,12 +1,15 @@
 # Physical worker accounting full review packet
 
-Date: 2026-10-03. Status: docs-only proposal; full MAIN read/approval required.
+Date: 2026-10-03. Status: MAIN FULL READ and DIRECTION ACCEPTED at
+3959ffc29eb4f93e0cca04fdc3154eca7ea7ddca; full runner NOT_APPROVED.
 Issue [126](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/126),
 related [80](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/80).
 Draft review [PR 129](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/129)
 targets develop; it is not merged and grants no source/native execution authority.
 The PR head SHA and pinned self-review comment identify the final docs handoff;
-FULL MAIN approval remains pending for both platform implementations.
+FULL MAIN approval remains pending for both platform implementations. MAIN's
+full read/directional acceptance is recorded below, not source or OS authority.
+The separate pure-unit amendment requires its own FULL MAIN pre-code review.
 
 ## 1. Immutable context and read order
 
@@ -32,13 +35,41 @@ Full review order:
 6. [Dependency tasks, explicit holds and ownership](tasks.md).
 7. This packet, scope/validation/verdict. Read the whole set, not only the CPU table.
 
-## 2. Concrete MAIN decisions before source authority
+## 2. MAIN decision and remaining source-authority holds
 
-- Accept/amend monitored aggregate enforcement with S=B-3 s, final CPU<=B,
+MAIN reports FULL read of ALL seven parent documents and ALL 34 research receipts
+at 3959ffc29eb4f93e0cca04fdc3154eca7ea7ddca. MAIN accepts monitored aggregate
+accounting direction explicitly NOT an instantaneous zero-overshoot guarantee.
+B60/240 remains unchanged and final CPU>B alwaysFAIL. This is not approval of
+actual timing/no-escape capability, OS controller/native implementation, security,
+provisioning or profile activation. Actual contexts are unavailable, profiles CLOSED.
+
+MAIN authorizes only a separately narrowed PURE sub-SDD BEFORE code. Read the
+entire new [pure protocol review packet](../physical-accounting-protocol/review-packet.md)
+and its research/requirements/design/contracts/validation/tasks. Its proposed
+future source scope is EXACTLY two NEW paths:
+
+```text
+scripts/physical_accounting_protocol.py
+tests/worker_accounting/test_protocol.py
+```
+
+Only deterministic supplied-record validation, checked conversion and protocol
+state/receipt/release eligibility consistency are proposed there. No source/clock/
+I/O/OS measurement, launch, controller, Job Object/cgroup, security/provisioning,
+profile activation or native compile/toolchain probe. runtime_authorized is always
+false. The exact new amended pin requires FULL MAIN read and explicit pure-source
+approval before either file is created. This is distinct from parent native I01
+and does not release any original actual-context or platform implementation hold.
+
+Remaining MAIN/owner decisions before native/integration source authority:
+
+- Review exact monitored enforcement parameters with S=B-3 s, final CPU<=B,
   measured maximum timing/lag/kill bounds and closed-profile behavior. Stock
   Linux bandwidth and Windows user-time APIs do not prove an instantaneous
   user+kernel hard limit. If that is the required bar, keep CLOSED and research
-  an alternative; don't approve an unknown fallback.
+  an alternative; don't approve an unknown fallback. Direction is accepted;
+  actual enforceability and all platform/timing evidence remain unapproved.
 - Accept exact Windows JOB_LIST plus suspended verification and Linux
   clone3 INTO_CGROUP protocols, native-only pre-exec path, integer counter
   units and receipt/null-unavailable semantics. No current ABI probe has run.
@@ -54,9 +85,10 @@ Full review order:
 - Preserve explicit future revision/DDL/admission/module/source-policy review
   boundary. Current 0003 recovery and source bundles are not expanded here.
 
-## 3. Documentation verification
+## 3. Historical documentation verification at 3959ffc
 
-Measured locally on 2026-10-03, using MAIN-authorized read-only MT interpreter
+Parent-only receipt, measured locally on 2026-10-03 at the accepted parent pin,
+using MAIN-authorized read-only MT interpreter
 with -B and no installation or environment edits:
 
 ```text
@@ -83,13 +115,21 @@ The inline feature audit checks planned gate mapping without creating tests or
 editing the shared ledger. Public docs use an interpreter alias; the private
 handoff command identifies the explicit read-only interpreter path.
 
+The pure amendment's separate scoped docs evidence is recorded in its packet;
+the historical seven-path/15-gate/34-receipt checks above do not cover that new
+unit or mean that its twelve prospective pure tests have run.
+
 No scientific/ops suite, native probe, actual Job Object, cgroup, service,
 environment install or host operation is authorized/run by this docs-only unit.
 
 ## 4. Scope and residual risks
 
-Only the new dated research file and new files in this feature folder belong to
-the branch. No existing verifier, worker, runtime, schema/DDL, app/API, test,
+Original parent scope: new dated research and six new feature files. The explicit
+pure amendment adds seven NEW sub-SDD files in physical-accounting-protocol and
+updates ONLY this parent packet. Other parent docs retain their historical3959
+proposals/holds; this decision record clarifies acceptance rather than granting
+the source authority those holds require. No existing verifier, worker, runtime,
+schema/DDL, app/API, test,
 module manifest, public admission or bundle-policy path changes. No packages,
 keys, secrets, private fixtures, backups or production directories touched.
 
