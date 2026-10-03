@@ -1,0 +1,485 @@
+{
+  "controls": [
+    {
+      "analytic_vs_volume_max_mgal": 2.7478019859472624e-14,
+      "case": 0,
+      "condition": {
+        "damped_condition": 4017369.376723143,
+        "weighted_design_condition": 13635158.694196995
+      },
+      "evaluation": {
+        "holdout": {
+          "covered_count": 30,
+          "normalized_rmse": 1.2886745332013492,
+          "rmse_mgal": 0.025773490664026982,
+          "signed_mean_mgal": -0.002373027953141116,
+          "unsupported_count": 13
+        },
+        "train": {
+          "covered_count": 149,
+          "normalized_rmse": 0.735229270016293,
+          "rmse_mgal": 0.01470458540032586,
+          "signed_mean_mgal": 2.9174341169559613e-06,
+          "unsupported_count": 0
+        }
+      },
+      "grids": [
+        {
+          "checked_nodes": 60,
+          "covered_nodes": 770,
+          "height_m": 300.0,
+          "independent_grid_rmse_mgal": 0.007503007324399593,
+          "max_conditional_sigma_mgal": 0.014872712012355486
+        },
+        {
+          "checked_nodes": 60,
+          "covered_nodes": 770,
+          "height_m": 600.0,
+          "independent_grid_rmse_mgal": 0.005683233523733887,
+          "max_conditional_sigma_mgal": 0.009064679061213294
+        },
+        {
+          "checked_nodes": 60,
+          "covered_nodes": 770,
+          "height_m": 1000.0,
+          "independent_grid_rmse_mgal": 0.008402996286226466,
+          "max_conditional_sigma_mgal": 0.0061991751196707225
+        }
+      ],
+      "masked": 4,
+      "nonuniqueness": {
+        "interpretation": "Comparable fits at different mathematical depths do not identify density or source geometry",
+        "training_only_alternatives": [
+          {
+            "coefficient_l2_mgal_m": 333.03226281741746,
+            "damped_condition": 612175.7924098934,
+            "damping": 0.01,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 1.784707371766735e-07
+          },
+          {
+            "coefficient_l2_mgal_m": 332.2718385912184,
+            "damped_condition": 608441.2147101809,
+            "damping": 1.0,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 1.7778533976301416e-05
+          },
+          {
+            "coefficient_l2_mgal_m": 279.7664361853845,
+            "damped_condition": 377902.2345669363,
+            "damping": 100.0,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.001324932348011313
+          },
+          {
+            "coefficient_l2_mgal_m": 745.8136811448132,
+            "damped_condition": 1868053.5266724792,
+            "damping": 100.0,
+            "depth_m": 360.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.009814129743502669
+          },
+          {
+            "coefficient_l2_mgal_m": 1136.3214190589447,
+            "damped_condition": 4017369.376723143,
+            "damping": 100.0,
+            "depth_m": 700.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.01470458540032586
+          }
+        ]
+      },
+      "quadrature_order16_vs22_max_mgal": 5.551115123125783e-16,
+      "request_sha256": "3a12f777f7776762f16a7d866143222fffd5de523f4172cb3ce5a7169900f4d4",
+      "result_sha256": "8aa77e96e2931ec0dbfddd2a9001a3f256ec5378318a264371539ef699ac44d6",
+      "selection": {
+        "criterion": "Inner train-block normalized RMSE; height by train-only noise-transfer ceiling",
+        "damping": 100.0,
+        "depth_m": 700.0,
+        "height_m": 300.0,
+        "status": "passed"
+      },
+      "source_kind": "synthetic_control",
+      "source_sha256": "e1ebec72eb75747d7ac437a94c3d23d028fc7ffc9ef3f3b25154d1de4d85f495",
+      "split_sha256": "83169d4a87949269fa3bb41923aef1b6a6b290dcaa6e0cc5866d181ef423d8a8",
+      "stations": 196
+    },
+    {
+      "analytic_vs_volume_max_mgal": 3.132216708223723e-14,
+      "case": 1,
+      "condition": {
+        "damped_condition": 4525255.207017601,
+        "weighted_design_condition": 15581689.296908174
+      },
+      "evaluation": {
+        "holdout": {
+          "covered_count": 33,
+          "normalized_rmse": 1.7112213067369157,
+          "rmse_mgal": 0.03422442613473831,
+          "signed_mean_mgal": 0.0005190963259331479,
+          "unsupported_count": 4
+        },
+        "train": {
+          "covered_count": 155,
+          "normalized_rmse": 0.8273821754797727,
+          "rmse_mgal": 0.016547643509595453,
+          "signed_mean_mgal": 8.436595365554767e-06,
+          "unsupported_count": 0
+        }
+      },
+      "grids": [
+        {
+          "checked_nodes": 62,
+          "covered_nodes": 797,
+          "height_m": 300.0,
+          "independent_grid_rmse_mgal": 0.012109760616413395,
+          "max_conditional_sigma_mgal": 0.014956279461409906
+        },
+        {
+          "checked_nodes": 62,
+          "covered_nodes": 797,
+          "height_m": 600.0,
+          "independent_grid_rmse_mgal": 0.007859179839297393,
+          "max_conditional_sigma_mgal": 0.008387713768359298
+        },
+        {
+          "checked_nodes": 62,
+          "covered_nodes": 797,
+          "height_m": 1000.0,
+          "independent_grid_rmse_mgal": 0.00845965095890901,
+          "max_conditional_sigma_mgal": 0.0057636229790876455
+        }
+      ],
+      "masked": 4,
+      "nonuniqueness": {
+        "interpretation": "Comparable fits at different mathematical depths do not identify density or source geometry",
+        "training_only_alternatives": [
+          {
+            "coefficient_l2_mgal_m": 322.39926805024663,
+            "damped_condition": 566351.9677758438,
+            "damping": 0.01,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 1.5261735092672275e-07
+          },
+          {
+            "coefficient_l2_mgal_m": 321.8375109156755,
+            "damped_condition": 563425.6450788449,
+            "damping": 1.0,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 1.5206008528956837e-05
+          },
+          {
+            "coefficient_l2_mgal_m": 282.4315436326994,
+            "damped_condition": 371482.1641123249,
+            "damping": 100.0,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.0011495971590836467
+          },
+          {
+            "coefficient_l2_mgal_m": 10443.836861675363,
+            "damped_condition": 1154424675.267426,
+            "damping": 0.01,
+            "depth_m": 360.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.00013468650285729375
+          },
+          {
+            "coefficient_l2_mgal_m": 5267.065561695294,
+            "damped_condition": 178436446.06126493,
+            "damping": 1.0,
+            "depth_m": 360.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.0030418826934492417
+          },
+          {
+            "coefficient_l2_mgal_m": 868.3602302722051,
+            "damped_condition": 2085921.613200225,
+            "damping": 100.0,
+            "depth_m": 360.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.010762485284081994
+          },
+          {
+            "damping": 1.0,
+            "depth_m": 700.0,
+            "reason": "operator: transfer reconstruction disagrees with pinned engine",
+            "status": "failed"
+          },
+          {
+            "coefficient_l2_mgal_m": 1254.6465230838448,
+            "damped_condition": 4525255.207017601,
+            "damping": 100.0,
+            "depth_m": 700.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.016547643509595453
+          }
+        ]
+      },
+      "quadrature_order16_vs22_max_mgal": 8.881784197001252e-16,
+      "request_sha256": "bb82a16720fef73e0f30e06615f1b9b11e2c4f5e20ab8c7575e6d18a98458e49",
+      "result_sha256": "85994bb8f19ee573d289bd86d867a128ed56c20d465b6a1acd3fe806e5b659b1",
+      "selection": {
+        "criterion": "Inner train-block normalized RMSE; height by train-only noise-transfer ceiling",
+        "damping": 100.0,
+        "depth_m": 700.0,
+        "height_m": 300.0,
+        "status": "passed"
+      },
+      "source_kind": "synthetic_control",
+      "source_sha256": "7f2fd1a43ee08d605f04aa2e6b456875f1635a3ee1793d10dad18880037095f2",
+      "split_sha256": "42b1712a7910608996f2220d71c8b1d172aca739fbc18e6e79ad9231ef4636af",
+      "stations": 196
+    },
+    {
+      "analytic_vs_volume_max_mgal": 3.824718319833664e-14,
+      "case": 2,
+      "condition": {
+        "damped_condition": 4268085.713292546,
+        "weighted_design_condition": 9711633.296402272
+      },
+      "evaluation": {
+        "holdout": {
+          "covered_count": 23,
+          "normalized_rmse": 1.279354641859691,
+          "rmse_mgal": 0.025587092837193827,
+          "signed_mean_mgal": -0.010502378939894103,
+          "unsupported_count": 21
+        },
+        "train": {
+          "covered_count": 148,
+          "normalized_rmse": 0.7782966360684469,
+          "rmse_mgal": 0.015565932721368938,
+          "signed_mean_mgal": 2.159159036936685e-06,
+          "unsupported_count": 0
+        }
+      },
+      "grids": [
+        {
+          "checked_nodes": 58,
+          "covered_nodes": 744,
+          "height_m": 300.0,
+          "independent_grid_rmse_mgal": 0.007230162351835167,
+          "max_conditional_sigma_mgal": 0.013725149172079428
+        },
+        {
+          "checked_nodes": 58,
+          "covered_nodes": 744,
+          "height_m": 600.0,
+          "independent_grid_rmse_mgal": 0.006255044389848476,
+          "max_conditional_sigma_mgal": 0.008140575576913354
+        },
+        {
+          "checked_nodes": 58,
+          "covered_nodes": 744,
+          "height_m": 1000.0,
+          "independent_grid_rmse_mgal": 0.007688316579537486,
+          "max_conditional_sigma_mgal": 0.005916238151725249
+        }
+      ],
+      "masked": 4,
+      "nonuniqueness": {
+        "interpretation": "Comparable fits at different mathematical depths do not identify density or source geometry",
+        "training_only_alternatives": [
+          {
+            "coefficient_l2_mgal_m": 289.2592981905675,
+            "damped_condition": 409825.0246633569,
+            "damping": 0.01,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 1.1684676211616408e-07
+          },
+          {
+            "coefficient_l2_mgal_m": 288.92125890410455,
+            "damped_condition": 408194.3221485319,
+            "damping": 1.0,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 1.166103226250172e-05
+          },
+          {
+            "coefficient_l2_mgal_m": 261.69428714834527,
+            "damped_condition": 292005.0172787713,
+            "damping": 100.0,
+            "depth_m": 160.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.0009795950022020972
+          },
+          {
+            "damping": 0.01,
+            "depth_m": 360.0,
+            "reason": "operator: transfer reconstruction disagrees with pinned engine",
+            "status": "failed"
+          },
+          {
+            "coefficient_l2_mgal_m": 5125.558560333908,
+            "damped_condition": 149020382.2021093,
+            "damping": 1.0,
+            "depth_m": 360.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.0029293370061187953
+          },
+          {
+            "coefficient_l2_mgal_m": 738.8285677656409,
+            "damped_condition": 1945343.1530890223,
+            "damping": 100.0,
+            "depth_m": 360.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.01077872519357334
+          },
+          {
+            "coefficient_l2_mgal_m": 1157.0426646138862,
+            "damped_condition": 4268085.713292546,
+            "damping": 100.0,
+            "depth_m": 700.0,
+            "status": "passed",
+            "training_rmse_mgal": 0.015565932721368938
+          }
+        ]
+      },
+      "quadrature_order16_vs22_max_mgal": 7.771561172376096e-16,
+      "request_sha256": "0c2066862b17a97dd4ecc9efb0e28847343b9896cc0bb0e4a19c17a3efd585fc",
+      "result_sha256": "07be23c7cd2f16012d0b66bc8699de278d0140cf3c1991c258536bde89a9888d",
+      "selection": {
+        "criterion": "Inner train-block normalized RMSE; height by train-only noise-transfer ceiling",
+        "damping": 100.0,
+        "depth_m": 700.0,
+        "height_m": 300.0,
+        "status": "passed"
+      },
+      "source_kind": "synthetic_control",
+      "source_sha256": "159b4ef75587c23fdd87143f1beafe09df2664556b06252c611c635cf94685a8",
+      "split_sha256": "fc1e6af49b6a007d572a564a28cd9a92421eadb6fb3f2abe63d289314d57b374",
+      "stations": 196
+    }
+  ],
+  "engines": {
+    "boule": "0.5.0",
+    "harmonica": "0.7.0",
+    "matplotlib": "3.10.8",
+    "numpy": "2.2.6",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.15.2",
+    "verde": "1.9.0"
+  },
+  "field_bytes_read": 0,
+  "field_eligibility": "closed: unresolved datum/errors/lineage; intake remains main-owned",
+  "full_method_accepted": false,
+  "installed_engine_sources": [
+    {
+      "bytes": 24083,
+      "distribution_relative_path": "harmonica/_equivalent_sources/cartesian.py",
+      "object": "EquivalentSources",
+      "sha256": "f62f2b5ad5a0ece1b66482a98d700f5093f8f5e18fd05062ca24e72437bea44f"
+    },
+    {
+      "bytes": 34275,
+      "distribution_relative_path": "verde/model_selection.py",
+      "object": "BlockShuffleSplit",
+      "sha256": "4d73437a409bad58da01d0d7731391fcc12badf24f4fd2330d889f349d6efbf7"
+    },
+    {
+      "bytes": 34275,
+      "distribution_relative_path": "verde/model_selection.py",
+      "object": "BlockKFold",
+      "sha256": "4d73437a409bad58da01d0d7731391fcc12badf24f4fd2330d889f349d6efbf7"
+    }
+  ],
+  "platform": "Windows",
+  "plotting_extension_wheels": [
+    {
+      "name": "matplotlib",
+      "sha256": "dd80ecb295460a5d9d260df63c43f4afbdd832d725a531f008dad1664f458adf",
+      "url": "https://files.pythonhosted.org/packages/30/4e/c10f171b6e2f44d9e3a2b96efa38b1677439d79c99357600a62cc1e9594e/matplotlib-3.10.8-cp312-cp312-win_amd64.whl",
+      "version": "3.10.8"
+    },
+    {
+      "name": "contourpy",
+      "sha256": "6e697d94e69f499ff6bebb899cae97a58d5d14f0e1fe9568b43a0248d2f9af8c",
+      "url": "https://files.pythonhosted.org/packages/50/a9/dab08786bb4d77ef9a046b3c1be923be4e73c5d07d91f5a54e8ea9b09e41/contourpy-1.4.0-cp312-cp312-win_amd64.whl",
+      "version": "1.4.0"
+    },
+    {
+      "name": "cycler",
+      "sha256": "85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30",
+      "url": "https://files.pythonhosted.org/packages/e7/05/c19819d5e3d95294a6f5947fb9b9629efb316b96de511b418c53d245aae6/cycler-0.12.1-py3-none-any.whl",
+      "version": "0.12.1"
+    },
+    {
+      "name": "fonttools",
+      "sha256": "261d8dc95845e751f975fe8d6075600593ee253470d46d1b84801688051b09f6",
+      "url": "https://files.pythonhosted.org/packages/f0/af/5c245a0587e5b7b3dd209f640b9f70d8e63404ad8dc93819ba578d685985/fonttools-4.66.1-cp312-cp312-win_amd64.whl",
+      "version": "4.66.1"
+    },
+    {
+      "name": "kiwisolver",
+      "sha256": "06a6917674de9e0fe3f66f5430787f59a9f2ddb64af9b714eaec547e29ef5c19",
+      "url": "https://files.pythonhosted.org/packages/6e/7c/7b210498f9f92e1cd7855f260fa69ef056881087b199ee20c208f0e4189a/kiwisolver-1.5.1-cp312-cp312-win_amd64.whl",
+      "version": "1.5.1"
+    },
+    {
+      "name": "pillow",
+      "sha256": "a2b55dd6b2a4c4b7d87ffa56bdb33fdc5fdb9a462173861a7bc097f17d91cb09",
+      "url": "https://files.pythonhosted.org/packages/45/89/da2f7971a317f83d807fdd4065c0af40208e59e692cc43d315a71a0e96d1/pillow-12.3.0-cp312-cp312-win_amd64.whl",
+      "version": "12.3.0"
+    },
+    {
+      "name": "pyparsing",
+      "sha256": "ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4",
+      "url": "https://files.pythonhosted.org/packages/38/bb/d215ee7c73b61497b28a5503f9f53523f294fcc936762b7caf90e0c1c2b5/pyparsing-3.3.3-py3-none-any.whl",
+      "version": "3.3.3"
+    }
+  ],
+  "primary_document_receipts": [
+    {
+      "bytes": 128251,
+      "sha256": "e0fbc5a8d1af70789aba77042c879495577377d984730d4dadc106c3dc5beea4",
+      "status": 200,
+      "url": "https://www.fatiando.org/harmonica/v0.7.0/api/generated/harmonica.EquivalentSources.html"
+    },
+    {
+      "bytes": 49599,
+      "sha256": "0741cb3b70322117440f29b9fb85aaba048516a2a0b3820ef7ae5e74cce2a486",
+      "status": 200,
+      "url": "https://www.fatiando.org/harmonica/v0.7.0/api/generated/harmonica.prism_gravity.html"
+    },
+    {
+      "bytes": 57664,
+      "sha256": "aabac5e77db3189cabe842641d977a31c24d88337dc98ec12556a22d5a39d972",
+      "status": 200,
+      "url": "https://www.fatiando.org/verde/v1.9.0/api/generated/verde.BlockShuffleSplit.html"
+    },
+    {
+      "bytes": 58813,
+      "sha256": "2164ba0aab38cd3bbaf375b619b92e2ea52e5c622e85f9f1b95998c11775c304",
+      "status": 200,
+      "url": "https://www.fatiando.org/verde/v1.9.0/api/generated/verde.BlockKFold.html"
+    },
+    {
+      "bytes": 31977,
+      "sha256": "88bc30a6711e3c6f805a411aca6d544ce12be815b7f34fe1782b0e501bf9786f",
+      "status": 200,
+      "url": "https://www.fatiando.org/verde/v1.9.0/api/generated/verde.base.least_squares.html"
+    },
+    {
+      "bytes": 43207,
+      "sha256": "8aa076770b118d010f8077787c9a3b0cac3242a390ce79fa414ff0cc94e7c551",
+      "status": 200,
+      "url": "https://www.fatiando.org/verde/v1.9.0/api/generated/verde.convexhull_mask.html"
+    },
+    {
+      "bytes": 45263,
+      "sha256": "3a784abd2e36ed476badada3011750532d2ecc5b1e0f28a6980f04be979f24dd",
+      "status": 200,
+      "url": "https://www.fatiando.org/verde/v1.9.0/api/generated/verde.distance_mask.html"
+    }
+  ],
+  "protected_source_published": false,
+  "python": "3.12.10",
+  "schema_version": "m01-transform-verification-1"
+}
