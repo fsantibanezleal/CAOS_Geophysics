@@ -8,7 +8,7 @@ Date: 2026-10-03. Status: docs-only proposed plan awaiting FULL MAIN read/approv
 - [x] Inspect primary physics/reference/uncertainty/engine/split sources; distinguish full reads, relevant inspected sections, indexed excerpts and bibliography/byte checks. Persist two new research files BEFORE sub-SDD in6ba07cb, pushed.
 - [x] Preserve original work/ref; new task/geophysics-m01-scientific-course-sdd from requested fresh4db6a16. Complete exactly seven feature docs: requirements, design, curriculum, contracts, scenarios, workflows and tasks (R-MC01..14).
 - [x] Stage only those seven new feature Markdown files; run existing content/template/CI-budget/structural-ledger/whitespace checks plus read-only source/scope/link/EARS/fenced-Python syntax audit. These are documentation checks, not recipe execution or course acceptance. Actual results below.
-- [ ] Commit/push scoped docs, create draft develop PR referencing issue43 without closing it, record self-review/exact remote pin; no merge/deploy.
+- [x] Commit/push scoped docs: research6ba07cb, complete seven-file feature milestone80be97e38375a3144104a316d01361188028acb0. Open draft develop [PR138](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/138), referencing issue43 without closing it; self-review/actual docs checks recorded. Final handoff freezes the pushed head including this persistence note; no merge/deploy.
 - [ ] FULL MAIN read of ALL seven feature documents and both research files, then explicit first-content authorization. Stop here until that decision.
 
 ## B. Separately approved authored wiki-only content
