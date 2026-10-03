@@ -15,7 +15,8 @@ import gravity_forward as forward
 import gravity_survey_l2 as survey
 
 
-RUNTIME_EPOCH = 'm02-survey-l2-cpu-1'
+RUNTIME_EPOCH = 'm02-survey-l2-cpu-2'
+OPTIMIZER_POLICY = 'projected-gncg-degenerate-release-1'
 FORWARD_SOURCE = '46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5'
 BETA_CANDIDATES = (.0001, .001, .01, .1, 1., 10., 100., 1000.)
 
@@ -70,7 +71,7 @@ def _calibration_metadata(request):
     policy = request['policy']
     survey._keys(policy, ('name', 'beta_candidates', 'optimizer', 'training'), 'policy')
     survey._enum(policy['name'], ('ordinary-l2-beta-grid-1',), 'policy.name')
-    survey._enum(policy['optimizer'], ('projected-gncg-recorded-1',), 'policy.optimizer')
+    survey._enum(policy['optimizer'], (OPTIMIZER_POLICY,), 'policy.optimizer')
     survey._enum(policy['training'], ('not_applicable_classical',), 'policy.training')
     if (type(policy['beta_candidates']) is not tuple or len(policy['beta_candidates']) != 8
             or any(type(beta) is not float for beta in policy['beta_candidates'])
@@ -240,10 +241,11 @@ def _kkt_gradient(q, gradient, lower, upper):
 
 
 class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
-    """Observe official directions/LS and replace ONLY ordinary stop semantics.
+    """Reviewed zero-free hybrid; ordinary directions and Armijo remain native.
 
-    No public hook, changed search/projection or native-source monkeypatch.
-    Line-search wrapper delegates unchanged; only failed diagnostics abort.
+    The ONLY search exception releases an exact degenerate free set using the
+    fixed actual positive diagonal. Never a fallback after native CG/LS failure.
+    No public hook, installed-source patch or claim of full GPCG convergence.
     """
 
     def __init__(self, problem, prior, deadline):
@@ -255,6 +257,9 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         self._states, self._cg_counts, self._ls_counts = [], [], []
         self._reason, self._initial_norm = None, None
         self._trials = []
+        self._release_next = False
+        self._direction_kinds, self._last_direction_kind = [], 'not_run'
+        self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
 
     def _fail(self, reason):
         self._reason = reason
@@ -284,8 +289,18 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         if inLS:
             if not np.isfinite(self._LS_ft) or not np.isfinite(self._LS_xt).all(): self._fail('nonfinite')
             self._trials.append((self.iter, self.iterLS, float(self._LS_ft)))
+            if self._last_direction_kind == 'degenerate_release':
+                try:
+                    with np.errstate(over='raise', invalid='raise'):
+                        displacement = self._LS_xt-self.xc
+                        slope = float(np.inner(self.g, displacement))
+                except ArithmeticError:
+                    self._fail('nonfinite')
+                if not np.isfinite(slope): self._fail('nonfinite')
+                if not np.any(displacement) or slope >= 0.: self._fail('zero_free_direction')
             if monotonic() > self._deadline: self._fail('wall_cap')
             return super().stoppingCriteria(inLS=True)
+        self._release_next = False
         absolute, kkt = self._record()
         if monotonic() > self._deadline:
             self._reason = 'wall_cap'
@@ -302,20 +317,40 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         if self.iter >= 200:
             self._reason = 'iteration_cap'
             return True
-        free = ~self.activeSet(self.xc)
-        self._initial_free_residual = float(np.linalg.norm(free*self.g))
-        if self._initial_free_residual == 0.:
+        active = self.activeSet(self.xc)
+        residual = (~active)*(-self.g)
+        self._initial_free_residual = float(np.linalg.norm(residual))
+        # Elementwise zero is distinct from norm underflow. Exact official
+        # active/binding sets, NOT the diagnostic KKT bound tolerance.
+        self._release_next = not np.any(residual != 0.) and np.any(active & ~self.bindingSet(self.xc))
+        if self._initial_free_residual == 0. and not self._release_next:
             self._reason = 'zero_free_direction'
             return True
         return False
 
-    def modifySearchDirection(self, p):
-        # Official findSearchDirection already ran. Do not replace its step.
-        if (not np.isfinite(p).all() or not np.isfinite(self.cg_abs_resid)
-                or not np.isfinite(self.cg_rel_resid)):
+    def findSearchDirection(self):
+        self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
+        self._last_direction_kind = 'degenerate_release' if self._release_next else 'native_CG'
+        if not self._release_next:
+            return super().findSearchDirection()
+        try:
+            with np.errstate(over='raise', invalid='raise'):
+                unprojected = self.xc-self.approxHinv*self.g
+                if not np.isfinite(unprojected).all(): self._fail('nonfinite')
+                direction = self.projection(unprojected)-self.xc
+                slope = float(np.inner(self.g, direction))
+        except ArithmeticError:
             self._fail('nonfinite')
-        if self.cg_count > 200 or self.cg_abs_resid > max(self.cg_rtol*self._initial_free_residual, self.cg_atol):
-            self._fail('cg_cap')
+        if not np.isfinite(direction).all() or not np.isfinite(slope): self._fail('nonfinite')
+        if not np.any(direction) or slope >= 0.: self._fail('zero_free_direction')
+        return direction
+
+    def modifySearchDirection(self, p):
+        if not np.isfinite(p).all(): self._fail('nonfinite')
+        if self._last_direction_kind != 'degenerate_release':
+            if not np.isfinite(self.cg_abs_resid) or not np.isfinite(self.cg_rel_resid): self._fail('nonfinite')
+            if self.cg_count > 200 or self.cg_abs_resid > max(self.cg_rtol*self._initial_free_residual, self.cg_atol):
+                self._fail('cg_cap')
         if not np.any(p): self._fail('zero_free_direction')
         trial, accepted = super().modifySearchDirection(p)
         if not accepted: self._reason = 'line_search_failed'
@@ -326,11 +361,12 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         if self._LS_ft - previous > 1e-12*max(1., abs(previous)): self._fail('state_mismatch')
         self._cg_counts.append(int(self.cg_count))
         self._ls_counts.append(int(self.iterLS)+1)
+        self._direction_kinds.append(1 if self._last_direction_kind == 'degenerate_release' else 0)
         super().doEndIteration(xt)
 
 
 def _solve_partition(problem, prior, deadline=None):
-    """Return truthful official bounded solve/accepted trace under frozen stops."""
+    """Return reviewed local hybrid solve/accepted trace under frozen stops."""
     started = monotonic()
     stop_time = min(started+120., deadline) if deadline is not None else started+120.
     opt = _RecordedProjectedGNCG(problem, prior, stop_time)
@@ -408,9 +444,11 @@ def _solve_partition(problem, prior, deadline=None):
     # solve-record keys or a caller-selectable hook/output destination.
     problem['optimizer_evidence'] = {
         'trial_objectives': survey._readonly(np.array(opt._trials, dtype=np.float64).reshape(-1, 3)),
+        'direction_kinds': survey._readonly(np.array(opt._direction_kinds[:max(k-1, 0)], dtype=np.int64)),
+        'last_direction_kind': opt._last_direction_kind,
         'last_cg_count': int(getattr(opt, 'cg_count', 0)),
-        'last_cg_absolute_residual': float(opt.cg_abs_resid) if hasattr(opt, 'cg_abs_resid') else None,
-        'last_cg_relative_residual': float(opt.cg_rel_resid) if hasattr(opt, 'cg_rel_resid') else None}
+        'last_cg_absolute_residual': float(opt.cg_abs_resid) if opt.cg_abs_resid is not None else None,
+        'last_cg_relative_residual': float(opt.cg_rel_resid) if opt.cg_rel_resid is not None else None}
     converged = reason in ('kkt_stable', 'absolute_stationary')
     return {'status': 'converged' if converged else ('failed' if reason in ('engine_error', 'nonfinite', 'state_mismatch')
                                                   else 'nonconverged'),
