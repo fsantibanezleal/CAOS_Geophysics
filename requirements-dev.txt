@@ -1,3 +1,5 @@
 # DEV lane, lint + test. Pinned to the verified install (Python 3.12, 2026-06-20).
 pytest==9.1.1
 ruff==0.15.18
+# Authenticated API TestClient, kept out of the production runtime lane.
+httpx==0.28.1

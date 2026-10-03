@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import Settings
 from app.errors import ApiError
 from app.models import ObservationDataset, ProcessingJob
+from app.mt_contract import M05_ID, M06_ID, M05_SCRATCH_BYTES, M06_SCRATCH_BYTES
 from app.processing_contract import (
     METHOD_SCRATCH_BYTES, checked_derived_path, dataset_key, result_key, sha256,
     validate_dataset_identity, validate_result_identity, verified_json,
@@ -23,10 +24,13 @@ async def account_derived_usage(session: AsyncSession, owner_id) -> int:
     results = (await session.execute(select(func.coalesce(func.sum(ProcessingJob.result_bytes), 0)).where(
         ProcessingJob.owner_id == owner_id, ProcessingJob.state == "succeeded",
     ))).scalar_one()
-    active = (await session.execute(select(func.count()).select_from(ProcessingJob).where(
+    active_methods = (await session.execute(select(ProcessingJob.method_id).where(
         ProcessingJob.owner_id == owner_id, ProcessingJob.state.in_(["queued", "running"]),
-    ))).scalar_one()
-    return int(datasets) + int(results) + int(active) * METHOD_SCRATCH_BYTES
+    ))).scalars().all()
+    reservations = {M05_ID: M05_SCRATCH_BYTES, M06_ID: M06_SCRATCH_BYTES}
+    return int(datasets) + int(results) + sum(
+        reservations.get(method_id, METHOD_SCRATCH_BYTES) for method_id in active_methods
+    )
 
 
 def exact_derived_project(

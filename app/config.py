@@ -31,6 +31,7 @@ class Settings:
     worker_memory_bytes: int = 2 * 1024 * MIB
     worker_scratch_bytes: int = 1024 * MIB
     worker_wall_seconds: int = 600
+    mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
 
     def __post_init__(self) -> None:
         if len(self.auth_secret) < 32:
@@ -77,6 +78,7 @@ class Settings:
             smtp_username=os.environ["GEOPHYSICS_SMTP_USERNAME"],
             smtp_password=os.environ["GEOPHYSICS_SMTP_PASSWORD"],
             smtp_from=os.environ["GEOPHYSICS_SMTP_FROM"],
+            mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
         )
 
 
@@ -86,6 +88,7 @@ class WorkerSettings:
 
     data_dir: Path
     db_path: Path | None = None
+    mt_online_enabled: bool = False
 
     def __post_init__(self) -> None:
         if not self.data_dir.is_absolute() or (self.db_path is not None and not self.db_path.is_absolute()):
@@ -103,4 +106,5 @@ class WorkerSettings:
     def from_env(cls) -> "WorkerSettings":
         data = Path(os.environ.get("GEOPHYSICS_DATA_DIR", "data/raw/api")).resolve()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
-        return cls(data_dir=data, db_path=Path(db).resolve() if db else None)
+        return cls(data_dir=data, db_path=Path(db).resolve() if db else None,
+                   mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1")

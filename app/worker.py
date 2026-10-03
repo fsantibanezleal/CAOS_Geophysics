@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import hashlib
+import json
 import os
 import subprocess
 import sys
@@ -20,7 +21,9 @@ from app.bundle import build_bundle
 from app.config import Settings, WorkerSettings
 from app.database import make_engine, reconcile_private_files, require_migration_head
 from app.errors import ApiError
-from app.models import ObservationDataset, ProcessingJob, utcnow
+from app.models import ObservationDataset, ProcessingJob, RawAsset, utcnow
+from app.mt_contract import M05_ID, M06_ID
+from app.projects import _verified_file
 from app.processing_contract import (
     METHOD_ID, canonical_bytes, checked_derived_path, dataset_key, result_key,
     sha256, validate_dataset_identity, validate_result_identity, verified_json,
@@ -108,6 +111,21 @@ def _command(job: ProcessingJob, input_path: Path, output_path: Path) -> list[st
     ]
 
 
+def _mt_command(job: ProcessingJob, input_path: Path, raw_path: Path, output_path: Path,
+                raw_bytes: int) -> list[str]:
+    return [
+        sys.executable, "-m", "app.mt_compute", "--input", str(input_path),
+        "--raw", str(raw_path), "--output", str(output_path), "--job-id", job.id,
+        "--dataset-sha256", job.dataset_sha256, "--request-sha256", job.request_sha256,
+        "--raw-sha256", job.request_json["raw_sha256"], "--raw-bytes", str(raw_bytes),
+        "--method-id", job.method_id,
+        "--parameters", json.dumps(job.request_json["parameters"], sort_keys=True, separators=(",", ":")),
+        "--qc-screen-sha256", job.request_json.get("qc_screen_sha256", ""),
+        "--memory-limit", str(job.preflight["memory_limit_bytes"]),
+        "--scratch-limit", str(job.preflight["scratch_limit_bytes"]),
+    ]
+
+
 def _terminate_tree(pid: int) -> None:
     try:
         root = psutil.Process(pid)
@@ -134,17 +152,36 @@ def _rss_tree(pid: int) -> int:
 
 
 def _stage_bytes(stage: Path) -> int:
-    if any(item.is_symlink() or not item.is_file() for item in stage.iterdir()):
+    entries = set(stage.iterdir())
+    cache = stage / ".matplotlib"
+    if any(item.is_symlink() or (not item.is_file() and item != cache) for item in entries):
         raise RuntimeError("unknown worker staging entry requires operator recovery")
-    return sum(item.stat().st_size for item in stage.iterdir())
+    cached = set(cache.iterdir()) if cache in entries and cache.is_dir() else set()
+    if cache in entries and not cache.is_dir() or any(item.is_symlink() or not item.is_file() for item in cached):
+        raise RuntimeError("unknown worker cache entry requires operator recovery")
+    return sum(item.stat().st_size for item in entries if item.is_file()) + sum(item.stat().st_size for item in cached)
 
 
 def _clear_known_stage(stage: Path) -> None:
     expected = {stage / "result.json", stage / "stderr.txt"}
-    if set(stage.iterdir()) != expected or any(item.is_symlink() or not item.is_file() for item in expected):
+    snapshot = stage / "source.edi"
+    cache = stage / ".matplotlib"
+    entries = set(stage.iterdir())
+    if (not expected <= entries or not entries <= expected | {cache, snapshot}
+            or any(item.is_symlink() or not item.is_file() for item in expected | (entries & {snapshot}))):
         raise RuntimeError("unknown worker staging entry requires operator recovery")
+    if cache in entries:
+        if cache.is_symlink() or not cache.is_dir() or any(
+            item.is_symlink() or not item.is_file() for item in cache.iterdir()
+        ):
+            raise RuntimeError("unknown worker cache entry requires operator recovery")
+        for item in cache.iterdir():
+            item.unlink()
+        cache.rmdir()
     for item in expected:
         item.unlink()
+    if snapshot in entries:
+        snapshot.unlink()
     stage.rmdir()
 
 
@@ -185,17 +222,32 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
     message = ""
     process: subprocess.Popen | None = None
     try:
+        if job.method_id in (M05_ID, M06_ID) and not settings.mt_online_enabled:
+            raise ApiError(409, "host_admission_pending", "MT worker admission is closed")
         async with sessions() as session:
             dataset = (await session.execute(select(ObservationDataset).where(
                 ObservationDataset.id == job.dataset_id, ObservationDataset.owner_id == job.owner_id,
                 ObservationDataset.project_id == job.project_id,
             ))).scalar_one()
+            asset = None
+            if job.method_id in (M05_ID, M06_ID):
+                asset = (await session.execute(select(RawAsset).where(
+                    RawAsset.id == dataset.raw_asset_id, RawAsset.owner_id == job.owner_id,
+                    RawAsset.project_id == job.project_id,
+                ))).scalar_one_or_none()
         if dataset.sha256 != job.dataset_sha256 or dataset.storage_key != input_key:
             raise ApiError(409, "dataset_changed", "Admitted dataset identity changed")
         payload = verified_json(settings, input_key, dataset.sha256, dataset.byte_count)
         validate_dataset_identity(payload, dataset)
-        if sha256(canonical_bytes(job.request_json)) != job.request_sha256 or job.method_id != METHOD_ID:
+        if sha256(canonical_bytes(job.request_json)) != job.request_sha256 or job.method_id not in (METHOD_ID, M05_ID, M06_ID):
             raise ApiError(409, "request_changed", "Admitted request identity changed")
+        raw_path = None
+        if job.method_id in (M05_ID, M06_ID):
+            if (asset is None or asset.id != job.request_json.get("raw_asset_id")
+                    or asset.sha256 != job.request_json.get("raw_sha256")
+                    or asset.sha256 != dataset.raw_sha256):
+                raise ApiError(409, "raw_integrity_failed", "Admitted EDI original identity changed")
+            raw_path = _verified_file(settings, asset)
         limits = job.preflight
         repo_root = Path(__file__).resolve().parents[1]
         environment = {
@@ -207,9 +259,20 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             for name in ("SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "PROGRAMDATA", "ALLUSERSPROFILE"):
                 if name in os.environ:
                     environment[name] = os.environ[name]
+        if raw_path is not None:
+            # Scientific readers use Path.home(); keep their config/cache lookup
+            # inside the per-job private staging boundary.
+            environment["HOME"] = str(stage)
+            environment["USERPROFILE"] = str(stage)
+            environment["MPLCONFIGDIR"] = str(stage / ".matplotlib")
+            for variable in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
+                             "NUMEXPR_NUM_THREADS", "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+                environment[variable] = "1"
         with error_path.open("xb") as errors:
             process = subprocess.Popen(
-                _command(job, input_path, output), cwd=stage, env=environment,
+                _command(job, input_path, output) if raw_path is None else
+                _mt_command(job, input_path, raw_path, output, asset.byte_count),
+                cwd=stage, env=environment,
                 stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=errors,
                 shell=False, start_new_session=(os.name == "posix"),
             )
@@ -234,6 +297,10 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
                 process.stdin.close()
         peak = max(peak, _rss_tree(process.pid))
         scratch_peak = max(scratch_peak, _stage_bytes(stage))
+        if code is None and scratch_peak > limits["scratch_limit_bytes"]:
+            code, message = "job_scratch_limit", "Processing exceeded scratch limit"
+        if code is None and time.monotonic() - started > limits["wall_limit_seconds"]:
+            code, message = "job_timeout", "Processing exceeded wall-time limit"
         if code is None and await _cancel_requested(sessions, job.id):
             code, message = "user_cancelled", "Owner cancelled processing"
         if code is None and process.returncode != 0:
@@ -249,7 +316,10 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             else:
                 result = verified_json_from_bytes(result_bytes)
                 validate_result_identity(result, job)
-                import app.compute as compute
+                if job.method_id == METHOD_ID:
+                    import app.compute as compute
+                else:
+                    import app.mt_compute as compute
                 if result.get("engine_sha256") != hashlib.sha256(Path(compute.__file__).read_bytes()).hexdigest():
                     raise ApiError(409, "engine_changed", "Processing engine digest differs from executed code")
                 try:

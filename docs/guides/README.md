@@ -7,3 +7,4 @@
 - [Acquire reviewed sources and inspect rights](05_sources.md).
 - [Use authenticated raw assets](06_api.md).
 - [Run bounded private processing jobs](07_processing_jobs.md).
+- [Run private EDI tensor QC and bounded layered MT jobs](08_online_edi_mt.md).

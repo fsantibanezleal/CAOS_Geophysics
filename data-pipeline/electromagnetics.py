@@ -8,7 +8,6 @@ from __future__ import annotations
 import hashlib
 import numpy as np
 from scipy.optimize import least_squares
-import torch
 
 from geology import mt_model
 
@@ -42,6 +41,7 @@ def impedance(rho, thickness, frequencies):
 
 
 def torch_impedance(logrho, thickness, frequencies):
+    import torch
     rho = logrho.exp()
     omega = 2*np.pi*frequencies
     z = torch.sqrt(1j*omega*MU*rho[-1])
@@ -71,6 +71,7 @@ def objective_residual(logrho, thickness, frequencies, observed, sigma, beta, ac
 
 def torch_objective(logrho, thickness, frequencies, observed, sigma, beta, active=None):
     """Same real-component mean and layer-difference mean as objective_residual."""
+    import torch
     pred = torch_impedance(logrho, thickness, frequencies)
     mask = torch.ones_like(frequencies, dtype=torch.bool) if active is None else active
     r = (pred[mask]-observed[mask])/sigma[mask]
@@ -206,6 +207,7 @@ def invert_mt(thickness, frequencies, observed, sigma, *, active=None, initial=N
                             optimality=float(fit.optimality),
                             tolerance=dict(ftol=1e-10, xtol=1e-10, gtol=1e-10))
         else:
+            import torch
             # All tensors are explicitly CPU; this tiny solve must not contend with FWI.
             tf, th, sigt = [torch.tensor(v, dtype=torch.float64, device="cpu") for v in (f, h, sig)]
             obst = torch.tensor(obs, dtype=torch.complex128, device="cpu")
