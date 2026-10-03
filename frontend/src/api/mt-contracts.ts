@@ -74,6 +74,7 @@ function source(value: unknown): MtSource {
   const d=obj(value,"source"); keys(d,["provider","exact_url","doi","citation","rights_decision","rights_statement","attribution"],"source");
   ["provider","rights_statement","attribution"].forEach(k=>text(d[k],k));
   ["exact_url","doi","citation"].forEach(k=>{if(d[k]!==null)text(d[k],k);});
+  if(d.exact_url!==null){const url=new URL(String(d.exact_url));expect(["http:","https:"].includes(url.protocol)&&!url.username&&!url.password,"safe source URL");}
   expect(["mirror","provider-link-only","derivative-only"].includes(String(d.rights_decision)),"source rights"); return value as MtSource;
 }
 function physical(value: unknown, count: number) {
