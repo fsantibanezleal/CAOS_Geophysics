@@ -18,3 +18,13 @@ Review renewed 2026-10-03: preserve the interrupted implementation and its priva
 | MT-ON-10 | THE existing M01 gravity job SHALL preserve its request, result, owner and bundle behavior. | `tests/api/test_job_execution.py::test_real_flag_qc_and_parameter_effect` and `tests/api/test_job_export.py::test_bundle_roundtrip_tamper_and_rights` |
 
 The local benchmark records wall time, peak child RSS and scratch for nominal, upper and malformed inputs. It cannot substitute for the required benchmark on the actual ML VPS; no production feature flag is set by this branch.
+
+## Source-valid replay reconciliation, authorized 2026-10-03
+
+MT-REC-01 WHEN the changed scientific source invalidates published MT provenance, THE offline reconciliation SHALL actually solve all four existing MT cases and six variants, retaining seeds, input construction, three methods, solver budgets, 128 bootstrap members and existing numerical tolerances; it SHALL write only a new ignored candidate. Gate: `scripts/validate_mt_replays.py::validate` and `tests/test_mt_replay_reconciliation.py::test_complete_matrix_and_source_binding`.
+
+MT-REC-02 WHEN a candidate is replayed, THE checker SHALL regenerate original seeded observations and independently evaluate every exported final model, residual, saved objective state, model metric and conditional interval summary, rejecting hash substitution, missing cells and numerical inconsistency. Gate: `tests/test_mt_replay_reconciliation.py::test_rehashed_numerical_tamper_fails` and `scripts/validate_mt_replays.py::validate`.
+
+MT-REC-03 WHEN cl061 is reconciled, THE builder SHALL parse the exact hash-pinned real EDI again and retain its QC-only failed full tensor screen, null truth, empty methods and measured source bytes; it SHALL not manufacture 1D eligibility. Gate: `tests/test_mt_replay_reconciliation.py::test_field_screen_requires_original_bytes` and `scripts/validate_mt_replays.py::validate`.
+
+MT-REC-04 THE reconciliation receipt SHALL bind actual source revisions/hashes, dependency versions, candidate/reference hashes, counts, commands, tolerances and retained scientific verdicts for the full-release assembler; canonical and FWI sources SHALL remain unchanged, and candidate verification SHALL not imply full-product or live-host acceptance. Gate: `scripts/validate_mt_replays.py::validate` and `docs/validation/mt-source-reconciliation.md`.
