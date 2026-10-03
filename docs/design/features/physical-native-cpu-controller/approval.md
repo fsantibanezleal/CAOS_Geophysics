@@ -64,3 +64,35 @@ Native source/tests/probe: NOT_CREATED/NOT_RUN at this approval record.
 Compiler/linker/ABI execution: NOT_RUN, awaiting separate build-inventory review.
 Windows/Linux actual profiles: UNSET/CLOSED. Host/production: untouched/CLOSED.
 No actual native object, process CPU observation, service or cgroup action.
+
+## 5. MAIN reviewer instruction at exact2dac0ad, before source
+
+MAIN reports FULL read of build-inventory.md and all five amended original docs
+at2dac0ad127ab6854e53d2fe5774e2983fbe855b3. This reviewer instruction operates
+UNDER the human user's already authorized parent work; it is NOT described as
+a new human approval, runtime authority or release of native context holds.
+
+MAIN accepts the explicit24-byte DRAINED actual timestamp and >=50ms post-drain
+wait before first final sample. This resolves contract timing consistency, NOT
+an actual measurement/visibility/timing guarantee. MAIN accepts /MT ONLY for
+the I01 deterministic core test DLL and standalone ABI probe, the exact five
+hashed libraries, inspected tools/includes/options and child-local/private
+output bounded recipe. The later runner /MD remains unchanged/CLOSED.
+
+Next author the three failing deterministic tests FIRST, then controller.h/c
+and optional abi_probe.c within section1's original NEW path scope. Core is
+supplied-byte/integer/state-only, without platform launch/query/kill/clock/I/O.
+Pure3bed, app/API/db/worker/recovery/manifests and source policies unchanged.
+H01/H02/H04/H05 and host/profiles remain CLOSED; no platform implementation.
+
+Freeze/push the FULL source/test/probe packet for MAIN complete read BEFORE
+actual compile/link/DLL load/probe execution. Earlier inventory acceptance is
+NOT permission to execute it ahead of that read. Proposed OUTPUT remains ABSENT;
+exact private OUTPUT and read-only PYTHON path/hash are supplied in handoff.
+Test-first authored negatives and static absence checks are distinct from real
+compiled RED/GREEN or measured SDK ABI. Do not invent execution evidence.
+
+No automatic build fallback, dependency install, runtime-policy widening or
+privileged controller. If the minimal bounded build capture mechanism is absent,
+propose its exact NEW helper scope/contract and await review BEFORE execution.
+This instruction is persisted and committed BEFORE any new test/source/probe.
