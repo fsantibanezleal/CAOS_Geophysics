@@ -141,3 +141,61 @@ def test_planner_private_readonly_snapshot_and_tamper():
     corrupt = deepcopy(plan)
     corrupt["scope"] = "accepted_field"
     with pytest.raises(ValueError): survey._validate_plan(corrupt)
+
+
+@pytest.mark.parametrize('wrapped', [False, True])
+def test_empty_container_budget_before_semantics_scans_copy_or_engine(monkeypatch, wrapped):
+    # Shared, small physical allocation. No giant recursive/tree fixture.
+    value = (((),) * 32768,) * 5
+    if wrapped:
+        req = planning_request()
+        req['source']['citation'] = value
+        value = req
+    def deny(*args, **kwargs): raise AssertionError('work before bounded metadata rejection')
+    for name in ('isfinite', 'array', 'count_nonzero'):
+        monkeypatch.setattr(survey.np, name, deny)
+    for name in ('_digest', '_snapshot', '_planning_metadata', 'forward_gravity'):
+        monkeypatch.setattr(survey, name, deny)
+    with pytest.raises(ValueError, match='metadata'):
+        survey._native_metadata(value)
+
+
+def test_primitive_scalar_limit_does_not_count_empty_containers():
+    # Under256KiB but >32768 containers: not new scalar-count semantics.
+    survey._native_metadata((((),) * 10000,) * 4)
+
+
+@pytest.mark.parametrize('kind', ['containers', 'escaped_unicode', 'array', 'primitives'])
+def test_proposed_exact_metadata_boundary_without_array_work(monkeypatch, kind):
+    # Prospective clarification control, not authority to change the SDD.
+    if kind == 'containers':
+        value, descriptor = (((),), (), {'x': ()}), [[[]], [], {'x': []}]
+    elif kind == 'escaped_unicode':
+        value, descriptor = {'key\n': ('\"\\\t', 'é', '\U0001f600')}, {'key\n': ['\"\\\t', 'é', '\U0001f600']}
+    elif kind == 'array':
+        value = np.zeros((3, 2))
+        descriptor = {'dtype': '<f8', 'shape': [3, 2], 'sha256': '0' * 64}
+    else:
+        value, descriptor = (-0., True, None, -(2**63)), [0.0, True, None, -(2**63)]
+    size = len(json.dumps(descriptor, sort_keys=True, ensure_ascii=False, allow_nan=False,
+                          separators=(',', ':')).encode('utf-8'))
+    def deny(*args, **kwargs): raise AssertionError('values/digest/copy before metadata budget')
+    for name in ('isfinite', 'array', 'count_nonzero'):
+        monkeypatch.setattr(survey.np, name, deny)
+    for name in ('_digest', '_snapshot', '_planning_metadata', 'forward_gravity'):
+        monkeypatch.setattr(survey, name, deny)
+    monkeypatch.setattr(survey, 'MAX_METADATA_BYTES', size)
+    survey._native_metadata(value)
+    monkeypatch.setattr(survey, 'MAX_METADATA_BYTES', size - 1)
+    with pytest.raises(ValueError, match='metadata'):
+        survey._native_metadata(value)
+
+
+def test_proposed_scalar_accounting_excludes_descriptor_and_containers(monkeypatch):
+    # Test-only small budgets; production caps remain frozen.
+    monkeypatch.setattr(survey, 'MAX_SCALARS', 4)
+    survey._native_metadata({'x': ((), ('a', False, None))})
+    with pytest.raises(ValueError, match='scalar-count'):
+        survey._native_metadata({'x': ((), ('a', False, None, 1))})
+    monkeypatch.setattr(survey, 'MAX_SCALARS', 1)
+    survey._native_metadata(np.zeros(3))
