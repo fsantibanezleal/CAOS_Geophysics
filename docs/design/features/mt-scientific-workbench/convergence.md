@@ -4,7 +4,44 @@ Ready for review: [PR111 to develop](https://github.com/fsantibanezleal/CAOS_Geo
 
 2026-10-03. Frontend-only unit; no deployment, public activation, main promotion or geological recovery claim. Requirements/design/tasks were pushed before code as `3ac149e`. Implementation milestone `8f6e870` and real-worker QA milestone `2f27eb6` were pushed separately. The branch starts at reviewed PR103 (`9b0cbe5`) and incorporates reviewed develop changes; the final PR diff contains only frontend, this feature's documents, and local frontend QA helpers.
 
-Tested implementation revision: `3bd0e8757cd0a228c06fcb1afd20e011ebd179bf`, incorporating develop `aff3549a008a499b8b075ca468fddc384b13ce39`. Subsequent handoff commits change feature documentation only. The owner independently pinned this implementation in a detached read-only review tree. Independent enabled and closed-profile QA passed; integration remains pending, with no additional 8877 harness execution or code changes planned before integration.
+Originally tested implementation revision: `3bd0e8757cd0a228c06fcb1afd20e011ebd179bf`, incorporating develop `aff3549a008a499b8b075ca468fddc384b13ce39`. The owner independently pinned that implementation in a detached read-only review tree. Independent enabled and closed-profile QA passed. The subsequent authorized develop integration and fresh backend execution are recorded below; frontend and MT harness source remain unchanged.
+
+## Fresh develop integration and actual backend QA
+
+On 2026-10-03, after owner confirmation that PR97 (including PR100/106 ancestry) and the preceding PR109 transform integration were merged, this task branch normally merged `origin/develop` at `6050100aeb3d1d482eefa1856ac67b2bc04b5bb1`. The merge is `1f6db811f914cc12c3f6e3f8ae43a66d47f9e62a`, with parents `7af8b7381e457de1e138d3198ddf14bd705929cd` and that exact develop revision. There were no conflicts. `git diff --quiet 3bd0e87 -- frontend` and the corresponding MT harness/fixture comparison pass: the complete frontend, not just MT panels, is unchanged from the independently reviewed pin. No course, Research, citation or canonical authoring occurred. Reviewed develop changes are inherited, not authored by this PR.
+
+Actual API/worker execution uses the clean read-only backend at `D:\_worktrees\geophysics-plan-convergence`, verified before and after QA to be exactly `6050100aeb3d1d482eefa1856ac67b2bc04b5bb1`, not the earlier `59f46c5` backend. Backend `app`, pipeline and EDI fixture paths remain clean. The same explicitly selected read-only online-MT interpreter and private loopback harness are used. Backend MT scientific source and the `app/` tree have no diff between the old parity revision and integrated develop; nevertheless the integrated checkout's real routes, migrations, worker and bundle verification were executed again.
+
+Fresh gates on the merge revision:
+
+- `npm test -- --reporter=dot`: 94 tests / 17 files pass, 1.31 seconds.
+- `npm run build:single-origin`: TypeScript and single-origin build pass; Vite 4.49 seconds. This is the build served for browser QA.
+- With `GEOPHYSICS_MT_QA_BACKEND_ROOT='D:\_worktrees\geophysics-plan-convergence'` and `GEOPHYSICS_MT_QA_ENABLE='isolated-test-only'`, the existing `npx playwright test --config playwright.mt.config.ts --reporter=line` passes 5/5 in 2.4 minutes. All five named actual API/worker tests run, including parameter effects, exported bundle re-import, scientific matrices, actual cl061 QC-only, failure/cancellation and session handling.
+- With the same backend but opt-in cleared, the same command passes one closed-admission test with four intentionally inapplicable skips, 8.9 seconds. Actual public-default settings still deny MT submission.
+- After browser QA finished, `npm run build` passes, including five static route entrypoints; Vite 3.36 seconds. Existing large-chunk warnings remain in both modes.
+- `git diff --check` passes. Existing gravity browser evidence is historical, not represented as rerun in this integration step.
+
+The enabled run spans `2026-10-03T08:49:31.792Z` to `2026-10-03T08:51:52.874Z`, reports zero browser errors, and indexes 714 fresh PNGs and six actual verified ZIP exports. The closed run also reports zero browser errors. Fresh evidence is separately retained in ignored `frontend/node_modules/.mt-qa/integrated-6050100/evidence/`:
+
+| Fresh receipt | SHA-256 |
+| --- | --- |
+| `run-receipt-enabled.json` | `023b3dddb54f51a2b3a47111d433caa9a159ba32cd732cd35c32f6dbcbc6dafe` |
+| `run-receipt-closed.json` | `adadab4d7cc79edbbd21f957ca28fc9e84199bfb8e6c877f3a53c1ad8576c28c` |
+
+The fresh receipt binds the integrated backend commit and these measured source SHA-256 values:
+
+| Source | SHA-256 |
+| --- | --- |
+| `app/mt_compute.py` | `688b4778746eca06d5b3c213966daa056c1f6819b8e4959687b2b1dd15a17ba4` |
+| `app/mt_bundle.py` | `b651347bddf1ba009f1f7e37a9450e1e4c667ebf711657e183c87835ad6b4c87` |
+| `data-pipeline/edi.py` | `1a6226f34cd36e3e30f6406a296c6f4e3bc38aa93ca5bda1d4f4428d3852b543` |
+| `data-pipeline/electromagnetics.py` | `9e5bed8fbc28772a6c6c6ffe3128ea91b5aefafc2063f2da0b0b4283e592ce7a` |
+
+The integrated run's `cl061-en-dark-1600-tensor-plot-0.png`, `en-dark-1600-residual-pointer-1.png` and `es-light-390-model-pointer.png` were directly inspected again: failed tensor criteria remain QC-only; complex residuals retain a common signed scale; the Spanish phone profile/readout retains imposed 350 m and infinite basement. This is representative inspection, not individual inspection of every capture.
+
+Before execution, the previous evidence and test-results directories were parked within the same explicitly validated private QA parent; after execution, fresh outputs were archived separately and the original directories restored without changing their bytes. Original enabled/closed receipt hashes remain `e8c72c8bd23eb375515734de06d8e0e45e6752093dad28964236f7bdcbd2b69c` and `894278ea97e5b6855450f022430a4f11923ed06ca97a49de8dc8bb46e02f15c6`. The owner's detached-review receipts are untouched. No private artifacts were committed or published.
+
+This closes the requested local develop/backend integration retest, not final main acceptance. No MT UI or test source was changed, no host/main action or deployment occurred, no scientific/canonical acceptance is inferred from this UI run, and default public flags/30% host admission remain unchanged. Owner-controlled PR integration and broader release gates remain separate.
 
 ## Owner-reported independent review
 
@@ -21,9 +58,9 @@ Owner-reported SHA-256 receipts are stored under the review tree's ignored `node
 - Enabled: `3430fa95447da2081ddf1a3b287d0df7e1d7e0bb47bed6402c64a0a4b114c34d`.
 - Closed: `bf0bb65ac1cecb568d4763ea0eae758497b31848c8b841c6b668342317cae853`.
 
-These are owner-reported independent results, distinct from this branch's indexed local run receipts. Port 8877 is released; no further MT QA is planned until integration. The branch remains isolated while the owner awaits backend canonical PR97 integration. It is ready for review, not approved for merge, public activation or deployment; final integration/code feedback remains owner-controlled.
+These are owner-reported independent results on the original pin, distinct from this branch's indexed local run receipts. That independent run released port 8877 and requested isolation pending PR97 integration. PR97 is now integrated into develop and the subsequently authorized fresh task-branch QA is recorded above. Final PR integration/code feedback remains owner-controlled; readiness for review is not merge, public activation or deployment approval.
 
-## Actual execution and numerical evidence
+## Earlier parity-backend execution and numerical evidence
 
 QA reads the separate backend at `D:\_worktrees\geophysics-mt-bundle-parity`, pinned during execution to `59f46c5a945531e573ae6db611a1f860237e3ba5` (bundle parity correction). Its MT compute/parser/forward source is unchanged from the reviewed online implementation. The explicit interpreter is `D:\_worktrees\geophysics-ingestion-foundation\.venv-online-mt-oct3\Scripts\python.exe`, read-only. Bytecode is disabled. Migrated databases, submitted originals, private child snapshots, caches, worker receipts and screenshots live only under this checkout's ignored `frontend/node_modules/.mt-qa`. No scientific source, production service/configuration, canonical artifact or another checkout is written.
 
@@ -41,7 +78,7 @@ The enabled harness uses the actual authenticated cookie/CSRF API and separate w
 
 Six actual successful bundles are downloaded through the frontend verifier and re-imported using the actual backend `app.bundle.verify_bundle`: halfspace M05/M06, layered low/high beta, layered changed thickness/seed, cl061 M05. They exclude original raw bytes. Frontend verification is MT-specific: exact bounded stored ZIP members, member SHA/bytes, immutable identity/conventions/source/environment, independent forward predictions, signed residual identity against **exported** predictions, objective normalization, training/holdout WRMS, percentile summaries/seeds and selected little-endian float64 model SHA. This checks serialization/physics consistency, not field calibration or uniqueness.
 
-## Reproduction
+## Reproduction of the earlier parity-backend run
 
 Run from the scoped checkout's `frontend` directory:
 
