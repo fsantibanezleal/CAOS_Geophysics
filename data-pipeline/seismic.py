@@ -102,7 +102,9 @@ def _relative_mse(pred, observed):
 def _run_stage(current, observed, active, frequency, grid, cutoff, beta, iterations, *, progress=None):
     parameter = _parameterize(current, grid)
     optimizer = torch.optim.LBFGS(
-        [parameter], lr=1., max_iter=1, history_size=15,
+        # max_iter=1 means one accepted update per call. PyTorch otherwise
+        # defaults max_eval to 1, leaving strong_wolfe no search iterations.
+        [parameter], lr=1., max_iter=1, max_eval=25, history_size=15,
         line_search_fn="strong_wolfe", tolerance_grad=1e-8, tolerance_change=1e-10)
     target = lowpass(observed, cutoff)
     scale = target[:, active].square().mean().clamp_min(1e-20)
@@ -206,6 +208,7 @@ def invert_observations(observed, initial, frequency=8., *, iterations=DEFAULT_I
             solver=dict(
                 optimizer="L-BFGS with strong-Wolfe line search", stopping="finite_budget",
                 iterations_per_stage=iterations, optimizer_calls=iterations*len(CONTROL_GRIDS),
+                lbfgs_max_eval_per_call=25,
                 closure_evaluations=closure_evaluations, terminal_update_evaluated=True,
                 selected_state="terminal evaluated state", bounds_m_s=list(VELOCITY_BOUNDS),
                 control_grids=[list(g) for g in CONTROL_GRIDS],

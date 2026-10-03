@@ -113,6 +113,14 @@ def test_withheld_samples_do_not_influence_inverse_and_terminal_is_saved(monkeyp
         trace = torch.linspace(.1, 1., nt, device=v.device)
         return (v.mean()/2000)*trace[None, None].expand(3, receivers, nt)
     monkeypatch.setattr(seismic, "simulate", algebraic)
+    optimizer_settings = []
+    original_lbfgs = torch.optim.LBFGS
+
+    def configured_lbfgs(*args, **kwargs):
+        optimizer_settings.append(kwargs)
+        return original_lbfgs(*args, **kwargs)
+
+    monkeypatch.setattr(torch.optim, 'LBFGS', configured_lbfgs)
     start = torch.tensor(seismic.independent_start())
     obs = algebraic(start)*1.02
     active = torch.arange(10)%5 != 2
@@ -122,6 +130,9 @@ def test_withheld_samples_do_not_influence_inverse_and_terminal_is_saved(monkeyp
         assert not torch.equal(obs, changed)
     first, _ = seismic.invert_observations(obs, start, active=active, iterations=1)
     second, _ = seismic.invert_observations(changed, start, active=active, iterations=1)
+    assert len(optimizer_settings) == 14  # One shared background plus six spatial stages per solve.
+    assert all(settings['max_iter'] == 1 and settings['max_eval'] == 25
+               and settings['line_search_fn'] == 'strong_wolfe' for settings in optimizer_settings)
     for key, result in first.items():
         np.testing.assert_array_equal(result['model_tensor'].numpy(), second[key]['model_tensor'].numpy())
         identity = result['state_identity']
@@ -195,6 +206,8 @@ def test_batch_fresh_prepare_needs_no_ignored_reference_files(tmp_path, monkeypa
     assert len({(j['case']['id'], j['variant']) for j in plan['jobs']}) == 24
     assert plan['reference_reuse'] == []
     assert plan['controls']['iterations_per_stage'] == 28
+    assert plan['controls']['export_precision_significant_digits'] == 10
+    assert plan['batch_writer_sha256'] == batch.FROZEN_BATCH
     assert not batch.CANDIDATE.exists(), 'Preparation must not fabricate result files'
     assert not (tmp_path/'catalog.json').exists()
 
@@ -217,7 +230,17 @@ def test_batch_rejects_canonical_target_and_missing_gpu_handoff(tmp_path, monkey
     assert not (tmp_path/'candidate').exists()
 
 
-def test_batch_resume_rejects_changed_fingerprint_or_reduced_budget(tmp_path):
+def test_batch_writer_round_trips_float32_velocity(tmp_path):
+    import seismic_batch as batch
+    from rebuild import save
+    velocity = np.float32(2100.1234)
+    path = tmp_path/'FWI_LAYERED'/'reference.json'
+    batch.save_result(path, dict(export_precision_significant_digits=10,
+                                 model=[[float(velocity)]]), save)
+    assert np.float32(json.loads(path.read_text())['model'][0][0]) == velocity
+
+
+def test_batch_resume_rejects_changed_fingerprint_or_reduced_budget(tmp_path, monkeypatch):
     import seismic_batch as batch
     path = tmp_path/'FWI_LAYERED'/'noise.json'
     path.parent.mkdir()
@@ -225,11 +248,21 @@ def test_batch_resume_rejects_changed_fingerprint_or_reduced_budget(tmp_path):
                   state_identity=dict(final_frame_index=0),
                   solver=dict(optimizer_calls=112, terminal_update_evaluated=True),
                   evaluation=dict(status='recovered'))
-    result = dict(id='FWI_LAYERED', variant='noise', provenance=dict(generator_fingerprint='frozen'),
-                  parameters=dict(iterations=28), methods={'fwi-l2':method, 'fwi-multiscale':method})
+    result = dict(id='FWI_LAYERED', variant='noise',
+                  provenance=dict(generator_fingerprint='frozen',
+                                  candidate_execution=dict(batch_writer_sha256=batch.FROZEN_BATCH)),
+                  export_precision_significant_digits=10, parameters=dict(iterations=28),
+                  methods={'fwi-l2':method, 'fwi-multiscale':method})
     path.write_text(json.dumps(result))
     assert batch.complete(path, 'frozen')
     assert not batch.complete(path, 'different')
+    with monkeypatch.context() as patch:
+        patch.setattr(batch, 'FROZEN_BATCH', 'different-writer')
+        assert not batch.complete(path, 'frozen')
+    result['export_precision_significant_digits'] = 7
+    path.write_text(json.dumps(result))
+    assert not batch.complete(path, 'frozen')
+    result['export_precision_significant_digits'] = 10
     result['parameters']['iterations'] = 7
     path.write_text(json.dumps(result))
     assert not batch.complete(path, 'frozen')
@@ -274,7 +307,7 @@ def test_reference_recovery_state_and_forward_replay(case_id):
         obs = clean+torch.randn_like(clean)*run['parameters']['noise_sigma']
     expected_statuses = {
         'FWI_LAYERED': {'fwi-l2': 'recovered', 'fwi-multiscale': 'recovered'},
-        'FWI_FAULT': {'fwi-l2': 'unresolved', 'fwi-multiscale': 'recovered'},
+        'FWI_FAULT': {'fwi-l2': 'recovered', 'fwi-multiscale': 'recovered'},
         'FWI_NOISY': {'fwi-l2': 'unresolved', 'fwi-multiscale': 'unresolved'},
         'FWI_CYCLE_SKIP': {'fwi-l2': 'negative-control', 'fwi-multiscale': 'negative-control'},
     }
@@ -288,6 +321,11 @@ def test_reference_recovery_state_and_forward_replay(case_id):
         assert result['evaluation'] == seismic.recovery_evaluation(
             result['metrics'], challenge=case_id == 'FWI_CYCLE_SKIP')
         assert result['evaluation']['status'] == expected_statuses[case_id][method_id]
+        assert result['solver']['lbfgs_max_eval_per_call'] == 25
+        if case_id == 'FWI_LAYERED':
+            # With max_iter=1 and PyTorch's default max_eval=1, every call has
+            # only its entry and one trial closure, so no Wolfe search occurs.
+            assert result['solver']['closure_evaluations'] > 2*result['solver']['optimizer_calls']
         if result['evaluation']['status'] == 'recovered':
             assert result['metrics']['active_wrms'] <= 2
             assert result['metrics']['withheld_wrms'] <= 2
