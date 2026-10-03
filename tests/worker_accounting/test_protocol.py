@@ -599,3 +599,421 @@ def test_public_surface_and_exports():
     rejected(lambda: p.limits_for(Hostile()))
     rejected(lambda: p.windows_cpu_ns(Hostile(), 0))
     rejected(lambda: p.decode_record(p.RecordKind.START, Hostile()))
+
+
+@pytest.mark.parametrize("bad", [None, True, 0, "", OTHER,
+                                "00000000-0000-0000-0000-000000000000"])
+@pytest.mark.parametrize("method", ["assert_contained", "assert_started", "assert_drained"])
+def test_transition_identity_and_replay_explicit_token(method, bad):
+    s = p.ProtocolSession.from_start(encoded(start()), p.Platform.WINDOWS_JOB_X64_1, "7" * 64)
+    if method != "assert_contained":
+        s.assert_contained(ATTEMPT, TOKEN, 0)
+    if method == "assert_drained":
+        s.assert_started(ATTEMPT, TOKEN, 0)
+        call = lambda: s.assert_drained(ATTEMPT, bad, 0, 0, True, 0)
+    else:
+        call = lambda: getattr(s, method)(ATTEMPT, bad, 0)
+    rejected(call)
+    assert s.phase == "FAILED_HELD" and not s.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("raw", [b'{"private-secret":1,"private-secret":2}',
+                                b'{"private-secret":true,"private-secret":false}'])
+def test_safe_errors_and_forged_authority_parser_context(raw):
+    error = rejected(lambda: p.decode_record(p.RecordKind.START, raw))
+    assert error.__cause__ is None and error.__context__ is None
+    assert "private-secret" not in str(error)
+    assert not hasattr(error, "doc")
+
+
+@pytest.mark.parametrize("variant", ["missing", "extra", "unknown_kw", "duplicate_kw"])
+def test_transition_identity_and_replay_call_shape(variant):
+    trace = Trace()
+    s = trace.session
+    if variant == "missing":
+        call = lambda: s.consume_sample()
+    elif variant == "extra":
+        call = lambda: s.consume_sample(encoded(sample()), "private-secret")
+    elif variant == "unknown_kw":
+        call = lambda: s.consume_sample(private_secret=encoded(sample()))
+    else:
+        call = lambda: s.consume_sample(encoded(sample()), frame=encoded(sample()))
+    rejected(call, "accounting_protocol_invalid")
+    assert s.phase == "FAILED_HELD"
+    assert not s.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("platform", [WINDOWS, LINUX])
+@pytest.mark.parametrize("field", ["sequence", "monotonic_ns", "query_duration_ns", "cpu_ns"])
+@pytest.mark.parametrize("value", [True, False, -1, None, "1", 1.0])
+def test_strict_shapes_and_canonical_records_numeric_fields(platform, field, value):
+    record = sample(platform)
+    record[field] = value
+    rejected(lambda: p.decode_record(p.RecordKind.SAMPLE, encoded(record)))
+
+
+@pytest.mark.parametrize("field", ["root_reaped", "adopted_reaped"])
+@pytest.mark.parametrize("value", [0, 1, None, "true"])
+def test_strict_shapes_and_canonical_records_strict_booleans(field, value):
+    record = sample(LINUX)
+    record["active"][field] = value
+    rejected(lambda: p.decode_record(p.RecordKind.SAMPLE, encoded(record)))
+
+
+@pytest.mark.parametrize("case", ["active32", "active33", "active_gt_total", "terminated_gt_total",
+                                 "total_regresses", "terminated_regresses", "root_regresses", "adopted_regresses"])
+def test_regression_overflow_underflow_and_bool_active(case):
+    if case.startswith(("root", "adopted")):
+        trace = Trace(LINUX)
+        first, second = sample(LINUX), sample(LINUX, 2, NS20, cpu=2000)
+        key = "root_reaped" if case.startswith("root") else "adopted_reaped"
+        first["active"][key] = True
+        trace.observe(first)
+        rejected(lambda: trace.session.consume_sample(encoded(second)), "accounting_counter_invalid")
+        return
+    record = sample()
+    if case in ("active32", "active33"):
+        record["active"].update(active_processes=32 if case == "active32" else 33, total_processes=33)
+    elif case == "active_gt_total":
+        record["active"]["total_processes"] = 0
+    elif case == "terminated_gt_total":
+        record["active"]["limit_terminated_processes"] = 2
+    else:
+        trace = Trace()
+        record["active"].update(total_processes=2, limit_terminated_processes=1)
+        trace.observe(record)
+        second = sample(sequence=2, at=NS20, cpu=2000)
+        if case == "total_regresses":
+            second["active"]["limit_terminated_processes"] = 1
+        else:
+            second["active"]["total_processes"] = 2
+        rejected(lambda: trace.session.consume_sample(encoded(second)), "accounting_counter_invalid")
+        return
+    if case == "active32":
+        p.decode_record(p.RecordKind.SAMPLE, encoded(record))
+    else:
+        rejected(lambda: p.decode_record(p.RecordKind.SAMPLE, encoded(record)), "accounting_counter_invalid")
+
+
+@pytest.mark.parametrize("method", [CORRECTION, TRANSFORM])
+@pytest.mark.parametrize("platform", [WINDOWS, LINUX])
+@pytest.mark.parametrize("which", ["gap", "query", "cpu", "wall"])
+@pytest.mark.parametrize("delta", [-1, 0, 1])
+def test_bounded_trace_and_final_consistency_running_boundaries(which, delta, method, platform):
+    trace = Trace(platform, method)
+    record = sample(platform, at=NS20)
+    if which == "gap":
+        record["monotonic_ns"] += delta
+        should_stop = delta > 0
+    elif which == "query":
+        record["query_duration_ns"] = NS20 + delta
+        should_stop = delta > 0
+    elif which == "cpu":
+        # Raw B/S +/-1 is impossible native granularity; +/-one tick is the valid boundary.
+        record = sample(platform, at=NS20, cpu=LANES[method][1] + delta * (100 if platform == WINDOWS else 1000))
+        should_stop = delta >= 0
+    else:
+        trace = Trace(platform, method, started=LANES[method][3] - NS20)
+        record["monotonic_ns"] = LANES[method][3] + delta
+        # At +1 both the gap and wall limit fail; first required reason is timing.
+        should_stop = delta > 0
+    decision = trace.observe(record)
+    assert decision.stop_required is should_stop
+    assert decision.computation_failed is should_stop
+    assert trace.session._record_count == 1
+    assert trace.session.phase == ("STOP_REQUIRED" if should_stop else "RUNNING_ASSERTED")
+
+
+@pytest.mark.parametrize("kill_delta", [-1, 0, 1])
+def test_bounded_trace_and_final_consistency_kill(kill_delta):
+    trace = Trace()
+    trace.stop("user_cancelled", 1)
+    trace.drain(stopped=1, drained=250000001 + kill_delta)
+    assert trace.session.phase == ("FAILED_HELD" if kill_delta > 0 else "DRAIN_ASSERTED")
+    assert not trace.session.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("bad", ["attempt_id", "job_id", "object_token", "platform",
+    "binding.input_sha256", "binding.request_sha256", "binding.source_commit",
+    "binding.runtime_sha256", "binding.module_set_sha256", "binding.profile_sha256",
+    "binding.controller_sha256", "samples.sha256", "samples.record_count", "samples.byte_count",
+    "timing.started_ns", "timing.max_observe_gap_ns", "timing.max_query_duration_ns",
+    "timing.kill_interval_ns", "final.root_exit_code", "final.cpu_ns", "cleanup.object_released"])
+def test_receipt_release_and_eligibility_receipt_mutation(bad):
+    trace = Trace()
+    receipt = trace.finish()
+    keys = bad.split(".")
+    obj, key = (receipt[keys[0]], keys[1]) if len(keys) == 2 else (receipt, keys[0])
+    old = obj[key]
+    obj[key] = (not old if type(old) is bool else old + 1 if type(old) is int
+                else LINUX if key == "platform" else OTHER if key.endswith("id") or key == "object_token"
+                else "a" * len(old))
+    rejected(lambda: trace.session.accept_receipt(encoded(receipt)))
+    assert trace.session.phase == "FAILED_HELD"
+    assert not trace.session.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("field", ["cpu_ns", "wall_ns", "peak_private_bytes"])
+def test_receipt_release_and_eligibility_parent_preliminary(field):
+    trace = Trace()
+    receipt = trace.finish()
+    receipt["controller"][field] = {"cpu_ns": 5000000001,
+        "wall_ns": 120000000001, "peak_private_bytes": 67108865}[field]
+    receipt["verdict"] = "failed_control"
+    trace.session.accept_receipt(encoded(receipt))
+    assert not trace.session.eligibility().protocol_eligible
+    assert trace.session.eligibility().runtime_authorized is False
+
+
+@pytest.mark.parametrize("platform", [WINDOWS, LINUX])
+def test_receipt_release_and_eligibility_exit_codes(platform):
+    trace = Trace(platform)
+    receipt = trace.finish(exit_code=4294967295 if platform == WINDOWS else -2147483648)
+    trace.session.accept_receipt(encoded(receipt))
+    trace.session.accept_release(encoded(release(receipt)))
+    assert not trace.session.eligibility().protocol_eligible
+    for value in ((-1, 4294967296) if platform == WINDOWS else (-2147483649, 2147483648)):
+        bad = receipt.copy()
+        bad["final"] = dict(receipt["final"], root_exit_code=value)
+        rejected(lambda: p.decode_record(p.RecordKind.RECEIPT, encoded(bad)))
+
+
+@pytest.mark.parametrize("platform", [WINDOWS, LINUX])
+def test_receipt_release_and_eligibility_b_plus_one(platform):
+    trace = Trace(platform)
+    trace.drain()
+    record = sample(platform, cpu=60000000000, at=30000000, empty=True)
+    record["cpu_ns"] += 1
+    rejected(lambda: trace.session.consume_final_sample(encoded(record)), "accounting_counter_invalid")
+    assert not trace.session.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("channel", ["sample", "control"])
+def test_transition_identity_and_replay_sequence_exhaustion(channel):
+    trace = Trace()
+    if channel == "sample":
+        trace.session._sample_sequence = U64
+        call = lambda: trace.session.consume_sample(encoded(sample(sequence=U64)))
+    else:
+        trace.session._control_sequence = U64
+        call = lambda: trace.session.consume_control(encoded(control(U64)))
+    rejected(call, "accounting_transition_invalid")
+    assert trace.session.phase == "FAILED_HELD"
+
+
+@pytest.mark.parametrize("platform", [WINDOWS, LINUX])
+def test_unavailable_is_not_final_zero_known_trace(platform):
+    trace = Trace(platform)
+    trace.observe(sample(platform))
+    trace.stop("user_cancelled", 11000000)
+    trace.drain(11000000, 20000000)
+    receipt = trace.receipt(unavailable=True)
+    receipt["stop_reason"] = "user_cancelled"
+    trace.session.accept_receipt(encoded(receipt))
+    assert trace.session._receipt.final.cpu_ns is None
+    assert trace.session._receipt.samples.record_count == 1
+    assert trace.session.phase == "FAILED_HELD"
+    assert not trace.session.eligibility().protocol_eligible
+
+
+PHASE_EVENTS = {
+    "contain": {"PREPARED"}, "start": {"CONTAINMENT_ASSERTED"},
+    "control": {"RUNNING_ASSERTED", "STOP_REQUIRED", "STOP_ASSERTED"},
+    "sample": {"RUNNING_ASSERTED", "STOP_REQUIRED", "STOP_ASSERTED"},
+    "stop": {"RUNNING_ASSERTED", "STOP_REQUIRED"},
+    "drain": {"RUNNING_ASSERTED", "STOP_ASSERTED"}, "final": {"DRAIN_ASSERTED"},
+    "receipt": {"FINAL_CHECKED"}, "release": {"RECEIPT_BOUND"},
+}
+PHASES = ("PREPARED", "CONTAINMENT_ASSERTED", "RUNNING_ASSERTED", "STOP_REQUIRED",
+          "STOP_ASSERTED", "DRAIN_ASSERTED", "FINAL_CHECKED", "RECEIPT_BOUND",
+          "ACK_CHECKED", "FAILED_HELD")
+
+
+@pytest.mark.parametrize("phase,event", [(phase, event) for phase in PHASES
+    for event, permitted in PHASE_EVENTS.items() if phase not in permitted])
+def test_transition_identity_and_replay_entire_phase_table(phase, event):
+    # Known phase setup is internal to this synthetic test, never a public setter.
+    trace = Trace()
+    receipt = trace.finish()
+    trace.session.accept_receipt(encoded(receipt))
+    trace.session._phase = phase
+    calls = {"contain": lambda: trace.session.assert_contained(ATTEMPT, TOKEN, 0),
+        "start": lambda: trace.session.assert_started(ATTEMPT, TOKEN, 0),
+        "control": lambda: trace.session.consume_control(encoded(control())),
+        "sample": lambda: trace.session.consume_sample(encoded(sample(sequence=5, at=NS20 * 5))),
+        "stop": lambda: trace.session.request_stop("user_cancelled", NS20 * 5),
+        "drain": lambda: trace.session.assert_drained(ATTEMPT, TOKEN, NS20 * 5, NS20 * 6, True, 0),
+        "final": lambda: trace.session.consume_final_sample(encoded(sample(sequence=5, at=NS20 * 5, empty=True))),
+        "receipt": lambda: trace.session.accept_receipt(encoded(receipt)),
+        "release": lambda: trace.session.accept_release(encoded(release(receipt)))}
+    rejected(calls[event])
+    assert trace.session.phase == "FAILED_HELD"
+    assert not trace.session.eligibility().protocol_eligible
+
+
+def test_transition_identity_and_replay_positive_stop_channels():
+    trace = Trace()
+    trace.session.consume_control(encoded(control(action="cancel")))
+    assert trace.session.phase == "STOP_REQUIRED"
+    trace.session.consume_control(encoded(control(2)))
+    trace.observe(sample())
+    assert trace.session.phase == "STOP_REQUIRED"
+    trace.stop("user_cancelled", 11000000)
+    trace.session.consume_control(encoded(control(3)))
+    trace.observe(sample(sequence=2, at=NS20, cpu=2000))
+    assert trace.session.phase == "STOP_ASSERTED"
+    trace.drain(11000000, 25000000)
+    for at in (30000000, 50000000, 70000000):
+        trace.observe(sample(sequence=len(trace.frames) + 1, at=at, cpu=2000, empty=True), final=True)
+    receipt = trace.receipt()
+    trace.session.accept_receipt(encoded(receipt))
+    trace.session.accept_release(encoded(release(receipt)))
+    assert trace.session.phase == "ACK_CHECKED"
+    assert not trace.session.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("bad", ["gap", "started", "stopped", "drained", "visibility"])
+def test_unavailable_is_not_final_zero_known_timing_mutation(bad):
+    trace = Trace()
+    trace.observe(sample())
+    receipt = trace.receipt(unavailable=True)
+    key = {"gap": "max_observe_gap_ns", "started": "started_ns", "stopped": "stopped_ns",
+           "drained": "drained_ns", "visibility": "visibility_evidence_sha256"}[bad]
+    receipt["timing"][key] = "not-a-digest" if bad == "visibility" else 1
+    rejected(lambda: trace.session.accept_receipt(encoded(receipt)))
+    assert trace.session.phase == "FAILED_HELD"
+    assert not trace.session.eligibility().protocol_eligible
+
+
+@pytest.mark.parametrize("code", [None, True, 0, b"accounting_cpu_limit"])
+def test_safe_errors_and_forged_authority_wrong_code_type(code):
+    rejected(lambda: p.safe_error(code), "accounting_protocol_invalid")
+
+
+def test_safe_errors_and_forged_authority_no_equality_hook():
+    class Hostile:
+        def __eq__(self, other):
+            raise AssertionError("Equality hook reached")
+    rejected(lambda: p.SafeError("accounting_cpu_limit", Hostile(), False))
+    rejected(lambda: p.ProtocolEligibility(True, True, "protocol_consistent"))
+    assert p.safe_error("s" * 100000).message == ERRORS["accounting_protocol_invalid"]
+
+
+@pytest.mark.parametrize("boundary", ["records", "bytes"])
+def test_bounded_trace_and_final_consistency_exact_trace_caps(boundary):
+    trace = Trace()
+    raw = encoded(sample())
+    if boundary == "records":
+        trace.session._record_count = 32767
+    else:
+        trace.session._byte_count = 16777216 - len(raw) - 1
+    trace.session.consume_sample(raw)
+    assert (trace.session._record_count if boundary == "records" else trace.session._byte_count) == (
+        32768 if boundary == "records" else 16777216)
+    digest = trace.session._digest.hexdigest()
+    rejected(lambda: trace.session.consume_sample(encoded(sample(sequence=2, at=NS20))),
+             "accounting_bounds_exceeded")
+    assert trace.session._digest.hexdigest() == digest
+
+
+@pytest.mark.parametrize("changed", ["scalar_type", "digests", "uuids", "nested_freeze", "unknown_variant"])
+def test_strict_shapes_and_canonical_records_typed_identity(changed):
+    record = start()
+    if changed == "scalar_type":
+        record["source_commit"] = 3
+    elif changed == "digests":
+        record["input_sha256"] = "A" * 64
+    elif changed == "uuids":
+        record["attempt_id"] = "00000000-0000-0000-0000-000000000000"
+    elif changed == "unknown_variant":
+        record["schema"] = "physical-accounting-profile-1"
+    else:
+        parsed = p.decode_record(p.RecordKind.START, encoded(record))
+        with pytest.raises((dataclasses.FrozenInstanceError, AttributeError, TypeError)):
+            parsed.limits.cpu_ceiling_ns = 1
+        record["limits"]["cpu_ceiling_ns"] = 1
+        assert parsed.limits.cpu_ceiling_ns == 60000000000
+        return
+    rejected(lambda: p.decode_record(p.RecordKind.START, encoded(record)))
+
+
+def test_bounds_precede_decode_and_conversion_no_subclass_hooks(monkeypatch):
+    class HostileBytes(bytes):
+        def decode(self, *args, **kwargs):
+            raise AssertionError("Untrusted decode hook reached")
+        def __len__(self):
+            raise AssertionError("Untrusted length hook reached")
+    class HostileStr(str):
+        def __len__(self):
+            raise AssertionError("Untrusted string length hook reached")
+    rejected(lambda: p.decode_record(p.RecordKind.START, HostileBytes(encoded(start()))))
+    rejected(lambda: p.limits_for(HostileStr(CORRECTION)))
+    for raw in (b'{"x":18446744073709551616}', b'{"x":-2147483649}'):
+        def forbidden(*args, **kwargs):
+            raise AssertionError("Integer range failed after tree/int allocation")
+        with monkeypatch.context() as patched:
+            patched.setattr(p, "_decode_json", forbidden)
+            patched.setattr(p, "_parse_int", forbidden)
+            rejected(lambda: p.decode_record(p.RecordKind.START, raw), "accounting_integer_invalid")
+
+
+@pytest.mark.parametrize("offset", [-1, 0, 1])
+def test_bounded_trace_and_final_consistency_last_deadline(offset):
+    trace = Trace()
+    trace.drain()
+    for seq, at in ((1, 30000000), (2, 50000000), (3, 2020000000 + offset)):
+        trace.observe(sample(sequence=seq, at=at, empty=True), final=True)
+    assert trace.session.phase == ("FAILED_HELD" if offset > 0 else "FINAL_CHECKED")
+    if offset <= 0:
+        receipt = trace.receipt()
+        trace.session.accept_receipt(encoded(receipt))
+        trace.session.accept_release(encoded(release(receipt)))
+        assert trace.session.eligibility().protocol_eligible
+    assert trace.session.eligibility().runtime_authorized is False
+
+
+@pytest.mark.parametrize("invalid", ["counter", "identity", "timing"])
+def test_unavailable_is_not_final_zero_held_diagnostic(invalid):
+    trace = Trace()
+    record = sample()
+    if invalid == "counter":
+        record["cpu_ns"] += 1
+        rejected(lambda: trace.session.consume_sample(encoded(record)))
+        reason = "counter_invalid"
+    elif invalid == "identity":
+        record["attempt_id"] = OTHER
+        rejected(lambda: trace.session.consume_sample(encoded(record)))
+        reason = "identity_changed"
+    else:
+        trace.drain()
+        record = sample(at=30000000, empty=True)
+        record["query_duration_ns"] = NS20 + 1
+        trace.observe(record, final=True)
+        reason = "observe_gap"
+    prior = trace.session.eligibility()
+    receipt = trace.receipt(unavailable=True)
+    receipt["stop_reason"] = reason
+    trace.session.accept_receipt(encoded(receipt))
+    assert trace.session.eligibility() == prior
+    assert trace.session.phase == "FAILED_HELD"
+    rejected(lambda: trace.session.accept_receipt(encoded(Trace().finish())))
+    assert trace.session.eligibility() == prior
+
+
+def test_bounds_precede_decode_and_conversion_serialization(monkeypatch):
+    raw = encoded(start())
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Serialization reached before bounded length check")
+    monkeypatch.setattr(p, "_canonical_size", lambda value: 16385)
+    monkeypatch.setattr(p._json, "dumps", forbidden)
+    rejected(lambda: p.decode_record(p.RecordKind.START, raw), "accounting_bounds_exceeded")
+
+
+def test_safe_errors_and_forged_authority_constructor_variants():
+    rejected(lambda: p.ProtocolEligibility(True, False, "accounting_cpu_limit"))
+    rejected(lambda: p.ProtocolEligibility(False, False, "protocol_consistent"))
+    rejected(lambda: p.ProtocolDecision("FAILED_HELD", True, False, "protocol_consistent"))
+    rejected(lambda: p.ProtocolDecision("FINAL_CHECKED", False, True, "protocol_consistent"))
+    rejected(lambda: bool(p.ProtocolEligibility(True, False, "protocol_consistent")))
+    rejected(lambda: bool(p.ProtocolEligibility(False, False, "accounting_cpu_limit")))
+    rejected(lambda: bool(p.ProtocolDecision("PREPARED", False, False, "protocol_consistent")))

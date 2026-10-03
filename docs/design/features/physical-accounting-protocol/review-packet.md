@@ -2,7 +2,8 @@
 
 Date: 2026-10-03. Status: MAIN FULL READ and narrow pure implementation APPROVED
 at2c94da44b6205652cd2d89d73ebbf78cc4626903. See [pre-code approval](approval.md).
-Source/tests not created at approval-record time; native/profile/OS still CLOSED.
+Source/tests were absent at approval-record time. Narrow pure unit now implemented;
+see [actual implementation evidence](implementation-evidence.md). Native/profile/OS CLOSED.
 Branch: task/geophysics-physical-worker-accounting-sdd.
 Issue [126](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/126),
 OPEN DRAFT [PR129](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/129)
@@ -28,14 +29,15 @@ MAIN must read this separate sub-SDD in full BEFORE any pure source authority:
 6. [Scoped ownership and blocked implementation dependencies](tasks.md).
 7. This packet plus amended parent packet, evidence and explicit nonclaims.
 
-Future owner: this bounded ops accounting unit. Exactly two NEW proposed paths:
+Assigned owner: this bounded ops accounting unit. Exactly two NEW authorized paths:
 
 ```text
 scripts/physical_accounting_protocol.py
 tests/worker_accounting/test_protocol.py
 ```
 
-Neither path exists/changes here. No other file/package/import surface is assigned.
+Only those two NEW source/test paths implemented. No other source/package/import
+surface assigned/created; permitted own subdocs updated with approval/convergence.
 Native/OS/integration/security owner is not invented or delegated by this packet.
 
 ## 2. Exact MAIN decisions accepted at2c94da4
@@ -85,14 +87,17 @@ SDD ledger edits or claim that the product-ledger guard covers these future gate
 
 Final commit pin and pinned self-review comment identify remote handoff after
 these checks. Parent3959 guard receipt remains historical, not a new test pass.
-All twelve pure gates and all fifteen parent actual-platform gates are NOT_RUN.
+The preceding docs receipt is historical at2c94da4; the approved subsequent pure
+implementation has all12 gates locally PASS (419 cases) in its own evidence.
+All fifteen parent actual-platform gates remain CLOSED/NOT_RUN.
 No scientific/ops/runtime suite, native compile/toolchain probe, Job Object,
 cgroup, process/controller launch, clocks, I/O or actual capability exercised.
 
 ## 4. Exact scope and unresolved mechanisms
 
-This amendment adds only seven files in physical-accounting-protocol plus the
-explicitly requested parent review-packet update. Existing source/tests/runtime/
+Historical2c94 amendment: seven subdocs plus expressly requested parent packet.
+After exact MAIN pre-code approval, ONLY two NEW pure source/test paths plus own
+subdocs/evidence. Parent packet has no further implementation edit. Existing source/tests/runtime/
 worker/database/API/migrations/verifiers/module-manifests/public-admission/source-
 bundles/envs unchanged. Preserved builder ref41f705245116e1f9d0a2ec4555bbeb050e4dea62
 is not changed or reused as containment/accounting evidence.

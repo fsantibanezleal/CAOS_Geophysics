@@ -12,9 +12,9 @@ Read [review packet](review-packet.md) and all its linked documents first.
 | PAP-D02 | This unit: exact schemas/caps/arithmetic/transitions/errors/eligibility plus future paths | D01; complete seven-document sub-SDD before code | DONE, docs only |
 | PAP-D03 | This unit: docs guards and scoped handoff | D02; packet records measured docs checks; remote commit/push/self-review pin recorded in PR129, no merge | Docs checks DONE; exact remote pin in PR handoff |
 | PAP-R01 | MAIN: FULL read/accept exact new pin | D03; all seven subdocs and amended parent packet at2c94da4 | DONE; exact narrow approval recorded BEFORE code |
-| PAP-I02 | This unit: test-first pure tests ONLY in tests/worker_accounting/test_protocol.py | R01; write all twelve named gates before I01, literal in-memory fixtures, no installs or source/host measurements | AUTHORIZED, NOT_STARTED |
-| PAP-I01 | This unit: pure protocol implementation ONLY in scripts/physical_accounting_protocol.py | R01 plus I02 test-first red evidence; stdlib bounded constants/types/functions; no OS/I/O/clock/source measurements | AUTHORIZED, waits for test-first gates |
-| PAP-R02 | MAIN: independent pinned pure source/tests review and local rerun | I01/I02 scoped commits; exact outcomes and exclusions; NOT runtime admission | BLOCKED |
+| PAP-I02 | This unit: test-first pure tests ONLY in tests/worker_accounting/test_protocol.py | R01; all12 gates committed before I01 at3515bb9 with expected RED import evidence; literal in-memory fixtures | DONE;419 local pure cases PASS |
+| PAP-I01 | This unit: pure protocol implementation ONLY in scripts/physical_accounting_protocol.py | R01 plus I02 test-first evidence; bounded stdlib only, no OS/I/O/clock/source measurements | IMPLEMENTED; exact code pin in PR handoff |
+| PAP-R02 | MAIN: independent pinned pure source/tests review and local rerun | I01/I02 scoped commits; exact outcomes and exclusions; NOT runtime admission | REQUIRED before develop promotion, NOT_RUN by MAIN here |
 
 Assigned future paths are NEW proposals, not created by this SDD. Any need for
 another import/package/dependency/interface/path returns to MAIN BEFORE changes.
@@ -34,7 +34,7 @@ and requires a separate bounded scope and actual-context evidence.
    source-bundle policy, environment, private state or production changes.
 5. No wildcard future revisions/variants or automatic module format expansion.
 6. Parent15 actual-platform tests/profiles remain NOT_RUN/CLOSED; pure12 gates
-   start NOT_RUN, then only actual later local results may change those statuses.
+   locally PASS, never substituted for native/host gates or independent MAIN review.
 7. Review packet records MAIN's directional acceptance, NOT full runner approval.
 
 No actual host visit/execution/install is required or allowed for this design.

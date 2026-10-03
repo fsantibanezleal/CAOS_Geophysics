@@ -1,6 +1,7 @@
 # Pure accounting protocol exact contracts
 
-Date: 2026-10-03. Status: PROPOSED; no implementation or actual measurement.
+Date: 2026-10-03. Status: exact pure contract MAIN-approved at2c94da4 and
+implemented; [local evidence](implementation-evidence.md). No actual measurement.
 Parent contract pin: 3959ffc29eb4f93e0cca04fdc3154eca7ea7ddca.
 Read [design](design.md), [requirements](requirements.md) and
 [validation](validation-plan.md). These are strict subsets/refinements of that

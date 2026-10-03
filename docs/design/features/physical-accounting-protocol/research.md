@@ -1,6 +1,8 @@
 # Pure accounting protocol design basis
 
-Date: 2026-10-03. Status: documentation only, no implementation authorized.
+Date: 2026-10-03. Historical design research at2c94da4, no native measurement.
+Subsequent narrow pure approval: [approval](approval.md); source/test evidence:
+[implementation evidence](implementation-evidence.md). Receipt rows unchanged.
 
 MAIN reports a FULL read of all seven parent documents and all 34 primary
 receipts at 3959ffc29eb4f93e0cca04fdc3154eca7ea7ddca. MAIN explicitly accepts
@@ -8,7 +10,8 @@ monitored aggregate accounting direction, NOT instantaneous zero overshoot;
 correction/transform ceilings remain 60/240 seconds and final CPU>B is always
 FAIL. MAIN expressly withholds OS launch/controller/security/provisioning,
 profile activation and native probe authority because actual contexts are absent.
-The next authorization is only to author this exact pure-unit sub-SDD before code.
+At research time, next authorization was only this exact pure-unit sub-SDD before
+code. Later explicit pure-source approval is separately persisted, not inferred.
 
 The parent [research](../../../research/physical-worker-accounting-2026-10-03.md)
 and [private contracts](../physical-worker-accounting/contracts.md) at that
@@ -60,4 +63,5 @@ contacts. Retrieval is design research, not future protocol runtime I/O.
 No new OS research changes the parent evidence or selects an alternate mechanism.
 Read [requirements](requirements.md), [design](design.md), [contracts](contracts.md),
 [validation](validation-plan.md), [tasks](tasks.md) and [review packet](review-packet.md)
-before approving any later source scope. All future unit gates are NOT_RUN.
+as the approved basis. Pure local gate results are separately recorded; every
+native/platform gate remains NOT_RUN. Research receipts do not prove capability.

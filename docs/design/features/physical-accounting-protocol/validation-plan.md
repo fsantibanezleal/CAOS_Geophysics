@@ -1,9 +1,11 @@
 # Pure accounting protocol prospective validation
 
-Date: 2026-10-03. Status: ALL PURE GATES NOT_RUN; documents only.
-Exact proposed test path: tests/worker_accounting/test_protocol.py.
+Date: 2026-10-03. Status: all12 pure gates locally PASS under exact MAIN approval;
+[measured evidence](implementation-evidence.md). Native/platform gates NOT_RUN.
+Exact implemented test path: tests/worker_accounting/test_protocol.py.
 Read [requirements](requirements.md), [contracts](contracts.md), [design](design.md).
-No code/test file, native fixture, compile probe, environment or profile created.
+Only approved pure source/test paths created; no native fixture, compile probe,
+environment or profile created. Independent MAIN rerun/review still required.
 
 ## 1. Test provenance and oracle boundary
 
@@ -29,18 +31,18 @@ subcases may be used without inventing additional code/test paths.
 
 | Requirement | Prospective test | Required evidence | Status |
 | --- | --- | --- | --- |
-| PAP-001 | test_pure_boundary_and_no_authority | Supplied statements only; even perfect trace returns runtime_authorized=false, no native/profile callbacks or implicit platform | NOT_RUN |
-| PAP-002 | test_bounds_precede_decode_and_conversion | Exact-byte check, each ingress ceiling +/-1, depth/node/member/string/digit checks before tree/int/copy; rejected input never reaches bounded decoder/hash | NOT_RUN |
-| PAP-003 | test_strict_shapes_and_canonical_records | Every key/discriminator/type positive and negative; duplicate/unknown key, noncanonical encoding and unknown variant reject | NOT_RUN |
-| PAP-004 | test_golden_units_and_native_maxima | Exact Windows/Linux unit cases, max convertibles, native-width and addition/multiplication guards | NOT_RUN |
-| PAP-005 | test_regression_overflow_underflow_and_bool | Independent component regressions, checked deltas, bool/subclass/float rejection, no counter wrapping or zero repair | NOT_RUN |
-| PAP-006 | test_exact_lane_limits_and_no_override | Both full fixed limit tables, all modified/missing/unknown bounds and methods reject | NOT_RUN |
-| PAP-007 | test_transition_identity_and_replay | Entire phase table, changed bindings, wrong platform, duplicate/skipped/exhausted sequences and held-error absorption | NOT_RUN |
-| PAP-008 | test_bounded_trace_and_final_consistency | Independent sample SHA/count/bytes, final3 spacing/equality/empty state, timing consistency and pre-update retention caps | NOT_RUN |
-| PAP-009 | test_unavailable_is_not_final_zero | Exact null/false unavailable shape, known timing consistency, no repair from last sample or release | NOT_RUN |
-| PAP-010 | test_receipt_release_and_eligibility | Complete/failed/uncertain, B/B+1, receipt binding/digest and checked release totals; stopped below B cannot become success | NOT_RUN |
-| PAP-011 | test_safe_errors_and_forged_authority | All17 registry entries and length/type checks; no echoed input/trace; forged flags never confer authority | NOT_RUN |
-| PAP-012 | test_public_surface_and_exports | Exact assigned public exports/scalar types, no CLI/package/profile/OS/controller interface; two-path scope independently reviewed | NOT_RUN |
+| PAP-001 | test_pure_boundary_and_no_authority | Supplied statements only; even perfect trace returns runtime_authorized=false, no native/profile callbacks or implicit platform | PASS |
+| PAP-002 | test_bounds_precede_decode_and_conversion | Exact-byte check, each ingress ceiling +/-1, depth/node/member/string/digit checks before tree/int/copy; rejected input never reaches bounded decoder/hash | PASS |
+| PAP-003 | test_strict_shapes_and_canonical_records | Every key/discriminator/type positive and negative; duplicate/unknown key, noncanonical encoding and unknown variant reject | PASS |
+| PAP-004 | test_golden_units_and_native_maxima | Exact Windows/Linux unit cases, max convertibles, native-width and addition/multiplication guards | PASS |
+| PAP-005 | test_regression_overflow_underflow_and_bool | Independent component regressions, checked deltas, bool/subclass/float rejection, no counter wrapping or zero repair | PASS |
+| PAP-006 | test_exact_lane_limits_and_no_override | Both full fixed limit tables, all modified/missing/unknown bounds and methods reject | PASS |
+| PAP-007 | test_transition_identity_and_replay | Entire phase table, changed bindings, wrong platform, duplicate/skipped/exhausted sequences and held-error absorption | PASS |
+| PAP-008 | test_bounded_trace_and_final_consistency | Independent sample SHA/count/bytes, final3 spacing/equality/empty state, timing consistency and pre-update retention caps | PASS |
+| PAP-009 | test_unavailable_is_not_final_zero | Exact null/false unavailable shape, known timing consistency, no repair from last sample or release | PASS |
+| PAP-010 | test_receipt_release_and_eligibility | Complete/failed/uncertain, B/B+1, receipt binding/digest and checked release totals; stopped below B cannot become success | PASS |
+| PAP-011 | test_safe_errors_and_forged_authority | All17 registry entries and length/type checks; no echoed input/trace; forged flags never confer authority | PASS |
+| PAP-012 | test_public_surface_and_exports | Exact assigned public exports/scalar types, no CLI/package/profile/OS/controller interface; two-path scope independently reviewed | PASS |
 
 ## 3. Golden native units and arithmetic
 

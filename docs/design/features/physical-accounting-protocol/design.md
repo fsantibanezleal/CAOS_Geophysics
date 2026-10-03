@@ -1,15 +1,16 @@
 # Pure accounting protocol design
 
-Date: 2026-10-03. Status: PROPOSED, full MAIN pre-code review required.
-All pure tests NOT_RUN; all actual OS/profile/host capability CLOSED/NOT_RUN.
+Date: 2026-10-03. Status: pure source/test scope MAIN-approved at2c94da4 and
+implemented; see [approval](approval.md) and [evidence](implementation-evidence.md).
+All pure gates locally PASS; all actual OS/profile/host capability CLOSED/NOT_RUN.
 Parent pin: 3959ffc29eb4f93e0cca04fdc3154eca7ea7ddca.
 See [contracts](contracts.md), [requirements](requirements.md),
 [validation](validation-plan.md) and [research](research.md).
 
 ## 1. Scope, assigned paths and non-authority
 
-Future implementation owner: this bounded ops accounting unit. MAIN owns review
-and exact next-scope approval. Only these NEW paths are proposed for later code:
+Implementation owner: this bounded ops accounting unit. MAIN owns independent
+pinned source review/rerun BEFORE promotion. Exactly these NEW source paths:
 
 ```text
 scripts/physical_accounting_protocol.py
@@ -68,7 +69,9 @@ from the phase table; no exported state setters or general event/callback API.
 Public constructors of records do not grant a session mutation path: it accepts
 only the specified scalar assertions/bytes and validates again. Eligibility and
 SafeError have the exact fields in contracts; additional public exports require
-review, not automatic acceptance. No implicit truthy success conversion is defined.
+review, not automatic acceptance. bool(ProtocolDecision/ProtocolEligibility)
+rejects with fixed ProtocolError: callers must explicitly read the typed fields,
+never use Python's default object truthiness as success or authorization.
 ProtocolDecision exact fields: phase (one table literal), stop_required (strict
 bool, true in STOP_REQUIRED/STOP_ASSERTED/FAILED_HELD), computation_failed
 (strict bool, sticky failure or held), reason_code (fixed safe code or

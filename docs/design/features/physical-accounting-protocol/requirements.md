@@ -1,11 +1,12 @@
 # Pure accounting protocol requirements
 
-Status: planned
-Date: 2026-10-03. Docs-only sub-SDD; FULL MAIN approval of its exact pin before code.
-Parent directional acceptance is not implementation or OS/context authorization.
+Date: 2026-10-03. Pure unit implemented under MAIN exact approval of2c94da4;
+see [approval](approval.md) and [actual local evidence](implementation-evidence.md).
+Parent directional acceptance is not native implementation or OS/context authorization.
 Read [research](research.md), [design](design.md), [contracts](contracts.md),
 [validation](validation-plan.md), [tasks](tasks.md) and [review packet](review-packet.md).
-All named tests are prospective, NOT_RUN; no test/source file is created here.
+All twelve named pure gates now exist/pass locally; independent MAIN review/rerun
+before develop promotion. All fifteen actual-platform gates still CLOSED/NOT_RUN.
 
 PAP-001 THE pure unit SHALL expose only deterministic in-memory protocol,
 conversion and state operations, without launch, source/profile measurements,
