@@ -21,3 +21,7 @@ R-MTC-007 WHEN the course is navigated from App, THE shell SHALL expose every M0
 R-MTC-008 THE change SHALL preserve every non-MT page section, existing replay MT algorithms, global styles, App/widgets/contracts, backend/scientific sources, canonical data and private ignored candidates. Gate: frontend/src/test/online-mt-course.test.ts::scoped integration and docs/validation/online-mt-course-review.md (path/section diff and full frontend test/build receipt).
 
 Independent release gates remain unresolved: canonical full assembly, actual-host resource/headroom/security acceptance and integrated App acceptance. Course tests cannot satisfy them.
+
+R-MTC-009 WHEN Introduction describes the product, THE course SHALL distinguish immutable originals, derived processing/corrections and inversion; actual owned CSV flag processing and reviewed bounded EDI admission; null field truth; offline GPU, bounded CPU and export/import without promising thirteen online methods or passed host admission. Preserve existing mathematical lessons. Gate: frontend/src/test/online-mt-course.test.ts::Introduction current scope and frontend/e2e/online-mt-course.spec.ts::Introduction scope grid.
+
+Ownership amendment2026-10-03: main explicitly verified exclusive Research.tsx ownership and authorized Introduction scope corrections. Preserve its existing equations and core lessons. R-MTC-008's preservation clause now excludes only this newly authorized Introduction prose/seam, not its equations or any other page.

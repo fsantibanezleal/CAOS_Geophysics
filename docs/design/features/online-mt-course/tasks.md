@@ -7,3 +7,5 @@
 5. R-MTC-001..008: publish scoped milestones and draft PR to develop with issue links and self-review. Do not merge/deploy or upgrade the full product/host ledger.
 
 Convergence: planned. Gates have not run. Host/canonical/App acceptance is independent and outstanding.
+
+6. R-MTC-009 amendment: correct Introduction current scope after explicit main authorization, preserving physical equations/core lessons; include it in the rendered grid before PR.
