@@ -7,4 +7,4 @@
 - [x] Persist scoped code and immutable runtime revision, run actual host controls, retain failures and fix the harness-only rate-budget cause without changing production rates.
 - [x] Review actual receipts, commit/push evidence and draft PR #101 to develop. No production activation or whole-product acceptance.
 - [ ] Pass complete admission: corrected 40-job sample failed unchanged 30% free-disk headroom (measured 29.42%). No exemption or passing receipt is authorized.
-- [ ] Integrate reviewed runtime/canonical source reconciliation after dependency PRs; keep public MT admission closed until all gates pass.
+- [x] Integrate reviewed runtime/canonical source reconciliation after PR #97/#100/#106; fresh local API regressions and actual cl061 rejection pass. Keep public MT admission closed until all gates pass.
