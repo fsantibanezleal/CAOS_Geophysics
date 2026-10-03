@@ -36,11 +36,13 @@ python scripts/check_content_standards.py
 git diff --cached --check
 ```
 
-The final test file has 69 collected cases: 68 unique cases passed across the full run and focused staging follow-up, and one ordinary-symlink case skipped. One focused guide gate overlaps the full run. Both suites emitted the existing Starlette TestClient deprecation warning, not a failure. Guard receipts: lint PASS; committed artifact hashes/sizes PASS (20 distinct truth cases, 120 experiments, 348 method results); template residue PASS; CI budget PASS; tracked content standards PASS; scoped whitespace check PASS. Named requirement gates were resolved against actual test functions; the hand-authored SVG parsed as XML. PowerShell wrapper help and Python CLI help passed. Bash launcher is a forwarding wrapper inspected for parity; no Linux execution is claimed. Canonical scientific training, baking and unrelated numerical/frontend suites were not run or modified by this bounded ops unit.
+The final test file has 69 collected cases: 68 unique cases passed across the full run and focused staging follow-up, and one ordinary-symlink case skipped. One focused guide gate overlaps the full run. Both suites emitted the existing Starlette TestClient deprecation warning, not a failure. Guard receipts: lint PASS; committed artifact hashes/sizes PASS (20 distinct truth cases, 120 experiments, 348 method results); template residue PASS; CI budget PASS; tracked content standards PASS; scoped whitespace check PASS. Named requirement gates were resolved against actual test functions; the hand-authored SVG parsed as XML. PowerShell wrapper help, Git Bash wrapper help and Python CLI help passed. The Bash launcher is executable and forwards the same arguments; no Linux execution is claimed. Canonical scientific training, baking and unrelated numerical/frontend suites were not run or modified by this bounded ops unit.
 
 ## Scope/history safety and main-agent handoff
 
 Worktree: isolated `geophysics-ops-recovery`; branch `task/geophysics-backup-restore`, based on fetched `origin/develop` at `2202ebd`. Every changed tracked path is NEW and owned by this ops unit. Config, worker, database, projects, migrations, frontend, release/version, workflows and management records are unchanged. No production/server writes, backup erasure, key generation outside temporary fixtures, merge or deployment occurred.
+
+Implementation commit: `17b5ea7`. Review handoff: [PR #102](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/102) targets develop and remains unmerged. The subsequent documentation/launcher-mode commit records this handoff; the exact reviewed head is recorded in the PR review thread.
 
 Main must verify these independently before release:
 
