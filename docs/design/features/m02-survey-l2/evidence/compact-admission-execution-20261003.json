@@ -1,0 +1,175 @@
+{
+  "schema": "m02-survey-l2-compact-admission-execution-1",
+  "recorded_date": "2026-10-03",
+  "source_state": "Pre-commit actual bytes; this is a new receipt, not a rewritten d7 optimizer receipt",
+  "base_head": "d7c66704edaeb46bc83dad4917f7cd41d12e09f1",
+  "authorization": "Original MAIN full 48245d1 SDD implementation approval; this milestone does not implement the newly proposed active-set exception",
+  "source_sha256": {
+    "data-pipeline/gravity_l2.py": "ee006ccd26fc955a40b094676982b115e2ce95d7c00261847d66ec582aac733a",
+    "data-pipeline/gravity_survey_l2.py": "50934e1f56fcd468787b113598d01966b0a0eb1b124cb95363605fea8278da97",
+    "tests/data/test_gravity_survey_l2.py": "3622ead3ce6a62e0f7bdba9113af873ac0894efb8fdb4f045d9a8a8e9fc9fb1e",
+    "tests/numerics/test_gravity_l2.py": "fb21a268b54a33dfbfd64fd1755af16029a31062890d0dd1b41e6be6f62e4c9e",
+    "tests/numerics/test_gravity_l2_selection.py": "44ea730ab3737e8b193141e6d27f6f9a221fb3df22ac938eecdcbc4c558b9ce5"
+  },
+  "runtime": {
+    "trusted_interpreter": "ProductCheckout/.venv-pipeline/Scripts/python.exe",
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "choclo": "0.3.2",
+    "pymatsolver": "0.4.0",
+    "platform": "Windows",
+    "bytecode_writes_disabled": true,
+    "blas_omp_threads": 1,
+    "installed_changes": 0,
+    "installed_source_pins_verified_by_focused_test": 28
+  },
+  "scope": [
+    "Exact compact calibration metadata, units, finite/hash/prior-bound identity rejection and readonly snapshots",
+    "Private fit maps original row identities into compact observation and principal covariance rows without an outer/full-n imputation",
+    "These are private stages: no complete calibrate/evaluate entry, full SPD/public-resource/selection admission or new direction algorithm"
+  ],
+  "red_green": [
+    {
+      "receipt": "calibration-admission-red.xml",
+      "sha256": "fd3c64518d1996ae26ab3c69fa54f42837c461b640af3dc6400f2803074c7fe0",
+      "tests": 22,
+      "failed": 22,
+      "passed": 0,
+      "skipped": 0,
+      "deselected": 42,
+      "junit_seconds": 4.092,
+      "junit_timestamp": "2026-10-03T11:09:14.969607-03:00",
+      "tool_chunk": "8f71c4",
+      "cause": "New private admission callable absent; tests authored/run before that implementation, not before all module files existed"
+    },
+    {
+      "receipt": "calibration-admission-green.xml",
+      "sha256": "7e436b59d0f73d1c8d0fe741bc5b09b9927670a77c00d540905a6ac04b0e4642",
+      "tests": 22,
+      "failed": 0,
+      "passed": 22,
+      "skipped": 0,
+      "deselected": 42,
+      "junit_seconds": 3.185,
+      "junit_timestamp": "2026-10-03T11:12:57.181265-03:00",
+      "tool_chunk": "ee03a1"
+    },
+    {
+      "receipt": "compact-fit-red.xml",
+      "sha256": "344e22e95227848130ee747fddbc38186430d1d4364faa8c012ee4adc2197a7d",
+      "tests": 5,
+      "failed": 5,
+      "passed": 0,
+      "skipped": 0,
+      "deselected": 40,
+      "junit_seconds": 6.221,
+      "junit_timestamp": "2026-10-03T11:16:06.807452-03:00",
+      "tool_chunk": "7a3a1f",
+      "cause": "Actual unexpected keyword observation_rows; compact builder option not implemented yet"
+    },
+    {
+      "receipt": "compact-fit-green.xml",
+      "sha256": "d9e188f1636d90a30660f849c66f1e917c4bd857ca92a76098295cfcf69226ea",
+      "tests": 5,
+      "failed": 0,
+      "passed": 5,
+      "skipped": 0,
+      "deselected": 40,
+      "junit_seconds": 4.717,
+      "junit_timestamp": "2026-10-03T11:24:13.251467-03:00",
+      "tool_chunk": "d297f7"
+    }
+  ],
+  "final_focused": {
+    "command": "& $ExistingPipelinePython -m pytest tests/data/test_gravity_survey_l2.py tests/numerics/test_gravity_l2.py tests/numerics/test_gravity_l2_selection.py tests/numerics/test_gravity_forward.py -o addopts= -q -rs -p no:cacheprovider --junitxml=$PrivateFocusedXml",
+    "receipt": "compact-final-focused.xml",
+    "sha256": "60ffcc0c1bf4334cd6c2ab7ba1133287dc839dc93bab456fd72ceb29b463c882",
+    "passed": 195,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "deselected": 0,
+    "new_local_components": 115,
+    "unchanged_forward_controls": 80,
+    "junit_seconds": 23.829,
+    "stdout_seconds": 23.83,
+    "junit_timestamp": "2026-10-03T11:35:04.418020-03:00"
+  },
+  "final_broader": {
+    "command": "& $ExistingPipelinePython -m pytest tests/data tests/numerics --ignore=tests/numerics/test_gravity_processing.py --ignore=tests/numerics/test_gravity_station_adapter.py --ignore=tests/numerics/test_gravity_transforms.py -o addopts= -q -rs -p no:cacheprovider --junitxml=$PrivateBroaderXml",
+    "receipt": "compact-final-broader.xml",
+    "sha256": "f18c1e3459531d131cc97569086a7db6b58b610322278c01b34187dcfef27f81",
+    "passed": 302,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 14,
+    "junit_seconds": 46.915,
+    "stdout_seconds": 46.97,
+    "junit_timestamp": "2026-10-03T11:38:51.827997-03:00",
+    "skip_attribution": {
+      "protected_archive_opt_in": 1,
+      "windows_symlink_privilege": 1,
+      "pygimli_not_installed": 2,
+      "rights_restricted_ert_asset_absent": 3,
+      "c15_mt_asset_absent": 3,
+      "rights_restricted_sgt_asset_absent": 4
+    },
+    "separated_unchanged_m01_files": "Original pipeline runtime lacks Boule/Harmonica as retained in historical receipt; not excluded new L2 gates",
+    "previous_separate_m01_execution": "164 PASS/1 protected archive skip at d7, reused only for these three unchanged files; no fresh same-runtime combined total"
+  },
+  "optimizer_preservation": {
+    "method": "Normalized AST comparison against git show d7c66704edaeb46bc83dad4917f7cd41d12e09f1:data-pipeline/gravity_l2.py",
+    "exact_algorithm_ast_unchanged": [
+      "_RecordedProjectedGNCG",
+      "_solve_partition",
+      "_kkt_gradient"
+    ],
+    "file_bytes_unchanged": false,
+    "d7_optimizer_source_sha256": "8f60909da5abe9cbc1f5fd6159a9a262e402346af4cf57a2bc566e8915684561",
+    "new_policy_implemented": false
+  },
+  "independent_main_review": {
+    "attribution": "MAIN separately authored/executed; not producer numerical acceptance",
+    "owner_report": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
+    "owner_report_read": true,
+    "owner_report_modified_or_duplicated": false,
+    "candidate": "d7c66704edaeb46bc83dad4917f7cd41d12e09f1",
+    "existing_168_pass_xml_sha256": "5ff79c2347fa1361268205aa1b0d3941c75a0360ca22382b4abfa391574c7623",
+    "metadata_12_pass_helper_sha256": "ce600ccab414319aad037c110d942ab84c7960b1350a7ff772752dc754fc8666",
+    "bounded_failed_receipt_sha256": "f118d046a6be3929d9432a921c728cc5a6295bd265cfc444dfecaf8e56f774da",
+    "bounded_receipt_read_and_hash_verified_here": true,
+    "bounded_counts": {
+      "pass": 2,
+      "fail": 2
+    },
+    "metadata_pass_does_not_resolve_optimizer": true
+  },
+  "not_accepted": [
+    "Degenerate active-set amendment awaits full MAIN review before any algorithm change",
+    "Complete16-gate inverse, eight-by-three candidate selection and sealed evaluation not implemented",
+    "All24 locked conditions and complete measured/projected operational resource gates pending",
+    "No field, API, IRLS, GPU, host, merge or deployment acceptance"
+  ],
+  "historical_receipts_rewritten": false,
+  "numerical_thresholds_changed": false,
+  "caps_seeds_or_candidates_changed": false,
+  "prepublication_checks": {
+    "ruff": "PASS, data-pipeline and tests",
+    "content_standards": "PASS",
+    "template_residue": "PASS,874 tracked files",
+    "ci_budget": "PASS",
+    "artifact_guard": "PASS, unchanged20 truths/120 experiments/348 method results; all SHA256 and sizes",
+    "product_ledger": "Structurally valid1 fail/18 unresolved; NOT scientific/release acceptance",
+    "protected_repository_hashes": 18,
+    "accepted_forward_test_hash_verified": true,
+    "original_seven_reviewed_files_unchanged": true,
+    "original_l2_and_forward_receipts_unchanged": true,
+    "base_integrity_strict_json_relative_links": "PASS",
+    "private_backup": "Original137-file directory present, ignored and git-untracked; digest not recomputed, no modifications",
+    "remote_ci_claimed": false
+  }
+}

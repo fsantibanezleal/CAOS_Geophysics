@@ -1,0 +1,189 @@
+{
+  "schema": "geophysics.m02-survey-l2-research/v1",
+  "date": "2026-10-03",
+  "base_revision": "1b112bb258520a5679a865335cec30b6a97a1a0d",
+  "status": "Source inspection and primary research only; no new scientific computation or implementation",
+  "repository_sha256": {
+    "data-pipeline/gravity_forward.py": "46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5",
+    "data-pipeline/potential.py": "37ab0563254196fc2e9f3d821959a7beb0fa07011ec07019d2248c90ede8a69e",
+    "data-pipeline/spatial_inverse.py": "514d7902afb2009482be0b26f844c4ebc5b894da9895aca2b9832deea4a4c18f",
+    "data-pipeline/ingest.py": "30d5c8cf25527f668cab44d8e2a1e2849531eaad441c0e0afc71bde4177f4692",
+    "data-pipeline/gravity_station_adapter.py": "b770b16ef87e83dd92f65a90472145ef93a525a9cedf7f55ee3e6f20f8a10cf8",
+    "data-pipeline/gravity_processing.py": "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321",
+    "data-pipeline/gravity_transforms.py": "d11d0f207c89c308c9f8711da2a31b84b8adaeb0c12597a5ecc89ce527fdecf0",
+    "data-pipeline/potential_sources.py": "90f3829743cf6c29c4a5639e8aeb8ea30efc4b5065038357fad2a79404c07683",
+    "docs/design/SDD.md": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
+    "docs/design/features/m02-survey-inversion/design.md": "a71e2bd328f0f20959fbd6d1e98aeb8f313f112c7e57ceaf4de92f8165aa6197",
+    "docs/design/features/m02-survey-inversion/requirements.md": "cb5f0854529aa480d70777c3283a4615b12c85afd38ec4dd69d86fa8077182c5",
+    "docs/design/features/m02-survey-inversion/tasks.md": "e727a4e88296c162032fd1522fd7a4debd89a217e5f2d44ef11d8f22d60c2979",
+    "docs/design/features/m02-survey-inversion/validation.md": "43932952808242ab6e86313a26f544a86b13cbda95c448dcf0a111b8933c595c",
+    "docs/design/features/m02-prism-operator/runtime-pins.json": "a5aa08c23a80e15024e6499fab6805315d52dee185c5de1010b5f46e5c9f5819",
+    "docs/design/features/m02-prism-operator/evidence/local-execution.json": "3b2d8e59338e8d678a9e97a9bb35e4868c34c58164b8cb1a2dd2e71a2c4d714e",
+    "docs/design/features/m02-prism-operator/evidence/final-geometry-execution.json": "3f779e1dbbdc7f8ea979ccbb0ffd07fea8c5e796991f1bee82ed27fe87367ffd",
+    "docs/design/features/m02-prism-operator/evidence/ready-execution.json": "07726bfbb72e16e8e1f401457806c98db3f47ae469f71a8fb0db649923ca1552",
+    "requirements-precompute.txt": "3c04ff92c44df5619978a1e444beaed6d0c19ec9e7e4f3d712dfceccdcbf1695"
+  },
+  "installed_versions": {
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "choclo": "0.3.2",
+    "pymatsolver": "0.4.0"
+  },
+  "installed_sources": {
+    "simpeg/data_misfit.py": {
+      "sha256": "1e223879152b1764db5e08d198ebfcd4faf5864601a842a90a0e31975fe9c843",
+      "bytes": 11166
+    },
+    "simpeg/optimization.py": {
+      "sha256": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+      "bytes": 50412
+    },
+    "simpeg/inverse_problem.py": {
+      "sha256": "e56070b71021be1cd9cc2222e496fc9f67e4e4c46551e7cafc289b6c2375ace7",
+      "bytes": 11082
+    },
+    "simpeg/inversion.py": {
+      "sha256": "1cc659992ff290c276e027ad9494741136eb3b2c1b35565cd31830e58c507381",
+      "bytes": 3347
+    },
+    "simpeg/regularization/base.py": {
+      "sha256": "aae7dbd3cb4887246f38c8ceba4fe8fbeeb5592110341635e06fdb70246a92b5",
+      "bytes": 87142
+    },
+    "simpeg/regularization/regularization_mesh.py": {
+      "sha256": "5283b4f854906aeb05c216ff1c83174c99a7c53fe6a3ce8227b8ea483e785f44",
+      "bytes": 21622
+    },
+    "simpeg/utils/code_utils.py": {
+      "sha256": "5f69a2cddfc8cbafa6b723466c7a46e20936efb8c37c3797591b2c262322e03b",
+      "bytes": 38521
+    },
+    "simpeg/simulation.py": {
+      "sha256": "ce5c964f69f524c160594ce61401d51fb19dc56e733c4d5a8117783716edfe80",
+      "bytes": 32232
+    }
+  },
+  "remote_sources": {
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/data_misfit.py": {
+      "http_status": 200,
+      "sha256": "1e223879152b1764db5e08d198ebfcd4faf5864601a842a90a0e31975fe9c843",
+      "bytes": 11166,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/optimization.py": {
+      "http_status": 200,
+      "sha256": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+      "bytes": 50412,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/inverse_problem.py": {
+      "http_status": 200,
+      "sha256": "e56070b71021be1cd9cc2222e496fc9f67e4e4c46551e7cafc289b6c2375ace7",
+      "bytes": 11082,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/inversion.py": {
+      "http_status": 200,
+      "sha256": "1cc659992ff290c276e027ad9494741136eb3b2c1b35565cd31830e58c507381",
+      "bytes": 3347,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/regularization/base.py": {
+      "http_status": 200,
+      "sha256": "aae7dbd3cb4887246f38c8ceba4fe8fbeeb5592110341635e06fdb70246a92b5",
+      "bytes": 87142,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/regularization/regularization_mesh.py": {
+      "http_status": 200,
+      "sha256": "5283b4f854906aeb05c216ff1c83174c99a7c53fe6a3ce8227b8ea483e785f44",
+      "bytes": 21622,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/utils/code_utils.py": {
+      "http_status": 200,
+      "sha256": "5f69a2cddfc8cbafa6b723466c7a46e20936efb8c37c3797591b2c262322e03b",
+      "bytes": 38521,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    },
+    "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/simulation.py": {
+      "http_status": 200,
+      "sha256": "ce5c964f69f524c160594ce61401d51fb19dc56e733c4d5a8117783716edfe80",
+      "bytes": 32232,
+      "equal_to_installed_bytes": true,
+      "equal_after_CRLF_to_LF_only": true
+    }
+  },
+  "inspection_method": "Read-only stdlib hashlib/importlib.metadata on trusted existing installed distributions; urllib.request to fixed official v0.25.2 URLs; no package imports, installs or file writes",
+  "source_scope": "Targeted installed source-byte inspection, not full environment or transitive supply-chain acceptance",
+  "proposed_implementation_sha256": null,
+  "proposed_test_sha256": null,
+  "new_numerical_gates_executed": 0,
+  "code_authority": "Pending MAIN full sub-SDD read and explicit approval",
+  "source_findings": {
+    "covariance": "L2DataMisfit.deriv uses W.T W; deriv2 uses W W. Symmetric W required for proposed full covariance path; no installed source modification.",
+    "stop": "Native optimal stoppers require all optimal conditions or any critical condition; small-gradient critical default differs from proposed normalized KKT policy. Exact mapping requires reviewed private recording/stopping subclass only.",
+    "null": "ProjectedGNCG free-set CG can divide residual norm by zero; stationary null case must stop before CG, nonstationary zero-free-direction remains a retained failure, not hidden jitter.",
+    "reference": "BaseInvProblem may adopt m0 as reference if none supplied; explicit reference required.",
+    "preconditioner": "BaseInvProblem default init_bfgs can factorize regularization Hessian; proposed explicit false plus positive diagonal preconditioner avoids an unadvertised dense/direct inverse."
+  },
+  "unavailable_access": [
+    {
+      "url": "https://gif.eos.ubc.ca/sites/default/files/Li_1998a.pdf",
+      "status": "Browser full-text open returned 400 timeout; search excerpt and author-hosted bibliographic record verified, not full-paper reread"
+    },
+    {
+      "url": "https://www.wsl.ch/lud/biodiversity_events/papers/Roberts_et_al-2017-Ecography.pdf",
+      "status": "Browser open returned 404; cached search title/excerpt not treated as current full-text access"
+    },
+    {
+      "url": "https://nsojournals.onlinelibrary.wiley.com/doi/10.1111/ecog.02881",
+      "status": "Initial response followed by find/internal errors and final 403; university-author metadata and official Verde description verified; no full-paper reread claimed"
+    }
+  ],
+  "docs_only_verification": {
+    "checked_at_utc": "2026-10-03 11:40:21 UTC",
+    "python": "3.12.10",
+    "platform": "Windows",
+    "bytecode_writes_disabled": true,
+    "scope": "Exactly seven new docs; no scientific code/test/runtime/data edits",
+    "commands": {
+      "scripts/check_content_standards.py": "pass",
+      "scripts/check_template_residue.py": "pass, 860 tracked files",
+      "scripts/check_ci_budget.py": "pass",
+      "scripts/check_sdd_convergence.py": "structurally valid, fail=1 unresolved=18 pass=0; not release acceptance",
+      "scripts/check_artifacts.py": "pass, unchanged 20 truths / 120 experiments / 348 method results; SHA-256 and sizes match",
+      "git diff --cached --check": "pass"
+    },
+    "base_integrity_rules": "pass, existing CI tracked-file and literal path-leak checks",
+    "strict_json_relative_links_scoped_new_paths": "pass",
+    "prospective_unique_absent_gates": 16,
+    "protected_repository_sha256_verified": 18,
+    "accepted_forward_test_sha256": "c50158f083cba3ad096ff7b17eccdcbeb0a31f6e8293d13ffdccb3f6d78624c1",
+    "unique_installed_source_pins_verified": 28,
+    "installed_source_manifest": "docs/design/features/m02-prism-operator/runtime-pins.json plus installed_sources above; no duplicates",
+    "installed_versions_verified": 7,
+    "remote_receipt_bindings_verified": 8,
+    "remote_refetch_in_final_audit": false,
+    "private_backup_tracked_paths": 0,
+    "private_backup_present_and_ignored": true,
+    "private_backup_digest_recomputed": false,
+    "new_numerical_gates_executed": 0,
+    "implementation_authorized": false
+  },
+  "notes": [
+    "Existing accepted gravity_forward.py SHA retained exactly; original three forward receipts untouched.",
+    "Existing Bartlett metadata gaps read from committed intake/M01 review, not freshly fetched provider data.",
+    "No new test suite, forward execution, inverse, resource benchmark, field, GPU, API or host acceptance."
+  ]
+}
