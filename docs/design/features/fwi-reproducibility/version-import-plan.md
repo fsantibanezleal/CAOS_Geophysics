@@ -61,6 +61,10 @@ Add an offline stdlib importer with three explicit commands:
    is absent, restore by copying the retained backup; do not overwrite an
    unexpected externally created canonical directory. Record final backup and
    publication digests, or explicit recovery status. No deployment/host writes.
+   Check target existence immediately before stage publication: preserve even
+   an unexpected empty directory, with the stage and private backup intact.
+   This is still a check-to-rename race, not a distributed lock; the owner must
+   coordinate all offline writers during the authorized operation.
 
 Both backup and staging must be fresh non-overlapping children of this worktree's
 ignored `data/raw/canonical-backups` and `data/experiments`, respectively. Reject

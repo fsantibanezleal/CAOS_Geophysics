@@ -278,6 +278,8 @@ def publish(stage, target, backup, expected_original, expected_published, failed
     try:
         if snapshot(backup) != expected_original:
             raise ValueError('Backup differs from frozen original')
+        if target.exists() or target.is_symlink() or target.is_junction():
+            raise FileExistsError('External canonical target appeared; preserve it and the original private backup')
         os.replace(stage, target)
         published = True
         if snapshot(target) != expected_published:

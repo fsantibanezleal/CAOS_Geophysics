@@ -216,13 +216,23 @@ def test_frozen_plan_drift_rejects_without_mutation(tmp_path, monkeypatch):
     assert not (tmp_path/'backup').exists()
 
 
-@pytest.mark.parametrize('failure', ['none', 'rename', 'postgate', 'external'])
+@pytest.mark.parametrize('failure', ['none', 'rename', 'postgate', 'external', 'external-empty', 'external-existing'])
 def test_publication_retains_original_backup_and_safe_recovery(tmp_path, monkeypatch, failure):
     target, stage, backup, failed = [tmp_path/name for name in ('canonical', 'stage', 'private-backup', 'failed')]
     write(target/'old.json', dict(original=True))
     write(stage/'new.json', dict(corrected=True))
     original, staged = importer.snapshot(target), importer.snapshot(stage)
     replace = importer.os.replace
+    if failure in ('external-empty', 'external-existing'):
+        def external_writer(source, destination):
+            if source == stage:
+                pytest.fail('An external canonical target must never reach the replacement syscall')
+            replace(source, destination)
+            if source == target:
+                target.mkdir()
+                if failure == 'external-existing':
+                    write(target/'external.json', dict(preserve=True))
+        monkeypatch.setattr(importer.os, 'replace', external_writer)
     if failure in ('rename', 'external'):
         def interrupted(source, destination):
             if source == stage:
@@ -238,15 +248,19 @@ def test_publication_retains_original_backup_and_safe_recovery(tmp_path, monkeyp
         result = importer.publish(stage, target, backup, original, staged, failed, check)
         assert result['original_backup_retained'] and importer.snapshot(target) == staged
     else:
-        with pytest.raises((OSError, ValueError), match='Injected'):
+        with pytest.raises((OSError, ValueError), match='External canonical' if failure.startswith('external-') else 'Injected'):
             importer.publish(stage, target, backup, original, staged, failed, check)
-        if failure == 'external':
+        if failure in ('external', 'external-existing'):
             assert (target/'external.json').exists() and not (target/'old.json').exists()
+        elif failure == 'external-empty':
+            assert target.is_dir() and list(target.iterdir()) == []
         else:
             assert importer.snapshot(target) == original
         if failure == 'postgate':
             assert importer.snapshot(failed) == staged
     assert importer.snapshot(backup) == original
+    if failure.startswith('external-'):
+        assert importer.snapshot(stage) == staged
 
 
 def test_publication_drift_or_existing_backup_never_moves_originals(tmp_path):
