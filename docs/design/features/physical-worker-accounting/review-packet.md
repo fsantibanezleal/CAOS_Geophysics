@@ -3,6 +3,10 @@
 Date: 2026-10-03. Status: docs-only proposal; full MAIN read/approval required.
 Issue [126](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/126),
 related [80](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/80).
+Draft review [PR 129](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/129)
+targets develop; it is not merged and grants no source/native execution authority.
+The PR head SHA and pinned self-review comment identify the final docs handoff;
+FULL MAIN approval remains pending for both platform implementations.
 
 ## 1. Immutable context and read order
 

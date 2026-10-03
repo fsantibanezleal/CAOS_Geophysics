@@ -19,10 +19,11 @@ tasks does not check any implementation or actual OS gate.
   launch authority/no-escape/backstop prerequisites and all NOT_RUN states explicit.
 - [x] D06: Finish path/link/receipt/requirement audits and existing cheap docs
   guards; record actual results in review packet; commit/push this scope only.
-- [ ] D07: Open a draft PR to develop, self-review exact docs head and hand off
+- [x] D07: Open a draft PR to develop, self-review exact docs head and hand off
   the entire folder/research for FULL MAIN read. Do not merge or mark implementation ready.
-  This last remote handoff is recorded by the PR/comment and final commit SHA,
-  not preclaimed by a checkbox before the PR exists.
+  [Draft PR 129](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/129)
+  records the exact head/self-review handoff. MAIN approval is still pending;
+  no implementation or OS task is checked by this remote docs handoff.
 
 ## 2. Mandatory hold and dependency order
 
