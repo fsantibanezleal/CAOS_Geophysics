@@ -163,3 +163,25 @@ Until AS-A is explicitly accepted, current native policy and zero_free_direction
 guard remain unchanged. Compact admission/source-metadata PASS, tiny algebra,
 docs guards and a feasible direction certificate do NOT establish complete
 inverse/resource/field/API/GPU/host acceptance. No merge/deploy authority.
+
+## Explicit MAIN approval before AS-B tests/code
+
+MAIN confirmed FULL read at1c8b2a1e6cd8dbf3088d3cb5a0c469cf8a0e99c6 of this
+complete amendment, the entire primary dossier and detailed one-direction receipt.
+MAIN independently checked installed official active/binding/CG/Armijo source
+and live Argonne sections2/3. On2026-10-03 MAIN explicitly APPROVED AS-B exactly
+as written: elementwise zero free residual AND any active-not-binding AFTER
+unchanged stops; existing positive D, finite projected descent, actual-trial
+slope/no-op rejection and None not-run CG diagnostics; cpu-2 and
+projected-gncg-degenerate-release-1. This approval is persisted BEFORE new red
+tests or implementation. Prior proposed/pending statements remain chronology.
+
+Authority covers only own gravity_l2.py, the three already-approved paired tests
+and additive own docs/evidence. Planner, accepted forward, installed sources,
+runtime environment, original documents/receipts, bounds/tolerances/seeds/caps
+remain unchanged. No ordinary-CG failure fallback. MAIN's d7 two failures remain
+literal historical failures. New-source controls must include frozen four plus
+six bound-start modes and all original16/24-case/selection/resource gates.
+Whole-unit acceptance requires later MAIN detached full review/run;195 historical
+focused passes are NOT amended-solver proof. No expanded paths, API/field/host,
+merge or deployment authority is granted.
