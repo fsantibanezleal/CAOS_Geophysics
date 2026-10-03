@@ -36,17 +36,85 @@ producer versions and all version-specific current source fingerprints remain
 intact. The reviewed guard epoch exception is explicit and unchanged; old
 tool hashes in independent receipts are not replaced. Full scientific coverage
 is 20 cases /120 conditions /348 methods, with 122 recovered, 184 unresolved,
-six failed and 36 negative controls retained. Main reports the post-import
-full artifact guard passed; this worker independently rechecks it.
+six failed and 36 negative controls retained. Both main and this worker passed
+the post-import full artifact guard. A separate `python -S` guard run passes
+without third-party site packages, preserving the no-rebake CI contract.
 
 ## Integration and post-import regression
 
-The source-scoped canonical milestone is persisted before a normal merge of
-reviewed develop `54277f95b836a302ab02ccb4af1fdd4d822a7eb2`. Its source-ledger
-metadata-verification unit is separate from FWI/MT physics and changes no frozen
-scientific producer/importer/guard module. Preserve both documentation nav lists
-if the merge requires resolving them. Post-integration regression receipts will
-be recorded here and in the new portable execution proof, not in old rehearsals.
+Canonical milestone `c8671022940fe0b0e249c90cf3fa8d238e645395` was committed
+and pushed before normal integration of reviewed develop
+`54277f95b836a302ab02ccb4af1fdd4d822a7eb2` at
+`0e1e4bc76f719ea6770f5bf26fc6dc402ae83f0a`. No conflicts occurred; both
+documentation nav lists remain unchanged. Upstream's metadata-verification
+source unit and its 22 additional tests are integrated, not authored by this
+worker. All frozen scientific producer/importer/guard hashes remain identical.
+
+All final tests execute at that merged source against actual `data/derived/v2`,
+not the old candidate/stage. New XML receipts are private ignored outputs,
+with their exact hashes, skips and coverage recorded in the portable proof:
+
+| Suite | Result | Receipt |
+| --- | --- | --- |
+| Full pipeline, strict setup and isolated cache | 361 passed, 15 skipped, zero failures/errors | `data/experiments/fwi-post-import-regression-20261003-run2/pipeline-tests.xml` |
+| Focused import/artifact/assembly controls | 85 passed, no skips/failures/errors | `data/experiments/fwi-post-import-regression-20261003-run1/focused-controls.xml` |
+| Fresh isolated API regression | 85 passed, one opt-in benchmark skip, zero failures/errors | `data/experiments/fwi-post-import-regression-20261003-run1/api-tests.xml` |
+
+The nine original solver/data files at baseline `f2bb280` now contain 194 tests,
+all passing without skips (172 prior tests plus 22 integrated source controls).
+Focused coverage remains 39 import, 14 artifact and 32 assembly tests. The API
+receipt is a fresh post-import run, not reuse of the prior 85/one rehearsal.
+Its upstream TestClient deprecation warning remains disclosed.
+
+The first post-import pipeline invocation passed 361/15 but had a non-fatal
+PowerShell `Resolve-Path` error for an optional cache directory. Its original
+run1 XML remains preserved. Final run2 creates a fresh isolated cache and makes
+setup errors terminating, then repeats all 361/15 tests without that error.
+No code, seed, physics tolerance or threshold changed between these runs.
+Broader skips cover opt-in source acquisition, missing PyGIMLi/rights-restricted
+ERT/SGT originals, absent C15 EDI and Windows symlink privilege; none covers
+FWI or the pinned cl061 control. Phase retraining, operations/host admission
+and frontend builds remain separate owner scopes, not silently claimed passed.
+
+Artifact, Ruff, content, template, CI-budget, base-integrity and diff checks pass.
+Read-only M13 asset integrity passes without touching phase files or training.
+Convergence is structurally valid with one failure and 18 unresolved. All test
+and inventory-reader jobs finished; final snapshots reconfirm unchanged backup,
+original candidate and published bytes. Workflow triggers remain trunk-only,
+so these are local execution receipts, not an invented task-branch CI run.
+
+## Reproduce read-only post-import checks
+
+`python` below means the existing pipeline interpreter. Install no shared
+dependencies: use the existing ignored repository-pinned M01 dependency target.
+Use fresh XML/cache output names on reproduction; do not overwrite receipts.
+Pin OMP/MKL to four, OpenBLAS/NumExpr to one for pipeline tests. The API uses
+the existing isolated online-MT interpreter read-only, no dependency overlay,
+with all four CPU thread variables set to one. Its pandas 3.0.6 remains
+attributed separately from pipeline pandas 2.2.3.
+
+```powershell
+python -S scripts/check_artifacts.py
+$env:INVERSE_EARTH_DATA = (Resolve-Path data/derived/v2).Path
+$env:FWI_RECOVERY_ARTIFACTS = $env:INVERSE_EARTH_DATA
+$env:PYTHONPATH = (Resolve-Path data/experiments/fwi-test-dependencies-pinned).Path
+python -m pytest tests --ignore=tests/api --ignore=tests/learning --ignore=tests/ops -q -o addopts='' -ra --junitxml=data/experiments/fwi-post-import-regression-20261003-run2/pipeline-tests.xml
+python -m pytest tests/test_fwi_import.py tests/test_artifact_contract.py tests/test_fwi_assembly.py -q -o addopts='' --junitxml=data/experiments/fwi-post-import-regression-20261003-run1/focused-controls.xml
+python -m pytest tests/api -q -o addopts='' -ra --tb=short --junitxml=data/experiments/fwi-post-import-regression-20261003-run1/api-tests.xml
+python -m ruff check data-pipeline tests scripts/import_fwi_candidate.py scripts/check_artifacts.py scripts/validate_fwi_mt_candidate.py
+python scripts/check_content_standards.py
+python scripts/check_template_residue.py
+python scripts/check_ci_budget.py
+python scripts/check_phase_assets.py
+python scripts/check_sdd_convergence.py
+git diff --check
+git ls-files data/raw/canonical-backups
+```
+
+Main's original 48-CUDA-model and 4,038-MT-state/3,072-refit independent receipts
+remain valid for the exactly preserved 133 producer/auxiliary files and unchanged
+scientific code. They are not relabeled as new post-import replays; no GPU rebake
+was required or added to CI. The new execution proof records this reuse explicitly.
 
 This canonical milestone is not app-version promotion, host admission, release,
 merge to main or deployment. R008 remains failed and 18 requirements unresolved;

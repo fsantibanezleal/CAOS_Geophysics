@@ -1,7 +1,7 @@
 {
   "schema": "inverse-earth/owner-executed-container-import/v1",
   "date": "2026-10-03",
-  "status": "Main executed exact reviewed import; independently verified original backup and published inventories; post-integration regression pending",
+  "status": "PASS owner execution, exact retained backup/published inventory, integrated-source canonical artifact guard and post-import regression; no deployment",
   "execution_attribution": {
     "operator": "Main integration owner",
     "executed_revision": "8285517c83084e9e3ae6024b7029dfb521d7d097",
@@ -1041,7 +1041,246 @@
     "method_results": 348
   },
   "post_import_regression": {
-    "status": "pending normal develop integration and fresh local tests"
+    "executed_revision": "0e1e4bc76f719ea6770f5bf26fc6dc402ae83f0a",
+    "canonical_data_root": "data/derived/v2",
+    "pipeline_tests": {
+      "path": "data/experiments/fwi-post-import-regression-20261003-run2/pipeline-tests.xml",
+      "sha256": "add218825b72da48df8025dccd89673167bc33a115f35b6172668cd7dd52d797",
+      "bytes": 52661,
+      "passed": 361,
+      "skipped": 15,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 51.551,
+      "skips": [
+        {
+          "test": "tests.data.test_potential_sources.test_real_local_source_intake",
+          "reason": "explicit local archive gate only; no download in tests or CI"
+        },
+        {
+          "test": "tests.data.test_potential_sources.test_storage_symlink_rejected",
+          "reason": "Windows symlink privilege unavailable; junction control remains required"
+        },
+        {
+          "test": "tests.numerics.test_ert.test_flat_homogeneous_oracle",
+          "reason": "could not import 'pygimli': No module named 'pygimli'"
+        },
+        {
+          "test": "tests.numerics.test_ert.test_topographic_factor_and_inverse",
+          "reason": "rights-restricted field raw asset is not present; run documented local acquisition"
+        },
+        {
+          "test": "tests.numerics.test_ert.test_field_result_receipt_and_uncertainty",
+          "reason": "rights-restricted field raw asset is not present; run documented local acquisition"
+        },
+        {
+          "test": "tests.numerics.test_ert.test_field_holdout_and_inverse_gate",
+          "reason": "rights-restricted field raw asset is not present; run documented local acquisition"
+        },
+        {
+          "test": "tests.numerics.test_gravity_processing.test_author_principal_fact_bytes_require_physical_metadata",
+          "reason": "Attributed field archive is a separate source acquisition, not a synthetic substitute"
+        },
+        {
+          "test": "tests.numerics.test_mt_field_qc.test_pinned_field_receipt",
+          "reason": "Acquire the ignored C15 EDI using the documented command"
+        },
+        {
+          "test": "tests.numerics.test_mt_field_qc.test_ineligible_never_becomes_inverse",
+          "reason": "Acquire the ignored C15 EDI using the documented command"
+        },
+        {
+          "test": "tests.numerics.test_mt_field_qc.test_field_scores_against_independent_component_formula_and_tipper_mask",
+          "reason": "Acquire the ignored C15 EDI using the documented command"
+        },
+        {
+          "test": "tests.numerics.test_traveltime.test_homogeneous_forward_oracle",
+          "reason": "could not import 'pygimli': No module named 'pygimli'"
+        },
+        {
+          "test": "tests.numerics.test_traveltime.test_homogeneous_time_and_field_holdout",
+          "reason": "rights-restricted .sgt absent; run documented local acquisition"
+        },
+        {
+          "test": "tests.numerics.test_traveltime.test_field_receipt_and_uncertainty_boundary",
+          "reason": "rights-restricted .sgt absent; run documented local acquisition"
+        },
+        {
+          "test": "tests.numerics.test_traveltime.test_independent_process_fit_reproducibility",
+          "reason": "rights-restricted .sgt absent; run documented local acquisition"
+        },
+        {
+          "test": "tests.numerics.test_traveltime.test_whole_shot_splits_and_failure_gate",
+          "reason": "rights-restricted .sgt absent; run documented local acquisition"
+        }
+      ]
+    },
+    "focused_import_artifact_assembly_tests": {
+      "path": "data/experiments/fwi-post-import-regression-20261003-run1/focused-controls.xml",
+      "sha256": "d66e1472abe15a1ff32a6e2b24dd2d4a37c700fe9c99de608d9bd29a23a06f3d",
+      "bytes": 11498,
+      "passed": 85,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 7.129,
+      "skips": []
+    },
+    "api_tests": {
+      "path": "data/experiments/fwi-post-import-regression-20261003-run1/api-tests.xml",
+      "sha256": "d33da7614a58a007598a322467cc0a0bd886e1058d1d52f12f47029b5ece9589",
+      "bytes": 11052,
+      "passed": 85,
+      "skipped": 1,
+      "failures": 0,
+      "errors": 0,
+      "seconds": 132.349,
+      "skips": [
+        {
+          "test": "tests.api.test_online_mt_benchmark.test_local_nominal_upper_malformed_admission",
+          "reason": "explicit local benchmark only"
+        }
+      ]
+    },
+    "api_receipt_reused": false,
+    "original_solver_data_suite": {
+      "baseline": "f2bb280",
+      "files": [
+        "tests/data/test_ingest_dispatch.py",
+        "tests/data/test_sources.py",
+        "tests/test_artifact_contract.py",
+        "tests/test_edi.py",
+        "tests/test_learning_evidence.py",
+        "tests/test_mt_recovery.py",
+        "tests/test_rebuild.py",
+        "tests/test_recovery.py",
+        "tests/test_seismic_recovery.py"
+      ],
+      "passed": 194,
+      "skipped": 0
+    },
+    "no_errors_or_failures": true,
+    "scientific_numerical_replay_reuse": "Main's original 48 CUDA models, 4038 MT states and 3072 refits remain valid for all 133 exactly preserved producer/auxiliary files and unchanged scientific hashes; no rebake or false new receipt",
+    "guard_results": {
+      "artifact": {
+        "cases": 20,
+        "runs": 120,
+        "method_results": 348,
+        "status": "PASS including python -S without third-party site packages"
+      },
+      "ruff": "PASS",
+      "content": "PASS",
+      "template": "PASS",
+      "ci_budget": "PASS",
+      "base_integrity": "PASS",
+      "phase_asset_integrity": "PASS read-only, no phase retraining",
+      "convergence": {
+        "structurally_valid": true,
+        "fail": 1,
+        "unresolved": 18,
+        "release_acceptance": false
+      },
+      "diff": "PASS"
+    },
+    "initial_pipeline_wrapper_error": {
+      "status": "Non-fatal missing optional NUMBA_CACHE_DIR Resolve-Path; pytest itself passed 361/15",
+      "receipt": {
+        "path": "data/experiments/fwi-post-import-regression-20261003-run1/pipeline-tests.xml",
+        "sha256": "e0e830c55be49a102b4030d9e18e439c89d491928a8d7532ec2240e31516f092",
+        "bytes": 52661,
+        "passed": 361,
+        "skipped": 15,
+        "failures": 0,
+        "errors": 0,
+        "seconds": 51.76,
+        "skips": [
+          {
+            "test": "tests.data.test_potential_sources.test_real_local_source_intake",
+            "reason": "explicit local archive gate only; no download in tests or CI"
+          },
+          {
+            "test": "tests.data.test_potential_sources.test_storage_symlink_rejected",
+            "reason": "Windows symlink privilege unavailable; junction control remains required"
+          },
+          {
+            "test": "tests.numerics.test_ert.test_flat_homogeneous_oracle",
+            "reason": "could not import 'pygimli': No module named 'pygimli'"
+          },
+          {
+            "test": "tests.numerics.test_ert.test_topographic_factor_and_inverse",
+            "reason": "rights-restricted field raw asset is not present; run documented local acquisition"
+          },
+          {
+            "test": "tests.numerics.test_ert.test_field_result_receipt_and_uncertainty",
+            "reason": "rights-restricted field raw asset is not present; run documented local acquisition"
+          },
+          {
+            "test": "tests.numerics.test_ert.test_field_holdout_and_inverse_gate",
+            "reason": "rights-restricted field raw asset is not present; run documented local acquisition"
+          },
+          {
+            "test": "tests.numerics.test_gravity_processing.test_author_principal_fact_bytes_require_physical_metadata",
+            "reason": "Attributed field archive is a separate source acquisition, not a synthetic substitute"
+          },
+          {
+            "test": "tests.numerics.test_mt_field_qc.test_pinned_field_receipt",
+            "reason": "Acquire the ignored C15 EDI using the documented command"
+          },
+          {
+            "test": "tests.numerics.test_mt_field_qc.test_ineligible_never_becomes_inverse",
+            "reason": "Acquire the ignored C15 EDI using the documented command"
+          },
+          {
+            "test": "tests.numerics.test_mt_field_qc.test_field_scores_against_independent_component_formula_and_tipper_mask",
+            "reason": "Acquire the ignored C15 EDI using the documented command"
+          },
+          {
+            "test": "tests.numerics.test_traveltime.test_homogeneous_forward_oracle",
+            "reason": "could not import 'pygimli': No module named 'pygimli'"
+          },
+          {
+            "test": "tests.numerics.test_traveltime.test_homogeneous_time_and_field_holdout",
+            "reason": "rights-restricted .sgt absent; run documented local acquisition"
+          },
+          {
+            "test": "tests.numerics.test_traveltime.test_field_receipt_and_uncertainty_boundary",
+            "reason": "rights-restricted .sgt absent; run documented local acquisition"
+          },
+          {
+            "test": "tests.numerics.test_traveltime.test_independent_process_fit_reproducibility",
+            "reason": "rights-restricted .sgt absent; run documented local acquisition"
+          },
+          {
+            "test": "tests.numerics.test_traveltime.test_whole_shot_splits_and_failure_gate",
+            "reason": "rights-restricted .sgt absent; run documented local acquisition"
+          }
+        ]
+      },
+      "corrected": "New isolated cache and terminating setup errors; repeat full pipeline in fresh run2, unchanged sources/thresholds"
+    },
+    "readers_and_tests_complete": true
+  },
+  "integration": {
+    "canonical_commit": "c8671022940fe0b0e249c90cf3fa8d238e645395",
+    "develop_revision": "54277f95b836a302ab02ccb4af1fdd4d822a7eb2",
+    "normal_merge_revision": "0e1e4bc76f719ea6770f5bf26fc6dc402ae83f0a",
+    "scientific_tools_changed": false,
+    "nav_lists_unchanged": true,
+    "upstream_paths": [
+      "data-pipeline/sources.py",
+      "data/source-ledger.json",
+      "docs/design/features/stead-source-reconciliation/design.md",
+      "docs/design/features/stead-source-reconciliation/requirements.md",
+      "docs/design/features/stead-source-reconciliation/tasks.md",
+      "docs/design/features/stead-source-reconciliation/validation.md",
+      "docs/guides/05_sources.md",
+      "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+      "tests/data/test_sources.py"
+    ],
+    "source_unit": {
+      "data-pipeline/sources.py": "0b14ce2c0df0448a700d2f49a1026f893dd9deee03eeab9d7bfc65bafb1338d7",
+      "data/source-ledger.json": "c962b040a416ceb3f6e1d85d5310119f70486d1a498e5e60692d46a1ea2f21cd"
+    }
   },
   "limits": [
     "No app-version change, deployment, main-branch mutation or host cutover",
