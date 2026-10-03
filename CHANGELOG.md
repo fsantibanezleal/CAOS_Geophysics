@@ -2,6 +2,10 @@
 
 All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
+## Unreleased replacement
+
+- Adds a source-bound requirement convergence ledger with strict coverage, evidence hashes, executable-gate checks and a separate release-refusal mode. Records the current incomplete M01-M13 platform state without changing the legacy release, scientific artifacts or public deployment.
+
 ## [0.04.001] - 2026-09-26
 
 - Adds a source-hashed, 42-frequency measured Clear Lake EDI tensor screen with explicit unit/variance assumptions, DOI attribution, and a failed necessary isotropic-1D test. It exports no field inversion or geological target; the original synthetic inversion fixtures remain separate.
