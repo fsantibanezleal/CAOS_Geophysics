@@ -328,7 +328,7 @@ export function Plot({
           {pick === null
             ? yLabel
             : series
-                .map((s) => `${s.name}: ${format(s.values[pick])}${s.errors ? ` ± ${format(s.errors[pick])}` : ""} ${yLabel}`)
+                .map((s) => `${s.name}: ${Number.isFinite(s.values[pick]) ? `${format(s.values[pick])}${s.errors ? ` ± ${format(s.errors[pick])}` : ""} ${yLabel}` : t("not in partition", "fuera de partición")}`)
                 .join(" · ")}
         </output>
       </figcaption>
@@ -422,7 +422,8 @@ export function Plot({
                     cx={X(x[i])}
                     cy={Y(v)}
                     r={i === pick ? 4.5 : 2.3}
-                    fill={s.color ?? hues[j % 3]}
+                    fill={s.dashed ? "var(--color-surface)" : s.color ?? hues[j % 3]}
+                    stroke={s.color ?? hues[j % 3]}
                     data-index={i} data-x={x[i]} data-value={v}
                   />
                 ) : null,
@@ -470,12 +471,16 @@ export function LayerColumn({
   thickness,
   title,
   range = [0, 4],
+  selectedLayer,
+  onSelect,
 }: {
   rho: number[];
   comparison?: number[];
   thickness: number[];
   title: string;
   range?: [number, number];
+  selectedLayer?: number;
+  onSelect?: (layer: number) => void;
 }) {
   const full = [
       ...thickness,
@@ -497,6 +502,12 @@ export function LayerColumn({
             <div
               key={i}
               className="earth-layer"
+              role={onSelect ? "button" : undefined}
+              tabIndex={onSelect ? 0 : undefined}
+              aria-pressed={onSelect ? selectedLayer === i : undefined}
+              aria-label={`${i + 1}: ${v} Ω m; ${top} m — ${i < thickness.length ? top + full[i] : "∞"} m`}
+              onClick={() => onSelect?.(i)}
+              onKeyDown={e => { if (onSelect && ["Enter", " "].includes(e.key)) { e.preventDefault(); onSelect(i); } }}
               style={{
                 flexGrow: full[i] / total,
                 background: color(Math.log10(v), range, "velocity"),
