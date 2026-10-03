@@ -1,0 +1,185 @@
+{
+  "schema": "geophysics.potential-source-intake-evidence/v1",
+  "inspected_at_utc": "2026-10-03T06:40:28.077270+00:00",
+  "scope": "Local source intake and QC inspection only; no correction module integration, canonical case, inversion, merge or deployment",
+  "archive": {
+    "source_id": "clear-lake-author-potentials-v2",
+    "version_doi": "10.5281/zenodo.16975696",
+    "bytes": 121295137,
+    "sha256": "337a2d9070493773af06aee11a19d591e6468ecf0f062dd75c194a04476c0cdf",
+    "md5": "7ef5beb984425bf0edabd829cf880187",
+    "entry_count": 40,
+    "expanded_bytes": 299907397,
+    "inventory_sha256": "e8f8b513fbb110b32cd7a3d21e29557056b508dd2911ba04a851df4c50b41407",
+    "selected_member_count": 4,
+    "selected_bytes": 221999149,
+    "modified": false,
+    "rights_statement": "Zenodo version 2 declares CC BY 4.0; retain authors, version DOI, original USGS references and any modification notice. No code licence is inferred for data.",
+    "citation": "Su, Wu, Sun, Wei and Chen (2025), Joint inversion and integrated geological interpretation for natural hydrogen exploration: code and results, v2, DOI 10.5281/zenodo.16975696. Underlying Bartlett release DOI 10.5066/P90F5TGH; station compilation/coordinate transforms are the author's derivative, not byte-identical original USGS attachments.",
+    "members": [
+      {
+        "bytes": 335377,
+        "name": "data/ground_gravity_data.csv",
+        "path": "data/downloads/extracted/clear-lake-author-potentials-v2/data/ground_gravity_data.csv",
+        "sha256": "7cb3ed0c3cbac60f896a11f213ba40209c3083cb7635ab80ab7c0fd0382a1055"
+      },
+      {
+        "bytes": 28531313,
+        "name": "data/aeromagnetic_data.csv",
+        "path": "data/downloads/extracted/clear-lake-author-potentials-v2/data/aeromagnetic_data.csv",
+        "sha256": "400c13f500d8c6163848a300237d062c7d9e978be19a99ee03b6aff3379ddd68"
+      },
+      {
+        "bytes": 193035546,
+        "name": "data/topography_data.csv",
+        "path": "data/downloads/extracted/clear-lake-author-potentials-v2/data/topography_data.csv",
+        "sha256": "482e7a63587292a0251aad758b2c2b547d4b59593b3bd413edd5dad6ba5ee214"
+      },
+      {
+        "bytes": 96913,
+        "name": "README.pdf",
+        "path": "data/downloads/extracted/clear-lake-author-potentials-v2/README.pdf",
+        "sha256": "28d22dab9fde8961d2fddfa6ac1df50f69f85cc75a45b9e93a03dd2949fc3fe1"
+      }
+    ]
+  },
+  "metadata": {
+    "source_id": "bartlett-fgdc",
+    "original_release_doi": "10.5066/P90F5TGH",
+    "bytes": 37384,
+    "sha256": "84d3d512f9deba53ae0251c74354c389b8723d056375390d2bfebd28c24b8295",
+    "rights": "USGS associated release CC0 1.0",
+    "original_measurements_byte_verified": false,
+    "datum_label": "elevation_ft_NVD29",
+    "spatial_reference_section_present": false
+  },
+  "profile": {
+    "raw_bytes": 335377,
+    "raw_sha256": "7cb3ed0c3cbac60f896a11f213ba40209c3083cb7635ab80ab7c0fd0382a1055",
+    "row_count": 2929,
+    "channel_bounds": {
+      "CBA": {
+        "max": 8.16,
+        "min": -59.75,
+        "missing_count": 0,
+        "valid_count": 2929
+      },
+      "FAA": {
+        "max": 108.99,
+        "min": -20.47,
+        "missing_count": 70,
+        "valid_count": 2859
+      },
+      "ISO": {
+        "max": 9,
+        "min": -34.13,
+        "missing_count": 0,
+        "valid_count": 2929
+      },
+      "OG": {
+        "max": 980038.1,
+        "min": 979715.5700000001,
+        "missing_count": 0,
+        "valid_count": 2929
+      },
+      "SBA": {
+        "max": 5.49,
+        "min": -79.41,
+        "missing_count": 70,
+        "valid_count": 2859
+      },
+      "TTC": {
+        "max": 38.39,
+        "min": 0.88,
+        "missing_count": 0,
+        "valid_count": 2929
+      }
+    },
+    "flag_count": 140,
+    "flags_by_field": [
+      {
+        "field": "FAA",
+        "count": 70,
+        "reason": "missing_or_nonfinite"
+      },
+      {
+        "field": "SBA",
+        "count": 70,
+        "reason": "missing_or_nonfinite"
+      }
+    ],
+    "duplicate_station_ids": [
+      "SROA55",
+      "SROR4"
+    ],
+    "duplicate_xyz_group_count": 1,
+    "excluded_row_count": 0,
+    "cba_minus_sba_minus_ttc": {
+      "valid_count": 2859,
+      "min_mgal": -1.4199999999999946,
+      "max_mgal": -0.019999999999999577,
+      "interpretation": "Arithmetic difference only, not a physical closure or prediction residual"
+    },
+    "vertical_reference": "unresolved: zWGS84 label alone does not specify its datum/transformation",
+    "horizontal_reference": "Author labels WGS84 longitude/latitude and WGS84 UTM10N projected channels",
+    "uncertainty": {
+      "kind": "unavailable",
+      "reason": "Source CSV has no measurement-error column"
+    },
+    "correction_state": {
+      "CBA": "provider complete Bouguer anomaly",
+      "FAA": "provider free-air anomaly",
+      "ISO": "provider isostatic anomaly",
+      "OG": "observed gravity in author compilation; original provider tide/drift/base ties already applied",
+      "SBA": "provider simple Bouguer anomaly",
+      "TTC": "provider total terrain correction"
+    },
+    "correction_state_evidence": "Original FGDC processing attribution; author station/channel lineage not independently verified",
+    "corrections_applied_by_intake": false,
+    "modelling_eligible": false,
+    "ineligible_reasons": [
+      "Unresolved original/author vertical datum and transform",
+      "Measurement uncertainties absent",
+      "Author compilation needs station-level original-source/processing lineage review"
+    ],
+    "inversion_performed": false
+  },
+  "receipt_files": [
+    {
+      "path": "data/raw/acquisition/bartlett-fgdc.json",
+      "bytes": 1154,
+      "sha256": "8836a28e25916c4a9b610f7d88fa42fb6527e84c4b93cb69e2a61d82e999927a"
+    },
+    {
+      "path": "data/raw/acquisition/clear-lake-author-potentials-v2.json",
+      "bytes": 1385,
+      "sha256": "a05e66de1c144f62674fb31d81b1dc40f5443c5c22ac2eceef0b3e4792af2659"
+    },
+    {
+      "path": "data/raw/acquisition/clear-lake-author-potentials-v2-members.json",
+      "bytes": 2008,
+      "sha256": "a8a8324837eda715f2eaefd9c4ea6772eb21e4d29bd66955108d099e798b320f"
+    }
+  ],
+  "ignored_profile_files": [
+    {
+      "path": "data/raw/potential-source-intake/gravity-inspection-20261003.json",
+      "bytes": 793365,
+      "sha256": "8c1f4af344221aa76686330ce5b2703f5b611a2b3946562e5ada05147b3ccfb1"
+    },
+    {
+      "path": "data/raw/potential-source-intake/gravity-inspection-shell-20261003.json",
+      "bytes": 793365,
+      "sha256": "6449dc7a679565cb1fdc00287a83ff75d4764fe2a1062f05ff08d1b7ec211b25"
+    }
+  ],
+  "entrypoint_equivalence": "PowerShell and Git Bash outputs identical excluding profiled_at_utc; all selected objects and receipts reused without change",
+  "environment": {
+    "python": "3.12.10",
+    "interpreter": "D:/_worktrees/geophysics-m01-corrections/.venv-m01/Scripts/python.exe",
+    "usage": "Existing isolated virtualenv used read-only; no installs or package changes",
+    "pytest": "9.1.1",
+    "ruff": "0.15.18",
+    "intake_dependencies": "Python standard library only; no provider arrays/models/code executed"
+  }
+}

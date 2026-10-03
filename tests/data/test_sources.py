@@ -1,5 +1,6 @@
 """Source rights, exact object identity, local immutability and publication boundary."""
 import hashlib
+import copy
 import json
 from pathlib import Path
 import subprocess
@@ -29,7 +30,7 @@ def test_ledger_contract_and_rights():
     records = load_ledger()
     assert set(records) == {"simpeg-gravity", "simpeg-magnetics", "original-synthetic",
                             "clear-lake-cl061", "auslamp-nsw-c15", "pygimli-slagdump", "pygimli-koenigsee",
-                            "stead-metadata"}
+                            "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2"}
     assert {record["rights_decision"] for record in records.values()} <= {
         "mirror", "provider-link-only", "derivative-only", "forbidden"}
     assert all(record["raw_path"].startswith("data/downloads/") for record in records.values()
@@ -181,8 +182,54 @@ def test_no_external_raw_tracked():
 
 def test_documented_source_inventory():
     guide = (ROOT / "docs/guides/05_sources.md").read_text(encoding="utf-8")
+    guide += (ROOT / "docs/guides/11_potential_source_intake.md").read_text(encoding="utf-8")
     contract = (ROOT / "docs/data-contract/data-contract.md").read_text(encoding="utf-8")
     for source_id in load_ledger():
         assert source_id in guide
     for term in ("provider-link-only", "sha256", "data/downloads/", "data/raw/"):
         assert term in guide and term in contract
+
+
+@pytest.mark.parametrize("field,value", [
+    ("max_entries", True), ("max_entries", 1.5), ("max_entries", 513),
+    ("max_entries", 10**1000), ("max_expanded_bytes", 0),
+    ("max_expanded_bytes", 500_000_001), ("max_member_bytes", -1),
+    ("max_member_bytes", 200_000_001), ("max_expansion_ratio", float("nan")),
+    ("max_expansion_ratio", float("inf")), ("max_expansion_ratio", True),
+    ("max_expansion_ratio", 1001), ("selected_members", {}), ("selected_members", []),
+])
+def test_archive_contract_limits_in_ledger(tmp_path, field, value):
+    record = copy.deepcopy(load_ledger()["clear-lake-author-potentials-v2"])
+    record["archive_contract"][field] = value
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    with pytest.raises(SourceError, match="limit"):
+        load_ledger(ledger)
+
+
+@pytest.mark.parametrize("name,pin", [
+    ("../outside.csv", {"bytes": 1, "sha256": "0" * 64}),
+    ("data/CON.csv", {"bytes": 1, "sha256": "0" * 64}),
+    ("data/model.npy", {"bytes": 1, "sha256": "0" * 64}),
+    ("data/valid.csv", {"bytes": True, "sha256": "0" * 64}),
+    ("data/valid.csv", {"bytes": 1, "sha256": "A" * 64}),
+    ("data/valid.csv", {"bytes": 1}),
+    ("data/valid.csv", {"bytes": 1, "sha256": "0" * 64, "execute": True}),
+])
+def test_archive_contract_member_pins_in_ledger(tmp_path, name, pin):
+    record = copy.deepcopy(load_ledger()["clear-lake-author-potentials-v2"])
+    record["archive_contract"]["selected_members"] = {name: pin}
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    with pytest.raises(SourceError):
+        load_ledger(ledger)
+
+
+def test_archive_contract_required_only_for_research_zip(tmp_path):
+    record = copy.deepcopy(load_ledger()["clear-lake-author-potentials-v2"])
+    ledger = tmp_path / "ledger.json"
+    for mutation in (dict(record, archive_contract=None), dict(record, format="fgdc-metadata-xml"),
+                     dict(record, archive_contract=dict(record["archive_contract"], ignored_limit=1))):
+        ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [mutation]}), encoding="utf-8")
+        with pytest.raises(SourceError, match="archive_contract"):
+            load_ledger(ledger)
