@@ -1,0 +1,806 @@
+{
+  "benchmark": {
+    "file": "benchmark.json",
+    "qc_valid": 5926,
+    "reference": "STEAD manual P/S picks, not geological truth",
+    "selected": 6000,
+    "sha256": "9e9f22f50b789fa8b85d2249321472ad0678ba01ceb0e97b1f32f3abcf3c7b96",
+    "tolerance_s": 0.5
+  },
+  "browser_parity_verified": false,
+  "input": {
+    "component_order": [
+      "E",
+      "N",
+      "Z"
+    ],
+    "duration_s": 60,
+    "file_dtype": "float32-little-endian",
+    "file_layout": "component-major; 6000 consecutive samples per component",
+    "normalization": "per-component float64 mean cast to float32; subtract in float32; divide by float32 peak absolute centred count",
+    "original_unit": "unrestituted instrument counts",
+    "sample_rate_hz": 100,
+    "samples": 6000,
+    "shape": [
+      1,
+      3,
+      6000
+    ],
+    "unit": "dimensionless normalized instrument counts"
+  },
+  "model": {
+    "bytes": 5739696,
+    "checkpoint_sha256": "90765889d05093356aae2e193bab6bf3a8122744510ccd7f125f5215763d1f09",
+    "file": "model.onnx",
+    "native_dev_max_abs_probability_error": 1.0728836059570312e-06,
+    "native_dev_max_peak_error_samples": 0,
+    "peak_rule": "global class argmax above threshold; S abstains when S-P < 0.4 s",
+    "probabilities_calibrated": false,
+    "sha256": "4e5962ed0a9037e545991c218ae770ae7aff2c01f1e6a919c338705780ce5f4c",
+    "thresholds": {
+      "P": 0.8,
+      "S": 0.8
+    }
+  },
+  "output": {
+    "classes": [
+      "N",
+      "P",
+      "S"
+    ],
+    "shape": [
+      1,
+      3,
+      6000
+    ]
+  },
+  "records": [
+    {
+      "analyst_p_s": 7.0,
+      "analyst_s_s": 12.77,
+      "category": "earthquake_local",
+      "channel": "EH",
+      "network": "PB",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.0005640464288602136,
+          0.0004448747080426377,
+          -0.00021007876388891115
+        ],
+        "peak_centered_counts": [
+          470.0909729003906,
+          342.7807922363281,
+          395.5390319824219
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "PB.B917",
+      "status": "qc-valid",
+      "trace_id": "B917.PB_20110107214856_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-00.f32",
+      "waveform_sha256": "10532b1af61372fab0a3069240b0dc1b79fa249a66c1de823316242ed2d5f83f"
+    },
+    {
+      "analyst_p_s": 7.0,
+      "analyst_s_s": 9.32,
+      "category": "earthquake_local",
+      "channel": "EH",
+      "network": "PB",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.0009363429188706504,
+          -2.052055445089233e-05,
+          0.0006891721901774872
+        ],
+        "peak_centered_counts": [
+          1608.8682861328125,
+          1320.1988525390625,
+          675.4240112304688
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "PB.B093",
+      "status": "qc-valid",
+      "trace_id": "B093.PB_20111211064029_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-01.f32",
+      "waveform_sha256": "cae0f89f619dc7156f401189077e812f2aa2946400d5116f5c0d140bc999752f"
+    },
+    {
+      "analyst_p_s": 9.0,
+      "analyst_s_s": 12.6,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "NC",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.3140714247972937,
+          0.7991033142451197,
+          -0.8896662099416522
+        ],
+        "peak_centered_counts": [
+          6553.0537109375,
+          9497.28125,
+          8505.1884765625
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "NC.BBGB",
+      "status": "qc-valid",
+      "trace_id": "BBGB.NC_20110929163129_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-02.f32",
+      "waveform_sha256": "ce8e65b17afa6b76aae4f71c430e26e6718c2d60ee45a9e199cb633b5fbc2ebf"
+    },
+    {
+      "analyst_p_s": 5.0,
+      "analyst_s_s": 8.91,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "NC",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.13180342509395754,
+          -0.025586038141705406,
+          -0.04973029180280476
+        ],
+        "peak_centered_counts": [
+          1787.088623046875,
+          1908.6285400390625,
+          1632.0909423828125
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "NC.BBGB",
+      "status": "qc-valid",
+      "trace_id": "BBGB.NC_20110309162307_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-03.f32",
+      "waveform_sha256": "eb8acf07e585eb6b4b1818694aefcb00bc79d4a5b99609fdaa366e7d43ac5acf"
+    },
+    {
+      "analyst_p_s": 4.0,
+      "analyst_s_s": 13.43,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "CI",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.2942365683422734,
+          0.3173450569057216,
+          0.08921818224526942
+        ],
+        "peak_centered_counts": [
+          2598.9697265625,
+          2302.08642578125,
+          1564.2779541015625
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "CI.BBR",
+      "status": "qc-valid",
+      "trace_id": "BBR.CI_20160306010500_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-04.f32",
+      "waveform_sha256": "1fc7f538b0b99bdece75b05d3c19c17bb6795ad29c950da81a04b75e154a4ec6"
+    },
+    {
+      "analyst_p_s": 5.0,
+      "analyst_s_s": 10.88,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "CI",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.00926569930522237,
+          0.09022852821120371,
+          0.06513098856979438
+        ],
+        "peak_centered_counts": [
+          796.7774658203125,
+          657.8060913085938,
+          496.5052795410156
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "CI.LMR2",
+      "status": "qc-valid",
+      "trace_id": "LMR2.CI_20130325173024_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-05.f32",
+      "waveform_sha256": "b4c045047b1fdc08d577c619417eb4f3defc0375e38226c4ee70a6ef0e95b409"
+    },
+    {
+      "analyst_p_s": 7.0,
+      "analyst_s_s": 11.08,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "BK",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.6259008378788519,
+          -0.9751408974941975,
+          -1.4582474960888114
+        ],
+        "peak_centered_counts": [
+          22417.1171875,
+          17924.251953125,
+          15566.474609375
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "BK.BDM",
+      "status": "qc-valid",
+      "trace_id": "BDM.BK_20160112043452_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-06.f32",
+      "waveform_sha256": "c3655e572e1fb2429ef5445d7fb9c5bc90aa83e5751dd04b3550872b5c5b2d47"
+    },
+    {
+      "analyst_p_s": 7.0,
+      "analyst_s_s": 10.55,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "BK",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.4605112201784117,
+          -1.4344748518997512,
+          -0.6522810785794475
+        ],
+        "peak_centered_counts": [
+          1527.972412109375,
+          2007.15380859375,
+          2135.12646484375
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "BK.SAO",
+      "status": "qc-valid",
+      "trace_id": "SAO.BK_20131207235848_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-07.f32",
+      "waveform_sha256": "5209e5a9ce95561a698b4fe98411e05c228b233fba9a49a6789c566ee737cf8c"
+    },
+    {
+      "analyst_p_s": 6.0,
+      "analyst_s_s": 9.34,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "AZ",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.012822941840606897,
+          -0.12131622932237739,
+          0.013214581613210612
+        ],
+        "peak_centered_counts": [
+          816.6661376953125,
+          522.5181274414062,
+          806.4942626953125
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AZ.CRY",
+      "status": "qc-valid",
+      "trace_id": "CRY.AZ_20120529154839_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-08.f32",
+      "waveform_sha256": "05d540a862449956b4924e966eab7bcc35d19812d631c34434b673379696d8da"
+    },
+    {
+      "analyst_p_s": 9.0,
+      "analyst_s_s": 14.16,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "AZ",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.015125477916910313,
+          0.02305529694358605,
+          -0.03915891178464517
+        ],
+        "peak_centered_counts": [
+          608.8635864257812,
+          746.185546875,
+          374.0615539550781
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AZ.CRY",
+      "status": "qc-valid",
+      "trace_id": "CRY.AZ_20160919195008_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-09.f32",
+      "waveform_sha256": "d9d783c46a8364aac665412437b2824eb5ea9bb128c8af960de9e9dfcde9fa3d"
+    },
+    {
+      "analyst_p_s": 5.0,
+      "analyst_s_s": 18.32,
+      "category": "earthquake_local",
+      "channel": "BH",
+      "network": "AV",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.230137635871768,
+          -0.3014367085217964,
+          0.0024356656420665484
+        ],
+        "peak_centered_counts": [
+          14230.6201171875,
+          18052.560546875,
+          9407.1953125
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AV.AMKA",
+      "status": "qc-valid",
+      "trace_id": "AMKA.AV_20140624152547_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-10.f32",
+      "waveform_sha256": "4a69c8372dfeed899954b11546482026a73a6c00e99f6a7d6fbfecf370ce0f4f"
+    },
+    {
+      "analyst_p_s": 7.0,
+      "analyst_s_s": 30.55,
+      "category": "earthquake_local",
+      "channel": "BH",
+      "network": "AV",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.08355175249627791,
+          0.1773844120646827,
+          -0.15331487594923238
+        ],
+        "peak_centered_counts": [
+          1529.704833984375,
+          1743.0777587890625,
+          1004.334228515625
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AV.AMKA",
+      "status": "qc-valid",
+      "trace_id": "AMKA.AV_20140624064806_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-11.f32",
+      "waveform_sha256": "cee27bfe5529bc7c0eec905ad97ffd87f9437e12edc836d32741bdde30060442"
+    },
+    {
+      "analyst_p_s": 6.0,
+      "analyst_s_s": 6.73,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "GS",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.01148236770865818,
+          0.2088393473730733,
+          0.014817060254591827
+        ],
+        "peak_centered_counts": [
+          224863.703125,
+          252019.6875,
+          108453.984375
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "GS.KS21",
+      "status": "qc-valid",
+      "trace_id": "KS21.GS_20150613095259_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-12.f32",
+      "waveform_sha256": "468698d424a21b4b7cec70310ce65925f6c7bcd8a2c69fc88ff02aa90e5dff46"
+    },
+    {
+      "analyst_p_s": 4.0,
+      "analyst_s_s": 6.390000000000001,
+      "category": "earthquake_local",
+      "channel": "HH",
+      "network": "GS",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.180016597129715,
+          -0.1491657537819507,
+          0.09801985454326495
+        ],
+        "peak_centered_counts": [
+          18943.1484375,
+          17224.349609375,
+          24265.748046875
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "GS.KS21",
+      "status": "qc-valid",
+      "trace_id": "KS21.GS_20150816095043_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-13.f32",
+      "waveform_sha256": "9df3ddeac8c79bb8c32d205fb53828acc194bf5624859e01c2188cb6225c6937"
+    },
+    {
+      "analyst_p_s": 4.0,
+      "analyst_s_s": 10.71,
+      "category": "earthquake_local",
+      "channel": "BH",
+      "network": "AK",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.5407238018166876,
+          0.16551506320922635,
+          0.023861349095668023
+        ],
+        "peak_centered_counts": [
+          508.2350769042969,
+          748.5662231445312,
+          693.7611694335938
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AK.WAX",
+      "status": "qc-valid",
+      "trace_id": "WAX.AK_20121110113339_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-14.f32",
+      "waveform_sha256": "e29adf8da859e45111e9a45fd745c52037fdd95c60cf0aca92d5af86584e50a9"
+    },
+    {
+      "analyst_p_s": 7.0,
+      "analyst_s_s": 19.45,
+      "category": "earthquake_local",
+      "channel": "BH",
+      "network": "AK",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          -0.15155714538367465,
+          0.041145878873416225,
+          -0.25958945420205903
+        ],
+        "peak_centered_counts": [
+          11220.3017578125,
+          15129.2802734375,
+          5109.05810546875
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AK.MCK",
+      "status": "qc-valid",
+      "trace_id": "MCK.AK_20090715002945_EV",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-15.f32",
+      "waveform_sha256": "eb4256f6799041b3cc135d01a4209d5368c8a532b49053f2498240e9ac48da0c"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "HH",
+      "network": "NC",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.032490805902440724,
+          0.02565408418803175,
+          -0.007300327964682462
+        ],
+        "peak_centered_counts": [
+          72.9397201538086,
+          74.17855072021484,
+          62.80135726928711
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "NC.LBR",
+      "status": "qc-valid",
+      "trace_id": "LBR.NC_201804052102_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-16.f32",
+      "waveform_sha256": "097df0fc67bd4f2a495317b9d87c307ae126f3bd251dde2669cf8de0187ac52a"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "HN",
+      "network": "NC",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.002993797272553214,
+          0.00036093816848036415,
+          -0.0005532451607062588
+        ],
+        "peak_centered_counts": [
+          29.098909378051758,
+          30.84869956970215,
+          29.79776382446289
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "NC.CHR",
+      "status": "qc-valid",
+      "trace_id": "CHR.NC_200511172121_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-17.f32",
+      "waveform_sha256": "4ddcfda7e8e89b43b4135db6fd26ddc170720c8915396772cd167824eddd94c1"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "BH",
+      "network": "AV",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.07597112876176834,
+          -0.08165437265982231,
+          -0.36183764269925206
+        ],
+        "peak_centered_counts": [
+          2326.746826171875,
+          5298.2626953125,
+          578.6361083984375
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "AV.AMKA",
+      "status": "qc-valid",
+      "trace_id": "AMKA.AV_20180115183754_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-18.f32",
+      "waveform_sha256": "d73b816f33819253af09fde77d075ad1ab380359e07372cc45244795ab91ea39"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "EH",
+      "network": "AV",
+      "qc_reason": "SteadFormatError: HDF5 trace has a flat component; not three measured channels",
+      "reference_is_ground_truth": false,
+      "station_id": "AV.ANNE",
+      "status": "qc-rejected",
+      "trace_id": "ANNE.AV_20180116161054_NO"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "HH",
+      "network": "CI",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.0378701391586413,
+          -0.047633717141114175,
+          -0.05066751421429217
+        ],
+        "peak_centered_counts": [
+          1613.5771484375,
+          1307.0985107421875,
+          1387.0384521484375
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "CI.TIN",
+      "status": "qc-valid",
+      "trace_id": "TIN.CI_20180115085612_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-20.f32",
+      "waveform_sha256": "eed166226c8e4a41411e4e1ea243f980d34647497b444f18cfe4fe1f0a5f256d"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "HH",
+      "network": "CI",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.07392455432761927,
+          0.022914144802605733,
+          -0.014282664473110345
+        ],
+        "peak_centered_counts": [
+          4286.52880859375,
+          4316.9716796875,
+          7548.9228515625
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "CI.SOF",
+      "status": "qc-valid",
+      "trace_id": "SOF.CI_201405251100_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-21.f32",
+      "waveform_sha256": "e5deb67fc24ec98057f994ff2cb449e6be0146202c04500a9c330e2181be2418"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "EH",
+      "network": "PB",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.00045062232994951045,
+          -0.00012814528494770153,
+          4.2116066308760005e-05
+        ],
+        "peak_centered_counts": [
+          16.859861373901367,
+          18.416893005371094,
+          18.110475540161133
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "PB.B901",
+      "status": "qc-valid",
+      "trace_id": "B901.PB_201609191259_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-22.f32",
+      "waveform_sha256": "b750a8f029ebb2daf931ed28416ac59c0e7b69ef64575216f997a9a03f2d4951"
+    },
+    {
+      "analyst_p_s": null,
+      "analyst_s_s": null,
+      "category": "noise",
+      "channel": "EH",
+      "network": "PB",
+      "normalization": {
+        "component_order": [
+          "E",
+          "N",
+          "Z"
+        ],
+        "mean_counts": [
+          0.0007492642103786693,
+          0.0009822292780903201,
+          -0.0005468068172722269
+        ],
+        "peak_centered_counts": [
+          16.32476043701172,
+          12.251775741577148,
+          12.944381713867188
+        ]
+      },
+      "reference_is_ground_truth": false,
+      "station_id": "PB.B900",
+      "status": "qc-valid",
+      "trace_id": "B900.PB_201607240537_NO",
+      "waveform_bytes": 72000,
+      "waveform_file": "trace-23.f32",
+      "waveform_sha256": "2540a0bceeb0485b7d45ac6ea3599e405c2832dcabd53390c0bf577bfd4bde46"
+    }
+  ],
+  "schema": "caos.phase-browser-assets.v1",
+  "selection": {
+    "display_ids_sha256": "ceda44e51554dada9544e64645d9e792a8c926f9616288b5b05d4d3bf84a1839",
+    "full_benchmark_selected": 6000,
+    "qc_rejected": 1,
+    "qc_valid": 23,
+    "selected": 24,
+    "selected_before_heldout_scoring": true,
+    "test_selection_sha256": "dd9fbb2d08406d2a7316be838eba957d0bbfd1f4ffb167cc3470c9abc5b64f3e"
+  },
+  "source": {
+    "authors": "Mousavi, Sheng, Zhu and Beroza (2019)",
+    "citation": "Stanford Earthquake Dataset (STEAD): A Global Data Set of Seismic Signals for AI",
+    "dataset": "STEAD",
+    "doi": "10.1109/ACCESS.2019.2947848",
+    "license": "CC BY 4.0",
+    "license_url": "https://github.com/smousavi05/STEAD/blob/master/LICENSE",
+    "mirror_url": "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/",
+    "modification": "Metadata-only event/station-disjoint selection; source ZNE counts reordered ENZ; QC rejects flat or exactly duplicated components; valid traces mean-removed and divided by per-component peak centred count for model inference. These are dimensionless normalized instrument counts, not ground velocity or acceleration.",
+    "original_url": "https://github.com/smousavi05/STEAD"
+  },
+  "status": "assets-exported-browser-parity-not-yet-verified"
+}

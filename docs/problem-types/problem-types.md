@@ -14,6 +14,8 @@ For angular frequency ω, permeability μ and resistivity ρ, the half-space imp
 
 Three solvers fit complex observations: bounded log-resistivity least squares, Adam on log resistivity, and a tanh neural parameterization differentiated through the same recursion. The layer thicknesses are known. A first-difference log-resistivity penalty controls roughness. The neural solution is optimized per sounding and is not a pretrained general inverse. Objective evaluations are labelled as such; they are not necessarily accepted least-squares iterations.
 
+Measured EDI transfer functions require a separate source, geometry, error and full-tensor admission before those layered solvers apply. The [M06 AusLAMP C15 study](mt-field-admission.md) documents a rights-cleared station with an upstream phase-tensor `1-D` screening label that nevertheless fails the predeclared complex-tensor gate. No field 1D inverse or geological truth is claimed.
+
 ## Acoustic FWI
 
 Deepwave solves constant-density 2D acoustics with fourth-order spatial differences, 12.5 m sampling and 0.5 ms integration. Three known Ricker shots and 40 (or 20) receivers produce 1.6 s records. Every fifth receiver is withheld from inversion. Exported gathers retain 4 ms sampling and pressure frames 24 ms spacing.
@@ -31,3 +33,9 @@ A CNN maps a normalized gravity map to depth-integrated density. Two convolution
 The classical comparator estimates the same column target from the same held-out models and receives exactly the same seeded noisy observations as the CNN (Gaussian noise at 2% of the training-observation scale). This is not a comprehensive hyperparameter-tuned SOTA benchmark. A separate 160-model set calibrates the autoencoder's 99th-percentile reconstruction-error threshold; an independent 80-model withheld-geometry set tests it. The tested detector misses all 80 withheld geometries. Case-level threshold flags are raw score comparisons, not validated geological classifications: contrast, acquisition, noise and station interpolation can change the score. Under reduced coverage, error is computed against the interpolated network input, while the raw-observation discrepancy is reported separately. No probabilistic confidence is claimed.
 
 Primary sources and methodological differences are recorded in [the review](../research/review.md). The UI methodology page contains the same implementation-specific assumptions in EN/ES.
+
+M12 is a separate, bounded learned **first-arrival velocity** experiment. It uses different synthetic families and acquisition layouts, an independent travel-time quadrature oracle and a matched regularized ray inverse. Its first locked joint-family/acquisition result fails the classical comparison; it is not a waveform inversion or field-validated product result. See [M12 methods, equations, numerical result and limitations](04_learned-velocity-validation.md).
+
+## Earthquake phase picking, approved design
+
+Classical M08 onset detection and learned M13 PhaseNet-family P/S picking are distinct from the current synthetic FWI and learned-inversion methods. Their units, equations, disjoint evaluation protocol and unimplemented release gates are documented in the [phase-picking design record](phase-picking.md). This is not a reported field-picking result.

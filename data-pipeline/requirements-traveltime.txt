@@ -1,0 +1,8 @@
+# Isolated M09 offline pyGIMLi environment; keep separate from the canonical
+# NumPy 2.2.6 precompute environment. Run the local script by path, not as a package.
+numpy==2.5.3
+scipy==1.17.1
+pygimli==1.6.1
+pgcore==1.6.0
+scooby==0.12.0
+setuptools==84.0.0

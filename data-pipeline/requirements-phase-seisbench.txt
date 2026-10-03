@@ -1,0 +1,3 @@
+# Isolated, independent reference reader for the STEAD HDF5 parity gate.
+# Do not install into the canonical CUDA training environment.
+seisbench==0.11.5

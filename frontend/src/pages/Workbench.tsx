@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Download,
   Pause,
@@ -31,6 +31,8 @@ import { lessons } from "../data/lessons";
 import { absoluteThreshold, casePropertyScale, physicalTarget, selectedModel, sharedScale, type ModelState } from "../recovery";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, TargetEvidence, UncertaintyView } from "../components/ScientificEvidence";
 import { provenanceDescription } from "../data/evidence";
+import { deploymentMode } from "../lib/deployment";
+import { ProjectDrawer } from "../components/ProjectDrawer";
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -111,6 +113,12 @@ export default function Workbench() {
   const [shot, setShot] = useState(1);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<"experiment" | "replay" | "evidence">("experiment");
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const projectLauncher = useRef<HTMLButtonElement>(null);
+  const closeProjects = () => {
+    setProjectsOpen(false);
+    window.requestAnimationFrame(() => projectLauncher.current?.focus());
+  };
   const [gain, setGain] = useState(8);
   const [playbackKind, setPlaybackKind] = useState("inverse");
   useEffect(() => {
@@ -1177,6 +1185,7 @@ export default function Workbench() {
         </>}
       </aside>
       <section className="instrument-main" aria-label={es ? entry?.name_es : entry?.name}>
+        {deploymentMode === "single-origin" && <div className="project-launch"><span className="project-launch-context">{t("Curated case view · private originals are separate", "Caso curado · los originales privados son independientes")}</span><button ref={projectLauncher} className="btn" onClick={() => setProjectsOpen(true)}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>}
         {error ? (
           <div role="alert" className="load-state">
             {error}
@@ -1320,6 +1329,7 @@ export default function Workbench() {
           )
         )}
       </section>
+      {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} />}
     </div>
   );
 }

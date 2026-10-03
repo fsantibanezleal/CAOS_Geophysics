@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="690" viewBox="0 0 1200 690" role="img" aria-labelledby="title description">
+  <title id="title">Source-to-result contract for geophysical observations</title>
+  <desc id="description">Five distinct records form a source, immutable original, physically validated observations, admitted computation and result. Rights, physical eligibility and numerical evidence are separate gates. A rejected or ineligible record cannot flow to an inverse result.</desc>
+  <style>
+    svg{--bg:var(--color-surface,#f7f9fb);--surface:var(--color-surface-2,#fff);--ink:var(--color-fg,#182b36);--muted:var(--color-fg-subtle,#526875);--edge:var(--color-border,#bdcbd2);--accent:var(--color-accent,#176589);--accent-bg:var(--color-accent-soft,#e5f2f7);--warning:var(--color-warn,#9b6225);--warning-bg:#fff4e6;--good:var(--color-good,#2d7657);font-family:var(--font-sans,system-ui,sans-serif)}
+    @media (prefers-color-scheme:dark){svg{--bg:#14212a;--surface:#1d303b;--ink:#e8f0f4;--muted:#bdcbd1;--edge:#56707d;--accent:#86c5e0;--accent-bg:#233d4b;--warning:#efbb80;--warning-bg:#423428;--good:#93d4ad}}
+    .background{fill:var(--bg)}.card{fill:var(--surface);stroke:var(--edge);stroke-width:1.3}.emphasis{stroke:var(--accent);stroke-width:1.8}.gate{fill:var(--accent-bg);stroke:var(--accent);stroke-width:1.3}.caution{fill:var(--warning-bg);stroke:var(--warning);stroke-width:1.3}.rule{stroke:var(--edge);stroke-width:1}.flow{fill:none;stroke:var(--accent);stroke-width:2.2}.branch{fill:none;stroke:var(--warning);stroke-width:1.8;stroke-dasharray:5 4}.label{fill:var(--ink);font-size:20px;font-weight:700}.subtitle{fill:var(--muted);font-size:13px}.index{fill:var(--accent);font-size:12px;font-weight:700;letter-spacing:1.2px}.heading{fill:var(--ink);font-size:17px;font-weight:700}.body{fill:var(--ink);font-size:13px}.small{fill:var(--muted);font-size:11.5px}.mono{fill:var(--accent);font-size:11px;font-family:var(--font-mono,ui-monospace,monospace)}.warning{fill:var(--warning)}.positive{fill:var(--good)}
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 8.5 5 1 9" fill="none" stroke="var(--accent)" stroke-width="1.5"/></marker>
+    <marker id="warn-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 8.5 5 1 9" fill="none" stroke="var(--warning)" stroke-width="1.5"/></marker>
+  </defs>
+  <rect class="background" x="0" y="0" width="1200" height="690"/>
+  <text x="32" y="39" class="label">A file is not yet a geophysical result</text>
+  <text x="32" y="63" class="subtitle">A distinct ID, hash, physical contract and verdict are preserved at each transition.</text>
+  <line x1="32" y1="81" x2="1168" y2="81" class="rule"/>
+
+  <rect x="32" y="110" width="205" height="241" rx="9" class="card"/>
+  <rect x="32" y="110" width="205" height="5" rx="2" fill="var(--accent)"/>
+  <text x="48" y="138" class="index">01 / DISCOVER</text>
+  <text x="48" y="166" class="heading">SourceRecord</text>
+  <text x="48" y="190" class="mono">source_id · provider</text>
+  <line x1="48" y1="204" x2="220" y2="204" class="rule"/>
+  <text x="48" y="229" class="body">Exact provider object or upload</text>
+  <text x="48" y="254" class="body">DOI, citation, rights decision</text>
+  <text x="48" y="279" class="body">Expected bytes and digest</text>
+  <text x="48" y="320" class="small">Unknown rights: no raw mirror.</text>
+
+  <path d="M238 231 H263" class="flow" marker-end="url(#arrow)"/>
+  <rect x="266" y="110" width="205" height="241" rx="9" class="card"/>
+  <rect x="266" y="110" width="205" height="5" rx="2" fill="var(--accent)"/>
+  <text x="282" y="138" class="index">02 / ACQUIRE</text>
+  <text x="282" y="166" class="heading">RawAsset</text>
+  <text x="282" y="190" class="mono">owner · project · SHA-256</text>
+  <line x1="282" y1="204" x2="454" y2="204" class="rule"/>
+  <text x="282" y="229" class="body">Original bytes are immutable</text>
+  <text x="282" y="254" class="body">Private storage and receipt</text>
+  <text x="282" y="279" class="body">Format envelope and MIME</text>
+  <text x="282" y="320" class="small">A header check is not scientific QC.</text>
+
+  <path d="M472 231 H497" class="flow" marker-end="url(#arrow)"/>
+  <rect x="500" y="110" width="205" height="241" rx="9" class="card emphasis"/>
+  <rect x="500" y="110" width="205" height="5" rx="2" fill="var(--accent)"/>
+  <text x="516" y="138" class="index">03 / VALIDATE</text>
+  <text x="516" y="166" class="heading">ObservationDataset</text>
+  <text x="516" y="190" class="mono">dataset_id · version</text>
+  <line x1="516" y1="204" x2="688" y2="204" class="rule"/>
+  <text x="516" y="229" class="body">Units, CRS, datum, axis order</text>
+  <text x="516" y="254" class="body">Geometry, values, errors</text>
+  <text x="516" y="279" class="body">Masks and QC reasons</text>
+  <text x="516" y="320" class="small">Field geology has no known truth.</text>
+
+  <path d="M706 231 H731" class="flow" marker-end="url(#arrow)"/>
+  <rect x="734" y="110" width="205" height="241" rx="9" class="card"/>
+  <rect x="734" y="110" width="205" height="5" rx="2" fill="var(--accent)"/>
+  <text x="750" y="138" class="index">04 / ADMIT &amp; RUN</text>
+  <text x="750" y="166" class="heading">SolverJob</text>
+  <text x="750" y="190" class="mono">method · input hash · state</text>
+  <line x1="750" y1="204" x2="922" y2="204" class="rule"/>
+  <text x="750" y="229" class="body">Eligibility and resource limit</text>
+  <text x="750" y="254" class="body">Start, bounds, weights, seed</text>
+  <text x="750" y="279" class="body">Measured worker use, stopping</text>
+  <text x="750" y="320" class="small">Queued is not a computed result.</text>
+
+  <path d="M940 231 H965" class="flow" marker-end="url(#arrow)"/>
+  <rect x="968" y="110" width="200" height="241" rx="9" class="card emphasis"/>
+  <rect x="968" y="110" width="200" height="5" rx="2" fill="var(--accent)"/>
+  <text x="984" y="138" class="index">05 / EVALUATE</text>
+  <text x="984" y="166" class="heading">ResultArtifact</text>
+  <text x="984" y="190" class="mono">model · predictions</text>
+  <line x1="984" y1="204" x2="1152" y2="204" class="rule"/>
+  <text x="984" y="229" class="body">Observed and signed residual</text>
+  <text x="984" y="254" class="body">Coverage, objectives, limits</text>
+  <text x="984" y="279" class="body">Rights-aware export hashes</text>
+  <text x="984" y="320" class="small">Fit is not unique geology.</text>
+
+  <path d="M602 351 V388 H661" class="branch" marker-end="url(#warn-arrow)"/>
+  <rect x="663" y="366" width="333" height="60" rx="8" class="caution"/>
+  <text x="678" y="390" class="heading warning">Ineligible or rejected</text>
+  <text x="678" y="411" class="small">Keep original; record why. No model.</text>
+  <text x="32" y="403" class="index">THREE NON-SUBSTITUTABLE EVIDENCE GATES</text>
+
+  <rect x="32" y="451" width="361" height="178" rx="8" class="gate"/>
+  <text x="49" y="479" class="index">A / BYTE &amp; RIGHTS</text>
+  <text x="49" y="510" class="heading">Can we identify and use it?</text>
+  <text x="49" y="540" class="body">Exact object, measured size, SHA-256.</text>
+  <text x="49" y="564" class="body">Private storage permission is not a</text>
+  <text x="49" y="586" class="body">public redistribution licence.</text>
+  <text x="49" y="611" class="small">Failure: preserve bytes; stop publication or import.</text>
+
+  <rect x="419" y="451" width="361" height="178" rx="8" class="gate"/>
+  <text x="436" y="479" class="index">B / PHYSICAL MEANING</text>
+  <text x="436" y="510" class="heading">Do values map to a survey?</text>
+  <text x="436" y="540" class="body">Named axes, units, sign, station or</text>
+  <text x="436" y="564" class="body">source geometry, uncertainty and</text>
+  <text x="436" y="586" class="body">mask/exclusion lineage.</text>
+  <text x="436" y="611" class="small">Failure: raw is kept; method stays ineligible.</text>
+
+  <rect x="806" y="451" width="362" height="178" rx="8" class="gate"/>
+  <text x="823" y="479" class="index">C / NUMERICAL INFERENCE</text>
+  <text x="823" y="510" class="heading">Did the declared method work?</text>
+  <text x="823" y="540" class="body">Independent forward check, held-out</text>
+  <text x="823" y="564" class="body">prediction, residual and sensitivity;</text>
+  <text x="823" y="586" class="body">report nonconvergence as non-success.</text>
+  <text x="823" y="611" class="small">Failure: keep the job and its diagnostic verdict.</text>
+
+  <line x1="32" y1="651" x2="1168" y2="651" class="rule"/>
+  <text x="32" y="674" class="small">Current online scope: immutable raw intake, typed gravity-station observations, and flag-only QC. Other full methods require their own validated verticals.</text>
+</svg>

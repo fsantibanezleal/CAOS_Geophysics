@@ -1,0 +1,41 @@
+{
+  "contains_trace_ids_or_waveform_samples": false,
+  "heldout_performance_established": false,
+  "metadata_sha256": "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe",
+  "model_trained": false,
+  "partitions": {
+    "dev": {
+      "private_array_sha256": "cb9083408f60f0b462e6364e22b141b8226aabc7d5ec6572b51afb82453c30e0",
+      "quarantine_reasons": {
+        "SteadFormatError: HDF5 trace has a flat component; not three measured channels": 58,
+        "SteadFormatError: HDF5 trace has an exactly duplicated component": 92
+      },
+      "quarantined": 150,
+      "selected": 6000,
+      "selection_sha256": "a438bfaba3c92b2ca072fcf8248e1bda8d805fa4b622a68aec4b8c1e8535b202",
+      "valid": 5850,
+      "valid_categories": {
+        "earthquake_local": 4999,
+        "noise": 851
+      }
+    },
+    "train": {
+      "private_array_sha256": "de94b547bef5face121779b36c045d5f8052402ac40841b6697d70ce7c776f0b",
+      "quarantine_reasons": {
+        "SteadFormatError: HDF5 trace has a flat component; not three measured channels": 54,
+        "SteadFormatError: HDF5 trace has an exactly duplicated component": 347
+      },
+      "quarantined": 401,
+      "selected": 65000,
+      "selection_sha256": "b38433b85401e4e7484490a8ed85c2d20b635a2b966f16f60f236c722c93b485",
+      "valid": 64599,
+      "valid_categories": {
+        "earthquake_local": 59982,
+        "noise": 4617
+      }
+    }
+  },
+  "schema": "caos.stead-phase-train-dev-qc.v1",
+  "test_waveforms_opened": false,
+  "waveform_source_sha256": "4d73f567d9ea85fcdea5f2d8bf9cf47fd2e0c25b602793d41f56713efba62b1b"
+}

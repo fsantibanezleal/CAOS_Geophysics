@@ -3,9 +3,9 @@ import { ApiClient, ApiHttpError } from "../api/client";
 import { parseSourceRecord } from "../api/contracts";
 
 const source = {
-  source_id: "src", provider: "USGS", location: { kind: "url", url: "https://example.org/source" },
-  doi: null, citation: "Source", retrieved_at: "2026-09-27T00:00:00Z", rights_statement: "Linked only",
-  rights_decision: "provider-link-only", declared_format: "EDI", expected_bytes: 100,
+  schema_version: "geophysics.source-record-view/v1", source_id: "src", version: 1, provider: "USGS", location: { kind: "upload", filename: "source.edi" },
+  doi: null, citation: null, retrieved_at: "2026-09-27T00:00:00Z", rights_statement: "Linked only",
+  rights_decision: "provider-link-only", private_storage_permission: "attested", declared_format: "edi", expected_bytes: 100,
   sha256: "a".repeat(64), attribution: "USGS",
 };
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });

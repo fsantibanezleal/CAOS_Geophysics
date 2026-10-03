@@ -5,7 +5,11 @@ This wiki is the durable technical record of the workbench. It explains what the
 - [Architecture](architecture/architecture.md): system flow, determinism, lanes, and release boundary.
 - [Frameworks](frameworks/frameworks.md): research-selected engines and why each is used.
 - [Problem types](problem-types/problem-types.md): gravity, magnetics, MT, FWI, learned, and joint methods.
+- [M06 measured MT admission](problem-types/mt-field-admission.md): attributed field EDI, independent full-tensor QC, ineligible verdict, and exact local reproduction.
+- [Earthquake phase picking](problem-types/phase-picking.md): M08/M13 theory, frozen input and asset contracts, held-out denominator, browser inference and parity gate.
+- [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
+- [Source to result](data-contract/01_source-to-result.md): rights, immutable raw bytes, typed observations, physical eligibility, processing and evidence boundaries, with a reproducible current API calculation.
 - [Source acquisition](guides/05_sources.md): reviewed provider links, immutable raw assets, rights, format dispatch and local receipts.
 - [Cases](cases/README.md): category taxonomy and 20-case coverage matrix.
 - [Guides](guides/README.md): setup, precompute, GPU, and bring-your-own-data workflows.

@@ -45,6 +45,84 @@
   display: flex;
   flex-direction: column;
 }
+.project-launch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+}
+.project-launch-context,
+.project-note,
+.project-account {
+  color: var(--color-fg-subtle);
+  font-size: 0.82rem;
+}
+.project-dialog {
+  position: fixed;
+  inset: 0 0 0 auto;
+  margin: 0;
+  width: min(700px, 100vw);
+  height: 100dvh;
+  max-height: 100dvh;
+  max-width: none;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 1.25rem;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  box-shadow: var(--color-shadow);
+}
+.project-dialog::backdrop {
+  background: color-mix(in oklab, var(--color-bg) 65%, transparent);
+}
+.project-dialog-header {
+  position: sticky;
+  top: -1.25rem;
+  z-index: 1;
+  background: var(--color-bg);
+  margin-top: -1.25rem;
+  padding-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 0.8rem;
+}
+.project-dialog-header h2 { margin: 0.25rem 0 0.75rem; }
+.project-form,
+.project-section { display: grid; gap: 0.8rem; margin: 1rem 0; }
+.project-form h3,
+.project-section h3 { margin: 0.3rem 0 0; }
+.project-dialog .select-control { width: 100%; }
+.project-dialog .select-control .select { width: 100%; }
+.project-dialog textarea.select { resize: vertical; min-height: 3.5rem; }
+.project-dialog .project-note { line-height: 1.5; margin: 0.45rem 0; }
+.project-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  padding: 0.85rem;
+  min-width: 0;
+}
+.project-card p { margin: 0.45rem 0; }
+.project-card small { color: var(--color-fg-subtle); overflow-wrap: anywhere; }
+.project-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.7rem; }
+.project-delete { border-left: 3px solid var(--color-bad); padding-left: 0.8rem; }
+.project-attestation { display: flex; align-items: start; gap: 0.55rem; font-size: 0.84rem; line-height: 1.5; }
+.project-attestation input { margin-top: 0.25rem; }
+.project-channel { display: grid; grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 1fr)); align-items: end; gap: 0.5rem; }
+.project-assets { display: grid; gap: 0.6rem; list-style: none; margin: 0; padding: 0; }
+.project-assets li { display: grid; gap: 0.25rem; }
+.project-receipt dl { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr); gap: 0.35rem 0.6rem; }
+.project-receipt dt { color: var(--color-fg-subtle); }
+.project-receipt dd { margin: 0; overflow-wrap: anywhere; }
+.project-hash { font-family: var(--font-mono); }
+.project-geometry { white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.8rem; }
+.project-error { color: var(--color-bad); border-left: 3px solid var(--color-bad); padding: 0.5rem 0.7rem; }
+.project-notice { color: var(--color-good); border-left: 3px solid var(--color-good); padding: 0.5rem 0.7rem; }
 .case-heading {
   display: flex;
   justify-content: space-between;
@@ -744,6 +822,45 @@
   stroke: var(--color-bad);
   stroke-width: 2;
 }
+.phase-picker { min-width: 0; margin: 1.4rem 0; padding: 1rem; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface); }
+.phase-picker h2 { margin: 0.25rem 0 0.45rem; }
+.phase-picker p { margin: 0.35rem 0 0.6rem; }
+.phase-heading { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+.phase-heading > div { min-width: 0; }
+.phase-heading .btn { flex: none; }
+.phase-controls { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: end; padding: 0.8rem 0; border-block: 1px solid var(--color-border); }
+.phase-controls .select-control { flex: 1 1 180px; min-width: 0; }
+.phase-local-files { flex: 1 1 190px; min-width: 0; }
+.phase-local-files summary { cursor: pointer; font-size: 0.82rem; }
+.phase-local-files > div { display: grid; gap: 0.6rem; padding: 0.5rem 0; }
+.phase-controls input[type="file"] { width: 100%; max-width: 100%; font: 0.78rem var(--font-sans); }
+.phase-controls .btn { flex: 0 0 auto; }
+.phase-error { padding: 0.65rem; border-left: 3px solid var(--color-bad); background: var(--color-surface-2); overflow-wrap: anywhere; }
+.phase-ledger { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.7rem; margin-block: 0.8rem; }
+.phase-ledger p { min-width: 0; padding: 0.7rem; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.82rem; line-height: 1.55; overflow-wrap: anywhere; }
+.phase-ledger code { font: 0.7rem var(--font-mono); overflow-wrap: anywhere; }
+.phase-source { font-size: 0.78rem; color: var(--color-fg-subtle); line-height: 1.5; }
+.phase-arrivals { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.7rem; margin-block: 0.8rem; }
+.phase-arrivals div { display: grid; gap: 0.3rem; padding: 0.65rem; border: 1px solid var(--color-border); border-radius: 6px; }
+.phase-arrivals span { font-size: 0.75rem; color: var(--color-fg-subtle); }
+.phase-arrivals strong { font: 0.88rem var(--font-mono); overflow-wrap: anywhere; }
+.phase-window-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 1rem; margin: 0.6rem 0; }
+.phase-window-controls .select-control { min-width: 180px; }
+.phase-window-controls input[type="range"] { display: block; width: min(340px,100%); }
+.phase-plots { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 0.7rem; }
+.phase-plot { min-width: 0; margin: 0; padding: 0.5rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-bg); }
+.phase-plot figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.3rem; font-size: 0.82rem; }
+.phase-plot figcaption output { font: 0.7rem var(--font-mono); }
+.phase-plot svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.phase-plot svg text { fill: var(--color-fg-subtle); font: 15px var(--font-sans); }
+.phase-plot svg .phase-axis-label { fill: var(--color-fg); font-weight: 600; }
+.phase-plot svg .phase-marker-label { font-size: 12px; }
+.phase-threshold { stroke: var(--color-warn); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.phase-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 0.75rem; font-size: 0.72rem; color: var(--color-fg-subtle); }
+.phase-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.phase-legend i { display: inline-block; width: 12px; height: 3px; }
+@media (max-width: 900px) { .phase-plots { grid-template-columns: 1fr; } }
+@media (max-width: 650px) { .phase-heading { display: block; } .phase-ledger, .phase-arrivals { grid-template-columns: 1fr; } }
 .geology-overlay {
   position: absolute;
   inset: 0;
@@ -782,6 +899,14 @@
   }
 }
 @media (max-width: 760px) {
+  .project-launch { align-items: stretch; }
+  .project-launch-context { display: none; }
+  .project-launch .btn { width: 100%; justify-content: center; }
+  .project-dialog { width: 100vw; padding: 1rem; }
+  .project-dialog-header { top: -1rem; margin-top: -1rem; padding-top: 1rem; }
+  .project-channel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .project-channel strong { grid-column: 1/-1; }
+  .project-receipt dl { grid-template-columns: 1fr; }
   .workbench {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr);

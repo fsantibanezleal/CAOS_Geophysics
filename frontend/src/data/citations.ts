@@ -1,6 +1,42 @@
 import type { Citation } from "@fasl-work/caos-app-shell";
 
 export const CITATIONS: Citation[] = [
+  {
+    id: "allen1978",
+    label: "Allen 1978",
+    citation: "Allen, R. V. Automatic earthquake recognition and timing from single traces. Bulletin of the Seismological Society of America 68(5), 1521-1532 (1978).",
+    doi: "10.1785/bssa0680051521",
+  },
+  {
+    id: "diehl2009",
+    label: "Diehl et al. 2009",
+    citation: "Diehl, T., Deichmann, N., Kissling, E. and Husen, S. Automatic S-wave picker for local earthquake tomography. Bulletin of the Seismological Society of America 99(3), 1906-1920 (2009).",
+    doi: "10.1785/0120080019",
+  },
+  {
+    id: "zhu2019",
+    label: "Zhu and Beroza 2019",
+    citation: "Zhu, W. and Beroza, G. C. PhaseNet: a deep-neural-network-based seismic arrival-time picking method. Geophysical Journal International 216(1), 261-273 (2019).",
+    doi: "10.1093/gji/ggy423",
+  },
+  {
+    id: "obspytrigger",
+    label: "ObsPy classic STA/LTA",
+    citation: "ObsPy documentation and source: classic_sta_lta and trigger_onset, sample-window energy characteristic and thresholded onset extraction.",
+    url: "https://docs.obspy.org/packages/autogen/obspy.signal.trigger.classic_sta_lta.html",
+  },
+  {
+    id: "obspyresponse",
+    label: "ObsPy channel response",
+    citation: "ObsPy documentation: Inventory.get_response selects a channel response at a specified time; Stream.remove_response deconvolves the instrument response.",
+    url: "https://docs.obspy.org/packages/autogen/obspy.core.inventory.inventory.Inventory.get_response.html",
+  },
+  {
+    id: "phasenetofficial",
+    label: "AI4EPS PhaseNet",
+    citation: "AI4EPS official PhaseNet repository: reference implementation, data formats, prediction and training commands.",
+    url: "https://github.com/AI4EPS/PhaseNet",
+  },
   { id: "astic2020", label: "Astic, Heagy and Oldenburg 2020", citation: "Astic, T., Heagy, L. J. and Oldenburg, D. W. Petrophysically and geologically guided multi-physics inversion using a dynamic Gaussian mixture model. Geophysical Journal International, 224(1), 40–68.", doi: "10.1093/gji/ggaa378", url: "https://arxiv.org/abs/2002.09515" },
   {
     id: "simpeggravity",
