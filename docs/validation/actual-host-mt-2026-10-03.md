@@ -42,6 +42,16 @@ These wall/RSS/scratch inequalities passed unchanged 70% ceilings. Observed pare
 
 ## Unclosed host/release gates
 
+Independent Windows re-import of the five actual Linux control ZIPs found a cross-platform near-zero residual defect in the original M06 verifier: a one-ULP re-evaluated prediction changes the subtraction while the exported prediction/residual pair remains internally consistent. Main preserved the originals and isolated the fix on `task/geophysics-mt-bundle-parity`, without altering this immutable executed runtime or its measurements. The corrected verifier checks prediction against independent physics with the unchanged tolerance, then checks the residual against the exact already-validated exported prediction, also with unchanged tolerance. The regression reproduces the failure before the fix and rejects re-hashed corruptions afterwards. All five original Linux bundles pass re-import with that correction; the correction is not yet a deployed runtime or full host acceptance.
+
+| Private Linux export | Bytes | SHA-256 |
+| --- | ---: | --- |
+| nominal-m05.zip | 19035 | `45d5992a2ac721cfd3579843568ba814c0a913f31879ec8a48d14cc9455ccc35` |
+| nominal-m06-20.zip | 42549 | `fcd47647a864f1e498064fe51dbb266c1a5004df9cde02d48929e6916e84471e` |
+| upper-m05.zip | 38823 | `313159afca37d720c6ed8985035f3b2bd77f550377df20a2a8438e232a3c035d` |
+| upper-m06-40.zip | 89537 | `40d590a9e36b924e1f8343c4a330ca3990fa87fcea0dbb34a8b8813df0a00615` |
+| upper-m05-512-5mib.zip | 253396 | `68970962a66a3a24246b6898c41ee21de6ee73723b57dc1ede9e6d558a82ef77` |
+
 After runtime installation root free space was 23,650,004,992 of 80,290,492,416 bytes, **29.45%**; the actual corrected distribution minimum was 23,622,492,160 bytes (**29.42%**). Both are below the approved 30% disk threshold. No threshold was lowered and no old release directory was deleted/compressed. Owner direction about lossless compression of obsolete geophysics releases is pending. Keep the current active and two newest rollback releases intact. Existing server age is 1.1.1, below the separately reviewed recovery tooling's maintained 1.3.1 minimum; a provenance-verified isolated binary is needed for the restore drill, not a global blind upgrade.
 
 Nominal p95 and minimum host memory/disk headroom are now measured, with the disk gate failing. These TestClient reads do not establish nginx/public HTTPS responsiveness. Backup/restore, durable external deletion authority, approved SMTP delivery, full field/method/data/UI/wiki convergence, external HTTPS/browser and single-origin cutover remain separate gates. No valid cutover receipt or full-product acceptance is asserted here.
