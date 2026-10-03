@@ -15,6 +15,25 @@
     {"object": "rights-cloud", "requested_url": "https://scedc.caltech.edu/data/cloud.html", "final_url": "https://scedc.caltech.edu/data/cloud.html", "started_utc": "2026-10-03T15:11:59.763518+00:00", "finished_utc": "2026-10-03T15:12:00.279424+00:00", "http_status": 200, "headers": {"Content-Type": "text/html", "Content-Encoding": "gzip", "Content-Length": "5390", "ETag": "\"36b560d5b41cc8c690cbd9e7e1d58519\"", "Last-Modified": "Wed, 22 Apr 2026 23:25:18 GMT", "Location": null}, "received_bytes": 0, "raw_sha256": null, "cap_bytes": 1048576, "failure_type": null, "over_limit": false, "original_publication_approved": false}
   ],
   "rights_notes": "Registry body actually retained. Citation/cloud responses supplied gzip despite identity request: body not read/decompressed, no raw hash invented. Their current official text was separately read through the research browser; existing documentation receipts remain historical. Cite SCEDC DOI 10.7909/C3WD3xH1 and CI DOI 10.7914/SN/CI. Private acquisition was explicitly MAIN-authorized; original/public derivative publication still requires per-object review.",
+  "declared_xml_inspection": {
+    "inspection_kind": "Read-only literal original XML inspection, not scanner/native/response admission",
+    "xml_encoding_declaration": "ISO-8859-1",
+    "schema_version": "1.1",
+    "network": {"code":"CI","startDate":"1900-01-01T00:00:00","endDate":"3000-01-01T00:00:00"},
+    "station": {"code":"GSC","startDate":"1961-11-07T00:00:00","endDate":"3000-01-01T00:00:00"},
+    "channel": {"code":"HNZ","locationCode":"","startDate":"2017-09-28T16:30:00","endDate":"2021-11-18T21:00:00","SampleRate":"100.0","Azimuth":"0.0","Dip":"-90.0"},
+    "instrument_sensitivity": {"Value":"214395.0","Frequency":"1.0","InputUnits":"M/S**2","OutputUnits":"COUNTS"},
+    "stages": [
+      {"number":"1","type":"PolesZeros","InputUnits":"M/S**2","OutputUnits":"V","transfer_type":"LAPLACE (RADIANS/SECOND)","NormalizationFactor":"24595700000000","NormalizationFrequency":"1","StageGainValue":"0.510574","StageGainFrequency":"1"},
+      {"number":"2","type":"gain-only","InputUnits":null,"OutputUnits":null,"StageGainValue":"1","StageGainFrequency":"0.03"},
+      {"number":"3","type":"Coefficients","InputUnits":"V","OutputUnits":"COUNTS","transfer_type":"DIGITAL","StageGainValue":"419430","StageGainFrequency":"0.03"},
+      {"number":"4","type":"FIR","InputUnits":"COUNTS","OutputUnits":"COUNTS","Symmetry":"NONE","StageGainValue":"1","StageGainFrequency":"0","DecimationDelay":"0.041607","DecimationCorrection":"0.041407"}
+    ],
+    "scientific_caveats": "Stage2 has no explicit units; contract forbids inference from adjacent V stages. Stage4 declares zero gain frequency while the approved lane requires positive frequency. Original encoding declaration and nested epoch values require actual strict scanner treatment. No metadata repair, inferred units, epoch/gain clearance or alternate candidate; original unchanged. This is not an executed QC verdict.",
+    "native_units_verified": false,
+    "response_epoch_verified": false,
+    "physical_eligible": false
+  },
   "processing_status": "ENGINE_COMPATIBILITY_BLOCKED; originals not decoded or scientifically admitted",
   "original_case_replaced": false,
   "phase_accessed": false,
