@@ -1,6 +1,7 @@
 # M02 pure prism operator design amendment
 
-Status: planned, 2026-10-03; code NOT authorized. New branch
+Status: narrowed implementation approved, 2026-10-03; acceptance pending. Main's
+full-read and exact authority are recorded in [tasks](tasks.md). New branch
 `task/geophysics-m02-forward-sdd`, aligned base develop
 `bc0c573daa511ba897dd0b21e315b8c1eef67413`. PR120 head
 `395459bb82cf221be132479358725ce76268ca93` is frozen/merged, its six files unchanged.
@@ -155,6 +156,8 @@ private arrays. Engine failures/nonfinite/wrong-shape/dtype/state mismatch raise
 `RuntimeError`, preserving the cause; no partial result, fallback, nan_to_num,
 silent clip or successful status. Catch ordinary engine exceptions, not system
 exit/interrupt/memory exhaustion; callers retain these literal failures externally.
+Exception context/cause is private caller diagnostic information, NOT a safe HTTP
+response contract; no web exception rendering is part of this operator.
 
 At capped geometry G has <=2048*4096*8 = 64 MiB. G/J/copies and engine internals
 need more memory; this cap is not a measured RSS, latency, host or GPU guarantee.

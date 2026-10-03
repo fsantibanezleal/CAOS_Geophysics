@@ -1,12 +1,28 @@
 # Pure forward amendment tasks and ownership
 
-Status: planned, awaiting main's complete amendment read. No code authorization.
+Status: narrowed implementation approved on 2026-10-03; scientific acceptance pending.
 
-- [ ] Main reviews [typed protocol/design](design.md), [requirements](requirements.md),
+Main independently read ALL five amendment files at
+`35b02c99f9b5e1ce0e58b4b5d10d1678e3da6039`: design, requirements, validation,
+tasks and runtime pins. No contract fault found. Main approves ONLY new
+`data-pipeline/gravity_forward.py`, `tests/numerics/test_gravity_forward.py` and
+this feature's own docs/evidence. Exact reviewed protocol remains six typed
+keys, finite float64 RAM/one-process engine, <=4096 tensor cells, 1..2048
+receivers strictly outside the closed full source box, external source checks
+and no application I/O/hooks. Existing tolerances remain unchanged.
+
+External test pin verification may read ONLY trusted installed dependency source,
+never user-provided import paths. No native binary staging or package/environment
+changes. No inverse/API/canonical/CLI/UI/legacy-kernel integration authorized.
+Errors are private caller diagnostic contexts, not safe HTTP responses. This
+ordinary operator does not complete M02. Main must independently review/rerun
+the exact pinned code/tests before any merge; no merge/deploy by this agent.
+
+- [x] Main reviews [typed protocol/design](design.md), [requirements](requirements.md),
   [locked gates/cases](validation.md) and [runtime/source pins](runtime-pins.json).
   Review 1..2048 receiver / 4096-cell cap, whole-box strict outside policy,
   float64 RAM engine, exact six-key result, Jacobian units and no-I/O provenance.
-- [ ] Explicit main authority for ONLY `data-pipeline/gravity_forward.py` and
+- [x] Explicit main authority for ONLY `data-pipeline/gravity_forward.py` and
   `tests/numerics/test_gravity_forward.py`, plus this feature's own evidence/docs.
   Main owns source/runtime verification tooling outside the pure callable; no
   new source-audit tool or environment edit is authorized by this amendment.
