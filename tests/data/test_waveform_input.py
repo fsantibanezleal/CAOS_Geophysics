@@ -12,7 +12,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "data-pipeline"))
 from waveform_input import (WaveformInputError, validate_request, scan_miniseed,
-                            scan_stationxml, utc_us, scientific_identity)
+                            scan_stationxml, utc_us, scientific_identity, bounded_json)
 from waveform_processing import process_waveform_record
 
 RECIPE = json.loads((ROOT / "tests/fixtures/waveform_m08/authored-controls.json").read_text())
@@ -209,3 +209,56 @@ def test_frozen_sources_and_local_only_nonclaims():
     result = process_waveform_record(source(), inventory(), request())
     assert result.metadata["field_truth"] is None
     assert not any(result.metadata["acceptance"].values())
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda b: struct.pack_into(">H", b, 30, 65535),
+    lambda b: struct.pack_into(">H", b, 50, 48),
+    lambda b: struct.pack_into(">H", b, 46, 4094),
+    lambda b: struct.pack_into(">H", b, 22, 367),
+    lambda b: b.__setitem__(26, 60),
+    lambda b: b.__setitem__(36, 128),
+    lambda b: b.__setitem__(39, 2),
+])
+def test_complete_header_admission_negatives(mutate, monkeypatch):
+    import waveform_processing as processing
+    calls=[]
+    monkeypatch.setattr(processing, "_decode_record", lambda *a: calls.append(a))
+    bad=bytearray(record([1,2,3]))
+    mutate(bad)
+    rejected(lambda: process_waveform_record(bytes(bad),inventory(),request()))
+    assert calls==[]
+
+
+def test_xml_bounds_duplicates_and_declared_encoding(monkeypatch):
+    import waveform_processing as processing
+    calls=[]
+    monkeypatch.setattr(processing,"_read_inventory",lambda *a: calls.append(a))
+    good=inventory()
+    variants=[good.replace(b'encoding="UTF-8"',b'encoding="ISO-8859-1"'),
+              good.replace(b"<SampleRate>100</SampleRate>",b"<SampleRate>100</SampleRate>"*2),
+              good.replace(b"<Source>authored control</Source>",b"<Source>"+b"x"*8193+b"</Source>"),
+              good.replace(b"<Source>authored control</Source>",b'<x:include xmlns:x="http://www.w3.org/2001/XInclude" href="https://SECRET/"/>'),
+              good.replace(b"<Source>authored control</Source>",b'<e:a xmlns:e="urn:authored">'*33+b'</e:a>'*33),
+              good.replace(b"<NormalizationFactor>1",b"<NormalizationFactor>1e400")]
+    for bad in variants:
+        rejected(lambda: process_waveform_record(source(),bad,request()))
+    assert calls==[]
+    good=good.replace(b"authored control", "authored \U0001d11e".encode())
+    assert scan_stationxml(good)["schema_version"]=="1.2"
+
+
+@pytest.mark.parametrize("raw", [b'{"x":1,"\\u0078":2}', b'{"x":1e400}',
+    b'{"x":9007199254740992}', b'{"x":"\\ud800"}', b'\xef\xbb\xbf{}',
+    b'{"x":NaN}', b'{"x":01}', b'{"x":1.}', b'{"x":true,}', b'[1]SECRET'])
+def test_reference_json_preallocation_grammar(raw):
+    rejected(lambda: bounded_json(raw,1048576))
+
+
+def test_native_json_type_semantics_and_precount():
+    values=bounded_json(b'{"i":1,"f":1.0,"z":-0.0,"u":"\\ud834\\udd1e","under":1e-400}',1048576)
+    assert type(values["i"]) is int and type(values["f"]) is float
+    assert math.copysign(1,values["z"])==-1 and values["under"]==0.0
+    assert values["u"]=="\U0001d11e"
+    for bad in (b'['*9+b'0'+b']'*9, b'{"'+b'x'*65+b'":0}', b'{"x":"'+b'x'*2049+b'"}'):
+        rejected(lambda: bounded_json(bad,1048576),"waveform_limit")
