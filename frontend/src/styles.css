@@ -1,5 +1,53 @@
 /* Geophysics widgets only. Shared shell owns theme, typography, page measure,
    navigation and controls. Widget patterns follow RotorVitals (ADR-0016/17/71). */
+.processing-workbench { height: 100%; }
+.processing-sidebar { overflow-y: auto !important; }
+.processing-actions, .processing-controls, .processing-run-form { display: flex; flex-direction: column; gap: .65rem; min-width: 0; }
+.processing-main { overflow-y: auto; gap: .45rem; }
+.processing-status, .processing-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; font-size: .85rem; }
+.processing-status { border-bottom: 1px solid var(--color-border); padding-bottom: .5rem; }
+.processing-instrument { display: flex; flex: 1; flex-direction: column; min-height: 440px; gap: .45rem; }
+.processing-instrument > :not(.processing-charts):not(.processing-station-table) { flex-shrink: 0; }
+.processing-station-toolbar { display: flex; align-items: end; gap: .65rem; flex-wrap: wrap; }
+.processing-station-toolbar .select-control { flex: 1; min-width: 140px; }
+.processing-station-readout { font: .8rem var(--font-mono); overflow-wrap: anywhere; }
+.processing-charts { display: grid; grid-template-columns: 1fr 1fr; flex: 1; min-height: 310px; gap: .6rem; }
+.processing-plot { margin: 0; min-width: 0; min-height: 310px; padding: .5rem; border: 1px solid var(--color-border); display: flex; flex-direction: column; background: var(--color-surface); }
+.processing-plot figcaption { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .25rem; font-size: .8rem; }
+.processing-plot output { font-family: var(--font-mono); }
+.processing-plot svg { flex: 1; width: 100%; min-height: 220px; touch-action: none; user-select: none; outline-offset: -2px; }
+.processing-plot svg text { font: 11px var(--font-mono); fill: var(--color-fg-subtle); }
+.processing-view-controls { display: flex; align-items: center; gap: .25rem; flex-wrap: wrap; font-size: .75rem; }
+.processing-view-controls .btn, .processing-view-controls .select { padding: .25rem .5rem; min-height: 30px; }
+.processing-view-controls label { display: flex; align-items: center; gap: .25rem; margin-left: auto; }
+.processing-station { color: var(--color-accent); }
+.processing-flagged { color: var(--color-bad); }
+.processing-selection { fill: none; stroke: var(--color-fg); stroke-width: 2; }
+.processing-threshold { stroke: var(--color-bad); stroke-dasharray: 6 4; }
+.processing-brush { fill: color-mix(in oklab, var(--color-accent) 20%, transparent); stroke: var(--color-accent); }
+.processing-station-table { overflow: auto; flex: 1; }
+.processing-station-table table { width: 100%; white-space: nowrap; }
+.processing-station-table tr[aria-selected="true"] { background: var(--color-surface-2); }
+.processing-limits { font-size: .78rem; display: grid; gap: .25rem; margin: 0; }
+.processing-limits dt { color: var(--color-fg-subtle); }
+.processing-limits dd { margin: 0 0 .35rem; font-family: var(--font-mono); }
+.processing-scope, .processing-provenance { margin: 0; font-size: .78rem; color: var(--color-fg-subtle); }
+.processing-provenance code { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .processing-workbench { height: 100%; overflow: hidden !important; }
+  .processing-workbench .processing-sidebar { display: flex; padding: 0; }
+  .processing-sidebar:not(.expanded) > .instrument-brand, .processing-sidebar:not(.expanded) > .processing-actions { display: flex !important; flex-wrap: wrap; flex-direction: row; }
+  .processing-sidebar.expanded { display: flex; }
+  .processing-sidebar.expanded > * { flex-shrink: 0; }
+  .processing-sidebar .mobile-controls-toggle { display: block; position: sticky; top: 0; background: var(--color-bg); }
+  .processing-main { overflow-y: auto; }
+  .processing-main > * { flex-shrink: 0; }
+  .processing-instrument { flex: none; min-height: 0; }
+  .processing-charts { grid-template-columns: 1fr; flex: none; min-height: 0; }
+  .processing-plot { height: 400px; min-height: 400px; }
+  .processing-plot figcaption, .processing-view-controls { flex-shrink: 0; }
+  .processing-view-controls .btn, .processing-view-controls .select { min-height: 40px; }
+}
 .workbench {
   display: grid;
   grid-template-columns: 304px minmax(0, 1fr);

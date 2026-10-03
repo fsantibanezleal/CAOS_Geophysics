@@ -12,6 +12,11 @@ const gravity = (): UploadDraft => ({
 });
 
 describe("explicit scientific raw-upload declaration", () => {
+  it("preserves optional gravity sigma declaration without guessing", () => {
+    expect(prepareUpload(original, gravity(), []).physical.geometry).not.toHaveProperty("sigma_column");
+    const draft = gravity(); draft.geometry.sigma_column = "uncertainty";
+    expect(prepareUpload(original, draft, []).physical.geometry.sigma_column).toBe("uncertainty");
+  });
   it("covers precisely the API envelope formats and produces no invented QC verdict", () => {
     expect(Object.keys(FORMAT_SPECS)).toEqual(["gravity_csv", "magnetic_csv", "traveltime_csv", "ert_csv", "geotiff", "edi", "miniseed", "stationxml", "segy", "mth5"]);
     const declaration = prepareUpload(original, gravity(), []);

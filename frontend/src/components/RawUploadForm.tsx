@@ -94,10 +94,11 @@ export function RawUploadForm({ es, assets, busy, onSubmit }: Props) {
         {geometryField.kind === "stationxml" ? <select className="select" required value={draft.geometry[geometryField.key] ?? ""} onChange={event => update("geometry", { ...draft.geometry, [geometryField.key]: event.target.value })}>
           <option value="">{t("Choose an uploaded StationXML asset…", "Seleccionar un activo StationXML cargado…")}</option>
           {stationxmlAssets.map(asset => <option key={asset.asset_id} value={asset.asset_id}>{asset.original_filename} · {asset.asset_id}</option>)}
-        </select> : <input className="select" required type={geometryField.kind === "integer" || geometryField.kind === "number" ? "number" : "text"}
+        </select> : <input className="select" required={!geometryField.optional} type={geometryField.kind === "integer" || geometryField.kind === "number" ? "number" : "text"}
           step={geometryField.kind === "integer" ? "1" : geometryField.kind === "number" ? "any" : undefined}
           value={draft.geometry[geometryField.key] ?? ""} onChange={event => update("geometry", { ...draft.geometry, [geometryField.key]: event.target.value })} />}
       </label>)}
+      {draft.format === "gravity_csv" && <p className="project-note">{t("Flag QC needs exactly six columns, 4–4096 stations, projected xy metres, vertical metres, mGal and a positive sigma for every station. Leave sigma blank only to store an original without this processing adapter.", "El QC de marcas requiere exactamente seis columnas, 4–4096 estaciones, xy proyectadas en metros, vertical en metros, mGal y sigma positiva por estación. Deje sigma vacía solo para almacenar un original sin este adaptador.")}</p>}
       {(draft.format === "miniseed" || draft.format === "stationxml" || draft.format === "mth5") && channelCodes.map(channel => <div className="project-channel" key={channel}>
         <strong>{channel}</strong>
         <label className="select-control"><span>{t("Azimuth (°; 0–<360)", "Acimut (°; 0–<360)")}</span><input className="select" type="number" step="any" required value={draft.orientation[channel]?.azimuth ?? ""} onChange={event => update("orientation", { ...draft.orientation, [channel]: { azimuth: event.target.value, dip: draft.orientation[channel]?.dip ?? "" } })} /></label>

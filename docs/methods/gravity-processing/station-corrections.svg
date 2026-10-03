@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" role="img" aria-labelledby="title desc">
+  <title id="title">Gravity station corrections and preserved lineage</title>
+  <desc id="desc">Original station values and physical metadata feed normal gravity, land plate and optional residual terrain additions. Verified histories, uncertainty and QC preserve every station. Full field and method acceptance remains open.</desc>
+  <style>
+    svg { --figure-bg: #f8fafc; --figure-panel: #ffffff; --figure-ink: #172435; --figure-muted: #46566b; --figure-accent: #176b83; --figure-line: #b8c7d8; }
+    @media (prefers-color-scheme: dark) { svg { --figure-bg: #111a25; --figure-panel: #1b2939; --figure-ink: #edf4fc; --figure-muted: #b9c8d9; --figure-accent: #7dd3eb; --figure-line: #637a94; } }
+    .bg { fill: var(--bg, var(--figure-bg)); }
+    .panel { fill: var(--panel, var(--figure-panel)); stroke: var(--line, var(--figure-line)); stroke-width: 1.5; }
+    text { fill: var(--ink, var(--figure-ink)); font-family: system-ui, sans-serif; font-size: 16px; }
+    .heading { font-size: 19px; font-weight: 650; }
+    .muted { fill: var(--muted, var(--figure-muted)); font-size: 14px; }
+    .equation { font-family: ui-monospace, monospace; font-size: 15px; }
+    .flow { fill: none; stroke: var(--accent, var(--figure-accent)); stroke-width: 2.5; marker-end: url(#arrow); }
+  </style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent, var(--figure-accent))"/></marker></defs>
+  <rect class="bg" width="960" height="620" rx="16"/>
+  <text class="heading" x="32" y="39">Gravity stations: physical corrections with explicit state</text>
+  <text class="muted" x="32" y="65">Local land processing. Downward gravity in mGal; WGS84 heights in metres, positive upward.</text>
+  <rect class="panel" x="32" y="95" width="428" height="130" rx="10"/>
+  <text class="heading" x="50" y="122">1. Preserve originals</text>
+  <text x="50" y="151">Station ID, latitude, longitude, gravity</text>
+  <text x="50" y="177">Receiver height and surface height differ</text>
+  <text class="muted" x="50" y="204">Source, rights, units, sign and original SHA-256</text>
+  <rect class="panel" x="500" y="95" width="428" height="130" rx="10"/>
+  <text class="heading" x="518" y="122">2. Admit known metadata</text>
+  <text x="518" y="151">Calibrated absolute gravity; tide-free datum</text>
+  <text x="518" y="177">Orthometric heights require a named geoid</text>
+  <text class="muted" x="518" y="204">Unknown history or duplicate station: reject</text>
+  <path class="flow" d="M 465 160 L 495 160"/>
+  <path class="flow" d="M 714 231 L 714 245 L 246 245 L 246 261"/>
+  <rect class="panel" x="32" y="265" width="428" height="145" rx="10"/>
+  <text class="heading" x="50" y="293">3. Compute physical effects</text>
+  <text class="equation" x="50" y="322">gamma(phi,h): pinned Boule engine</text>
+  <text class="equation" x="50" y="349">B = 2 pi G rho t: Harmonica plate</text>
+  <text class="muted" x="50" y="379">Surface t &gt;= 0; receiver h &gt;= t</text>
+  <rect class="panel" x="500" y="265" width="428" height="145" rx="10"/>
+  <text class="heading" x="518" y="293">4. Apply declared signed additions</text>
+  <text class="equation" x="518" y="322">D = g - gamma(phi,0) + height term</text>
+  <text class="equation" x="518" y="349">DB = D - B; DT = DB + T</text>
+  <text class="muted" x="518" y="379">T is residual to B, never a total terrain effect</text>
+  <path class="flow" d="M 465 337 L 495 337"/>
+  <path class="flow" d="M 714 416 L 714 432 L 246 432 L 246 446"/>
+  <rect class="panel" x="32" y="450" width="428" height="133" rx="10"/>
+  <text class="heading" x="50" y="478">5. Verify correction lineage</text>
+  <text x="50" y="507">Original + recorded additions = derived</text>
+  <text x="50" y="533">Before/after hashes and frozen parameters</text>
+  <text class="muted" x="50" y="559">Reapplication or changed history: reject</text>
+  <rect class="panel" x="500" y="450" width="428" height="133" rx="10"/>
+  <text class="heading" x="518" y="478">6. Export uncertainty and QC</text>
+  <text x="518" y="507">Marginal SD model and shared geoid effect</text>
+  <text x="518" y="533">All station map arrays; outliers flagged only</text>
+  <text class="muted" x="518" y="559">Full field, holdout and web gates remain open</text>
+  <path class="flow" d="M 465 516 L 495 516"/>
+  <text class="muted" x="32" y="608">A checked correction chain is measurement processing, not a uniquely determined geological model.</text>
+</svg>

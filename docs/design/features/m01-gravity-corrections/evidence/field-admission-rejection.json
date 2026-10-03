@@ -1,0 +1,22 @@
+{
+  "date_utc": "2026-10-03",
+  "source": "https://doi.org/10.5281/zenodo.16975696",
+  "source_version": "v2, main-session attributed author archive",
+  "rights": "CC BY 4.0, preserve author attribution",
+  "archive_sha256_supplied_by_main": "337a2d9070493773af06aee11a19d591e6468ecf0f062dd75c194a04476c0cdf",
+  "member": "data/ground_gravity_data.csv",
+  "member_bytes": 335377,
+  "member_sha256_locally_verified": "7cb3ed0c3cbac60f896a11f213ba40209c3083cb7635ab80ab7c0fd0382a1055",
+  "operation": "Read one existing archive member in memory and test missing-physical-metadata admission; no download, extraction, full source profile or numerical reduction",
+  "gate": "tests/numerics/test_gravity_processing.py::test_author_principal_fact_bytes_require_physical_metadata",
+  "gate_verdict": "passed negative admission control",
+  "processing_eligibility": "ineligible until physical metadata is resolved",
+  "missing_from_direct_csv_contract": ["height_datum", "instrument_processing", "gravity_quantity", "tide_system"],
+  "note": "Some upstream processing facts are documented in the main-owned FGDC evidence; the CSV header alone is not an explicit validated physical contract. zWGS84 and permanent-tide/reference semantics remain unresolved.",
+  "original_provider_columns_retained": ["Station_ID", "lonWGS84", "latWGS84", "xWGS84_UTM10N", "yWGS84_UTM10N", "zWGS84", "OG", "FAA", "SBA", "TTC", "CBA", "ISO"],
+  "invented_physical_metadata": false,
+  "reference_correction_performed": false,
+  "field_result_generated": false,
+  "full_m01_accepted": false,
+  "usgs_original_byte_identity_established": false
+}
