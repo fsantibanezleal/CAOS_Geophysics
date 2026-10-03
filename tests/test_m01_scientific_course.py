@@ -9,8 +9,13 @@ from copy import deepcopy
 from hashlib import sha256
 import json
 import math
+from importlib.metadata import version
+import os
 from pathlib import Path
+import platform
+import re
 import sys
+import time
 import xml.etree.ElementTree as ET
 
 import harmonica as hm
@@ -22,11 +27,11 @@ sys.path.insert(0, str(ROOT / "data-pipeline"))
 from gravity_processing import GravityContractError, digest, normal_gravity, process_survey
 from gravity_station_adapter import run_station_corrections
 from gravity_transform_controls import control_request, prism_integral
-from gravity_transforms import admit, fit_layer, read_request, replay_grid, transform_survey
+from gravity_transforms import admit, export_bundle, fit_layer, read_request, replay_grid, transform_survey
 
 COURSE = ROOT / "docs/methods/gravity-processing/scientific-course"
 FEATURE = ROOT / "docs/design/features/m01-scientific-course"
-WEB = ROOT / "frontend/public/data/m01-scientific-course"
+WEB = ROOT / "data/derived/m01-scientific-course"
 INDEX = ROOT / "frontend/src/data/m01-course-record-index.json"
 PINS = {
     "gravity_processing.py": "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321",
@@ -51,6 +56,214 @@ CHAPTERS = ("01_quantity-and-reference", "02_plate-and-terrain",
             "05_spatial-validation", "06_continuation-and-limits")
 G = 6.67430e-11
 C = 2 * math.pi * G * 1e5
+OWNED_RUN_ROOT = ROOT / "data/raw/gravity-m01-transforms"
+INDEX_KEYS = {"schema_version", "scenario_id", "label_kind", "request_sha256", "result_sha256",
+              "source_pins", "runtime", "artifacts"}
+RESULT_KEYS = {"schema_version", "original_correction_result", "geometry", "config", "model",
+               "selection", "split", "stations", "evaluation", "axes", "grids", "condition",
+               "nonuniqueness", "uncertainty", "resolution", "provenance"}
+
+
+def require(condition):
+    if not condition:
+        raise ValueError("Course record does not match the frozen teaching contract.")
+
+
+def strict_json(raw):
+    """Only the owned, byte-bound exporter objects; not a generic upload API."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            require(key not in result)
+            result[key] = value
+        return result
+
+    def finite(value):
+        number = float(value)
+        require(math.isfinite(number))
+        return number
+
+    def forbidden(_):
+        raise ValueError("Nonfinite course JSON is forbidden.")
+
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=unique,
+                       parse_float=finite, parse_constant=forbidden)
+    def depth(node, level=0):
+        require(level <= 16)
+        if type(node) is dict:
+            for child in node.values():
+                depth(child, level + 1)
+        elif type(node) is list:
+            for child in node:
+                depth(child, level + 1)
+    depth(value)
+    return value
+
+
+def bound_bytes(path, expected):
+    """Count actual bytes; cap at expected+1, not Content-Length/stat alone."""
+    require(type(expected) is int and 0 < expected <= 32 * 1024 * 1024)
+    with path.open("rb") as stream:
+        raw = stream.read(expected + 1)
+    require(len(raw) == expected)
+    return raw
+
+
+def validate_record(item, base, *, expected_result=None):
+    """Verify both file-byte and Python scientific domains without rewriting."""
+    require(type(item) is dict and set(item) == INDEX_KEYS)
+    require(item["schema_version"] == "m01-course-record-1" and item["scenario_id"] in IDS
+            and item["label_kind"] == "synthetic_control_replay")
+    require(item["source_pins"] == PINS)
+    for key in ("request_sha256", "result_sha256"):
+        require(type(item[key]) is str and re.fullmatch("[0-9a-f]{64}", item[key]) is not None)
+    runtime = item["runtime"]
+    require(type(runtime) is dict and set(runtime) == {"python", "python_implementation", "engines"})
+    require(type(runtime["python"]) is str and re.fullmatch(r"3\.12\.\d+", runtime["python"]) is not None)
+    require(runtime["python_implementation"] == "CPython" and runtime["engines"] == ENGINES)
+    entries = item["artifacts"]
+    require(type(entries) is list and len(entries) == 11)
+    require(all(type(e) is dict and set(e) == {"role", "path", "bytes", "sha256"} for e in entries))
+    require({e["role"] for e in entries} == set(ROLES))
+    require(len({e["path"] for e in entries}) == 11)
+    raw_by_role = {}
+    manifest = {}
+    directory = base / item["scenario_id"]
+    require(not directory.is_symlink() and not directory.is_junction())
+    require({p.name for p in directory.iterdir()} == set(ROLES.values()))
+    for entry in entries:
+        name = ROLES[entry["role"]]
+        require(entry["path"] == item["scenario_id"] + "/" + name)
+        path = base / entry["path"]
+        require(not path.is_symlink() and path.is_file())
+        raw = bound_bytes(path, entry["bytes"])
+        require(sha256(raw).hexdigest() == entry["sha256"])
+        raw_by_role[entry["role"]] = raw
+        if name != "receipt.json":
+            manifest[name] = {"name": name, "bytes": len(raw), "sha256": sha256(raw).hexdigest()}
+    request, result, receipt = (strict_json(raw_by_role[r]) for r in ("request", "result", "export_receipt"))
+    require(type(receipt) is dict and set(receipt) == {"schema_version", "executed_utc", "request_sha256",
+                                                      "result_sha256", "files", "full_method_accepted"})
+    require(receipt["schema_version"] == "gravity-transform-export-1" and receipt["full_method_accepted"] is False)
+    require(type(receipt["executed_utc"]) is str and receipt["executed_utc"].endswith("+00:00"))
+    require(receipt["files"] == [manifest[name] for name in sorted(manifest)])
+    require(digest(request) == item["request_sha256"] == receipt["request_sha256"])
+    require(digest(result) == item["result_sha256"] == receipt["result_sha256"])
+    admit(request)  # complete correction identity, errors, QC and geometry
+    require(set(result) == RESULT_KEYS and result["schema_version"] == "gravity-transform-result-1")
+    require(result["original_correction_result"] == request["correction_result"])
+    require(result["geometry"] == request["geometry"] and result["config"] == request["config"])
+    provenance = result["provenance"]
+    require(provenance["request_sha256"] == item["request_sha256"])
+    require(provenance["engines"] == runtime["engines"] and provenance["python"] == runtime["python"])
+    require(provenance["module_sha256"] == PINS["gravity_transforms.py"])
+    require(provenance["corrections_reapplied"] is False and provenance["full_method_accepted"] is False
+            and provenance["field_gate"] == "open")
+    if expected_result is not None:
+        require(digest(result) == digest(expected_result))
+    return request, result, receipt
+
+
+def owned_output(output):
+    """Operator-selected fresh run below this owner's ignored area only."""
+    path = Path(output).absolute()
+    require(".." not in path.parts and path != OWNED_RUN_ROOT)
+    require(not path.exists() and not path.is_symlink() and not path.is_junction())
+    for parent in path.parents:
+        require(not parent.is_symlink() and not parent.is_junction())
+    path = path.resolve()
+    require(path.is_relative_to(OWNED_RUN_ROOT.resolve()))
+    return path
+
+
+def peak_working_set_bytes():
+    """Actual process high-water mark, not an incremental/device budget."""
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        class Counters(ctypes.Structure):
+            _fields_ = [("cb", wintypes.DWORD), ("faults", wintypes.DWORD)] + [
+                (name, ctypes.c_size_t) for name in ("peak", "working", "paged_peak", "paged",
+                                                    "nonpaged_peak", "nonpaged", "pagefile", "pagefile_peak")]
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.GetCurrentProcess.restype = wintypes.HANDLE
+        psapi = ctypes.WinDLL("psapi", use_last_error=True)
+        psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
+        counters = Counters()
+        counters.cb = ctypes.sizeof(counters)
+        require(bool(psapi.GetProcessMemoryInfo(kernel.GetCurrentProcess(), ctypes.byref(counters), counters.cb)))
+        return int(counters.peak)
+    import resource
+    maximum = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return int(maximum if sys.platform == "darwin" else maximum * 1024)
+
+
+def write_new_json(path, value):
+    with path.open("x", encoding="utf-8", newline="\n") as stream:
+        json.dump(value, stream, indent=2, sort_keys=True, allow_nan=False)
+        stream.write("\n")
+
+
+def produce_course_records(output):
+    """Frozen entry: actual case0/1/2 -> unchanged transform -> exporter."""
+    output = owned_output(output)  # before control/kernel/plot allocation
+    require(platform.python_implementation() == "CPython" and platform.python_version().startswith("3.12."))
+    require({name: version(name) for name in ENGINES} == ENGINES)
+    for name, pin in PINS.items():
+        path = (ROOT / "data-pipeline" / name).resolve()
+        require(sha256(path.read_bytes()).hexdigest() == pin)
+        module = sys.modules.get(path.stem)
+        if module is not None:
+            require(Path(module.__file__).resolve() == path)
+    output.mkdir(parents=True, exist_ok=False)
+    catalogue, measurements = [], []
+    started, cpu_started = time.perf_counter(), time.process_time()
+    for case, scenario in enumerate(IDS):
+        before, cpu_before = time.perf_counter(), time.process_time()
+        request, truth = control_request(case=case, noisy=True)
+        original = digest(request)
+        result = transform_survey(request)
+        require(digest(request) == original and result["selection"]["status"] == "passed")
+        export_bundle(request, result, output / scenario)
+        item = {
+            "schema_version": "m01-course-record-1", "scenario_id": scenario,
+            "label_kind": "synthetic_control_replay", "request_sha256": digest(request),
+            "result_sha256": digest(result), "source_pins": dict(PINS),
+            "runtime": {"python": platform.python_version(), "python_implementation": platform.python_implementation(),
+                        "engines": dict(result["provenance"]["engines"])},
+            "artifacts": [],
+        }
+        for role, name in ROLES.items():
+            raw = (output / scenario / name).read_bytes()
+            item["artifacts"].append({"role": role, "path": scenario + "/" + name,
+                                      "bytes": len(raw), "sha256": sha256(raw).hexdigest()})
+        validate_record(item, output, expected_result=result)
+        # Independent source physics is evaluation only; never feeds the fit.
+        oracle = hm.prism_gravity(truth["coordinates"], truth["prisms"], truth["densities"], field="g_z", parallel=False)
+        difference = float(np.max(np.abs(oracle - truth["true_observed_mgal"])))
+        require(difference < 1e-7)
+        measurements.append({
+            "scenario_id": scenario, "wall_seconds": time.perf_counter() - before,
+            "process_cpu_seconds": time.process_time() - cpu_before,
+            "process_peak_working_set_bytes": peak_working_set_bytes(),
+            "bundle_bytes": sum(a["bytes"] for a in item["artifacts"]),
+            "oracle_max_abs_mgal": difference, "evaluation": result["evaluation"],
+            "selection": {k: result["selection"][k] for k in ("status", "depth_m", "damping", "height_m")},
+            "split_sha256": result["split"]["sha256"], "condition": result["condition"],
+            "grid_summaries": [{k: g[k] for k in ("height_m", "max_conditional_sigma_mgal",
+                                                   "height_precision_passed", "adjacent_easting_difference_rms_mgal")}
+                               | {"covered_count": sum(g["covered"]), "node_count": len(g["covered"])} for g in result["grids"]],
+        })
+        catalogue.append(item)
+    write_new_json(output / "producer-measurements.json", {
+        "producer_sha256": sha256(Path(__file__).read_bytes()).hexdigest(),
+        "runtime": catalogue[0]["runtime"], "source_pins": PINS, "cases": measurements,
+        "wall_seconds": time.perf_counter() - started, "process_cpu_seconds": time.process_time() - cpu_started,
+        "process_peak_working_set_bytes": peak_working_set_bytes(),
+        "limits": "Measured one process on this machine; no browser, device, field, host or full-method acceptance.",
+    })
+    write_new_json(output / INDEX.name, catalogue)  # completion marker last
+    return catalogue
 
 
 @pytest.fixture(scope="module")
@@ -60,11 +273,16 @@ def controls():
 
 @pytest.fixture(scope="module")
 def records():
-    assert INDEX.is_file(), "Actual course records have not been produced/published."
-    catalogue = read_request(INDEX)
+    selected = os.environ.get("M01_COURSE_CANDIDATE_ROOT")
+    base = Path(selected).resolve() if selected else WEB
+    if selected:
+        assert base.is_relative_to(OWNED_RUN_ROOT.resolve())
+    index = base / INDEX.name if selected else INDEX
+    assert index.is_file(), "Actual course records have not been produced/published."
+    catalogue = read_request(index)
     assert type(catalogue) is list and len(catalogue) == 3
-    return [(read_request(WEB / item["scenario_id"] / "request.json"),
-             read_request(WEB / item["scenario_id"] / "result.json"),
+    return [(read_request(base / item["scenario_id"] / "request.json"),
+             read_request(base / item["scenario_id"] / "result.json"),
              item) for item in catalogue]
 
 
@@ -261,9 +479,11 @@ def test_explanatory_controls_not_physical_jobs():
 
 
 def test_recorded_scenario_identity_and_stale_negatives(records, controls):
-    catalogue = read_request(INDEX)
+    selected = os.environ.get("M01_COURSE_CANDIDATE_ROOT")
+    base = Path(selected).resolve() if selected else WEB
+    catalogue = [item for _, _, item in records]
     for i, (request, result, item) in enumerate(records):
-        validate_record(item, WEB)
+        validate_record(item, base)
         assert digest(request) == digest(controls[i][0])
         assert result == transform_survey(request)
     assert len({i["request_sha256"] for i in catalogue}) == 3
@@ -275,13 +495,18 @@ def test_recorded_scenario_identity_and_stale_negatives(records, controls):
         bad = deepcopy(original)
         bad[key] = value
         with pytest.raises(ValueError):
-            validate_record(bad, WEB)
+            validate_record(bad, base)
     for key, value in (("bytes", original["artifacts"][0]["bytes"] + 1), ("sha256", "0"*64),
                        ("path", "../request.json"), ("role", "unknown")):
         bad = deepcopy(original)
         bad["artifacts"][0][key] = value
         with pytest.raises(ValueError):
-            validate_record(bad, WEB)
+            validate_record(bad, base)
+    for count in (0, -1, True, 1.0):
+        bad = deepcopy(original)
+        bad["artifacts"][0]["bytes"] = count
+        with pytest.raises(ValueError):
+            validate_record(bad, base)
 
 
 def test_user_file_workflow_and_parent_identity(controls, tmp_path):
@@ -297,7 +522,7 @@ def test_user_file_workflow_and_parent_identity(controls, tmp_path):
     assert result["receipt"]["acceptance"] == {"host_approved": False, "full_method_accepted": False, "field_source_verified": False}
     assert selected.read_bytes() == before
     absent = tmp_path / "absent.json"
-    with pytest.raises(OSError):
+    with pytest.raises(GravityContractError, match="regular file"):
         read_request(absent)
     assert not absent.exists()
     parent["stations"][0].update(original_value=980000.0, value_mgal=980000)
@@ -367,8 +592,38 @@ def test_negative_controls_and_field_gate(controls):
     # No private field bytes or fabricated field SD/datum are consumed here.
 
 
-def test_stage_authorization_and_nonclaims():
+def test_stage_authorization_and_nonclaims(tmp_path, monkeypatch):
     text = (FEATURE / "tasks.md").read_text(encoding="utf-8")
     assert "96b583eefad4e8c8c4281800df219432c3b5a45e" in text
     assert "--produce-course-records OUTPUT_ROOT" in text and "explicitly authorized" in text
     assert "MAIN" in text and "ledger" in text
+    monkeypatch.setitem(globals(), "OWNED_RUN_ROOT", tmp_path / "owned")
+    for path in (tmp_path, tmp_path / "other", tmp_path / "owned"):
+        with pytest.raises(ValueError):
+            owned_output(path)
+    fresh = tmp_path / "owned" / "fresh"
+    assert owned_output(fresh) == fresh.resolve() and not fresh.exists()
+    fresh.mkdir(parents=True)
+    with pytest.raises(ValueError):
+        produce_course_records(fresh)
+    sized = tmp_path / "bytes.bin"
+    sized.write_bytes(b"12345")
+    for expected in (4, 6):
+        with pytest.raises(ValueError):
+            bound_bytes(sized, expected)
+    assert bound_bytes(sized, 5) == b"12345"
+    for raw in (b'{"x":NaN}', b'{"x":1e999}', b'{"x":1,"x":2}', b"\xff"):
+        with pytest.raises(ValueError):
+            strict_json(raw)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3 or sys.argv[1] != "--produce-course-records":
+        print("Usage: test_m01_scientific_course.py --produce-course-records OUTPUT_ROOT", file=sys.stderr)
+        raise SystemExit(2)
+    try:
+        produce_course_records(sys.argv[2])
+    except (ValueError, OSError, GravityContractError):
+        print("Course production rejected; no verified complete record publication.", file=sys.stderr)
+        raise SystemExit(2)
+    print("Three authored-control bundles verified; no field, host or full-method acceptance.")
