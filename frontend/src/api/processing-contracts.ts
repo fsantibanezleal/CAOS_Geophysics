@@ -78,7 +78,7 @@ export function processingObject(value: unknown, context: string): Record<string
   if (!value || typeof value !== "object" || Array.isArray(value)) fail(`${context}: expected object`);
   return value as Record<string, unknown>;
 }
-function keys(value: Record<string, unknown>, expected: string[], context: string) {
+export function keys(value: Record<string, unknown>, expected: string[], context: string) {
   if (Object.keys(value).sort().join(",") !== [...expected].sort().join(",")) fail(`${context}: unexpected or missing fields`);
 }
 export function processingText(value: unknown, context: string): string {
@@ -90,13 +90,13 @@ export function processingId(value: unknown): string {
   if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) fail("identity: expected UUID");
   return id;
 }
-function hash(value: unknown) {
+export function hash(value: unknown) {
   if (typeof value !== "string" || !/^[0-9a-f]{64}$/.test(value)) fail("expected SHA-256");
 }
-function number(value: unknown): asserts value is number {
+export function number(value: unknown): asserts value is number {
   if (typeof value !== "number" || !Number.isFinite(value)) fail("expected finite number");
 }
-function integer(value: unknown, min = 0, max = Number.MAX_SAFE_INTEGER): asserts value is number {
+export function integer(value: unknown, min = 0, max = Number.MAX_SAFE_INTEGER): asserts value is number {
   number(value);
   if (!Number.isSafeInteger(value) || value < min || value > max) fail("integer out of range");
 }
@@ -104,7 +104,7 @@ function timestamp(value: unknown) {
   const text = processingText(value, "timestamp");
   if (!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(text) || !Number.isFinite(Date.parse(text))) fail("timestamp needs timezone");
 }
-function same(a: unknown, b: unknown, context: string) {
+export function same(a: unknown, b: unknown, context: string) {
   // Physical metadata object key order is not a semantic property.
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) fail(context);
@@ -294,7 +294,7 @@ export function bindResult(result: FlagResult, job: ProcessingJob, dataset: Grav
   same(result.request_sha256, job.request_sha256, "result request hash"); same(result.parameters, job.request.parameters, "result submitted parameters");
   for (const key of ["station_ids", "xyz_m", "observed_mgal", "sigma_mgal", "axis_order", "dimensions", "uncertainty_kind", "physical_metadata", "rights_decision", "rights_statement"] as const) same(result[key], dataset[key], `unchanged ${key}`);
 }
-async function sha(bytes: Uint8Array): Promise<string> {
+export async function sha(bytes: Uint8Array): Promise<string> {
   const buffer = Uint8Array.from(bytes).buffer;
   return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", buffer)), byte => byte.toString(16).padStart(2, "0")).join("");
 }

@@ -5,6 +5,7 @@ import type { RawAsset } from "../api/contracts";
 import { ProcessingApi } from "../api/processing";
 import { FLAG_METHOD, M05_METHOD, isFlagJob, isGravityReceipt, type ProjectDatasetReceipt, type ProjectProcessingJob, type FlagResult, type GravityDataset, type MethodEligibility, type ProcessingState } from "../api/processing-contracts";
 import { GravityStationInstrument } from "./GravityStationInstrument";
+import { MtProjectWorkbench } from "./MtProjectWorkbench";
 
 export function processingProblem(error: unknown, es: boolean): string {
   const t = (en: string, sp: string) => es ? sp : en;
@@ -45,6 +46,13 @@ function save(blob: Blob, name: string) {
 
 export function ProjectProcessingWorkbench({ projectId, es, onManage, onCurated }: {
   projectId: string; es: boolean; onManage: () => void; onCurated: () => void;
+}) {
+  const [mt, setMt] = useState(() => new URLSearchParams(window.location.search).get("instrument") === "mt");
+  const select = (value: boolean) => { const url = new URL(window.location.href); if (value) url.searchParams.set("instrument", "mt"); else url.searchParams.delete("instrument"); window.history.replaceState(null, "", url); setMt(value); };
+  return mt ? <MtProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onGravity={() => select(false)} /> : <GravityProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onMt={() => select(true)} />;
+}
+function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
+  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onMt: () => void;
 }) {
   const t = (en: string, sp: string) => es ? sp : en;
   const clients = useMemo(() => { const client = new ApiClient(window.location.origin); return { lifecycle: new LifecycleApi(client), processing: new ProcessingApi(client) }; }, []);
@@ -166,7 +174,7 @@ export function ProjectProcessingWorkbench({ projectId, es, onManage, onCurated 
   return <div className="page-body wide workbench processing-workbench">
     <aside className={`instrument-sidebar processing-sidebar ${controlsOpen ? "expanded" : ""}`}>
       <div className="instrument-brand"><span className="small-caps">{t("PRIVATE PROJECT · PROCESSING", "PROYECTO PRIVADO · PROCESAMIENTO")}</span><h1>{project?.name ?? t("Project processing", "Procesamiento de proyecto")}</h1></div>
-      <div className="processing-actions"><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>
+      <div className="processing-actions"><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>
       <button className="btn mobile-controls-toggle" aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}>{t("Processing controls", "Controles de procesamiento")}</button>
       {session === "ready" && <div className="processing-controls">
         <label className="select-control"><span>{t("Control section", "Sección de controles")}</span><select className="select" value={section} onChange={event => setSection(event.target.value)}>

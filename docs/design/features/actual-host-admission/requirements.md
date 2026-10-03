@@ -1,0 +1,10 @@
+# Actual-host admission requirements
+
+Scope: approved SDD sections 3 and 8, R-007/R-017. This unit measures the existing M05/M06 runtime on the ML VPS. It never changes public nginx, DNS, Pages, production private state or online activation flags.
+
+- HA-01: WHEN invoked explicitly on Linux under a non-root restricted identity, THE harness SHALL execute the existing authenticated API and singleton numerical worker, with immutable job/result identities. Gate: `tests/api/test_host_admission.py::test_nominal_distribution_and_concurrent_reads`.
+- HA-02: THE harness SHALL measure at least twenty nominal jobs per admitted method, nearest-rank p95 wall/RSS/scratch, parent-plus-child RSS, minimum host available memory and disk, and enforce nominal usage below 70% of configured limits and host memory/disk headroom at least 30%. Same-process TestClient responsiveness is labelled separately from public HTTPS responsiveness. Gate: same test.
+- HA-03: THE host SHALL pass original nominal/upper/malformed controls without changing numerical limits or scientific resolution. Gate: `tests/api/test_online_mt_benchmark.py::test_local_nominal_upper_malformed_admission` on this host, not a copied Windows receipt.
+- HA-04: WHEN the real worker parent is killed during a child job, THE orphan SHALL exit and recovery SHALL persist a non-success result, preserve disputed staging, and successfully process a new attempt. Gate: `tests/api/test_host_admission.py::test_real_parent_crash_and_recovery` plus existing cancel/timeout/resource gates.
+- HA-05: THE server runner SHALL use an immutable reviewed source archive, isolated pinned venv, transient DynamicUser identity, strict filesystem and process/cgroup bounds, no listener and only private writable admission state. Gate: reviewed `scripts/server_mt_admission.sh`, actual systemd property receipt and adjacent tests.
+- HA-06: THE guide SHALL preserve raw receipts and explicitly exclude whole-product/public-host activation claims until integrated HTTPS, backup, security and browser gates also pass. Gate: `tests/api/test_host_admission.py::test_host_guide_contract`.
