@@ -1,0 +1,7 @@
+# Metadata verification is separate from acquisition and inference
+
+Keep acquisition `provider-link` and rights `provider-link-only`. A new exact status `locally-verified-metadata` is supported only for STEAD metadata format. It requires `verification_evidence` with one repository-relative aggregate profile and its exact SHA-256. Paths stay under `data/derived/phase`, without absolute paths, traversal, Windows aliases or symlinks. Loader verifies the profile before trusting its source identity. Missing evidence, unknown status or digest/source drift rejects; the older unverified status remains supported but may not carry fabricated verified evidence.
+
+The existing profile is an immutable metadata-era receipt, not a newly inferred model or a waveform acquisition receipt. It has source URL, exact bytes/SHA, 1,265,657 row summary and explicit waveforms-not-downloaded-by-this-receipt. Current M13 model/heldout/browser validation remains separate. Main independently re-hashed actual phase-worktree metadata before this change; no train/test trace is opened, no split recomputed and no model fitted.
+
+Primary official STEAD repository identifies its dataset terms; SeisBench documents metadata/waveform separation. The provider-linked SeisBench mirror URL is not promoted into the local automatic-fetch allowlist. Existing local byte-hash verification establishes the checked source file, not external current availability or scientific licence from a checksum.

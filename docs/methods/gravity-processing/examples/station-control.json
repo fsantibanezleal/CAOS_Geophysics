@@ -1,0 +1,50 @@
+{
+  "dataset": {
+    "schema_version": "gravity-stations-1",
+    "state": "observed_absolute",
+    "history": [],
+    "metadata": {
+      "source_kind": "synthetic_control",
+      "source_sha256": "88f638b4487c398332ece4a7e6a004fbca0bcd019381fe4dad3293021163e181",
+      "source_citation": "Original mathematical definition: M01 synthetic: phi=45; h=t=1000 m; rho=2670 kg/m3; residual=12 mGal. Not field observations.",
+      "rights": "Authored numerical control, Apache-2.0",
+      "crs": "EPSG:4326",
+      "reference_ellipsoid": "WGS84",
+      "height_datum": "ellipsoidal",
+      "height_unit": "m",
+      "height_sign": "upward",
+      "gravity_unit": "mGal",
+      "gravity_sign": "downward",
+      "gravity_quantity": "absolute_gravity",
+      "gravity_datum": "Authored WGS84 normal-field control",
+      "tide_system": "tide_free",
+      "instrument_processing": {
+        "calibration": {"status": "applied", "citation": "Gravity defined analytically in physical units"},
+        "drift": {"status": "not_applicable", "citation": "Synthetic definition has no instrument drift"},
+        "tide": {"status": "not_applicable", "citation": "Synthetic definition has no tides"}
+      }
+    },
+    "stations": [
+      {
+        "station_id": "analytic-plate-control",
+        "latitude_deg": 45.0,
+        "longitude_deg": 0.0,
+        "receiver_height_m": 1000.0,
+        "surface_height_m": 1000.0,
+        "original_value": 980435.2584487502,
+        "value_mgal": 980435.2584487502,
+        "gravity_sigma": 0.1,
+        "receiver_sigma_m": 0.5,
+        "surface_sigma_m": 0.5,
+        "latitude_sigma_deg": 0.0
+      }
+    ]
+  },
+  "config": {
+    "target": "bouguer_disturbance",
+    "uncertainty_model": "conservative_marginals",
+    "density_kg_m3": 2670.0,
+    "density_sigma_kg_m3": 20.0,
+    "outlier_z": 6.0
+  }
+}

@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -17,18 +18,66 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "data/source-ledger.json"
-FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm",
+FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm", "research-zip", "fgdc-metadata-xml",
            "pygimli-traveltime-sgt", "stead-metadata-csv", "generated-case"}
 RIGHTS = {"mirror", "provider-link-only", "derivative-only", "forbidden"}
-FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org"}
+FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov", "zenodo.org"}
 MIME = {"simpeg-obs-tar-gz": "application/gzip", "edi-transfer-function": "text/plain",
-        "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain"}
+        "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain",
+        "research-zip": "application/zip", "fgdc-metadata-xml": "application/xml"}
 MAX_SOURCE_BYTES = 200_000_000
 CHUNK_BYTES = 128 * 1024
+ARCHIVE_LIMITS = {"max_entries": 512, "max_expanded_bytes": 500_000_000,
+                  "max_member_bytes": MAX_SOURCE_BYTES, "max_expansion_ratio": 1000}
 
 
 class SourceError(ValueError):
     """A source could not pass its declared acquisition contract."""
+
+
+def archive_member_key(name: str) -> PurePosixPath:
+    """Portable, canonical file/directory name; no Windows aliases or devices."""
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_. /-]+", name):
+        raise SourceError("Unsafe ZIP path: require a portable relative name")
+    path = PurePosixPath(name)
+    devices = {"con", "prn", "aux", "nul", *(f"com{i}" for i in range(10)), *(f"lpt{i}" for i in range(10))}
+    if (not path.parts or path.is_absolute() or path.as_posix() != name
+            or any(part in {".", ".."} or part.endswith((".", " "))
+                   or part.split(".")[0].rstrip(" ").lower() in devices for part in path.parts)):
+        raise SourceError("Unsafe ZIP path: noncanonical path or Windows alias")
+    return path
+
+
+def validate_archive_contract(contract: dict) -> None:
+    """Validate reviewed limits and selected pins before reading an archive."""
+    required = {*ARCHIVE_LIMITS, "selected_members"}
+    if not isinstance(contract, dict) or set(contract) != required:
+        raise SourceError("Research ZIP archive_contract needs exact limits and selected_members")
+    for field, ceiling in ARCHIVE_LIMITS.items():
+        value = contract[field]
+        numeric = type(value) in (int, float) if field == "max_expansion_ratio" else type(value) is int
+        if not numeric or not 0 < value <= ceiling or not math.isfinite(value):
+            raise SourceError(f"Archive {field} limit must be positive, finite and at most {ceiling}")
+    selected = contract["selected_members"]
+    if not isinstance(selected, dict) or not 0 < len(selected) <= contract["max_entries"]:
+        raise SourceError("Archive selected_members count limit")
+    names = set()
+    total = 0
+    for name, pin in selected.items():
+        key = archive_member_key(name)
+        if key.suffix.lower() not in {".csv", ".pdf"} or name.casefold() in names:
+            raise SourceError("Archive selection must contain distinct portable CSV/PDF members")
+        names.add(name.casefold())
+        if (not isinstance(pin, dict) or set(pin) != {"bytes", "sha256"}
+                or type(pin["bytes"]) is not int or not 0 < pin["bytes"] <= contract["max_member_bytes"]
+                or not isinstance(pin["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", pin["sha256"])):
+            raise SourceError(f"Selected member needs bounded byte limit and lowercase SHA-256: {name}")
+        total += pin["bytes"]
+    if total > contract["max_expanded_bytes"]:
+        raise SourceError("Selected member total expansion limit")
+    for name in names:
+        if any(parent.as_posix() in names for parent in PurePosixPath(name).parents if parent.as_posix() != "."):
+            raise SourceError("Archive selection has a file/parent collision")
 
 
 def _https(url: str, *, fetch: bool = False) -> None:
@@ -52,6 +101,51 @@ def _raw_key(value: str) -> PurePosixPath:
             or any(part in ("", ".", "..") for part in path.parts)):
         raise SourceError(f"Raw storage key must stay under data/downloads/: {value!r}")
     return path
+
+
+def _verified_metadata_evidence(record: dict) -> None:
+    evidence = record.get("verification_evidence")
+    if (record["format"] != "stead-metadata-csv" or not isinstance(evidence, dict)
+            or set(evidence) != {"path", "sha256"}
+            or not isinstance(evidence["sha256"], str)
+            or not re.fullmatch(r"[0-9a-f]{64}", evidence["sha256"])):
+        raise SourceError("Verified metadata requires a pinned aggregate profile")
+    key = archive_member_key(evidence["path"])
+    if len(key.parts) != 4 or key.parts[:3] != ("data", "derived", "phase") or key.suffix != ".json":
+        raise SourceError("Metadata evidence must be a profile under data/derived/phase")
+    profile = ROOT.joinpath(*key.parts)
+    for item in (profile, *profile.parents):
+        if item.is_symlink() or getattr(item, "is_junction", lambda: False)():
+            raise SourceError("Metadata evidence cannot traverse a symlink or junction")
+        if item == ROOT:
+            break
+    try:
+        with profile.open("rb") as handle:
+            raw = handle.read(2 * 1024 * 1024 + 1)
+        if len(raw) > 2 * 1024 * 1024 or hashlib.sha256(raw).hexdigest() != evidence["sha256"]:
+            raise SourceError("Metadata profile byte/hash mismatch")
+        def pairs(items):
+            result = {}
+            for name, item in items:
+                if name in result:
+                    raise SourceError("Metadata profile contains duplicate keys")
+                result[name] = item
+            return result
+
+        def constant(_value):
+            raise SourceError("Metadata profile contains a nonfinite constant")
+
+        value = json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError) as error:
+        raise SourceError("Metadata aggregate profile unavailable or invalid") from error
+    source = value.get("source") if isinstance(value, dict) else None
+    rows = value.get("rows") if isinstance(value, dict) else None
+    if (not isinstance(value, dict) or value.get("schema") != "caos.stead-metadata-profile.v1" or not isinstance(source, dict)
+            or not isinstance(rows, dict) or type(rows.get("total")) is not int or rows["total"] <= 0
+            or type(source.get("bytes")) is not int or source["bytes"] != record["expected_bytes"]
+            or source.get("sha256") != record["sha256"] or source.get("url") != record["object_url"]
+            or source.get("waveforms_downloaded_by_this_receipt") is not False):
+        raise SourceError("Metadata profile source identity mismatch")
 
 
 def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
@@ -88,13 +182,17 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
                 raise SourceError(f"{source_id}: generated source must have no external raw asset")
         elif mode == "provider-link":
             if (record["rights_decision"] != "provider-link-only" or
-                    record.get("verification_status") != "user-reported-unverified" or
+                    record.get("verification_status") not in ("user-reported-unverified", "locally-verified-metadata") or
                     record["raw_path"] is not None or not record["object_url"]):
-                raise SourceError(f"{source_id}: provider-link entry must remain unverified and have no raw storage key")
+                raise SourceError(f"{source_id}: provider-link entry needs an explicit verification status and no raw storage key")
             if (type(record["expected_bytes"]) is not int or record["expected_bytes"] <= 0 or
                     not isinstance(record["sha256"], str) or
                     not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])):
                 raise SourceError(f"{source_id}: provider-reported bytes and SHA-256 must be well formed")
+            if record["verification_status"] == "locally-verified-metadata":
+                _verified_metadata_evidence(record)
+            elif "verification_evidence" in record:
+                raise SourceError(f"{source_id}: unverified metadata cannot claim a verified profile")
         elif mode in {"fetch", "manual"}:
             if record["format"] == "generated-case" or record["rights_decision"] == "forbidden":
                 raise SourceError(f"{source_id}: acquisition conflicts with format or rights")
@@ -119,6 +217,10 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
             if any(not isinstance(record.get(field), str) or not record[field].strip()
                    for field in ("quantity", "value_unit", "coordinate_convention")):
                 raise SourceError(f"{source_id}: observation archive needs quantity, value_unit and coordinates")
+        if record["format"] == "research-zip":
+            validate_archive_contract(record.get("archive_contract"))
+        elif "archive_contract" in record:
+            raise SourceError(f"{source_id}: archive_contract requires research-zip format")
         records[source_id] = record
     if not records:
         raise SourceError("Source ledger is empty")
@@ -203,7 +305,7 @@ def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path
     if mode == "generated":
         raise SourceError(f"{source_id}: generated cases use the geological constructor, not raw acquisition")
     if mode == "provider-link":
-        raise SourceError(f"{source_id}: provider-link metadata is not a verified raw asset; "
+        raise SourceError(f"{source_id}: provider-link metadata is not an acquirable raw asset; "
                           f"consult {record['object_url']} and review a separate acquisition contract first")
     root = Path(root).resolve()
     target = _inside(root, _raw_key(record["raw_path"]), "downloads")

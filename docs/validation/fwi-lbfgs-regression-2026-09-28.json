@@ -1,0 +1,258 @@
+{
+  "schema": "inverse-earth/fwi-lbfgs-regression/v1",
+  "scope": "Local deterministic CUDA diagnostics and an isolated candidate, not canonical release evidence",
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "torch": "2.14.0+cu126",
+    "deepwave": "0.0.27",
+    "cuda": "12.6"
+  },
+  "layered_fixed_inputs": {
+    "observation_sha256": "557eb556c372b515a595e614a0a16fc2b1115c78cc5a16b46c8f4a6c568666bb",
+    "initial_sha256": "300a7c1a1cb1506256b80b52bb1ae20ba494af19c8dba942f6754551d9fcdcf8",
+    "truth_sha256": "63f29ddb27a36dad7c4cadaf58d26aba40b5ad16f4e1643f75704b5cf299fd6a"
+  },
+  "old_optimizer": {
+    "solver_sha256": "6a5e8070891b179a023645a8137ff19741941cb7d967932e19990ec425f76ad6",
+    "torch_max_iter_per_call": 1,
+    "torch_max_eval_default": 1,
+    "effective_wolfe_search_iterations": 0,
+    "layered_multiscale": {
+      "active_wrms": 2.607551097869873,
+      "withheld_wrms": 2.656599283218384,
+      "model_rmse_ratio": 0.538562295844426,
+      "status": "unresolved",
+      "model_sha256": "2e5cb741b79d623677d2ff634554f03a12f93c42176ba7b3ecb23c8b4919df2c",
+      "final_stage_first_zero_step_call": 5,
+      "final_stage_last_trial_closure_gradient_linf": 0.00082985
+    }
+  },
+  "rejected_schedule_diagnostics": [
+    {
+      "cutoffs_hz": [3, 5, 8, null],
+      "calls_per_stage": 28,
+      "active_wrms": 2.547264337539673,
+      "withheld_wrms": 2.5957694053649902,
+      "model_rmse_ratio": 0.5376238037897881,
+      "status": "unresolved"
+    },
+    {
+      "cutoffs_hz": [3, 8, 14, null],
+      "calls_per_stage": 28,
+      "active_wrms": 2.072258234024048,
+      "withheld_wrms": 2.12884521484375,
+      "model_rmse_ratio": 0.5642168541730344,
+      "status": "unresolved",
+      "model_sha256": "4a309961e85a2f139f984c160a0139c86a23a67434ef7f230066d822cb6c6c6c"
+    },
+    {
+      "cutoffs_hz": [3, 8, 14, null],
+      "calls_per_stage": 56,
+      "active_wrms": 2.072258234024048,
+      "withheld_wrms": 2.12884521484375,
+      "model_rmse_ratio": 0.5642168541730344,
+      "status": "unresolved",
+      "model_sha256": "4a309961e85a2f139f984c160a0139c86a23a67434ef7f230066d822cb6c6c6c"
+    }
+  ],
+  "corrected_optimizer": {
+    "solver_sha256": "e0d475c946edd07c906874511d4c53170db8180dcf0c74887da73bba35b55c85",
+    "torch_max_iter_per_call": 1,
+    "torch_max_eval_per_call": 25,
+    "cutoffs_hz": [3, 5, 8, 14],
+    "calls_per_stage": 28,
+    "repeat_before_metadata_rename": {
+      "solver_sha256": "c055d27dd42404555c0482fa7d34695f9334b030b343542003aabc0b074b577b",
+      "independent_runs": 2,
+      "observation_hash_equal": true,
+      "fullband_model_hash_equal": true,
+      "multiscale_model_hash_equal": true,
+      "multiscale_model_sha256": "914f1b4035af31f869e3d351009aac88d0e363dec682063dfcde3168cf63cd9e",
+      "multiscale_final_stage_closures": 61,
+      "multiscale_final_stage_last_parameter_step_linf": 0.0043433
+    },
+    "layered_reference": {
+      "fullband_active_wrms": 1.130370,
+      "fullband_withheld_wrms": 1.145779,
+      "fullband_model_rmse_ratio": 0.534691,
+      "multiscale_active_wrms": 1.2077864408493042,
+      "multiscale_withheld_wrms": 1.2330355644226074,
+      "multiscale_model_rmse_ratio": 0.5269253074085157,
+      "fullband_status": "recovered",
+      "multiscale_status": "recovered"
+    },
+    "fault_reference": {
+      "fullband_active_wrms": 1.370423,
+      "fullband_withheld_wrms": 1.418753,
+      "fullband_model_rmse_ratio": 0.700736,
+      "multiscale_active_wrms": 1.3400107622146606,
+      "multiscale_withheld_wrms": 1.3875075578689575,
+      "multiscale_model_rmse_ratio": 0.653271921253339,
+      "fullband_status": "recovered",
+      "multiscale_status": "recovered"
+    }
+  },
+  "failed_seven_digit_candidate": {
+    "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375",
+    "conditions_completed": 24,
+    "seconds": 2434.974703200016,
+    "peak_monitored_gpu_bytes": 4578082816,
+    "cuda_forward_replay": "failed",
+    "first_mismatch": {
+      "case": "FWI_LAYERED",
+      "variant": "reference",
+      "method": "fwi-l2",
+      "mismatched_decimated_samples": 13744,
+      "samples": 48000,
+      "maximum_absolute_violation": 0.00023426,
+      "relative_tolerance": 0.00002,
+      "absolute_tolerance": 0.00002
+    },
+    "layered_reference_float32_rounding": {
+      "velocity_cells": 12288,
+      "changed_fullband_cells": 9524,
+      "changed_multiscale_cells": 9692,
+      "maximum_cell_difference_m_s": 0.00048828125
+    },
+    "cause": "batch save_result used rebuild.save seven-digit default despite declared ten-digit FWI export precision",
+    "canonical_artifacts_changed": false
+  },
+  "integration_validation": {
+    "date": "2026-10-03",
+    "scoped_fix_commit": "6f7b718",
+    "integrated_origin_develop": "dce92a1d8693afd60a33ff429dfff59cad4de64d",
+    "merge_commit": "cfeddb7008b062bcd69b0afeba229d6fcfaab7a9",
+    "conflicts": false,
+    "solver_geology_writer_hashes_unchanged_by_merge": true,
+    "pre_integration_all_tests": {"passed": 149, "exit_code": 0},
+    "post_integration_solver_data_suite": {
+      "file_selection": "git ls-tree -r --name-only f2bb280 tests; select /test_[^/]+\\.py$",
+      "command": "python -m pytest @fwiSolverSuite -q -o addopts='' --junitxml=data/experiments/fwi-batch-receipts-precision10/post-develop-solvers-tests.xml",
+      "recovery_reuse": "FWI_RECOVERY_ARTIFACTS=data/experiments/fwi-candidate-precision10; current generator fingerprint checked",
+      "passed": 150,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "seconds": 76.721,
+      "xml_sha256": "b64cebc1ff665416188f45c86727da34e365d5b1878eea0c62b29eaa2cce5120"
+    },
+    "post_integration_product_collection": {
+      "command": "python -m pytest tests -q -o addopts='' --junitxml=data/experiments/fwi-batch-receipts-precision10/post-develop-full-tests.xml",
+      "exit_code": 1,
+      "xml_sha256": "8a41473cc8723ce79c659d57c642bf8c14eec3c15308f0cadd711e01df966909",
+      "error": "ModuleNotFoundError: No module named 'alembic' while collecting tests/api",
+      "scope": "Pipeline environment does not contain the new API stack; not a whole-product pass"
+    },
+    "artifact_gate": {
+      "command": "python scripts/check_artifacts.py",
+      "exit_code": 1,
+      "error": "Stale scientific source/settings",
+      "scope": "Canonical release artifacts remain unchanged; parent integration must regenerate and review release evidence"
+    },
+    "lint_and_guards": ["Ruff data-pipeline/tests/probe", "check_content_standards", "check_ci_budget", "check_template_residue", "git diff --check"]
+  },
+  "ten_digit_candidate": {
+    "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375",
+    "batch_writer_sha256": "c919ea877c9b6eacb3e1a5ba06d93b61fc7beebd3e044eb0a806b79908afdb71",
+    "conditions_planned": 24,
+    "conditions_completed": 24,
+    "seconds": 2489.0610674000054,
+    "peak_monitored_gpu_bytes": 4870635520,
+    "guard_events": [],
+    "cuda_forward_replay": "passed",
+    "replay_date": "2026-10-03",
+    "model_replays": 48,
+    "prediction_rtol": 0.00002,
+    "prediction_atol": 0.00002,
+    "status_counts": {
+      "FWI_LAYERED": {"recovered": 10, "failed": 2},
+      "FWI_FAULT": {"recovered": 10, "failed": 2},
+      "FWI_NOISY": {"recovered": 4, "unresolved": 6, "failed": 2},
+      "FWI_CYCLE_SKIP": {"negative-control": 12}
+    },
+    "receipts": {
+      "root": "data/experiments/fwi-batch-receipts-precision10",
+      "plan_sha256": "db0e9fd172d2c8f2a251c9b7aab0c3bf453ff61944cffee4ee984cd024d00e66",
+      "ledger_sha256": "46f4fd9feb559797e79ade382095046ff88cfb1f7771a40ab2fec4fad9dac387",
+      "cuda_replay_sha256": "79721c8b1f167559a96dc481e631b1869c6bdd66dbe2dc5b945dbae5464a0c2a"
+    },
+    "model_replay_records": [
+      {"case":"FWI_LAYERED","variant":"reference","method":"fwi-l2","velocity_rmse":122.49502563476562,"active_wrms":1.1303702592849731,"withheld_wrms":1.145779013633728,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"reference","method":"fwi-multiscale","velocity_rmse":120.71602630615234,"active_wrms":1.2077864408493042,"withheld_wrms":1.2330355644226074,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"contrast","method":"fwi-l2","velocity_rmse":215.2146453857422,"active_wrms":1.1600760221481323,"withheld_wrms":1.1775552034378052,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"contrast","method":"fwi-multiscale","velocity_rmse":209.81365966796875,"active_wrms":1.2555211782455444,"withheld_wrms":1.2849482297897339,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"noise","method":"fwi-l2","velocity_rmse":119.53266143798828,"active_wrms":1.001380205154419,"withheld_wrms":1.0080596208572388,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"noise","method":"fwi-multiscale","velocity_rmse":118.14434051513672,"active_wrms":1.002567172050476,"withheld_wrms":1.0094889402389526,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"acquisition","method":"fwi-l2","velocity_rmse":139.84593200683594,"active_wrms":1.0512603521347046,"withheld_wrms":1.0588958263397217,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"acquisition","method":"fwi-multiscale","velocity_rmse":118.59683227539062,"active_wrms":1.0394134521484375,"withheld_wrms":1.0476264953613281,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"coverage","method":"fwi-l2","velocity_rmse":124.66455841064453,"active_wrms":1.120879054069519,"withheld_wrms":1.3636221885681152,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"coverage","method":"fwi-multiscale","velocity_rmse":122.741455078125,"active_wrms":1.1865261793136597,"withheld_wrms":1.471399188041687,"status":"recovered"},
+      {"case":"FWI_LAYERED","variant":"regularization","method":"fwi-l2","velocity_rmse":385.2981872558594,"active_wrms":2.396794557571411,"withheld_wrms":2.4585392475128174,"status":"failed"},
+      {"case":"FWI_LAYERED","variant":"regularization","method":"fwi-multiscale","velocity_rmse":398.1587219238281,"active_wrms":2.498162031173706,"withheld_wrms":2.5564496517181396,"status":"failed"},
+      {"case":"FWI_FAULT","variant":"reference","method":"fwi-l2","velocity_rmse":211.06396484375,"active_wrms":1.3704231977462769,"withheld_wrms":1.4187531471252441,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"reference","method":"fwi-multiscale","velocity_rmse":196.7676239013672,"active_wrms":1.3400107622146606,"withheld_wrms":1.3875075578689575,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"contrast","method":"fwi-l2","velocity_rmse":305.32977294921875,"active_wrms":1.482656478881836,"withheld_wrms":1.5377064943313599,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"contrast","method":"fwi-multiscale","velocity_rmse":291.99615478515625,"active_wrms":1.4257104396820068,"withheld_wrms":1.4831647872924805,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"noise","method":"fwi-l2","velocity_rmse":212.57447814941406,"active_wrms":1.0059767961502075,"withheld_wrms":1.0086184740066528,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"noise","method":"fwi-multiscale","velocity_rmse":197.25218200683594,"active_wrms":1.0052975416183472,"withheld_wrms":1.0077121257781982,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"acquisition","method":"fwi-l2","velocity_rmse":175.1110382080078,"active_wrms":1.0952792167663574,"withheld_wrms":1.0965619087219238,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"acquisition","method":"fwi-multiscale","velocity_rmse":185.0350341796875,"active_wrms":1.0950638055801392,"withheld_wrms":1.097442626953125,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"coverage","method":"fwi-l2","velocity_rmse":208.4209747314453,"active_wrms":1.3020648956298828,"withheld_wrms":1.7382535934448242,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"coverage","method":"fwi-multiscale","velocity_rmse":195.41552734375,"active_wrms":1.2743037939071655,"withheld_wrms":1.6014680862426758,"status":"recovered"},
+      {"case":"FWI_FAULT","variant":"regularization","method":"fwi-l2","velocity_rmse":517.8717651367188,"active_wrms":2.7459781169891357,"withheld_wrms":2.8349387645721436,"status":"failed"},
+      {"case":"FWI_FAULT","variant":"regularization","method":"fwi-multiscale","velocity_rmse":498.26153564453125,"active_wrms":2.720757484436035,"withheld_wrms":2.8216469287872314,"status":"failed"},
+      {"case":"FWI_CYCLE_SKIP","variant":"reference","method":"fwi-l2","velocity_rmse":618.6937255859375,"active_wrms":1.7336534261703491,"withheld_wrms":1.9447388648986816,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"reference","method":"fwi-multiscale","velocity_rmse":582.731201171875,"active_wrms":1.7506064176559448,"withheld_wrms":1.9658986330032349,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"contrast","method":"fwi-l2","velocity_rmse":761.9943237304688,"active_wrms":1.8447710275650024,"withheld_wrms":2.064624309539795,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"contrast","method":"fwi-multiscale","velocity_rmse":728.740234375,"active_wrms":1.93727707862854,"withheld_wrms":2.1612305641174316,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"noise","method":"fwi-l2","velocity_rmse":604.1954345703125,"active_wrms":1.0159127712249756,"withheld_wrms":1.0271632671356201,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"noise","method":"fwi-multiscale","velocity_rmse":566.7903442382812,"active_wrms":1.01638925075531,"withheld_wrms":1.0277462005615234,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"acquisition","method":"fwi-l2","velocity_rmse":588.626708984375,"active_wrms":1.2217799425125122,"withheld_wrms":1.2810492515563965,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"acquisition","method":"fwi-multiscale","velocity_rmse":576.3740844726562,"active_wrms":1.2078720331192017,"withheld_wrms":1.2695149183273315,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"coverage","method":"fwi-l2","velocity_rmse":617.4820556640625,"active_wrms":1.5910096168518066,"withheld_wrms":3.155813217163086,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"coverage","method":"fwi-multiscale","velocity_rmse":583.6897583007812,"active_wrms":1.6575815677642822,"withheld_wrms":3.4817423820495605,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"regularization","method":"fwi-l2","velocity_rmse":637.9190063476562,"active_wrms":3.69107985496521,"withheld_wrms":4.083581447601318,"status":"negative-control"},
+      {"case":"FWI_CYCLE_SKIP","variant":"regularization","method":"fwi-multiscale","velocity_rmse":618.4767456054688,"active_wrms":4.007630348205566,"withheld_wrms":4.357740879058838,"status":"negative-control"},
+      {"case":"FWI_NOISY","variant":"reference","method":"fwi-l2","velocity_rmse":224.926025390625,"active_wrms":2.764615774154663,"withheld_wrms":2.9043331146240234,"status":"unresolved"},
+      {"case":"FWI_NOISY","variant":"reference","method":"fwi-multiscale","velocity_rmse":177.52333068847656,"active_wrms":2.07137131690979,"withheld_wrms":2.212655782699585,"status":"unresolved"},
+      {"case":"FWI_NOISY","variant":"contrast","method":"fwi-l2","velocity_rmse":344.24578857421875,"active_wrms":4.168816566467285,"withheld_wrms":4.384444236755371,"status":"unresolved"},
+      {"case":"FWI_NOISY","variant":"contrast","method":"fwi-multiscale","velocity_rmse":229.0335235595703,"active_wrms":2.309654951095581,"withheld_wrms":2.454214096069336,"status":"unresolved"},
+      {"case":"FWI_NOISY","variant":"noise","method":"fwi-l2","velocity_rmse":260.59991455078125,"active_wrms":1.0643367767333984,"withheld_wrms":1.0750072002410889,"status":"recovered"},
+      {"case":"FWI_NOISY","variant":"noise","method":"fwi-multiscale","velocity_rmse":176.90692138671875,"active_wrms":1.0212651491165161,"withheld_wrms":1.028255581855774,"status":"recovered"},
+      {"case":"FWI_NOISY","variant":"acquisition","method":"fwi-l2","velocity_rmse":185.6571044921875,"active_wrms":1.4371837377548218,"withheld_wrms":1.4558230638504028,"status":"recovered"},
+      {"case":"FWI_NOISY","variant":"acquisition","method":"fwi-multiscale","velocity_rmse":165.60687255859375,"active_wrms":1.3729989528656006,"withheld_wrms":1.3881083726882935,"status":"recovered"},
+      {"case":"FWI_NOISY","variant":"coverage","method":"fwi-l2","velocity_rmse":216.3459014892578,"active_wrms":2.396378517150879,"withheld_wrms":3.395317792892456,"status":"unresolved"},
+      {"case":"FWI_NOISY","variant":"coverage","method":"fwi-multiscale","velocity_rmse":168.21261596679688,"active_wrms":1.9614288806915283,"withheld_wrms":2.8184027671813965,"status":"unresolved"},
+      {"case":"FWI_NOISY","variant":"regularization","method":"fwi-l2","velocity_rmse":397.20587158203125,"active_wrms":4.981765270233154,"withheld_wrms":5.130189418792725,"status":"failed"},
+      {"case":"FWI_NOISY","variant":"regularization","method":"fwi-multiscale","velocity_rmse":379.9606628417969,"active_wrms":4.876909255981445,"withheld_wrms":5.106736660003662,"status":"failed"}
+    ],
+    "artifact_receipts": [
+      {"case":"FWI_LAYERED","variant":"contrast","sha256":"71269cc3804fe218b66467f8c7062ca4b348cf0feb3d06bae77499b49ec33354","bytes":24693026},
+      {"case":"FWI_LAYERED","variant":"reference","sha256":"ea0167e6c150619e051a3f30729b125ed16f782014381f13edbc5617b6b07943","bytes":24666052},
+      {"case":"FWI_LAYERED","variant":"noise","sha256":"f884ea63cfc015eb25cbcb04e69f13dab23850fe459fb460f6f74b0bfdcd5035","bytes":24552052},
+      {"case":"FWI_LAYERED","variant":"acquisition","sha256":"ead018aeb6519b2f644b3d06763c8cfe107e3ad9e8c32a0ac52a1af98357c2d3","bytes":24183595},
+      {"case":"FWI_LAYERED","variant":"coverage","sha256":"12cd4db5a5bd260d1ac4bc4b9c5580e8ff5e985b7eaf4c7048de352725f39ab0","bytes":22952064},
+      {"case":"FWI_LAYERED","variant":"regularization","sha256":"1fd65462c4d79cc88325b1b701274be7ea37fe46bc0083385d822e29e519164b","bytes":24656237},
+      {"case":"FWI_FAULT","variant":"reference","sha256":"a714a04749336607f604f12c5384b6995c5e916e9e4196a6a2e13e3e74751cce","bytes":24623047},
+      {"case":"FWI_FAULT","variant":"contrast","sha256":"e450a0f6f0d9da74abf37ec1973cef04cda487bbcaeb24180b1cc57058029b89","bytes":24648680},
+      {"case":"FWI_FAULT","variant":"noise","sha256":"aff9a2d908c0d9a1223796c7b68086c20fcbe3293c7cebca88c393daf05f3117","bytes":24514690},
+      {"case":"FWI_FAULT","variant":"acquisition","sha256":"5734f36be246efa1ca8374ac284e87b3b843af17f74cd8e63557a08fd32d3d92","bytes":24194127},
+      {"case":"FWI_FAULT","variant":"coverage","sha256":"52ec870be08a3dda855d3f7341373608b454a670c901defdb83faa0e5bd26301","bytes":22918459},
+      {"case":"FWI_FAULT","variant":"regularization","sha256":"16ceb0ec75674b7b0a9dec5d864c402eca899588dfbd680c658443c2ab3908ce","bytes":24616276},
+      {"case":"FWI_CYCLE_SKIP","variant":"contrast","sha256":"849fb409d5d3bdb2c1c2c7b0a3f50acf1d3a1eff9b74aaf5cee84fa5ca84724c","bytes":25131927},
+      {"case":"FWI_CYCLE_SKIP","variant":"reference","sha256":"30f098ab9f251f1c55d2cad437a6bda1b47c623a01c331a937dd92023a4ef1a7","bytes":25084270},
+      {"case":"FWI_CYCLE_SKIP","variant":"noise","sha256":"25067a6bb1d6002d184b65ced4277c40363b4ee0df48b76a65dcdf1400359283","bytes":24970225},
+      {"case":"FWI_CYCLE_SKIP","variant":"acquisition","sha256":"b591c6f5a46b4dcecdc017b7430f7a2f29f11897724674454eb1baace39064af","bytes":24446871},
+      {"case":"FWI_CYCLE_SKIP","variant":"coverage","sha256":"6561665fad161c0d63d2200ece1627fcbfff9b55230d64510653dee5a733c423","bytes":23360800},
+      {"case":"FWI_CYCLE_SKIP","variant":"regularization","sha256":"586c6f3915d808a50156990fc3a0eefb5ad3627d718d3ed2b904af00f5a708c0","bytes":25078687},
+      {"case":"FWI_NOISY","variant":"reference","sha256":"56a58ce185f40b7f60041527faf803ed3f6f2131296cb4707c7f62773c511c03","bytes":24258223},
+      {"case":"FWI_NOISY","variant":"contrast","sha256":"1119a813597659745d771cd9d770ce7e129cef43a037e9dcc8fa66aba4094c2e","bytes":24219925},
+      {"case":"FWI_NOISY","variant":"noise","sha256":"cb7dbd3e7958b919c15cca37f7ab5346061b85706bc14e797077a048dbc8f4e1","bytes":24169927},
+      {"case":"FWI_NOISY","variant":"acquisition","sha256":"a62c272d897199ba61145f30f011f246c56202ead6bd0feecd79851df56d385b","bytes":24038665},
+      {"case":"FWI_NOISY","variant":"coverage","sha256":"4ae24915e996763026bbcbbfe4ceb455d5ec5bdaa4b0146d615a57e96c7a4b7f","bytes":22584212},
+      {"case":"FWI_NOISY","variant":"regularization","sha256":"17f2d3ecac39669b6946512e39126a04c687e50fe3ecdb981129358f8e82158c","bytes":24244305}
+    ],
+    "canonical_artifacts_changed": false
+  }
+}

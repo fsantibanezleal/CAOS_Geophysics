@@ -243,8 +243,18 @@ def verify_mt_contents(manifest: dict, dataset: dict, result: dict, dataset_sha:
     predicted = impedance(model, h, f)
     observed = z[:, 0, 1]
     method = inverse["methods"]["mt-lm"]
-    for label, expected in (("predicted", predicted), ("residual", observed - predicted)):
+    for label in ("predicted", "residual"):
+        # The independent recursion checks physics; subtraction checks the exact
+        # exported residual identity. Reusing a platform's recomputed prediction
+        # for subtraction spuriously rejects near-zero residuals after 1-ULP drift.
+        if label == "predicted":
+            expected = predicted
+        else:
+            stored = method["predicted"]
+            expected = observed - (np.asarray(stored["real"]) + 1j * np.asarray(stored["imag"]))
         curve = method.get(label, {})
+        if not isinstance(curve, dict):
+            raise ValueError("M06 predicted or residual array mismatch")
         for key, values in (("real", expected.real), ("imag", expected.imag)):
             if (not isinstance(curve.get(key), list) or len(curve[key]) != count
                     or any(not _close(a, float(b), 1e-7) for a, b in zip(curve[key], values))):

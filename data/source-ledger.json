@@ -137,12 +137,72 @@
       "format": "stead-metadata-csv",
       "expected_bytes": 402560190,
       "sha256": "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe",
-      "verification_status": "user-reported-unverified",
+      "verification_status": "locally-verified-metadata",
+      "verification_evidence": {
+        "path": "data/derived/phase/stead-metadata-profile.json",
+        "sha256": "6059e78501acfae60211c08627a17cb3f0cce6c97430da04a37cc8601c66480b"
+      },
       "raw_path": null,
       "rights_decision": "provider-link-only",
-      "rights_statement": "The official STEAD repository declares CC BY 4.0 for the dataset. This index is provider-linked only here; mirror provenance and the user-reported local checksum have not been independently verified in this worktree, and no waveform asset is acquired.",
+      "rights_statement": "The official STEAD repository declares CC BY 4.0 for the dataset. This index remains provider-linked only. The phase pipeline's original metadata was independently re-hashed and its aggregate profile is pinned; no raw metadata or waveform mirror is enabled by this entry.",
       "citation": "Mousavi et al., Stanford Earthquake Dataset (STEAD), official repository; SeisBench metadata mirror.",
-      "use": "Candidate M13 seismic waveform metadata only. No waveform download verification, preprocessing, model input, or public data publication is claimed."
+      "use": "Verified 1,265,657-row metadata index for the separately validated M08/M13 phase pipeline. Metadata verification does not establish waveform QC, model generalization or another raw acquisition path; those have separate frozen phase receipts."
+    },
+    {
+      "source_id": "bartlett-fgdc",
+      "name": "USGS Bartlett Springs original FGDC metadata",
+      "provider": "USGS",
+      "provider_url": "https://www.usgs.gov/data/gravity-aeromagnetic-magnetic-potential-and-physical-property-data-bartlett-springs-fault-zone",
+      "object_url": "https://data.usgs.gov/datacatalog/metadata/USGS.64188a2ed34eb496d1d1d359.xml",
+      "acquisition": "fetch",
+      "format": "fgdc-metadata-xml",
+      "expected_bytes": 37384,
+      "sha256": "84d3d512f9deba53ae0251c74354c389b8723d056375390d2bfebd28c24b8295",
+      "raw_path": "data/downloads/bartlett-fgdc.xml",
+      "rights_decision": "mirror",
+      "rights_statement": "USGS identifies the associated release as CC0 1.0. This asset is metadata only, not measurements.",
+      "citation": "Langenheim et al. (2023), USGS data release, DOI 10.5066/P90F5TGH; original FGDC metadata harvested by USGS Science Data Catalog.",
+      "use": "Inspect named quantities, existing tide/drift/Bouguer/terrain/isostatic corrections and datum limitations. Does not provide measurement bytes or solver eligibility."
+    },
+    {
+      "source_id": "clear-lake-author-potentials-v2",
+      "name": "Su et al. Clear Lake potential-field author archive v2",
+      "provider": "Su et al. / Zenodo",
+      "provider_url": "https://zenodo.org/records/16975696",
+      "object_url": "https://zenodo.org/api/records/16975696/files/Natural_Hydrogen_Zenodo.zip/content",
+      "acquisition": "fetch",
+      "format": "research-zip",
+      "expected_bytes": 121295137,
+      "sha256": "337a2d9070493773af06aee11a19d591e6468ecf0f062dd75c194a04476c0cdf",
+      "raw_path": "data/downloads/clear-lake-author-potentials-v2.zip",
+      "rights_decision": "mirror",
+      "rights_statement": "Zenodo version 2 declares CC BY 4.0; retain authors, version DOI, original USGS references and any modification notice. No code licence is inferred for data.",
+      "citation": "Su, Wu, Sun, Wei and Chen (2025), Joint inversion and integrated geological interpretation for natural hydrogen exploration: code and results, v2, DOI 10.5281/zenodo.16975696. Underlying Bartlett release DOI 10.5066/P90F5TGH; station compilation/coordinate transforms are the author's derivative, not byte-identical original USGS attachments.",
+      "use": "Local strict principal-fact and grid inspection. Explicit unknown vertical-datum/uncertainty/acquisition-height gates before modelling; no geological truth or hydrogen detection claim.",
+      "archive_contract": {
+        "max_entries": 64,
+        "max_expanded_bytes": 350000000,
+        "max_member_bytes": 200000000,
+        "max_expansion_ratio": 1000,
+        "selected_members": {
+          "data/ground_gravity_data.csv": {
+            "bytes": 335377,
+            "sha256": "7cb3ed0c3cbac60f896a11f213ba40209c3083cb7635ab80ab7c0fd0382a1055"
+          },
+          "data/aeromagnetic_data.csv": {
+            "bytes": 28531313,
+            "sha256": "400c13f500d8c6163848a300237d062c7d9e978be19a99ee03b6aff3379ddd68"
+          },
+          "data/topography_data.csv": {
+            "bytes": 193035546,
+            "sha256": "482e7a63587292a0251aad758b2c2b547d4b59593b3bd413edd5dad6ba5ee214"
+          },
+          "README.pdf": {
+            "bytes": 96913,
+            "sha256": "28d22dab9fde8961d2fddfa6ac1df50f69f85cc75a45b9e93a03dd2949fc3fe1"
+          }
+        }
+      }
     }
   ]
 }

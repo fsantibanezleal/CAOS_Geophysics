@@ -54,16 +54,16 @@ const config: ShellConfig = {
       es: "Desarrollado por Felipe Santibáñez-Leal",
     },
     provenance: {
-      en: "Synthetic geophysical inversion.",
-      es: "Inversión geofísica sintética.",
+      en: "Geophysical observations and method evidence.",
+      es: "Observaciones geofísicas y evidencia de métodos.",
     },
     license: {
       en: "Apache-2.0 code and CC-BY-4.0 content",
       es: "Código Apache-2.0 y contenido CC-BY-4.0",
     },
     disclaimer: {
-      en: "Synthetic models; no field validation.",
-      es: "Modelos sintéticos; sin validación de campo.",
+      en: "Inspect source, units and method-specific limitations.",
+      es: "Revise fuente, unidades y límites específicos del método.",
     },
   },
 };

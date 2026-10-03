@@ -1,11 +1,13 @@
 """Source rights, exact object identity, local immutability and publication boundary."""
 import hashlib
+import copy
 import json
 from pathlib import Path
 import subprocess
 from urllib.request import Request
 
 import pytest
+import sources
 
 from sources import SourceError, _NoRedirect, acquire_source, load_ledger
 
@@ -29,7 +31,7 @@ def test_ledger_contract_and_rights():
     records = load_ledger()
     assert set(records) == {"simpeg-gravity", "simpeg-magnetics", "original-synthetic",
                             "clear-lake-cl061", "auslamp-nsw-c15", "pygimli-slagdump", "pygimli-koenigsee",
-                            "stead-metadata"}
+                            "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2"}
     assert {record["rights_decision"] for record in records.values()} <= {
         "mirror", "provider-link-only", "derivative-only", "forbidden"}
     assert all(record["raw_path"].startswith("data/downloads/") for record in records.values()
@@ -148,7 +150,12 @@ def test_pygimli_provider_links_and_pins():
 
 
 def test_stead_is_unverified_provider_metadata_only(tmp_path):
-    record = load_ledger()["stead-metadata"]
+    record = copy.deepcopy(load_ledger()["stead-metadata"])
+    record["verification_status"] = "user-reported-unverified"
+    record.pop("verification_evidence")
+    ledger = tmp_path / "legacy-ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    assert load_ledger(ledger)["stead-metadata"] == record
     assert record["acquisition"] == "provider-link"
     assert record["rights_decision"] == "provider-link-only"
     assert record["format"] == "stead-metadata-csv"
@@ -157,9 +164,82 @@ def test_stead_is_unverified_provider_metadata_only(tmp_path):
     assert record["expected_bytes"] == 402560190
     assert record["sha256"] == "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe"
     assert record["object_url"] == "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/metadata.csv"
-    with pytest.raises(SourceError, match="stead-metadata: provider-link metadata is not a verified raw asset"):
+    with pytest.raises(SourceError, match="stead-metadata: provider-link metadata is not an acquirable raw asset"):
+        acquire_source("stead-metadata", root=tmp_path, ledger_path=ledger)
+    assert not (tmp_path / "data").exists()
+
+
+def test_stead_verified_metadata_profile(tmp_path):
+    record = load_ledger()["stead-metadata"]
+    assert record["verification_status"] == "locally-verified-metadata"
+    assert record["raw_path"] is None and record["acquisition"] == "provider-link"
+    assert record["rights_decision"] == "provider-link-only"
+    profile = ROOT / record["verification_evidence"]["path"]
+    assert hashlib.sha256(profile.read_bytes()).hexdigest() == record["verification_evidence"]["sha256"]
+    with pytest.raises(SourceError, match="not an acquirable raw asset"):
         acquire_source("stead-metadata", root=tmp_path)
     assert not (tmp_path / "data").exists()
+
+
+@pytest.mark.parametrize("variant", [
+    "missing", "digest", "unsafe", "absolute", "alias", "unverified_with_evidence", "unknown_status",
+    "status_object", "format", "profile_missing", "profile_hash", "profile_schema", "source_sha",
+    "source_bytes", "source_url", "waveform_claim", "rows_boolean", "nonobject", "duplicate", "nonfinite", "oversize",
+])
+def test_verified_metadata_evidence_rejects_drift(tmp_path, monkeypatch, variant):
+    record = copy.deepcopy(load_ledger()["stead-metadata"])
+    profile_bytes = (ROOT / record["verification_evidence"]["path"]).read_bytes()
+    profile = tmp_path / record["verification_evidence"]["path"]
+    profile.parent.mkdir(parents=True)
+    profile.write_bytes(profile_bytes)
+    monkeypatch.setattr(sources, "ROOT", tmp_path)
+    if variant == "missing":
+        record.pop("verification_evidence")
+    elif variant == "digest":
+        record["verification_evidence"]["sha256"] = "invalid"
+    elif variant in ("unsafe", "absolute", "alias"):
+        record["verification_evidence"]["path"] = {
+            "unsafe": "data/derived/phase/../profile.json", "absolute": "C:/Windows/profile.json",
+            "alias": "data/derived/phase/con.json",
+        }[variant]
+    elif variant == "unverified_with_evidence":
+        record["verification_status"] = "user-reported-unverified"
+    elif variant in ("unknown_status", "status_object"):
+        record["verification_status"] = "assumed" if variant == "unknown_status" else {}
+    elif variant == "format":
+        record["format"] = "edi-transfer-function"
+    elif variant == "profile_missing":
+        profile.unlink()
+    elif variant == "profile_hash":
+        profile.write_bytes(profile_bytes + b" ")
+    else:
+        value = json.loads(profile_bytes)
+        if variant == "profile_schema":
+            value["schema"] += "-unknown"
+        elif variant in ("source_sha", "source_bytes", "source_url"):
+            name = {"source_sha": "sha256", "source_bytes": "bytes", "source_url": "url"}[variant]
+            value["source"][name] = {"source_sha": "0" * 64, "source_bytes": 1,
+                                     "source_url": "https://example.org/other"}[variant]
+        elif variant == "waveform_claim":
+            value["source"]["waveforms_downloaded_by_this_receipt"] = True
+        elif variant == "rows_boolean":
+            value["rows"]["total"] = True
+        if variant == "nonobject":
+            changed = b"[]"
+        elif variant == "duplicate":
+            changed = b'{"schema":"a","schema":"b"}'
+        elif variant == "nonfinite":
+            changed = b'{"value":NaN}'
+        elif variant == "oversize":
+            changed = b" " * (2 * 1024 * 1024 + 1)
+        else:
+            changed = json.dumps(value).encode()
+        profile.write_bytes(changed)
+        record["verification_evidence"]["sha256"] = hashlib.sha256(changed).hexdigest()
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    with pytest.raises(SourceError):
+        load_ledger(ledger)
 
 
 def test_actionable_acquisition_errors(tmp_path):
@@ -181,8 +261,54 @@ def test_no_external_raw_tracked():
 
 def test_documented_source_inventory():
     guide = (ROOT / "docs/guides/05_sources.md").read_text(encoding="utf-8")
+    guide += (ROOT / "docs/guides/11_potential_source_intake.md").read_text(encoding="utf-8")
     contract = (ROOT / "docs/data-contract/data-contract.md").read_text(encoding="utf-8")
     for source_id in load_ledger():
         assert source_id in guide
     for term in ("provider-link-only", "sha256", "data/downloads/", "data/raw/"):
         assert term in guide and term in contract
+
+
+@pytest.mark.parametrize("field,value", [
+    ("max_entries", True), ("max_entries", 1.5), ("max_entries", 513),
+    ("max_entries", 10**1000), ("max_expanded_bytes", 0),
+    ("max_expanded_bytes", 500_000_001), ("max_member_bytes", -1),
+    ("max_member_bytes", 200_000_001), ("max_expansion_ratio", float("nan")),
+    ("max_expansion_ratio", float("inf")), ("max_expansion_ratio", True),
+    ("max_expansion_ratio", 1001), ("selected_members", {}), ("selected_members", []),
+])
+def test_archive_contract_limits_in_ledger(tmp_path, field, value):
+    record = copy.deepcopy(load_ledger()["clear-lake-author-potentials-v2"])
+    record["archive_contract"][field] = value
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    with pytest.raises(SourceError, match="limit"):
+        load_ledger(ledger)
+
+
+@pytest.mark.parametrize("name,pin", [
+    ("../outside.csv", {"bytes": 1, "sha256": "0" * 64}),
+    ("data/CON.csv", {"bytes": 1, "sha256": "0" * 64}),
+    ("data/model.npy", {"bytes": 1, "sha256": "0" * 64}),
+    ("data/valid.csv", {"bytes": True, "sha256": "0" * 64}),
+    ("data/valid.csv", {"bytes": 1, "sha256": "A" * 64}),
+    ("data/valid.csv", {"bytes": 1}),
+    ("data/valid.csv", {"bytes": 1, "sha256": "0" * 64, "execute": True}),
+])
+def test_archive_contract_member_pins_in_ledger(tmp_path, name, pin):
+    record = copy.deepcopy(load_ledger()["clear-lake-author-potentials-v2"])
+    record["archive_contract"]["selected_members"] = {name: pin}
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    with pytest.raises(SourceError):
+        load_ledger(ledger)
+
+
+def test_archive_contract_required_only_for_research_zip(tmp_path):
+    record = copy.deepcopy(load_ledger()["clear-lake-author-potentials-v2"])
+    ledger = tmp_path / "ledger.json"
+    for mutation in (dict(record, archive_contract=None), dict(record, format="fgdc-metadata-xml"),
+                     dict(record, archive_contract=dict(record["archive_contract"], ignored_limit=1))):
+        ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [mutation]}), encoding="utf-8")
+        with pytest.raises(SourceError, match="archive_contract"):
+            load_ledger(ledger)

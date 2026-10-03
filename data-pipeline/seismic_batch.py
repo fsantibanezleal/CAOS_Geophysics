@@ -25,6 +25,7 @@ LEDGER = RECEIPTS/'ledger.json'
 MEMORY_LOG = RECEIPTS/'memory.jsonl'
 FROZEN_SOURCE = hashlib.sha256((ROOT/'data-pipeline/seismic.py').read_bytes()).hexdigest()
 FROZEN_GEOLOGY = hashlib.sha256((ROOT/'data-pipeline/geology.py').read_bytes()).hexdigest()
+FROZEN_BATCH = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 VRAM_LIMIT_BYTES = 6_000_000_000
 ALLOCATOR_FRACTION = .29
 CREATE_NO_WINDOW = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
@@ -50,6 +51,7 @@ def modules():
     assert RELEASE_VERSION
     assert digest(ROOT/'data-pipeline/seismic.py') == FROZEN_SOURCE, 'Frozen seismic source changed'
     assert digest(ROOT/'data-pipeline/geology.py') == FROZEN_GEOLOGY, 'Frozen geological target changed'
+    assert digest(Path(__file__)) == FROZEN_BATCH, 'Frozen candidate writer changed'
     return registry, VARIANTS, annotate, save, generator_fingerprint
 
 
@@ -63,7 +65,7 @@ def result_path(case_id, variant):
 
 def save_result(path, result, save):
     temporary = path.with_suffix(f'.{os.getpid()}.partial.json')
-    receipt = save(temporary, result)
+    receipt = save(temporary, result, significant_digits=result['export_precision_significant_digits'])
     temporary.replace(path)
     return receipt
 
@@ -75,6 +77,8 @@ def complete(path, fingerprint):
         run = json.loads(path.read_text(encoding='utf-8'))
         if run.get('provenance', {}).get('generator_fingerprint') != fingerprint:
             return False
+        assert run['provenance']['candidate_execution']['batch_writer_sha256'] == FROZEN_BATCH
+        assert run['export_precision_significant_digits'] == 10
         assert run['parameters']['iterations'] == 28
         assert run['id'] == path.parent.name and run['variant'] == path.stem
         assert set(run['methods']) == {'fwi-l2', 'fwi-multiscale'}
@@ -114,7 +118,7 @@ def prepare(reuse_directory=None):
                         method['evaluation']['status'] = 'negative-control'
                         labels.append(key)
             assert run['id'] == case['id'] and run['seed'] == case['seed'] and run['variant'] == 'reference'
-            run['provenance'] = dict(reference_reuse=dict(
+            run['provenance'] = dict(candidate_execution=dict(batch_writer_sha256=FROZEN_BATCH), reference_reuse=dict(
                 source_artifact_sha256=digest(source), source_solver_sha256=original_digest,
                 normalized_solver_sha256=FROZEN_SOURCE,
                 migration='Only evaluation status expected-negative-control becomes negative-control' if labels else 'No label change',
@@ -132,21 +136,25 @@ def prepare(reuse_directory=None):
     plan = dict(
         schema='inverse-earth.fwi-candidate-plan/v1', version=RELEASE_VERSION,
         candidate_root=str(CANDIDATE), solver_sha256=FROZEN_SOURCE, geology_sha256=FROZEN_GEOLOGY,
+        batch_writer_sha256=FROZEN_BATCH,
         generator_fingerprint=generation, reference_reuse=references, jobs=jobs,
         controls=dict(iterations_per_stage=28, actual_calls_per_pair=196, workers=2,
+                      export_precision_significant_digits=10,
                       per_process_allocator_fraction=ALLOCATOR_FRACTION,
                       total_vram_guard_bytes=VRAM_LIMIT_BYTES, threads_per_worker=2),
         gpu_state='waiting for explicit GPU release; preparation allocated no CUDA tensors')
     atomic_json(PLAN, plan)
     pending = sum(not complete(result_path(j['case']['id'], j['variant']), generation) for j in jobs)
     print(json.dumps(dict(conditions=len(jobs), reused_references=len(references), pending_jobs=pending,
-                          solver_sha256=FROZEN_SOURCE, generator_fingerprint=generation, plan=str(PLAN))), flush=True)
+                          solver_sha256=FROZEN_SOURCE, batch_writer_sha256=FROZEN_BATCH,
+                          generator_fingerprint=generation, plan=str(PLAN))), flush=True)
 
 
 def worker(case_id, variant):
     registry, _, annotate, save, fingerprint = modules()
     plan = json.loads(PLAN.read_text(encoding='utf-8'))
     assert plan['solver_sha256'] == FROZEN_SOURCE and plan['geology_sha256'] == FROZEN_GEOLOGY
+    assert plan['batch_writer_sha256'] == FROZEN_BATCH
     assert plan['generator_fingerprint'] == fingerprint('seismic', 28, 180)
     import torch
     import seismic
@@ -168,9 +176,11 @@ def worker(case_id, variant):
 
     run = seismic.solve_case(case, variant, iterations=28, progress=progress)
     assert fingerprint('seismic', 28, 180) == frozen_fingerprint, 'Generator changed during solve'
+    assert digest(Path(__file__)) == FROZEN_BATCH, 'Candidate writer changed during solve'
     elapsed = time.perf_counter()-started
     run['provenance'] = dict(candidate_execution=dict(
-        solver_sha256=FROZEN_SOURCE, geology_sha256=FROZEN_GEOLOGY, threads=2,
+        solver_sha256=FROZEN_SOURCE, geology_sha256=FROZEN_GEOLOGY,
+        batch_writer_sha256=FROZEN_BATCH, threads=2,
         peak_cuda_allocated_bytes=torch.cuda.max_memory_allocated(),
         peak_cuda_reserved_bytes=torch.cuda.max_memory_reserved(),
         allocator_fraction=ALLOCATOR_FRACTION, independent_worker=True))
@@ -212,6 +222,7 @@ def coordinate(workers, limit):
     modules()
     plan = json.loads(PLAN.read_text(encoding='utf-8'))
     assert plan['solver_sha256'] == FROZEN_SOURCE and plan['geology_sha256'] == FROZEN_GEOLOGY
+    assert plan['batch_writer_sha256'] == FROZEN_BATCH
     from rebuild import generator_fingerprint
     assert plan['generator_fingerprint'] == generator_fingerprint('seismic', 28, 180)
     pending = deque(j for j in plan['jobs']

@@ -34,7 +34,7 @@ The artifact guard binds full scientific source bytes, so the lazy Torch import 
 
 ## Exact feature path inventory
 
-The feature changes 25 paths relative to its develop base. The ledger and incoming M13/wiki files are not modified by this feature.
+The initial feature changed 25 paths relative to its develop base. The authorized source-reconciliation follow-up adds the offline checker, adversarial tests and measured candidate evidence, and updates its SDD and script index; see the [additional inventory and actual-source verdict](mt-source-reconciliation.md). The ledger and incoming M13/wiki files are not modified by this feature.
 
 ```text
 app/bundle.py
@@ -65,3 +65,5 @@ tests/api/test_online_mt_benchmark.py
 ```
 
 No database migration is needed: the existing generic processing tables store the new versioned method/request/result receipts. Private original data, all earlier `.pytest-tmp-mt-*` directories, failed/successful `data/raw` test outputs and both virtual environments are preserved and excluded from commits. The [stable contract](../data-contract/02_online-edi-mt.md) is the frontend-agent and actual-host harness handoff. Related issues #32, #40, #47, #48, #38 and #80 remain open where their full scope exceeds this bounded backend. This is review-only work for a draft PR to develop, not merge/deployment authority.
+
+Follow-up: the owner authorized actual-source MT reconciliation into an ignored candidate. [Its receipt](mt-source-reconciliation.md) now establishes all 24 fresh condition solves, 72 numerical result replays, actual bootstrap refits and a freshly regenerated cl061 QC-only screen. This resolves the MT contribution's candidate computation/replay work, not the full-release assembly, canonical provenance guard, product acceptance or actual-host gate. Online compute/scientific source bytes remain unchanged from `7b69404`.
