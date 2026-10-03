@@ -1,0 +1,49 @@
+{
+  "schema": "geophysics.prism-design-runtime-pins/v1",
+  "date": "2026-10-03",
+  "status": "Read-only metadata/source-byte inspection; proposed runtime epoch, not numerical execution",
+  "source_epoch": "m02-prism-cpu-1",
+  "base_revision": "bc0c573daa511ba897dd0b21e315b8c1eef67413",
+  "planned_operator": "data-pipeline/gravity_forward.py",
+  "planned_operator_sha256": null,
+  "python": "3.12.10",
+  "platform": "Windows AMD64 CPython cp312",
+  "required_engine_runtime_versions": {
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2"
+  },
+  "oracle_runtime_versions_observed": {
+    "choclo": "0.3.2",
+    "numba": "0.67.0",
+    "llvmlite": "0.49.0"
+  },
+  "source_audit": "External read-only harness/review required; operator has no file I/O or automatic byte verification. Targeted module/binary pins, not full transitive supply-chain coverage.",
+  "targeted_source_sha256": {
+    "simpeg/potential_fields/gravity/simulation.py": "1dad16969ce8db878f02350f1ce90bf16ededace3e85f117c2cc76447eda160f",
+    "simpeg/potential_fields/gravity/receivers.py": "0b72c8948e6bc6cd3b4077aa9109245f63719ed186fba47f030bacaa99709229",
+    "simpeg/potential_fields/gravity/sources.py": "d5653055db0b6faf474a647a2e38a6ceb198ad4d92347d572aac8390697267ba",
+    "simpeg/potential_fields/gravity/survey.py": "3e3f35e74a6c2423a25c51e106b7b38027602cf7e486309cf98117b508344938",
+    "simpeg/potential_fields/base.py": "becc3582946a820ad87581853ccb4821eba995fd106e9b5ebaad09c36cdd4a27",
+    "simpeg/maps/_base.py": "6bdd7455d17467ed547091526735df560a35c9b204ab2f4105dfab096ed6c90e",
+    "geoana/kernels/potential_field_prism.py": "3f0c4c29d6383bed0913568bcfec052fe5c9ddc70a2cda3061218adea9c27f34",
+    "geoana/kernels/__init__.py": "3e15a05790734e84b8fefd202425bb0d90220162de072ec04341b02078764238",
+    "geoana/kernels/_extensions/potential_field_prism.cp312-win_amd64.pyd": "21c2cccf7616b7642e444a68c8732658523c74e1302febd4059f7b1c8100dab7",
+    "discretize/tensor_mesh.py": "2e8a97a5449f490dbf4128c8696833a8770c896d260f5ecf087e2f622b3be65d",
+    "discretize/base/base_tensor_mesh.py": "56fb85078a2b42184d4b17ec57fa484592d35c20beb76ecd339b50db4edb2b00",
+    "discretize/base/base_mesh.py": "2df57eadb78bd9b784336502614a1eab4c0ec9f25f422dbd074b41a02daad9c2",
+    "discretize/operators/differential_operators.py": "f3c7ca3c54a50232202d08bf9768411273fcee7ce95eb5b110a79de6c42db70a",
+    "discretize/_extensions/interputils_cython.cp312-win_amd64.pyd": "babde320cdbad8b8e0ab044344a3fdc9ec89f9513039490c0a80cb042f53325e",
+    "discretize/_extensions/simplex_helpers.cp312-win_amd64.pyd": "bd0a71f04f62ef9a8a80658d280565b3bd6653afbf233b22debd478ae8cc9a7a",
+    "discretize/_extensions/tree_ext.cp312-win_amd64.pyd": "84258f2aa9273d804365aeb3ed34d088886bc433f3d6df141ed55b7d3e3b8fbd",
+    "choclo/prism/_gravity.py": "b50aa392db4b18124f439f8ec4b9d3214bd74dba7fb43f559ac19e3e33e8b94a",
+    "choclo/prism/_kernels.py": "27c14a03c0d5d39bcbd46304687f6b7c559d7ac498039e2cd0874fd2e8afb2c2",
+    "choclo/constants.py": "81eda92d7a631ad9544ba318319561be115906e32dc6de23bcd48ca1ea458494",
+    "scipy/constants/_codata.py": "6720b92f0773413d9dbab052a2a343e9a9dd6032e8f0cd916c967fdd4553d303"
+  },
+  "new_numerical_execution": false,
+  "field_eligibility": false,
+  "source_hashes_measured_by_operator": false
+}
