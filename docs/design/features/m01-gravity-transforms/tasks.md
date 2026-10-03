@@ -7,4 +7,4 @@
 - [x] R-T02/R-T05: independent converged volume-prism controls and varied noncentral survey/negative tests.
 - [x] R-T07/R-T08: paired CLI, immutable export, high-resolution diagnostics, deep theory/other-data exercise and theme-aware SVG.
 - [x] R-T01..R-T08: run new and existing correction/source gates; preserve exact environment/source/package/artifact receipts and render/inspect figures in both themes.
-- [ ] R-T01..R-T08: converge named gates, scoped commit/push, develop PR/self-review; no merge/deploy or full field acceptance claim.
+- [x] R-T01..R-T08: converge named gates, scoped commit/push, develop PR #109/self-review; no merge/deploy or full field acceptance claim.
