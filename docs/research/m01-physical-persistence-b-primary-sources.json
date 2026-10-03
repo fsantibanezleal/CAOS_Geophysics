@@ -14,6 +14,15 @@
     {"url":"https://www.sqlite.org/wal.html","status":200,"bytes":42143,"sha256":"f3467b530b883d4a00574fe1a898b3d121ed72764ae28cf66941080ac0badb9e","retrieved_at":"2026-10-03T11:59:10Z"},
     {"url":"https://docs.python.org/3.12/library/sqlite3.html","status":200,"bytes":310373,"sha256":"be9ed9540ac845f15db3cc7844472fa2902ece239c3123b369069edbf76b5e67","retrieved_at":"2026-10-03T11:59:10Z"}
   ],
+  "sqlite_patch_amendment_sources":[
+    {"url":"https://sqlite.org/wal.html","status":200,"bytes":42143,"sha256":"f3467b530b883d4a00574fe1a898b3d121ed72764ae28cf66941080ac0badb9e","retrieved_at":"2026-10-03T13:46:40Z"},
+    {"url":"https://sqlite.org/src/info/863c171b76cd36e0","status":200,"bytes":31826,"sha256":"43f843f6db2d07c9b12e80278b17f7c08a4b2f4c1d868ea13283e5759c5f4206","retrieved_at":"2026-10-03T13:47:09Z"},
+    {"url":"https://sqlite.org/src/info/c7facf7ac58d2cda","status":200,"bytes":31613,"sha256":"845590b02573ab1ec93bd9e9628ef254a40307babc8c1b04b6cc691366b314aa","retrieved_at":"2026-10-03T13:47:09Z"}
+  ],
+  "unsuccessful_amendment_lookups":[
+    {"url":"https://www.sqlite.org/releaselog/3_44_6.html","status":404,"bytes":175,"sha256":"91019e626563185016918fe02018a26a3334f9aea57d87d9893ff696652f541b","retrieved_at":"2026-10-03T13:46:41Z"},
+    {"url":"https://www.sqlite.org/releaselog/3_50_7.html","status":404,"bytes":175,"sha256":"f7c90fd7ab0a9ac3059c31055e48ba1f3aea36d1281fdb81adfad32bcb790224","retrieved_at":"2026-10-03T13:46:42Z"}
+  ],
   "git_sources":[
     {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"app/migrations/versions/0003_processing_jobs.py","git_blob":"a65d7a9b05fd2760a92a43266df6bf417e7358b6","bytes":3631,"sha256":"06a9437a41e6665e1689cb85af0789c741e420dc380888139ed138c2abe4939f"},
     {"source_commit":"e67f7ffebaa1aab3b00f4981ca629803c394ad81","path":"app/database.py","git_blob":"a72d71f8d5d8a6177f5b4077a35bfed31ff2136d","bytes":8242,"sha256":"ee4baa961ed7c9070158809588c6661f29d2a94ffb7d50751c4090c538453c3f"},

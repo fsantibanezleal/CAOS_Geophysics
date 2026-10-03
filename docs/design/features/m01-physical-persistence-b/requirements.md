@@ -20,5 +20,6 @@ Status: PLANNED, DOCS_ONLY, MAIN_REVIEW_REQUIRED. No implementation approval. MA
 | MP-B14 | After writers reopen, the system SHALL refuse pre-migration snapshot rollback that loses subsequent committed writes. | PB18_rollback_hold |
 | MP-B15 | When producing a restore candidate, the system SHALL expose no validated object until complete archive EOF/member hashes/DB and graph/custody checks pass. | PB19_restore_barrier |
 | MP-B16 | If only local pure-data/schema implementation is approved later, the implementation SHALL have no production writer, child, provider, API or host activation path. | PB20_scope_partition |
+| MP-B17 | Before opening any physical native WAL target, the system SHALL require the actual SQLite version/source_id/loaded binary tuple and independently reviewed upstream or exact distribution-backport evidence to match an explicitly supported patched-build record; affected unpatched and unknown tuples SHALL remain CLOSED without numeric backport inference. | PB21_sqlite_patch_admission |
 
 All named gates are prospective definitions in [validation](validation-plan.md), NOT_RUN. No SQL candidate or runtime tests are executed by this document task. A's1-GiB quota,32/256/512-MiB stages,16/80/128-MiB permanent ceilings and unknown-cache CLOSED policy are preserved as design choices, not measured resource/device admission.

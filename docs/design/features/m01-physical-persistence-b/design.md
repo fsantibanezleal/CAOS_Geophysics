@@ -20,6 +20,8 @@ B freezes proposed migration identity `0004_physical_persistence`, its two addit
 
 The data classifier receives a bounded immutable inventory; it does not create locks, enumerate arbitrary host trees, run physics or certify a live source. A fixture-only latest-watermark value is test input, never a production ACK. All fixture outputs are explicitly fixture_only=true,production_activated=false; runtime verdicts remain NOT_RUN.
 
+MAIN reports FULL read of all nine original B docs at4d81a554671567a88d3ce33ffac3357eee868f3f, with required SQLite WAL-reset patch correction before any code. This amendment requires [exact supported version/source_id/loaded-binary and patch evidence](leases-wal.md#mandatory-patched-build-admission-before-opening-a-target), not version>=a backport threshold. Supported build registry EMPTY/UNREGISTERED; PB21_sqlite_patch_admission NOT_RUN. Native proof adds the exact build-proof binding/check; all production/OS/WAL-driver contexts remain CLOSED. Neither original B full read nor this delta grants B-DATA/B-SCHEMA code approval.
+
 ## Proposed B-only SQL additions
 
 Use exact A domains/naming/nullability/FK RESTRICT rules. No old column/value or A field is removed. Add `uq_deletion_receipt_identity(id,owner_id,project_id)` to the existing table as a suitable unique parent.

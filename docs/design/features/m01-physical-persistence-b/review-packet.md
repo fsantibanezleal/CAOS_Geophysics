@@ -28,7 +28,8 @@ Lifetime CPU mechanism proof, actual host30% disk/resource admission, phone boun
 - [x] Record A FULL read/acceptance before B on isolated new docs branch.
 - [x] Inspect exact existing0003/WAL/worker/authority/source code and current migration namespace; persist fresh primary HTTP bytes and actual Git blob SHA fingerprints without copying private data.
 - [x] Author complete EARS/lease/classifier/typed authority/bridge/revision/source policy/validation/code-owner contracts before source implementation.
-- [ ] MAIN FULL pinned B review and explicit accept/amend/code-scope decision.
+- [x] MAIN reports FULL original nine-doc B read at4d81a554, with required SQLite patch-admission amendment before code.
+- [ ] MAIN FULL amended-delta review and explicit accept/amend/code-scope decision.
 - [ ] Only if MAIN EXPLICITLY approves, implement B-DATA/B-SCHEMA isolated local candidates and run their gates; no production/native/runtime wiring.
 - [ ] Separately authorize/prove B-NATIVE and CPU platforms; choose/prove independently trusted external checkpoint policy; measure host/browser before B-RUNTIME.
 - [ ] Full A/B/vertical convergence and private operational review before any separate deployment discussion.
@@ -39,4 +40,14 @@ PASS after explicit staging: `python scripts/check_content_standards.py`; `pytho
 
 Self-review corrected lease-before-auth/admission order (deletion selects exclusive directly; no upgrade), bounded complete chain ciphertext/decoded source bytes, explicit method/FK-order literals and native-receipt preservation without old delete/reinsert normalization. This is a documentation consistency/source audit, NOT independent review or proof any mechanism works. No webpage was refetched to claim its old hash still current; retrieval times/bytes are actual recorded observations.
 
-All PB05..PB20/A/full-vertical product gates NOT_RUN; implementation NOT_STARTED. Exact final head/PR are supplied at handoff; no self-hash/commit is embedded as a manufactured source pin. This packet is for MAIN to full-read and decide scope, not permission to act on the task list.
+## MAIN full B read and required SQLite amendment
+
+MAIN reports FULL read of all nine B docs at4d81a554671567a88d3ce33ffac3357eee868f3f including migration/validation. That read identified omitted SQLite WAL-reset patch admission; it is NOT B-DATA/B-SCHEMA code approval. Required delta adds actual sqlite_version/sqlite_source_id/loaded-binary proof matching an independently reviewed exact patch tuple, explicit documented backports versus invalid numeric thresholds, separate distribution evidence and prospective PB21_sqlite_patch_admission negatives BEFORE native target open. Proposed native-proof/v1 now has13 exact keys including sqlite_build_proof_sha256 and nine mechanism checks including sqlite_patch_admission; the old12-key/eight-check proposal cannot satisfy the amended contract.
+
+Changed B paths ONLY: requirements.md,design.md,leases-wal.md,migration-source-policy.md,validation-plan.md,review-packet.md and the two B research/receipt files. authority-bridge.md is unchanged, as are all A/PR123 documents and old runtime/scientific/source files. Actual fresh WAL+two linked SQLite check-in200 receipts and two explicitly unsuccessful404 lookups are appended without replacing original six receipts/eight Git pins. All supplied host/production contexts remain untouched. The supported build registry is EMPTY/UNREGISTERED; no patch binary/source_id approval, probe/install/upgrade or live DB write is claimed.
+
+MAIN FULL amended-delta review and explicit code-scope approval remain unchecked requirements even though the original full-read is complete. Original4d81 docs-only guard/source audit above is historical, not a re-run under this amendment. Fresh staged amendment guards and scope/link/receipt audit will be reported at the final amended pin.
+
+Amendment docs-only validation PASS: staged content standards/template residue (828 tracked files)/CI budget/cached whitespace. Scoped PowerShell audit PASS: eight B-only changed paths,21 local links,17 defined prospective gates,13-key native proof binding,three actual200 plus two explicitly recorded404 receipt shapes; original six receipts/eight Git pins and A/PR123/authority-bridge/runtime paths unchanged. The initial receipt-audit timestamp string comparison failed because PowerShell7.6 automatically converted JSON dates; re-running with ConvertFrom-Json -DateKind String passed without changing source receipts. These are static docs checks only; PB21 and all native/OS/WAL-driver/product tests remain NOT_RUN/CLOSED. Final guards are re-run after staging this audit note.
+
+All PB05..PB21/A/full-vertical product gates NOT_RUN; implementation NOT_STARTED. Exact final head/PR are supplied at handoff; no self-hash/commit is embedded as a manufactured source pin. This packet is for MAIN to full-read and decide scope, not permission to act on the task list.
