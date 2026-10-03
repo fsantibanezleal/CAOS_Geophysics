@@ -1,6 +1,6 @@
 # M01 local corrections requirements
 
-Status: planned. Authorized by the approved product SDD and 2026-10-03 bounded implementation instruction.
+Status: local feature gates passed; full M01 unaccepted. Authorized by the approved product SDD and 2026-10-03 bounded implementation instruction. Exact receipts: [convergence](convergence.md).
 
 R-G01 THE processor SHALL preserve input values, source identity, units, sign and correction lineage in a deterministic derivative.
 Gate: tests/numerics/test_gravity_processing.py::test_station_correction_lineage
