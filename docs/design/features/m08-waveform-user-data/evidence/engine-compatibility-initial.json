@@ -1,0 +1,314 @@
+{
+  "schema": "caos.m08-engine-compatibility.v1",
+  "executed_git_head": "4cc0a70c04581561b0ff67e56d218802ef82f37e",
+  "reviewed_packet": "d295925819a3c777c0e686aa9cce83d697678019",
+  "approval_head": "f116d127703689b79d015def3d37cee8cc95ed88",
+  "runtime": {
+    "implementation_name": "cpython",
+    "implementation_version": "3.12.10",
+    "os_name": "nt",
+    "platform_machine": "AMD64",
+    "platform_release": "11",
+    "platform_system": "Windows",
+    "platform_version": "10.0.26300",
+    "python_full_version": "3.12.10",
+    "platform_python_implementation": "CPython",
+    "python_version": "3.12",
+    "sys_platform": "win32"
+  },
+  "pip_version": "25.0.1",
+  "freeze": [
+    "certifi==2026.7.22",
+    "charset-normalizer==3.5.2",
+    "colorama==0.4.6",
+    "contourpy==1.4.0",
+    "cycler==0.12.1",
+    "decorator==5.3.1",
+    "fonttools==4.66.1",
+    "greenlet==3.5.6",
+    "idna==3.20",
+    "iniconfig==2.3.0",
+    "kiwisolver==1.5.1",
+    "lxml==6.1.3",
+    "matplotlib==3.11.2",
+    "numpy==2.2.6",
+    "obspy==1.4.2",
+    "packaging==26.3",
+    "pillow==12.3.0",
+    "pip==25.0.1",
+    "pluggy==1.6.0",
+    "Pygments==2.21.0",
+    "pyparsing==3.3.3",
+    "pytest==9.0.3",
+    "python-dateutil==2.9.0.post0",
+    "requests==2.34.2",
+    "scipy==1.15.2",
+    "setuptools==84.0.0",
+    "six==1.17.0",
+    "SQLAlchemy==1.4.54",
+    "urllib3==2.8.0"
+  ],
+  "install_report": {
+    "bytes": 528773,
+    "sha256": "632d1852ddfe0901dcd8bc7e21108db673e95b3dda2fad5d2be919f383e8208a"
+  },
+  "wheels": [
+    {
+      "name": "obspy",
+      "version": "1.4.2",
+      "file": "obspy-1.4.2-cp312-cp312-win_amd64.whl",
+      "sha256": "a6fdd8693e55fada63e9bf36e5cbdfe1ebd231f4723fe1398ed6a7a4ee5de2ad"
+    },
+    {
+      "name": "numpy",
+      "version": "2.2.6",
+      "file": "numpy-2.2.6-cp312-cp312-win_amd64.whl",
+      "sha256": "c1f9540be57940698ed329904db803cf7a402f3fc200bfe599334c9bd84a40b2"
+    },
+    {
+      "name": "scipy",
+      "version": "1.15.2",
+      "file": "scipy-1.15.2-cp312-cp312-win_amd64.whl",
+      "sha256": "e7c68b6a43259ba0aab737237876e5c2c549a031ddb7abc28c7b47f22e202ded"
+    },
+    {
+      "name": "pytest",
+      "version": "9.0.3",
+      "file": "pytest-9.0.3-py3-none-any.whl",
+      "sha256": "2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9"
+    },
+    {
+      "name": "colorama",
+      "version": "0.4.6",
+      "file": "colorama-0.4.6-py2.py3-none-any.whl",
+      "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
+    },
+    {
+      "name": "iniconfig",
+      "version": "2.3.0",
+      "file": "iniconfig-2.3.0-py3-none-any.whl",
+      "sha256": "f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12"
+    },
+    {
+      "name": "matplotlib",
+      "version": "3.11.2",
+      "file": "matplotlib-3.11.2-cp312-cp312-win_amd64.whl",
+      "sha256": "c5c1c68ee401fc98271263410f0e5ce88285abacf7627132914e8adf3d70ff43"
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "file": "packaging-26.3-py3-none-any.whl",
+      "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+    },
+    {
+      "name": "pluggy",
+      "version": "1.6.0",
+      "file": "pluggy-1.6.0-py3-none-any.whl",
+      "sha256": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746"
+    },
+    {
+      "name": "Pygments",
+      "version": "2.21.0",
+      "file": "pygments-2.21.0-py3-none-any.whl",
+      "sha256": "2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9"
+    },
+    {
+      "name": "SQLAlchemy",
+      "version": "1.4.54",
+      "file": "SQLAlchemy-1.4.54-cp312-cp312-win_amd64.whl",
+      "sha256": "f941aaf15f47f316123e1933f9ea91a6efda73a161a6ab6046d1cde37be62c88"
+    },
+    {
+      "name": "decorator",
+      "version": "5.3.1",
+      "file": "decorator-5.3.1-py3-none-any.whl",
+      "sha256": "f47fe6fdbd2edd623ecfe36875d37aba411624e2670dd395dddae1358689bb3c"
+    },
+    {
+      "name": "lxml",
+      "version": "6.1.3",
+      "file": "lxml-6.1.3-cp312-cp312-win_amd64.whl",
+      "sha256": "3e9a00d1c2c30936f7add097c41afc5da6556c580909104aafd382cac92a855c"
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "file": "requests-2.34.2-py3-none-any.whl",
+      "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+    },
+    {
+      "name": "setuptools",
+      "version": "84.0.0",
+      "file": "setuptools-84.0.0-py3-none-any.whl",
+      "sha256": "51a52592b3b99e102b609654876bd65f19f999935166d1352678931132b0c670"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22",
+      "file": "certifi-2026.7.22-py3-none-any.whl",
+      "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "file": "charset_normalizer-3.5.2-cp312-cp312-win_amd64.whl",
+      "sha256": "780fbe7cab297b81dad9fb8dc5eb003c0468ffb0d9e5f65068c53a34661a96bc"
+    },
+    {
+      "name": "contourpy",
+      "version": "1.4.0",
+      "file": "contourpy-1.4.0-cp312-cp312-win_amd64.whl",
+      "sha256": "6e697d94e69f499ff6bebb899cae97a58d5d14f0e1fe9568b43a0248d2f9af8c"
+    },
+    {
+      "name": "cycler",
+      "version": "0.12.1",
+      "file": "cycler-0.12.1-py3-none-any.whl",
+      "sha256": "85cef7cff222d8644161529808465972e51340599459b8ac3ccbac5a854e0d30"
+    },
+    {
+      "name": "fonttools",
+      "version": "4.66.1",
+      "file": "fonttools-4.66.1-cp312-cp312-win_amd64.whl",
+      "sha256": "261d8dc95845e751f975fe8d6075600593ee253470d46d1b84801688051b09f6"
+    },
+    {
+      "name": "greenlet",
+      "version": "3.5.6",
+      "file": "greenlet-3.5.6-cp312-cp312-win_amd64.whl",
+      "sha256": "7ac4abb3877c43af320392c664774eef6fa2cc063c79a55fc02d844a3cbe7395"
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "file": "idna-3.20-py3-none-any.whl",
+      "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
+    },
+    {
+      "name": "kiwisolver",
+      "version": "1.5.1",
+      "file": "kiwisolver-1.5.1-cp312-cp312-win_amd64.whl",
+      "sha256": "06a6917674de9e0fe3f66f5430787f59a9f2ddb64af9b714eaec547e29ef5c19"
+    },
+    {
+      "name": "pillow",
+      "version": "12.3.0",
+      "file": "pillow-12.3.0-cp312-cp312-win_amd64.whl",
+      "sha256": "a2b55dd6b2a4c4b7d87ffa56bdb33fdc5fdb9a462173861a7bc097f17d91cb09"
+    },
+    {
+      "name": "pyparsing",
+      "version": "3.3.3",
+      "file": "pyparsing-3.3.3-py3-none-any.whl",
+      "sha256": "ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4"
+    },
+    {
+      "name": "python-dateutil",
+      "version": "2.9.0.post0",
+      "file": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "file": "urllib3-2.8.0-py3-none-any.whl",
+      "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+    },
+    {
+      "name": "six",
+      "version": "1.17.0",
+      "file": "six-1.17.0-py2.py3-none-any.whl",
+      "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+    }
+  ],
+  "native_libraries": {
+    "evresp.cp312-win_amd64.pyd": {
+      "bytes": 92672,
+      "sha256": "cf75f2d2ffa6f58d37058330f9ecd1e76006fd582236770a84d6df54b7c42773"
+    },
+    "gcf.cp312-win_amd64.pyd": {
+      "bytes": 25600,
+      "sha256": "9ba415d4a28fc95776c2308faa3928866814d1b8cfe5eab7aaf1683a9044444a"
+    },
+    "gse2.cp312-win_amd64.pyd": {
+      "bytes": 13824,
+      "sha256": "0cd8a77dbe5d0bc916c8ab3d7428815f87e9e64127ea31142d3bbdaf69c7ace7"
+    },
+    "mseed.cp312-win_amd64.pyd": {
+      "bytes": 148992,
+      "sha256": "cefbf2a975ee90037452bacf61ffd1d13419bb97d79e5aad0dab60e72a0a74fe"
+    },
+    "segy.cp312-win_amd64.pyd": {
+      "bytes": 10752,
+      "sha256": "c489292445e82e2cd546a01182b01266808a5c204788c575105adc4ae82bcaa6"
+    },
+    "signal.cp312-win_amd64.pyd": {
+      "bytes": 49664,
+      "sha256": "0cebcacb5143ffacd10e973a746464887d785864488f8ad2ae651cdce851ea63"
+    },
+    "tau.cp312-win_amd64.pyd": {
+      "bytes": 14336,
+      "sha256": "3a02f3e0975c23bcaa7640b1a3f67fe1d7fae1aa843171af9cb475e9e74965b7"
+    }
+  },
+  "installed_obspy_import_source": {
+    "bytes": 28567,
+    "sha256": "6f290dcb4e827a0b62f63e364b2849b88f648db38134b6898f7ce917bbd5cdc3"
+  },
+  "owned_files": {
+    "data-pipeline/requirements-m08.txt": {
+      "bytes": 54,
+      "sha256": "739807b9fae01f713c57db57d6aa84a515b18b73a68431f5233486ba2972f7e9"
+    },
+    "tests/data/test_waveform_input.py": {
+      "bytes": 11186,
+      "sha256": "392afc800fbbf0af6b5e69ef626d73a692893664626b93f90603db08a1b421e1"
+    },
+    "tests/numerics/test_waveform_picks.py": {
+      "bytes": 7988,
+      "sha256": "96558277550c43c9959dbb72cc94d3898db01d291debf78a75c5f254e4d8e17a"
+    },
+    "tests/fixtures/waveform_m08/authored-controls.json": {
+      "bytes": 545,
+      "sha256": "f540c38a09e49e6c0bfc834e2ed9bd49e3d77295e39df75f1b0feb9e7b075398"
+    },
+    "docs/design/features/m08-waveform-user-data/evidence/ridgecrest-selection-seal.json": {
+      "bytes": 1809,
+      "sha256": "6c5356cb1ac3b3255de3aeab069d4fb90ca028a709410cae795d7b7800d36709"
+    }
+  },
+  "private_smoke": {
+    "bytes": 3052,
+    "sha256": "b658790af5a12529a209aa6f8a3b1201891d55be4aef021e0b7b4dad9f7eb5d5"
+  },
+  "test_first": {
+    "initial_system_runtime": "CPython 3.12.10 pytest 9.0.3",
+    "initial_outcome": "RED 2 collection errors: absent waveform_input",
+    "owned_runtime_outcome": "RED 2 collection errors: absent waveform_input",
+    "owned_runtime_exit_code": 2,
+    "owned_xml": {
+      "bytes": 2005,
+      "sha256": "7c2081255872e8a07dd81698e49831e8e821a61d913a8ac47440d3e87e45dabb"
+    },
+    "owned_log": {
+      "bytes": 2441,
+      "sha256": "fae3b15f8900a79bc03a440716c112f4644faa61b7fb29e515caaba982840bdd"
+    }
+  },
+  "smoke_status": "FAIL",
+  "smoke_exit_code": 1,
+  "failure_code": "ModuleNotFoundError",
+  "missing_module": "pkg_resources",
+  "resolved_setuptools": "84.0.0",
+  "pip_check": "PASS metadata constraints only; does not prove import compatibility",
+  "native_science_executed": false,
+  "proposed_setuptools_pin": "81.0.0",
+  "alternative_approved": false,
+  "alternative_installed": false,
+  "scientific_modules_created": false,
+  "phase_accessed": false,
+  "resource_profiles": "NOT_RUN/CLOSED",
+  "method_accepted": false,
+  "host_admitted": false
+}
