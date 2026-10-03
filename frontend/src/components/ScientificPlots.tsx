@@ -505,7 +505,7 @@ export function LayerColumn({
               role={onSelect ? "button" : undefined}
               tabIndex={onSelect ? 0 : undefined}
               aria-pressed={onSelect ? selectedLayer === i : undefined}
-              aria-label={`${i + 1}: ${v} Ω m; ${top} m — ${i < thickness.length ? top + full[i] : "∞"} m`}
+              aria-label={`${i + 1}: ${v} Ω m; ${top} m to ${i < thickness.length ? top + full[i] : "∞"} m`}
               onClick={() => onSelect?.(i)}
               onKeyDown={e => { if (onSelect && ["Enter", " "].includes(e.key)) { e.preventDefault(); onSelect(i); } }}
               style={{
