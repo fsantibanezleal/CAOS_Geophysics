@@ -2,6 +2,28 @@
 
 Assessment: 2026-10-03, 09:35 UTC. [Approved product SDD](SDD.md). This is a current implementation and preservation review, not release acceptance.
 
+## Later scoped execution checkpoint
+
+Develop `1b112bb258520a5679a865335cec30b6a97a1a0d` integrates the ordinary
+M02 prism forward operator through PR122 and its portable documentation repair
+PR128. MAIN independently executed118 passes/two explicit skips plus165 M01
+regressions without skips, audited20 actual runtime source/native pins and added
+a separate signed nonuniform3x2x3 Choclo/volume-integral control. The
+[full independent record](../validation/gravity-forward-independent-review-2026-10-03.md)
+separates those real local gates from pending survey/L2/IRLS/field/host acceptance.
+CI37117384343 failed on absolute documentation paths; docs-only repair retained
+all science bytes/receipts and fresh CI37117994883 passed. Neither result is hidden.
+
+The tracker now has51 open issues, including the original parent/48 children
+and two additional scoped execution tasks (#124 local physical JSON, #126 worker
+accounting). Draft PR123's physical vertical and PR129's accounting dossier remain
+pre-code reviews; PR127's separately reviewed local parser is being implemented.
+The original09:35 assessment and its19-requirement ledger are historical snapshots,
+preserved in Git history. The later ledger assessment pins `1b112bb` and adds
+the independently reviewed forward evidence, retaining18 unresolved/one failed
+whole requirement; it does not imply completed whole-method acceptance. Main and
+production remain unchanged; only reviewed task/develop progress is integrated.
+
 ## Integrated revisions and independent review
 
 After scoped fetch, the assessed develop code/document baseline is `bc0c573daa511ba897dd0b21e315b8c1eef67413`. Main remains `39813230478ed53bf5eb29cc21f07ed568767c64`, legacy application 0.04.001. No replacement release, production private-state mutation, Pages withdrawal or name/DNS cutover occurred. The tracker still has 49 open issues: parent #32 and 48 children. Product SDD approval is already recorded; old issue wording about awaiting approval is stale, not new authority.
