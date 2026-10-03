@@ -20,6 +20,91 @@ FORWARD_SOURCE = '46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07
 BETA_CANDIDATES = (.0001, .001, .01, .1, 1., 10., 100., 1000.)
 
 
+def _calibration_metadata(request):
+    """All supplied shapes/types/counts before scans, hash, copy or engine.
+
+    Private admission stage only; projected-resource and SPD/workflow gates
+    remain required before this becomes the complete native calibration entry.
+    """
+    survey._native_metadata(request)
+    survey._keys(request, ('schema', 'plan', 'observations', 'noise', 'prior', 'policy', 'runtime_epoch'), 'calibration')
+    survey._enum(request['schema'], ('gravity-survey-l2-calibration-request-1',), 'schema')
+    survey._enum(request['runtime_epoch'], (RUNTIME_EPOCH,), 'runtime_epoch')
+    survey._plan_result_metadata(request['plan'])
+    m = len(request['plan']['development_rows'])
+    a = len(request['plan']['geometry']['active_cell_indices'])
+    if not 1 <= m <= 2048: raise ValueError('observations: compact row count outside ordinary cap')
+    observed = request['observations']
+    survey._keys(observed, ('rows', 'gz_up_mgal', 'values_sha256', 'acceleration_unit', 'vertical_positive'),
+                 'observations')
+    survey._array(observed['rows'], (m,), 'observations.rows', np.int64)
+    survey._array(observed['gz_up_mgal'], (m,), 'observations.gz_up_mgal')
+    survey._enum(observed['acceleration_unit'], ('mGal',), 'observations.acceleration_unit')
+    survey._enum(observed['vertical_positive'], ('up',), 'observations.vertical_positive')
+    survey._sha(observed['values_sha256'], 'observations.values_sha256')
+    noise = request['noise']
+    survey._keys(noise, ('kind', 'values', 'unit', 'basis', 'citation', 'values_sha256',
+                        'cross_partition_dependence'), 'noise')
+    survey._enum(noise['kind'], ('diagonal_sd', 'full_covariance'), 'noise.kind')
+    covariance = noise['kind'] == 'full_covariance'
+    survey._array(noise['values'], (m, m) if covariance else (m,), 'noise.values')
+    survey._enum(noise['unit'], ('mGal^2' if covariance else 'mGal',), 'noise.unit')
+    survey._enum(noise['basis'], ('measured_gaussian', 'propagated_independent_gaussian',
+                                'explicit_conditional_gaussian'), 'noise.basis')
+    survey._enum(noise['cross_partition_dependence'], ('declared_absent', 'possible_not_removed'),
+                 'noise.cross_partition_dependence')
+    survey._text(noise['citation'], 'noise.citation')
+    survey._sha(noise['values_sha256'], 'noise.values_sha256')
+    prior = request['prior']
+    survey._keys(prior, ('lower_kg_m3', 'upper_kg_m3', 'start_kg_m3', 'reference_kg_m3', 'density_scale_kg_m3',
+                        'lengths_m', 'basis', 'reference_in_smooth', 'spatial_weights', 'geometry_sha256'), 'prior')
+    for key in ('lower_kg_m3', 'upper_kg_m3', 'start_kg_m3', 'reference_kg_m3'):
+        survey._array(prior[key], (a,), 'prior.'+key)
+    survey._array(prior['lengths_m'], (3,), 'prior.lengths_m')
+    survey._float(prior['density_scale_kg_m3'], 'prior.density_scale_kg_m3', positive=True)
+    survey._text(prior['basis'], 'prior.basis')
+    if type(prior['reference_in_smooth']) is not bool or prior['reference_in_smooth'] is not True:
+        raise ValueError('prior.reference_in_smooth: exact True required')
+    survey._enum(prior['spatial_weights'], ('none',), 'prior.spatial_weights')
+    survey._sha(prior['geometry_sha256'], 'prior.geometry_sha256')
+    policy = request['policy']
+    survey._keys(policy, ('name', 'beta_candidates', 'optimizer', 'training'), 'policy')
+    survey._enum(policy['name'], ('ordinary-l2-beta-grid-1',), 'policy.name')
+    survey._enum(policy['optimizer'], ('projected-gncg-recorded-1',), 'policy.optimizer')
+    survey._enum(policy['training'], ('not_applicable_classical',), 'policy.training')
+    if (type(policy['beta_candidates']) is not tuple or len(policy['beta_candidates']) != 8
+            or any(type(beta) is not float for beta in policy['beta_candidates'])
+            or policy['beta_candidates'] != BETA_CANDIDATES):
+        raise ValueError('policy.beta_candidates: exact eight frozen floats required')
+
+
+def _admit_calibration(request):
+    """Private compact identity/prior stage, NOT a complete inverse or SPD gate."""
+    _calibration_metadata(request)
+    survey._finite(request)
+    observed, noise, prior, plan = (request[key] for key in ('observations', 'noise', 'prior', 'plan'))
+    if not np.array_equal(observed['rows'], plan['development_rows']):
+        raise ValueError('observations.rows: exact compact development identities required')
+    body = {key: value for key, value in observed.items() if key != 'values_sha256'}
+    if survey._digest(body) != observed['values_sha256']: raise ValueError('observations: content hash mismatch')
+    body = {key: noise[key] for key in ('kind', 'unit', 'values')} | {'rows': observed['rows']}
+    if survey._digest(body) != noise['values_sha256']: raise ValueError('noise: content hash mismatch')
+    if survey._digest(plan['geometry']) != prior['geometry_sha256']: raise ValueError('prior: geometry hash mismatch')
+    lower, upper = prior['lower_kg_m3'], prior['upper_kg_m3']
+    if np.any(lower >= upper): raise ValueError('prior: strict lower<upper required')
+    for key in ('start_kg_m3', 'reference_kg_m3'):
+        if np.any(prior[key] < lower) or np.any(prior[key] > upper):
+            raise ValueError('prior: start/reference outside supplied bounds, no clipping')
+    if np.any(prior['lengths_m'] <= 0): raise ValueError('prior: positive physical lengths required')
+    if noise['kind'] == 'diagonal_sd':
+        if np.any(noise['values'] <= 0): raise ValueError('noise: positive SD required, no floor')
+    elif not np.array_equal(noise['values'], noise['values'].T):
+        raise ValueError('noise: exact declared covariance symmetry required')
+    admitted = survey._snapshot(request)
+    admitted['plan'] = survey._validate_plan(admitted['plan'])
+    return admitted
+
+
 def _weights(noise, indices):
     """Independent principal-block symmetric whitening, not joint conditioning."""
     survey._keys(noise, ('kind', 'values'), 'private noise')
@@ -66,13 +151,30 @@ def _weights(noise, indices):
     return sp.csr_matrix(weights)
 
 
-def _build_problem(request, observations, noise, prior, rows, beta_candidate):
-    """Real fitting simulation and official objectives; never substitute a kernel."""
+def _build_problem(request, observations, noise, prior, rows, beta_candidate, observation_rows=None):
+    """Real fitting simulation; compact declared rows never impute sealed values.
+
+    Legacy private tiny controls omit observation_rows. Production calibration
+    must supply its compact development identities, not a full-n data vector.
+    """
     forward._runtime()
     survey._array(rows, (None,), 'fit_rows', np.int64)
-    survey._array(observations, (len(request['stations']['receivers_m']),), 'observations')
-    if not 1 <= len(rows) <= 2048 or np.any(rows < 0) or np.any(rows >= len(observations)):
+    n = len(request['stations']['receivers_m'])
+    survey._array(observations, (n,) if observation_rows is None else (None,), 'observations')
+    if observation_rows is not None:
+        survey._array(observation_rows, (len(observations),), 'observation_rows', np.int64)
+    if not 1 <= len(observations) <= 2048 or not 1 <= len(rows) <= 2048:
+        raise ValueError('fit: row count outside ordinary cap')
+    if np.any(rows < 0) or np.any(rows >= n) or np.any(rows[1:] <= rows[:-1]):
         raise ValueError('fit: row count/identity invalid')
+    selected = rows
+    if observation_rows is not None:
+        if (np.any(observation_rows < 0) or np.any(observation_rows >= n)
+                or np.any(observation_rows[1:] <= observation_rows[:-1])):
+            raise ValueError('fit: compact unique ascending observation identities required')
+        selected = np.searchsorted(observation_rows, rows)
+        if np.any(selected >= len(observation_rows)) or not np.array_equal(observation_rows[selected], rows):
+            raise ValueError('fit: requested identity absent from compact observations')
     survey._float(beta_candidate, 'beta_candidate', positive=True)
     active_count = int(np.count_nonzero(request['mesh']['active']))
     receivers = request['stations']['receivers_m'][rows]
@@ -96,11 +198,11 @@ def _build_problem(request, observations, noise, prior, rows, beta_candidate):
     if not np.isfinite(kernel).all() or not np.allclose(
             kernel / 1000., verified['jacobian_mgal_per_kg_m3'], rtol=1e-10, atol=1e-12):
         raise RuntimeError('engine: physical fitting Jacobian identity mismatch')
-    weights = _weights(noise, rows)
+    weights = _weights(noise, selected)
     fixed_background = request['background_mgal'][rows]
     # Official simulation predicts Gq. Move independently fixed b to the data;
     # its residual is still Gq+b-d. No intercept/background fit is introduced.
-    engine_data = data.Data(fitting.survey, dobs=observations[rows] - fixed_background)
+    engine_data = data.Data(fitting.survey, dobs=observations[selected] - fixed_background)
     misfit = data_misfit.L2DataMisfit(data=engine_data, simulation=fitting)
     misfit.W = weights
     volume = float(np.sum(geometry['active_cell_volumes_m3']))
@@ -119,7 +221,7 @@ def _build_problem(request, observations, noise, prior, rows, beta_candidate):
     return {'simulation': fitting, 'misfit': misfit, 'regularization': reg, 'geometry': geometry,
             'beta_engine': len(rows) * beta_candidate, 'beta_candidate': beta_candidate,
             'rows': survey._readonly(rows), 'background': survey._readonly(fixed_background),
-            'observations': survey._readonly(observations[rows]),
+            'observations': survey._readonly(observations[selected]),
             'reference_q': survey._readonly(reference),
             'alpha': (normalizer, float(alphas[0]), float(alphas[1]), float(alphas[2]))}
 

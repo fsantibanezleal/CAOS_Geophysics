@@ -148,3 +148,59 @@ sizes20/120/348 PASS. Seven approved files, accepted forward source/test, first
 134 receipt, three dated forward receipts, legacy modules and canonical bytes
 are unchanged. Original137-file backup remains ignored and git-untracked. This
 is local evidence, not remote CI, independent whole-unit acceptance or promotion.
+
+## Compact admission milestone and separate optimizer blocker
+
+Read the [new compact-data receipt](evidence/compact-admission-execution-20261003.json).
+The22 admission tests actually failed before their new callable existed; the5
+compact-fit tests actually failed on the absent observation_rows option before
+its implementation. Red XML timestamps/hashes and subsequent measured greens
+are preserved. Modules already existed at d7; no commit is claimed to predate
+these tests/files, and no deletion/moving manufactured an earlier red state.
+
+Final focused run:195 PASS, zero skips/deselections,115 new local-component and80
+unchanged forward controls. New metadata tests deny scans/copies/hashes/engine
+before exact compact row/type/unit/schema admission. Real signed fit/J/residual
+and principal covariance controls align original row identities into compact
+development arrays. Poisoning a supplied-but-not-fitting row leaves that fit
+unchanged. No full-n zero fill or sealed observations are created.
+Broader run:302 PASS/14 attributed legacy skips; the same three unchanged missing-
+Boule/Harmonica files remain explicitly separated. Prior separate M01 execution
+164 PASS/1 skip is reused only for unchanged files, NOT a fresh combined run.
+
+Only private metadata/identity/prior stages are implemented, NOT the completed
+SPD/projected-workspace gate or public native calibrate/evaluate workflow.
+Normalized AST comparison verifies the current optimizer class, KKT function
+and solve routine are unchanged from d7. The file's SHA is new because admission
+and compact builder code were added; no old optimizer hash is copied onto it.
+
+MAIN's separately owned complete report is
+docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md on its own
+bounded-evidence branch. It retains168 PASS and12 metadata PASS separately from
+two wide-bound PASS/two tight75kg/m3 FAIL. This producer read that full report
+and verified the actual failed private receipt hash, without copying/rewriting
+MAIN's report. The zero-free failures remain genuine and BLOCK bounded acceptance.
+Producer's original easier250-bound controls do not overturn these new negatives.
+
+The [new primary dossier](../../../research/m02-l2-degenerate-active-set-2026-10-03.md)
+and [full additive amendment](active-set-amendment.md) specify one proposed
+finite diagonal projected-gradient release with unchanged native Armijo/caps,
+strict triggering, exact trace semantics and a distinct proposed source epoch.
+A [read-only one-direction certificate](evidence/degenerate-direction-diagnostic-20261003.json)
+reproduces the old failures and checks prospective descent algebra externally;
+ZERO optimizer release steps were executed. These documents require FULL MAIN
+read and explicit approval BEFORE any new optimizer algorithm/tests. No silent
+direction replacement, threshold/cap/seed change, dense BVLS fallback or install.
+
+Whole16-gate/24-case/selection/resource acceptance remains pending and cannot
+be inferred from195 tests or metadata passes. No API/IRLS/field/GPU/host/canonical,
+MAIN worktree, main branch, merge or deploy changes are made by this milestone.
+
+Current pre-publication checks: Ruff, content, template874 tracked files,
+CI-budget and unchanged artifact SHA/size20/120/348 PASS. Source/test receipt
+hashes,28 installed pins (actual focused test),18 protected repository hashes,
+accepted forward test, original seven reviewed files and historical receipts
+match. Relative links/strict JSON/base-integrity pass. Original137-file backup
+is present, ignored and git-untracked; no digest recomputation or mutation.
+Product ledger remains structurally valid with1 fail/18 unresolved, not scientific
+or release acceptance. No remote CI or independent amended-solver PASS is asserted.

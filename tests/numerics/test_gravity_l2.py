@@ -196,6 +196,47 @@ def test_nonuniform_full_active_stencil_all_directions():
                                    2*independent.T@independent@direction, rtol=1e-10, atol=1e-12)
 
 
+def test_private_compact_fit_rows_never_create_sealed_values():
+    req, d, prior, _, oracle = tiny()
+    supplied = np.array([0, 2, 3], dtype=np.int64)
+    fit = np.array([2, 3], dtype=np.int64)
+    compact_d = d[supplied]
+    compact_cov = noise()['values'][np.ix_(supplied, supplied)]
+    spec = {'kind': 'full_covariance', 'values': compact_cov}
+    problem = l2._build_problem(req, compact_d, spec, prior, fit, .01, observation_rows=supplied)
+    np.testing.assert_array_equal(problem['rows'], fit)
+    np.testing.assert_array_equal(problem['observations'], d[fit])
+    np.testing.assert_allclose(problem['simulation'].G/1000., oracle[fit], rtol=1e-7, atol=1e-10)
+    w = problem['misfit'].W.toarray()
+    principal = compact_cov[1:, 1:]
+    np.testing.assert_allclose(w@principal@w.T, np.eye(2), rtol=1e-10, atol=1e-12)
+    q = np.array([.4, -.6, .9, -.3, 1.2])
+    np.testing.assert_allclose(problem['misfit'].residual(q), oracle[fit]@(q*1000)+req['background_mgal'][fit]-d[fit],
+                               rtol=1e-10, atol=1e-12)
+    # Poison the supplied development row that is NOT part of this fit.
+    compact_d[0] += 1000.
+    changed = l2._build_problem(req, compact_d, spec, prior, fit, .01, observation_rows=supplied)
+    np.testing.assert_array_equal(problem['observations'], changed['observations'])
+    np.testing.assert_array_equal(problem['misfit'].deriv(q), changed['misfit'].deriv(q))
+    assert problem['beta_engine'] == .02
+
+
+@pytest.mark.parametrize('bad', ['missing', 'duplicate', 'unordered', 'length'])
+def test_private_compact_identity_rejects_before_engine(monkeypatch, bad):
+    req, d, prior, _, _ = tiny()
+    supplied = np.array([0, 2, 3], dtype=np.int64)
+    fit = np.array([2, 3], dtype=np.int64)
+    if bad == 'missing': fit = np.array([1, 2], dtype=np.int64)
+    if bad == 'duplicate': supplied[1] = supplied[0]
+    if bad == 'unordered': supplied = supplied[::-1].copy()
+    if bad == 'length': supplied = supplied[:2]
+    def deny(*args, **kwargs): raise AssertionError('fit engine before compact identity rejected')
+    monkeypatch.setattr(forward, 'forward_gravity', deny)
+    with pytest.raises(ValueError):
+        l2._build_problem(req, d[[0, 2, 3]], {'kind': 'diagonal_sd', 'values': np.full(3, .01)},
+                          prior, fit, .01, observation_rows=supplied)
+
+
 @pytest.mark.parametrize('bound,start', [(1500., 0.), (1500., 100.), (1500., -100.), (250., 0.)])
 def test_bounded_l2_independent_bvls_and_kkt(bound, start):
     req, d, prior, bounds, oracle = tiny()
