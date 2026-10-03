@@ -17,6 +17,7 @@ import { chapters, type Algorithm, type Chapter } from "../data/methods";
 import { phasePickers } from "../data/phase-picking";
 import { PhasePickingContent } from "../components/PhasePickingContent";
 import { PhasePickerPanel } from "../components/PhasePickerPanel";
+import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
@@ -72,8 +73,8 @@ export function Introduction() {
         )}
       >
         {t(
-          "Geophysical inversion estimates subsurface properties from measured physical responses. This application compares density, magnetic susceptibility, resistivity and acoustic velocity in controlled synthetic experiments. The relation ",
-          "La inversión geofísica estima propiedades del subsuelo a partir de respuestas físicas medidas. Esta aplicación compara densidad, susceptibilidad, resistividad y velocidad acústica en experimentos sintéticos controlados. La relación ",
+          "Geophysical research separates immutable observations, derived processing and conditional subsurface inversion. This platform combines audited synthetic lessons with owned CSV flag processing and reviewed bounded EDI QC/inversion; method-specific admission is not public host activation. The relation ",
+          "La investigación geofísica separa observaciones inmutables, procesamiento derivado e inversión condicional del subsuelo. La plataforma combina lecciones sintéticas auditadas, flags de CSV propio y QC/inversión EDI acotados revisados; admisión por método no implica host público activo. La relación ",
         )}
         <InlineMath tex="d=F(m)+\epsilon" />
         {t(
@@ -81,6 +82,7 @@ export function Introduction() {
           " separa modelo desconocido, operador directo y error de observación.",
         )}
       </Head>
+      <OnlineMTIntroduction />
       <section>
         <h2>
           {t(
@@ -215,8 +217,8 @@ export function Introduction() {
       <section>
         <h2>
           {t(
-            "4. Experimental calculation and interpretation",
-            "4. Cálculo e interpretación experimental",
+            "4. Synthetic experimental calculation and interpretation",
+            "4. Cálculo e interpretación experimental sintética",
           )}
         </h2>
         <ol className="measure">
@@ -371,7 +373,9 @@ export function Methodology() {
   const i = useShellLang() === "es" ? 1 : 0;
   const released = (ids: string[]) => chapters
     .filter((chapter) => ids.includes(chapter.id))
-    .map((chapter) => ({ id: chapter.id, label: chapter.title[i], content: <TheoryChapter chapter={chapter} /> }));
+    .map((chapter) => ({ id: chapter.id, label: chapter.title[i], content: chapter.id === "mt"
+      ? <OnlineMTCourse view="theory" replay={<TheoryChapter chapter={chapter} />} />
+      : <TheoryChapter chapter={chapter} /> }));
   const groups = [
     {
       id: "fields",
@@ -569,7 +573,9 @@ export function Implementation() {
         .map((chapter) => ({
           id: chapter.id,
           label: chapter.title[i],
-          content: <SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />,
+          content: chapter.id === "mt"
+            ? <OnlineMTCourse view="implementation" replay={<SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />} />
+            : <SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />,
         }))} />,
     },
     {

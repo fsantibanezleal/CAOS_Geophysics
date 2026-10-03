@@ -9,6 +9,8 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [Problem types](problem-types/problem-types.md): gravity, magnetics, MT, FWI, learned, and joint methods.
 - [M01 gravity station corrections](methods/gravity-processing.md): normal gravity, height/reference conventions, Bouguer plate and residual terrain terms, uncertainty propagation, independent oracles and explicit field-admission failures. This local unit does not yet provide the full transform or field modelling chain.
 - [M06 measured MT admission](problem-types/mt-field-admission.md): attributed field EDI, independent full-tensor QC, ineligible verdict, and exact local reproduction.
+- [M05/M06 online MT course](problem-types/05_online-mt-course.md): complete complex mathematics, source/variance/frame QC, actual TRF/array protocol, independent worked fixed-h/wrong-h controls and conditional limits.
+- [Use and reproduce the MT course](guides/09_online-mt-course.md): bilingual in-app exercises, exact numerical/render gates and separately pending host admission.
 - [Earthquake phase picking](problem-types/phase-picking.md): M08/M13 theory, frozen input and asset contracts, held-out denominator, browser inference and parity gate.
 - [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
