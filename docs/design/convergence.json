@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "9918ea46aa0745ea91a546ff37593dc0a8c5bad2",
-  "assessed_at": "2026-10-03T12:14:42Z",
+  "assessed_revision": "e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe",
+  "assessed_at": "2026-10-03T15:12:00Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -116,7 +116,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Local API, strict recovery and paired Git-object bundle reviews pass separately; public-service and complete product admission remain open.",
+      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Separately merged pure accounting and its independent review passed419 unit tests and43 supplied-record checks; these are not OS measurements, runtime authority remains false and all15 native gates remain closed. Local API/recovery/source-bundle controls do not establish public-service or complete product admission.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -129,6 +129,10 @@
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
           "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
+        },
+        {
+          "path": "docs/validation/physical-accounting-independent-review-2026-10-03.md",
+          "sha256": "3c32a7d42196d925f33ac7158e1b093aef760018bb97f75d18b43cc384b7f5ac"
         }
       ],
       "receipts": []
@@ -137,7 +141,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity still loses to its matched classical baseline. Independently accepted FWI/MT science and guarded canonical container retain the original private backup. M01 local transforms/adapter and the narrow M02 ordinary prism forward operator pass independent local controls. Submitted-survey L2/IRLS, field/host and complete M01-M13 acceptance remain failed or pending; no whole-method verdict is upgraded from the forward unit.",
+      "note": "M12 learned velocity still loses to its matched classical baseline. FWI/MT evidence and private original backup remain preserved. M01 local transforms/adapter and the narrow M02 forward unit pass independent controls. Later merged L2 reviews retain134 original passes, then168 regressions/12 metadata controls at d7c6670, but the new independent physical oracle has two tight-bound failures and two wide-bound passes. L2 candidate code remains unmerged; an approved active-set amendment is not numerical success. Complete submitted-survey L2/IRLS, field/host and M01-M13 acceptance remain failed or pending.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -162,6 +166,14 @@
         {
           "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
           "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
+        },
+        {
+          "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
+          "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
+        },
+        {
+          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
+          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
         }
       ],
       "receipts": []
