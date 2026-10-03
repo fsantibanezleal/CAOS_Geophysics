@@ -20,11 +20,11 @@ M03-004 IF a grid, magnetic potential, vector, gradient or RGB raster is offered
 Implementation: data-pipeline/magnetic_line_contract.py::validate_lines
 Gate: tests/data/test_magnetic_lines.py::test_bartlett_grid_and_charleston_rgb_are_not_lines
 
-M03-005 WHEN a correction is requested, THE processor SHALL require its verified input state, eligible metadata, sign/units, explicit parameters and ordered immutable lineage; an already applied or unknown correction SHALL not be applied again.
+M03-005 WHEN a correction is requested, THE processor SHALL require its verified input state, eligible metadata, sign/units, explicit parameters and ordered immutable lineage; an already applied or unknown correction SHALL not be applied again, except a distinct verified current-to-target rereference transaction as explicitly contracted.
 Implementation: data-pipeline/magnetic_lines.py::apply_corrections
 Gate: tests/numerics/test_magnetic_processing.py::test_correction_state_and_no_double_application
 
-M03-006 IF epoch, main-field generation, coordinate basis, evaluated reference or altitude semantics cannot be established, THEN THE processor SHALL reject IGRF subtraction or re-reference without inventing a survey date, site vector or height.
+M03-006 IF tagged survey_reference versus row_utc epoch, main-field generation, coordinate basis, independently evaluated old/new reference or altitude semantics cannot be established, THEN THE processor SHALL reject IGRF subtraction or typed rereference without broadcast/re-evaluation defaults or invented date/vector/height.
 Implementation: data-pipeline/magnetic_lines.py::apply_reference
 Gate: tests/numerics/test_magnetic_processing.py::test_igrf_epoch_vector_datum_and_rereference
 
@@ -44,7 +44,7 @@ M03-010 WHEN a directional residual-filter diagnostic is selected, THE processor
 Implementation: data-pipeline/magnetic_lines.py::microlevel_diagnostic
 Gate: tests/numerics/test_magnetic_processing.py::test_microlevel_stripes_and_parallel_geology
 
-M03-011 WHEN gridding alternatives are evaluated, THE processor SHALL invoke pinned Harmonica float64 single-thread equivalent sources with explicit training-only source coordinates and recorded column scaling/weights, and use SciPy geometric interpolation only where height comparability is established.
+M03-011 WHEN gridding alternatives are evaluated, THE processor SHALL invoke pinned Harmonica float64 single-thread equivalent sources on an admitted scalar anomaly with deterministic training-only half-open source-block maps, column scaling, raw weights and explicitly dimensioned/rescaled damping, and use SciPy geometric interpolation only where height comparability is established.
 Implementation: data-pipeline/magnetic_lines.py::fit_grid
 Gate: tests/numerics/test_magnetic_processing.py::test_dense_independent_fit_and_height_baseline
 
@@ -52,7 +52,7 @@ M03-012 WHEN output cells or predictions are created, THE processor SHALL report
 Implementation: data-pipeline/magnetic_lines.py::support_masks
 Gate: tests/numerics/test_magnetic_processing.py::test_sampling_aliasing_and_support_masks
 
-M03-013 WHEN model parameters or correction choices are selected, THE evaluator SHALL freeze full-line spatial outer holdout before value processing, remove training tie samples in buffered held-out blocks, tune only on inner training partitions and keep final test values sealed until one evaluation.
+M03-013 WHEN model parameters or correction choices are selected, THE evaluator SHALL freeze actual complete-line outer/inner partitions, boundary anchors, segment-wise tie buffers, support/candidates and geometry-only coverage before value processing, refit calibration/source choices inside each inner training fold and keep final test values sealed until one evaluation.
 Implementation: data-pipeline/magnetic_line_validation.py::make_partitions
 Gate: tests/numerics/test_magnetic_processing.py::test_blocked_line_holdout
 
@@ -109,3 +109,5 @@ Implementation: docs/design/features/m03-aeromagnetic-lines/convergence.json (fu
 Gate: scripts/check_magnetic_artifacts.py::main
 
 No gate above currently exists as an M03 implementation. Requirement M03-022 cannot use a mocked child, supplied accounting trace or MT host receipt as its positive proof. M03-004's scientific rejection must use actual retrieved provider metadata. M03-026 must not rewrite the parent convergence ledger to pass from documentation presence.
+
+Revision2 corrects26f0916 transparently. Literal gates also cover closed nested schemas/missing-null/counts, rereference transaction duplication/old-new receipt binding, epoch-mode swaps, weights/damping units and scale invariance, source-block edge/row mapping, metre-versus-dimensionless tolerances and the fixed authored geometry partition. Every field/online/native gate remains unexecuted. Full-survey parent acceptance cannot follow from this bounded400-row contract.
