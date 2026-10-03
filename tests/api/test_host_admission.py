@@ -45,9 +45,7 @@ def receipt(path, value):
 @pytest.mark.skipif(not HOST, reason="explicit actual-host gate only")
 def test_nominal_distribution_and_concurrent_reads(make_harness, tmp_path):
     checked_host()
-    harness = make_harness(mt_online_enabled=True)
-    harness.account()
-    project, _asset, dataset, original = upload_dataset(harness, NATIVE, station="HALFSPACE_100_NATIVE", count=24)
+    original = NATIVE.read_bytes()
     rows, reads, available, free, tree_rss = [], [], [], [], []
     halt = threading.Event()
 
@@ -66,9 +64,19 @@ def test_nominal_distribution_and_concurrent_reads(make_harness, tmp_path):
 
     sampler = threading.Thread(target=monitor, daemon=True)
     sampler.start()
-    qc_id = None
     try:
         for method in (M05_ID, M06_ID):
+            # Keep the production 30-jobs/IP/hour admission unchanged. Distinct
+            # private stores exercise 20 M05, or 1 QC + 20 M06, not 40 in one bucket.
+            harness = make_harness(mt_online_enabled=True)
+            harness.account()
+            project, _asset, dataset, supplied = upload_dataset(
+                harness, NATIVE, station="HALFSPACE_100_NATIVE", count=24)
+            assert supplied == original
+            qc_id = None
+            if method == M06_ID:
+                _screen, qc = complete(harness, submit(harness, project, dataset, M05_ID, {}))
+                qc_id = qc["job_id"]
             for attempt in range(20):
                 parameters = {} if method == M05_ID else {
                     "qc_job_id": qc_id, "thickness_m": [], "initial_ohm_m": [40],
@@ -95,6 +103,15 @@ def test_nominal_distribution_and_concurrent_reads(make_harness, tmp_path):
                 rows.append({key: status[key] for key in (
                     "job_id", "method_id", "dataset_sha256", "request_sha256", "preflight",
                     "wall_ms", "peak_rss_bytes", "scratch_bytes", "result_sha256")})
+            harness.close()
+    except BaseException as error:
+        receipt(tmp_path / "partial-host-receipt.json", {
+            "schema": "geophysics.actual-host-incomplete/v1", "failure_type": type(error).__name__,
+            "rows": rows, "application_read_samples": len(reads), "admission_passed": False,
+            "minimum_available_host_memory_bytes": min(available) if available else None,
+            "minimum_free_disk_bytes": min(free) if free else None,
+        })
+        raise
     finally:
         halt.set()
         sampler.join(timeout=2)
@@ -124,6 +141,7 @@ def test_nominal_distribution_and_concurrent_reads(make_harness, tmp_path):
         "application_read_max_ms": max(reads),
         "read_scope": "Authenticated TestClient while real worker child runs; not nginx/TLS/network latency",
         "replication_scope": "Twenty attempts per method on one nominal analytic sounding; not diverse-field throughput",
+        "rate_limit_policy": "Unchanged 30 jobs/IP/hour; independent private stores per method (20 or 21 submissions)",
     }
     # Retain all measurements even if an acceptance inequality fails.
     receipt(tmp_path / "nominal-host-receipt.json", value)
