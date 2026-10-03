@@ -62,7 +62,7 @@ the exact checked sum and required budget relationship.
 Controls include complete trace/receipt/release consistency; replayed release
 becoming FAILED_HELD; CPU-stop thresholds; forbidden clean stop; malformed
 native/derived CPU identity; sticky held state; exact maximum convertibles;
-addition/multiplication overflow; delta underflow; bool rejection; preflight
+multiplication overflow; delta underflow; bool rejection; preflight
 integer/depth bounds; duplicate keys; negative zero; false runtime authority;
 and rejection of implicit boolean eligibility. Emitted errors retain only fixed
 application fields under direct calls, with no cause/parser context.
