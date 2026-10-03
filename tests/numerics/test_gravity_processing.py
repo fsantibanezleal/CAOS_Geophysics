@@ -4,13 +4,17 @@ All inputs here are original synthetic numerical controls, never field data.
 """
 
 from copy import deepcopy
+import csv
 from hashlib import sha256
+import io
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
+import zipfile
 
 import numpy as np
 import pytest
@@ -371,6 +375,63 @@ def test_worked_request_is_synthetic_and_closes_formula():
     result = process_survey(**request)
     assert result["qc"]["derived_mgal"] == pytest.approx([12], abs=1e-8)
     assert result["processing"]["full_method_accepted"] is False
+
+
+@pytest.mark.skipif(
+    not os.environ.get("M01_PRINCIPAL_FACT_ARCHIVE"),
+    reason="Attributed field archive is a separate source acquisition, not a synthetic substitute",
+)
+def test_author_principal_fact_bytes_require_physical_metadata():
+    """Read one real member in memory, without extraction or a source profile.
+
+    This is a negative admission gate. No height, instrument status or error
+    value is invented to make the author's processed principal facts eligible.
+    """
+    with zipfile.ZipFile(os.environ["M01_PRINCIPAL_FACT_ARCHIVE"]) as archive:
+        names = [n for n in archive.namelist() if n == "data/ground_gravity_data.csv"]
+        assert len(names) == 1
+        assert archive.getinfo(names[0]).file_size == 335377
+        raw = archive.read(names[0])
+    member_hash = sha256(raw).hexdigest()
+    assert member_hash == "7cb3ed0c3cbac60f896a11f213ba40209c3083cb7635ab80ab7c0fd0382a1055"
+    reader = csv.DictReader(io.StringIO(raw.decode("utf-8-sig")))
+    assert reader.fieldnames == [
+        "",
+        "Station_ID",
+        "lonWGS84",
+        "latWGS84",
+        "xWGS84_UTM10N",
+        "yWGS84_UTM10N",
+        "zWGS84",
+        "OG",
+        "FAA",
+        "SBA",
+        "TTC",
+        "CBA",
+        "ISO",
+    ]
+    first = next(reader)
+    original = deepcopy(first)
+    # Retain known source evidence only; unknown physical metadata stays absent.
+    dataset = {
+        "schema_version": "gravity-stations-1",
+        "state": "observed_absolute",
+        "history": [],
+        "metadata": {
+            "source_kind": "field",
+            "source_sha256": member_hash,
+            "source_citation": "Attributed author compiled principal facts, Zenodo 16975696 v2",
+            "rights": "CC BY 4.0, author attribution required",
+        },
+        "stations": [first],
+    }
+    with pytest.raises(GravityContractError) as rejected:
+        process_survey(dataset, config())
+    for key in ("height_datum", "instrument_processing", "gravity_quantity", "tide_system"):
+        assert key in str(rejected.value)
+    assert first == original
+    assert first["OG"] == "979999.22" and first["CBA"] == "6.67"
+    assert "zWGS84" in first and "receiver_height_m" not in first
 
 
 def test_qc_preserves_outliers():
