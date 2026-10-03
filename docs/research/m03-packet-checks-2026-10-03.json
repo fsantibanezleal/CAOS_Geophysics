@@ -1,0 +1,113 @@
+{
+  "schema": "m03-packet-checks/1",
+  "date": "2026-10-03",
+  "base_commit": "ba54d32f0932a09502f463f3aff9c8f21270dca1",
+  "scope": "Documentation and primary-retrieval custody only; no numerical, field, UI, worker, persistence or deployment acceptance.",
+  "runtime": {
+    "path": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe",
+    "version": "CPython 3.12.10 MSC v.1943 64 bit AMD64",
+    "dependencies_installed": false
+  },
+  "files": [
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/research.md",
+      "bytes": 16377,
+      "sha256": "bda915507e1346150fa30d7cb6e43fa7921b1dda4802357605222c6b77db2daf"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/requirements.md",
+      "bytes": 12079,
+      "sha256": "9d15d8bbb960d75d11eb826069dc3fdd04a8eafdeee485160e16a848d486ad19"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/design.md",
+      "bytes": 14120,
+      "sha256": "ed7336fd9c6b07229f0b4ba2184f79b0932f06449c5d3a36e773a89534108604"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/contracts.md",
+      "bytes": 17851,
+      "sha256": "726270c12378f231fe59a745d193477f9fe185d197761b612e3329a58e6803b6"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/algorithms.md",
+      "bytes": 21720,
+      "sha256": "7f75b86feb00fa417eb085436e8c50e0c4cf88c9dabe82f65a3ed975ea21c5e2"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/validation.md",
+      "bytes": 16338,
+      "sha256": "03a3c6c5f3c08f0e6e424673b010c6014cae54cbc51befb073aba7e7cf027bee"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/tasks.md",
+      "bytes": 12089,
+      "sha256": "fc1ac9ed1fbf7df79e1b0f9b5e8739032792a2efa5e9b4871561b13116c47a8f"
+    },
+    {
+      "path": "docs/research/m03-primary-retrieval-2026-10-03.json",
+      "bytes": 11747,
+      "sha256": "5fae05534bb92868ea4ec0d9a8f8b0e65eb9cca27d051aa39e6ce37d62ce2c0d"
+    }
+  ],
+  "checks": [
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_content_standards.py",
+      "exit_code": 0,
+      "summary": "check_content_standards: OK, no em-dash or emoji in tracked content."
+    },
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_template_residue.py",
+      "exit_code": 0,
+      "summary": "check_template_residue: OK: no template residue in 896 tracked files."
+    },
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_ci_budget.py",
+      "exit_code": 0,
+      "summary": "ci budget: OK"
+    },
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_sdd_convergence.py",
+      "exit_code": 0,
+      "summary": "Ledger structurally valid: {'fail': 1, 'ineligible': 0, 'pass': 0, 'unresolved': 18}. This is not scientific or release acceptance."
+    },
+    {
+      "command": "PowerShell exact seven-file inventory, literal sequential EARS/Implementation/Gate regex, minimum 5000 characters/file, relative-link existence, Get-FileHash and byte count for every response cache body",
+      "exit_code": 0,
+      "observed": {
+        "seven_files": 7,
+        "ears_requirements": 26,
+        "relative_links": 32,
+        "response_body_hashes": 18,
+        "http200": 16,
+        "http403": 2
+      },
+      "meaning": "Shape/link/custody checks only. Named M03 product tests remain prospective."
+    },
+    {
+      "command": "git diff --cached --check",
+      "exit_code": 0
+    },
+    {
+      "command": "git check-ignore data/raw/m03-primary-20261003/charleston-metadata.body",
+      "exit_code": 0
+    }
+  ],
+  "parent_ledger_observation": {
+    "pass": 0,
+    "fail": 1,
+    "unresolved": 18,
+    "ineligible": 0,
+    "modified": false
+  },
+  "status": {
+    "documentation": "checked",
+    "implementation": "not_started",
+    "main_review": "pending_full_read_and_explicit_approval",
+    "field_measurements_acquired": false,
+    "online": "CLOSED",
+    "numerical_tests": "prospective_not_executed",
+    "rendered_qa": "not_applicable_no_UI_change",
+    "deployment": "unchanged"
+  }
+}
