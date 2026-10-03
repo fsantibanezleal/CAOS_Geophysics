@@ -2,6 +2,10 @@
 
 Status: DOCS_ONLY, REVIEW_REQUIRED. No API/schema/migration/frontend/worker code, source artifact, host operation or runtime test is part of this unit. No merge/deploy/release claim. Follow [tasks and gates](validation-plan.md).
 
+## MAIN full-read acceptance of milestone A
+
+MAIN reports FULL read of all nine milestone-A docs at `e67f7ffebaa1aab3b00f4981ca629803c394ad81`, including research, ten actual primary receipts, thirteen source pins, SQL types/composite FKs/lifetime/partial indexes, complete custody JSON/charges/copy-versus-rename and the B cut matrix. MAIN accepts the direction and EXACT proposed A dictionary, including root/correction/transform stage32/256/512 MiB and permanent16/80/128 MiB. These are proposed capacities, NOT measured host/device budgets, phone admission or runtime PASS. Preserve the existing1-GiB quota and unknown-cache CLOSED state. This is attributed MAIN design acceptance, not an independent execution or Felipe product/release acceptance. NO schema/worker/migration code approval until complete B is reviewed. The earlier pending-review wording below describes the original e67f7ff packet, not a denial of this subsequent bounded acceptance. Original pins/receipts/dictionary remain unchanged.
+
 ## Read order
 
 Read [research](../../../research/m01-physical-persistence-2026-10-03.md) and its [actual receipt ledger](../../../research/m01-physical-persistence-primary-sources.json), then [requirements](requirements.md), [design](design.md), [SQL dictionary](sql-contract.md), [custody](custody.md), [B boundary](recovery-boundary.md), [validation/tasks](validation-plan.md), and this packet. The immutable Git commit/PR revision pins the entire unit; this packet does not embed its own impossible self-commit hash.
