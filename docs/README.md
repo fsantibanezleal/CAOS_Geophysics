@@ -2,6 +2,8 @@
 
 This wiki is the durable technical record of the workbench. It explains what the product is and is not, the physics, exact data contracts, local scripts, offline and browser lanes, framework choices, cases, experiments, and deployment boundary.
 
+The [approved replacement SDD](design/SDD.md), [current plan review](design/plan-status-2026-10-03.md) and [requirement ledger](design/convergence.json) govern the active rebuild. The 0.04.001 release and its completed checklists below are historical; they do not establish acceptance of the user-data platform.
+
 - [Architecture](architecture/architecture.md): system flow, determinism, lanes, and release boundary.
 - [Frameworks](frameworks/frameworks.md): research-selected engines and why each is used.
 - [Problem types](problem-types/problem-types.md): gravity, magnetics, MT, FWI, learned, and joint methods.
