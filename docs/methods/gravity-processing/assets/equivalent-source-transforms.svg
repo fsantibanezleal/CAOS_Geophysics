@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" role="img" aria-labelledby="title desc">
+ <title id="title">M01 local equivalent-source geometry and blocked validation</title>
+ <desc id="desc">Original fixed metric receiver geometry is retained. Training sources lie below training stations; upward targets above all receivers are masked by training coverage. Spatial holdout values never select the layer. Coefficients are not density.</desc>
+ <style>
+ :root {--bg:#f8fafc;--panel:#e8eef6;--text:#132239;--muted:#526780;--train:#087fa8;--test:#a76522;--line:#67839f;--mask:#b7c4d5}
+ @media (prefers-color-scheme: dark) {:root {--bg:#101b2c;--panel:#1e3048;--text:#e7edf7;--muted:#b8c8db;--train:#57c4eb;--test:#ffc17c;--line:#8faac8;--mask:#405572}}
+ text {font-family:DejaVu Sans,Arial,sans-serif;fill:var(--text);font-size:19px}
+ .small {font-size:16px;fill:var(--muted)} .head {font-size:25px;font-weight:600}
+ .panel {fill:var(--panel);stroke:var(--line);stroke-width:1.2}
+ .link {stroke:var(--line);stroke-width:2;fill:none;marker-end:url(#arrow)}
+ .train {fill:var(--train)} .test {fill:var(--test)} .line {stroke:var(--line);stroke-width:2}
+ </style>
+ <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="var(--line)"/></marker></defs>
+ <rect width="1200" height="820" fill="var(--bg)"/>
+ <text x="40" y="45" class="head">M01 • fixed metric geometry → supported upward field</text>
+ <text x="40" y="76" class="small">Down-positive gravity (mGal); easting, northing, upward (m); declared WGS84 ellipsoidal heights</text>
+ <rect x="35" y="98" width="660" height="410" rx="12" class="panel"/>
+ <text x="58" y="132">Targets at or above every receiver; no downward continuation</text>
+ <path d="M90 202H646" class="line"/>
+ <rect x="92" y="185" width="78" height="32" fill="var(--mask)"/>
+ <rect x="522" y="185" width="124" height="32" fill="var(--mask)"/>
+ <g class="train"><circle cx="202" cy="201" r="5"/><circle cx="246" cy="201" r="5"/><circle cx="290" cy="201" r="5"/><circle cx="334" cy="201" r="5"/><circle cx="378" cy="201" r="5"/><circle cx="422" cy="201" r="5"/><circle cx="466" cy="201" r="5"/></g>
+ <text x="91" y="173" class="small">null: outside training coverage</text>
+ <path d="M90 323L155 311L224 331L293 302L362 314L431 326L500 297L565 306L646 320" fill="none" class="line"/>
+ <g class="train"><circle cx="155" cy="311" r="7"/><circle cx="224" cy="331" r="7"/><circle cx="362" cy="314" r="7"/><circle cx="431" cy="326" r="7"/><circle cx="565" cy="306" r="7"/></g>
+ <g class="test"><rect x="286" y="295" width="14" height="14"/><rect x="493" y="290" width="14" height="14"/></g>
+ <text x="91" y="360" class="small">Original receivers: training ● and spatial holdout ■</text>
+ <path d="M110 421H625" class="line"/>
+ <g class="train"><circle cx="155" cy="421" r="6"/><circle cx="224" cy="421" r="6"/><circle cx="362" cy="421" r="6"/><circle cx="431" cy="421" r="6"/><circle cx="565" cy="421" r="6"/></g>
+ <path d="M669 415V227" class="link"/>
+ <text x="91" y="456" class="small">Source plane: min(training upward) − candidate depth</text>
+ <text x="91" y="484" class="small">J = 1/r; coefficients in mGal·m, not density or mass</text>
+ <rect x="720" y="98" width="445" height="410" rx="12" class="panel"/>
+ <text x="743" y="132">Frozen horizontal blocks</text>
+ <g stroke="var(--line)" stroke-width="1"><path d="M757 161H1117V341H757Z" fill="var(--mask)"/>
+ <path d="M757 161H847V221H757ZM937 221H1027V281H937ZM1027 281H1117V341H1027Z" fill="var(--test)"/>
+ <path d="M847 161V341M937 161V341M1027 161V341M757 221H1117M757 281H1117" fill="none"/></g>
+ <text x="743" y="374" class="small">Outer holdout: evaluate only after selection</text>
+ <text x="743" y="405" class="small">Inner training blocks: depth / damping</text>
+ <text x="743" y="436" class="small">Height: training-only noise-transfer ceiling</text>
+ <text x="743" y="475" class="small">No heldout values in source coefficients</text>
+ <rect x="35" y="535" width="355" height="205" rx="12" class="panel"/>
+ <text x="57" y="571">1. Admit documented inputs</text>
+ <text x="57" y="606" class="small">Replay corrections; retain originals</text><text x="57" y="635" class="small">Known datum, component, errors</text><text x="57" y="664" class="small">Unknown or high noise → reject</text><text x="57" y="704" class="small">Field eligibility stays unresolved</text>
+ <path d="M393 637H419" class="link"/>
+ <rect x="425" y="535" width="355" height="205" rx="12" class="panel"/>
+ <text x="447" y="571">2. Fit real harmonic layer</text>
+ <text x="447" y="606" class="small">Column-scaled weighted ridge</text><text x="447" y="635" class="small">Inspect condition and alternate fits</text><text x="447" y="664" class="small">Conditional covariance L C Lᵀ</text><text x="447" y="704" class="small">Nonuniqueness ≠ geological truth</text>
+ <path d="M783 637H809" class="link"/>
+ <rect x="815" y="535" width="350" height="205" rx="12" class="panel"/>
+ <text x="837" y="571">3. Export supported results</text>
+ <text x="837" y="606" class="small">Training hull AND nearest distance</text><text x="837" y="635" class="small">Unsupported values / errors = null</text><text x="837" y="664" class="small">Metric maps, signed diagnostics</text><text x="837" y="704" class="small">JSON checkpoint + hash receipt</text>
+ <text x="40" y="780" class="small">Sampling is not resolution. Conditional σ excludes geometry, selection, bias and geological uncertainty.</text>
+ <text x="40" y="806" class="small">Independent buried-prism controls test physics; they do not close the actual USGS field-data gate.</text>
+</svg>

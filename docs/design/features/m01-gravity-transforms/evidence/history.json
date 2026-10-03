@@ -1,0 +1,44 @@
+{
+  "schema_version": "m01-review-evidence-history-1",
+  "historical_revision": "bfa5c24f6637dd633aa1f944d7900124e18b70bf",
+  "historical_receipts": [
+    "verification.json",
+    "control-export.json",
+    "svg-render.json"
+  ],
+  "historical_limit": "Original partial processing-field admission; not evidence of the later full receipt/capped parser gates",
+  "current_receipts": [
+    "verification-current.json",
+    "control-export-current.json"
+  ],
+  "current_scope": "Full deterministic receipt/input reconstruction/declared runtime compatibility and bounded strict reader; numerical operators unchanged",
+  "plot_artifacts": [
+    {
+      "name": "diagnostics-dark.png",
+      "current_sha256": "f3579c10f389267b7106b8179222933bd31ee7d5ed357a5990b601b6f19c4001",
+      "historical_sha256": "f3579c10f389267b7106b8179222933bd31ee7d5ed357a5990b601b6f19c4001",
+      "unchanged": true
+    },
+    {
+      "name": "diagnostics-light.png",
+      "current_sha256": "2f299c6468db16c5689767344302b5fbe4c55d80253b6498b60ee66019814967",
+      "historical_sha256": "2f299c6468db16c5689767344302b5fbe4c55d80253b6498b60ee66019814967",
+      "unchanged": true
+    },
+    {
+      "name": "maps-dark.png",
+      "current_sha256": "e4170868115ebe70ef9dbc8ef0f96157e5ef7b323281934b9ae116e6e5a209fb",
+      "historical_sha256": "e4170868115ebe70ef9dbc8ef0f96157e5ef7b323281934b9ae116e6e5a209fb",
+      "unchanged": true
+    },
+    {
+      "name": "maps-light.png",
+      "current_sha256": "84eb961b2047425afec3032d72af0876810453980d31609232b28e8cd0bbe390",
+      "historical_sha256": "84eb961b2047425afec3032d72af0876810453980d31609232b28e8cd0bbe390",
+      "unchanged": true
+    }
+  ],
+  "field_bytes_read": 0,
+  "field_eligibility": "closed for unresolved scientific contracts",
+  "api_approval": false
+}

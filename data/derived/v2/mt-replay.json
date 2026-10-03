@@ -1,0 +1,1780 @@
+{
+  "schema": "inverse-earth/combined-candidate-mt-replay/v1",
+  "status": "PASS",
+  "recorded_at_utc": "2026-10-03T07:29:13.818859+00:00",
+  "source_revision": "421b9992fa2f55e33f16a89e936b97e5931beeea",
+  "source_sha256": {
+    "data-pipeline/electromagnetics.py": "9e5bed8fbc28772a6c6c6ffe3128ea91b5aefafc2063f2da0b0b4283e592ce7a",
+    "data-pipeline/edi.py": "1a6226f34cd36e3e30f6406a296c6f4e3bc38aa93ca5bda1d4f4428d3852b543",
+    "data-pipeline/geology.py": "d821a6681ab4d9b2c1d78b9c3df9be45f87e14d43d0dac17fbdad9d3ddd300c7",
+    "data-pipeline/provenance.py": "c590b9cbaae6cb3666d1a7c264a7ef936d9fe8b5b84cd55c74dfc39fd29adb00",
+    "data-pipeline/rebuild.py": "5eee455c26fd09c2eefff4a3ea5c0159b2ee07579a09d9f93d4e77ce72aca06f",
+    "data-pipeline/seismic.py": "e0d475c946edd07c906874511d4c53170db8180dcf0c74887da73bba35b55c85",
+    "scripts/build_field_screen.py": "890cede0318af4ae1345b60973745b7abfa88047561075f9f5a3f929acb9d4f2",
+    "scripts/validate_mt_replays.py": "4b89a957b7e4dc824054d818a7b176e87409f029d85b7322ceff4b5812e5798a",
+    "data-pipeline/seismic_batch.py": "c919ea877c9b6eacb3e1a5ba06d93b61fc7beebd3e044eb0a806b79908afdb71",
+    "data-pipeline/assemble_fwi_candidate.py": "eef040d9fca95961b306d18163cfc624f60e85cdad08f617260a02e238e79abd",
+    "data-pipeline/catalog.py": "d53796acc25d33ead9c7ed6b6415bbf93967e3fb01561b2f8a99447ba49fa6fe",
+    "scripts/check_artifacts.py": "b7fbb8b2f24b24d6ab8828c7f4c40abd6f5fdd1820c063ae4b6290bfbe9a6872",
+    "scripts/validate_fwi_exports.py": "5f93b7b32df091450861595429be28913fc43aa85a98283a8e3a813182869548",
+    "scripts/validate_fwi_mt_candidate.py": "5f1ba898d9b05d35606410368e410ac411870dd963532da17b14d5df4c611af4"
+  },
+  "python": "3.12.10",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "dependencies": {
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "torch": "2.14.0+cu126",
+    "deepwave": "0.0.27",
+    "mt-metadata": "1.0.10",
+    "pandas": "2.2.3"
+  },
+  "artifact_gate": {
+    "cases": 20,
+    "runs": 120,
+    "method_results": 348
+  },
+  "conditions": 120,
+  "method_results": 348,
+  "mt_conditions": 24,
+  "mt_method_results": 72,
+  "bootstrap_refits": 3072,
+  "states_replayed": 4038,
+  "mt_verdicts": {
+    "recovered": 61,
+    "unresolved": 11
+  },
+  "verdicts": {
+    "recovered": 122,
+    "unresolved": 184,
+    "negative-control": 36,
+    "failed": 6
+  },
+  "tolerances": {
+    "prediction_rtol": 3e-05,
+    "prediction_atol": 1e-10,
+    "metric_rtol": 0.0002,
+    "metric_atol": 2e-05,
+    "residual_atol": "existing 2e-6 maximum data/prediction amplitude cancellation allowance"
+  },
+  "catalog_sha256": "a31c7560ded59060a2a62deecf9a8734fcc5a51c304bd1cdf49206e9dec3fc70",
+  "release_sha256": "91e8e75118cf0d7dda714bda4a17c1df89a124772c25c1d047b5c484c4dc6786",
+  "canonical_tree_sha256": "7dfc0fc18a0a45988f501a7aaedbda12abca3628cfa403b19696bda618aba266",
+  "canonical_unchanged": true,
+  "field_screen": {
+    "artifact": "edi/clear-lake-cl061-screen.json",
+    "sha256": "0bb33c3fdeed7bec98064a753979d7f8184bdb89795fbbcd2c76ec6cc520e364",
+    "bytes": 50910,
+    "source_sha256": "90c5c96cd69d6d29c866a768097cb3b38bc20e8b9c143e24bf10b2d253261e83",
+    "source_bytes": 16411,
+    "parser_source_sha256": "1a6226f34cd36e3e30f6406a296c6f4e3bc38aa93ca5bda1d4f4428d3852b543",
+    "one_d_inversion_eligible": false,
+    "compatibility": {
+      "xx_component_wrms": 320.23326026462956,
+      "yy_component_wrms": 109.50787977874732,
+      "antisymmetry_conservative_wrms": 267.60003875190307,
+      "threshold": 3.0,
+      "passes_screen": false,
+      "criteria": "diagonal component WRMS <=3 and conservative antisymmetry WRMS <=3",
+      "caveat": "Necessary 1D consistency screen only, not proof of isotropy; static shift and 2D/3D ambiguity remain."
+    }
+  },
+  "edi_manifest_sha256": "92f24baf8f2920e60f0d10b70fd5f32b91c6293364d1fab794676b677e999413",
+  "artifacts": [
+    {
+      "path": "GRAVITY_INTRUSION/reference.json",
+      "sha256": "6a77da9441893c1e0671c36d11e6bf30aa5a7cb3428ffb8b95fa51de474a49ec",
+      "bytes": 1730096,
+      "reference_sha256": "6a77da9441893c1e0671c36d11e6bf30aa5a7cb3428ffb8b95fa51de474a49ec",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_INTRUSION/contrast.json",
+      "sha256": "26f53f6809b7ed3a9648a1b7d1ff8774e821432e68a45c7d7e9d8df5361ebb86",
+      "bytes": 1709649,
+      "reference_sha256": "26f53f6809b7ed3a9648a1b7d1ff8774e821432e68a45c7d7e9d8df5361ebb86",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_INTRUSION/noise.json",
+      "sha256": "25e5c039f8776d80b70efdf03bbe28cf9160d5e1ce814efc49d0b33570266357",
+      "bytes": 1717683,
+      "reference_sha256": "25e5c039f8776d80b70efdf03bbe28cf9160d5e1ce814efc49d0b33570266357",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_INTRUSION/acquisition.json",
+      "sha256": "56cfb8eb94c5d4333a069fe4e994caaaaee5617a4bd47d60b8cc8cfad29de3f9",
+      "bytes": 1726529,
+      "reference_sha256": "56cfb8eb94c5d4333a069fe4e994caaaaee5617a4bd47d60b8cc8cfad29de3f9",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_INTRUSION/coverage.json",
+      "sha256": "f67ae0a0e08f210f06ca5635bdb8bc9933b4f911846e97a7d881b20371ae0045",
+      "bytes": 1729491,
+      "reference_sha256": "f67ae0a0e08f210f06ca5635bdb8bc9933b4f911846e97a7d881b20371ae0045",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_INTRUSION/regularization.json",
+      "sha256": "954b6a652c775f0d755b0881e113b776f7a6b04de1213834ddf6a4a48d1b8855",
+      "bytes": 1734593,
+      "reference_sha256": "954b6a652c775f0d755b0881e113b776f7a6b04de1213834ddf6a4a48d1b8855",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_DEEP_BODY/reference.json",
+      "sha256": "8a63102579771bf7e0b1a2e42067e5b91cdb5dd7cfe5f4b062ce3d7c78eafaab",
+      "bytes": 1674695,
+      "reference_sha256": "8a63102579771bf7e0b1a2e42067e5b91cdb5dd7cfe5f4b062ce3d7c78eafaab",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_DEEP_BODY/contrast.json",
+      "sha256": "bb4aaca2a621f6513a7cf58676ed1d75fec05a045ed037ed5f8850845ca44eb2",
+      "bytes": 1661101,
+      "reference_sha256": "bb4aaca2a621f6513a7cf58676ed1d75fec05a045ed037ed5f8850845ca44eb2",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_DEEP_BODY/noise.json",
+      "sha256": "6c93ab05716ed074336883bcfe1db44b0001d1c10743528de6ca260d49fd82fb",
+      "bytes": 1666970,
+      "reference_sha256": "6c93ab05716ed074336883bcfe1db44b0001d1c10743528de6ca260d49fd82fb",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_DEEP_BODY/acquisition.json",
+      "sha256": "39ff2db5233ac8ec566a8175ed62175826bd00984e0ca6da76ed8fbec4e95a7b",
+      "bytes": 1681410,
+      "reference_sha256": "39ff2db5233ac8ec566a8175ed62175826bd00984e0ca6da76ed8fbec4e95a7b",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_DEEP_BODY/coverage.json",
+      "sha256": "c0c5121a27dad8ff3e66a23019abe85e9ad4d3e94e5cd84cb05642d15cb59b09",
+      "bytes": 1672903,
+      "reference_sha256": "c0c5121a27dad8ff3e66a23019abe85e9ad4d3e94e5cd84cb05642d15cb59b09",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_DEEP_BODY/regularization.json",
+      "sha256": "68edcd923ecd2150032869b5c06f012b050aa55c3e710a2298c4678afa400837",
+      "bytes": 1676248,
+      "reference_sha256": "68edcd923ecd2150032869b5c06f012b050aa55c3e710a2298c4678afa400837",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_NOISY/reference.json",
+      "sha256": "e4478b439142ac1b83a9899bcbac26f6fbf7b0b0abc152dcd6e7ba97bd5fa196",
+      "bytes": 1758996,
+      "reference_sha256": "e4478b439142ac1b83a9899bcbac26f6fbf7b0b0abc152dcd6e7ba97bd5fa196",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_NOISY/contrast.json",
+      "sha256": "61d9d7002a3fae98fdd49b9ae6845984805804b486cbcb6b025dc6ee14bf5c53",
+      "bytes": 1741513,
+      "reference_sha256": "61d9d7002a3fae98fdd49b9ae6845984805804b486cbcb6b025dc6ee14bf5c53",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_NOISY/noise.json",
+      "sha256": "67793e8fd95603790bd9d2fc1f4b47abcd96cd92dd31e7fb9b594ce003192c7d",
+      "bytes": 1746464,
+      "reference_sha256": "67793e8fd95603790bd9d2fc1f4b47abcd96cd92dd31e7fb9b594ce003192c7d",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_NOISY/acquisition.json",
+      "sha256": "529b59cf068e4f4b600472c18da1c719d0607d24005fbca182b513a79237c4a6",
+      "bytes": 1754236,
+      "reference_sha256": "529b59cf068e4f4b600472c18da1c719d0607d24005fbca182b513a79237c4a6",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_NOISY/coverage.json",
+      "sha256": "48049a5d0280a2de6f6c4ce11dc4837608e95e5a472a35d4d847ef4ec6b7826a",
+      "bytes": 1759985,
+      "reference_sha256": "48049a5d0280a2de6f6c4ce11dc4837608e95e5a472a35d4d847ef4ec6b7826a",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_NOISY/regularization.json",
+      "sha256": "369a6049f0dbbfd180aaf8179a88bf3af13418d42c2031bc25a4dbf53088b3e8",
+      "bytes": 1758342,
+      "reference_sha256": "369a6049f0dbbfd180aaf8179a88bf3af13418d42c2031bc25a4dbf53088b3e8",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_TILTED/reference.json",
+      "sha256": "86270a5c78eede7ce490e718fa1d568023bb6f3aacbb9885c599b27fdd61e7c1",
+      "bytes": 1635246,
+      "reference_sha256": "86270a5c78eede7ce490e718fa1d568023bb6f3aacbb9885c599b27fdd61e7c1",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_TILTED/contrast.json",
+      "sha256": "473195df32688c2b51f102f78c85322659ce25672ea234678eb48fabd6cb0b58",
+      "bytes": 1594776,
+      "reference_sha256": "473195df32688c2b51f102f78c85322659ce25672ea234678eb48fabd6cb0b58",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_TILTED/noise.json",
+      "sha256": "d1e716230f03e78bd56eb69e960894865bf4d2d0a051d47340c74f8f56c7d2b0",
+      "bytes": 1633021,
+      "reference_sha256": "d1e716230f03e78bd56eb69e960894865bf4d2d0a051d47340c74f8f56c7d2b0",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_TILTED/acquisition.json",
+      "sha256": "d8b71a4842e8101b8089ad9933d208f2e017beb183a441e607bca52faa362a73",
+      "bytes": 1626828,
+      "reference_sha256": "d8b71a4842e8101b8089ad9933d208f2e017beb183a441e607bca52faa362a73",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_TILTED/coverage.json",
+      "sha256": "9c6d4927ff45cae6e0e9a07760de89eaec0043b6c2d7edd35bdd2de654f82435",
+      "bytes": 1635556,
+      "reference_sha256": "9c6d4927ff45cae6e0e9a07760de89eaec0043b6c2d7edd35bdd2de654f82435",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "GRAVITY_TILTED/regularization.json",
+      "sha256": "9d67af7058b7cd3c450a071d47a4f441e355a2686b4e5bdc854181abc5b03e7d",
+      "bytes": 1639743,
+      "reference_sha256": "9d67af7058b7cd3c450a071d47a4f441e355a2686b4e5bdc854181abc5b03e7d",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DYKE/reference.json",
+      "sha256": "eb0923d42e7eea9b057fade63b7f82ffa90d7a76755792d72bb1c441ae251f2f",
+      "bytes": 2570758,
+      "reference_sha256": "eb0923d42e7eea9b057fade63b7f82ffa90d7a76755792d72bb1c441ae251f2f",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DYKE/contrast.json",
+      "sha256": "746aad9244a192e4c21e2948e80f65af42dd63159c09cb48d40fceba0b8d2b14",
+      "bytes": 2547939,
+      "reference_sha256": "746aad9244a192e4c21e2948e80f65af42dd63159c09cb48d40fceba0b8d2b14",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DYKE/noise.json",
+      "sha256": "a19796a987e8a01b6d8ef37111810970c88d5ca14a0e9c6a397ad28f9bdc6452",
+      "bytes": 2571656,
+      "reference_sha256": "a19796a987e8a01b6d8ef37111810970c88d5ca14a0e9c6a397ad28f9bdc6452",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DYKE/acquisition.json",
+      "sha256": "70275ff264b7bcd42880b848c9febaa68ad59e6f75f5420e2f7d41c0f21a23e4",
+      "bytes": 2567670,
+      "reference_sha256": "70275ff264b7bcd42880b848c9febaa68ad59e6f75f5420e2f7d41c0f21a23e4",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DYKE/coverage.json",
+      "sha256": "f626ddf8f668a100fd5399a8edc70b7f95bf07730f07d837231e9b7681d350ac",
+      "bytes": 2571065,
+      "reference_sha256": "f626ddf8f668a100fd5399a8edc70b7f95bf07730f07d837231e9b7681d350ac",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DYKE/regularization.json",
+      "sha256": "13421718ea71bf9ac3adc4ada4a1c35e097ae8def0497f74c26a7b62a8ce0b16",
+      "bytes": 2573915,
+      "reference_sha256": "13421718ea71bf9ac3adc4ada4a1c35e097ae8def0497f74c26a7b62a8ce0b16",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_REMANENCE/reference.json",
+      "sha256": "26ad186bbee755f886564f3639ca345bd4f06743665a8005ea0861210c86aa12",
+      "bytes": 2652208,
+      "reference_sha256": "26ad186bbee755f886564f3639ca345bd4f06743665a8005ea0861210c86aa12",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_REMANENCE/contrast.json",
+      "sha256": "f93ebf66f1b52fb8b8d69df60de7087b1ab47d55d97a8388abbebce90ad93181",
+      "bytes": 2629203,
+      "reference_sha256": "f93ebf66f1b52fb8b8d69df60de7087b1ab47d55d97a8388abbebce90ad93181",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_REMANENCE/noise.json",
+      "sha256": "e56acf377ce02a2ed3724275c08606fc2fb561b2e99df460eb83499d19e7e598",
+      "bytes": 2658801,
+      "reference_sha256": "e56acf377ce02a2ed3724275c08606fc2fb561b2e99df460eb83499d19e7e598",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_REMANENCE/acquisition.json",
+      "sha256": "fb517582edfea08723c464b0a6ed1b7f7005de59c3d759bd26aef3bb2432d133",
+      "bytes": 2635613,
+      "reference_sha256": "fb517582edfea08723c464b0a6ed1b7f7005de59c3d759bd26aef3bb2432d133",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_REMANENCE/coverage.json",
+      "sha256": "d6a71e599fca312b41f88c9933ea24bf74e42cbb1c90116de93a6ee6ae6ff935",
+      "bytes": 2655656,
+      "reference_sha256": "d6a71e599fca312b41f88c9933ea24bf74e42cbb1c90116de93a6ee6ae6ff935",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_REMANENCE/regularization.json",
+      "sha256": "4c5ae2c5af268935e55d3cd1cbe1af9727b88438d677a3e45f8a348f8f1aa391",
+      "bytes": 2665726,
+      "reference_sha256": "4c5ae2c5af268935e55d3cd1cbe1af9727b88438d677a3e45f8a348f8f1aa391",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DEEP/reference.json",
+      "sha256": "d4479020d72df20301db2db1873be1f0e2ea2d295027d1d2f427ca20fd801bf9",
+      "bytes": 2597814,
+      "reference_sha256": "d4479020d72df20301db2db1873be1f0e2ea2d295027d1d2f427ca20fd801bf9",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DEEP/contrast.json",
+      "sha256": "eb91039ec4a6ea70ecca871049078dff3b6a9b732b3cc93bead9ee7f6c1439c0",
+      "bytes": 2576906,
+      "reference_sha256": "eb91039ec4a6ea70ecca871049078dff3b6a9b732b3cc93bead9ee7f6c1439c0",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DEEP/noise.json",
+      "sha256": "f0d1b128bd629c403894265527d37b3b7443e85bfb7a0cde783695fea5f9c4f1",
+      "bytes": 2603787,
+      "reference_sha256": "f0d1b128bd629c403894265527d37b3b7443e85bfb7a0cde783695fea5f9c4f1",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DEEP/acquisition.json",
+      "sha256": "f7033b46e944936322010b900e812f9898a3f32939c846669a714f91a089dbe6",
+      "bytes": 2588785,
+      "reference_sha256": "f7033b46e944936322010b900e812f9898a3f32939c846669a714f91a089dbe6",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DEEP/coverage.json",
+      "sha256": "37ac11f263413442ce9c6b0a18bf135cbbb7482a122473afa60b7978070a3e6c",
+      "bytes": 2600142,
+      "reference_sha256": "37ac11f263413442ce9c6b0a18bf135cbbb7482a122473afa60b7978070a3e6c",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_DEEP/regularization.json",
+      "sha256": "3d58eac029e0f6bb54c1b2aae9aae68c6c36e49d84e3b52e5c9742e1150b3822",
+      "bytes": 2612839,
+      "reference_sha256": "3d58eac029e0f6bb54c1b2aae9aae68c6c36e49d84e3b52e5c9742e1150b3822",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_NOISY/reference.json",
+      "sha256": "8fd53eebc3befb597d33f8c26b06e34c7acf88a9a3b7afd77e24a07b5fbb1504",
+      "bytes": 2549733,
+      "reference_sha256": "8fd53eebc3befb597d33f8c26b06e34c7acf88a9a3b7afd77e24a07b5fbb1504",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_NOISY/contrast.json",
+      "sha256": "7fa6dbc5b1f8d5d069340ada2734714bfcdf5da9c9cf436dcfd73261d755dfdb",
+      "bytes": 2526290,
+      "reference_sha256": "7fa6dbc5b1f8d5d069340ada2734714bfcdf5da9c9cf436dcfd73261d755dfdb",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_NOISY/noise.json",
+      "sha256": "bad1357455736df633ee4f850b25db3b50199fcb71ee5dfea48397e9cc1f5519",
+      "bytes": 2547561,
+      "reference_sha256": "bad1357455736df633ee4f850b25db3b50199fcb71ee5dfea48397e9cc1f5519",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_NOISY/acquisition.json",
+      "sha256": "9e604dd5354502f95c598f6ca38e6fe009bb075fe321edd71bbc66ea3a5b63ac",
+      "bytes": 2544610,
+      "reference_sha256": "9e604dd5354502f95c598f6ca38e6fe009bb075fe321edd71bbc66ea3a5b63ac",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_NOISY/coverage.json",
+      "sha256": "602d1b149395d1d25adb334c262aa723c4857b746a3fcf37fd26bf0aa3c6768a",
+      "bytes": 2550314,
+      "reference_sha256": "602d1b149395d1d25adb334c262aa723c4857b746a3fcf37fd26bf0aa3c6768a",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MAGNETIC_NOISY/regularization.json",
+      "sha256": "dd17f2c9790bd77f84c784850cf55ebd158a63fed1fbc15641ced64c8f70e685",
+      "bytes": 2550713,
+      "reference_sha256": "dd17f2c9790bd77f84c784850cf55ebd158a63fed1fbc15641ced64c8f70e685",
+      "version": "0.04.000",
+      "generator_fingerprint": "edeeba1006f23138169a44a48399045bd418eea667bd6e8ae1ca27d45dde8db7"
+    },
+    {
+      "path": "MT_RESISTIVE/reference.json",
+      "sha256": "b0c0e4cd07dcb7f11900aa94e6ee163b1e4655fa5f3ef0ae441fcd41a9cba44d",
+      "bytes": 60373,
+      "reference_sha256": "2fe762ec968c3286d77ccb63fbb101e5d121c7cc2a27854b5b35400c1ee97734",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_RESISTIVE/contrast.json",
+      "sha256": "be79e088563925c80d001f3eb64befe9e8222102df93559d93b3a0ee023692a2",
+      "bytes": 59886,
+      "reference_sha256": "4c209cb87226c353e8b04c384cc741dd25c188bfbd783abc8d2271e0c10d49cf",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_RESISTIVE/noise.json",
+      "sha256": "96e3026c4c0e0e6ca21455528744440fecf814350d8c1b56e9fbb9bf1a62af9b",
+      "bytes": 59731,
+      "reference_sha256": "cdfd8678710ab14d6031bb3e68afaa49034d9002acbad1a7a6be2b9ad80d3c00",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_RESISTIVE/acquisition.json",
+      "sha256": "aa07e230601c873f85ff6f9f41cc8e7a1604a49ef806a9f9ba902781e15f87c2",
+      "bytes": 60214,
+      "reference_sha256": "1e0213c174bdc4131beda384cd3c4cfca909bfbb0245adc7fae59de8ba2c3d98",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_RESISTIVE/coverage.json",
+      "sha256": "4196386d584e9a93f2bafa374329342ef99811063c6fb2c9b5e3be197f36de18",
+      "bytes": 60008,
+      "reference_sha256": "0e4ebde204d570b8d5e56fa482bdee00e8a285fab8118b4dd6041418a53434c4",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_RESISTIVE/regularization.json",
+      "sha256": "c05d995900f4507d5dd37e1d4ad968aac2019d93a45a1623e9e21991a78d23dc",
+      "bytes": 60244,
+      "reference_sha256": "5f8dccecade542d56f73308c77d6898fd3f847480e6e47633a42b8ac958f7dc2",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_CONDUCTIVE/reference.json",
+      "sha256": "fe604653c1e0bd1f8c40e2e6f58339fcb45379173cb717b318ec3a9396f06716",
+      "bytes": 60151,
+      "reference_sha256": "7d1d2fc70a202ad030d5718ff61ae2b6a7e77e81f92ca9c1fe9b8f3bfde15d5e",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_CONDUCTIVE/contrast.json",
+      "sha256": "fa8338b04ee465aa37960c2c50664578bfc7a34421bdd29d9293875627c0489c",
+      "bytes": 60183,
+      "reference_sha256": "df2635a38b6f4107ef39236985fd16aaf143a0f2904b87a55cbd09354bd7bdd3",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_CONDUCTIVE/noise.json",
+      "sha256": "72d5dc26622b6ece6b498cdff9cc13df7b81aa4fad206d8c52087d4651fd2f4f",
+      "bytes": 59894,
+      "reference_sha256": "7509545f9e206443d78dabbfc2487980598e6ba78afa008c92b198abeeb3b4b2",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_CONDUCTIVE/acquisition.json",
+      "sha256": "a876e9eaef27e4e026a29eee27c7c35de8f36c58193c105f96a3406408beb698",
+      "bytes": 60181,
+      "reference_sha256": "3832d3dde64d7f246d40636e08c4d41dc40e8ef8dbc8cb39cd7b29be95c8a99f",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_CONDUCTIVE/coverage.json",
+      "sha256": "f1496222c85f3fe0f2cb77e03f7a2028032d00db31ba5afc18a66e643f051398",
+      "bytes": 59971,
+      "reference_sha256": "c903b48d134104fd04b12c790cda9156611a99213ca940497b28ae0d9db116ee",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_CONDUCTIVE/regularization.json",
+      "sha256": "8b170c30cfde39f2d699998682819d3586e69a93b47cbcfd9d062efb707d2884",
+      "bytes": 59353,
+      "reference_sha256": "bc1df176401183b0bbbc1c6d26b5bc6c57c79da7ffb0c05c4daf5fe14bbf5ba9",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_MIXED/reference.json",
+      "sha256": "6a6c772c0387f7912630b341492b7a9c6b9670119d0f5a1a8f536ad2cd794709",
+      "bytes": 68812,
+      "reference_sha256": "4fa3af8f1e7afb9a0eaa4d6cde6fe88e298e18ae508fc15f1d7d7ccd6b4f3171",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_MIXED/contrast.json",
+      "sha256": "ed6f08dc1c18a5ec6617a7fd6fbc5085cdcc107b74e2b76e3a4abcb961cea546",
+      "bytes": 69902,
+      "reference_sha256": "566fdc3d9b68f615b3b1bca12e10358835911af8fd9818c9ffb0b89a5d87e572",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_MIXED/noise.json",
+      "sha256": "955ab662011fae54e9f1b94402cb3f0be4a0d6d26a0b7f286c910bb2f1e6f8cc",
+      "bytes": 69858,
+      "reference_sha256": "a3a42f775343f6004041663c444b7580502d13b929d422b5b1ffb30a4359a7ca",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_MIXED/acquisition.json",
+      "sha256": "0b5c271837f3a9ed4fc8952f37524ded5f63d700ef4fb18454855239d06af955",
+      "bytes": 69572,
+      "reference_sha256": "bbac762b84b8d86f1ce7a76c689da47db01bf648991fedcd392bee752d2b2538",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_MIXED/coverage.json",
+      "sha256": "a232bcfff42a13317b242fb8067a6de71c579671691de4a9a55137d7c5686794",
+      "bytes": 70778,
+      "reference_sha256": "92efe2a9966989fe74c4464b64f6107f887326c1ff4c56b1f61a4f28aeb91117",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_MIXED/regularization.json",
+      "sha256": "a396d2de0d29365c710d3583787ccdd1e50f16c5cb9063e2d558f6989a2636cc",
+      "bytes": 68328,
+      "reference_sha256": "a3dc20f853eaeb64fce794c3210229c19db44a7ce1c260ec80be2a4767e9c026",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_NOISY/reference.json",
+      "sha256": "d8801352c8cab2143f5adf8ad540b543f74ae77f3fb954c7664df192259a4360",
+      "bytes": 63209,
+      "reference_sha256": "d034a82bc274841597bb9565feaaaa0a3434fc23b8926970e2bb9e4df56ce540",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_NOISY/contrast.json",
+      "sha256": "b54f00505ee5706e41294b83d0332104bb950a0f1c1b70c1c94045b2670add64",
+      "bytes": 63394,
+      "reference_sha256": "20688b975275ef1ff1569fdfa472c5b23f1465733b7b382e4bbd1ba9805c4462",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_NOISY/noise.json",
+      "sha256": "88d03d23f73835da99584f4fb9b17b6874ab499f878fc0416d8d9a777558a902",
+      "bytes": 63143,
+      "reference_sha256": "5e4f14dc7a114115d4130c166fffb92f6f65a22eef1953e8060cdff6405b430c",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_NOISY/acquisition.json",
+      "sha256": "2916c586f980b97ee8e4bf2bd4fc6c971e151a897e6dabf2628554aa320989d9",
+      "bytes": 63202,
+      "reference_sha256": "65d4699d9b96338dbd90e1c4aab33e69b00e3e8e4d1ac734b8b579afe978c8f1",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_NOISY/coverage.json",
+      "sha256": "8f76fdd9031f035098dd23f1ded14e347c72c2e50390f6cbc68a6c0e111aeaa2",
+      "bytes": 63453,
+      "reference_sha256": "c35730de2c555f5476e22d0ba3c272bc5359b9bc832f1581fb4c08eabec022e1",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "MT_NOISY/regularization.json",
+      "sha256": "0738a8d15cf91b8a2f7a35e8cb996723be9edd35540d2ada12abd446e4bdb03a",
+      "bytes": 63171,
+      "reference_sha256": "003e4205963dd413621417dac22fc748950b1e11c73b5386c4759db2fe4388a3",
+      "version": "0.04.001",
+      "generator_fingerprint": "4b89b557195acd9112b958ec11943cf16e33aeee7cd8f2fbe089cbe9886ef60b"
+    },
+    {
+      "path": "FWI_LAYERED/reference.json",
+      "sha256": "ea0167e6c150619e051a3f30729b125ed16f782014381f13edbc5617b6b07943",
+      "bytes": 24666052,
+      "reference_sha256": "9fd6e3081ccedeed57e14aeea2fe436f3387cfbf9b6881a087dfff597538c441",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_LAYERED/contrast.json",
+      "sha256": "71269cc3804fe218b66467f8c7062ca4b348cf0feb3d06bae77499b49ec33354",
+      "bytes": 24693026,
+      "reference_sha256": "3b4f1484219f7e9ba68c59f0f39d7f554adfce30607f1b2c5eb707c98f075188",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_LAYERED/noise.json",
+      "sha256": "f884ea63cfc015eb25cbcb04e69f13dab23850fe459fb460f6f74b0bfdcd5035",
+      "bytes": 24552052,
+      "reference_sha256": "a1a21736a773f2b51f24875cd0bbf8e5aad70b2129cd898ba6abf300f8c1e3b6",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_LAYERED/acquisition.json",
+      "sha256": "ead018aeb6519b2f644b3d06763c8cfe107e3ad9e8c32a0ac52a1af98357c2d3",
+      "bytes": 24183595,
+      "reference_sha256": "2e12a2905fb3dfbd7467a7659ec293ac163dce674bb98ad6cf228ea24fcaa1cc",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_LAYERED/coverage.json",
+      "sha256": "12cd4db5a5bd260d1ac4bc4b9c5580e8ff5e985b7eaf4c7048de352725f39ab0",
+      "bytes": 22952064,
+      "reference_sha256": "6f8f70b9149607623233120c6676ec6ebbe659b996a6639969ce3592ab889e2f",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_LAYERED/regularization.json",
+      "sha256": "1fd65462c4d79cc88325b1b701274be7ea37fe46bc0083385d822e29e519164b",
+      "bytes": 24656237,
+      "reference_sha256": "3453b79f728bd0f7fccaa161099ccee163dfa1aae2a546d6ec0ba1907293c48c",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_FAULT/reference.json",
+      "sha256": "a714a04749336607f604f12c5384b6995c5e916e9e4196a6a2e13e3e74751cce",
+      "bytes": 24623047,
+      "reference_sha256": "9582bcd8b68ce78904f02d9fed2701f2f9d6670304e63e1b4e97b4138c057b46",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_FAULT/contrast.json",
+      "sha256": "e450a0f6f0d9da74abf37ec1973cef04cda487bbcaeb24180b1cc57058029b89",
+      "bytes": 24648680,
+      "reference_sha256": "2d2899a49cfbb03a88c99cfe3e9522817cb1c2a0c7bf1376d6cbdd04d1bcce21",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_FAULT/noise.json",
+      "sha256": "aff9a2d908c0d9a1223796c7b68086c20fcbe3293c7cebca88c393daf05f3117",
+      "bytes": 24514690,
+      "reference_sha256": "b3158156793f04b9b96365898386260cab20da26a069a337beb227840b9ded4e",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_FAULT/acquisition.json",
+      "sha256": "5734f36be246efa1ca8374ac284e87b3b843af17f74cd8e63557a08fd32d3d92",
+      "bytes": 24194127,
+      "reference_sha256": "d3c86315b6cb5da45cba10820f88904f2a1406b5be1275df3bd8e5cc51ca60d1",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_FAULT/coverage.json",
+      "sha256": "52ec870be08a3dda855d3f7341373608b454a670c901defdb83faa0e5bd26301",
+      "bytes": 22918459,
+      "reference_sha256": "9d53182ffac40673cf42de2498dde21408e13a08edb16a8cd509e24477c28cd8",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_FAULT/regularization.json",
+      "sha256": "16ceb0ec75674b7b0a9dec5d864c402eca899588dfbd680c658443c2ab3908ce",
+      "bytes": 24616276,
+      "reference_sha256": "d0838a261b99d76d317e728a7e412ed5ef20945a47c033efe1725691eee3541f",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_CYCLE_SKIP/reference.json",
+      "sha256": "30f098ab9f251f1c55d2cad437a6bda1b47c623a01c331a937dd92023a4ef1a7",
+      "bytes": 25084270,
+      "reference_sha256": "01bdd643f1dcc821d7fd6d40f6d8f6c6ffb6ff32266fa1a1be55cb493f2729f9",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_CYCLE_SKIP/contrast.json",
+      "sha256": "849fb409d5d3bdb2c1c2c7b0a3f50acf1d3a1eff9b74aaf5cee84fa5ca84724c",
+      "bytes": 25131927,
+      "reference_sha256": "3bab39b021dc65f66cb194e1116886c127bfba2edba60227d4d1d1b0a946eaa5",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_CYCLE_SKIP/noise.json",
+      "sha256": "25067a6bb1d6002d184b65ced4277c40363b4ee0df48b76a65dcdf1400359283",
+      "bytes": 24970225,
+      "reference_sha256": "553e5d33b5c1c94ab5655fda3d90a078a796625f7e02873f36f878786a38e745",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_CYCLE_SKIP/acquisition.json",
+      "sha256": "b591c6f5a46b4dcecdc017b7430f7a2f29f11897724674454eb1baace39064af",
+      "bytes": 24446871,
+      "reference_sha256": "9f869b84345e33693fbfc3aab9d975dcb168e547f09420c575ae67b492ba8799",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_CYCLE_SKIP/coverage.json",
+      "sha256": "6561665fad161c0d63d2200ece1627fcbfff9b55230d64510653dee5a733c423",
+      "bytes": 23360800,
+      "reference_sha256": "3384bd2945812d9bd05f80e06c78da4468533443293feedfafc1cf442e4d5388",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_CYCLE_SKIP/regularization.json",
+      "sha256": "586c6f3915d808a50156990fc3a0eefb5ad3627d718d3ed2b904af00f5a708c0",
+      "bytes": 25078687,
+      "reference_sha256": "28e1a882d71f745bc9f7ffe005cc84683259c4c8910c52e5965d20e8f8a67476",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_NOISY/reference.json",
+      "sha256": "56a58ce185f40b7f60041527faf803ed3f6f2131296cb4707c7f62773c511c03",
+      "bytes": 24258223,
+      "reference_sha256": "3f8dc9d4dfcd53d1f35ebdf40231175749fc44a1aa267036793f8dfd5eeb0b99",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_NOISY/contrast.json",
+      "sha256": "1119a813597659745d771cd9d770ce7e129cef43a037e9dcc8fa66aba4094c2e",
+      "bytes": 24219925,
+      "reference_sha256": "3ca4b1d3a685c691d808d56e45c9c3421db1d41c1d4cc782d12dcb3080f9d693",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_NOISY/noise.json",
+      "sha256": "cb7dbd3e7958b919c15cca37f7ab5346061b85706bc14e797077a048dbc8f4e1",
+      "bytes": 24169927,
+      "reference_sha256": "302062054325ee07841d14dd710d6fbed50d59ec48e5922c5459655b9ffea675",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_NOISY/acquisition.json",
+      "sha256": "a62c272d897199ba61145f30f011f246c56202ead6bd0feecd79851df56d385b",
+      "bytes": 24038665,
+      "reference_sha256": "37110b7665d039de410e11a5e52e15fd2dc83783f46aa22a4938eb98108197e1",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_NOISY/coverage.json",
+      "sha256": "4ae24915e996763026bbcbbfe4ceb455d5ec5bdaa4b0146d615a57e96c7a4b7f",
+      "bytes": 22584212,
+      "reference_sha256": "af94d15cb00739462f742684bdfee77e86305cdd5ca9fccc05e345045a2d0116",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "FWI_NOISY/regularization.json",
+      "sha256": "17f2d3ecac39669b6946512e39126a04c687e50fe3ecdb981129358f8e82158c",
+      "bytes": 24244305,
+      "reference_sha256": "ee94486c540a6a58babd5ebc9f6ef4f62069dca0bf62787a0107fe8d68842d9c",
+      "version": "0.04.001",
+      "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375"
+    },
+    {
+      "path": "JOINT_SHARED/reference.json",
+      "sha256": "0de832e8566090b8a81383d7e1ed4a3fa3921d13acc38768c6b435fcf4da581f",
+      "bytes": 7148019,
+      "reference_sha256": "0de832e8566090b8a81383d7e1ed4a3fa3921d13acc38768c6b435fcf4da581f",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_SHARED/contrast.json",
+      "sha256": "f322618e2f0a4f6b39d16c1905bd2ce83f3d70598e49c7bcb7fcb7b561a8e0da",
+      "bytes": 6941742,
+      "reference_sha256": "f322618e2f0a4f6b39d16c1905bd2ce83f3d70598e49c7bcb7fcb7b561a8e0da",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_SHARED/noise.json",
+      "sha256": "157e14c52220b3fec3c75c644147f7ca6bd5a0b4865de842a1c9c0189736370e",
+      "bytes": 7164216,
+      "reference_sha256": "157e14c52220b3fec3c75c644147f7ca6bd5a0b4865de842a1c9c0189736370e",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_SHARED/acquisition.json",
+      "sha256": "146250d2a6bfe3fc6400702bc0db6905838699c37dc61509b923151acd095ea2",
+      "bytes": 7118156,
+      "reference_sha256": "146250d2a6bfe3fc6400702bc0db6905838699c37dc61509b923151acd095ea2",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_SHARED/coverage.json",
+      "sha256": "492e1b4afc24a6bd34fd1bb05929c09f8375a30cc4f0cc9eb6a6a56557534d4d",
+      "bytes": 7153884,
+      "reference_sha256": "492e1b4afc24a6bd34fd1bb05929c09f8375a30cc4f0cc9eb6a6a56557534d4d",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_SHARED/regularization.json",
+      "sha256": "1b850f0f210ccbf409bab8db092d23c946702efbad8bf83b2f5e78ef10fe6d3f",
+      "bytes": 7153799,
+      "reference_sha256": "1b850f0f210ccbf409bab8db092d23c946702efbad8bf83b2f5e78ef10fe6d3f",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_CONFLICT/reference.json",
+      "sha256": "9f83d3eb61fef3167c20f63ca168f19ce20f8301dfa246190fcc005a18ac945f",
+      "bytes": 7796315,
+      "reference_sha256": "9f83d3eb61fef3167c20f63ca168f19ce20f8301dfa246190fcc005a18ac945f",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_CONFLICT/contrast.json",
+      "sha256": "b6ee6559c00df3adfc76b998219313e4c54e13c6b76fa6f4810f4334c688c3f1",
+      "bytes": 7722897,
+      "reference_sha256": "b6ee6559c00df3adfc76b998219313e4c54e13c6b76fa6f4810f4334c688c3f1",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_CONFLICT/noise.json",
+      "sha256": "db0a5dff2e6fd1be161f56611160c7b480d8ba93fc2709190730c398dc771c9f",
+      "bytes": 7758606,
+      "reference_sha256": "db0a5dff2e6fd1be161f56611160c7b480d8ba93fc2709190730c398dc771c9f",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_CONFLICT/acquisition.json",
+      "sha256": "50717348fb5f4ebeb3dc74fb9db2e2097116daf93646d296952fd149fcab4f0c",
+      "bytes": 7803058,
+      "reference_sha256": "50717348fb5f4ebeb3dc74fb9db2e2097116daf93646d296952fd149fcab4f0c",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_CONFLICT/coverage.json",
+      "sha256": "84dd017a2aed9bbf63bf237aaa2d221e039bf809ff4724b613ddf6af1906f1de",
+      "bytes": 7795801,
+      "reference_sha256": "84dd017a2aed9bbf63bf237aaa2d221e039bf809ff4724b613ddf6af1906f1de",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "JOINT_CONFLICT/regularization.json",
+      "sha256": "18b74083f846d5c6b003c2e7a78ade50c9722a3f11fe21121ca3f8f055139aef",
+      "bytes": 7791017,
+      "reference_sha256": "18b74083f846d5c6b003c2e7a78ade50c9722a3f11fe21121ca3f8f055139aef",
+      "version": "0.04.001",
+      "generator_fingerprint": "dd3e2f2f0a01372814a23b9e863cee5723af5dbb328c7575363e01e8aea0d3dd"
+    },
+    {
+      "path": "LEARNED_CNN/reference.json",
+      "sha256": "2e53ab02cdbfa35bbb03dbea30478b401e1b989978e34380c4baa8fc5fb702f6",
+      "bytes": 1741854,
+      "reference_sha256": "2e53ab02cdbfa35bbb03dbea30478b401e1b989978e34380c4baa8fc5fb702f6",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_CNN/contrast.json",
+      "sha256": "591d9da77aecfab6a89cd209ae73b65d0cd2b9b229f9810187ad251fa8b15ed5",
+      "bytes": 1723023,
+      "reference_sha256": "591d9da77aecfab6a89cd209ae73b65d0cd2b9b229f9810187ad251fa8b15ed5",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_CNN/noise.json",
+      "sha256": "4a5168fb7e23f3c2e631d923023341c1ac166a21c51ef198fdc0c1cc696db314",
+      "bytes": 1731981,
+      "reference_sha256": "4a5168fb7e23f3c2e631d923023341c1ac166a21c51ef198fdc0c1cc696db314",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_CNN/acquisition.json",
+      "sha256": "c336823260842cbdee6a70583667c36e8f529d5b5a6cbcdc442525edaf1f26c6",
+      "bytes": 1740212,
+      "reference_sha256": "c336823260842cbdee6a70583667c36e8f529d5b5a6cbcdc442525edaf1f26c6",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_CNN/coverage.json",
+      "sha256": "3e388a1b7b7df0de027bd53cc6def69bcf7d3ca8162bb42c7e49ff5b8ea420c4",
+      "bytes": 1740912,
+      "reference_sha256": "3e388a1b7b7df0de027bd53cc6def69bcf7d3ca8162bb42c7e49ff5b8ea420c4",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_CNN/regularization.json",
+      "sha256": "670bcab35a701e57b709be3884323c572f8c77dad5d5d0724f45cea55a6a7799",
+      "bytes": 1741914,
+      "reference_sha256": "670bcab35a701e57b709be3884323c572f8c77dad5d5d0724f45cea55a6a7799",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/reference.json",
+      "sha256": "e0cd48ac3a04de193830a1cb6bb1baa2eafa0ef502c3cc1be619695a9f1055af",
+      "bytes": 1730904,
+      "reference_sha256": "e0cd48ac3a04de193830a1cb6bb1baa2eafa0ef502c3cc1be619695a9f1055af",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/contrast.json",
+      "sha256": "f49b58b37504639771e585cc59088ccdd485a34d77a4231b3ad3a1f814c83281",
+      "bytes": 1703946,
+      "reference_sha256": "f49b58b37504639771e585cc59088ccdd485a34d77a4231b3ad3a1f814c83281",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/noise.json",
+      "sha256": "2fab66b19b3e6fce9baf340eaefbfb951633bd24815a6cd724e97f5d647f1557",
+      "bytes": 1720580,
+      "reference_sha256": "2fab66b19b3e6fce9baf340eaefbfb951633bd24815a6cd724e97f5d647f1557",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/acquisition.json",
+      "sha256": "c782cd48b0802230d37ea234c22cfb47cb68143609df564aa7e008e9f6ef8a9e",
+      "bytes": 1726363,
+      "reference_sha256": "c782cd48b0802230d37ea234c22cfb47cb68143609df564aa7e008e9f6ef8a9e",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/coverage.json",
+      "sha256": "f8fc6b1b8376c0d5cef42eea9fd3e91443a14bd480633791462ef3748c2c156b",
+      "bytes": 1730512,
+      "reference_sha256": "f8fc6b1b8376c0d5cef42eea9fd3e91443a14bd480633791462ef3748c2c156b",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/regularization.json",
+      "sha256": "b7f63b4f32b65d2687e383a43f8993c1439bcd51d7981a52e69ab2a5d1ea332a",
+      "bytes": 1731041,
+      "reference_sha256": "b7f63b4f32b65d2687e383a43f8993c1439bcd51d7981a52e69ab2a5d1ea332a",
+      "version": "0.04.001",
+      "generator_fingerprint": "d3efa93ec8118bf65789e6bafbe19bdd94185d6fe12d5d447372a4e809c6e60a"
+    }
+  ],
+  "records": [
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "reference",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 11,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "reference",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "reference",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "contrast",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "contrast",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "contrast",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "noise",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "noise",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "noise",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "acquisition",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 10,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "acquisition",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "acquisition",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "coverage",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "coverage",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "coverage",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "regularization",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 12,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "regularization",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_RESISTIVE",
+      "variant": "regularization",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "reference",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "reference",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "reference",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "contrast",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "contrast",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "contrast",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "noise",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "noise",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "noise",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "acquisition",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "acquisition",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "acquisition",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "coverage",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "coverage",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "coverage",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "regularization",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 9,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "regularization",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_CONDUCTIVE",
+      "variant": "regularization",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "reference",
+      "method": "mt-lm",
+      "status": "unresolved",
+      "states_replayed": 23,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "reference",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "reference",
+      "method": "mt-neural",
+      "status": "unresolved",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "contrast",
+      "method": "mt-lm",
+      "status": "unresolved",
+      "states_replayed": 28,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "contrast",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "contrast",
+      "method": "mt-neural",
+      "status": "unresolved",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "noise",
+      "method": "mt-lm",
+      "status": "unresolved",
+      "states_replayed": 28,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "noise",
+      "method": "mt-adam",
+      "status": "unresolved",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "noise",
+      "method": "mt-neural",
+      "status": "unresolved",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "acquisition",
+      "method": "mt-lm",
+      "status": "unresolved",
+      "states_replayed": 26,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "acquisition",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "acquisition",
+      "method": "mt-neural",
+      "status": "unresolved",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "coverage",
+      "method": "mt-lm",
+      "status": "unresolved",
+      "states_replayed": 32,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "coverage",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "coverage",
+      "method": "mt-neural",
+      "status": "unresolved",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "unresolved",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "regularization",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 24,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "regularization",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_MIXED",
+      "variant": "regularization",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "reference",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 10,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "reference",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "reference",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "contrast",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 11,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "contrast",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "contrast",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "noise",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 11,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "noise",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "noise",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "acquisition",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 10,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "acquisition",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "acquisition",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "coverage",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 11,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "coverage",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "coverage",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "regularization",
+      "method": "mt-lm",
+      "status": "recovered",
+      "states_replayed": 14,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "regularization",
+      "method": "mt-adam",
+      "status": "recovered",
+      "states_replayed": 62,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    },
+    {
+      "case": "MT_NOISY",
+      "variant": "regularization",
+      "method": "mt-neural",
+      "status": "recovered",
+      "states_replayed": 92,
+      "source_and_settings_match": true,
+      "reference_status": "recovered",
+      "max_reference_model_difference": 0.0
+    }
+  ],
+  "claim": "Independent combined-source MT/field replay. FWI replay and tests are separately required. Synthetic recovery is not geological truth; host/product acceptance is not asserted.",
+  "command": [
+    "D:\\_Repos\\_Web_Projects\\CAOS_Geophysics\\.venv-pipeline\\Scripts\\python.exe",
+    "scripts/validate_fwi_mt_candidate.py",
+    "--data",
+    "data/experiments/fwi-mt-full-candidate-20261003-run1",
+    "--source",
+    "data/downloads/clear-lake/USGS-GMEG.2022.cl061.edi",
+    "--expected-canonical-sha256",
+    "7dfc0fc18a0a45988f501a7aaedbda12abca3628cfa403b19696bda618aba266",
+    "--report",
+    "data/experiments/main-independent-review-20261003-run1/mt-replay.json"
+  ]
+}

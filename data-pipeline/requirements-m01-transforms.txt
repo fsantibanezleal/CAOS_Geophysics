@@ -1,0 +1,9 @@
+# Local M01 transforms/figures only. Extend the owned .venv-m01, not runtime or another agent's env.
+-r requirements-m01.txt
+matplotlib==3.10.8
+contourpy==1.4.0
+cycler==0.12.1
+fonttools==4.66.1
+kiwisolver==1.5.1
+pillow==12.3.0
+pyparsing==3.3.3
