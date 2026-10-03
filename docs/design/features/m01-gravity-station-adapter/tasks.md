@@ -1,10 +1,10 @@
 # M01 ordinary station adapter tasks and review hold
 
-Status: design only. The user assigned a prospective ordinary adapter and scoped tests, with explicit main review before code. Shared API integration remains main-owned after MT convergence. All implementation gates are prospective, not existing/pass claims.
+Status: approved for the bounded implementation on 2026-10-03 after main read all four documents/current contracts; original design commit 60f9b2e was pushed before code. Shared API integration remains main-owned after MT convergence. Implementation gates are not reported passed until actually run.
 
 - [x] R-GA01..R-GA11: inspect governance, approved parent product SDD, station API proposal, exact scientific core, existing independent tests and pinned primary references; persist research first.
 - [x] R-GA01..R-GA11: write exact ordinary request/result/receipt/safe-error boundaries and exclusive two-path ownership, explicit acceptance false and unchanged protected files.
-- [ ] R-GA01..R-GA11: main reviews this pinned documentation revision and approves or revises the boundary before implementation. No code/test placeholder is created meanwhile.
+- [x] R-GA01..R-GA11: main reviewed the pinned documentation and approved before implementation, adding the imported resolved __file__/preloaded-shadow condition. No code/test placeholder existed at approval.
 - [ ] R-GA01/R-GA02/R-GA03/R-GA08/R-GA09: after approval, add only the new scoped tests for native-object/bounded/hash/runtime/safe-error rejection and zero-call negative controls.
 - [ ] R-GA04/R-GA05/R-GA06/R-GA07: add genuine real-core positives, independent formula/error/unit/sign controls and exact-parent resume/original-preservation comparisons.
 - [ ] R-GA01..R-GA11: implement only data-pipeline/gravity_station_adapter.py against the approved shapes and existing pinned core; no filesystem publication, worker protocol or requirements changes.

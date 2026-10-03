@@ -1,10 +1,10 @@
 # M01 ordinary gravity station adapter sub-SDD and ownership
 
-Date: 2026-10-03. Status: proposed, awaiting main's review before code. Read [research](research.md) first; [requirements](requirements.md) names every prospective gate and [tasks](tasks.md) separates completed design work from implementation. This is a bounded seam within approved M01, not a new method/product, authenticated transport implementation or host approval.
+Date: 2026-10-03. Status: APPROVED by main after reading all four documents and current app contracts, before code. Original design commit 60f9b2eae7fa86cec8a00fc32fddc27c3c7e13ea was persisted and pushed first. Read [research](research.md) first; [requirements](requirements.md) names every gate and [tasks](tasks.md) separates completed design work from implementation. This is a bounded seam within approved M01, not a new method/product, authenticated transport implementation or host approval.
 
 ## Scope and exact ownership
 
-Current authorized action: write/persist/review this sub-SDD only. After main approves this contract, implementation ownership is exactly:
+Main approved implementation after the design commit. Exclusive implementation ownership is exactly:
 
 - data-pipeline/gravity_station_adapter.py, new ordinary local module, not an internal package.
 - tests/numerics/test_gravity_station_adapter.py, new scoped unit tests with real numerical positives.
@@ -49,6 +49,8 @@ The adapter receives an already decoded object, so it cannot discover duplicate 
 ## Execution, runtime and immutable scientific result
 
 Check the fixed sibling core file's reviewed SHA-256 before a fixed lazy import inside the callable, then verify actual installed core PINS before numerics. This allows missing dependencies/import failures to produce a safe runtime record and prevents an unexpected core file from being imported by the adapter. No user-controlled import mechanism or sys.path change is added. Expected engines are exactly Boule 0.5.0, Harmonica 0.7.0, NumPy 2.2.6 and SciPy 1.15.2, matching the unchanged core PINS. Proposed compatibility lane: CPython 3.12.x release runtime, matching the reviewed isolated environment, with the actual patch recorded rather than invented or compared with an old parent patch. A core or engine change requires a new review; no installation, fallback or requirements edit occurs. Missing dependencies/pins or an unreadable trusted module fail closed. Module-file identity is a reviewed code-integrity control, not protection against a malicious interpreter or authenticated package-origin proof.
+
+Main's approval adds the explicit trusted-import condition: the imported ordinary module's __file__ must resolve to that same fixed sibling file. A preloaded shadow in sys.modules rejects before numerical execution; checking only the sibling's disk hash does not verify which module Python actually imported. Check a preloaded module before import and the returned module after import, without using a user-provided path or rewriting sys.path. Tests cover a ModuleType shadow with a different __file__, missing/invalid __file__, and the real same-file module. This is a file-location/code-integrity check, not authenticated-origin proof.
 
 Validate config with the core parser, retaining both its exact submitted form and explicit normalized defaults for the receipt. Plate/terrain targets still require explicit density and density SD; no adapter default makes missing physical information present. Existing nonphysical QC defaults are recorded exactly as the core normalizes them. Nothing is inserted into the submitted dataset/config, and no terrain/drift/tide/isostatic/curvature model is invented.
 
@@ -115,4 +117,4 @@ Parity, identity, mutation or privacy failure blocks adapter acceptance. Any nee
 
 ## Main review request and remaining authority
 
-Please review the exact six-key request, four-key result/receipt, callable name, native-object limits, fixed safe-error mapping, direct exact-parent resume policy and code fingerprint/runtime lane. Confirm the two implementation paths and unchanged scientific core before code starts. These choices are proposed ordinary-module boundaries, not claims that app/shared schema or MT worker protocols already use them. Main may align the boundary during this review without any shared-path edits here. Until main explicitly approves, implementation is held and host approval remains false.
+Main approved the exact six-key request, four-key result/receipt, callable name, native-object limits, fixed safe-error mapping, direct exact-parent resume policy and CPython 3.12/core-pin lane, with the imported-file check above. Implementation may now proceed only in the two assigned new paths plus these feature docs. App/shared schema and MT worker protocols remain separately main-owned; this approval is not shared integration authority. Host approval remains false. Main will independently review the final pinned unit before merging; no merge/deploy is authorized here.

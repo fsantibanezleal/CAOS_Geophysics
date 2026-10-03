@@ -1,6 +1,6 @@
 # M01 ordinary gravity station adapter requirements
 
-Status: planned. Main review required before implementation. All gates below are prospective, unimplemented test names in one new scoped file. Parent product SDD approval is retained; neither this draft nor a future local adapter pass grants API/host/field/full-M01 acceptance.
+Status: planned. Main approved the persisted design before code on 2026-10-03, including the explicit imported-file shadow check. Gates remain prospective until implemented in the one new scoped test file. Parent product SDD approval is retained; neither this feature nor a future local adapter pass grants API/host/field/full-M01 acceptance.
 
 R-GA01 WHEN the ordinary adapter receives a request, THE adapter SHALL accept only the exact version/method/dataset/config/integrity boundary in design.md and reject CSV/provider/flag-only objects, unknown operational variants and additional keys without scientific reinterpretation. Gate: tests/numerics/test_gravity_station_adapter.py::test_exact_contract_and_unsupported_inputs.
 
@@ -18,7 +18,7 @@ R-GA07 THE adapter SHALL preserve full uncertainty model/components/warnings and
 
 R-GA08 IF request/core/environment/result verification fails, THEN THE adapter SHALL emit only the fixed safe error record in design.md, no success/partial scientific result, raw exception text, arbitrary keys, citations, values, paths or tracebacks. Gate: tests/numerics/test_gravity_station_adapter.py::test_safe_errors_do_not_disclose_input.
 
-R-GA09 IF the reviewed core fingerprint, pinned engine versions or declared runtime lane differs, THEN THE adapter SHALL fail closed without numerical execution or dependency/environment changes. Gate: tests/numerics/test_gravity_station_adapter.py::test_runtime_and_core_pin_fail_closed.
+R-GA09 IF the reviewed core fingerprint, imported resolved __file__, pinned engine versions or declared runtime lane differs, THEN THE adapter SHALL fail closed without numerical execution or dependency/environment changes, including a preloaded shadow module. Gate: tests/numerics/test_gravity_station_adapter.py::test_runtime_and_core_pin_fail_closed.
 
 R-GA10 WHEN a result is returned, THE adapter SHALL verify fresh core receipt invariants and bind complete result/input/submitted-config/normalized-config/output/module/engine identities, preserving exact known keys and false acceptance declarations. Gate: tests/numerics/test_gravity_station_adapter.py::test_result_receipt_integrity.
 

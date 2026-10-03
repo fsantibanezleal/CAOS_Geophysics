@@ -1,6 +1,6 @@
 # M01 ordinary station adapter: pre-code research and evidence
 
-Date: 2026-10-03. Status: researched proposal, awaiting main's feature-contract review before code. This dossier narrows the existing [station API proposal](../m01-station-api-proposal/design.md) to one ordinary local adapter and its unit tests. The parent product SDD is approved; this adapter boundary is not yet approved. No scientific, API, storage or worker implementation is included.
+Date: 2026-10-03. This pre-code dossier was persisted in 60f9b2e before main's feature-contract review. Main subsequently approved the boundary, with an imported same-file/preloaded-shadow condition, before code. This dossier narrows the existing [station API proposal](../m01-station-api-proposal/design.md) to one ordinary local adapter and its unit tests. The parent product SDD is approved. No API, storage or worker implementation is included.
 
 ## Authority, baseline and direct repository evidence
 
