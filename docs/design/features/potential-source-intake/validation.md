@@ -48,3 +48,28 @@ Reviewed: ledger changes preserve existing modes/rights/URL restrictions; contra
 Known limitation: multi-file installation is not a transaction across OS faults or competing writers, although every installed object is independently byte-verified and immutable; use a single writer and identical retry. No claim of a complete product suite, full method acceptance, original field-data provenance closure, inversion, deploy or merge is made.
 
 Open scientific gates: original USGS attachment bytes and station-level author transformation lineage; adjudicated horizontal/vertical transforms and elevation datum; a real error model; magnetic acquisition/grid height semantics; applicable correction-state admission; independent field forward/heldout/inverse/uncertainty controls and full M01/M02 acceptance. Those are intentionally not fabricated to close this intake unit.
+
+## Persistence and exact changed paths
+
+Implementation milestone `241250041478167da5d05a4181a9a1acd5d3361d` was committed and pushed on the scoped branch. [PR #104](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/104) is open against develop and reports mergeable; the dedicated [named-test self-review](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/104#issuecomment-5966522136) is posted. At inspection, GitHub reports no PR status checks; this record does not claim remote CI success. No merge/deploy was performed. This closing documentation update is a separate scoped persistence milestone; the main agent owns subsequent integration.
+
+Compact evidence file SHA-256: `7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7`. Its acquisition/member/profile receipt hashes describe actual on-disk bytes and are not substitutes for the retained ignored files.
+
+Exactly 14 changed paths relative to the starting commit:
+
+```text
+data-pipeline/potential_sources.py
+data-pipeline/sources.py
+data/source-ledger.json
+docs/design/features/potential-source-intake/design.md
+docs/design/features/potential-source-intake/requirements.md
+docs/design/features/potential-source-intake/tasks.md
+docs/design/features/potential-source-intake/validation.md
+docs/guides/11_potential_source_intake.md
+docs/research/bartlett-source-review-2026-10-03.md
+docs/research/potential-source-intake-evidence-2026-10-03.json
+scripts/intake-potential-sources.ps1
+scripts/intake-potential-sources.sh
+tests/data/test_potential_sources.py
+tests/data/test_sources.py
+```

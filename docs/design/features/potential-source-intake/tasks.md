@@ -6,4 +6,4 @@
 - [x] PFI-04: implement strict principal-fact profile and physical negative controls; preserve original row/index channels and missingness without guessed heights, weights or corrections.
 - [x] PFI-05: publish guide 11/paired scripts and actual 2929-row source inspection evidence with exact receipt hashes; unresolved original datum/uncertainty/source gates remain ineligible.
 - [x] Validate scoped and existing data tests in the existing isolated environment used read-only; inspect raw ignores and paired-script equivalence. See validation record for named gates and platform skip.
-- [ ] Commit/push the scoped branch and self-review the develop PR; no merge, solver/field acceptance or deployment.
+- [x] Commit/push the scoped branch and self-review [develop PR #104](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/104); implementation milestone `2412500`, named-test [self-review](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/104#issuecomment-5966522136). No merge, solver/field acceptance or deployment. Exact validation/scope and open method gates are in `validation.md`.
