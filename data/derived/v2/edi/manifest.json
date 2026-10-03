@@ -156,7 +156,7 @@
       "station_url": "https://data.earthscope.org/app/products/portal/emtf/emtf_item.html?p=2022%2FMT_TF_USGS-GMEG.2022.cl061",
       "release_doi": "10.5066/P14KAQ3M",
       "transfer_function_doi": "10.17611/DP/EMTF/GMEG/Clearlake",
-      "parser_source_sha256": "2181a4fa4f6fe822949ba834b3adbaf1dee3dcdd6455b218a341648c200587b6",
+      "parser_source_sha256": "1a6226f34cd36e3e30f6406a296c6f4e3bc38aa93ca5bda1d4f4428d3852b543",
       "one_d_inversion_eligible": false,
       "observed_frequencies": 42,
       "citation_condition": "Data Citation Required; see artifact source_release and original station INFO"

@@ -16,6 +16,7 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
 - [Source to result](data-contract/01_source-to-result.md): rights, immutable raw bytes, typed observations, physical eligibility, processing and evidence boundaries, with a reproducible current API calculation.
 - [Source acquisition](guides/05_sources.md): reviewed provider links, immutable raw assets, rights, format dispatch and local receipts.
+- [Private EDI M05/M06 jobs](guides/08_online_edi_mt.md): authenticated original-byte tensor QC, conditional layered inverse, host admission and re-import.
 - [Pinned potential-field source intake](guides/11_potential_source_intake.md): reviewed archive/member hashes, bounded selective extraction, all-row profiling and the unresolved physical-metadata eligibility gate.
 - [Bartlett Springs source/correction review](research/bartlett-source-review-2026-10-03.md): original provider versus attributed author-transformed bytes, correction-state meanings, unresolved height/error semantics and licence boundaries.
 - [Cases](cases/README.md): category taxonomy and 20-case coverage matrix.

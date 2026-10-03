@@ -1,0 +1,32 @@
+{
+  "schema_version": "m01-static-svg-render-1",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Edg/154.0.4258.48",
+    "revision": "@80bb122d4912059dc0cf309273bbe3191ae80a62",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
+    "jsVersion": "15.4.11.6"
+  },
+  "source_sha256": "e79690d2a942fa64035335a87a01131515963a0eae22ae6f76f5cc79297b068b",
+  "receipt": [
+    {
+      "theme": "light",
+      "dark": false,
+      "background": "rgb(248, 250, 252)",
+      "outside": [],
+      "filename": "theory-light-cdp.png",
+      "bytes": 78451,
+      "sha256": "b6bc2238122c6222d706c06a033586a4ee332a733467ad2ba203480f09ab6ad6"
+    },
+    {
+      "theme": "dark",
+      "dark": true,
+      "background": "rgb(16, 27, 44)",
+      "outside": [],
+      "filename": "theory-dark-cdp.png",
+      "bytes": 78355,
+      "sha256": "1125d7ca52300e050448a4b11663d5f80182048580a99e0cb379f0152d8a75ad"
+    }
+  ],
+  "web_acceptance": false
+}

@@ -162,6 +162,10 @@ def parse_gravity_dataset(
 
 
 def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> None:
+    if dataset.modality == "edi_transfer_function":
+        from app.mt_contract import validate_edi_dataset
+        validate_edi_dataset(payload, dataset)
+        return
     if (payload.get("schema") != "geophysics.observation-dataset/v1"
             or payload.get("dataset_id") != dataset.id or payload.get("version") != dataset.version
             or payload.get("owner_id") != str(dataset.owner_id)
@@ -177,6 +181,10 @@ def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> Non
 
 
 def validate_result_identity(payload: dict, job: ProcessingJob) -> None:
+    if job.method_id.startswith("mt.edi-"):
+        from app.mt_contract import validate_mt_result
+        validate_mt_result(payload, job)
+        return
     if (payload.get("schema") != "geophysics.processing-result/v1"
             or payload.get("job_id") != job.id or payload.get("dataset_id") != job.dataset_id
             or payload.get("dataset_sha256") != job.dataset_sha256

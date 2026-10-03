@@ -102,7 +102,9 @@ def _relative_mse(pred, observed):
 def _run_stage(current, observed, active, frequency, grid, cutoff, beta, iterations, *, progress=None):
     parameter = _parameterize(current, grid)
     optimizer = torch.optim.LBFGS(
-        [parameter], lr=1., max_iter=1, history_size=15,
+        # max_iter=1 means one accepted update per call. PyTorch otherwise
+        # defaults max_eval to 1, leaving strong_wolfe no search iterations.
+        [parameter], lr=1., max_iter=1, max_eval=25, history_size=15,
         line_search_fn="strong_wolfe", tolerance_grad=1e-8, tolerance_change=1e-10)
     target = lowpass(observed, cutoff)
     scale = target[:, active].square().mean().clamp_min(1e-20)
@@ -206,6 +208,7 @@ def invert_observations(observed, initial, frequency=8., *, iterations=DEFAULT_I
             solver=dict(
                 optimizer="L-BFGS with strong-Wolfe line search", stopping="finite_budget",
                 iterations_per_stage=iterations, optimizer_calls=iterations*len(CONTROL_GRIDS),
+                lbfgs_max_eval_per_call=25,
                 closure_evaluations=closure_evaluations, terminal_update_evaluated=True,
                 selected_state="terminal evaluated state", bounds_m_s=list(VELOCITY_BOUNDS),
                 control_grids=[list(g) for g in CONTROL_GRIDS],
@@ -272,6 +275,28 @@ def recovery_evaluation(metrics, challenge=False):
 
 
 def solve_case(case, variant, iterations=DEFAULT_ITERATIONS, *, progress=None):
+    """Run the bounded inverse under a reproducible CUDA algorithm policy.
+
+    Deepwave gradient reductions can send L-BFGS down materially different
+    paths even when the synthetic observations are bitwise identical. Restore
+    the caller's global PyTorch flags after this single-case calculation.
+    """
+    previous_algorithms = torch.are_deterministic_algorithms_enabled()
+    previous_warn_only = torch.is_deterministic_algorithms_warn_only_enabled()
+    previous_cudnn_deterministic = torch.backends.cudnn.deterministic
+    previous_cudnn_benchmark = torch.backends.cudnn.benchmark
+    try:
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+        torch.use_deterministic_algorithms(True)
+        return _solve_case_deterministic(case, variant, iterations, progress=progress)
+    finally:
+        torch.use_deterministic_algorithms(previous_algorithms, warn_only=previous_warn_only)
+        torch.backends.cudnn.deterministic = previous_cudnn_deterministic
+        torch.backends.cudnn.benchmark = previous_cudnn_benchmark
+
+
+def _solve_case_deterministic(case, variant, iterations, *, progress=None):
     started = time.perf_counter()
     torch.manual_seed(case["seed"])
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -321,6 +346,7 @@ def solve_case(case, variant, iterations=DEFAULT_ITERATIONS, *, progress=None):
         receivers=(torch.linspace(6, 120, receivers).long()*12.5).tolist(), methods=methods,
         active_receivers=active.cpu().tolist(),
         parameters=dict(
+            deterministic_algorithms=True, cudnn_deterministic=True, cudnn_benchmark=False,
             frequency_hz=frequency, noise_fraction=noise, noise_sigma=sigma,
             receivers=receivers, regularization=beta, iterations=iterations,
             iterations_semantics="maximum L-BFGS calls per spatial stage (four stages)",

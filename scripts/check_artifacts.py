@@ -8,6 +8,7 @@ import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'data-pipeline'))
 from provenance import generator_fingerprint
+from artifact_versions import RUN_VERSIONS, allowed_run_version, validate_migration
 
 ROOT=Path(__file__).resolve().parents[1]/"data/derived/v2"
 EXPECTED_CASE_FAMILY={
@@ -38,6 +39,12 @@ def assert_method_matrix(family, run_methods, catalog_methods):
     assert set(catalog_methods)==expected, f'{family}: missing or unexpected catalogue methods: {set(catalog_methods)^expected}'
 
 
+def assert_run_provenance(family, provenance, container_version):
+    run_version=provenance['version']
+    allowed_run_version(container_version,run_version)
+    assert provenance['generator_fingerprint']==generator_fingerprint(family,version=run_version),'Stale scientific source/settings'
+
+
 def finite(obj):
     if isinstance(obj,float):
         assert math.isfinite(obj),"non-finite number"
@@ -57,6 +64,7 @@ def numbers(obj):
 def validate():
     catalog=json.loads((ROOT/"catalog.json").read_text(encoding="utf-8"))
     assert catalog["schema"]=="inverse-earth.catalog/v2"
+    assert catalog['version'] in RUN_VERSIONS,'Unsupported container version'
     assert len(catalog["cases"])==20
     assert len({case['id'] for case in catalog['cases']})==20,'Duplicate case id'
     assert {case['id']:case['family'] for case in catalog['cases']}==EXPECTED_CASE_FAMILY,'Missing, extra or relabelled case'
@@ -90,9 +98,7 @@ def validate():
                     assert lo<=min(numbers(run['secondary_truth'])) and max(numbers(run['secondary_truth']))<=hi
             if case['family']=='seismic':
                 assert run.get('export_precision_significant_digits')==10,'FWI model export must round-trip float32 forward states'
-            run_version=run['provenance']['version']
-            assert run_version in {catalog['version'],'0.04.000'},'Unexpected run version'
-            assert run['provenance']['generator_fingerprint']==generator_fingerprint(case['family'],version=run_version),'Stale scientific source/settings'
+            assert_run_provenance(case['family'],run['provenance'],catalog['version'])
             assert run["provenance"]["synthetic"] and run["methods"]
             assert_method_matrix(case['family'],run['methods'],variant['methods'])
             if variant["id"]=="reference":
@@ -147,6 +153,7 @@ def validate():
     release=json.loads((ROOT/"release.json").read_text())
     assert release['complete'] and catalog['complete']
     assert release['version']==catalog['version'],'Catalogue/release version mismatch'
+    validate_migration(ROOT,catalog,release)
     assert (runs,cells)==(release["runs"],release["methods"])
     edi=json.loads((ROOT/'edi/manifest.json').read_text())
     assert len(edi['fixtures'])==3 and len(edi['calibration'])==2
