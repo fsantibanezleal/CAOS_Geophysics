@@ -1,0 +1,41 @@
+{
+  "derived_mgal": [
+    12.000000000024315
+  ],
+  "envelope_sha256": "3a454db790e502e92ff35a1db02454379035c88f9b490f313676a61bf40a3174",
+  "executed_utc": "2026-10-03T09:23:29.163227+00:00",
+  "fixture": "docs/methods/gravity-processing/examples/station-control.json",
+  "fixture_bytes": 1831,
+  "fixture_sha256": "11c68ecd3c938591fe705bca95be6a89702f6e92963e371dded4fd837748b052",
+  "original_request_unchanged": true,
+  "protected_field_bytes_read": 0,
+  "receipt": {
+    "acceptance": {
+      "field_source_verified": false,
+      "full_method_accepted": false,
+      "host_approved": false
+    },
+    "adapter_module_sha256": "b770b16ef87e83dd92f65a90472145ef93a525a9cedf7f55ee3e6f20f8a10cf8",
+    "adapter_version": "1",
+    "core_module_sha256": "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321",
+    "correction_result_sha256": "495b28c748571e219951e9c2b7d46f10ad26cc0f275424f1a8838fc84f90dd6a",
+    "engines": {
+      "boule": "0.5.0",
+      "harmonica": "0.7.0",
+      "numpy": "2.2.6",
+      "scipy": "1.15.2"
+    },
+    "input_dataset_sha256": "fd34156aea7d62ae85e9198827a83f628383c990b24ed4bcede7457b6170f86f",
+    "normalized_config_sha256": "2b036b10baa6a6d12bf3f29af0913e54bdc4a884615a5b80e8c1c0a4450436c2",
+    "output_dataset_sha256": "3ce5c4e0bf17d14e53be4115b640603e41d4e78ea2a31ce592e669eb76815ed6",
+    "python": "3.12.10",
+    "python_implementation": "CPython",
+    "request_sha256": "0792bfe11e32ca01d1b3a45b45f7f6c93169908beee1d2570342d9e2b92d1c90",
+    "submitted_config_sha256": "e2b35309e4fe0400127f519febd5dd68de9a31422485ab8044151fdbeab94e47"
+  },
+  "schema_version": "gravity-station-adapter-local-evidence-1",
+  "shared_api_implemented": false,
+  "source_kind": "synthetic_control",
+  "station_count": 1,
+  "target": "bouguer_disturbance"
+}

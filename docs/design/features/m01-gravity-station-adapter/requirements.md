@@ -1,6 +1,6 @@
 # M01 ordinary gravity station adapter requirements
 
-Status: planned. Main approved the persisted design before code on 2026-10-03, including the explicit imported-file shadow check. Gates remain prospective until implemented in the one new scoped test file. Parent product SDD approval is retained; neither this feature nor a future local adapter pass grants API/host/field/full-M01 acceptance.
+Status: local gates passed; main's independent pinned review/integration remains pending. Main approved the persisted design before code on 2026-10-03, including the explicit imported-file shadow check. All named gates below exist in the one new scoped test file. Parent product SDD approval is retained; this feature grants no API/host/field/full-M01 acceptance. Exact results and boundaries: [convergence](convergence.md).
 
 R-GA01 WHEN the ordinary adapter receives a request, THE adapter SHALL accept only the exact version/method/dataset/config/integrity boundary in design.md and reject CSV/provider/flag-only objects, unknown operational variants and additional keys without scientific reinterpretation. Gate: tests/numerics/test_gravity_station_adapter.py::test_exact_contract_and_unsupported_inputs.
 
