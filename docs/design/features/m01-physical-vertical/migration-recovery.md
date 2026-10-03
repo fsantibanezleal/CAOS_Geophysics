@@ -1,0 +1,97 @@
+# Proposed immutable version migration, publication and recovery
+
+Status: planned. No migration, SQL, recovery code or operational action is implemented. Read with [design](design.md) and [contracts](contracts.md). Baseline revision is exactly `0003_processing_jobs`; the next revision number/name and DDL fingerprint are assigned only after FULL design review and integration-base inspection, not forged here.
+
+## 1. Schema invariants and maintenance migration
+
+Explicit planned tables/changes:
+
+| Entity | New state / constraint |
+| --- | --- |
+| ObservationDataset | kind/root_dataset_id/parent_dataset_id/payload_schema; explicit family ordinal in existing version; named root-only raw/parser unique index; unique root/ordinal; composite owner/project/raw identity; immutable row/hash/path after publication. |
+| DatasetFamilySequence | Root-scoped allocator and published-plus-reserved count; mutable accounting only, never scientific payload. Allocate under BEGIN IMMEDIATE; gaps preserved. |
+| DatasetInputEdge | One fixed role scientific_input, one parent per current child, same root/raw/project/owner and exact parent dataset bytes/hash; no cycles, no rewriting edges. |
+| DatasetProduction | Unique child and unique producing physical job; exact result/request/config/module/receipt hashes; separate relation avoids a dataset/job FK cycle. |
+| ArtifactPublicationIntent | New root or job child/result exact targets/hash/bytes and identity snapshot; reserved UUID/ordinal, phase, liabilities. No public scientific object or success status. |
+| StorageLiability | Exact owned pending publication/deletion/quarantine bytes and disposition state, charged until exact reconciliation; no generic unknown-file sweep. |
+
+Constraints do not make cross-row scientific invariants automatic. Enforce composite FKs against named suitable unique parent identities with foreign_keys ON on every runtime connection. Only append-only child creation can add an edge, parent already committed and strictly lower ordinal in same root. Full startup/ops audits reconstruct graph and compare envelopes/production/request/result hashes. Direct SQL corruption, cross-root links, self/cycles, forged roots and orphan producers fail even if every JSON hash was recomputed. Never repurpose parser_version as a child discriminator or silently reinterpret old version=1 payloads.
+
+Root CHECK additionally requires version=1, root_dataset_id=id and parent=null; derived CHECK requires version>1 and non-null distinct parent. Proposed exact control-record payloads (DB column types and revision assigned after review): sequence has root_dataset_id/owner_id/project_id/raw_asset_id/next_ordinal/published_count/reserved_count. Edge has child_dataset_id/parent_dataset_id/root_dataset_id/owner_id/project_id/raw_asset_id/role/parent_dataset_sha256; role is only scientific_input. Production has child_dataset_id/job_id/root_dataset_id/owner_id/project_id/raw_asset_id/parent_dataset_id/parent_dataset_sha256/request_sha256/submitted_parameters_sha256/scientific_request_sha256/scientific_result_sha256/adapter_result_sha256/module_manifest_sha256/result_sha256/result_bytes/scientific_verdict. Transform adapter_result_sha256 is null: there is no ordinary Curie transform adapter; its scientific_result_sha256 binds the full actual transform output.
+
+Intent payload schema geophysics.physical-publication-intent/v1 has exactly intent_id/kind/owner_id/project_id/raw_asset_id/root_dataset_id/child_dataset_id/ordinal/job_id/parent_dataset_id/parent_dataset_sha256/raw_sha256/raw_bytes/request_sha256/module_manifest_sha256/submitted_parameters_sha256/scientific_request_sha256/scientific_result_sha256/adapter_result_sha256/stage_id/targets/reserved_permanent_bytes/reserved_scratch_bytes/created_at. Root intent kind=root has job/parent/request/scientific-result/adapter-result fields null; its payload digest is retained in the exact target. Job intent kind=job requires its job identities; adapter_result_sha256 is non-null for correction and null for transform. Each targets entry is exactly kind/id/storage_key/bytes/sha256, fixed dataset or result kind; root has one dataset target, job has one dataset and one result target. Keys are server-generated safe relative storage identities, never exposed in user responses. The only live intent phase is prepared, implicit in this schema; installation is classified by exact inventory, not guessed from an uncommitted phase label. Success/verified abandonment retires the intent and retains production or safe job/error plus monotonic ordinal history; unknown phases/fields fail closed.
+
+Liability payload schema geophysics.storage-liability/v1 has exactly liability_id/owner_id/project_id/origin_kind/origin_id/targets/charged_bytes/created_at/disposition. origin_kind is publication or deletion; disposition pending or quarantined. targets use the exact intent target shape with retained hashes; an unhashable unknown byte cannot be classified as safe cleanup and blocks audit/admission. Quarantine does not silently remove the account's debt. Exact verified removal or separately approved custody/accounting disposition closes the record without changing historical success/failed identities. These records are not permission to invent an off-host storage/deletion provider.
+
+Migration requires an owner-approved stopped-writer maintenance window and verified current backup/latest authority, with no active jobs, stages, intents or unresolved liabilities. Inventory all existing source/raw/root/job/result IDs/hashes/bytes and DDL before migration. Create the new exact schema through a reviewed Alembic SQLite rebuild where needed, preserving old IDs, all payload bytes/storage keys, root parser/version, source metadata, job foreign keys and result bytes. Backfill legacy roots with self root identity, null parent and v1 payload registry. Backfill sequence/count state without rewriting files; no invented physical history or producer for flag/MT roots.
+
+SQLite batch rebuild may need connection foreign-key enforcement disabled outside a transaction during controlled maintenance. That is not a runtime permission or guard bypass: prove it is restored to ON, run integrity_check and foreign_key_check, compare named constraints/indexes/triggers/table fingerprint and legacy identities before accepting the migrated candidate. SQLite connection behavior and explicit transaction boundaries must be tested on the pinned SQLAlchemy/driver versions; do not assume ORM begin automatically makes DDL transactional. Prefer migration/validation of a new private candidate with existing owner-controlled replacement procedure, not unreviewed live in-place mutation. No replacement/service activation is authorized by this document.
+
+Downgrade is refused once derived rows/intents/liabilities exist; it cannot flatten children into fake parser roots. Rollback uses the preserved pre-migration snapshot and independently latest authority through the reviewed new-target restore procedure, then independently reconciles later deletions. It must not resurrect a deleted project or discard a committed child as though migration never happened. No data-losing downgrade or automatic production path swap.
+
+## 2. Durable multi-artifact publication
+
+Both new physical roots and computed children need intent-backed publication. Existing legacy operations remain backward-compatible; their current crash limitations are not retroactively claimed solved by this SDD. A publication intent is durable control metadata, not an approved child. It contains exactly the expected target files, fixed owners/project/raw/parent/job IDs, reserved child UUID/ordinal, request/config/module/scientific receipt identities, byte/hash records, bounded stage identity, reserved permanent/scratch bytes and phase. Payload snapshots do not include their own digest. No caller supplies paths.
+
+Worker control flow:
+
+1. Queue transaction binds immutable parent/raw/request/approval and reserves method-specific permanent/scratch ceilings. Claim under existing single-worker lock. Record running and start one bounded scientific child outside DB transactions.
+2. Child writes only expected complete outputs, fsyncs and emits completion last. Parent validates bounded structure and all identity/hash relationships without numerics. Partial/unknown output is not success.
+3. BEGIN IMMEDIATE rechecks running/cancel/approval/ownership/quota and reserves final child UUID/ordinal plus durable prepared intent containing actual complete output hashes/bytes. Commit intent before installing targets. Scientific version gaps after later failure are intentional.
+4. Exclusively install each exact target, never replace existing. Retain complete accounted stage until final classification. Synchronize files/directory metadata under the measured platform procedure. Intent owns and charges these not-yet-published target bytes.
+5. Final BEGIN IMMEDIATE rechecks cancel and every identity/installed file hash, inserts dataset/edge/production relation and result metadata, sets succeeded/finished/measured resources, retires intent and converts reservations to actual committed charges in ONE commit. No file appears through a public API merely because it exists on disk.
+6. Cleanup only exact known stage files. Unknown leftovers or cleanup failure preserve evidence/liability and block inventory. The successful job may remain successful after its visible commit, but the operational tree is not clean/recovery-ready until known cleanup is proven. Do not erase success to hide an orphan or release its debt.
+
+Root creation uses the analogous bounded structural parse, root uniqueness/reservation/intent, exact installation and one commit of root/sequence/accounting. No scientific child runs during root parsing. Existing raw upload stream/stage and transport receipts remain private originals, not overwritten by this protocol.
+
+Cancellation linearizes on DB commits, not pointer time or process signal delivery. A queued cancellation releases only proven empty reservations. A running cancellation commits its flag, kills/reaps the full child tree and publishes nothing if that flag precedes step5's commit. Step5's write lock prevents a cancellation transaction from interleaving its decision; after success, cancellation409. A transport timeout is neither successful cancellation nor publication proof; reload actual job state.
+
+## 3. Crash and uncertain-commit matrix
+
+| Cut / state | Required outcome |
+| --- | --- |
+| Before claim or before complete output | Existing queued/running recovery policy; no child/result. Known files preserved on crash; active/orphan liabilities not casually released. |
+| Complete stage, no durable intent | No publication; unknown staged bytes fail closed. Operator classifies exact owned stage, preserves evidence, retries with new identity. |
+| Prepared intent, no installed target | No public child; all reservations retained until exact intent/stage verification and approved abandon/retry. |
+| Only child OR result installed | No public child/result/job success; inventory permits only exact intent-owned pending bytes and refuses backup/activation until reconciled. Never adopt half a publication. |
+| Both files installed, success commit not attempted | Same no-visibility/retained liability; recheck cancellation before any approved finalization. Initial implementation policy is abandon, not automatic resume. |
+| Success commit outcome uncertain | Read-only exact DB/intent/files classification under worker/maintenance lock. If coherent committed success exists, retain it; if uncommitted, do not fabricate it; if inconsistent, fail closed. Never unlink possibly committed targets. |
+| Success visible, stage cleanup interrupted | Child/result/production remain coherent and visible; leftover stage has charged known liability and blocks clean recovery. Exact owner-assisted cleanup only. |
+| Intent hash/owner/path/size mismatch or unknown byte | Fail closed, preserve exact bytes and restriction; no auto-adoption, recursive sweep, name-based deletion or successful recovery receipt. |
+
+This design does not promise atomic file installation, crash-free cleanup, automatic recovery or media erasure. It promises no partially committed scientific publication, explicit liabilities and refusal of unexplained state. A publication intent adds a reviewed known-pending state to startup classification; it does not bypass today's interrupted-staging refusal. Normal service startup must still refuse unresolved pending state until the separate approved reconciliation establishes a clean inventory.
+
+## 4. Quota and deletion
+
+Maintain AccountUsage.raw_bytes as raw-only for old compatibility. Derived_usage adds actual unique dataset files and successful result files, plus unconsumed permanent reservations, active scratch reservation and pending liabilities. Do not double-charge reserved capacity AND the same installed unpublished bytes: convert intent reservation to actual bytes plus remaining ceiling, with a precise per-target ledger. Actual duplicated JSON in child/result files is charged because it is real storage. Reconciliation must retain unexpected excess bytes as liability and block admission; it never sets them to zero. Export scratch/output is bounded by its separate measured request budget, not uncharged persistent storage.
+
+Serial BEGIN IMMEDIATE quota checks cover uploads, roots, submits, publication and deletion. Method lookup must be exact; unknown methods cannot inherit the legacy flag budget. Failed/cancelled requests only release capacity after their own exact known bytes are accounted/removed or retained as debt. Family count includes reserved versions; abandon decreases reserved count but never rewinds ordinal or reuses ID. Completed parents are charged once irrespective of graph fanout.
+
+Project deletion requires terminal jobs, no unresolved intents/liabilities and exact owned graph/inventory. Build a tombstone manifest containing every raw and every dataset/root/child/result (existing derived kind dataset/result), each ID/hash/bytes; graph edges/production identities are bound in a separately versioned tombstone extension. Preserve old tombstone schemas unchanged. No new storage path kind for a parser-suffix child. Proposed deletion relation order: production and input edges, family allocator/control records, jobs, derived dataset leaves in descending topological order, roots, raw assets, source records, project. Validate actual FKs; no blind cascade claiming survivor protection.
+
+Move only exact verified owned files into existing .deleting staging. Commit tombstone, complete row deletions and quota/liability transfer in one DB transaction. Before a definitely unattempted commit rollback, restore exact moves; after uncertain commit retain files until DB classification. Postcommit exact purge failure leaves charged pending-deletion debt and a durable receipt, not a successfully empty tree. Requests for deleted owned resources return404. Preserve the separate existing backup-erasure not_attempted/external pending meaning. Never implement a new off-host deletion provider or claim physical destruction of backups from this feature.
+
+## 5. Explicit recovery compatibility matrix
+
+Current ops source pins revision0003 and its exact SQLite DDL fingerprint `33a96998cd77c595a0d983461f84e1367a813e460b9c13222d07490fd9b86709`, verified directly in the inspected script. Future code must compute/persist a new approved fingerprint from its real migration and validate it independently, not accept any declared migration label.
+
+| Tool adapter / input | Expected behavior |
+| --- | --- |
+| Existing0003 tool, exact legacy0003 gravity/EDI | Preserve current strict capture/restore behavior and method/null/receipt limits. |
+| Existing0003 tool, new version-DAG revision | Refuse unknown revision before snapshot/restore success; no wildcard fallback. |
+| Existing0003 tool, changed DDL labelled0003 | Refuse exact DDL mismatch, including added tables/indexes/triggers. |
+| Reviewed new tool, legacy0003 snapshot | Explicit legacy adapter validates original bytes/FKs/quota/MT receipts; latest deletion authority remains mandatory. Return a clean legacy target or an explicitly recorded migration-on-new-copy, never silent in-place upgrade. |
+| Reviewed new tool, exact new DAG snapshot | Exact registered revision/DDL/tables/schema/method/edge/producer/root-family/byte registry. Restore latest tombstones and survivors with original member hashes. |
+| Any tool, future revision/schema/method/unknown graph role | Fail closed even if hashes and FK checks pass. No prefix, modality or version-range acceptance. |
+| Any tool, outstanding intent/stage/orphan/deletion liability | Capture refused until exact reviewed maintenance reconciliation; no incomplete scientific snapshot. |
+| New tool, new-schema tombstone + older snapshot | Validate authority extension explicitly; delete entire matching owned project graph in scratch; no resurrection or invented missing ancestor. |
+
+New recovery adapter must version all affected snapshot/table/manifest/tombstone/authority shapes explicitly. Preserve retained historical authority registrations and deletion receipts; no reinitialization to bypass missing history. If a new envelope carries old receipts, retain their original schema/bytes/digest and check via their explicit adapter rather than canonicalizing them into a newly guessed receipt. Unknown new tombstone extensions block older tools, not silently drop derivation identities.
+
+Keep current age trust/provenance/minimum-version, stopped/masked all-writers maintenance, restricted new scratch/new target, exact file inventory, hostile archive/link rejection, latest independently trusted authority/watermark, expiry, owner/deletion reconciliation, revoked sessions, raw quota rebuild and final clean startup audit. No numerical replay in capture/restore. Restore removes graph relations and dataset leaves before roots; successful survivors retain their exact raw/dataset/result hashes. Unknown schema/link/intent/identity fails before a validated target receipt.
+
+The existing external tombstone durability gap remains open: a source loss after deletion but before independently durable checkpoint cannot be repaired by hashing/encryption. This SDD specifies compatibility with main's eventual reviewed solution, not a new service or provider. Actual host drill, measured headroom and activation remain main-owned and unrun here.
+
+## 6. Required compatibility evidence before implementation acceptance
+
+Real migrated0003 fixture with gravity and M05/M06 plus old deletion receipts; same IDs/bytes/versions/parsers/jobs after new migration; branching correction/transform graph; concurrent root/version/quota races; every publication/deletion crash cut; real child cancellation/parent loss; exact old/new recovery rejection matrix; encrypted pre-deletion graph snapshot restored with latest post-deletion authority and a survivor; failed target/unknown authority/DDL/payload controls; legacy frontend/API/MT/ops regressions. Numerical/ownership/byte/operational verdicts remain separate. See [validation plan](validation-plan.md) for prospective named gates and evidence retention.

@@ -1,0 +1,79 @@
+# M01 physical upload, immutable derivation and recovery research
+
+Date: 2026-10-03. Status: researched design input, not implementation or online acceptance. Repository baseline: `cf086dc817d095d66e46fdab53cc235a8e70004b`, containing merged PR #117. Scope is only new `docs/research/m01-physical-vertical-*` and `docs/design/features/m01-physical-vertical/*`. No API, migration, worker, scientific core, frontend, canonical artifact, environment or operational state changes are authorized.
+
+## Research question and evidence boundaries
+
+How can a user-uploaded exact physical survey reach a real bounded correction child, immutable dataset-version graph, private export and selected-project instrument without converting statistical flags into physics or weakening existing storage/recovery guarantees?
+
+The governing approved [product SDD](../design/SDD.md), management Entry_point, ADR-0075/spec-driven development, ADR-0069 scientific completeness and ADR-0067 content discipline were inspected. The user's narrower allowed documentation paths govern this unit. Full main review of the complete feature SDD is required before product implementation. A docs PR is not that approval.
+
+The following source groups were read in full, including the complete worker, storage, model, format and recovery implementations. Hashes below identify actual checkout bytes, not a fabricated runtime receipt. Existing scientific convergence is attributed to its producing unit, not rerun by this docs unit.
+
+| Baseline source | SHA-256 | Consequence |
+| --- | --- | --- |
+| `app/models.py` | `6f467a846027b854b96101402a2da3036b9e9e6c3d07ed7b1c114bfc58b6d6bc` | Global raw/parser uniqueness currently prevents physical children. |
+| `app/formats.py` | `523f390dcac843efa1950ac51f6c57aed0da2feecb5411500664c26757970828` | Physical station JSON is not an admitted format. CSV detection is not physical correction admission. |
+| `app/schemas.py` | `fa19df62297e32ffc932ca7c877fbecfbb058e75fb9d239afd9289de4ebb08cc` | Existing metadata must not receive invented projection/epoch defaults. |
+| `app/projects.py` | `5b49bb8180f6b659dceb64354740f4cd3866b5eeadc79bc06ac1aab0ace4ff08` | Raw streaming, source permission, exact deletion manifests and uncertain commits are already protected. |
+| `app/processing.py` | `cd07136e17d20e2b5bc8f2d81ea4d20d991a423a4e220798a6728d4fb3626a5e` | Existing root/job/result/export routes are the integration seam, not a new standalone service. |
+| `app/processing_contract.py` | `8f91e480f4fd40908c33e4edfe1c6c7672212374496dcb7e02d2b7d5554ab496` | UTF-8 application canonicalization differs from the scientific ASCII-escaped digest. |
+| `app/processing_storage.py` | `6deb7e6b515bd4ff310b32c392febbc0d6825e20699ff9401062039f1caa09a3` | Derived accounting/inventory currently knows dataset and result files; unknown-method budget fallback must not admit new methods. |
+| `app/database.py` | `ee4baa961ed7c9070158809588c6661f29d2a94ffb7d50751c4090c538453c3f` | Startup requires exact private inventory and rejects interrupted stages. |
+| `app/worker.py` | `8c1dbf10fb425a1ea1f1494718b65c810662b5a266aec222a4e2c2aa01337235` | Existing fixed child, process-tree monitoring and cancellation are reused; one-result publication must become child-plus-result publication. |
+| `app/compute.py` | `f509dccfba0c8ff78e37d7ae82f4b4713d22f702147251c3dbdcc9a8d138b78d` | Existing gravity child produces statistical flags only, with unchanged observations/SD. |
+| `app/bundle.py` | `a73c6d752d44963ee5835a3c3778f345e4aaa106d4246aad80c2d4b1024da347` | Existing three-member bundle is not a complete physical derivation export. |
+| `app/mt_contract.py` | `8064be5c18236b9782d88fbf1ae09278ef6649642750dab1eb38c3982a504d3a` | EDI roots, M05 QC and M06 candidates remain separate exact variants. |
+| `app/mt_bundle.py` | `b651347bddf1ba009f1f7e37a9450e1e4c667ebf711657e183c87835ad6b4c87` | Preserve reviewed near-zero exported-residual semantics; do not repurpose MT verifier for gravity. |
+| `app/migrations/versions/0003_processing_jobs.py` | `06a9437a41e6665e1689cb85af0789c741e420dc380888139ed138c2abe4939f` | New graph needs an explicit migration, not parser suffixes or an unchanged revision label. |
+| `scripts/ops_recovery.py` | `e3ccf805d3eb1e2979923f7a58fbd5e465ad7090a2710fb52dc067a285ce42a4` | All 1221 lines inspected. Revision, DDL, tables, payloads and tombstones are exact allowlists. |
+| `data-pipeline/gravity_processing.py` | `7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321` | Real Boule/Harmonica corrections with original values and ordered history. |
+| `data-pipeline/gravity_transforms.py` | `d11d0f207c89c308c9f8711da2a31b84b8adaeb0c12597a5ecc89ce527fdecf0` | Separate full correction-result/geometry/config request; replay and dense fits belong inside the child. |
+| `frontend/src/api/processing-contracts.ts` | `a7807ca689b544cda0d65ff1ec60e1e03fdb9fcbefa4bbd31f9ef61557e447be` | Existing v1-only parser must gain a separate reviewed physical discriminated union, not relaxed gravity validation. |
+| `frontend/src/components/ProjectProcessingWorkbench.tsx` | `43b455ffba3bccde1c3138f8e54305622440da26efe143caec4806b33e0c6eec` | Selected-project App is the future instrument location; ownership reset and job polling already exist. |
+| `docs/operations/01_backup_restore.md` | `65443a344befd736720400576a9b59ceeb74495bce11f4b9a9234e5d46c411d2` | Maintenance/new-target recovery, latest authority and external deletion durability remain separate gates. |
+
+Also read: complete `app/config.py`, `app/views.py`, `frontend/src/components/GravityStationInstrument.tsx`, both data-contract landing/source-to-result documents, local correction and transform designs/convergence, station API proposal/design/validation plan, and ops research/design/requirements/tasks/convergence. Paths above are repository inputs; no protected survey, raw archive, private account database or previous QA receipt was opened or changed.
+
+## Ordinary adapter coordination
+
+Curie's separate read-only checkout advanced during inspection to `9ce5cc97a9d3e3c77a9a893868d1e1b1b3c3d048`. Its complete research/design/requirements/tasks/convergence were read. [PR #119](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/119) reports implementation `39f490f410b699c28200884fdda8f2aeff96864d`, adapter SHA-256 `b770b16ef87e83dd92f65a90472145ef93a525a9cedf7f55ee3e6f20f8a10cf8`, 90 adapter cases and a 222-pass/one-skip local combined run. These are producer-reported evidence, not this unit's executions or a merged dependency. Main's pinned review remains required. Nothing was copied or modified there.
+
+The approved seam is `run_station_corrections(request)`: exactly six request keys, four result keys, 13 receipt keys and fixed safe failure records. It admits 1..400 stations, depth 16, 200000 counted nodes, 8192-byte strings, 128-byte keys and 16 MiB scientific canonical request. The actual parent/config objects are hashed without float rewriting. Fixed core-file/imported-module identity and CPython 3.12.x/pinned engines are checked before a real single core call. The adapter is not a worker executable, authenticated envelope, raw parser, host authority or filesystem publisher. Its false acceptance declarations must remain false.
+
+## Scientific findings
+
+Correction states are `observed_absolute`, `gravity_disturbance`, `bouguer_disturbance`, `terrain_adjusted_disturbance`; their history lengths are 0, 2, 3, 4. Reference and elevation are one state transition, then plate and optional supplied residual terrain. The core verifies known history before appending later stages. It does not infer calibration/drift/tide, geoid, terrain or provider datum. A correction result has no fitted prediction or residual and no heldout score. MAD flags retain all stations; small/zero MAD gives nullable unassessable scores.
+
+First-order independent primitive contributions aggregate as an SD; conservative marginal contributions aggregate as a bound. Shared geoid/density contributions cannot become independent station SD by relabelling. Primitive zero errors can be valid deterministic controls. The transform instead requires positive fit SD, explicit dependence/covariance and station-ordered metric mapping/masks with reasons. Geometry is supplied, not computed or verified as a projection in an API request.
+
+The transform request is exactly `schema_version`, `correction_result`, `geometry`, `config`. It supports 20..400 stations, at least 20 retained noncollinear stations, 20-km bounds, at most 12 depth/damping combinations, 12000 grid nodes, eight heights and 2..5 inner folds. It reconstructs correction lineage, performs covariance/geometry numerical admission, freezes an outer block split, chooses candidates using inner training only, and fits the final equivalent source to outer training only. Conditional noise propagation is not geological uncertainty, coverage is not resolution, coefficients are not density, and its signed residual is predicted minus observed. `unmet_height_precision` is an actual scientific non-pass even when execution produces inspectable diagnostics.
+
+Existing transform admission can reject a genuine correction whose exact earlier integer serialization is unavailable to its reconstructed-parent policy. The new online design must retain exact ancestors and either pass the unchanged local admission or fail with that reason. Removing this scientific restriction requires a separately reviewed core amendment, not a transport rewrite that changes the parent's digest.
+
+Bartlett author's 2929-row principal facts remain outside this bounded lane and unresolved for datum/errors/original lineage. No convenience subset, old six-column flag CSV, renamed provider anomaly or synthetic replacement establishes physical field admission. Complete M01 field acceptance remains open even if the future product workflow passes on eligible authored controls.
+
+## Primary-source ledger and design inferences
+
+Sources were browsed from official publishers and fetched directly into memory, without saving full HTML or provider bytes. [HTTP byte receipts](m01-physical-vertical-primary-sources.json) record URL, retrieval time, status, size and SHA-256. These hashes identify documentation responses, not deployed dependencies or authenticated runtime binaries. Live documentation is not a proposal to upgrade installed packages.
+
+| Source | Verified semantics | Design inference, not a source guarantee |
+| --- | --- | --- |
+| [Python 3.12 JSON](https://docs.python.org/3.12/library/json.html) | Defaults accept repeated names and nonfinite constants; hooks can reject them. Encoding controls distinguish escaped ASCII from literal Unicode. Untrusted input needs size limits. | Reject duplicates before a dict loses them; reject overflow as well as constants; add explicit depth/node/token limits before scientific imports. Name both existing digest dialects. |
+| [SQLAlchemy constraints](https://docs.sqlalchemy.org/en/20/core/constraints.html) | Named unique and composite foreign-key constraints express row identity relationships. | Root uniqueness and graph identity must be independent constraints. An ORM relationship alone does not enforce owner/project identity. |
+| [SQLAlchemy transactions](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html) | Session transaction contexts coordinate commit/rollback of database work. | No ORM transaction makes multiple ordinary files part of SQLite's atomic commit. Keep numerical work outside queue/publication transactions. |
+| [SQLAlchemy SQLite dialect](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html) | `sqlite_where` supports partial indexes; SQLite connection/transaction behavior needs explicit handling. | Use a root-only unique index instead of suffixing parser identity. Preserve explicit BEGIN IMMEDIATE behavior and connection FK enforcement. |
+| [SQLite partial indexes](https://www.sqlite.org/partialindex.html) | A unique partial index enforces uniqueness only for rows satisfying its predicate. | One root per raw/parser can coexist with separately identified children. Do not depend on NULL combinations to express root uniqueness. |
+| [SQLite transactions](https://www.sqlite.org/lang_transaction.html) | IMMEDIATE starts a write transaction and can fail busy when another writer exists. | Serialize quota, version allocation, cancellation linearization and publication without holding a transaction across a scientific run. |
+| [SQLite foreign keys](https://www.sqlite.org/foreignkeys.html) | Enable enforcement per connection; changing it inside a transaction has no effect. Composite parent keys need suitable unique identity. | Migration FK handling is maintenance-only and must restore/check enforcement. Cross-row acyclicity additionally requires append-only rules and complete audits. |
+| [SQLite atomic commit](https://www.sqlite.org/atomiccommit.html) | Database commit guarantees rely on journal, synchronization and filesystem assumptions. | DB visibility can be atomic; external-file installation needs an exact durable publication intent and fail-closed crash reconciliation. |
+| [Alembic SQLite batch migration](https://alembic.sqlalchemy.org/en/latest/batch.html) | Constraint changes can rebuild tables; referencing FKs and named checks need explicit handling. | Backfill existing roots without rewriting payloads; test old jobs/FKs/indexes, interruption and unknown DDL. No uncontrolled live rebuild. |
+| [W3C PROV-O](https://www.w3.org/TR/prov-o/) | Entity derivation and activity use/generation are distinct provenance relations. | Separate dataset versions, input edges and producing jobs. This design is not an RDF/PROV conformance claim. |
+
+## Alternatives and decisions carried to full review
+
+Reject: method/config hashes embedded in parser suffixes; mutable replacement datasets; root/version increment derived only from a parent; generic gravity/unknown-method fallbacks; API-side history replay or covariance decomposition; one-result-file publication described as an atomic child graph; backup recovery that accepts every future revision; raw SHA equated with supplied provider-source SHA.
+
+Prefer: explicit append-only dataset root/parent/version identities; root-only raw/parser uniqueness; parent-bound correction and distinct transform requests; one monitored scientific child with aggregate CPU/wall/RSS/scratch ceilings; exact private multi-artifact intent; transactional publication of child/result/job/edges; complete quota and deletion inventory; registered revision/DDL/payload recovery compatibility; linked App views driven by actual immutable jobs. The detailed proposal and its not-run gates are in [feature design](../design/features/m01-physical-vertical/design.md).
+
+Research complete does not mean the architecture is approved, numerically executed online, browser-verified, host-admitted, deployed or full-M01 accepted.
