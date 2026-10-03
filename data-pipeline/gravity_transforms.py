@@ -8,8 +8,10 @@ from datetime import datetime, timezone
 from hashlib import sha256
 from importlib.metadata import version
 import json
+import math
 from pathlib import Path
 import platform
+import re
 import sys
 import tempfile
 
@@ -24,6 +26,8 @@ import verde as vd
 from gravity_processing import (
     GravityContractError,
     PINS,
+    STATES,
+    STATE_LENGTHS,
     UNIT_FACTORS,
     _keys,
     _number,
@@ -35,6 +39,22 @@ from gravity_processing import (
 
 TRANSFORM_PINS = {**PINS, "verde": "1.9.0", "scikit-learn": "1.9.1", "matplotlib": "3.10.8"}
 ROOT = Path(__file__).resolve().parents[1]
+MAX_INPUT_BYTES = 32 * 1024 * 1024
+MAX_JSON_DEPTH = 16
+PROCESSING_FIELDS = (
+    "method",
+    "input_sha256",
+    "output_sha256",
+    "config",
+    "engines",
+    "python",
+    "module_sha256",
+    "uncertainty_model",
+    "uncertainty_mgal",
+    "uncertainty_components_mgal",
+    "full_method_accepted",
+    "warnings",
+)
 
 
 def _array(values, count, label):
@@ -49,7 +69,60 @@ def _integer(value, label, low, high):
     return value
 
 
-def admit(request):
+def _processing_identity(original, dataset, processing, replay):
+    """Verify every deterministic receipt field, bounded parents and runtime declaration."""
+    expected = deepcopy(replay["processing"])
+    _keys(processing, tuple(expected), (), "correction_result.processing")
+    recorded_python = processing["python"]
+    if (
+        platform.python_implementation() != "CPython"
+        or sys.version_info[:2] != (3, 12)
+        or not isinstance(recorded_python, str)
+        or re.fullmatch(r"3\.12\.(0|[1-9][0-9]{0,2})", recorded_python) is None
+    ):
+        raise GravityContractError(
+            "processing.python: require a declared compatible CPython 3.12.x release, not verified origin"
+        )
+    candidates = {}
+    original_values = np.array([row["value_mgal"] for row in original["stations"]], dtype=float)
+    for index, state in enumerate(STATES[: STATES.index(dataset["state"])]):
+        candidate = deepcopy(original)
+        prefix = deepcopy(dataset["history"][: STATE_LENGTHS[index]])
+        candidate.update(state=state, history=prefix)
+        values = original_values.copy()
+        for record in prefix:
+            values += np.asarray(record["additions_mgal"], dtype=float)
+        for row, value in zip(candidate["stations"], values, strict=True):
+            row["value_mgal"] = float(value)
+        candidates[digest(candidate)] = state
+    input_sha = processing["input_sha256"]
+    if not isinstance(input_sha, str) or re.fullmatch(r"[0-9a-f]{64}", input_sha) is None:
+        raise GravityContractError("processing.input_sha256: require canonical SHA-256 string")
+    matched_state = candidates.get(input_sha)
+    if matched_state is None:
+        raise GravityContractError(
+            "processing.input_sha256: no independently reconstructable canonical earlier input; exact parent needed"
+        )
+    expected["input_sha256"] = processing["input_sha256"]
+    # Compatibility is not authentication. Preserve the declaration rather than
+    # silently rewriting it to the replay machine's patch version.
+    expected["python"] = recorded_python
+    if digest(processing) != digest(expected):
+        raise GravityContractError("correction_result.processing: deterministic receipt identity differs from replay")
+    return {
+        "input_state": matched_state,
+        "input_sha256": processing["input_sha256"],
+        "parent_policy": "Canonical converted observations or verified known-stage history prefix only",
+        "deterministic_receipt_verified": True,
+        "recorded_python": recorded_python,
+        "runtime_python": platform.python_version(),
+        "python_compatibility": "Reviewed CPython 3.12.x lane",
+        "recorded_runtime_origin_verified": False,
+        "recorded_runtime_implementation": "Not specified by correction receipt",
+    }
+
+
+def admit(request, *, return_identity=False):
     """Verify existing correction lineage without emitting/reapplying corrections."""
     _keys(request, ("schema_version", "correction_result", "geometry", "config"), (), "request")
     if request["schema_version"] != "gravity-transform-request-1":
@@ -57,6 +130,10 @@ def admit(request):
     result, geom, cfg = request["correction_result"], request["geometry"], request["config"]
     _keys(result, ("dataset", "processing", "qc"), (), "correction_result")
     dataset, processing = result["dataset"], result["processing"]
+    _keys(processing, PROCESSING_FIELDS, (), "correction_result.processing")
+    _keys(dataset, ("schema_version", "state", "metadata", "stations", "history"), (), "correction_result.dataset")
+    if not isinstance(dataset["stations"], list) or not 20 <= len(dataset["stations"]) <= 400:
+        raise GravityContractError("stations: local dense transform requires 20..400; no automatic thinning")
     if dataset.get("state") not in ("gravity_disturbance", "bouguer_disturbance", "terrain_adjusted_disturbance"):
         raise GravityContractError("state: require known corrected disturbance, not absolute/provider anomaly")
     # Full replay validates original units/datum/instrument status and the known
@@ -70,19 +147,10 @@ def admit(request):
     for row in original["stations"]:
         row["value_mgal"] = row["original_value"] * factor * (1 if meta["gravity_sign"] == "downward" else -1)
     replay = process_survey(original, processing["config"])
-    if (
-        replay["dataset"] != dataset
-        or processing["output_sha256"] != digest(dataset)
-        or result["qc"] != replay["qc"]
-        or processing["engines"] != PINS
-        or processing["uncertainty_mgal"] != replay["processing"]["uncertainty_mgal"]
-        or processing["uncertainty_components_mgal"] != replay["processing"]["uncertainty_components_mgal"]
-        or processing["uncertainty_model"] != replay["processing"]["uncertainty_model"]
-    ):
+    if digest(replay["dataset"]) != digest(dataset) or digest(result["qc"]) != digest(replay["qc"]):
         raise GravityContractError("correction_result: replay/hash/geometry/error lineage drift")
+    correction_identity = _processing_identity(original, dataset, processing, replay)
     n = len(dataset["stations"])
-    if not 20 <= n <= 400:
-        raise GravityContractError("stations: local dense transform requires 20..400; no automatic thinning")
     required = (
         "station_ids",
         "easting_m",
@@ -240,7 +308,8 @@ def admit(request):
         raise GravityContractError("error_model: explicitly declare station dependence")
     if np.max(sigma[active]) > cfg["max_input_sigma_mgal"]:
         raise GravityContractError("uncertainty_mgal: high noise exceeds declared precision budget")
-    return coords, np.array([r["value_mgal"] for r in dataset["stations"]]), sigma, covariance, active
+    admitted = (coords, np.array([r["value_mgal"] for r in dataset["stations"]]), sigma, covariance, active)
+    return (*admitted, correction_identity) if return_identity else admitted
 
 
 def support(train_coords, query, radius):
@@ -305,7 +374,7 @@ def transform_survey(request):
     engines = {name: version(name) for name in TRANSFORM_PINS}
     if engines != TRANSFORM_PINS:
         raise GravityContractError(f"environment: expected {TRANSFORM_PINS}, found {engines}")
-    coords, values, sigma, covariance, active = admit(request)
+    coords, values, sigma, covariance, active, correction_identity = admit(request, return_identity=True)
     cfg = request["config"]
     matrix = np.column_stack(coords[:2])
     outer = vd.BlockShuffleSplit(
@@ -538,6 +607,7 @@ def transform_survey(request):
             "python": platform.python_version(),
             "module_sha256": sha256(Path(__file__).read_bytes()).hexdigest(),
             "corrections_reapplied": False,
+            "correction_identity": correction_identity,
             "field_gate": "open",
             "full_method_accepted": False,
         },
@@ -603,15 +673,56 @@ def export_bundle(request, result, output):
     return receipt
 
 
+def _finite_json_float(value):
+    number = float(value)
+    if not math.isfinite(number):
+        raise GravityContractError("input: nonfinite/overflow JSON number")
+    return number
+
+
+def _reject_json_constant(value):
+    raise GravityContractError(f"input: nonfinite JSON constant {value}")
+
+
+def read_request(path):
+    """Bound actual bytes, structural nesting and strict JSON before any engine call."""
+    path = Path(path)
+    if not path.is_file():
+        raise GravityContractError("input: require regular file")
+    with path.open("rb") as stream:
+        raw = stream.read(MAX_INPUT_BYTES + 1)
+    if len(raw) > MAX_INPUT_BYTES:
+        raise GravityContractError("input: actual bytes read exceed 32 MiB cap")
+    content = raw.decode("utf-8", errors="strict")
+    depth, quoted, escaped = 0, False, False
+    for character in content:
+        if quoted:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                quoted = False
+        elif character == '"':
+            quoted = True
+        elif character in "[{":
+            depth += 1
+            if depth > MAX_JSON_DEPTH:
+                raise GravityContractError("input: JSON nesting exceeds depth 16")
+        elif character in "]}":
+            depth -= 1
+    return json.loads(
+        content, object_pairs_hook=_unique_object, parse_constant=_reject_json_constant, parse_float=_finite_json_float
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args(argv)
     try:
-        if args.input.stat().st_size > 32 * 1024 * 1024:
-            raise GravityContractError("input: maximum 32 MiB")
-        request = json.loads(args.input.read_text(encoding="utf-8"), object_pairs_hook=_unique_object)
+        request = read_request(args.input)
         result = transform_survey(request)
         receipt = export_bundle(request, result, args.output_dir)
         print(

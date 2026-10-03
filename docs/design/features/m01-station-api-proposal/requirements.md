@@ -2,7 +2,7 @@
 
 Status: planned, awaiting main ownership/approval after current units and MT runtime converge. No backend implementation or API activation is authorized here. Prospective test names below are specifications, not claims that tests exist or pass. API approval defaults false until actual host admission.
 
-R-MU01 WHEN an authenticated owner uploads exact gravity-stations-1 JSON, THE API SHALL preserve private immutable raw bytes and transport SHA-256 plus a separately retained scientific source identity; reject unauthorized/cross-owner access, unsafe paths, unknown rights and resource overruns without leaking content. Prospective gate: tests/api/test_gravity_station_json.py::test_private_exact_bytes_and_ownership.
+R-MU01 WHEN an authenticated owner uploads exact gravity-stations-1 JSON, THE API SHALL preserve private immutable raw bytes and transport SHA-256 plus a separately retained scientific source identity; reject unauthorized/cross-owner access, unsafe paths, missing private-storage permission and resource overruns without leaking content. Private permission SHALL NOT imply public redistribution rights. Prospective gate: tests/api/test_gravity_station_json.py::test_private_exact_bytes_and_ownership.
 
 R-MU02 IF schema, physical units/sign/component/datum, finite numeric error/geometry, instrument status or ordered correction lineage is missing/ambiguous, THEN admission SHALL reject with typed field paths and no guessed metadata, parser coercion or computed child. Prospective gate: tests/api/test_gravity_station_json.py::test_strict_physics_and_no_csv_relabelling.
 

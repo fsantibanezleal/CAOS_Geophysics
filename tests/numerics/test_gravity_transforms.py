@@ -3,6 +3,7 @@
 from copy import deepcopy
 from hashlib import sha256
 import json
+import io
 from pathlib import Path
 import subprocess
 import sys
@@ -11,10 +12,11 @@ import xml.etree.ElementTree as ET
 import harmonica as hm
 import numpy as np
 import pytest
+import gravity_transforms as transforms
 
 from gravity_processing import GravityContractError, digest, process_survey
 from gravity_transform_controls import control_request, prism_integral
-from gravity_transforms import admit, export_bundle, fit_layer, replay_grid, transform_survey
+from gravity_transforms import admit, export_bundle, fit_layer, read_request, replay_grid, transform_survey
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -65,6 +67,169 @@ def test_contract_lineage_and_originals(controls, results):
     corrupted["correction_result"]["dataset"]["stations"][0]["value_mgal"] += 0.1
     with pytest.raises(GravityContractError, match="history|lineage|hash"):
         admit(corrupted)
+
+
+@pytest.mark.parametrize(
+    "key,value",
+    [
+        ("method", "renamed-correction-method"),
+        ("input_sha256", "0" * 64),
+        ("input_sha256", ["0" * 64]),
+        ("module_sha256", "0" * 64),
+        ("output_sha256", "1" * 64),
+        ("python", "3.11.10"),
+        ("python", "3.12.nan"),
+        ("python", "3.12.10-stale"),
+        ("full_method_accepted", True),
+        ("full_method_accepted", 0),
+        ("warnings", []),
+        ("engines", {"boule": "unreviewed engine"}),
+        (
+            "config",
+            {
+                "target": "gravity_disturbance",
+                "uncertainty_model": "independent_first_order",
+                "unknown_config_key": "forbidden",
+            },
+        ),
+        ("uncertainty_model", "conservative_marginals"),
+        ("uncertainty_mgal", [123.0] * 196),
+        ("uncertainty_components_mgal", {"unknown": [0.0] * 196}),
+        ("unexpected", "unverified provenance"),
+    ],
+)
+def test_full_processing_identity(key, value, controls):
+    request = deepcopy(controls[0][0])
+    request["correction_result"]["processing"][key] = value
+    if key != "output_sha256":
+        request["correction_result"]["processing"]["output_sha256"] = digest(request["correction_result"]["dataset"])
+    # Rehashing the container does not make stale inner provenance verifiable.
+    assert len(digest(request)) == 64
+    with pytest.raises(GravityContractError, match="processing|receipt|config"):
+        admit(request)
+    missing = deepcopy(controls[0][0])
+    del missing["correction_result"]["processing"][key if key != "unexpected" else "warnings"]
+    with pytest.raises(GravityContractError, match="processing"):
+        admit(missing)
+
+
+def test_reconstructable_resume_and_python_provenance(controls):
+    request = deepcopy(controls[0][0])
+    original_python = request["correction_result"]["processing"]["python"]
+    declared_patch = "3.12.11" if original_python != "3.12.11" else "3.12.10"
+    first_parent = deepcopy(request["correction_result"]["dataset"])
+    request["correction_result"] = process_survey(
+        first_parent,
+        {
+            "target": "bouguer_disturbance",
+            "density_kg_m3": 2670.0,
+            "density_sigma_kg_m3": 0.0,
+            "uncertainty_model": "independent_first_order",
+        },
+    )
+    request["correction_result"]["processing"]["python"] = declared_patch
+    identity = admit(request, return_identity=True)[-1]
+    assert identity["input_state"] == "gravity_disturbance"
+    assert identity["input_sha256"] == digest(first_parent)
+    assert identity["recorded_python"] == declared_patch
+    assert identity["recorded_runtime_origin_verified"] is False
+    result = transform_survey(request)
+    assert result["original_correction_result"] == request["correction_result"]
+    assert result["provenance"]["correction_identity"] == identity
+    second_parent = deepcopy(request["correction_result"]["dataset"])
+    n = len(request["geometry"]["station_ids"])
+    terrain = {
+        "kind": "additive_residual_to_plate",
+        "unit": "mGal",
+        "height_reference": "WGS84_ellipsoid",
+        "density_kg_m3": 2670.0,
+        "source_sha256": digest({"authored": "flat terrain residual zero"}),
+        "method": "Authored flat no-terrain control, not a field DEM",
+        "station_ids": request["geometry"]["station_ids"],
+        "additions_mgal": [0.0] * n,
+        "sigma_mgal": [0.0] * n,
+    }
+    request["correction_result"] = process_survey(
+        second_parent,
+        {
+            "target": "terrain_adjusted_disturbance",
+            "density_kg_m3": 2670.0,
+            "density_sigma_kg_m3": 0.0,
+            "uncertainty_model": "conservative_marginals",
+            "terrain": terrain,
+        },
+    )
+    sigma = np.array(request["correction_result"]["processing"]["uncertainty_mgal"])
+    request["config"].update(
+        error_model="supplied_covariance",
+        covariance_mgal2=np.diag(sigma**2).tolist(),
+        covariance_citation="Only authored independent gravity error is nonzero in this flat control",
+    )
+    assert admit(request, return_identity=True)[-1]["input_state"] == "bouguer_disturbance"
+    stale = deepcopy(request)
+    stale["correction_result"]["processing"]["input_sha256"] = digest(second_parent | {"history": []})
+    with pytest.raises(GravityContractError, match="reconstructable"):
+        admit(stale)
+
+
+def test_unreconstructable_input_serialization_is_explicit(controls):
+    request = deepcopy(controls[0][0])
+    original = deepcopy(request["correction_result"]["dataset"])
+    original.update(state="observed_absolute", history=[])
+    for row in original["stations"]:
+        row["value_mgal"] = row["original_value"]
+    original["stations"][0].update(original_value=980000.0, value_mgal=980000)
+    original["metadata"]["source_sha256"] = digest({"authored": "integer raw current-value serialization control"})
+    request["correction_result"] = process_survey(
+        original, {"target": "gravity_disturbance", "uncertainty_model": "independent_first_order"}
+    )
+    with pytest.raises(GravityContractError, match="exact parent needed"):
+        admit(request)
+
+
+def test_bounded_strict_request_reader(tmp_path, monkeypatch):
+    target = tmp_path / "input.json"
+    for content in (
+        '{"x":NaN}',
+        '{"x":Infinity}',
+        '{"x":-Infinity}',
+        '{"x":1e999}',
+        '{"x":1,"x":2}',
+        "[" * 17 + "0" + "]" * 17,
+    ):
+        target.write_text(content, encoding="utf-8")
+        with pytest.raises(GravityContractError):
+            read_request(target)
+    target.write_bytes(b"\xff")
+    with pytest.raises(UnicodeError):
+        read_request(target)
+    valid = {"citation": '"' + ("[" * 40) + ("]" * 40) + "\\"}
+    target.write_text(json.dumps(valid), encoding="utf-8")
+    assert read_request(target) == valid  # quoted brackets/escapes are not structural depth
+    target.write_text('{"x":1}', encoding="utf-8")
+    real_open = Path.open
+
+    def changed_after_stat(path, *args, **kwargs):
+        if path == target and args == ("rb",):
+            return io.BytesIO(b" " * 65)
+        return real_open(path, *args, **kwargs)
+
+    with monkeypatch.context() as limited:
+        limited.setattr(transforms, "MAX_INPUT_BYTES", 64)
+        limited.setattr(Path, "open", changed_after_stat)
+        assert target.stat().st_size < 64
+        with pytest.raises(GravityContractError, match="actual bytes read"):
+            read_request(target)
+    for content in ('{"x":NaN}', "[" * 17 + "0" + "]" * 17):
+        target.write_text(content, encoding="utf-8")
+        with monkeypatch.context() as guarded:
+
+            def forbidden_engine(*args, **kwargs):
+                raise AssertionError("Invalid parser input reached numerical transform")
+
+            guarded.setattr(transforms, "transform_survey", forbidden_engine)
+            assert transforms.main(["--input", str(target), "--output-dir", str(tmp_path / "not-created")]) == 2
+        assert not (tmp_path / "not-created").exists()
 
 
 @pytest.mark.parametrize("case", range(3))
@@ -397,3 +562,54 @@ def test_theory_and_svg():
     text = svg.read_text(encoding="utf-8")
     assert "prefers-color-scheme: dark" in text and "<title" in text and "<desc" in text
     assert "training" in text and "holdout" in text and "density" in text
+
+
+def test_committed_scientific_evidence(results):
+    """Receipts/screenshots are actual labelled controls, not detached acceptance claims."""
+    directory = ROOT / "docs/design/features/m01-gravity-transforms/evidence"
+    verification = json.loads((directory / "verification-current.json").read_text(encoding="utf-8"))
+    assert verification["field_bytes_read"] == 0
+    assert verification["protected_source_published"] is False
+    assert verification["full_method_accepted"] is False
+    assert "closed" in verification["field_eligibility"]
+    assert verification["engines"] == results[0]["provenance"]["engines"]
+    for control, result in zip(verification["controls"], results, strict=True):
+        assert control["source_kind"] == "synthetic_control"
+        assert control["source_sha256"] == result["provenance"]["source_sha256"]
+        assert control["stations"] == 196 and control["masked"] == 4
+        recorded = control["evaluation"]["holdout"]
+        actual = result["evaluation"]["holdout"]
+        assert recorded["covered_count"] == actual["covered_count"]
+        assert recorded["unsupported_count"] == actual["unsupported_count"]
+        assert recorded["rmse_mgal"] == pytest.approx(actual["rmse_mgal"], rel=1e-8, abs=1e-10)
+        identity = control["correction_identity"]
+        assert identity["deterministic_receipt_verified"] is True
+        assert identity["recorded_runtime_origin_verified"] is False
+        assert identity["input_state"] == "observed_absolute"
+        assert len(control["transform_module_sha256"]) == 64
+    for reference in verification["primary_document_receipts"]:
+        assert reference["status"] == 200 and reference["bytes"] > 1000
+        assert reference["url"].startswith("https://www.fatiando.org/")
+        assert len(reference["sha256"]) == 64
+    receipt = json.loads((directory / "control-export-current.json").read_text(encoding="utf-8"))
+    assert receipt["analytical_control_only"] and receipt["protected_field_bytes_read"] == 0
+    assert receipt["paired_results_equal"] and len(set(receipt["paired_result_file_sha256"])) == 1
+    for item in receipt["files"]:
+        if item["name"].endswith(".png"):
+            image = directory / item["name"]
+            assert image.stat().st_size == item["bytes"]
+            assert sha256(image.read_bytes()).hexdigest() == item["sha256"]
+    rendered = json.loads((directory / "svg-render.json").read_text(encoding="utf-8"))
+    source = ROOT / "docs/methods/gravity-processing/assets/equivalent-source-transforms.svg"
+    assert sha256(source.read_bytes()).hexdigest() == rendered["source_sha256"]
+    assert rendered["web_acceptance"] is False
+    for item in rendered["receipt"]:
+        assert item["outside"] == []
+        assert item["dark"] == (item["theme"] == "dark")
+        image = directory / f"theory-{item['theme']}.png"
+        assert image.stat().st_size == item["bytes"]
+        assert sha256(image.read_bytes()).hexdigest() == item["sha256"]
+    history = json.loads((directory / "history.json").read_text(encoding="utf-8"))
+    assert history["api_approval"] is False and history["field_bytes_read"] == 0
+    assert history["historical_revision"].startswith("bfa5c24")
+    assert all(image["unchanged"] for image in history["plot_artifacts"])

@@ -54,6 +54,8 @@ def control_evidence():
                 "source_sha256": result["provenance"]["source_sha256"],
                 "request_sha256": digest(request),
                 "result_sha256": digest(result),
+                "transform_module_sha256": result["provenance"]["module_sha256"],
+                "correction_identity": result["provenance"]["correction_identity"],
                 "split_sha256": result["split"]["sha256"],
                 "stations": len(result["stations"]["station_ids"]),
                 "masked": sum(request["geometry"]["mask"]),

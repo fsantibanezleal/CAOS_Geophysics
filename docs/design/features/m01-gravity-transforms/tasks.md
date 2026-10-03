@@ -8,3 +8,6 @@
 - [x] R-T07/R-T08: paired CLI, immutable export, high-resolution diagnostics, deep theory/other-data exercise and theme-aware SVG.
 - [x] R-T01..R-T08: run new and existing correction/source gates; preserve exact environment/source/package/artifact receipts and render/inspect figures in both themes.
 - [x] R-T01..R-T08: converge named gates, scoped commit/push, develop PR #109/self-review; no merge/deploy or full field acceptance claim.
+- [x] Main pre-merge review: require full exact-key deterministic processing identity, bounded reconstructed parent hashes and preserved compatible Python provenance, with stale/missing/extra-field negatives and legitimate resume positives; station correction module unchanged.
+- [x] Main pre-merge review: cap actual read bytes, UTF-8/nonfinite/overflow/depth JSON before numerics; test growing-file and escaped-string/depth controls.
+- [x] Refresh current module/result/paired execution receipts, preserve pre-review evidence as history and prove the actual map PNGs remain byte-identical; keep actual field eligibility/API approval unchanged.
