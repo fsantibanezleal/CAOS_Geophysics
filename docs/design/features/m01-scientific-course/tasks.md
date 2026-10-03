@@ -1,6 +1,6 @@
 # M01 course staged ownership, validation and convergence
 
-Date: 2026-10-03. Status: docs-only proposed plan awaiting FULL MAIN read/approval. Initial research committed/pushed at6ba07cb; original station-adapter ref9ce5cc97a9d3e3c77a9a893868d1e1b1b3c3d048 is preserved. Base4db6a1613373d139e4496b6392e605c36adfa978. No wider branch merge or product/source promotion is needed for this additive documentation unit.
+Date: 2026-10-03. Status: MAIN approved B wiki-only content after full nine-document review at0c86844fbef91958e7688be9d60e4ab295955b5a; C remains unapproved. Approval is recorded below BEFORE content. Initial research committed/pushed at6ba07cb; original station-adapter ref9ce5cc97a9d3e3c77a9a893868d1e1b1b3c3d048 is preserved. Base4db6a1613373d139e4496b6392e605c36adfa978. No wider branch merge or product/source promotion is needed for this additive documentation unit.
 
 ## A. Current authorized research/sub-SDD unit
 
@@ -9,7 +9,11 @@ Date: 2026-10-03. Status: docs-only proposed plan awaiting FULL MAIN read/approv
 - [x] Preserve original work/ref; new task/geophysics-m01-scientific-course-sdd from requested fresh4db6a16. Complete exactly seven feature docs: requirements, design, curriculum, contracts, scenarios, workflows and tasks (R-MC01..14).
 - [x] Stage only those seven new feature Markdown files; run existing content/template/CI-budget/structural-ledger/whitespace checks plus read-only source/scope/link/EARS/fenced-Python syntax audit. These are documentation checks, not recipe execution or course acceptance. Actual results below.
 - [x] Commit/push scoped docs: research6ba07cb, complete seven-file feature milestone80be97e38375a3144104a316d01361188028acb0. Open draft develop [PR138](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/138), referencing issue43 without closing it; self-review/actual docs checks recorded. Final handoff freezes the pushed head including this persistence note; no merge/deploy.
-- [ ] FULL MAIN read of ALL seven feature documents and both research files, then explicit first-content authorization. Stop here until that decision.
+- [x] MAIN explicitly confirmed FULL read of all seven feature documents and both research files at0c86844, including rereading truncated sections, and authorized B ONLY in the first confirmed approval message received on2026-10-03.
+
+### Approval recorded before B authoring
+
+The user's confirmed authorization is: "APPROVE B wikiONLY EXACTtaskspaths docs/methods/gravity-processing/scientific-course/README+6namedchapters+6namedphysicalSVGassets. PersistMAINapproval BEFOREcontent". MAIN accepts the six questions, four explanatory models, separate index proposal, conditional physics and integer limitations. This permits full EN/ES text, derivations, worked reasoning exercises, local user-file Python examples and original physical SVGs, with rendered documentation QA. It does NOT authorize C frontend/numerical producer/solver/global CSS/API code, execution of course numerical recipes, a field/host waiver, merge or deployment. Return a frozen full B content pin for MAIN's full review before C assignment. This approval note is committed/pushed before any B path exists; later completion evidence is separate.
 
 ## B. Separately approved authored wiki-only content
 
