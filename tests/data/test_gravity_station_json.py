@@ -98,7 +98,24 @@ def upper_root(target=CANON_CAP):
     return obj
 
 
+def unique_keys_raw(profile):
+    """Build bytes only: decoded key length78/79, not a second native object tree.
+
+    For m unique scalar members: nodes=1+2m; base canonical bytes=1+83m.
+    The escaped initial k adds five RAW bytes/key but no decoded/canonical bytes.
+    """
+    count = 100000 if profile == "unique-keys-nodes-over" else 99999
+    extra = 0 if count == 100000 else CANON_CAP - (1 + 83 * count)
+    if profile == "unique-keys-canonical-over":
+        extra += 1
+    parts = (b'"\\u006bey-' + f"{i:06d}".encode() + b"x" * (68 + (i < extra)) + b'":0'
+             for i in range(count))
+    return b"{" + b",".join(parts) + b"}"
+
+
 def profile_raw(profile):
+    if profile.startswith("unique-keys-"):
+        return unique_keys_raw(profile)
     if profile == "nominal":
         return encoded(survey())
     if profile == "upper400":
@@ -108,6 +125,11 @@ def profile_raw(profile):
     if profile in ("raw-upper", "raw-over"):
         raw = encoded(survey())
         return raw + b" " * (RAW_CAP + (profile == "raw-over") - len(raw))
+    if profile == "raw-upper-astral":
+        obj = survey()
+        obj["metadata"]["source_citation"] += "\U0001d11e"
+        raw = encoded(obj, ascii=False)
+        return raw + b" " * (RAW_CAP - len(raw))
     if profile == "malformed":
         tail = b'{"x":0,"\\u0078":1}'
         return b" " * (RAW_CAP - 1 - len(tail)) + tail
@@ -148,6 +170,8 @@ def cold_record(profile):
     tracemalloc.start()
     raw = profile_raw(profile)
     raw_hash = sha256(raw).hexdigest()
+    _, input_build_peak = tracemalloc.get_traced_memory()
+    tracemalloc.reset_peak()
     sys.path.insert(0, str(ROOT / "data-pipeline"))
     cold_start = time.perf_counter()
     boundary = importlib.import_module("gravity_station_json")
@@ -160,11 +184,17 @@ def cold_record(profile):
         return native(data)
 
     boundary._materialize = observed  # Test-only observation, no caller hook exposed by the helper.
-    status, error = "accepted", None
+    unique_keys = profile.startswith("unique-keys-")
+    scanner_only = profile == "unique-keys-upper"
+    status, error, scan = "scanner_accepted" if scanner_only else "accepted", None, None
     try:
-        result = boundary.load_gravity_stations_json(raw)
+        if scanner_only:
+            scan = boundary._scan(raw)
+            result = None
+        else:
+            result = boundary.load_gravity_stations_json(raw)
     except boundary.GravityStationsJsonError as exc:
-        status, error = "rejected", exc.code
+        status, error = "scanner_rejected" if scanner_only else "rejected", exc.code
         result = None
     cold_wall = (time.perf_counter() - cold_start) * 1000
     current, peak_alloc = tracemalloc.get_traced_memory()
@@ -181,10 +211,17 @@ def cold_record(profile):
         if result is not None else None,
         "cold_helper_wall_ms": cold_wall, "process_wall_ms": (time.perf_counter() - process_start) * 1000,
         "process_cpu_ms": (time.process_time() - cpu_start) * 1000,
-        "peak_tracemalloc_bytes": peak_alloc, "current_tracemalloc_bytes": current,
+        "peak_tracemalloc_bytes": max(input_build_peak, peak_alloc), "current_tracemalloc_bytes": current,
+        "input_build_peak_tracemalloc_bytes": input_build_peak, "helper_peak_tracemalloc_bytes": peak_alloc,
         "peak_process_bytes": peak_rss, "peak_process_method": rss_method, "materializer_calls": calls,
         "helper_scratch_bytes": 0, "scratch_basis": "no helper I/O, independently instrumented by separate gate",
         "trace_overhead_included": True, "synthetic_control": True, "host_admission": False,
+        "scanner_only": scanner_only, "root_accepted": result is not None,
+        "observed_scan": list(scan) if scan is not None else None,
+        "expected_unique_decoded_keys": (100000 if profile == "unique-keys-nodes-over" else 99999) if unique_keys else None,
+        "expected_input_nodes": (200001 if profile == "unique-keys-nodes-over" else 199999) if unique_keys else None,
+        "expected_input_canonical_bytes": (8300001 if profile == "unique-keys-nodes-over" else
+                                            CANON_CAP + (profile == "unique-keys-canonical-over")) if unique_keys else None,
     }
 
 
@@ -551,8 +588,10 @@ def test_raw_and_supplied_source_hash_domains(boundary):
 
 
 def test_local_resource_and_legacy_regression_evidence(boundary, tmp_path):
-    profiles = ("nominal", "upper400", "canonical-upper", "raw-upper", "malformed", "overflow", "raw-over",
-                "canonical-over", "depth-over", "nodes-over")
+    profiles = ("nominal", "upper400", "canonical-upper", "raw-upper", "raw-upper-astral", "malformed", "overflow", "raw-over",
+                "canonical-over", "depth-over", "nodes-over", "unique-keys-upper",
+                "unique-keys-canonical-over", "unique-keys-nodes-over", "unique-keys-root-invalid")
+    scanner_raw_hash = None
     for profile in profiles:
         child = subprocess.run([sys.executable, "-B", "-S", str(Path(__file__).resolve()), profile],
                                capture_output=True, cwd=tmp_path, timeout=180)
@@ -562,9 +601,31 @@ def test_local_resource_and_legacy_regression_evidence(boundary, tmp_path):
         assert receipt["test_sha256"] == sha256(Path(__file__).read_bytes()).hexdigest()
         assert receipt["peak_process_bytes"] > 0 and receipt["peak_tracemalloc_bytes"] > 0
         assert receipt["helper_scratch_bytes"] == 0 and receipt["host_admission"] is False
-        accepted = profile in profiles[:4]
-        assert receipt["status"] == ("accepted" if accepted else "rejected")
-        assert receipt["materializer_calls"] == int(accepted)
+        if profile.startswith("unique-keys-"):
+            assert receipt["root_accepted"] is False
+            if profile == "unique-keys-upper":
+                assert receipt["scanner_only"] is True and receipt["materializer_calls"] == 0
+                assert receipt["status"] == "scanner_accepted"
+                assert receipt["observed_scan"] == [CANON_CAP, 199999, 1]
+                scanner_raw_hash = receipt["raw_sha256"]
+            elif profile == "unique-keys-root-invalid":
+                assert receipt["scanner_only"] is False and receipt["materializer_calls"] == 1
+                assert receipt["status"] == "rejected" and receipt["error_code"] == "gravity_json_contract"
+                assert receipt["raw_sha256"] == scanner_raw_hash
+                assert receipt["observed_scan"] is None
+            else:
+                assert receipt["scanner_only"] is False and receipt["materializer_calls"] == 0
+                assert receipt["status"] == "rejected" and receipt["error_code"] == "gravity_json_limit"
+                assert receipt["observed_scan"] is None
+            assert receipt["expected_input_nodes"] == (200001 if profile == "unique-keys-nodes-over" else 199999)
+            assert receipt["expected_unique_decoded_keys"] == (100000 if profile == "unique-keys-nodes-over" else 99999)
+        else:
+            accepted = profile in profiles[:5]
+            assert receipt["status"] == ("accepted" if accepted else "rejected")
+            assert receipt["materializer_calls"] == int(accepted)
+            if profile == "raw-upper-astral":
+                assert receipt["raw_bytes"] == RAW_CAP
+                assert receipt["canonical_bytes"] == len(encoded(survey())) + 12
         # Explicit test artifacts only, not source/field data. tmp_path is fresh per execution.
         (tmp_path / f"{profile}.json").write_bytes(child.stdout)
         (tmp_path / f"{profile}.stderr.log").write_bytes(child.stderr)
