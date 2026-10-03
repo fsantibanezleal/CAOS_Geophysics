@@ -35,6 +35,12 @@ print(result["gz_up_mgal"])
 print(result["jacobian_mgal_per_kg_m3"])
 ```
 
+MAIN executed this exact Markdown code block in the reviewed runtime. The
+three upward responses were approximately (-0.29272360, -0.13493608,
+-0.05476427) mGal, with the single Jacobian column equal to those values divided
+by1000 kg/m3. These displayed values are rounded readouts, not reference precision
+or a fitted result. The independent physical-oracle checks retain full precision.
+
 Float arrays must be native float64 exact NumPy arrays; the active mask is bool.
 No list conversion, implicit dtype cast, default frame or receiver displacement
 occurs. The mesh origin is its lower west/south/bottom corner, widths are positive

@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "bc0c573daa511ba897dd0b21e315b8c1eef67413",
-  "assessed_at": "2026-10-03T09:35:59Z",
+  "assessed_revision": "1b112bb258520a5679a865335cec30b6a97a1a0d",
+  "assessed_at": "2026-10-03T11:14:22Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -133,7 +133,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity still loses to its matched classical baseline. Independently accepted FWI/MT science and guarded canonical container are merged with the original 137-file private backup retained. Local M01 transforms/adapter pass; M02 has a source-backed prospective plan, not new numerical acceptance. Complete M01-M13 acceptance remains failed.",
+      "note": "M12 learned velocity still loses to its matched classical baseline. Independently accepted FWI/MT science and guarded canonical container retain the original private backup. M01 local transforms/adapter and the narrow M02 ordinary prism forward operator pass independent local controls. Submitted-survey L2/IRLS, field/host and complete M01-M13 acceptance remain failed or pending; no whole-method verdict is upgraded from the forward unit.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -150,6 +150,10 @@
         {
           "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
           "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/gravity-forward-independent-review-2026-10-03.md",
+          "sha256": "cbfc9293b23091d115bf38ca8bb75884ad000de7328aaa686139803fe1acea56"
         },
         {
           "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",

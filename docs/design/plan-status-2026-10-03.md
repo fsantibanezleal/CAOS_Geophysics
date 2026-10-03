@@ -19,7 +19,9 @@ and two additional scoped execution tasks (#124 local physical JSON, #126 worker
 accounting). Draft PR123's physical vertical and PR129's accounting dossier remain
 pre-code reviews; PR127's separately reviewed local parser is being implemented.
 The original09:35 assessment and its19-requirement ledger are historical snapshots,
-not retroactively changed to imply completed whole-method acceptance. Main and
+preserved in Git history. The later ledger assessment pins `1b112bb` and adds
+the independently reviewed forward evidence, retaining18 unresolved/one failed
+whole requirement; it does not imply completed whole-method acceptance. Main and
 production remain unchanged; only reviewed task/develop progress is integrated.
 
 ## Integrated revisions and independent review
