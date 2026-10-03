@@ -117,6 +117,41 @@
     "cause": "batch save_result used rebuild.save seven-digit default despite declared ten-digit FWI export precision",
     "canonical_artifacts_changed": false
   },
+  "integration_validation": {
+    "date": "2026-10-03",
+    "scoped_fix_commit": "6f7b718",
+    "integrated_origin_develop": "dce92a1d8693afd60a33ff429dfff59cad4de64d",
+    "merge_commit": "cfeddb7008b062bcd69b0afeba229d6fcfaab7a9",
+    "conflicts": false,
+    "solver_geology_writer_hashes_unchanged_by_merge": true,
+    "pre_integration_all_tests": {"passed": 149, "exit_code": 0},
+    "post_integration_solver_data_suite": {
+      "file_selection": "git ls-tree -r --name-only f2bb280 tests; select /test_[^/]+\\.py$",
+      "command": "python -m pytest @fwiSolverSuite -q -o addopts='' --junitxml=data/experiments/fwi-batch-receipts-precision10/post-develop-solvers-tests.xml",
+      "recovery_reuse": "FWI_RECOVERY_ARTIFACTS=data/experiments/fwi-candidate-precision10; current generator fingerprint checked",
+      "passed": 150,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "exit_code": 0,
+      "seconds": 76.721,
+      "xml_sha256": "b64cebc1ff665416188f45c86727da34e365d5b1878eea0c62b29eaa2cce5120"
+    },
+    "post_integration_product_collection": {
+      "command": "python -m pytest tests -q -o addopts='' --junitxml=data/experiments/fwi-batch-receipts-precision10/post-develop-full-tests.xml",
+      "exit_code": 1,
+      "xml_sha256": "8a41473cc8723ce79c659d57c642bf8c14eec3c15308f0cadd711e01df966909",
+      "error": "ModuleNotFoundError: No module named 'alembic' while collecting tests/api",
+      "scope": "Pipeline environment does not contain the new API stack; not a whole-product pass"
+    },
+    "artifact_gate": {
+      "command": "python scripts/check_artifacts.py",
+      "exit_code": 1,
+      "error": "Stale scientific source/settings",
+      "scope": "Canonical release artifacts remain unchanged; parent integration must regenerate and review release evidence"
+    },
+    "lint_and_guards": ["Ruff data-pipeline/tests/probe", "check_content_standards", "check_ci_budget", "check_template_residue", "git diff --check"]
+  },
   "ten_digit_candidate": {
     "generator_fingerprint": "44932fc5c29c8c890d750143e9e94f5f98efc6dbc8e2d8cab7a28aff590d8375",
     "batch_writer_sha256": "c919ea877c9b6eacb3e1a5ba06d93b61fc7beebd3e044eb0a806b79908afdb71",

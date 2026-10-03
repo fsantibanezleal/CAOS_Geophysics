@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_case_solver_enforces_and_restores_deterministic_policy(monkeypatch):
     prior = (
         torch.are_deterministic_algorithms_enabled(),
+        torch.is_deterministic_algorithms_warn_only_enabled(),
         torch.backends.cudnn.deterministic,
         torch.backends.cudnn.benchmark,
     )
@@ -31,14 +32,16 @@ def test_case_solver_enforces_and_restores_deterministic_policy(monkeypatch):
         assert progress is None
         return (
             torch.are_deterministic_algorithms_enabled(),
+            torch.is_deterministic_algorithms_warn_only_enabled(),
             torch.backends.cudnn.deterministic,
             torch.backends.cudnn.benchmark,
         )
 
     monkeypatch.setattr(seismic, "_solve_case_deterministic", inspect_policy)
-    assert seismic.solve_case({}, "reference") == (True, True, False)
+    assert seismic.solve_case({}, "reference") == (True, False, True, False)
     assert (
         torch.are_deterministic_algorithms_enabled(),
+        torch.is_deterministic_algorithms_warn_only_enabled(),
         torch.backends.cudnn.deterministic,
         torch.backends.cudnn.benchmark,
     ) == prior
@@ -51,6 +54,7 @@ def test_case_solver_enforces_and_restores_deterministic_policy(monkeypatch):
         seismic.solve_case({}, "reference")
     assert (
         torch.are_deterministic_algorithms_enabled(),
+        torch.is_deterministic_algorithms_warn_only_enabled(),
         torch.backends.cudnn.deterministic,
         torch.backends.cudnn.benchmark,
     ) == prior

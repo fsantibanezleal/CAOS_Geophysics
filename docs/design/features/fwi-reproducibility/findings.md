@@ -176,7 +176,9 @@ python data-pipeline/seismic_batch.py prepare --output data/experiments/fwi-cand
 python data-pipeline/seismic_batch.py run --output data/experiments/fwi-candidate-precision10 --receipts data/experiments/fwi-batch-receipts-precision10 --workers 2 --gpu-released
 python scripts/validate_fwi_exports.py --data data/experiments/fwi-candidate-precision10 --report data/experiments/fwi-batch-receipts-precision10/cuda-replay.json
 $env:FWI_RECOVERY_ARTIFACTS = (Resolve-Path data/experiments/fwi-candidate-precision10).Path
-python -m pytest tests -q
+python -m pytest tests/test_seismic_recovery.py -q
+$fwiSolverSuite = git ls-tree -r --name-only f2bb280 tests | Where-Object { $_ -match '/test_[^/]+\.py$' }
+python -m pytest @fwiSolverSuite -q -o addopts='' --junitxml=data/experiments/fwi-batch-receipts-precision10/post-develop-solvers-tests.xml
 ```
 
 Recovery-artifact reuse validates the current generator fingerprint before
@@ -205,6 +207,20 @@ replay. The CPU inverse-bookkeeping test checks the explicit optimizer budget
 on every stage independently of those candidate files. Separate CUDA tests
 check the filtered acoustic directional derivative and fourth/eighth-order
 stencil agreement.
+
+The reviewed milestone was persisted as `6f7b718` before merging current
+`origin/develop` (`dce92a1`) into this task branch at `cfeddb7`. The merge was
+conflict-free and preserved byte-identical solver, geology and candidate writer
+hashes, so it did not invalidate the frozen candidate. After integration the
+full original solver/data test-file set passed 150 tests (an upstream source
+test adds one), and the deterministic-policy assertion additionally checks
+warn-only restoration. Repository-wide Ruff, content and CI-budget guards
+pass. The expanded `python -m pytest tests` cannot collect API tests in the
+pipeline environment: `ModuleNotFoundError: No module named 'alembic'`.
+The failed collection XML is retained alongside the passing scoped XML under
+`data/experiments/fwi-batch-receipts-precision10`. It is not a passing whole-product
+validation or a reason to modify the API or phase environments in this task.
+
 `scripts/check_artifacts.py` fails with `Stale scientific source/settings` against
 the unchanged committed 0.04.001 artifacts, as expected from the new solver
 fingerprint. The isolated 24-condition FWI candidate bake and CUDA export
