@@ -1,5 +1,11 @@
 # FWI completion and refreshed MT integration handoff
 
+Latest completion: [combined acceptance](combined-acceptance.md) and
+[portable proof](../../../validation/fwi-mt-full-candidate-20261003.json).
+READY was received, full 72+24+24 assembly and owner independent numerical
+review passed at `421b999`. The older snapshots below remain historical.
+Canonical import is not executed; its separate guarded migration needs review.
+
 Date: 2026-10-03. Completed FWI evidence is persisted at `630e0c4` on
 `task/geophysics-fwi-regression`, draft PR #97. The standalone guarded assembler
 is `56cebd4`; the original numerical fix is `6f7b718`.

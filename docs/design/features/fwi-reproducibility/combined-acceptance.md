@@ -7,6 +7,33 @@ corrected FWI plus develop `afac8ab7b0be2df474406d1b17f0a165be9e0599` and
 PR100 `0970a09fa7640d3ac6148a9ccdc0335d2a75782b`. Imported MT scientific code
 is unchanged from `7b69404`. No canonical import, release, merge or deployment.
 
+Final combined runtime includes the owner's reviewed verifier-only parity fix
+`59f46c5`, cherry-picked as `421b999`. At that source, the full artifact gate,
+48 CUDA FWI replays, 4,038 MT objective states/3,072 bootstrap refits and fresh
+cl061 screen all passed again. Pipeline tests again passed 300/15 explicit
+skips in 58.87 s; API tests passed **85/one opt-in benchmark skip** in 139.02 s
+using the existing isolated online-MT interpreter read-only. Its pandas 3.0.6
+differs from pipeline pandas 2.2.3 and is attributed separately. An upstream
+TestClient deprecation warning remains. The local cl061 control executes, so
+this API run has one fewer skip than main's earlier private-source-absent run.
+The parity change alters no solver, engine fingerprint or numerical tolerance.
+
+The [portable full proof](../../../validation/fwi-mt-full-candidate-20261003.json)
+binds original/copied hashes for every condition, reused-family modules, all
+gate sources, XML/replay files, runtimes, negatives and failed initial collection.
+All 172 current tests in the original nine solver/data files pass without skips.
+
+Main independently replayed this unchanged candidate at `421b999`: all 48 CUDA
+models and 4,038 MT states/3,072 refits passed, plus exact 20/120/348 artifact
+validation and unchanged canonical digest. Separate owner receipts are
+`data/experiments/main-independent-review-20261003-run1/fwi-replay.json`
+(SHA `79721c8b1f167559a96dc481e631b1869c6bdd66dbe2dc5b945dbae5464a0c2a`)
+and `mt-replay.json`
+(SHA `4e1b65090884f71bdc6475aee45a24716a01c676849d5aa5698053232dbf9167`).
+This is owner independent numerical acceptance, not permission to execute
+canonical import. The owner next authorized designing/testing a guarded
+byte-preserving 0.04.002 container migration, requiring review before import.
+
 ## Assembly and full-source audit
 
 Fresh ignored candidate: `data/experiments/fwi-mt-full-candidate-20261003-run1`.
