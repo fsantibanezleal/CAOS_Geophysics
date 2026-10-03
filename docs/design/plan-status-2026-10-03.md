@@ -2,7 +2,55 @@
 
 Assessment: 2026-10-03, 09:35 UTC. [Approved product SDD](SDD.md). This is a current implementation and preservation review, not release acceptance.
 
-## Latest accepted local-unit checkpoint, 12:14 UTC
+## Latest independent-review checkpoint, 15:12 UTC
+
+Develop `e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe` now integrates pure
+supplied-record accounting PR129, original L2 independent review PR137, bounded
+L2 independent review PR141 and final accounting independent review PR139.
+Fresh CI37132145914 passed at e700b8d; CI37130960906 passed at the preceding
+00e9ec0 bounded-review merge. Main remains3981323 and legacy0.04.001.
+
+The [accounting review](../validation/physical-accounting-independent-review-2026-10-03.md)
+records MAIN419 passing tests and43 independent supplied-record checks. The
+final peer fully reread its92 lines at62396e5 after the sole attribution
+correction: multiplication overflow belongs to that helper; addition overflow
+is covered separately by the unit tests. These executions do not measure an
+operating system. Runtime authorization stays false and all15 native gates
+stay CLOSED/NOT_RUN. Concrete native-controller design is a separate issue140.
+
+The [original L2 review](../validation/gravity-l2-independent-review-2026-10-03.md)
+retains its134 local passes and original independently proven metadata gap.
+The [later bounded review](../validation/gravity-l2-bounded-independent-review-2026-10-03.md)
+records MAIN168 regression passes,12 independent metadata controls and a new
+physical six-cell/five-receiver oracle at frozen d7c6670: two wide-bound passes
+and two tight-bound failures. Both tight solves stop zero_free_direction before
+the independent BVLS optimum. Failed receipts are retained; the unmerged
+candidate is not accepted from its regression count. MAIN subsequently fully
+reviewed1c8b2a1's additive active-set proposal and explicitly approved its narrow
+test-first implementation. That approval is not a new optimizer PASS. Sealed
+selection, all24 conditions and whole-job resources remain pending.
+
+Unmerged work also continues under exact reviewed contracts: M01 course B's
+full bilingual thirteen-file content at96b583e was read and its preview hashes
+verified; numerical controls and small shell-based components were separately
+authorized afterwards, not accepted from the preview. M08's full twelve-file
+packet atd295925 was read before three local modules, an isolated new environment
+and bounded private acquisition of the exact CI.GSC HNZ Ridgecrest window were
+authorized. Native containment/CLI/resource gates and publication of acquired
+objects remain separately closed. Physical persistence candidate tests are
+authorized only in a disposable migration registry, outside the unchanged
+legacy registry. M03's researched seven-file packet is still under full review.
+
+The current tracker has51 open issues: original parent/48 children plus scoped
+accounting126 and concrete native-controller140. Only narrow124 is closed.
+The product ledger adds exact merged review identities while retaining
+18 unresolved/one failed whole requirement and replacement_accepted=false.
+Original data, failed evidence, environments and concurrent branches remain
+protected. No release/version/service/Pages/DNS or production activation follows
+from this checkpoint; the measured disk/restore/authority/mail/identity gates
+remain open. Earlier sections below are dated historical checkpoints.
+
+## Earlier accepted local-unit checkpoint, 12:14 UTC
 
 Develop `9918ea46aa0745ea91a546ff37593dc0a8c5bad2` integrates the independently
 reviewed forward recipe/evidence PR130 and bounded local physical JSON
