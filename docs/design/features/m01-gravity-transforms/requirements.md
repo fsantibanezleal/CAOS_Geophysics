@@ -1,6 +1,6 @@
 # M01 local transform requirements
 
-Status: planned. Authorized continuation of approved M01, 2026-10-03; no product-scope amendment.
+Status: local gates passed; integration/field/online acceptance open. Authorized continuation of approved M01, 2026-10-03; no product-scope amendment.
 
 R-T01 WHEN a transform input is admitted, THE processor SHALL verify the replayable corrected state, source/unit/datum/component/error/metric geometry contract and preserve the original result and masks unchanged. Gate: tests/numerics/test_gravity_transforms.py::test_contract_lineage_and_originals
 
