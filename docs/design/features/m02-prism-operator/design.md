@@ -144,9 +144,10 @@ not a new computation. The current proposed source epoch is Windows AMD64 /
 CPython 3.12.10. Unsupported runtime or missing/changed external source pins
 cannot pass the reviewed harness. A separately reviewed equivalent Linux/runtime
 epoch is not authorized by relabelling these Windows hashes. Targeted pins are
-not a full transitive supply-chain hash. The operator itself has no source
-file hash yet, because code does not exist; its real implementation SHA must
-be recorded when reviewed, never prefilled with old potential.py provenance.
+not a full transitive supply-chain hash. The original docs-only manifest retains
+its planned null operator hash; do not retroactively rewrite that provenance.
+Actual implementation/test hashes are bound in the new execution receipts in
+[validation](validation.md), never copied from old potential.py provenance.
 
 ## Failures, memory and acceptance boundaries
 
@@ -170,3 +171,45 @@ amendment. Existing physics, fixtures/canonical/source guards, API/UI, dependenc
 files and environment stay unchanged. A passing ordinary forward gate would
 not accept user-survey semantics, a full inverse, terrain, errors, field geometry,
 holdouts, M02 product or deployment. Those remain separately unapproved/unresolved.
+
+## Additive representability investigation and geometry policy
+
+2026-10-03, within main's approved invalid-geometry protection scope. The
+original 66/104/164-run receipt and original code/test hashes remain historical,
+not reassigned to a new source. Official pinned SimPEG builds Geoana prism
+coordinates from actual TensorMesh **nodes**, not centre +/- half-width.
+At origin 1e16 and width 2, centre coordinates collapse to a face, but actual
+node bounds remain ordered and engine acceleration agrees with Choclo. A
+prediction-collapse hypothesis was NOT reproduced. At origin 1e16 and width 3,
+node width rounds to 4: actual prism volume is 64 m3 versus framework volume
+27 m3 from the supplied widths. Returning consistent shape alone misses this
+physical density/volume discrepancy.
+
+Ordinary decimal widths can instead produce harmless one-ULP differences from
+sequential node accumulation. An exact-equality nominal-edge admission rule
+would reject those grids and is NOT the final policy. Add a separate geometric
+fidelity budget **1e-10 relative to local cell widths/volumes**, never relative
+to a large absolute origin and never a changed prediction/oracle tolerance.
+It requires declared and actual edge/bound differences <=1e-10 of adjacent
+local widths, actual node interval widths within that relative budget of
+supplied widths, and node-derived volumes within that relative budget of
+TensorMesh cell_volumes. This conservative metadata fidelity target permits
+the investigated ordinary 1000 m / 0.1 m roundoff (~1e-12 relative width),
+but rejects width 3 rounding to 4 and gross density-volume inconsistency.
+It is not a guarantee of field-coordinate accuracy or forward relative error
+near a cancellation; independent physics tolerances remain separate and unchanged.
+
+All nominal and actual centres must be finite and strictly inside their full
+cells, including inactive cells. Verify actual TensorMesh node arrays, actual
+bounds, all eight ordered corner coordinates (bounding boxes alone miss a
+duplicate corner), actual centres and node-derived volumes. Return actual
+verified engine bounds/centres/volumes, not nominal coordinates falsely labelled
+engine geometry. Recheck receivers strictly outside the actual full node box,
+with no shifts. Verify actual SimPEG active prism corners exactly match the
+ordered actual TensorMesh corners before evaluating fields. Structural equality
+between views of the SAME actual nodes is exact; nominal floating-point geometry
+agreement uses the distinct cell-scale rule above, not exact bit equality.
+
+This fail-closed geometry tightening and its full source diff require main's
+independent final review. Counts, required engine, units, shape contract, Windows
+epoch, no-I/O scope and every frozen prediction tolerance remain unchanged.

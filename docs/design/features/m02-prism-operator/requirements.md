@@ -1,6 +1,7 @@
 # M02 ordinary prism forward operator requirements
 
-Status: planned. Independent main read/explicit code authorization pending.
+Status: narrowed implementation authorized at design head `361b66f`; local
+controls executed as recorded in validation, independent pinned code review pending.
 This is a separate amendment after merged PR120, not inverse approval or full
 M02 acceptance. Scope: [design](design.md), [gates](validation.md), [tasks](tasks.md).
 Approved principles: CPU Geoana, separate Choclo/volume oracle and exact units.
@@ -59,6 +60,7 @@ controls, wrong unit/factor/precision/source negatives and all forward failures;
 it SHALL NOT infer field eligibility, geological truth or inverse convergence.
 Gate: tests/numerics/test_gravity_forward.py::test_negative_controls_and_literal_scope
 
-All tests are planned/nonexistent. Broad M02 survey types/asset binding,
+The named gates now exist with local results in [validation](validation.md);
+this is not independent acceptance or full M02. Broad survey types/asset binding,
 calibration seeds/epsilon/null inverse policy and pinned optimizer stops remain
 pending under the separate [merged plan](../m02-survey-inversion/tasks.md).

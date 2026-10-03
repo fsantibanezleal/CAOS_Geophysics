@@ -26,18 +26,22 @@ the exact pinned code/tests before any merge; no merge/deploy by this agent.
   `tests/numerics/test_gravity_forward.py`, plus this feature's own evidence/docs.
   Main owns source/runtime verification tooling outside the pure callable; no
   new source-audit tool or environment edit is authorized by this amendment.
-- [ ] After authority: implement strict in-memory arrays/geometry, actual official
+- [x] After authority: implement strict in-memory arrays/geometry, actual official
   engine call, copied immutable result and literal errors. No filesystem, CLI,
   GUI, callback/backend hook, legacy kernel or inverse integration.
-- [ ] Execute all proposed gates locally and persist scoped actual receipts,
-  source/runtime hashes, deterministic cases and negatives. No current numerical
-  PASS label exists. Main independently repeats/reviews before code promotion.
+- [x] Execute all proposed gates locally and persist scoped actual receipts,
+  source/runtime hashes, deterministic cases and negatives. Local forward controls
+  pass; [exact evidence](validation.md) is not full M02 acceptance.
+- [ ] Main independently repeats/reviews PINNED code/test/source receipts before
+  promotion. After ready handoff keep branch/files stable; no automatic merge.
 
-This branch changes only `docs/design/features/m02-prism-operator/*`. PR120 head
+This branch initially changed only `docs/design/features/m02-prism-operator/*`;
+after exact authority only the two named new code/test paths were added. PR120 head
 `395459bb82cf221be132479358725ce76268ca93`, merged at
 `bc0c573daa511ba897dd0b21e315b8c1eef67413`, remains unchanged. This is a separate
 new review unit, not an appended change to PR120. Source pin acquisition was
-read-only; no package or scientific execution occurred.
+read-only; no package changes occurred. At that original docs-only milestone no
+scientific execution had occurred; subsequent runs have separate dated receipts.
 
 Broad [M02 plan](../m02-survey-inversion/tasks.md) survey key/types/enums/asset
 binding, seeds/candidates/epsilon/null inverse policy and pinned optimizer stops

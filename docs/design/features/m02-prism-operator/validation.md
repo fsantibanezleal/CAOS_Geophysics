@@ -1,10 +1,11 @@
 # Ordinary prism operator exact planned gates
 
-Status: planned. No operator code exists or numerical test has run in this
-amendment. Docs/source-pin inspection only. Independent review pending.
+Status: local ordinary-operator controls executed; independent pinned code/test
+review pending. The original gate policy below was frozen before implementation.
+Actual receipts and literal scope limits are in the implementation section.
 Protocol: [design](design.md). Requirements: [requirements](requirements.md).
 
-## Gate mapping, all NOT RUN
+## Frozen gate mapping
 
 | Requirement | Planned test in `tests/numerics/test_gravity_forward.py` | Locked evidence/negative |
 | --- | --- | --- |
@@ -81,7 +82,8 @@ optimizer validation nor proof of density identifiability.
 4. Main independently reviews actual code and reproduces ordinary cases/source
    checks. Broader survey/inverse/field gates remain pending and unclaimed.
 
-Current scientific gate count: zero executed. Documentation checks cannot
+At the docs-only design milestone the scientific gate count was zero executed.
+Documentation checks cannot
 close P02 requirements or mark M02 accepted. Full product convergence ledger,
 historical negative fixtures and original private FWI backup/candidates/receipts
 remain unchanged.
@@ -109,4 +111,152 @@ These are source inspection, not numerical results or a full environment audit.
 Private backup presence remains 137 files / zero tracked; backup and experiments
 remain ignored and untouched. Product ledger structure still reports one failure,
 18 unresolved. No numerical/gate result changed. Actual operator/test files do
-not exist. Main has not yet authorized code or independently accepted this amendment.
+did not exist at that docs-only audit. Subsequent main approval is recorded in
+tasks at design head `361b66f`; independent code acceptance is still pending.
+
+## Historical ordinary implementation before geometry correction
+
+The following 66/104/164 results and hashes belong to the earlier source,
+not the corrected final implementation. Preserve this receipt byte-for-byte.
+
+Local machine receipt: [evidence/local-execution.json](evidence/local-execution.json).
+Only two new scientific/test paths are implemented. No threshold, cap, engine,
+source epoch or approved fixture was changed. Errors/cause chains remain private
+caller context, not safe HTTP payloads. No full inverse/M02/field/host/GPU claim.
+
+Operator SHA256:
+`94c2bd2a8ea626b55b0e7954c48eedecf09f2d5becbb4793fb969ea865173d30`.
+Test SHA256:
+`897c99a395c4f9c14fe28019abf2732910cb2e5ec7a44ba85bfcd1c83c44ad91`.
+Reviewed runtime-pin manifest remains byte-identical at
+`a5aa08c23a80e15024e6499fab6805315d52dee185c5de1010b5f46e5c9f5819`.
+Later documentation/receipt edits must not be confused with changed code bytes.
+
+Exact existing interpreter, READ-ONLY, no creation/upgrade:
+`D:\_Repos\_Web_Projects\CAOS_Geophysics\.venv-pipeline\Scripts\python.exe`.
+Set process-only `PYTHONDONTWRITEBYTECODE=1`, `OPENBLAS_NUM_THREADS=1`,
+`OMP_NUM_THREADS=1`; main can use a new private scratch outside protected backups
+for pytest temporary outputs. The standalone new unit does not publish files.
+
+```powershell
+$env:PYTHONDONTWRITEBYTECODE='1'
+$env:OPENBLAS_NUM_THREADS='1'
+$env:OMP_NUM_THREADS='1'
+& 'D:\_Repos\_Web_Projects\CAOS_Geophysics\.venv-pipeline\Scripts\python.exe' -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider
+```
+
+All **66** new controls pass. In particular seven metadata-preallocation
+negatives use real modest oversized arrays (including 5,000-element arrays and
+2,049 receivers), forbid np.isfinite/np.array/np.count_nonzero and engine calls,
+and prove rejection before ANY scans/copies. Only after all arrays' exact metadata
+and caps pass is bounded active population traversed to verify density alignment.
+Custom scalar/frame/nested values and array/dict/string subclasses reject before
+equality/NumPy conversion. Runtime versions use already-loaded official modules,
+not filesystem metadata scans in the pure callable.
+
+Actual max combined 2,048-by-4,096 engine execution returns a float64 physical J
+of exactly 64 MiB and meets p=Jrho identity. This is not a measured RSS/latency or
+host envelope. Separate Choclo single-prism maximum difference is
+`1.3322676295501878e-15 mGal`; signed/nonuniform active case is
+`5.7667629352331495e-15 mGal`. Independent volume quadrature maximum errors at
+orders 4/8/16 are `4.174748420460173e-6`, `2.2928547949163658e-11` and
+`3.1433189384699745e-15 mGal`. Null/sign, Jacobian 0.001, finite-difference,
+adjoint, sphere-integrator, far-field, output/state, actual engine and no-I/O
+controls pass the original thresholds. These are authored ordinary controls,
+not measured surveys or geological truths.
+
+Scoped pipeline regression command (exact in receipt) includes this test module,
+source intake and four existing legacy prism/inverse/CSV gates:
+**104 passed, 2 existing skips, 11 deselected**. Initial broader collection
+failed with three missing-Boule/Harmonica errors in this unchanged pipeline
+environment. Preserve that negative; no installation or fallback was made.
+Existing isolated M01 interpreter
+`D:\_worktrees\geophysics-m01-corrections\.venv-m01\Scripts\python.exe`
+ran its processing/transforms/station-adapter regression files separately:
+**164 passed, 1 existing skip**. This is not an M02 environment or new install.
+
+The unchanged artifact guard reports PASS **20 truths / 120 experiments / 348
+method results**, with all SHA256/sizes matching. Ordinary unit source/runtime
+audit verifies the 20 targeted installed source/binary pins; no native binaries
+staged. Full product ledger and all prior scientific negatives stay independent.
+Main's exact-source independent rerun/review is required before merge; hold this
+code/test handoff stable once ready.
+
+## Resolved geometry implementation and ready handoff, 2026-10-03
+
+Final source SHA256:
+`46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5`.
+Final test SHA256:
+`c50158f083cba3ad096ff7b17eccdcbeb0a31f6e8293d13ffdccb3f6d78624c1`.
+Read the [fresh quantitative receipt](evidence/final-geometry-execution.json)
+and [final test addendum](evidence/ready-execution.json) together. The first
+contains the actual 76/114/164 run and test hash `e5456f...`; the addendum binds
+the final additional controls and does NOT relabel that earlier test run.
+Both use the same unchanged operator source above. Original historical receipt
+SHA256 remains `3b2d8e59338e8d678a9e97a9bb35e4868c34c58164b8cb1a2dd2e71a2c4d714e`;
+reviewed runtime manifest remains `a5aa08c23a80e15024e6499fab6805315d52dee185c5de1010b5f46e5c9f5819`.
+
+Final standalone controls: **80 passed, no skips**. Final scoped pipeline
+command as printed above/in the receipts: **118 passed, 2 existing skips,
+11 deselected**. The three existing M01 files passed **164 / 1 existing skip**
+in their separate unchanged interpreter; the final test-only additions do not
+affect those files. Full artifact guard passes **20/120/348**, all hashes/sizes
+match. No scientific fixture or canonical/source guard was changed.
+
+Full geometry tightening relative to the historical implementation:
+
+- Reject nonrepresentable nominal and actual interior centres across ALL cells,
+  including inactive cells, before prism construction/evaluation.
+- Verify actual cumulative TensorMesh axis nodes and interval widths, cell
+  bounds, all eight ordered node corners, centres and physical volumes. Nominal
+  agreement is cell-scaled **1e-10 geometry fidelity**, NOT exact equality of
+  decimal arithmetic and NOT a changed prediction/oracle tolerance.
+- Return actual verified engine geometry, check full actual-node closed-box
+  receiver exclusion, and verify SimPEG active prism-node identity before fields.
+- Reject large origin 1e16 / width 3 rounding to node width 4 and physical-volume
+  mismatch; admit width 4 with interior centres and exact TensorMesh volume.
+  Admit ordinary decimal roundoff. Injected cumulative node disagreement,
+  invalid bounds/centres/corners/volumes all reject before prism evaluation.
+
+The final added controls explicitly isolate a representable active cell beside
+an invalid inactive cell. Seven original pre-scan negatives still forbid finite
+scans/copies/mask traversal/engine for invalid metadata/caps. Counts, exact types,
+runtime pins, no-I/O scope and frozen physics tolerances remain unchanged.
+
+Fresh measured Choclo residual maxima remain **1.3322676295501878e-15** and
+**5.7667629352331495e-15 mGal**. Volume quadrature errors at orders 4/8/16:
+**4.174748420460173e-6 / 2.2928547949163658e-11 / 3.1433189384699745e-15 mGal**.
+Actual simultaneous 2048-observation/4096-cell control executes the official
+engine and returns a 64 MiB Jacobian; not a total-RSS or host-admission claim.
+
+Evidence separation: Curie's user-reported static WIP review of `d8cf3...` is
+STATIC, not execution. Main's user-reported diagnostic of source `46d205...`
+rejects hx2/hx3 and admits hx4 with volume 40000 m3, but is WIP, NOT independent
+final acceptance. Our direct-engine investigation agrees with Choclo even when
+centres collapse: the engine uses actual nodes. No centre-caused G collapse was
+reproduced or claimed. The retained intermediate negative (1 failed/73 passed)
+was an injected duplicate-corner escape, corrected by ordered-corner validation.
+
+Use the exact existing READ-ONLY pipeline interpreter and process controls above;
+no environment creation/upgrades. For main's rerun select new private scratch,
+for example `--basetemp <new-private-path>`, never a protected backup/candidate.
+M01 interpreter is separate and listed above. Windows source epoch only;
+20 trusted installed source pins pass. No native binaries are staged.
+An attempted PowerShell `Get-Date -AsUTC` display failed because this host lacks
+that parameter, after the 80-test run had passed; the addendum timestamp uses
+the independent UTC clock instead. This does not turn the test into a failure.
+
+Self-review: exactly two additive code/test paths and this feature folder; all
+six PR120 plan files, legacy physics, dependency/environment, API/UI and canonical
+bytes are unchanged. Private 137-file backup and ignored candidates/receipts
+remain unstaged/untouched. Independent final FULL code/policy/diff review and
+exact-source rerun by main are still pending. Keep the ready pin stable; this
+milestone is not inverse, survey, full M02, field, GPU, host or deployment acceptance.
+
+Final staged static checks pass: content standards, template residue, CI budget,
+SDD structure and `git diff --cached --check`. Read-only receipt self-audit verifies
+strict JSON/no duplicate keys, all source/test/receipt/manifest SHA bindings,
+12 requirement gate functions present, nine staged paths confined to the approved
+scope, six PR120 files unchanged, and private backup count 137 / zero tracked.
+The structural ledger reports 1 fail / 18 unresolved on this branch; this does
+not imply scientific or release acceptance and has not been edited here.
