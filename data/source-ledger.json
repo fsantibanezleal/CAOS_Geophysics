@@ -137,12 +137,16 @@
       "format": "stead-metadata-csv",
       "expected_bytes": 402560190,
       "sha256": "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe",
-      "verification_status": "user-reported-unverified",
+      "verification_status": "locally-verified-metadata",
+      "verification_evidence": {
+        "path": "data/derived/phase/stead-metadata-profile.json",
+        "sha256": "6059e78501acfae60211c08627a17cb3f0cce6c97430da04a37cc8601c66480b"
+      },
       "raw_path": null,
       "rights_decision": "provider-link-only",
-      "rights_statement": "The official STEAD repository declares CC BY 4.0 for the dataset. This index is provider-linked only here; mirror provenance and the user-reported local checksum have not been independently verified in this worktree, and no waveform asset is acquired.",
+      "rights_statement": "The official STEAD repository declares CC BY 4.0 for the dataset. This index remains provider-linked only. The phase pipeline's original metadata was independently re-hashed and its aggregate profile is pinned; no raw metadata or waveform mirror is enabled by this entry.",
       "citation": "Mousavi et al., Stanford Earthquake Dataset (STEAD), official repository; SeisBench metadata mirror.",
-      "use": "Candidate M13 seismic waveform metadata only. No waveform download verification, preprocessing, model input, or public data publication is claimed."
+      "use": "Verified 1,265,657-row metadata index for the separately validated M08/M13 phase pipeline. Metadata verification does not establish waveform QC, model generalization or another raw acquisition path; those have separate frozen phase receipts."
     },
     {
       "source_id": "bartlett-fgdc",

@@ -103,6 +103,51 @@ def _raw_key(value: str) -> PurePosixPath:
     return path
 
 
+def _verified_metadata_evidence(record: dict) -> None:
+    evidence = record.get("verification_evidence")
+    if (record["format"] != "stead-metadata-csv" or not isinstance(evidence, dict)
+            or set(evidence) != {"path", "sha256"}
+            or not isinstance(evidence["sha256"], str)
+            or not re.fullmatch(r"[0-9a-f]{64}", evidence["sha256"])):
+        raise SourceError("Verified metadata requires a pinned aggregate profile")
+    key = archive_member_key(evidence["path"])
+    if len(key.parts) != 4 or key.parts[:3] != ("data", "derived", "phase") or key.suffix != ".json":
+        raise SourceError("Metadata evidence must be a profile under data/derived/phase")
+    profile = ROOT.joinpath(*key.parts)
+    for item in (profile, *profile.parents):
+        if item.is_symlink() or getattr(item, "is_junction", lambda: False)():
+            raise SourceError("Metadata evidence cannot traverse a symlink or junction")
+        if item == ROOT:
+            break
+    try:
+        with profile.open("rb") as handle:
+            raw = handle.read(2 * 1024 * 1024 + 1)
+        if len(raw) > 2 * 1024 * 1024 or hashlib.sha256(raw).hexdigest() != evidence["sha256"]:
+            raise SourceError("Metadata profile byte/hash mismatch")
+        def pairs(items):
+            result = {}
+            for name, item in items:
+                if name in result:
+                    raise SourceError("Metadata profile contains duplicate keys")
+                result[name] = item
+            return result
+
+        def constant(_value):
+            raise SourceError("Metadata profile contains a nonfinite constant")
+
+        value = json.loads(raw, object_pairs_hook=pairs, parse_constant=constant)
+    except (OSError, UnicodeError, json.JSONDecodeError, RecursionError) as error:
+        raise SourceError("Metadata aggregate profile unavailable or invalid") from error
+    source = value.get("source") if isinstance(value, dict) else None
+    rows = value.get("rows") if isinstance(value, dict) else None
+    if (not isinstance(value, dict) or value.get("schema") != "caos.stead-metadata-profile.v1" or not isinstance(source, dict)
+            or not isinstance(rows, dict) or type(rows.get("total")) is not int or rows["total"] <= 0
+            or type(source.get("bytes")) is not int or source["bytes"] != record["expected_bytes"]
+            or source.get("sha256") != record["sha256"] or source.get("url") != record["object_url"]
+            or source.get("waveforms_downloaded_by_this_receipt") is not False):
+        raise SourceError("Metadata profile source identity mismatch")
+
+
 def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
     try:
         ledger = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -137,13 +182,17 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
                 raise SourceError(f"{source_id}: generated source must have no external raw asset")
         elif mode == "provider-link":
             if (record["rights_decision"] != "provider-link-only" or
-                    record.get("verification_status") != "user-reported-unverified" or
+                    record.get("verification_status") not in ("user-reported-unverified", "locally-verified-metadata") or
                     record["raw_path"] is not None or not record["object_url"]):
-                raise SourceError(f"{source_id}: provider-link entry must remain unverified and have no raw storage key")
+                raise SourceError(f"{source_id}: provider-link entry needs an explicit verification status and no raw storage key")
             if (type(record["expected_bytes"]) is not int or record["expected_bytes"] <= 0 or
                     not isinstance(record["sha256"], str) or
                     not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])):
                 raise SourceError(f"{source_id}: provider-reported bytes and SHA-256 must be well formed")
+            if record["verification_status"] == "locally-verified-metadata":
+                _verified_metadata_evidence(record)
+            elif "verification_evidence" in record:
+                raise SourceError(f"{source_id}: unverified metadata cannot claim a verified profile")
         elif mode in {"fetch", "manual"}:
             if record["format"] == "generated-case" or record["rights_decision"] == "forbidden":
                 raise SourceError(f"{source_id}: acquisition conflicts with format or rights")
@@ -256,7 +305,7 @@ def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path
     if mode == "generated":
         raise SourceError(f"{source_id}: generated cases use the geological constructor, not raw acquisition")
     if mode == "provider-link":
-        raise SourceError(f"{source_id}: provider-link metadata is not a verified raw asset; "
+        raise SourceError(f"{source_id}: provider-link metadata is not an acquirable raw asset; "
                           f"consult {record['object_url']} and review a separate acquisition contract first")
     root = Path(root).resolve()
     target = _inside(root, _raw_key(record["raw_path"]), "downloads")
