@@ -1,7 +1,8 @@
 # Pure accounting protocol narrowed pre-code review packet
 
-Date: 2026-10-03. Status: PROPOSED DOCS ONLY; FULL MAIN read/approval required
-at the final amended pin. No source, tests, OS/context probe or profile created.
+Date: 2026-10-03. Status: MAIN FULL READ and narrow pure implementation APPROVED
+at2c94da44b6205652cd2d89d73ebbf78cc4626903. See [pre-code approval](approval.md).
+Source/tests not created at approval-record time; native/profile/OS still CLOSED.
 Branch: task/geophysics-physical-worker-accounting-sdd.
 Issue [126](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/126),
 OPEN DRAFT [PR129](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/129)
@@ -37,7 +38,13 @@ tests/worker_accounting/test_protocol.py
 Neither path exists/changes here. No other file/package/import surface is assigned.
 Native/OS/integration/security owner is not invented or delegated by this packet.
 
-## 2. Exact MAIN decisions requested
+## 2. Exact MAIN decisions accepted at2c94da4
+
+MAIN has now FULL read the complete seven-file sub-SDD plus parent packet delta
+and explicitly approved only the two NEW pure source/test paths and own subdocs.
+Test-first all12 gates, then exact pure implementation. The decisions below are
+accepted as supplied-stream consistency, never OS/profile/runtime authority.
+Independent MAIN source review/rerun remains REQUIRED before develop promotion.
 
 - Approve/amend pure record subset: exact byte/type/key bounds BEFORE allocation,
   fixed per-kind ingress, no arrays/escapes/unknown schemas, canonical ASCII JSON,
@@ -102,4 +109,5 @@ Actual profiles CLOSED; no OS/controller/security/provisioning or profile
 activation authorized. Owner headroom decision absent: MAIN's prior29.42% disk
 vs unchanged30% gate has not been remeasured. No host access, install, production
 state/key change, actual recovery drill or native compile ABI probe. No source
-implementation until MAIN fully reads and approves the new exact pin/scope.
+implementation beyond the two exact approved pure paths. MAIN independent
+review/rerun required before develop promotion; no merge or native authority.

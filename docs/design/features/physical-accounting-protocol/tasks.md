@@ -1,7 +1,7 @@
 # Pure accounting protocol dependency tasks
 
-Date: 2026-10-03. Status: docs-only; all source/test tasks BLOCKED on FULL MAIN
-review/approval of the exact amended docs head and explicit next source scope.
+Date: 2026-10-03. Status: narrow pure source/test scope APPROVED by MAIN after
+FULL read of2c94da4; see [pre-code approval](approval.md). Native tasks still CLOSED.
 Issue [126](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/126),
 draft [PR129](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/129).
 Read [review packet](review-packet.md) and all its linked documents first.
@@ -11,9 +11,9 @@ Read [review packet](review-packet.md) and all its linked documents first.
 | PAP-D01 | This unit: preserve parent3959 direction/evidence, research pure types/JSON bounds | MAIN parent full-read report; official primary receipts; no source or OS changes | DONE, docs only |
 | PAP-D02 | This unit: exact schemas/caps/arithmetic/transitions/errors/eligibility plus future paths | D01; complete seven-document sub-SDD before code | DONE, docs only |
 | PAP-D03 | This unit: docs guards and scoped handoff | D02; packet records measured docs checks; remote commit/push/self-review pin recorded in PR129, no merge | Docs checks DONE; exact remote pin in PR handoff |
-| PAP-R01 | MAIN: FULL read/accept or amend exact new pin | D03; all seven subdocs and amended parent packet, not merely summary | REQUIRED, NOT_APPROVED |
-| PAP-I01 | This unit: pure protocol implementation ONLY in scripts/physical_accounting_protocol.py | R01 plus explicit source authority; stdlib bounded constants/types/functions; no OS/I/O/clock/source measurements | BLOCKED, NOT_STARTED |
-| PAP-I02 | This unit: pure tests ONLY in tests/worker_accounting/test_protocol.py | I01; twelve named prospective gates, literal in-memory fixtures, no installs or source/host measurements | BLOCKED, NOT_RUN |
+| PAP-R01 | MAIN: FULL read/accept exact new pin | D03; all seven subdocs and amended parent packet at2c94da4 | DONE; exact narrow approval recorded BEFORE code |
+| PAP-I02 | This unit: test-first pure tests ONLY in tests/worker_accounting/test_protocol.py | R01; write all twelve named gates before I01, literal in-memory fixtures, no installs or source/host measurements | AUTHORIZED, NOT_STARTED |
+| PAP-I01 | This unit: pure protocol implementation ONLY in scripts/physical_accounting_protocol.py | R01 plus I02 test-first red evidence; stdlib bounded constants/types/functions; no OS/I/O/clock/source measurements | AUTHORIZED, waits for test-first gates |
 | PAP-R02 | MAIN: independent pinned pure source/tests review and local rerun | I01/I02 scoped commits; exact outcomes and exclusions; NOT runtime admission | BLOCKED |
 
 Assigned future paths are NEW proposals, not created by this SDD. Any need for
