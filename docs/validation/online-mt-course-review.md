@@ -69,7 +69,7 @@ Research diff is only the import, two MT slots, authorized Introduction opener/b
 
 ## Main independent review and authorized integration
 
-Main reported pinned25439be independent75numerical tests in17.29s,89frontend tests in3.57s, build8.34s and32browser tests in4.7minutes with zero errors. Main inspected its own ES/light physics, EN/dark solver and ES/dark phone objective. These are Main's independent execution claims, not this branch's local screenshots rebranded independent; Main persists the separate review. Our preview was identified as owned Vite PID69352 and released on request, preserving report/evidence.4337 remains stopped here.
+Main's [persisted independent review](mt-course-independent-review-2026-10-03.md) records pinned25439be independent75numerical tests in17.29s,89frontend tests in3.57s, build8.34s and32browser tests in282.43s with zero errors. Main inspected its own ES/light physics, EN/dark solver and ES/dark phone objective. These are Main's independent executions, not this branch's local screenshots rebranded independent. Our previous preview was identified as owned Vite PID69352 and released on request, preserving report/evidence. This remains historical evidence for25439be, not a combined46bd5e7 render receipt.
 
 Main subsequently authorized normal merge of develop6050100 into PR114. Mergefdfad97 includes integrated PR97/FWI, PR100/MT and PR109/M01 code plus their reviewed canonical import. The sole conflict was the guide list; both08online EDI and09course entries plus gravity/potential-field links are preserved. `git diff --exit-code 25439be -- frontend/src frontend/e2e/online-mt-course.spec.ts frontend/playwright.mt-course.config.ts` passes, proving all reviewed frontend source, diagrams, translations and worked JSON unchanged. `git diff --exit-code 6050100 -- app data-pipeline data/derived` passes, proving no duplicate scientific/backend/container edit. No browser rerun or preview restart is needed for unchanged course source.
 
@@ -88,6 +88,30 @@ Measured current file hashes, explicitly distinct from original execution hashes
 | data/derived/v2/catalog.json |81248370d6ded868cdc71cace05bc343b275e2814f7a96ce96f426f37315a8cf |
 
 Both FWI source files' latest scientific commit is6f7b718687775993a1d460993e9231277eb228ec, inherited through actual PR97/develop6050100. The source tree is not the older separate59f snapshot. Original worked JSON remains SHA`5092c98b177bf58f6df43cab01ebe4ff8c4e5e832caf3c1249b2e03ee7c650a9`, with original measured provenance intact. These integration receipts establish source/numerical compatibility, not actual-host admission or all-method product acceptance.
+
+## Combined develop46bd5e7 integration
+
+At Main's explicit request, the approved exact-function compatibility proof and its two adversarial controls were persisted and pushed in0a03b44 before normal merge8857b1376e2636b4f85c46aaa6c33de6d369e015 of develop46bd5e74c7ed0d6a962077058ce2c4c620844291. The only conflict was the guide index:08online EDI,09course,12actual-host admission and all gravity/potential-field links are retained. Both course-scoped module styles and inherited shared MT styles remain intact. No other owner's code was overwritten.
+
+The exact reviewed course components/module CSS/data/citations/Research/test/harness/config match25439be (`git diff --exit-code` returned0). Inherited shared ScientificPlots, global styles, App/widgets/API contracts, backend, scientific sources and canonical outputs match46bd5e7 (`git diff --exit-code` returned0). The original worked JSON and actual cl061 byte hashes above were remeasured and are unchanged. The 22-path course diff remains the complete PR scope; inherited owner edits are not course authorship.
+
+Fresh combined executions on8857b13:
+
+| Gate | Actual result |
+| --- | --- |
+| Same77numerical/parser/source-binding command above |77passed,11.00s, no skips; actual original cl061 and all worked controls rerun |
+| `npm test -- --run` |18files/101tests passed,0.969s |
+| `npm run build` |TypeScript/Vite/five route entrypoints passed,8.44s total/Vite3.73s; existing large-chunk warning retained |
+| `npx playwright test --config playwright.mt-course.config.ts` |32passed,286759.519ms; started2026-10-03T09:07:07.157Z; zero skipped/unexpected/flaky/browser errors |
+| `python -S scripts/check_artifacts.py` |20distinct truths/120experiments/348results; all bytes/hashes consistent, no computation/bake |
+| Ruff across `data-pipeline tests`; template/CI-budget/phase-assets/SDD structure/whitespace |pass; ledger remains1fail/18unresolved/0pass |
+| `python -S scripts/check_content_standards.py` |FAIL: six inherited em-dashes in three unchanged upstream files; not suppressed |
+
+The content failure locations are `MtProjectWorkbench.tsx:60` (three), `MtScientificInstrument.tsx:54,55` (two), and `ScientificPlots.tsx:508` (one). Each file is byte-identical to develop46bd5e7. [Main/Bacon owner handoff](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/114#issuecomment-5967543558) requests the scoped owner correction; this course branch does not change those files, rewrite fixtures or weaken the guard. This failure is an integration blocker, distinct from passing course numerical/frontend gates.
+
+Because shared ScientificPlots/styles changed upstream, the entire actual32-case combined Introduction/course matrix was rerun, not inferred from unchanged course source or Main's historical review. New ignored report `frontend/node_modules/.mt-course-qa/report.json` SHA-256`6c4d76915c2ff28a220d127b499be03dcd32df7b82f21674d2ebca688a293cba`. Accepted current viewport/physics/equation/exercise captures remain in `frontend/node_modules/.mt-course-qa/evidence/`; historical unsuffixed tall captures remain excluded. Manual current inspection included EN/light phone worked controls/metrics/observed-predicted graph and units, ES/light phone graph/provenance/physics equations and captions, EN/dark phone objective panning, and EN/ES dark desktop physics dot-circle figures. Overlapping viewport captures plus dedicated formula pans show full readable content rather than interpreting an edge-of-viewport crop as complete evidence. The inherited plot remains noninteractive in this course, with real fixed worked-case selection; it is not a live API job.
+
+The harness owned only loopback4337 during this execution and stopped its server on completion; a subsequent listener check found no4337listener. All protected untracked pytest output directories/private ignored data remain unstaged. PR114 is mergeable after the normal merge, but remains draft pending the inherited owner content-guard correction. No course/frontend implementation change, fixture hash rewrite, tolerance change, merge or deployment accompanies this receipt.
 
 ## Separate blockers and nonclaims
 
