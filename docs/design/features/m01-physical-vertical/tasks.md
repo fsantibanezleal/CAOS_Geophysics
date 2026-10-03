@@ -1,6 +1,6 @@
 # M01 physical vertical dependency tasks and review hold
 
-Status: docs-only proposed design; implementation NOT_STARTED. All product gates NOT_RUN. The user requests full main review before any API/migration/frontend code. Task completion below separates authored design from actual implementation. No placeholder source/tests/migration or unreviewed app change is authorized.
+Status: docs-only proposed design; implementation NOT_STARTED. All product gates NOT_RUN. MAIN requires full pinned SDD review before any API/migration/frontend code under repository conventions. This coordination hold is distinct from Felipe's product SDD approval. Task completion below separates authored design from actual implementation. No placeholder source/tests/migration or unreviewed app change is authorized.
 
 ## Completed design work
 
