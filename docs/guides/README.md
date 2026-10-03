@@ -7,3 +7,4 @@
 - [Acquire reviewed sources and inspect rights](05_sources.md).
 - [Use authenticated raw assets](06_api.md).
 - [Run bounded private processing jobs](07_processing_jobs.md).
+- [Use and reproduce the source-valid M05/M06 course](09_online-mt-course.md).

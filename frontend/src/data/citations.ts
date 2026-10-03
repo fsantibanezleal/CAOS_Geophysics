@@ -1,6 +1,14 @@
 import type { Citation } from "@fasl-work/caos-app-shell";
 
 export const CITATIONS: Citation[] = [
+  { id: "processingcontract", label: "Owned processing contract", citation: "Implemented authenticated owner CSV flag-processing workflow: immutable originals, dataset/job/result identity, private worker, export verification and explicit capability boundary. Develop baseline afac8ab.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/afac8ab/docs/guides/07_processing_jobs.md" },
+  { id: "mtcode", label: "MT scientific implementation", citation: "Reviewed strict EDI and electromagnetic implementation: original source, complex forward recurrence, objective, local sensitivity and conditional bootstrap. Scientific baseline 7b69404.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/tree/7b69404/data-pipeline" },
+  { id: "mtonline", label: "Bounded MT worker", citation: "Reviewed online M05/M06 implementation: exact-source screen binding, frozen frequency partition, training-only multistart and sensitivity controls. Compute baseline 7b69404.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/7b69404/app/mt_compute.py" },
+  { id: "mtcontract", label: "Online MT contract", citation: "Bounded authenticated EDI contract: source identity, result arrays, export and admission boundaries. PR100 contract at 0970a09; actual-host acceptance is separate.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/0970a09/docs/data-contract/02_online-edi-mt.md" },
+  { id: "mtmetadata", label: "MT Metadata EDI", citation: "MT Metadata official EDI reader for electromagnetic transfer functions; this product validates raw blocks before reader invocation.", url: "https://github.com/MTgeophysics/mt_metadata/blob/main/mt_metadata/transfer_functions/io/edi/edi.py" },
+  { id: "emtffcu", label: "EMTF-FCU conventions", citation: "EMTF-FCU source documentation: Fourier sign, impedance conventions, complex-error variance and limits of rotating EDI marginal errors.", url: "https://github.com/magnetotellurics/EMTF-FCU" },
+  { id: "caldwell2004", label: "Caldwell et al. 2004", citation: "Caldwell, T. G., Bibby, H. M. and Brown, C. The magnetotelluric phase tensor. Geophysical Journal International 158(2), 457-469 (2004).", doi: "10.1111/j.1365-246X.2004.02281.x" },
+  { id: "clearlake", label: "USGS Clear Lake MT", citation: "Peacock, J. R., Mitchell, M. A. and Burgess, S. D. Magnetotelluric data from the Clear Lake Region, Northern California. USGS data release (2025). cl061 is a measured QC-only exclusion, not 1D geological truth.", doi: "10.5066/P14KAQ3M", url: "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california" },
   {
     id: "allen1978",
     label: "Allen 1978",
