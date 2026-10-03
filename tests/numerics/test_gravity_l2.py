@@ -279,8 +279,9 @@ def test_private_optimizer_delegates_official_algorithms_and_fixed_parameters():
     req, d, prior, _, _ = tiny()
     problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
     opt = l2._RecordedProjectedGNCG(problem, prior, l2.monotonic()+120.)
-    for name in ('findSearchDirection', 'projection', 'scaleSearchDirection', 'minimize'):
+    for name in ('projection', 'scaleSearchDirection', 'minimize', 'activeSet', 'bindingSet'):
         assert getattr(type(opt), name) is getattr(l2.optimization.ProjectedGNCG, name)
+    assert type(opt).findSearchDirection is not l2.optimization.ProjectedGNCG.findSearchDirection
     expected = {'maxIter': 200, 'maxIterLS': 20, 'cg_maxiter': 200, 'cg_rtol': 1e-6, 'cg_atol': 0.,
                 'step_active_set': True, 'active_set_grad_scale': .01, 'LSreduction': 1e-4,
                 'LSshorten': .5, 'use_WolfeCurvature': False, 'require_decrease': True, 'maxStep': np.inf}
@@ -430,14 +431,222 @@ def test_pinned_stopping_null_and_terminal_state(monkeypatch):
     assert expired['status'] == 'nonconverged' and expired['reason'] == 'wall_cap'
 
 
-def test_nonstationary_zero_free_set_is_literal_failure():
+def test_nonstationary_zero_free_set_uses_approved_release():
     req, d, prior, _, _ = tiny()
     prior['start_kg_m3'][:] = prior['lower_kg_m3']
     problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
     result = l2._solve_partition(problem, prior)
-    assert result['status'] == 'nonconverged' and result['reason'] == 'zero_free_direction'
-    assert result['iterations'] == 0
-    np.testing.assert_array_equal(result['model_kg_m3'], prior['start_kg_m3'])
+    assert result['status'] == 'converged'
+    assert result['iterations'] > 0
+    np.testing.assert_array_equal(result['trace']['models_kg_m3'][0], prior['start_kg_m3'])
+    assert problem['optimizer_evidence']['direction_kinds'][0] == 1
+
+
+def six_cell_control(kind, bound, start='zero'):
+    """MAIN's retained physical specification, independently assembled in tests.
+
+    This is not a second author-independent control or field data. Direct Choclo,
+    explicit pairwise R and separate Cholesky avoid production G/W/R reuse.
+    """
+    origin = np.array([-320., -140., -510.])
+    widths = [np.array([70., 110., 90.]), np.array([80., 140.]), np.array([120., 60.])]
+    active = np.zeros(12, dtype=bool)
+    active[[0, 1, 4, 6, 9, 11]] = True
+    edges = [o + np.r_[0., np.cumsum(w)] for o, w in zip(origin, widths)]
+    boxes = np.array([[edges[0][i], edges[0][i+1], edges[1][j], edges[1][j+1], edges[2][k], edges[2][k+1]]
+                      for k in range(2) for j in range(2) for i in range(3) if active[i+3*j+6*k]])
+    points = np.array([[-100., 50., 140.], [500., -450., 80.], [-450., 300., -900.],
+                       [20., -200., 350.], [100., 200., 220.]])
+    jacobian = np.array([[choclo.prism.gravity_u(*p, *b, 1.)*1e5 for b in boxes] for p in points])
+    background = np.array([.002, -.003, .001, .004, -.002])
+    observed = jacobian@np.array([250., -450., 600., -800., 300., 1000.])+background
+    reference = np.array([10., -15., 25., -40., 5., 0.])
+    starts = {'zero': np.zeros(6), 'all_lower': np.full(6, -bound), 'all_upper': np.full(6, bound),
+              'lower_upper': np.tile([-bound, bound], 3), 'upper_lower': np.tile([bound, -bound], 3),
+              'lower_reference': np.where(np.arange(6) % 2 == 0, -bound, reference),
+              'upper_reference': np.where(np.arange(6) % 2 == 0, bound, reference)}
+    prior = {'lower_kg_m3': np.full(6, -bound), 'upper_kg_m3': np.full(6, bound),
+             'start_kg_m3': starts[start], 'reference_kg_m3': reference, 'density_scale_kg_m3': 750.,
+             'lengths_m': np.array([60., 110., 75.]), 'reference_in_smooth': True, 'spatial_weights': 'none'}
+    covariance = .005**2*(np.eye(5) if kind == 'diagonal_sd' else .65*np.eye(5)+.35*np.ones((5, 5)))
+    noise_spec = {'kind': kind, 'values': np.full(5, .005) if kind == 'diagonal_sd' else covariance}
+    request = {'frame': dict(forward.FRAME), 'engine': forward.ENGINE,
+               'mesh': dict(zip(('origin_m', 'hx_m', 'hy_m', 'hz_m', 'active'), (origin, *widths, active))),
+               'stations': {'receivers_m': points}, 'background_mgal': background}
+    independent = independent_r(boxes, prior['lengths_m'], .750)
+    whitening = la.solve_triangular(la.cholesky(covariance, lower=True), np.eye(5), lower=True)
+    augmented = np.vstack((whitening@(jacobian*1000.), np.sqrt(.05)*independent))
+    target = np.r_[whitening@(observed-background), np.sqrt(.05)*independent@(reference/1000.)]
+    return request, observed, noise_spec, prior, jacobian, augmented, target
+
+
+def assert_six_cell_optimum(kind, bound, start):
+    req, observed, spec, prior, jacobian, augmented, target = six_cell_control(kind, bound, start)
+    problem = l2._build_problem(req, observed, spec, prior, np.arange(5, dtype=np.int64), .01)
+    result = l2._solve_partition(problem, prior)
+    oracle = lsq_linear(augmented, target, bounds=(-bound/1000., bound/1000.),
+                        method='bvls', lsq_solver='exact', tol=1e-12, max_iter=1000)
+    assert oracle.success
+    assert result['status'] == 'converged', (kind, bound, start, result['reason'], result['kkt_normalized'])
+    q = result['model_kg_m3']/1000.
+    assert np.all(q >= -bound/1000.) and np.all(q <= bound/1000.)
+    model_relative = np.linalg.norm(q-oracle.x)/max(1., np.linalg.norm(oracle.x))
+    objective_relative = abs(np.linalg.norm(augmented@q-target)**2-2*oracle.cost)/max(1., 2*oracle.cost)
+    prediction_absolute = np.max(np.abs(jacobian@((q-oracle.x)*1000.)))
+    assert model_relative <= 1e-3 and objective_relative <= 1e-6 and prediction_absolute <= 1e-6
+    assert np.max(np.abs((q-oracle.x)*1000.))/max(1., np.max(np.abs(oracle.x*1000.))) <= 1e-5
+    assert prediction_absolute/max(1., np.max(np.abs(jacobian@(oracle.x*1000.)))) <= 1e-5
+    initial_g = 2*augmented.T@(augmented@(prior['start_kg_m3']/1000.)-target)
+    gradient = 2*augmented.T@(augmented@q-target)
+    projected = gradient.copy()
+    projected[(q <= -bound/1000.+1e-12) & (gradient > 0)] = 0.
+    projected[(q >= bound/1000.-1e-12) & (gradient < 0)] = 0.
+    assert np.linalg.norm(projected, ord=np.inf)/max(1., np.linalg.norm(initial_g, ord=np.inf)) <= 1e-5
+    trace, evidence = result['trace'], problem['optimizer_evidence']
+    np.testing.assert_array_equal(trace['models_kg_m3'][0], prior['start_kg_m3'])
+    for rho, phi in zip(trace['models_kg_m3'], trace['phi_engine']):
+        np.testing.assert_allclose(phi, np.linalg.norm(augmented@(rho/1000.)-target)**2, rtol=1e-10, atol=1e-12)
+    assert np.all(np.diff(trace['phi_engine']) <= 1e-12*np.maximum(1., abs(trace['phi_engine'][:-1])))
+    np.testing.assert_array_equal(result['residual_observed_minus_predicted_mgal'], observed-result['predicted_mgal'])
+    assert evidence['direction_kinds'].shape == (result['iterations'],)
+    assert not evidence['direction_kinds'].flags.writeable
+    assert np.all(trace['cg_counts'][evidence['direction_kinds'] == 1] == 0)
+    assert np.all(trace['line_search_counts'] <= 20) and result['iterations'] <= 200
+    return result, problem
+
+
+@pytest.mark.parametrize('kind', ['diagonal_sd', 'full_covariance'])
+@pytest.mark.parametrize('bound', [1500., 75.])
+def test_independent_six_cell_bvls_tight_and_wide(kind, bound):
+    assert_six_cell_optimum(kind, bound, 'zero')
+
+
+@pytest.mark.parametrize('kind', ['diagonal_sd', 'full_covariance'])
+@pytest.mark.parametrize('bound', [75., 1500.])
+@pytest.mark.parametrize('start', ['all_lower', 'all_upper', 'lower_upper', 'upper_lower',
+                                  'lower_reference', 'upper_reference'])
+def test_independent_six_cell_bound_starts(kind, bound, start):
+    assert_six_cell_optimum(kind, bound, start)
+
+
+def diagnostic_opt(monkeypatch, q, g, inverse, lower, upper):
+    """Trusted bounded arithmetic injection, not a physical engine substitute."""
+    q, g, inverse, lower, upper = (np.array(x, dtype=float) for x in (q, g, inverse, lower, upper))
+    prior = {'lower_kg_m3': lower*1000., 'upper_kg_m3': upper*1000.}
+    opt = l2._RecordedProjectedGNCG({}, prior, l2.monotonic()+120.)
+    opt.xc, opt.g, opt.f, opt.iter = q, g, 1., 0
+    opt.approxHinv = sp.diags(inverse, format='csr')
+    monkeypatch.setattr(opt, '_record', lambda: (float(np.linalg.norm(g, ord=np.inf)), 1.))
+    return opt
+
+
+@pytest.mark.parametrize('mixed', [False, True])
+def test_degenerate_release_exact_trigger_and_certificate(monkeypatch, mixed):
+    q, g = ([0., 1.], [-2., 0.]) if mixed else ([0., 0.], [-2., -3.])
+    opt = diagnostic_opt(monkeypatch, q, g, [.25, .5], [0., 0.], [4., 4.])
+    def deny(*args, **kwargs): raise AssertionError('exact zero-free release entered native CG')
+    monkeypatch.setattr(l2.optimization.ProjectedGNCG, 'findSearchDirection', deny)
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    expected = np.clip(np.array(q)-np.array([.25, .5])*g, 0., 4.)-q
+    np.testing.assert_array_equal(direction, expected)
+    assert np.dot(g, direction) <= -np.sum(direction**2/np.array([.25, .5]))
+    assert opt.cg_count == 0 and opt.cg_abs_resid is None and opt.cg_rel_resid is None
+
+
+def test_nonzero_underflow_free_gradient_is_not_release(monkeypatch):
+    opt = diagnostic_opt(monkeypatch, [0., 1.], [-2., 1e-300], [.25, .5], [0., 0.], [4., 4.])
+    assert opt.stoppingCriteria() and opt._reason == 'zero_free_direction'
+
+
+@pytest.mark.parametrize('null', [False, True])
+def test_stationary_bound_and_null_do_not_release(monkeypatch, null):
+    req, _, prior, _, _ = tiny()
+    prior['reference_kg_m3'][:] = prior['start_kg_m3'][:] = (0. if null else prior['lower_kg_m3'][0])
+    d = tiny()[4]@prior['start_kg_m3']+req['background_mgal']
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    def deny(*args, **kwargs): raise AssertionError('stationary bound/null entered any direction')
+    monkeypatch.setattr(l2._RecordedProjectedGNCG, 'findSearchDirection', deny)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'converged' and result['iterations'] == 0
+    evidence = problem['optimizer_evidence']
+    assert evidence['last_direction_kind'] == 'not_run'
+    assert evidence['last_cg_absolute_residual'] is evidence['last_cg_relative_residual'] is None
+
+
+@pytest.mark.parametrize('rounded', [False, True])
+def test_release_official_armijo_counts_and_rounded_trial(monkeypatch, rounded):
+    if rounded:
+        opt = diagnostic_opt(monkeypatch, [1e16], [-4.], [.5], [1e16], [1e16+8.])
+        opt.lower, opt.upper = np.array([1e16]), np.array([1e16+8.])
+        opt.evalFunction = lambda *args, **kwargs: 2.
+    else:
+        opt = diagnostic_opt(monkeypatch, [0.]*3, [-2.]*3, [.5]*3, [0.]*3, [2.]*3)
+        h = np.full((3, 3), 1.9)+np.eye(3)*.1
+        opt.f = 5.
+        opt.evalFunction = lambda q, **kwargs: float(.5*q@h@q-2*np.sum(q)+5)
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    if rounded:
+        with pytest.raises(l2._SolveFailure, match='zero_free_direction'): opt.modifySearchDirection(direction)
+    else:
+        trial, accepted = opt.modifySearchDirection(direction)
+        assert accepted and opt.iterLS == 1 and len(opt._trials) == 2
+        np.testing.assert_array_equal(trial, np.full(3, .5))
+        assert opt._LS_ft <= opt.f+1e-4*opt._LS_descent
+
+
+@pytest.mark.parametrize('failure', ['nonnegative_slope', 'nonfinite_slope', 'line_search_cap'])
+def test_release_trial_faults_never_enter_native_or_retry(monkeypatch, failure):
+    # Supplemental post-code diagnostic injections; not a claim that these
+    # projections/objectives occurred naturally in the physical BVLS controls.
+    opt = diagnostic_opt(monkeypatch, [0.], [-2.], [.5], [0.], [4.])
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    opt.evalFunction = lambda *args, **kwargs: 2.
+    if failure != 'line_search_cap':
+        monkeypatch.setattr(opt, 'projection', lambda q: np.array([-1. if failure == 'nonnegative_slope' else 1e308]))
+        with pytest.raises(l2._SolveFailure, match='nonfinite' if failure == 'nonfinite_slope' else 'zero_free_direction'):
+            opt.modifySearchDirection(direction)
+    else:
+        _, accepted = opt.modifySearchDirection(direction)
+        assert not accepted and opt._reason == 'line_search_failed'
+        assert len(opt._trials) == 20 and opt.iterLS == 20
+    assert opt.cg_count == 0 and opt.cg_abs_resid is opt.cg_rel_resid is None
+
+
+@pytest.mark.parametrize('failure', ['overflow', 'rounded_zero', 'wrong_projection'])
+def test_release_finite_failure_no_jitter_or_retry(monkeypatch, failure):
+    opt = diagnostic_opt(monkeypatch, [0.], [-2.], [1e308 if failure == 'overflow' else .5], [0.], [4.])
+    if failure == 'rounded_zero':
+        opt.xc = opt.lower = np.array([1e16])
+        opt.upper = np.array([1e16+8.])
+        opt.g[:] = -1.
+        opt.approxHinv = sp.diags([.25])
+    if failure == 'wrong_projection': monkeypatch.setattr(opt, 'projection', lambda q: np.array([-1.]))
+    assert not opt.stoppingCriteria()
+    with pytest.raises(l2._SolveFailure, match='nonfinite' if failure == 'overflow' else 'zero_free_direction'):
+        opt.findSearchDirection()
+
+
+def test_native_failure_never_invokes_release(monkeypatch):
+    opt = diagnostic_opt(monkeypatch, [1.], [-2.], [.5], [0.], [4.])
+    assert not opt.stoppingCriteria()
+    def failed(*args, **kwargs): raise RuntimeError('retained native CG failure')
+    def deny(*args, **kwargs): raise AssertionError('ordinary failure entered release projection')
+    monkeypatch.setattr(l2.optimization.ProjectedGNCG, 'findSearchDirection', failed)
+    monkeypatch.setattr(opt, 'projection', deny)
+    with pytest.raises(RuntimeError, match='retained native CG failure'): opt.findSearchDirection()
+
+
+def test_release_trace_identity_and_not_run_cg():
+    result, problem = assert_six_cell_optimum('full_covariance', 75., 'zero')
+    evidence = problem['optimizer_evidence']
+    np.testing.assert_array_equal(evidence['direction_kinds'], [0, 1])
+    assert evidence['last_direction_kind'] == 'degenerate_release'
+    assert evidence['last_cg_count'] == 0
+    assert evidence['last_cg_absolute_residual'] is evidence['last_cg_relative_residual'] is None
+    assert result['trace']['line_search_counts'][-1] == 1
 
 
 @pytest.mark.parametrize('kind', ['diagonal_sd', 'full_covariance'])

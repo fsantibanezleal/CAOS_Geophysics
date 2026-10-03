@@ -204,3 +204,70 @@ match. Relative links/strict JSON/base-integrity pass. Original137-file backup
 is present, ignored and git-untracked; no digest recomputation or mutation.
 Product ledger remains structurally valid with1 fail/18 unresolved, not scientific
 or release acceptance. No remote CI or independent amended-solver PASS is asserted.
+
+## Approved AS-B hybrid: new measured source, not d7 relabelling
+
+MAIN's complete1c8b2a1 amendment/research/direction-receipt read and explicit AS-B
+approval were persisted and pushed as73da9e3687a12b3439ac13afbd1efe8e33eedf05
+BEFORE new red tests and algorithm changes. The
+[new actual receipt](evidence/approved-release-execution-20261003.json) binds the
+new cpu-2/projected-gncg-degenerate-release-1 source. All original seven reviewed
+files, planner, accepted forward, installed sources and earlier JSONs are unchanged.
+
+Real pre-code run:27 FAIL/4 PASS/109 deselected, zero skips, source still ee006ccd.
+It reproduces both tight-bound zero-free failures and absent release/epoch/trace
+behaviour. An earlier malformed PowerShell JUnit argument ran no tests; that
+harness error is retained separately, not counted as a numerical red. First full
+green226 PASS belongs to the initial test bytes. Three subsequent fault-injection
+tests were added after that green, not retroactively claimed test-first.
+Intermediate focused run229 PASS, zero skips/deselections, includes149 new component
+controls plus80 unchanged forward controls. All28 trusted installed pins execute.
+Twenty installed SimPEG scalar-conversion deprecation warnings remain visible;
+the installed package is not changed or its warnings suppressed.
+
+Only the reviewed exact zero-free/active-not-binding branch changes direction.
+Convergence and caps run first; ordinary directions still call official CG and
+all directions still use official projected Armijo. Positive fixed D, strict
+finite/descent/actual-trial-no-op guards and no retry/fallback are tested. Native
+CG failures remain failures. Private direction-kind evidence distinguishes real
+CG from not-run residuals None; public record keys are unchanged. These are a
+local hybrid, not a claim that official native ProjectedGNCG is unchanged.
+
+Producer execution of MAIN's unchanged four-control helper passes all four at
+new source: tight diagonal/full-covariance converge in two accepted steps;
+model normalized errors3.1031676915590914e-17, objective relative errors0,
+prediction absolute errors<=3.776584818933027e-19mGal. Wide controls retain their
+original one-step agreement. Twelve separately recorded six-start/noise controls
+also pass; stationary all-upper controls stop at iteration0 before any direction.
+Accepted traces, feasible starts/models and d-minus-stored-p identity replay.
+This is producer execution, NOT MAIN detached acceptance or a replacement for
+MAIN's separately authored16-start helper. MAIN's d7 two-failure receipt and
+later4-PASS/12-FAIL baseline remain literal historical negatives.
+
+The subsequent supplemental start gate extends all six modes to BOTH bounds75
+and1500 under both noise modes. Actual24-test run:23 PASS/1 FAIL, no skips,
+64 other tests deselected for this diagnostic command. Wide1500 diagonal
+lower_reference hits the unchanged120s cooperative wall cap with normalized
+KKT0.0001297087805674626. The failing optimum assertion is retained, not xfailed,
+skipped or weakened. The229 focused/336 broader passes belong to earlier test
+bytes and do NOT cover this subsequently added failing control. No near-zero
+release or ordinary-CG fallback is authorized or implemented. Full current
+regression and separate accepted-trace diagnosis are recorded in the new receipt,
+including failures. Algorithm source remains unchanged during diagnosis.
+
+Current full existing-runtime regression:347 PASS/1 FAIL/14 attributed legacy
+skips, no deselection,20 vendor warnings. The exact focused subset in that SAME
+XML is240 PASS/1 FAIL/zero skips out of241 controls; it is not another execution
+or a green focused suite. The same three unchanged M01 files are explicitly
+separated for the historically demonstrated missing dependencies; no new L2 gate
+is excluded. The [additional diagnosis](ordinary-near-zero-negative.md) records
+the actual52-state native-only trace, independent free/active gradients, BVLS
+comparison failures and the exact approved-policy boundary. This source is a
+reviewable incomplete milestone, not ready for whole-unit promotion.
+
+AS-C/D remain open: full native sealed calibrate/evaluate, every candidate/trace,
+all24 locked outcomes, rank/resolution and projected/measured resource gates.
+No full16-gate, scientific whole-unit, field/API/IRLS/GPU/host, merge or deployment
+acceptance follows from the AS-B controls. MAIN must review and independently
+execute a stable pin. No algorithm, tolerance, bounds, cap, seed or beta changes
+beyond the explicitly approved narrow branch and source/policy epoch are made.
