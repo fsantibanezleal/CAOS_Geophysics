@@ -15,4 +15,4 @@ The actual-host maintenance/restore drill and deletion-path synchronous external
 - [x] R-OPS-09: persist validated bounded unit first; read full MT feature and runtime/data contracts; amend ops requirements/design/tasks before adapter code.
 - [x] R-OPS-09: strict per-modality dataset, job and result validation with same-dataset M05/M06 linkage; unknown variants fail closed.
 - [x] R-OPS-09: actual API M05/M06 immutable capture/restore/deletion plus hostile variant tests in new temporary fixtures, using MT environment read-only.
-- [ ] R-OPS-09: update guide, exact convergence commands and Poincare/main contract handoff; scoped self-review, commit/push PR #102. Host drill remains unrun.
+- [x] R-OPS-09: update guide, exact convergence commands and Poincare/main contract handoff; scoped self-review, commit/push PR #102. Host drill remains unrun.
