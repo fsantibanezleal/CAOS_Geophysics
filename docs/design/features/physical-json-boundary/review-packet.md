@@ -1,6 +1,6 @@
 # Local JSON boundary full-review packet
 
-Status: design-only, draft [PR127](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/127) review, no implementation permission. Related scoped [issue124](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/124); broader issues39/43 stay open. Read ALL seven documents, not just the limit table:
+Status: full MAIN review of all seven b124 documents complete on 2026-10-03; explicit approval ONLY for the independent NEW local helper/tests and own feature docs/evidence, recorded in tasks BEFORE code. Draft [PR127](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/127) remains open; no merge/release. Related scoped [issue124](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/124); broader issues39/43 stay open. Read ALL seven documents, not just the limit table:
 
 1. [Research and inspected sources](research.md)
 2. [EARS requirements and named gates](requirements.md)
@@ -20,7 +20,7 @@ The scanner-precount/native-encoder equality is an explicit oracle to falsify, n
 
 Current authorized paths are ONLY new docs/design/features/physical-json-boundary/{research,requirements,design,contracts,validation-plan,tasks,review-packet}.md. Baseline7e26d253ac7d3a3688cb6263f669a747681aa077. No existing tracked file, module/test, original data, dependency, API/frontend/parser/runtime/provider or other worktree changed. The previous course branch/reference remains be4ec1cea4a02c25829ec902fbc86e53d313fe30; eleven protected untracked diagnostic directories are excluded, never staged or deleted.
 
-Future module/test paths are proposals only. No API, storage, jobs, bundle, UI, browser/device/host admission, provider/field eligibility, physical-vertical activation, method acceptance or release is authorized. The larger M01 vertical SDD hard holds remain intact; this unit is not a waiver or alternate activation route. No merge/deploy is requested.
+MAIN has now explicitly authorized ONLY NEW data-pipeline/gravity_station_json.py and tests/data/test_gravity_station_json.py plus own seven docs/evidence. All14 gates must be test-first, frozen bounds/semantics retained, and local upper/resource/cold-stderr controls measured in fresh private scratch using existing runtimes without installs. Source-pinned ordinary core integration is tests-only/read-only; missing engines/skips must be disclosed. No API, storage, worker/jobs, bundle, UI, browser/device/host admission, provider/field eligibility, physical-vertical activation, method acceptance or release is authorized. The larger M01 vertical SDD hard holds remain intact; this unit is not a waiver or alternate activation route. No merge/deploy is requested.
 
 ## Current validation record
 
