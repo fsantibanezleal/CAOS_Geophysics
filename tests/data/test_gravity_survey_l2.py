@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 import gravity_forward as forward
+import gravity_l2 as l2
 import gravity_survey_l2 as survey
 
 
@@ -199,3 +200,83 @@ def test_proposed_scalar_accounting_excludes_descriptor_and_containers(monkeypat
         survey._native_metadata({'x': ((), ('a', False, None, 1))})
     monkeypatch.setattr(survey, 'MAX_SCALARS', 1)
     survey._native_metadata(np.zeros(3))
+
+
+def calibration_request():
+    """Test-owned compact development contract, not field/upload admission."""
+    plan = survey.plan_gravity_l2(planning_request())
+    rows = plan['development_rows']
+    observed = {'rows': rows.copy(), 'gz_up_mgal': np.zeros(len(rows)),
+                'acceleration_unit': 'mGal', 'vertical_positive': 'up'}
+    observed['values_sha256'] = survey._digest(observed)
+    noise = {'kind': 'diagonal_sd', 'values': np.full(len(rows), .01), 'unit': 'mGal',
+             'basis': 'explicit_conditional_gaussian', 'citation': 'Authored fixed conditional Gaussian scale',
+             'cross_partition_dependence': 'declared_absent'}
+    noise['values_sha256'] = survey._digest({key: noise[key] for key in ('kind', 'unit', 'values')}
+                                           | {'rows': rows})
+    a = len(plan['geometry']['active_cell_indices'])
+    prior = {'lower_kg_m3': np.full(a, -1500.), 'upper_kg_m3': np.full(a, 1500.),
+             'start_kg_m3': np.zeros(a), 'reference_kg_m3': np.zeros(a), 'density_scale_kg_m3': 1000.,
+             'lengths_m': np.array([80., 90., 70.]), 'basis': 'Authored frozen zero reference, signed bounds',
+             'reference_in_smooth': True, 'spatial_weights': 'none',
+             'geometry_sha256': survey._digest(plan['geometry'])}
+    return {'schema': 'gravity-survey-l2-calibration-request-1', 'plan': plan,
+            'observations': observed, 'noise': noise, 'prior': prior,
+            'policy': {'name': 'ordinary-l2-beta-grid-1', 'beta_candidates': l2.BETA_CANDIDATES,
+                       'optimizer': 'projected-gncg-recorded-1', 'training': 'not_applicable_classical'},
+            'runtime_epoch': l2.RUNTIME_EPOCH}
+
+
+@pytest.mark.parametrize('field', ['full_observations', 'oversize_covariance', 'noise_unit', 'noise_basis',
+                                  'prior_shape', 'prior_scale', 'prior_lengths', 'prior_reference_flag',
+                                  'seed_override', 'beta_type', 'outer_payload', 'runtime'])
+def test_calibration_metadata_before_any_scan_copy_hash_or_engine(monkeypatch, field):
+    req = calibration_request()
+    if field == 'full_observations': req['observations']['gz_up_mgal'] = np.zeros(144)
+    if field == 'oversize_covariance':
+        req['noise'].update(kind='full_covariance', values=np.eye(2049), unit='mGal^2')
+    if field == 'noise_unit': req['noise']['unit'] = 'microGal'
+    if field == 'noise_basis': req['noise']['basis'] = 'conservative_bounds'
+    if field == 'prior_shape': req['prior']['start_kg_m3'] = np.zeros(5000)
+    if field == 'prior_scale': req['prior']['density_scale_kg_m3'] = np.float64(1000.)
+    if field == 'prior_lengths': req['prior']['lengths_m'] = np.ones(4)
+    if field == 'prior_reference_flag': req['prior']['reference_in_smooth'] = 1
+    if field == 'seed_override': req['policy']['seed'] = 3
+    if field == 'beta_type': req['policy']['beta_candidates'] = (True,) + l2.BETA_CANDIDATES[1:]
+    if field == 'outer_payload': req['observations']['outer_values'] = np.zeros(36)
+    if field == 'runtime': req['runtime_epoch'] = 'unreviewed'
+    def deny(*args, **kwargs): raise AssertionError('numerical work before calibration metadata admission')
+    for name in ('isfinite', 'array', 'count_nonzero', 'array_equal'):
+        monkeypatch.setattr(survey.np, name, deny)
+    for name in ('_digest', '_snapshot', '_validate_plan', 'forward_gravity'):
+        monkeypatch.setattr(survey, name, deny)
+    monkeypatch.setattr(l2, '_build_problem', deny)
+    with pytest.raises((TypeError, ValueError)):
+        l2._admit_calibration(req)
+
+
+def test_compact_calibration_admission_owns_no_outer_observation_values():
+    req = calibration_request()
+    admitted = l2._admit_calibration(req)
+    np.testing.assert_array_equal(admitted['observations']['rows'], req['plan']['development_rows'])
+    assert admitted['observations']['gz_up_mgal'].shape == (108,)
+    assert admitted['noise']['values'].shape == (108,)
+    assert not admitted['observations']['gz_up_mgal'].flags.writeable
+    req['observations']['gz_up_mgal'][0] = 1.
+    assert admitted['observations']['gz_up_mgal'][0] == 0.
+
+
+@pytest.mark.parametrize('field', ['observation_hash', 'noise_hash', 'geometry_hash', 'rows',
+                                  'bounds_swap', 'infeasible_start', 'infeasible_reference', 'zero_sd', 'nonfinite'])
+def test_calibration_finite_identity_bounds_and_noise_fail_closed(field):
+    req = calibration_request()
+    if field == 'observation_hash': req['observations']['values_sha256'] = '0' * 64
+    if field == 'noise_hash': req['noise']['values_sha256'] = '0' * 64
+    if field == 'geometry_hash': req['prior']['geometry_sha256'] = '0' * 64
+    if field == 'rows': req['observations']['rows'][1] = req['observations']['rows'][0]
+    if field == 'bounds_swap': req['prior']['lower_kg_m3'][0] = 1500.
+    if field == 'infeasible_start': req['prior']['start_kg_m3'][0] = 1501.
+    if field == 'infeasible_reference': req['prior']['reference_kg_m3'][0] = -1501.
+    if field == 'zero_sd': req['noise']['values'][0] = 0.
+    if field == 'nonfinite': req['observations']['gz_up_mgal'][0] = np.nan
+    with pytest.raises(ValueError): l2._admit_calibration(req)
