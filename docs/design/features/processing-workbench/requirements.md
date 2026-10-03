@@ -1,6 +1,6 @@
 # Selected-project processing workbench requirements
 
-Date: 2026-10-03. Status: planned. Parent: approved product SDD R-004/R-005/R-006/R-011; issues #74/#75. Implementation authorized by the user's October 3 bounded frontend assignment. This unit consumes the existing authenticated processing API; scientific engines and their release gates retain their own acceptance criteria.
+Date: 2026-10-03. Status: implemented and locally verified for the bounded gravity flag adapter. Parent: approved product SDD R-004/R-005/R-006/R-011; issues #74/#75. Implementation authorized by the user's October 3 bounded frontend assignment. This unit consumes the existing authenticated processing API; scientific engines and their release gates retain their own acceptance criteria. Exact receipts and non-claims are in [validation.md](validation.md).
 
 R-PW-01 WHEN an authenticated owner opens a selected project from the existing App project drawer, THE frontend SHALL show its datasets, eligibility, jobs and results on the primary App instrument without adding a route, replacing shared shell typography/tokens, or mixing curated results with private observations. Gate: `frontend/e2e/processing-workbench.spec.ts` test `owner upload to flag result and verified export` and test `direct project hydration and session boundary`.
 

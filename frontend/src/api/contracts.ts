@@ -239,7 +239,7 @@ function exactKeys(value: Record<string, unknown>, expected: readonly string[], 
   for (const key of expected) if (!(key in value)) fail(`${path}.${key}`, "missing field");
 }
 
-function rawPhysical(value: unknown): RawPhysicalMetadata {
+export function rawPhysical(value: unknown): RawPhysicalMetadata {
   const physical = object(value, "raw_asset.physical_metadata");
   exactKeys(physical, ["coordinate_reference", "epsg", "local_crs", "axis_order", "horizontal_datum", "vertical_datum", "vertical_positive", "horizontal_unit", "vertical_unit", "measurement_unit", "epoch_utc", "component_frame", "geometry"], "raw_asset.physical_metadata");
   choice(physical.coordinate_reference, ["epsg", "local"] as const, "raw_asset.physical_metadata.coordinate_reference");

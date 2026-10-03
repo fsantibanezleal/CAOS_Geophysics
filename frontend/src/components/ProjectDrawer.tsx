@@ -8,7 +8,7 @@ import { FORMAT_SPECS, type RawFormat } from "../api/upload-metadata";
 
 type GuestStep = "login" | "register" | "verify" | "recover" | "reset";
 type OwnerStep = "projects" | "upload" | "receipts" | "account";
-type Props = { es: boolean; onClose: () => void };
+type Props = { es: boolean; onClose: () => void; onOpenWorkbench?: (projectId: string) => void; onOwnerCleared?: () => void };
 
 function errorMessage(error: unknown, es: boolean): string {
   const t = (en: string, spanish: string) => es ? spanish : en;
@@ -52,7 +52,7 @@ function saveBlob(blob: Blob, filename: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
-export function ProjectDrawer({ es, onClose }: Props) {
+export function ProjectDrawer({ es, onClose, onOpenWorkbench, onOwnerCleared }: Props) {
   const t = (en: string, spanish: string) => es ? spanish : en;
   const dialog = useRef<HTMLDialogElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
@@ -92,7 +92,7 @@ export function ProjectDrawer({ es, onClose }: Props) {
 
   useEffect(() => { if (error) errorRef.current?.scrollIntoView({ block: "nearest" }); }, [error]);
 
-  const clearOwner = () => { setAccount(null); setProjects([]); setProjectId(""); setAssets([]); setReceipt(null); setOwnerStep("projects"); };
+  const clearOwner = () => { setAccount(null); setProjects([]); setProjectId(""); setAssets([]); setReceipt(null); setOwnerStep("projects"); onOwnerCleared?.(); };
   const loadProjects = useCallback(async (preferredId?: string) => {
     const list = await api.projects();
     setProjects(list);
@@ -233,6 +233,7 @@ export function ProjectDrawer({ es, onClose }: Props) {
         {selectedProject && <form className="project-form project-delete" onSubmit={deleteProject}><h3>{t("Delete selected project", "Eliminar proyecto seleccionado")}</h3><p>{t("This removes the API-owned project and verified raw files only if the server permits it. Existing backup entries block deletion; external backup erasure is not attempted.", "Esto elimina el proyecto de la API y archivos originales verificados solo si el servidor lo permite. Los respaldos existentes bloquean la eliminación; no se intenta borrar respaldos externos.")}</p><label className="select-control"><span>{t("Type the exact project name to confirm", "Escriba el nombre exacto para confirmar")}: {selectedProject.name}</span><input className="select" required value={deleteName} onChange={event => setDeleteName(event.target.value)} /></label><button className="btn" disabled={busy || deleteName !== selectedProject.name}>{t("Delete project and request receipt", "Eliminar proyecto y solicitar recibo")}</button></form>}
         {deletion && <div className="project-card" role="status"><strong>{t("Deletion receipt", "Recibo de eliminación")}</strong><p>{deletion.receipt_id}</p><p>{t("Backup erasure not attempted; external backup reconciliation pending.", "No se intentó borrar respaldos; conciliación de respaldos externos pendiente.")}</p></div>}
       </div>}
+      {selectedProject && onOpenWorkbench && <button className="btn primary" disabled={busy} onClick={() => onOpenWorkbench(selectedProject.id)}>{t("Open processing workbench", "Abrir mesa de procesamiento")}</button>}
       {ownerStep === "upload" && (projectId ? <div className="project-section"><p className="project-account">{t("Private project", "Proyecto privado")}: {selectedProject?.name}</p><RawUploadForm es={es} assets={assets} busy={busy} onSubmit={upload} /></div> : <p>{t("Select or create a project first.", "Seleccione o cree un proyecto primero.")}</p>)}
       {ownerStep === "receipts" && <div className="project-section"><p className="project-account">{t("Private project", "Proyecto privado")}: {selectedProject?.name}</p><h3>{t("Original-byte receipts", "Recibos de bytes originales")}</h3><p className="project-note">{t("raw_metadata_checked means upload metadata and file envelope only; no scientific QC, dataset or solver eligibility.", "raw_metadata_checked significa solo metadatos de carga y envoltura del archivo; no implica control científico, conjunto de datos ni elegibilidad para métodos.")}</p>
         {assets.length ? <ul className="project-assets">{assets.map(asset => <li className="project-card" key={asset.asset_id}><strong>{asset.original_filename}</strong><span>{FORMAT_SPECS[asset.detected_format as RawFormat] ? (es ? FORMAT_SPECS[asset.detected_format as RawFormat].es : FORMAT_SPECS[asset.detected_format as RawFormat].en) : asset.detected_format} · {asset.byte_count.toLocaleString(es ? "es-CL" : "en-US")} bytes</span><div className="project-actions"><button className="btn" disabled={busy} onClick={() => showReceipt(asset.asset_id)}>{t("View receipt", "Ver recibo")}</button><button className="btn" disabled={busy} onClick={() => download(asset)}>{t("Download original", "Descargar original")}</button></div></li>)}</ul> : <p className="project-note">{t("No uploaded originals in this project.", "No hay originales cargados en este proyecto.")}</p>}
