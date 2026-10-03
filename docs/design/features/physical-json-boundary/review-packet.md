@@ -1,6 +1,6 @@
 # Local JSON boundary full-review packet
 
-Status: design-only, draft review, no implementation permission. Related scoped issue124; broader issues39/43 stay open. Read ALL seven documents, not just the limit table:
+Status: design-only, draft [PR127](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/127) review, no implementation permission. Related scoped [issue124](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/124); broader issues39/43 stay open. Read ALL seven documents, not just the limit table:
 
 1. [Research and inspected sources](research.md)
 2. [EARS requirements and named gates](requirements.md)
@@ -37,4 +37,4 @@ read-only PowerShell scope/link/EARS/matrix/source/exclusion audit : PASS
 
 The audit checked exactly seven added Markdown paths/no existing modifications,14 unique requirements and14 Gate lines with named matrix controls,21 resolved relative Markdown links, exact inspected core/adapter hashes, absent prospective module/test, unchanged coursebe4 ref and11 protected untracked diagnostic directories excluded. The unchanged product ledger still records zero whole-requirement passes,18 unresolved and one failed: its structurally valid receipt is not parser/scientific/release acceptance. No scripts/check_sdd.py exists; none was claimed run or added.
 
-Final commit/remote/draft PR pin will be recorded in the handoff without a self-referential source hash. All helper/negative/numerical/local resource gates remain NOT_RUN. Product/API/frontend/browser/host suites were not executed for this design-only/no-activation instruction. Prior core/adapter/MT/course receipts are not relabelled as this unit's evidence.
+Initial seven-doc milestone f5bb0344bc475a5ccad42f67fe327d39dcfce8f9 was committed/pushed and draft PR127 opened against develop. This follow-up records that persistence only; the exact final commit/remote pin and self-review are in the PR handoff without a self-referential source hash. All helper/negative/numerical/local resource gates remain NOT_RUN. Product/API/frontend/browser/host suites were not executed for this design-only/no-activation instruction. Prior core/adapter/MT/course receipts are not relabelled as this unit's evidence.

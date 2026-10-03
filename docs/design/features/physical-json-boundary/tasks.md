@@ -8,7 +8,7 @@ Status: design-only, awaiting full main review. This plan has no implementation 
 - [x] Fetch current develop; create independent task/geophysics-physical-json-sdd from7e26d25 in the owned ingestion worktree, preserving coursebe4 references and11 diagnostic directories.
 - [x] Persist research before requirements/design/contracts and the explicit local-only/no-waiver boundary (R-PJB01..14).
 - [x] Run tracked docs guards and independent path/link/EARS/scope audit; preserve no-code status (R-PJB14). Actual results are in the review packet.
-- [ ] Commit/push scoped design and open a draft develop PR with self-review and full review pin; no merge.
+- [x] Commit/push scoped design and open draft develop [PR127](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/127); initial documentation milestone f5bb034, final self-review/pin recorded in the PR handoff; no merge.
 - [ ] MAIN reads ALL seven documents and explicitly approves or requests corrections. A docs PR or merge alone does not authorize helper/tests.
 
 ## Only after explicit full review and implementation approval
