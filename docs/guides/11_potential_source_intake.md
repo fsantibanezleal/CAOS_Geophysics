@@ -40,10 +40,10 @@ Run from the repository root. Paths may contain spaces; quote them. The paired s
 
 Every inventory path must be canonical portable ASCII, relative, without traversal, drive syntax, controls, Windows devices, trailing dot/space aliases, case collisions or file/parent collisions. Symlinks, reparse points in storage, special files, encryption, unsupported compression and nonempty directory records fail. The complete inventory is bounded before reading selected content. Only these exact names and their ledger byte/SHA-256 pins are read:
 
-- `data/ground_gravity_data.csv` — 335377 bytes.
-- `data/aeromagnetic_data.csv` — 28531313 bytes.
-- `data/topography_data.csv` — 193035546 bytes.
-- `README.pdf` — 96913 bytes (stored only, not executed or rendered).
+- `data/ground_gravity_data.csv`: 335377 bytes.
+- `data/aeromagnetic_data.csv`: 28531313 bytes.
+- `data/topography_data.csv`: 193035546 bytes.
+- `README.pdf`: 96913 bytes (stored only, not executed or rendered).
 
 Unselected source code, notebooks, saved model text, `.npy` and HDF5 files are inventoried by ZIP headers only, never opened, loaded or executed. No `extractall`, pickle loading, array deserialization or provider code execution occurs. All selected bytes are staged and verified before exclusive hard-link installation. Existing member/receipt disagreements fail before intentional publication; no overwrite occurs. Multi-file publication is not a transactional filesystem operation: an OS failure or competing writer during installation can leave an incomplete set of **verified** members, recoverable by identical retry. Use one intake writer per worktree.
 
