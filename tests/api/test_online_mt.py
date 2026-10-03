@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import hashlib
 import io
 import json
@@ -22,6 +23,7 @@ from app.bundle import verify_bundle
 from app.config import WorkerSettings
 from app.mt_compute import compute_mt, verified_source_snapshot
 from app.mt_contract import M05_ID, M06_ID
+from app.mt_bundle import build_mt_bundle
 from app.processing_contract import canonical_bytes, sha256
 from app.worker import run_one
 
@@ -298,6 +300,46 @@ def test_bundle_roundtrip_and_wrong_principal(make_harness):
     assert harness.request("POST", f"/api/projects/{project['id']}/jobs", json={
         "dataset_id": dataset["dataset_id"], "method_id": M05_ID, "parameters": {},
     }).status_code == 404
+
+
+def test_bundle_near_zero_residual_uses_exported_prediction(make_harness):
+    harness = make_harness(mt_online_enabled=True)
+    harness.account()
+    project, _asset, dataset, _body = upload_dataset(
+        harness, NATIVE, station="HALFSPACE_100_NATIVE", count=24)
+    _screen, qc = complete(harness, submit(harness, project, dataset, M05_ID, {}))
+    _result, job = complete(harness, submit(harness, project, dataset, M06_ID, {
+        "qc_job_id": qc["job_id"], "thickness_m": [], "initial_ohm_m": [100],
+        "beta": 0.001, "bootstrap_samples": 20, "seed": 61001,
+    }))
+    response = harness.client.get(f"/api/projects/{project['id']}/jobs/{job['job_id']}/export")
+    assert response.status_code == 200, response.text
+    _manifest, data, result = verify_bundle(response.content)
+    changed = copy.deepcopy(result)
+    method = changed["inverse"]["methods"]["mt-lm"]
+    observed = changed["screen"]["observed"]["xy"]
+    for key in ("real", "imag"):
+        method["predicted"][key] = np.nextafter(method["predicted"][key], np.inf).tolist()
+        method["residual"][key] = (np.asarray(observed[key]) - method["predicted"][key]).tolist()
+    assert max(abs(value) for value in method["residual"]["real"]) < 1e-15
+    encoded = build_mt_bundle(data, changed, sha256(canonical_bytes(data)), sha256(canonical_bytes(changed)))
+    assert verify_bundle(encoded)[2] == changed
+
+    # Hashes are all regenerated: semantic checks, not byte hashes, must reject these changes.
+    for variant in ("prediction", "residual", "nonfinite", "shape"):
+        corrupted = copy.deepcopy(changed)
+        curves = corrupted["inverse"]["methods"]["mt-lm"]
+        if variant == "prediction":
+            curves["predicted"]["real"][0] += 1e-5
+            curves["residual"]["real"][0] -= 1e-5
+        elif variant == "residual":
+            curves["residual"]["real"][0] += 1e-8
+        elif variant == "nonfinite":
+            curves["predicted"]["real"][0] = "NaN"
+        else:
+            curves["predicted"]["real"].pop()
+        with pytest.raises(ValueError, match="predicted or residual"):
+            build_mt_bundle(data, corrupted, sha256(canonical_bytes(data)), sha256(canonical_bytes(corrupted)))
 
 
 def test_verified_snapshot_survives_source_drift(make_harness, tmp_path):
