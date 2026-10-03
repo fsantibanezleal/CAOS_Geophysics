@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 import scipy.linalg as la
 import scipy.sparse as sp
+from scipy.optimize import lsq_linear
 
 import gravity_forward as forward
 import gravity_l2 as l2
@@ -195,6 +196,221 @@ def test_nonuniform_full_active_stencil_all_directions():
                                    2*independent.T@independent@direction, rtol=1e-10, atol=1e-12)
 
 
+@pytest.mark.parametrize('bound,start', [(1500., 0.), (1500., 100.), (1500., -100.), (250., 0.)])
+def test_bounded_l2_independent_bvls_and_kkt(bound, start):
+    req, d, prior, bounds, oracle = tiny()
+    prior['lower_kg_m3'][:] = -bound
+    prior['upper_kg_m3'][:] = bound
+    prior['start_kg_m3'][:] = start
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'converged', result
+    assert result['reason'] in ('kkt_stable', 'absolute_stationary')
+    assert result['kkt_normalized'] <= 1e-5
+    r = independent_r(bounds, prior['lengths_m'], 1.)
+    chol = la.cholesky(noise()['values'], lower=True)
+    w = la.solve_triangular(chol, np.eye(4), lower=True)
+    a = np.vstack([w @ (oracle*1000), np.sqrt(problem['beta_engine'])*r])
+    target = np.r_[w@(d-req['background_mgal']), np.sqrt(problem['beta_engine'])*r@(prior['reference_kg_m3']/1000)]
+    oracle_solve = lsq_linear(a, target, bounds=(-bound/1000, bound/1000), method='bvls', lsq_solver='exact',
+                              tol=1e-12, max_iter=1000)
+    assert oracle_solve.success
+    density = result['model_kg_m3']
+    assert np.all(density >= -bound) and np.all(density <= bound)
+    assert np.max(np.abs(density - oracle_solve.x*1000))/max(1., np.max(np.abs(oracle_solve.x*1000))) <= 1e-5
+    oracle_prediction = oracle @ (oracle_solve.x*1000) + req['background_mgal']
+    assert np.max(np.abs(result['predicted_mgal']-oracle_prediction))/max(1., np.max(np.abs(oracle_prediction))) <= 1e-5
+    np.testing.assert_allclose(result['phi_engine'], 2*oracle_solve.cost, rtol=1e-5, atol=1e-12)
+    np.testing.assert_array_equal(result['residual_observed_minus_predicted_mgal'], d-result['predicted_mgal'])
+    if bound == 250.: assert np.any(np.isclose(np.abs(oracle_solve.x), .25, rtol=0., atol=1e-12))
+    trace = result['trace']
+    assert len(trace['phi_engine']) == result['iterations']+1
+    np.testing.assert_array_equal(trace['models_kg_m3'][-1], density)
+    for rho, pd, pm in zip(trace['models_kg_m3'], trace['phi_d'], trace['phi_m']):
+        np.testing.assert_allclose([pd, pm], [problem['misfit'](rho/1000), problem['regularization'](rho/1000)],
+                                   rtol=1e-10, atol=1e-12)
+    assert np.all(np.diff(trace['phi_engine']) <= 1e-12*np.maximum(1., np.abs(trace['phi_engine'][:-1])))
+    assert np.all(trace['cg_counts'] <= 200) and np.all(trace['line_search_counts'] <= 20)
+    assert not density.flags.writeable
+
+
+def test_private_optimizer_delegates_official_algorithms_and_fixed_parameters():
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    opt = l2._RecordedProjectedGNCG(problem, prior, l2.monotonic()+120.)
+    for name in ('findSearchDirection', 'projection', 'scaleSearchDirection', 'minimize'):
+        assert getattr(type(opt), name) is getattr(l2.optimization.ProjectedGNCG, name)
+    expected = {'maxIter': 200, 'maxIterLS': 20, 'cg_maxiter': 200, 'cg_rtol': 1e-6, 'cg_atol': 0.,
+                'step_active_set': True, 'active_set_grad_scale': .01, 'LSreduction': 1e-4,
+                'LSshorten': .5, 'use_WolfeCurvature': False, 'require_decrease': True, 'maxStep': np.inf}
+    for name, value in expected.items(): assert getattr(opt, name) == value
+    np.testing.assert_array_equal(opt.lower, prior['lower_kg_m3']/1000.)
+    np.testing.assert_array_equal(opt.upper, prior['upper_kg_m3']/1000.)
+
+
+def test_private_optimizer_nonfinite_inverse_diagonal_rejects_before_run(monkeypatch):
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    # Inject a finite positive but unrepresentably invertible Hessian diagonal.
+    # This is an arithmetic guard, not a claim about a naturally observed survey.
+    problem['misfit'].W = sp.diags(np.full(4, 1e-160), format='csr')
+    monkeypatch.setattr(problem['regularization'], 'deriv2', lambda q: sp.diags(np.full(5, 1e-320)))
+    def deny(*args, **kwargs): raise AssertionError('nonfinite preconditioner reached official run')
+    monkeypatch.setattr(l2.inversion.BaseInversion, 'run', deny)
+    with pytest.raises(ValueError, match='preconditioner'):
+        l2._solve_partition(problem, prior)
+
+
+@pytest.mark.parametrize('failure', ['cg_residual', 'nonfinite_direction', 'engine_error', 'line_search'])
+def test_private_optimizer_injected_failures_never_claim_convergence(monkeypatch, failure):
+    # Bounded diagnostic fault injection, NOT naturally occurring physics results.
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    official_direction = l2.optimization.ProjectedGNCG.findSearchDirection
+    seen = {'cg': 0, 'ls': 0}
+    def direction(opt):
+        seen['cg'] += 1
+        if failure == 'engine_error': raise RuntimeError('injected official engine failure')
+        step = official_direction(opt)
+        if failure == 'cg_residual':
+            opt.cg_abs_resid = max(opt.cg_rtol*opt._initial_free_residual, opt.cg_atol)+1.
+        if failure == 'nonfinite_direction': step[0] = np.nan
+        return step
+    monkeypatch.setattr(l2.optimization.ProjectedGNCG, 'findSearchDirection', direction)
+    official_stop = l2.optimization.Minimize.stoppingCriteria
+    def stop(opt, inLS=False):
+        if inLS:
+            seen['ls'] += 1
+            if failure == 'line_search': return False
+        return official_stop(opt, inLS=inLS)
+    monkeypatch.setattr(l2.optimization.Minimize, 'stoppingCriteria', stop)
+    result = l2._solve_partition(problem, prior)
+    reason = {'cg_residual': 'cg_cap', 'nonfinite_direction': 'nonfinite',
+              'engine_error': 'engine_error', 'line_search': 'line_search_failed'}[failure]
+    assert seen['cg'] == 1
+    assert result['reason'] == reason
+    assert result['status'] == ('failed' if failure in ('nonfinite_direction', 'engine_error') else 'nonconverged')
+    assert result['iterations'] == 0 and len(result['trace']['phi_engine']) == 1
+    np.testing.assert_array_equal(result['model_kg_m3'], prior['start_kg_m3'])
+    assert result['failed_trial']['reason'] == reason
+    if failure == 'line_search':
+        assert seen['ls'] == 20
+        assert len(problem['optimizer_evidence']['trial_objectives']) == 20
+    else:
+        assert seen['ls'] == 0
+
+
+def test_private_optimizer_terminal_return_tamper_is_not_success(monkeypatch):
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    official_run = l2.inversion.BaseInversion.run
+    def tampered(runner, start):
+        terminal = official_run(runner, start)
+        return terminal + .001
+    monkeypatch.setattr(l2.inversion.BaseInversion, 'run', tampered)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'failed' and result['reason'] == 'state_mismatch'
+    np.testing.assert_array_equal(result['trace']['models_kg_m3'][-1], result['model_kg_m3'])
+
+
+def test_private_optimizer_deadline_precedence_after_failed_line_search(monkeypatch):
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    clock = [0.]
+    monkeypatch.setattr(l2, 'monotonic', lambda: clock[0])
+    official_ls = l2.optimization.ProjectedGNCG.modifySearchDirection
+    def rejected(opt, direction):
+        trial, _ = official_ls(opt, direction)
+        clock[0] = 121.
+        return trial, False
+    monkeypatch.setattr(l2.optimization.ProjectedGNCG, 'modifySearchDirection', rejected)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'nonconverged' and result['reason'] == 'line_search_failed'
+    assert result['wall_seconds'] == 121.
+
+
+@pytest.mark.parametrize('failure', ['exception', 'arithmetic', 'nonfinite'])
+def test_private_optimizer_prediction_export_failure_retains_record(monkeypatch, failure):
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    official_run = l2.inversion.BaseInversion.run
+    official_prediction = problem['simulation'].dpred
+    complete = [False]
+    def run(runner, start):
+        terminal = official_run(runner, start)
+        complete[0] = True
+        return terminal
+    def prediction(*args, **kwargs):
+        if complete[0]:
+            if failure == 'exception': raise RuntimeError('injected export engine failure')
+            if failure == 'arithmetic': raise FloatingPointError('injected export arithmetic failure')
+            return np.full(4, np.inf)
+        return official_prediction(*args, **kwargs)
+    monkeypatch.setattr(l2.inversion.BaseInversion, 'run', run)
+    monkeypatch.setattr(problem['simulation'], 'dpred', prediction)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'failed'
+    assert result['reason'] == ('engine_error' if failure == 'exception' else 'nonfinite')
+    assert result['predicted_mgal'] is None and result['residual_observed_minus_predicted_mgal'] is None
+    assert len(result['trace']['phi_engine']) >= 1
+    assert np.isfinite(result['model_kg_m3']).all()
+
+
+def test_private_optimizer_injected_iteration_cap_not_native_tolerance_success(monkeypatch):
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    official_record = l2._RecordedProjectedGNCG._record
+    def capped(opt):
+        absolute, kkt = official_record(opt)
+        assert absolute > 1e-12 and kkt > 1e-5
+        opt.f0 = opt.f_last = opt.f
+        opt.x_last = opt.xc.copy()  # Complete native diagnostic-print state.
+        opt.iter = 200  # Diagnostic injection, NOT a claim of200 actual accepted steps.
+        return absolute, kkt
+    monkeypatch.setattr(l2._RecordedProjectedGNCG, '_record', capped)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'nonconverged' and result['reason'] == 'iteration_cap'
+    assert result['iterations'] == 0 and result['failed_trial']['iteration'] == 200
+
+
+def test_pinned_stopping_null_and_terminal_state(monkeypatch):
+    req, _, prior, _, _ = tiny()
+    prior['reference_kg_m3'][:] = prior['start_kg_m3'][:] = 0.
+    problem = l2._build_problem(req, req['background_mgal'], noise(), prior, np.arange(4, dtype=np.int64), .01)
+    def deny(*args, **kwargs): raise AssertionError('stationary null entered CG')
+    with monkeypatch.context() as guard:
+        guard.setattr(l2.optimization.ProjectedGNCG, 'findSearchDirection', deny)
+        result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'converged' and result['reason'] == 'absolute_stationary'
+    assert result['iterations'] == 0 and len(result['trace']['phi_engine']) == 1
+    assert result['phi_d'] == result['phi_m'] == result['phi_engine'] == result['wrms'] == 0.
+    np.testing.assert_array_equal(result['model_kg_m3'], np.zeros(5))
+    expired = l2._solve_partition(problem, prior, deadline=l2.monotonic()-1)
+    assert expired['status'] == 'nonconverged' and expired['reason'] == 'wall_cap'
+
+
+def test_nonstationary_zero_free_set_is_literal_failure():
+    req, d, prior, _, _ = tiny()
+    prior['start_kg_m3'][:] = prior['lower_kg_m3']
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    result = l2._solve_partition(problem, prior)
+    assert result['status'] == 'nonconverged' and result['reason'] == 'zero_free_direction'
+    assert result['iterations'] == 0
+    np.testing.assert_array_equal(result['model_kg_m3'], prior['start_kg_m3'])
+
+
+@pytest.mark.parametrize('kind', ['diagonal_sd', 'full_covariance'])
+@pytest.mark.parametrize('rows', [[0, 0, 2], [2, 0, 1], [-1, 0, 2], [0, 2, 4]])
+def test_private_whitening_rejects_duplicate_marginal_indices(monkeypatch, kind, rows):
+    indices = np.array(rows, dtype=np.int64)
+    def deny(*args, **kwargs): raise AssertionError('factorization before invalid row identity rejected')
+    monkeypatch.setattr(l2.la, 'cholesky', deny)
+    monkeypatch.setattr(l2.la, 'eigh', deny)
+    monkeypatch.setattr(l2.np, 'isfinite', deny)
+    with pytest.raises(ValueError, match='rows'):
+        l2._weights(noise(kind), indices)
+
+
 def test_no_io_hooks_runtime_or_legacy_mutation(monkeypatch):
     root = Path(__file__).resolve().parents[2]
     assert hashlib.sha256((root/'data-pipeline/gravity_forward.py').read_bytes()).hexdigest() == (
@@ -219,6 +435,8 @@ def test_no_io_hooks_runtime_or_legacy_mutation(monkeypatch):
         guard.setattr(importlib.metadata, 'distribution', deny)
         problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
         assert problem['misfit'](np.zeros(5)) >= 0
+        solved = l2._solve_partition(problem, prior)
+        assert solved['status'] == 'converged'
         planned = survey.plan_gravity_l2(planning_req)
         assert len(planned['outer_rows']) == 36
         old_version = forward.simpeg.__version__

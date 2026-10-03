@@ -87,3 +87,64 @@ MAIN review before production metadata changes. Bounded red tests are authored
 and actually run; private aligned-row rejection is corrected in WIP. Optimizer
 work remains uncommitted and incomplete. No old receipt, reviewed packet,
 accepted forward, legacy engine, canonical data or installed runtime is changed.
+
+## Approved metadata and private optimizer milestone
+
+MAIN's complete accounting read/approval was committed and pushed as0b0adda
+BEFORE the production metadata patch. Read the
+[fresh actual receipt](evidence/metadata-optimizer-execution-20261003.json), which
+binds new source/tests and retains the14-red/2-pass admission run, prediction-export
+handler failures, diagnostic-fixture defect and nonfinite reciprocal-diagonal red.
+No first134-pass receipt, old failed evidence or numerical threshold was rewritten.
+
+The metadata walker now charges exact approved compact descriptor UTF-8 bytes,
+including container punctuation BEFORE child visits, escaped strings/keys and
+metadata-only fixed-length array descriptors. Original scalar32768/depth8/storage
+96MiB/type/count semantics remain unchanged. The491531-byte counterexample now
+rejects against262144; external trusted profiling measured81920 visits before
+rejection. This is bounded preflight evidence, NOT a whole-workflow RSS claim.
+
+Final focused command (168 PASS, zero skips/deselections):
+
+```powershell
+& $ExistingPipelinePython -m pytest tests/data/test_gravity_survey_l2.py tests/numerics/test_gravity_l2.py tests/numerics/test_gravity_l2_selection.py tests/numerics/test_gravity_forward.py -o addopts= -q -rs -p no:cacheprovider
+```
+
+This includes88 new LOCAL component controls and80 unchanged accepted forward
+controls, all metadata negatives included. The private optimizer uses actual
+official ProjectedGNCG search/projection/minimize/line-search algorithms, the
+frozen parameters and an observer-only accepted-state/stop recorder. Official
+bfgsH0 plus approxHinv setters fix the actual positive Hessian reciprocal diagonal
+action; without the latter setter, the official default would apply BFGS updates.
+Nonfinite reciprocal rejects before a solve, without adding a floor or fallback.
+
+Independent Choclo/pairwise-R/separate-Cholesky BVLS controls at signed starts
+0,+100,-100 and a250kg/m3 active bound converge under the declared stationary
+exception, with normalized density error<=1.3103361225284149e-12 and prediction
+error<=1.519617764955683e-15. Max independently replayed trace-objective absolute
+error is8.668621376273222e-13. Accepted models, original d-minus-stored-p residuals
+and objectives replay; trial evidence is distinct. Injected failure tests are
+explicitly diagnostic, not fabricated naturally occurring numerical failures.
+The iteration-cap injection does NOT assert200 actual accepted steps.
+
+Final broader existing-runtime run:275 PASS/14 attributed skips. Three unchanged
+M01 files are explicitly separated because the untouched pipeline runtime lacks
+Boule/Harmonica, as demonstrated by the first receipt's retained collection
+errors; the existing M01 interpreter independently reruns them164 PASS/1 attributed
+archive skip. Neither is MAIN's separately measured actual archive179 result.
+All28 installed source pins execute in the final focused test. No package change.
+
+Scope still incomplete: compact development calibration/noise/prior admission,
+24 candidate folds plus sealed evaluation, output tamper/replay, rank/resolution,
+the complete24-control matrix and whole-workflow projected/measured resource gates
+remain pending. This milestone does NOT close all16 requirements, the broad M02
+plan, IRLS, field, API, GPU, host or promotion. Next stage implements only frozen
+native calibrate_gravity_l2/evaluate_gravity_l2 with test-first compact-row
+admission and sealed selection; there is no outer-value imputation or fallback.
+
+Milestone self-review: source/test hashes in the fresh receipt match exact bytes;
+Ruff, content/template (870 tracked files), CI budget and existing artifact hashes/
+sizes20/120/348 PASS. Seven approved files, accepted forward source/test, first
+134 receipt, three dated forward receipts, legacy modules and canonical bytes
+are unchanged. Original137-file backup remains ignored and git-untracked. This
+is local evidence, not remote CI, independent whole-unit acceptance or promotion.

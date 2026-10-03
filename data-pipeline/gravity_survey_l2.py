@@ -74,8 +74,26 @@ def _array(value, shape, field, dtype=np.float64):
 
 
 def _native_metadata(value):
-    """Walk exact container/array metadata only. Never traverse array values."""
+    """Bound compact native-digest descriptor bytes without reading array values.
+
+    Charge container punctuation before children. Shared aliases count at every
+    logical occurrence; original scalar nodes, not containers/descriptors, count
+    toward MAX_SCALARS. No whole-tree serialization, value hash or input copy.
+    """
     totals = [0, 0, 0]
+
+    def check_budget():
+        if totals[0] > MAX_ARRAY_BYTES or totals[1] > MAX_METADATA_BYTES or totals[2] > MAX_SCALARS:
+            raise ValueError("request: native array/metadata storage or scalar-count cap exceeded")
+
+    def charge(size):
+        totals[1] += size
+        check_budget()
+
+    def compact_size(item):
+        return len(json.dumps(item, sort_keys=True, ensure_ascii=False, allow_nan=False,
+                              separators=(',', ':')).encode('utf-8'))
+
     def visit(item, depth):
         if depth > 8:
             raise ValueError("request: exceeds eight container levels")
@@ -86,31 +104,37 @@ def _native_metadata(value):
             if item.ndim not in (1, 2) or any(n > 4096 for n in item.shape):
                 raise ValueError("array: dimensions exceed ordinary metadata envelope")
             totals[0] += item.nbytes
+            check_budget()
+            dtype = {'f': '<f8', 'i': '<i8', 'b': '|b1'}[item.dtype.kind]
+            # Exact descriptor length is independent of the actual64 SHA digits.
+            # This bounded generated object contains metadata only, not values.
+            charge(compact_size({'dtype': dtype, 'shape': list(item.shape), 'sha256': '0' * 64}))
         elif kind is dict:
-            if len(item) > MAX_SCALARS or any(type(key) is not str for key in item):
+            if len(item) > MAX_SCALARS:
                 raise TypeError("metadata: exact bounded string keys required")
+            charge(2 + max(0, len(item)-1) + len(item))
             for key, child in item.items():
+                if type(key) is not str:
+                    raise TypeError("metadata: exact bounded string keys required")
                 visit(key, depth + 1)
                 visit(child, depth + 1)
         elif kind is tuple:
             if len(item) > MAX_SCALARS:
                 raise ValueError("metadata: tuple count exceeds cap")
+            charge(2 + max(0, len(item)-1))
             for child in item:
                 visit(child, depth + 1)
         elif kind in (str, int, float, bool, type(None)):
             totals[2] += 1
+            check_budget()
             if kind is str:
                 if len(item) > 1024:
                     raise ValueError("metadata: string exceeds 1024 code points")
-                totals[1] += len(item.encode('utf-8'))
-            else:
-                if kind is int and item.bit_length() > 64:
-                    raise ValueError("metadata: oversized integer")
-                totals[1] += 24
+            elif kind is int and item.bit_length() > 64:
+                raise ValueError("metadata: oversized integer")
+            charge(compact_size(0.0 if kind is float and item == 0 else item))
         else:
             raise TypeError("metadata: custom types, hooks and array subclasses forbidden")
-        if totals[0] > MAX_ARRAY_BYTES or totals[1] > MAX_METADATA_BYTES or totals[2] > MAX_SCALARS:
-            raise ValueError("request: native array/metadata storage or scalar-count cap exceeded")
     visit(value, 0)
 
 
