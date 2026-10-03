@@ -81,3 +81,18 @@ Review request: read this whole clarification, then explicitly approve or revise
 the exact existing256KiB interpretation BEFORE the production accounting patch.
 No change to the seven frozen files, scalar-count cap or physics thresholds is
 needed. This review does not authorize any additional callable or environment.
+
+## Explicit MAIN approval before accounting implementation
+
+On2026-10-03 MAIN confirmed FULL read of this83-line file at
+ae7f8e7947486eca354730142ef5999786b2ab28, the complete66-line independent
+receipt and frozen digest/metadata contract, then explicitly approved this narrow
+interpretation. Compact ensure_ascii=False native-digest descriptor bytes include
+punctuation, escaped strings and the fixed64-character SHA descriptor; charge
+incrementally before child visits with NO hash, copy, array-value traversal or
+full-tree allocation. Original scalar32768, depth8, array96MiB, exact types/count
+caps and all numerical thresholds remain unchanged. Authority covers only own
+metadata implementation/tests/docs. All metadata controls must run without
+exclusions in the fresh-source run. This approval is persisted before the code
+patch; earlier proposed/pending statements remain historical chronology.
+It confers no complete16-gate, API, field, host or production acceptance.
