@@ -1,6 +1,6 @@
 # M01 physical upload-to-result vertical design
 
-Date: 2026-10-03. Status: proposed, awaiting FULL main review before implementation. Baseline `cf086dc817d095d66e46fdab53cc235a8e70004b`. This branch creates documentation only. [Research](../../../research/m01-physical-vertical-2026-10-03.md) precedes this proposal. Read [requirements](requirements.md), [exact contracts](contracts.md), [migration/recovery](migration-recovery.md) and [validation plan](validation-plan.md) as one SDD; no individual section authorizes code.
+Date: 2026-10-03. Status: main reports FULL read and agreement with the architecture direction; independent findings and final approved contract pin still required before implementation. Baseline `cf086dc817d095d66e46fdab53cc235a8e70004b`. This branch creates documentation only. [Research](../../../research/m01-physical-vertical-2026-10-03.md) precedes this proposal. Read [requirements](requirements.md), [exact contracts](contracts.md), [migration/recovery](migration-recovery.md) and [validation plan](validation-plan.md) as one SDD; no individual section authorizes code or merge.
 
 ## 1. Problem and limits
 

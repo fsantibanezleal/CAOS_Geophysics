@@ -9,7 +9,11 @@ Status: docs-only proposed design; implementation NOT_STARTED. All product gates
 - [x] R-MPV01..R-MPV17: persist repository source fingerprints and official Python/SQLAlchemy/SQLite/Alembic/PROV research with actual public-document HTTP byte receipts before feature proposal.
 - [x] R-MPV04/R-MPV05: read Curie's complete ordinary adapter sub-SDD and producer convergence read-only; bind exact request/result/receipt and separate transform contract; retain main-reported merged PR119/223-pass evidence as attributed dependency, not integrated acceptance.
 - [x] R-MPV01..R-MPV17: write requirements/design/contracts/migration-recovery/validation plan/current gaps before code, including root-only uniqueness, explicit append-only version DAG, exact identities and future failing gates.
-- [ ] R-MPV01..R-MPV17: main reads and approves/amends the FULL pinned SDD and assigns exclusive implementation owners against the then-current integrated develop. This is the hard stop; no code before approval.
+- [x] R-MPV01..R-MPV17: main reports FULL read of all nine docs and agrees with the architecture direction. This does not authorize product code or merge.
+- [ ] R-MPV01..R-MPV17: receive/fold Curie scientific, Turing storage and Poincare browser findings from their reported79fceeb baseline, then obtain main's full review of the exact corrected pin. No peer approval is inferred before findings arrive.
+- [ ] R-MPV03/R-MPV08/R-MPV09/R-MPV12/R-MPV13: obtain a final explicitly approved migration revision and complete control-record field/types/nullability/constraints/digest/storage contract pin before schema-owner implementation; proposed field lists alone are not approval.
+- [ ] R-MPV11/R-MPV14/R-MPV16: keep per-device verifier admission unset/closed pending measured maximum live memory plus raw-byte/typed-parse bounds.512-MiB provisional server cap does not enable phone verification or relax legacy guards.
+- [ ] R-MPV01..R-MPV17: main finally approves/amends the corrected pinned SDD and assigns exclusive implementation owners against the then-current integrated develop. This is the hard stop; no product code or merge before explicit clearance.
 
 ## Future dependency-sequenced implementation, NOT AUTHORIZED here
 
@@ -28,6 +32,6 @@ Status: docs-only proposed design; implementation NOT_STARTED. All product gates
 ## Docs handoff validation and persistence
 
 - [x] Stage only newly authorized documentation paths, validate unchanged full tracked-content/template/CI-budget guards, whitespace, local links, JSON receipt/hash fields, named17-gate coverage and allowed-path diff. Nine added paths,31 local links,17 requirements and10 primary receipts checked; no existing path modified.
-- [x] Commit/push scoped documentation milestone79fceeb and open draft [PR #123](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/123) to develop for full SDD review. Final documentation handoff records validation/self-review with explicit no-code/no-product-test-run/no-host/no-provider/non-acceptance claims; main's full review remains pending.
+- [x] Commit/push scoped documentation milestone79fceeb and open draft [PR #123](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/123) to develop for full SDD review. Documentation handoff records validation/self-review with explicit no-code/no-product-test-run/no-host/no-provider/non-acceptance claims. Main reports full read/direction agreement; findings and final approved pin remain pending.
 
 Current operational/scientific gaps and review decisions are in [review packet](review-packet.md). No global convergence ledger, course, shared navigation, canonical records, release status, main or host is modified by this feature.

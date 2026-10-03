@@ -1,6 +1,6 @@
 # M01 physical vertical review packet and current gaps
 
-Date: 2026-10-03. Status: docs-only SDD proposed, FULL main review pending. Implementation NOT_STARTED, all new product gates NOT_RUN. No deployment, provider selection, headroom/identity answer or full M01 completion claim. Design branch starts at cf086dc and does not incorporate unassigned code.
+Date: 2026-10-03. Status: main reports FULL read complete and agrees with the architecture direction; independent findings and final contract approval remain pending. Implementation NOT_STARTED, all new product gates NOT_RUN. No deployment, provider selection, headroom/identity answer or full M01 completion claim. Design branch starts at cf086dc and does not incorporate unassigned code.
 
 ## Read the complete submission
 
@@ -61,3 +61,11 @@ The read-only audit checked nine allowed added paths/no modifications,31 local M
 Self-review checked digest-domain separation and Python-versus-JavaScript numeric serialization, exact6/4/13 ordinary adapter shapes, null transform adapter identity (no invented adapter), distinct correction/transform quantities/residual signs/error kinds, explicit legacy-preserving schema/index/version model, complete parent/producer bindings, idempotent lookup before active-job rejection, cancel publication linearization, every crash/liability/deletion cut, registered old/new/unknown recovery matrix and future actual-network scientific browser evidence. Caps/CPU accounting, new migration/DDL, v2 schemas, diagnostic non-pass policy and future implementation ownership remain main-review decisions, not silently accepted defaults. The PR closes no parent issue and authorizes no product code, merge or deployment.
 
 Main's final review concern is explicit in contracts/validation:512 MiB is only a provisional server-side candidate ceiling, not safe phone admission. Browser total/member/structure/peak-memory caps require actual constrained-memory measurement and start unset/closed. Source bytes must be capped/parsed before allocation or duplicate-losing JSON decoding; buffered unzip-then-check is forbidden. Existing legacy guard is not loosened. Unmeasured/oversized browser workflows remain blocked/unresolved, with complete offline verification and honest download-versus-verification labels, never reduced scientific output or a phone PASS inferred from a desktop screenshot.
+
+## Main full-read checkpoint and continuing hold
+
+Main reports reading all nine documents and the latest docs-only corrections. Accepted architecture direction: explicit one-parent immutable forest; ordinary6/4/13 correction boundary; distinct transform with inspectable scientific non-pass; intent-backed publication/accounting; no unknown-method/schema fallback. This is direction agreement, NOT final schema/contract approval, implementation authority or merge permission.
+
+Main reports independent review in progress at `79fceeb32314964d84f35bf73c8f033f23a77a90`: Curie scientific, Turing storage, Poincare browser. Their findings have not been supplied to this unit and no peer PASS or approval is inferred. Preserve that review baseline; fold supplied findings into scoped docs and obtain main's review of the resulting exact head before code. Later device-admission/doc corrections must also be reviewed, not assumed covered by the earlier pin.
+
+Hard holds: (1) review findings folded and main-reviewed; (2) exact migration revision and multi-artifact control-record field/type/nullability/constraint/hash/storage contract recorded in a final approved pin; (3) browser raw-byte scan/typed parsing and measured per-device maximum live memory admission, initially unset/closed.512 MiB never sets a phone allowance, a desktop phone-width screenshot never measures device capacity, and no legacy guard is weakened. No API/schema/migration/frontend code or PR merge before these review holds are cleared explicitly. All full-feature gates remain NOT_RUN.

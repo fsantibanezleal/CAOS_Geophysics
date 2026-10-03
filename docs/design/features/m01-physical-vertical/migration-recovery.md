@@ -2,6 +2,8 @@
 
 Status: planned. No migration, SQL, recovery code or operational action is implemented. Read with [design](design.md) and [contracts](contracts.md). Baseline revision is exactly `0003_processing_jobs`; the next revision number/name and DDL fingerprint are assigned only after FULL design review and integration-base inspection, not forged here.
 
+Final migration/control-schema approval pin: NOT_SET. Main agrees with the architecture direction but requires independent findings folded/reviewed before implementation. The field-name proposals below are not a finished typed persistence contract. Before a schema owner writes code, main must approve one exact documentation revision enumerating migration revision/down_revision, every table/control-record key and SQL/wire type, numeric/string bounds, nullability by root/correction/transform, enum values, PK/unique/index/FK/check constraints, digest dialect/input, storage-target rules, ordinal/reservation transitions and legacy/tombstone/ops compatibility. The new DDL fingerprint must later come from the actual reviewed migrated schema, not be invented in docs. No schema owner may fill missing types/fields or choose a migration revision implicitly from architecture agreement.
+
 ## 1. Schema invariants and maintenance migration
 
 Explicit planned tables/changes:
