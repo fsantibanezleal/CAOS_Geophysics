@@ -33,6 +33,24 @@
 .processing-limits dd { margin: 0 0 .35rem; font-family: var(--font-mono); }
 .processing-scope, .processing-provenance { margin: 0; font-size: .78rem; color: var(--color-fg-subtle); }
 .processing-provenance code { overflow-wrap: anywhere; }
+.mt-instrument { flex: none; min-height: 0; }
+.mt-plot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.mt-instrument .analytical-curve { flex: none; }
+.analytical-curve svg { width: 100%; touch-action: none; user-select: none; }
+.analytical-curve figcaption { flex-wrap: wrap; }
+.analytical-curve figcaption output { max-width: 100%; overflow-wrap: anywhere; }
+.mt-instrument .processing-station-table { flex: none; max-height: 320px; }
+.mt-instrument .processing-provenance td { white-space: normal; overflow-wrap: anywhere; }
+.mt-instrument .layer-column { max-width: 640px; }
+.mt-instrument .earth-layer[role="button"] { cursor: pointer; }
+.mt-instrument .earth-layer[aria-pressed="true"] { outline: 2px solid var(--color-fg); outline-offset: -3px; }
+.mt-axis-toggle { display: none; }
+@media (max-width: 1000px) { .mt-plot-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .mt-workbench .processing-sidebar:not(.expanded) > .processing-actions { display: none !important; }
+  .mt-instrument .mt-axis-toggle { display: block; }
+  .mt-toolbar:not(.axes-open) > .select-control:nth-of-type(n+3) { display: none; }
+}
 @media (max-width: 760px) {
   .processing-workbench { height: 100%; overflow: hidden !important; }
   .processing-workbench .processing-sidebar { display: flex; padding: 0; }
