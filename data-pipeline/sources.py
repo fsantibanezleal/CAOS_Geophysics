@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
@@ -17,18 +18,66 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "data/source-ledger.json"
-FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm",
+FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm", "research-zip", "fgdc-metadata-xml",
            "pygimli-traveltime-sgt", "stead-metadata-csv", "generated-case"}
 RIGHTS = {"mirror", "provider-link-only", "derivative-only", "forbidden"}
-FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org"}
+FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov", "zenodo.org"}
 MIME = {"simpeg-obs-tar-gz": "application/gzip", "edi-transfer-function": "text/plain",
-        "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain"}
+        "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain",
+        "research-zip": "application/zip", "fgdc-metadata-xml": "application/xml"}
 MAX_SOURCE_BYTES = 200_000_000
 CHUNK_BYTES = 128 * 1024
+ARCHIVE_LIMITS = {"max_entries": 512, "max_expanded_bytes": 500_000_000,
+                  "max_member_bytes": MAX_SOURCE_BYTES, "max_expansion_ratio": 1000}
 
 
 class SourceError(ValueError):
     """A source could not pass its declared acquisition contract."""
+
+
+def archive_member_key(name: str) -> PurePosixPath:
+    """Portable, canonical file/directory name; no Windows aliases or devices."""
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_. /-]+", name):
+        raise SourceError("Unsafe ZIP path: require a portable relative name")
+    path = PurePosixPath(name)
+    devices = {"con", "prn", "aux", "nul", *(f"com{i}" for i in range(10)), *(f"lpt{i}" for i in range(10))}
+    if (not path.parts or path.is_absolute() or path.as_posix() != name
+            or any(part in {".", ".."} or part.endswith((".", " "))
+                   or part.split(".")[0].rstrip(" ").lower() in devices for part in path.parts)):
+        raise SourceError("Unsafe ZIP path: noncanonical path or Windows alias")
+    return path
+
+
+def validate_archive_contract(contract: dict) -> None:
+    """Validate reviewed limits and selected pins before reading an archive."""
+    required = {*ARCHIVE_LIMITS, "selected_members"}
+    if not isinstance(contract, dict) or set(contract) != required:
+        raise SourceError("Research ZIP archive_contract needs exact limits and selected_members")
+    for field, ceiling in ARCHIVE_LIMITS.items():
+        value = contract[field]
+        numeric = type(value) in (int, float) if field == "max_expansion_ratio" else type(value) is int
+        if not numeric or not 0 < value <= ceiling or not math.isfinite(value):
+            raise SourceError(f"Archive {field} limit must be positive, finite and at most {ceiling}")
+    selected = contract["selected_members"]
+    if not isinstance(selected, dict) or not 0 < len(selected) <= contract["max_entries"]:
+        raise SourceError("Archive selected_members count limit")
+    names = set()
+    total = 0
+    for name, pin in selected.items():
+        key = archive_member_key(name)
+        if key.suffix.lower() not in {".csv", ".pdf"} or name.casefold() in names:
+            raise SourceError("Archive selection must contain distinct portable CSV/PDF members")
+        names.add(name.casefold())
+        if (not isinstance(pin, dict) or set(pin) != {"bytes", "sha256"}
+                or type(pin["bytes"]) is not int or not 0 < pin["bytes"] <= contract["max_member_bytes"]
+                or not isinstance(pin["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", pin["sha256"])):
+            raise SourceError(f"Selected member needs bounded byte limit and lowercase SHA-256: {name}")
+        total += pin["bytes"]
+    if total > contract["max_expanded_bytes"]:
+        raise SourceError("Selected member total expansion limit")
+    for name in names:
+        if any(parent.as_posix() in names for parent in PurePosixPath(name).parents if parent.as_posix() != "."):
+            raise SourceError("Archive selection has a file/parent collision")
 
 
 def _https(url: str, *, fetch: bool = False) -> None:
@@ -119,6 +168,10 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
             if any(not isinstance(record.get(field), str) or not record[field].strip()
                    for field in ("quantity", "value_unit", "coordinate_convention")):
                 raise SourceError(f"{source_id}: observation archive needs quantity, value_unit and coordinates")
+        if record["format"] == "research-zip":
+            validate_archive_contract(record.get("archive_contract"))
+        elif "archive_contract" in record:
+            raise SourceError(f"{source_id}: archive_contract requires research-zip format")
         records[source_id] = record
     if not records:
         raise SourceError("Source ledger is empty")
