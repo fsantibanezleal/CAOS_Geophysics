@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "afac8ab7b0be2df474406d1b17f0a165be9e0599",
-  "assessed_at": "2026-10-03T07:08:54Z",
+  "assessed_revision": "bc0c573daa511ba897dd0b21e315b8c1eef67413",
+  "assessed_at": "2026-10-03T09:35:59Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -18,11 +18,17 @@
       "id": "R-001",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_catalogue_sources.py::test_rights_links_and_hash_receipts.",
-      "note": "Rights-aware pinned research-archive intake is merged. Actual Bartlett author bytes are acquired/profiled with missing values retained, but datum/errors and complete advertised source coverage remain unaccepted.",
-      "evidence": [{
-        "path": "docs/research/potential-source-intake-evidence-2026-10-03.json",
-        "sha256": "7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7"
-      }],
+      "note": "Pinned author intake and full-file STEAD metadata verification are merged; protected originals and rights gates remain distinct. Actual Bartlett bytes retain missing/duplicate diagnostics, but datum/errors and complete advertised field coverage remain unaccepted.",
+      "evidence": [
+        {
+          "path": "docs/research/potential-source-intake-evidence-2026-10-03.json",
+          "sha256": "7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7"
+        },
+        {
+          "path": "docs/design/features/stead-source-reconciliation/validation.md",
+          "sha256": "2da6560749321c4738e0ef54ea677d67a7fec62e5287b83b86fd124f7a88d65a"
+        }
+      ],
       "receipts": []
     },
     {
@@ -55,11 +61,19 @@
       "id": "R-004",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_provenance.py::test_transform_dag_roundtrip.",
-      "note": "Local explicit station correction, reference and uncertainty controls passed and were merged in PR99. The full uploaded physical processing DAG, transform chain and eligible field lineage remain incomplete.",
+      "note": "Local corrections/transforms and the exact ordinary physical station adapter are merged (PR99/109/119). Independent adapter integration passed 223 tests without skips, including actual-author negative admission. Authenticated immutable correction/transform children and eligible field lineage remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
+          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
         }
       ],
       "receipts": []
@@ -68,7 +82,7 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "The API distinguishes flag-only QC from unimplemented solvers. End-to-end scientific eligibility for all uploaded modalities remains incomplete.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -81,11 +95,15 @@
       "id": "R-006",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "The merged project workbench submits real owner datasets to the flag worker and verifies exported outputs. Flags are not corrections or inversions; bounded MT solves remain under review and all promised submitted-data methods are incomplete.",
+      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
         }
       ],
       "receipts": []
@@ -94,11 +112,19 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Actual-VPS isolated MT controls passed six cancellation/limit/crash checks. Forty nominal jobs completed but their overall admission failed free-disk headroom at 29.42% below the unchanged 30% threshold. Public-service and complete product admission remain open; draft PR101 retains the measured failure.",
+      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Local API, strict recovery and paired Git-object bundle reviews pass separately; public-service and complete product admission remain open.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/actual-host-mt-2026-10-03.md",
+          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+        },
+        {
+          "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
+          "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
         }
       ],
       "receipts": []
@@ -107,7 +133,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity lost to its matched classical baseline. The FWI optimizer/replay correction and freshly recomputed MT outputs await a combined 120-case independent candidate review. Local M01 correction controls passed, but complete M01-M13 acceptance is not achieved.",
+      "note": "M12 learned velocity still loses to its matched classical baseline. Independently accepted FWI/MT science and guarded canonical container are merged with the original 137-file private backup retained. Local M01 transforms/adapter pass; M02 has a source-backed prospective plan, not new numerical acceptance. Complete M01-M13 acceptance remains failed.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -116,6 +142,18 @@
         {
           "path": "docs/design/features/m06-field-mt/convergence.md",
           "sha256": "89bfb88e433262a152490c0aa379b419a33f3e6e00c3bd5223d3fbbf80188b0c"
+        },
+        {
+          "path": "docs/validation/fwi-canonical-import-20261003.json",
+          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
+          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
         }
       ],
       "receipts": []
@@ -124,8 +162,13 @@
       "id": "R-009",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_artifact_contract.py::test_truth_only_for_synthetic.",
-      "note": "Historical artifacts distinguish known synthetic truths from the measured MT screen. Full replacement artifact contract is not accepted.",
-      "evidence": [],
+      "note": "The corrected canonical container preserves producer identities and known synthetic truths separately from the QC-only truth-null cl061 field screen. Complete replacement user-data artifact acceptance across all methods remains incomplete.",
+      "evidence": [
+        {
+          "path": "docs/validation/fwi-canonical-import-20261003.json",
+          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        }
+      ],
       "receipts": []
     },
     {
@@ -149,7 +192,7 @@
       "id": "R-011",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_export.py::test_bundle_roundtrip_and_rights.",
-      "note": "Raw-project and flag-QC bundles are locally checked. Scientific result bundle re-import across every method is incomplete.",
+      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
@@ -158,6 +201,10 @@
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
         }
       ],
       "receipts": []
@@ -174,18 +221,24 @@
       "id": "R-013",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
-      "note": "Real owner upload, dataset/job/result hydration, station selection, cancellation and downloaded gravity-QC bundle passed five local API/worker browser tests. MT scientific controls and all promised modality-linked views remain incomplete.",
-      "evidence": [{
-        "path": "docs/design/features/processing-workbench/validation.md",
-        "sha256": "1d7581dab9a26c489a9dbd2764417f39a27ce9e2865da0c03c321f40cd07200b"
-      }],
+      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete.",
+      "evidence": [
+        {
+          "path": "docs/design/features/processing-workbench/validation.md",
+          "sha256": "1d7581dab9a26c489a9dbd2764417f39a27ce9e2865da0c03c321f40cd07200b"
+        },
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-014",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
-      "note": "Legacy physical renderers and M13 waveforms exist. Full modality-specific user-result visualization and animation evidence remains incomplete.",
+      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete.",
       "evidence": [],
       "receipts": []
     },
@@ -193,19 +246,36 @@
       "id": "R-015",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "The real gravity-QC workbench has 21 local EN/ES light/dark desktop/phone renders, with independent desktop/phone inspection and pointer/keyboard tests. Complete scientific panel, reduced-motion and language/theme/device matrices remain open.",
-      "evidence": [],
+      "note": "Independent scoped gravity/MT browser controls and original MAIN course 32-case matrix pass at their respective pins. The course producer reran 32 combined-style cases; final MAIN integration passed 77 numerical and 101 frontend tests plus build/content guards. Tiny ADR fix and fresh develop CI pass; complete visual/user acceptance remains open.",
+      "evidence": [
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
+          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "Source/provenance, M08/M13 and literal M01 station-correction theory/oracles are merged. The complete deep M01-M13 bilingual wiki/course and source-to-content review remain incomplete.",
+      "note": "Source/M08/M13/M01 correction/transform wiki units and source-bound M05/M06 course are merged. Independent original course 75 numeric/89 frontend/32 browser controls remain separately pinned; final integration adds exact source-compatibility proof, 77 numeric and 101 frontend passes. Full deep M01-M13 bilingual wiki remains incomplete.",
       "evidence": [
         {
           "path": "docs/data-contract/01_source-to-result.md",
           "sha256": "60b59df62d4c72572ccd2d95b11406a1065cc99b8bbcee902277c866902aba29"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
+          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
         }
       ],
       "receipts": []
@@ -214,15 +284,28 @@
       "id": "R-017",
       "verdict": "unresolved",
       "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
-      "note": "Main remains legacy 0.04.001; no replacement cutover or Pages withdrawal occurred. Actual-host admission failed disk headroom. Final identity, mail delivery, deletion-aware actual-host restore and complete acceptance remain open.",
-      "evidence": [],
+      "note": "Main/public app remain legacy 0.04.001 with no replacement cutover or Pages withdrawal. Actual-host admission failed disk headroom. Strict local MT recovery and paired source-builder reviews pass, but actual Linux drill, externally durable deletion authority, identity, SMTP and complete acceptance remain open.",
+      "evidence": [
+        {
+          "path": "docs/validation/actual-host-mt-2026-10-03.md",
+          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+        },
+        {
+          "path": "docs/validation/ops-fixture-independent-review-2026-10-03.md",
+          "sha256": "73f7847eae278058d3fa6c0111fa44226c7e171b09443857cda961497aa6837e"
+        },
+        {
+          "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
+          "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger now explicitly records all 19 requirements; structural checks are not final convergence. Complete measured product gate receipts remain absent.",
+      "note": "The ledger preserves 18 unresolved and one failed whole requirement while recording merged code, canonical import, independent controls and failed host evidence. Fresh CI resolves the retained ADR failure, not release acceptance; structural/local unit passes do not replace full named convergence gates.",
       "evidence": [],
       "receipts": []
     },
