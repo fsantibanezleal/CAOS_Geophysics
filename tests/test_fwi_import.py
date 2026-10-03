@@ -76,12 +76,15 @@ def migration_tree(tmp_path):
     matrix = dict(cases=20, runs=120, method_results=348)
     write(root/'mt-replay.json', dict(status='PASS', catalog_sha256=hashlib.sha256(original).hexdigest(),
           release_sha256='original-release-pin', conditions=120, method_results=348,
-          states_replayed=4038, bootstrap_refits=3072, artifact_gate=matrix))
+          states_replayed=4038, bootstrap_refits=3072, artifact_gate=matrix,
+          source_sha256={n: versions.digest(versions.REPO/n) for n in versions.REPLAY_SOURCE_FILES}))
     write(root/'fwi-replay.json', dict(conditions=24, method_results=48, records=[{}]*48))
     migration = dict(schema='inverse-earth/byte-preserving-container-migration/v1', from_version='0.04.001',
                      to_version='0.04.002', reused_producer_versions=['0.04.000', '0.04.001'], plan_sha256='plan-pin',
                      source_catalog_sha256=hashlib.sha256(original).hexdigest(), catalog_sha256=hashlib.sha256(raw).hexdigest(),
                      source_release_sha256='original-release-pin', preserved_files=preserved,
+                     independent_review_source_sha256=importer.read(root/'mt-replay.json')['source_sha256'],
+                     guard_epoch_differences={},
                      scientific_source_sha256={n: versions.digest(versions.REPO/n) for n in versions.SCIENTIFIC_FILES},
                      gate_sha256={n: versions.digest(versions.REPO/n) for n in ('scripts/check_artifacts.py', 'data-pipeline/artifact_versions.py')},
                      independent_receipts={n: versions.digest(root/n) for n in ('fwi-replay.json', 'mt-replay.json')})
@@ -100,7 +103,8 @@ def test_migration_requires_133_preserved_byte_hashes_and_independent_receipts(m
     assert len(importer.snapshot(root)) == 139
 
 
-@pytest.mark.parametrize('fault', ['scientific', 'gate', 'duplicate', 'fixture', 'header', 'receipt', 'version', 'validation'])
+@pytest.mark.parametrize('fault', ['scientific', 'gate', 'duplicate', 'fixture', 'header', 'receipt', 'version',
+                                 'validation', 'epoch', 'old-tool', 'other-replay'])
 def test_rehashed_migration_cannot_hide_stale_source_or_changed_evidence(migration_tree, fault):
     root, catalog, release, migration = migration_tree
     if fault == 'scientific':
@@ -122,6 +126,17 @@ def test_rehashed_migration_cannot_hide_stale_source_or_changed_evidence(migrati
         migration['reused_producer_versions'] = ['0.04.001']
     elif fault == 'validation':
         write(root/'validation.json', dict(schema='forged'))
+    elif fault == 'epoch':
+        migration['guard_epoch_differences']['scripts/check_artifacts.py'] = dict(
+            independent_review_sha256='fake-old-tool', migration_guard_sha256='fake-new-tool')
+    elif fault == 'old-tool':
+        migration['independent_review_source_sha256']['scripts/check_artifacts.py'] = 'fake-old-tool'
+    elif fault == 'other-replay':
+        mt = importer.read(root/'mt-replay.json')
+        mt['source_sha256']['scripts/validate_fwi_exports.py'] = 'unreviewed-checker'
+        migration['independent_review_source_sha256'] = mt['source_sha256']
+        write(root/'mt-replay.json', mt)
+        migration['independent_receipts']['mt-replay.json'] = versions.digest(root/'mt-replay.json')
     write(root/'migration.json', migration)
     release['container_migration_sha256'] = versions.digest(root/'migration.json')
     with pytest.raises(AssertionError):

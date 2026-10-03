@@ -13,7 +13,7 @@ import sys
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO/'data-pipeline'))
-from artifact_versions import CONTAINER_VERSION, SCIENTIFIC_FILES, digest, header_bytes  # noqa: E402
+from artifact_versions import CONTAINER_VERSION, REPLAY_SOURCE_FILES, SCIENTIFIC_FILES, digest, header_bytes  # noqa: E402
 
 CANONICAL = REPO/'data/derived/v2'
 EXPERIMENTS = REPO/'data/experiments'
@@ -119,6 +119,8 @@ def independent_acceptance(candidate, fwi_path, mt_path, fwi_pin, mt_pin):
         raise ValueError('Independent full artifact matrix required')
     if (mt['catalog_sha256'], mt['release_sha256']) != (digest(candidate/'catalog.json'), digest(candidate/'release.json')):
         raise ValueError('Independent acceptance refers to another candidate')
+    if set(mt['source_sha256']) != REPLAY_SOURCE_FILES:
+        raise ValueError('Missing/unexpected independent replay source bindings')
     epochs = {}
     for name, recorded in mt['source_sha256'].items():
         path = safe_path(REPO/name)

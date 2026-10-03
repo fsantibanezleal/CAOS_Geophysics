@@ -17,6 +17,12 @@ SCIENTIFIC_FILES = tuple('data-pipeline/'+n for n in (
     'geology.py', 'potential.py', 'spatial_inverse.py', 'evaluation.py', 'joint.py',
     'petrophysics.py', 'learning.py', 'electromagnetics.py', 'edi.py', 'seismic.py',
     'seismic_batch.py', 'provenance.py'))
+REPLAY_SOURCE_FILES = frozenset((
+    'data-pipeline/electromagnetics.py', 'data-pipeline/edi.py', 'data-pipeline/geology.py',
+    'data-pipeline/provenance.py', 'data-pipeline/rebuild.py', 'data-pipeline/seismic.py',
+    'scripts/build_field_screen.py', 'scripts/validate_mt_replays.py', 'data-pipeline/seismic_batch.py',
+    'data-pipeline/assemble_fwi_candidate.py', 'data-pipeline/catalog.py', 'scripts/check_artifacts.py',
+    'scripts/validate_fwi_exports.py', 'scripts/validate_fwi_mt_candidate.py'))
 
 
 def digest(path):
@@ -73,6 +79,19 @@ def validate_migration(root, catalog, release):
         assert name in ('fwi-replay.json', 'mt-replay.json') and digest(root/name) == pin
     assert set(migration['independent_receipts']) == {'fwi-replay.json', 'mt-replay.json'}
     mt = json.loads((root/'mt-replay.json').read_text(encoding='utf-8'))
+    recorded = mt['source_sha256']
+    assert set(recorded) == REPLAY_SOURCE_FILES, 'Missing/unexpected independent source bindings'
+    assert migration['independent_review_source_sha256'] == recorded, 'Historical source hashes were relabeled'
+    differences = {}
+    for name, historical in recorded.items():
+        current = digest(REPO/name)
+        if current != historical:
+            assert name == 'scripts/check_artifacts.py', 'Unreviewed replay/producer source change'
+            differences[name] = (historical, current)
+    epochs = migration['guard_epoch_differences']
+    assert set(epochs) == set(differences), 'Guard epoch differences missing or forged'
+    for name, (historical, current) in differences.items():
+        assert (epochs[name]['independent_review_sha256'], epochs[name]['migration_guard_sha256']) == (historical, current)
     assert mt['status'] == 'PASS' and mt['catalog_sha256'] == migration['source_catalog_sha256']
     assert mt['release_sha256'] == migration['source_release_sha256']
     assert (mt['conditions'], mt['method_results'], mt['states_replayed'], mt['bootstrap_refits']) == (120, 348, 4038, 3072)
