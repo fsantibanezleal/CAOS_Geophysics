@@ -4,7 +4,7 @@ Ready for review: [PR111 to develop](https://github.com/fsantibanezleal/CAOS_Geo
 
 2026-10-03. Frontend-only unit; no deployment, public activation, main promotion or geological recovery claim. Requirements/design/tasks were pushed before code as `3ac149e`. Implementation milestone `8f6e870` and real-worker QA milestone `2f27eb6` were pushed separately. The branch starts at reviewed PR103 (`9b0cbe5`) and incorporates reviewed develop changes; the final PR diff contains only frontend, this feature's documents, and local frontend QA helpers.
 
-Tested implementation revision: `3bd0e8757cd0a228c06fcb1afd20e011ebd179bf`, incorporating develop `aff3549a008a499b8b075ca468fddc384b13ce39`. Subsequent handoff commits change feature documentation only. The owner has independently pinned this implementation in a detached read-only review tree. Independent review is in progress; no additional 8877 harness execution or code changes are made during that review.
+Tested implementation revision: `3bd0e8757cd0a228c06fcb1afd20e011ebd179bf`, incorporating develop `aff3549a008a499b8b075ca468fddc384b13ce39`. Subsequent handoff commits change feature documentation only. The owner independently pinned this implementation in a detached read-only review tree. Independent enabled and closed-profile QA passed; integration remains pending, with no additional 8877 harness execution or code changes planned before integration.
 
 ## Owner-reported independent review
 
@@ -14,9 +14,14 @@ On 2026-10-03 the owner reported independent execution in `geophysics-mt-ui-revi
 - Single-origin build passed.
 - Actual API/worker MT Playwright suite passed 5/5 in 2.4 minutes.
 - MT contracts, MT client and harness source were reviewed; signed-residual, QC and phone-geometry images were visually inspected.
-- The independent closed-profile test is still running; no independent closed-profile result is asserted yet.
+- The independent closed-profile check passed: one test, four intentionally inapplicable skips, 6.8 seconds.
 
-These are owner-reported independent results, distinct from this branch's indexed local run receipts. Final integration/code feedback remains pending. The branch is ready for review, not approved for merge, public activation or deployment; code and the 8877 harness remain untouched while the owner completes QA.
+Owner-reported SHA-256 receipts are stored under the review tree's ignored `node_modules`, separate from and without modifying this branch's original QA evidence:
+
+- Enabled: `3430fa95447da2081ddf1a3b287d0df7e1d7e0bb47bed6402c64a0a4b114c34d`.
+- Closed: `bf0bb65ac1cecb568d4763ea0eae758497b31848c8b841c6b668342317cae853`.
+
+These are owner-reported independent results, distinct from this branch's indexed local run receipts. Port 8877 is released; no further MT QA is planned until integration. The branch remains isolated while the owner awaits backend canonical PR97 integration. It is ready for review, not approved for merge, public activation or deployment; final integration/code feedback remains owner-controlled.
 
 ## Actual execution and numerical evidence
 
@@ -88,7 +93,7 @@ Rendered inspection includes desktop EN/light response; EN/dark residuals and co
 - Fixed stale-result display at submission initiation; reselecting the same dataset/job no longer clears a result without triggering a reload. Project/dataset/job identity keys reset instrument state; requests abort on change/session loss. Result/export actions require actual success and typed identity checks.
 - Source URLs accept only HTTP(S), no executable scheme/embedded credentials. Tests reject sign/unit/shape/truth/QC/mask/winner/prediction/residual/bootstrap/ZIP drift. Serialized model identity and near-zero residual handling are checked without recomputing residuals from a differently rounded independent prediction.
 - M05 is necessary tensor QC, never an inverse. M06 fits XY only, imposed thickness, CPU float64 bounded TRF, frozen same-sounding holdout; -YX is unfitted validation. Objective records are residual evaluations, not accepted optimizer iterations. Conditional bootstrap is not geological posterior, simultaneous coverage, calibrated field coverage or independent-station generalization.
-- Chromium/Windows loopback is the tested browser/runtime. Safari/Firefox, public Linux browser/service deployment, host resource acceptance and main promotion are not asserted. Actual host disk headroom remains below the unchanged 30% gate per the owner's receipt; public MT flags remain closed. Independent closed-profile QA and final integration acceptance remain pending; completed owner-reported checks are recorded separately above.
+- Chromium/Windows loopback is the tested browser/runtime. Safari/Firefox, public Linux browser/service deployment, host resource acceptance and main promotion are not asserted. Actual host disk headroom remains below the unchanged 30% gate per the owner's receipt; public MT flags remain closed. Independent enabled and closed-profile QA passed; final integration acceptance remains pending. Owner-reported checks are recorded separately above.
 
 ## Scoped changed paths
 
