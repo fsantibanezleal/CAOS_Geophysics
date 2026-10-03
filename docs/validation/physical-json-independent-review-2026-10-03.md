@@ -109,3 +109,69 @@ Fixed safe error records are not a guarantee that traceback locals erase input.
 This is initial independent candidate evidence. Final peer review, added
 key-heavy resource control, producer convergence and exact final-head promotion
 remain separate steps. All whole-product unresolved/failed verdicts remain.
+
+## Final expanded candidate replay and packet review
+
+The original execution above remains pinned to a730 and ten profiles. MAIN
+subsequently read the complete79-line test-only expansion at
+`9e4d35b5eaf7eafab21c96142bd0d7ab3e89502c`. The helper is unchanged. Final test
+SHA-256 is
+`65392731acae33e7e4c4176b7b9edc19fffc8d249a4d7020e44e387e38c80738`.
+The expansion adds literal astral Unicode/raw-upper allocation, active decoded
+key sets near the canonical/node bounds, and a same-byte public-loader wrong-root
+negative. A private scanner success is expressly not structural-root acceptance.
+
+MAIN executed the same full command above against that exact detached candidate
+with a new private test root and the actual protected author archive. Result:
+179 passed, zero skips,168.75 s. Final private JUnit SHA-256:
+`abdc3fe50bd3b8c4cbf8788d487cf828da20f1a18de1fde65c775f621c1769b2`.
+All165 unchanged M01 regressions and all14 named parser gates ran. The checkout
+remained tracked-clean. No installs, source/data rewriting or tolerance changes.
+
+All15 final profiles ran in actual separate cold processes, with empty stderr.
+The following are rounded readouts of this independent final execution, not
+producer measurements or a universal resource limit:
+
+| Profile | Outcome | Helper wall, ms | Process CPU, ms | Peak process bytes | Native materializations |
+| --- | --- | ---: | ---: | ---: | ---: |
+| canonical-over | rejected | 10855.7 | 10609.4 | 46878720 | 0 |
+| canonical-upper | accepted | 11190.9 | 11078.1 | 46731264 | 1 |
+| depth-over | rejected | 10.0 | 15.6 | 30011392 | 0 |
+| malformed | rejected | 10965.6 | 10531.2 | 60784640 | 0 |
+| nodes-over | rejected | 2606.5 | 2578.1 | 29896704 | 0 |
+| nominal | accepted | 12.5 | 15.6 | 29892608 | 1 |
+| overflow | rejected | 12.0 | 15.6 | 30023680 | 0 |
+| raw-over | rejected | 10.2 | 15.6 | 60772352 | 0 |
+| raw-upper-astral | accepted | 10908.8 | 10656.2 | 110809088 | 1 |
+| raw-upper | accepted | 11119.6 | 10671.9 | 60801024 | 1 |
+| unique-keys-canonical-over | rejected | 20566.2 | 19843.8 | 66924544 | 0 |
+| unique-keys-nodes-over | rejected | 20403.3 | 19937.5 | 66617344 | 0 |
+| unique-keys-root-invalid | rejected | 20885.2 | 20453.1 | 77025280 | 1 |
+| unique-keys-upper | scanner_accepted | 20643.0 | 20140.6 | 66949120 | 0 |
+| upper400 | accepted | 388.3 | 406.2 | 30359552 | 1 |
+
+The16-MiB literal astral/whitespace control has helper traced peak100767215
+bytes and process peak110809088 bytes: decoded CPython text can use four bytes
+per code point. This invalidates treating the previous ASCII process peak as a
+general bound. The key-heavy scanner accepts8388608 canonical bytes/199999
+nodes/99999 unique decoded names at depth1. Sending identical source bytes
+through the public loader materializes once and safely rejects the wrong root;
+its helper traced peak is37978921 bytes. Canonical+1 and node200001 negatives
+reject before native materialization. Fixture-build/helper allocation peaks are
+separate; whole-process peak includes both plus instrumentation. Zero helper
+scratch follows the executed no-I/O gate, not invented filesystem telemetry.
+
+MAIN fully read the final nine-document/evidence delta at
+`730c45b6385239b6ca07a51e52df0b62bd9e92ea`, including all15 actual sanitized
+producer receipts. Source/test pins match the independently executed candidate.
+Producer13 passed/one real-core skip and100 passed/two legacy skips remain
+separately attributed; the retained long-path fixture failure is not deleted or
+relabeled as a scientific failure. The existing reviewed M01 runtime supplies
+the independently executed real-core PASS above, not a mocked producer PASS.
+
+The measured bounded local unit is suitable for this explicitly approved
+ordinary function milestone. It requires a caller that already owns bounded
+bytes; no HTTP, file acquisition, browser memory budget, aggregate worker CPU,
+server storage, provider eligibility or method acceptance follows. The single
+ML-VPS replacement and larger physical vertical remain gated. Final independent
+peer review and exact-head develop promotion are recorded separately.
