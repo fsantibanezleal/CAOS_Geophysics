@@ -21,7 +21,9 @@ Convergence: all nine course requirements locally validated, not product or host
 | R-MTC-005 | pass | Actual20-refit bootstrap and independent first-member refit; nonuniqueness/conditional claims checked |
 | R-MTC-006 | pass | Nine-row physical function/array mapping, exact reviewed worker limits and owner/source/bundle boundaries |
 | R-MTC-007 | pass |32enhanced browser tests, including pointer/native-key controls, real equation panning, SVG bounds/orientation and inspected viewport evidence |
-| R-MTC-008 | pass | Exact Research preservation test,89frontend tests/build,75scientific/parser tests,68existing API tests, scoped path review |
+| R-MTC-008 | pass | Exact Research preservation test,89frontend tests/build,77post-integration scientific/parser/source-binding tests,68historical API tests, scoped path review |
 | R-MTC-009 | pass | Introduction current-scope unit check and16rendered combinations; original equations/core lessons preserved |
 
 Persisted milestones: design4692473, Introduction design3aa4a18, implementation714c6a9, safe develop3b0fd0e merge72f2ea8, scientific schematic correction102e321. Final receipt/self-review is a separate scoped milestone. Shared handoff to Bacon uses PR103 because this runtime has no direct agent-message tool. No merge/deploy is authorized.
+
+Post-review integration: Main reported independent pinned25439be numerics75, frontend89/build and all32browser combinations passing. At Main's explicit request, normal mergefdfad97 integrates develop6050100, with both08online-EDI/09course guide links retained. Frontend/course source and original worked JSON remain byte-identical to25439be; no4337restart. The only integration test adjustment is the strictly pinned offline-Torch-import source-compatibility proof and two negative controls.77tests,89frontend tests/build, full20/120/348artifact hashes and existing guards passed. This merges develop into the task branch only; ready PR114 is not merged or deployed.

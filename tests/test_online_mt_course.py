@@ -119,11 +119,44 @@ def test_objective_mask_and_normalization():
     np.testing.assert_array_equal(residual, objective_residual(np.log(rho), [350.], s.frequencies, changed, sig, beta, mask))
 
 
+def assert_function_binding(saved, actual, inverse_source):
+    """Admit only the pinned offline Torch import relocation, not science drift."""
+    assert saved.keys() == actual.keys()
+    assert {key: value for key, value in saved.items() if key != "invert_mt"} == {
+        key: value for key, value in actual.items() if key != "invert_mt"}
+    assert hashlib.sha256(inverse_source.encode()).hexdigest() == actual["invert_mt"]
+    if saved["invert_mt"] == actual["invert_mt"]:
+        return
+    assert (saved["invert_mt"], actual["invert_mt"]) == (
+        "b13ecce15df4eef1374a261a50c545aa68e31c2ffcf6034a66fa0d956319726d",
+        "371639c3aad2eb3251b978ee0a8cda4222f15d45a091f793717cc05aae17049d")
+    offline_import = "        else:\n            import torch\n"
+    assert inverse_source.count(offline_import) == 1
+    restored = inverse_source.replace(offline_import, "        else:\n", 1)
+    assert hashlib.sha256(restored.encode()).hexdigest() == saved["invert_mt"]
+
+
+@pytest.mark.parametrize("changed", ["forward", "trf"])
+def test_function_binding_rejects_scientific_changes(changed):
+    saved = json.loads(WORKED.read_text(encoding="utf-8"))["scientific_function_sha256"]
+    source = inspect.getsource(invert_mt).replace("\r\n", "\n")
+    actual = {**saved, "invert_mt": hashlib.sha256(source.encode()).hexdigest()}
+    if changed == "forward":
+        actual["impedance"] = "0" * 64
+    else:
+        assert "max_nfev=max_nfev" in source
+        source = source.replace("max_nfev=max_nfev", "max_nfev=99", 1)
+        actual["invert_mt"] = hashlib.sha256(source.encode()).hexdigest()
+    with pytest.raises(AssertionError):
+        assert_function_binding(saved, actual, source)
+
+
 def test_worked_case_replay():
     saved, actual = json.loads(WORKED.read_text(encoding="utf-8")), worked_case()
     assert saved["source_sha256"] == actual["source_sha256"] == "0d6b0fab71efe69d183445070aba1181604333f00fb6781bf6d2c9d9d2ee5e95"
     assert saved["source_bytes"] == actual["source_bytes"] == 8987
-    assert saved["scientific_function_sha256"] == actual["scientific_function_sha256"]
+    assert_function_binding(saved["scientific_function_sha256"], actual["scientific_function_sha256"],
+                            inspect.getsource(invert_mt).replace("\r\n", "\n"))
     for key in ("frequency_hz", "observed_real_ohm", "observed_imag_ohm", "sigma_per_real_component_ohm", "training_mask"):
         assert saved[key] == actual[key]
     for record, repeat in zip(saved["cases"], actual["cases"], strict=True):
