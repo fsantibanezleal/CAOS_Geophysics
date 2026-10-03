@@ -5,6 +5,11 @@ Read [design](design.md), [requirements](requirements.md) and [validation](valid
 The existing pure [contract](../physical-accounting-protocol/contracts.md) is
 not widened or replaced. Its runtime_authorized ALWAYSfalse remains mandatory.
 
+PENDING amendment beyond MAIN-reviewed67c621c: explicit24-byte DRAINED timestamp
+and50ms pre-final visibility wait below need exact MAIN acceptance BEFORE source
+adoption. Narrow I01 authority does not implicitly approve these changes; see
+[approval](approval.md) and [build inventory](build-inventory.md).
+
 ## 1. Identity and authority
 
 Private start/trace/receipt/release use unchanged exact pure schemas and keys.
@@ -67,7 +72,7 @@ Kinds and complete payload layouts (all offsets relative to payload):
 | 7 STARTED | Native to bridge, after resume/GO | 8bytes offset_ns uint64 |
 | 8 SAMPLE | Native to bridge, running/stop/drain/final | 96bytes, twelve uint64 slots listed below |
 | 9 STOP | Native to bridge, once stop requested | 16bytes: reason uint32 at0, reserved uint32=0 at4, offset_ns uint64 at8 |
-| 10 DRAINED | Native to bridge, after actual emptiness/reap | 16bytes: root exit raw32 at0, reserved uint32=0 at4, stop_offset uint64 at8. Drain timestamp is the mandatory following SAMPLE timestamp, same event cycle |
+| 10 DRAINED | Native to bridge, after actual emptiness/reap | 24bytes: root exit raw32 at0, reserved uint32=0 at4, stop_offset uint64 at8, drained_offset uint64 at16 |
 | 11 ERROR | Native to bridge, once failure latched | 16bytes: operation uint32 at0, safe_code uint32 at4, native errno/GetLastError uint32 at8, reserved uint32=0 at12 |
 | 12 RELEASED | Native to bridge, after matched ack and actual object release | 8bytes controller preliminary SELF ns. This is explicitly NOT a final lifetime parent RELEASE record |
 
@@ -100,8 +105,8 @@ sequence: the bridge maintains separate exact1-based counters for each pure
 channel, preventing a CONTAINED/event frame from consuming a sample number.
 SAMPLE native/active slots produce only the matching canonical pure SAMPLE,
 then consume_sample or consume_final_sample by the fixed native phase. Drain
-assertion precedes all final samples; the first final sample supplies the native
-drain event timestamp and must not be accepted first as running evidence.
+assertion uses the actual DRAINED offset and precedes all final samples; a final
+sample must not be accepted first as running evidence or redefine drain time.
 Nonclean STOP invokes request_stop with its native timestamp; clean_exit16 is
 natural-stop metadata for assert_drained, NEVER request_stop(clean_exit).
 ERROR latches held diagnostic and attempts native stop, not a synthesized zero.
@@ -158,7 +163,9 @@ scratch. Log truncation does not undo a limit violation. The supervisor cannot
 certify RSS/scratch enforcement solely from these byte caps.
 
 Final phase begins only after native whole-object empty and owned exit proof;
-three equal component totals, empty active variants, >=20ms spacing, <=2s from
+wait at least the admitted50ms visibility bound after drain BEFORE first final
+read, with actual empty state still checked. Three equal component totals,
+empty active variants, >=20ms spacing, <=2s from
 drain. Running20ms gap rule does not impose an upper final-read spacing.
 Unavailable final fields remain null with final_reads0 and empty_verifiedfalse.
 Clock/stop/drain/exit/receipt loss latches FAILED_HELD, no reset/rebind/replay.

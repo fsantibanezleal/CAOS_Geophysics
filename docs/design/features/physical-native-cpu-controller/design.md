@@ -2,6 +2,10 @@
 
 Date: 2026-10-03. Status: proposed, FULL MAIN pre-code review required.
 Base ba54d32f0932a09502f463f3aff9c8f21270dca1. All native gates NOT_RUN.
+MAIN FULL read67c621c and authorized narrowly separate I01 authoring, recorded
+in [approval](approval.md). Later explicit drain timestamp/50ms settle correction
+is PENDING exact review, not adopted in source. [Build inventory](build-inventory.md)
+proposes /MT for I01 tests/probe ONLY; section7 future runner /MD stays unchanged.
 Read [research](research.md), [requirements](requirements.md),
 [contracts](contracts.md), [validation](validation-plan.md) and [tasks](tasks.md).
 Parent [design](../physical-worker-accounting/design.md) and approved pure
@@ -235,7 +239,10 @@ until MAIN supplies read-only inventory; v6.12 sched.h is research only.
 ## 6. Final counters, parent tails, durability and recovery
 
 After whole-object emptiness/root+owned exit proof, three identical component
-counter samples at least20 ms apart within2 s. Require no native regressions,
+counter samples at least20 ms apart within2 s. First final read occurs no
+earlier than50 ms after actual drain, covering the admitted visibility bound;
+three equal reads alone over40 ms cannot establish a50 ms settle allowance.
+Actual emptiness remains checked throughout. Require no native regressions,
 no missed active period, valid previous trace, strict units and known exit code.
 Natural root exit with a surviving child is unexpected_descendants, stop/fail.
 Drained final CPU betweenS andB may be consistent only absent earlier failed

@@ -1,8 +1,15 @@
 # Native CPU controller full pre-code review packet
 
-Date: 2026-10-03. Status: PROPOSED, FULL MAIN READ/explicit approval pending.
+Date: 2026-10-03. Status: original67c621c FULL MAIN read; narrow I01 authoring
+approved, compiler execution and later amendments pending separate review.
 Issue [140](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/140).
-Docs-only milestone, no source/test/native/profile/host authority granted.
+This milestone contains docs only. Source/test authority is narrowly recorded
+in [approval](approval.md); native/platform/profile/host authority is NOT granted.
+[Draft PR145](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/145) targets
+develop. Its exact-head self-review/final handoff identifies the stable packet;
+it is not merged. Approval was persisted at914a4bbe BEFORE any new source/test.
+The [read-only build inventory and unexecuted recipe](build-inventory.md) require
+a NEW exact MAIN decision before any compiler/linker/compiled test or probe run.
 
 ## 1. Exact immutable context and complete read order
 
@@ -30,9 +37,11 @@ Read ALL seven files in order, not only requirements or the Windows route:
 6. [Ownership, dependency sequence and H00..06 holds](tasks.md).
 7. This packet, measured docs checks, exclusions and decisions to request.
 
-Only these seven new Markdown files are candidates for commit/push. No other
-path is edited, including parent packets and pure code/tests. No code/prerequisite
-helper/fixture file is created merely to validate this design. Human-only Git
+The original67c621c milestone contains exactly these seven new Markdown files.
+The next bounded milestone adds approval.md/build-inventory.md and updates five
+of the original own docs; no source/test/probe exists yet. Parent packets and
+pure code/tests remain unchanged. No code/prerequisite helper/fixture file is
+created merely to validate the inventory. Human-only Git
 authorship, no package/installer or deploy commands, no merge.
 
 ## 2. Concrete proposals for MAIN to approve or correct
@@ -73,7 +82,7 @@ remains CLOSED, not a source scope quietly accepted as whole runtime approval.
 Docs approval alone cannot activate a profile, relax headroom, install a binary,
 touch OS objects/services, patch a worker or expand current ops inventory.
 
-## 4. Documentation validation evidence
+## 4. Historical original67c621c documentation validation evidence
 
 Actual local docs verification on2026-10-03, using the existing read-only
 CPython3.12.10 interpreter alias (exact private path in handoff), -B, no installs:
@@ -100,7 +109,47 @@ pure-producer or native suite was run for this docs delta. Existing
 check_sdd_convergence validates the unchanged product ledger, not native gates;
 it is not reported as native convergence. No scripts/check_sdd.py exists atbase.
 
-## 5. Nonclaims and final handoff requirements
+## 5. New inventory and amendment review, before compiled tests
+
+MAIN FULL read original67c621c and authorized the exact deterministic core and
+three test paths plus optional ABI probe; see the committed approval record.
+This does not approve two later material docs changes: DRAINED payload16->24
+with an explicit drain timestamp, and waiting the admitted50ms BEFORE first
+final read (three equal reads over40ms alone do not cover50ms visibility).
+Contracts/design/validation mark those amendments PENDING. Do not adopt them in
+source until MAIN reviews the exact amended packet. Native100ns/1000ns quantum
+versus supplied B+1ns clarification is also identified, not fictional OS data.
+
+Build inventory binds actual cl/link, all90 compiler-directory files, four
+include roots, static/import libraries, CRT and named system dependency bytes.
+Static PE import reads are actual; loaded dependency/ABI evidence is NOT_RUN.
+Python's local VC runtime14.42 is older than compiler-local14.43; System32 is
+14.50. No assumption that a /MD test DLL selects System32's newer runtime.
+Request /MT ONLY for the deterministic test DLL/ABI probe with five explicit
+hashed static libraries, no cross-boundary CRT-owned memory. The future native
+runner /MD remains unchanged/CLOSED. This choice needs MAIN compiler review.
+
+The build-inventory packet contains the exact read-only observations,49 file
+hash rows, five root hashes, eight NEW bounded official HTTPS receipts and full
+UNEXECUTED compile/link/probe/test commands. The original34 research receipts
+remain unchanged. No toolchain/interpreter/OS environment or output root changed.
+No new source/test/probe or compiled result exists; test-first RED/GREEN is next
+after the mandatory inventory decision, not silently reported as already run.
+
+Actual new read-only/docs evidence on2026-10-03, same approved interpreter -B:
+content standards PASS; template residue PASS across897 tracked files; CI budget
+PASS. Nine-path/base scope audit PASS,44 relative Markdown links resolve, two
+pure protected hashes PASS, original research/requirements byte-unchanged at67.
+Source/tests/probe paths and proposed private output root all ABSENT. Inventory
+has49 well-formed file hashes and five root hashes. Parsed recipe contains only
+assignments/Join-Path: bound compile argument arrays23/23, link arrays21/20.
+That check evaluated string/path assignments only; no tool or generated binary
+was launched. Initial expected compile argument count21 was a checker error,
+corrected to actual23; no compiler/test result was substituted for this check.
+An initial extra blank line at inventory EOF was corrected before final whitespace
+validation. Final guards/whitespace are rerun after staging the complete packet.
+
+## 6. Nonclaims and final handoff requirements
 
 No actual Job Object/cgroup, compiled controller, measured job CPU, launch token,
 manager policy, OS profile, parent finality, durable receipt/release or migration
@@ -116,6 +165,7 @@ unit did not remeasure it or obtain owner authorization. Host drill/production
 activation remain CLOSED. Existing failed controls and immutable encrypted
 backups/deletion authority remain preserved, not replaced by these docs.
 
-Final handoff must identify the full pushed docs SHA, draft PR/base, exact seven
-paths, actual docs-check commands and receipt inventory, with all holds explicit.
-MAIN FULL read/approval of that full packet is required BEFORE code/native work.
+Final handoff identifies the full pushed SHA, draft PR/base, exact nine new docs
+relative tobase (seven original plus approval/build inventory), actual checks and
+receipt inventory. MAIN must review the inventory and pending amendments before
+compiler execution or amendment adoption. Native OS work has NO authorization.

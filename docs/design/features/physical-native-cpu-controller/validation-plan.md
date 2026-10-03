@@ -5,6 +5,10 @@ No files named below exist in this unit. Full MAIN read and explicit assignment,
 toolchain/probe and concrete context approval precede even a compile fixture.
 Read [requirements](requirements.md), [design](design.md), [contracts](contracts.md).
 No CI OS matrix, product test suite, install or native training job is proposed.
+MAIN's narrow I01 authoring approval is persisted in [approval](approval.md).
+Compile/test-binary/ABI execution still needs [inventory](build-inventory.md)
+approval. The explicit drain timestamp/50ms wait amendments below are PENDING
+MAIN acceptance before source adoption, not added runtime PASS claims.
 
 ## 1. Evidence layers and test-first order
 
@@ -87,6 +91,13 @@ Native golden cases, before actual OS controls:
   boundaries and checked seconds. No rounding tolerance for CPU identity.
 - Fixed wire endian bytes,unaligned offsets,zero reserved,frame cap before
   copy/int conversion; compare canonical result against unchanged pure decoder.
+- Delayed native updates through the admitted50ms visibility window after empty
+  state, three identical premature reads and late counter increment: finalization
+  waits50ms before first final query and never treats40ms equality as final proof.
+
+Strict B+1ns is a supplied-record negative boundary, not a claimed native
+resolution. Actual Windows/Linux overbudget controls use the next representable
+100ns/1000ns CPU quantum and must fail; no fictional1ns OS measurement.
 
 ABI probe NOT_RUN: Windows all sizes/offsets/alignments/signatures used in
 design and retained error semantics; Linux clone_args88 fields/offsets plus
