@@ -1,8 +1,8 @@
 # Online MT scientific course requirements
 
-Status: planned. Date: 2026-10-03. Authorized by the user's explicit M05/M06 course request under the approved [product SDD](../../SDD.md).
+Status: implemented and locally validated; draft review pending. Date: 2026-10-03. Authorized by the user's explicit M05/M06 course request under the approved [product SDD](../../SDD.md).
 
-This is a course/content change, not backend admission, canonical promotion or completion of M01-M13. Base: develop afac8ab. Scientific implementation: PR100, compute baseline 7b69404. The actual consolidated page is `frontend/src/pages/Research.tsx`; separate Methodology.tsx/Implementation.tsx files do not exist. Only its two MT content slots and import seam are in scope. Bacon owns App/widgets/processing contracts/styles.
+This is a course/content change, not backend admission, canonical promotion or completion of M01-M13. Initial base: develop afac8ab; develop3b0fd0e safely integrated. Scientific implementation: PR100, compute baseline 7b69404. The actual consolidated page is `frontend/src/pages/Research.tsx`; separate Methodology.tsx/Implementation.tsx files do not exist. Its two MT content slots, import seam and subsequently authorized Introduction scope are in scope. Bacon owns App/widgets/processing contracts/styles.
 
 R-MTC-001 THE course SHALL state the complex Maxwell/plane-wave recurrence, positive time convention, E/H units, tensor frame, variance-to-sigma conversion and conservative full-frequency QC in faithful EN/ES with captioned equations and primary references in every section. Gate: frontend/src/test/online-mt-course.test.ts::scientific content and equations.
 

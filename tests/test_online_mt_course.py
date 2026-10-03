@@ -91,6 +91,20 @@ def test_reflection_oracle(rho, h):
         np.testing.assert_allclose(np.angle(z, deg=True), 45., atol=1e-12)
 
 
+def test_forward_limiting_cases():
+    # Mathematical forward limits, not online admission of zero/huge thickness.
+    f = np.geomspace(.001, 1000., 64)
+    np.testing.assert_allclose(reflection([120., 12.], [0.], f), reflection([12.], [], f), rtol=1e-12)
+    np.testing.assert_allclose(impedance([120., 12.], [1e-12], f), reflection([12.], [], f), rtol=1e-12)
+    with pytest.raises(ValueError, match="positive"):
+        impedance([120., 12.], [0.], f)
+    # More than 50 skin depths already realizes the upper-halfspace limit;
+    # keep complex tanh arguments away from gratuitous floating-point overflow.
+    np.testing.assert_allclose(impedance([120., 12.], [1e7], f[:4]), reflection([120.], [], f[:4]), rtol=1e-12)
+    for h in ([2.], [350.], [4000.]):
+        np.testing.assert_allclose(impedance([120., 120.], h, f), reflection([120.], [], f), rtol=1e-12)
+
+
 def test_objective_mask_and_normalization():
     s = read_edi(FIXTURE)
     obs, sig = s.select("xy")
