@@ -25,14 +25,23 @@ M06 rejects the passing 512-frequency QC input with 422/method_ineligible. Uploa
 
 The real separate `app.worker` parent was killed with SIGKILL while its real `app.mt_compute` child existed. The child exited, normal recovery persisted failed/worker_interrupted with no result, then refused disputed staging as intended. Only that new harness stage was moved into retained operator quarantine with matching before/after hashes. A new M05 attempt succeeded. The actual crash receipt SHA-256 is `e1dc3d8b8a65da30107f0d337dd9ac10809efb8b5c53c6f518c42244fa689d04`. This establishes operator-assisted fail-closed recovery, not unattended restart.
 
-## Distribution failure and pending corrected invocation
+## Distribution failure and corrected actual measurements
 
-The first distribution invocation failed after 268.80 s because one isolated API store made more than the existing 30-jobs/IP/hour admission limit. Successful earlier job outputs and the failed store remain preserved; that run is not a passing forty-sample measurement. Production rate limits were not changed. Harness correction `f65e85a08a46a4106351249b420c2696e661c138` uses separate private stores per method: twenty M05 submissions, one prerequisite QC plus twenty M06 submissions. Incomplete invocations now retain a partial measurement receipt. It passes local lint and opt-out/guide tests; actual corrected distribution evidence is pending.
+The first distribution invocation failed after 268.80 s because one isolated API store made more than the existing 30-jobs/IP/hour admission limit. Successful earlier job outputs and the failed store remain preserved; that run is not a passing forty-sample measurement. Production rate limits were not changed. Harness correction `f65e85a08a46a4106351249b420c2696e661c138` uses separate private stores per method: twenty M05 submissions, one prerequisite QC plus twenty M06 submissions. Incomplete invocations now retain a partial measurement receipt.
 
 The new immutable selected source TAR SHA-256 is `4a1437c5487b9a305a28debbfcf80361423d7e00f6f58c9c1e6e68748cf36abd`. To avoid duplicate dependency disk consumption, its `.venv` is a read-only hardlink clone of the pinned admission environment, never updated in place; application/test source is the new revision. No other product environment is reused or modified.
 
+The corrected restricted invocation completed all forty successful nominal jobs and retained the full receipt before failing the disk inequality. Runtime 350.32 s. Exact private `nominal-host-receipt.json` SHA-256: `63549f518d80a9146102a4cfe73276d561fa479ae9b4ed67138bf698d0c2b2cb`.
+
+| Method | Attempts | Nearest-rank p95 wall | p95 child RSS | p95 scratch |
+| --- | ---: | ---: | ---: | ---: |
+| M05 | 20 | 8,651 ms | 245,182,464 bytes | 53,880 bytes |
+| M06 | 20 | 8,511 ms | 247,214,080 bytes | 77,250 bytes |
+
+These wall/RSS/scratch inequalities passed unchanged 70% ceilings. Observed parent-plus-child peak RSS was 428,449,792 bytes; host available RAM minimum was 4,806,569,984 of 8,127,717,376 bytes. The sampler observed 4,660 authenticated application reads: p95 34.386 ms, maximum 289.049 ms, not public HTTP/TLS latency. The test stopped at disk, so subsequent parent-tree/read assertions were not executed, although the retained values are independently below their stated thresholds. Full admission verdict is **FAIL**, not a filtered pass of the preceding checks.
+
 ## Unclosed host/release gates
 
-After runtime installation root free space was 23,650,004,992 of 80,290,492,416 bytes, **29.45%**, below the approved 30% disk threshold. No threshold was lowered and no old release directory was deleted/compressed. Owner direction about lossless compression of obsolete geophysics releases is pending. Keep the current active and two newest rollback releases intact. Existing server age is 1.1.1, below the separately reviewed recovery tooling's maintained 1.3.1 minimum; a provenance-verified isolated binary is needed for the restore drill, not a global blind upgrade.
+After runtime installation root free space was 23,650,004,992 of 80,290,492,416 bytes, **29.45%**; the actual corrected distribution minimum was 23,622,492,160 bytes (**29.42%**). Both are below the approved 30% disk threshold. No threshold was lowered and no old release directory was deleted/compressed. Owner direction about lossless compression of obsolete geophysics releases is pending. Keep the current active and two newest rollback releases intact. Existing server age is 1.1.1, below the separately reviewed recovery tooling's maintained 1.3.1 minimum; a provenance-verified isolated binary is needed for the restore drill, not a global blind upgrade.
 
-Nominal p95 and minimum host memory/disk headroom still need the corrected actual run. These TestClient reads do not establish nginx/public HTTPS responsiveness. Backup/restore, durable external deletion authority, approved SMTP delivery, full field/method/data/UI/wiki convergence, external HTTPS/browser and single-origin cutover remain separate gates. No valid cutover receipt or full-product acceptance is asserted here.
+Nominal p95 and minimum host memory/disk headroom are now measured, with the disk gate failing. These TestClient reads do not establish nginx/public HTTPS responsiveness. Backup/restore, durable external deletion authority, approved SMTP delivery, full field/method/data/UI/wiki convergence, external HTTPS/browser and single-origin cutover remain separate gates. No valid cutover receipt or full-product acceptance is asserted here.
