@@ -7,6 +7,7 @@ import subprocess
 from urllib.request import Request
 
 import pytest
+import sources
 
 from sources import SourceError, _NoRedirect, acquire_source, load_ledger
 
@@ -149,7 +150,12 @@ def test_pygimli_provider_links_and_pins():
 
 
 def test_stead_is_unverified_provider_metadata_only(tmp_path):
-    record = load_ledger()["stead-metadata"]
+    record = copy.deepcopy(load_ledger()["stead-metadata"])
+    record["verification_status"] = "user-reported-unverified"
+    record.pop("verification_evidence")
+    ledger = tmp_path / "legacy-ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    assert load_ledger(ledger)["stead-metadata"] == record
     assert record["acquisition"] == "provider-link"
     assert record["rights_decision"] == "provider-link-only"
     assert record["format"] == "stead-metadata-csv"
@@ -158,9 +164,82 @@ def test_stead_is_unverified_provider_metadata_only(tmp_path):
     assert record["expected_bytes"] == 402560190
     assert record["sha256"] == "9b9007406ebfef8c182060c8bb4266d29bbc433985f91f7e2dc476c8aca08efe"
     assert record["object_url"] == "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/metadata.csv"
-    with pytest.raises(SourceError, match="stead-metadata: provider-link metadata is not a verified raw asset"):
+    with pytest.raises(SourceError, match="stead-metadata: provider-link metadata is not an acquirable raw asset"):
+        acquire_source("stead-metadata", root=tmp_path, ledger_path=ledger)
+    assert not (tmp_path / "data").exists()
+
+
+def test_stead_verified_metadata_profile(tmp_path):
+    record = load_ledger()["stead-metadata"]
+    assert record["verification_status"] == "locally-verified-metadata"
+    assert record["raw_path"] is None and record["acquisition"] == "provider-link"
+    assert record["rights_decision"] == "provider-link-only"
+    profile = ROOT / record["verification_evidence"]["path"]
+    assert hashlib.sha256(profile.read_bytes()).hexdigest() == record["verification_evidence"]["sha256"]
+    with pytest.raises(SourceError, match="not an acquirable raw asset"):
         acquire_source("stead-metadata", root=tmp_path)
     assert not (tmp_path / "data").exists()
+
+
+@pytest.mark.parametrize("variant", [
+    "missing", "digest", "unsafe", "absolute", "alias", "unverified_with_evidence", "unknown_status",
+    "status_object", "format", "profile_missing", "profile_hash", "profile_schema", "source_sha",
+    "source_bytes", "source_url", "waveform_claim", "rows_boolean", "nonobject", "duplicate", "nonfinite", "oversize",
+])
+def test_verified_metadata_evidence_rejects_drift(tmp_path, monkeypatch, variant):
+    record = copy.deepcopy(load_ledger()["stead-metadata"])
+    profile_bytes = (ROOT / record["verification_evidence"]["path"]).read_bytes()
+    profile = tmp_path / record["verification_evidence"]["path"]
+    profile.parent.mkdir(parents=True)
+    profile.write_bytes(profile_bytes)
+    monkeypatch.setattr(sources, "ROOT", tmp_path)
+    if variant == "missing":
+        record.pop("verification_evidence")
+    elif variant == "digest":
+        record["verification_evidence"]["sha256"] = "invalid"
+    elif variant in ("unsafe", "absolute", "alias"):
+        record["verification_evidence"]["path"] = {
+            "unsafe": "data/derived/phase/../profile.json", "absolute": "C:/Windows/profile.json",
+            "alias": "data/derived/phase/con.json",
+        }[variant]
+    elif variant == "unverified_with_evidence":
+        record["verification_status"] = "user-reported-unverified"
+    elif variant in ("unknown_status", "status_object"):
+        record["verification_status"] = "assumed" if variant == "unknown_status" else {}
+    elif variant == "format":
+        record["format"] = "edi-transfer-function"
+    elif variant == "profile_missing":
+        profile.unlink()
+    elif variant == "profile_hash":
+        profile.write_bytes(profile_bytes + b" ")
+    else:
+        value = json.loads(profile_bytes)
+        if variant == "profile_schema":
+            value["schema"] += "-unknown"
+        elif variant in ("source_sha", "source_bytes", "source_url"):
+            name = {"source_sha": "sha256", "source_bytes": "bytes", "source_url": "url"}[variant]
+            value["source"][name] = {"source_sha": "0" * 64, "source_bytes": 1,
+                                     "source_url": "https://example.org/other"}[variant]
+        elif variant == "waveform_claim":
+            value["source"]["waveforms_downloaded_by_this_receipt"] = True
+        elif variant == "rows_boolean":
+            value["rows"]["total"] = True
+        if variant == "nonobject":
+            changed = b"[]"
+        elif variant == "duplicate":
+            changed = b'{"schema":"a","schema":"b"}'
+        elif variant == "nonfinite":
+            changed = b'{"value":NaN}'
+        elif variant == "oversize":
+            changed = b" " * (2 * 1024 * 1024 + 1)
+        else:
+            changed = json.dumps(value).encode()
+        profile.write_bytes(changed)
+        record["verification_evidence"]["sha256"] = hashlib.sha256(changed).hexdigest()
+    ledger = tmp_path / "ledger.json"
+    ledger.write_text(json.dumps({"schema": "inverse-earth.sources/v2", "sources": [record]}), encoding="utf-8")
+    with pytest.raises(SourceError):
+        load_ledger(ledger)
 
 
 def test_actionable_acquisition_errors(tmp_path):
