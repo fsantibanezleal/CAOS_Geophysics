@@ -113,6 +113,26 @@ Because shared ScientificPlots/styles changed upstream, the entire actual32-case
 
 The harness owned only loopback4337 during this execution and stopped its server on completion; a subsequent listener check found no4337listener. All protected untracked pytest output directories/private ignored data remain unstaged. PR114 is mergeable after the normal merge, but remains draft pending the inherited owner content-guard correction. No course/frontend implementation change, fixture hash rewrite, tolerance change, merge or deployment accompanies this receipt.
 
+## ADR-0067 owner-fix closure on developcf086dc
+
+Main independently reviewed and merged tiny owner PR117 at developcf086dc817d095d66e46fdab53cc235a8e70004b. Normal course-branch merge9f1609c23d7802365accb98336ed86a56d8f2828 incorporates it without conflicts. Its complete inherited diff from46bd5e7 is three owner files/four source lines: unavailable resource labels, translated depth/interval separators and the LayerColumn accessibility separator. Original null tests/nullish coalescing, true zero values, scientific endpoints/infinity and interval availability remain unchanged. The formerly failed content gate above remains a historical failure; it is not relabelled.
+
+Fresh executions against9f1609c:
+
+| Gate | Actual result |
+| --- | --- |
+| `python -S scripts/check_content_standards.py` |PASS across the full tracked tree; unchanged guard |
+| Same77numerical/parser/source-binding command with fresh `--basetemp=D:/_worktrees/geophysics-ingestion-foundation/.venv-course-adr117-check` |77passed,12.04s, zero skips |
+| `npm test -- --run` |18files/101tests passed,1.21s |
+| `npm run build` |TypeScript/Vite/five static route entrypoints passed; Vite4.42s; existing large-chunk warning retained |
+| Artifact, full Ruff, template, CI-budget, phase-assets, SDD-structure and whitespace gates |PASS; unchanged global ledger1fail/18unresolved/0pass |
+
+Source-invariance evidence is separate from execution: all course/Introduction/Research source, citations, numerical test, worked JSON and browser harness/config matchca51bfe exactly. Backend/scientific/canonical/global styles match46bd5e7; the three owner-fixed files matchcf086dc exactly. The complete ScientificPlots prefix before `export function LayerColumn(`, including the entire course-consumed Plot implementation, is byte-identical to46bd5e7 (SHA-256`3a7f1f52d00185d80949d4beffe886c9df91a27f9e9576cce0818ecb6e6bf978`). Research and OnlineMTExercise import Plot, not LayerColumn or the two owner MT job widgets. Thus the tiny owner labels do not change a course-rendered component. No scientific function/hash/tolerance or source receipt was rewritten.
+
+The32-case combined46bd/8857b13 browser execution remains pinned to its original source/time and report SHA-256`6c4d76915c2ff28a220d127b499be03dcd32df7b82f21674d2ebca688a293cba`, remeasured unchanged after integration. There is no new browser execution claimed forcf086dc, and Main's independent25439be review remains separately pinned. Port4337 remains unused. The new numerical run is a distinct12.04s receipt, not replacement of the earlier77passed11.00s run.
+
+Final course PR scope remains the same22paths. Tracked/index state is clean after the receipt commit. Excluded and preserved: all11preexisting untracked `.pytest-tmp-mt-check-1..5` and `.pytest-tmp-mt-diagnostic`, `-2..6` directories; ignored original cl061, private candidate outputs, virtual environments and complete browser QA evidence. The fresh numerical temporary root did not exist before this run and is ignored; no protected prior output was reused/deleted/staged. With the inherited content blocker resolved, PR114 is ready for Main review, not merged/deployed. Host and full-product nonclaims below still apply.
+
 ## Separate blockers and nonclaims
 
 This completes local course requirements, not all M01-M13 or the replacement product ledger. Actual-host admission remains unaccepted: develop3b0fd0e's R007/R017 retain failed free-disk headroom29.42% below unchanged30%. Main owns subsequent owner choices, host revalidation and Linux bundle parity. Canonical full-family candidate assembly and integrated App/MT acceptance remain separately reviewed. Local API tests concern the merged owner CSV workflow, not end-to-end online MT host activation. No merge, deployment, second public origin or activation performed.
