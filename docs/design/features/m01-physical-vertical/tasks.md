@@ -27,7 +27,7 @@ Status: docs-only proposed design; implementation NOT_STARTED. All product gates
 
 ## Docs handoff validation and persistence
 
-- [ ] Stage only newly authorized documentation paths, validate unchanged full tracked-content/template/CI-budget guards, whitespace, local links, JSON receipt/hash fields, named17-gate coverage and allowed-path diff.
-- [ ] Commit/push scoped documentation milestones, open draft PR to develop for full SDD review, and record self-review with explicit no-code/no-test-run/no-host/no-provider/non-acceptance claims.
+- [x] Stage only newly authorized documentation paths, validate unchanged full tracked-content/template/CI-budget guards, whitespace, local links, JSON receipt/hash fields, named17-gate coverage and allowed-path diff. Nine added paths,31 local links,17 requirements and10 primary receipts checked; no existing path modified.
+- [x] Commit/push scoped documentation milestone79fceeb and open draft [PR #123](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/123) to develop for full SDD review. Final documentation handoff records validation/self-review with explicit no-code/no-product-test-run/no-host/no-provider/non-acceptance claims; main's full review remains pending.
 
 Current operational/scientific gaps and review decisions are in [review packet](review-packet.md). No global convergence ledger, course, shared navigation, canonical records, release status, main or host is modified by this feature.

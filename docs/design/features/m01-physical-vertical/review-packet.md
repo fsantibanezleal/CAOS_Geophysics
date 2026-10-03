@@ -41,3 +41,23 @@ There is no new host/auth/SMTP/mail/deletion provider, product identity or guess
 Approve or amend the explicit version schema/root index/monotonic gap policy; one-parent branching DAG/current limits; exact v2/hash dialects and current scientific-parent restriction; diagnostic execution-success versus precision non-pass; caps and real aggregate child CPU accounting; durable file intent/liability/cancel linearization; deletion/tombstone and recovery matrix; full ancestor export/browser memory gate; App quantity/error/unit/axis semantics; safe errors/idempotency/ownership; and exclusive future implementation owners. Defaults never answer the still-missing provider/headroom/identity choices.
 
 Acceptance of the documentation alone leaves R-MPV01..R-MPV17 product gates NOT_RUN. It does not close issues43/74/75/80/37 or broader product convergence. Code, host and release review are separate future evidence.
+
+## Docs-only persistence and self-review
+
+Initial validated/pushed SDD milestone: `79fceeb32314964d84f35bf73c8f033f23a77a90`. Draft [PR #123](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/123) targets develop; the final revision is recorded by the PR head and handoff comment, avoiding a self-referential commit hash. Branch task/geophysics-m01-physical-vertical-sdd is based on cf086dc. Exactly nine NEW paths: seven Markdown files in this feature folder plus the dated research Markdown and primary-source JSON. No existing tracked path, canonical artifact, protected source, other worktree/branch/environment, prior QA receipt or host changed.
+
+Actual docs validation, after all new paths were git-staged so tracked-file scanning included them:
+
+```text
+python scripts/check_content_standards.py : PASS, full tracked tree
+python scripts/check_template_residue.py : PASS, 810 tracked files
+python scripts/check_ci_budget.py : PASS
+git diff --cached --check : PASS
+read-only PowerShell path/link/EARS/receipt audit : PASS
+```
+
+The read-only audit checked nine allowed added paths/no modifications,31 local Markdown targets,17 unique EARS requirements with specific Gate names and10 HTTPS200 primary byte/hash/date records. Source bodies were fetched into memory only; no HTML, user data or source archive was committed. The repository has no scripts/check_sdd.py at this baseline, so none is claimed run; no replacement guard or convergence-owner record was edited. Numerical/API/frontend/build/browser/host/recovery product suites were intentionally NOT_RUN for this docs-only task.
+
+Self-review checked digest-domain separation and Python-versus-JavaScript numeric serialization, exact6/4/13 ordinary adapter shapes, null transform adapter identity (no invented adapter), distinct correction/transform quantities/residual signs/error kinds, explicit legacy-preserving schema/index/version model, complete parent/producer bindings, idempotent lookup before active-job rejection, cancel publication linearization, every crash/liability/deletion cut, registered old/new/unknown recovery matrix and future actual-network scientific browser evidence. Caps/CPU accounting, new migration/DDL, v2 schemas, diagnostic non-pass policy and future implementation ownership remain main-review decisions, not silently accepted defaults. The PR closes no parent issue and authorizes no product code, merge or deployment.
+
+Main's final review concern is explicit in contracts/validation:512 MiB is only a provisional server-side candidate ceiling, not safe phone admission. Browser total/member/structure/peak-memory caps require actual constrained-memory measurement and start unset/closed. Source bytes must be capped/parsed before allocation or duplicate-losing JSON decoding; buffered unzip-then-check is forbidden. Existing legacy guard is not loosened. Unmeasured/oversized browser workflows remain blocked/unresolved, with complete offline verification and honest download-versus-verification labels, never reduced scientific output or a phone PASS inferred from a desktop screenshot.
