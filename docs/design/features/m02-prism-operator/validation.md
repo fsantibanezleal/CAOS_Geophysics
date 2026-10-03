@@ -110,8 +110,8 @@ These are source inspection, not numerical results or a full environment audit.
 
 Private backup presence remains 137 files / zero tracked; backup and experiments
 remain ignored and untouched. Product ledger structure still reports one failure,
-18 unresolved. No numerical/gate result changed. Actual operator/test files do
-did not exist at that docs-only audit. Subsequent main approval is recorded in
+18 unresolved. No numerical/gate result changed. Actual operator/test files
+did not exist at the docs-only audit. Subsequent main approval is recorded in
 tasks at design head `361b66f`; independent code acceptance is still pending.
 
 ## Historical ordinary implementation before geometry correction
@@ -236,6 +236,8 @@ final acceptance. Our direct-engine investigation agrees with Choclo even when
 centres collapse: the engine uses actual nodes. No centre-caused G collapse was
 reproduced or claimed. The retained intermediate negative (1 failed/73 passed)
 was an injected duplicate-corner escape, corrected by ordered-corner validation.
+Here and in the unchanged dated JSON receipts, "user-reported" means MAIN-agent
+coordination, not Felipe-supplied scientific execution or owner approval.
 
 Use the exact existing READ-ONLY pipeline interpreter and process controls above;
 no environment creation/upgrades. For main's rerun select new private scratch,
