@@ -44,7 +44,9 @@ addopts so its actual summary is visible; no environment/config file change:
 <READ_ONLY_PYTHON> -B -m pytest --noconftest -p no:cacheprovider -o addopts= -q tests/worker_accounting/test_protocol.py
 ```
 
-Actual result:419 passed in0.51s, exit0, no skip/xfail. All12 exact named gates
+Validated source/test pin:965b0a248bc4fd74d9047757da2a06922bcabfae. The final
+documentation-only handoff preserves that pin's exact source/test Git blobs.
+Actual result:419 passed in0.54s, exit0, no skip/xfail. All12 exact named gates
 in requirements pass, including supplemental parametrized negatives/positives.
 The duration is ordinary test-runner output, not measured native job CPU/time.
 Forbidden phase/event combinations are individually asserted with exact transition
