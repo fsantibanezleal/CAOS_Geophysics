@@ -33,6 +33,12 @@ After numerical records pass, permitted web-copy directories are exactly NEW fro
 
 MAIN owns the minimal Research.tsx mount after frozen components. Resource/load measurement and actual product QA remain required, not satisfied by B's preview. No route edit, acceptance-ledger upgrade, science/adapter/solver/API change, environment mutation, protected bytes or historical receipt/image rewrite is authorized. If a new path or contract seam is required, STOP and propose before changing it. Final self-review and frozen handoff precede any merge; no merge/deploy by this owner.
 
+### MAIN publication-path correction, before canonical writes
+
+MAIN independently inspected Vite's publicDir=public-release, both ignored frontend public directories and the complete copy-data script. The original frontend/public/data destination would neither persist normally nor be served. MAIN therefore REVISES the C assignment to exactly NEW tracked data/derived/m01-scientific-course/{prism-case-0,prism-case-1,prism-case-2}/, with the same eleven exporter basenames per case and no extras. No historical data changes. The eight-key index remains NEW frontend/src/data/m01-course-record-index.json; relative case/name artifact paths and browser data/m01-scientific-course/ URLs are unchanged.
+
+Persist this authorization before canonical writes. Produce first to a fresh owned private/ignored output root and run actual numerical gates there; only then copy identical verified bytes into the new tracked directories. Course tests may read that explicitly selected owned candidate root before publication, then run again against the tracked root. Do not force-add ignored frontend directories. MAIN exclusively owns the later narrowly allowlisted copy-data.mjs change into public-release/data/m01-scientific-course and the minimal Research.tsx mount. This unit does not edit copy-data, Vite, ignore rules or global styles. Product QA must follow the integrated MAIN mount/copy, not an isolated preview. Scientific objects, native/no-job boundaries, role paths and hash dialects do not change.
+
 ## C. Separately approved course controls/evidence/frontend unit
 
 Numerical and conditional UI paths/producer are now explicitly approved as recorded above. Existing science, MT data/components, Research.tsx and global shell CSS remain protected. The former prospective checkpoints below are now governed by that exact staged authorization; completing content tests alone cannot satisfy real numerical/resource/rendered gates.
