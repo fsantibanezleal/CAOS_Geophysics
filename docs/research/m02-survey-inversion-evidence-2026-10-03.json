@@ -1,0 +1,167 @@
+{
+  "schema": "geophysics.m02-design-research/v1",
+  "date": "2026-10-03",
+  "status": "Research/source inspection only; numerical gates planned and not executed",
+  "base_revision": "0a10b5517b025cfa4330f205946ddf918f4b0f8f",
+  "handoff_base_revision": "66952f32b6ce86d5a752cf56d3e4ca8481c8b4da",
+  "base_alignment": "Fast-forward to latest develop at alignment, including MT UI/reviews/course, upstream ADR-0067 separator repair and ops source-bundle unit; inspected scientific module hashes unchanged.",
+  "versions_observed_read_only": {
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "choclo": "0.3.2",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "pyproj": "3.8.0",
+    "verde": null
+  },
+  "inspected_source_sha256": {
+    "docs/design/SDD.md": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
+    "docs/design/convergence.json": "bdad61af97e97d13773b7406840d6cad1547b47dc7694664e3e7949a075f24d3",
+    "data-pipeline/potential.py": "37ab0563254196fc2e9f3d821959a7beb0fa07011ec07019d2248c90ede8a69e",
+    "data-pipeline/spatial_inverse.py": "514d7902afb2009482be0b26f844c4ebc5b894da9895aca2b9832deea4a4c18f",
+    "data-pipeline/ingest.py": "30d5c8cf25527f668cab44d8e2a1e2849531eaad441c0e0afc71bde4177f4692",
+    "data-pipeline/gravity_processing.py": "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321",
+    "data-pipeline/gravity_transforms.py": "d11d0f207c89c308c9f8711da2a31b84b8adaeb0c12597a5ecc89ce527fdecf0",
+    "app/processing_contract.py": "8f91e480f4fd40908c33e4edfe1c6c7672212374496dcb7e02d2b7d5554ab496",
+    "requirements-precompute.txt": "3c04ff92c44df5619978a1e444beaed6d0c19ec9e7e4f3d712dfceccdcbf1695",
+    "docs/research/bartlett-source-review-2026-10-03.md": "76a3011b5260ba232f987e862087ce9eb249b44b6d6379af12a1f2ed5677a025",
+    "docs/research/potential-source-intake-evidence-2026-10-03.json": "7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7"
+  },
+  "new_numerical_execution": false,
+  "scientific_or_environment_edits": false,
+  "full_field_eligibility": false,
+  "primary_sources": [
+    {
+      "id": "P16",
+      "url": "https://academic.oup.com/gji/article/218/1/268/5420370",
+      "doi": "10.1093/gji/ggz156",
+      "status": "VERIFIED publisher title/abstract and displayed methodology/introduction; no new reproduction",
+      "basis": "Fournier and Oldenburg 2019, GJI 218, 268-282: mixed norms, L2-to-IRLS stages, gradient scaling and nonuniqueness. Field example is magnetics, not M02 gravity acceptance."
+    },
+    {
+      "id": "P17",
+      "url": "https://sgkang.github.io/papers/simpeg_2015.html",
+      "doi": "10.1016/j.cageo.2015.09.015",
+      "status": "VERIFIED author publication page/abstract and publisher search text",
+      "basis": "Cockett, Kang, Heagy, Pidlisecky and Oldenburg 2015, Computers & Geosciences 85, 142-154; modular gradient-based framework, not a current version performance receipt."
+    },
+    {"id":"P13","url":"https://discretize.simpeg.xyz/en/latest/api/generated/discretize.utils.active_from_xyz.html","status":"VERIFIED documentation labelled 0.12.0","basis":"Node/centre active-cell definitions; nearest-neighbour extension outside the surface hull must be explicitly prevented for this proposed contract."},
+    {"id":"P14","url":"https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.WeightedLeastSquares.html","status":"VERIFIED versioned documentation","basis":"Official smallness/smoothness terms, reference-model options and spatial scaling."},
+    {"id":"P15","url":"https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/LICENSE","status":"VERIFIED pinned licence text","basis":"SimPEG MIT software licence; does not license linked tutorial data."},
+    {
+      "id": "P01",
+      "url": "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.potential_fields.gravity.Simulation3DIntegral.html",
+      "status": "VERIFIED documentation",
+      "basis": "Versioned units, upward gz, Geoana/Choclo engine selection, active cells and sensitivity precision/storage."
+    },
+    {
+      "id": "P02",
+      "url": "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/potential_fields/gravity/simulation.py",
+      "status": "VERIFIED pinned source and installed source inspection",
+      "basis": "Geoana prism imports; explicit Choclo alternative. Geoana forward_only does not supply all inverse sensitivity operations."
+    },
+    {
+      "id": "P03",
+      "url": "https://www.fatiando.org/choclo/latest/api/generated/choclo.prism.gravity_u.html",
+      "status": "VERIFIED documentation labelled v0.3.2",
+      "basis": "Separate prism evaluator in SI/upward coordinates; proposed oracle, not a newly executed comparison."
+    },
+    {
+      "id": "P04",
+      "url": "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/data_misfit.py",
+      "status": "VERIFIED pinned source",
+      "basis": "Unhalved squared residual norm and factor-two gradient; W setter accepts explicit square whitening matrix."
+    },
+    {
+      "id": "P05",
+      "url": "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.Sparse.html",
+      "status": "VERIFIED versioned documentation",
+      "basis": "Sparse smallness and directional norms, epsilon stabilization and scaled IRLS weights."
+    },
+    {
+      "id": "P06",
+      "url": "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/directives/_regularization.py",
+      "status": "VERIFIED pinned source",
+      "basis": "L2 initialization, fit-only threshold initialization, beta/epsilon updates, directive ordering and stopping."
+    },
+    {
+      "id": "P07",
+      "url": "https://simpeg.xyz/user-tutorials/inv-gravity-anomaly-3d/",
+      "status": "VERIFIED current official tutorial; not pinned executable receipt",
+      "basis": "L2 and IRLS examples, synthetic observations, topography and survey. Prose 2.5% versus executable 2% uncertainty example discrepancy; not adopted as field uncertainty."
+    },
+    {
+      "id": "P08",
+      "url": "https://simpeg.xyz/user-tutorials/weighting-strategies/",
+      "status": "VERIFIED current official tutorial; output names SimPEG 0.25.0, not 0.25.2 execution evidence",
+      "basis": "Established alternative depth/sensitivity weighting; select only on declared development data."
+    },
+    {
+      "id": "P09",
+      "url": "https://gif.eos.ubc.ca/sites/default/files/Li_1998a.pdf",
+      "doi": "10.1190/1.1444302",
+      "status": "VERIFIED title/authors/year/abstract and initial 11-page PDF response; subsequent full-text reads unavailable",
+      "basis": "Li and Oldenburg, 1998, 3-D inversion of gravity data, Geophysics 63, 109-119. Not the 1996 magnetic DOI. No claim of complete full-text reproduction."
+    },
+    {
+      "id": "P10",
+      "url": "https://www.fatiando.org/verde/v1.9.0/api/generated/verde.BlockKFold.html",
+      "status": "VERIFIED versioned documentation; unavailable in inspected base runtime",
+      "basis": "Spatial blocks, not a guarantee of independent observations. Buffered nested partitions remain an explicit proposed design."
+    },
+    {
+      "id": "P11",
+      "url": "https://pyproj4.github.io/pyproj/stable/api/transformer.html",
+      "status": "VERIFIED documentation labelled 3.7.2; observed runtime is 3.8.0",
+      "basis": "Explicit xy axes, no ballpark, only_best requires PROJ >=9.2; operation/grid availability still needs independent admission."
+    },
+    {
+      "id": "P12",
+      "url": "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.optimization.ProjectedGNCG.html",
+      "status": "VERIFIED versioned documentation",
+      "basis": "Official bounded projected Gauss-Newton/CG optimizer, not a promise of globally optimal sparse inversion."
+    }
+  ],
+  "unavailable_or_unverified": [
+    {
+      "item": "Alternative author-hosted 2019 mixed-norm PDF",
+      "url": "https://www.appliedgeophysics.org/articles/2019-fournier-oldenburg-gji.pdf",
+      "status": "Fresh browser internal error; publisher text P16 verified instead. No claim of this PDF download."
+    },
+    {
+      "item": "Original USGS Bartlett CSV",
+      "status": "NOT retrieved by this worker; historical ScienceBase 403 remains attributed to prior source audit",
+      "url": "https://www.usgs.gov/data/gravity-aeromagnetic-magnetic-potential-and-physical-property-data-bartlett-springs-fault-zone",
+      "fresh_result": "Browser internal error; no fresh HTTP status inferred."
+    },
+    {
+      "item": "Official FGDC XML refresh",
+      "url": "https://data.usgs.gov/datacatalog/metadata/USGS.64188a2ed34eb496d1d1d359.xml",
+      "status": "Fresh browser internal error; existing owner-inspected receipt retained, not reverified from new bytes."
+    },
+    {
+      "item": "UpdateIRLS generated API pages",
+      "url": "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.directives.UpdateIRLS.html",
+      "status": "Browser internal error; verified pinned source fallback P06. Deprecated underscored API URL also unavailable."
+    },
+    {
+      "item": "Geoana Prism generated page",
+      "url": "https://www.fatiando.org/geoana/latest/api/generated/geoana.gravity.Prism.html",
+      "status": "Browser internal error; separation established only by pinned SimPEG source/local imports."
+    },
+    {
+      "item": "Initial guessed weighting tutorial URL",
+      "url": "https://simpeg.xyz/user-tutorials/weighting-strategies-gravity-anomaly/",
+      "status": "Unavailable. Correct official linked URL P08 verified; no claim based on guessed path."
+    },
+    {
+      "item": "Complete compatible measured M02 field survey",
+      "status": "UNAVAILABLE: attributed author CSV has unresolved height/processing/errors/duplicates. No substitute field truth or eligibility."
+    },
+    {
+      "item": "M02 latency/RSS/GPU benefit and full synthetic acceptance",
+      "status": "NOT RUN; local resource envelope and all numerical tolerances are proposed review gates, not measurements."
+    }
+  ]
+}
