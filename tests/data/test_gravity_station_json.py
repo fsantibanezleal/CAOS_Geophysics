@@ -193,7 +193,7 @@ if __name__ == "__main__":
     raise SystemExit(0)
 
 
-import pytest  # noqa: E402; direct cold mode above must work with CPython -S and stdlib only.
+import pytest  # Direct cold mode above must work with CPython -S and stdlib only.
 
 
 @pytest.fixture
@@ -418,6 +418,7 @@ def test_exact_history_shapes_without_numerical_replay(boundary):
 
 
 def test_safe_typed_errors_and_no_decoder_context(boundary, monkeypatch):
+    valid_raw = encoded(survey())
     for raw in (b'{"' + PRIVATE.encode() + b'":', b'{"x":0,"x":1}', encoded({PRIVATE: 0}), b"1e400"):
         error = rejected(boundary, raw)
         assert PRIVATE not in str(error) + repr(vars(error))
@@ -426,12 +427,15 @@ def test_safe_typed_errors_and_no_decoder_context(boundary, monkeypatch):
         def broken(*args, **kwargs):
             raise json.JSONDecodeError(PRIVATE, PRIVATE, 0)
         patch.setattr(boundary.json, "loads", broken)
-        rejected(boundary, encoded(survey()), "gravity_json_invalid")
+        rejected(boundary, valid_raw, "gravity_json_invalid")
     with monkeypatch.context() as patch:
+        original_iterencode = boundary.json.JSONEncoder.iterencode
         def broken(*args, **kwargs):
-            raise UnicodeDecodeError("utf8", PRIVATE.encode(), 0, 1, PRIVATE)
+            if type(args[1]) is dict:
+                raise UnicodeDecodeError("utf8", PRIVATE.encode(), 0, 1, PRIVATE)
+            return original_iterencode(*args, **kwargs)
         patch.setattr(boundary.json.JSONEncoder, "iterencode", broken)
-        rejected(boundary, encoded(survey()), "gravity_json_invalid")
+        rejected(boundary, valid_raw, "gravity_json_invalid")
 
 
 def test_stdlib_only_no_io_hooks_or_global_changes(boundary):
@@ -445,7 +449,7 @@ def test_stdlib_only_no_io_hooks_or_global_changes(boundary):
                       "setrecursionlimit", "set_int_max_str_digits", "deepcopy", "getenv", "environ", "open("):
         assert forbidden not in source
     program = r'''
-import builtins,copy,json,math,os,socket,subprocess,sys,types
+import __future__,builtins,copy,json,math,os,socket,subprocess,sys,types
 code=compile(builtins.open(sys.argv[1],encoding="utf8").read(),sys.argv[1],"exec")
 raw=sys.stdin.buffer.read()
 before=(sys.getrecursionlimit(),sys.get_int_max_str_digits(),json.loads,json.dumps,json.JSONEncoder)
