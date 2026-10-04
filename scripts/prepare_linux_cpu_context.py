@@ -47,7 +47,7 @@ def text(value, cap=1024, path=False):
 def encode_context(*, budget_class, uid, gid, attempt, object_id,
                    executable, argv0, cwd, arguments, environment):
     if (type(budget_class) is not int or budget_class not in (1, 2) or
-            any(type(v) is not int or not 1 <= v < 2**32 for v in (uid, gid))):
+            any(type(v) is not int or not 1 <= v < 2**32 - 1 for v in (uid, gid))):
         reject()
     attempt_raw, object_raw = identity(attempt), identity(object_id)
     if type(arguments) is not list or not 1 <= len(arguments) <= 32:
@@ -129,8 +129,8 @@ def unit_arguments(systemd_run, controller, context, attempt, parent, budget_cla
         "RuntimeMaxSec=" + ("120s" if budget_class == 1 else "300s"),
         "NoNewPrivileges=yes", "PrivateNetwork=yes", "PrivateTmp=yes",
         "PrivateDevices=yes", "RestrictAddressFamilies=AF_UNIX",
-        "RestrictNamespaces=yes", "LockPersonality=yes", "ProtectHome=yes",
-        "CapabilityBoundingSet=CAP_SETUID CAP_SETGID", "UMask=0077",
+        "LockPersonality=yes", "ProtectHome=yes",
+        "CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_SETPCAP", "UMask=0077",
     ]
     return [systemd_run, "--quiet", "--pipe", "--wait",
             "--unit=geophysics-cpu-qual-" + attempt + ".service"] + [

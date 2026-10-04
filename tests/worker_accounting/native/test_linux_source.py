@@ -26,7 +26,12 @@ def test_no_fallback_or_activation():
     assert "setgroups(0, NULL)" in native
     assert "PR_SET_NO_NEW_PRIVS" in native and "SYS_capset" in native
     assert "PR_SET_PDEATHSIG" in native and "getppid() != expected_parent" in native
+    assert "PR_CAPBSET_DROP" in native and "SECCOMP_SET_MODE_FILTER" in native
+    assert "AUDIT_ARCH_X86_64" in native and "SYS_unshare" in native and "SYS_setns" in native
     assert "poll(" in loop and "lc_sample(" in loop
+    assert "l.out_eof ? -1 : l.object.out_fd" in loop
+    assert "l.err_eof ? -1 : l.object.err_fd" in loop
+    assert "#define LC_TRACE_SAMPLES 65536u" in (CORE / "linux_controller.h").read_text("utf-8")
     assert "lc_stop(" in loop and "lc_sha_update(" in loop
     for text in (native, loop):
         assert not re.search(r"\b(?:fork|vfork|system|popen|malloc|calloc|realloc)\s*\(", text)
@@ -40,3 +45,9 @@ def test_probe_has_no_native_operations():
     assert "struct clone_args" in probe and "offsetof(" in probe
     for call in ("clone3", "syscall", "setuid", "mkdir", "execve", "kill"):
         assert not re.search(r"\b" + call + r"\s*\(", probe)
+
+
+def test_enum_names_are_distinct_before_linux_compile():
+    header = (CORE / "linux_controller.h").read_text("utf-8")
+    entries = re.findall(r"\b(LC_[A-Z_]+)\s*=\s*[0-9]+", header)
+    assert len(entries) == 33 and len(set(entries)) == len(entries)

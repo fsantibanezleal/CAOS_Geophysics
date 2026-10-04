@@ -38,7 +38,7 @@ def test_exact_header_native_payload_and_roundtrip():
 
 @pytest.mark.parametrize("field,bad", [
     ("budget_class", True), ("budget_class", 3), ("uid", 0),
-    ("uid", 1.0), ("gid", -1), ("uid", 2**32),
+    ("uid", 1.0), ("gid", -1), ("uid", 2**32), ("uid", 2**32 - 1), ("gid", 2**32 - 1),
     ("attempt", "00" * 16), ("attempt", "AA" * 16),
     ("object_id", "z" * 32), ("executable", "relative"),
     ("executable", "/usr/../bin/python"), ("cwd", "/a//b"),
@@ -102,6 +102,10 @@ def test_system_manager_recipe_is_attempt_specific_and_not_activation():
     assert "--property=Delegate=cpu memory pids" in command
     assert "--property=DelegateSubgroup=observer" in command
     assert "--property=KillMode=control-group" in command
+    assert "--property=CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_SETPCAP" in command
+    # v255 blocks clone3 under RestrictNamespaces, before native birth. Science
+    # receives its own post-birth filter instead; preserve the actual syscall.
+    assert not any("RestrictNamespaces" in item for item in command)
     assert "--property=BindsTo=geophysics-cpu-parent-" + "01" * 16 + ".service" in command
     assert "--user" not in command and "--scope" not in command
     assert "--collect" not in command

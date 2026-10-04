@@ -2,10 +2,17 @@
 
 Date: 2026-10-03. Issue [140](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/140).
 Current evidence: I01 core compiled-pure179 and Windows SDK layout47 PASS;
-native OS operations/integration NOT_RUN, both profiles UNSET/CLOSED. See the
+Linux native operation source/test/build-capture candidate is now authored (not compiled or
+host-qualified); native OS operations/integration NOT_RUN, both profiles
+UNSET/CLOSED. See the
 [measured receipt](../../../validation/native-i01-abi-pure-20261004.json) and
 [concrete worker operations](worker-operations.md). Original pre-execution
 milestones below retain their historical scope; no native gate is upgraded.
+The [precise Linux source/unit/build packet](linux-systemd255.md) specifies
+system-manager delegation, clone3 birth, science-only seccomp and exact binary
+transport. Necessary geophysics-only setup is normal scoped deployment work,
+not an unavailable preexisting prerequisite. The existing compiler is used;
+no global installation, SMTP/off-host backup or arbitrary disk percentage gate.
 
 ## 1. Authorized seven-document work
 
@@ -33,13 +40,13 @@ milestones below retain their historical scope; no native gate is upgraded.
 | --- | --- | --- |
 | H00 | Original core/test/probe design and exact wire/finality amendments | Recorded in approval.md section5; adopted by frozen I01 source, no OS admission |
 | H01 | Actual Windows effective token/DACL/ancestor chain, controller-handle rights and reachable broker denial; no guessed security policy | MAIN/security owner; ABSENT/CLOSED |
-| H02 | Actual Linux compiler/headers/libc read-only pins and approved existing delegation, credential transitions, cgroup ownership and simultaneous-death manager | MAIN/owner; ABSENT/CLOSED |
+| H02 | Actual Linux compiler/headers/libc identities; exact dedicated unit/account/delegation setup, credential transitions, cgroup ownership and death orders | Read-only inventory obtained; dedicated setup/OS controls pending, CLOSED |
 | H03 | Per-platform admitted topology, accounting visibility/rounding, max observation/kill/drain evidence and accepted non-real-time monitored risk | MAIN; NOT_RUN |
 | H04 | Full post-exit controller and worker attempt tail/publication CPU with exact final counter custody, not pre-finalwrite SELF | MAIN worker/integration owner; UNRESOLVED/CLOSED |
 | H05 | Durable receipt/intent/ack/release and uncertain-commit/deletion/quota state plus explicit new schema/DDL/inventory adapter | Storage/ops owners under MAIN; UNIMPLEMENTED/CLOSED |
 | H06 | Exact toolchain/CRT/recipe and distinct platform execution decision | I01 /MT build, ABI47 and compiled-pure179 measured; actual /MD runner and Linux inventory/execution remain pending |
 
-Actual security/delegation/manager contexts remain unavailable. I01 does not
+Actual qualified security/delegation/manager contexts remain unmeasured. I01 does not
 silently release H01..05 or the new platform executable boundary. Native operation
 authoring targets the concrete call-order supplement, not another deterministic
 facade. New source/recipe/import closure and real context are reviewed before
@@ -58,11 +65,13 @@ This design is not an application-facing profile and makes no production pass.
   release is inferred. Original artifact/source identity stays distinct from
   later documentation commits.
 - [ ] I02 (002/003/004/010): Windows I01 SDK probe47 sizeof/alignof/offsetof
-  checks PASS at reviewed hashes. Linux ABI remains NOT_RUN/uninventoried;
+  checks PASS at reviewed hashes. Linux ABI remains NOT_RUN; selected installed
+  compiler/header/libc/tool identities are inventoried read-only;
   platform operation executables, API behavior and loaded closures are separate
   unmeasured gates, not implied by the layout probe.
-- [ ] I03 (001..010/012): implement isolated platform controller and bounded
-  bridge against the concrete operation supplement, then freeze exact source,
+- [ ] I03 (001..010/012): Linux standalone native source/probe/fixture and bounded
+  qualification harness authored; Windows operation source remains separate.
+  Freeze exact source,
   recipe and context for independent execution review; no existing worker hook.
   Test actual containment/limits/lifetime/death per platform separately.
 - [ ] I04 (006..009/015): authorized real positives/adversarials and independent
@@ -90,8 +99,9 @@ recovery inventory, tombstones and maintenance acceptance. No imaginary provider
 Protected: all existing files including pure source/tests, worker/API/database,
 ops_recovery/host_fixture/source_bundle, manifests, public admission, scientific
 canonical outputs, branch evidence and environments. No credentials/keys/fixtures
-or binaries in public repo. No service/cgroup/Job Object changes. No production
-or VPS access. No automatic branch update beneath another agent.
+or binaries in public repo. No service/cgroup/Job Object changes or production
+activation here. Authorized read-only VPS tool/source inventory is distinct from
+compilation/qualification execution. No automatic branch update beneath another agent.
 
 | Layer | Current verdict |
 | --- | --- |
@@ -99,7 +109,7 @@ or VPS access. No automatic branch update beneath another agent.
 | Original approval/build inventory | Historical prerequisite; I01 measured evidence is now separately pinned |
 | Documentation checks | See measured review packet; cannot pass runtime gates |
 | I01 source/compiled-pure/Windows SDK layout | Authored; 179/47 measured PASS, no native operation proof |
-| Windows/Linux platform operation source/runtime | Concrete supplement specified; NOT_IMPLEMENTED/NOT_RUN |
+| Windows/Linux platform operation source/runtime | Linux candidate authored; Windows operation source pending; native compilation/OS qualification NOT_RUN |
 | NCC001..016, original15 native gates | ALL NOT_RUN |
 | Windows/Linux actual profile | UNSET/CLOSED |
 | Parent CPU/durable publication/recovery integration | CLOSED |
