@@ -187,6 +187,12 @@ class _Intervals:
     def matrix(self, matrix, vector):
         self.check()
         if not self._use_native_rows: return self._decimal_matrix(matrix,vector)
+        # Fixed narrow stencils are cheaper and tighter in the original exact
+        # stream. This chooses arithmetic by operator arity, never by score,
+        # gradient size, a changed precision/sign rule or an accepted-step cap.
+        if (matrix.shape[1]<=8 or
+                (sp.issparse(matrix) and np.max(np.diff(matrix.indptr),initial=0)<=8)):
+            return self._decimal_matrix(matrix,vector)
         try:
             centers,radii = self._row_vectors(vector)
         except (ArithmeticError,ValueError,OverflowError):
