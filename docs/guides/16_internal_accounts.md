@@ -38,6 +38,11 @@ served by the application or committed publicly. Do not pass a password as a
 command-line argument. Successful output gives a verdict and account ID only.
 Malformed input and database failures do not print credentials or hashes.
 
+Local project-deletion receipts report off-host integration as `not_configured`
+and external erasure as `not_attempted`. This is not proof that no external copy
+exists. Existing recorded local backup custody still prevents deletion and is
+preserved for operator review; the application does not silently erase it.
+
 Provisioning preserves the validated identifier, refuses an existing account
 by default, uses the installed auth library's salted Argon2 hash and does not
 claim that a mailbox has been verified. Accounts are active but not superusers.

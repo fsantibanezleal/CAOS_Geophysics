@@ -221,3 +221,34 @@ def test_parallel_create_serializes_without_overwriting(make_harness):
     assert sum(isinstance(item, AccountProvisionError) for item in outcomes) == 1
     with sqlite3.connect(harness.settings.database_path) as connection:
         assert connection.execute('SELECT COUNT(*) FROM "user"').fetchone()[0] == 1
+
+
+def test_local_deletion_profile_and_existing_backup_custody(make_harness):
+    harness = make_harness(auth_mode="local")
+    provision(harness)
+    assert login(harness).status_code == 204
+    project = harness.project("Local deletion")
+    asset = harness.upload(project["id"]).json()
+    response = harness.request("DELETE", f"/api/projects/{project['id']}")
+    assert response.status_code == 200
+    assert response.json()["external_backup_status"] == "not_configured"
+    assert response.json()["backup_erasure_status"] == "not_attempted"
+    assert harness.client.get(asset["receipt"]).status_code == 404
+    assert harness.client.get(f"/api/projects/{project['id']}").status_code == 404
+    with sqlite3.connect(harness.settings.database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM deletion_receipts").fetchone()[0] == 1
+        assert connection.execute("SELECT raw_bytes FROM account_usage").fetchone()[0] == 0
+
+    protected = harness.project("Recorded custody")
+    stored = harness.upload(protected["id"]).json()
+    owner = harness.client.get("/api/auth/me").json()["id"]
+    backup = harness.settings.data_dir / ".backups" / owner / protected["id"]
+    backup.mkdir(parents=True)
+    original = backup / "existing-private-copy.bin"
+    original.write_bytes(b"existing owned test backup")
+    refusal = harness.request("DELETE", f"/api/projects/{protected['id']}")
+    assert refusal.status_code == 409 and refusal.json()["code"] == "backup_reconciliation_required"
+    assert original.read_bytes() == b"existing owned test backup"
+    assert harness.client.get(stored["receipt"]).status_code == 200
+    with sqlite3.connect(harness.settings.database_path) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM deletion_receipts").fetchone()[0] == 1

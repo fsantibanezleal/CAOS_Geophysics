@@ -447,7 +447,8 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             await asyncio.to_thread(purge_exact_derived, deleting_derived, derived_manifest)
         return {
             "deleted": True, "project_id": project_id, "receipt_id": receipt.id,
-            "backup_erasure_status": "not_attempted", "external_backup_status": "pending_reconciliation",
+            "backup_erasure_status": "not_attempted",
+            "external_backup_status": "not_configured" if settings.auth_mode == "local" else "pending_reconciliation",
         }
 
     app.include_router(router)
