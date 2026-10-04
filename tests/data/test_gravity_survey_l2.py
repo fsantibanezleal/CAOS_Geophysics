@@ -223,7 +223,7 @@ def calibration_request():
     return {'schema': 'gravity-survey-l2-calibration-request-1', 'plan': plan,
             'observations': observed, 'noise': noise, 'prior': prior,
             'policy': {'name': 'ordinary-l2-beta-grid-1', 'beta_candidates': l2.BETA_CANDIDATES,
-                       'optimizer': 'projected-gncg-degenerate-release-1', 'training': 'not_applicable_classical'},
+                       'optimizer': 'projected-gncg-binding-release-1', 'training': 'not_applicable_classical'},
             'runtime_epoch': l2.RUNTIME_EPOCH}
 
 
@@ -285,10 +285,35 @@ def test_calibration_finite_identity_bounds_and_noise_fail_closed(field):
 @pytest.mark.parametrize('old', ['epoch', 'optimizer', 'both'])
 def test_amended_optimizer_epoch_rejects_old_before_work(monkeypatch, old):
     req = calibration_request()
-    req['runtime_epoch'] = 'm02-survey-l2-cpu-2'
+    req['runtime_epoch'] = 'm02-survey-l2-cpu-3'
     if old in ('epoch', 'both'): req['runtime_epoch'] = 'm02-survey-l2-cpu-1'
     if old in ('optimizer', 'both'): req['policy']['optimizer'] = 'projected-gncg-recorded-1'
     def deny(*args, **kwargs): raise AssertionError('old provenance reached numerical/hash/engine work')
     for name in ('_finite', '_digest', '_snapshot', '_validate_plan'):
         monkeypatch.setattr(survey, name, deny)
+    with pytest.raises(ValueError): l2._admit_calibration(req)
+
+
+def test_binding_epoch_identity_and_nominal_compact_admission():
+    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-3'
+    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-1'
+    req = calibration_request()
+    admitted = l2._admit_calibration(req)
+    assert admitted['runtime_epoch'] == 'm02-survey-l2-cpu-3'
+    assert not admitted['observations']['gz_up_mgal'].flags.writeable
+
+
+@pytest.mark.parametrize('epoch,policy', [
+    ('m02-survey-l2-cpu-1', 'projected-gncg-recorded-1'),
+    ('m02-survey-l2-cpu-2', 'projected-gncg-degenerate-release-1'),
+    ('m02-survey-l2-cpu-2', 'projected-gncg-binding-release-1'),
+    ('m02-survey-l2-cpu-3', 'projected-gncg-degenerate-release-1'),
+    ('m02-survey-l2-cpu-3', 'projected-gncg-recorded-1')])
+def test_binding_epoch_exact_no_upgrade(monkeypatch, epoch, policy):
+    req = calibration_request()
+    req['runtime_epoch'], req['policy']['optimizer'] = epoch, policy
+    def deny(*args, **kwargs): raise AssertionError('old source epoch reached values/hash/copy/engine')
+    for name in ('_finite', '_digest', '_snapshot', '_validate_plan'):
+        monkeypatch.setattr(survey, name, deny)
+    monkeypatch.setattr(l2, '_build_problem', deny)
     with pytest.raises(ValueError): l2._admit_calibration(req)
