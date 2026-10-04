@@ -96,6 +96,26 @@ internal users; the application remains multi-user and multi-project.
 
 ## 3. Measured host qualification
 
+`scripts/qualify_isolated_api.py` runs the installed candidate through a newly
+named temporary systemd socket and service, then stops both. Supply explicit
+candidate, manifest/runtime/bootstrap receipt digests and a fresh private
+evidence directory. Add `--authenticated --credentials` with the private owner
+file to test plural accounts/projects, ownership, CSRF, original upload/download,
+dataset construction, export and logout. The additional qualification account
+is retained privately. Only the three exact freshly created projects are deleted
+through the API after success; failures retain their IDs and files. No scientific
+job, production activation or external HTTPS verification is implied.
+
+The initial bootstrap receipt remains historical after a new source revision.
+For later candidates, provide `--original-bootstrap-bundle` and
+`--original-bootstrap-bundle-sha256` naming its exact original immutable bundle.
+The qualifier rehashes that original bundle, verifies its initial-source identity,
+requires identical committed migration inventories and checks the actual existing
+database in read-only mode. Plural active accounts are valid. Do not rerun initial
+bootstrap or replace the database to make a later candidate qualify. A migration
+inventory change requires a separately reviewed schema compatibility contract.
+Current service configuration hashes must still match the original bootstrap.
+
 Use an isolated candidate with the exact bundle/runtime bytes to execute
 nominal, upper-bound, malformed, cancellation, crash/recovery, ownership and
 concurrent-public-read controls. Record actual outcomes, source revision,

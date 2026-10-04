@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import secrets
+import sqlite3
 import stat
 import subprocess
 import sys
@@ -16,10 +18,10 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bootstrap_service_state import (  # noqa: E402
-    CONFIG, STATE, BootstrapRunner, bounded_private_json, credentials, dedicated_identity,
+    CONFIG, HEAD, STATE, BootstrapRunner, bounded_private_json, credentials, dedicated_identity,
     exclusive_private_file, operator_directory, verify_candidate,
 )
-from prepare_service_release import file_digest, no_links  # noqa: E402
+from prepare_service_release import file_digest, no_links, verify_bundle  # noqa: E402
 from stage_service_runtime import EVIDENCE, RELEASES, exclusive_json  # noqa: E402
 from verify_local_service import verify  # noqa: E402
 
@@ -97,7 +99,8 @@ def read_properties(raw: str) -> dict[str, str]:
         raise ValueError('incomplete service property inventory')
     expected = {'User': 'geophysics', 'Group': 'geophysics', 'ActiveState': 'active',
                 'SubState': 'running', 'MemoryMax': '536870912', 'MemorySwapMax': '0',
-                'TasksMax': '96', 'NoNewPrivileges': 'yes', 'PrivateNetwork': 'yes',
+                'TasksMax': '96', 'CPUQuotaPerSecUSec': '1.500000s',
+                'NoNewPrivileges': 'yes', 'PrivateNetwork': 'yes',
                 'ProtectSystem': 'strict', 'ProtectHome': 'yes', 'ProtectControlGroups': 'yes',
                 'CapabilityBoundingSet': '', 'RestrictAddressFamilies': 'AF_UNIX',
                 'ReadWritePaths': '/var/lib/geophysics'}
@@ -106,8 +109,72 @@ def read_properties(raw: str) -> dict[str, str]:
     return result
 
 
+def migration_digest(manifest: dict) -> str:
+    selected = {key: value for key, value in manifest['source'].items()
+                if key.startswith('app/migrations/')}
+    if not selected or len(selected) > 128 or 'app/migrations/versions/' + HEAD + '.py' not in selected:
+        raise ValueError('committed migration inventory incomplete')
+    return hashlib.sha256(json.dumps(selected, sort_keys=True, separators=(',', ':'),
+                                     allow_nan=False).encode('ascii')).hexdigest()
+
+
+def state_compatibility(bootstrap: dict, candidate: dict, original_bundle: Path | None = None,
+                        original_sha: str | None = None) -> dict:
+    if (bootstrap.get('schema') != 'geophysics.service-bootstrap/v1'
+            or bootstrap.get('bootstrapped') is not True
+            or bootstrap.get('database', {}).get('schema_revision') != HEAD):
+        raise ValueError('initial bootstrap schema/state differs')
+    original = candidate
+    if (original_bundle is None) != (original_sha is None):
+        raise ValueError('explicit original bundle and digest required together')
+    if original_bundle is not None:
+        if (original_bundle.parent != RELEASES or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', original_bundle.name)
+                or not re.fullmatch(r'[0-9a-f]{64}', original_sha)
+                or file_digest(original_bundle / 'release.json')['sha256'] != original_sha):
+            raise ValueError('original bundle identity differs')
+        from stage_service_runtime import root_owned_tree
+        if sys.platform == 'linux':
+            operator_directory(original_bundle)
+            for path in ('release.json', 'source', 'web'):
+                root_owned_tree(original_bundle / path)
+        original = verify_bundle(original_bundle)
+    elif bootstrap.get('source_revision') != candidate['source_revision']:
+        raise ValueError('later candidate requires explicit original bundle')
+    if original['source_revision'] != bootstrap.get('source_revision'):
+        raise ValueError('historical initial source revision differs')
+    initial_digest = migration_digest(original)
+    if initial_digest != migration_digest(candidate):
+        raise ValueError('migration compatibility changed; separate reviewed contract required')
+    result = {'initial_source_revision': original['source_revision'], 'schema_revision': HEAD,
+              'migration_inventory_sha256': initial_digest}
+    if original_sha is not None:
+        result['original_bundle_sha256'] = original_sha
+    return result
+
+
+def existing_database(path: Path, uid: int, gid: int) -> dict:
+    no_links(path)
+    info = path.stat()
+    if (not stat.S_ISREG(info.st_mode) or (info.st_uid, info.st_gid) != (uid, gid)
+            or stat.S_IMODE(info.st_mode) != 0o600):
+        raise ValueError('existing database ownership/mode differs')
+    deadline = time.monotonic() + 5
+    with sqlite3.connect('file:' + path.as_posix() + '?mode=ro', uri=True, timeout=2) as connection:
+        connection.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
+        connection.execute('PRAGMA query_only=ON')
+        if connection.execute('PRAGMA quick_check').fetchall() != [('ok',)]:
+            raise ValueError('existing database integrity failed')
+        if connection.execute('SELECT version_num FROM alembic_version').fetchall() != [(HEAD,)]:
+            raise ValueError('existing database schema differs')
+        count = connection.execute('SELECT COUNT(*) FROM "user" WHERE is_active=1').fetchone()[0]
+        if count < 1:
+            raise ValueError('existing database requires an active internal account')
+    return {'schema_revision': HEAD, 'active_accounts': count, 'uid': uid, 'gid': gid, 'mode': '0600'}
+
+
 def run(release: Path, receipt: Path, bundle_sha: str, runtime_sha: str, evidence: Path,
-        bootstrap_receipt: Path, bootstrap_sha: str, owner_credentials: Path | None = None) -> dict:
+        bootstrap_receipt: Path, bootstrap_sha: str, owner_credentials: Path | None = None,
+        original_bundle: Path | None = None, original_sha: str | None = None) -> dict:
     if sys.platform != 'linux' or os.geteuid() != 0:
         raise ValueError('Linux operator required')
     if release.parent != RELEASES or evidence.parent != EVIDENCE:
@@ -128,20 +195,18 @@ def run(release: Path, receipt: Path, bundle_sha: str, runtime_sha: str, evidenc
             raise ValueError('unexpected deployment lock')
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         return _locked(release, receipt, bundle_sha, runtime_sha, evidence, current,
-                       bootstrap_receipt, bootstrap_sha, owner_credentials)
+                       bootstrap_receipt, bootstrap_sha, owner_credentials, original_bundle, original_sha)
 
 
 def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootstrap_receipt, bootstrap_sha,
-            owner_credentials):
+            owner_credentials, original_bundle, original_sha):
     commands = Commands()
     initial_current = os.readlink(current)
     manifest = verify_candidate(release, receipt, bundle_sha, runtime_sha)
     if not re.fullmatch(r'[0-9a-f]{64}', bootstrap_sha) or file_digest(bootstrap_receipt)['sha256'] != bootstrap_sha:
         raise ValueError('bootstrap receipt changed')
     bootstrap = bounded_private_json(bootstrap_receipt)
-    if (bootstrap.get('schema') != 'geophysics.service-bootstrap/v1' or bootstrap.get('bootstrapped') is not True
-            or bootstrap.get('source_revision') != manifest['source_revision']):
-        raise ValueError('initial bootstrap does not bind this candidate')
+    compatibility = state_compatibility(bootstrap, manifest, original_bundle, original_sha)
     identity = dedicated_identity()
     no_links(STATE)
     state = STATE.stat()
@@ -162,6 +227,7 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
         status = commands.run(['/usr/bin/systemctl', 'show', unit, '--property=ActiveState', '--value'])
         if status not in ('inactive', 'failed', ''):
             raise ValueError('production writer active; parallel qualification refused')
+    database = existing_database(STATE / 'api.sqlite3', *identity)
     name, api, sock = unit_texts(release, secrets.token_hex(6))
     socket_path = RUN / (name + '.sock')
     paths = (UNIT_ROOT / (name + '.service'), UNIT_ROOT / (name + '.socket'))
@@ -174,6 +240,7 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
               'qualifier_sha256': file_digest(Path(__file__))['sha256'], 'bundle_sha256': bundle_sha,
               'runtime_receipt_sha256': runtime_sha, 'created_at': datetime.now(timezone.utc).isoformat(),
               'bootstrap_receipt_sha256': bootstrap_sha,
+              'state_compatibility': compatibility, 'existing_database': database,
               'initial_current': initial_current, 'environment_files': environments,
               'unit_name': name, 'transport_passed': False, 'stopped': False,
               'activated': False, 'host_admitted': False, 'full_release_accepted': False}
@@ -256,6 +323,8 @@ def main() -> int:
     parser.add_argument('--runtime-sha256', required=True)
     parser.add_argument('--bootstrap-receipt', type=Path, required=True)
     parser.add_argument('--bootstrap-sha256', required=True)
+    parser.add_argument('--original-bootstrap-bundle', type=Path)
+    parser.add_argument('--original-bootstrap-bundle-sha256')
     parser.add_argument('--authenticated', action='store_true')
     parser.add_argument('--credentials', type=Path)
     parser.add_argument('--evidence', type=Path, required=True)
@@ -264,7 +333,8 @@ def main() -> int:
         if args.authenticated != (args.credentials is not None):
             raise ValueError('authenticated qualification requires an explicit private owner file')
         result = run(args.release, args.runtime_receipt, args.bundle_sha256, args.runtime_sha256, args.evidence,
-                     args.bootstrap_receipt, args.bootstrap_sha256, args.credentials)
+                     args.bootstrap_receipt, args.bootstrap_sha256, args.credentials,
+                     args.original_bootstrap_bundle, args.original_bootstrap_bundle_sha256)
     except Exception:
         print('Isolated API qualification failed; retained evidence, no activation.', file=sys.stderr)
         return 2
