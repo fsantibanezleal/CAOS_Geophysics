@@ -477,4 +477,56 @@ the exact retained binary64 coefficient1e-4 times slope. Reject certified
 non-descent lower>=0 or margin lower>0. Exhaust all three precisions with a
 straddling interval ->unresolved/precision_limit. Expired/unsupported/incomplete
 arithmetic ->not_run with all partial intervals/precision cleared and passes0.
+
+## Trusted vendor regularizer and public optimizer composition
+
+magnetic_optimizer_adapter.py defines internal MagneticRegularizer and
+MagneticObjective, not another request format or user-callable registration.
+MagneticRegularizer(mesh,reference_q,lengths_m,penalty,epsilon_q,weight_model)
+requires mesh exact{origin_m,hx_m,hy_m,hz_m,active}, native F64(3), three native
+F64(axis1..64) and native Bool(full_cells<=4096); active1..2048. Other arrays
+are native F64(A),F64(3),F64(A) respectively. Lengths strictlypositive<=1e5m;
+reference/weight models finite[0,10]. P04 local geometry/volume fidelity applies.
+penalty exactly l2 or sparse_smallness. epsilon_q nativefloat exactly0 for l2;
+for sparse one of the eight frozen positive epsilon values. All arguments are
+mandatory. Constructor owns copies and creates actual public WeightedLeastSquares
+or Sparse with the explicit algorithms section4/6 settings. No foreign vendor
+object, callback or guessed parameter default is accepted. It refreshes Sparse
+weights ONCE at weight_model; a later outer iteration constructs a new object.
+Its terms() returns independent fixed{alpha,weights,derivative} snapshots matching
+the certificate table. A genuinely empty physical face component contributes
+zero and is omitted, not replaced by a fabricated derivative. Positive multipliers
+and nonempty terms retain actual coefficients/weights without a rounded normal
+matrix. Terms with zero multiplier need not be evaluated by the certificate.
+
+MagneticObjective(operator,regularizer,observed,noise,lower_q,upper_q,beta,
+source_inventory_sha256,allocation_plan_sha256,stage_index) takes EXACT native
+MagneticQuantity/MagneticRegularizer instances, likelihood/bound types from the
+certificate table, positivefloat beta, two explicit Hash identities and native
+int stage_index0..20. It owns snapshots. The source/allocator identities are
+trusted-driver inputs, not verified by accepting their strings. Counts and
+conservative capacity precede derived matrices. Real registered source admission
+is still required; these constructors cannot turn an upload into authorization.
+
+The seven public methods map to PhysicalObjective without gravity constructors:
+
+| Method | Exact composition |
+| --- | --- |
+| identity() | Fresh13keys mode,runtime_epoch,objective_sha256,source_inventory_sha256,q_unit,physical_unit,physical_scale,parameter_count,observation_rows,observation_components,beta_engine,stage_index,allocation_plan_sha256. q_unit literal chi_over_0.01; physical_unit SI; physical_scale .01. Mode fixed_linear_quadratic for vector/linearTMI, nonlinear_gauss_newton for exactnorm. Digests bind native operands and actual regularizer coefficients/settings. Epoch comes from the reviewed public core, not request choice. |
+| evaluate(q,return_g=False,return_H=False) | Two exactbool flags; nativefloat Phi, tuple(Phi,g), tuple(Phi,H), or tuple(Phi,g,H). Phi=phi_d+beta*actual_vendor_regularizer(q). g=2Jq.T W.T W r+beta*vendor.deriv(q). H actual float64 LinearOperator(A,A):2Jq.T W.T W Jq action+beta*vendor.deriv2(q,v), GN only for exactnorm. |
+| components(q) | Fresh exact{phi_d,phi_m,phi_engine} finite nonnegative nativefloats from SAME current evaluation. No surrogate relabelled true p1. |
+| binding_diagonal(q) | Native positive F64(A) full GN plus actual fixed vendor regularizer diagonal; no floor/nugget/normalization. |
+| free_metric(q,free_indices) | Native I64 vector unique increasing0..A-1, permits genuine zero count. Exact reviewed diagonal inverse action on this face, zero outside, real float64 LinearOperator(A,A). No gravity Joseph policy substitution. |
+| certify(...) | Complete14key MagneticCertificate, SAME native model/gradient/Phi and fixed vendor terms. Norm-domain record cannot pass quadratic-only core. |
+| release_state() | Clears only this adapter's ephemeral evaluation/Jacobian cache; no disk/source/provider/shared-state mutation. |
+
+solve_linear(objective,lower_q,upper_q,start_q,*,budget,binding) invokes ONLY
+public physical_optimizer.solve_bounded_physical with its exact typed budget/
+binding and ten-key result/trace contract. It verifies current local optimizer
+and evaluator source hashes against that binding. No registry self-attestation:
+reviewed source inventory/native authority remains external. Exactnorm refuses
+before core evaluation until real nonlinear source/validator registration. Linear
+candidate execution does not establish acceptance of the full magnetic method.
+Paired executable tests live in tests/numerics/test_magnetic_optimizer_adapter.py.
+BVLS is independent TEST ONLY, never a production retry or substituted optimizer.
 Bounds, nonfinite native values and zero chords never create acceptance.
