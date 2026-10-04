@@ -273,3 +273,81 @@ def test_MP04_exception_cycle_keeps_cause_but_not_native_scratch(monkeypatch):
                             np.arange(3,dtype=np.int64),monotonic()+120.)
     assert caught.value.__cause__.__context__ is caught.value
     assert all(v() is None for v in refs)
+
+
+def test_MP02_native_face_change_disposes_previous_payload_BEFORE_new_setup(monkeypatch):
+    import gravity_l2 as l2
+    from test_gravity_l2 import tiny,noise
+    req,data,prior,_,_=tiny()
+    problem=l2._build_problem(req,data,noise(),prior,np.arange(4,dtype=np.int64),.01)
+    opt=l2._RecordedProjectedGNCG(problem,prior,monotonic()+120.)
+    n=len(prior['start_kg_m3'])
+    opt.H=sp.eye(n,format='csr')
+    opt.iter=0
+    opt._diagonal_metric=sp.eye(n,format='csr')
+    opt.xc=np.zeros(n)
+    native=metric.JosephMetric
+    owners=[]
+    references=[]
+    callbacks=[]
+    def observed(*args,**kwargs):
+        # No overlap between old-face B/F and the next factor construction,
+        # including when an external native LinearOperator retains its owner.
+        assert all(owner.live_payload_bytes==0 for owner in owners)
+        assert all(ref() is None for refs in references for ref in refs)
+        owner=native(*args,**kwargs)
+        owners.append(owner)
+        references.append([weakref.ref(v) for v in (owner.lower,owner.b,owner.f,owner.pivots)])
+        return owner
+    monkeypatch.setattr(metric,'JosephMetric',observed)
+    try:
+        for active in ((),(1,3),(0,2,4),()):
+            opt.xc=np.zeros(n)
+            opt.xc[list(active)]=opt.lower[list(active)]
+            opt._set_free_metric()
+            owner=opt._joseph
+            callbacks.append(opt.approxHinv)
+            free=np.flatnonzero(~opt.activeSet(opt.xc))
+            np.testing.assert_array_equal(owner.free,free)
+            actual=opt.approxHinv@np.ones(n)
+            np.testing.assert_array_equal(actual[list(active)],np.zeros(len(active)))
+            assert np.inner(actual,np.ones(n))>0.
+            # Reusing exactly this face does not allocate a second metric.
+            count=len(owners)
+            opt._set_free_metric()
+            assert opt._joseph is owner and len(owners)==count
+            opt.iter+=1
+    finally:
+        opt.close_metric()
+    assert len(owners)==4 and all(owner.live_payload_bytes==0 for owner in owners)
+    assert all(ref() is None for refs in references for ref in refs)
+    for callback in callbacks:
+        with pytest.raises(ValueError,match='disposed'): callback@np.ones(n)
+
+
+def test_MP05_full_covariance_cap_refuses_before_principal_factor_or_RHS(monkeypatch):
+    # The caller's already-present immutable operands do not justify allocating
+    # a metric for an original-source profile outside the unchanged2GiB bound.
+    reg=sp.eye(4096,format='csr')
+    g=np.broadcast_to(np.float64(0.),(4,4096))
+    w=sp.eye(4,format='csr')
+    free=np.arange(4096,dtype=np.int64)
+    def forbidden(*args,**kwargs): raise AssertionError('metric copy before cap refusal')
+    monkeypatch.setattr(sp.csr_matrix,'copy',forbidden)
+    monkeypatch.setattr(metric,'_paired',forbidden)
+    with pytest.raises(ValueError,match='original2GiB'):
+        metric.JosephMetric(reg,g,w,free,monotonic()+120.,profile=(2048,2048,4096,True))
+
+
+def test_MP07_expired_action_refuses_before_any_native_triangular_entry(monkeypatch):
+    owner=metric.JosephMetric(sp.eye(3,format='csr'),np.ones((4,3)),sp.eye(4,format='csr'),
+                             np.arange(3,dtype=np.int64),monotonic()+120.)
+    refs=[weakref.ref(v) for v in (owner.lower,owner.b,owner.f,owner.pivots)]
+    owner.deadline=monotonic()-1.
+    def forbidden(*args,**kwargs): raise AssertionError('expired action entered native solver')
+    monkeypatch.setattr(metric,'spsolve_triangular',forbidden)
+    try:
+        with pytest.raises(metric.DeadlineExceeded,match='wall_cap'): owner.apply(np.ones(3))
+    finally:
+        owner.close()
+    assert owner.live_payload_bytes==0 and all(ref() is None for ref in refs)
