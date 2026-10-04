@@ -166,3 +166,23 @@ JS08 now has this scoped objective coverage. Coupled optimization, two genuinely
 optimized baselines, sealed selection,24 refined-source cases, complete measured
 resources and serialized import/export/CLI gates JS09..JS16 are still pending.
 Neither source agreement nor tiny derivative precision closes those gates.
+
+At the subsequent test epoch07c74efa9a66479acf7f6aa5eac57bf284be844c,
+the original five-receiver and additive six-receiver controls both pass in both
+noise modes. Independent full approximate-Hv composition, output ownership and
+additional cap/descriptor-before-scan spies pass. Scientific implementation bytes
+are identical to ef9f099; only tests and intrinsic documentation changed.
+All121 new controls and256 accepted forward controls pass without skips. The
+explicitly available broader set passes384 with the same12 attributed skips.
+No full-directory, inverse, sealed-selection or large-resource result is inferred.
+
+The new four-control quantitative receipt retains all three directional steps,
+exact/approximate Hv, positive search-Hv Rayleigh controls and exact validation
+mutation invariance. Its SHA256:
+186a943cb102bf90b6e5c46c382f6bb090c875f37398563daeba1cdc18d48e5f.
+Frozen available-regression JUnit SHA256:
+733e3757d4f11839375f7c6cc8ca80790b296923b926cd988bee6787d0ef3938.
+Approximate Hv maximum disagreement6.227e-13; the other maxima match the earlier
+objective epoch. Measured tiny probe3.136 s/742621184-byte Windows peak working
+set is not a solver or maximum-resource acceptance. Neither historical JSON nor
+its source attribution was rewritten.
