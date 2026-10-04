@@ -39,6 +39,25 @@ Cholesky oracle independently checks ||W r||^2=r^T C^-1 r and weighted
 column norms including off-diagonal covariance; at rtol1e-12/atol1e-10.
 No covariance correction or user-uncertainty estimator in this test.
 
+Preparatory executable path: tests/numerics/test_magnetic_survey_objective.py.
+This verifies the actual physical kernel and public vendor linear objective,
+not an optimizer adapter or fitted survey. Freeze a separate tiny nonuniform
+12-cell mesh origin[-140,-180,-260],hx[40,70],hy[30,50,90],hz[60,110]m;
+active x-fast indices[0,1,2,3,6,7,11].30 exterior receivers have
+E=-260+90*s,N=-350+220*l,U=100+17*((l+s)%3),l0..2,s0..9.
+Use F50000,I37,D-73, lengths[400,1200,600]m, beta.3 and3, and explicit
+nonzero q/reference vectors in the test. Test secondary ENU and linear TMI,
+all rows and a geometry-fixed12-receiver principal subset. Separate SD.5nT
+and full SPD C_ij=(.5+.002*i)*(.5+.002*j)*.22^abs(i-j) are authored controls,
+not field uncertainties. Re-factor each principal covariance; do not subset a
+full-survey whitening matrix. Actual public LinearSimulation composes retained
+native physical Jq for this test only. W is a SciPy triangular-solve
+LinearOperator, not a dense NumPy array subject to elementwise multiplication.
+Independent Choclo unit-SI columns, pairwise faces/averages and covariance solves
+must satisfy the existing tolerances above, without tuning the test geometry.
+Passing these algebra/operator controls does not satisfy BVLS, accepted-core
+certification, L2/IRLS convergence, nonlinear, acquisition or fullcap gates.
+
 Independent SciPy1.15.2 lsq_linear(method="bvls",tol=1e-12,max_iter=10000)
 on stacked [W J_q; sqrt(beta)*R], RHS [W d;sqrt(beta)*R*q_ref],
 matching production bounds, not a production fallback.
