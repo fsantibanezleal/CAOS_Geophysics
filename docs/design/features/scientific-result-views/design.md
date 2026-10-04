@@ -99,12 +99,17 @@ the assertion, or change production timers.
 The bounded test uses the existing trusted Chromium executable READ ONLY, with
 a new ignored private browser profile and loopback debugging port. Raw official
 CDP, without Playwright page attachment/focus emulation, opens the same compiled
-app against the same actual local API. Random QA session cookies remain private,
+app against the same actual local API. It authenticates the already provisioned
+random QA account through actual local HTTP login; no cookie-import shortcut.
+Credentials/session cookies stay in the private loopback in-memory exchange,
 never in arguments/receipts/public sources. Only native window minimization and
 restoration are performed, with cleanup of this owned process tree in finally.
 Require document.hidden=true, literal pause state and no frame advancement; keep
 all failures. No new package, binary staging, backend/source change or scientific
 value interception. This browser-specific harness does not establish a host gate.
+QA storage/receipts may use a caller-created exact private C:/E: scratch parent
+when the source drive is constrained. Require a new UUID child of that declared
+parent; no deletion, source copying, installed changes or canonical writes.
 The installed Chromium protocol defines getWindowForTarget/setWindowBounds and
 minimized/normal states; [official protocol](https://chromedevtools.github.io/devtools-protocol/tot/Browser/)
 is the supporting API reference, not scientific evidence.
