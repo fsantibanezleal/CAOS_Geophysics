@@ -385,12 +385,15 @@ def test_NI01_outward_row_matches_independent_rational_corners(width,sparse):
     vector = [arithmetic.sub(arithmetic.exact(z),arithmetic.exact(r))[0:1]+
               arithmetic.add(arithmetic.exact(z),arithmetic.exact(r))[1:2]
               for z,r in zip(centers,radii)]
+    converted_centers,converted_radii = arithmetic._row_vectors(vector)
+    direct = arithmetic._enclosed_row(coefficients,converted_centers,converted_radii)
     matrix = coefficients.reshape(1,-1)
     if sparse: matrix = sp.csr_matrix(matrix)
     bounds = arithmetic.matrix(matrix,vector)[0]
     lo = sum((F.from_float(float(c))*F(x[0] if c>=0 else x[1]) for c,x in zip(coefficients,vector)),F(0))
     hi = sum((F.from_float(float(c))*F(x[1] if c>=0 else x[0]) for c,x in zip(coefficients,vector)),F(0))
     assert F(bounds[0])<=lo<=hi<=F(bounds[1])
+    assert F(direct[0])<=lo<=hi<=F(direct[1])
 
 
 @pytest.mark.parametrize('fault',['coefficient','center','radius','overflow'])
@@ -402,6 +405,9 @@ def test_NI02_unsupported_row_uses_original_decimal(monkeypatch,fault):
     if fault=='center': vector=[(Decimal('1E-330'),Decimal('2E-330'))]
     if fault=='radius': vector=[(Decimal(1),Decimal('1.'+'0'*329+'1'))]
     if fault=='overflow': coefficient,vector=1e300,[(Decimal('1E100'),Decimal('1E100'))]
+    with pytest.raises((ValueError,ArithmeticError)):
+        centers,radii=arithmetic._row_vectors(vector)
+        arithmetic._enclosed_row(np.array([coefficient]),centers,radii)
     calls=[]
     original=arithmetic.dot
     def observe(*args):
