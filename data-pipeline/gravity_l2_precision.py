@@ -91,6 +91,8 @@ class _Intervals:
         self.lo = Context(prec=digits,rounding=ROUND_FLOOR,Emin=-9999,Emax=9999,traps=traps)
         self.hi = Context(prec=digits,rounding=ROUND_CEILING,Emin=-9999,Emax=9999,traps=traps)
         self.deadline = deadline
+        self._use_native_rows = digits == 34
+        self._bounds = {}
 
     def check(self):
         if monotonic()>self.deadline: raise _Expired
@@ -123,7 +125,90 @@ class _Intervals:
             lower,upper = self.lo.add(lower,lo),self.hi.add(upper,hi)
         return lower,upper
 
+    def _reduction_bound(self, k):
+        """Outward product AND reduction error, no scientific error floor."""
+        if k in self._bounds: return self._bounds[k]
+        m = Decimal(2*k)
+        epsilon = Decimal.from_float(2.**-52)
+        tiny = Decimal.from_float(float(np.finfo(np.float64).tiny))
+        me = self.hi.multiply(m,epsilon)
+        denominator = self.lo.subtract(Decimal(1),me)
+        if denominator<=0: raise ValueError('precision: reduction length')
+        gamma = self.hi.divide(me,denominator)
+        divisor = self.lo.subtract(Decimal(1),gamma)
+        if divisor<=0: raise ValueError('precision: error divisor')
+        loss = self.hi.multiply(self.hi.multiply(m,tiny),self.hi.add(Decimal(1),gamma))
+        self._bounds[k] = gamma,divisor,loss
+        return self._bounds[k]
+
+    def _row_vectors(self, vector):
+        centers,radii = np.empty(len(vector)),np.empty(len(vector))
+        tiny = float(np.finfo(np.float64).tiny)
+        for i,(lo,hi) in enumerate(vector):
+            if i % 16 == 0: self.check()
+            center = float(lo)
+            if not np.isfinite(center) or (center!=0. and abs(center)<tiny):
+                raise ValueError('precision: unsupported native center')
+            dc = Decimal.from_float(center)
+            radius = max(self.hi.subtract(dc,lo),self.hi.subtract(hi,dc),_ZERO)
+            native_radius = float(radius)
+            # A tiny conversion followed by a huge coefficient cannot be
+            # hidden in the accumulation's absolute-underflow allowance.
+            if radius!=0 and (native_radius<tiny or not np.isfinite(native_radius)):
+                raise ValueError('precision: unsupported radius conversion')
+            centers[i] = center
+            radii[i] = 0. if radius==0 else np.nextafter(native_radius,np.inf)
+            if not np.isfinite(radii[i]): raise ValueError('precision: radius overflow')
+        return centers,radii
+
+    def _enclosed_row(self, coefficients, centers, radii):
+        k = len(coefficients)
+        if k==0: return _ZERO,_ZERO
+        tiny = float(np.finfo(np.float64).tiny)
+        if np.any((np.abs(coefficients)<tiny)&(coefficients!=0.)):
+            raise ValueError('precision: unsupported native coefficient')
+        # Row-local native products/reductions, never a pre-rounded WG/D/Wj.
+        # 2k epsilon and lambda compensation bound every product/addition,
+        # arbitrary reduction ordering and absolute underflow loss.
+        with np.errstate(over='raise',invalid='raise',under='ignore'):
+            products = coefficients*centers
+            center = float(np.sum(products,dtype=np.float64))
+            a = float(np.sum(np.abs(products),dtype=np.float64))
+            radius_products = np.abs(coefficients)*radii
+            q = float(np.sum(radius_products,dtype=np.float64))
+        if not np.isfinite([center,a,q]).all(): raise ValueError('precision: nonfinite row')
+        gamma,divisor,loss = self._reduction_bound(k)
+        au = self.hi.divide(self.hi.add(Decimal.from_float(a),loss),divisor)
+        qu = self.hi.divide(self.hi.add(Decimal.from_float(q),loss),divisor)
+        error = self.hi.add(self.hi.add(self.hi.multiply(gamma,au),loss),qu)
+        c = Decimal.from_float(center)
+        return self.lo.subtract(c,error),self.hi.add(c,error)
+
     def matrix(self, matrix, vector):
+        self.check()
+        if not self._use_native_rows: return self._decimal_matrix(matrix,vector)
+        try:
+            centers,radii = self._row_vectors(vector)
+        except (ArithmeticError,ValueError,OverflowError):
+            return self._decimal_matrix(matrix,vector)
+        output = []
+        sparse = sp.issparse(matrix)
+        for i in range(matrix.shape[0]):
+            if i % 16 == 0: self.check()
+            if sparse:
+                start,end = matrix.indptr[i:i+2]
+                indices,coefficients = matrix.indices[start:end],matrix.data[start:end]
+            else:
+                indices = np.flatnonzero(matrix[i])
+                coefficients = matrix[i,indices]
+            try:
+                output.append(self._enclosed_row(coefficients,centers[indices],radii[indices]))
+            except (ArithmeticError,ValueError,OverflowError):
+                output.append(self.dot(coefficients,(vector[j] for j in indices)))
+        self.check()
+        return output
+
+    def _decimal_matrix(self, matrix, vector):
         self.check()
         output = []  # O(rows) interval pairs, never O(rows*cols) Decimal objects.
         sparse = sp.issparse(matrix)
@@ -223,8 +308,9 @@ class _CertifiedDelta:
         if monotonic()>self.deadline:
             r['cause'] = 'wall_cap'
             return _validate_record(r)
-        for passes,digits in enumerate((34,50,80),1):
+        for passes,digits,native_rows in ((1,34,True),(1,34,False),(2,50,False),(3,80,False)):
             arithmetic = _Intervals(digits,self.deadline)
+            arithmetic._use_native_rows = native_rows
             try:
                 arithmetic.check()
                 qv = [arithmetic.exact(v) for v in q]
