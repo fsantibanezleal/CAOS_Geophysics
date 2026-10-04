@@ -110,8 +110,8 @@ denied raw members. Full survey data do not become independent field truth.
 
 ## Necessary implementation gates and ownership boundary
 
-Proposed ordinary new executor: data-pipeline/magnetic_survey.py; new tests
-tests/data/test_magnetic_survey.py and tests/numerics/test_magnetic_survey.py;
+Ordinary new executor namespace: data-pipeline/magnetic_line_survey.py; new tests
+tests/data/test_magnetic_line_survey.py and tests/numerics/test_magnetic_line_survey.py;
 paired wrappers gain an explicit reviewed survey tag after its exact schema
 exists. Old contracts/Results remain immutable and continue to refuse >400
 ordinary rows or >256 sources. A survey result has a distinct schema and
@@ -136,3 +136,10 @@ unresolved. Provider-product prediction and independently sealed end-to-end
 correction validation are separate outcomes. Existing S1 and both opened
 refinement failures remain immutable. No API/auth/storage/frontend/deployment
 change or full-method acceptance is part of this executor seam.
+
+The exact prospective streamed schema, solver tolerances, preallocated phase
+lifetimes and local timing ceilings are now specified in
+[full-survey contracts](full-survey-contracts.md),
+[full-survey algorithms](full-survey-algorithms.md) and
+[full-survey verification](full-survey-validation.md). They supply no measured
+full-survey capacity or retroactive acceptance of the opened controls.
