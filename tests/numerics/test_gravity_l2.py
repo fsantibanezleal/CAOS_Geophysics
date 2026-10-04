@@ -554,8 +554,8 @@ def test_degenerate_release_exact_trigger_and_certificate(monkeypatch, mixed):
     assert opt.cg_count == 0 and opt.cg_abs_resid is None and opt.cg_rel_resid is None
 
 
-def test_nonzero_underflow_free_gradient_is_not_release(monkeypatch):
-    opt = diagnostic_opt(monkeypatch, [0., 1.], [-2., 1e-300], [.25, .5], [0., 0.], [4., 4.])
+def test_nonzero_underflow_free_gradient_with_binding_active_is_not_release(monkeypatch):
+    opt = diagnostic_opt(monkeypatch, [0., 1.], [2., 1e-300], [.25, .5], [0., 0.], [4., 4.])
     assert opt.stoppingCriteria() and opt._reason == 'zero_free_direction'
 
 
@@ -604,11 +604,12 @@ def test_release_trial_faults_never_enter_native_or_retry(monkeypatch, failure):
     assert not opt.stoppingCriteria()
     direction = opt.findSearchDirection()
     opt.evalFunction = lambda *args, **kwargs: 2.
-    if failure != 'line_search_cap':
+    if failure == 'nonfinite_slope':
         monkeypatch.setattr(opt, 'projection', lambda q: np.array([-1. if failure == 'nonnegative_slope' else 1e308]))
-        with pytest.raises(l2._SolveFailure, match='nonfinite' if failure == 'nonfinite_slope' else 'zero_free_direction'):
+        with pytest.raises(l2._SolveFailure, match='nonfinite'):
             opt.modifySearchDirection(direction)
     else:
+        if failure == 'nonnegative_slope': monkeypatch.setattr(opt, 'projection', lambda q: np.array([-1.]))
         _, accepted = opt.modifySearchDirection(direction)
         assert not accepted and opt._reason == 'line_search_failed'
         assert len(opt._trials) == 20 and opt.iterLS == 20
@@ -643,10 +644,137 @@ def test_release_trace_identity_and_not_run_cg():
     result, problem = assert_six_cell_optimum('full_covariance', 75., 'zero')
     evidence = problem['optimizer_evidence']
     np.testing.assert_array_equal(evidence['direction_kinds'], [0, 1])
-    assert evidence['last_direction_kind'] == 'degenerate_release'
+    assert evidence['last_direction_kind'] == 'binding_release'
     assert evidence['last_cg_count'] == 0
     assert evidence['last_cg_absolute_residual'] is evidence['last_cg_relative_residual'] is None
     assert result['trace']['line_search_counts'][-1] == 1
+
+
+@pytest.mark.parametrize('upper', [False, True])
+@pytest.mark.parametrize('free_gradient', [0., 1e-300, 1e-11, 3., -3.])
+def test_binding_release_any_inward_before_native_cg(monkeypatch, upper, free_gradient):
+    q, g = ([4., 1.], [2., free_gradient]) if upper else ([0., 1.], [-2., free_gradient])
+    diagonal_inverse = np.array([.25, .5])
+    opt = diagnostic_opt(monkeypatch, q, g, diagonal_inverse, [0., 0.], [4., 4.])
+    def deny(*args, **kwargs): raise AssertionError('inward binding release ran native CG first')
+    monkeypatch.setattr(l2.optimization.ProjectedGNCG, 'findSearchDirection', deny)
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    expected = np.clip(np.array(q)-diagonal_inverse*g, 0., 4.)-q
+    np.testing.assert_array_equal(direction, expected)
+    metric = np.sum(direction**2/diagonal_inverse)
+    assert float(np.dot(g, direction)) < 0 and metric > 0
+    assert np.dot(g, direction) <= -metric
+    assert opt._last_direction_kind == 'binding_release'
+    assert opt.cg_count == 0 and opt.cg_abs_resid is opt.cg_rel_resid is None
+    decision = opt._direction_decisions[-1]
+    assert decision['active_count'] == decision['inward_active_count'] == 1
+    assert decision['cg_executed'] is False and decision['kind'] == 'binding_release'
+    np.testing.assert_allclose(decision['pg_metric_norm_squared'], metric, rtol=1e-10, atol=1e-12)
+
+
+def test_binding_face_delegation_actual_projected_armijo_shortening(monkeypatch):
+    # Exact SPD mathematical control, real pinned native CG/LS; not a field fixture.
+    q, g = np.array([.99, .01]), np.array([-1., 2.])
+    h = np.array([[1., -1.5], [-1.5, 2.5]])
+    opt = diagnostic_opt(monkeypatch, q, g, 1/np.diag(h), [0., 0.], [1., 1.])
+    opt.H, opt.f = sp.csr_matrix(h), 5.
+    def objective(x, **kwargs):
+        delta = x-q
+        return float(5.+g@delta+.5*delta@h@delta)
+    opt.evalFunction = objective
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    np.testing.assert_allclose(direction, [-2., -2.], rtol=1e-10, atol=1e-12)
+    assert opt.cg_count == 2 and opt._last_direction_kind == 'native_CG'
+    trial, accepted = opt.modifySearchDirection(direction)
+    assert accepted and opt.iterLS == 7
+    checks = np.array(opt._trial_checks)
+    assert checks.shape == (8, 5) and checks[0, 3] > 0 and checks[-1, 3] < 0
+    np.testing.assert_array_equal(checks[:, 4], [0., 0., 0., 0., 0., 0., 0., 1.])
+    np.testing.assert_allclose(checks[:, 2], 2.**-np.arange(8), rtol=0., atol=0.)
+    np.testing.assert_allclose(checks[-1, 3], g@(trial-q), rtol=1e-10, atol=1e-12)
+    assert objective(trial) <= opt.f+1e-4*checks[-1, 3]
+    assert opt._direction_decisions[-1]['pg_metric_norm_squared'] is None
+    assert opt._direction_decisions[-1]['cg_executed'] is True
+
+
+def test_binding_feasible_chord_is_not_projected_gradient_arc(monkeypatch):
+    opt = diagnostic_opt(monkeypatch, [0.], [-10.], [1.], [0.], [1.])
+    opt.f = 1.
+    opt.evalFunction = lambda q, **kwargs: float(1.-10*q[0]+20*q[0]**2)
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    trial, accepted = opt.modifySearchDirection(direction)
+    assert accepted and opt.iterLS == 2
+    np.testing.assert_array_equal(trial, [.25])
+    assert np.clip(opt.xc-.25*(opt.approxHinv@opt.g), 0., 1.)[0] == 1.
+    assert opt._last_trial_check['decision'] == 'accepted'
+    assert opt._last_trial_check['slope'] == -2.5
+
+
+@pytest.mark.parametrize('kind', ['native_CG', 'binding_release'])
+def test_binding_both_branch_positive_actual_slope_exhausts_same_direction(monkeypatch, kind):
+    opt = diagnostic_opt(monkeypatch, [1.] if kind == 'native_CG' else [0.], [-2.], [.5], [0.], [4.])
+    opt.H = sp.csr_matrix([[2.]])
+    opt.f, opt.evalFunction = 5., lambda *args, **kwargs: 0.
+    assert not opt.stoppingCriteria()
+    direction = opt.findSearchDirection()
+    count = opt.cg_count
+    monkeypatch.setattr(opt, 'projection', lambda q: np.array([-1.]))
+    _, accepted = opt.modifySearchDirection(direction)
+    assert not accepted and opt._reason == 'line_search_failed'
+    assert opt.iterLS == len(opt._trials) == len(opt._trial_checks) == 20
+    assert opt.cg_count == count
+    assert np.all(np.array(opt._trial_checks)[:, 3] > 0.)
+    assert np.all(np.array(opt._trial_checks)[:, 4] == 0.)
+    assert opt._last_trial_check['cause'] == 'line_search_failed'
+    assert opt._last_trial_check['decision'] == 'failure'
+
+
+@pytest.mark.parametrize('kind', ['native_CG', 'binding_release'])
+@pytest.mark.parametrize('fault', ['noop', 'nonfinite_model', 'nonfinite_objective', 'deadline'])
+def test_binding_both_branch_trial_fault_no_false_acceptance(monkeypatch, kind, fault):
+    opt = diagnostic_opt(monkeypatch, [1.], [-2.], [.5], [0.], [4.])
+    opt._last_direction_kind = kind
+    opt._LS_xt, opt._LS_ft, opt.iterLS = np.array([2.]), 0., 0
+    opt._LS_t, opt._LS_descent = 1., -2.  # Complete native nominal LS state before the fault.
+    if fault == 'noop': opt._LS_xt = opt.xc.copy()
+    if fault == 'nonfinite_model': opt._LS_xt[0] = np.inf
+    if fault == 'nonfinite_objective': opt._LS_ft = np.nan
+    if fault == 'deadline': opt._deadline = -np.inf
+    reason = 'zero_free_direction' if fault == 'noop' else 'wall_cap' if fault == 'deadline' else 'nonfinite'
+    with pytest.raises(l2._SolveFailure, match=reason): opt.stoppingCriteria(inLS=True)
+    assert opt._last_trial_check['decision'] == 'failure'
+    assert opt._last_trial_check['cause'] == reason
+
+
+def test_binding_trace_ten_keys_and_unavailable_cg_not_success():
+    result, problem = assert_six_cell_optimum('full_covariance', 75., 'zero')
+    e = problem['optimizer_evidence']
+    assert set(e) == {'trial_objectives', 'direction_kinds', 'last_direction_kind', 'last_cg_count',
+                      'last_cg_absolute_residual', 'last_cg_relative_residual', 'last_cg_residual_status',
+                      'direction_decisions', 'trial_checks', 'last_trial_check'}
+    decisions = e['direction_decisions']
+    assert type(decisions) is tuple and len(decisions) == result['iterations'] <= 200
+    assert e['last_cg_residual_status'] == 'not_run'
+    assert e['last_cg_absolute_residual'] is e['last_cg_relative_residual'] is None
+    for decision in decisions:
+        assert set(decision) == {'state_index', 'kind', 'active_count', 'inward_active_count',
+                                 'free_residual_inf', 'candidate_slope', 'pg_metric_norm_squared', 'cg_executed'}
+        assert decision['candidate_slope'] < 0.
+        if decision['kind'] == 'binding_release':
+            assert decision['inward_active_count'] > 0 and not decision['cg_executed']
+            assert decision['pg_metric_norm_squared'] > 0.
+        else:
+            assert decision['inward_active_count'] == 0 and decision['cg_executed']
+            assert decision['pg_metric_norm_squared'] is None
+    for name, columns in [('trial_objectives', 3), ('trial_checks', 5)]:
+        array = e[name]
+        assert array.shape[1] == columns and len(array) <= 4000
+        assert np.isfinite(array).all() and not array.flags.writeable
+    assert len(e['trial_checks']) == sum(result['trace']['line_search_counts'])
+    assert set(e['last_trial_check']) == {'iteration', 'trial', 't', 'phi_trial', 'slope', 'decision', 'cause'}
 
 
 @pytest.mark.parametrize('kind', ['diagonal_sd', 'full_covariance'])

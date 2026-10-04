@@ -15,8 +15,8 @@ import gravity_forward as forward
 import gravity_survey_l2 as survey
 
 
-RUNTIME_EPOCH = 'm02-survey-l2-cpu-2'
-OPTIMIZER_POLICY = 'projected-gncg-degenerate-release-1'
+RUNTIME_EPOCH = 'm02-survey-l2-cpu-3'
+OPTIMIZER_POLICY = 'projected-gncg-binding-release-1'
 FORWARD_SOURCE = '46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5'
 BETA_CANDIDATES = (.0001, .001, .01, .1, 1., 10., 100., 1000.)
 
@@ -241,10 +241,10 @@ def _kkt_gradient(q, gradient, lower, upper):
 
 
 class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
-    """Reviewed zero-free hybrid; ordinary directions and Armijo remain native.
+    """Reviewed binding-set hybrid with native reduced-face CG and Armijo.
 
-    The ONLY search exception releases an exact degenerate free set using the
-    fixed actual positive diagonal. Never a fallback after native CG/LS failure.
+    An exact active nonbinding coordinate selects the fixed-diagonal feasible
+    chord BEFORE CG. Never a fallback after native CG/LS failure.
     No public hook, installed-source patch or claim of full GPCG convergence.
     """
 
@@ -259,11 +259,18 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         self._trials = []
         self._release_next = False
         self._direction_kinds, self._last_direction_kind = [], 'not_run'
+        self._direction_decisions, self._trial_checks = [], []
+        self._last_trial_check = None
         self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
 
     def _fail(self, reason):
         self._reason = reason
         raise _SolveFailure(reason)
+
+    def _trial_fail(self, reason):
+        self._last_trial_check['decision'] = 'failure'
+        self._last_trial_check['cause'] = reason
+        self._fail(reason)
 
     def _record(self):
         # The parent is the genuine BaseInvProblem, not a substituted objective.
@@ -287,19 +294,31 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
 
     def stoppingCriteria(self, inLS=False):
         if inLS:
-            if not np.isfinite(self._LS_ft) or not np.isfinite(self._LS_xt).all(): self._fail('nonfinite')
+            self._last_trial_check = {
+                'iteration': int(self.iter), 'trial': int(self.iterLS), 't': float(self._LS_t),
+                'phi_trial': float(self._LS_ft) if np.isfinite(self._LS_ft) else None,
+                'slope': None, 'decision': 'shorten', 'cause': None}
+            if (not np.isfinite(self._LS_ft) or not np.isfinite(self._LS_xt).all()
+                    or not np.isfinite(self._LS_t)):
+                self._trial_fail('nonfinite')
             self._trials.append((self.iter, self.iterLS, float(self._LS_ft)))
-            if self._last_direction_kind == 'degenerate_release':
-                try:
-                    with np.errstate(over='raise', invalid='raise'):
-                        displacement = self._LS_xt-self.xc
-                        slope = float(np.inner(self.g, displacement))
-                except ArithmeticError:
-                    self._fail('nonfinite')
-                if not np.isfinite(slope): self._fail('nonfinite')
-                if not np.any(displacement) or slope >= 0.: self._fail('zero_free_direction')
-            if monotonic() > self._deadline: self._fail('wall_cap')
-            return super().stoppingCriteria(inLS=True)
+            try:
+                with np.errstate(over='raise', invalid='raise'):
+                    displacement = self._LS_xt-self.xc
+                    slope = float(np.inner(self.g, displacement))
+            except ArithmeticError:
+                self._trial_fail('nonfinite')
+            if not np.isfinite(displacement).all() or not np.isfinite(slope):
+                self._trial_fail('nonfinite')
+            self._last_trial_check['slope'] = slope
+            if not np.any(displacement): self._trial_fail('zero_free_direction')
+            if monotonic() > self._deadline: self._trial_fail('wall_cap')
+            # Projection can turn a native descent direction into ascent.
+            # Shorten that SAME direction; never rerun CG or use a fallback.
+            accepted = bool(super().stoppingCriteria(inLS=True)) if slope < 0. else False
+            self._trial_checks.append((self.iter, self.iterLS, self._LS_t, slope, int(accepted)))
+            if accepted: self._last_trial_check['decision'] = 'accepted'
+            return accepted
         self._release_next = False
         absolute, kkt = self._record()
         if monotonic() > self._deadline:
@@ -320,9 +339,9 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         active = self.activeSet(self.xc)
         residual = (~active)*(-self.g)
         self._initial_free_residual = float(np.linalg.norm(residual))
-        # Elementwise zero is distinct from norm underflow. Exact official
-        # active/binding sets, NOT the diagnostic KKT bound tolerance.
-        self._release_next = not np.any(residual != 0.) and np.any(active & ~self.bindingSet(self.xc))
+        # Exact official sets, NOT the diagnostic KKT bound tolerance or a
+        # free-gradient magnitude heuristic. The free norm never selects PG.
+        self._release_next = bool(np.any(active & ~self.bindingSet(self.xc)))
         if self._initial_free_residual == 0. and not self._release_next:
             self._reason = 'zero_free_direction'
             return True
@@ -330,30 +349,59 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
 
     def findSearchDirection(self):
         self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
-        self._last_direction_kind = 'degenerate_release' if self._release_next else 'native_CG'
+        self._last_direction_kind = 'binding_release' if self._release_next else 'native_CG'
+        active = self.activeSet(self.xc)
+        inward = active & ~self.bindingSet(self.xc)
+        decision = {'state_index': int(self.iter), 'kind': self._last_direction_kind,
+                    'active_count': int(np.count_nonzero(active)),
+                    'inward_active_count': int(np.count_nonzero(inward)),
+                    'free_residual_inf': float(np.max(np.abs((~active)*self.g))),
+                    'candidate_slope': None, 'pg_metric_norm_squared': None,
+                    'cg_executed': not self._release_next}
+        self._direction_decisions.append(decision)
         if not self._release_next:
-            return super().findSearchDirection()
+            if not np.isfinite(self._initial_free_residual): self._fail('nonfinite')
+            direction = super().findSearchDirection()
+            try:
+                with np.errstate(over='raise', invalid='raise'):
+                    slope = float(np.inner(self.g, direction))
+            except ArithmeticError:
+                self._fail('nonfinite')
+            if not np.isfinite(direction).all() or not np.isfinite(slope): self._fail('nonfinite')
+            decision['candidate_slope'] = slope
+            if not np.any(direction) or slope >= 0.: self._fail('zero_free_direction')
+            return direction
         try:
-            with np.errstate(over='raise', invalid='raise'):
+            with np.errstate(over='raise', invalid='raise', divide='raise'):
                 unprojected = self.xc-self.approxHinv*self.g
                 if not np.isfinite(unprojected).all(): self._fail('nonfinite')
                 direction = self.projection(unprojected)-self.xc
                 slope = float(np.inner(self.g, direction))
+                inverse_diagonal = self.approxHinv.diagonal()
+                if not np.isfinite(inverse_diagonal).all() or np.any(inverse_diagonal <= 0.):
+                    self._fail('nonfinite')
+                metric = float(np.sum(direction**2/inverse_diagonal))
         except ArithmeticError:
             self._fail('nonfinite')
-        if not np.isfinite(direction).all() or not np.isfinite(slope): self._fail('nonfinite')
-        if not np.any(direction) or slope >= 0.: self._fail('zero_free_direction')
+        if not np.isfinite(direction).all() or not np.isfinite(slope) or not np.isfinite(metric):
+            self._fail('nonfinite')
+        decision['candidate_slope'] = slope
+        if not np.any(direction) or slope >= 0. or metric <= 0.: self._fail('zero_free_direction')
+        decision['pg_metric_norm_squared'] = metric
         return direction
 
     def modifySearchDirection(self, p):
         if not np.isfinite(p).all(): self._fail('nonfinite')
-        if self._last_direction_kind != 'degenerate_release':
+        if self._last_direction_kind != 'binding_release':
             if not np.isfinite(self.cg_abs_resid) or not np.isfinite(self.cg_rel_resid): self._fail('nonfinite')
             if self.cg_count > 200 or self.cg_abs_resid > max(self.cg_rtol*self._initial_free_residual, self.cg_atol):
                 self._fail('cg_cap')
         if not np.any(p): self._fail('zero_free_direction')
         trial, accepted = super().modifySearchDirection(p)
-        if not accepted: self._reason = 'line_search_failed'
+        if not accepted:
+            self._reason = 'line_search_failed'
+            if self._last_trial_check is not None:
+                self._last_trial_check.update(decision='failure', cause='line_search_failed')
         return trial, accepted
 
     def doEndIteration(self, xt):
@@ -361,7 +409,7 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         if self._LS_ft - previous > 1e-12*max(1., abs(previous)): self._fail('state_mismatch')
         self._cg_counts.append(int(self.cg_count))
         self._ls_counts.append(int(self.iterLS)+1)
-        self._direction_kinds.append(1 if self._last_direction_kind == 'degenerate_release' else 0)
+        self._direction_kinds.append(1 if self._last_direction_kind == 'binding_release' else 0)
         super().doEndIteration(xt)
 
 
@@ -442,13 +490,21 @@ def _solve_partition(problem, prior, deadline=None):
         reason = 'wall_cap'
     # Private bounded evidence for external trusted controls, not extra public
     # solve-record keys or a caller-selectable hook/output destination.
+    cg_absolute, cg_relative = opt.cg_abs_resid, opt.cg_rel_resid
+    cg_status = ('not_run' if opt._last_direction_kind != 'native_CG' else
+                 'unavailable' if cg_absolute is None or cg_relative is None else
+                 'finite' if np.isfinite(cg_absolute) and np.isfinite(cg_relative) else 'nonfinite')
     problem['optimizer_evidence'] = {
         'trial_objectives': survey._readonly(np.array(opt._trials, dtype=np.float64).reshape(-1, 3)),
         'direction_kinds': survey._readonly(np.array(opt._direction_kinds[:max(k-1, 0)], dtype=np.int64)),
         'last_direction_kind': opt._last_direction_kind,
         'last_cg_count': int(getattr(opt, 'cg_count', 0)),
-        'last_cg_absolute_residual': float(opt.cg_abs_resid) if opt.cg_abs_resid is not None else None,
-        'last_cg_relative_residual': float(opt.cg_rel_resid) if opt.cg_rel_resid is not None else None}
+        'last_cg_absolute_residual': float(cg_absolute) if cg_absolute is not None and np.isfinite(cg_absolute) else None,
+        'last_cg_relative_residual': float(cg_relative) if cg_relative is not None and np.isfinite(cg_relative) else None,
+        'last_cg_residual_status': cg_status,
+        'direction_decisions': tuple(dict(item) for item in opt._direction_decisions),
+        'trial_checks': survey._readonly(np.array(opt._trial_checks, dtype=np.float64).reshape(-1, 5)),
+        'last_trial_check': dict(opt._last_trial_check) if opt._last_trial_check is not None else None}
     converged = reason in ('kkt_stable', 'absolute_stationary')
     return {'status': 'converged' if converged else ('failed' if reason in ('engine_error', 'nonfinite', 'state_mismatch')
                                                   else 'nonconverged'),
