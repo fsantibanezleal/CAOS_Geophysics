@@ -30,8 +30,8 @@ function source(v: unknown) { const r = closed(v, sourceKeys); hash(r.sha256); i
 const engineKeys = ["numpy", "scipy", "user_tool_sha256", "velocity_operator_sha256", "checkpoint_sha256", "checkpoint_protocol", "refinement_code_sha256"];
 
 /** Linear bounded lexical preflight. Decoded object-key duplicates are rejected. */
-export function strictVelocityJson(bytes: Uint8Array, maxNodes = 160000): unknown {
-  require(bytes.byteLength > 0 && bytes.byteLength <= 4 * 1048576);
+export function strictVelocityJson(bytes: Uint8Array, maxNodes = 160000, maxBytes = 4 * 1048576, maxDepth = 12): unknown {
+  require(bytes.byteLength > 0 && bytes.byteLength <= maxBytes);
   const s = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
   const stack: { object: boolean; keys: Set<string>; key: boolean }[] = [];
   let nodes = 0, atom = false;
@@ -49,7 +49,7 @@ export function strictVelocityJson(bytes: Uint8Array, maxNodes = 160000): unknow
       if (top?.object && top.key) { const key = JSON.parse(s.slice(start, i + 1)); require(!top.keys.has(key)); top.keys.add(key); top.key = false; }
       atom = false;
     } else if (c === "{" || c === "[") {
-      charge(); stack.push({ object: c === "{", keys: new Set(), key: c === "{" }); require(stack.length <= 12); atom = false;
+      charge(); stack.push({ object: c === "{", keys: new Set(), key: c === "{" }); require(stack.length <= maxDepth); atom = false;
     } else if (c === "}" || c === "]") { require(stack.length > 0); stack.pop(); atom = false; }
     else if (c === ",") { if (top?.object) top.key = true; atom = false; }
     else if (/[\s:]/.test(c)) atom = false;
