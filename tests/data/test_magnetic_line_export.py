@@ -194,3 +194,51 @@ def test_paired_scripts_replay_and_no_overwrite(tmp_path):
     assert "Traceback" not in completed.stderr.decode()
     assert str(tmp_path) not in completed.stdout.decode()
     assert not (tmp_path / "must-not-exist").exists()
+
+
+def resource_controller():
+    import importlib.util
+    root = Path(processor().__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location("m03_resource_review", root / "scripts/check_magnetic_artifacts.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("failed", ("accounting", "limits", "memory", "exit", "still_active"))
+def test_terminal_resource_counters_fail_closed(failed):
+    from types import SimpleNamespace
+    m = resource_controller()
+    c, _ = modules()
+    def query(job, kind, pointer, size, returned):
+        if kind == 1:
+            pointer._obj.user = 10000000
+        else:
+            pointer._obj.peak_job_memory = 4096
+        return int(failed != ("accounting" if kind == 1 else "limits"))
+    def memory(handle, pointer, size):
+        pointer._obj.peak_working = 2048
+        return int(failed != "memory")
+    def exit_code(handle, pointer):
+        pointer._obj.value = 259 if failed == "still_active" else 0
+        return int(failed != "exit")
+    api = SimpleNamespace(QueryInformationJobObject=query, GetExitCodeProcess=exit_code)
+    psapi = SimpleNamespace(GetProcessMemoryInfo=memory)
+    with pytest.raises(c.MagneticContractError) as caught:
+        m.terminal_counters(api, psapi, 1, 2)
+    assert caught.value.error["code"] == "resource_refused"
+
+
+@pytest.mark.parametrize("change", ({"controller_cpu_s": 10.00001}, {"peak_owned_scratch_bytes": 67108865},
+    {"peak_tree_rss_bytes": 536870913}, {"peak_job_commit_bytes": 536870913}, {"child_tree_cpu_s": 60.00001},
+    {"wall_s": 120.00001}, {"measurement_complete": False}, {"exit_code": 1},
+    {"mode": "cancel", "terminal": "cancelled", "exit_code": 2, "post_stop_cpu_s": None, "post_stop_wall_s": 0.01},
+    {"mode": "cancel", "terminal": "cancelled", "exit_code": 2, "post_stop_cpu_s": 0., "post_stop_wall_s": 10.00001}))
+def test_resource_verdict_has_independent_measured_limits(change):
+    m = resource_controller()
+    record = dict(mode="probe", terminal="completed", exit_code=0, measurement_complete=True,
+        child_tree_cpu_s=60., controller_cpu_s=10., wall_s=120., peak_owned_scratch_bytes=67108864,
+        peak_tree_rss_bytes=536870912, peak_job_commit_bytes=536870912, post_stop_cpu_s=None, post_stop_wall_s=None)
+    assert m.resource_eligible(record)
+    record.update(change)
+    assert not m.resource_eligible(record)

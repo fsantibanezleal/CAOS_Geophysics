@@ -98,6 +98,33 @@ class Memory(ctypes.Structure):
         ("peak_working","working","peak_paged","paged","peak_nonpaged","nonpaged","pagefile","peak_pagefile","private")]]
 
 
+def terminal_counters(api, psapi, job, process):
+    """Retained process lifetime peaks and Job totals; no zero on query failure."""
+    accounting, limits, memory = Accounting(), Limits(), Memory(cb=ctypes.sizeof(Memory))
+    code = ctypes.c_uint32()
+    if not api.QueryInformationJobObject(job,1,ctypes.byref(accounting),ctypes.sizeof(accounting),None) or \
+        not api.QueryInformationJobObject(job,9,ctypes.byref(limits),ctypes.sizeof(limits),None) or \
+        not psapi.GetProcessMemoryInfo(process,ctypes.byref(memory),ctypes.sizeof(memory)) or \
+        not api.GetExitCodeProcess(process,ctypes.byref(code)) or code.value == 259:
+        c.fail("local_profile.terminal_measurement","resource_refused")
+    return accounting, limits, memory, code.value
+
+
+def resource_eligible(record):
+    """Each measured ceiling and cancellation reserve is necessary, not averaged."""
+    if record.get("measurement_complete") is not True:
+        return False
+    for key, limit in (("child_tree_cpu_s",60),("controller_cpu_s",10),("wall_s",120),
+        ("peak_tree_rss_bytes",536870912),("peak_job_commit_bytes",536870912),("peak_owned_scratch_bytes",67108864)):
+        value = record.get(key)
+        if type(value) not in (int,float) or not __import__("math").isfinite(value) or not 0 <= value <= limit:
+            return False
+    if record.get("mode") == "cancel":
+        return record.get("terminal") == "cancelled" and record.get("exit_code") != 0 and all(
+            type(record.get(k)) in (int,float) and 0 <= record[k] <= 10 for k in ("post_stop_cpu_s","post_stop_wall_s"))
+    return record.get("terminal") == "completed" and record.get("exit_code") == 0
+
+
 def measured_child(mode, output_directory, *, direct_base_runtime=False):
     """Suspended before Job assignment: actual lifetime CPU/commit/RSS/kill.
 
@@ -136,7 +163,7 @@ def measured_child(mode, output_directory, *, direct_base_runtime=False):
         c.fail("local_profile.job_creation","resource_refused")
     process = ProcessInfo()
     start,controller_start = time.monotonic(),time.process_time()
-    user=kernel=peak_rss=peak_commit=0
+    user=kernel=peak_rss=peak_commit=peak_scratch=0
     stopped_at=stop_wall=None
     cause="completed"
     streams=[]
@@ -195,7 +222,9 @@ def measured_child(mode, output_directory, *, direct_base_runtime=False):
             peak_commit=max(peak_commit,current.peak_job_memory)
             elapsed = time.monotonic()-start
             scratch=sum(f.stat().st_size for f in output_directory.rglob("*") if f.is_file())
+            peak_scratch=max(peak_scratch,scratch)
             if stopped_at is None and (user+kernel>=50 or elapsed>=120 or peak_rss>536870912 or scratch>67108864 or
+                time.process_time()-controller_start>10 or
                 (mode=="cancel" and (output_directory/"cancel-ready.json").is_file())):
                 stopped_at,stop_wall = user+kernel,time.monotonic()
                 cause="cancelled" if mode=="cancel" else "resource_refused"
@@ -208,19 +237,17 @@ def measured_child(mode, output_directory, *, direct_base_runtime=False):
             if wait!=258 or (stop_wall is not None and time.monotonic()-stop_wall>10):
                 cause="stop_refused"
                 break
-        accounting=Accounting()
-        current=Limits()
-        api.QueryInformationJobObject(job,1,ctypes.byref(accounting),ctypes.sizeof(accounting),None)
-        api.QueryInformationJobObject(job,9,ctypes.byref(current),ctypes.sizeof(current),None)
-        code=ctypes.c_uint32()
-        api.GetExitCodeProcess(process.process,ctypes.byref(code))
+        accounting,current,memory,code = terminal_counters(api,psapi,job,process.process)
         user,kernel = accounting.user/1e7,accounting.kernel/1e7
+        peak_rss=max(peak_rss,memory.peak_working)
         peak_commit=max(peak_commit,current.peak_job_memory)
-        if code.value!=0 and cause=="completed":
+        peak_scratch=max(peak_scratch,sum(f.stat().st_size for f in output_directory.rglob("*") if f.is_file()))
+        if code!=0 and cause=="completed":
             cause="resource_or_native_refused"
-        record = dict(mode=mode,terminal=cause,exit_code=code.value,child_tree_user_s=user,child_tree_kernel_s=kernel,
+        record = dict(mode=mode,terminal=cause,exit_code=code,measurement_complete=True,child_tree_user_s=user,child_tree_kernel_s=kernel,
             child_tree_cpu_s=user+kernel,controller_cpu_s=time.process_time()-controller_start,wall_s=time.monotonic()-start,
             peak_tree_rss_bytes=peak_rss,peak_job_commit_bytes=peak_commit,
+            peak_owned_scratch_bytes=peak_scratch,
             post_stop_cpu_s=None if stopped_at is None else max(0.,user+kernel-stopped_at),
             post_stop_wall_s=None if stop_wall is None else time.monotonic()-stop_wall,
             active_process_limit=1,cpu_limit_s=60,stop_cpu_s=50,wall_limit_s=120,rss_limit_bytes=536870912,commit_limit_bytes=536870912,
@@ -274,8 +301,7 @@ def resource_child(mode, directory, job_handle):
             c.fail("study.geometry_seal","custody_mismatch")
         for key in ("probe","cancel","contract"):
             measurement=c.strict_json(c.read_bounded(directory/(key+"-measurement.json"),2097152))
-            if measurement["terminal"]!=("cancelled" if key=="cancel" else "completed") or measurement["child_tree_cpu_s"]>60 or \
-                measurement["wall_s"]>120 or measurement["peak_tree_rss_bytes"]>536870912 or measurement["peak_job_commit_bytes"]>536870912:
+            if not resource_eligible(measurement):
                 c.fail("study.actual_profile_prerequisite","resource_refused")
             if key=="cancel" and (measurement["post_stop_cpu_s"] is None or measurement["post_stop_cpu_s"]>10 or measurement["post_stop_wall_s"]>10):
                 c.fail("study.cancel_reserve","resource_refused")
@@ -331,12 +357,14 @@ def resource_child(mode, directory, job_handle):
 
 
 def main(argv=None):
+    controller_start = time.process_time()
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-directory",required=True)
     parser.add_argument("--resource-child",choices=("probe","cancel","contract","study-100","study-50"))
     parser.add_argument("--job-handle",type=int)
     parser.add_argument("--scientific-site-packages")
     parser.add_argument("--direct-base-runtime",action="store_true")
+    parser.add_argument("--resource-only",action="store_true",help="Probe/cancel/previously opened contract only; never generate new study truth")
     args=parser.parse_args(argv)
     directory=Path(args.output_directory)
     try:
@@ -361,17 +389,20 @@ def main(argv=None):
         for mode in ("probe","cancel","contract"):
             record=measured_child(mode,directory,direct_base_runtime=args.direct_base_runtime)
             measured.append(record)
-            eligible &= record["terminal"]==("cancelled" if mode=="cancel" else "completed") and record["child_tree_cpu_s"]<=60 and \
-                record["wall_s"]<=120 and record["peak_tree_rss_bytes"]<=536870912 and record["peak_job_commit_bytes"]<=536870912
-        if eligible:
+            eligible &= resource_eligible(record)
+        if eligible and not args.resource_only:
             for mode in ("study-100","study-50"):
                 measured.append(measured_child(mode,directory,direct_base_runtime=args.direct_base_runtime))
-            eligible &= all(r["terminal"]=="completed" for r in measured[-2:])
+            eligible &= all(resource_eligible(r) for r in measured[-2:])
+        controller_cpu = time.process_time()-controller_start
+        eligible &= controller_cpu <= 10
+        verdict = ("local_component_resource_pass" if args.resource_only else "local_resource_pass") if eligible else "resource_refused"
         _new_json(directory/"study-resource-outcome.json",dict(schema="m03-local-study-resource/1",geometry_file_sha256=geometry_sha,
-            source_pins_file_sha256=pin,measurements=measured,verdict="local_resource_pass" if eligible else "resource_refused",
+            source_pins_file_sha256=pin,measurements=measured,verdict=verdict,controller_total_cpu_s=controller_cpu,
+            measurement_scope="component_and_existing_contract_only" if args.resource_only else "component_contract_and_both_fresh_studies",
             fresh_truth_generated=any((directory/(m+"-input-identity.json")).exists() for m in ("study-100","study-50")),
             original_s1_replaced=False,vps_admitted=False))
-        print(json.dumps(dict(verdict="local_resource_pass" if eligible else "resource_refused",vps_admitted=False)))
+        print(json.dumps(dict(verdict=verdict,vps_admitted=False)))
         return 0 if eligible else 2
     except c.MagneticContractError as exc:
         if args.resource_child:

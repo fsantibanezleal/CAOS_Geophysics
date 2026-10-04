@@ -97,3 +97,21 @@ The fitted1/r coefficients remain nT*m representation coefficients, not geologic
 magnetization/depth. Empty inner-A calibration remains ineligible. No320 result,
 resource probe or successful export activates VPS/online processing, completes
 field evidence or waives original S1.
+
+Terminal measurement must query retained process lifetime RSS, Job accounting,
+Job committed-memory peak and the exit code successfully. A failed query or
+STILL_ACTIVE code refuses rather than becoming zero. Owned scratch includes
+originals, cache, all retained probe/study members and output receipts. Each
+child's measured scratch/RSS/commit/CPU/wall/controller limits and, for
+cancellation, both stop reserves are independent requirements. Whole parent
+CPU through child drain is measured separately; its final receipt serialization
+is not part of that reported timestamp. This is not a native host admission
+or the required thirty-run/p95 proof.
+
+The controller's explicit `--resource-only` option performs maximum-shape
+zero-target fits, real native-fit-workload cancellation and the previously
+opened S3 contract. It does not generate fresh study values or evaluate a new
+outer holdout. Its separate `local_component_resource_pass` verdict cannot be
+relabeled as full scientific request, refinement predictive or full-survey
+acceptance. Earlier study outcomes remain bound to their original controller
+revision, not retrospectively upgraded by new counter-query controls.
