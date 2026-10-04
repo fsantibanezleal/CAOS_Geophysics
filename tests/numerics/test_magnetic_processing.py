@@ -348,3 +348,111 @@ def test_independent_original_dipoles_against_official_engine():
     official = np.column_stack(hm.dipole_magnetic(coordinates, sources, moments, field="b", parallel=False))
     independent = np.array([g.analytic_dipole_vector(point) for point in query])
     np.testing.assert_allclose(official, independent, rtol=1e-9, atol=1e-6)
+
+
+def test_s2_original_plane_crossovers_and_full_relative_offsets():
+    c, g = modules()
+    p = processing()
+    raw, meta, req = g.control_input("S2")
+    loaded = c.load_lines(raw, c.canonical_bytes(meta), c.canonical_bytes(req))
+    rows = loaded["rows"]
+    before = deepcopy(rows)
+    crossings = p.crossovers(rows, req["geometry_policy"])
+    admitted = [x for x in crossings if x["disposition"] == "admitted" and
+                x["constraint_representative"] == x["crossover_id"]]
+    assert len(admitted) == 24
+    assert all(x["height_difference_m"] == 0. for x in admitted)
+    result = p.level_offsets(rows, req["geometry_policy"], [r["row_id"] for r in rows])
+    for line in (f"F{i:02d}" for i in range(8)):
+        assert result["offsets"][line] == pytest.approx(2*(int(line[1:])-3), abs=1e-6)
+    assert result["components"][0]["absolute_datum"] is False
+    assert result["components"][0]["gauge_line_id"] == "T00"
+    assert result["common_relative_gauge"] is True
+    for row in result["rows"]:
+        assert row["magnetic_nT"] == pytest.approx(10+.002*row["easting_m"]-.003*row["northing_m"], abs=1e-6)
+    assert rows == before
+
+
+def test_crossovers_retain_height_gap_and_endpoint_constraints():
+    c, g = modules()
+    p = processing()
+    raw, _, req = g.control_input("S1")
+    mixed = c.parse_csv(raw)["rows"]
+    inventory = p.crossovers(mixed, req["geometry_policy"])
+    assert not [x for x in inventory if x["disposition"] == "admitted"]
+    assert any("height_mismatch" in x["reasons"] for x in inventory)
+    assert all(x["flight_minus_tie_nT"] is None for x in inventory)
+    # Two straight lines cross at genuine shared endpoints:four segment pairs,
+    # one physical equality. No joined segment may skip a missing middle row.
+    rows = []
+    for line, kind, positions in (("F", "flight", [(-100., 0.), (0., 0.), (100., 0.)]),
+                                  ("T", "tie", [(0., -100.), (0., 0.), (0., 100.)])):
+        for j, (e, n) in enumerate(positions):
+            row = deepcopy(g.geometry_rows()[j])
+            row.update(row_id=f"{line}.{j}", line_id=line, line_kind=kind, easting_m=e, northing_m=n,
+                       upward_m=80., terrain_upward_m=0., clearance_m=80., magnetic_nT=10+.002*e-.003*n)
+            rows.append(row)
+    inventory = p.crossovers(rows, req["geometry_policy"])
+    assert len(inventory) == 4
+    assert len({x["shared_endpoint_group_id"] for x in inventory}) == 1
+    assert sum(x["constraint_representative"] == x["crossover_id"] for x in inventory) == 1
+    bad = deepcopy(rows)
+    bad[1]["magnetic_nT"] = None
+    rejected = p.crossovers(bad, req["geometry_policy"])
+    assert len(rejected) == 4
+    assert all("missing_value" in x["reasons"] and x["flight_minus_tie_nT"] is None for x in rejected)
+    for value in (True, float("nan"), float("inf"), "10"):
+        bad = deepcopy(rows)
+        bad[0]["magnetic_nT"] = value
+        with pytest.raises(c.MagneticContractError):
+            p.crossovers(bad, req["geometry_policy"])
+    weighted = deepcopy(rows)
+    for row in weighted:
+        row["uncertainty_nT"] = 2. if row["line_kind"] == "flight" else 3.
+    policy = deepcopy(req["geometry_policy"])
+    policy["crossover"]["uncertainty_policy"] = "documented_independent_rows"
+    uncertainty = dict(meaning="independent_one_sigma",source_evidence="Authored algebraic variance control, not field",
+                       independence_assumption="row_independent",unit="nT")
+    result = p.crossovers(weighted, policy, uncertainty=uncertainty)
+    assert all(x["difference_variance_nT2"] == pytest.approx(13., abs=1e-12) for x in result)
+    uncertainty["independence_assumption"] = "correlated"
+    with pytest.raises(c.MagneticContractError):
+        p.crossovers(weighted, policy, uncertainty=uncertainty)
+    uncertainty["independence_assumption"] = "row_independent"
+    for sigma in (1e-300, 1e308):
+        bad = deepcopy(weighted)
+        for row in bad:
+            row["uncertainty_nT"] = sigma
+        with pytest.raises(c.MagneticContractError):
+            p.crossovers(bad, policy, uncertainty=uncertainty)
+
+
+def test_leveling_does_not_calibrate_sealed_or_disconnected_lines():
+    c, g = modules()
+    p, v = processing(), validation()
+    raw, _, req = g.control_input("S2")
+    rows = c.parse_csv(raw)["rows"]
+    sealed = v.make_partitions(rows, req)
+    result = p.level_offsets(rows, req["geometry_policy"], sealed["outer_training_ids"])
+    assert "F04" not in result["offsets"]
+    assert "F04" in result["uncalibrated_line_ids"]
+    assert all(row["magnetic_nT"] is None for row in result["rows"] if row["line_id"] == "F04")
+    assert all("outer_sealed" in x["reasons"] and x["flight_minus_tie_nT"] is None
+               for x in result["crossovers"] if x["flight_segment_id"].startswith("S00013"))
+    before = deepcopy(result)
+    altered = deepcopy(rows)
+    for row in altered:
+        if row["line_id"] == "F04":
+            row["magnetic_nT"] += 10000
+    other = p.level_offsets(altered, req["geometry_policy"], sealed["outer_training_ids"])
+    assert other["offsets"] == before["offsets"]
+    assert other["components"] == before["components"]
+    disconnected = deepcopy(rows)
+    for row in disconnected:
+        if row["line_id"] in ("F07","T02"):
+            row["easting_m"] += 10000
+            row["northing_m"] += 10000
+    result = p.level_offsets(disconnected, req["geometry_policy"], [r["row_id"] for r in disconnected])
+    assert len(result["components"]) == 2
+    assert result["common_relative_gauge"] is False
+    assert all(component["absolute_datum"] is False for component in result["components"])

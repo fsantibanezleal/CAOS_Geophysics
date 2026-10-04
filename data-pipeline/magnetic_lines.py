@@ -262,6 +262,194 @@ def solve_offsets(crossings, weights_policy):
     return dict(offsets=offsets, components=components, residuals=residuals)
 
 
+def _utc_ns(value):
+    from magnetic_line_contract import utc_key
+    date, nano = utc_key(value)
+    return ((date.toordinal()*86400 + date.hour*3600 + date.minute*60 + date.second)*1000000000 + nano)
+
+
+def crossovers(rows, geometry_policy, eligible_ids=None, uncertainty=None):
+    """Inventory original-adjacency candidates before physical/partition admission.
+
+    Null/gapped records are never filtered then reconnected. Values outside the
+    supplied training IDs are not interpolated. No field error is inferred.
+    """
+    from magnetic_line_contract import MagneticContractError
+    from magnetic_line_validation import validate_geometry_rows
+    validate_geometry_rows(rows)
+    for row in rows:
+        _type(row["magnetic_nT"], "?F64", "crossover.magnetic_nT", len(rows))
+        _type(row["uncertainty_nT"], "?Pos", "crossover.uncertainty_nT", len(rows))
+    policy = validate_named("GeometryPolicy", geometry_policy, len(rows))
+    physical = policy["crossover"]
+    ids = {r["row_id"] for r in rows}
+    if eligible_ids is not None and (type(eligible_ids) is not list or len(set(eligible_ids)) != len(eligible_ids) or
+                                     not set(eligible_ids) <= ids):
+        fail("crossover.training_ids")
+    eligible = ids if eligible_ids is None else set(eligible_ids)
+    if physical["uncertainty_policy"] == "documented_independent_rows":
+        model = None if uncertainty is None else validate_named("Uncertainty", uncertainty)
+        if model is None or model["meaning"] != "independent_one_sigma" or model["independence_assumption"] != "row_independent":
+            fail("crossover.uncertainty", "metadata_ineligible", "crossover")
+    span = max(max(r[k] for r in rows)-min(r[k] for r in rows) for k in ("easting_m","northing_m"))
+    tau = 64*EPSILON*max(1., span, max(abs(r[k]) for r in rows for k in ("easting_m","northing_m")))
+    if not math.isfinite(tau) or not math.isfinite(span):
+        fail("crossover.geometry_range", "metadata_ineligible", "crossover")
+    grouped = {}
+    for i, row in enumerate(rows):
+        grouped.setdefault((row["line_id"],row["sensor_id"]),[]).append((i,row))
+    adjacencies = []
+    for group in grouped.values():
+        for (i,p),(_,q) in zip(group,group[1:]):
+            adjacencies.append(dict(segment_id=f"S{i:06d}",p=p,q=q))
+    flights = [s for s in adjacencies if s["p"]["line_kind"] in ("flight","reflight")]
+    ties = [s for s in adjacencies if s["p"]["line_kind"] == "tie"]
+    def bounds(segment, key):
+        return sorted((segment["p"][key],segment["q"][key]))
+    pairs = []
+    for flight in flights:
+        for tie in ties:
+            if all(bounds(flight,k)[0] <= bounds(tie,k)[1]+tau and bounds(tie,k)[0] <= bounds(flight,k)[1]+tau
+                   for k in ("easting_m","northing_m")):
+                if len(pairs) == 4096:
+                    fail("crossover.segment_pairs", "resource_refused", "crossover")
+                pairs.append((flight,tie))
+    pairs.sort(key=lambda pair:(pair[0]["segment_id"],pair[1]["segment_id"]))
+    inventory, representatives = [], []
+    for index,(flight,tie) in enumerate(pairs):
+        endpoints = [s[k] for s in (flight,tie) for k in ("p","q")]
+        record = dict(crossover_id=f"X{index:06d}",flight_segment_id=flight["segment_id"],tie_segment_id=tie["segment_id"],
+            a=None,b=None,easting_m=None,northing_m=None,flight_minus_tie_nT=None,height_difference_m=None,
+            time_separation_s=None,difference_variance_nT2=None,disposition="rejected",reasons=[],
+            shared_endpoint_group_id=None,constraint_representative=None,
+            tolerance=dict(coordinate_m=tau,determinant_m2=None,sine_dimensionless=None,
+                           parameter_dimensionless=None,matrix_residual_m=None))
+        reasons = record["reasons"]
+        for s in (flight,tie):
+            p,q = s["p"],s["q"]
+            length = math.hypot(q["easting_m"]-p["easting_m"],q["northing_m"]-p["northing_m"])
+            if not math.isfinite(length) or length > policy["max_segment_gap_m"]:
+                reasons.append("gap")
+            if policy["max_time_gap_s"] is not None:
+                if p["utc"] is None or q["utc"] is None:
+                    reasons.append("unsupported_time")
+                elif not 0 < (_utc_ns(q["utc"])-_utc_ns(p["utc"]))*1e-9 <= policy["max_time_gap_s"]:
+                    reasons.append("gap")
+        if any(p["row_id"] not in eligible for p in endpoints):
+            if any(p["line_kind"]=="tie" and p["row_id"] not in eligible for p in endpoints):
+                reasons.append("spatial_buffer")
+            if any(p["line_kind"]!="tie" and p["row_id"] not in eligible for p in endpoints):
+                reasons.append("outer_sealed")
+        if any(p["sensor_id"] != flight["p"]["sensor_id"] for p in endpoints):
+            reasons.append("sensor_mismatch")
+        if any(p["magnetic_nT"] is None for p in endpoints):
+            reasons.append("missing_value")
+        if any(p["upward_m"] is None for p in endpoints):
+            reasons.append("missing_height")
+        coordinates = [[p["easting_m"],p["northing_m"]] for p in endpoints]
+        v = [coordinates[1][i]-coordinates[0][i] for i in range(2)]
+        w = [coordinates[3][i]-coordinates[2][i] for i in range(2)]
+        lp,lq = math.hypot(*v),math.hypot(*w)
+        if lp > tau and lq > tau and math.isfinite(lp*lq):
+            det = abs(v[0]*w[1]-v[1]*w[0])
+            threshold = 64*EPSILON*lp*lq+4*tau*(lp+lq)+4*tau*tau
+            record["tolerance"]["determinant_m2"] = threshold
+            record["tolerance"]["sine_dimensionless"] = max(physical["min_crossing_sine"],threshold/(lp*lq))
+            if det > 0:
+                record["tolerance"]["parameter_dimensionless"] = 64*EPSILON+8*tau*(lp+lq)/det
+        try:
+            geometry = intersect_segments(*coordinates,tau,physical["min_crossing_sine"])
+            for key in ("a","b","easting_m","northing_m","tolerance"):
+                record[key] = geometry[key]
+        except MagneticContractError as exc:
+            field = exc.error["field"]
+            reasons.append({"intersection.degenerate":"degenerate_segment","intersection.parallel":"parallel_or_collinear",
+                            "intersection.ill_conditioned":"ill_conditioned","intersection.matrix":"ill_conditioned",
+                            "intersection.parameters":"parameter_outside_segment"}.get(field,"ill_conditioned"))
+        if record["a"] is not None and record["b"] is not None and "missing_height" not in reasons:
+            def interpolate(s, key, weight):
+                a,b = s["p"][key],s["q"][key]
+                return a if a == b else math.fsum(((1-weight)*a,weight*b))
+            a,b = record["a"],record["b"]
+            height = interpolate(flight,"upward_m",a)-interpolate(tie,"upward_m",b)
+            record["height_difference_m"] = height
+            if abs(height) > physical["max_height_separation_m"]:
+                reasons.append("height_mismatch")
+            if all(p["utc"] is not None for p in endpoints):
+                origin = min(_utc_ns(p["utc"]) for p in endpoints)
+                times = [_utc_ns(p["utc"])-origin for p in endpoints]
+                delta = abs(math.fsum(((1-a)*times[0],a*times[1],-(1-b)*times[2],-b*times[3])))*1e-9
+                record["time_separation_s"] = delta
+                if physical["max_time_separation_s"] is not None and delta > physical["max_time_separation_s"]:
+                    reasons.append("unsupported_time")
+            elif physical["max_time_separation_s"] is not None:
+                reasons.append("unsupported_time")
+            if not reasons:
+                difference = interpolate(flight,"magnetic_nT",a)-interpolate(tie,"magnetic_nT",b)
+                if not math.isfinite(difference):
+                    fail("crossover.difference", "metadata_ineligible", "crossover")
+                record["flight_minus_tie_nT"] = difference
+                if physical["uncertainty_policy"] == "documented_independent_rows":
+                    sigma = [p["uncertainty_nT"] for p in endpoints]
+                    if any(x is None or x <= 0 for x in sigma):
+                        fail("crossover.sigma", "metadata_ineligible", "crossover")
+                    try:
+                        variance = math.fsum((s*w)*(s*w) for s,w in zip(sigma,(1-a,a,1-b,b)))
+                    except OverflowError:
+                        fail("crossover.variance", "metadata_ineligible", "crossover")
+                    if not math.isfinite(variance) or variance <= 0:
+                        fail("crossover.variance", "metadata_ineligible", "crossover")
+                    record["difference_variance_nT2"] = variance
+                record["disposition"] = "admitted"
+                role = (flight["p"]["line_id"],tie["p"]["line_id"],flight["p"]["sensor_id"])
+                group = next((r for group_role,r in representatives if group_role==role and
+                              math.hypot(record["easting_m"]-r["easting_m"],record["northing_m"]-r["northing_m"]) <= tau),None)
+                if group is None:
+                    representatives.append((role,record))
+                    group = record
+                else:
+                    reasons.append("duplicate_physical_constraint")
+                record["constraint_representative"] = group["crossover_id"]
+                record["shared_endpoint_group_id"] = group["crossover_id"]
+        # Stable diagnostic enum order; rejected pairs never carry an equality.
+        order = ("degenerate_segment","parallel_or_collinear","ill_conditioned","parameter_outside_segment",
+                 "matrix_residual_exceeded","gap","missing_value","missing_height","height_mismatch","unsupported_time",
+                 "sensor_mismatch","channel_state_mismatch","duplicate_physical_constraint","uncalibrated_line",
+                 "spatial_buffer","outer_sealed")
+        record["reasons"] = [r for r in order if r in reasons]
+        inventory.append(record)
+    return inventory
+
+
+def level_offsets(rows, geometry_policy, training_ids, weights_policy="unweighted", uncertainty=None):
+    """Infer offsets from training brackets only; retain uncalibrated rows as null."""
+    inventory = crossovers(rows,geometry_policy,training_ids,uncertainty)
+    by_id = {f"S{i:06d}":r for i,r in enumerate(rows)}
+    constraints = [dict(flight=by_id[x["flight_segment_id"]]["line_id"],tie=by_id[x["tie_segment_id"]]["line_id"],
+                        difference_nT=x["flight_minus_tie_nT"],variance_nT2=x["difference_variance_nT2"])
+                   for x in inventory if x["disposition"]=="admitted" and x["constraint_representative"]==x["crossover_id"]]
+    if not constraints:
+        fail("leveling.no_training_constraints", "metadata_ineligible", "crossover")
+    result = solve_offsets(constraints,weights_policy)
+    corrected,masks = [],[]
+    for row in rows:
+        item = dict(row)
+        if row["line_id"] not in result["offsets"]:
+            item["magnetic_nT"] = None
+            masks.append(["uncalibrated_line"])
+        elif row["magnetic_nT"] is None:
+            masks.append(["missing_value"])
+        else:
+            item["magnetic_nT"] = row["magnetic_nT"]-result["offsets"][row["line_id"]]
+            if not math.isfinite(item["magnetic_nT"]):
+                fail("leveling.output", "metadata_ineligible", "correction")
+            masks.append([])
+        corrected.append(item)
+    return dict(**result,rows=corrected,masks=masks,crossovers=inventory,
+                uncalibrated_line_ids=sorted({r["line_id"] for r in rows}-set(result["offsets"])),
+                common_relative_gauge=len(result["components"])==1,absolute_datum=False)
+
+
 def fit_equivalent(rows, config, depth_m, damping):
     """Pinned real harmonic fit; explicit training-only blocks and raw weights."""
     from magnetic_line_validation import kernel_column_scales, source_blocks, validate_geometry_rows

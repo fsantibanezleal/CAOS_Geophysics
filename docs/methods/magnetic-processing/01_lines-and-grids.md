@@ -178,6 +178,24 @@ Correlated or unknown errors do not justify this expression as a calibrated
 field variance. Shared-endpoint comparisons retain all original pair
 identities but contribute only one physical constraint.
 
+An exact planar exercise separates geometry/offset signs from magnetic
+height gradients. On the authored common80m plane let
+d(e,n)=10+0.002e-0.003n nT. Add2(i-3)nT to flightFi, i=0..7, and zero to
+ties. Linear interpolation of this plane is exact at each comparable
+crossing. The flight-minus-tie constraints recover offsets
+[-6,-4,-2,0,2,4,6,8]nT relative to the lexicographically first tie gauge.
+Subtracting those offsets recovers d; it does not establish an absolute
+magnetic datum. This is the original S2 synthetic control, not field data.
+
+The local crossover inventory retains original adjacency IDs and rejected
+candidate pairs. Missing middle rows are not removed before joining their
+neighbours. Shared-endpoint segment pairs have one representative equality;
+their repeated pairs remain diagnostic. Training-ID exclusions precede
+value interpolation, so a sealed line's measurements do not calibrate its
+offset. A line absent from the training graph remains null/uncalibrated,
+never zero-filled. Distinct connected components have separate relative
+gauges and cannot be treated as one common datum for gridding.
+
 For an admitted training graph, C has+1 at the flight and-1 at the tie:
 
 $$

@@ -111,18 +111,25 @@ def geometry_request(rows):
 
 
 def control_rows(regime):
-    """Original authored S1 independent dipoles, only after the fixed geometry seal."""
-    if regime != "S1":
+    """Original controls:truth only after the regime's prescribed geometry seal."""
+    if regime not in ("S1", "S2"):
         raise ValueError("This generator revision has not implemented the other regimes.")
     from magnetic_line_validation import make_partitions
     rows = geometry_rows()
+    if regime == "S2":
+        for row in rows:
+            row["upward_m"] = row["clearance_m"] = 80.
     seal = make_partitions(rows, geometry_request(rows))
     assert len(seal["outer_training_ids"]) == 294 and len(seal["outer_validation_ids"]) == 33
     dec, inc = math.radians(12.), math.radians(55.)
     direction = (math.cos(inc)*math.sin(dec), math.cos(inc)*math.cos(dec), -math.sin(inc))
     for row in rows:
-        vector = analytic_dipole_vector((row["easting_m"], row["northing_m"], row["upward_m"]))
-        row["magnetic_nT"] = math.fsum(a*b for a, b in zip(direction, vector))
+        if regime == "S2":
+            offset = 2*(int(row["line_id"][1:])-3) if row["line_kind"] == "flight" else 0.
+            row["magnetic_nT"] = 10+.002*row["easting_m"]-.003*row["northing_m"]+offset
+        else:
+            vector = analytic_dipole_vector((row["easting_m"], row["northing_m"], row["upward_m"]))
+            row["magnetic_nT"] = math.fsum(a*b for a, b in zip(direction, vector))
     return rows
 
 
@@ -154,6 +161,12 @@ def control_input(regime):
                                 sign_definition="authored_weak_projection")
     metadata["authored_control"].update(generator_revision="dipole-1", regime=regime,
         truth_definition="Three explicit independent SI dipoles; weak projection on authored F48000nT/D12deg/I55deg")
+    if regime == "S2":
+        metadata["dataset_id"] = "authored-plane-leveling"
+        metadata["revision"] = "plane-leveling-1"
+        metadata["authored_control"].update(generator_revision="plane-leveling-1",
+            truth_definition="Authored common80m plane:10+0.002e-0.003n nT, flight offsets2*(line_index-3),ties0")
+        request = geometry_request(rows)
     raw = csv_bytes(rows)
     metadata["original"].update(csv_sha256=sha256(raw).hexdigest(), csv_bytes=len(raw))
     request["dataset_version_sha256"] = dataset_identity(sha256(raw).hexdigest(), sha256(canonical_bytes(metadata)).hexdigest())
