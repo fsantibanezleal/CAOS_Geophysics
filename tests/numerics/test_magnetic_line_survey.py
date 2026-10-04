@@ -81,6 +81,36 @@ def test_adjoint_dot_oracle():
     assert abs(lhs - rhs) / denominator <= 1e-12
 
 
+@pytest.mark.parametrize("weighted", [False, True])
+def test_unchanged_verde_ridge_parity(weighted):
+    p = module()
+    xyz, sources = geometry(2)
+    y = immutable(7 * np.sin(np.arange(len(xyz)) * .7) - 2.3)
+    sigma = immutable(1 + np.arange(len(y)) % 7) if weighted else None
+    streamed = p.global_operator(xyz, sources, sigma_nT=sigma,
+                                 chunk_rows=7, chunk_sources=3)
+    result = p.solve_global(streamed, y, .01)
+    _, hm = p.engines()
+    unchanged = hm.EquivalentSources(points=tuple(sources[:, k] for k in range(3)),
+                                    dtype="float64", parallel=False, damping=.01)
+    coords = tuple(xyz[:, k] for k in range(3))
+    unchanged.fit(coords, y, weights=None if sigma is None else 1 / sigma**2)
+    reference = unchanged.predict(coords)
+    actual = independent_dense(xyz, sources) @ result["coefficients"]
+    assert np.max(np.abs(actual - reference)) <= 1e-7 * max(1, np.sqrt(np.mean(reference**2)))
+
+
+def test_source_chunk_permutation_is_global_not_tiled():
+    p = module()
+    xyz, sources = geometry(5)
+    order = np.arange(len(sources))[::-1]
+    vector = np.linspace(-2, 3, len(sources))
+    one = p.global_operator(xyz, sources, chunk_rows=7, chunk_sources=3)
+    two = p.global_operator(xyz, immutable(sources[order]), chunk_rows=5, chunk_sources=2)
+    np.testing.assert_allclose(two.operator @ vector[order], one.operator @ vector,
+                               rtol=1e-11, atol=1e-11)
+
+
 def test_chunk_order_and_sizes():
     p = module()
     xyz, sources = geometry(5)

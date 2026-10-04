@@ -60,7 +60,9 @@ No absolute floor in physical nT units that could admit an arbitrarily small
 bad solution. Compute/check each term for finite representability; zero caused
 by underflow refuses. Also report ||g||_2/lambda in nT, an a posteriori
 coefficient numerical-error bound from Hessian A^T A+lambda I, NOT geological
-or measurement uncertainty. Large bound alone cannot upgrade predictive
+or measurement uncertainty. The bound is mathematical for the exact objective;
+the reported float64 gradient is subject to roundoff, not an interval-certified
+error enclosure. Large bound alone cannot upgrade predictive
 acceptance. Record raw data and penalty terms and their finite sum; do not
 call an LSMR estimate the independently reconstructed objective.
 
@@ -185,3 +187,41 @@ zero-target/native-workload cancellation profiles must pass at the actually
 proposed geometry. Thirty cold useful-shape runs and tail/headroom/native host
 checks remain admission gates; this provisional local profile is not VPS
 admission. No measured full-survey success is asserted by this document.
+
+## Internal algebra entry and execution boundary
+
+`magnetic_line_survey.global_operator(xyz, sources, sigma_nT=None,
+chunk_rows=4096, chunk_sources=128)` accepts only native read-only C-contiguous
+little-endian float64 ndarray/memmap inputs. XYZ shape[N,3], sources[M,3],
+optional positive sigma[N]. Source Z is one plane strictly below all sample Z.
+This internal mathematical entry does not admit metadata/rights/independent
+sigma status by receiving a Python array. The full SurveyInput adapter must
+verify those scientific and source conditions before producing owned arrays.
+No user callback, arbitrary dtype, array hook or JSON-to-ndarray guessing.
+
+Uncontained independent control shapes are limited to2..128rows/1..32sources.
+Larger execution currently refuses, including a caller's self-declared resource
+pass; the provisional ceiling is not a native controller. This is not a
+reduced-resolution full-survey method or a hidden raise of an old profile.
+Full-shape controller and streamed intake/DAG/custody must be implemented and
+measured before that boundary can open. No field or full Result is emitted by
+these internal algebra calls.
+
+`solve_global(operator, readonly_values_nT, lambda)` returns an internal
+14-key object: coefficients, scaled_coefficients, data_term,
+regularization_term, objective, gradient_denominator, stationarity_inf,
+stationarity_relative, coefficient_error_bound_nT, istop, iterations,
+objective_unit, operator_forward_calls, operator_adjoint_calls. Coefficient
+arrays are float64[M] read-only; scalar diagnostics are finite. This is NOT
+SolverReceipt, which also requires actual stop estimates/lifetime measurements,
+and is never serialized as SurveyResult. Nonrepresentable objective/penalty
+including a lost nonzero underflow refuses, even when weights are finite.
+The scaled norm prevents silent zero totals; compensated sums preserve exact
+integer controls. Zero-signal/orthogonal controls retain their nonzero data term.
+
+`allocation_bounds(N,M,P=0,Q=0)` returns the three integer phase allowances;
+`plan_capacity` returns CapacityRecord with resource_state=unmeasured. Its
+conservative work count uses max fold N/M for all25 fits. A future geometry
+planner may count exact25 fold shapes but cannot drop rows or relax the10^15
+pair ceiling. Memory formulas or successful small algebra tests are never
+substitutes for whole-request physical, export, resource or admission evidence.
