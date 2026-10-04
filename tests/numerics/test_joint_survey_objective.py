@@ -12,7 +12,7 @@ import torch
 
 import joint_survey_plan as planner
 import joint_survey_objective as objective
-from test_joint_survey_plan import request,Hook
+from test_joint_survey_plan import request,Hook,arrays
 from test_joint_survey_oracles import explicit_faces,independent_bounds,models,torch_function
 
 
@@ -28,8 +28,13 @@ def kernels(req):
     return Gg,Gm
 
 
-def body(covariance=False):
+def body(covariance=False,receivers=6):
     req=request(); req['mesh']['active'][:]=False; req['mesh']['active'][[0,1,4,6,9,11]]=True
+    if receivers==5:
+        for modality in ('gravity','magnetic'):
+            for key in ('receivers_m','mask','groups','partition'):
+                req[modality][key]=req[modality][key][:5].copy()
+            req[modality]['missing_reasons']=req[modality]['missing_reasons'][:5]
     for prop in ('density','susceptibility'):
         for key in ('lower','upper','start','reference'):
             req['prior'][prop][key]=req['prior'][prop][key][req['mesh']['active']]
@@ -101,20 +106,63 @@ def independent_function(value):
 
 
 @pytest.mark.parametrize('covariance',[False,True])
-def test_objective_chain(covariance):
-    value=body(covariance); result=objective.evaluate_joint_objective(value)
+@pytest.mark.parametrize('receivers',[5,6])
+def test_objective_chain(covariance,receivers):
+    value=body(covariance,receivers); result=objective.evaluate_joint_objective(value)
     f,q,scale,direction=independent_function(value); qt=torch.tensor(q,dtype=torch.float64,requires_grad=True)
     expected=f(qt);gradient=torch.autograd.grad(expected,qt)[0].detach().numpy()
     hessian=torch.autograd.functional.hessian(f,qt).detach().numpy()
     np.testing.assert_allclose(result['objective'],expected.item(),atol=1e-10,rtol=1e-9)
     np.testing.assert_allclose(result['gradient_physical']*scale,gradient,atol=1e-10,rtol=1e-9)
     np.testing.assert_allclose(result['exact_hessian_vector_physical']*scale,hessian@direction,atol=1e-10,rtol=1e-9)
+    # Independent full search-Hv: replace ONLY the exact quartic contribution
+    # with its PSD Gram approximation, retaining real Choclo data and own R/W.
+    req=value['survey_request'];G,A,volumes,_=explicit_faces(req);n=len(volumes)
+    B=np.sqrt(volumes)[:,None]*A;a=G@q[:n];b=G@q[n:]
+    block11=B.T@(B@(b*b));block12=-B.T@(B@(a*b));block22=B.T@(B@(a*a))
+    u=G@direction[:n];w=G@direction[n:]
+    approx_cross=2*req['prior']['coupling_length_m']**4/volumes.sum()*np.r_[
+        G.T@(block11*u+block12*w),G.T@(block12*u+block22*w)]
+    exact_cross=torch.autograd.functional.hessian(torch_function(req),qt).detach().numpy()@direction
+    expected_approx=hessian@direction+value['weights']['coupling']*(approx_cross-exact_cross)
+    np.testing.assert_allclose(result['approx_hessian_vector_physical']*scale,expected_approx,atol=1e-10,rtol=1e-9)
+    assert direction@expected_approx>=-1e-10*max(1.,np.linalg.norm(expected_approx))
     slope=float(gradient@direction)
     for step in (1e-4,1e-5,1e-6):
         fd=(f(torch.tensor(q+step*direction)).item()-f(torch.tensor(q-step*direction)).item())/(2*step)
         assert abs(fd-slope)/max(1.,abs(slope))<=2e-6
     assert not result['diagnostics']['inverse_completed']
     assert not result['diagnostics']['sealed_consumed']
+
+
+@pytest.mark.parametrize('bad',['rows2049','covariance_shape','descriptor_bytes','empty_container_citation'])
+def test_objective_preflight_before_scans_copies_hash_or_engines(bad,monkeypatch):
+    value=body()
+    if bad=='rows2049': value['development']['gravity']['rows']=np.zeros(2049,np.int64)
+    elif bad=='covariance_shape': value['development']['magnetic']['noise_values']=np.zeros((5,5))
+    elif bad=='descriptor_bytes':
+        n=70
+        value['survey_request']['gravity'].update(receivers_m=np.zeros((n,3)),mask=np.ones(n,bool),
+            missing_reasons=('a'*4096,)*n,groups=np.arange(n,dtype=np.int64),partition=np.zeros(n,np.int64))
+    else: value['survey_request']['gravity']['source']['citation']=(((),)*32768,)*5
+    for key in ('_finite','_snapshot','_digest'):
+        monkeypatch.setattr(planner,key,lambda *a:pytest.fail('value work before complete preflight'))
+    monkeypatch.setattr(planner.discretize,'TensorMesh',lambda *a,**k:pytest.fail('mesh before preflight'))
+    monkeypatch.setattr(objective.gravity_forward,'forward_gravity',lambda *a:pytest.fail('physics before preflight'))
+    with pytest.raises((TypeError,ValueError)): objective.evaluate_joint_objective(value)
+
+
+def test_objective_result_ownership_and_inputs_unchanged():
+    value=body(True);before=planner._digest(value)
+    result=objective.evaluate_joint_objective(value)
+    assert planner._digest(value)==before
+    for a in arrays(result):
+        assert a.flags.owndata and a.flags.c_contiguous and not a.flags.writeable
+        assert all(not np.shares_memory(a,b) for b in arrays(value))
+    terms=result['terms'];weights=value['weights']
+    assert result['objective']==(terms['data_gravity']+terms['data_magnetic']
+        +weights['beta_gravity']*terms['regularization_gravity']
+        +weights['beta_magnetic']*terms['regularization_magnetic']+weights['coupling']*terms['coupling'])
 
 
 @pytest.mark.parametrize('bad',['rows_dtype','rows_duplicate','rows_order','sealed_rows','observed_shape',

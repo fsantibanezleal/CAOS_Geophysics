@@ -80,6 +80,14 @@ Compare full weighted objective and normalized-coordinate gradient/exact Hv
 at atol1e-10,rtol1e-9 and all three directional steps from validation.md.
 This is a mathematical derivative control, NOT inverse recovery.
 
+The earlier validation protocol's five-receiver control is additionally exercised
+in both noise modes, not replaced by the six-receiver control. The training and
+validation counts stay two each; the fifth receiver is the single sealed geometry
+row whose observations are absent. Independently compose the full PSD search-Hv
+from the data/quadratic-model Hessian and explicit Gram coupling approximation;
+do not compare that approximation to an exact quartic Hessian. Check that every
+returned array is owned/C-contiguous/read-only and that inputs remain unchanged.
+
 Negative tests: row duplicates/order/sealed IDs, nonnative arrays, metadata caps
 before scans/copies/hash/engine; negative SD, asymmetric/semidefinite covariance,
 false absent-dependence declaration; stale plan/value/noise hashes; model/weight

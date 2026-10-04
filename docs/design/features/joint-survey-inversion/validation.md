@@ -120,6 +120,49 @@ Geoana centre-based physics defect was inferred from that injected negative.
 JS01..JS05 and structural JS07 have foundation coverage. JS06 has independent
 prism controls plus unchanged accepted forward quadrature tests; full synthetic
 inverse JS09..JS12, actual full-pipeline resources JS13, serialized export/CLI
-JS14..JS16 and completed weighted objective JS08 remain pending, not PASS.
+JS14..JS16 and completed weighted objective JS08 remained pending at this
+foundation epoch, not PASS.
 The probe's measured working set is not a full-cap solve benchmark. No GPU,
 host/API/browser, field eligibility or full R-008 release acceptance is asserted.
+
+## Executed development-only objective, separate source epoch
+
+At source ef9f099145cecb9b71eb76c8eb2ad7360497e60f the actual 370 focused
+controls passed without skips:114 new planner/structure/objective controls and
+256 unchanged accepted forward controls. The broader explicitly available set
+passed377 with12 skips for absent unrelated field fixtures/pyGIMLi; it does not
+replace the earlier failed full-directory collection or imply full-suite success.
+The objective is a derivative evaluation, not a candidate fit, selection or
+completed inverse. Sealed observations never belong to its request grammar.
+
+The signed/nonuniform six-active/six-receiver Choclo control, with independent
+physical pairwise regularizer and triangular whitening, measured maxima across
+diagonal and full covariance:objective disagreement1.063e-13, scaled physical
+gradient2.566e-13, exact Hv6.231e-13, all three directional steps4.835e-11.
+Rehashed validation observation mutations leave F/g/both Hv arrays exactly
+unchanged; a training mutation changes the actual objective in both noise modes.
+These producer-authored oracle fixtures are not independent reviewer executions,
+inverse recovery, a full-cap resource measurement or field evidence.
+
+Objective quantitative receipt SHA256:
+ab180af7029cdd2007d429892d3d5691188dd194f7e022fdc91cb840803a8843.
+Frozen focused JUnit SHA256:
+8c0ec6df837c259403a9e7f5d43e64d33681278cba57545376a8fce5712264f7.
+Frozen available-regression JUnit SHA256:
+52cb94604a4783b9ea2f6476ba0070add016fbb7df18627f3c4c9e4ff96f1789.
+The pre-module objective red was a missing-module collection error, not an
+assertion-level red. All earlier receipts remain separate and unchanged.
+
+Source-locator clarification:the initial six structural target pins included
+RegularizationMesh's public re-export wrapper (class __module__=simpeg.regularization),
+SHA942ac3fffded92f48c7a5294575082713ebde716918d0e8fbe117c084607ff8f.
+That wrapper is not the defining mesh implementation. The objective source test
+additionally locates the actual RegularizationMesh.cell_gradient property body,
+SHA5283b4f854906aeb05c216ff1c83174c99a7c53fe6a3ce8227b8ea483e785f44.
+Seven distinct trusted loaded structural source files are pinned in this later
+epoch; no earlier receipt is relabelled as having audited that extra file.
+
+JS08 now has this scoped objective coverage. Coupled optimization, two genuinely
+optimized baselines, sealed selection,24 refined-source cases, complete measured
+resources and serialized import/export/CLI gates JS09..JS16 are still pending.
+Neither source agreement nor tiny derivative precision closes those gates.

@@ -12,7 +12,7 @@ verdict. Initial filenames are prospective, not evidence of execution.
 | JS05 | Distinct source records and immutable byte-bound snapshots, no fictitious verification | test_joint_survey_plan.py::test_source_and_snapshot |
 | JS06 | Real public gravity/magnetic operators vs independent Choclo/volume/sign/unit columns | test_joint_survey_oracles.py::test_prism_oracles |
 | JS07 | Actual face-averaged coupling/gradient/exact Hv vs independent assembly/autograd/FD; PSD approximation tested separately | test_joint_survey_oracles.py::test_cross_gradient_derivatives |
-| JS08 | Independent diagonal/SPD marginal whitening, physical scale chain and pairwise regularizer | test_joint_survey_oracles.py::test_objective_chain |
+| JS08 | Independent diagonal/SPD marginal whitening, physical scale chain and pairwise regularizer | test_joint_survey_objective.py::test_objective_chain |
 | JS09 | Two independently optimized baselines, same-input bounded BVLS tiny oracle | test_joint_survey_inverse.py::test_two_baselines |
 | JS10 | Bound-start/release/ordinary-CG/line-search/KKT/finite controls and truthful failure traces | test_joint_survey_inverse.py::test_optimizer_controls |
 | JS11 | Candidate/beta/start freeze and validation selection; no sealed/truth read or refit | test_joint_survey_inverse.py::test_sealed_selection |
