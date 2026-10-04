@@ -205,6 +205,39 @@ def resource_controller():
     return module
 
 
+@pytest.mark.parametrize("role,declared", (("original.csv",16777217),("sidecar.json",2097153),
+    ("request.json",2097153),("environment.json",2097153),("result.json",8388609),("replay.txt",8193),
+    ("combined",2097154),("wrong-kind",0),("duplicate",0)))
+def test_export_declared_role_bounds_before_any_member_read(tmp_path, monkeypatch, role, declared):
+    c, _ = modules()
+    p = processor()
+    kinds = dict(zip(("original.csv","sidecar.json","request.json","environment.json","replay.txt","result.json"),
+        ("original","metadata","request","receipt","replay_recipe","result_array")))
+    receipt = dict(schema="magnetic-local-custody/1",input_sha256="0"*64,request_sha256="0"*64,
+        environment_sha256="0"*64,result_sha256="0"*64,publication="local_only",replay_verdict="eligible",
+        members=[dict(relative_path=name,kind=kind,included=True,permission="allowed",reason=None,
+            sha256="0"*64,bytes=declared if name==role else 1) for name,kind in kinds.items()])
+    if role == "combined":
+        for member in receipt["members"]:
+            if member["relative_path"] in ("sidecar.json","request.json"):
+                member["bytes"] = declared//2
+    elif role == "wrong-kind":
+        receipt["members"][-1]["kind"] = "original"
+    elif role == "duplicate":
+        receipt["members"].append(deepcopy(receipt["members"][0]))
+    reads = []
+    def bounded(path, limit):
+        reads.append(Path(path).name)
+        if Path(path).name == "custody.json":
+            return c.canonical_bytes(receipt)
+        pytest.fail("All declared member limits must be checked before the first body allocation")
+    monkeypatch.setattr(c,"read_bounded",bounded)
+    with pytest.raises(c.MagneticContractError) as caught:
+        p.verify_bundle(tmp_path)
+    assert caught.value.error["code"] == ("custody_mismatch" if role in ("wrong-kind","duplicate") else "resource_refused")
+    assert reads == ["custody.json"]
+
+
 @pytest.mark.parametrize("failed", ("accounting", "limits", "memory", "exit", "still_active"))
 def test_terminal_resource_counters_fail_closed(failed):
     from types import SimpleNamespace

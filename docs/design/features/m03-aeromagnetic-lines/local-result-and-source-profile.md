@@ -44,6 +44,13 @@ SHA-256 and members use the closed Member table. Neither Result nor receipt
 contains its own file hash. The Result artifact list excludes result.json and
 custody.json. Fixed members are original.csv,sidecar.json,request.json,
 environment.json,replay.txt,result.json; custody.json is the external receipt.
+Before the first member-body allocation, replay checks the entire declared
+allowlist, exact physical roles and byte budgets: original CSV16MiB;
+sidecar/request combined2MiB; environment2MiB; Result8MiB; recipe8192bytes.
+Custody itself is read with a2MiB MAX+1 cap; declared sizes never authorize
+six generic64MiB allocations. Every actual member read retains MAX+1/size/hash
+checks. No old source receipt is promoted to a new source revision by this
+resource-only tightening: historical Results retain their exact source pins.
 Unknown members, links/junctions, traversal, executable targets, modified bytes
 and existing destinations refuse before replay computation. MAX+1 actual reads
 apply; no ZIP/pickle, executable replay member, network or auto-install exists.

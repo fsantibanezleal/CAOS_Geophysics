@@ -2195,7 +2195,29 @@ def verify_bundle(bundle, *, local_profile=None, local_job_handle=None):
     for key in ("input_sha256","request_sha256","environment_sha256","result_sha256"):
         _type(receipt[key],"Hash","bundle."+key,1)
     _result_type(receipt["members"],L("Member",1,64),"bundle.members",1)
-    allowed = {"original.csv","sidecar.json","request.json","environment.json","replay.txt","result.json"}
+    roles = {"original.csv":("original",16777216),"sidecar.json":("metadata",2097152),
+        "request.json":("request",2097152),"environment.json":("receipt",2097152),
+        "replay.txt":("replay_recipe",8192),"result.json":("result_array",8388608)}
+    allowed = set(roles)
+    declared_total, declared_metadata, planned_names = 0,0,set()
+    # Inspect ALL declared role/combined bounds before allocating any member.
+    for m in receipt["members"]:
+        name = m["relative_path"]
+        if name not in roles or name in planned_names or m["kind"] != roles[name][0]:
+            fail("bundle.member.role","custody_mismatch","export")
+        planned_names.add(name)
+        if m["included"]:
+            if m["permission"] != "allowed" or m["sha256"] is None or m["bytes"] is None:
+                fail("bundle.member.permission")
+            if m["bytes"] > roles[name][1]:
+                fail("bundle.member.bytes","resource_refused","export")
+            declared_total += m["bytes"]
+            if name in ("sidecar.json","request.json"):
+                declared_metadata += m["bytes"]
+        elif m["sha256"] is not None or m["bytes"] is not None:
+            fail("bundle.denied_member","custody_mismatch","export")
+    if planned_names != allowed or declared_total > 67108864 or declared_metadata > 2097152:
+        fail("bundle.declared_budget","resource_refused","export")
     names,body,total = set(),{},0
     for m in receipt["members"]:
         name = m["relative_path"]
@@ -2208,7 +2230,7 @@ def verify_bundle(bundle, *, local_profile=None, local_job_handle=None):
         if m["included"]:
             if m["permission"]!="allowed" or m["sha256"] is None or m["bytes"] is None:
                 fail("bundle.member.permission")
-            data = contract.read_bounded(path,min(m["bytes"],67108864))
+            data = contract.read_bounded(path,m["bytes"])
             if len(data)!=m["bytes"] or sha256(data).hexdigest()!=m["sha256"]:
                 fail("bundle.member.hash","custody_mismatch","export")
             body[name] = data
