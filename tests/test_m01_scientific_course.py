@@ -225,7 +225,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { CitationsProvider, useLangStore, useThemeStore } from "@fasl-work/caos-app-shell";
 const started = performance.now(), cpu = process.cpuUsage();
 const server = await createServer({configFile:false,root:process.cwd(),plugins:[react()],optimizeDeps:{noDiscovery:true,include:[]},
-  server:{middlewareMode:true},appType:"custom"});
+  server:{middlewareMode:true,hmr:false,watch:null},appType:"custom"});
 let checks=0, renders=0, negatives=0;
 function near(a,b,tolerance=1e-10) { assert.ok(Math.abs(a-b)<=tolerance); checks++; }
 try {
