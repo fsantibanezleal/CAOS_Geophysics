@@ -24,7 +24,8 @@ DECLARED original-request identity: that raw request is not present for byte
 reverification. A matching manifest is neither signature nor source authenticity.
 
 Closed request: schema,id,source,frame,units,ray_ids,rays_m,times_s,sigma_s,lambda.
-Frame local-x-z-down and units m/s/m/s are not inferred/converted.8..2048 unique
+Frame local-x-z-down and units distance=m,time=s,velocity=m/s are not inferred or
+converted.8..2048 unique
 ASCII IDs; finite endpoint4-tuples in[0,800]m, length>=0.001m; times(0,100]s,
 sigma(0,10]s,lambda[1e-6,1e6]. Citation nonempty<=2048characters; approved rights/
 scope enums. Axes exactly25+50i m,16cells; order depth,distance. Coverage16x16
