@@ -1,6 +1,6 @@
 # Existing server-result instruments
 
-Status: planned. Parent: product SDD R-011/R-013/R-014/R-015 and the processing
+Parent: product SDD R-011/R-013/R-014/R-015 and the processing
 and MT scientific workbench contracts. This unit extends inspection of existing
 server results, not the set of scientific methods or API schemas.
 
@@ -32,7 +32,9 @@ SRV-05 WHEN recorded MT solver evaluations are inspected, THE instrument SHALL
 link the scrubber, objective cursor, literal state identity and recorded layer
 profile. Play SHALL advance existing frames only, stop at the final frame and
 pause on selection/view change, reduced motion, hidden document or unmount.
-Gate: `frontend/e2e/scientific-result-views.spec.ts` recorded-state controls.
+Gate: `frontend/e2e/scientific-result-views.spec.ts` recorded-state controls and
+`frontend/src/test/scientific-result-views.test.ts` playback admission states.
+The latter is a source/unit visibility control, not native window execution.
 
 SRV-06 WHEN a recorded state is exported, THE JSON SHALL contain its existing
 index/kind/step/model/objective and imposed geometry with source identities,

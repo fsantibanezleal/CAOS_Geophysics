@@ -90,29 +90,19 @@ selection and screenshots are measured. A browser pass is not a numerical
 revalidation of the methods, host admission, scientific renderer-wide acceptance
 or deployment authority. Existing negative/review receipts remain unchanged.
 
-The mandatory real document-hidden check is separate from the linked-value and
-render matrix. Existing Playwright enables focus emulation; attempted headless,
-headed tab activation and headed minimization all kept document.hidden=false.
-Retain those actual failed attempts. Do not override the hidden property, skip
-the assertion, or change production timers.
-
-The bounded test uses the existing trusted Chromium executable READ ONLY, with
-a new ignored private browser profile and loopback debugging port. Raw official
-CDP, without Playwright page attachment/focus emulation, opens the same compiled
-app against the same actual local API. It authenticates the already provisioned
-random QA account through actual local HTTP login; no cookie-import shortcut.
-Credentials/session cookies stay in the private loopback in-memory exchange,
-never in arguments/receipts/public sources. Only native window minimization and
-restoration are performed, with cleanup of this owned process tree in finally.
-Require document.hidden=true, literal pause state and no frame advancement; keep
-all failures. No new package, binary staging, backend/source change or scientific
-value interception. This browser-specific harness does not establish a host gate.
-QA storage/receipts may use a caller-created exact private C:/E: scratch parent
-when the source drive is constrained. Require a new UUID child of that declared
-parent; no deletion, source copying, installed changes or canonical writes.
-The installed Chromium protocol defines getWindowForTarget/setWindowBounds and
-minimized/normal states; [official protocol](https://chromedevtools.github.io/devtools-protocol/tot/Browser/)
-is the supporting API reference, not scientific evidence.
+Ordinary repository-local Playwright against the owned local server is the
+browser gate. Native window-controller availability is not a product prerequisite.
+Exploratory native-visibility attempts and their failures remain separate historical
+QA evidence; their removal from the ordinary matrix does not establish a native
+visibility pass. Do not override document properties or intercept scientific data.
+The source lifecycle still observes native visibility changes: hidden pauses,
+visible restoration updates control eligibility but never restarts playback.
+A pure admission predicate tests reduced-motion, visibility and frame-end states;
+these unit controls are not an operating-system visibility execution claim.
+QA storage/receipts use a caller-created private scratch parent when the source
+drive is constrained. Require a new UUID child of that declared parent; no deletion,
+installed changes or canonical writes. The ordinary matrix must run all five
+data/result/export/render groups without exclusions.
 
 Implementation grounding: [React effect cleanup](https://react.dev/reference/react/useEffect),
 [media-query change subscription](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia),
