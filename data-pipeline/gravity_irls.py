@@ -30,7 +30,7 @@ _UNITS=('g/cc','g/cc/m','g/cc/m','g/cc/m')
 # A trusted driver still must independently review full native/source closure.
 _SOURCES={str(Path(path).name):hashlib.sha256(Path(path).read_bytes()).hexdigest()
     for path in (__file__,l2.__file__,precision.__file__,optimizer.__file__,survey.__file__,
-                 l2.forward.__file__,inspect.getfile(regularization.WeightedLeastSquares),
+                 l2.forward.__file__,l2.metric.__file__,inspect.getfile(regularization.WeightedLeastSquares),
                  inspect.getfile(regularization.Sparse),inspect.getfile(l2.data_misfit.L2DataMisfit),
                  inspect.getfile(optimizer.optimization.ProjectedGNCG))}
 _INVENTORY=survey._digest(_SOURCES)

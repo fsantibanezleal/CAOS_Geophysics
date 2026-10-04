@@ -295,15 +295,16 @@ def test_amended_optimizer_epoch_rejects_old_before_work(monkeypatch, old):
 
 
 def test_binding_epoch_identity_and_nominal_compact_admission():
-    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-4'
-    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-certified-delta-1'
+    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-5'
+    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-joseph-ic0-certified-delta-1'
     req = calibration_request()
     admitted = l2._admit_calibration(req)
-    assert admitted['runtime_epoch'] == 'm02-survey-l2-cpu-4'
+    assert admitted['runtime_epoch'] == 'm02-survey-l2-cpu-5'
     assert not admitted['observations']['gz_up_mgal'].flags.writeable
 
 
 @pytest.mark.parametrize('epoch,policy', [
+    ('m02-survey-l2-cpu-4', 'projected-gncg-binding-release-certified-delta-1'),
     ('m02-survey-l2-cpu-1', 'projected-gncg-recorded-1'),
     ('m02-survey-l2-cpu-2', 'projected-gncg-degenerate-release-1'),
     ('m02-survey-l2-cpu-2', 'projected-gncg-binding-release-1'),
