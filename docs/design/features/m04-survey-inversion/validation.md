@@ -21,7 +21,8 @@ Choclo total norm differentiated with centered steps chi=1e-6,5e-7,2.5e-7,
 using only interior production bounds. Require consecutive derivative estimates
 converge at rtol2e-6/atol1e-6 nT/SI, then analytic candidate agrees at the same
 fixed tolerance. At chi=0 use a permitted one-sided three-point derivative and
-confirm its limit is linear projection. Check adjoint
+confirm its limit uses native B0/norm(B0); do not assume a rounded B0 norm equals
+the separately retained F or reset its tiny baseline. Check adjoint
 u dot (J v)=v dot (J^T u) with relative error<=1e-12 or absolute1e-10 nT/SI;
 freeze vectors independently of the candidate. Zero-norm/guard-domain negatives
 must fail without fallback. These proposed derivative tolerances do not weaken
@@ -92,7 +93,10 @@ For A-E use deterministic authored conditional Gaussian SD.5nT every component,
 noise generated NumPy PCG64 seed20261004, raw generator/seed/source version
 recorded; vectors and scalar modes are separate measurements with respective
 noise, not identical likelihoods. F null uses zero observations with SD.5,
-an explicitly noiseless realization of a declared conditional test covariance.
+an explicitly zero-observation control with a declared conditional test covariance.
+In the exact scalar lane retain the separate native-vector clean baseline
+norm(B0)-F, which may be nonzero; this zero-observation test does not assert
+exact identity between rounded-vector norm and F and does not change P04.
 Physical truth fields from Choclo, scalar exact values from Decimal80 direct
 norm, no SimPEG inverse-crime generator. Timestamps use unavailable_declared
 rather than fake collection dates. No generated anomaly amplitude determines SD.

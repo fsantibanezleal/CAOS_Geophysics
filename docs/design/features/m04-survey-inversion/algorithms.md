@@ -55,18 +55,49 @@ Obtain actual G shape(3M,A), receiver-major ENU, nT per unit SI chi.
 The public vendor getJ at chi with IdentityMap must agree with G.
 Use q=chi/.01 and q_ref=reference_si/.01. J_b,q=.01*G.
 
-Let b=reshape(G chi,(M,3)), t=B0+b, T=norm(t).
+Bind the actual retained binary64 B0 component vector, scalar F and component
+kernel independently. Trigonometric construction does NOT imply the exact
+native-operand identity dot(B0,B0)=F^2. Never normalize B0, replace F with its
+rounded norm, or drop the baseline defect to manufacture that identity.
+Let b=reshape(G chi,(M,3)), t=B0+b, T=norm(t),
+delta0=dot(B0,B0)-F^2 evaluated with a cancellation-safe certified chain.
 Secondary ENU: H=b in original receiver/component order.
 Linear TMI: H=f dot b and J_q=.01*f dot G.
-Exact scalar anomaly: H=(2 B0 dot b+b dot b)/(T+F);
+Exact scalar anomaly: H=T-F=(delta0+2 B0 dot b+b dot b)/(T+F);
 J_q=.01*(t/T) dot G for each receiver.
+For the real algebra on frozen native operands these expressions are identical;
+each implemented binary64 expression has its own arithmetic enclosure. Bind
+whether the adapter stores rounded A_b=.01*G or retains multiplication as a
+separate operation, and certify that SAME expression, not hidden higher-precision
+operands. Point-evaluation agreement is not a rounding certificate.
 Reject if T/F<=1e-8 (undefined/ill-conditioned direction) or any derived
 value becomes nonfinite, rather than choosing f or jittering t.
 This guard is a declared numerical domain restriction, not geological knowledge.
-The zero-secondary model has T=F and derivative f, so zero starts are legal.
+At zero secondary field, T0=norm(B0) need not equal F, H0=T0-F may be tiny
+nonzero, and the direction is B0/T0, not an asserted exactly unit rounded f.
+Zero starts remain legal when the declared domain guard passes; the ideal
+exact-vector statements H0=0 and direction=f do not override native operands.
+Do not classify the retained intercept as measurement noise, subtract a mean,
+reset H0, or weaken any frozen tiny-relative gate. The original P04 forward
+expression/source remains unchanged; this continuation's native norm-minus-F
+definition is explicit and cannot silently relabel that older expression.
 The forward-only P04 magnitude domain is not narrowed by this inverse-only guard.
 No exact lane using vendor secondary-amplitude mode, no constant linear
 projection Jacobian inside a nonlinear fit, no substitution of |b|.
+
+The independent portable algebraic oracle uses Decimal80, Decimal.from_float
+on EACH retained operand before addition, and direct positive-radicand sqrt-F.
+It is separate from the physical Choclo component oracle and from an interval
+certificate. Decimal.sqrt rounds HALF_EVEN regardless of context rounding.
+For a finite checked0<s_lo<=s_hi interval that already encloses all affine,
+square and sum arithmetic, enlarge sqrt(s_lo) with next_minus(context) and
+sqrt(s_hi) with next_plus(context); check finite positive ordering/exponent
+flags afterwards. Directed subtraction/division must enclose the full delta0
+numerator and positive denominator, including all endpoint quotients when
+the numerator changes sign. A rounded nominal domain test or a FLOOR context
+alone cannot certify either norm, domain guard or nonlinear objective.
+The nonlinear lane remains unsupported until its actual native-expression
+norm/rational-objective certificate and accepted nonlinear core exist.
 
 ## 3. Errors, residuals, sensitivity and units
 
