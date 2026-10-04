@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import stat
 import subprocess
 import sys
@@ -142,6 +143,9 @@ def copy_bundle(source: Path, build: Path, output: Path, paths: list[str], revis
         raise ValueError("build has no index.html")
     if len(runtime) + len(web) > MAX_FILES or sum(i["bytes"] for i in [*runtime.values(), *web.values()]) > MAX_TOTAL:
         raise ValueError("combined release bound exceeded")
+    required_bytes = sum(i["bytes"] for i in [*runtime.values(), *web.values()]) + MAX_MANIFEST
+    if shutil.disk_usage(output.parent).free < required_bytes:
+        raise ValueError("qualification destination capacity insufficient")
     output.mkdir()  # Parent must already exist; never overwrite or recursively create input roots.
     for prefix, root, members in (("source", source, runtime), ("web", build, web)):
         for name, receipt in members.items():
@@ -225,7 +229,38 @@ def retained_inventory(root: Path, current: str, rollbacks: list[str]) -> list[d
     if len(names) != 3 or len(set(names)) != 3 or any(not ID.fullmatch(n) for n in names):
         raise ValueError("current plus two distinct explicit rollback IDs required")
     return [{"id": name, "role": "current" if i == 0 else "rollback",
-             "bytes": sum(m["bytes"] for m in inventory(root / name).values())} for i, name in enumerate(names)]
+             "bytes": release_bytes(root / name)} for i, name in enumerate(names)]
+
+
+def release_bytes(root: Path) -> int:
+    """Logical regular-file bytes, never follow links; free space is measured separately."""
+    no_links(root)
+    if not root.is_dir():
+        raise ValueError("release directory absent")
+    allowed_env_links = {".venv/bin/python", ".venv/bin/python3", ".venv/bin/python3.12", ".venv/lib64"}
+    pending, total, entries = [root], 0, 0
+    while pending:
+        with os.scandir(pending.pop()) as scan:
+            for item in scan:
+                entries += 1
+                if entries > 262144:
+                    raise ValueError("release measurement entry bound exceeded")
+                path = Path(item.path)
+                name = safe_relative(path.relative_to(root).as_posix())
+                if item.is_symlink():
+                    if name not in allowed_env_links:
+                        raise ValueError("unexpected release measurement link")
+                    continue  # Not followed or hashed; this is not runtime/dependency acceptance.
+                no_links(path)
+                if item.is_dir(follow_symlinks=False):
+                    pending.append(path)
+                elif item.is_file(follow_symlinks=False):
+                    total += item.stat(follow_symlinks=False).st_size
+                else:
+                    raise ValueError("unexpected release measurement entry")
+                if total > 32 * 1024**3:
+                    raise ValueError("release measurement byte bound exceeded")
+    return total
 
 
 def mem_available(text: str) -> int:

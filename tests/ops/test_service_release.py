@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -179,3 +180,13 @@ def test_empty_directory_bound(tmp_path, monkeypatch):
 def test_dotdot_absolute_path(tmp_path):
     with pytest.raises(ValueError):
         module().no_links(tmp_path / "folder/../other")
+
+
+def test_insufficient_local_destination_before_writes(tmp_path, monkeypatch):
+    service = module()
+    source, build = fixture(tmp_path)
+    monkeypatch.setattr(service.shutil, "disk_usage", lambda p: SimpleNamespace(free=0))
+    out = tmp_path / "candidate"
+    with pytest.raises(ValueError, match="destination capacity"):
+        service.copy_bundle(source, build, out, ["app/main.py"], "a" * 40)
+    assert not out.exists()
