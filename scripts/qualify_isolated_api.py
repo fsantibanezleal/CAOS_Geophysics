@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+import json
 import os
 from pathlib import Path
 import re
@@ -15,7 +16,8 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bootstrap_service_state import (  # noqa: E402
-    CONFIG, STATE, bounded_private_json, dedicated_identity, exclusive_private_file, operator_directory, verify_candidate,
+    CONFIG, STATE, BootstrapRunner, bounded_private_json, credentials, dedicated_identity,
+    exclusive_private_file, operator_directory, verify_candidate,
 )
 from prepare_service_release import file_digest, no_links  # noqa: E402
 from stage_service_runtime import EVIDENCE, RELEASES, exclusive_json  # noqa: E402
@@ -96,7 +98,7 @@ def read_properties(raw: str) -> dict[str, str]:
 
 
 def run(release: Path, receipt: Path, bundle_sha: str, runtime_sha: str, evidence: Path,
-        bootstrap_receipt: Path, bootstrap_sha: str) -> dict:
+        bootstrap_receipt: Path, bootstrap_sha: str, owner_credentials: Path | None = None) -> dict:
     if sys.platform != 'linux' or os.geteuid() != 0:
         raise ValueError('Linux operator required')
     if release.parent != RELEASES or evidence.parent != EVIDENCE:
@@ -116,10 +118,12 @@ def run(release: Path, receipt: Path, bundle_sha: str, runtime_sha: str, evidenc
         if info.st_uid != 0 or not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:
             raise ValueError('unexpected deployment lock')
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootstrap_receipt, bootstrap_sha)
+        return _locked(release, receipt, bundle_sha, runtime_sha, evidence, current,
+                       bootstrap_receipt, bootstrap_sha, owner_credentials)
 
 
-def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootstrap_receipt, bootstrap_sha):
+def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootstrap_receipt, bootstrap_sha,
+            owner_credentials):
     commands = Commands()
     initial_current = os.readlink(current)
     manifest = verify_candidate(release, receipt, bundle_sha, runtime_sha)
@@ -166,6 +170,17 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
               'activated': False, 'host_admitted': False, 'full_release_accepted': False}
     started = False
     try:
+        owner, other = None, None
+        if owner_credentials is not None:
+            owner = json.loads(credentials(bounded_private_json(owner_credentials)))
+            other = {'username': 'qualification.' + name.rsplit('-', 1)[-1] + '@geophysics.invalid',
+                     'password': secrets.token_urlsafe(32)}
+            exclusive_private_file(evidence / 'qualification-account.json', credentials(other))
+            runner = BootstrapRunner(*identity, STATE)
+            runner.run('qualification-account', [str(release / '.venv/bin/python'), '-I', '-B',
+                       str(release / 'source/scripts/bootstrap_service_state.py'), '--internal-account'],
+                       release / 'source', account=credentials(other))
+            record['account_provisioning'] = runner.steps
         for path, text in zip(paths, (api, sock), strict=True):
             exclusive_private_file(path, text.encode('utf-8'))
             os.chmod(path, 0o644)
@@ -198,6 +213,10 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
             raise ValueError('actual socket permissions differ')
         record['socket'] = {'mode': '0660', 'uid': info.st_uid, 'gid': info.st_gid}
         record['transport_passed'] = True
+        if owner is not None:
+            from qualify_api_workflows import workflows
+            record['workflow_qualifier_sha256'] = file_digest(Path(__file__).with_name('qualify_api_workflows.py'))['sha256']
+            workflows(str(socket_path), owner, other, commands.deadline, record)
     except Exception:
         record['failure'] = 'isolated_candidate_control_failed'
         raise
@@ -227,16 +246,21 @@ def main() -> int:
     parser.add_argument('--runtime-sha256', required=True)
     parser.add_argument('--bootstrap-receipt', type=Path, required=True)
     parser.add_argument('--bootstrap-sha256', required=True)
+    parser.add_argument('--authenticated', action='store_true')
+    parser.add_argument('--credentials', type=Path)
     parser.add_argument('--evidence', type=Path, required=True)
     args = parser.parse_args()
     try:
+        if args.authenticated != (args.credentials is not None):
+            raise ValueError('authenticated qualification requires an explicit private owner file')
         result = run(args.release, args.runtime_receipt, args.bundle_sha256, args.runtime_sha256, args.evidence,
-                     args.bootstrap_receipt, args.bootstrap_sha256)
+                     args.bootstrap_receipt, args.bootstrap_sha256, args.credentials)
     except Exception:
         print('Isolated API qualification failed; retained evidence, no activation.', file=sys.stderr)
         return 2
     print('Actual candidate Unix API passed and stopped; scientific/full admission remain false.')
-    return 0 if result['transport_passed'] and result['stopped'] else 2
+    return 0 if (result['transport_passed'] and result['stopped']
+                 and (not args.authenticated or result.get('authenticated_workflows_passed') is True)) else 2
 
 
 if __name__ == '__main__':
