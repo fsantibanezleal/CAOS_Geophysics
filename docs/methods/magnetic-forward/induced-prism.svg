@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 530" role="img" aria-labelledby="title desc">
+  <title id="title">Induced magnetic forward quantities and independent controls</title>
+  <desc id="desc">Strict native-array preflight precedes the actual SimPEG Geoana engine. ENU secondary components branch into linear TMI and its susceptibility Jacobian, and stable exact magnitude. Separate Choclo and volume quadrature verify physics; Decimal verifies tiny scalar algebra only. No inverse, field admission or host acceptance is implied.</desc>
+  <style>
+    svg { --bg:#f8fafc; --box:#ffffff; --fg:#152536; --muted:#465d73; --line:#627a8b; --accent:#126f82; }
+    @media (prefers-color-scheme:dark) { svg { --bg:#101820; --box:#192833; --fg:#eef4f7; --muted:#bdd0dc; --line:#94adbc; --accent:#79d7e3; } }
+    .bg { fill:var(--bg); } .box { fill:var(--box); stroke:var(--line); stroke-width:2; }
+    text { fill:var(--fg); font:18px Arial,sans-serif; } .small { font-size:17px; fill:var(--muted); }
+    .heading { font-size:23px; font-weight:700; } .label { font-weight:700; }
+    .edge { fill:none; stroke:var(--accent); stroke-width:3; marker-end:url(#arrow); }
+  </style>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--accent)"/></marker></defs>
+  <rect class="bg" width="1200" height="530"/>
+  <text class="heading" x="30" y="40">Induced prisms: physical components are not scalar magnitude</text>
+  <rect class="box" x="30" y="70" width="300" height="160" rx="12"/>
+  <text class="label" x="48" y="100">Strict input and preflight</text>
+  <text x="48" y="130">Metre ENU; x-fast active chi</text>
+  <text x="48" y="157">Explicit F, I and D; no defaults</text>
+  <text class="small" x="48" y="184">Counts before scans / copies</text>
+  <text class="small" x="48" y="210">Exterior of closed full mesh</text>
+  <path class="edge" d="M 335 150 L 375 150"/>
+  <rect class="box" x="385" y="70" width="340" height="160" rx="12"/>
+  <text class="label" x="403" y="100">Actual TensorMesh + SimPEG</text>
+  <text x="403" y="130">Geoana; scalar induced model</text>
+  <text x="403" y="157">float64 RAM G; one process</text>
+  <text class="small" x="403" y="184">dpred and G chi identity</text>
+  <text class="small" x="403" y="210">b = (east, north, up) in nT</text>
+  <path class="edge" d="M 730 125 L 780 125"/>
+  <path class="edge" d="M 730 200 L 755 200 L 755 275 L 780 275"/>
+  <rect class="box" x="790" y="70" width="380" height="125" rx="12"/>
+  <text class="label" x="808" y="100">Linear TMI = f dot b [nT]</text>
+  <text x="808" y="130">J = d(linear TMI)/d(chi)</text>
+  <text class="small" x="808" y="160">Physical unit-SI columns [nT/SI]</text>
+  <rect class="box" x="790" y="225" width="380" height="105" rx="12"/>
+  <text class="label" x="808" y="255">Exact magnitude = |B0+b| - F</text>
+  <text class="small" x="808" y="285">Rationalized; tiny nonzero preserved</text>
+  <rect class="box" x="30" y="270" width="695" height="150" rx="12"/>
+  <text class="label" x="48" y="302">Independent physics: no candidate G or helpers</text>
+  <text x="48" y="333">Choclo: explicit six bounds, M in A/m, tesla to nT</text>
+  <text x="48" y="362">Volume dipoles: converged 24/32-point quadrature</text>
+  <text class="small" x="48" y="392">chi=1 Jacobian oracle is NOT a production chi input</text>
+  <rect class="box" x="790" y="360" width="380" height="100" rx="12"/>
+  <text class="label" x="808" y="391">Decimal80 direct norm oracle</text>
+  <text class="small" x="808" y="422">Tiny scalar algebra, not field physics</text>
+  <text x="30" y="465">Owned write-protected snapshots, not tamperproof storage.</text>
+  <text class="small" x="30" y="498">No inverse / remanence detection / field admission / online worker / host acceptance.</text>
+</svg>
