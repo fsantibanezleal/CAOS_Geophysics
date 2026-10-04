@@ -1,12 +1,25 @@
 param(
     [string]$Key = $env:FASL_SSH_KEY,
     [string]$HostName = "89.167.4.175",
-    [string]$Domain = "geophysics.ml.fasl-work.com"
+    [string]$Domain = "geophysics.ml.fasl-work.com",
+    [string]$ValidationPython
 )
 
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\")).Path
 $dist = Join-Path $repo "frontend\dist"
+# The legacy static uploader must never bypass replacement release acceptance.
+# Check before reading a key, creating an archive or contacting SSH.
+if ([string]::IsNullOrWhiteSpace($ValidationPython)) {
+    $ValidationPython = Join-Path $repo ".venv-pipeline\Scripts\python.exe"
+}
+if (-not (Test-Path -LiteralPath $ValidationPython -PathType Leaf)) {
+    throw "Supply the existing trusted validation interpreter with -ValidationPython. No deployment performed."
+}
+& $ValidationPython -B (Join-Path $repo "scripts\check_single_origin.py") $repo --built
+if ($LASTEXITCODE -ne 0) { throw "Single-origin source/build gate failed. No deployment performed." }
+& $ValidationPython -B (Join-Path $repo "scripts\check_sdd_convergence.py") --root $repo --require-release
+if ($LASTEXITCODE -ne 0) { throw "Whole-product release acceptance is incomplete. No deployment performed." }
 if (-not (Test-Path (Join-Path $dist "index.html"))) { throw "Missing frontend/dist/index.html. Run the local build first." }
 if ([string]::IsNullOrWhiteSpace($Key) -or -not (Test-Path $Key)) { throw "Pass -Key or set FASL_SSH_KEY to the SSH key path." }
 

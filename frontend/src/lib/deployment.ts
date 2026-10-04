@@ -1,18 +1,12 @@
-export type DeploymentMode = "legacy" | "single-origin";
+export type DeploymentMode = "single-origin";
 
-/** The target mode is opt-in until the single-origin cutover is approved. */
-export const deploymentMode: DeploymentMode =
-  import.meta.env.MODE === "single-origin" ? "single-origin" : "legacy";
+/** Both development and production builds use the approved root-only VPS origin. */
+export const deploymentMode: DeploymentMode = "single-origin";
 
-export function routerBasename(mode: DeploymentMode, pathname: string): string {
-  if (mode === "single-origin") return "/";
-  // Preserve the two existing static origins while the replacement is built.
-  return pathname === "/CAOS_Geophysics" || pathname.startsWith("/CAOS_Geophysics/")
-    ? "/CAOS_Geophysics"
-    : "/";
+export function routerBasename(_mode: DeploymentMode, _pathname: string): string {
+  return "/";
 }
 
-export function artifactBase(mode: DeploymentMode, pathname: string): string {
-  const basename = routerBasename(mode, pathname);
-  return basename === "/" ? "/" : `${basename}/`;
+export function artifactBase(_mode: DeploymentMode, _pathname: string): string {
+  return "/";
 }

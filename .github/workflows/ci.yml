@@ -56,6 +56,8 @@ jobs:
           python-version: "3.12"
       - name: No template residue (instantiated products must replace the example pipeline)
         run: python scripts/check_template_residue.py
+      - name: Single ML VPS source and build policy (no network or scientific execution)
+        run: python scripts/check_single_origin.py
       - name: No em-dash or emoji in product content (ADR-0067)
         run: python scripts/check_content_standards.py
       - name: Frontend build contract
