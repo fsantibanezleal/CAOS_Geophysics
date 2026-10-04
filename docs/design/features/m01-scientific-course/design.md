@@ -1,6 +1,6 @@
 # M01 scientific course sub-SDD
 
-Date: 2026-10-03. Status: proposed, awaiting FULL MAIN read. Base develop `4db6a1613373d139e4496b6392e605c36adfa978`; task/geophysics-m01-scientific-course-sdd. This milestone adds only two new research files and seven new files in this directory. This design plus [requirements](requirements.md), [curriculum](curriculum.md), [contracts](contracts.md), [scenarios](scenarios.md), [workflows](workflows.md), [tasks](tasks.md) form one seven-document review packet. Read both research files as its scientific basis. Research preceded design in `6ba07cb`.
+This design plus [requirements](requirements.md), [curriculum](curriculum.md), [contracts](contracts.md), [scenarios](scenarios.md), [workflows](workflows.md) and [validation](validation.md) define the course's scientific, display and source-binding contracts. Primary scientific references and derivations are in its six bilingual chapters. Historical approvals, initiative state and runtime receipts are private management records, not product interfaces.
 
 ## 1. Bounded outcome and exclusions
 
@@ -12,7 +12,7 @@ The minimal sequence is (A) this research/SDD review, (B) separately approved au
 
 ## 2. Actual source-to-course seam
 
-The [source record](../../../research/m01-course-sources-2026-10-03.md) pins unchanged modules. `process_survey(dataset, config)` returns exactly dataset/processing/qc. The deterministic processing object has twelve keys: method, input_sha256, output_sha256, config, engines, python, module_sha256, uncertainty_model, uncertainty_mgal, uncertainty_components_mgal, full_method_accepted, warnings. CLI receipt timestamps are a separate layer, not part of that object.
+The committed course-record index and executable verifier pin unchanged modules. `process_survey(dataset, config)` returns exactly dataset/processing/qc. The deterministic processing object has twelve keys: method, input_sha256, output_sha256, config, engines, python, module_sha256, uncertainty_model, uncertainty_mgal, uncertainty_components_mgal, full_method_accepted, warnings. CLI receipt timestamps are a separate layer, not part of that object.
 
 Ordinary `run_station_corrections(request)` has six request keys and four result keys, with a thirteen-key receipt; [workflow contracts](workflows.md) specify them. It is not an API endpoint. Its fixed sibling source hash, resolved imported __file__, actual engine pins and CPython3.12 requirement are not authenticated-origin proof.
 

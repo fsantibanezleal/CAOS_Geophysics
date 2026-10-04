@@ -1,6 +1,6 @@
 # Source-bound questions, controls and negative cases
 
-Status: proposed, all new controls/records/negative/resource/browser gates NOT_RUN. Inputs below define falsifiable teaching scenarios, not reported outputs. Research references and unchanged source pins are in the [source record](../../../research/m01-course-sources-2026-10-03.md). [Contracts](contracts.md) govern the real local workflow; no new numerical engine, provider acquisition or field dataset is proposed.
+Inputs below define falsifiable teaching scenarios, not reported outputs. Primary references are in the [bilingual chapters](../../../methods/gravity-processing/scientific-course/README.md); exact unchanged source pins are in the committed course-record index and its executable verifier. [Contracts](contracts.md) govern the real local workflow; this course adds no numerical engine, provider acquisition or field dataset.
 
 ## 1. Four explanatory calculators, never physical jobs
 

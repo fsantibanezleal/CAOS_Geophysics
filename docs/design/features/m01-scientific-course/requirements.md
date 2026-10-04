@@ -1,8 +1,8 @@
 # M01 scientific course requirements
 
-Status: planned; FULL MAIN read and explicit approval pending. Parent [product SDD](../../SDD.md) remains approved and unchanged. Research was persisted first in `6ba07cb`; read the [physics dossier](../../../research/m01-course-research-2026-10-03.md) and [sources](../../../research/m01-course-sources-2026-10-03.md). This submission authorizes no lesson/frontend/solver/test implementation.
+Parent [product SDD](../../SDD.md), [scientific contracts](contracts.md), [curriculum](curriculum.md) and [validation contract](validation.md) define this course. Primary scientific citations and derivations are included in the [six bilingual chapters](../../../methods/gravity-processing/scientific-course/README.md). Initiative coordination and historical execution records are maintained privately.
 
-Each future named test below is a falsifiable gate, NOT an existing test or PASS claim. The proposed tests/test_m01_scientific_course.py file must stay absent until separately approved. Browser and recipe execution require their own actual receipts; content tests alone cannot certify them.
+Each named test below is a falsifiable gate, not a PASS claim. Browser and recipe execution require actual source-bound receipts; content tests alone cannot certify them.
 
 R-MC01 THE feature SHALL remain an M01 correction/transform course with no new solver, density inversion, source interpretation, private bytes, API/storage/worker activation, acceptance waiver or M13 change.
 Gate: tests/test_m01_scientific_course.py::test_scope_and_acceptance_boundaries; MAIN full path/source/claim review.
@@ -43,5 +43,5 @@ Gate: tests/test_m01_scientific_course.py::test_shared_shell_and_scoped_mount; a
 R-MC13 WHEN demonstrating failure, THE course SHALL include actual wrong-unit/high-noise/missing-coordinate/downward-height/stale-parent and source-ineligible controls, keeping field eligibility closed for unresolved datum/SD/lineage and preserving scientific tolerances.
 Gate: tests/test_m01_scientific_course.py::test_negative_controls_and_field_gate; real negative execution after explicit approval, private field test only when MAIN supplies a rights-aware path.
 
-R-MC14 THE feature SHALL stop at each explicit approval boundary and keep documentation, local scientific execution, course content, browser QA, source eligibility, host admission and full M01 acceptance as separate verdicts.
-Gate: tasks.md convergence review; tests/test_m01_scientific_course.py::test_stage_authorization_and_nonclaims.
+R-MC14 THE feature SHALL preserve its producer ownership/no-overwrite boundaries and keep documentation, local scientific execution, course content, browser QA, source eligibility, host admission and full M01 acceptance as separate verdicts.
+Gate: [validation contract](validation.md); tests/test_m01_scientific_course.py::test_stage_authorization_and_nonclaims.

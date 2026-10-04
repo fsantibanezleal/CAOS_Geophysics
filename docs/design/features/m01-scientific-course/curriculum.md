@@ -1,6 +1,6 @@
 # Six question-led lessons and literal definitions
 
-Status: proposed curriculum, not authored wiki lessons or course PASS. Mathematical derivations and primary citations are in the [research dossier](../../../research/m01-course-research-2026-10-03.md). All equation captions, diagrams, controls, exercise answers and non-claims must have equivalent EN/ES content after approval.
+Mathematical derivations and primary citations are in the [six bilingual lessons](../../../methods/gravity-processing/scientific-course/README.md). All equation captions, diagrams, controls, exercise answers and non-claims require equivalent EN/ES content. This curriculum is a content contract, not a scientific or browser PASS.
 
 ## Q1. What quantity and reference did the station measure?
 
