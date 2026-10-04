@@ -83,7 +83,7 @@ reference_F,reference_date,navigation,base,crossover,offset,grid_coordinate,
 grid_value,grid_mask,spectrum_axis,spectrum_power,microlevel_removed,
 microlevel_retained). Role-specific type/shape/unit checks are mandatory:
 row_id ascii64[N]/identity; UTC ascii30[N]/UTC; line_index uint32[N], sensor
-uint8[N], ordinal uint64[N]; seven coordinate/heading/value/sigma scalar
+uint8[N], ordinal uint64[N]; eight coordinate/heading/value/sigma scalar
 columns float64[N] in their original m/degree/nT units; masks uint32[N].
 Missing bits0..8 mean UTC/upward/terrain/clearance/magnetic/sigma/heading/
 reference/date; unused bits zero. Masked float cells store +0 solely as a
