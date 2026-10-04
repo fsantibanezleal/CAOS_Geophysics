@@ -86,3 +86,40 @@ wall/RSS/scratch and export sizes using actual scientific computations. Do not
 equate projected G bytes to total memory or a parser run to a full-cap solve.
 CPU acceptance is source/platform-specific. Optional actual CUDA acceleration
 needs an independent source/precision/parity/resource packet, not an engine badge.
+
+## Executed foundation, not full inverse acceptance
+
+At source7376b35309aad8117d5bd953b0d9d60ee41a7d69, actual controls pass:
+62 native planner and20 structural/physical/source-pin controls, no skips.
+The available numerical regression set passes345 tests with12 explicitly
+unavailable unrelated field/pyGIMLi controls. Its338 planner/structural/accepted
+gravity/magnetic controls have no skips. The attempted full numerical directory
+did NOT pass collection: three M01 modules require Boule/Harmonica absent in the
+existing pinned interpreter. No installation or test exclusion repairs that
+broader result. Missing field fixtures likewise do not become field acceptance.
+
+Producer-authored explicit-face/autograd controls measure maximum normalized
+directional error7.69e-10 across the three frozen steps, gradient disagreement
+8.33e-17 and exact Hv disagreement5.55e-16 in normalized coordinates.
+Independent Choclo gravity prediction max discrepancy2.04e-15 mGal and magnetic
+prediction1.88e-13 nT; physical Jacobian maxima6.07e-18 mGal/(kg/m³) and
+1.03e-11 nT/SI. These are tiny forward/derivative controls, not inverse recovery
+or an independent reviewer execution. Six targeted actual loaded structural
+source files are byte-pinned in tests; accepted forward source controls also run.
+
+Quantitative receipt SHA256:
+05339cf6242838d1be2e0bc409d0a018a9f0df596106e0c2bf34fb940582a8f4.
+Frozen available-regression JUnit SHA256:
+059a3ef9464a6d76906dd384dbabb9836b496bdcdce9008d5f4a7c3949798a5f.
+Historical pre-module red runs are missing-module collection errors, not assertion
+reds. A later malformed-engine geometry gate genuinely produced2 failures/4
+passes before correction: NaN nodes and biased interior centres were not rejected.
+The own planner now rejects both at the unchanged geometry tolerance. No genuine
+Geoana centre-based physics defect was inferred from that injected negative.
+
+JS01..JS05 and structural JS07 have foundation coverage. JS06 has independent
+prism controls plus unchanged accepted forward quadrature tests; full synthetic
+inverse JS09..JS12, actual full-pipeline resources JS13, serialized export/CLI
+JS14..JS16 and completed weighted objective JS08 remain pending, not PASS.
+The probe's measured working set is not a full-cap solve benchmark. No GPU,
+host/API/browser, field eligibility or full R-008 release acceptance is asserted.
