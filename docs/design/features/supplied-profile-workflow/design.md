@@ -76,3 +76,27 @@ This local extension does not register a VPS worker, provide hard resource
 preemption, change shared styles or accept all M07/M09 field geology. Actual
 method-specific host resource admission and browser views are separate required
 integration work. No SMTP, project backup or second deployment is introduced.
+
+## Geometry-only supplied traveltime validation extension
+
+The original M09 provider path retains `pinned-15/v1` as its default, including
+the identical three held shots per fold and original 2-of-3 improvement rule.
+Its literal 15-shot restriction must not define support for supplied projects.
+An explicit `supplied-whole-shot/v1` option is implemented before reading any
+new supplied pick values: at least ten distinct shots; withhold ceil(N/5) whole
+shots. Interleaved indices are floor((j+1)N/K)-1 for j=0..K-1, and the central
+block starts at floor((N-K)/2). N=15 produces exactly the original indices.
+Keep the original minimum100 training/30 held picks, no shot leakage, >=10%
+held-RMSE improvement, normal stop before the original iteration ceiling, and
+require at least ceil(2K/3) held shots to improve. These are conditional
+predictive gates, not geology validity or calibrated uncertainty. No values
+enter fold selection, no silent adaptation when insufficient, and no new
+parameter selection from opened held picks. Record policy and required count
+in the supplied report/configuration. The original provider configuration hash
+and receipts remain byte-compatible except for unrelated runtime variation.
+
+Tests first: N=10,15,20,25 grouped geometry; original N15 parity; fold disjointness
+and complete coverage; perturb all observed times without changing split;
+original refusal on N20, supplied refusal on N<10/insufficient picks; scaled
+held-shot gate retains failed verdict. This extends the actual Dijkstra inverse,
+not a wrapper that marks unsupported other data as computed success.
