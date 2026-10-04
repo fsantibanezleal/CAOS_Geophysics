@@ -1,6 +1,6 @@
 """Actual quantity kernels/Jacobians; not a completed magnetic inverse fit."""
 
-from decimal import Decimal, localcontext
+from decimal import Decimal, localcontext, Rounded
 import importlib.util
 import math
 from pathlib import Path
@@ -158,3 +158,25 @@ def test_total_field_guard_and_owned_snapshots():
     np.testing.assert_array_equal(op.evaluate(np.array([0.]))["prediction_nT"], before)
     background[:] = 0.; g[:] = 0.
     np.testing.assert_array_equal(op.evaluate(np.array([0.]))["prediction_nT"], before)
+
+
+def test_scalar_point_context_isolated_and_zero_one_sided_jacobian(physics):
+    _, g, _, direction, _, _, _, _, _ = physics
+    op = inverse.MagneticQuantity(g, 50000.*direction, direction, 50000., 'exact_total_anomaly_nT')
+    expected = op.evaluate(np.zeros(7))
+    with localcontext() as ctx:
+        ctx.prec, ctx.Emax = 6, 2
+        ctx.traps[Rounded] = True
+        actual = op.evaluate(np.zeros(7))
+    np.testing.assert_array_equal(actual['prediction_nT'], expected['prediction_nT'])
+    # Production zero is a legal boundary. A three-point one-sided SI
+    # derivative approaches the total-vector direction, not assumed norm F.
+    column = np.eye(7)[2]
+    estimates = []
+    for h in (1e-6, 5e-7, 2.5e-7):
+        y1 = op.evaluate(column*h/.01)['prediction_nT'].ravel()
+        y2 = op.evaluate(column*(2*h)/.01)['prediction_nT'].ravel()
+        y0 = expected['prediction_nT'].ravel()
+        estimates.append((-3*y0+4*y1-y2)/(2*h))
+    np.testing.assert_allclose(estimates[-1], estimates[-2], rtol=2e-6, atol=1e-6)
+    np.testing.assert_allclose(expected['jacobian_nT_per_q'][:,2]/.01, estimates[-1], rtol=2e-6, atol=1e-6)

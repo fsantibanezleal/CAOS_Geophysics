@@ -272,6 +272,11 @@ optimizador público M02, L2/IRLS, incertidumbre, UI, contención y despliegue.
 
 ## Source-linked continuation, not a numerical claim
 
+The [native norm and directed step certificate](04_native-norm-certificate.md)
+explains the executable quantity/Jacobian, retained rounded-field baseline and
+full actual-displacement objective enclosure. These are not completed inverse,
+IRLS, field or online gates.
+
 Physical and inverse definitions remain tied to actual primary
 [SimPEG magnetic source](https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/potential_fields/magnetics/simulation.py),
 [WeightedLeastSquares](https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/regularization/base.py),

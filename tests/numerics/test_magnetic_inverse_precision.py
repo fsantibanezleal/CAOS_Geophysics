@@ -1,6 +1,6 @@
 """Independent Decimal160 full native-operand objective, not quadratic relabelling."""
 
-from decimal import Decimal, localcontext, getcontext
+from decimal import Decimal, localcontext, getcontext, Rounded
 from time import monotonic
 
 import numpy as np
@@ -70,9 +70,9 @@ def test_full_objective_encloses_independent_actual_chord(quantity, covariance):
     q, qt = np.array([1., .8]), np.array([.3, .25])
     g = np.array([1., 1.])
     record = cert.certify(q,qt,g,1.,.2,0,0,monotonic()+120.)
-    delta = objective(op,qt,d,noise,terms)-objective(op,q,d,noise,terms)
     with localcontext() as ctx:
         ctx.prec = 160
+        delta = objective(op,qt,d,noise,terms)-objective(op,q,d,noise,terms)
         slope = sum(Decimal.from_float(float(a))*(Decimal.from_float(float(y))-Decimal.from_float(float(x)))
                     for a,x,y in zip(g,q,qt))
         margin = delta-Decimal.from_float(1e-4)*slope
@@ -121,3 +121,82 @@ def test_closed_certificate_construction(fault):
     if fault == 'bounds': upper[0] = 0.
     with pytest.raises((TypeError,ValueError)):
         MagneticCertificate(op,d,noise,reference,lower,upper,.3,terms)
+
+
+def test_full_context_isolation_readonly_copies_and_real_projected_chord():
+    op, cert, d, noise, terms = operands(covariance=True)
+    q, qt, g = np.array([1.,.8]), np.array([0.,.25]), np.array([1.,1.])
+    # The first component is a real bound hit: certify qt-q, not the
+    # hypothetical unprojected direction which could be arbitrarily negative.
+    expected = cert.certify(q,qt,g,1.,.2,0,0,monotonic()+120.)
+    d[:] = 999.; noise['values'][:] = 0.; terms[0]['weights'][:] = 999.
+    terms[0]['derivative'].data[:] = 999.
+    with localcontext() as ctx:
+        ctx.prec, ctx.Emax = 6, 2
+        ctx.traps[Rounded] = True
+        actual = cert.certify(q,qt,g,1.,.2,0,0,monotonic()+120.)
+    assert actual == expected
+    assert actual['displacement_inf_q'] == 1.
+    assert actual['decision'] == 'certified_accept'
+    # Modifying returned owned kernel operands also cannot mutate certifier.
+    snap = op.operand_snapshot()[0]
+    snap.flags.writeable = True
+    snap[:] = 999.
+    assert cert.certify(q,qt,g,1.,.2,0,0,monotonic()+120.) == expected
+
+
+def test_tiny_delta_both_signs_rational_zero_intercept_and_armijo_rejection():
+    op, cert, d, noise, terms = operands()
+    q = np.array([1e-20, 2e-20])
+    qt = np.array([2e-20, 1e-20])
+    g = np.array([0.,1.])
+    record = cert.certify(q,qt,g,1.,.2,0,0,monotonic()+120.)
+    with localcontext() as ctx:
+        ctx.prec = 160
+        change = objective(op,qt,d,noise,terms)-objective(op,q,d,noise,terms)
+    assert Decimal(record['delta_interval'][0]) <= change <= Decimal(record['delta_interval'][1])
+    assert record['decision'] in ('certified_accept','certified_reject')
+    # Declared negative native slope cannot accept an actually increasing Phi.
+    up = cert.certify(np.array([.3,.25]),np.array([1.,.8]),-np.ones(2),.2,1.,0,0,monotonic()+120.)
+    assert up['decision'] == 'certified_reject' and up['cause'] == 'armijo'
+
+
+def test_symmetric_objective_tiny_slope_exhausts_all_precisions():
+    # Symmetric q around reference have the same exact real linear objective;
+    # The native weight.3 has a long exact decimal expansion. Full endpoint
+    # arithmetic cannot resolve a positive1e-104 Armijo margin at80 digits.
+    op = MagneticQuantity(np.zeros((3,1)),np.array([0.,0.,50000.]),np.array([0.,0.,1.]),
+                          50000.,'linear_tmi_nT')
+    cert = MagneticCertificate(op,np.zeros((1,1)),{'kind':'diagonal_sd','values':np.ones((1,1))},
+        np.ones(1),np.zeros(1),np.full(1,10.),1.,
+        ({'alpha':1.,'weights':np.array([.3]),'derivative':csr_matrix(np.ones((1,1)))},))
+    record = cert.certify(np.array([.5]),np.array([1.5]),np.array([-1e-100]),1.,1.,0,0,monotonic()+120.)
+    assert record['decision'] == 'unresolved' and record['cause'] == 'precision_limit'
+    assert record['passes'] == 3 and record['precision_digits'] == 80
+
+
+@pytest.mark.parametrize('fault',['qbool','qshape','outside','gradient','iteration','trial','phi','deadline'])
+def test_exact_native_certificate_call_schema(fault):
+    _, cert, _, _, _ = operands()
+    args = [np.ones(2),np.full(2,.5),np.ones(2),1.,.2,0,0,monotonic()+120.]
+    if fault == 'qbool': args[0] = np.ones(2,dtype=bool)
+    if fault == 'qshape': args[0] = np.ones((2,1))
+    if fault == 'outside': args[1][0] = -1.
+    if fault == 'gradient': args[2][0] = np.nan
+    if fault == 'iteration': args[5] = True
+    if fault == 'trial': args[6] = 20
+    if fault == 'phi': args[3] = np.inf
+    if fault == 'deadline': args[7] = np.inf
+    with pytest.raises((TypeError,ValueError)):
+        cert.certify(*args)
+
+
+def test_timeout_mid_arithmetic_clears_complete_partial_record(monkeypatch):
+    import magnetic_inverse_precision as precision
+    _, cert, _, _, _ = operands()
+    clock = iter([0.,0.,0.,0.,10.])
+    monkeypatch.setattr(precision,'monotonic',lambda: next(clock,10.))
+    record = cert.certify(np.ones(2),np.full(2,.5),np.ones(2),1.,.2,0,0,1.)
+    assert record['cause'] == 'wall_cap' and record['decision'] == 'not_run'
+    assert record['passes'] == 0 and record['precision_digits'] is None
+    assert all(record[k] is None for k in ('delta_interval','slope_interval','armijo_margin_interval'))
