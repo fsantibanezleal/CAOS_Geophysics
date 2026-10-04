@@ -12,6 +12,13 @@ gates against the selected source. Commit their approved product artifacts and
 keep actual operating receipts in the private management repository. Build the
 frontend locally, once. CI/CD never computes or trains.
 
+An already-reviewed build can live on a separate local scratch drive. Supply
+`-BuildDirectory` to the PowerShell preparer, or `--build` to the Python
+preparer and the `check_single_origin.py --built` guard. These explicit absolute
+paths receive the same entry/asset and no-link inventory checks as
+`frontend/dist`. This does not establish that an old build belongs to new source;
+retain the exact source/build and rendered review receipts.
+
 From the repository root, provide an existing trusted interpreter and an
 explicit absolute new output directory whose parent exists:
 

@@ -286,8 +286,9 @@ def collect_capacity(root: Path, current: str, rollbacks: list[str], *, addition
             "worker_memory_bytes": worker, "api_memory_bytes": api, "controller_memory_bytes": controller}
 
 
-def prepare(source: Path, output: Path) -> dict:
+def prepare(source: Path, output: Path, *, build: Path | None = None) -> dict:
     source = no_links(source)
+    build = no_links(build if build is not None else source / 'frontend/dist')
     from check_sdd_convergence import validate, strict_json as read_ledger, GATE, method_declarations
     from check_single_origin import check
 
@@ -302,7 +303,7 @@ def prepare(source: Path, output: Path) -> dict:
     revision = git("rev-parse", "HEAD").decode("ascii").strip()
     ledger = read_ledger(source / "docs/design/convergence.json")
     validate(source, ledger)
-    if errors := check(source, built=True):
+    if errors := check(source, built=True, build_dir=build):
         raise ValueError("single-origin source/build check failed: " + "; ".join(errors))
     tracked = set(git("ls-files", "-z").decode("utf-8").split("\0")) - {""}
     paths = {p for p in tracked if p.startswith(("app/", "deploy/")) or
@@ -322,7 +323,7 @@ def prepare(source: Path, output: Path) -> dict:
                 "deploy/service/geophysics-worker.service", "deploy/service/geophysics.nginx"}
     if not required <= paths:
         raise ValueError("service configurations missing")
-    receipt = copy_bundle(source, source / "frontend/dist", output, sorted(paths), revision)
+    receipt = copy_bundle(source, build, output, sorted(paths), revision)
     if git("rev-parse", "HEAD").decode("ascii").strip() != revision or git("status", "--porcelain", "--untracked-files=all").strip():
         raise ValueError("source revision/status changed during qualification")
     return receipt
@@ -332,9 +333,10 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument('--build', type=Path, help='explicit absolute reviewed frontend build')
     args = parser.parse_args(argv)
     try:
-        receipt = prepare(args.source, args.output)
+        receipt = prepare(args.source, args.output, build=args.build)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
         print(f"Qualification failed; retain existing outputs: {exc}", file=sys.stderr)
         return 1

@@ -46,6 +46,27 @@ def test_release_admission():
         service.require_pre_cutover({"requirements": unresolved[:-1]})
 
 
+def test_external_reviewed_build_has_same_policy(tmp_path):
+    from check_single_origin import check
+    build = tmp_path / 'external-build'
+    (build / 'assets').mkdir(parents=True)
+    (build / 'index.html').write_text('<script src="/assets/reviewed.js"></script>', encoding='utf-8')
+    assert check(ROOT, built=True, build_dir=build) == []
+    (build / 'index.html').write_text('<script src="assets/not-root.js"></script>', encoding='utf-8')
+    assert any('root-relative' in e for e in check(ROOT, built=True, build_dir=build))
+    (build / 'index.html').write_text('<script src="/assets/reviewed.js"></script>', encoding='utf-8')
+    (build / 'CNAME').write_text('secondary.example.org', encoding='ascii')
+    assert any('CNAME' in e for e in check(ROOT, built=True, build_dir=build))
+
+
+def test_external_build_requires_absolute_nontraversing_existing_path(tmp_path):
+    from check_single_origin import check
+    assert any('unsafe' in e for e in check(ROOT, built=True, build_dir=Path('relative-build')))
+    assert any('unsafe' in e for e in check(ROOT, built=True, build_dir=tmp_path / 'other/../build'))
+    assert any('unsafe' in e for e in check(ROOT, built=True, build_dir=tmp_path / 'absent'))
+    assert any('requires built' in e for e in check(ROOT, build_dir=tmp_path))
+
+
 def test_bundle_integrity(tmp_path):
     service = module()
     source, build = fixture(tmp_path)

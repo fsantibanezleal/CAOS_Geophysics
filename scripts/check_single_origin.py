@@ -31,8 +31,10 @@ PUBLICATION = re.compile(
 SECONDARY_ORIGIN = re.compile(r"https?://[^\s)\"']*github\.io\b", re.I)
 
 
-def check(root: Path, *, built: bool = False) -> list[str]:
+def check(root: Path, *, built: bool = False, build_dir: Path | None = None) -> list[str]:
     errors: list[str] = []
+    if build_dir is not None and not built:
+        errors.append('explicit build input requires built verification')
     for relative in FORBIDDEN_FILES:
         if (root / relative).exists():
             errors.append(f"retired deployment path exists: {relative}")
@@ -80,12 +82,26 @@ def check(root: Path, *, built: bool = False) -> list[str]:
         errors.append("legacy uploader must require product acceptance before credentials or transfer")
 
     if built:
-        index = read("frontend/dist/index.html")
+        dist = build_dir if build_dir is not None else root / 'frontend/dist'
+        try:
+            if not dist.is_absolute() or '..' in dist.parts:
+                raise ValueError('explicit absolute build path required')
+            for item in (dist, *dist.parents):
+                if item.exists() or item.is_symlink():
+                    info = item.lstat()
+                    if item.is_symlink() or getattr(info, 'st_file_attributes', 0) & 0x400:
+                        raise ValueError('build link/reparse path forbidden')
+            entry = dist / 'index.html'
+            if entry.is_symlink() or getattr(entry.lstat(), 'st_file_attributes', 0) & 0x400:
+                raise ValueError('entry link/reparse path forbidden')
+            index = entry.read_text(encoding='utf-8')
+        except (OSError, UnicodeError, ValueError):
+            errors.append('missing, unsafe or unreadable explicit build')
+            return errors
         refs = re.findall(r'(?:src|href)=["\']([^"\']+)["\']', index)
         assets = [ref for ref in refs if "/assets/" in ref or ref.startswith("assets/")]
         if not assets or any(not ref.startswith("/assets/") for ref in assets):
             errors.append("built entry document does not use root-relative hashed assets")
-        dist = root / "frontend/dist"
         for path in dist.rglob("assets"):
             if path.is_dir() and path.parent != dist:
                 errors.append(f"duplicated route asset tree: {path.relative_to(dist).as_posix()}")
@@ -98,8 +114,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("repo", nargs="?", type=Path, default=ROOT)
     parser.add_argument("--built", action="store_true", help="also inspect a completed frontend build")
+    parser.add_argument('--build', type=Path, help='explicit absolute reviewed build, requires --built')
     args = parser.parse_args()
-    errors = check(args.repo.resolve(), built=args.built)
+    if args.build is not None and not args.built:
+        parser.error('--build requires --built')
+    errors = check(args.repo.resolve(), built=args.built, build_dir=args.build)
     for error in errors:
         print(f"::error::{error}")
     if not errors:
