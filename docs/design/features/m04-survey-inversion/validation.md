@@ -1,6 +1,8 @@
 # Independent validation and complete acceptance matrix
 
-All continuation gates are planned/NOT_RUN. P04 frozen scientific tolerances
+This is the complete acceptance matrix. Ordinary input/geometry gates verify
+their implemented foundation only; numerical/full-generation/integration gates
+remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
 remain unchanged. A parser, physical operator or figure pass cannot satisfy
 inverse, field, durability, online or product acceptance.
 

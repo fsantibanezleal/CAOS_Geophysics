@@ -64,6 +64,79 @@ def test_sealed_geometry_and_value_independence():
     assert p["identity"]["noise_sha256"] != q["identity"]["noise_sha256"]
 
 
+def test_independent_frozen_membership_hash():
+    import hashlib
+    p = plan(request())
+    ids = p["partition"]["unit_ids"]
+    ordered = sorted(set(ids), key=lambda uid: (hashlib.sha256((
+        "magnetic-geometry-seal-1|104729|"+uid).encode()).hexdigest(), uid))
+    membership = dict(units=[dict(id=uid, rows=[i for i, u in enumerate(ids) if u == uid]) for uid in ordered],
+                      outer=p["partition"]["outer_rows"]["data"],
+                      development=p["partition"]["development_rows"]["data"],
+                      folds=[dict(fit=f["fit_rows"]["data"], validation=f["validation_rows"]["data"],
+                                  buffered=f["buffered_rows"]["data"]) for f in p["partition"]["folds"]],
+                      final=p["final_refit_rows"]["data"])
+    assert digest(membership) == "2336754f197bcf8470fdcf267df80af962f2483860bad37b5dacefb9691f2d45"
+
+
+def test_permutation_preserves_unit_identity_and_row_mapping():
+    doc = request()
+    p = plan(doc)
+    order = list(reversed(range(288)))
+    for key in ("row_ids", "group_ids"):
+        doc["acquisition"][key] = [doc["acquisition"][key][i] for i in order]
+    g = doc["geometry"]
+    g["qc_reason"] = [g["qc_reason"][i] for i in order]
+    for key, stride in (("usable", 1), ("receivers_m", 3)):
+        data = g[key]["data"]
+        g[key]["data"] = [value for i in order for value in data[i*stride:(i+1)*stride]]
+        rehash(doc, "geometry/"+key)
+    for path in ("observations/values", "noise/values"):
+        data = doc[path.split("/")[0]]["values"]["data"]
+        doc[path.split("/")[0]]["values"]["data"] = [v for i in order for v in data[3*i:3*i+3]]
+        rehash(doc, path)
+    q = plan(doc)
+    assert set(q["partition"]["unit_ids"]) == set(p["partition"]["unit_ids"])
+    for key in ("outer_rows", "development_rows"):
+        before = {p["inventory"]["row_ids"][i] for i in p["partition"][key]["data"]}
+        after = {q["inventory"]["row_ids"][i] for i in q["partition"][key]["data"]}
+        assert before == after
+    # Original-order seal changes; never sort inventory to hide a permutation.
+    assert p["identity"]["seal_sha256"] != q["identity"]["seal_sha256"]
+
+
+@pytest.mark.parametrize("attack", ["rank", "width", "edge", "zero_active", "prior", "frame_units", "too_few_rows"])
+def test_more_physical_and_partition_negatives(attack):
+    doc = request()
+    if attack == "rank":
+        # Distinct source groups but horizontal sites exactly collinear.
+        data = doc["geometry"]["receivers_m"]["data"]
+        for i in range(288):
+            data[3*i] = float(1000*i)
+            data[3*i+1] = float(2000*i)
+        rehash(doc, "geometry/receivers_m")
+    elif attack == "width":
+        doc["geometry"]["mesh"]["widths_x_m"]["data"][0] = 0
+        rehash(doc, "geometry/mesh/widths_x_m")
+    elif attack == "edge":
+        doc["geometry"]["mesh"]["origin_m"]["data"][0] = 1e7
+        rehash(doc, "geometry/mesh/origin_m")
+    elif attack == "zero_active":
+        doc["geometry"]["mesh"]["active"]["data"] = [False]*528
+        rehash(doc, "geometry/mesh/active")
+    elif attack == "prior":
+        doc["prior"]["upper_si"]["data"][0] = .11
+        rehash(doc, "prior/upper_si")
+    elif attack == "frame_units":
+        doc["frame"]["coordinate_unit"] = "degree"
+    else:
+        doc["geometry"]["usable"]["data"] = [i % 24 == 0 for i in range(288)]
+        doc["geometry"]["qc_reason"] = ["accepted" if i % 24 == 0 else "provider_qc_excluded" for i in range(288)]
+        rehash(doc, "geometry/usable")
+    with pytest.raises(InputError):
+        plan(doc)
+
+
 @pytest.mark.parametrize("attack", ["duplicate_xyz", "duplicate_id", "one_group", "tie_bridge", "interior", "qc_mismatch", "buffer_exhaustion"])
 def test_geometry_negatives_without_fallback(attack):
     doc = request()
@@ -89,15 +162,13 @@ def test_geometry_negatives_without_fallback(attack):
 
 
 def test_exact_buffer_equality_not_relaxed():
+    from magnetic_survey import _buffer
+    assert _buffer([0, 1], [2], [(0., 0., 120.), (0., 1., 120.), (600., 0., 120.)], 600.) == ([1], [0])
     doc = request()
     doc["geometry"]["partition"]["buffer_m"] = 600.0
-    p = plan(doc)
-    outer = p["partition"]["outer_rows"]["data"]
-    final = p["final_refit_rows"]["data"]
-    xyz = doc["geometry"]["receivers_m"]["data"]
-    for i in final:
-        assert all((xyz[3*i]-xyz[3*j])**2+(xyz[3*i+1]-xyz[3*j+1])**2 > 600**2 for j in outer)
-    assert len(final) < 216
+    with pytest.raises(InputError) as failure:
+        plan(doc)
+    assert failure.value.code == "partition"
 
 
 def test_unverified_external_lineage_is_not_admitted():

@@ -3,7 +3,9 @@
 Status: planned
 
 These are literal EARS requirements for the full continuation, not an acceptance
-record. Every implementation path is proposed until reviewed. Frozen details
+record. Ordinary input/geometry foundation paths are implemented; numerical and
+full-generation/integration paths remain planned. The planned status remains
+until the complete continuation converges, not merely its foundation. Frozen details
 and all error semantics are in [contracts](contracts.md) and [algorithms](algorithms.md).
 
 R-401 THE magnetic survey reader SHALL reject excess bytes, tokens, depth,

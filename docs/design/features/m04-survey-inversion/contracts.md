@@ -399,6 +399,12 @@ readback verification, never overwrites a prior export; partial failure unlinks
 only the newly created file. A foundation export proves neither the future NPY
 result bundle nor crash-recovery/host durability. No external path is accepted
 inside this document. No solver, likelihood load or claim upgrade on reimport.
+The ordinary module's local command is exactly magnetic_survey.py validate
+--request PATH --export NEW_FILE (both mandatory). Unknown commands/flags reject.
+Exit0 means complete geometry validation/export only,2 invalid input/partition,
+5 file/durability failure. It reads at most8MiB request bytes and never the
+provider original, so source.original_sha256 remains unverified raw provenance.
+It never advertises calibrate/evaluate. Those full tools remain R-414 scope.
 
 API adapter uses existing owner-scoped source/job IDs, not client-supplied owner.
 Submit a hash-bound config plus source ID; return existing queued/running/
