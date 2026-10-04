@@ -20,6 +20,7 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [Use and reproduce the MT course](guides/09_online-mt-course.md): bilingual in-app exercises, exact numerical/render gates and separately pending host admission.
 - [Earthquake phase picking](problem-types/phase-picking.md): M08/M13 theory, frozen input and asset contracts, held-out denominator, browser inference and parity gate.
 - [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
+- [Local first-arrival user-data tools](guides/19_local_velocity_data.md): supplied physical rays/times/errors, actual weighted classical estimate and optional frozen-checkpoint inference, verified local exports and explicit approximation/negative-model limits.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
 - [Source to result](data-contract/01_source-to-result.md): rights, immutable raw bytes, typed observations, physical eligibility, processing and evidence boundaries, with a reproducible current API calculation.
 - [Source acquisition](guides/05_sources.md): reviewed provider links, immutable raw assets, rights, format dispatch and local receipts.
