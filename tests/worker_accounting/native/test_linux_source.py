@@ -73,7 +73,7 @@ def test_science_cwd_path_descriptor_is_leaf_only():
     assert "(st.st_mode & 0777u) != 0700u" in opener
     assert "open_path(c->cwd, 1, (uid_t)c->uid, 1)" in native
     assert "open_path(c->executable, 0, 0, 0)" in native
-    assert native.index("setresuid(") < native.index("science_filter() || fchdir(6)")
+    assert native.index("setresuid(") < native.index("science_filter()) child_fail") < native.index("fchdir(6)) child_fail")
     for forbidden in ("CAP_DAC_OVERRIDE", "CAP_DAC_READ_SEARCH", "setfsuid(", "chmod("):
         assert forbidden not in native
 
@@ -90,3 +90,17 @@ def test_cpu_dialect_optional_force_idle_never_changes_charge():
     assert "v[8]" not in body  # optional idle diagnostic is not executed CPU
     keyed = native[native.index("static int keyed("):native.index("int lc_parse_cpu(")]
     assert "key == count" in keyed and "(*seen & (1u << key))" in keyed
+
+
+def test_child_failure_stages_are_fixed_safe_literals():
+    native = (CORE / "linux_controller.c").read_text("utf-8")
+    loop = (CORE / "linux_main.c").read_text("utf-8")
+    start = native.index("static void child_setup(")
+    body = native[start:native.index("int lc_birth(", start)]
+    stages = re.findall(r"child_fail\((?:ready|3), '([A-L])'\)", body)
+    assert sorted(set(stages)) == list("ABCDEFGHIJKL")
+    assert "science_filter()) child_fail(3, 'I')" in body
+    assert "fchdir(6)) child_fail(3, 'J')" in body
+    assert '"linux_child_setup_unknown\\n"' in loop
+    assert all('"linux_child_setup_' + stage + '\\n"' in loop for stage in "ABCDEFGHIJKL")
+    assert "fputs(setup_failures[byte-'A'],stderr)" in loop

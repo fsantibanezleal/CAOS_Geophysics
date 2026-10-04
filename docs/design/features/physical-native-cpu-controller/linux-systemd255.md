@@ -529,3 +529,15 @@ match the preceding SAMPLE exactly. Retained native failed runs stay failed.
 Test gates include exact diagnostic key/charge independence, unknown/duplicate/
 overflow rejection and adversarial early-FINAL availability/word/order/digest
 controls. This changes no native acceptance threshold or public protocol.
+
+## 14. Fixed child setup failure stages
+
+The private READY pipe retains one byte. R still means ready; failure uses ONLY
+A..L for descriptor duplicate/remap/close, bounding caps, credentials, credential
+verification, capset, process restrictions, seccomp, cwd, READY write and GO
+respectively. The parent logs ONLY the corresponding fixed literal
+linux_child_setup_A..L; unknown byte logs linux_child_setup_unknown. Never log
+errno, syscall arguments, context, UID/path/input or dynamic exception content.
+Every non-R remains sticky LC_SETUP and child exit126. No fallback, privilege,
+mode, seccomp, credential, timing or scientific acceptance change. Failed runs
+without this diagnostic remain unknown-stage failures at their actual pins.

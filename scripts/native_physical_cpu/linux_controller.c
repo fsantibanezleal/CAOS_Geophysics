@@ -345,8 +345,7 @@ int lc_prepare(struct lc_object *o, const struct lc_context *c) {
         prctl(PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0)) return LC_SETUP;
     return LC_OK;
 }
-static void child_fail(int ready) {
-    const unsigned char code = 'E';
+static void child_fail(int ready, unsigned char code) {
     ssize_t unused = write(ready, &code, 1); (void)unused;
     _exit(126);
 }
@@ -387,41 +386,42 @@ static void child_setup(const struct lc_object *o, const struct lc_context *c,
     int high[7];
     for (size_t i = 0; i < 7; ++i) {
         high[i] = fcntl(originals[i], F_DUPFD_CLOEXEC, 64);
-        if (high[i] < 0) child_fail(ready);
+        if (high[i] < 0) child_fail(ready, 'A');
     }
     for (int i = 0; i < 7; ++i)
-        if (dup2(high[i], i) < 0) child_fail(ready);
-    if (syscall(SYS_close_range, 7u, UINT_MAX, 0u)) child_fail(3);
+        if (dup2(high[i], i) < 0) child_fail(ready, 'B');
+    if (syscall(SYS_close_range, 7u, UINT_MAX, 0u)) child_fail(3, 'C');
     for (int capability = 0; capability < 64; ++capability) {
         int has = prctl(PR_CAPBSET_READ, capability, 0, 0, 0);
         if (has < 0) {
             if (errno == EINVAL && capability > CAP_LAST_CAP) break;
-            child_fail(3);
+            child_fail(3, 'D');
         }
-        if (has && prctl(PR_CAPBSET_DROP, capability, 0, 0, 0)) child_fail(3);
-        if (prctl(PR_CAPBSET_READ, capability, 0, 0, 0) != 0) child_fail(3);
+        if (has && prctl(PR_CAPBSET_DROP, capability, 0, 0, 0)) child_fail(3, 'D');
+        if (prctl(PR_CAPBSET_READ, capability, 0, 0, 0) != 0) child_fail(3, 'D');
     }
     if (setgroups(0, NULL) || setresgid((gid_t)c->gid, (gid_t)c->gid, (gid_t)c->gid) ||
-        setresuid((uid_t)c->uid, (uid_t)c->uid, (uid_t)c->uid)) child_fail(3);
+        setresuid((uid_t)c->uid, (uid_t)c->uid, (uid_t)c->uid)) child_fail(3, 'E');
     uid_t r, e, s; gid_t gr, ge, gs;
     if (getresuid(&r, &e, &s) || getresgid(&gr, &ge, &gs) ||
         r != c->uid || e != c->uid || s != c->uid || gr != c->gid || ge != c->gid || gs != c->gid ||
-        getgroups(0, NULL) != 0) child_fail(3);
+        getgroups(0, NULL) != 0) child_fail(3, 'F');
     struct __user_cap_header_struct header = {_LINUX_CAPABILITY_VERSION_3, 0};
     struct __user_cap_data_struct caps[2] = {{0}, {0}};
     if (syscall(SYS_capset, &header, caps) || syscall(SYS_capget, &header, caps) ||
         caps[0].effective || caps[0].permitted || caps[0].inheritable ||
-        caps[1].effective || caps[1].permitted || caps[1].inheritable ||
-        prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_CLEAR_ALL, 0, 0, 0) ||
+        caps[1].effective || caps[1].permitted || caps[1].inheritable) child_fail(3, 'G');
+    if (prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_CLEAR_ALL, 0, 0, 0) ||
         prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) || prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) ||
-        prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) || getppid() != expected_parent ||
-        science_filter() || fchdir(6)) child_fail(3);
+        prctl(PR_SET_PDEATHSIG, SIGKILL, 0, 0, 0) || getppid() != expected_parent) child_fail(3, 'H');
+    if (science_filter()) child_fail(3, 'I');
+    if (fchdir(6)) child_fail(3, 'J');
     const unsigned char ready_byte = 'R';
-    if (write(3, &ready_byte, 1) != 1) child_fail(3);
+    if (write(3, &ready_byte, 1) != 1) child_fail(3, 'K');
     unsigned char permission;
     ssize_t got;
     do { got = read(4, &permission, 1); } while (got < 0 && errno == EINTR);
-    if (got != 1 || permission != 'G' || getppid() != expected_parent) child_fail(3);
+    if (got != 1 || permission != 'G' || getppid() != expected_parent) child_fail(3, 'L');
     close(3); close(4); close(6);
     if (fcntl(5, F_SETFD, FD_CLOEXEC)) _exit(126);
     fexecve(5, c->argv, c->envp);
