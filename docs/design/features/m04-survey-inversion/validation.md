@@ -28,6 +28,20 @@ freeze vectors independently of the candidate. Zero-norm/guard-domain negatives
 must fail without fallback. These proposed derivative tolerances do not weaken
 the stricter P04 component or ordinary magnitude comparisons.
 
+The kernel/certificate source paths are magnetic_inverse.py and
+magnetic_inverse_precision.py; paired test paths are
+tests/numerics/test_magnetic_inverse.py and test_magnetic_inverse_precision.py.
+Test the strict internal contracts before copies and physical construction,
+all three actual quantities, cardinal/oblique physical columns, asymmetric
+active holes, native rounded baseline and portable independent direct norms.
+Directed certificate controls compare full nonlinear objective changes and
+actual native-gradient chord against independent Decimal160 calculations,
+including both signs, null/tiny, mixed-sign rational numerators, off-diagonal
+covariance, true bound projection, cancellation, all precision/domain/deadline
+failures and caller-context isolation. No quadratic-only norm certificate.
+These tests do not satisfy the accepted-optimizer binding or completed inverse
+fit gates; a norm certificate alone does not certify true sparse stationarity.
+
 ## Objective, covariance and optimizer oracles
 
 Tiny well-conditioned linear controls A<=8, D>=24, explicit regularizer;

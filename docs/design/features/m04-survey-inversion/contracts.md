@@ -411,3 +411,70 @@ Submit a hash-bound config plus source ID; return existing queued/running/
 succeeded/failed/cancelled state with this method result reference. Until actual
 optimizer+native/profile+ownership acceptance, return ineligible with local
 recipe. No invented endpoint path or auth protocol replaces MAIN's existing ABI.
+
+## Internal physical operator and actual-displacement certificate
+
+These are trusted in-process scientific functions, not new upload/HTTP endpoints
+or callbacks accepted from users. They implement the already defined equations;
+they do not supply an accepted nonlinear optimizer or completed fit by themselves.
+data-pipeline/magnetic_inverse.py build_operator(raw,rows,deadline=...) parses
+the same bounded original bytes and seals metadata before engine import. rows
+is an exact built-in tuple of1..2048 strictly increasing original usable row
+indices (exact int, no bool); geometry-only prediction may include outer
+coordinates but never reads their observations. deadline is an explicit finite
+native monotonic float. Unresolved rights or non-original unresolved lineage
+rejects. No field/original-source verification claim follows from this kernel.
+
+MagneticQuantity is the internal native-kernel composition: actual Gchi
+F64(3N,A), B0 F64(3), direction F64(3), F native float[1,1e6], quantity one
+of the three declared quantities. Metadata/counts precede scans/copies;
+N<=2048,A<=2048,3N*A<=12582912. Store rounded A_b=.01*Gchi once, including
+its exact payload hash, not separate unrounded scale multiplication. Native
+q F64(A) must be finite and in[0,10]. Returned evaluate(q) has exactly
+{prediction_nT,jacobian_nT_per_q,secondary_enu_nT,total_norm_nT}; shapes are
+(N,C),(N*C,A),(N,3),(N,) respectively, owned C-order write-protected arrays.
+Native point norms use isolated Decimal80/from_float on retained B0 and native
+b, full delta0 rational numerator and positive denominator, not the old P04
+expression. The analytic Jacobian uses the actual total-vector direction;
+all inverse T/F>1e-8 guards apply without fallback. Hash-bound operand snapshots
+are owned/write-protected, not tamperproof process memory.
+
+data-pipeline/magnetic_inverse_precision.py MagneticCertificate owns that
+operator's fixed native operands and explicit observed F64(N,C), noise exactly
+{kind,values} (diagonal_sd/F64(N,C) or full_covariance/F64(D,D)), reference_q,
+lower_q,upper_q F64(A), beta positive native float and a tuple of0..7 fixed
+regularization terms. Each term is exact{alpha,weights,derivative}: alpha
+nonnegative native float, weights positive F64(K), derivative canonical float64
+CSR(K,A),K<=2A,nnz<=8A with native int32 indices/indptr, no duplicates or
+foreign hooks. These are actual vendor component W diagonals, derivative
+coefficients and multipliers, not a pre-rounded normal matrix or copied solver.
+Skip alpha0 terms without changing them. All metadata and a conservative live
+interval-vector/copy byte bound must pass<=805306368 before snapshots; domain,
+CSR/order/finite, SD positivity and SPD checks follow. Full covariance D<=512,
+exact symmetric positive-definite C, condition2<=1e8, no jitter; factor this
+already principal C and bind the actual retained binary64 Cholesky L. Whiten
+by native/interval triangular solves, never a constructed inverse.
+
+certify(q,qt,native_gradient,native_phi,native_phi_trial,iteration,trial,deadline)
+uses the actual projected chord, not an unprojected search vector. Exact native
+F64(A) models/gradient, finite native phi floats, iteration int0..199,trial
+int0..19, explicit finite monotonic deadline. Its exact14 return keys are
+iteration,trial,native_phi_current,native_phi_trial,displacement_inf_q,
+precision_digits,slope_interval,delta_interval,armijo_margin_interval,
+arithmetic_domain,slope_domain,decision,cause,passes. Domain is
+fixed_native_operand_magnetic_norm for exact magnitude or
+fixed_native_operand_quadratic for the two linear lanes; slope domain is
+recorded_native_gradient. This DIFFERENT norm domain cannot be submitted to a
+quadratic-only M02 validator or relabelled accepted nonlinear execution.
+precision_digits nullable34/50/80;passes exact int0..3. Intervals nullable exact
+tuple(str,str) of finite ordered Decimal endpoints, each<=192chars, exponent
+range[-9999,9999]. unavailable metadata is None, never fictitious zero.
+decision enum certified_accept,certified_reject,unresolved,not_run; cause enum
+armijo,non_descent,zero_displacement,precision_limit,range_unsupported,wall_cap,
+native_failure. Accept ONLY certified negative slope upper and strict negative
+Armijo-margin upper for actual real native-operand objective difference minus
+the exact retained binary64 coefficient1e-4 times slope. Reject certified
+non-descent lower>=0 or margin lower>0. Exhaust all three precisions with a
+straddling interval ->unresolved/precision_limit. Expired/unsupported/incomplete
+arithmetic ->not_run with all partial intervals/precision cleared and passes0.
+Bounds, nonfinite native values and zero chords never create acceptance.
