@@ -245,3 +245,191 @@ def test_IR_C06_nonnull_actual_fixed_floor_stages_shared_budget_no_step_fabricat
     # prescribed three final transitions do not converge. Never mark it xfail.
     assert terminal['status']=='converged',terminal
     assert terminal['reason']=='irls_fixed_point'
+
+
+def _book_fixture():
+    """Typed serialization fixture only; never a scientific solve receipt."""
+    weights=np.array([1.,2.,3.])
+    trace={'models_kg_m3':np.array([[0.,0.,0.],[1.,2.,3.]]),
+           'stage_indices':np.array([-1,0],dtype=np.int64)}
+    metrics={name:None if name.endswith('_initial') else 0.
+             for name in irls._BOOK_METRICS}
+    rows=({'index':0,'accepted_start':0,'accepted_stop':1,
+        'model_row_start':0,'model_row_stop':1,'beta_engine':2.,
+        'epsilon':(.001,.00001,.00001,.00001),'epsilon_units':policy()['epsilon_units'],
+        'norms':policy()['norms'],'weight_sha256':(irls.survey._digest(weights),)+('f'*64,)*3,
+        'smallness_weights':weights,'operator_sha256':('8'*64,)*4,
+        'status':'converged','reason':'absolute_stationary','metrics':metrics},)
+    args={'parameter_count':3,'beta_engine':2.,'initial_epsilon':policy()['epsilon_floor'],
+          'policy':policy()}
+    return rows,trace,args
+
+
+def test_SB02_signed_words_exact_bits_no_float_roundtrip():
+    for digest in ('0'*64,'f'*64,'8'*64,'0123456789abcdef'*4):
+        words=irls._hash_words(digest)
+        assert words.dtype==np.int64 and words.shape==(4,)
+        assert irls._words_hash(words)==digest
+    assert np.all(irls._hash_words('f'*64)==-1)
+    for digest in ('F'*64,'a'*63,False):
+        with pytest.raises((TypeError,ValueError)): irls._hash_words(digest)
+
+
+def test_SB03_lossless_fifteen_key_digest_null_and_trace_binding():
+    rows,trace,args=_book_fixture()
+    book=irls.encode_stage_book(rows,trace,**args)
+    assert len(book)==19 and book['schema']=='gravity-survey-irls-stage-book-1'
+    assert book['logical_stage_sha256']==irls.survey._digest(rows)
+    decoded=irls.decode_stage_book(book,trace,**args)
+    assert irls.survey._digest(decoded)==irls.survey._digest(rows)
+    assert decoded[0]['metrics']['phi_d_initial'] is None
+    assert decoded[0]['metrics']['phi_d_final']==0.
+    assert not decoded[0]['smallness_weights'].flags.writeable
+    assert all(not v.flags.writeable for v in book.values() if type(v) is np.ndarray)
+    assert all(not v.flags.writeable for v in book['metrics'].values() if type(v) is np.ndarray)
+
+
+@pytest.mark.parametrize('fault',['extra','unknown_status','unknown_reason','status_reason',
+    'duplicate_metric','gap_metric','unknown_metric_column','weight_digest','span_gap',
+    'epsilon','beta','nonfinite','array_type','logical_digest','book_digest'])
+def test_SB04_rehashed_inconsistent_book_never_decodes(fault):
+    rows,trace,args=_book_fixture()
+    book=deepcopy(irls.encode_stage_book(rows,trace,**args))
+    for item in book.values():
+        if type(item) is np.ndarray: item.flags.writeable=True
+    for item in book['metrics'].values():
+        if type(item) is np.ndarray: item.flags.writeable=True
+    if fault=='extra': book['extra']=0
+    if fault=='unknown_status': book['status'][0]=7
+    if fault=='unknown_reason': book['reason'][0]=99
+    if fault=='status_reason': book['status'][0]=1
+    if fault=='duplicate_metric': book['metrics']['index'][0,3]=0
+    if fault=='gap_metric': book['metrics']['index'][0,4]=1
+    if fault=='unknown_metric_column': book['metrics']['columns']=('wrong',)+book['metrics']['columns'][1:]
+    if fault=='weight_digest': book['weight_sha256_words'][0,0]^=1
+    if fault=='span_gap': book['accepted_span'][0,0]=1
+    if fault=='epsilon': book['epsilon'][0,0]=.002
+    if fault=='beta': book['beta_engine'][0]=3.
+    if fault=='nonfinite': book['smallness_weights'][0,0]=float('nan')
+    if fault=='array_type': book['index']=np.array([0],dtype=np.int32)
+    if fault=='logical_digest': book['logical_stage_sha256']='a'*64
+    if fault=='book_digest': book['book_sha256']='a'*64
+    else: book['book_sha256']=irls.survey._digest({k:v for k,v in book.items() if k!='book_sha256'})
+    with pytest.raises((TypeError,ValueError)): irls.decode_stage_book(book,trace,**args)
+
+
+def test_SB01_complete_metadata_admission_before_hash_or_copy(monkeypatch):
+    rows,trace,args=_book_fixture()
+    book=irls.encode_stage_book(rows,trace,**args)
+    book['untrusted_oversize']='a'*262145
+    def denied(*a,**k): raise AssertionError('hash/copy before metadata admission')
+    monkeypatch.setattr(irls.survey,'_digest',denied)
+    monkeypatch.setattr(irls.survey,'_readonly',denied)
+    with pytest.raises((TypeError,ValueError)): irls.decode_stage_book(book,trace,**args)
+
+
+def test_SB04_trace_changes_and_unaccounted_rows_rejected():
+    rows,trace,args=_book_fixture()
+    book=irls.encode_stage_book(rows,trace,**args)
+    for key in ('models_kg_m3','stage_indices'):
+        changed=deepcopy(trace)
+        changed[key].flat[-1]+=1
+        with pytest.raises(ValueError): irls.decode_stage_book(book,changed,**args)
+    bad=deepcopy(rows)
+    bad[0]['accepted_stop']=0
+    with pytest.raises(ValueError): irls.encode_stage_book(bad,trace,**args)
+
+
+def test_SB03_actual_native_null21_book_preserves_every_stage(record_property):
+    problem,prior=native_problem()
+    result=irls._solve_partition(problem,prior,policy(),monotonic()+120.)
+    args={'parameter_count':12,'beta_engine':float(problem['beta_engine']),
+          'initial_epsilon':policy()['epsilon_floor'],'policy':policy()}
+    book=irls.encode_stage_book(result['stages'],result['trace'],**args)
+    decoded=irls.decode_stage_book(book,result['trace'],**args)
+    assert len(decoded)==21
+    assert irls.survey._digest(decoded)==irls.survey._digest(result['stages'])
+    record_property('native_outcome','CONVERGED/IRLS_STATIONARY_NULL')
+    record_property('logical_stage_sha256',book['logical_stage_sha256'])
+
+
+@pytest.mark.parametrize('field',['norms','epsilon_units'])
+def test_SB04_empty_book_still_rejects_foreign_semantics(field):
+    _,trace,args=_book_fixture()
+    trace={'models_kg_m3':trace['models_kg_m3'][:1],
+           'stage_indices':trace['stage_indices'][:1]}
+    book=irls.encode_stage_book((),trace,**args)
+    book[field]=('wrong',)*4
+    book['book_sha256']=irls.survey._digest({k:v for k,v in book.items() if k!='book_sha256'})
+    with pytest.raises(ValueError): irls.decode_stage_book(book,trace,**args)
+
+
+def test_SB03_no_stage_or_initial_threshold_after_failed_initialization():
+    _,_,args=_book_fixture()
+    args['initial_epsilon']=None
+    trace={'models_kg_m3':np.empty((0,3)), 'stage_indices':np.empty(0,dtype=np.int64)}
+    book=irls.encode_stage_book((),trace,**args)
+    assert irls.decode_stage_book(book,trace,**args)==()
+
+
+def test_SB05_actual25_books_fit_whole_guard_without_list_digest_waiver():
+    problem,prior=native_problem()
+    result=irls._solve_partition(problem,prior,policy(),monotonic()+120.)
+    args={'parameter_count':12,'beta_engine':float(problem['beta_engine']),
+          'initial_epsilon':policy()['epsilon_floor'],'policy':policy()}
+    book=irls.encode_stage_book(result['stages'],result['trace'],**args)
+    # Repeated aliases are charged at EVERY logical occurrence, not deduped.
+    envelope={'candidates':tuple({'folds':tuple({'solve':{'stages':book,
+        'trace':result['trace'],'l2_initialization':result['l2_initialization']}}
+        for _ in range(3))} for _ in range(8)),
+        'final_solve':{'stages':book,'trace':result['trace'],
+                       'l2_initialization':result['l2_initialization']}}
+    # The preserved proposal's metrics.columns scalar children reach depth9.
+    # Never increase the literal depth8 guard to accept this representation.
+    with pytest.raises(ValueError,match='eight container levels'):
+        l2._result_native_metadata(envelope)
+    legacy=deepcopy(envelope)
+    for candidate in legacy['candidates']:
+        for fold in candidate['folds']: fold['solve']['stages']=result['stages']
+    legacy['final_solve']['stages']=result['stages']
+    with pytest.raises(ValueError): l2._result_native_metadata(legacy)
+    pool={'stage_books':tuple(book for _ in range(25)),
+          'candidates':tuple({'folds':tuple({'solve':{'stages':3*i+j,
+              'trace':result['trace'],'l2_initialization':result['l2_initialization']}}
+              for j in range(3))} for i in range(8)),
+          'final_solve':{'stages':24,'trace':result['trace'],
+                         'l2_initialization':result['l2_initialization']}}
+    l2._result_native_metadata(pool)
+
+
+def test_SB03_actual_nonnull_cap_outcome_lossless_not_promoted(record_property):
+    problem,prior=native_problem(null=False)
+    result=irls._solve_partition(problem,prior,policy(),monotonic()+120.)
+    kernels=[c.f_m(result['l2_initialization']['model_kg_m3']/1000.)
+        for alpha,c in zip(problem['regularization'].multipliers,
+                           problem['regularization'].objfcts) if alpha>0.]
+    initial=tuple(max(f,float(np.max(np.abs(k)))) for f,k in zip(policy()['epsilon_floor'],kernels))
+    args={'parameter_count':12,'beta_engine':float(problem['beta_engine']),
+          'initial_epsilon':initial,'policy':policy()}
+    book=irls.encode_stage_book(result['stages'],result['trace'],**args)
+    decoded=irls.decode_stage_book(book,result['trace'],**args)
+    assert irls.survey._digest(decoded)==irls.survey._digest(result['stages'])
+    assert result['irls_terminal']['status']=='nonconverged'
+    assert result['irls_terminal']['reason']=='irls_iteration_cap'
+    record_property('native_outcome','NONCONVERGED/IRLS_ITERATION_CAP')
+
+
+def test_SB05_unchanged_array_limit_counts_duplicate_logical_occurrences():
+    values=np.zeros((4096,4096),dtype=np.float64)
+    # Two references are256MiB exactly; a third remains refused.
+    l2._result_native_metadata((values,values))
+    with pytest.raises(ValueError): l2._result_native_metadata((values,values,values))
+
+
+def test_SB01_foreign_hook_rejected_without_comparison():
+    class Foreign:
+        def __eq__(self,other): raise AssertionError('foreign comparison')
+    rows,trace,args=_book_fixture()
+    book=irls.encode_stage_book(rows,trace,**args)
+    book['count']=Foreign()
+    with pytest.raises(TypeError): irls.decode_stage_book(book,trace,**args)
