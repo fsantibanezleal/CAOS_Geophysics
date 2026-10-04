@@ -17,3 +17,5 @@ SR-05 WHEN a release is activated, THE installer SHALL refuse unexpected paths a
 SR-06 THE capacity collector SHALL measure actual filesystem free bytes, MemAvailable and application releases; current plus two rollback releases SHALL be retained after qualified activation, with all additional targets individually verified before any removal. Gate: tests/ops/test_service_release.py::test_capacity_and_retention.
 
 SR-07 IF any release, capacity, migration, readiness or verification check fails, THE deploy workflow SHALL retain its failure evidence and SHALL NOT report full acceptance. Gate: tests/ops/test_service_release.py::test_fail_closed.
+
+SR-08 THE runtime stager SHALL rehash a supplied immutable bundle against an explicit manifest digest before installing an API-only environment, reject existing environments or receipts, measure available installation bytes, constrain installer process time/memory/output, and record installed dependency and file inventories outside the release. It SHALL NOT activate services, mutate private projects, install global packages or grant scientific admission. Gate: tests/ops/test_service_runtime.py.
