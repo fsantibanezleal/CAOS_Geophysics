@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "a4db32e53e4ac2de78602ad043e31ca625289904e1861fd7912688fcc56a27e0",
+  "sdd_sha256": "6cc226eb0de1f4765d04bfa76dfe1eaa5e1740910cc431b0f704b9b09e4a40dd",
   "assessed_revision": "e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe",
   "assessed_at": "2026-10-04T00:03:59Z",
   "release": {
@@ -307,7 +307,7 @@
     {
       "id": "R-017",
       "verdict": "unresolved",
-      "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
+      "declared_gate": "scripts/verify_single_vps_release.py::main plus independently reviewed private scientific/UI/actual-host jobs/ownership/HTTPS/browser/retired-publication/rollback receipts. The read-only verifier alone cannot accept this requirement.",
       "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Pages publication was withdrawn and active source/build paths removed; this is not replacement acceptance. The owner amendment on 2026-10-03 removes SMTP, off-host backup/deletion-journal and arbitrary whole-host 30% free-space prerequisites for this test deployment. Full scientific/UI, actual-host job capacity, account/ownership and single-origin cutover gates remain unresolved. Existing hostname retained; current plus two rollback releases required. Historical failed disk/restore evidence is preserved, not relabelled passed.",
       "evidence": [
         {
