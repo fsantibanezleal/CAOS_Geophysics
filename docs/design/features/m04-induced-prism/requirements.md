@@ -24,11 +24,15 @@ with float64 RAM sensitivities, one process and an identity active susceptibilit
 Gate: tests/numerics/test_magnetic_forward.py::test_actual_engine_precision_order
 
 P04-06 THE operator SHALL return component flux densities, projected linear TMI,
-its susceptibility Jacobian and exact scalar magnitude anomaly as distinct quantities.
+its susceptibility Jacobian and exact scalar magnitude anomaly as distinct quantities;
+THE tests SHALL verify tiny scalar-magnitude controls using the independent
+stdlib Decimal80 direct norm oracle and nonzero-relative checks in validation.
 Gate: tests/numerics/test_magnetic_forward.py::test_components_projection_exact_magnitude
 
 P04-07 THE operator SHALL satisfy separate Choclo and volume-dipole quadrature
-controls, null/linearity/far-field/field-change controls under frozen tolerances.
+controls, null/linearity/far-field/field-change controls under frozen tolerances;
+THE tests SHALL verify physical unit-SI susceptibility Jacobian columns with
+mathematical chi=1 and M=B0(T)/mu0, without submitting chi=1 to production.
 Gate: tests/numerics/test_magnetic_forward.py::test_independent_prism_and_quadrature
 
 P04-08 WHEN an induced interpretation is evaluated, THE tests SHALL retain an
@@ -37,7 +41,10 @@ SHALL NOT claim that forward agreement proves absence of remanence.
 Gate: tests/numerics/test_magnetic_forward.py::test_remanence_and_wrong_field_nonclaims
 
 P04-09 THE operator SHALL reject wrong runtime, dtype, shape or nonfinite kernel
-output and return exact immutable owned arrays with no filesystem/network I/O.
+output and return independently owned C-order snapshot arrays write-protected
+at return, with no input/result aliasing or filesystem/network I/O;
+THE contract SHALL disclose that owners can reenable writes and that this is
+not tamperproof in-memory or durable-storage immutability.
 Gate: tests/numerics/test_magnetic_forward.py::test_runtime_output_and_scope
 
 P04-10 THE independent harness SHALL retain actual pins, commands, failed and

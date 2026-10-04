@@ -48,15 +48,34 @@ field_components_nt, linear_tmi_nt, linear_jacobian_nt_per_si,
 exact_magnitude_anomaly_nt, linearization.
 schema=`magnetic-prism-forward-result-1`, source_epoch=`m04-induced-prism-cpu-1`.
 Engine literal identical to request. inducing_field adds to its original three
-keys direction_enu (owned immutable float64(3,)) and background_enu_nt(3,).
+keys direction_enu (owned write-protected float64(3,)) and background_enu_nt(3,).
 
 geometry exactly receivers_m(N,3), active_indices(n_active,) native int64,
 active_bounds_m(n_active,6) ordered west,east,south,north,bottom,top,
 active_centres_m(n_active,3), active_volumes_m3(n_active,), cell_order=`x-fast`.
-All numeric result arrays own immutable C-order storage and are finite.
+All numeric result arrays are finite native ndarrays with independently owned
+C-order storage: OWNDATA=true, base=None, C_CONTIGUOUS=true, WRITEABLE=false
+at return. Each array is a snapshot, with no shared memory with any caller input
+or another numeric result array. The caller's arrays and write flags are unchanged.
+Ordinary indexed assignment to a returned array fails while its flag is false.
+This is write protection, NOT tamperproof in-memory immutability: an owner can
+reenable WRITEABLE and modify its own snapshot. Dicts are ordinary mutable dicts.
+The operator never retains or reuses returned storage as trusted future state.
+
+Durable immutability and identity belong to the external persisted-byte contracts
+and verified content hashes of immutable stored objects, not to NumPy flags or
+this no-I/O function. A hash detects byte changes; it alone does not prevent them.
+Persisted storage, export and hash verification are separate later gates, not
+implemented or accepted by a forward result.
+
 field_components_nt(N,3) is east,north,up; linear_tmi_nt(N,);
 linear_jacobian_nt_per_si(N,n_active); exact_magnitude_anomaly_nt(N,).
 The Jacobian is ONLY for projected linear TMI, not exact scalar magnitude.
+Its unit is nT per unit dimensionless SI susceptibility. Independent oracle
+columns mathematically set chi=1 for one prism at a time, using Choclo
+magnetization M=B0(T)/mu0 in A/m and its actual pinned mu0. This linear derivative
+oracle is outside the production request domain and never submits chi=1 to the
+operator. Production susceptibility remains in[0,0.1].
 
 linearization exactly secondary_to_background_ratio(N,),
 exact_minus_linear_nt(N,), maximum_abs_difference_nt(float),

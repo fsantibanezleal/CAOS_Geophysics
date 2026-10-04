@@ -19,9 +19,22 @@ sensitivity_dtype=np.float64, n_processes=1. No M override or disk caching.
 Check actual G is float64 finite(3*N,n_active); reshape receiver-first
 component-second to(N,3,n_active), verified by asymmetric independent controls.
 Calculate vectors and projected Jacobian; verify actual native dpred components
-agree with G@chi to frozen float64 numerical tolerance. Return exact contract
-and immutable independent arrays. No source field/residual is synthesized from
-case labels, and no output is an inverse.
+agree with G@chi to frozen float64 numerical tolerance. Return the exact contract
+and independently owned C-order snapshots with WRITEABLE=false at return and
+no pairwise/input memory aliasing. Owners can reenable writes; neither arrays
+nor result dicts are tamperproof. No returned storage is retained as trusted
+future state. Durable identity/immutability requires external persisted-byte
+contracts, immutable storage and verified hashes; the forward function performs
+none of that I/O. No source field/residual is synthesized from case labels,
+and no output is an inverse.
+
+The tiny scalar-magnitude algebraic gate uses portable stdlib Decimal80 direct
+sqrt of independently converted binary64 input components, not Windows
+longdouble or the candidate's rationalized expression. It is distinct from the
+independent Choclo physical component gate. Mathematical unit-susceptibility
+Jacobian controls use chi=1 only in the independent oracle, with physical
+M=B0(T)/mu0; they do not expand the production chi range. Exact controls and
+unchanged component/ordinary-magnitude tolerances are specified in validation.
 
 ## Resource boundary
 

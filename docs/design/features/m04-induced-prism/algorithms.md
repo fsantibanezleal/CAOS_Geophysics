@@ -24,6 +24,21 @@ derived values, never round them to zero. No Jacobian of exact magnitude is
 promised. For b=0 both quantities are zero; susceptibility linearity applies
 to b,d,J, not generally to the exact scalar magnitude anomaly.
 
+The independent algebraic tiny-magnitude oracle instead evaluates the original
+direct norm-minus-F using stdlib Decimal at80 digits and sqrt, after converting
+each binary64 input with Decimal.from_float. It never repeats the candidate's
+rationalized expression. Its exact cardinal tiny controls and nonzero/error
+criteria are frozen in validation; it is not an independent magnetic kernel.
+
+For an independent column of K at mathematical chi=1, evaluate one prism with
+Choclo's physical magnetization M=(1e-9 B0)/mu0 A/m using its pinned mu0;
+multiply the returned tesla vector by1e9, then project with f for the column
+of J in nT per unit SI susceptibility. Alternatively evaluate the three unit
+A/m magnetization kernels and combine them with those explicit M components.
+A single unscaled1 A/m vector is NOT a unit-susceptibility derivative. The
+mathematical chi=1 oracle is outside the production[0,0.1] request domain and
+does not extend it or imply physical self-demagnetization at large chi.
+
 Ordering is independent of field orientation: receiver-major components east,
 north,up, and active cells ascending full x-fast index. At horizontal north
 (I=0,D=0), f=(0,1,0); horizontal east (0,90), f=(1,0,0); down (90,0),
