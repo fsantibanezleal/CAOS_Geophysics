@@ -99,6 +99,30 @@ resources exactly `logical_input_bytes`, `projected_kernel_bytes`,
 from verified facts and must include `rights_verified=false`,
 `source_bytes_verified=false`, `field_eligible=false`, `inverse_completed=false`.
 The native planner cannot assert receipt/source-file verification it did not do.
+The exact diagnostics also include active_cells (int), shared_raw_bytes (bool),
+common_frame_declared=true, rank_not_assessed=true. Equal raw hashes are visible;
+different source IDs alone are not proof of independent geological sources.
+Projected export-array bytes conservatively include input arrays, kernels,
+36 property traces x251 states xactive_count x8 bytes (16 independent solves,
+10 two-property solves), plus54 residual/prediction vectors per survey row.
+Calibration must additionally budget its real observation/covariance arrays and
+metadata; this planner estimate is not total RSS or complete export acceptance.
+
+`evaluate_joint_structure(request)` is an initial no-I/O objective/derivative
+unit, not optimization. Exact keys: schema=`joint-survey-structure-request-1`,
+survey_request (the seven-key native planner request), density_kg_m3 float64(active,),
+susceptibility_si float64(active,), direction_physical float64(2*active,).
+Models must be within declared prior bounds. Direction contains density then
+susceptibility components in their respective physical units, not a unitless
+velocity or an injected kernel. Total logical array bytes, including these
+vectors, obey96MiB before any planner finite scan/hash/mesh construction.
+Result exactly schema=`joint-survey-structure-1`, plan_sha256, objective (float),
+gradient_physical float64(2*active,), exact_hessian_vector_physical float64(2*active,),
+approx_hessian_vector_physical float64(2*active,),
+cell_centre_cross_gradient float64(active,) in1/m² for normalized properties,
+optimizer_completed=false. Arrays are independently owned C-order/read-only.
+The dimensionless objective and the unscaled cell-centre diagnostic remain
+explicitly different. No custom weights or kernel/optimizer injection exists.
 
 ## Prospective calibration/evaluation and serialized CLI contract
 
