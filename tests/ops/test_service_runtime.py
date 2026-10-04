@@ -165,10 +165,25 @@ def test_inventory_rehashes_ordinary_files(tmp_path):
     (root / 'bin').mkdir(parents=True)
     (root / 'bin/python').write_bytes(b'fixture')
     (root / 'pyvenv.cfg').write_bytes(b'fixture')
+    (root / 'Transparent Busy.ani').write_bytes(b'legitimate owned wheel data')
     before = runtime.runtime_inventory(root, Path(sys.executable).resolve())
+    assert 'Transparent Busy.ani' in before['files']
     (root / 'pyvenv.cfg').write_bytes(b'mutated')
     after = runtime.runtime_inventory(root, Path(sys.executable).resolve())
     assert before != after
+
+
+@pytest.mark.parametrize('value', ['../outside', '/absolute', 'a//b', 'a\\b', 'C:drive',
+                                 'a/ leading', 'a/trailing ', 'a/dot.', 'a/..', 'a/\x00name'])
+def test_runtime_filename_policy_retains_path_boundaries(value):
+    with pytest.raises(ValueError, match='unsafe runtime'):
+        runtime.runtime_relative(value)
+
+
+def test_wheel_space_policy_does_not_relax_release_members():
+    assert runtime.runtime_relative('lib/scipy/Transparent Busy.ani') == 'lib/scipy/Transparent Busy.ani'
+    with pytest.raises(ValueError):
+        bundle.safe_relative('lib/scipy/Transparent Busy.ani')
 
 
 def test_inventory_byte_bound(tmp_path, monkeypatch):

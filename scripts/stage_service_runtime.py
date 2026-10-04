@@ -18,7 +18,7 @@ import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from prepare_service_release import file_digest, no_links, safe_relative, verify_bundle  # noqa: E402
+from prepare_service_release import file_digest, no_links, verify_bundle  # noqa: E402
 
 RELEASES = Path('/var/www/geophysics.ml.fasl-work.com/releases')
 EVIDENCE = Path('/var/lib/geophysics-deploy')
@@ -86,6 +86,14 @@ def root_owned_tree(root: Path) -> None:
             raise ValueError('release input contains an unexpected node')
 
 
+def runtime_relative(value: str) -> str:
+    if (not isinstance(value, str) or not value or len(value) > 1024
+            or any(not re.fullmatch(r'[A-Za-z0-9_. -]+', part) or part in ('.', '..')
+                   or part != part.strip() or part.endswith('.') for part in value.split('/'))):
+        raise ValueError('unsafe runtime member name')
+    return value
+
+
 def runtime_inventory(root: Path, interpreter: Path, *, deadline: float | None = None) -> dict:
     no_links(root)
     actual_python = interpreter.resolve(strict=True)
@@ -105,7 +113,7 @@ def runtime_inventory(root: Path, interpreter: Path, *, deadline: float | None =
                 if count > MAX_RUNTIME_ENTRIES:
                     raise ValueError('runtime entry bound exceeded')
                 path = Path(item.path)
-                name = safe_relative(path.relative_to(root).as_posix())
+                name = runtime_relative(path.relative_to(root).as_posix())
                 if item.is_symlink():
                     target = path.resolve(strict=True)
                     if name == 'lib64' and os.readlink(path) == 'lib' and target == root / 'lib' and target.is_dir():
