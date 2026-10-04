@@ -9,6 +9,7 @@ import io
 import json
 from pathlib import Path
 import re
+import sys
 import threading
 
 import pytest
@@ -83,6 +84,24 @@ def test_manifest_hash_binds_same_bytes_parsed(helper, tmp_path):
         helper.approval(path, digest)
 
 
+def test_actual_source_hash_mismatch_before_tool_launch(helper, tmp_path, monkeypatch):
+    source, vc, sdk = (tmp_path / name for name in ("source", "vc", "sdk"))
+    for path in (source, vc, sdk):
+        path.mkdir()
+    first = source / helper.SOURCE_FILES[0]
+    first.parent.mkdir(parents=True)
+    first.write_bytes(b"changed source")
+    original_hash = helper.file_hash
+    def supplied_hash(path):
+        return helper.PYTHON_PIN if path == Path(sys.executable) else original_hash(path)
+    monkeypatch.setattr(helper, "file_hash", supplied_hash)
+    def forbidden(*args, **kwargs):
+        pytest.fail("tool launch during source rejection")
+    monkeypatch.setattr(helper.subprocess, "Popen", forbidden)
+    with pytest.raises(helper.BuildHeld, match="^build_source_changed$"):
+        helper.verify_inputs(source, vc, sdk, manifest(helper))
+
+
 def test_manifest_raw_limit_before_parser(helper, tmp_path, monkeypatch):
     path = tmp_path / "private-approval.json"
     path.write_bytes(b" " * (helper.STREAM_CAP + 1))
@@ -129,6 +148,35 @@ def test_output_never_overwrites_or_deletes(helper, tmp_path):
     with pytest.raises(FileExistsError):
         helper.write_new(output, path.name, b"replacement")
     assert path.read_bytes() == b"retained"
+
+
+def test_existing_output_root_rejected_before_launch(helper, tmp_path, monkeypatch):
+    paths = {key: tmp_path / key for key in ("source", "output", "vc", "sdk")}
+    paths["system"] = tmp_path / "Windows"
+    for path in paths.values():
+        path.mkdir()
+    (paths["system"] / "System32").mkdir()
+    prior = paths["output"] / "retained.private"
+    prior.write_bytes(b"do not replace")
+    binding = manifest(helper)
+    binding["roots"] = {key: str(path) for key, path in paths.items()}
+    monkeypatch.setattr(helper, "verify_inputs", lambda *args: None)
+    def forbidden(*args, **kwargs):
+        pytest.fail("tool launch with an existing output root")
+    monkeypatch.setattr(helper.subprocess, "Popen", forbidden)
+    with pytest.raises(helper.BuildHeld, match="^build_output_invalid$"):
+        helper.run(*(paths[key] for key in ("source", "output", "vc", "sdk", "system")), binding)
+    assert prior.read_bytes() == b"do not replace"
+
+
+def test_observed_file_count_exceeded(helper, tmp_path, monkeypatch):
+    output = tmp_path / "output"
+    output.mkdir()
+    (output / "core.obj").write_bytes(b"a")
+    (output / "abi.obj").write_bytes(b"b")
+    monkeypatch.setattr(helper, "FILE_CAP", 1)
+    with pytest.raises(helper.BuildHeld, match="^build_output_invalid$"):
+        helper.output_size(output)
 
 
 @pytest.mark.parametrize("name", ["outside.txt", "../stage1.stdout", "core.dll/child"])
