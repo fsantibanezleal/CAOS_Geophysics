@@ -225,3 +225,36 @@ conservative work count uses max fold N/M for all25 fits. A future geometry
 planner may count exact25 fold shapes but cannot drop rows or relax the10^15
 pair ceiling. Memory formulas or successful small algebra tests are never
 substitutes for whole-request physical, export, resource or admission evidence.
+
+## Raw bootstrap inspection and custody boundary
+
+`inspect_geometry(csv_path, fresh_output_root, original, rights,
+line_definitions, sensor_definitions)` is a stdlib-only bootstrap. Exact
+Original identity, Rights and sorted unique LineDefinition/SensorDefinition
+rows are supplied, not invented. Definitions are bounded at65536lines/4sensors
+and cover the file exactly. The local source path is never serialized/fetched.
+No symlink/reparse/hardlink substitution; open-handle identity, streamed hash/
+byte count and final path identity must agree. Bounded records retain every
+row; an external unique-ID/ordinal index has8MiB cache and disk temporaries.
+Magnetic/sigma tokens are bounded ASCII but are not numerically decoded,
+cached, tested for finiteness or used for geometry choices. Geometry-only
+missing bits0..3/6 retain nullable UTC/height/terrain/clearance/heading. The
+measurement pass must emit its own completed immutable mask, not reuse an
+unopened measurement as valid zero.
+
+The internal receipt has exactly schema="m03-geometry-inspection/1", original,
+rows, lines, sensors, arrays, dictionaries, geometry_sha256, value_access=
+"not_opened". It is NOT SurveyInput, GeometrySeal or SurveyResult. Actual
+ArrayRefs support SurveyInput assembly; a full seal additionally needs reviewed
+metadata/navigation/partitions/sources/crossovers/capacity. No placeholder
+magnetic/sigma/reference array or raw copy is generated. Allowed private
+processing never implies public location rights.
+
+Geometry identity hashes source-order length-prefixed canonical geometry rows,
+excluding magnetic/sigma and their missingness. ordered_ids_sha256 is SHA256
+of concatenated ascii64 original row-ID payloads with defined NUL padding,
+not the old inline JSON-ID encoding. Chunks/pages/roots use the exact streamed
+names and limits. Verification reconstructs chunk/root/page identity, array
+shape/type/unit, dictionary coverage, padding/placeholders and source-order
+geometry hash; unknown files/rehashed semantic drift refuse. Verification
+does not assert physical eligibility or original authenticity from a hash.
