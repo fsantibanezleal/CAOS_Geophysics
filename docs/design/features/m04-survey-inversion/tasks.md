@@ -68,7 +68,8 @@ source+physical metadata, produce actual fits, evaluate/export/reimport and
 reproduce hashes. Include negative/cap/non-success exit tests and complete
 worked wiki commands. No HTTP/default license/correction guesses.
 Run interrupted Windows/local generation tests and honest filesystem-limit
-documentation, then owner-scoped hosted persistence/restore integration review.
+documentation, then owner-scoped hosted persistence integration review. Off-host
+restore/mail are not owner-tested-stage prerequisites under product SDD section8.
 
 ## T46: full field/user-data/API/view/course vertical
 
