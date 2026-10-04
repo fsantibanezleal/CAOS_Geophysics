@@ -5,6 +5,7 @@ small mathematical controls. No user-prepared engine/kernel objects are accepted
 """
 
 from time import monotonic
+import json
 
 import numpy as np
 import scipy.linalg as la
@@ -13,10 +14,11 @@ from simpeg import data, data_misfit, inverse_problem, inversion, maps, optimiza
 
 import gravity_forward as forward
 import gravity_survey_l2 as survey
+import gravity_l2_precision as precision
 
 
-RUNTIME_EPOCH = 'm02-survey-l2-cpu-3'
-OPTIMIZER_POLICY = 'projected-gncg-binding-release-1'
+RUNTIME_EPOCH = 'm02-survey-l2-cpu-4'
+OPTIMIZER_POLICY = 'projected-gncg-binding-release-certified-delta-1'
 FORWARD_SOURCE = '46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5'
 BETA_CANDIDATES = (.0001, .001, .01, .1, 1., 10., 100., 1000.)
 
@@ -261,6 +263,7 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         self._direction_kinds, self._last_direction_kind = [], 'not_run'
         self._direction_decisions, self._trial_checks = [], []
         self._last_trial_check = None
+        self._precision, self._precision_trials = None, []
         self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
 
     def _fail(self, reason):
@@ -270,7 +273,22 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
     def _trial_fail(self, reason):
         self._last_trial_check['decision'] = 'failure'
         self._last_trial_check['cause'] = reason
+        if self._precision_trials:
+            r = self._precision_trials[-1]
+            r.update(decision='not_run',cause='zero_displacement' if reason=='zero_free_direction' else
+                     'wall_cap' if reason=='wall_cap' else 'native_failure',passes=0,precision_digits=None,
+                     slope_interval=None,delta_interval=None,armijo_margin_interval=None)
         self._fail(reason)
+
+    def _certify_trial(self):
+        if self._precision is None:
+            # Native SimPEG descriptors represent a one-cell bound as a scalar.
+            # Broadcast that exact native value, without changing the box.
+            lower = np.broadcast_to(np.asarray(self.lower,dtype=np.float64),self.xc.shape)
+            upper = np.broadcast_to(np.asarray(self.upper,dtype=np.float64),self.xc.shape)
+            self._precision = precision._CertifiedDelta(self._problem,lower,upper,self._deadline)
+        self._precision.deadline = self._deadline
+        return self._precision.evaluate(self.xc,self._LS_xt,self.g,int(self.iter),int(self.iterLS),float(self.f),float(self._LS_ft))
 
     def _record(self):
         # The parent is the genuine BaseInvProblem, not a substituted objective.
@@ -282,6 +300,9 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         if np.any(self.xc < self.lower) or np.any(self.xc > self.upper): self._fail('state_mismatch')
         if self._initial_norm is None:
             self._initial_norm = max(1., float(np.linalg.norm(gradient, ord=np.inf)))
+            # Native terminal diagnostic printers require this initial scalar.
+            # Their tolF/tolX shortcuts are never called as our convergence rule.
+            self.f0 = phi
         projected = _kkt_gradient(self.xc, gradient, self.lower, self.upper)
         absolute = float(np.linalg.norm(projected, ord=np.inf))
         kkt = absolute/self._initial_norm
@@ -294,6 +315,8 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
 
     def stoppingCriteria(self, inLS=False):
         if inLS:
+            if len(self._precision_trials)>=4000: self._fail('state_mismatch')
+            self._precision_trials.append(precision._record(int(self.iter),int(self.iterLS),self.f,self._LS_ft))
             self._last_trial_check = {
                 'iteration': int(self.iter), 'trial': int(self.iterLS), 't': float(self._LS_t),
                 'phi_trial': float(self._LS_ft) if np.isfinite(self._LS_ft) else None,
@@ -311,11 +334,23 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
             if not np.isfinite(displacement).all() or not np.isfinite(slope):
                 self._trial_fail('nonfinite')
             self._last_trial_check['slope'] = slope
+            self._precision_trials[-1]['displacement_inf_q'] = float(np.max(np.abs(displacement)))
             if not np.any(displacement): self._trial_fail('zero_free_direction')
             if monotonic() > self._deadline: self._trial_fail('wall_cap')
             # Projection can turn a native descent direction into ascent.
             # Shorten that SAME direction; never rerun CG or use a fallback.
-            accepted = bool(super().stoppingCriteria(inLS=True)) if slope < 0. else False
+            if slope<0.:
+                try:
+                    certificate = self._certify_trial()
+                except (ValueError,KeyError,TypeError):
+                    certificate = self._precision_trials[-1]
+                    certificate.update(cause='range_unsupported')
+                self._precision_trials[-1] = precision._validate_record(certificate)
+                if certificate['cause']=='wall_cap': self._trial_fail('wall_cap')
+                accepted = certificate['decision']=='certified_accept'
+            else:
+                self._precision_trials[-1].update(cause='non_descent')
+                accepted = False
             self._trial_checks.append((self.iter, self.iterLS, self._LS_t, slope, int(accepted)))
             if accepted: self._last_trial_check['decision'] = 'accepted'
             return accepted
@@ -504,7 +539,8 @@ def _solve_partition(problem, prior, deadline=None):
         'last_cg_residual_status': cg_status,
         'direction_decisions': tuple(dict(item) for item in opt._direction_decisions),
         'trial_checks': survey._readonly(np.array(opt._trial_checks, dtype=np.float64).reshape(-1, 5)),
-        'last_trial_check': dict(opt._last_trial_check) if opt._last_trial_check is not None else None}
+        'last_trial_check': dict(opt._last_trial_check) if opt._last_trial_check is not None else None,
+        'precision_trials': tuple(dict(precision._validate_record(item)) for item in opt._precision_trials)}
     converged = reason in ('kkt_stable', 'absolute_stationary')
     return {'status': 'converged' if converged else ('failed' if reason in ('engine_error', 'nonfinite', 'state_mismatch')
                                                   else 'nonconverged'),
@@ -514,3 +550,434 @@ def _solve_partition(problem, prior, deadline=None):
             'phi_d': pd, 'phi_m': pm, 'phi_engine': phi, 'wrms': float(np.sqrt(pd/len(observed))) if pd is not None else None,
             'kkt_normalized': kkt, 'trace': trace, 'iterations': max(0, k-1), 'wall_seconds': float(monotonic()-started),
             'failed_trial': None if converged else {'iteration': int(getattr(opt, 'iter', 0)), 'reason': reason}}
+
+
+_WARNINGS = ('admitted_fixed_geometry','rank_deficient','zero_sensitivity_columns',
+             'validation_outside_fit_hull','error_assumed_conditional',
+             'geometry_uncertainty_not_propagated','cross_partition_dependence')
+_REASONS = ('kkt_stable','absolute_stationary','iteration_cap','cg_cap','line_search_failed','wall_cap',
+            'zero_free_direction','nonfinite','engine_error','state_mismatch')
+
+
+def _preflight_calibration(request):
+    """Conservative native + interval storage admission, not a measured RSS claim."""
+    _calibration_metadata(request)
+    plan = request['plan']
+    n,m = len(plan['request']['stations']['receivers_m']),len(plan['development_rows'])
+    # Charge actual submitted mask population, not a potentially inconsistent
+    # redundant geometry record that has not yet been recomputed.
+    a = int(np.count_nonzero(plan['request']['mesh']['active']))
+    sensitivity = 8*n*a
+    covariance = 8*m*m if request['noise']['kind']=='full_covariance' else 0
+    # <=a smallness rows plus <=3a BOTH-active first-order face rows.
+    intervals = 4096*(12*a+12*m+32*a)
+    projected = 8*sensitivity+12*covariance+intervals+(256+256+64)*1024**2
+    if sensitivity>64*1024**2 or covariance>32*1024**2 or projected>2*1024**3:
+        raise ValueError('calibration: projected native/interval workspace exceeds existing budget')
+    return projected
+
+
+def _marginal_metrics(prediction, observed, noise, indices):
+    weights = _weights(noise,indices)
+    residual = observed-prediction
+    with np.errstate(over='raise',invalid='raise'):
+        whitened = weights@residual
+        phi = float(whitened@whitened)
+        wrms,rmse = float(np.sqrt(phi/len(indices))),float(np.sqrt(np.mean(residual**2)))
+    if not np.isfinite([phi,wrms,rmse]).all() or not np.isfinite(whitened).all():
+        raise ValueError('evaluation: nonfinite marginal metrics')
+    return phi,wrms,rmse,residual,whitened
+
+
+def _physical_prediction(request,model):
+    return forward.forward_gravity({'schema':'gravity-prism-forward-request-1','frame':request['frame'],
+        'mesh':request['mesh'],'receivers_m':request['stations']['receivers_m'],
+        'density_kg_m3':model,'engine':request['engine']})['gz_up_mgal']+request['background_mgal']
+
+
+def _selected_index(candidates):
+    eligible = [c for c in candidates if c['eligible']]
+    if len(eligible)<2: return None
+    best = min(c['score_q'] for c in eligible)
+    ties = [c for c in eligible if abs(c['score_q']-best)<=1e-12*max(1.,abs(best))]
+    return min(ties,key=lambda c:(-c['beta_candidate'],c['index']))['index']
+
+
+def _unstarted_solve(rows,prior,beta,reason):
+    a = len(prior['start_kg_m3'])
+    empty = {key:survey._readonly(np.empty(0,dtype=np.int64 if key in ('cg_counts','line_search_counts') else np.float64))
+             for key in ('phi_d','phi_m','phi_engine','kkt_normalized','relative_changes','cg_counts','line_search_counts')}
+    empty['models_kg_m3'] = survey._readonly(np.empty((0,a)))
+    return {'status':'nonconverged' if reason=='wall_cap' else 'failed','reason':reason,'model_kg_m3':None,
+        'beta_candidate':beta,'beta_engine':len(rows)*beta,'fit_rows':survey._readonly(rows),'predicted_mgal':None,
+        'residual_observed_minus_predicted_mgal':None,'phi_d':None,'phi_m':None,'phi_engine':None,'wrms':None,
+        'kkt_normalized':None,'trace':empty,'iterations':0,'wall_seconds':0.,'failed_trial':{'iteration':0,'reason':reason}}
+
+
+def _run_fit(request,observed,noise,prior,rows,beta,observation_rows,deadline):
+    if monotonic()>deadline: return _unstarted_solve(rows,prior,beta,'wall_cap')
+    started = monotonic()
+    try:
+        problem = _build_problem(request,observed,noise,prior,rows,beta,observation_rows=observation_rows)
+        return _solve_partition(problem,prior,deadline)
+    except ArithmeticError:
+        result = _unstarted_solve(rows,prior,beta,'nonfinite')
+    except (ValueError,RuntimeError):
+        result = _unstarted_solve(rows,prior,beta,'engine_error')
+    result['wall_seconds'] = float(monotonic()-started)
+    return result
+
+
+def _fit_diagnostics(request,noise,observed,prior,plan):
+    rows = plan['development_rows']
+    problem = _build_problem(request,observed,noise,prior,rows,BETA_CANDIDATES[0],observation_rows=rows)
+    weighted = problem['misfit'].W@problem['simulation'].G
+    with np.errstate(over='raise',invalid='raise'):
+        sensitivity = np.sum((weighted/1000.)**2,axis=0)
+        singular = la.svdvals(weighted,check_finite=True)
+        threshold = float(max(weighted.shape)*np.finfo(np.float64).eps*singular[0])
+    rank = int(np.count_nonzero(singular>threshold))
+    if rank==0 or not np.isfinite(sensitivity).all() or not np.isfinite(singular).all():
+        raise ValueError('diagnostics: rank-zero/nonfinite data sensitivity')
+    warnings = ['admitted_fixed_geometry']
+    if rank<weighted.shape[1]: warnings.append('rank_deficient')
+    if np.any(sensitivity==0.): warnings.append('zero_sensitivity_columns')
+    from scipy.spatial import Delaunay
+    points = request['stations']['receivers_m'][:,:2]
+    if any(np.any(Delaunay(points[f['fit_rows']]).find_simplex(points[f['validation_rows']])<0) for f in plan['folds']):
+        warnings.append('validation_outside_fit_hull')
+    return {'fit_rows':survey._readonly(rows),'sensitivity_diagonal':survey._readonly(sensitivity),
+        'sensitivity_unit':'(kg/m3)^-2','singular_values':survey._readonly(singular),
+        'numeric_rank':rank,'numeric_nullity':weighted.shape[1]-rank,'rank_threshold':threshold,
+        'warnings':tuple(warnings)}
+
+
+def calibrate_gravity_l2(request):
+    """Actual serial8x3 fits + one selected refit; compact development only.
+
+    No I/O, user callback, warm start, failed-fold average or second selected
+    candidate on refit failure. Source verification/sealing remain external.
+    """
+    started = monotonic()
+    _preflight_calibration(request)
+    admitted = _admit_calibration(request)
+    plan,prior = admitted['plan'],admitted['prior']
+    req,rows = plan['request'],plan['development_rows']
+    observed = admitted['observations']['gz_up_mgal']
+    noise = {k:admitted['noise'][k] for k in ('kind','values')}
+    # Validate the complete declared covariance, not just selected subblocks.
+    _weights(noise,np.arange(len(rows),dtype=np.int64))
+    diagnostics = _fit_diagnostics(req,noise,observed,prior,plan)
+    warnings = list(diagnostics['warnings'])
+    if admitted['noise']['basis']=='explicit_conditional_gaussian': warnings.append('error_assumed_conditional')
+    warnings.append('geometry_uncertainty_not_propagated')
+    if admitted['noise']['cross_partition_dependence']=='possible_not_removed': warnings.append('cross_partition_dependence')
+    diagnostics['warnings'] = tuple(warnings)
+    deadline,candidates = started+1800.,[]
+    for index,beta in enumerate(BETA_CANDIDATES):
+        folds = []
+        for fold in plan['folds']:
+            solved = _run_fit(req,observed,noise,prior,fold['fit_rows'],beta,rows,deadline)
+            pd,wrms,rmse = None,None,None
+            if solved['status']=='converged' and monotonic()<=deadline:
+                prediction = _physical_prediction(req,solved['model_kg_m3'])
+                positions = np.searchsorted(rows,fold['validation_rows'])
+                try:
+                    pd,wrms,rmse,_,_ = _marginal_metrics(prediction[fold['validation_rows']],observed[positions],noise,positions)
+                except (ArithmeticError,ValueError):
+                    pass  # Literal unavailable score, never average successful folds only.
+            folds.append({'fold':fold['fold'],'solve':solved,'validation_rows':survey._readonly(fold['validation_rows']),
+                          'validation_phi_d':pd,'validation_wrms':wrms,'validation_rmse_mgal':rmse})
+        valid = all(f['solve']['status']=='converged' for f in folds)
+        scored = valid and all(f['validation_phi_d'] is not None for f in folds)
+        score = float(sum(f['validation_phi_d'] for f in folds)/sum(len(f['validation_rows']) for f in folds)) if scored else None
+        if score is not None and not np.isfinite(score): scored,score = False,None
+        candidates.append({'index':index,'beta_candidate':beta,'eligible':bool(scored),'folds':tuple(folds),
+                           'score_q':score,'reason':'eligible' if scored else 'invalid_score' if valid else 'fold_failure'})
+    selected = _selected_index(candidates)
+    final,prediction,status = None,None,'insufficient_candidates'
+    if selected is not None:
+        final = _run_fit(req,observed,noise,prior,rows,BETA_CANDIDATES[selected],rows,deadline)
+        status = 'selected' if final['status']=='converged' else 'final_nonconverged'
+        if final['model_kg_m3'] is not None: prediction = _physical_prediction(req,final['model_kg_m3'])
+    result = {'schema':'gravity-survey-l2-calibration-result-1','plan':plan,
+        'provenance':{'source':survey._snapshot(req['source']),'plan_sha256':plan['plan_sha256'],
+            'normalized_values_sha256':admitted['observations']['values_sha256'],'noise_sha256':admitted['noise']['values_sha256'],
+            'prior_sha256':survey._digest(prior),'policy_sha256':survey._digest(admitted['policy']),
+            'forward_source_sha256':FORWARD_SOURCE,'runtime_epoch':RUNTIME_EPOCH,
+            'runtime_versions':forward._runtime(),'source_verification':'external_required_not_performed_by_solver'},
+        'candidates':tuple(candidates),'selected_index':selected,'selection_status':status,'final_solve':final,
+        'predictions':{'rows':survey._readonly(np.arange(len(req['background_mgal']),dtype=np.int64)),
+                       'gz_up_mgal':survey._readonly(prediction) if prediction is not None else None},
+        'diagnostics':diagnostics,'scope':{'training':'not_applicable_classical','inverse':'weighted_bounded_l2',
+            'field_eligible':False,'full_M02_accepted':False,'API_accepted':False,'GPU_accepted':False,
+            'host_accepted':False,'geometry_error':'not_propagated'}}
+    result['result_sha256'] = survey._digest(result)
+    return result
+
+
+def _result_native_metadata(value):
+    """Result histories have the frozen256MiB allowance, not request96MiB.
+
+    Never changes planner/request caps. Charge the complete evaluation wrapper,
+    including repeated logical occurrences, before any numeric traversal/hash.
+    """
+    totals = [0,0,0]
+    def charge(size):
+        totals[1] += size
+        if totals[0]>256*1024**2 or totals[1]>survey.MAX_METADATA_BYTES or totals[2]>survey.MAX_SCALARS:
+            raise ValueError('result: complete native storage/metadata/scalar cap')
+    def size(item):
+        return len(json.dumps(item,sort_keys=True,ensure_ascii=False,allow_nan=False,separators=(',',':')).encode('utf-8'))
+    def visit(item,depth):
+        if depth>8: raise ValueError('result: eight container levels')
+        kind = type(item)
+        if kind is np.ndarray:
+            if item.dtype not in (np.dtype('float64'),np.dtype('int64'),np.dtype('bool')):
+                raise TypeError('result: exact native arrays required')
+            if item.ndim not in (1,2) or any(n>4096 for n in item.shape): raise ValueError('result: bounded dimensions')
+            totals[0] += item.nbytes
+            charge(size({'dtype':{'f':'<f8','i':'<i8','b':'|b1'}[item.dtype.kind],'shape':list(item.shape),'sha256':'0'*64}))
+        elif kind is dict:
+            if len(item)>survey.MAX_SCALARS: raise ValueError('result: dictionary count')
+            charge(2+max(0,len(item)-1)+len(item))
+            for key,child in item.items():
+                if type(key) is not str: raise TypeError('result: exact string keys')
+                visit(key,depth+1)
+                visit(child,depth+1)
+        elif kind is tuple:
+            if len(item)>survey.MAX_SCALARS: raise ValueError('result: tuple count')
+            charge(2+max(0,len(item)-1))
+            for child in item: visit(child,depth+1)
+        elif kind in (str,int,float,bool,type(None)):
+            totals[2] += 1
+            if kind is str and len(item)>1024: raise ValueError('result: text cap')
+            if kind is int and item.bit_length()>64: raise ValueError('result: integer cap')
+            charge(size(0. if kind is float and item==0 else item))
+        else: raise TypeError('result: hooks/subclasses/foreign values forbidden')
+    visit(value,0)
+
+
+def _int(value,maximum,field):
+    if type(value) is not int or not 0<=value<=maximum: raise ValueError(field+': exact bounded integer')
+
+
+def _solve_metadata(value,a,rows,beta):
+    survey._keys(value,('status','reason','model_kg_m3','beta_candidate','beta_engine','fit_rows','predicted_mgal',
+        'residual_observed_minus_predicted_mgal','phi_d','phi_m','phi_engine','wrms','kkt_normalized','trace',
+        'iterations','wall_seconds','failed_trial'),'solve')
+    survey._enum(value['status'],('converged','nonconverged','failed'),'solve.status')
+    survey._enum(value['reason'],_REASONS,'solve.reason')
+    for key in ('beta_candidate','beta_engine','wall_seconds'): survey._float(value[key],key)
+    if value['beta_candidate']!=beta or value['beta_engine']!=len(rows)*beta or value['wall_seconds']<0:
+        raise ValueError('solve: fixed beta/timing identity')
+    survey._array(value['fit_rows'],rows.shape,'solve.fit_rows',np.int64)
+    for key in ('predicted_mgal','residual_observed_minus_predicted_mgal'):
+        if value[key] is not None: survey._array(value[key],rows.shape,key)
+    if value['model_kg_m3'] is not None: survey._array(value['model_kg_m3'],(a,),'model_kg_m3')
+    for key in ('phi_d','phi_m','phi_engine','wrms','kkt_normalized'):
+        if value[key] is not None:
+            survey._float(value[key],key)
+            if value[key]<0: raise ValueError('solve: nonnegative metric')
+    _int(value['iterations'],200,'solve.iterations')
+    trace = value['trace']
+    survey._keys(trace,('models_kg_m3','phi_d','phi_m','phi_engine','kkt_normalized','relative_changes',
+                       'line_search_counts','cg_counts'),'trace')
+    survey._array(trace['models_kg_m3'],(None,a),'trace.models')
+    k = len(trace['models_kg_m3'])
+    if k>201: raise ValueError('trace:201states cap')
+    for key in ('phi_d','phi_m','phi_engine','kkt_normalized'): survey._array(trace[key],(k,),'trace.'+key)
+    survey._array(trace['relative_changes'],(max(0,k-1),),'trace.relative_changes')
+    for key in ('line_search_counts','cg_counts'): survey._array(trace[key],(max(0,k-1),),'trace.'+key,np.int64)
+    failed = value['failed_trial']
+    if failed is not None:
+        survey._keys(failed,('iteration','reason'),'failed_trial')
+        _int(failed['iteration'],200,'failed_trial.iteration')
+        survey._enum(failed['reason'],_REASONS,'failed_trial.reason')
+
+
+def _calibration_result_metadata(result):
+    survey._keys(result,('schema','plan','provenance','candidates','selected_index','selection_status',
+        'final_solve','predictions','diagnostics','scope','result_sha256'),'calibration_result')
+    survey._enum(result['schema'],('gravity-survey-l2-calibration-result-1',),'schema')
+    survey._sha(result['result_sha256'],'result_sha256')
+    survey._plan_result_metadata(result['plan'])
+    plan = result['plan']
+    a,n,m = len(plan['geometry']['active_cell_indices']),len(plan['request']['background_mgal']),len(plan['development_rows'])
+    provenance = result['provenance']
+    survey._keys(provenance,('source','plan_sha256','normalized_values_sha256','noise_sha256','prior_sha256',
+        'policy_sha256','forward_source_sha256','runtime_epoch','runtime_versions','source_verification'),'provenance')
+    survey._keys(provenance['source'],survey.SOURCE_KEYS,'provenance.source')
+    for key in ('plan_sha256','normalized_values_sha256','noise_sha256','prior_sha256','policy_sha256','forward_source_sha256'):
+        survey._sha(provenance[key],key)
+    survey._enum(provenance['forward_source_sha256'],(FORWARD_SOURCE,),'forward_source_sha256')
+    survey._enum(provenance['runtime_epoch'],(RUNTIME_EPOCH,),'runtime_epoch')
+    survey._enum(provenance['source_verification'],('external_required_not_performed_by_solver',),'source_verification')
+    survey._keys(provenance['runtime_versions'],forward.VERSIONS,'runtime_versions')
+    for key,version in forward.VERSIONS.items(): survey._enum(provenance['runtime_versions'][key],(version,),key)
+    candidates = result['candidates']
+    if type(candidates) is not tuple or len(candidates)!=8: raise ValueError('candidates: exact8')
+    for index,candidate in enumerate(candidates):
+        survey._keys(candidate,('index','beta_candidate','eligible','folds','score_q','reason'),'candidate')
+        _int(candidate['index'],7,'candidate.index')
+        survey._float(candidate['beta_candidate'],'candidate.beta')
+        if candidate['index']!=index or candidate['beta_candidate']!=BETA_CANDIDATES[index]:
+            raise ValueError('candidate: exact grid/order')
+        if type(candidate['eligible']) is not bool: raise TypeError('candidate: exact eligibility bool')
+        if candidate['score_q'] is not None: survey._float(candidate['score_q'],'candidate.score_q')
+        survey._enum(candidate['reason'],('eligible','fold_failure','invalid_score'),'candidate.reason')
+        if type(candidate['folds']) is not tuple or len(candidate['folds'])!=3: raise ValueError('candidate: exact3folds')
+        for fold_index,fold in enumerate(candidate['folds']):
+            survey._keys(fold,('fold','solve','validation_rows','validation_phi_d','validation_wrms','validation_rmse_mgal'),'fold')
+            _int(fold['fold'],2,'fold.index')
+            if fold['fold']!=fold_index: raise ValueError('fold: exact order')
+            expected = plan['folds'][fold_index]
+            survey._array(fold['validation_rows'],expected['validation_rows'].shape,'validation_rows',np.int64)
+            for key in ('validation_phi_d','validation_wrms','validation_rmse_mgal'):
+                if fold[key] is not None:
+                    survey._float(fold[key],key)
+                    if fold[key]<0: raise ValueError('validation: negative metric')
+            _solve_metadata(fold['solve'],a,expected['fit_rows'],BETA_CANDIDATES[index])
+    selected = result['selected_index']
+    if selected is not None: _int(selected,7,'selected_index')
+    survey._enum(result['selection_status'],('selected','insufficient_candidates','final_nonconverged'),'selection_status')
+    if result['final_solve'] is not None:
+        if selected is None: raise ValueError('final: absent selected identity')
+        _solve_metadata(result['final_solve'],a,plan['development_rows'],BETA_CANDIDATES[selected])
+    prediction = result['predictions']
+    survey._keys(prediction,('rows','gz_up_mgal'),'predictions')
+    survey._array(prediction['rows'],(n,),'predictions.rows',np.int64)
+    if prediction['gz_up_mgal'] is not None: survey._array(prediction['gz_up_mgal'],(n,),'predictions.gz')
+    diagnostics = result['diagnostics']
+    survey._keys(diagnostics,('fit_rows','sensitivity_diagonal','sensitivity_unit','singular_values','numeric_rank',
+        'numeric_nullity','rank_threshold','warnings'),'diagnostics')
+    survey._array(diagnostics['fit_rows'],(m,),'diagnostics.fit_rows',np.int64)
+    survey._enum(diagnostics['sensitivity_unit'],('(kg/m3)^-2',),'sensitivity_unit')
+    for key,shape in [('sensitivity_diagonal',(a,)),('singular_values',(min(m,a),))]:
+        if diagnostics[key] is not None: survey._array(diagnostics[key],shape,'diagnostics.'+key)
+    for key,maximum in [('numeric_rank',min(m,a)),('numeric_nullity',a)]:
+        if diagnostics[key] is not None: _int(diagnostics[key],maximum,'diagnostics.'+key)
+    if diagnostics['rank_threshold'] is not None: survey._float(diagnostics['rank_threshold'],'rank_threshold')
+    if type(diagnostics['warnings']) is not tuple or len(diagnostics['warnings'])>7: raise ValueError('diagnostics: bounded warnings tuple')
+    for warning in diagnostics['warnings']: survey._enum(warning,_WARNINGS,'warning')
+    scope = result['scope']
+    survey._keys(scope,('training','inverse','field_eligible','full_M02_accepted','API_accepted','GPU_accepted',
+                       'host_accepted','geometry_error'),'scope')
+    for key,value in [('training','not_applicable_classical'),('inverse','weighted_bounded_l2'),('geometry_error','not_propagated')]:
+        survey._enum(scope[key],(value,),key)
+    for key in ('field_eligible','full_M02_accepted','API_accepted','GPU_accepted','host_accepted'):
+        if type(scope[key]) is not bool or scope[key] is not False: raise ValueError('scope: exact False nonclaim')
+
+
+def _validate_solve_state(solve,rows):
+    if not np.array_equal(solve['fit_rows'],rows): raise ValueError('solve: row binding')
+    trace,k = solve['trace'],len(solve['trace']['models_kg_m3'])
+    if solve['iterations']!=max(0,k-1): raise ValueError('solve: accepted history count')
+    if any(np.any(trace[key]<0) for key in ('phi_d','phi_m','phi_engine','kkt_normalized','relative_changes')):
+        raise ValueError('trace: negative metrics')
+    if np.any(trace['line_search_counts']<1) or np.any(trace['line_search_counts']>20) or np.any(trace['cg_counts']<0) or np.any(trace['cg_counts']>200):
+        raise ValueError('trace: original trial/CG caps')
+    if not np.array_equal(trace['relative_changes'],np.abs(np.diff(trace['phi_engine']))/np.maximum(1.,np.abs(trace['phi_engine'][:-1]))):
+        raise ValueError('trace: native relative change binding')
+    if not np.allclose(trace['phi_engine'],trace['phi_d']+solve['beta_engine']*trace['phi_m'],rtol=1e-10,atol=1e-12):
+        raise ValueError('trace: fixed objective binding')
+    if k:
+        if solve['model_kg_m3'] is None or not np.array_equal(solve['model_kg_m3'],trace['models_kg_m3'][-1]):
+            raise ValueError('solve: exact accepted terminal model')
+        for key in ('phi_d','phi_m','phi_engine','kkt_normalized'):
+            if solve[key]!=float(trace[key][-1]): raise ValueError('solve: terminal metric binding')
+        if solve['wrms']!=float(np.sqrt(solve['phi_d']/len(rows))): raise ValueError('solve: WRMS binding')
+    elif solve['model_kg_m3'] is not None or any(solve[key] is not None for key in ('phi_d','phi_m','phi_engine','wrms','kkt_normalized')):
+        raise ValueError('solve: unavailable metrics must be None')
+    success = solve['status']=='converged'
+    if success!=(solve['reason'] in ('kkt_stable','absolute_stationary')): raise ValueError('solve: status/reason binding')
+    if success and (not k or solve['failed_trial'] is not None or solve['predicted_mgal'] is None or solve['residual_observed_minus_predicted_mgal'] is None):
+        raise ValueError('solve: incomplete success')
+    if not success and (solve['failed_trial'] is None or solve['failed_trial']['reason']!=solve['reason']):
+        raise ValueError('solve: retained failure identity')
+    if solve['reason']=='kkt_stable' and (k<4 or solve['kkt_normalized']>1e-5 or np.any(trace['relative_changes'][-3:]>1e-6)):
+        raise ValueError('solve: frozen three-change criterion')
+    if solve['reason']=='absolute_stationary' and solve['kkt_normalized']>1e-12:
+        raise ValueError('solve: necessary native normalized stationarity bound')
+
+
+def _validate_frozen(result):
+    if survey._digest({k:v for k,v in result.items() if k!='result_sha256'})!=result['result_sha256']:
+        raise ValueError('frozen: content hash mismatch')
+    plan,provenance = result['plan'],result['provenance']
+    if provenance['plan_sha256']!=plan['plan_sha256'] or survey._digest(provenance['source'])!=survey._digest(plan['request']['source']):
+        raise ValueError('frozen: source/plan binding')
+    expected_policy = {'name':'ordinary-l2-beta-grid-1','beta_candidates':BETA_CANDIDATES,
+                       'optimizer':OPTIMIZER_POLICY,'training':'not_applicable_classical'}
+    if provenance['policy_sha256']!=survey._digest(expected_policy): raise ValueError('frozen: current exact policy binding')
+    if result['selection_status']!='selected' or result['final_solve'] is None: raise ValueError('frozen: nonconverged/unselected result')
+    for candidate in result['candidates']:
+        for fold,expected in zip(candidate['folds'],plan['folds']):
+            if not np.array_equal(fold['validation_rows'],expected['validation_rows']): raise ValueError('fold: row binding')
+            _validate_solve_state(fold['solve'],expected['fit_rows'])
+            if fold['validation_phi_d'] is not None and fold['validation_wrms']!=float(np.sqrt(fold['validation_phi_d']/len(fold['validation_rows']))):
+                raise ValueError('fold: WRMS binding')
+        eligible = all(f['solve']['status']=='converged' and all(f[k] is not None for k in ('validation_phi_d','validation_wrms','validation_rmse_mgal')) for f in candidate['folds'])
+        if candidate['eligible']!=eligible: raise ValueError('candidate: no missing-fold eligibility')
+        expected_score = float(sum(f['validation_phi_d'] for f in candidate['folds'])/sum(len(f['validation_rows']) for f in candidate['folds'])) if eligible else None
+        if candidate['score_q']!=expected_score: raise ValueError('candidate: exact complete score')
+    if result['selected_index']!=_selected_index(result['candidates']): raise ValueError('selection: fixed tie/eligibility binding')
+    final = result['final_solve']
+    _validate_solve_state(final,plan['development_rows'])
+    if final['status']!='converged': raise ValueError('frozen: unsuccessful selected refit')
+    if not np.array_equal(result['predictions']['rows'],np.arange(len(plan['request']['background_mgal']),dtype=np.int64)):
+        raise ValueError('predictions: complete original row identity')
+    if result['predictions']['gz_up_mgal'] is None: raise ValueError('frozen: unavailable predictions')
+    # Recompute geometry/plan AFTER complete wrapper metadata/hash admission.
+    survey._validate_plan(plan)
+    prediction = _physical_prediction(plan['request'],final['model_kg_m3'])
+    if not np.allclose(prediction,result['predictions']['gz_up_mgal'],rtol=1e-10,atol=1e-12):
+        raise ValueError('frozen: independent physical prediction binding')
+    if not np.allclose(prediction[final['fit_rows']],final['predicted_mgal'],rtol=1e-10,atol=1e-12):
+        raise ValueError('frozen: fit prediction binding')
+
+
+def evaluate_gravity_l2(request):
+    """Separate sealed marginal score; NO optimization, correction or refit."""
+    _result_native_metadata(request)
+    survey._keys(request,('schema','frozen_calibration','observations','noise'),'evaluation')
+    survey._enum(request['schema'],('gravity-survey-l2-evaluation-request-1',),'schema')
+    frozen = request['frozen_calibration']
+    _calibration_result_metadata(frozen)
+    rows = frozen['plan']['outer_rows']
+    observed,noise = request['observations'],request['noise']
+    survey._keys(observed,('rows','gz_up_mgal','values_sha256','acceleration_unit','vertical_positive'),'observations')
+    survey._array(observed['rows'],rows.shape,'observations.rows',np.int64)
+    survey._array(observed['gz_up_mgal'],rows.shape,'observations.values')
+    survey._sha(observed['values_sha256'],'values_sha256')
+    survey._enum(observed['acceleration_unit'],('mGal',),'acceleration_unit')
+    survey._enum(observed['vertical_positive'],('up',),'vertical_positive')
+    survey._keys(noise,('kind','values','unit','basis','citation','values_sha256','cross_partition_dependence'),'noise')
+    survey._enum(noise['kind'],('diagonal_sd','full_covariance'),'noise.kind')
+    covariance = noise['kind']=='full_covariance'
+    survey._array(noise['values'],(len(rows),len(rows)) if covariance else rows.shape,'noise.values')
+    survey._enum(noise['unit'],('mGal^2' if covariance else 'mGal',),'noise.unit')
+    survey._enum(noise['basis'],('measured_gaussian','propagated_independent_gaussian','explicit_conditional_gaussian'),'noise.basis')
+    survey._enum(noise['cross_partition_dependence'],('declared_absent','possible_not_removed'),'dependence')
+    survey._text(noise['citation'],'noise.citation')
+    survey._sha(noise['values_sha256'],'noise.values_sha256')
+    survey._finite(request)
+    if not np.array_equal(observed['rows'],rows): raise ValueError('evaluation: exact outer row binding')
+    if survey._digest({k:v for k,v in observed.items() if k!='values_sha256'})!=observed['values_sha256']:
+        raise ValueError('evaluation: observation hash mismatch')
+    if survey._digest({k:noise[k] for k in ('kind','unit','values')}|{'rows':rows})!=noise['values_sha256']:
+        raise ValueError('evaluation: noise hash mismatch')
+    _validate_frozen(frozen)
+    observed = survey._snapshot(observed)
+    prediction = survey._readonly(frozen['predictions']['gz_up_mgal'][rows])
+    phi,wrms,rmse,residual,whitened = _marginal_metrics(prediction,observed['gz_up_mgal'],
+        {k:noise[k] for k in ('kind','values')},np.arange(len(rows),dtype=np.int64))
+    result = {'schema':'gravity-survey-l2-evaluation-result-1','calibration_sha256':frozen['result_sha256'],
+        'observations':observed,'noise_sha256':noise['values_sha256'],'rows':survey._readonly(rows),'predicted_mgal':prediction,
+        'residual_observed_minus_predicted_mgal':survey._readonly(residual),'whitened_residual':survey._readonly(whitened),
+        'phi_d':phi,'wrms':wrms,'rmse_mgal':rmse,
+        'prediction_quality':'within_declared_noise' if wrms<=2. else 'poor_under_declared_noise',
+        'dependence':noise['cross_partition_dependence'],'geometry_conditioning':'fixed_not_propagated',
+        'field_truth':None,'model_accuracy':None,'field_eligible':False,'full_M02_accepted':False}
+    result['result_sha256'] = survey._digest(result)
+    return result

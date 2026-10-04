@@ -6,6 +6,7 @@ import hashlib
 import importlib.metadata
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import socket
 import subprocess
 
@@ -319,13 +320,17 @@ def test_private_optimizer_injected_failures_never_claim_convergence(monkeypatch
         if failure == 'nonfinite_direction': step[0] = np.nan
         return step
     monkeypatch.setattr(l2.optimization.ProjectedGNCG, 'findSearchDirection', direction)
-    official_stop = l2.optimization.Minimize.stoppingCriteria
-    def stop(opt, inLS=False):
-        if inLS:
-            seen['ls'] += 1
-            if failure == 'line_search': return False
-        return official_stop(opt, inLS=inLS)
-    monkeypatch.setattr(l2.optimization.Minimize, 'stoppingCriteria', stop)
+    official_certificate = l2._RecordedProjectedGNCG._certify_trial
+    def certificate(opt):
+        seen['ls'] += 1
+        if failure == 'line_search':
+            # The cpu-4 predicate replaces native absolute-Phi stoppers.
+            # Inject unavailability at its real owned seam, not an unused vendor hook.
+            r = l2.precision._record(int(opt.iter),int(opt.iterLS),opt.f,opt._LS_ft)
+            r.update(cause='range_unsupported',displacement_inf_q=float(np.max(np.abs(opt._LS_xt-opt.xc))))
+            return r
+        return official_certificate(opt)
+    monkeypatch.setattr(l2._RecordedProjectedGNCG, '_certify_trial', certificate)
     result = l2._solve_partition(problem, prior)
     reason = {'cg_residual': 'cg_cap', 'nonfinite_direction': 'nonfinite',
               'engine_error': 'engine_error', 'line_search': 'line_search_failed'}[failure]
@@ -360,6 +365,7 @@ def test_private_optimizer_deadline_precedence_after_failed_line_search(monkeypa
     problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
     clock = [0.]
     monkeypatch.setattr(l2, 'monotonic', lambda: clock[0])
+    monkeypatch.setattr(l2.precision, 'monotonic', lambda: clock[0])
     official_ls = l2.optimization.ProjectedGNCG.modifySearchDirection
     def rejected(opt, direction):
         trial, _ = official_ls(opt, direction)
@@ -540,6 +546,20 @@ def diagnostic_opt(monkeypatch, q, g, inverse, lower, upper):
     return opt
 
 
+def diagnostic_quadratic_operands(opt, h):
+    """Test-only explicit SPD residual factors for the old arithmetic controls.
+
+    No production callback/fallback. The toy constant objective offset cancels
+    in delta; factors reproduce its gradient/Hessian to ordinary binary roundoff.
+    """
+    g = np.linalg.cholesky(np.asarray(h,dtype=np.float64)/2).T
+    target = g@opt.xc-np.linalg.solve(g.T,opt.g/2)
+    opt._problem = {'simulation':SimpleNamespace(G=g),
+                    'misfit':SimpleNamespace(W=sp.eye(len(g),format='csr'),data=SimpleNamespace(dobs=target)),
+                    'regularization':SimpleNamespace(multipliers=(),objfcts=()),
+                    'reference_q':np.zeros(len(opt.xc)), 'beta_engine':1.}
+
+
 @pytest.mark.parametrize('mixed', [False, True])
 def test_degenerate_release_exact_trigger_and_certificate(monkeypatch, mixed):
     q, g = ([0., 1.], [-2., 0.]) if mixed else ([0., 0.], [-2., -3.])
@@ -583,6 +603,7 @@ def test_release_official_armijo_counts_and_rounded_trial(monkeypatch, rounded):
     else:
         opt = diagnostic_opt(monkeypatch, [0.]*3, [-2.]*3, [.5]*3, [0.]*3, [2.]*3)
         h = np.full((3, 3), 1.9)+np.eye(3)*.1
+        diagnostic_quadratic_operands(opt,h)
         opt.f = 5.
         opt.evalFunction = lambda q, **kwargs: float(.5*q@h@q-2*np.sum(q)+5)
     assert not opt.stoppingCriteria()
@@ -679,6 +700,7 @@ def test_binding_face_delegation_actual_projected_armijo_shortening(monkeypatch)
     h = np.array([[1., -1.5], [-1.5, 2.5]])
     opt = diagnostic_opt(monkeypatch, q, g, 1/np.diag(h), [0., 0.], [1., 1.])
     opt.H, opt.f = sp.csr_matrix(h), 5.
+    diagnostic_quadratic_operands(opt,h)
     def objective(x, **kwargs):
         delta = x-q
         return float(5.+g@delta+.5*delta@h@delta)
@@ -703,6 +725,7 @@ def test_binding_feasible_chord_is_not_projected_gradient_arc(monkeypatch):
     opt = diagnostic_opt(monkeypatch, [0.], [-10.], [1.], [0.], [1.])
     opt.f = 1.
     opt.evalFunction = lambda q, **kwargs: float(1.-10*q[0]+20*q[0]**2)
+    diagnostic_quadratic_operands(opt,[[40.]])
     assert not opt.stoppingCriteria()
     direction = opt.findSearchDirection()
     trial, accepted = opt.modifySearchDirection(direction)
@@ -749,12 +772,12 @@ def test_binding_both_branch_trial_fault_no_false_acceptance(monkeypatch, kind, 
     assert opt._last_trial_check['cause'] == reason
 
 
-def test_binding_trace_ten_keys_and_unavailable_cg_not_success():
+def test_binding_trace_cpu4_eleven_keys_and_unavailable_cg_not_success():
     result, problem = assert_six_cell_optimum('full_covariance', 75., 'zero')
     e = problem['optimizer_evidence']
     assert set(e) == {'trial_objectives', 'direction_kinds', 'last_direction_kind', 'last_cg_count',
                       'last_cg_absolute_residual', 'last_cg_relative_residual', 'last_cg_residual_status',
-                      'direction_decisions', 'trial_checks', 'last_trial_check'}
+                      'direction_decisions', 'trial_checks', 'last_trial_check','precision_trials'}
     decisions = e['direction_decisions']
     assert type(decisions) is tuple and len(decisions) == result['iterations'] <= 200
     assert e['last_cg_residual_status'] == 'not_run'
