@@ -595,6 +595,15 @@ def _physical_prediction(request,model):
         'density_kg_m3':model,'engine':request['engine']})['gz_up_mgal']+request['background_mgal']
 
 
+def _bounded_prediction(request,model,deadline):
+    if monotonic()>deadline: raise _SolveFailure('wall_cap')
+    prediction=_physical_prediction(request,model)
+    survey._array(prediction,request['background_mgal'].shape,'prediction')
+    if not np.isfinite(prediction).all(): raise ArithmeticError('nonfinite prediction')
+    if monotonic()>deadline: raise _SolveFailure('wall_cap')
+    return prediction
+
+
 def _selected_index(candidates):
     eligible = [c for c in candidates if c['eligible']]
     if len(eligible)<2: return None
@@ -680,11 +689,12 @@ def calibrate_gravity_l2(request):
             solved = _run_fit(req,observed,noise,prior,fold['fit_rows'],beta,rows,deadline)
             pd,wrms,rmse = None,None,None
             if solved['status']=='converged' and monotonic()<=deadline:
-                prediction = _physical_prediction(req,solved['model_kg_m3'])
-                positions = np.searchsorted(rows,fold['validation_rows'])
                 try:
-                    pd,wrms,rmse,_,_ = _marginal_metrics(prediction[fold['validation_rows']],observed[positions],noise,positions)
-                except (ArithmeticError,ValueError):
+                    prediction = _bounded_prediction(req,solved['model_kg_m3'],deadline)
+                    positions = np.searchsorted(rows,fold['validation_rows'])
+                    scored_values = _marginal_metrics(prediction[fold['validation_rows']],observed[positions],noise,positions)
+                    if monotonic()<=deadline: pd,wrms,rmse = scored_values[:3]
+                except (ArithmeticError,ValueError,RuntimeError):
                     pass  # Literal unavailable score, never average successful folds only.
             folds.append({'fold':fold['fold'],'solve':solved,'validation_rows':survey._readonly(fold['validation_rows']),
                           'validation_phi_d':pd,'validation_wrms':wrms,'validation_rmse_mgal':rmse})
@@ -699,7 +709,17 @@ def calibrate_gravity_l2(request):
     if selected is not None:
         final = _run_fit(req,observed,noise,prior,rows,BETA_CANDIDATES[selected],rows,deadline)
         status = 'selected' if final['status']=='converged' else 'final_nonconverged'
-        if final['model_kg_m3'] is not None: prediction = _physical_prediction(req,final['model_kg_m3'])
+        if final['model_kg_m3'] is not None:
+            prediction_reason=None
+            try: prediction = _bounded_prediction(req,final['model_kg_m3'],deadline)
+            except _SolveFailure: prediction_reason='wall_cap'
+            except ArithmeticError: prediction_reason='nonfinite'
+            except (ValueError,RuntimeError): prediction_reason='engine_error'
+            if prediction_reason is not None and final['status']=='converged':
+                final.update(status='nonconverged' if prediction_reason=='wall_cap' else 'failed',
+                             reason=prediction_reason,
+                             failed_trial={'iteration':final['iterations'],'reason':prediction_reason})
+                status='final_nonconverged'
     result = {'schema':'gravity-survey-l2-calibration-result-1','plan':plan,
         'provenance':{'source':survey._snapshot(req['source']),'plan_sha256':plan['plan_sha256'],
             'normalized_values_sha256':admitted['observations']['values_sha256'],'noise_sha256':admitted['noise']['values_sha256'],

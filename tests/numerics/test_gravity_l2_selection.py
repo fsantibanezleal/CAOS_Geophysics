@@ -139,6 +139,55 @@ def test_whole_workflow_expiry_does_not_launch_additional_fits(monkeypatch):
             assert solved['trace']['models_kg_m3'].shape==(0,48)
 
 
+@pytest.mark.parametrize('fault',['prediction','score','final_prediction','late_prediction','late_score','late_final'])
+def test_real_workflow_prediction_and_score_barriers_preserve_unavailable(monkeypatch,fault):
+    clock=[monotonic()]
+    monkeypatch.setattr(l2,'monotonic',lambda:clock[0])
+    calls=[]
+    native_prediction,native_score=l2._physical_prediction,l2._marginal_metrics
+    def predict(req,model):
+        value=native_prediction(req,model)
+        calls.append('prediction')
+        is_final=len(calls)==25
+        if fault=='prediction' and len(calls)==1: raise RuntimeError('retained injected prediction failure')
+        if fault=='final_prediction' and is_final: raise RuntimeError('retained final prediction failure')
+        if fault=='late_prediction' or (fault=='late_final' and is_final): clock[0]+=1801.
+        return value
+    score_calls=[]
+    def score(*args):
+        value=native_score(*args)
+        score_calls.append('score')
+        if fault=='score' and len(score_calls)==1: raise RuntimeError('retained injected scoring failure')
+        if fault=='late_score': clock[0]+=1801.
+        return value
+    monkeypatch.setattr(l2,'_physical_prediction',predict)
+    monkeypatch.setattr(l2,'_marginal_metrics',score)
+    result=l2.calibrate_gravity_l2(calibration_request())
+    assert len(result['candidates'])==8 and all(len(c['folds'])==3 for c in result['candidates'])
+    if fault in ('prediction','score'):
+        first=result['candidates'][0]
+        assert first['eligible'] is False and first['score_q'] is None
+        assert first['reason']=='invalid_score'
+        assert first['folds'][0]['solve']['status']=='converged'
+        assert first['folds'][0]['validation_phi_d'] is None
+        assert result['selection_status']=='selected' and result['selected_index']==7
+    elif fault in ('late_prediction','late_score'):
+        assert result['selection_status']=='insufficient_candidates'
+        assert result['selected_index'] is result['final_solve'] is None
+        assert all(c['eligible'] is False and c['score_q'] is None for c in result['candidates'])
+        assert result['candidates'][0]['folds'][0]['validation_phi_d'] is None
+    else:
+        assert result['selected_index']==7 and result['selection_status']=='final_nonconverged'
+        assert result['predictions']['gz_up_mgal'] is None
+        final=result['final_solve']
+        assert final['status']==('failed' if fault=='final_prediction' else 'nonconverged')
+        assert final['reason']==('engine_error' if fault=='final_prediction' else 'wall_cap')
+        assert final['model_kg_m3'] is not None
+        assert final['failed_trial']=={'iteration':final['iterations'],'reason':final['reason']}
+        with pytest.raises(ValueError,match='nonconverged'): l2.evaluate_gravity_l2(outer_request(result))
+    assert survey._digest({k:v for k,v in result.items() if k!='result_sha256'})==result['result_sha256']
+
+
 @pytest.mark.parametrize('fault',['extra','array','hash','model','source','epoch','status','prediction','units'])
 def test_frozen_result_tamper_and_metadata_before_work(monkeypatch,fault):
     result = l2.calibrate_gravity_l2(calibration_request())
