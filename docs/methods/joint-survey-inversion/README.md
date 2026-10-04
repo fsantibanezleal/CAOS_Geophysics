@@ -10,7 +10,9 @@ The exact [native contract](../../design/features/joint-survey-inversion/contrac
 [objective/algorithm proposal](../../design/features/joint-survey-inversion/algorithms.md),
 [requirements](../../design/features/joint-survey-inversion/requirements.md),
 [frozen controls](../../design/features/joint-survey-inversion/validation.md) and
-[primary research](research.md) define this method. Planner and numerical-oracle
+[primary research](research.md), [bounded-reference applicability](bounded-reference.md),
+and [proposed serialized intake](../../design/features/joint-survey-inversion/intake-unit.md)
+define this method. Planner and numerical-oracle
 milestones are not a complete inverse/export workflow. The nonlinear optimizer
 and serialized full-pipeline seams require their stated applicability review and
 actual tests before a runnable complete recipe is advertised.
