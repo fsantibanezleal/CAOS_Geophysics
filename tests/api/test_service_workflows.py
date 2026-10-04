@@ -11,12 +11,22 @@ import pytest
 
 from app.accounts import provision_account
 from app.server import create_app
+from app.schemas import UserCreate
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 from qualify_api_workflows import Session, workflows  # noqa: E402
+from qualify_isolated_api import qualification_account  # noqa: E402
 
 TEST_OWNER = {'username': 'owner@example.org', 'password': 'test-only-owner-password'}
 TEST_OTHER = {'username': 'other@example.org', 'password': 'test-only-other-password'}
+
+
+def test_qualification_identifier_library_acceptance_without_mail():
+    account = qualification_account('geophysics-qualification-abcdef123456')
+    parsed = UserCreate(email=account['username'], password=account['password'])
+    assert parsed.email == account['username']
+    assert len(account['password']) >= 32
+    assert parsed.is_superuser is False
 
 
 @pytest.fixture

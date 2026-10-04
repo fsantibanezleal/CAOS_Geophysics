@@ -32,6 +32,15 @@ PROPERTIES = ('User', 'Group', 'MainPID', 'ActiveState', 'SubState', 'MemoryMax'
               'CapabilityBoundingSet', 'RestrictAddressFamilies', 'ReadWritePaths')
 
 
+def qualification_account(name: str) -> dict:
+    if not re.fullmatch(r'geophysics-qualification-[0-9a-f]{12}', name):
+        raise ValueError('invalid owned qualification name')
+    # FastAPI Users EmailStr refuses reserved .invalid domains. This identifier
+    # is syntactically valid only; no mailbox/DNS verification or SMTP is invoked.
+    return {'username': 'qualification.' + name.rsplit('-', 1)[-1] + '@geophysics.ml.fasl-work.com',
+            'password': secrets.token_urlsafe(32)}
+
+
 def unit_texts(release: Path, token: str) -> tuple[str, str, str]:
     if not re.fullmatch(r'[0-9a-f]{12}', token):
         raise ValueError('invalid qualification identity')
@@ -173,14 +182,15 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
         owner, other = None, None
         if owner_credentials is not None:
             owner = json.loads(credentials(bounded_private_json(owner_credentials)))
-            other = {'username': 'qualification.' + name.rsplit('-', 1)[-1] + '@geophysics.invalid',
-                     'password': secrets.token_urlsafe(32)}
+            other = qualification_account(name)
             exclusive_private_file(evidence / 'qualification-account.json', credentials(other))
             runner = BootstrapRunner(*identity, STATE)
-            runner.run('qualification-account', [str(release / '.venv/bin/python'), '-I', '-B',
-                       str(release / 'source/scripts/bootstrap_service_state.py'), '--internal-account'],
-                       release / 'source', account=credentials(other))
-            record['account_provisioning'] = runner.steps
+            try:
+                runner.run('qualification-account', [str(release / '.venv/bin/python'), '-I', '-B',
+                           str(release / 'source/scripts/bootstrap_service_state.py'), '--internal-account'],
+                           release / 'source', account=credentials(other))
+            finally:
+                record['account_provisioning'] = runner.steps
         for path, text in zip(paths, (api, sock), strict=True):
             exclusive_private_file(path, text.encode('utf-8'))
             os.chmod(path, 0o644)
