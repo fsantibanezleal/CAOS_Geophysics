@@ -108,3 +108,55 @@ def geometry_request(rows):
         spectrum=None, export_policy=dict(destination_policy="new_directory_only", raw_requested="exclude",
             derivative_requested="private", include_replay_inputs=True, redaction_policy="deny_members_keep_reason",
             network_during_replay=False))
+
+
+def control_rows(regime):
+    """Original authored S1 independent dipoles, only after the fixed geometry seal."""
+    if regime != "S1":
+        raise ValueError("This generator revision has not implemented the other regimes.")
+    from magnetic_line_validation import make_partitions
+    rows = geometry_rows()
+    seal = make_partitions(rows, geometry_request(rows))
+    assert len(seal["outer_training_ids"]) == 294 and len(seal["outer_validation_ids"]) == 33
+    dec, inc = math.radians(12.), math.radians(55.)
+    direction = (math.cos(inc)*math.sin(dec), math.cos(inc)*math.cos(dec), -math.sin(inc))
+    for row in rows:
+        vector = analytic_dipole_vector((row["easting_m"], row["northing_m"], row["upward_m"]))
+        row["magnetic_nT"] = math.fsum(a*b for a, b in zip(direction, vector))
+    return rows
+
+
+def analytic_dipole_vector(position):
+    """Direct SI control operator, independent of Harmonica and fitted1/r blocks."""
+    dipoles = (
+        ((0., 0., -300.), (2e7, -1e7, 3e7)),
+        ((-700., 500., -500.), (-1e7, 2e7, 1e7)),
+        ((800., -600., -250.), (1e7, 1e7, -2e7)),
+    )
+    vector = [0., 0., 0.]
+    for source, moment in dipoles:
+        r = tuple(a-b for a, b in zip(position, source))
+        length = math.sqrt(math.fsum(x*x for x in r))
+        dot = math.fsum(a*b for a, b in zip(moment, r))
+        for axis in range(3):
+            # Explicit analytic control mu0/(4pi)=1e-7 SI and T->nT=1e9.
+            vector[axis] += 100*(3*r[axis]*dot/length**5 - moment[axis]/length**3)
+    return vector
+
+
+def control_input(regime):
+    """Actually byte-bound original authored acquisition; no provider data."""
+    rows = control_rows(regime)
+    _, metadata, request = geometry_input()
+    metadata["dataset_id"] = "authored-dipoles"
+    metadata["revision"] = "dipole-1"
+    metadata["quantity"].update(kind="scalar_total_field_anomaly", channel_name="authored-weak-anomaly",
+                                sign_definition="authored_weak_projection")
+    metadata["authored_control"].update(generator_revision="dipole-1", regime=regime,
+        truth_definition="Three explicit independent SI dipoles; weak projection on authored F48000nT/D12deg/I55deg")
+    raw = csv_bytes(rows)
+    metadata["original"].update(csv_sha256=sha256(raw).hexdigest(), csv_bytes=len(raw))
+    request["dataset_version_sha256"] = dataset_identity(sha256(raw).hexdigest(), sha256(canonical_bytes(metadata)).hexdigest())
+    request["channel_sha256"] = channel_identity(rows)
+    request["split"]["sealed_values_sha256"] = channel_identity(rows)
+    return raw, metadata, request

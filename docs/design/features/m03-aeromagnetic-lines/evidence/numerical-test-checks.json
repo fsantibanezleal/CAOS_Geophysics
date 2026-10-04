@@ -1,0 +1,560 @@
+{
+  "approved_design_commit": "89249842fb3485a7d47d9678c8574b28c6eb0fff",
+  "bytes_domains": "executed working bytes and LF Git blob bytes are distinct; no historical receipt was rewritten",
+  "command": "python -m pytest tests/data/test_magnetic_lines.py tests/numerics/test_magnetic_processing.py -q --tb=short --junitxml=data/raw/m03-numerical-investigation/final-checkpoint.xml",
+  "field_acceptance": false,
+  "files": [
+    {
+      "executed_working_bytes": 21184,
+      "executed_working_sha256": "a19d087fd362af346b24cd7936a46dd6278e3c4f45ab0afdbccf187c314d5155",
+      "git_blob_bytes": 21184,
+      "git_blob_sha256": "a19d087fd362af346b24cd7936a46dd6278e3c4f45ab0afdbccf187c314d5155",
+      "path": "data-pipeline/magnetic_lines.py"
+    },
+    {
+      "executed_working_bytes": 43398,
+      "executed_working_sha256": "33720f8510a273292c45b7554010b90886b707a086168ff5c001ec6ca2e78645",
+      "git_blob_bytes": 43398,
+      "git_blob_sha256": "33720f8510a273292c45b7554010b90886b707a086168ff5c001ec6ca2e78645",
+      "path": "data-pipeline/magnetic_line_contract.py"
+    },
+    {
+      "executed_working_bytes": 15567,
+      "executed_working_sha256": "b51cba661ff21ebb075de27a63cdc1d214b7f9296b61f0535aa74508c1f60554",
+      "git_blob_bytes": 15567,
+      "git_blob_sha256": "b51cba661ff21ebb075de27a63cdc1d214b7f9296b61f0535aa74508c1f60554",
+      "path": "data-pipeline/magnetic_line_validation.py"
+    },
+    {
+      "executed_working_bytes": 10321,
+      "executed_working_sha256": "037fc0d8226fe3b134fa68c8c7eebe23c62d9ea55a3295f287eace83c2920448",
+      "git_blob_bytes": 10321,
+      "git_blob_sha256": "037fc0d8226fe3b134fa68c8c7eebe23c62d9ea55a3295f287eace83c2920448",
+      "path": "tests/fixtures/magnetic_lines/generate.py"
+    },
+    {
+      "executed_working_bytes": 15848,
+      "executed_working_sha256": "f00869ea409c6fcc6a54f47d067f664e62aa1cc6211373200e66a07a4b52adbc",
+      "git_blob_bytes": 15848,
+      "git_blob_sha256": "f00869ea409c6fcc6a54f47d067f664e62aa1cc6211373200e66a07a4b52adbc",
+      "path": "tests/numerics/test_magnetic_processing.py"
+    },
+    {
+      "executed_working_bytes": 18033,
+      "executed_working_sha256": "bcda1d05032c1e43217e2ec465fa062071d409dbf43dde3997af46886ee352a2",
+      "git_blob_bytes": 18033,
+      "git_blob_sha256": "bcda1d05032c1e43217e2ec465fa062071d409dbf43dde3997af46886ee352a2",
+      "path": "tests/data/test_magnetic_lines.py"
+    }
+  ],
+  "final_run": "m03-numerical-investigation/final-checkpoint.xml",
+  "full_method_accepted": false,
+  "intake_geometry_checkpoint": "2c3fed93e24c577bd3e8fc031a657cc2ee42af9c",
+  "investigations": [
+    {
+      "bytes": 79290,
+      "evaluation_count": 1,
+      "file": "s1-frozen-investigation.json",
+      "production_fit_count": 25,
+      "quality_limit_nT": 0.25966396538773057,
+      "quality_verdict": "fail",
+      "rmse_nT": 18.799740861734186,
+      "selected_candidate": {
+        "damping": 0.0001,
+        "depth_m": 500
+      },
+      "sha256": "21f5ca76ff0a3aeb9059ef2bf2e805f0308fe7b80ce3d35008db6c6dd144b7e7",
+      "signal_rms_nT": 5.1932793077546116
+    },
+    {
+      "bytes": 83651,
+      "evaluation_count": 1,
+      "file": "s1-intake-bound-investigation.json",
+      "production_fit_count": 25,
+      "quality_limit_nT": 0.25966396538773057,
+      "quality_verdict": "fail",
+      "rmse_nT": 18.799740861734186,
+      "selected_candidate": {
+        "damping": 0.0001,
+        "depth_m": 500
+      },
+      "sha256": "81e0a1d0b5723da1a8ab36e3c84103bb8a49505a64bf6aafc0032517ab9801ec",
+      "signal_rms_nT": 5.1932793077546116
+    },
+    {
+      "bytes": 84530,
+      "evaluation_count": 1,
+      "file": "s1-current-source-investigation.json",
+      "production_fit_count": 25,
+      "quality_limit_nT": 0.25966396538773057,
+      "quality_verdict": "fail",
+      "rmse_nT": 18.799740861734186,
+      "selected_candidate": {
+        "damping": 0.0001,
+        "depth_m": 500
+      },
+      "sha256": "f99280b7c81030311cd9641a0472c92c870867d30b79be2055a4d5d47d0b6c7f",
+      "signal_rms_nT": 5.1932793077546116
+    }
+  ],
+  "native_admission": false,
+  "runs": [
+    {
+      "folder": "m03-t05",
+      "file": "actual-01.xml",
+      "sha256": "f07d3bab1c1359b2145112540daaa2b08c6c7f30dea3d1babb00887cd5585d7d",
+      "tests": 2,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "suite_seconds": 19.635,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ],
+      "test_names": [
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ]
+    },
+    {
+      "folder": "m03-t05",
+      "file": "red-01.xml",
+      "sha256": "5f40d6f87245ad25ada5f65b3d2e42582af300ef416526af0c3ccbb75621bd97",
+      "tests": 2,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0,
+      "suite_seconds": 0.578,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ],
+      "test_names": [
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ]
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap"
+      ],
+      "failures": 1,
+      "file": "green-01.xml",
+      "folder": "m03-t03-t04",
+      "sha256": "da57c1993cf26d443b463e32025a4b7e6df4c8f39a00744095b0b1da5c529740",
+      "skipped": 0,
+      "suite_seconds": 32.508,
+      "test_names": [
+        "tests.data.test_magnetic_lines::test_original_identity_and_rights",
+        "tests.data.test_magnetic_lines::test_physical_metadata_and_exact_keys",
+        "tests.data.test_magnetic_lines::test_order_identity_duplicates_and_masks",
+        "tests.data.test_magnetic_lines::test_bartlett_grid_and_charleston_rgb_are_not_lines",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1,\"a\":2}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":NaN}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1e999}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{}{}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":\"\\ud800\"}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[\\xff]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111}]",
+        "tests.data.test_magnetic_lines::test_bounded_reads_and_complexity",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[reduction_to_pole]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[downward_continuation]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[vector_recovery]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[susceptibility_inversion]",
+        "tests.data.test_magnetic_lines::test_every_intake_request_table_exact_and_typed",
+        "tests.data.test_magnetic_lines::test_auxiliary_epoch_state_and_union_negative_branches",
+        "tests.data.test_magnetic_lines::test_csv_native_numeric_time_and_order_boundaries",
+        "tests.data.test_magnetic_lines::test_actual_byte_token_node_and_record_caps",
+        "tests.data.test_magnetic_lines::test_input_module_imports_no_scientific_engines",
+        "tests.data.test_magnetic_lines::test_primitives_counts_nullability_and_unknown_keys_all_depths",
+        "tests.data.test_magnetic_lines::test_actual_reference_epoch_row_binding_not_authentication",
+        "tests.numerics.test_magnetic_processing::test_blocked_line_holdout",
+        "tests.numerics.test_magnetic_processing::test_segment_buffer_is_closed_and_not_endpoint_only",
+        "tests.numerics.test_magnetic_processing::test_half_open_source_maps_no_values_or_thinning",
+        "tests.numerics.test_magnetic_processing::test_preflight_exact_counts_before_native_imports",
+        "tests.numerics.test_magnetic_processing::test_nearconstant_kernel_guard_before_scaler",
+        "tests.numerics.test_magnetic_processing::test_geometry_seal_counts_source_receipts_and_no_truth",
+        "tests.numerics.test_magnetic_processing::test_bounds_source_counts_padding_and_geometry_failures",
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines"
+      ],
+      "tests": 36
+    },
+    {
+      "errors": 0,
+      "failing_tests": [],
+      "failures": 0,
+      "file": "green-02.xml",
+      "folder": "m03-t03-t04",
+      "sha256": "90f8dd81a8755815a4e8b7ba2c4805b404c1938102151d84f5ecd167035029b7",
+      "skipped": 0,
+      "suite_seconds": 3.687,
+      "test_names": [
+        "tests.data.test_magnetic_lines::test_original_identity_and_rights",
+        "tests.data.test_magnetic_lines::test_physical_metadata_and_exact_keys",
+        "tests.data.test_magnetic_lines::test_order_identity_duplicates_and_masks",
+        "tests.data.test_magnetic_lines::test_bartlett_grid_and_charleston_rgb_are_not_lines",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1,\"a\":2}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":NaN}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1e999}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{}{}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":\"\\ud800\"}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[\\xff]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111}]",
+        "tests.data.test_magnetic_lines::test_bounded_reads_and_complexity",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[reduction_to_pole]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[downward_continuation]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[vector_recovery]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[susceptibility_inversion]",
+        "tests.data.test_magnetic_lines::test_every_intake_request_table_exact_and_typed",
+        "tests.data.test_magnetic_lines::test_auxiliary_epoch_state_and_union_negative_branches",
+        "tests.data.test_magnetic_lines::test_csv_native_numeric_time_and_order_boundaries",
+        "tests.data.test_magnetic_lines::test_actual_byte_token_node_and_record_caps",
+        "tests.data.test_magnetic_lines::test_input_module_imports_no_scientific_engines",
+        "tests.data.test_magnetic_lines::test_primitives_counts_nullability_and_unknown_keys_all_depths",
+        "tests.data.test_magnetic_lines::test_actual_reference_epoch_row_binding_not_authentication",
+        "tests.numerics.test_magnetic_processing::test_blocked_line_holdout",
+        "tests.numerics.test_magnetic_processing::test_segment_buffer_is_closed_and_not_endpoint_only",
+        "tests.numerics.test_magnetic_processing::test_half_open_source_maps_no_values_or_thinning",
+        "tests.numerics.test_magnetic_processing::test_preflight_exact_counts_before_native_imports",
+        "tests.numerics.test_magnetic_processing::test_nearconstant_kernel_guard_before_scaler",
+        "tests.numerics.test_magnetic_processing::test_geometry_seal_counts_source_receipts_and_no_truth",
+        "tests.numerics.test_magnetic_processing::test_bounds_source_counts_padding_and_geometry_failures",
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines"
+      ],
+      "tests": 36
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines"
+      ],
+      "failures": 5,
+      "file": "red-01.xml",
+      "folder": "m03-t03-t04",
+      "sha256": "b826bc7e92c322cc78b6aef4d0cd0e19167e9b8e47d29b25914eabb6b9b71c25",
+      "skipped": 0,
+      "suite_seconds": 1.518,
+      "test_names": [
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines"
+      ],
+      "tests": 5
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ],
+      "failures": 1,
+      "file": "actual-02.xml",
+      "folder": "m03-numerical-investigation",
+      "sha256": "292ae302ef5b53aff404aa09d9cf1e5bba553efcda943d22d4add22af4b05190",
+      "skipped": 0,
+      "suite_seconds": 17.951,
+      "test_names": [
+        "tests.data.test_magnetic_lines::test_original_identity_and_rights",
+        "tests.data.test_magnetic_lines::test_physical_metadata_and_exact_keys",
+        "tests.data.test_magnetic_lines::test_order_identity_duplicates_and_masks",
+        "tests.data.test_magnetic_lines::test_bartlett_grid_and_charleston_rgb_are_not_lines",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1,\"a\":2}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":NaN}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1e999}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{}{}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":\"\\ud800\"}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[\\xff]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111}]",
+        "tests.data.test_magnetic_lines::test_bounded_reads_and_complexity",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[reduction_to_pole]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[downward_continuation]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[vector_recovery]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[susceptibility_inversion]",
+        "tests.data.test_magnetic_lines::test_every_intake_request_table_exact_and_typed",
+        "tests.data.test_magnetic_lines::test_auxiliary_epoch_state_and_union_negative_branches",
+        "tests.data.test_magnetic_lines::test_csv_native_numeric_time_and_order_boundaries",
+        "tests.data.test_magnetic_lines::test_actual_byte_token_node_and_record_caps",
+        "tests.data.test_magnetic_lines::test_input_module_imports_no_scientific_engines",
+        "tests.data.test_magnetic_lines::test_primitives_counts_nullability_and_unknown_keys_all_depths",
+        "tests.data.test_magnetic_lines::test_actual_reference_epoch_row_binding_not_authentication",
+        "tests.numerics.test_magnetic_processing::test_blocked_line_holdout",
+        "tests.numerics.test_magnetic_processing::test_segment_buffer_is_closed_and_not_endpoint_only",
+        "tests.numerics.test_magnetic_processing::test_half_open_source_maps_no_values_or_thinning",
+        "tests.numerics.test_magnetic_processing::test_preflight_exact_counts_before_native_imports",
+        "tests.numerics.test_magnetic_processing::test_nearconstant_kernel_guard_before_scaler",
+        "tests.numerics.test_magnetic_processing::test_geometry_seal_counts_source_receipts_and_no_truth",
+        "tests.numerics.test_magnetic_processing::test_bounds_source_counts_padding_and_geometry_failures",
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines",
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice",
+        "tests.numerics.test_magnetic_processing::test_s1_outer_perturbation_does_not_change_training_selection",
+        "tests.numerics.test_magnetic_processing::test_independent_original_dipoles_against_official_engine"
+      ],
+      "tests": 40
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ],
+      "failures": 1,
+      "file": "final-01.xml",
+      "folder": "m03-numerical-investigation",
+      "sha256": "45395127dcc0cacda05e600ab6f235a5d25249209ab9162c709ecae77acfe001",
+      "skipped": 0,
+      "suite_seconds": 16.168,
+      "test_names": [
+        "tests.data.test_magnetic_lines::test_original_identity_and_rights",
+        "tests.data.test_magnetic_lines::test_physical_metadata_and_exact_keys",
+        "tests.data.test_magnetic_lines::test_order_identity_duplicates_and_masks",
+        "tests.data.test_magnetic_lines::test_bartlett_grid_and_charleston_rgb_are_not_lines",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1,\"a\":2}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":NaN}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1e999}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{}{}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":\"\\ud800\"}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[\\xff]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111}]",
+        "tests.data.test_magnetic_lines::test_bounded_reads_and_complexity",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[reduction_to_pole]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[downward_continuation]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[vector_recovery]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[susceptibility_inversion]",
+        "tests.data.test_magnetic_lines::test_every_intake_request_table_exact_and_typed",
+        "tests.data.test_magnetic_lines::test_auxiliary_epoch_state_and_union_negative_branches",
+        "tests.data.test_magnetic_lines::test_csv_native_numeric_time_and_order_boundaries",
+        "tests.data.test_magnetic_lines::test_actual_byte_token_node_and_record_caps",
+        "tests.data.test_magnetic_lines::test_input_module_imports_no_scientific_engines",
+        "tests.data.test_magnetic_lines::test_primitives_counts_nullability_and_unknown_keys_all_depths",
+        "tests.data.test_magnetic_lines::test_actual_reference_epoch_row_binding_not_authentication",
+        "tests.numerics.test_magnetic_processing::test_blocked_line_holdout",
+        "tests.numerics.test_magnetic_processing::test_segment_buffer_is_closed_and_not_endpoint_only",
+        "tests.numerics.test_magnetic_processing::test_half_open_source_maps_no_values_or_thinning",
+        "tests.numerics.test_magnetic_processing::test_preflight_exact_counts_before_native_imports",
+        "tests.numerics.test_magnetic_processing::test_nearconstant_kernel_guard_before_scaler",
+        "tests.numerics.test_magnetic_processing::test_geometry_seal_counts_source_receipts_and_no_truth",
+        "tests.numerics.test_magnetic_processing::test_bounds_source_counts_padding_and_geometry_failures",
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines",
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice",
+        "tests.numerics.test_magnetic_processing::test_s1_outer_perturbation_does_not_change_training_selection",
+        "tests.numerics.test_magnetic_processing::test_independent_original_dipoles_against_official_engine"
+      ],
+      "tests": 40
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ],
+      "failures": 1,
+      "file": "final-checkpoint.xml",
+      "folder": "m03-numerical-investigation",
+      "sha256": "5f16e37e450f26b599a2d9692f5ac57a95bc2cb21fdb65f5b2c9f253737a0b84",
+      "skipped": 0,
+      "suite_seconds": 17.597,
+      "test_names": [
+        "tests.data.test_magnetic_lines::test_original_identity_and_rights",
+        "tests.data.test_magnetic_lines::test_physical_metadata_and_exact_keys",
+        "tests.data.test_magnetic_lines::test_order_identity_duplicates_and_masks",
+        "tests.data.test_magnetic_lines::test_bartlett_grid_and_charleston_rgb_are_not_lines",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1,\"a\":2}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":NaN}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1e999}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{}{}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":\"\\ud800\"}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[\\xff]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111}]",
+        "tests.data.test_magnetic_lines::test_bounded_reads_and_complexity",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[reduction_to_pole]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[downward_continuation]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[vector_recovery]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[susceptibility_inversion]",
+        "tests.data.test_magnetic_lines::test_every_intake_request_table_exact_and_typed",
+        "tests.data.test_magnetic_lines::test_auxiliary_epoch_state_and_union_negative_branches",
+        "tests.data.test_magnetic_lines::test_csv_native_numeric_time_and_order_boundaries",
+        "tests.data.test_magnetic_lines::test_actual_byte_token_node_and_record_caps",
+        "tests.data.test_magnetic_lines::test_input_module_imports_no_scientific_engines",
+        "tests.data.test_magnetic_lines::test_primitives_counts_nullability_and_unknown_keys_all_depths",
+        "tests.data.test_magnetic_lines::test_actual_reference_epoch_row_binding_not_authentication",
+        "tests.numerics.test_magnetic_processing::test_blocked_line_holdout",
+        "tests.numerics.test_magnetic_processing::test_segment_buffer_is_closed_and_not_endpoint_only",
+        "tests.numerics.test_magnetic_processing::test_half_open_source_maps_no_values_or_thinning",
+        "tests.numerics.test_magnetic_processing::test_preflight_exact_counts_before_native_imports",
+        "tests.numerics.test_magnetic_processing::test_nearconstant_kernel_guard_before_scaler",
+        "tests.numerics.test_magnetic_processing::test_geometry_seal_counts_source_receipts_and_no_truth",
+        "tests.numerics.test_magnetic_processing::test_bounds_source_counts_padding_and_geometry_failures",
+        "tests.numerics.test_magnetic_processing::test_native_array_shape_bounds_and_fixed_errors",
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines",
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice",
+        "tests.numerics.test_magnetic_processing::test_s1_outer_perturbation_does_not_change_training_selection",
+        "tests.numerics.test_magnetic_processing::test_independent_original_dipoles_against_official_engine"
+      ],
+      "tests": 41
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice"
+      ],
+      "failures": 1,
+      "file": "intake-bound-final.xml",
+      "folder": "m03-numerical-investigation",
+      "sha256": "f4b580f9d7732b4fb5fcc9916f03060fd3c60d1840a94e9b19a9bfb816125cdf",
+      "skipped": 0,
+      "suite_seconds": 25.044,
+      "test_names": [
+        "tests.data.test_magnetic_lines::test_original_identity_and_rights",
+        "tests.data.test_magnetic_lines::test_physical_metadata_and_exact_keys",
+        "tests.data.test_magnetic_lines::test_order_identity_duplicates_and_masks",
+        "tests.data.test_magnetic_lines::test_bartlett_grid_and_charleston_rgb_are_not_lines",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1,\"a\":2}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":NaN}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":1e999}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{}{}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":\"\\ud800\"}]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[\\xff]",
+        "tests.data.test_magnetic_lines::test_strict_json_pre_materialization[{\"a\":111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111}]",
+        "tests.data.test_magnetic_lines::test_bounded_reads_and_complexity",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[reduction_to_pole]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[downward_continuation]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[vector_recovery]",
+        "tests.data.test_magnetic_lines::test_unsupported_operations[susceptibility_inversion]",
+        "tests.data.test_magnetic_lines::test_every_intake_request_table_exact_and_typed",
+        "tests.data.test_magnetic_lines::test_auxiliary_epoch_state_and_union_negative_branches",
+        "tests.data.test_magnetic_lines::test_csv_native_numeric_time_and_order_boundaries",
+        "tests.data.test_magnetic_lines::test_actual_byte_token_node_and_record_caps",
+        "tests.data.test_magnetic_lines::test_input_module_imports_no_scientific_engines",
+        "tests.data.test_magnetic_lines::test_primitives_counts_nullability_and_unknown_keys_all_depths",
+        "tests.data.test_magnetic_lines::test_actual_reference_epoch_row_binding_not_authentication",
+        "tests.numerics.test_magnetic_processing::test_blocked_line_holdout",
+        "tests.numerics.test_magnetic_processing::test_segment_buffer_is_closed_and_not_endpoint_only",
+        "tests.numerics.test_magnetic_processing::test_half_open_source_maps_no_values_or_thinning",
+        "tests.numerics.test_magnetic_processing::test_preflight_exact_counts_before_native_imports",
+        "tests.numerics.test_magnetic_processing::test_nearconstant_kernel_guard_before_scaler",
+        "tests.numerics.test_magnetic_processing::test_geometry_seal_counts_source_receipts_and_no_truth",
+        "tests.numerics.test_magnetic_processing::test_bounds_source_counts_padding_and_geometry_failures",
+        "tests.numerics.test_magnetic_processing::test_lag_diurnal_heading_and_overlap",
+        "tests.numerics.test_magnetic_processing::test_igrf_epoch_vector_datum_and_rereference",
+        "tests.numerics.test_magnetic_processing::test_scalar_vector_remanence_and_rtp_rejection",
+        "tests.numerics.test_magnetic_processing::test_crossing_geometry_height_and_gap",
+        "tests.numerics.test_magnetic_processing::test_level_graph_gauges_and_sealed_lines",
+        "tests.numerics.test_magnetic_processing::test_dense_independent_fit_and_height_baseline",
+        "tests.numerics.test_magnetic_processing::test_s1_frozen_blocked_quality_and_sealed_choice",
+        "tests.numerics.test_magnetic_processing::test_s1_outer_perturbation_does_not_change_training_selection",
+        "tests.numerics.test_magnetic_processing::test_independent_original_dipoles_against_official_engine"
+      ],
+      "tests": 40
+    },
+    {
+      "errors": 0,
+      "failing_tests": [
+        "tests.numerics.test_magnetic_processing::test_native_array_shape_bounds_and_fixed_errors"
+      ],
+      "failures": 1,
+      "file": "native-shape-red.xml",
+      "folder": "m03-numerical-investigation",
+      "sha256": "305c02834fd40f3cd747563e94e3c7e9d469669e750455f4998fadab8d887620",
+      "skipped": 0,
+      "suite_seconds": 1.814,
+      "test_names": [
+        "tests.numerics.test_magnetic_processing::test_native_array_shape_bounds_and_fixed_errors"
+      ],
+      "tests": 1
+    }
+  ],
+  "runtime_receipt": "runtime-inspection.json",
+  "schema": "m03-numerical-test-checks/1",
+  "scientific_suite_verdict": "fail",
+  "scope": "T01/T02 plus local operator, QR/dipole and S1 investigation checks, not full contracted gate coverage",
+  "utc": "2026-10-04T02:53:59.078736+00:00",
+  "guards": [
+    {
+      "name": "ruff",
+      "command": "ruff check --select F data-pipeline/magnetic_lines.py tests/fixtures/magnetic_lines/generate.py tests/numerics/test_magnetic_processing.py",
+      "exit_code": 0,
+      "summary": "All checks passed!"
+    },
+    {
+      "name": "check_content_standards.py",
+      "command": "python scripts/check_content_standards.py",
+      "exit_code": 0,
+      "summary": "check_content_standards: OK, no em-dash or emoji in tracked content."
+    },
+    {
+      "name": "check_template_residue.py",
+      "command": "python scripts/check_template_residue.py",
+      "exit_code": 0,
+      "summary": "check_template_residue: OK: no template residue in 912 tracked files.\r"
+    },
+    {
+      "name": "check_ci_budget.py",
+      "command": "python scripts/check_ci_budget.py",
+      "exit_code": 0,
+      "summary": "ci budget: OK\r"
+    },
+    {
+      "name": "check_sdd_convergence.py --structure-only",
+      "command": "python scripts/check_sdd_convergence.py --structure-only",
+      "exit_code": 1,
+      "summary": "usage: check_sdd_convergence.py [-h] [--root ROOT] [--ledger LEDGER]\r"
+    },
+    {
+      "name": "whitespace",
+      "command": "git diff --cached --check",
+      "exit_code": 0,
+      "summary": ""
+    },
+    {
+      "name": "protected-design",
+      "command": "git diff 89249842fb3485a7d47d9678c8574b28c6eb0fff -- docs/design/features/m03-aeromagnetic-lines/research.md docs/design/features/m03-aeromagnetic-lines/requirements.md docs/design/features/m03-aeromagnetic-lines/design.md docs/design/features/m03-aeromagnetic-lines/contracts.md docs/design/features/m03-aeromagnetic-lines/algorithms.md docs/design/features/m03-aeromagnetic-lines/validation.md docs/design/features/m03-aeromagnetic-lines/tasks.md",
+      "exit_code": 0,
+      "summary": ""
+    },
+    {
+      "name": "unchanged-intake",
+      "command": "git diff 2c3fed93e24c577bd3e8fc031a657cc2ee42af9c -- data-pipeline/magnetic_line_contract.py data-pipeline/magnetic_line_validation.py tests/data/test_magnetic_lines.py",
+      "exit_code": 0,
+      "summary": ""
+    },
+    {
+      "name": "check_sdd_convergence.py",
+      "command": "python scripts/check_sdd_convergence.py",
+      "exit_code": 0,
+      "summary": "Ledger structurally valid: 18 unresolved, one failed; not scientific or release acceptance."
+    }
+  ]
+}
