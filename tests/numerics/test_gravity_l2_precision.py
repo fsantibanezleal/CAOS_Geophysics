@@ -369,3 +369,103 @@ def test_stagnation_verdict_closed():
     assert result['reason'] == 'absolute_stationary' and result['iterations'] == 0
     assert p['optimizer_evidence']['precision_trials'] == ()
     assert 'finite_precision_stagnation' not in result['reason']
+
+
+@pytest.mark.parametrize('width', [1,7,37,4096])
+@pytest.mark.parametrize('sparse', [False,True])
+def test_NI01_outward_row_matches_independent_rational_corners(width,sparse):
+    module = importlib.import_module('gravity_l2_precision')
+    arithmetic = module._Intervals(34,monotonic()+30.)
+    # Test the actual new enclosure, not the old Decimal implementation alone.
+    assert hasattr(arithmetic,'_enclosed_row')
+    generator = np.random.Generator(np.random.PCG64(104729+width))
+    coefficients = generator.normal(size=width)*.3
+    centers = generator.normal(size=width)
+    radii = np.abs(generator.normal(size=width))*2.**-35
+    vector = [arithmetic.sub(arithmetic.exact(z),arithmetic.exact(r))[0:1]+
+              arithmetic.add(arithmetic.exact(z),arithmetic.exact(r))[1:2]
+              for z,r in zip(centers,radii)]
+    matrix = coefficients.reshape(1,-1)
+    if sparse: matrix = sp.csr_matrix(matrix)
+    bounds = arithmetic.matrix(matrix,vector)[0]
+    lo = sum((F.from_float(float(c))*F(x[0] if c>=0 else x[1]) for c,x in zip(coefficients,vector)),F(0))
+    hi = sum((F.from_float(float(c))*F(x[1] if c>=0 else x[0]) for c,x in zip(coefficients,vector)),F(0))
+    assert F(bounds[0])<=lo<=hi<=F(bounds[1])
+
+
+@pytest.mark.parametrize('fault',['coefficient','center','radius','overflow'])
+def test_NI02_unsupported_row_uses_original_decimal(monkeypatch,fault):
+    module = importlib.import_module('gravity_l2_precision')
+    arithmetic = module._Intervals(34,monotonic()+30.)
+    coefficient,vector = 1.,[(Decimal(1),Decimal(1))]
+    if fault=='coefficient': coefficient=np.nextafter(0.,1.)
+    if fault=='center': vector=[(Decimal('1E-330'),Decimal('2E-330'))]
+    if fault=='radius': vector=[(Decimal(1),Decimal('1.'+'0'*329+'1'))]
+    if fault=='overflow': coefficient,vector=1e300,[(Decimal('1E100'),Decimal('1E100'))]
+    calls=[]
+    original=arithmetic.dot
+    def observe(*args):
+        calls.append(None)
+        return original(*args)
+    monkeypatch.setattr(arithmetic,'dot',observe)
+    bounds=arithmetic.matrix(np.array([[coefficient]]),vector)[0]
+    assert calls  # Unsupported fast native domain must not silently accept it.
+    exact_lo=F.from_float(float(coefficient))*F(vector[0][0])
+    exact_hi=F.from_float(float(coefficient))*F(vector[0][1])
+    assert F(bounds[0])<=exact_lo<=exact_hi<=F(bounds[1])
+
+
+def test_NI03_exact_gamma_products_and_absolute_reduction():
+    module = importlib.import_module('gravity_l2_precision')
+    arithmetic=module._Intervals(34,monotonic()+30.)
+    for k in (1,7,4096,8192):
+        gamma,denominator,loss=arithmetic._reduction_bound(k)
+        u=F(1,2**52)
+        exact_gamma=2*k*u/(1-2*k*u)
+        assert F(gamma)>=exact_gamma
+        assert 0<F(denominator)<=1-F(gamma)
+        assert F(loss)>=2*k*F.from_float(float(np.finfo(np.float64).tiny))*(1+F(gamma))
+    with pytest.raises(ValueError): arithmetic._reduction_bound(2**52)
+
+
+@pytest.mark.parametrize('digits',[34,50,80])
+def test_NI04_cancellation_zero_and_context_isolation(digits):
+    module=importlib.import_module('gravity_l2_precision')
+    arithmetic=module._Intervals(digits,monotonic()+30.)
+    row=np.array([[1e150,-1e150,1.]])
+    bounds=arithmetic.matrix(row,[(Decimal(1),Decimal(1))]*3)[0]
+    assert F(bounds[0])<=F(1)<=F(bounds[1])
+    zero=arithmetic.matrix(np.zeros((1,3)),[(Decimal(1),Decimal(1))]*3)[0]
+    assert zero==(Decimal(0),Decimal(0))
+
+
+@pytest.mark.parametrize('seed',range(8))
+def test_NI05_complete_nested_margin_rational_inclusion(seed):
+    generator=np.random.Generator(np.random.PCG64(20261004+seed))
+    g=generator.normal(size=(5,3))*.3
+    w=generator.normal(size=(5,5))*.2+np.eye(5)
+    derivative=generator.normal(size=(3,3))*.1
+    q=generator.normal(size=3)*.1
+    qt=q*.6
+    grad=q*10.
+    problem=toy(g,generator.normal(size=5)*.01,alpha=.2,beta=.6,w=w,d=derivative,
+                reference=generator.normal(size=3)*.01)
+    r=evaluate(evaluator(problem,[-2.]*3,[2.]*3),q,qt,grad)
+    exact=rational_nested_objective(problem,qt)-rational_nested_objective(problem,q)
+    slope=sum((F.from_float(float(gg))*(F.from_float(float(y))-F.from_float(float(x)))
+               for gg,x,y in zip(grad,q,qt)),F(0))
+    interval_contains(r['delta_interval'],exact)
+    interval_contains(r['armijo_margin_interval'],exact-F.from_float(1e-4)*slope)
+
+
+def test_NI06_original_decimal_context_used_when_fast_sign_unresolved(monkeypatch):
+    module=importlib.import_module('gravity_l2_precision')
+    contexts=[]
+    original=module._Intervals.__init__
+    def observe(arithmetic,*args,**kwargs):
+        original(arithmetic,*args,**kwargs)
+        contexts.append(arithmetic)
+    monkeypatch.setattr(module._Intervals,'__init__',observe)
+    boundary=evaluate(evaluator(toy(((0.,),),alpha=1e-4),[-2.],[2.]),[1.],[0.],[1.])
+    assert boundary['decision']=='unresolved' and boundary['passes']==3
+    assert any(getattr(context,'_use_native_rows',None) is False for context in contexts)
