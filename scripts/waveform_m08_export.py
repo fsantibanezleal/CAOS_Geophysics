@@ -343,3 +343,75 @@ def write_export(plan, directory):
         "bytes": plan.total_bytes,
         "runtime_authorized": False,
     }
+
+
+def copy_export(source, destination, *, evaluation=None, scratch_input_bytes=0, environment_bytes=0):
+    """Accounted controller streams a reverified seal to a NEW final directory.
+
+    No source manifest rewrite, array buffering, source/reference transformation
+    or resource authority. The independently generated evaluation is post-seal.
+    All live retained staging plus final bytes are checked before copying.
+    """
+    _directory(source)
+    _directory(destination)
+    if (
+        destination.readonly
+        or destination.names(55)
+        or source.identity == destination.identity
+        or type(scratch_input_bytes) is not int
+        or not 0 <= scratch_input_bytes <= 18939904
+        or type(environment_bytes) is not int
+        or not 0 <= environment_bytes <= 52690944
+    ):
+        fail("waveform_contract")
+    sealed = verify_export(source)
+    raw = _read(source, "manifest.json", JSON_CAP)
+    original = _manifest(raw)
+    files = original["files"]
+    if "evaluation.json" in {item["name"] for item in files}:
+        fail("waveform_contract")
+    extra = None
+    if evaluation is not None:
+        exact_bytes(evaluation, JSON_CAP)
+        metadata = bounded_json(sealed.metadata_bytes, JSON_CAP, max_nodes=2097152, max_depth=16)
+        _evaluation(evaluation, sealed.calculation_sha256, metadata)
+        extra = {"name": "evaluation.json", "bytes": len(evaluation), "sha256": sha(evaluation)}
+    final_files = sorted(files + ([] if extra is None else [extra]), key=lambda row: row["name"])
+    manifest = _canonical(dict(original, files=final_files), JSON_CAP)
+    staged = sum(row["bytes"] for row in files) + len(raw)
+    total = sum(row["bytes"] for row in final_files) + len(manifest)
+    if total > TOTAL_CAP or staged + total + scratch_input_bytes + environment_bytes + 196608 > 52690944:
+        fail("waveform_limit")
+    for row in files:
+        digest, count = hashlib.sha256(), 0
+        with source.open_regular(row["name"]) as incoming, destination.create_regular(row["name"]) as outgoing:
+            if source.file_size(incoming) != row["bytes"]:
+                fail("waveform_contract")
+            while count < row["bytes"]:
+                chunk = incoming.read(min(CHUNK, row["bytes"] - count))
+                if not chunk or outgoing.write(chunk) != len(chunk):
+                    fail("waveform_contract")
+                count += len(chunk)
+                digest.update(chunk)
+            if incoming.read(1) or digest.hexdigest() != row["sha256"]:
+                fail("waveform_contract")
+            destination.flush_file(outgoing)
+    if extra is not None:
+        with destination.create_regular("evaluation.json") as outgoing:
+            if outgoing.write(evaluation) != len(evaluation):
+                fail("waveform_contract")
+            destination.flush_file(outgoing)
+    with destination.create_regular("manifest.pending") as outgoing:
+        if outgoing.write(manifest) != len(manifest):
+            fail("waveform_contract")
+        destination.flush_file(outgoing)
+    _verify(destination, manifest, "manifest.pending")
+    destination.publish_pending()
+    if verify_export(destination) != sealed or verify_export(source) != sealed:
+        fail("waveform_contract")
+    return {
+        "manifest_sha256": sha(manifest),
+        "calculation_sha256": sealed.calculation_sha256,
+        "bytes": total,
+        "runtime_authorized": False,
+    }
