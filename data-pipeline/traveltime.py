@@ -19,6 +19,7 @@ import tempfile
 import time
 
 import numpy as np
+from profile_mesh import parameter_mesh
 
 from sources import ROOT, SourceError, acquire_source
 
@@ -419,6 +420,7 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     }
     if retain_arrays:
         result.update({"model_velocity_m_s": velocity.tolist(), "model_cell_center_xy_m": centers,
+                       "parameter_mesh": parameter_mesh(manager.mesh),
                        "raypath_coverage_m_per_cell": coverage.tolist(),
                        "predicted_t_s": predicted.tolist(),
                        "signed_residual_t_s": (predicted - observed).tolist(),

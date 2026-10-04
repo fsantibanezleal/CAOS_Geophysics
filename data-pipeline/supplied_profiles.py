@@ -180,6 +180,9 @@ def process_profile(path: Path, metadata: dict) -> dict:
                     "shot_geophone_zero_based": survey.shot_geophone.tolist(),
                     "row_ids_zero_based": list(range(len(survey.time_s)))}
     code = Path(engine.__file__)
+    import profile_mesh
+    mesh_code = Path(profile_mesh.__file__)
+    mesh_raw, mesh_identity = _read(mesh_code, MAX_INPUT_BYTES)
     code_raw, code_identity = _read(code, MAX_INPUT_BYTES)
     wrapper_raw, wrapper_identity = _read(Path(__file__), MAX_INPUT_BYTES)
     if METHODS[meta["method"]] == "traveltime":
@@ -191,7 +194,8 @@ def process_profile(path: Path, metadata: dict) -> dict:
     if identity != fresh_identity or _hash(fresh) != binding["sha256"]:
         raise ProfileError("original changed during calculation")
     for code_path, prior, prior_identity in ((code, code_raw, code_identity),
-                                           (Path(__file__), wrapper_raw, wrapper_identity)):
+                                           (Path(__file__), wrapper_raw, wrapper_identity),
+                                           (mesh_code, mesh_raw, mesh_identity)):
         observed, observed_identity = _read(code_path, MAX_INPUT_BYTES)
         if observed != prior or observed_identity != prior_identity:
             raise ProfileError("implementation changed during calculation")
@@ -205,7 +209,8 @@ def process_profile(path: Path, metadata: dict) -> dict:
         report["unit_basis"] = "explicit supplied metadata: profile coordinates metres; first arrivals seconds"
     result = {"schema": RESULT_SCHEMA, "method": meta["method"], "metadata": meta,
               "original": binding, "geometry": geometry, "engine_report": report,
-              "code_hashes": {code.name: _hash(code_raw), "supplied_profiles.py": _hash(wrapper_raw)},
+              "code_hashes": {code.name: _hash(code_raw), "supplied_profiles.py": _hash(wrapper_raw),
+                              "profile_mesh.py": _hash(mesh_raw)},
               "numerical_settings": dict(engine.INVERSE_OPTIONS),
               "scope": {"uploaded": False, "raw_copied": False, "execution": "explicit-local",
                         "rights": "operator-declaration-not-independent-permission-review",
@@ -237,7 +242,10 @@ def _validate_result(result):
     if report.get("schema") != expected_engine_schema or report.get("source_bytes") != result["original"]["bytes"]:
         raise ProfileError("engine method or original count disagreement")
     expected_code = "ert.py" if METHODS[result["method"]] == "ert" else "traveltime.py"
-    _keys(result["code_hashes"], expected_code + " supplied_profiles.py")
+    code_keys = expected_code + " supplied_profiles.py"
+    if type(result["code_hashes"]) is dict and "profile_mesh.py" in result["code_hashes"]:
+        code_keys += " profile_mesh.py"
+    _keys(result["code_hashes"], code_keys)
     for value in result["code_hashes"].values():
         _digest(value)
     if type(result["numerical_settings"]) is not dict or not result["numerical_settings"]:

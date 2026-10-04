@@ -19,6 +19,7 @@ import tempfile
 import time
 
 import numpy as np
+from profile_mesh import parameter_mesh
 
 from sources import ROOT, SourceError, acquire_source
 
@@ -426,6 +427,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         report["inverse"] = {
             "mesh_cells": int(mgr.fop.paraDomain.cellCount()), "model_resistivity_ohm_m": model.tolist(),
             "model_cell_center_xz_m": cell_centers,
+            "parameter_mesh": parameter_mesh(mgr.fop.paraDomain),
             "parameter_mesh_sha256": parameter_mesh_sha256,
             "forward_mesh_sha256": forward_mesh_sha256,
             "model_range_ohm_m": [float(np.min(model)), float(np.max(model))],

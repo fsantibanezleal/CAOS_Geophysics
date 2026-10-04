@@ -113,6 +113,9 @@ changing those files during the calculation prevents completion. Numerical
 settings, gradients, held folds, forward mesh and model values do not change.
 Only primary ERT and both primary traveltime retained arrays gain this topology;
 no invented iteration history or ray trajectory is generated.
+Earlier v1 results with only engine/wrapper hashes remain importable; without
+returned topology their centres can be inspected as centres only, not reconstructed
+cells. New serializer hashes do not retroactively alter those original receipts.
 
 A separate public `instrument=profile-local` workbench takes original result.json
 and matching manifest.json before rendering. Both file sizes are checked before
