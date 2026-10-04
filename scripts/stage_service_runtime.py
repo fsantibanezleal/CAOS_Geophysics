@@ -37,7 +37,8 @@ def exclusive_json(path: Path, value: dict) -> None:
     raw = json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()
     if len(raw) > MAX_RECEIPT:
         raise ValueError('runtime receipt exceeds byte bound')
-    with path.open('xb') as handle:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+    with os.fdopen(fd, 'wb') as handle:
         handle.write(raw)
         handle.flush()
         os.fsync(handle.fileno())

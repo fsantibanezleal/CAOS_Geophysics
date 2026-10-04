@@ -81,6 +81,19 @@ Neither file is committed, printed or served. No SMTP, public signup, email
 verification/reset or off-host backup is required for this operating profile.
 These choices do not restrict the database to one user or one project.
 
+The initial setup is executable with `scripts/bootstrap_service_state.py`:
+provide the non-active candidate, exact bundle/runtime-receipt digests, a
+root-owned mode0600 private credential file and a new private evidence child.
+It rehashes the installed environment before creating the dedicated service
+identity, absent mode0700 state, committed migration and initial internal
+account. Migration/account creation run unprivileged; the credential travels
+through anonymous stdin, not command arguments or a temporary plaintext file.
+Generated environments are mode0600 and have no admitted engines enabled.
+An existing state/config path is preserved and refused, never replaced. Any
+partial failure is retained for explicit recovery. This does not start services
+or grant scientific admission. Use the existing account CLI to add further
+internal users; the application remains multi-user and multi-project.
+
 ## 3. Measured host qualification
 
 Use an isolated candidate with the exact bundle/runtime bytes to execute
