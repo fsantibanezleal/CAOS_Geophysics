@@ -4,11 +4,13 @@ import { Plot, LayerColumn, type Series } from "./ScientificPlots";
 import { frequencyAxis, mtResidual, partition, quantityUnit, type MtQuantity } from "./mt-view-data";
 import { format } from "../science";
 import { Cite, Equation, Refs } from "@fasl-work/caos-app-shell";
+import { RecordedMtStates } from "./RecordedMtStates";
+import { downloadInspection, mtInspection, mtReadout } from "./result-view-data";
 
 export function MtScientificInstrument({result, es}: {result: MtResult; es: boolean}) {
   const t=(en:string,sp:string)=>es?sp:en, s=result.screen, inverse=result.inverse, m=inverse?.methods["mt-lm"];
   const [view,setView]=useState("response"), [quantity,setQuantity]=useState<MtQuantity>("apparent"), [period,setPeriod]=useState(false), [logX,setLogX]=useState(true), [normalized,setNormalized]=useState(true);
-  const [pick,setPick]=useState(0), [viewport,setViewport]=useState<[number,number]|null>(null), [frame,setFrame]=useState(0), [layer,setLayer]=useState(0), [milli,setMilli]=useState(false), [axesOpen,setAxesOpen]=useState(false);
+  const [pick,setPick]=useState(0), [viewport,setViewport]=useState<[number,number]|null>(null), [layer,setLayer]=useState(0), [milli,setMilli]=useState(false), [axesOpen,setAxesOpen]=useState(false);
   const [errorBars,setErrorBars]=useState(true);
   const errorControl=<label className="project-attestation"><input type="checkbox" checked={errorBars} onChange={e=>setErrorBars(e.target.checked)}/><span>{t("Show marginal SD bars (display only; no QC change)","Mostrar barras de DE marginal (solo visualización; no cambia QC)")}</span></label>;
   const x=frequencyAxis(result.frequency_hz,period), labels=result.frequency_hz.map((_,i)=>inverse?t(inverse.active[i]?"training":"held out",inverse.active[i]?"entrenamiento":"reservada"):t("all-frequency QC","QC de todas las frecuencias"));
@@ -29,6 +31,13 @@ export function MtScientificInstrument({result, es}: {result: MtResult; es: bool
     <div className="evaluation-status" data-evaluation={s.one_d_inversion_eligible?"unresolved":"failed"} data-testid="mt-qc-verdict"><strong>{s.one_d_inversion_eligible?t("Necessary tensor screen passes; 1D geology not established.","Pasa el filtro tensorial necesario; no establece geología 1D."):t("Tensor screen fails: QC only; no 1D inverse.","Falla el filtro tensorial: solo QC; sin inversión 1D.")}</strong><p>{t("Geological truth: null. A successful job is not model recovery.","Verdad geológica: null. Un trabajo exitoso no es recuperación del modelo.")}</p></div>
     {select}
     <output className="processing-station-readout" data-testid="mt-frequency-readout">{result.frequency_hz[pick]} Hz · {1/result.frequency_hz[pick]} s · {labels[pick]} · XY {s.observed.xy.real[pick]} + i {s.observed.xy.imag[pick]} Ω E/H · σ {s.observed.xy.sigma_real_imag_ohm[pick]} Ω / {t("real or imaginary part","parte real o imaginaria")}</output>
+    <details className="processing-provenance"><summary>{t("Exact selected response / residual values", "Valores exactos de respuesta / residuo seleccionado")}</summary>
+      <div className="processing-station-table"><table className="cmp-table" data-testid="mt-exact-values"><caption>{t("Native E/H ohm; display unit toggles do not change these exact values. -YX is sign-corrected.", "Ohm E/H nativo; cambios de unidad gráfica no alteran estos valores exactos. -YX tiene signo corregido.")}</caption>
+        <thead><tr>{[t("Component", "Componente"), "Re Z [Ω E/H]", "Im Z [Ω E/H]", "σ [Ω]", "Re Zpred [Ω E/H]", "Im Zpred [Ω E/H]", "Re ΔZ [Ω E/H]", "Im ΔZ [Ω E/H]", "Re ΔZ/σ [1]", "Im ΔZ/σ [1]"].map(h => <th key={h}>{h}</th>)}</tr></thead>
+        <tbody>{(["xy", "yx"] as const).map(c => { const row = mtReadout(result, pick).components[c]; return <tr key={c}><th>{c === "xy" ? "XY" : "−YX"}</th>{[row.observed.real, row.observed.imag, row.sigma_real_imag_ohm, row.predicted?.real, row.predicted?.imag, row.residual?.real, row.residual?.imag, row.standardized_residual?.real, row.standardized_residual?.imag].map((v, i) => <td key={i}>{v === undefined ? t("unavailable (QC only)", "no disponible (solo QC)") : String(v)}</td>)}</tr>; })}</tbody>
+      </table></div>
+      <button className="btn" onClick={() => downloadInspection(mtInspection(result, pick), `mt-inspection-${result.job_id}.json`)}>{t("Export exact inspection JSON", "Exportar inspección exacta JSON")}</button>
+    </details>
     {view==="response"&&<>
       {(quantity==="real"||quantity==="imag")&&errorControl}
       <label className="select-control"><span>{t("Response quantity","Magnitud de respuesta")}</span><select className="select" value={quantity} onChange={e=>setQuantity(e.target.value as MtQuantity)}><option value="apparent">ρa [Ω m]</option><option value="phase">φ [°]</option><option value="real">Re Z [Ω E/H]</option><option value="imag">Im Z [Ω E/H]</option></select></label>
@@ -74,8 +83,7 @@ export function MtScientificInstrument({result, es}: {result: MtResult; es: bool
     {view==="solver"&&m&&inverse&&<>
       <p>{t("Bounded CPU float64 TRF; residual evaluations are NOT accepted optimizer iterations.","TRF acotado CPU float64; evaluaciones residuales NO son iteraciones aceptadas del optimizador.")}</p>
       {table([t("Receipt","Recibo"),t("Value","Valor")],[["algorithm",m.solver.algorithm],["success / status",`${m.solver.success} / ${m.solver.status}`],["stop (verbatim)",m.solver.stop_reason],["nfev / max_nfev",`${m.solver.nfev} / ${m.solver.max_nfev}`],[t("residual calls","llamadas residuales"),m.solver.residual_calls],["optimality",m.solver.optimality],["ftol / xtol / gtol",Object.values(m.solver.tolerance).join(" / ")],["J data / regularization / total",`${m.objective.data} / ${m.objective.regularization} / ${m.objective.total}`],["β",m.solver.beta],["bounds [Ω m]","1 / 6000"],[t("Local resolution","Resolución local"),m.identifiability.status],[t("Effective / numerical rank","Rango efectivo / numérico"),`${m.identifiability.effective_rank} / ${m.identifiability.numerical_rank} / ${m.identifiability.parameter_count}`],[t("Condition number","Número de condición"),m.identifiability.condition_number??t("undefined (null)","indefinido (null)")]])}
-      <Plot interactive x={m.history.map((_,i)=>i)} series={[{name:"J [1]",values:m.history}]} title={t("Objective per recorded residual evaluation","Objetivo por evaluación residual registrada")} xLabel={t("recorded frame [1]","marco registrado [1]")} yLabel="J [1]" selectedIndex={frame} onSelect={setFrame}/>
-      <output>{t("Recorded state (not a new prediction)","Estado registrado (no es otra predicción")}: {frame} · {m.states[frame].kind} · ρ {m.frames[frame].join(" / ")} Ω m · J {m.history[frame]}. {t("Response panels always use the selected final model.","Los paneles de respuesta siempre usan el modelo final seleccionado.")}</output>
+      <RecordedMtStates key={`${result.job_id}:${result.request_sha256}`} result={result} es={es}/>
       {table([t("Layer","Capa"),t("Local log-rho SD","DE local log-rho"),t("Weak direction participation","Participación dirección débil"),t("Near bound","Cerca del límite"),t("Unresolved","No resuelta")],m.model.map((_,i)=>[i+1,m.identifiability.local_logrho_sd[i],m.identifiability.weak_direction_participation[i],String(m.identifiability.near_bound[i]),String(m.identifiability.unresolved_layers.includes(i))]))}
       <p>{t("Local Jacobian diagnostics do not establish global uniqueness. Geological recovery remains unresolved without independent truth.","Diagnósticos locales del Jacobiano no establecen unicidad global. Recuperación geológica no resuelta sin verdad independiente.")}</p>
     </>}
