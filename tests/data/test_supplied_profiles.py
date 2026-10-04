@@ -1,7 +1,9 @@
 """Closed supplied-profile admission and immutable portable results."""
 from copy import deepcopy
 import hashlib
+import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -178,3 +180,28 @@ def test_cli_failure_artifact_and_safe_output(tmp_path):
     assert receipt["status"] == "ineligible" and receipt["published"] is True
     assert str(tmp_path) not in completed.stdout
     assert workflow.import_result(out)["engine_report"]["inverse_status"] == "ineligible"
+
+
+def test_cli_native_diagnostics_cannot_corrupt_machine_receipt(tmp_path, monkeypatch, capfd):
+    path, meta = original(tmp_path)
+    metadata_path = tmp_path / "metadata.json"
+    metadata_path.write_text(json.dumps(meta), encoding="utf-8")
+    cli_path = Path(__file__).resolve().parents[2] / "scripts/process_supplied_profile.py"
+    spec = importlib.util.spec_from_file_location("profile_cli_under_test", cli_path)
+    cli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cli)
+    actual = workflow.process_profile
+
+    def diagnostic(*args, **kwargs):
+        print("Python engine diagnostics: " + str(path), flush=True)
+        os.write(1, ("Native engine diagnostics: " + str(path) + "\n").encode())
+        return actual(*args, **kwargs)
+
+    monkeypatch.setattr(workflow, "process_profile", diagnostic)
+    assert cli.main(["--input", str(path), "--metadata", str(metadata_path),
+                     "--output", str(tmp_path / "diagnostic-result")]) == 3
+    captured = capfd.readouterr()
+    assert json.loads(captured.out)["status"] == "ineligible"
+    assert str(path) not in captured.out
+    assert "Python engine diagnostics" in captured.err
+    assert "Native engine diagnostics" in captured.err

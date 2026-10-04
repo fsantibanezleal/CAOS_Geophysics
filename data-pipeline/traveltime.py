@@ -304,7 +304,7 @@ def _rmse_s(predicted: np.ndarray, observed: np.ndarray) -> float:
     return float(np.sqrt(np.mean((predicted - observed) ** 2)))
 
 
-def _split_record(name: str, parts: dict[str, np.ndarray]) -> dict:
+def _split_record(name: str, parts: dict[str, np.ndarray], *, policy: str = "pinned-15/v1") -> dict:
     record = {"rule": "every fifth shot in x order, starting at index 4" if name == "interleaved"
               else "three central shots by survey x order",
               "held_shots_zero_based": parts["held_shots"].tolist(),
@@ -312,6 +312,15 @@ def _split_record(name: str, parts: dict[str, np.ndarray]) -> dict:
               "heldout_rows": parts["held_rows"].tolist(),
               "training_count": len(parts["training_rows"]),
               "heldout_count": len(parts["held_rows"])}
+    if policy == "supplied-whole-shot/v1":
+        record["policy"] = policy
+        record["rule"] = (
+            "K=ceil(N/5) whole shots; ordered shot indices floor((j+1)*N/K)-1 for j=0..K-1"
+            if name == "interleaved" else
+            "K=ceil(N/5) central whole shots; ordered shot indices floor((N-K)/2)..floor((N-K)/2)+K-1"
+        )
+    elif policy != "pinned-15/v1":
+        raise TraveltimeError("unsupported whole-shot validation policy")
     record["sha256"] = hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest()
     return record
 
@@ -482,7 +491,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
     report["environment_versions_sha256"] = hashlib.sha256(json.dumps(
         {key: value for key, value in report["engine"].items() if key != "options"},
         sort_keys=True).encode()).hexdigest()
-    report["split"] = {name: _split_record(name, parts) for name, parts in splits.items()}
+    report["split"] = {name: _split_record(name, parts, policy=validation_policy) for name, parts in splits.items()}
     configuration = {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
          "finer_mesh": FINER_MESH_OPTIONS, "cgls_max_iterations": CGLS_MAX_ITER,
          "cgls_residual_squared_tolerance": CGLS_TOLERANCE,

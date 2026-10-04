@@ -59,6 +59,9 @@ independent physical oracle by itself.
 The path-invoked CLI takes explicit input, metadata and output paths. Python
 packages/engines remain in repository-local ignored environments. It reports
 fixed safe status and result digest, not private filesystem paths or raw values.
+Engine diagnostics, including native file-descriptor writes, use stderr rather
+than contaminating the single JSON stdout receipt. Stderr remains local operator
+diagnostics and must not be exposed to public clients without redaction.
 Any rejected/nonconverged/unverified scientific run returns a nonzero exit while
 retaining its diagnostic artifact; QC-only must not be called inverse success.
 
@@ -94,6 +97,9 @@ enter fold selection, no silent adaptation when insufficient, and no new
 parameter selection from opened held picks. Record policy and required count
 in the supplied report/configuration. The original provider configuration hash
 and receipts remain byte-compatible except for unrelated runtime variation.
+Each supplied split record describes the actual variable-K formula and binds
+the supplied policy into its split digest. The pinned provider split text and
+digest are unchanged. A description of three held shots is not used for other N.
 
 Tests first: N=10,15,20,25 grouped geometry; original N15 parity; fold disjointness
 and complete coverage; perturb all observed times without changing split;

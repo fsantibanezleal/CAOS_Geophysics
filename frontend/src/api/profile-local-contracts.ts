@@ -30,7 +30,7 @@ function mesh(value:unknown,n:number,centres:number[][]):ProfileMesh|null {
   const nodes=points(d.node_xz_m,3,200000);require(Array.isArray(d.cell_node_ids)&&d.cell_node_ids.length===n);
   const cells=d.cell_node_ids.map((r,i)=>{
     const ids=vector(r,3,0,nodes.length-1);require(ids.every(Number.isInteger)&&new Set(ids).size===3);
-    const [a,b,c]=ids.map(j=>nodes[j]);require((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])!==0);
+    const [a,b,c]=ids.map(j=>nodes[j]),area=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);require(Number.isFinite(area)&&area!==0);
     for(let axis=0;axis<2;axis++) require(Math.abs((a[axis]+b[axis]+c[axis])/3-centres[i][axis])<=1e-8+1e-12*Math.abs(centres[i][axis]));
     return ids;
   });return {nodes,cells};
@@ -83,7 +83,18 @@ export function parseProfileResult(value:unknown):ParsedProfile {
         const trainShots=new Set(part.training.map(i=>rows[i][0]));require(part.held.every(i=>!trainShots.has(rows[i][0])));add(name,inverse[name],observed,part);}
     }
   }
-  if(e.inverse_status==="passed")require(models.length===(method==="ert"?1:2));
+  if(e.inverse_status==="passed"){
+    require(models.length===(method==="ert"?1:2));const settings=obj(r.numerical_settings),maximum=integer(settings.maxIter,1,100);
+    for(const model of models){integer(model.report.iterations,0,maximum-1);require(["objective-stagnation","assumed-chi2-target"].includes(String(model.report.stopping_reason)));}
+    if(method==="ert"){
+      const primary=obj(e.inverse),block=obj(e.blocked_validation),factors=obj(e.factors);
+      require(primary.engine_converged===true&&number(primary.heldout_improvement_vs_homogeneous)>=.1&&block.engine_stopped_before_limit===true&&number(block.improvement_vs_homogeneous)>=.1);
+      integer(block.iterations,0,maximum-1);number(factors.flat_formula_max_relative_error,0,1e-5);
+    }else{
+      const oracle=obj(e.homogeneous_oracle);number(oracle.max_relative_error,0,1e-3);number(oracle.reciprocity_relative_error,0,1e-3);number(oracle.max_speed_scaling_relative_error,0,1e-3);
+      for(const model of models){const heldShots=new Set(model.held.map(i=>rows[i][0]));require(model.report.engine_stopped_before_limit===true&&number(model.report.heldout_improvement)>=.1&&integer(model.report.improved_held_shot_count,0,heldShots.size)>=Math.ceil(2*heldShots.size/3));}
+    }
+  }
   return {result:r,models,sensors,rows,method,sourceId,verdict:e.inverse_status};
 }
 

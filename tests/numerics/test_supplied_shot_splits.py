@@ -58,3 +58,21 @@ def test_scaled_held_shot_gate_never_accepts_two_of_five():
     for fit in fits.values():
         fit["improved_held_shot_count"] = 4
     assert engine._field_verdict(fits, minimum_improved_shots=4)[0] == "passed"
+
+
+@pytest.mark.parametrize("n", [10, 15, 20, 25])
+def test_exported_supplied_rule_describes_the_actual_variable_fold(n):
+    splits = engine.shot_splits(survey(n), policy="supplied-whole-shot/v1")
+    for name, parts in splits.items():
+        record = engine._split_record(name, parts, policy="supplied-whole-shot/v1")
+        assert record["policy"] == "supplied-whole-shot/v1"
+        assert "ceil(N/5)" in record["rule"]
+        assert record["held_shots_zero_based"] == parts["held_shots"].tolist()
+        assert "three central" not in record["rule"]
+
+
+def test_pinned_split_provenance_stays_byte_compatible():
+    parts = engine.shot_splits(survey(15))
+    for name, fold in parts.items():
+        assert engine._split_record(name, fold) == engine._split_record(name, fold, policy="pinned-15/v1")
+        assert "policy" not in engine._split_record(name, fold)

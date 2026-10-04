@@ -51,6 +51,10 @@ describe("supplied profile original-byte and numerical display admission",()=>{
     const c=control();c.engine_report.inverse_status="ineligible";delete (c.engine_report as Partial<typeof c.engine_report>).inverse;
     expect(parseProfileResult(c).models).toHaveLength(0);
   });
+  it("refuses a forged passed verdict without the original numerical gates",()=>{
+    const c=control();c.engine_report.inverse_status="passed";
+    expect(()=>parseProfileResult(c)).toThrow();
+  });
   for(const key of ["GEOPHYSICS_PROFILE_ERT","GEOPHYSICS_PROFILE_TRAVELTIME"]){
     it.skipIf(!process.env[key])(`admits actual external producer bytes ${key}`,async()=>{
       const root=process.env[key]!;

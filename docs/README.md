@@ -22,6 +22,7 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [Earthquake phase picking](problem-types/phase-picking.md): M08/M13 theory, frozen input and asset contracts, held-out denominator, browser inference and parity gate.
 - [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
 - [Local first-arrival user-data tools](guides/19_local_velocity_data.md): supplied physical rays/times/errors, actual weighted classical estimate and optional frozen-checkpoint inference, verified local exports and explicit approximation/negative-model limits.
+- [Supplied ERT and traveltime profiles](guides/20_supplied_profiles.md): original-data pyGIMLi inverses, exact whole-shot provenance, native parameter cells and public local inspection. This is not evidence of an activated VPS profile worker.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
 - [Source to result](data-contract/01_source-to-result.md): rights, immutable raw bytes, typed observations, physical eligibility, processing and evidence boundaries, with a reproducible current API calculation.
 - [Source acquisition](guides/05_sources.md): reviewed provider links, immutable raw assets, rights, format dispatch and local receipts.
