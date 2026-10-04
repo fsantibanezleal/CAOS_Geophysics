@@ -357,8 +357,48 @@ a readback and uses same-volume atomic pointer replacement. Never overwrite
 original or prior successful generation. Unsupported filesystem fsync/directory
 semantics remain explicit durability limitations, not invented Windows proof.
 Crash, disk-full and interruption tests must prove old generation/recoverable
-new data and no successful partial pointer. Hosted persistence/ownership/backup/
-restore belongs existing product infrastructure and requires its own gates.
+new data and no successful partial pointer. Hosted persistence/ownership belongs
+existing product infrastructure and requires its own gates. Off-host backups,
+restore and provider SMTP are not owner-tested-stage prerequisites under current
+product SDD section8; retain their historical failed receipts unchanged.
+
+## Geometry-only foundation closure
+
+Before optimizer binding, parse_request(bytes) returns a private bounded handle.
+Its metadata() returns a fresh stdlib document with observation/noise data omitted
+but their closed dtype/shape/hash retained. The original raw bytes and deferred
+token spans remain private. All number types/counts/hashes, including likelihood
+tokens, are validated by streaming without a likelihood list or numerical array.
+plan_geometry(handle) receives metadata only; it cannot access likelihood values.
+It returns a fresh closed magnetic-geometry-plan-1 document with exact keys
+{schema,identity,inventory,partition,final_refit_rows,eligibility,preflight,claims}.
+Identity has exactly the five Hash keys seal_sha256,configuration_sha256,
+source_record_sha256,observations_sha256,noise_sha256. Inventory and partition use
+the Result tables above. final_refit_rows is I64 of increasing original indices.
+eligibility exactly {local_processing,redistribution,lineage_verified,reasons}:
+three bools and list of literal reasons rights_unresolved,raw_mirror_forbidden,
+unresolved_lineage,optimizer_unbound,likelihood_not_validated,online_not_admitted.
+Original identity lineage is declared, not verified field correction. Non-original
+operations remain unresolved_lineage until the upstream validator is actually
+bound; no parameter-hash-only acceptance. Likelihood SPD/SD scientific validation
+and optimizer execution are not foundation claims. preflight exactly
+{rows,components,active_cells,full_cells,descriptor_bytes,scalar_elements,
+conservative_bytes}: nonnegative Int counts. claims are the four false Result
+booleans. This plan is never a magnetic-survey-result-1 or an inverse success.
+
+Foundation export is a separate closed magnetic-geometry-export-1 JSON with keys
+{schema,request_sha256,request_bytes,request,plan,generation_sha256}: Hash,
+positive Int, full closed original request, exact geometry plan, Hash respectively.
+The request is embedded as its original UTF8 string, bounded by the 8MiB transport
+cap, preserving exact lexical bytes; no provider original is embedded. Export is
+private-owner local only (no publication API), capped at 16MiB. The generation
+hash covers canonical export excluding itself. Import validates the complete
+request anew and recomputes the full plan and all hashes before returning it.
+Writer uses exclusive creation of a caller-explicit new local file, flush/fsync,
+readback verification, never overwrites a prior export; partial failure unlinks
+only the newly created file. A foundation export proves neither the future NPY
+result bundle nor crash-recovery/host durability. No external path is accepted
+inside this document. No solver, likelihood load or claim upgrade on reimport.
 
 API adapter uses existing owner-scoped source/job IDs, not client-supplied owner.
 Submit a hash-bound config plus source ID; return existing queued/running/

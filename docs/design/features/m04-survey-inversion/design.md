@@ -77,8 +77,14 @@ copies, BLAS workspace, covariance and history; raw G bytes are not RSS.
 Proposed online sub-profile: N<=512, A<=256, full cells<=4096, D<=1536,
 covariance D<=512, same schemas and algorithms. One physical worker, no GPU.
 Proposed per-job ceilings are 60 s wall, 30 s whole-child CPU, 768 MiB RSS,
-1 GiB private committed memory and 512 MiB scratch; admission requires 30%
-measured host memory/disk headroom. These are testable proposed ceilings, not
+1 GiB private committed memory and 512 MiB scratch. Under current product SDD
+section8, owner-tested admission uses measured byte capacity for the candidate
+release, current plus two rollback releases, retained project bytes and configured
+scratch, together with configured worker-memory admission without exhausting the
+shared host. No whole-host percentage threshold, off-host backup/restore or
+provider SMTP prerequisite applies to this stage. Historical failed receipts
+remain historical; this policy change does not turn them into passes.
+These are testable proposed ceilings, not
 observed feasibility or authority to activate OS/native controls. Offline full
 Charleston processing needs a separate full-file workflow and capacity review;
 this bounded local/online design cannot silently satisfy it.

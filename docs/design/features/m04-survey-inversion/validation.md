@@ -152,8 +152,13 @@ One threaded context explicitly pinned; monitor complete child CPU, peak RSS/
 private memory, scratch and orphan cleanup, not launcher/null metrics.
 Cold/warm null, nominal and upper count cases measured independently with
 fresh scratch/cache; upper-cap metadata rejection is not upper execution.
-Proposed online60s/30CPU/768MiB RSS/1GiB private/512MiB scratch and30% headroom
-must pass actual admitted contained execution. Timeout/cancel survive restart,
+Proposed online60s/30CPU/768MiB RSS/1GiB private/512MiB scratch must pass actual
+admitted contained execution. Admission additionally measures actual byte
+capacity for the candidate release, current plus two rollback releases, retained
+project bytes and configured scratch, and configured worker-memory capacity.
+There is no whole-host percentage threshold for the owner-tested stage.
+Historical failed headroom/restore receipts are not revised into passes.
+Timeout/cancel survive restart,
 no orphan processes, no success partial outputs. Native activation is not
 authorized by writing this design.
 
@@ -166,8 +171,10 @@ may be inventoried but cannot be fitted/published.
 Crash/disk-full/hash corruption/truncated arrays/member traversal/object NPY/
 cross-volume pointer tests must preserve old successful generation and reject
 partial new generation; Windows guarantees measured, not assumed. Hosted owner
-cross-read/write, job quota, durable cancel/restart, backup+restore and user
-deletion tests belong existing integration, not a second persistence system.
+cross-read/write, job quota, durable cancel/restart and user deletion tests belong
+existing integration, not a second persistence system. Off-host backup/restore
+and provider SMTP are not prerequisites for the owner-tested stage under current
+product SDD section8; local atomic export/reimport remains required.
 
 Field gate requires actually available original bytes with permitted processing,
 explicit quantity/error/geometry/field/corrections and grouped heldout results.
