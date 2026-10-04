@@ -1,6 +1,8 @@
 # Inverse Earth Studio · 0.04.001
 
-[Open the observatory](https://geophysics.ml.fasl-work.com/) · [GitHub Pages](https://fsantibanezleal.github.io/CAOS_Geophysics/) · [Documentation](docs/README.md) · [0.04.001 scientific and browser evidence](docs/validation/scientific-ui-0.04.001.md) · [0.04.001 public deployment evidence](docs/validation/deployment-0.04.001.md)
+[Open the application](https://geophysics.ml.fasl-work.com/) · [Documentation](docs/README.md) · [0.04.001 scientific and browser evidence](docs/validation/scientific-ui-0.04.001.md) · [0.04.001 historical deployment evidence](docs/validation/deployment-0.04.001.md)
+
+The ML VPS is the only application host. The previous secondary publication was retired on 2026-10-03. The approved account/project/processing replacement is still under development; the public site remains the legacy 0.04.001 release. Source cleanup is not acceptance or deployment of that replacement. See [deployment policy](deploy/README.md) and the [whole-product convergence ledger](docs/design/convergence.json).
 
 A geophysics investigation workbench with 20 distinct geological cases, six conditions per case, and 348 computed inverse-method results. The release uses original synthetic geology and arrays calculated by SimPEG, SciPy, PyTorch and Deepwave. The catalogue records each method's target, units, final state and recovery verdict.
 
