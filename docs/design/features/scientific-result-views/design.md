@@ -27,6 +27,8 @@ replacement. Verification errors cannot replace the previous verified result;
 the error explains that it remains the last verified view, not the rejected file.
 Re-opening another job requires selecting that job first. This is not a free-form
 offline producer importer or proof of field geology/authenticity from hashes alone.
+Reselecting the same dataset/job is a no-op: it must not clear the current view
+without a changed identity triggering the existing reload effect.
 
 ## Exact-value inspection snapshot
 
@@ -87,6 +89,25 @@ light/dark,1280x800/1600x900/2560x1440/390x844. Containment, labels, pointer/key
 selection and screenshots are measured. A browser pass is not a numerical
 revalidation of the methods, host admission, scientific renderer-wide acceptance
 or deployment authority. Existing negative/review receipts remain unchanged.
+
+The mandatory real document-hidden check is separate from the linked-value and
+render matrix. Existing Playwright enables focus emulation; attempted headless,
+headed tab activation and headed minimization all kept document.hidden=false.
+Retain those actual failed attempts. Do not override the hidden property, skip
+the assertion, or change production timers.
+
+The bounded test uses the existing trusted Chromium executable READ ONLY, with
+a new ignored private browser profile and loopback debugging port. Raw official
+CDP, without Playwright page attachment/focus emulation, opens the same compiled
+app against the same actual local API. Random QA session cookies remain private,
+never in arguments/receipts/public sources. Only native window minimization and
+restoration are performed, with cleanup of this owned process tree in finally.
+Require document.hidden=true, literal pause state and no frame advancement; keep
+all failures. No new package, binary staging, backend/source change or scientific
+value interception. This browser-specific harness does not establish a host gate.
+The installed Chromium protocol defines getWindowForTarget/setWindowBounds and
+minimized/normal states; [official protocol](https://chromedevtools.github.io/devtools-protocol/tot/Browser/)
+is the supporting API reference, not scientific evidence.
 
 Implementation grounding: [React effect cleanup](https://react.dev/reference/react/useEffect),
 [media-query change subscription](https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia),
