@@ -50,9 +50,10 @@ def geometry_packet():
     studies = []
     for width in (100.,50.):
         req = g.geometry_request(rows)
-        req["equivalent_sources"]["source_geometry"].update(block_e_m=width,block_n_m=width,max_sources=320)
-        seal = v.make_partitions(rows,req,local_profile="m03-local-320/1")
-        proof = p.local_source_preallocation(rows,req,local_profile="m03-local-320/1")
+        profile = "m03-local-320/1" if width == 50. else None
+        req["equivalent_sources"]["source_geometry"].update(block_e_m=width,block_n_m=width,max_sources=320 if profile else 256)
+        seal = v.make_partitions(rows,req,local_profile=profile)
+        proof = p.local_source_preallocation(rows,req,local_profile=profile)
         studies.append(dict(source_block_m=width,request=req,partitions=seal,preallocation=proof))
     return dict(schema="m03-new-null-geometry/1",geometry=v.geometry_manifest(rows),geometry_sha256=c.digest(v.geometry_manifest(rows)),
         studies=studies,magnetic_values_generated=False,original_s1_replaced=False,vps_admitted=False)
@@ -265,6 +266,26 @@ def measured_child(mode, output_directory, *, direct_base_runtime=False):
             stream.close()
 
 
+def run_contract_probe(directory, job_handle):
+    """Opened S3 -> one25-fit run -> actual immutable export and verified custody."""
+    p._local_resource_guard(job_handle)
+    g = _generator()
+    raw,meta,request = g.instrument_input(raw_mirroring="allowed")
+    request["export_policy"]["raw_requested"] = "include"
+    request["equivalent_sources"]["source_geometry"]["max_sources"] = 320
+    originals = (raw,c.canonical_bytes(meta),c.canonical_bytes(request))
+    custody = p.export_run(*originals,directory/"contract-bundle",local_profile="m03-local-320/1",local_job_handle=job_handle)
+    verified,result,body = p.verify_bundle(directory/"contract-bundle",local_profile="m03-local-320/1",local_job_handle=job_handle)
+    if verified != custody or tuple(body[k] for k in ("original.csv","sidecar.json","request.json")) != originals or \
+        result["fit"]["production_fit_count"] != 25 or len(list((directory/"contract-bundle").iterdir())) != 7:
+        c.fail("profile.full_export_custody","custody_mismatch")
+    _new_json(directory/"contract-probe.json",dict(production_fit_count=result["fit"]["production_fit_count"],
+        numerical_success=result["verdict"]["numerical_success"],fresh_study_truth_generated=False,
+        schema=result["schema"],result_sha256=sha256(body["result.json"]).hexdigest(),
+        custody_sha256=sha256(c.canonical_bytes(custody)).hexdigest(),immutable_export_verified=True,
+        export_member_count=7,additional_verification_fits=0))
+
+
 def resource_child(mode, directory, job_handle):
     p._local_resource_guard(job_handle)
     api=ctypes.WinDLL("kernel32",use_last_error=True)
@@ -278,22 +299,10 @@ def resource_child(mode, directory, job_handle):
     _new_json(directory/(mode+"-stage.json"),dict(stage="scientific_imports_started",actual_job_membership=True,
         python_revision=platform.python_version(),python_executable_sha256=sha256(Path(image.value).read_bytes()).hexdigest()))
     p.engines()
-    g = _generator()
     if mode=="contract":
-        raw,meta,request=g.instrument_input(raw_mirroring="allowed")
-        request["export_policy"]["raw_requested"]="include"
-        request["equivalent_sources"]["source_geometry"]["max_sources"]=320
-        result=p.run_result(raw,c.canonical_bytes(meta),c.canonical_bytes(request),run_id="local-contract-control",
-            local_profile="m03-local-320/1",local_job_handle=job_handle)
-        # This contract probe validates full serialization without opening the
-        # NEW study values; the existing S3 is an already defined control.
-        serialized=c.canonical_bytes(result)
-        p.parse_result(serialized,local_profile="m03-local-320/1")
-        _new_json(directory/"contract-result.json",result)
-        _new_json(directory/"contract-probe.json",dict(production_fit_count=result["fit"]["production_fit_count"],
-            numerical_success=result["verdict"]["numerical_success"],fresh_study_truth_generated=False,
-            schema=result["schema"],result_sha256=sha256(serialized).hexdigest()))
+        run_contract_probe(directory,job_handle)
         return
+    g = _generator()
     if mode in ("study-100","study-50"):
         packet=c.strict_json(c.read_bounded(directory/"fresh-null-geometry.json",2097152))
         expected=geometry_packet()

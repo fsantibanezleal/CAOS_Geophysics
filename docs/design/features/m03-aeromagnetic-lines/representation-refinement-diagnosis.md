@@ -18,6 +18,23 @@ Original100m Result SHA256
 Later parser/resource changes do not rewrite these recorded source identities.
 These are authored synthetic controls, not provider measurements.
 
+The historical value-free resource-budget packet used max_sources320 for
+both widths; the actual100m request retained the ordinary256 ceiling, while
+50m explicitly used320. Thus those full request declarations were not
+byte-identical. The geometry, source memberships/counts, depths, damping,
+split/support and thresholds were unchanged, and227 sources satisfy both
+ceilings. This is a conservative-budget versus executed-cap distinction,
+not a parameter chosen from outer error. Preserve the historical packet.
+Future value-free packets explicitly declare256/320 respectively before
+any values. No original observation, result or receipt is rewritten.
+
+The source counts (final,inner A,B,C) are227/137/156/194 and287/168/193/243.
+The accounted dense-buffer arithmetic is respectively15939552/21691872bytes;
+it excludes interpreter/import/JIT/allocator/decoder overhead and is not a
+certified whole-process/native-workspace peak. Actual whole-case RSS was
+289800192/288804864bytes at the original measured study source. Neither
+component nor case measurements establish a universal full-cap profile.
+
 | Fixed request | Final sources | Inner-selected depth / damping | Outer RMSE nT | Frozen limit nT | Verdict |
 |---|---:|---|---:|---:|---|
 |100m|227|500m /1|4.523829180141187|0.33114843034021674|FAIL|

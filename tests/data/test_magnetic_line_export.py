@@ -205,6 +205,27 @@ def resource_controller():
     return module
 
 
+def test_whole_contract_export_probe_requires_actual_job_before_control_values(tmp_path, monkeypatch):
+    m = resource_controller()
+    c, _ = modules()
+    monkeypatch.setattr(m, "_generator", lambda: pytest.fail("Control values cannot precede real containment"))
+    destination = tmp_path/"absent-contract-root"
+    with pytest.raises(c.MagneticContractError) as caught:
+        m.run_contract_probe(destination, None)
+    assert caught.value.error["code"] == "resource_refused"
+    assert not destination.exists()
+
+
+def test_prevalue_study_manifest_separates_ordinary_and_local_source_caps():
+    m = resource_controller()
+    packet = m.geometry_packet()
+    assert packet["magnetic_values_generated"] is False
+    assert [s["request"]["equivalent_sources"]["source_geometry"]["max_sources"] for s in packet["studies"]] == [256,320]
+    assert [s["preallocation"]["source_limit"] for s in packet["studies"]] == [256,320]
+    assert [s["preallocation"]["source_counts"] for s in packet["studies"]] == [[227,137,156,194],[287,168,193,243]]
+    assert [s["preallocation"]["peak_dense_bytes_bound"] for s in packet["studies"]] == [15939552,21691872]
+
+
 @pytest.mark.parametrize("role,declared", (("original.csv",16777217),("sidecar.json",2097153),
     ("request.json",2097153),("environment.json",2097153),("result.json",8388609),("replay.txt",8193),
     ("combined",2097154),("wrong-kind",0),("duplicate",0)))

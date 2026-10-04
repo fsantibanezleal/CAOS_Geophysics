@@ -122,3 +122,14 @@ outer holdout. Its separate `local_component_resource_pass` verdict cannot be
 relabeled as full scientific request, refinement predictive or full-survey
 acceptance. Earlier study outcomes remain bound to their original controller
 revision, not retrospectively upgraded by new counter-query controls.
+
+The whole-contract probe must complete the actual immutable seven-member
+export and verify its closed custody before recording its resource outcome.
+One export_run invocation owns the25 numerical fits; verify_bundle adds no
+fits. Passing a precomputed Result to export_run would independently repeat
+the scientific pipeline and is therefore not used in this26-fit profile.
+The known S3 originals and separate local study tag retain their explicit
+authored provenance. A probe without real Job membership refuses before
+generating control arrays or creating an output directory. Earlier Result-only
+probe receipts remain serialization evidence, not retrospectively upgraded
+full-export measurements.
