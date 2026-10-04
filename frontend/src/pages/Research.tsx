@@ -18,6 +18,7 @@ import { phasePickers } from "../data/phase-picking";
 import { PhasePickingContent } from "../components/PhasePickingContent";
 import { PhasePickerPanel } from "../components/PhasePickerPanel";
 import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
+import { M01ScientificCourse } from "../components/M01ScientificCourse";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
@@ -380,7 +381,10 @@ export function Methodology() {
     {
       id: "fields",
       label: t("Fields", "Campo"),
-      content: <SubTabs orientation="vertical" ariaLabel={t("Field and MT methods", "Métodos de campos y MT")} tabs={released(["potential", "mt", "joint"])} />,
+      content: <SubTabs orientation="vertical" ariaLabel={t("Field and MT methods", "Métodos de campos y MT")} tabs={[
+        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },
+        ...released(["potential", "mt", "joint"]),
+      ]} />,
     },
     {
       id: "waves",
@@ -568,7 +572,9 @@ export function Implementation() {
     {
       id: "fields",
       label: t("Fields", "Campo"),
-      content: <SubTabs orientation="vertical" ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={chapters
+      content: <SubTabs orientation="vertical" ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={[
+        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },
+        ...chapters
         .filter((chapter) => ["potential", "mt", "joint"].includes(chapter.id))
         .map((chapter) => ({
           id: chapter.id,
@@ -576,7 +582,8 @@ export function Implementation() {
           content: chapter.id === "mt"
             ? <OnlineMTCourse view="implementation" replay={<SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />} />
             : <SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />,
-        }))} />,
+        })),
+      ]} />,
     },
     {
       id: "waves",
