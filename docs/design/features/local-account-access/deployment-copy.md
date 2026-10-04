@@ -24,7 +24,7 @@ access decision. It is not a new numerical, field, renderer or host acceptance.
 ## Exact editing design
 
 Change only System/Lanes' final EN/ES paragraphs in architecture.ts and the EN/ES
-deployment passage in ImplementationChapter in pages/Research.tsx. Retain the
+deployment passage in ValidationSection in pages/Research.tsx. Retain the
 two existing offline-science sentences verbatim. The intended English facts are:
 
 - Current live0.04.001: legacy synthetic replay on the ML VPS only; Pages withdrawn.
