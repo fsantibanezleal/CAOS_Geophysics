@@ -4,7 +4,7 @@ Status: planned
 
 This refines approved R-017. It does not introduce another origin, SMTP, off-host backups or a production administration requirement.
 
-SR-01 THE release builder SHALL admit only a clean, committed source and a complete release-accepted convergence ledger, and SHALL preserve the exact reviewed web bytes without building, downloading or computing. Gate: tests/ops/test_service_release.py::test_release_admission.
+SR-01 THE release builder SHALL admit only a clean, committed source and a structurally valid convergence ledger, and SHALL preserve the exact reviewed web bytes without building, downloading or computing. Qualification bundles SHALL NOT grant activation; activation SHALL require all scientific/UI requirements plus independent actual-host admission, and final acceptance SHALL require post-activation HTTPS/browser/rollback verification. Gate: tests/ops/test_service_release.py::test_release_admission.
 
 SR-02 THE release builder SHALL inventory bounded regular runtime and web files, reject links, unsafe names, untracked runtime files and observed source changes, and write only an explicit new release directory. Gate: tests/ops/test_service_release.py::test_bundle_integrity.
 
