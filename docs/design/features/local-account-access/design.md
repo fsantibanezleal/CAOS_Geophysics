@@ -16,7 +16,7 @@ server operations until LifecycleApi.probe returns an authenticated account,
 and clear private state on401. Public course/replay paths do not use this probe.
 
 Reuse this existing seam rather than changing scientific workbenches or chrome.
-MAIN's client-first-access feature and product-SDD amendment explicitly require
+The client-first-access feature and product-SDD amendment explicitly require
 local internal DB accounts, plural accounts/projects, no SMTP/off-host backups
 for the owner-tested stage and no falsely verified mailbox. Historical email
 profile is explicitly retained there for compatibility, not default deployment.
@@ -75,17 +75,23 @@ password, alternate API origin or prefilled production credential.
 Returned project lists are not truncated to one; switching accounts must clear
 previous owner projects/receipts. Existing validated local/replay export is public.
 No local file is automatically uploaded; this feature adds no server fallback.
-Deletion/backup receipt contracts stay unchanged, even though MAIN updates the
-operating prerequisites separately. No new claim that old backup fields vanish.
+The deletion contract retains backup_erasure_status:'not_attempted' and now
+recognizes external_backup_status:'not_configured' for the local operating
+profile alongside the historical 'pending_reconciliation' state. This additive
+wire union follows the explicit operating decision; unknown states still reject.
+The UI describes the actual returned state, not an inferred external backup.
+Neither state claims backup erasure, and the legacy state does not establish
+that any external backup exists. The backend determines the profile-specific
+wire state; the client never replaces an existing receipt value.
 
 ## Gates and evidence limits
 
 Named gates are in requirements/tasks. Unit and route-intercepted browser tests
 exercise real production UI/client code with explicitly labelled response stubs.
-They do NOT establish live API ownership or actual-host admission. MAIN's actual
-config/login/multi-account API implementation is an integration dependency; a
+They do NOT establish live API ownership or actual-host admission. The actual
+config/login/multi-account API implementation is a separate integration gate; a
 missing local endpoint is reported, not replaced in production with a fake.
 Use existing Node/npm/Playwright and private test output, no package upgrades.
 Full UI matrix screenshots are inspected; shared scientific file hashes/diff
 prove no renderer/shell/palette changes. Preserve unrelated worktrees and dirty
-files; push this isolated task branch, no merge/deploy/main writes.
+files. This feature does not change scientific renderers or authorize a release.

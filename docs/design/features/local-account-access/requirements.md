@@ -43,7 +43,7 @@ LA-06 THE panel SHALL support returned lists of multiple projects and multiple
 separate accounts without single-user/single-project assumptions or credential
 persistence. Gate: local-access.spec.ts two-project/account switching; no supplied
 operator credential in code, bundle, public docs or tests. Backend ownership is
-MAIN's separate tests/api/test_local_auth.py gate, not a browser-mock claim.
+the separate tests/api/test_local_auth.py gate, not a browser-mock claim.
 
 LA-07 THE unit SHALL preserve the shared shell, six-route manifest and existing
 styles, and render usable labelled login/project states in EN/ES, light/dark and
@@ -52,5 +52,11 @@ checks, screenshot inspection, full Vitest/TypeScript/build/content/base guards.
 
 Scope: frontend/src/api/lifecycle.ts (typed account client),
 frontend/src/components/ProjectDrawer.tsx (account/project panel), frontend tests
-and this feature docs only. Main owns app/auth.py/config/bootstrap/API tests and
-product SDD. No backend, environment install, host, deployment, main or merge.
+and this feature docs only. Backend auth/config/bootstrap, API tests and product
+SDD are separate boundaries; scientific code and deployment are not modified.
+
+LA-08 WHEN deletion returns external_backup_status:'not_configured' or the
+legacy 'pending_reconciliation', THE client SHALL retain the exact wire value
+and show EN/ES state-specific copy without claiming external backup existence
+or erasure. Unknown states SHALL reject. Gate: local-access.test.ts union and
+negative parser controls; local-access.spec.ts both rendered deletion states.
