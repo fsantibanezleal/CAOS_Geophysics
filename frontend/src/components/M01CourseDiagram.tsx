@@ -44,6 +44,12 @@ export type MapField = "field" | "sigma" | "residual";
 export const mapScales: Record<MapField, readonly [number,number]> = {
   field: [-.2, .8], sigma: [0, .03], residual: [-.1, .1],
 };
+export function mapEncoding(field: MapField, value: number) {
+  const [low, high] = mapScales[field];
+  return { colour: field !== "sigma" && value < 0 ? "var(--color-magenta)" : "var(--color-accent)",
+    opacity: Math.min(1, Math.abs(value) / (value < 0 ? -low : high)) };
+}
+export const mapLabel = (value: number) => String(Number(value.toPrecision(6)));
 export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field = "field", coverage = true }: {
   chapter?: number; result?: CourseResult; heightIndex?: number; field?: MapField; coverage?: boolean;
 }) {
@@ -61,10 +67,10 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
   const ymin = y[0] - dy/2, ymax = y.at(-1)! + dy/2;
   const scale = 510 / (xmax - xmin), plotHeight = (ymax - ymin) * scale;
   const px = (v: number) => 65 + (v - xmin) * scale, py = (v: number) => 35 + (ymax - v) * scale;
-  const [low, high] = mapScales[field], mid = (low + high) / 2;
+  const [low, high] = mapScales[field], mid = field === "sigma" ? (low + high) / 2 : 0;
   const values = field === "sigma" ? grid.conditional_sigma_mgal : grid.predicted_mgal;
-  const color = (v: number) => v < mid ? "var(--color-fg-subtle)" : "var(--color-accent)";
-  const opacity = (v: number) => .12 + .88 * Math.min(1, Math.abs(v - mid) / ((high - low) / 2));
+  const color = (v: number) => mapEncoding(field, v).colour;
+  const opacity = (v: number) => mapEncoding(field, v).opacity;
   const label = field === "sigma" ? t("Conditional noise SD", "DE condicional de ruido")
     : field === "residual" ? t("Prediction minus observation", "Predicción menos observación")
       : t("Continued downward component", "Componente descendente continuada");
@@ -80,7 +86,8 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
   return <Figure caption={t(
     "Actual recorded arrays, mGal; equal-aspect metric axes. Rectangles depict sampled grid nodes, not extra interpolation or geological resolution. Shared fixed colour limits across all three scenarios/heights; saturated colour does not clip the value.",
     "Arrays realmente registrados, mGal; ejes métricos con igual escala. Rectángulos representan nodos muestreados, no interpolación adicional ni resolución geológica. Límites de color fijos entre tres escenarios/alturas; saturación no recorta valores.")}>
-    <svg className="method-diagram" viewBox={"0 0 640 " + (plotHeight + 170)} role="img" aria-labelledby={id+"-title"}>
+    <p data-testid="m01-map-extents">{t("Northing (m), bottom to top", "Norte (m), de abajo hacia arriba")}: {mapLabel(ymin)} → {mapLabel(ymax)}.</p>
+    <svg className="method-diagram" viewBox={"65 35 510 " + plotHeight} role="img" aria-labelledby={id+"-title"}>
       <title id={id+"-title"}>{label + " (mGal)"}</title>
       <rect x="65" y="35" width="510" height={plotHeight} fill="var(--color-surface)" stroke="var(--color-border)" />
       {field !== "residual" && values.map((v, i) => v === null ? coverage ? <rect key={i}
@@ -109,20 +116,26 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
           <title>{result.geometry.station_ids[i] + ": " + result.split.partition[i]}</title>
         </circle> : null;
       })}
-      <text x="65" y={plotHeight + 61}>{xmin.toFixed(0)} m</text>
-      <text x="575" y={plotHeight + 61} textAnchor="end">{xmax.toFixed(0)} m</text>
-      <text x="310" y={plotHeight + 86} textAnchor="middle">{t("Easting (m)", "Este (m)")}</text>
-      <text x="60" y="30" textAnchor="end">{ymax.toFixed(0)} m</text>
-      <text x="60" y={plotHeight + 35} textAnchor="end">{ymin.toFixed(0)} m</text>
-      <text transform={"translate(16 "+(35+plotHeight/2)+") rotate(-90)"} textAnchor="middle">{t("Northing (m)", "Norte (m)")}</text>
+      <circle cx={px(selectedX)} cy={py(selectedY)} r="5" fill="none" stroke="var(--color-fg)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" pointerEvents="none" />
+    </svg>
+    <div data-testid="m01-map-axis" style={{ display: "flex", justifyContent: "space-between", gap: ".5rem", flexWrap: "wrap" }}>
+      <span>{mapLabel(xmin)} m</span><span>{t("Easting (m)", "Este (m)")}</span><span>{mapLabel(xmax)} m</span>
+    </div>
+    <p>{label} (mGal)</p>
+    <svg className="method-diagram" viewBox="0 0 510 12" role="img" aria-labelledby={id+"-scale"}>
+      <title id={id+"-scale"}>{label + ": " + low + " to " + high + " mGal"}</title>
+      <rect width="510" height="12" fill="var(--color-surface)" />
       {Array.from({length: 40}, (_, i) => {
         const v = low + (high-low) * i/39;
-        return <rect key={"scale-"+i} x={65+i*12.75} y={plotHeight+99} width="12.75" height="12" fill={color(v)} fillOpacity={opacity(v)} />;
+        return <rect key={"scale-"+i} x={i*12.75} y="0" width="12.75" height="12" fill={color(v)} fillOpacity={opacity(v)} />;
       })}
-      <text x="65" y={plotHeight+130}>{low} mGal</text><text x="320" y={plotHeight+130} textAnchor="middle">{mid} mGal</text>
-      <text x="575" y={plotHeight+130} textAnchor="end">{high} mGal</text>
-      <text x="65" y={plotHeight+150}>{t("X = masked/unsupported; blank = null", "X = máscara/sin soporte; blanco = null")}</text>
     </svg>
+    <div data-testid="m01-map-legend" style={{ display: "grid", gridTemplateColumns: `${(mid-low)/(high-low)}fr ${(high-mid)/(high-low)}fr`, minWidth: 0 }}>
+      <span>{mapLabel(low)}</span>
+      <span style={{ textAlign: "right", gridColumn: 2, gridRow: 1 }}>{mapLabel(high)}</span>
+      <span style={{ gridColumn: 2, gridRow: 1 }}>{mapLabel(mid)}</span>
+    </div>
+    <p>{t("X = masked/unsupported; outlined empty cell = null. Selected ring = inspected sample. Colours saturate at the fixed limits; the readout retains the actual value.", "X = máscara/sin soporte; celda vacía delineada = null. Anillo = muestra inspeccionada. Colores se saturan en los límites fijos; lectura conserva el valor real.")}</p>
     <label htmlFor={id+"-node"}>{t("Inspect sample (keyboard arrows or pointer)", "Inspeccionar muestra (flechas o puntero)")}</label>
     <input className="select" id={id+"-node"} type="number" min="0" max={maxIndex} value={selected}
       onChange={e => { const v = Number(e.target.value); if (Number.isInteger(v) && v >= 0 && v <= maxIndex) setPoint(v); }} />
