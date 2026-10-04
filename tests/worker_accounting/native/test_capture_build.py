@@ -255,7 +255,7 @@ def workspace(tmp_path):
 
 
 def telemetry(scratch):
-    (scratch / "Microsoft/VSApplicationInsights" / ("vstelf" + "a" * 32)).mkdir(parents=True)
+    (scratch / "Microsoft/VSApplicationInsights" / ("vstel" + "a" * 32)).mkdir(parents=True)
 
 
 def test_observed_empty_telemetry_only_not_arbitrary_allowlist(helper, tmp_path):
@@ -266,7 +266,7 @@ def test_observed_empty_telemetry_only_not_arbitrary_allowlist(helper, tmp_path)
     assert report["held"] is None and report["complete"] is True
     assert (report["files"], report["directories"], report["file_bytes"]) == (1, 3, 6)
     assert len(report["entries"]) == 4
-    unknown = scratch / "Microsoft/VSApplicationInsights" / ("vstelf" + "a" * 32) / "unknown.bin"
+    unknown = scratch / "Microsoft/VSApplicationInsights" / ("vstel" + "a" * 32) / "unknown.bin"
     unknown.write_bytes(b"private")
     report = helper.observe_workspace(output, scratch)
     assert report["held"] == "build_scratch_invalid"
@@ -274,8 +274,11 @@ def test_observed_empty_telemetry_only_not_arbitrary_allowlist(helper, tmp_path)
     assert unknown.read_bytes() == b"private"
 
 
-@pytest.mark.parametrize("name", ["other", "Microsoft/other", "Microsoft/VSApplicationInsights/vstelfz",
-                                 "Microsoft/VSApplicationInsights/vstelf" + "A" * 32])
+@pytest.mark.parametrize("name", ["other", "Microsoft/other", "Microsoft/VSApplicationInsights/vstelz",
+                                 "Microsoft/VSApplicationInsights/vstel" + "A" * 32,
+                                 "Microsoft/VSApplicationInsights/vstel" + "a" * 31,
+                                 "Microsoft/VSApplicationInsights/vstel" + "a" * 33,
+                                 "Microsoft/VSApplicationInsights/vstelf" + "a" * 32])
 def test_unknown_scratch_directory_retained_closed(helper, tmp_path, name):
     output, scratch = workspace(tmp_path)
     (scratch / name).mkdir(parents=True)
@@ -309,7 +312,7 @@ def test_diagnostic_walk_bounded_before_accumulation(helper, tmp_path, monkeypat
 def test_multiple_dynamic_telemetry_leaves_not_accepted(helper, tmp_path):
     output, scratch = workspace(tmp_path)
     telemetry(scratch)
-    (scratch / "Microsoft/VSApplicationInsights" / ("vstelf" + "b" * 32)).mkdir()
+    (scratch / "Microsoft/VSApplicationInsights" / ("vstel" + "b" * 32)).mkdir()
     assert helper.observe_workspace(output, scratch)["held"] == "build_scratch_invalid"
 
 
@@ -587,3 +590,16 @@ def test_unknown_scratch_file_never_hashed(helper, tmp_path, monkeypatch):
     assert invoke(helper, paths, binding) == 1
     receipt = json.loads((paths["outcome"] / "build.json").read_bytes())
     assert receipt["held"] == "build_scratch_invalid" and receipt["artifacts"] is None
+
+
+def test_observed_shape_width_is_37_not_38_without_private_leaf_identifier(helper, tmp_path):
+    output, scratch = workspace(tmp_path)
+    # Authored hash, same structural width as actual retained compiler telemetry.
+    name = "vstel" + "f" + "a" * 31
+    assert len(name) == 37 and len(name.removeprefix("vstelf")) == 31
+    (scratch / "Microsoft/VSApplicationInsights" / name).mkdir(parents=True)
+    assert helper.observe_workspace(output, scratch)["held"] is None
+    old_authored = scratch / "Microsoft/VSApplicationInsights" / ("vstelf" + "b" * 32)
+    assert len(old_authored.name) == 38
+    old_authored.mkdir()
+    assert helper.observe_workspace(output, scratch)["held"] == "build_scratch_invalid"

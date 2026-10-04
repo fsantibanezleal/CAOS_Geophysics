@@ -365,11 +365,17 @@ Output is an exclusive new flat private root, allowlisted core.obj/dll/lib/exp,
 abi.obj/exe and eight bounded stage stdout/stderr streams, NOT the outcome receipt.
 Scratch is another exclusive new root. The ONLY currently supported scratch entries
 are empty directories Microsoft, Microsoft/VSApplicationInsights, and at most one
-Microsoft/VSApplicationInsights/vstelf followed by exactly32 lowercase hexadecimal
+Microsoft/VSApplicationInsights/vstel followed by exactly32 lowercase hexadecimal
 characters. This is the observed directory shape, NOT an opaque namespace allowlist
 or documented vendor guarantee. ANY scratch file or other entry holds the build,
 is retained/quarantined and never adopted as an artifact. No telemetry environment
 switch or global setting is changed. Future observed files need explicit review.
+Width is exactly37 characters for the leaf. The preceding38-character inference
+(vstelf plus32 hex) and its authored controls were incorrect: the actual retained
+build held at that strict guard with one leaf, not two. A literal37-character
+positive and31/33-hex, uppercase and old38-character negatives cover the correction.
+The one-leaf limit is unchanged; no opaque telemetry file admission or new vendor
+guarantee. Corrected source requires exact review before another build operation.
 
 Observe output+scratch together <=64MiB/32 regular files; diagnostic walk bounds
 <=128 entries, <=8 relative components, <=1024 characters per relative name.
