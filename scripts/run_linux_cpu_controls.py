@@ -179,11 +179,14 @@ def build_manifest(path, expected):
     return value
 
 
-def observe_inventory(output, scratch):
+def observe_inventory(output, scratch, *, linker=False):
     """Build custody observation, not a science scratch quota/RSS controller."""
+    if type(linker) is not bool:
+        reject()
     entries = []
     total = 0
     invalid = False
+    linker_leaves = 0
     for kind, root in (("output", Path(output)), ("scratch", Path(scratch))):
         for entry in root.iterdir():
             if len(entries) >= 128:
@@ -196,22 +199,29 @@ def observe_inventory(output, scratch):
                 invalid = True
             if kind == "output" and entry.name not in BUILD_ARTIFACT_NAMES:
                 invalid = True
-            if kind == "scratch" and not re.fullmatch(r"cc[A-Za-z0-9]{6}\.(s|o)", entry.name):
-                invalid = True
+            if kind == "scratch":
+                ordinary = re.fullmatch(r"cc[A-Za-z0-9]{6}\.(s|o)", entry.name)
+                ctor = re.fullmatch(r"cc[A-Za-z0-9]{6}\.cdtor\.(c|o)", entry.name)
+                if ctor:
+                    linker_leaves += 1
+                if not ordinary and not (linker and ctor and linker_leaves <= 2):
+                    invalid = True
             entries.append(dict(kind=kind, name=entry.name, bytes=status.st_size,
                                 mode=stat.S_IFMT(status.st_mode), uid=status.st_uid, nlink=status.st_nlink))
     return dict(bytes=total, leaves=len(entries), entries=entries, invalid=invalid, truncated=False)
 
 
-def inventory(output, scratch):
-    observed = observe_inventory(output, scratch)
+def inventory(output, scratch, *, linker=False):
+    observed = observe_inventory(output, scratch, linker=linker)
     if observed["invalid"]:
         reject()
     return observed
 
 
-def build_capture(argv, output, scratch, deadline):
+def build_capture(argv, output, scratch, deadline, *, linker=False):
     """Bounded selected-tool capture; PID1 owns the separate build unit teardown."""
+    if type(linker) is not bool:
+        reject()
     child = subprocess.Popen(argv, shell=False, stdin=subprocess.DEVNULL,
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True)
     selector = selectors.DefaultSelector()
@@ -221,12 +231,16 @@ def build_capture(argv, output, scratch, deadline):
         selector.register(stream, selectors.EVENT_READ, target)
     begun = time.monotonic_ns()
     held = None
+    first_invalid = None
     peak = dict(bytes=0, leaves=0)
     try:
         while selector.get_map():
             if time.monotonic_ns() > deadline or time.monotonic_ns()-begun > 30_000_000_000:
                 raise ControlError("build_timeout")
-            observed = inventory(output, scratch)
+            observed = observe_inventory(output, scratch, linker=linker)
+            if observed["invalid"]:
+                first_invalid = observed
+                reject()
             peak["bytes"] = max(peak["bytes"], observed["bytes"])
             peak["leaves"] = max(peak["leaves"], observed["leaves"])
             for key, unused in selector.select(0.005):
@@ -248,7 +262,8 @@ def build_capture(argv, output, scratch, deadline):
             child.wait(timeout=4)
         child.stdout.close()
         child.stderr.close()
-    return dict(returncode=code, held=held, wall_ns=time.monotonic_ns()-begun, peak_observed=peak), bytes(out), bytes(err)
+    return dict(returncode=code, held=held, wall_ns=time.monotonic_ns()-begun,
+                peak_observed=peak, first_invalid_inventory=first_invalid), bytes(out), bytes(err)
 
 
 def run_build(path, expected):
@@ -280,14 +295,14 @@ def run_build(path, expected):
                        "--property=ReadOnlyPaths=" + m["source"],
                        "--property=ReadWritePaths=" + str(output) + " " + str(scratch),
                        "--setenv=TMPDIR=" + str(scratch), "--setenv=PATH=/usr/bin:/bin", "--setenv=LC_ALL=C", *command]
-            stage, out, err = build_capture(wrapper, output, scratch, deadline)
+            stage, out, err = build_capture(wrapper, output, scratch, deadline, linker=index >= 5)
             stages.append(dict(index=index + 1, command=command, **stage))
             exclusive(outcome / (str(index + 1) + ".stdout"), out)
             exclusive(outcome / (str(index + 1) + ".stderr"), err)
             if stage["held"] or stage["returncode"] != 0:
                 manager(["/usr/bin/systemctl", "stop", unit])
                 raise ControlError("build_stage_failed")
-            inventory(output, scratch)
+            inventory(output, scratch, linker=index >= 5)
         if {entry.name for entry in output.iterdir()} != BUILD_ARTIFACT_NAMES:
             reject()
         # Emitted selected header closure is retained and hashed before any load.
@@ -766,6 +781,8 @@ def main():
         result = run_build(args.manifest, args.manifest_sha256)
         print(json.dumps({"artifact_success": result["artifact_success"], "held": result["held"],
                           "abi_execution": "NOT_RUN", "runtime_admission": False}, sort_keys=True))
+        if result["artifact_success"] is not True:
+            raise SystemExit(1)
     else:
         # Private output file, not an API safe-error surface.
         result = run_control(args.manifest, args.manifest_sha256)

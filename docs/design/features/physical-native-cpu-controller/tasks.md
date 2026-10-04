@@ -2,8 +2,11 @@
 
 Date: 2026-10-03. Issue [140](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/140).
 Current evidence: I01 core compiled-pure179 and Windows SDK layout47 PASS;
-Linux native operation source/test/build-capture candidate is now authored (not compiled or
-host-qualified); native OS operations/integration NOT_RUN, both profiles
+Linux native operation source/test/build-capture candidate is now authored;
+five actual C17 compilations passed at b1017ac, first link failed sampled
+inventory, no complete ELF/probe/controller execution. The narrow source-backed
+capture amendment passed348 local tests, not an actual retry or native admission.
+Native OS operations/integration NOT_RUN, both profiles
 UNSET/CLOSED. See the
 [measured receipt](../../../validation/native-i01-abi-pure-20261004.json) and
 [concrete worker operations](worker-operations.md). Original pre-execution
@@ -109,7 +112,7 @@ compilation/qualification execution. No automatic branch update beneath another 
 | Original approval/build inventory | Historical prerequisite; I01 measured evidence is now separately pinned |
 | Documentation checks | See measured review packet; cannot pass runtime gates |
 | I01 source/compiled-pure/Windows SDK layout | Authored; 179/47 measured PASS, no native operation proof |
-| Windows/Linux platform operation source/runtime | Linux candidate authored; Windows operation source pending; native compilation/OS qualification NOT_RUN |
+| Windows/Linux platform operation source/runtime | Linux five C17 objects compiled; first link held, corrected helper unexecuted; Windows operation source pending; native OS qualification NOT_RUN |
 | NCC001..016, original15 native gates | ALL NOT_RUN |
 | Windows/Linux actual profile | UNSET/CLOSED |
 | Parent CPU/durable publication/recovery integration | CLOSED |

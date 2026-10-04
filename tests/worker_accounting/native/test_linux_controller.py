@@ -244,6 +244,71 @@ def complete(r, error=0):
     return f
 
 
+@pytest.mark.parametrize("suffix", ["cdtor.c", "cdtor.o"])
+def test_build_linker_scratch_is_phase_specific(tmp_path, suffix):
+    from scripts.run_linux_cpu_controls import observe_inventory
+    output, scratch = tmp_path / "output", tmp_path / "scratch"
+    output.mkdir(); scratch.mkdir()
+    (scratch / ("ccA012bZ." + suffix)).write_bytes(b"authored tool output")
+    assert observe_inventory(output, scratch)["invalid"] is True
+    observed = observe_inventory(output, scratch, linker=True)
+    assert observed["invalid"] is False and observed["leaves"] == 1
+    (scratch / "ccC456dY.cdtor.c").write_bytes(b"second")
+    (scratch / "ccE789fX.cdtor.o").write_bytes(b"third")
+    assert observe_inventory(output, scratch, linker=True)["invalid"] is True
+
+
+@pytest.mark.parametrize("name", ["ccA012bZ.res", "ccA012bZ.x", "ccA012bZ.cdtor.cpp", "ccBAD.cdtor.c"])
+def test_build_linker_scratch_unknown_stays_failed(tmp_path, name):
+    from scripts.run_linux_cpu_controls import observe_inventory
+    output, scratch = tmp_path / "output", tmp_path / "scratch"
+    output.mkdir(); scratch.mkdir()
+    (scratch / name).write_bytes(b"unknown contents not adopted")
+    assert observe_inventory(output, scratch, linker=True)["invalid"] is True
+    with pytest.raises(ControlError):
+        observe_inventory(output, scratch, linker=1)
+
+
+def test_build_first_invalid_sample_is_retained(tmp_path, monkeypatch):
+    import scripts.run_linux_cpu_controls as runner
+    output, scratch = tmp_path / "output", tmp_path / "scratch"
+    output.mkdir(); scratch.mkdir()
+    (scratch / "unknown.linker").write_bytes(b"untrusted private bytes")
+    class Pipe:
+        def fileno(self): return 123
+        def close(self): pass
+    class Child:
+        stdout = Pipe(); stderr = Pipe()
+        def poll(self): return 0
+    class Selector:
+        def register(self, *unused): pass
+        def get_map(self): return {123: True}
+        def close(self): pass
+    # Authored transport doubles only; no actual compiler/controller/OS fixture.
+    monkeypatch.setattr(runner.subprocess, "Popen", lambda *a, **k: Child())
+    monkeypatch.setattr(runner.selectors, "DefaultSelector", Selector)
+    monkeypatch.setattr(runner.os, "set_blocking", lambda *a: None)
+    stage, out, err = runner.build_capture(["authored"], output, scratch,
+                                          runner.time.monotonic_ns()+10**9, linker=True)
+    assert stage["held"] is not None and stage["returncode"] is None
+    assert stage["first_invalid_inventory"]["invalid"] is True
+    assert stage["first_invalid_inventory"]["entries"][0]["name"] == "unknown.linker"
+    assert "untrusted private bytes" not in str(stage) and out == err == b""
+    assert (scratch / "unknown.linker").read_bytes() == b"untrusted private bytes"
+
+
+def test_build_held_cli_returns_failure_not_transport_success(monkeypatch, capsys):
+    import scripts.run_linux_cpu_controls as runner
+    import sys
+    monkeypatch.setattr(sys, "argv", ["authored", "build", "manifest", "hash"])
+    monkeypatch.setattr(runner, "run_build", lambda *unused:
+                        dict(artifact_success=False, held="build_stage_failed"))
+    with pytest.raises(SystemExit) as raised:
+        runner.main()
+    assert raised.value.code == 1
+    assert '"artifact_success": false' in capsys.readouterr().out
+
+
 def test_birth_and_credential_barrier(host_results):
     for name in ("nominal", "threads", "exited", "escape"):
         assert host_results[name]["birth_marker"] is True

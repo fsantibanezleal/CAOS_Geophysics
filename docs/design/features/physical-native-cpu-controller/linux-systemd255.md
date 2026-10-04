@@ -425,3 +425,42 @@ The separate [production broker SDD](../physical-native-linux-broker/requirement
 defines exact process/packet authentication, immutable launch allowlist and
 distinct production context without giving the worker root/systemd permission.
 It is design-only pending full seam review, not implemented in this controller.
+
+## 10. Actual first Linux build and narrow capture amendment
+
+The source freeze b1017ac actually passed all five pinned C17 compile stages.
+First link stage6 failed the sampled inventory guard; no complete ELF was
+produced, stages7/8 did not run, and no binary/probe/controller was executed.
+All original failure outputs remain retained. The invalid transient entry was
+not preserved by the original capture, so its exact name/cause is unproven.
+Later manager inactive/success status does not override artifact_success=false.
+
+A source-backed correction is specified before test-first authoring:
+[GCC13.3 collect2](https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-13.3.0/gcc/collect2.cc)
+creates .cdtor.c and .cdtor.o temporary files; its
+[libiberty temporary-file implementation](https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-13.3.0/libiberty/make-temp-file.c)
+uses cc plus six randomized characters in selected TMPDIR. This explains a
+specific possible gap in the old .s/.o-only validator, not an observed filename.
+Permit ONLY up to two root-owned single-link regular ccXXXXXX.cdtor.c/.cdtor.o
+leaves during the explicit link phase6..8. Compile phase still rejects them;
+all unknown suffixes/aliases/links/UIDs reject. Combined128-leaf/32MiB/time/stream
+bounds and compiler/link argv/tool/header/library pins stay unchanged.
+
+Retain the FIRST invalid sampled inventory in the stage receipt before files
+can disappear; never hash/adopt unknown contents. A capture failure remains
+non-success even if later inventory is valid or PID1 reports a success. CLI
+must return nonzero for held artifact outcome as well as print artifact_success
+false. No automatic retry or reuse of partial roots. Exact new helper/tests/hash
+manifest and fresh absent roots require technical review before a new build;
+actual ELF/header/import closure still precedes any probe/binary execution.
+
+Eight new amendment controls first failed for the missing phase-specific capture
+and failing CLI exit. After authoring, those eight passed, followed by a distinct
+fresh348-test local capture:179 unchanged compiled-pure +74 unchanged helper
++95 local Linux tests, zero failures/errors/skips. XML time1.085s; wall
+1,484,000,000ns; XML SHA256
+d47b4cce670ac182c58d93f6d99b324ffef7b79ed2d0cb56bf180a68d81e7d60,
+stdoutbd91de16bfb2783f9a0abd030106a911ac42e9f13dfed44a7552f4c8fe6b1cca;
+stderr empty. Authored transport doubles are explicit unit controls, not a
+compiler/native live fixture. These tests do not execute a retry or admit a
+runtime. The failed b1017ac build and earlier340/339/314+1 records stay distinct.
