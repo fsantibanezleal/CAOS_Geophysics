@@ -60,3 +60,11 @@ legacy 'pending_reconciliation', THE client SHALL retain the exact wire value
 and show EN/ES state-specific copy without claiming external backup existence
 or erasure. Unknown states SHALL reject. Gate: local-access.test.ts union and
 negative parser controls; local-access.spec.ts both rendered deletion states.
+
+LA-09 THE combined local integration gate SHALL use actual HTTP backend routes
+and the unchanged frontend build, two randomized local test accounts and a fresh
+ignored DB. It SHALL prove plural-project ownership, guest refusal, cookie/logout
+and local deletion behavior without API interception, SMTP or heavy-job execution.
+Existing operator data and production source SHALL remain unchanged. Gate:
+frontend/e2e/local-real-access.spec.ts and its test-only local-api-server.py.
+Loopback test cookies are not a deployed HTTPS or actual-VPS acceptance claim.

@@ -86,7 +86,7 @@ wire state; the client never replaces an existing receipt value.
 
 ## Gates and evidence limits
 
-Named gates are in requirements/tasks. Unit and route-intercepted browser tests
+Named gates are in requirements/validation. Unit and route-intercepted browser tests
 exercise real production UI/client code with explicitly labelled response stubs.
 They do NOT establish live API ownership or actual-host admission. The actual
 config/login/multi-account API implementation is a separate integration gate; a
@@ -95,3 +95,36 @@ Use existing Node/npm/Playwright and private test output, no package upgrades.
 Full UI matrix screenshots are inspected; shared scientific file hashes/diff
 prove no renderer/shell/palette changes. Preserve unrelated worktrees and dirty
 files. This feature does not change scientific renderers or authorize a release.
+
+## Real local HTTP integration gate
+
+The separate local integration test uses the real backend factory, committed
+Alembic migrations and installed account provisioning library, with the same
+frontend build bytes. It provisions two randomized test accounts in a NEW ignored
+QA database, never the existing operator database. Secrets pass through a private
+child-process pipe, never public code, argv, screenshots or verification records.
+The test server mounts only the real static frontend after real API routes; no
+API interceptor, additional auth endpoint, SMTP sender or worker is introduced.
+HTTP loopback uses cookie_secure:false only in this explicit test Settings,
+matching existing local API tests. This cannot establish deployed HTTPS security.
+Actual backend/frontend byte hashes are checked before/after the run. Source,
+installed runtime and existing DB bytes remain unchanged; fresh QA DB/evidence
+remain ignored. No backend or shared API source modifications are authorized by
+this gate. Its test helper and spec live only in frontend/e2e/.
+
+Predeclared controls: anonymous six-route access and guest project/upload/job
+refusal, eight language/theme/device login renderings, two actual local accounts
+with is_verified:false, two projects for one account and a separate other-owner
+project, cross-account404, actual HttpOnly/SameSite cookie attributes, wrong-login
+password clearing, actual logout401 and truthful local deletion receipts.
+Retain every failed run. Test-owned project cleanup uses the real exact-ID API;
+it never deletes the database or any operator-owned file/project.
+
+Each integration control gets its own fresh database/server, with the unchanged
+ten-auth-attempt/600-second policy. The owner control makes seven real auth
+attempts, checks three further invalid attempts and the eleventh429/Retry-After.
+This avoids unrelated matrix cases exhausting each other's rate windows, not
+a rate-policy bypass. The static test mount rejects unmatched /api/ paths rather
+than returning SPA HTML/StaticFiles405; it adds no API handler. Extracted backend
+files must match the supplied immutable Git revision's actual blob bytes, and
+all backend source/build bytes plus the separate existing DB are guarded.
