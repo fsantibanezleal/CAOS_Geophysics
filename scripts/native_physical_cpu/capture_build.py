@@ -287,7 +287,7 @@ def observe_workspace(output: Path, scratch: Path) -> dict:
                 if lane == "output":
                     valid = not is_dir and len(rel.parts) == 1 and name in ALLOW
                 else:
-                    dynamic = re.fullmatch(r"Microsoft/VSApplicationInsights/vstelf[0-9a-f]{32}", name)
+                    dynamic = re.fullmatch(r"Microsoft/VSApplicationInsights/vstel[0-9a-f]{32}", name)
                     if dynamic and is_dir:
                         telemetry_leaves += 1
                     valid = is_dir and (name in {"Microsoft", "Microsoft/VSApplicationInsights"} or
