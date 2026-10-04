@@ -138,8 +138,11 @@ def validate_request(raw):
     return doc
 
 
-def _checkpoint(path, expected_sha256):
-    from velocity_validation import load_checkpoint
+def _checkpoint(path, expected_sha256, protocol):
+    if protocol == "physics-v2":
+        from velocity_physics_refinement import load_checkpoint
+    else:
+        from velocity_validation import load_checkpoint
 
     if type(expected_sha256) is not str or not SHA.fullmatch(expected_sha256):
         _fail()
@@ -157,9 +160,10 @@ def _checkpoint(path, expected_sha256):
     return load_checkpoint(Path(path), expected_sha256, "cpu")
 
 
-def calculate(raw, *, checkpoint=None, checkpoint_sha256=None):
+def calculate(raw, *, checkpoint=None, checkpoint_sha256=None, checkpoint_protocol="original"):
     doc = validate_request(raw)
-    if (checkpoint is None) != (checkpoint_sha256 is None):
+    if ((checkpoint is None) != (checkpoint_sha256 is None)
+            or checkpoint_protocol not in ("original", "physics-v2")):
         _fail()
     import numpy as np
     import scipy
@@ -188,7 +192,9 @@ def calculate(raw, *, checkpoint=None, checkpoint_sha256=None):
     learned_domain = None
     if checkpoint is not None:
         import torch
-        model = _checkpoint(checkpoint, checkpoint_sha256)
+        model = _checkpoint(checkpoint, checkpoint_sha256, checkpoint_protocol)
+        if checkpoint_protocol == "physics-v2":
+            from velocity_physics_refinement import input_features
         with torch.no_grad():
             models["learned"] = model(torch.from_numpy(input_features(observed, a))[None])[0].numpy().ravel().astype(np.float64)
         same_geometry = any(rays.shape == acquisition(layout).shape
@@ -196,8 +202,11 @@ def calculate(raw, *, checkpoint=None, checkpoint_sha256=None):
         same_noise = bool(np.all(sigma == 0.001))
         learned_domain = {"training_geometry": same_geometry, "training_noise": same_noise,
                           "field_validated": False, "heldout_advantage": False}
-        warnings.extend(("Frozen CNN failed the matched family/acquisition-disjoint comparator",
-                         "CNN perturbations are restricted to +/-600 m/s around the fixed reference"))
+        warnings.append("Frozen CNN failed the matched family/acquisition-disjoint comparator")
+        if checkpoint_protocol == "original":
+            warnings.append("CNN perturbations are restricted to +/-600 m/s around the fixed reference")
+        else:
+            warnings.append("Geometry-normalized CNN predicts only within 1400..4000 m/s; no field calibration")
         if not same_geometry or not same_noise:
             warnings.append("Supplied geometry or uncertainty lies outside the trained acquisition/noise domain")
     outputs = {}
@@ -231,7 +240,10 @@ def calculate(raw, *, checkpoint=None, checkpoint_sha256=None):
         "engine": {"numpy": np.__version__, "scipy": scipy.__version__,
                    "user_tool_sha256": _hash(Path(__file__).read_bytes()),
                    "velocity_operator_sha256": _hash((Path(__file__).parent / "velocity_validation.py").read_bytes()),
-                   "checkpoint_sha256": checkpoint_sha256},
+                   "checkpoint_sha256": checkpoint_sha256,
+                   "checkpoint_protocol": checkpoint_protocol if checkpoint is not None else None,
+                   "refinement_code_sha256": _hash((Path(__file__).parent / "velocity_physics_refinement.py").read_bytes())
+                   if checkpoint is not None and checkpoint_protocol == "physics-v2" else None},
         "claims": {"field_truth_known": False, "field_validated": False,
                    "heldout_advantage": False, "online_admitted": False},
     }

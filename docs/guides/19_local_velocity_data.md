@@ -72,6 +72,11 @@ of the classical model. Its matched held-out benchmark failed. The output
 retains that warning, the600 m/s perturbation bound and any mismatch from its
 training geometry or1 ms noise. Do not interpret `computed` as learned advantage.
 
+The separate geometry-normalized checkpoint uses `--checkpoint-protocol physics-v2`
+and the path/hash in its [replayed experiment](../../models/experimental/m12-physics-cuda-20261004/README.md).
+It corrects input dimensions and exposes the full declared velocity interval,
+but still fails the matched comparator; it is not substituted for the old record.
+
 The generation has `result.json` and `manifest.json`; the manifest is published
 only after an independent reopen checks physical shapes, axes, ray reforward,
 residuals, WRMS, objective and exact bytes/hashes. `verify_generation` in

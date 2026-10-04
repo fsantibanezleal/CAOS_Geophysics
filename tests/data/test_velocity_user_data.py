@@ -127,6 +127,16 @@ def test_bundle_roundtrip_and_corruption(tmp_path):
         tool.verify_generation(destination)
 
 
+def test_physics_checkpoint_on_actual_user_data():
+    path = ROOT / "models/experimental/m12-physics-cuda-20261004/m12-physics.npz"
+    sha = "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
+    result = tool.calculate(raw(request()), checkpoint=path, checkpoint_sha256=sha, checkpoint_protocol="physics-v2")
+    velocity = np.asarray(result["results"]["learned"]["velocity_m_s"])
+    assert velocity.shape == (16, 16) and np.all((velocity >= 1400) & (velocity <= 4000))
+    assert result["engine"]["checkpoint_protocol"] == "physics-v2"
+    assert any("failed" in x for x in result["warnings"])
+
+
 def test_failed_verification_has_no_success_manifest(tmp_path, monkeypatch):
     result = tool.calculate(raw(request()))
     def fail(*args):

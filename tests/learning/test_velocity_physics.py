@@ -81,7 +81,7 @@ def test_fixture_is_not_full_receipt(tmp_path):
 
 def test_frozen_receipt_and_replay():
     root = Path(__file__).resolve().parents[2]
-    output = Path(os.environ.get("M12_PHYSICS_RECEIPT", root / "data/raw/m12-physics-cuda-20261004"))
+    output = Path(os.environ.get("M12_PHYSICS_RECEIPT", root / "models/experimental/m12-physics-cuda-20261004"))
     receipt = refined.verify(output)
     assert receipt["device"] == "cuda"
     assert receipt["epochs"] == len(receipt["history"]) == 40
