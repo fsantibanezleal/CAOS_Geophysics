@@ -478,3 +478,23 @@ def test_whole_file_samples_xml_stage_and_work_limits_precede_native(monkeypatch
     req["analysis_end_utc"] = "2020-01-01T00:03:40Z"
     rejected(lambda: process_waveform_record(source(), xml, req), "waveform_limit")
     assert calls == []
+
+
+def test_response_science_outside_parent_and_epoch_ambiguity():
+    good = inventory()
+    for misplaced in (
+        b"<InstrumentPolynomial/>",
+        b"<InstrumentSensitivity><Value>1</Value></InstrumentSensitivity>",
+        b"<StageGain><Value>1</Value><Frequency>1</Frequency></StageGain>",
+    ):
+        rejected(lambda: scan_stationxml(good.replace(b"<Source>authored control</Source>", misplaced)))
+    channel = b"<Channel " + good.split(b"<Channel ")[1].split(b"</Channel>")[0] + b"</Channel>"
+    for xml, reason in [
+        (good.replace(channel, channel * 2), "epoch_ambiguous"),
+        (good.replace(b' startDate="2019-01-01T00:00:00Z"', b""), "epoch_missing"),
+    ]:
+        out = process_waveform_record(source(), xml, request())
+        assert out.metadata["status"] == "qc_only" and reason in out.metadata["qc"]["reasons"]
+        assert out.metadata["candidates"] is None and all(name == "counts" for ci, name in out.arrays)
+    open_end = process_waveform_record(source(), good.replace(b' endDate="2021-01-01T00:00:00Z"', b""), request())
+    assert open_end.metadata["status"] == "computed"

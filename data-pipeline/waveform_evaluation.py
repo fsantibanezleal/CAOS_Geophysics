@@ -25,6 +25,7 @@ from waveform_input import (
     DECIMAL,
     finite_number,
     validate_request,
+    scientific_identity,
 )
 from waveform_processing import WaveformResult
 
@@ -40,6 +41,13 @@ REFERENCE_KEYS = (
     "analyst_status",
     "source_record_id",
 )
+
+ARRAY_NAMES = frozenset((
+    "counts", "physical_native", "filtered_native", "edge_valid", "time_taper",
+    "response_frequency_hz", "response_real", "response_imag", "inverse_real", "inverse_imag",
+    "prefilter_weight", "characteristic", "psd_frequency_hz", "counts_psd", "physical_psd",
+    "filtered_psd", "filter_sos",
+))
 
 
 @dataclass(frozen=True)
@@ -67,7 +75,13 @@ def _sealed_metadata(m):
         fail("waveform_contract")
     keys(m["request"], "submitted scientific_sha256 original_json_bytes original_json_sha256")
     submitted = validate_request(m["request"]["submitted"])
-    if type(m["channels"]) is not list or len(m["channels"]) > 3 or type(m["array_descriptors"]) is not list:
+    if m["request"]["scientific_sha256"] != scientific_identity(submitted):
+        fail("waveform_contract")
+    if (
+        type(m["channels"]) is not list
+        or len(m["channels"]) > len(submitted["channels"])
+        or type(m["array_descriptors"]) is not list
+    ):
         fail("waveform_contract")
     identities = set()
     for i, c in enumerate(m["channels"]):
@@ -111,12 +125,17 @@ def _sealed_metadata(m):
         ):
             fail("waveform_contract")
         utc_us(c["on_utc"])
+    if len(m["array_descriptors"]) > 3 * len(ARRAY_NAMES):
+        fail("waveform_contract")
+    total = 0
+    seen = set()
     for d in m["array_descriptors"]:
         keys(d, "channel_index name dtype shape unit bytes sha256")
         if (
             type(d["channel_index"]) is not int
             or d["channel_index"] not in identities
             or type(d["name"]) is not str
+            or d["name"] not in ARRAY_NAMES
             or d["dtype"] not in ("<i4", "<f8", "|b1")
             or type(d["shape"]) is not list
             or not 1 <= len(d["shape"]) <= 2
@@ -128,6 +147,28 @@ def _sealed_metadata(m):
             or not re.fullmatch("[a-f0-9]{64}", d["sha256"])
         ):
             fail("waveform_contract")
+        key = (d["channel_index"], d["name"])
+        if key in seen or (m["status"] == "qc_only" and d["name"] != "counts"):
+            fail("waveform_contract")
+        seen.add(key)
+        expected_dtype = "<i4" if d["name"] == "counts" else "|b1" if d["name"] == "edge_valid" else "<f8"
+        if d["dtype"] != expected_dtype:
+            fail("waveform_contract")
+        size = math.prod(d["shape"]) * (4 if expected_dtype == "<i4" else 1 if expected_dtype == "|b1" else 8)
+        if size != d["bytes"]:
+            fail("waveform_contract")
+        if d["name"] == "filter_sos":
+            if d["shape"] != [submitted["processing"]["filter_order"], 6]:
+                fail("waveform_contract")
+        elif len(d["shape"]) != 1 or d["shape"][0] > (
+            65537 if d["name"].startswith(("response_", "inverse_")) or d["name"] == "prefilter_weight"
+            else 4097 if d["name"].endswith("_psd") or d["name"] == "psd_frequency_hz"
+            else 60000
+        ):
+            fail("waveform_contract")
+        total += size
+    if total + native_precount(m, 2097152, max_nodes=2097152, max_depth=16) > 33554432:
+        fail("waveform_contract")
 
 
 def seal_result(result):
@@ -164,6 +205,7 @@ def seal_result(result):
             or not a.flags.c_contiguous
             or not a.flags.owndata
             or a.flags.writeable
+            or not np.isfinite(a).all()
             or sha(memoryview(a).cast("B")) != d["sha256"]
         ):
             fail("waveform_contract")

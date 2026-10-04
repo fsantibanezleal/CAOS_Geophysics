@@ -274,7 +274,9 @@ def test_sealing_rejects_non_native_array_hooks_and_corrupt_metadata():
         lambda m: m.update(acceptance={}),
         lambda m: m.update(array_descriptors=None),
         lambda m: m.update(channels=None),
+        lambda m: m.update(channels=m["channels"] * 2),
         lambda m: m.update(candidates="SECRET"),
+        lambda m: m["request"].update(scientific_sha256="0" * 64),
     ):
         metadata = copy.deepcopy(out.metadata)
         mutation(metadata)
@@ -317,6 +319,55 @@ def test_zero_matches_are_evaluated_not_missing_reference_truth():
     assert evaluated["matched_reference_fraction"] == 0.0 and evaluated["median_absolute_residual_s"] is None
     refs["references"] = []
     assert evaluate_waveform_candidates(sealed, json.dumps(refs).encode())["status"] == "not_evaluable"
+
+
+def test_sealing_rejects_nonfinite_arrays_even_with_matching_digest():
+    from waveform_processing import WaveformResult
+
+    out = process_waveform_record(source(), inventory(), request())
+    for value in (float("nan"), float("inf"), float("-inf")):
+        metadata = copy.deepcopy(out.metadata)
+        arrays = dict(out.arrays)
+        bad = arrays[(0, "physical_native")].copy()
+        bad[2000] = value
+        bad.setflags(write=False)
+        arrays[(0, "physical_native")] = bad
+        descriptor = next(d for d in metadata["array_descriptors"] if d["name"] == "physical_native")
+        descriptor["sha256"] = hashlib.sha256(memoryview(bad).cast("B")).hexdigest()
+        rejected(lambda: seal_result(WaveformResult(metadata, arrays)), "waveform_contract")
+
+
+def test_sealing_rejects_unregistered_arrays_and_qc_physical_products():
+    from waveform_processing import WaveformResult
+
+    out = process_waveform_record(source(), inventory(), request())
+    renamed = copy.deepcopy(out.metadata)
+    descriptor = next(d for d in renamed["array_descriptors"] if d["name"] == "physical_native")
+    descriptor["name"] = "SECRET_unknown"
+    arrays = dict(out.arrays)
+    arrays[(0, "SECRET_unknown")] = arrays.pop((0, "physical_native"))
+    rejected(lambda: seal_result(WaveformResult(renamed, arrays)), "waveform_contract")
+    qc = copy.deepcopy(out.metadata)
+    qc.update(status="qc_only", candidates=None)
+    rejected(lambda: seal_result(WaveformResult(qc, out.arrays)), "waveform_contract")
+
+
+def test_sealing_includes_metadata_bytes_in_total_output_bound():
+    from waveform_processing import WaveformResult
+
+    out = process_waveform_record(source(), inventory(), request())
+    # Valid registered counts; owned/read-only finite allocation. Metadata makes
+    # the aggregate cap overflow even though the array alone meets it exactly.
+    counts = np.zeros(33554432 // 4, dtype="<i4")
+    counts.setflags(write=False)
+    metadata = copy.deepcopy(out.metadata)
+    metadata.update(status="qc_only", candidates=None)
+    metadata["array_descriptors"] = [{
+        "channel_index": 0, "name": "counts", "dtype": "<i4", "shape": list(counts.shape),
+        "unit": "counts", "bytes": counts.nbytes,
+        "sha256": hashlib.sha256(memoryview(counts).cast("B")).hexdigest(),
+    }]
+    rejected(lambda: seal_result(WaveformResult(metadata, {(0, "counts"): counts})), "waveform_contract")
 
 
 def direct_dft(values):

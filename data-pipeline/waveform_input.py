@@ -773,6 +773,8 @@ def _scan_xml(raw):
         if core and any(f["tag"] == "Response" for f in frames) and tag not in _RESPONSE_TAGS:
             fail()
         in_response = any(f["tag"] == "Response" for f in frames)
+        if core and not in_response and tag in _RESPONSE_TAGS - {"Response", "Name", "Description"}:
+            fail()
         if core and in_response and tag not in _RESPONSE_CHILDREN.get(parent, set()):
             fail()
         if core and frames and parent in numeric_tags:

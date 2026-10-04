@@ -1,0 +1,96 @@
+{
+  "decoder_called": false,
+  "event_id": "38457511",
+  "field_eligible": false,
+  "field_truth": null,
+  "host_admitted": false,
+  "method_accepted": false,
+  "nslc": [
+    "CI",
+    "GSC",
+    "",
+    "HNZ"
+  ],
+  "original_changed": false,
+  "original_publication_approved": false,
+  "phase_accessed_before_terminal_seal": false,
+  "physical_arrays_emitted": false,
+  "record_count": 8,
+  "reference_evaluation": "unavailable_for_rejected_calculation",
+  "rejected_cases": 1,
+  "request": {
+    "adc_rails": [
+      null
+    ],
+    "analysis_end_utc": "2019-07-06T03:21:40Z",
+    "analysis_start_utc": "2019-07-06T03:19:40Z",
+    "channels": [
+      {
+        "channel": "HNZ",
+        "location": "",
+        "network": "CI",
+        "station": "GSC"
+      }
+    ],
+    "conditioning_end_utc": "2019-07-06T03:22:20Z",
+    "conditioning_start_utc": "2019-07-06T03:19:20Z",
+    "processing": {
+      "bandpass_hz": [
+        1,
+        10
+      ],
+      "edge_guard_s": 10,
+      "filter_mode": "offline-zero-phase",
+      "filter_order": 4,
+      "lta_s": 2,
+      "output": "native",
+      "prefilter_hz": [
+        0.5,
+        1,
+        12,
+        15
+      ],
+      "refractory_s": 1,
+      "sta_s": 0.2,
+      "taper_fraction": 0.05,
+      "threshold_off": 1.5,
+      "threshold_on": 3.5,
+      "water_level_db": 60,
+      "welch_segment_samples": 1024
+    },
+    "representation": "unrestituted_integer_counts",
+    "schema": "caos.local-waveform-request.v1",
+    "source": {
+      "citation": "SCEDC 10.7909/C3WD3xH1; CI 10.7914/SN/CI",
+      "declared_sha256": "425a7184012a5403e0431e5ed5161e0bd16115d6eab5132a51d27b66c3830ef6",
+      "kind": "provider",
+      "processing_statement": "Exact privately acquired original counts; no response removal, resampling or rotation",
+      "provider_url": "https://service.scedc.caltech.edu/fdsnws/dataselect/1/query?net=CI&sta=GSC&loc=--&cha=HNZ&starttime=2019-07-06T03:19:20&endtime=2019-07-06T03:22:20&nodata=404",
+      "rights": "private-use-attested"
+    }
+  },
+  "response_called": false,
+  "safe_error": {
+    "code": "waveform_format",
+    "field": "document",
+    "message": "Waveform encoding is unsupported or malformed"
+  },
+  "sample_count": 18001,
+  "sample_rates_hz": [
+    100
+  ],
+  "schema": "caos.m08-original-terminal.v1",
+  "scientific_sha256": "87d0de2cfd6e8757bb31550a489af428cb2e7d621d3baba31ece057ac1bd1d25",
+  "selected_cases": 1,
+  "sources": {
+    "miniseed": {
+      "bytes": 32768,
+      "sha256": "425a7184012a5403e0431e5ed5161e0bd16115d6eab5132a51d27b66c3830ef6"
+    },
+    "stationxml": {
+      "bytes": 9388,
+      "sha256": "cd14c82f6e188975cc7b5cff2720e318ac6140f2550c50999ef4100f0fd71382"
+    }
+  },
+  "status": "input_rejected"
+}
