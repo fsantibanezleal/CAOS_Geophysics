@@ -41,6 +41,23 @@ releases root, installs an API-only `.venv` in that release from the exact
 and environment are owned by the operator, readable but not writable by the
 service account. Staging and source verification precede activation.
 
+The bounded installer is executable from the staged candidate's source:
+
+```bash
+/usr/bin/python3 -I -B source/scripts/stage_service_runtime.py \
+  --release /var/www/geophysics.ml.fasl-work.com/releases/REVIEWED_ID \
+  --evidence /var/lib/geophysics-deploy/REVIEWED_RUNTIME_ID \
+  --bundle-sha256 REVIEWED_MANIFEST_SHA256
+```
+
+Use the explicit measured IDs and digest, not these placeholders. This operator
+step refuses the active release, existing environments, wrong bundle bytes,
+unsafe requirements and insufficient available bytes. Wheel-only installation
+uses isolated pip without global changes or cache. The complete installed
+file/interpreter and resolved dependency inventories are retained in private
+evidence; failed candidates are retained and never reused by overwriting them.
+Runtime installation is not method admission, activation or complete delivery.
+
 Private state lives in `/var/lib/geophysics`, owned by the dedicated service
 account with mode0700, outside all release and document roots. Alembic creates
 the exact reviewed schema before first activation. Existing databases are
