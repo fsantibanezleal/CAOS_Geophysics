@@ -1,0 +1,113 @@
+{
+  "approved_design_commit": "89249842fb3485a7d47d9678c8574b28c6eb0fff",
+  "field_measurements": false,
+  "files": [
+    {
+      "bytes": 43398,
+      "path": "data-pipeline/magnetic_line_contract.py",
+      "sha256": "33720f8510a273292c45b7554010b90886b707a086168ff5c001ec6ca2e78645"
+    },
+    {
+      "bytes": 15567,
+      "path": "data-pipeline/magnetic_line_validation.py",
+      "sha256": "b51cba661ff21ebb075de27a63cdc1d214b7f9296b61f0535aa74508c1f60554"
+    },
+    {
+      "bytes": 7720,
+      "path": "tests/fixtures/magnetic_lines/generate.py",
+      "sha256": "074ac185367433be9cff9d28fb7ce6ab90f64f1c5d56bf21cfa910d4a55f60f2"
+    },
+    {
+      "bytes": 18033,
+      "path": "tests/data/test_magnetic_lines.py",
+      "sha256": "bcda1d05032c1e43217e2ec465fa062071d409dbf43dde3997af46886ee352a2"
+    },
+    {
+      "bytes": 6274,
+      "path": "tests/numerics/test_magnetic_processing.py",
+      "sha256": "9665ccd2962782db7a19033e1b2fe56a72350175e15958f8e18eaeb5c4f55b8b"
+    }
+  ],
+  "full_method_accepted": false,
+  "input_request_tables": 49,
+  "magnetic_truth": false,
+  "native_admission": false,
+  "red_test_commit": "53ad2722a569775e507465a93a567bb7cf50a0ff",
+  "runs": [
+    {
+      "errors": 0,
+      "failures": 4,
+      "file": "green-01.xml",
+      "sha256": "e092c041de00f7fb2797eab98c33d6f9cc7d29938d2a81e5a52f327b8660d541",
+      "skipped": 0,
+      "suite_seconds": 0.762,
+      "tests": 22
+    },
+    {
+      "errors": 0,
+      "failures": 2,
+      "file": "green-02.xml",
+      "sha256": "61095af32428d623216d315afe1e4135fb07d62c5eac9294b3f8f5434466ed96",
+      "skipped": 0,
+      "suite_seconds": 1.006,
+      "tests": 27
+    },
+    {
+      "errors": 0,
+      "failures": 1,
+      "file": "green-03.xml",
+      "sha256": "256889fd75407a8c6bd7e77e1eccb16af52c4ca1cc9be17ef8f5535ebf3cfa21",
+      "skipped": 0,
+      "suite_seconds": 0.923,
+      "tests": 27
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "green-04.xml",
+      "sha256": "fa282dab1d88bd119e90fa203ce54c498e45669461ff2acf8d4d49ef471283e5",
+      "skipped": 0,
+      "suite_seconds": 0.86,
+      "tests": 27
+    },
+    {
+      "errors": 0,
+      "failures": 1,
+      "file": "green-05.xml",
+      "sha256": "1cdab5cab0381d6978548d41c504c6234ca82ae4a3db7829ff1c1d87ff2697a1",
+      "skipped": 0,
+      "suite_seconds": 0.944,
+      "tests": 29
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "green-06.xml",
+      "sha256": "2ac77eeb658e0711e0023de6f5e00df7024b8f7edf8072e0baefb429fe79ef8e",
+      "skipped": 0,
+      "suite_seconds": 1.221,
+      "tests": 29
+    },
+    {
+      "errors": 0,
+      "failures": 0,
+      "file": "green-07.xml",
+      "sha256": "808ca5b3fe6891ae5db95c2440932306035b26cd77c74dcdd8fc211b29e41dcb",
+      "skipped": 0,
+      "suite_seconds": 1.239,
+      "tests": 31
+    },
+    {
+      "errors": 0,
+      "failures": 22,
+      "file": "red-01.xml",
+      "sha256": "603bc57ae61d0bca86d9de850a54774d818c5bf30ea5450fb450c602ddac8599",
+      "skipped": 0,
+      "suite_seconds": 0.381,
+      "tests": 22
+    }
+  ],
+  "schema": "m03-intake-geometry-checks/1",
+  "solver_run": false,
+  "typed_keys": 305
+}

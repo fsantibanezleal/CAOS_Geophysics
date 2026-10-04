@@ -5,6 +5,9 @@ import math
 
 import pytest
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data"))
 from test_magnetic_lines import modules
 
 
@@ -70,7 +73,6 @@ def test_half_open_source_maps_no_values_or_thinning():
 
 def test_preflight_exact_counts_before_native_imports():
     c, g = modules()
-    v = validation()
     raw, meta, req = g.geometry_input()
     loaded = c.load_lines(raw, c.canonical_bytes(meta), c.canonical_bytes(req))
     counts = c.preflight(loaded["rows"], meta, req)
@@ -95,3 +97,59 @@ def test_nearconstant_kernel_guard_before_scaler():
         v.kernel_column_scales([[1., 2.], [1., 3.]])
     scale = v.kernel_column_scales([[1., 2.], [3., 4.]])
     assert scale == [1., 1.]
+
+
+def test_geometry_seal_counts_source_receipts_and_no_truth():
+    c, g = modules()
+    v = validation()
+    rows = g.geometry_rows()
+    raw, meta, req = g.geometry_input()
+    assert all(r["magnetic_nT"] is None for r in rows)
+    assert g.geometry_input() == (raw, meta, req)
+    manifest = v.make_partitions(rows, req)
+    assert [len(manifest["outer_source_positions"])] + [len(f["source_positions"]) for f in manifest["inner"]] == [66, 45, 48, 57]
+    assert manifest["max_nearest_m"] == pytest.approx(387.45134262252844, abs=1e-10)
+    assert [f["max_nearest_m"] for f in manifest["inner"]] == pytest.approx(
+        [447.2709304213723, 447.5201609983622, 357.61083274979245], abs=1e-10)
+    for fold in manifest["inner"]:
+        assert len(fold["source_block_map"]) == len(fold["training_ids"])
+        assert [m["row_id"] for m in fold["source_block_map"]] == fold["training_ids"]
+        assert sum(s["count"] for s in fold["source_positions"]) == len(fold["training_ids"])
+    assert manifest["evaluation_count"] == 0
+    changed = deepcopy(rows)
+    changed[0]["easting_m"] += 1
+    with pytest.raises(c.MagneticContractError) as err:
+        v.make_partitions(changed, req)
+    assert err.value.error["code"] == "custody_mismatch"
+
+
+def test_bounds_source_counts_padding_and_geometry_failures():
+    c, g = modules()
+    v = validation()
+    rows = g.geometry_rows()
+    _, meta, req = g.geometry_input()
+    for axis, number in (("nx", 1000), ("ny", 1000)):
+        bad = deepcopy(req)
+        bad["grid"][axis] = number
+        with pytest.raises(c.MagneticContractError):
+            c.preflight(rows, meta, bad)
+    bad = deepcopy(req)
+    bad["grid"]["boundary_policy"]["mode"] = "reflect_pad"
+    bad["grid"]["boundary_policy"]["pad_e_cells"] = 33
+    with pytest.raises(c.MagneticContractError):
+        c.preflight(rows, meta, bad)
+    config = deepcopy(req["equivalent_sources"]["source_geometry"])
+    config["max_sources"] = 1
+    with pytest.raises(c.MagneticContractError):
+        v.source_blocks(rows, config, 200)
+    with pytest.raises(c.MagneticContractError):
+        c.preflight(rows + rows[:38], meta, req)
+    for value in (True, float("nan"), float("inf"), "0"):
+        bad = deepcopy(rows)
+        bad[0]["easting_m"] = value
+        with pytest.raises(c.MagneticContractError):
+            v.make_partitions(bad, req)
+    bad = deepcopy(req)
+    bad["split"]["inner_folds"][0]["validation_line_ids"] = ["F00"]
+    with pytest.raises(c.MagneticContractError):
+        v.make_partitions(rows, bad)
