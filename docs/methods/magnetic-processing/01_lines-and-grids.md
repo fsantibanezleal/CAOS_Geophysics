@@ -445,7 +445,9 @@ predictive threshold or authorize selecting geometry from its opened test.
 The source-bound local `fit_grid` orchestration produces real corrected rows,
 blocked fits, comparator applicability, supported grid and higher-plane
 predictions. It reports S1 quality failure explicitly. It is an internal
-numerical mapping, not yet the complete serialized/replayable `magnetic-result/1`.
+numerical mapping. The separate `run_result` boundary produces the complete
+serialized `magnetic-result/1` only with its additional typed reference,
+array/runtime/custody prerequisites. See the [local-file workflow](02_local-files-and-replay.md).
 FFT requires a complete declared supported plane; source-free=True on the
 ordinary transform is a physical caller assertion, not provider authentication.
 Strict float64 axes/padding/cell/byte preconditions and known datum/sign remain
@@ -477,6 +479,7 @@ publication and raw-mirroring permissions. A source hash establishes identity,
 not ownership, license or provider authentication. The bounded contract has
 400 rows/16MiB original CSV,2MiB combined metadata,26 fits and16384 total
 exported cells; it is not a full Charleston-survey executor. The complete
-rights-aware correction/export/replay workflow, independent IGRF evaluation,
-full-survey field evidence and native activation remain unaccepted. The
+independent IGRF evaluation, full-survey field evidence and native activation
+remain unaccepted. Local correction/export/replay controls do not close those
+gates. The
 actual frozen S1 failure must not be presented as a successful field example.

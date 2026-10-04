@@ -156,9 +156,38 @@ def _coverage(training, validation, radius):
     return dict(eligible_count=count, total_count=total, fraction=count/total, unsupported_ids=unsupported), max(distances)
 
 
-def source_blocks(rows, config, depth):
+def validate_profile_named(name, value, row_count=1, *, local_profile=None):
+    """Explicit local study extension; never mutate the ordinary v1 schema.
+
+    All original validation runs on a copied object with the one extended
+    ceiling projected to 256. The original typed ceiling is restored only for
+    the named local profile. No request can activate it by adding a key.
+    """
+    from copy import deepcopy
+    if local_profile is None:
+        return validate_named(name, value, row_count)
+    if type(local_profile) is not str or local_profile != "m03-local-320/1":
+        fail("profile.name", "unsupported_operation")
+    copied = deepcopy(value)
+    try:
+        geometry = (copied["equivalent_sources"]["source_geometry"] if name == "Request" else
+                    copied["source_geometry"] if name == "EquivalentSourcesConfig" else copied)
+        bound = geometry["max_sources"]
+    except (KeyError, TypeError):
+        fail("profile.source_geometry")
+    if type(bound) is not int or not 1 <= bound <= 320:
+        fail("profile.sources", "resource_refused")
+    geometry["max_sources"] = min(bound, 256)
+    decoded = validate_named(name, copied, row_count)
+    target = (decoded["equivalent_sources"]["source_geometry"] if name == "Request" else
+              decoded["source_geometry"] if name == "EquivalentSourcesConfig" else decoded)
+    target["max_sources"] = bound
+    return decoded
+
+
+def source_blocks(rows, config, depth, *, local_profile=None):
     validate_geometry_rows(rows)
-    config = validate_named("SourceGeometry", config)
+    config = validate_profile_named("SourceGeometry", config, local_profile=local_profile)
     if type(depth) not in (float, int) or not math.isfinite(depth) or not 1 <= depth <= 2000:
         fail("sources.depth")
     if not rows or len(rows) > 400:
@@ -198,9 +227,9 @@ def source_blocks(rows, config, depth):
     return dict(sources=sources, map=[row_map[rid] for rid in ids])
 
 
-def make_partitions(rows, request):
+def make_partitions(rows, request, *, local_profile=None):
     validate_geometry_rows(rows)
-    request = validate_named("Request", request, len(rows))
+    request = validate_profile_named("Request", request, len(rows), local_profile=local_profile)
     if not 1 <= len(rows) <= 400:
         fail("partition.rows", "resource_refused", "partition")
     split = request["split"]
@@ -235,7 +264,7 @@ def make_partitions(rows, request):
             fail("partition.support", "metadata_ineligible", "partition",
                  observed=coverage["fraction"], limit=split["minimum_supported_fraction"])
         sources = source_blocks(training, request["equivalent_sources"]["source_geometry"],
-                                request["equivalent_sources"]["depth_candidates_m"][0])
+                                request["equivalent_sources"]["depth_candidates_m"][0], local_profile=local_profile)
         return dict(fold_id=fold_id, training_ids=[r["row_id"] for r in training],
                     validation_ids=[r["row_id"] for r in validation],
                     tie_buffer_excluded_ids=[r["row_id"] for r in rows if r["row_id"] in exclude],
@@ -252,12 +281,14 @@ def make_partitions(rows, request):
                 outer_source_positions=original["source_positions"], evaluation_count=0)
 
 
-def kernel_column_scales(kernel):
+def kernel_column_scales(kernel, *, local_profile=None):
     """Unweighted ddof0 std in 1/m, before any StandardScaler numerical fallback."""
     if type(kernel) is not list or not 2 <= len(kernel) <= 400 or any(type(r) is not list for r in kernel):
         fail("kernel.rows")
     width = len(kernel[0])
-    if not 1 <= width <= 256 or any(len(row) != width for row in kernel):
+    if local_profile not in (None, "m03-local-320/1") or type(local_profile) not in (str, type(None)):
+        fail("profile.name", "unsupported_operation")
+    if not 1 <= width <= (320 if local_profile else 256) or any(len(row) != width for row in kernel):
         fail("kernel.shape")
     scales = []
     for j in range(width):
@@ -275,10 +306,10 @@ def kernel_column_scales(kernel):
     return scales
 
 
-def preflight_geometry(rows, metadata, request):
+def preflight_geometry(rows, metadata, request, *, local_profile=None):
     validate_geometry_rows(rows)
     metadata = validate_named("Sidecar", metadata, len(rows))
-    request = validate_named("Request", request, len(rows))
+    request = validate_profile_named("Request", request, len(rows), local_profile=local_profile)
     if not 1 <= len(rows) <= 400:
         fail("preflight.rows", "resource_refused", observed=len(rows), limit=400)
     grid, boundary = request["grid"], request["grid"]["boundary_policy"]
@@ -311,7 +342,7 @@ def preflight_geometry(rows, metadata, request):
                 pairs += 1
                 if pairs > 4096:
                     fail("preflight.segment_pairs", "resource_refused", observed=pairs, limit=4096)
-    sealed = make_partitions(rows, request)
+    sealed = make_partitions(rows, request, local_profile=local_profile)
     source_counts = [len(sealed["outer_source_positions"])] + [len(f["source_positions"]) for f in sealed["inner"]]
     return dict(rows=len(rows), lines=len({r["line_id"] for r in rows}), sensors=len({r["sensor_id"] for r in rows}),
                 segments=len(segments), segment_pairs=pairs, sources=max(source_counts), fits=26,

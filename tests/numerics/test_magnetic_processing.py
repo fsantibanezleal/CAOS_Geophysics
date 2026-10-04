@@ -11,6 +11,54 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data"))
 from test_magnetic_lines import modules
 
 
+def test_local_320_geometry_profile_is_explicit_and_value_free():
+    c, g = modules()
+    v = validation()
+    p = processing()
+    rows = g.refinement_geometry_rows()
+    assert all(r["magnetic_nT"] is None for r in rows)
+    assert rows != g.geometry_rows()
+    req = g.geometry_request(rows)
+    req["equivalent_sources"]["source_geometry"].update(block_e_m=50., block_n_m=50., max_sources=320)
+    with pytest.raises(c.MagneticContractError):
+        v.make_partitions(rows, req)
+    sealed = v.make_partitions(rows, req, local_profile="m03-local-320/1")
+    assert len(sealed["outer_source_positions"]) <= 320
+    proof = p.local_source_preallocation(rows, req, local_profile="m03-local-320/1")
+    assert proof["source_counts"] == [len(sealed["outer_source_positions"])] + [len(f["source_positions"]) for f in sealed["inner"]]
+    assert proof["peak_dense_bytes_bound"] < 512 * 1024**2
+    assert proof["values_generated"] is False and proof["vps_admitted"] is False
+    changed = deepcopy(rows)
+    for r in changed:
+        r["magnetic_nT"] = 1e12
+    with pytest.raises(c.MagneticContractError):
+        p.local_source_preallocation(changed, req, local_profile="m03-local-320/1")
+    for name in (None, "vps-320", True):
+        with pytest.raises(c.MagneticContractError):
+            v.make_partitions(rows, req, local_profile=name)
+    req["equivalent_sources"]["source_geometry"]["max_sources"] = 321
+    with pytest.raises(c.MagneticContractError):
+        v.make_partitions(rows, req, local_profile="m03-local-320/1")
+
+
+def test_local_source_profile_requires_actual_job_before_native_import(monkeypatch):
+    c,g=modules()
+    p=processing()
+    config=g.geometry_request(g.geometry_rows())["equivalent_sources"]
+    config["source_geometry"]["max_sources"]=320
+    monkeypatch.setattr(p,"engines",lambda: pytest.fail("Uncontained local profile must refuse before scientific imports"))
+    with pytest.raises(c.MagneticContractError) as caught:
+        p.fit_equivalent(g.geometry_rows(),config,500.,.0001,local_profile="m03-local-320/1")
+    assert caught.value.error["code"]=="resource_refused"
+
+
+def test_fresh_truth_requires_prior_null_geometry_seal():
+    _,g=modules()
+    for width,seal in ((100.,"0"*64),(50.,"0"*64),(True,"0"*64),(200.,"0"*64)):
+        with pytest.raises(ValueError,match="fresh geometry seal"):
+            g.refinement_input(width,seal)
+
+
 def validation():
     return importlib.import_module("magnetic_line_validation")
 

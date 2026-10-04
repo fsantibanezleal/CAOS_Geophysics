@@ -9,7 +9,7 @@ from magnetic_line_contract import CSV_COLUMNS, canonical_bytes, channel_identit
 from magnetic_line_validation import geometry_manifest
 
 
-def geometry_rows():
+def geometry_rows(*, jitter_prefix="m03/20261003/"):
     rows = []
     northings = (-1400, -950, -520, -170, 230, 610, 1050, 1500)
     eastings = (-1100, 0, 1000)
@@ -23,7 +23,7 @@ def geometry_rows():
             def jitter(axis):
                 if j in (0, 32):
                     return 0.0
-                value = sha256(f"m03/20261003/{rid}/{axis}".encode("ascii")).digest()
+                value = sha256(f"{jitter_prefix}{rid}/{axis}".encode("ascii")).digest()
                 return (int.from_bytes(value[:2], "big") % 1001 - 500) / 100
             t = start + timedelta(seconds=136*line_index + .5*j)
             up = 80 + 15*math.sin(j/5) + 10*math.cos(line_index)
@@ -32,6 +32,67 @@ def geometry_rows():
                 easting_m=float(e)+jitter("e"), northing_m=float(n)+jitter("n"), upward_m=up,
                 terrain_upward_m=0.0, clearance_m=up, magnetic_nT=None, uncertainty_nT=None, heading_deg=None))
     return rows
+
+
+def refinement_geometry_rows():
+    """Approved NEW magnetic-null geometry; original default bytes unchanged."""
+    return geometry_rows(jitter_prefix="m03-refinement/20261004/")
+
+
+def refinement_input(width, sealed_geometry_sha256):
+    """Approved fresh SI dipoles; refuse without the prior NULL geometry seal.
+
+    Widths are separate requests, never chosen from an outer score. Original
+    controls, candidates and their failed thresholds remain byte unchanged.
+    """
+    rows = refinement_geometry_rows()
+    if width not in (100.,50.) or type(width) is bool or digest(geometry_manifest(rows))!=sealed_geometry_sha256:
+        raise ValueError("The fresh geometry seal and both fixed widths are required.")
+    request=geometry_request(rows)
+    request["equivalent_sources"]["source_geometry"].update(block_e_m=float(width),block_n_m=float(width),max_sources=320 if width==50 else 256)
+    from magnetic_line_validation import make_partitions
+    make_partitions(rows,request,local_profile="m03-local-320/1" if width==50 else None)
+    _,meta,_=geometry_input()
+    meta["rights"]["raw_mirroring"]="allowed"  # Newly authored controls only.
+    recipe=dict(F_nT=48000.,D_deg=-17.,I_deg=42.,
+        positions_m=[[-350.,180.,-350.],[510.,-420.,-450.],[-850.,-610.,-280.]],
+        moments_Am2=[[1.2e7,-.9e7,2.1e7],[-1.6e7,1.1e7,.6e7],[.8e7,1.4e7,-1.3e7]])
+    d,i=math.radians(recipe["D_deg"]),math.radians(recipe["I_deg"])
+    direction=(math.cos(i)*math.sin(d),math.cos(i)*math.cos(d),-math.sin(i))
+    for row in rows:
+        vector=[0.,0.,0.]
+        for source,moment in zip(recipe["positions_m"],recipe["moments_Am2"]):
+            r=[row[k]-s for k,s in zip(("easting_m","northing_m","upward_m"),source)]
+            length=math.sqrt(math.fsum(x*x for x in r))
+            dot=math.fsum(a*b for a,b in zip(moment,r))
+            for axis in range(3):
+                vector[axis]+=100*(3*r[axis]*dot/length**5-moment[axis]/length**3)
+        row["magnetic_nT"]=math.fsum(a*b for a,b in zip(vector,direction))
+    coordinate_hash=digest(dict(datum=meta["coordinates"]["vertical_datum"],rows=[
+        [r["row_id"],r["easting_m"],r["northing_m"],r["upward_m"]] for r in rows]))
+    start=datetime(2001,1,1,tzinfo=timezone.utc)
+    reference=dict(kind="authored_constant",model_generation="authored_constant",coefficients_sha256=None,
+        evaluator=dict(name="authored_constant",revision="refinement-1",source_sha256=digest(recipe),calculation="main_field",
+            valid_start_decimal_year=2000.,valid_end_decimal_year=2002.,rounding_tolerance_nT=1e-8,
+            input_coordinates_sha256=coordinate_hash,source_rights_evidence_sha256=digest(meta["rights"])),
+        epoch=dict(date_mode="row_utc",date_decimal_year=None,row_date_decimal_year=[2001+(
+            datetime.fromisoformat(r["utc"].replace("Z","+00:00"))-start).total_seconds()/(365*86400) for r in rows],
+            survey_epoch_evidence_sha256=None,row_utc_sha256=digest([r["utc"] for r in rows])),
+        coordinates_sha256=coordinate_hash,input_height_definition="authored engineering zero",input_height_unit="m",
+        datum_transform_evidence_sha256=None,original_basis="ENU",output_basis="ENU",vector_east_nT=[48000*direction[0]]*len(rows),
+        vector_north_nT=[48000*direction[1]]*len(rows),vector_up_nT=[48000*direction[2]]*len(rows),scalar_F_nT=[48000.]*len(rows),
+        direction_tolerance_deg=.5,receipt_sha256="")
+    reference["receipt_sha256"]=digest({k:value for k,value in reference.items() if k!="receipt_sha256"})
+    raw=csv_bytes(rows)
+    meta.update(dataset_id="authored-refinement-20261004",revision="refinement-1",reference=reference)
+    meta["original"].update(csv_sha256=sha256(raw).hexdigest(),csv_bytes=len(raw))
+    meta["quantity"].update(kind="scalar_total_field_anomaly",channel_name="fresh-authored-weak-projection",
+        sign_definition="authored_weak_projection")
+    meta["authored_control"].update(generator_revision="refinement-1",regime="S1",truth_definition="Fresh independent SI dipoles "+canonical_bytes(recipe).decode())
+    request["dataset_version_sha256"]=dataset_identity(sha256(raw).hexdigest(),digest(meta))
+    request["channel_sha256"]=request["split"]["sealed_values_sha256"]=channel_identity(rows)
+    request["export_policy"]["raw_requested"]="include"
+    return raw,meta,request
 
 
 def csv_bytes(rows):
@@ -207,7 +268,7 @@ def authored_identity(payload, rights):
     return identity
 
 
-def instrument_input():
+def instrument_input(*, raw_mirroring="denied"):
     """Prescribed S3 calibration with an independently authored piecewise path.
 
     Navigation knots are measured UTC+0.25s at the original geometry. The
@@ -216,6 +277,9 @@ def instrument_input():
     the aligned geometry seal. No sensor value calibrates lag/base/heading.
     """
     _,meta,_ = geometry_input()
+    if raw_mirroring not in ("allowed", "denied"):
+        raise ValueError("Authored control permissions must be explicit.")
+    meta["rights"]["raw_mirroring"] = raw_mirroring
     aligned = geometry_rows()
     rows = []
     navigation = []

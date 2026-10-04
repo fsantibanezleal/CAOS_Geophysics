@@ -7,6 +7,7 @@ from importlib.metadata import PackageNotFoundError, version
 import math
 from pathlib import Path
 import platform
+import magnetic_line_contract as contract
 
 from magnetic_line_contract import _type, digest, fail, validate_named
 
@@ -18,6 +19,92 @@ SOURCE_PINS = {
     "verde.base.least_squares": "a4eb01f891016a50be2451432842e0449ac924ec2fdfef8ecb182cc1f36ec090",
 }
 EPSILON = 2.220446049250313e-16
+
+# Exhaustive reviewed output tables, independent of the unchanged intake tables.
+# This is a literal schema, not a run-time parser of prose or a permissive dict.
+E, L, I = contract.E, contract.L, contract.I
+V = E("pass", "fail", "unresolved", "ineligible", "nonconverged", "cancelled", "resource_refused")
+A = "ArrayDescriptor"
+RESULT_TABLES = {
+    "Result": dict(schema=contract.literal("magnetic-result/1"), run_id="ID",
+        lane=E("local_synthetic", "local_user", "field_provider_product", "future_online_owned"),
+        input="InputIdentity", request="RequestIdentity", environment="Environment", inventory="Inventory",
+        channels=L("Channel",1,8), geometry="GeometryResult", crossovers=L("Crossover",0,4096),
+        leveling="?LevelingResult", partitions="PartitionResult", fit="FitResult", grid=L("GridResult",1,3),
+        spectrum="?SpectrumResult", evaluation="EvaluationResult", rights="Rights", artifacts=L("Member",0,64), verdict="Verdict"),
+    "InputIdentity": dict(dataset_sha256="Hash",csv_sha256="Hash",csv_bytes=I(1,16777216),sidecar_sha256="Hash",
+        sidecar_bytes=I(1,2097152),source_kind=E("field_acquisition","original_synthetic_acquisition","provider_grid","provider_image"),
+        row_ids=("rows","ID"),auxiliary_identities=L("AuxIdentity",0,16)),
+    "RequestIdentity": dict(bytes_sha256="Hash",bytes=I(1,2097152),canonical_request="Request",geometry_manifest_sha256="Hash"),
+    "Environment": dict(python_revision="Text",os_revision="Text",cpu_identity="Text",engine_versions=L("EnginePin",1,64),
+        loaded_modules=L("FilePin",1,256),native_modules=L("FilePin",0,256),threads=I(1,1),source_revision="Hash",environment_receipt_sha256="Hash"),
+    "EnginePin": dict(name="Text",version="Text",distribution_sha256="Hash",license_evidence_sha256="Hash"),
+    "FilePin": dict(module_name="Text",sha256="Hash",bytes=I(1,2147483647)),
+    "Inventory": dict(original_rows=I(1,400),retained_ids=L("ID",0,400),invalid_ids=L("ID",0,400),excluded_ids=L("ID",0,400),
+        reasons=L("RowMask",0,400),flag_counts=L("MaskCount",0,16)),
+    "RowMask": dict(row_id="ID",reasons=L("Mask",1,16),disposition=E("retained","invalid","excluded")),
+    "MaskCount": dict(reason="Mask",count=I(0,400)),
+    A: dict(shape=L(I(1,65536),1,2),dtype=E("float64","int32","id","mask"),
+        unit=E("nT","nT^2","nT*m","nT^-2","m","1_per_m","cycles_per_m","rad_per_m","s","degree","dimensionless","identity"),
+        ordered_ids_sha256="Hash",values=L("ArrayScalar",1,65536),values_sha256="Hash",masks=L(L("Mask",0,16),1,65536),mask_sha256="Hash"),
+    "Channel": dict(channel_id="ID",kind=E("scalar_total_intensity","scalar_total_field_anomaly"),
+        role=E("original","derived","diagnostic_removed","diagnostic_retained"),data=A,state=L("StateRecord",0,64),
+        parent_sha256="?Hash",reference_receipt_sha256="?Hash"),
+    "GeometryResult": dict(row_ids=("rows","ID"),easting=A,northing=A,upward=A,segments=L("Segment",0,399),
+        line_statistics=L("LineStatistics",1,128),coverage_sha256="Hash"),
+    "Segment": dict(segment_id="ID",line_id="ID",sensor_id="ID",start_row_id="ID",end_row_id="ID",length_m="Pos",valid=contract.literal(True)),
+    "LineStatistics": dict(line_id="ID",sensor_id="ID",spacing_min_m="?Nonneg",spacing_median_m="?Nonneg",spacing_max_m="?Nonneg",
+        local_perpendicular_spacing_m="?Nonneg",azimuth_deg="?F64",reversals=I(0,399),gap_count=I(0,399),row_count=I(1,400)),
+    "Crossover": dict(crossover_id="ID",flight_segment_id="ID",tie_segment_id="ID",a="?F64",b="?F64",easting_m="?F64",northing_m="?F64",
+        flight_minus_tie_nT="?F64",height_difference_m="?F64",time_separation_s="?Nonneg",difference_variance_nT2="?Nonneg",
+        disposition=E("admitted","rejected"),reasons=L("CrossoverReason",0,16),shared_endpoint_group_id="?ID",
+        constraint_representative="?ID",tolerance="IntersectionTolerance"),
+    "IntersectionTolerance": dict(coordinate_m="Pos",determinant_m2="?Pos",sine_dimensionless="?Pos",parameter_dimensionless="?Pos",matrix_residual_m="?Nonneg"),
+    "LevelingResult": dict(offsets=L("OffsetValue",1,32),components=L("LevelComponent",1,32),before_residuals=A,after_residuals=A,
+        uncalibrated_line_ids=L("ID",0,32),scope=contract.literal("training_only"),gauge_policy=contract.literal("lexicographic_first_tie_per_component")),
+    "LevelComponent": dict(component_id="ID",line_ids=L("ID",1,32),gauge_line_id="ID",rank=I(0,32),singular_values=L("Nonneg",1,32),
+        condition="?Pos",absolute_datum=contract.literal(False)),
+    "PartitionResult": dict(config="SplitConfig",original_row_ids=("rows","ID"),outer_training_ids=L("ID",1,400),outer_validation_ids=L("ID",1,400),
+        tie_buffer_excluded_ids=L("ID",0,400),inner=L("FoldInventory",3,3),evaluation_count=I(0,1),geometry_only_coverage="Coverage"),
+    "FoldInventory": dict(fold_id="ID",training_ids=L("ID",1,400),validation_ids=L("ID",1,400),tie_buffer_excluded_ids=L("ID",0,400),
+        calibration_receipts=L("Hash",0,16),source_block_map=L("BlockMember",1,400),geometry_only_coverage="Coverage"),
+    "Coverage": dict(eligible_count=I(0,400),total_count=I(1,400),fraction="Nonneg",unsupported_ids=L("ID",0,400)),
+    "FitResult": dict(method=contract.literal("harmonica_equivalent_sources"),candidates=L("CandidateResult",8,8),selected_candidate_id="ID",
+        production_fit_count=I(1,26),source_positions=A,source_coefficients=A,source_block_map=L("BlockMember",1,400),column_scales=A,
+        objective="Objective",weights_policy=E("unweighted","admitted_inverse_variance"),damping_unit=E("dimensionless","nT^-2"),
+        comparator="ComparatorResult",residuals=A,numerical_status=E("converged","nonconverged")),
+    "BlockMember": dict(row_id="ID",block_e=I(-2147483648,2147483647),block_n=I(-2147483648,2147483647),source_id="ID"),
+    "CandidateResult": dict(candidate_id="ID",depth_m="Pos",damping="Pos",damping_unit=E("dimensionless","nT^-2"),folds=L("FoldScore",3,3),
+        mean_rmse_nT="?Nonneg",status=E("eligible","ineligible","nonconverged")),
+    "FoldScore": dict(fold_id="ID",coverage="Coverage",rmse_nT="?Nonneg",objective="?Objective",verdict=V,reason="?Text"),
+    "Objective": dict(data_term="Nonneg",regularization_term="Nonneg",total="Nonneg",unit=E("nT^2","dimensionless"),
+        weight_multiplier="Pos",damping="Pos",damping_unit=E("dimensionless","nT^-2"),condition="?Pos",rank=I(0,256)),
+    "ComparatorResult": dict(method=contract.literal("scipy_linear_nd"),verdict=V,reason="?Text",residuals="?ArrayDescriptor",metrics="?Metrics"),
+    "GridResult": dict(grid_id="ID",config="GridConfig",quantity=contract.literal("scalar_total_field_anomaly"),easting_axis=A,northing_axis=A,
+        values=A,support_flags=L("CellFlags",0,16384),role=E("fitted_plane","continued_plane","microlevel_diagnostic")),
+    "CellFlags": dict(cell_index=I(0,16383),reasons=L("Mask",1,16),disposition=E("retained","excluded")),
+    "SpectrumResult": dict(config="SpectrumConfig",power=A,east_axis=A,north_axis=A,window_mean_square="Pos",mean_removed_nT="F64",
+        parseval_sum_nT2="Nonneg",sectors=L("SectorPower",0,16),microlevel="?MicrolevelResult"),
+    "SectorPower": dict(sector_id="ID",bin_count=I(0,16384),power_nT2="Nonneg"),
+    "MicrolevelResult": dict(parameters="MicrolevelParameters",transfer=A,removed=A,retained=A,removed_power_nT2="Nonneg",
+        retained_power_nT2="Nonneg",clipped_removed="?ArrayDescriptor",geological_preservation_claim=contract.literal(False)),
+    "EvaluationResult": dict(interpretation=E("synthetic_truth","conditional_provider_product","independently_sealed_processing","user_prediction_only"),
+        outer="Metrics",per_line=L("LineMetrics",1,32),provider_comparison="ProviderComparison",field_acceptance=E("unresolved","ineligible"),
+        synthetic_acceptance=V,reference_approximation="Text",maximum_direction_spread_deg="Nonneg"),
+    "Metrics": dict(count=I(0,400),coverage="Coverage",bias_nT="?F64",rmse_nT="?Nonneg",mae_nT="?Nonneg",
+        median_absolute_nT="?Nonneg",max_absolute_nT="?Nonneg",standardized_rmse="?Nonneg",uncertainty_meaning="?Uncertainty"),
+    "LineMetrics": dict(line_id="ID",sensor_id="ID",metrics="Metrics"),
+    "ProviderComparison": dict(verdict=E("unresolved","ineligible"),numeric_grid_sha256="?Hash",metadata_receipt_sha256="?Hash",
+        matched_cells=I(0,16384),difference_rmse_nT="?Nonneg",reason="Text"),
+    "Member": dict(relative_path="Text",kind=E("original","metadata","request","result_array","diagnostic","replay_recipe","receipt"),
+        permission=E(*contract.PERMISSIONS),included="Bool",sha256="?Hash",bytes=("nullable",I(0,67108864)),reason="?Text"),
+    "Verdict": dict(overall=V,gates=L("GateVerdict",1,26),reasons=L("Text",0,64),error="?Error",numerical_success="Bool"),
+    "GateVerdict": dict(requirement_id=E(*(f"M03-{i:03d}" for i in range(1,27))),verdict=V,evidence_sha256="?Hash",reason="?Text"),
+    "Error": dict(code=E("schema_invalid","metadata_ineligible","rights_unresolved","rights_denied","resource_refused","unsupported_operation",
+        "numerical_failure","method_unadmitted","cancelled","interrupted","custody_mismatch","overwrite_refused"),
+        stage=E("parse","eligibility","partition","correction","crossover","fit","predict","spectrum","export","worker","recovery"),
+        field="?Text",observed="?EnumOrScalar",limit="?EnumOrScalar",reason="Text",local_recipe="?Text",attempt_id="?ID"),
+}
 
 
 def engines():
@@ -298,7 +385,23 @@ def _channel_descriptor(rows, masks):
                 values=values,values_sha256=digest(values),masks=masks,mask_sha256=digest(masks))
 
 
-def apply_corrections(csv_original, sidecar_original, request_original, training_ids=None, *, defer_microlevel=False):
+def _load_profile_lines(csv_original, sidecar_original, request_original, *, local_profile=None):
+    """Explicit local extension; ordinary byte/key/rights checks remain exact."""
+    if local_profile is None:
+        return contract.load_lines(csv_original,sidecar_original,request_original)
+    from magnetic_line_validation import validate_profile_named
+    if type(request_original) is not bytes or len(request_original)+len(sidecar_original)>2097152:
+        fail("profile.metadata_bytes","resource_refused")
+    intake = contract.load_lines(csv_original,sidecar_original)
+    request = validate_profile_named("Request",contract.strict_json(request_original),len(intake["rows"]),local_profile=local_profile)
+    if request["dataset_version_sha256"]!=intake["dataset_sha256"] or request["channel_sha256"]!=intake["channel_sha256"]:
+        fail("Request.input_identity","custody_mismatch")
+    intake["request"],intake["request_bytes"] = request,request_original
+    intake["eligibility_reasons"] = contract.validate_lines(intake["rows"],intake["metadata"],request)
+    return intake
+
+
+def apply_corrections(csv_original, sidecar_original, request_original, training_ids=None, *, defer_microlevel=False, local_profile=None):
     """Replay exact originals into immutable DAG channels; not a serialized Result.
 
     Authored auxiliary byte/clock custody is implemented. Field independent
@@ -307,8 +410,8 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
     mask and null value; they cannot enter physical reference or fitting.
     """
     from copy import deepcopy
-    from magnetic_line_contract import channel_identity,load_lines
-    intake = load_lines(csv_original,sidecar_original,request_original)
+    from magnetic_line_contract import channel_identity
+    intake = _load_profile_lines(csv_original,sidecar_original,request_original,local_profile=local_profile)
     if type(defer_microlevel) is not bool:
         fail("correction.defer_grid_diagnostic")
     metadata,request = intake["metadata"],intake["request"]
@@ -353,7 +456,7 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
             if training_ids is None:
                 fail("leveling.unsealed_training_scope", "metadata_ineligible", "correction")
             from magnetic_line_validation import make_partitions
-            manifest = make_partitions(rows,request)
+            manifest = make_partitions(rows,request,local_profile=local_profile)
             allowed = [manifest["outer_training_ids"]]+[fold["training_ids"] for fold in manifest["inner"]]
             if training_ids not in allowed:
                 fail("leveling.partition_identity", "custody_mismatch", "correction")
@@ -720,26 +823,86 @@ def level_offsets(rows, geometry_policy, training_ids, weights_policy="unweighte
                 common_relative_gauge=len(result["components"])==1,absolute_datum=False)
 
 
-def fit_equivalent(rows, config, depth_m, damping):
+def local_source_preallocation(rows, request, *, local_profile=None):
+    """Geometry-only buffer accounting; not an actual RSS or cancellation proof."""
+    from magnetic_line_validation import make_partitions, validate_profile_named, geometry_manifest
+    if any(r["magnetic_nT"] is not None or r["uncertainty_nT"] is not None for r in rows):
+        fail("profile.magnetic_null_required", "custody_mismatch", "partition")
+    request = validate_profile_named("Request", request, len(rows), local_profile=local_profile)
+    sealed = make_partitions(rows, request, local_profile=local_profile)
+    counts = [len(sealed["outer_source_positions"])] + [len(f["source_positions"]) for f in sealed["inner"]]
+    n, m = len(rows), max(counts)
+    cells = request["grid"]["nx"]*request["grid"]["ny"]
+    # Conservative simultaneous dense Python/native buffer allowance, including
+    # XYZ pair displacements, distances/J/scaled/weighted, augmented copies,
+    # Gram/SVD/ridge work and both grid query/prediction planes. Imports, JIT,
+    # allocators and decoder overhead are NOT established by this arithmetic.
+    dense = 8*(16*n*m + 12*m*m + 16*cells + 8*(n+m))
+    return dict(profile=local_profile or "m03-bounded-256/1", source_counts=counts,
+        geometry_manifest_sha256=digest(geometry_manifest(rows)), partitions_sha256=digest(sealed),
+        peak_dense_bytes_bound=dense, source_limit=320 if local_profile else 256,
+        values_generated=False, vps_admitted=False, measured_resource_verdict="unresolved")
+
+
+def _local_resource_guard(job_handle=None):
+    """Local study only: verify actual current job ceilings before allocation.
+
+    The controller must separately measure cold lifetime/peak and cancellation;
+    this check is containment, not completion/admission evidence. POSIX and
+    uncontained execution refuse; no host identity is inferred.
+    """
+    import ctypes
+    if platform.system()!="Windows" or type(job_handle) is not int or job_handle<=0:
+        fail("profile.windows_job_required","resource_refused","fit")
+    class Basic(ctypes.Structure):
+        _fields_ = [("process_cpu",ctypes.c_longlong),("job_cpu",ctypes.c_longlong),("flags",ctypes.c_uint32),
+            ("min_working",ctypes.c_size_t),("max_working",ctypes.c_size_t),("active",ctypes.c_uint32),
+            ("affinity",ctypes.c_size_t),("priority",ctypes.c_uint32),("scheduling",ctypes.c_uint32)]
+    class IO(ctypes.Structure):
+        _fields_ = [("counter"+str(i),ctypes.c_ulonglong) for i in range(6)]
+    class Limits(ctypes.Structure):
+        _fields_ = [("basic",Basic),("io",IO),("process_memory",ctypes.c_size_t),("job_memory",ctypes.c_size_t),
+            ("peak_process_memory",ctypes.c_size_t),("peak_job_memory",ctypes.c_size_t)]
+    api = ctypes.WinDLL("kernel32",use_last_error=True)
+    api.QueryInformationJobObject.argtypes = [ctypes.c_void_p,ctypes.c_int,ctypes.c_void_p,ctypes.c_uint32,ctypes.c_void_p]
+    api.QueryInformationJobObject.restype = ctypes.c_int
+    api.GetCurrentProcess.restype = ctypes.c_void_p
+    api.IsProcessInJob.argtypes = [ctypes.c_void_p,ctypes.c_void_p,ctypes.c_void_p]
+    api.IsProcessInJob.restype = ctypes.c_int
+    member = ctypes.c_int()
+    limits = Limits()
+    membership = api.IsProcessInJob(api.GetCurrentProcess(),job_handle,ctypes.byref(member))
+    query = api.QueryInformationJobObject(job_handle,9,ctypes.byref(limits),ctypes.sizeof(limits),None)
+    if not membership or not member.value or not query or limits.basic.flags & (0x2000|0x200|0x8|0x4)!=(0x2000|0x200|0x8|0x4) or \
+        limits.basic.active!=1 or limits.job_memory>536870912 or limits.job_memory==0 or limits.basic.job_cpu>600000000 or limits.basic.job_cpu<=0:
+        observation = f"member={member.value};query={query};flags={limits.basic.flags};active={limits.basic.active};job_bytes={limits.job_memory};cpu_100ns={limits.basic.job_cpu}"
+        fail("profile.actual_resource_and_cancel_receipt_required","resource_refused","fit",observed=observation)
+
+
+def fit_equivalent(rows, config, depth_m, damping, *, local_profile=None, local_job_handle=None):
     """Pinned real harmonic fit; explicit training-only blocks and raw weights."""
-    from magnetic_line_validation import kernel_column_scales, source_blocks, validate_geometry_rows
+    from magnetic_line_validation import kernel_column_scales, source_blocks, validate_geometry_rows, validate_profile_named
     validate_geometry_rows(rows)
-    config = validate_named("EquivalentSourcesConfig", config)
+    config = validate_profile_named("EquivalentSourcesConfig", config, local_profile=local_profile)
+    if local_profile is not None:
+        # Numerical entry requires an ACTUAL bounded Windows Job, not a caller
+        # boolean, self-reported trace or a forged JSON provenance flag.
+        _local_resource_guard(local_job_handle)
     depth = _type(depth_m, "Pos", "fit.depth_m", 1)
     damping = _type(damping, "Pos", "fit.damping", 1)
     if depth not in config["depth_candidates_m"] or damping not in config["damping_candidates"]:
         fail("fit.frozen_candidate")
-    basis = source_blocks(rows, config["source_geometry"], depth)
+    basis = source_blocks(rows, config["source_geometry"], depth, local_profile=local_profile)
     np, hm = engines()
     from threadpoolctl import threadpool_limits
     coordinates = _array([[r[k] for k in ("easting_m", "northing_m", "upward_m")] for r in rows], 3)
-    sources = _array([[s[k] for k in ("easting_m", "northing_m", "upward_m")] for s in basis["sources"]], 3, 256)
+    sources = _array([[s[k] for k in ("easting_m", "northing_m", "upward_m")] for s in basis["sources"]], 3, 320 if local_profile else 256)
     values = _array([r["magnetic_nT"] for r in rows])
     distance = np.linalg.norm(coordinates[:, None, :]-sources[None, :, :], axis=2)
     if np.any(distance == 0) or not np.isfinite(distance).all():
         fail("fit.distance", "metadata_ineligible", "fit")
     jacobian = 1/distance
-    scales = np.asarray(kernel_column_scales(jacobian.tolist()))
+    scales = np.asarray(kernel_column_scales(jacobian.tolist(),local_profile=local_profile))
     weights = np.ones(len(rows))
     if config["weights_policy"] == "admitted_inverse_variance":
         sigma = _array([r["uncertainty_nT"] for r in rows])
@@ -792,32 +955,32 @@ def predict_equivalent(fitted, coordinates):
     return predicted
 
 
-def blocked_fit(rows, request, sealed, *, original_inputs=None):
+def blocked_fit(rows, request, sealed, *, original_inputs=None, local_profile=None, local_job_handle=None):
     """Frozen8x3 fits; corrected channels require exact independent input replay.
 
     No supplied parent hash can substitute for original bytes. Training-only
     leveling is recomputed per inner/final partition, never once on all rows.
     Existing uncorrected S1 recipe/outputs/candidates remain unchanged.
     """
-    from magnetic_line_contract import channel_identity,load_lines
-    from magnetic_line_validation import make_partitions
+    from magnetic_line_contract import channel_identity
+    from magnetic_line_validation import make_partitions,validate_profile_named
     np, _ = engines()
-    request = validate_named("Request", request, len(rows))
-    if sealed != make_partitions(rows, request):
+    request = validate_profile_named("Request", request, len(rows),local_profile=local_profile)
+    if sealed != make_partitions(rows, request,local_profile=local_profile):
         fail("partition.custody", "custody_mismatch", "fit")
     processing_lineage = None
     fold_rows = None
     if original_inputs is not None:
         if type(original_inputs) is not tuple or len(original_inputs)!=3 or any(type(v) is not bytes for v in original_inputs):
             fail("fit.original_input_bytes")
-        intake = load_lines(*original_inputs)
+        intake = _load_profile_lines(*original_inputs,local_profile=local_profile)
         if intake["request"] != request:
             fail("fit.original_request","custody_mismatch","fit")
-        final_run = apply_corrections(*original_inputs,training_ids=sealed["outer_training_ids"],defer_microlevel=True)
+        final_run = apply_corrections(*original_inputs,training_ids=sealed["outer_training_ids"],defer_microlevel=True,local_profile=local_profile)
         if final_run["rows"] != rows or final_run["kind"]!="scalar_total_field_anomaly":
             fail("fit.derived_channel_replay","custody_mismatch","fit")
         scopes = [fold["training_ids"] for fold in sealed["inner"]]+[sealed["outer_training_ids"]]
-        runs = [apply_corrections(*original_inputs,training_ids=scope,defer_microlevel=True) for scope in scopes[:3]]+[final_run]
+        runs = [apply_corrections(*original_inputs,training_ids=scope,defer_microlevel=True,local_profile=local_profile) for scope in scopes[:3]]+[final_run]
         for run,scope,validation_ids in zip(runs,scopes,
             [fold["validation_ids"] for fold in sealed["inner"]]+[sealed["outer_validation_ids"]]):
             selected = set(scope+validation_ids)
@@ -846,13 +1009,13 @@ def blocked_fit(rows, request, sealed, *, original_inputs=None):
                 validation = [actual[rid] for rid in fold["validation_ids"] if rid not in unsupported]
                 if not validation:
                     fail("fit.fold_support", "metadata_ineligible", "fit")
-                fitted = fit_equivalent(train, config, depth, damping)
+                fitted = fit_equivalent(train, config, depth, damping,local_profile=local_profile,local_job_handle=local_job_handle)
                 query = [[r[k] for k in ("easting_m", "northing_m", "upward_m")] for r in validation]
                 # Only this fold's validation values enter its score.
                 predicted = predict_equivalent(fitted, query)
                 observed = _array([r["magnetic_nT"] for r in validation])
                 rmse = float(np.sqrt(np.mean((observed-predicted)**2)))
-                scores.append(dict(fold_id=fold["fold_id"], rmse_nT=rmse,
+                scores.append(dict(fold_id=fold["fold_id"], rmse_nT=rmse, objective=fitted["objective"],
                                    training_sha256=digest(train), source_map_sha256=digest(fitted["source_block_map"]),
                                    coverage=fold["geometry_only_coverage"], scored_count=len(validation)))
             candidates.append(dict(depth_m=depth, damping=damping, mean_rmse_nT=math.fsum(s["rmse_nT"] for s in scores)/3,
@@ -862,7 +1025,7 @@ def blocked_fit(rows, request, sealed, *, original_inputs=None):
     selected = max((c for c in candidates if abs(c["mean_rmse_nT"]-best_score) <= 1e-9),
                    key=lambda c: (c["damping"], c["depth_m"]))
     train = [by_id[rid] for rid in sealed["outer_training_ids"]]
-    final = fit_equivalent(train, config, selected["depth_m"], selected["damping"])
+    final = fit_equivalent(train, config, selected["depth_m"], selected["damping"],local_profile=local_profile,local_job_handle=local_job_handle)
     unsupported = set(sealed["geometry_only_coverage"]["unsupported_ids"])
     validation = [by_id[rid] for rid in sealed["outer_validation_ids"] if rid not in unsupported]
     if not validation:
@@ -932,30 +1095,40 @@ def _partition_geometry(intake):
     return rows
 
 
-def fit_grid(csv_original, sidecar_original, request_original):
+def fit_grid(csv_original, sidecar_original, request_original, *, local_profile=None, local_job_handle=None):
     """Local correction/blocked fit/height/support orchestration, NOT Result JSON.
 
     No field-source approval is inferred. Synthetic quality failure is retained
     alongside actual computed diagnostics. A future complete serializer/export
     has additional exact contracts; this internal mapping is not that result.
     """
-    from magnetic_line_contract import load_lines,preflight,MagneticContractError
-    from magnetic_line_validation import make_partitions
+    from magnetic_line_contract import MagneticContractError
+    from magnetic_line_validation import make_partitions,preflight_geometry
     original = (csv_original,sidecar_original,request_original)
-    intake = load_lines(*original)
+    intake = _load_profile_lines(*original,local_profile=local_profile)
     meta,request = intake["metadata"],intake["request"]
     if request is None or meta["rights"]["decision"]!="allowed" or meta["rights"]["private_processing"]!="allowed":
         fail("fit.input_or_rights","metadata_ineligible","fit")
     unresolved = set(intake["eligibility_reasons"])-{"uncertainty_unresolved"}
+    if meta["source_kind"]=="original_synthetic_acquisition" and meta["reference"] is not None and meta["reference"]["kind"]=="authored_constant":
+        authored = meta["reference"]
+        validate_reference(authored,meta["source_kind"],len(intake["rows"]))
+        if authored["coordinates_sha256"]!=reference_coordinates_sha256(intake["rows"],meta["coordinates"]["vertical_datum"]) or \
+            authored["evaluator"]["source_rights_evidence_sha256"]!=digest(meta["rights"]) or \
+            authored["receipt_sha256"]!=digest({k:value for k,value in authored.items() if k!="receipt_sha256"}):
+            fail("fit.authored_reference_identity","custody_mismatch","fit")
+        # This is conditional authored-control physics, NOT independent IGRF or
+        # field review. The original intake diagnostic is retained unchanged.
+        unresolved.discard("reference_independent_review_unverified")
     if meta["source_kind"]!="original_synthetic_acquisition" or unresolved:
         fail("fit.physical_metadata_or_independent_source_review","metadata_ineligible","fit")
     aligned = _partition_geometry(intake)
-    sealed = make_partitions(aligned,request)
-    counts = preflight(aligned,meta,request)
-    processed = apply_corrections(*original,training_ids=sealed["outer_training_ids"],defer_microlevel=True)
+    sealed = make_partitions(aligned,request,local_profile=local_profile)
+    counts = preflight_geometry(aligned,meta,request,local_profile=local_profile)
+    processed = apply_corrections(*original,training_ids=sealed["outer_training_ids"],defer_microlevel=True,local_profile=local_profile)
     if processed["kind"]!="scalar_total_field_anomaly":
         fail("fit.reference_subtracted_anomaly_required","metadata_ineligible","fit")
-    fitted = blocked_fit(processed["rows"],request,sealed,original_inputs=original)
+    fitted = blocked_fit(processed["rows"],request,sealed,original_inputs=original,local_profile=local_profile,local_job_handle=local_job_handle)
     by_id = {r["row_id"]:r for r in processed["rows"]}
     training = [by_id[r] for r in sealed["outer_training_ids"]]
     validation = [by_id[r] for r in fitted["outer_row_ids"]]
@@ -1327,3 +1500,813 @@ def microlevel_diagnostic(values, grid_config, parameters, *, acquisition_azimut
         removed_power_nT2=removed_power,retained_power_nT2=retained_power,
         clipped_removed=clipped,clipped_spectrum=clipped_spectrum,geological_preservation_claim=False,
         source_spectrum=spectrum)
+
+
+CROSSOVER_REASONS = ("degenerate_segment","parallel_or_collinear","ill_conditioned","parameter_outside_segment",
+    "matrix_residual_exceeded","gap","missing_value","missing_height","height_mismatch","unsupported_time",
+    "sensor_mismatch","channel_state_mismatch","duplicate_physical_constraint","uncalibrated_line","spatial_buffer","outer_sealed")
+
+
+def _result_type(value, spec, field, n, local_profile=None):
+    if type(spec) is str and spec.startswith("?"):
+        return None if value is None else _result_type(value,spec[1:],field,n,local_profile)
+    if type(spec) is tuple and spec[0] in ("list","rows","nullable"):
+        if spec[0]=="nullable":
+            return None if value is None else _result_type(value,spec[1],field,n,local_profile)
+        lo,hi = (n,n) if spec[0]=="rows" else spec[2:]
+        if type(value) is not list or not lo<=len(value)<=hi:
+            fail(field)
+        return [_result_type(v,spec[1],f"{field}[{i}]",n,local_profile) for i,v in enumerate(value)]
+    if type(spec) is str and spec in RESULT_TABLES:
+        table = RESULT_TABLES[spec]
+        if local_profile is not None:
+            if type(local_profile) is not str or local_profile!="m03-local-320/1":
+                fail("result.profile","unsupported_operation")
+            if spec=="Result":
+                table=dict(table,schema=contract.literal("magnetic-local-study-result/1"))
+            elif spec=="Objective":
+                table=dict(table,rank=I(0,320))
+        if type(value) is not dict or set(value)!=set(table):
+            fail(field)
+        return {k:_result_type(value[k],t,field+"."+k,n,local_profile) for k,t in table.items()}
+    if spec=="Request" and local_profile is not None:
+        from magnetic_line_validation import validate_profile_named
+        return validate_profile_named("Request",value,n,local_profile=local_profile)
+    if spec=="Bool":
+        if type(value) is not bool:
+            fail(field)
+        return value
+    if spec=="Mask":
+        return _type(value,E(*MASK_ORDER),field,n)
+    if spec=="CrossoverReason":
+        return _type(value,E(*CROSSOVER_REASONS),field,n)
+    if spec in ("ArrayScalar","EnumOrScalar"):
+        if value is None and spec=="ArrayScalar":
+            return None
+        if type(value) is bool and spec=="EnumOrScalar":
+            return value
+        if type(value) is int and spec=="EnumOrScalar":
+            return _type(value,I(-2147483648,2147483647),field,n)
+        if type(value) in (int,float):
+            return _type(value,"F64",field,n)
+        return _type(value,"Text",field,n)
+    return _type(value,spec,field,n)
+
+
+def _parse_bounded_json(raw, limit):
+    import json
+    if type(raw) is not bytes or not 1<=len(raw)<=limit:
+        fail("result.bytes","resource_refused")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeError:
+        fail("result.utf8")
+    scan = contract._Scanner(text)
+    scan.value()
+    scan.space()
+    if scan.i!=len(text):
+        fail("result.trailing")
+    try:
+        return json.loads(text)
+    except (ValueError,RecursionError):
+        fail("result.json")
+
+
+def array_descriptor(values, ordered_ids, masks, shape, unit, dtype="float64"):
+    descriptor = dict(shape=shape,dtype=dtype,unit=unit,ordered_ids_sha256=digest(ordered_ids),
+        values=values,values_sha256=digest(values),masks=masks,mask_sha256=digest(masks))
+    validate_array_descriptor(descriptor,ordered_ids)
+    return descriptor
+
+
+def validate_array_descriptor(d, ordered_ids=None, *, shape=None, unit=None):
+    _result_type(d,A,"result.array",1)
+    if len(d["values"])!=math.prod(d["shape"]) or len(d["masks"])!=len(d["values"]):
+        fail("result.array.shape")
+    if shape is not None and (d["shape"]!=shape or d["dtype"]!="float64"):
+        fail("result.array.physical_shape")
+    if unit is not None and d["unit"]!=unit:
+        fail("result.array.physical_unit")
+    if ordered_ids is not None and (len(ordered_ids)!=len(d["values"]) or digest(ordered_ids)!=d["ordered_ids_sha256"]):
+        fail("result.array.ordered_identity","custody_mismatch")
+    if digest(d["values"])!=d["values_sha256"] or digest(d["masks"])!=d["mask_sha256"]:
+        fail("result.array.hash","custody_mismatch")
+    for v,flags in zip(d["values"],d["masks"]):
+        if flags!=[m for m in MASK_ORDER if m in flags] or (v is None and not flags):
+            fail("result.array.mask")
+        if v is not None:
+            spec = {"float64":"F64","int32":I(-2147483648,2147483647),"id":"ID","mask":E(*MASK_ORDER)}[d["dtype"]]
+            _type(v,spec,"result.array.value",1)
+    return d
+
+
+def _coverage_check(v):
+    if v["eligible_count"]>v["total_count"] or v["fraction"]!=v["eligible_count"]/v["total_count"] or \
+        len(v["unsupported_ids"])!=v["total_count"]-v["eligible_count"] or len(set(v["unsupported_ids"]))!=len(v["unsupported_ids"]):
+        fail("result.coverage")
+
+
+def _metrics(residuals, all_ids, scored_ids, uncertainty=None, sigmas=None):
+    from statistics import median
+    unsupported = [r for r in all_ids if r not in set(scored_ids)]
+    coverage = dict(eligible_count=len(scored_ids),total_count=len(all_ids),fraction=len(scored_ids)/len(all_ids),unsupported_ids=unsupported)
+    if len(residuals)!=len(scored_ids):
+        fail("result.metrics.count")
+    absolute = [abs(v) for v in residuals]
+    standardized = None
+    if residuals and uncertainty is not None and uncertainty["meaning"]=="independent_one_sigma" and uncertainty["independence_assumption"]=="row_independent":
+        if sigmas is None or len(sigmas)!=len(residuals) or any(type(s) not in (int,float) or not math.isfinite(s) or s<=0 for s in sigmas):
+            fail("result.metrics.sigma")
+        standardized = math.sqrt(math.fsum((r/s)**2 for r,s in zip(residuals,sigmas))/len(residuals))
+    return dict(count=len(residuals),coverage=coverage,bias_nT=math.fsum(residuals)/len(residuals) if residuals else None,
+        rmse_nT=math.sqrt(math.fsum(v*v for v in residuals)/len(residuals)) if residuals else None,
+        mae_nT=math.fsum(absolute)/len(residuals) if residuals else None,median_absolute_nT=median(absolute) if residuals else None,
+        max_absolute_nT=max(absolute) if residuals else None,standardized_rmse=standardized,uncertainty_meaning=uncertainty)
+
+
+def environment_identity(*, local_job_handle=None):
+    """Actual installed distribution bytes/licenses and fixed loaded source pins.
+
+    No hostname, user paths, invented wheel digest or CPython-origin assertion.
+    Distribution identity excludes interpreter-generated caches, not scientific
+    payload. License evidence is actual package metadata plus shipped licenses;
+    recording it is not a legal permission inference.
+    """
+    import sys
+    from importlib.metadata import distribution
+    np,_=engines()
+    root = Path(sys.prefix).resolve()
+    if local_job_handle is not None:
+        _local_resource_guard(local_job_handle)
+        root=Path(np.__file__).resolve().parents[3]
+        if not (root/"pyvenv.cfg").is_file():
+            fail("environment.explicit_existing_virtualenv_packages","custody_mismatch")
+    pins = []
+    for name,pin in ENGINE_PINS.items():
+        dist = distribution(name)
+        inventory,licenses = [],[]
+        for entry in sorted(dist.files or [],key=str):
+            if str(entry).endswith(".pyc") or "__pycache__" in str(entry):
+                continue
+            file = Path(dist.locate_file(entry)).resolve()
+            if not file.is_relative_to(root) or not file.is_file():
+                fail("environment.distribution_path","custody_mismatch")
+            body = file.read_bytes()
+            record = dict(name=str(entry).replace("\\","/"),sha256=sha256(body).hexdigest(),bytes=len(body))
+            inventory.append(record)
+            if "license" in str(entry).lower() or file.name=="METADATA":
+                licenses.append(record)
+        if not inventory or not licenses:
+            fail("environment.distribution_evidence","custody_mismatch")
+        pins.append(dict(name=name,version=pin,distribution_sha256=digest(inventory),license_evidence_sha256=digest(licenses)))
+    files = []
+    for name in ("magnetic_line_contract","magnetic_line_validation","magnetic_lines",*SOURCE_PINS):
+        module = import_module(name)
+        file = Path(module.__file__).resolve()
+        if name.startswith("magnetic_") and file!=Path(__file__).resolve().with_name(name+".py"):
+            fail("environment.shadow","custody_mismatch")
+        body = file.read_bytes()
+        files.append(dict(module_name=name,sha256=sha256(body).hexdigest(),bytes=len(body)))
+    natives = []
+    # Fixed scientific native registry, not whatever a test runner happened to
+    # import. Replay can validate this BEFORE computing or importing test code.
+    for name in ("numpy._core._multiarray_umath","numpy.linalg._umath_linalg","scipy.linalg._fblas",
+                 "scipy.linalg._flapack","scipy.spatial._qhull","sklearn.utils._cython_blas","numba._dispatcher"):
+        module = import_module(name)
+        file = Path(module.__file__).resolve()
+        if not file.is_relative_to(root) or file.suffix.lower() not in (".pyd",".so"):
+            fail("environment.native_path","custody_mismatch")
+        body = file.read_bytes()
+        natives.append(dict(module_name=name,sha256=sha256(body).hexdigest(),bytes=len(body)))
+    value = dict(python_revision=platform.python_version(),os_revision=platform.platform(),cpu_identity=platform.processor() or platform.machine(),
+        engine_versions=pins,loaded_modules=files,native_modules=natives,threads=1,source_revision=digest(files[:3]))
+    value["environment_receipt_sha256"] = digest(value)
+    _result_type(value,"Environment","environment",1)
+    return value
+
+
+def parse_result(raw, *, local_profile=None):
+    return validate_result(_parse_bounded_json(raw,8388608),local_profile=local_profile)
+
+
+def validate_result(result, *, local_profile=None):
+    if type(result) is not dict or type(result.get("input")) is not dict or type(result["input"].get("row_ids")) is not list:
+        fail("Result")
+    ids = result["input"]["row_ids"]
+    n = len(ids)
+    _result_type(result,"Result","Result",n,local_profile)
+    if len(set(ids))!=n or result["inventory"]["original_rows"]!=n or result["geometry"]["row_ids"]!=ids:
+        fail("result.inventory.identity")
+    inv = result["inventory"]
+    groups = [inv[k] for k in ("retained_ids","invalid_ids","excluded_ids")]
+    combined = sum(groups,[])
+    if len(combined)!=n or set(combined)!=set(ids) or len(set(combined))!=n or any(g!=[i for i in ids if i in set(g)] for g in groups):
+        fail("result.inventory.dispositions")
+    if result["input"]["sidecar_bytes"]+result["request"]["bytes"]>2097152:
+        fail("result.metadata.bytes","resource_refused")
+    if result["request"]["canonical_request"]["dataset_version_sha256"]!=result["input"]["dataset_sha256"]:
+        fail("result.input.request","custody_mismatch")
+    if contract.dataset_identity(result["input"]["csv_sha256"],result["input"]["sidecar_sha256"])!=result["input"]["dataset_sha256"] or \
+        result["request"]["geometry_manifest_sha256"]!=result["request"]["canonical_request"]["split"]["geometry_manifest_sha256"]:
+        fail("result.input.byte_identity","custody_mismatch")
+    env = result["environment"]
+    if digest({k:v for k,v in env.items() if k!="environment_receipt_sha256"})!=env["environment_receipt_sha256"] or \
+        digest(env["loaded_modules"][:3])!=env["source_revision"]:
+        fail("result.environment.hash","custody_mismatch")
+    for channel in result["channels"]:
+        validate_array_descriptor(channel["data"],ids,shape=[n],unit="nT")
+    for key in ("easting","northing","upward"):
+        validate_array_descriptor(result["geometry"][key],ids,shape=[n],unit="m")
+    for reason in inv["reasons"]:
+        if reason["row_id"] not in ids or reason["reasons"]!=[m for m in MASK_ORDER if m in reason["reasons"]] or \
+            reason["row_id"] not in inv[reason["disposition"]+"_ids"]:
+            fail("result.inventory.reasons")
+    if len({r["row_id"] for r in inv["reasons"]})!=len(inv["reasons"]) or inv["flag_counts"]!=[
+        dict(reason=m,count=sum(m in r["reasons"] for r in inv["reasons"])) for m in MASK_ORDER if any(m in r["reasons"] for r in inv["reasons"])]:
+        fail("result.inventory.flag_counts")
+    p = result["partitions"]
+    if p["original_row_ids"]!=ids or p["config"]!=result["request"]["canonical_request"]["split"] or p["evaluation_count"]!=1:
+        fail("result.partition.identity")
+    for f in [p]+p["inner"]:
+        train = f["outer_training_ids"] if f is p else f["training_ids"]
+        val = f["outer_validation_ids"] if f is p else f["validation_ids"]
+        if set(train)&set(val) or not set(train+val+f["tie_buffer_excluded_ids"])<=set(ids):
+            fail("result.partition.overlap")
+        _coverage_check(f["geometry_only_coverage"])
+    fit = result["fit"]
+    source_ids = list(dict.fromkeys(m["source_id"] for m in sorted(fit["source_block_map"],key=lambda m:(m["block_e"],m["block_n"]))))
+    m = len(source_ids)
+    if not 1<=m<=(320 if local_profile else 256) or [r["row_id"] for r in fit["source_block_map"]]!=p["outer_training_ids"]:
+        fail("result.sources.inventory")
+    validate_array_descriptor(fit["source_positions"],[[s,a] for s in source_ids for a in ("e","n","u")],shape=[m,3],unit="m")
+    validate_array_descriptor(fit["source_coefficients"],source_ids,shape=[m],unit="nT*m")
+    validate_array_descriptor(fit["column_scales"],source_ids,shape=[m],unit="1_per_m")
+    validate_array_descriptor(fit["residuals"],ids,shape=[n],unit="nT")
+    cfg = result["request"]["canonical_request"]["equivalent_sources"]
+    if fit["weights_policy"]!=cfg["weights_policy"] or fit["damping_unit"]!=cfg["damping_unit"]:
+        fail("result.fit.weight_identity")
+    expected = [(d,l) for d in cfg["depth_candidates_m"] for l in cfg["damping_candidates"]]
+    if [(c["depth_m"],c["damping"]) for c in fit["candidates"]]!=expected or fit["production_fit_count"] not in (25,26):
+        fail("result.fit.candidates")
+    for candidate in fit["candidates"]:
+        if candidate["damping_unit"]!=cfg["damping_unit"] or [f["fold_id"] for f in candidate["folds"]]!=[f["fold_id"] for f in p["inner"]]:
+            fail("result.fit.fold_identity")
+        for f in candidate["folds"]:
+            _coverage_check(f["coverage"])
+            if f["objective"] is not None:
+                _objective_check(f["objective"],cfg,candidate["damping"])
+        if candidate["status"]=="eligible" and (any(f["rmse_nT"] is None for f in candidate["folds"]) or
+            candidate["mean_rmse_nT"]!=math.fsum(f["rmse_nT"] for f in candidate["folds"])/3):
+            fail("result.fit.mean_score")
+    selected = [c for c in fit["candidates"] if c["candidate_id"]==fit["selected_candidate_id"]]
+    if len(selected)!=1:
+        fail("result.fit.selected")
+    best = min(c["mean_rmse_nT"] for c in fit["candidates"] if c["status"]=="eligible")
+    winner = max((c for c in fit["candidates"] if c["status"]=="eligible" and abs(c["mean_rmse_nT"]-best)<=1e-9),key=lambda c:(c["damping"],c["depth_m"]))
+    if winner!=selected[0]:
+        fail("result.fit.selection_rule")
+    _objective_check(fit["objective"],cfg,selected[0]["damping"])
+    if fit["objective"]["rank"]!=m or any(v is None or v<=0 for v in fit["column_scales"]["values"]):
+        fail("result.fit.scale_or_rank")
+    cells = 0
+    for grid in result["grid"]:
+        gid,config = grid["grid_id"],grid["config"]
+        nx,ny = config["nx"],config["ny"]
+        cells+=nx*ny
+        validate_array_descriptor(grid["values"],[[gid,j] for j in range(nx*ny)],shape=[ny,nx],unit="nT")
+        for key,axis,count in (("easting_axis","e",nx),("northing_axis","n",ny)):
+            validate_array_descriptor(grid[key],[[gid,axis,j] for j in range(count)],shape=[count],unit="m")
+            expected_axis = [config[f"origin_{axis}_m"]+j*config[f"spacing_{axis}_m"] for j in range(count)]
+            if grid[key]["values"]!=expected_axis:
+                fail("result.grid.axis")
+    if cells>16384 or len(set(g["grid_id"] for g in result["grid"]))!=len(result["grid"]):
+        fail("result.grid.cells","resource_refused")
+    _validate_optional_result_arrays(result)
+    residual_by_id = dict(zip(ids,fit["residuals"]["values"]))
+    outer_ids = p["outer_validation_ids"]
+    scored = [i for i in outer_ids if residual_by_id[i] is not None]
+    metric = result["evaluation"]["outer"]
+    expected_metric = _metrics([residual_by_id[i] for i in scored],outer_ids,scored)
+    for key in ("count","coverage","bias_nT","rmse_nT","mae_nT","median_absolute_nT","max_absolute_nT"):
+        if metric[key]!=expected_metric[key]:
+            fail("result.evaluation.residual_binding")
+    if any(residual_by_id[i] is not None for i in ids if i not in set(outer_ids)):
+        fail("result.residual.scored_identity")
+    if len({g["requirement_id"] for g in result["verdict"]["gates"]})!=len(result["verdict"]["gates"]):
+        fail("result.verdict.duplicate_gate")
+    for member in result["artifacts"]:
+        _member_path(member)
+    if len({m["relative_path"] for m in result["artifacts"]})!=len(result["artifacts"]) or any(
+        m["relative_path"] in ("result.json","custody.json") for m in result["artifacts"]):
+        fail("result.circular_member")
+    if len(contract.canonical_bytes(result))>8388608:
+        fail("result.bytes","resource_refused")
+    return result
+
+
+def _member_path(m):
+    from pathlib import PurePosixPath
+    name = m["relative_path"]
+    if "\\" in name or ":" in name or name.startswith("/") or any(part in ("", ".", "..") for part in name.split("/")) or \
+        PurePosixPath(name).suffix.lower() in (".exe",".py",".sh",".ps1",".bat",".cmd",".vbs",".js",".dll",".pyd"):
+        fail("result.member.path")
+    if m["included"] and (m["permission"]!="allowed" or m["sha256"] is None or m["bytes"] is None):
+        fail("result.member.permission")
+
+
+def _validate_optional_result_arrays(result):
+    ids = result["input"]["row_ids"]
+    fit = result["fit"]
+    comparator = fit["comparator"]
+    if comparator["residuals"] is not None:
+        validate_array_descriptor(comparator["residuals"],ids,shape=[len(ids)],unit="nT")
+    elif comparator["metrics"] is not None:
+        fail("result.comparator.nulls")
+    leveling = result["leveling"]
+    if leveling is not None:
+        crossings = [x["crossover_id"] for x in result["crossovers"] if x["disposition"]=="admitted" and x["constraint_representative"]==x["crossover_id"]]
+        for key in ("before_residuals","after_residuals"):
+            validate_array_descriptor(leveling[key],crossings,shape=[len(crossings)],unit="nT")
+    for x in result["crossovers"]:
+        if x["reasons"]!=[r for r in CROSSOVER_REASONS if r in x["reasons"]] or \
+            (x["disposition"]=="rejected" and (not x["reasons"] or x["flight_minus_tie_nT"] is not None or x["difference_variance_nT2"] is not None)) or \
+            (x["disposition"]=="admitted" and any(r!="duplicate_physical_constraint" for r in x["reasons"])):
+            fail("result.crossovers.disposition")
+    spectrum = result["spectrum"]
+    if spectrum is None:
+        return
+    cfg = spectrum["config"]
+    ny,nx = cfg["rectangle"]["ny"],cfg["rectangle"]["nx"]
+    bins = [["grid-0","bin",j] for j in range(nx*ny)]
+    validate_array_descriptor(spectrum["power"],bins,shape=[ny,nx],unit="nT^2")
+    for key,axis,count in (("east_axis","e",nx),("north_axis","n",ny)):
+        validate_array_descriptor(spectrum[key],[["grid-0",axis,j] for j in range(count)],shape=[count],unit=cfg["axis_unit"])
+    if not math.isclose(math.fsum(spectrum["power"]["values"]),spectrum["parseval_sum_nT2"],rel_tol=1e-10,abs_tol=1e-12):
+        fail("result.spectrum.parseval")
+    micro = spectrum["microlevel"]
+    if micro is not None:
+        validate_array_descriptor(micro["transfer"],bins,shape=[ny,nx],unit="dimensionless")
+        for key in ("removed","retained","clipped_removed"):
+            if micro[key] is not None:
+                validate_array_descriptor(micro[key],[["grid-0","cell",j] for j in range(nx*ny)],shape=[ny,nx],unit="nT")
+
+
+def _objective_check(o, config, damping):
+    if o["total"]!=o["data_term"]+o["regularization_term"] or o["damping"]!=damping or o["weight_multiplier"]!=1. or \
+        o["damping_unit"]!=config["damping_unit"] or o["unit"]!=("nT^2" if config["weights_policy"]=="unweighted" else "dimensionless") or \
+        o["condition"] is None or o["condition"]>1e12:
+        fail("result.objective")
+
+
+def _auxiliary_identities(request):
+    records = []
+    for op in request["operations"]:
+        p = op["parameters"]
+        identity = (p["navigation"]["identity"] if op["operation"]=="lag" else p["base"]["identity"] if op["operation"]=="diurnal" else
+                    p["calibration"]["identity"] if op["operation"]=="heading" else
+                    p["heldout_calibration"]["calibration"]["identity"] if op["operation"]=="leveling" and p["heldout_calibration"] is not None else None)
+        if identity is not None and identity not in records:
+            records.append(identity)
+    return records
+
+
+def _direction_spread(reference, row_ids, admitted_ids):
+    from itertools import combinations
+    vectors = []
+    for index,rid in enumerate(row_ids):
+        if rid in admitted_ids:
+            xyz = [reference[k][index] for k in ("vector_east_nT","vector_north_nT","vector_up_nT")]
+            norm = math.sqrt(math.fsum(v*v for v in xyz))
+            if not math.isfinite(norm) or norm<=0:
+                fail("result.reference_direction","metadata_ineligible","predict")
+            vectors.append([v/norm for v in xyz])
+    if not vectors:
+        fail("result.reference_direction","metadata_ineligible","predict")
+    return max((math.degrees(math.acos(max(-1.,min(1.,math.fsum(a*b for a,b in zip(u,v)))))) for u,v in combinations(vectors,2)),default=0.)
+
+
+def run_result(csv_original, sidecar_original, request_original, *, run_id, local_profile=None, local_job_handle=None):
+    """Actual 25-fit bounded run -> exact Result, never missing metadata defaults.
+
+    Original S1 without a typed inducing-direction receipt remains an internal
+    diagnostic/retained predictive failure, not a fabricated complete Result.
+    """
+    from copy import deepcopy
+    from magnetic_line_validation import _segments
+    _type(run_id,"ID","run_id",1)
+    if local_profile is not None:
+        _local_resource_guard(local_job_handle)
+    intake = _load_profile_lines(csv_original,sidecar_original,request_original,local_profile=local_profile)
+    request,meta = intake["request"],intake["metadata"]
+    if request is None:
+        fail("result.request_required")
+    reference = meta["reference"]
+    for op in request["operations"]:
+        if op["operation"]=="main_field":
+            reference = op["parameters"]["evaluated_reference"]
+        elif op["operation"]=="rereference":
+            reference = op["parameters"]["new_reference"]
+    if reference is None:
+        fail("result.typed_reference_required","metadata_ineligible","eligibility")
+    internal = fit_grid(csv_original,sidecar_original,request_original,local_profile=local_profile,local_job_handle=local_job_handle)
+    processed,fit,parts = (internal[k] for k in ("processing","fit","partitions"))
+    original_rows,rows = intake["rows"],processed["rows"]
+    ids = [r["row_id"] for r in rows]
+    n = len(ids)
+    def row_array(values,masks=None,unit="nT"):
+        return array_descriptor(values,ids,masks if masks is not None else [[] for _ in ids],[n],unit)
+    channels = deepcopy(processed["channels"])
+    for channel in channels:
+        d = channel["data"]
+        channel["data"] = row_array(d["values"],d["masks"])
+    selected_ids = set(parts["outer_training_ids"]+parts["outer_validation_ids"])
+    spread = _direction_spread(processed["reference"],ids,selected_ids)
+    if spread>min(request["geometry_policy"]["direction_tolerance_deg"],reference["direction_tolerance_deg"],.5):
+        fail("result.direction_tolerance","metadata_ineligible","predict")
+    invalid,excluded,retained,reasons = [],[],[],[]
+    for r,flags,masks in zip(original_rows,intake["flags"],processed["masks"]):
+        why = [m for m in MASK_ORDER if m in flags+masks]
+        disposition = "invalid" if any(m in why for m in ("missing_value","invalid_geometry")) else "excluded" if masks else "retained"
+        {"invalid":invalid,"excluded":excluded,"retained":retained}[disposition].append(r["row_id"])
+        if why:
+            reasons.append(dict(row_id=r["row_id"],reasons=why,disposition=disposition))
+    inventory = dict(original_rows=n,retained_ids=retained,invalid_ids=invalid,excluded_ids=excluded,reasons=reasons,
+        flag_counts=[dict(reason=m,count=sum(m in r["reasons"] for r in reasons)) for m in MASK_ORDER if any(m in r["reasons"] for r in reasons)])
+    segments = []
+    for s in _segments(rows,request["geometry_policy"]):
+        a,b = s["p"],s["q"]
+        if any(r["magnetic_nT"] is None or r["upward_m"] is None for r in (a,b)) or a["ordinal"]+1!=b["ordinal"]:
+            continue
+        segments.append(dict(segment_id=s["segment_id"],line_id=a["line_id"],sensor_id=a["sensor_id"],start_row_id=a["row_id"],
+            end_row_id=b["row_id"],length_m=math.dist((a["easting_m"],a["northing_m"]),(b["easting_m"],b["northing_m"])),valid=True))
+    stats = internal["support"]["line_statistics"]
+    if {r["sensor_id"] for r in rows}!={request["sensor_id"]}:
+        # A successful one-sensor run must still inventory other sensor geometry
+        # correctly; no fabricated statistics for unused channels.
+        fail("result.multi_sensor_statistics_extension_required","metadata_ineligible","predict")
+    geometry = dict(row_ids=ids,easting=row_array([r["easting_m"] for r in rows],unit="m"),
+        northing=row_array([r["northing_m"] for r in rows],unit="m"),upward=row_array([r["upward_m"] for r in rows],
+            [["height_mismatch"] if r["upward_m"] is None else [] for r in rows],unit="m"),
+        segments=segments,line_statistics=stats,coverage_sha256=digest(internal["support"]))
+    crossings = crossovers(rows,request["geometry_policy"],parts["outer_training_ids"],meta["uncertainty"])
+    partition = {k:deepcopy(parts[k]) for k in RESULT_TABLES["PartitionResult"]}
+    partition["evaluation_count"] = fit["evaluation_count"]
+    partition["inner"] = [{k:deepcopy(f[k]) for k in RESULT_TABLES["FoldInventory"]} for f in parts["inner"]]
+    candidates = []
+    selected = None
+    cfg = request["equivalent_sources"]
+    for index,c in enumerate(fit["candidates"]):
+        candidate_id = f"candidate-{index}"
+        if (c["depth_m"],c["damping"])==(fit["selected_candidate"]["depth_m"],fit["selected_candidate"]["damping"]):
+            selected = candidate_id
+        candidates.append(dict(candidate_id=candidate_id,depth_m=c["depth_m"],damping=c["damping"],damping_unit=cfg["damping_unit"],
+            folds=[dict(fold_id=f["fold_id"],coverage=f["coverage"],rmse_nT=f["rmse_nT"],objective=f["objective"],verdict="pass",reason=None) for f in c["folds"]],
+            mean_rmse_nT=c["mean_rmse_nT"],status="eligible"))
+    final = fit["final_fit"]
+    sources = final["source_positions"]
+    source_ids = [s["source_id"] for s in sources]
+    residual_by_id = dict(zip(fit["outer_row_ids"],fit["outer_observed_minus_predicted_nT"]))
+    def residual_array(mapping):
+        return row_array([mapping.get(i) for i in ids],[["outer_sealed"] if i in parts["outer_training_ids"] else
+            ["spatial_buffer"] if i in parts["tie_buffer_excluded_ids"] else ["outside_hull"] if i not in mapping else [] for i in ids])
+    comparator = internal["comparator"]
+    comparison = dict(method="scipy_linear_nd",verdict="ineligible",reason=comparator.get("reason"),residuals=None,metrics=None)
+    if comparator["verdict"]=="eligible":
+        actual = {rid:obs-pred for rid,obs,pred in zip(fit["outer_row_ids"],fit["outer_observed_nT"],comparator["values"]) if pred is not None}
+        comparison.update(verdict="pass",reason="Same-height geometric interpolation; no height transfer",residuals=residual_array(actual),
+            metrics=_metrics(list(actual.values()),parts["outer_validation_ids"],list(actual)))
+    fit_result = dict(method="harmonica_equivalent_sources",candidates=candidates,selected_candidate_id=selected,
+        production_fit_count=25+(comparator["verdict"]=="eligible"),source_positions=array_descriptor(
+            [s[k] for s in sources for k in ("easting_m","northing_m","upward_m")],[[s,a] for s in source_ids for a in ("e","n","u")],
+            [[] for _ in range(3*len(sources))],[len(sources),3],"m"),
+        source_coefficients=array_descriptor(final["coefficients"],source_ids,[[] for _ in sources],[len(sources)],"nT*m"),
+        source_block_map=final["source_block_map"],column_scales=array_descriptor(final["column_scales"],source_ids,[[] for _ in sources],[len(sources)],"1_per_m"),
+        objective=final["objective"],weights_policy=cfg["weights_policy"],damping_unit=cfg["damping_unit"],comparator=comparison,
+        residuals=residual_array(residual_by_id),numerical_status="converged")
+    grids = []
+    for plane,role,gid in ((internal["grid"],"fitted_plane","grid-0"),(internal["continued_grid"],"continued_plane","grid-1")):
+        if plane is None:
+            continue
+        config = deepcopy(request["grid"])
+        config["plane_upward_m"] = float(plane["plane_upward_m"])
+        if role=="continued_plane":
+            config["continuation_delta_m"] = None
+        nx,ny = config["nx"],config["ny"]
+        grids.append(dict(grid_id=gid,config=config,quantity="scalar_total_field_anomaly",
+            easting_axis=array_descriptor(plane["east_axis"].tolist(),[[gid,"e",j] for j in range(nx)],[[] for _ in range(nx)],[nx],"m"),
+            northing_axis=array_descriptor(plane["north_axis"].tolist(),[[gid,"n",j] for j in range(ny)],[[] for _ in range(ny)],[ny],"m"),
+            values=array_descriptor(plane["masked_values"],[[gid,j] for j in range(nx*ny)],plane["masks"],[ny,nx],"nT"),
+            support_flags=[dict(cell_index=j,reasons=flags,disposition="excluded" if denied else "retained")
+                for j,(flags,denied) in enumerate(zip(plane["masks"],plane["excluded"])) if flags],role=role))
+    spectrum = _serialize_spectrum(internal,request)
+    sigmas = {r["row_id"]:r["uncertainty_nT"] for r in rows}
+    metrics = _metrics(fit["outer_observed_minus_predicted_nT"],parts["outer_validation_ids"],fit["outer_row_ids"],meta["uncertainty"],
+        [sigmas[i] for i in fit["outer_row_ids"]])
+    per_line = []
+    for line,sensor in dict.fromkeys((r["line_id"],r["sensor_id"]) for r in rows if r["row_id"] in parts["outer_validation_ids"]):
+        group = [r["row_id"] for r in rows if (r["line_id"],r["sensor_id"])==(line,sensor) and r["row_id"] in parts["outer_validation_ids"]]
+        scored = [i for i in group if i in residual_by_id]
+        per_line.append(dict(line_id=line,sensor_id=sensor,metrics=_metrics([residual_by_id[i] for i in scored],group,scored,meta["uncertainty"],[sigmas[i] for i in scored])))
+    gates = [dict(requirement_id="M03-013",verdict="pass",evidence_sha256=digest(partition),reason="Geometry-sealed 24 inner fits and one outer evaluation"),
+        dict(requirement_id="M03-014",verdict="unresolved",evidence_sha256=None,reason="No independently eligible provider field comparison"),
+        dict(requirement_id="M03-018",verdict=internal["synthetic_quality_verdict"],evidence_sha256=digest(metrics),reason="Synthetic quality is separate from numerical convergence"),
+        dict(requirement_id="M03-022",verdict="unresolved",evidence_sha256=None,reason="No native online admission or full-survey resource proof")]
+    value = dict(schema="magnetic-local-study-result/1" if local_profile else "magnetic-result/1",run_id=run_id,lane="local_synthetic",input=dict(dataset_sha256=intake["dataset_sha256"],
+        csv_sha256=intake["csv_sha256"],csv_bytes=len(csv_original),sidecar_sha256=intake["sidecar_sha256"],sidecar_bytes=len(sidecar_original),
+        source_kind=meta["source_kind"],row_ids=ids,auxiliary_identities=_auxiliary_identities(request)),
+        request=dict(bytes_sha256=sha256(request_original).hexdigest(),bytes=len(request_original),canonical_request=request,
+            geometry_manifest_sha256=request["split"]["geometry_manifest_sha256"]),environment=environment_identity(local_job_handle=local_job_handle),inventory=inventory,
+        channels=channels,geometry=geometry,crossovers=crossings,leveling=_serialize_leveling(processed["leveling"]),partitions=partition,
+        fit=fit_result,grid=grids,spectrum=spectrum,evaluation=dict(interpretation="synthetic_truth",outer=metrics,per_line=per_line,
+            provider_comparison=dict(verdict="unresolved",numeric_grid_sha256=None,metadata_receipt_sha256=None,matched_cells=0,
+                difference_rmse_nT=None,reason="No eligible numeric provider comparison was supplied"),field_acceptance="unresolved",
+            synthetic_acceptance=internal["synthetic_quality_verdict"],reference_approximation="Authored constant-direction weak projection, not exact field norm",
+            maximum_direction_spread_deg=spread),rights=meta["rights"],artifacts=[],
+        verdict=dict(overall="fail" if internal["synthetic_quality_verdict"]=="fail" else "unresolved",gates=gates,
+            reasons=["Numerical convergence does not close field, native, full-survey or parent method gates"],error=None,numerical_success=True))
+    validate_result(value,local_profile=local_profile)
+    # Scanner verifies global node/depth/string bounds on generated JSON too.
+    parse_result(contract.canonical_bytes(value),local_profile=local_profile)
+    return value
+
+
+def _serialize_leveling(leveling):
+    if leveling is None:
+        return None
+    ids = [x["crossover_id"] for x in leveling["crossovers"] if x["disposition"]=="admitted" and x["constraint_representative"]==x["crossover_id"]]
+    return dict(offsets=[dict(line_id=k,offset_nT=v,uncertainty_nT=None) for k,v in sorted(leveling["offsets"].items())],
+        components=leveling["components"],before_residuals=array_descriptor([x["flight_minus_tie_nT"] for x in leveling["crossovers"]
+            if x["crossover_id"] in ids],ids,[[] for _ in ids],[len(ids)],"nT"),
+        after_residuals=array_descriptor(leveling["residuals"],ids,[[] for _ in ids],[len(ids)],"nT"),
+        uncalibrated_line_ids=leveling["uncalibrated_line_ids"],scope="training_only",gauge_policy="lexicographic_first_tie_per_component")
+
+
+def _serialize_spectrum(internal,request):
+    spectrum = internal["spectrum"]
+    if spectrum is None:
+        return None
+    config = request["spectrum"]
+    ny,nx = spectrum["power"].shape
+    def descriptor(values,unit,bin_role="bin"):
+        return array_descriptor(values.ravel().tolist(),[["grid-0",bin_role,j] for j in range(nx*ny)],[[] for _ in range(nx*ny)],[ny,nx],unit)
+    unit = config["axis_unit"]
+    out = dict(config=config,power=descriptor(spectrum["power"],"nT^2"),
+        east_axis=array_descriptor(spectrum["east_axis"].tolist(),[["grid-0","e",j] for j in range(nx)],[[] for _ in range(nx)],[nx],unit),
+        north_axis=array_descriptor(spectrum["north_axis"].tolist(),[["grid-0","n",j] for j in range(ny)],[[] for _ in range(ny)],[ny],unit),
+        window_mean_square=spectrum["window_mean_square"],mean_removed_nT=spectrum["mean_removed_nT"],parseval_sum_nT2=spectrum["parseval_sum_nT2"],
+        sectors=spectrum["sectors"],microlevel=None)
+    micro = internal["microlevel"]
+    if micro is not None:
+        if micro["transfer"].shape!=(ny,nx):
+            fail("result.microlevel.distinct_rectangle_requires_extension","unsupported_operation","spectrum")
+        out["microlevel"] = dict(parameters=micro["parameters"],transfer=descriptor(micro["transfer"],"dimensionless"),
+            removed=descriptor(micro["removed"],"nT","cell"),retained=descriptor(micro["retained"],"nT","cell"),
+            removed_power_nT2=micro["removed_power_nT2"],retained_power_nT2=micro["retained_power_nT2"],
+            clipped_removed=None if micro["clipped_removed"] is None else descriptor(micro["clipped_removed"],"nT","cell"),geological_preservation_claim=False)
+    return out
+
+
+class LocalWorkflowError(contract.MagneticContractError):
+    """The approved standalone Error union; no arbitrary exception strings."""
+    def __init__(self, code, field, stage="export"):
+        messages = dict(overwrite_refused="The destination must be a fresh absent directory.",
+            rights_denied="The recorded rights deny this export member.",rights_unresolved="The recorded rights do not authorize this export member.",
+            numerical_failure="The local numerical workflow did not complete.",interrupted="The local workflow was interrupted.",
+            cancelled="The local workflow was cancelled.")
+        if code not in messages:
+            raise ValueError("Unknown local failure code.")
+        self.error = dict(code=code,stage=stage,field=field,observed=None,limit=None,reason=messages[code],local_recipe=None,attempt_id=None)
+        ValueError.__init__(self,messages[code])
+
+
+def _safe_directory(path, *, absent=False):
+    import os
+    try:
+        p = Path(os.path.abspath(path))
+        if any(q.is_symlink() or q.is_junction() for q in (p,*p.parents)):
+            fail("bundle.symlink_or_junction","custody_mismatch","export")
+        if absent and (p.exists() or os.path.lexists(p)):
+            raise LocalWorkflowError("overwrite_refused","output_directory")
+        if not absent and not p.is_dir():
+            fail("bundle.directory","custody_mismatch","export")
+    except (OSError,ValueError,TypeError) as exc:
+        if isinstance(exc,contract.MagneticContractError):
+            raise
+        fail("bundle.directory","custody_mismatch","export")
+    return p
+
+
+def _binding_check(result, originals, *, local_profile=None, local_job_handle=None):
+    intake = _load_profile_lines(*originals,local_profile=local_profile)
+    if result["input"]["dataset_sha256"]!=intake["dataset_sha256"] or result["input"]["csv_sha256"]!=intake["csv_sha256"] or \
+        result["input"]["sidecar_sha256"]!=intake["sidecar_sha256"] or result["request"]["bytes_sha256"]!=sha256(originals[2]).hexdigest() or \
+        result["request"]["canonical_request"]!=intake["request"] or result["rights"]!=intake["metadata"]["rights"] or \
+        result["input"]["auxiliary_identities"]!=_auxiliary_identities(intake["request"]):
+        fail("bundle.original_bindings","custody_mismatch","export")
+    if result["environment"]!=environment_identity(local_job_handle=local_job_handle):
+        fail("bundle.environment","custody_mismatch","export")
+    return intake
+
+
+def export_run(csv_original, sidecar_original, request_original, output_directory, *, result=None, local_profile=None, local_job_handle=None):
+    """New local directory, exact original-byte members and closed outer custody.
+
+    A supplied Result is not trusted numerical origin: independently replay it
+    before publication. Private exports still honor raw-mirroring exclusions,
+    including embedded auxiliary originals. No ZIP, pickle or network loader.
+    """
+    from copy import deepcopy
+    target = _safe_directory(output_directory,absent=True)
+    originals = (csv_original,sidecar_original,request_original)
+    initial = _load_profile_lines(*originals,local_profile=local_profile)
+    initial_policy,initial_rights = initial["request"]["export_policy"],initial["metadata"]["rights"]
+    required = initial_rights["derivative_publication"] if initial_policy["derivative_requested"]=="public" else initial_rights["private_processing"]
+    embedded = [a["rights"]["raw_mirroring"] for a in _auxiliary_identities(initial["request"])]
+    if required!="allowed" or any(p!="allowed" for p in embedded):
+        raise LocalWorkflowError("rights_denied" if "denied" in [required]+embedded else "rights_unresolved","result.embedded_original_rights")
+    if result is None:
+        result = run_result(*originals,run_id="local-run",local_profile=local_profile,local_job_handle=local_job_handle)
+    else:
+        validate_result(result,local_profile=local_profile)
+        _binding_check(result,originals,local_profile=local_profile,local_job_handle=local_job_handle)
+        replayed = run_result(*originals,run_id=result["run_id"],local_profile=local_profile,local_job_handle=local_job_handle)
+        # Export manifests are not physical producer outputs.
+        comparison = deepcopy(result)
+        comparison["artifacts"] = []
+        compare_replay(comparison,replayed,local_profile=local_profile)
+    intake = _binding_check(result,originals,local_profile=local_profile,local_job_handle=local_job_handle)
+    policy,rights = intake["request"]["export_policy"],intake["metadata"]["rights"]
+    public = policy["derivative_requested"]=="public"
+    derivative = rights["derivative_publication"] if public else rights["private_processing"]
+    auxiliary_rights = [a["rights"]["raw_mirroring"] for a in result["input"]["auxiliary_identities"]]
+    embedded_permission = "denied" if "denied" in auxiliary_rights else "unresolved" if "unresolved" in auxiliary_rights else "allowed"
+    if derivative!="allowed" or embedded_permission!="allowed":
+        raise LocalWorkflowError("rights_denied" if "denied" in (derivative,embedded_permission) else "rights_unresolved","result.embedded_original_rights")
+    raw_allowed = rights["raw_mirroring"]=="allowed" and policy["raw_requested"]=="include" and policy["include_replay_inputs"]
+    replay_allowed = raw_allowed and embedded_permission=="allowed"
+    bodies,members = {},[]
+    def member(name,kind,permission,body,include):
+        record = dict(relative_path=name,kind=kind,permission=permission,included=include,
+            sha256=sha256(body).hexdigest() if include else None,bytes=len(body) if include else None,
+            reason=None if include else "Explicit rights or export policy excludes this original member")
+        members.append(record)
+        if include:
+            bodies[name] = body
+    member("original.csv","original",rights["raw_mirroring"],csv_original,raw_allowed)
+    member("sidecar.json","metadata",embedded_permission,sidecar_original,policy["include_replay_inputs"])
+    member("request.json","request",embedded_permission,request_original,policy["include_replay_inputs"])
+    member("environment.json","receipt",derivative,contract.canonical_bytes(result["environment"]),True)
+    member("replay.txt","replay_recipe",derivative,b"Use the unchanged local magnetic_lines.py replay --bundle DIRECTORY --output-directory NEW_DIRECTORY. Supply the pinned existing CPython runtime; no network or install.\n",True)
+    exported = deepcopy(result)
+    exported["artifacts"] = deepcopy(members)
+    validate_result(exported,local_profile=local_profile)
+    body = contract.canonical_bytes(exported)
+    parse_result(body,local_profile=local_profile)
+    member("result.json","result_array",derivative,body,True)
+    receipt = dict(schema="magnetic-local-custody/1",input_sha256=intake["dataset_sha256"],request_sha256=sha256(request_original).hexdigest(),
+        environment_sha256=result["environment"]["environment_receipt_sha256"],result_sha256=sha256(body).hexdigest(),members=members,
+        replay_verdict="eligible" if replay_allowed else "ineligible",publication="local_only")
+    bodies["custody.json"] = contract.canonical_bytes(receipt)
+    if sum(len(v) for v in bodies.values())>67108864:
+        fail("export.bytes","resource_refused","export")
+    try:
+        target.mkdir()  # Exclusive reservation; never overwrite any existing directory.
+        for name,content in bodies.items():
+            with (target/name).open("xb") as stream:
+                stream.write(content)
+                stream.flush()
+                import os
+                os.fsync(stream.fileno())
+    except OSError:
+        # Owned partial directory remains non-success; no deletion or replacement.
+        fail("export.io_or_race","custody_mismatch","export")
+    verify_bundle(target,local_profile=local_profile,local_job_handle=local_job_handle)
+    return receipt
+
+
+def verify_bundle(bundle, *, local_profile=None, local_job_handle=None):
+    """Verify every original/array/manifest binding before any scientific call."""
+    directory = _safe_directory(bundle)
+    receipt = _parse_bounded_json(contract.read_bounded(directory/"custody.json",2097152),2097152)
+    keys = {"schema","input_sha256","request_sha256","environment_sha256","result_sha256","members","replay_verdict","publication"}
+    if type(receipt) is not dict or set(receipt)!=keys or receipt["schema"]!="magnetic-local-custody/1" or receipt["publication"]!="local_only" or \
+        receipt["replay_verdict"] not in ("eligible","ineligible"):
+        fail("bundle.custody")
+    for key in ("input_sha256","request_sha256","environment_sha256","result_sha256"):
+        _type(receipt[key],"Hash","bundle."+key,1)
+    _result_type(receipt["members"],L("Member",1,64),"bundle.members",1)
+    allowed = {"original.csv","sidecar.json","request.json","environment.json","replay.txt","result.json"}
+    names,body,total = set(),{},0
+    for m in receipt["members"]:
+        name = m["relative_path"]
+        if name not in allowed or name in names:
+            fail("bundle.member.path")
+        names.add(name)
+        path = directory/name
+        if path.is_symlink() or path.is_junction():
+            fail("bundle.member.symlink","custody_mismatch","export")
+        if m["included"]:
+            if m["permission"]!="allowed" or m["sha256"] is None or m["bytes"] is None:
+                fail("bundle.member.permission")
+            data = contract.read_bounded(path,min(m["bytes"],67108864))
+            if len(data)!=m["bytes"] or sha256(data).hexdigest()!=m["sha256"]:
+                fail("bundle.member.hash","custody_mismatch","export")
+            body[name] = data
+            total+=len(data)
+        elif path.exists() or m["sha256"] is not None or m["bytes"] is not None:
+            fail("bundle.denied_member","custody_mismatch","export")
+    if total>67108864 or names!=allowed or {p.name for p in directory.iterdir()}!=set(body)|{"custody.json"}:
+        fail("bundle.inventory","custody_mismatch","export")
+    result = parse_result(body["result.json"],local_profile=local_profile)
+    if sha256(body["result.json"]).hexdigest()!=receipt["result_sha256"] or result["input"]["dataset_sha256"]!=receipt["input_sha256"] or \
+        result["request"]["bytes_sha256"]!=receipt["request_sha256"] or result["environment"]["environment_receipt_sha256"]!=receipt["environment_sha256"] or \
+        result["artifacts"]!=[m for m in receipt["members"] if m["relative_path"]!="result.json"] or \
+        body["environment.json"]!=contract.canonical_bytes(result["environment"]):
+        fail("bundle.result_bindings","custody_mismatch","export")
+    if "original.csv" in body:
+        _binding_check(result,(body["original.csv"],body["sidecar.json"],body["request.json"]),local_profile=local_profile,local_job_handle=local_job_handle)
+    if (receipt["replay_verdict"]=="eligible")!=(set(("original.csv","sidecar.json","request.json"))<=set(body)):
+        fail("bundle.replay_declaration","custody_mismatch","export")
+    return receipt,result,body
+
+
+def compare_replay(recorded, replayed, *, local_profile=None):
+    """Exact structures/identities and frozen 1e-9 relative + 1e-6 nT bound.
+
+    Rehashing altered arrays does not verify physics. Metadata, config, objective
+    identity, source/engine/environment and mask hashes are exact; only scalar
+    numerical values with float origins use the stated tolerance.
+    """
+    validate_result(recorded,local_profile=local_profile)
+    validate_result(replayed,local_profile=local_profile)
+    def compare(a,b,path):
+        if type(a) is dict and type(b) is dict and set(a)==set(b):
+            for k in a:
+                compare(a[k],b[k],path+"."+k)
+        elif type(a) is list and type(b) is list and len(a)==len(b):
+            for index,(x,y) in enumerate(zip(a,b)):
+                compare(x,y,path+f"[{index}]")
+        elif type(a) is float and type(b) is float and any(t in path for t in (".values[",".rmse_nT",".data_term",".regularization_term",".total",".condition")):
+            if not math.isclose(a,b,rel_tol=1e-9,abs_tol=1e-6):
+                fail("replay.numerical_tolerance","custody_mismatch","export")
+        elif type(a) is not type(b) or a!=b:
+            fail("replay.identity","custody_mismatch","export")
+    compare(recorded,replayed,"Result")
+
+
+def replay_run(bundle, output_directory):
+    _safe_directory(output_directory,absent=True)
+    receipt,result,body = verify_bundle(bundle)
+    if receipt["replay_verdict"]!="eligible":
+        raise LocalWorkflowError("rights_denied","replay.original_inputs")
+    original = (body["original.csv"],body["sidecar.json"],body["request.json"])
+    _binding_check(result,original)
+    # export_run independently computes/compares the exact recorded producer
+    # once, then publishes it. Do not duplicate the 25-fit replay again here.
+    return export_run(*original,output_directory,result=result)
+
+
+def main(argv=None):
+    """Bounded local CLI. No file paths/errors/tracebacks leak to stdout."""
+    import argparse
+    import sys
+    parser = argparse.ArgumentParser(description="Local magnetic flight-line contract and computation; no online or field admission")
+    sub = parser.add_subparsers(dest="command",required=True)
+    for name in ("validate","run"):
+        child = sub.add_parser(name)
+        for key in ("csv","metadata","request"):
+            child.add_argument("--"+key,required=True)
+        if name=="run":
+            child.add_argument("--output-directory",required=True)
+    child = sub.add_parser("replay")
+    child.add_argument("--bundle",required=True)
+    child.add_argument("--output-directory",required=True)
+    args = parser.parse_args(argv)
+    try:
+        if args.command=="replay":
+            value = replay_run(args.bundle,args.output_directory)
+        else:
+            if args.command=="run":
+                _safe_directory(args.output_directory,absent=True)
+            original = (contract.read_bounded(args.csv,16777216),contract.read_bounded(args.metadata,2097152),contract.read_bounded(args.request,2097152))
+            if args.command=="validate":
+                intake = contract.load_lines(*original)
+                value = dict(dataset_sha256=intake["dataset_sha256"],eligibility_reasons=intake["eligibility_reasons"],
+                    provider_authenticated=False,numerical_success=False)
+            else:
+                value = export_run(*original,args.output_directory)
+        sys.stdout.buffer.write(contract.canonical_bytes(value)+b"\n")
+        return 0
+    except contract.MagneticContractError as exc:
+        sys.stdout.buffer.write(contract.canonical_bytes(exc.error)+b"\n")
+        return 2
+    except KeyboardInterrupt:
+        error = LocalWorkflowError("cancelled","local_workflow",stage="worker")
+    except Exception:
+        error = LocalWorkflowError("numerical_failure","local_workflow",stage="fit")
+    sys.stdout.buffer.write(contract.canonical_bytes(error.error)+b"\n")
+    return 2
+
+
+if __name__=="__main__":
+    raise SystemExit(main())
