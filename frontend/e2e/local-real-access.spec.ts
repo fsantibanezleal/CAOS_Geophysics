@@ -102,6 +102,21 @@ async function logout(page: Page, es: boolean) {
 }
 async function csrf(context: BrowserContext) { return (await (await context.request.get(origin + "/api/auth/csrf")).json()).csrf_token as string; }
 
+function fixedBucketDelayMs(serverDate: string | null): number {
+  const ms = Date.parse(serverDate ?? "");
+  if (!Number.isFinite(ms) || new Date(ms).toUTCString() !== serverDate) throw new Error("Invalid server HTTP Date");
+  const remaining = 600 - Math.floor(ms / 1000) % 600;
+  return remaining <= 30 ? (remaining + 1) * 1000 : 0;
+}
+test("fixed UTC bucket scheduling, not a rolling-window assumption", () => {
+  expect(fixedBucketDelayMs("Sun, 04 Oct 2026 02:39:29 GMT")).toBe(0);
+  expect(fixedBucketDelayMs("Sun, 04 Oct 2026 02:39:30 GMT")).toBe(31_000);
+  expect(fixedBucketDelayMs("Sun, 04 Oct 2026 02:39:59 GMT")).toBe(2_000);
+  expect(fixedBucketDelayMs("Sun, 04 Oct 2026 02:40:00 GMT")).toBe(0);
+  expect(() => fixedBucketDelayMs(null)).toThrow("Invalid server HTTP Date");
+  expect(() => fixedBucketDelayMs("not a date")).toThrow("Invalid server HTTP Date");
+});
+
 test("real anonymous public routes and API project/upload/job refusal; no mail endpoints", async ({ browser }) => {
   const context = await browser.newContext(), page = await context.newPage();
   await context.addInitScript(() => localStorage.setItem("caos.lang", "en"));
@@ -157,16 +172,35 @@ for (const lang of ["en", "es"] as const) for (const theme of ["light", "dark"] 
     for (const project of aProjects) expect((await context.request.delete(origin + `/api/projects/${project.id}`, { headers })).status()).toBe(200);
     await logout(page, es);
     expect((await context.request.get(origin + "/api/auth/me")).status()).toBe(401);
-    // Seven real login/logout attempts above. Keep the backend's ten/600s
-    // limiter unchanged; independent per-control DBs prevent matrix cross-talk.
-    const authHeaders = { Origin: origin, "X-CSRF-Token": await csrf(context) };
-    for (let i = 0; i < 3; i++) expect((await context.request.post(origin + "/api/auth/cookie/login", {
-      headers: authHeaders, form: { username: accounts[0].email, password: randomUUID() },
-    })).status()).toBe(400);
-    const limited = await context.request.post(origin + "/api/auth/cookie/login", {
-      headers: authHeaders, form: { username: accounts[0].email, password: randomUUID() },
-    });
-    expect(limited.status()).toBe(429); expect(Number(limited.headers()["retry-after"])).toBeGreaterThan(0);
     await context.close();
   });
 }
+
+test("dedicated actual auth rate admission in one fixed UTC bucket", async ({ browser }) => {
+  test.setTimeout(60_000);
+  const context = await browser.newContext();
+  const clock = await context.request.get(origin + "/api/auth/config");
+  const delay = fixedBucketDelayMs(clock.headers()["date"] ?? null);
+  if (delay) await new Promise<void>(done => setTimeout(done, delay));
+  const start = await context.request.get(origin + "/api/auth/config");
+  const date = start.headers()["date"] ?? null;
+  expect(fixedBucketDelayMs(date)).toBe(0);
+  const bucket = Math.floor(Date.parse(date!) / 600_000);
+  const headers = { Origin: origin, "X-CSRF-Token": await csrf(context) };
+  for (let attempt = 1; attempt <= 11; attempt++) {
+    const response = await context.request.post(origin + "/api/auth/cookie/login", {
+      headers, form: { username: accounts[0].email, password: randomUUID() },
+    });
+    const responseDate = response.headers()["date"] ?? null;
+    fixedBucketDelayMs(responseDate); // Fail closed on absent/noncanonical Date.
+    expect(Math.floor(Date.parse(responseDate!) / 600_000), "fixed bucket changed during rate control").toBe(bucket);
+    expect(response.status()).toBe(attempt <= 10 ? 400 : 429);
+    if (attempt === 11) {
+      expect((await response.json()).code).toBe("rate_limited");
+      const retryAfter = response.headers()["retry-after"];
+      expect(retryAfter).toMatch(/^[1-9]\d*$/);
+      expect(Number(retryAfter)).toBeLessThanOrEqual(600);
+    }
+  }
+  await context.close();
+});

@@ -543,8 +543,8 @@ function ValidationSection() {
       </pre>
       <p>
         {t(
-          "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",
-          "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. Pages y VPS sirven archivos estáticos. Sólo la calculadora directa MT recalcula respuesta física en navegador.",
+          "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. The current live 0.04.001 deployment uses only the ML VPS; Pages publication has been withdrawn. The replacement keeps courses, curated replay and validated browser computations public, including layered MT forward calculation and locally implemented M13 phase-picking inference. Server project persistence, uploads and VPS jobs require login; implementation and local validation do not mean new VPS jobs are deployed.",
+          "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. El despliegue live 0.04.001 actual usa sólo ML VPS; la publicación en Pages fue retirada. El reemplazo mantiene públicos los cursos, la reproducción curada y los cálculos validados en navegador, incluido MT directo por capas y la inferencia M13 de fases implementada localmente. La persistencia de proyectos, las cargas y las tareas VPS requieren inicio de sesión; la implementación y validación local no significan que se hayan desplegado nuevas tareas VPS.",
         )}
       </p>
       <Callout

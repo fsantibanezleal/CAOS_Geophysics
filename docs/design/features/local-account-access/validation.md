@@ -17,8 +17,10 @@ establishes operating-host admission, deployment or complete-product acceptance.
 - LA-09: actual HTTP factory/migrations/provisioner and two randomized accounts
   in a new private DB per control; actual cookies, CSRF, cross-account404, project
   creation/deletion, logout401, guest project/upload/job401 and absent mail404.
-  Eight EN/ES × light/dark × desktop/phone controls also verify unchanged auth
-  rate admission (eleventh attempt429 and positive Retry-After).
+  Eight EN/ES × light/dark × desktop/phone controls retain owner behavior. A
+  dedicated fixed-UTC-window control verifies unchanged auth rate admission
+  (ten400s, eleventh429, positive Retry-After); a separate pure scheduler test
+  checks Date boundaries/failures. See the fixed-window gate design.
 
 Inspect all language/theme/device screenshots and verify dialog containment.
 Intercepted responses prove only frontend behavior; they are not real server
