@@ -35,6 +35,7 @@ import { provenanceDescription } from "../data/evidence";
 import { deploymentMode } from "../lib/deployment";
 import { ProjectDrawer } from "../components/ProjectDrawer";
 import { ProjectProcessingWorkbench } from "../components/ProjectProcessingWorkbench";
+import { VelocityLocalWorkbench } from "../components/VelocityLocalWorkbench";
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -964,6 +965,7 @@ export default function Workbench() {
       );
     }
   }
+  if (searchParams.get("instrument") === "velocity-local") return <VelocityLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
   if (processingProjectId) return <>
     <ProjectProcessingWorkbench key={processingProjectId} projectId={processingProjectId} es={es} onManage={() => setProjectsOpen(true)} onCurated={() => selectProcessingProject("")} />
     {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOwnerCleared={() => selectProcessingProject("")} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
@@ -996,6 +998,7 @@ export default function Workbench() {
             ))}
           </select>
         </label>
+        <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "velocity-local"); return next; }, {replace:true})}>{t("Open local velocity result", "Abrir resultado local de velocidad")}</button>
         <button
           className="btn mobile-controls-toggle"
           aria-expanded={controlsOpen}
