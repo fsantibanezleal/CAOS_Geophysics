@@ -32,8 +32,11 @@ class Settings:
     worker_scratch_bytes: int = 1024 * MIB
     worker_wall_seconds: int = 600
     mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
+    auth_mode: str = "local"
 
     def __post_init__(self) -> None:
+        if self.auth_mode not in {"local", "email"}:
+            raise ValueError("GEOPHYSICS_AUTH_MODE must be local or email")
         if len(self.auth_secret) < 32:
             raise ValueError("GEOPHYSICS_AUTH_SECRET must be at least 32 characters")
         parsed = urlsplit(self.public_origin)
@@ -73,12 +76,13 @@ class Settings:
             db_path=Path(db).resolve() if db else None,
             auth_secret=os.environ["GEOPHYSICS_AUTH_SECRET"],
             public_origin=os.environ["GEOPHYSICS_PUBLIC_ORIGIN"].rstrip("/"),
-            smtp_host=os.environ["GEOPHYSICS_SMTP_HOST"],
+            smtp_host=os.environ.get("GEOPHYSICS_SMTP_HOST", ""),
             smtp_port=int(os.environ.get("GEOPHYSICS_SMTP_PORT", "587")),
-            smtp_username=os.environ["GEOPHYSICS_SMTP_USERNAME"],
-            smtp_password=os.environ["GEOPHYSICS_SMTP_PASSWORD"],
-            smtp_from=os.environ["GEOPHYSICS_SMTP_FROM"],
+            smtp_username=os.environ.get("GEOPHYSICS_SMTP_USERNAME", ""),
+            smtp_password=os.environ.get("GEOPHYSICS_SMTP_PASSWORD", ""),
+            smtp_from=os.environ.get("GEOPHYSICS_SMTP_FROM", ""),
             mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+            auth_mode=os.environ.get("GEOPHYSICS_AUTH_MODE", "local"),
         )
 
 

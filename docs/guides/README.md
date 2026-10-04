@@ -13,6 +13,7 @@
 - [Run the ordinary physical station adapter](13_local_station_adapter.md): exact parent/configuration identities, real correction and safe-error boundary; authenticated online children remain separate.
 - [Calculate local prism gravity](14_local_gravity_forward.md): exact declared geometry, density units, upward response and Jacobian; not a measured-data inverse or host job.
 - [Read local physical gravity JSON](15_local_physical_json.md): bounded original bytes, strict root declarations, separate raw/scientific identities and the real correction adapter; no online activation.
+- [Provision internal accounts and distinguish public client work from protected server work](16_internal_accounts.md): library hashes/sessions, plural projects and no SMTP prerequisite.
 - [Build paired selected-source bundles](../operations/03_paired_source_bundle.md): exact Git objects and deterministic archive provenance, not production trust or an actual-host restore.
 - [Compute explicit local gravity station corrections](../methods/gravity-processing/01_station-corrections.md): actual Python/PowerShell/Bash commands, mathematical conventions and negative admission controls.
 - [Acquire and profile pinned potential-field source members](11_potential_source_intake.md): immutable bytes and QC-only profiles, not an inferred field model.
