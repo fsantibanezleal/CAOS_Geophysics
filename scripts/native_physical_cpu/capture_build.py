@@ -21,6 +21,12 @@ import time
 STREAM_CAP = 2 * 1024 * 1024
 OUTPUT_CAP = 64 * 1024 * 1024
 FILE_CAP = 32
+ENTRY_CAP = 128
+DEPTH_CAP = 8
+NAME_CAP = 1024
+RECEIPT_CAP = 128 * 1024
+INVENTORY_CAP = 64 * 1024
+ROOT_KEYS = ("source", "output", "scratch", "outcome", "vc", "sdk", "system")
 SOURCE_FILES = (
     "scripts/native_physical_cpu/controller.h",
     "scripts/native_physical_cpu/controller.c",
@@ -58,11 +64,26 @@ def safe_path(path: Path, *, missing_leaf: bool = False) -> None:
     if not path.is_absolute() or ".." in path.parts:
         raise BuildHeld("build_path_invalid")
     for index, item in enumerate((path, *path.parents)):
-        if index == 0 and missing_leaf and not item.exists():
-            continue
-        info = item.lstat()
+        try:
+            info = item.lstat()
+        except FileNotFoundError:
+            if index == 0 and missing_leaf:
+                continue
+            raise
         if stat.S_ISLNK(info.st_mode) or getattr(info, "st_file_attributes", 0) & 0x400:
             raise BuildHeld("build_path_invalid")
+        if stat.S_ISREG(info.st_mode) and info.st_nlink != 1:
+            raise BuildHeld("build_path_invalid")
+
+
+def identity(info) -> tuple:
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns,
+            info.st_nlink, stat.S_IFMT(info.st_mode))
+
+
+def same_metadata(before, after) -> bool:
+    # Compare ctime only within the same path/handle API, not across Windows APIs.
+    return identity(before) == identity(after) and before.st_ctime_ns == after.st_ctime_ns
 
 
 def file_hash(path: Path) -> str:
@@ -72,13 +93,19 @@ def file_hash(path: Path) -> str:
         raise BuildHeld("build_file_invalid")
     h = hashlib.sha256()
     with path.open("rb") as stream:
+        before_handle = os.fstat(stream.fileno())
+        if identity(before_handle) != identity(info):
+            raise BuildHeld("build_file_changed")
         count = 0
         while chunk := stream.read(65536):
             count += len(chunk)
             if count > OUTPUT_CAP:
                 raise BuildHeld("build_file_invalid")
             h.update(chunk)
-    if count != info.st_size:
+        after_handle = os.fstat(stream.fileno())
+    safe_path(path)
+    if (count != info.st_size or not same_metadata(before_handle, after_handle) or
+            not same_metadata(info, path.stat())):
         raise BuildHeld("build_file_changed")
     return h.hexdigest()
 
@@ -108,14 +135,16 @@ def approval(path: Path, expected: str) -> dict:
         "schema", "source_commit", "source_hashes", "tree_files", "execute_i01_build", "roots"
     }:
         raise BuildHeld("build_approval_invalid")
-    if value["schema"] != "i01-build-approval-1" or value["execute_i01_build"] is not True:
+    if value["schema"] != "i01-build-approval-2" or value["execute_i01_build"] is not True:
         raise BuildHeld("build_approval_invalid")
     if type(value["source_commit"]) is not str or not re.fullmatch("[0-9a-f]{40}", value["source_commit"]):
         raise BuildHeld("build_approval_invalid")
     roots = value["roots"]
-    if type(roots) is not dict or set(roots) != {"source", "output", "vc", "sdk", "system"}:
+    if type(roots) is not dict or set(roots) != set(ROOT_KEYS):
         raise BuildHeld("build_approval_invalid")
     if any(type(p) is not str or len(p) > 1024 or not p for p in roots.values()):
+        raise BuildHeld("build_approval_invalid")
+    if any(path.is_relative_to(Path(roots[key])) for key in ("output", "scratch", "outcome")):
         raise BuildHeld("build_approval_invalid")
     hashes = value["source_hashes"]
     if type(hashes) is not dict or set(hashes) != set(SOURCE_FILES):
@@ -200,7 +229,7 @@ def recipe(source: Path, output: Path, vc: Path, sdk: Path) -> tuple[tuple[str, 
     )
 
 
-ALLOW = {"core.obj", "core.dll", "core.lib", "core.exp", "abi.obj", "abi.exe", "build.json"}
+ALLOW = {"core.obj", "core.dll", "core.lib", "core.exp", "abi.obj", "abi.exe"}
 ALLOW |= {f"stage{i}.{kind}" for i in range(1, 5) for kind in ("stdout", "stderr")}
 
 
@@ -215,6 +244,77 @@ def output_size(root: Path) -> int:
         if total > OUTPUT_CAP:
             raise BuildHeld("build_output_exceeded")
     return total
+
+
+def observe_workspace(output: Path, scratch: Path) -> dict:
+    """Bounded metadata observation, never open unknown files or follow links.
+
+    Partial observations are lower counts, not complete quota/drain evidence.
+    Scratch names are quarantined metadata, never artifact identities.
+    """
+    report = {"held": None, "complete": False, "files": 0, "directories": 0,
+              "file_bytes": 0, "entries": []}
+    telemetry_leaves = 0
+    inventory_bytes = 0
+
+    def walk(root, directory, lane):
+        nonlocal telemetry_leaves, inventory_bytes
+        safe_path(directory)
+        with os.scandir(directory) as iterator:
+            for entry in iterator:
+                path = Path(entry.path)
+                rel = path.relative_to(root)
+                name = rel.as_posix()
+                if (len(report["entries"]) >= ENTRY_CAP or len(rel.parts) > DEPTH_CAP or
+                        len(name) > NAME_CAP):
+                    raise BuildHeld("build_observation_exceeded")
+                safe_path(path)
+                info = path.lstat()
+                is_dir = stat.S_ISDIR(info.st_mode)
+                if not is_dir and not stat.S_ISREG(info.st_mode):
+                    raise BuildHeld("build_path_invalid")
+                item = {"lane": lane, "name": name, "kind": "directory" if is_dir else "file",
+                        "bytes": 0 if is_dir else info.st_size}
+                amount = len(json.dumps(item, ensure_ascii=True, separators=(",", ":")).encode("ascii"))
+                if inventory_bytes + amount > INVENTORY_CAP:
+                    raise BuildHeld("build_observation_exceeded")
+                inventory_bytes += amount
+                report["entries"].append(item)
+                report["directories" if is_dir else "files"] += 1
+                report["file_bytes"] += item["bytes"]
+                if report["files"] > FILE_CAP or report["file_bytes"] > OUTPUT_CAP:
+                    raise BuildHeld("build_output_exceeded")
+                if lane == "output":
+                    valid = not is_dir and len(rel.parts) == 1 and name in ALLOW
+                else:
+                    dynamic = re.fullmatch(r"Microsoft/VSApplicationInsights/vstelf[0-9a-f]{32}", name)
+                    if dynamic and is_dir:
+                        telemetry_leaves += 1
+                    valid = is_dir and (name in {"Microsoft", "Microsoft/VSApplicationInsights"} or
+                                        bool(dynamic)) and telemetry_leaves <= 1
+                if not valid and report["held"] is None:
+                    report["held"] = "build_output_invalid" if lane == "output" else "build_scratch_invalid"
+                if is_dir:
+                    yield from walk(root, path, lane)
+                yield None
+
+    try:
+        for root, lane in ((output, "output"), (scratch, "scratch")):
+            for _ in walk(root, root, lane):
+                pass
+        report["complete"] = True
+    except BuildHeld as error:
+        report["held"] = error.args[0]
+    except OSError:
+        report["held"] = "build_observation_unavailable"
+    return report
+
+
+def check_workspace(output: Path, scratch: Path) -> int:
+    report = observe_workspace(output, scratch)
+    if report["held"]:
+        raise BuildHeld(report["held"])
+    return report["file_bytes"]
 
 
 def drain(stream, buffer: bytearray, stopped: threading.Event, failed: threading.Event,
@@ -239,7 +339,7 @@ def drain(stream, buffer: bytearray, stopped: threading.Event, failed: threading
         stream.close()
 
 
-def capture(args: tuple[str, ...], output: Path, environment: dict) -> dict:
+def capture(args: tuple[str, ...], output: Path, environment: dict, *, scratch: Path) -> dict:
     stopped, failed = threading.Event(), threading.Event()
     lock = threading.Lock()
     buffers = (bytearray(), bytearray())
@@ -255,7 +355,7 @@ def capture(args: tuple[str, ...], output: Path, environment: dict) -> dict:
     held = None
     try:
         while proc.poll() is None:
-            output_size(output)
+            check_workspace(output, scratch)
             if failed.is_set():
                 raise BuildHeld("build_stream_exceeded_or_unavailable")
             if time.monotonic() - started > 90:
@@ -265,20 +365,22 @@ def capture(args: tuple[str, ...], output: Path, environment: dict) -> dict:
             thread.join(timeout=1)
         if any(t.is_alive() for t in readers) or failed.is_set():
             raise BuildHeld("build_stream_exceeded_or_unavailable")
-        output_size(output)
+        check_workspace(output, scratch)
         if proc.returncode != 0:
             held = "build_tool_failed"
     except BuildHeld as error:
         held = error.args[0]
+    except OSError:
+        held = "build_io_unavailable"
     finally:
         with lock:
             stopped.set()
         if proc.poll() is None:
             # Exact owned Popen handle only. NOT a descendant kill/drain proof.
-            proc.kill()
             try:
+                proc.kill()
                 proc.wait(timeout=2)
-            except subprocess.TimeoutExpired:
+            except (OSError, subprocess.TimeoutExpired):
                 held = "build_root_termination_uncertain"
         for thread in readers:
             thread.join(timeout=1)
@@ -290,8 +392,9 @@ def capture(args: tuple[str, ...], output: Path, environment: dict) -> dict:
             "held": held, "streams": frozen, "descendant_drain_proven": False}
 
 
-def write_new(root: Path, name: str, data: bytes) -> None:
-    if name not in ALLOW or len(data) > STREAM_CAP or output_size(root) + len(data) > OUTPUT_CAP:
+def write_new(root: Path, name: str, data: bytes, *, scratch: Path | None = None) -> None:
+    size = output_size(root) if scratch is None else check_workspace(root, scratch)
+    if name not in ALLOW or len(data) > STREAM_CAP or size + len(data) > OUTPUT_CAP:
         raise BuildHeld("build_output_exceeded")
     with (root / name).open("xb") as stream:
         stream.write(data)
@@ -299,60 +402,120 @@ def write_new(root: Path, name: str, data: bytes) -> None:
         os.fsync(stream.fileno())
 
 
-def run(source: Path, output: Path, vc: Path, sdk: Path, system: Path, binding: dict) -> int:
+def run(source: Path, output: Path, vc: Path, sdk: Path, system: Path, binding: dict,
+        *, scratch: Path, outcome: Path) -> int:
     if os.name != "nt":
         raise BuildHeld("build_platform_closed")
-    actual_roots = dict(zip(("source", "output", "vc", "sdk", "system"),
-                           (source, output, vc, sdk, system), strict=True))
+    actual_roots = dict(zip(ROOT_KEYS, (source, output, scratch, outcome, vc, sdk, system), strict=True))
     if any(path != Path(binding["roots"][key]) for key, path in actual_roots.items()):
         raise BuildHeld("build_path_invalid")
-    verify_inputs(source, vc, sdk, binding)
     safe_path(system)
     # A full independent approval supplied this SystemRoot; no PATH discovery.
     if system.name.casefold() != "windows" or not (system / "System32").is_dir():
         raise BuildHeld("build_platform_closed")
-    safe_path(output, missing_leaf=True)
-    if output.exists() or any(output.is_relative_to(p) for p in (source, vc, sdk, system)):
-        raise BuildHeld("build_output_invalid")
-    output.mkdir()  # exclusive absent root; parents must already exist
-    environment = {"SystemRoot": str(system), "TEMP": str(output), "TMP": str(output),
+    writable = (output, scratch, outcome)
+    for root in writable:
+        if (root.exists() or any(root.is_relative_to(p) or p.is_relative_to(root)
+                                 for p in (source, vc, sdk, system)) or
+                any(root != p and (root.is_relative_to(p) or p.is_relative_to(root)) for p in writable) or
+                len(set(writable)) != 3):
+            raise BuildHeld("build_output_invalid")
+        safe_path(root, missing_leaf=True)
+    outcome.mkdir()  # all three leaves are absent; no cleanup on partial failure
+    # Reserve independent custody before tool launch. No output scan gates this write.
+    with (outcome / "build.json").open("xb") as destination:
+        reserved_handle = os.fstat(destination.fileno())
+        reserved_path = (outcome / "build.json").stat()
+        if identity(reserved_handle) != identity(reserved_path):
+            raise BuildHeld("build_receipt_custody_uncertain")
+        receipt = {"schema": "i01-build-capture-2", "source_commit": binding["source_commit"],
+                   "source_hashes": binding["source_hashes"], "stages": [], "held": None,
+                   "compiled_tests": "NOT_RUN", "abi_execution": "NOT_RUN",
+                   "loaded_dependency_closure": "NOT_RUN", "runtime_authorized": False,
+                   "artifact_success": False, "recipe_completed": False, "artifacts": None,
+                   "artifact_snapshot_status": "NOT_AVAILABLE", "workspace": None}
+        try:
+            output.mkdir()
+            scratch.mkdir()
+            execute_recipe(source, output, scratch, vc, sdk, system, binding, receipt)
+        except BuildHeld as error:
+            receipt["held"] = error.args[0]
+        except (OSError, ValueError, TypeError):
+            receipt["held"] = "build_io_unavailable"
+        receipt["workspace"] = observe_workspace(output, scratch)
+        if receipt["workspace"]["held"] and receipt["held"] is None:
+            receipt["held"] = receipt["workspace"]["held"]
+        if receipt["held"]:
+            receipt["artifacts"] = None
+            receipt["recipe_completed"] = False
+            receipt["artifact_snapshot_status"] = "NOT_AVAILABLE"
+        raw = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode("ascii")
+        if len(raw) > RECEIPT_CAP:
+            # Never replace a held outcome with success. No raw exception/paths.
+            raw = b'{"schema":"i01-build-capture-2","held":"build_receipt_exceeded","artifact_success":false,"runtime_authorized":false}'
+            receipt["held"] = "build_receipt_exceeded"
+        # Detect observable outcome replacement/modification before the single write.
+        safe_path(outcome / "build.json")
+        if (not same_metadata(reserved_path, (outcome / "build.json").stat()) or
+                not same_metadata(reserved_handle, os.fstat(destination.fileno()))):
+            raise BuildHeld("build_receipt_custody_uncertain")
+        if os.fstat(destination.fileno()).st_size != 0:
+            raise BuildHeld("build_receipt_custody_uncertain")
+        destination.write(raw)
+        destination.flush()
+        os.fsync(destination.fileno())
+    return 1 if receipt["held"] else 0
+
+
+def execute_recipe(source, output, scratch, vc, sdk, system, binding, receipt):
+    environment = {"SystemRoot": str(system), "TEMP": str(scratch), "TMP": str(scratch),
                    "PATH": str(vc / "bin/Hostx64/x64") + os.pathsep + str(system / "System32")}
-    receipt = {"schema": "i01-build-capture-1", "source_commit": binding["source_commit"],
-               "source_hashes": binding["source_hashes"], "stages": [],
-               "compiled_tests": "NOT_RUN", "abi_execution": "NOT_RUN",
-               "loaded_dependency_closure": "NOT_RUN", "runtime_authorized": False}
     for index, args in enumerate(recipe(source, output, vc, sdk), 1):
         verify_inputs(source, vc, sdk, binding)
-        result = capture(args, output, environment)
+        targets = (("core.obj",), ("core.dll", "core.lib", "core.exp"), ("abi.obj",), ("abi.exe",))
+        if any((output / name).exists() for name in targets[index - 1]):
+            raise BuildHeld("build_artifact_exists")
+        result = capture(args, output, environment, scratch=scratch)
         streams = result.pop("streams")
         result["stream_bytes"] = [len(b) for b in streams]
         result["stream_sha256"] = [hashlib.sha256(b).hexdigest() for b in streams]
         result["stream_hash_scope"] = "captured_prefix_if_held"
         receipt["stages"].append(result)
-        for kind, data in zip(("stdout", "stderr"), streams, strict=True):
-            write_new(output, f"stage{index}.{kind}", bytes(data))
         if result["held"]:
-            break  # never continue/retry after any uncertain/failed stage
+            receipt["held"] = result["held"]
+            return  # no writes/hash reads into rejected or potentially live tool roots
+        check_workspace(output, scratch)
+        for kind, data in zip(("stdout", "stderr"), streams, strict=True):
+            write_new(output, f"stage{index}.{kind}", bytes(data), scratch=scratch)
     # Do not hash potentially still-mutating compiler output on any held stage.
+    check_workspace(output, scratch)
     expected_artifacts = {"core.obj", "core.dll", "core.lib", "core.exp", "abi.obj", "abi.exe"}
-    if not any(s["held"] for s in receipt["stages"]) and not all(
+    if not all(
             (output / name).is_file() for name in expected_artifacts):
-        receipt["stages"][-1]["held"] = "build_artifacts_unavailable"
-    receipt["artifacts"] = None if any(s["held"] for s in receipt["stages"]) else {
-        p.name: {"bytes": p.stat().st_size, "sha256": file_hash(p)}
-        for p in output.iterdir() if p.suffix in {".obj", ".dll", ".lib", ".exp", ".exe"}}
-    write_new(output, "build.json", json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode("ascii"))
-    return 1 if any(s["held"] for s in receipt["stages"]) else 0
+        raise BuildHeld("build_artifacts_unavailable")
+    artifacts = {}
+    for name in sorted(expected_artifacts):
+        path = output / name
+        before = path.stat()
+        digest = file_hash(path)
+        if not same_metadata(before, path.stat()):
+            raise BuildHeld("build_file_changed")
+        artifacts[name] = {"bytes": before.st_size, "sha256": digest}
+    receipt["artifacts"] = artifacts
+    check_workspace(output, scratch)
+    receipt["artifact_snapshot_status"] = "OBSERVED_NOT_DRAIN_PROVEN"
+    receipt["recipe_completed"] = True  # NOT trusted artifact/native execution acceptance
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("source", "output", "vc", "sdk", "system", "approval", "approval-sha256"):
+    for name in (*ROOT_KEYS, "approval", "approval-sha256"):
         parser.add_argument("--" + name, required=True)
     args = parser.parse_args()
     try:
         binding = approval(Path(args.approval), args.approval_sha256)
-        return run(*(Path(getattr(args, name)) for name in ("source", "output", "vc", "sdk", "system")), binding)
+        return run(*(Path(getattr(args, name)) for name in ("source", "output", "vc", "sdk", "system")), binding,
+                   scratch=Path(args.scratch), outcome=Path(args.outcome))
     except (BuildHeld, OSError, ValueError, TypeError, RecursionError):
         print("I01 build held; retain private output and request review", file=sys.stderr)
         return 1

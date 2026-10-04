@@ -373,6 +373,8 @@ switch or global setting is changed. Future observed files need explicit review.
 
 Observe output+scratch together <=64MiB/32 regular files; diagnostic walk bounds
 <=128 entries, <=8 relative components, <=1024 characters per relative name.
+Encoded inventory entries total<=64KiB checked before accumulation, including
+JSON escaping; partial observations explicitly mark this bound's rejection.
 Directory bounds include unexpected directories; they cannot evade entry limits.
 The observation retains bounded private relative names/kinds/sizes, observed file
 and directory counts, and a completeness flag. Never follow links/reparse points;
@@ -388,14 +390,28 @@ ONCE at finalization (<=128KiB, flush/fsync), without revalidating rejected writ
 output as a prerequisite. Catch launch/input/guard/write/termination failures as fixed
 codes, not raw exception values. Independent outcome I/O failure is still possible:
 fixed stderr/exit1, retain partial receipt and all roots, no success or retry.
+Observable named-file/handle replacement, nonempty reserved file or links detected
+before final write hold custody; no overwrite of an externally modified receipt.
 The helper does not promise protection against a malicious tool that discovers an
 unadvertised outcome path or races path checks; independent custody is not a sandbox.
 
-Normal four-stage completion requires all six artifacts. File hashes are bounded
-before/after metadata-checked read observations, not future immutability or trusted
+Normal four-stage completion requires all six artifacts.
+Stage targets must still be absent before each launch; no overwrite of prematurely
+created known artifacts, no automatic recovery or adoption of such files.
+File hashes are bounded before/after metadata-checked read observations, not future immutability or trusted
 executables; snapshot status is OBSERVED_NOT_DRAIN_PROVEN. Any held stage sets artifact
 observations null, recipe_completedfalse and artifact_successfalse. Even normal
 completion keeps artifact_successfalse pending independent PE/import/closure review.
+Cross-API identity compares device/inode/size/mtime_ns/link count/file type, not
+permission bits: Windows path stat may encode executable filename permissions
+that handle fstat does not. ctime_ns is compared before/after WITHIN the same
+path API and WITHIN the same handle API, not across them. The actual CPython3.12.10
+path/handle observations differ on ctime for freshly written files: the
+[pinned path-stat source](https://github.com/python/cpython/blob/v3.12.10/Modules/posixmodule.c)
+copies birthtime to deprecated ctime, while
+[pinned handle-stat source](https://github.com/python/cpython/blob/v3.12.10/Python/fileutils.c)
+uses available ChangeTime. Authored controls preserve both same-API time checks
+without a false cross-API identity rejection. No timestamp-based immutability claim.
 
 Important limitation: this helper kills ONLY the exact owned tool root handle on
 failure. It supplies NO compiler-descendant kill/drain or hard filesystem quota

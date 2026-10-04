@@ -421,3 +421,169 @@ def test_same_size_mutation_during_hash_rejected(helper, tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "open", lambda p, *a, **kw: ChangingReader() if p == path else real_open(p, *a, **kw))
     with pytest.raises(helper.BuildHeld, match="build_file_changed"):
         helper.file_hash(path)
+
+
+def test_escaped_inventory_budget_before_append(helper, tmp_path, monkeypatch):
+    output, scratch = workspace(tmp_path)
+    (scratch / ("\U0001d11e" * 20)).mkdir()
+    monkeypatch.setattr(helper, "INVENTORY_CAP", 128)
+    report = helper.observe_workspace(output, scratch)
+    assert report["held"] == "build_observation_exceeded" and report["complete"] is False
+    assert report["entries"] == []
+
+
+@pytest.mark.parametrize("kind", ["symlink", "reparse"])
+def test_link_attributes_rejected_without_traversing(helper, tmp_path, monkeypatch, kind):
+    from types import SimpleNamespace
+    import stat
+    output, scratch = workspace(tmp_path)
+    path = scratch / "link"
+    path.mkdir()
+    real_lstat = Path.lstat
+    def supplied_lstat(p, *args, **kwargs):
+        if p != path: return real_lstat(p, *args, **kwargs)
+        return SimpleNamespace(st_mode=stat.S_IFLNK if kind == "symlink" else stat.S_IFDIR,
+                               st_file_attributes=0 if kind == "symlink" else 0x400)
+    monkeypatch.setattr(Path, "lstat", supplied_lstat)
+    report = helper.observe_workspace(output, scratch)
+    assert report["held"] == "build_path_invalid" and report["entries"] == []
+    assert report["complete"] is False
+
+
+def test_mock_root_guard_failure_has_frozen_streams_and_no_descendant_claim(helper, tmp_path, monkeypatch):
+    output, scratch = workspace(tmp_path)
+    (scratch / "unknown").write_bytes(b"x")
+    class Root:
+        stdout, stderr = io.BytesIO(b"raw"), io.BytesIO(b"")
+        returncode = None
+        killed = 0
+        def poll(self): return self.returncode
+        def kill(self): self.killed += 1; self.returncode = -9
+        def wait(self, timeout): assert timeout == 2; return self.returncode
+    root = Root()
+    def launch(args, **kw):
+        assert args == ("exact-reviewed-tool",)
+        assert kw["shell"] is False and kw["close_fds"] is True
+        assert kw["cwd"] == output and kw["stdin"] == helper.subprocess.DEVNULL
+        return root
+    monkeypatch.setattr(helper.subprocess, "Popen", launch)
+    result = helper.capture(("exact-reviewed-tool",), output, {}, scratch=scratch)
+    assert root.killed == 1 and result["returncode"] == -9
+    assert result["held"] == "build_scratch_invalid"
+    assert result["streams"][0] in (b"raw", b"") and result["streams"][1] == b""
+    assert all(type(stream) is bytes for stream in result["streams"])
+    assert type(result["wall_ms"]) is float and result["descendant_drain_proven"] is False
+
+
+def test_normal_supplied_four_stages_are_observations_not_artifact_acceptance(helper, tmp_path, monkeypatch):
+    paths, binding = run_context(helper, tmp_path, monkeypatch)
+    count = 0
+    def supplied_capture(args, output, environment, *, scratch):
+        nonlocal count
+        count += 1
+        telemetry(scratch) if count == 1 else None
+        targets = (("core.obj",), ("core.dll", "core.lib", "core.exp"), ("abi.obj",), ("abi.exe",))
+        for name in targets[count - 1]: (output / name).write_bytes(name.encode("ascii"))
+        return {"returncode": 0, "wall_ms": 0.0, "held": None, "streams": (b"", b""),
+                "descendant_drain_proven": False}
+    monkeypatch.setattr(helper, "capture", supplied_capture)
+    assert invoke(helper, paths, binding) == 0
+    receipt = json.loads((paths["outcome"] / "build.json").read_bytes())
+    assert count == 4 and receipt["recipe_completed"] is True
+    assert receipt["held"] is None and receipt["artifact_success"] is False
+    assert receipt["artifact_snapshot_status"] == "OBSERVED_NOT_DRAIN_PROVEN"
+    assert all(item["sha256"] == hashlib.sha256(name.encode("ascii")).hexdigest()
+               for name, item in receipt["artifacts"].items())
+    assert not (paths["output"] / "build.json").exists()
+    assert receipt["workspace"]["files"] == 14 and receipt["workspace"]["directories"] == 3
+
+
+def test_known_future_target_not_overwritten(helper, tmp_path, monkeypatch):
+    paths, binding = run_context(helper, tmp_path, monkeypatch)
+    count = 0
+    def supplied_capture(args, output, environment, *, scratch):
+        nonlocal count
+        count += 1
+        (output / "core.obj").write_bytes(b"core")
+        (output / "core.dll").write_bytes(b"premature")
+        return {"returncode": 0, "wall_ms": 0.0, "held": None,
+                "streams": (b"", b""), "descendant_drain_proven": False}
+    monkeypatch.setattr(helper, "capture", supplied_capture)
+    assert invoke(helper, paths, binding) == 1 and count == 1
+    receipt = json.loads((paths["outcome"] / "build.json").read_bytes())
+    assert receipt["held"] == "build_artifact_exists" and receipt["artifacts"] is None
+    assert (paths["output"] / "core.dll").read_bytes() == b"premature"
+
+
+def test_external_receipt_modified_by_supplied_tool_never_overwritten(helper, tmp_path, monkeypatch):
+    paths, binding = run_context(helper, tmp_path, monkeypatch)
+    def supplied_capture(*args, **kwargs):
+        (paths["outcome"] / "build.json").write_bytes(b"external retained")
+        raise OSError("PRIVATE")
+    monkeypatch.setattr(helper, "capture", supplied_capture)
+    with pytest.raises(helper.BuildHeld, match="build_receipt_custody_uncertain"):
+        invoke(helper, paths, binding)
+    assert (paths["outcome"] / "build.json").read_bytes() == b"external retained"
+
+
+def test_external_receipt_io_failure_retains_roots_no_fallback(helper, tmp_path, monkeypatch):
+    paths, binding = run_context(helper, tmp_path, monkeypatch)
+    def supplied_capture(*args, **kwargs): raise OSError("PRIVATE")
+    monkeypatch.setattr(helper, "capture", supplied_capture)
+    monkeypatch.setattr(helper.os, "fsync", lambda *a: (_ for _ in ()).throw(OSError("PRIVATE")))
+    with pytest.raises(OSError): invoke(helper, paths, binding)
+    assert paths["output"].is_dir() and paths["scratch"].is_dir()
+    assert json.loads((paths["outcome"] / "build.json").read_bytes())["held"]
+
+
+def test_identity_compares_type_not_windows_path_handle_permission_encoding(helper):
+    from types import SimpleNamespace
+    import stat
+    values = dict(st_dev=1, st_ino=2, st_size=3, st_mtime_ns=4, st_ctime_ns=5, st_nlink=1)
+    path = SimpleNamespace(**values, st_mode=stat.S_IFREG | 0o777)
+    handle = SimpleNamespace(**values, st_mode=stat.S_IFREG | 0o666)
+    assert helper.identity(path) == helper.identity(handle)
+    directory = SimpleNamespace(**values, st_mode=stat.S_IFDIR | 0o777)
+    assert helper.identity(path) != helper.identity(directory)
+    changed = SimpleNamespace(**{**values, "st_ctime_ns": 6}, st_mode=stat.S_IFREG | 0o666)
+    assert helper.identity(path) == helper.identity(changed)
+    assert not helper.same_metadata(handle, changed)
+
+
+def test_termination_uncertainty_preserves_external_failure(helper, tmp_path, monkeypatch):
+    paths, binding = run_context(helper, tmp_path, monkeypatch)
+    class Root:
+        returncode = None
+        stdout, stderr = io.BytesIO(b""), io.BytesIO(b"")
+        def poll(self): return None
+        def kill(self): raise OSError("SECRET ROOT")
+    monkeypatch.setattr(helper.subprocess, "Popen", lambda *a, **kw: Root())
+    clock = iter((0.0, 91.0, 92.0))
+    monkeypatch.setattr(helper.time, "monotonic", lambda: next(clock))
+    assert invoke(helper, paths, binding) == 1
+    raw = (paths["outcome"] / "build.json").read_bytes()
+    receipt = json.loads(raw)
+    assert receipt["held"] == "build_root_termination_uncertain"
+    assert receipt["stages"][0]["returncode"] is None
+    assert receipt["stages"][0]["descendant_drain_proven"] is False
+    assert receipt["artifacts"] is None and b"SECRET ROOT" not in raw
+
+
+def test_manifest_cannot_be_in_tool_or_outcome_root(helper, tmp_path):
+    value = manifest(helper)
+    value["roots"]["outcome"] = str(tmp_path)
+    with pytest.raises(helper.BuildHeld, match="build_approval_invalid"):
+        read_manifest(helper, tmp_path, value)
+
+
+def test_unknown_scratch_file_never_hashed(helper, tmp_path, monkeypatch):
+    paths, binding = run_context(helper, tmp_path, monkeypatch)
+    def supplied_capture(args, output, environment, *, scratch):
+        (scratch / "unknown").write_bytes(b"not an artifact")
+        return {"returncode": 0, "wall_ms": 0.0, "held": None,
+                "streams": (b"", b""), "descendant_drain_proven": False}
+    monkeypatch.setattr(helper, "capture", supplied_capture)
+    monkeypatch.setattr(helper, "file_hash", lambda *a: pytest.fail("unknown file hashed"))
+    assert invoke(helper, paths, binding) == 1
+    receipt = json.loads((paths["outcome"] / "build.json").read_bytes())
+    assert receipt["held"] == "build_scratch_invalid" and receipt["artifacts"] is None

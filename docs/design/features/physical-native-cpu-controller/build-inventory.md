@@ -247,7 +247,13 @@ manifest tool, PDB/debug helper output request, DLL installation or download.
 Exports are to be explicit in controller.h; no new .def/helper/package path.
 Do not suppress warnings, add /FORCE or adjust packing/options to make ABI pass.
 
-Child-only process environment is proposed, not applied: clear inherited
+Historical initial proposal below is retained, not the amended execution recipe.
+Contracts section8 now specifies the operator Python capture, separate NEW tool
+TEMP scratch, separate NEW external outcome custody, and combined output/scratch
+observation bounds. The four compiler/linker argv and five pinned libraries above
+are unchanged. ABI/probe/DLL execution remains a separate held review operation.
+
+Child-only process environment was originally proposed, not applied: clear inherited
 CL/_CL_/LINK/INCLUDE/LIB/LIBPATH and injection/path override variables; PATH only
 MSVC_BIN and SYSTEM32; SystemRoot exactly C:\Windows; TMP/TEMP and working
 directory exactly the NEW private OUTPUT. No persistent/user environment edit.
