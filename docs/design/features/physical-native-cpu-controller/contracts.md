@@ -323,13 +323,16 @@ No DLL load, ABI execution, test execution, compiler discovery, fallback, instal
 environment mutation, native science launch or public API is provided. Executing
 the recipe requires an independently reviewed private source/manifest pin.
 
-Private CLI arguments are source/output/VC/SDK/SystemRoot, approval manifest and
+Private CLI arguments are source/output/scratch/outcome/VC/SDK/SystemRoot, approval manifest and
 manifest SHA256; absolute device paths do not belong in the public repository.
-The exact `i01-build-approval-1` object has schema, source_commit, source_hashes,
+The exact `i01-build-approval-2` object has schema, source_commit, source_hashes,
 tree_files, execute_i01_build, roots. The execute flag is literaltrue, not a runtime
-authority token. roots has EXACT source/output/vc/sdk/system strings. Each root
+authority token. roots has EXACT source/output/scratch/outcome/vc/sdk/system strings. Each root
 must match the reviewed supplied argument; no relative, parent traversal, symlink
-or reparse component. The output leaf must be absent and outside source/tools/OS.
+or reparse component. Output, scratch and outcome leaves must all be absent,
+pairwise disjoint (neither equal nor nested), and outside source/tools/OS; their
+existing ancestors are checked. No hardlinked regular files admitted. The private
+manifest itself cannot lie within a writable root. No old-manifest fallback.
 Source hashes bind all eight C/header/probe/helper/test files, including the helper
 and its separate test_capture_build.py, and the source commit is40 lowercase hex.
 Hash pinning binds actual file identities. source_commit is a reviewed receipt
@@ -348,7 +351,8 @@ Hash pinning does not attest dynamically loaded tool/system dependencies.
 After compilation/linking, independently inspect expected PE imports/closure
 BEFORE a separate decision authorizes any ABI probe run or DLL load/test.
 
-Each child receives only SystemRoot, pinned PATH, and private TEMP/TMP. No inherited
+Each child receives only SystemRoot, pinned PATH, and TEMP/TMP pointing to scratch,
+NEVER output or outcome. No inherited
 CL/LINK/INCLUDE/LIB/user injection options. One tool stage at a time, stdin closed,
 no shell, only reviewed absolute executable. Two reader threads retain at most
 2MiB each, check before append, and latch over-limit/unavailable; captured prefixes
@@ -357,13 +361,41 @@ are sealed under a lock after stopping readers. Deadline90s is checked with20ms
 polls; root wait after an owned-handle kill<=2s and bounded pipe joins. No broad PID
 sweep, tree deletion, retry, extra tool stage or automatic artifact execution.
 
-Output is an exclusive new private root, allowlisted core.obj/dll/lib/exp,
-abi.obj/exe, eight bounded stage stdout/stderr streams and build.json. Observe
-<=64MiB/32 files and reject unapproved files/reparse/subdirectories. Logs/receipt
-use exclusive creation, pre-write remaining-byte check and flush/fsync. No output
-is removed or overwritten, including after failure. A successful four-stage build
-requires all six artifacts; each actual artifact hash/bytes is retained. Any held
-stage stops the sequence and does not hash possibly still-mutating artifacts.
+Output is an exclusive new flat private root, allowlisted core.obj/dll/lib/exp,
+abi.obj/exe and eight bounded stage stdout/stderr streams, NOT the outcome receipt.
+Scratch is another exclusive new root. The ONLY currently supported scratch entries
+are empty directories Microsoft, Microsoft/VSApplicationInsights, and at most one
+Microsoft/VSApplicationInsights/vstelf followed by exactly32 lowercase hexadecimal
+characters. This is the observed directory shape, NOT an opaque namespace allowlist
+or documented vendor guarantee. ANY scratch file or other entry holds the build,
+is retained/quarantined and never adopted as an artifact. No telemetry environment
+switch or global setting is changed. Future observed files need explicit review.
+
+Observe output+scratch together <=64MiB/32 regular files; diagnostic walk bounds
+<=128 entries, <=8 relative components, <=1024 characters per relative name.
+Directory bounds include unexpected directories; they cannot evade entry limits.
+The observation retains bounded private relative names/kinds/sizes, observed file
+and directory counts, and a completeness flag. Never follow links/reparse points;
+hardlinks/special files reject. Partial/unavailable observations are NOT total-byte
+proofs.20ms sampling is not a filesystem quota or zero-overshoot bound. Stream writes
+use exclusive creation and combined remaining-byte checks; no output/scratch/outcome
+is removed or overwritten, even on failure. Guard failure stops later stages; captured
+stream prefix bytes/hashes remain in the external receipt even when log writes fail.
+
+Outcome has an independent exclusive build.json reserved/opened BEFORE any tool
+launch, outside both tool-writable roots, closed to child inheritance. It is written
+ONCE at finalization (<=128KiB, flush/fsync), without revalidating rejected writable
+output as a prerequisite. Catch launch/input/guard/write/termination failures as fixed
+codes, not raw exception values. Independent outcome I/O failure is still possible:
+fixed stderr/exit1, retain partial receipt and all roots, no success or retry.
+The helper does not promise protection against a malicious tool that discovers an
+unadvertised outcome path or races path checks; independent custody is not a sandbox.
+
+Normal four-stage completion requires all six artifacts. File hashes are bounded
+before/after metadata-checked read observations, not future immutability or trusted
+executables; snapshot status is OBSERVED_NOT_DRAIN_PROVEN. Any held stage sets artifact
+observations null, recipe_completedfalse and artifact_successfalse. Even normal
+completion keeps artifact_successfalse pending independent PE/import/closure review.
 
 Important limitation: this helper kills ONLY the exact owned tool root handle on
 failure. It supplies NO compiler-descendant kill/drain or hard filesystem quota
@@ -374,10 +406,29 @@ outcomes are held and cannot start another stage or claim artifact/native succes
 build containment/context is needed if execution review requires a hard bound on
 compiler descendants; this helper cannot self-admit that stronger contract.
 
-The private `i01-build-capture-1` receipt preserves source pin, stage return code,
-measured tool wall float, held code, captured stream bytes/hashes and actual artifact
-hashes where stable. compiled_tests, abi_execution and loaded_dependency_closure
-remain NOT_RUN, runtime_authorizedfalse. Filesystem/launch/capture failure may make
-a receipt unavailable; retain output and request review, never report success or
+The private `i01-build-capture-2` receipt preserves source pin, fixed overall held
+code, bounded workspace observations, stage return code, measured tool wall float,
+captured stream bytes/hashes and artifact read observations only on normal completion.
+Source_commit remains claimed metadata; source hashes bind actual identity.
+compiled_tests, abi_execution and loaded_dependency_closure remain NOT_RUN,
+runtime_authorizedfalse. Retain output and request review, never report success or
 fabricate missing CPU/RSS/ABI values. It is not a science CPU accounting receipt,
 durable publication acknowledgment, parent finality or Linux/Windows admission.
+
+### Primary basis and negative controls
+
+Retrieved2026-10-03: [Microsoft GetTempPathW](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettemppathw)
+documents TMP then TEMP selection, no existence/access check, and preserved symlinks.
+Explicit scratch selection plus ancestry checks address this contract, NOT all vendor
+file writes or telemetry content. [Python3.12 os.stat](https://docs.python.org/3.12/library/os.html#os.stat)
+documents link count and file metadata; [exclusive open](https://docs.python.org/3.12/library/functions.html#open)
+documents x-mode existing-file rejection. Metadata comparison cannot prove no later
+writer. No primary source is claimed to guarantee the observed telemetry names.
+
+Authored controls must cover old/malformed root shape, separate/non-nested/absent
+roots, TMP/TEMP placement, exact unchanged argv and pins, observed empty telemetry
+shape versus unknown files/directories, combined file/byte and diagnostic limits,
+link/reparse/hardlink rejection, mutation detection, no overwrite/cleanup, and safe
+external receipt on unexpected output, scratch, launch/stream/log-write failure.
+Controls use supplied data/fake child handles only; actual retry and PE/ABI/DLL
+execution are separate reviewed operations, NOT promoted by these tests.
