@@ -153,6 +153,8 @@ def analytic_dipole_vector(position):
 
 def control_input(regime):
     """Actually byte-bound original authored acquisition; no provider data."""
+    if regime == "S3":
+        return instrument_input()
     rows = control_rows(regime)
     _, metadata, request = geometry_input()
     metadata["dataset_id"] = "authored-dipoles"
@@ -173,3 +175,108 @@ def control_input(regime):
     request["channel_sha256"] = channel_identity(rows)
     request["split"]["sealed_values_sha256"] = channel_identity(rows)
     return raw, metadata, request
+
+
+def authored_identity(payload, rights):
+    """Actual canonical authored bytes, not an authenticated provider receipt."""
+    identity = dict(source_sha256=digest(payload),source_verification="authored",source_receipt_sha256=None,
+                    canonical_records_sha256=digest(payload),rights=rights)
+    identity["source_receipt_sha256"] = digest({k:v for k,v in identity.items() if k != "source_receipt_sha256"})
+    return identity
+
+
+def instrument_input():
+    """Prescribed S3 calibration with an independently authored piecewise path.
+
+    Navigation knots are measured UTC+0.25s at the original geometry. The
+    original assigned coordinates are navigation at measured UTC. A preceding
+    independently authored knot supplies overlap. Truth is evaluated only after
+    the aligned geometry seal. No sensor value calibrates lag/base/heading.
+    """
+    _,meta,_ = geometry_input()
+    aligned = geometry_rows()
+    rows = []
+    navigation = []
+    for start in range(0,len(aligned),33):
+        line = aligned[start:start+33]
+        p,q = line[:2]
+        preceding = {k:2*p[k]-q[k] for k in ("easting_m","northing_m","upward_m")}
+        nav_start = datetime.fromisoformat(p["utc"].replace("Z","+00:00"))-timedelta(seconds=.25)
+        navigation.append(dict(utc=nav_start.isoformat(timespec="milliseconds").replace("+00:00","Z"),
+                               line_id=p["line_id"],**preceding))
+        previous = preceding
+        for known in line:
+            date = datetime.fromisoformat(known["utc"].replace("Z","+00:00"))
+            nav = dict(utc=(date+timedelta(seconds=.25)).isoformat(timespec="milliseconds").replace("+00:00","Z"),
+                       line_id=known["line_id"],**{k:known[k] for k in ("easting_m","northing_m","upward_m")})
+            navigation.append(nav)
+            known["heading_deg"] = math.degrees(math.atan2(known["easting_m"]-previous["easting_m"],
+                                                          known["northing_m"]-previous["northing_m"])) % 360
+            row = dict(known)
+            for key in ("easting_m","northing_m","upward_m"):
+                row[key] = .5*(known[key]+previous[key])
+            row["clearance_m"] = row["upward_m"]
+            rows.append(row)
+            previous = known
+    request = geometry_request(aligned)
+    from magnetic_line_validation import make_partitions
+    make_partitions(aligned,request)  # Before any magnetic truth.
+    start_date = datetime(2001,1,1,tzinfo=timezone.utc)
+    dec,inc = math.radians(12),math.radians(55)
+    direction = (math.cos(inc)*math.sin(dec),math.cos(inc)*math.cos(dec),-math.sin(inc))
+    base = []
+    for row,known in zip(rows,aligned):
+        t = (datetime.fromisoformat(row["utc"].replace("Z","+00:00"))-start_date).total_seconds()
+        perturbation = 3*math.sin(2*math.pi*t/120)
+        heading = math.radians(row["heading_deg"])
+        vector = analytic_dipole_vector(tuple(known[k] for k in ("easting_m","northing_m","upward_m")))
+        truth = math.fsum(a*b for a,b in zip(direction,vector))
+        row["magnetic_nT"] = 48000+truth+perturbation+2*math.cos(heading)-math.sin(heading)
+        base.append(dict(utc=row["utc"],intensity_nT=48000+perturbation))
+    meta["dataset_id"] = "authored-instrument"
+    meta["revision"] = "instrument-1"
+    meta["quantity"]["channel_name"] = "authored-instrument-total"
+    meta["acquisition"]["sensor_dictionary"][0]["description"] = "Authored scalar total-intensity control, not field"
+    meta["authored_control"].update(generator_revision="instrument-1",regime="S3",
+        truth_definition="Independent aligned dipoles; total48000nT,lag+0.25s,base3sin(2pi*t/120),heading2cos(h)-sin(h)")
+    meta["channel_state"] = [dict(operation=op,status="not_applied",parent_channel_sha256=None,output_channel_sha256=None,
+        evidence_sha256=None,parameters=None,units=None,sign="unknown",applied_by="user")
+        for op in ("lag","diurnal","heading","main_field")]
+    clock = dict(basis="UTC",precision_s=.5,synchronization_evidence_sha256=digest(
+        dict(measurement_basis="UTC",auxiliary_basis="UTC",offset_s=0.,definition="authored shared synthetic2001 clock")),
+        synchronization_error_s=None)
+    nav = dict(schema="magnetic-navigation/1",identity=authored_identity(navigation,meta["rights"]),clock=clock,
+               coordinates=meta["coordinates"],records=navigation)
+    base_series = dict(schema="magnetic-base/1",identity=authored_identity(base,meta["rights"]),clock=clock,
+        station_id="authored-base",quantity="scalar_total_intensity",unit="nT",records=base)
+    coefficients = dict(a0_nT=0.,ac_nT=2.,as_nT=-1.,convention="clockwise_from_north_degrees")
+    calibration = dict(identity=authored_identity(coefficients,meta["rights"]),partition="independent_calibration",
+        calibration_row_ids=[],coefficient_receipt_sha256=digest(coefficients))
+    coordinate_hash = digest(dict(datum=meta["coordinates"]["vertical_datum"],
+        rows=[[r["row_id"],r["easting_m"],r["northing_m"],r["upward_m"]] for r in aligned]))
+    dates = [2001+(datetime.fromisoformat(r["utc"].replace("Z","+00:00"))-start_date).total_seconds()/(365*86400)
+             for r in aligned]
+    reference = dict(kind="authored_constant",model_generation="authored_constant",coefficients_sha256=None,
+        evaluator=dict(name="authored_constant",revision="instrument-1",source_sha256=digest(dict(F_nT=48000.,D_deg=12.,I_deg=55.)),
+            calculation="main_field",valid_start_decimal_year=2000.,valid_end_decimal_year=2002.,rounding_tolerance_nT=1e-8,
+            input_coordinates_sha256=coordinate_hash,source_rights_evidence_sha256=digest(meta["rights"])),
+        epoch=dict(date_mode="row_utc",date_decimal_year=None,row_date_decimal_year=dates,
+            survey_epoch_evidence_sha256=None,row_utc_sha256=digest([r["utc"] for r in aligned])),
+        coordinates_sha256=coordinate_hash,input_height_definition="authored engineering zero",input_height_unit="m",
+        datum_transform_evidence_sha256=None,original_basis="ENU",output_basis="ENU",
+        vector_east_nT=[48000*direction[0]]*len(rows),vector_north_nT=[48000*direction[1]]*len(rows),
+        vector_up_nT=[48000*direction[2]]*len(rows),scalar_F_nT=[48000.]*len(rows),direction_tolerance_deg=.5,receipt_sha256="")
+    reference["receipt_sha256"] = digest({k:v for k,v in reference.items() if k != "receipt_sha256"})
+    raw = csv_bytes(rows)
+    meta["original"].update(csv_sha256=sha256(raw).hexdigest(),csv_bytes=len(raw))
+    request["dataset_version_sha256"] = dataset_identity(sha256(raw).hexdigest(),digest(meta))
+    request["channel_sha256"] = request["split"]["sealed_values_sha256"] = channel_identity(rows)
+    parameters = [dict(tau_s=.25,definition="position_time = measurement_time + tau_s",navigation=nav,
+                       max_bracket_gap_s=.5,interpolation="linear_no_extrapolation"),
+        dict(base=base_series,base_reference_nT=48000.,valid_intervals=[dict(start=rows[0]["utc"],end=rows[-1]["utc"])],
+             max_bracket_gap_s=.5,interpolation="linear_no_extrapolation",sign="subtract_base_minus_reference"),
+        dict(**coefficients,calibration=calibration,sign="subtract_model"),
+        dict(evaluated_reference=reference,sign="subtract_F")]
+    request["operations"] = [dict(operation=op,input_channel_sha256=request["channel_sha256"],parameters=params)
+                            for op,params in zip(("lag","diurnal","heading","main_field"),parameters)]
+    return raw,meta,request

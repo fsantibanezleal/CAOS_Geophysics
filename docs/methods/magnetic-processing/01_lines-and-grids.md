@@ -209,6 +209,51 @@ components cannot acquire relative zeros from gridding. Solve by rank-checked
 QR, not normal-equation inversion. A line absent from its calibration graph
 remains uncalibrated, including a held-out line.
 
+## A reproducible instrument-correction exercise
+
+The authored S3 acquisition supplies synchronized navigation and base samples,
+independent heading coefficients and an engineering-datum constant reference.
+It is not a field survey or an evaluated IGRF model. For measurement UTC t,
+navigation supplies the position at t+0.25s. The recorded position corresponds
+to navigation at t; the scalar measurement itself is never time-shifted.
+Exact UTC differences are computed in nanoseconds before interpolation, avoiding
+the loss of subsecond information from a large absolute floating-point epoch.
+Outside a same-line bracket, no endpoint fill or extrapolation is permitted.
+
+The independently injected total-intensity control is
+
+$$
+T(t)=48000+d(\mathbf x(t+0.25))
+ +3\sin(2\pi t/120)+2\cos h-\sin h\quad\mathrm{nT}.
+$$
+
+Here h is clockwise-from-north heading, converted from degrees to radians;
+d is the direct dipole weak projection, not the nonlinear vector-norm anomaly.
+Subtract the base perturbation b(t)-48000, the heading model
+2cos(h)-sin(h), then the independently supplied constant reference48000.
+The result is d at the aligned position. Subtracting the absolute base would
+remove the main field twice. A heading term of+2nT at north and-1nT at east
+provides a simple sign/degree exercise.
+[USGS acquisition-correction description](https://pubs.usgs.gov/of/2002/0098/APPENDIX.HTM),
+[Harmonica scalar projection](https://www.fatiando.org/harmonica/v0.7.0/api/generated/harmonica.total_field_anomaly.html).
+
+For actual user files, the existing bounded loader can supply the three exact
+byte strings to `apply_corrections(raw, metadata, request)`. The returned original
+rows and separate derivative channels bind actual parent/output identities,
+parameters, signs and masks. Applied or unknown corrections refuse replay.
+This internal correction result is not the complete fitted/exported M03 Result.
+The implemented authored-auxiliary lane verifies its embedded content and
+clock definition; it does not authenticate provider sources. Field auxiliary
+review and evaluated IGRF remain separate eligibility requirements.
+
+Leveling must be calibrated again using each fold's training brackets. A
+sealed line absent from that graph stays null/uncalibrated unless a separately
+verified independent offset and the same tie gauge are supplied. Its offset
+applies to the immediate derivative channel, not the original raw total.
+Exercise: apply an independent heading offset3nT before S2 leveling. Why must
+the final plane be7+0.002e-0.003n, rather than silently return10+0.002e-0.003n?
+Explain why changing held-out observations cannot establish their line offset.
+
 ## Harmonic sources and the exact weighted objective
 
 The physical dipole control uses

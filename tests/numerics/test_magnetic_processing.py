@@ -456,3 +456,196 @@ def test_leveling_does_not_calibrate_sealed_or_disconnected_lines():
     assert len(result["components"]) == 2
     assert result["common_relative_gauge"] is False
     assert all(component["absolute_datum"] is False for component in result["components"])
+
+
+def test_s3_full_instrument_reference_dag_and_original_identity():
+    c, g = modules()
+    p = processing()
+    raw, meta, req = g.control_input("S3")
+    original = c.parse_csv(raw)["rows"]
+    run = p.apply_corrections(raw, c.canonical_bytes(meta), c.canonical_bytes(req))
+    assert run["original_rows"] == original
+    assert [s["operation"] for s in run["state"] if s["applied_by"] == "processor"] == [
+        "lag","diurnal","heading","main_field"]
+    assert len(run["channels"]) == 5
+    assert run["kind"] == "scalar_total_field_anomaly"
+    assert all(not flags for flags in run["masks"])
+    for before, after, known in zip(original,run["rows"],g.geometry_rows()):
+        for key in ("easting_m","northing_m","upward_m"):
+            assert after[key] == pytest.approx(known[key], abs=1e-8)
+        vector = g.analytic_dipole_vector((known["easting_m"],known["northing_m"],known["upward_m"]))
+        dec,inc = math.radians(12),math.radians(55)
+        true = sum(a*b for a,b in zip(vector,(math.cos(inc)*math.sin(dec),math.cos(inc)*math.cos(dec),-math.sin(inc))))
+        assert after["magnetic_nT"] == pytest.approx(true, abs=1e-6)
+        assert before["magnetic_nT"] != after["magnetic_nT"]
+    assert run["state"][-1]["output_channel_sha256"] == run["output_sha256"]
+    assert run["channels"][-1]["parent_sha256"] == run["state"][-1]["parent_channel_sha256"]
+    assert run == p.apply_corrections(raw, c.canonical_bytes(meta), c.canonical_bytes(req))
+
+
+def test_correction_state_and_no_double_application():
+    c, g = modules()
+    p = processing()
+    raw, meta, req = g.control_input("S3")
+    for status in ("applied","unknown"):
+        bad = deepcopy(meta)
+        bad["channel_state"][2]["status"] = status
+        other = deepcopy(req)
+        other["dataset_version_sha256"] = c.dataset_identity(bad["original"]["csv_sha256"],
+                                                           c.digest(bad))
+        with pytest.raises(c.MagneticContractError):
+            p.apply_corrections(raw, c.canonical_bytes(bad), c.canonical_bytes(other))
+    bad = deepcopy(req)
+    bad["operations"][0]["parameters"]["navigation"]["identity"]["source_verification"] = "user_claimed"
+    bad["operations"][0]["parameters"]["navigation"]["identity"]["source_receipt_sha256"] = None
+    with pytest.raises(c.MagneticContractError):
+        p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(bad))
+    bad = deepcopy(req)
+    ref = bad["operations"][-1]["parameters"]["evaluated_reference"]
+    ref["coordinates_sha256"] = ref["evaluator"]["input_coordinates_sha256"] = "0"*64
+    ref["receipt_sha256"] = c.digest({k:v for k,v in ref.items() if k != "receipt_sha256"})
+    with pytest.raises(c.MagneticContractError):
+        p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(bad))
+
+
+def test_lag_dag_no_extrapolation_and_clock_or_rights_guess():
+    c, g = modules()
+    p = processing()
+    raw, meta, req = g.control_input("S3")
+    req["operations"] = req["operations"][:1]
+    req["operations"][0]["parameters"]["tau_s"] = 1.
+    run = p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(req))
+    assert any("unsupported_time" in flags for flags in run["masks"])
+    assert all(row["magnetic_nT"] is None for row,flags in zip(run["rows"],run["masks"]) if flags)
+    for name in ("private_processing","decision"):
+        bad = deepcopy(meta)
+        bad["rights"][name] = "unresolved"
+        other = deepcopy(req)
+        other["dataset_version_sha256"] = c.dataset_identity(bad["original"]["csv_sha256"],c.digest(bad))
+        with pytest.raises(c.MagneticContractError):
+            p.apply_corrections(raw,c.canonical_bytes(bad),c.canonical_bytes(other))
+
+
+def leveling_request(g, c, raw, meta, req):
+    """Independent authored offsets, not inferred from heldout magnetic rows."""
+    meta = deepcopy(meta)
+    req = deepcopy(req)
+    meta["channel_state"].append(dict(operation="leveling",status="not_applied",parent_channel_sha256=None,
+        output_channel_sha256=None,evidence_sha256=None,parameters=None,units=None,sign="unknown",applied_by="user"))
+    payload = dict(values=[dict(line_id=f"F{i:02d}",offset_nT=float(2*(i-3)),uncertainty_nT=None) for i in range(8)]+
+        [dict(line_id=f"T{i:02d}",offset_nT=0.,uncertainty_nT=None) for i in range(3)],reference_gauge_id="T00")
+    calibration = dict(identity=g.authored_identity(payload,meta["rights"]),partition="independent_calibration",
+        calibration_row_ids=[],coefficient_receipt_sha256=c.digest(payload))
+    params = dict(crossover_policy=req["geometry_policy"]["crossover"],weights_policy="unweighted",
+        gauge_policy="lexicographic_first_tie_per_component",scope="training_only",
+        heldout_calibration=dict(**payload,calibration=calibration))
+    req["operations"].append(dict(operation="leveling",input_channel_sha256=req["channel_sha256"],parameters=params))
+    req["dataset_version_sha256"] = c.dataset_identity(meta["original"]["csv_sha256"],c.digest(meta))
+    return raw,meta,req
+
+
+def test_leveling_dag_independent_heldout_calibration_and_preserved_parent():
+    c,g = modules()
+    p,v = processing(),validation()
+    raw,meta,req = leveling_request(g,c,*g.control_input("S2"))
+    rows = c.parse_csv(raw)["rows"]
+    manifest = v.make_partitions(rows,req)
+    run = p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(req),manifest["outer_training_ids"])
+    assert run["original_rows"] == rows
+    for row in run["rows"]:
+        assert row["magnetic_nT"] == pytest.approx(10+.002*row["easting_m"]-.003*row["northing_m"],abs=1e-6)
+    assert not any(run["masks"])
+    # This actual point correction precedes leveling. Independent calibration
+    # must apply to the immediate derivative, not silently restore raw values.
+    meta["channel_state"].insert(0,dict(operation="heading",status="not_applied",parent_channel_sha256=None,
+        output_channel_sha256=None,evidence_sha256=None,parameters=None,units=None,sign="unknown",applied_by="user"))
+    for row in rows:
+        row["heading_deg"] = 0.
+    raw = g.csv_bytes(rows)
+    coefficients = dict(a0_nT=3.,ac_nT=0.,as_nT=0.,convention="clockwise_from_north_degrees")
+    calibration = dict(identity=g.authored_identity(coefficients,meta["rights"]),partition="independent_calibration",
+        calibration_row_ids=[],coefficient_receipt_sha256=c.digest(coefficients))
+    req["operations"].insert(0,dict(operation="heading",input_channel_sha256="",parameters=dict(
+        **coefficients,calibration=calibration,sign="subtract_model")))
+    from hashlib import sha256
+    meta["original"].update(csv_sha256=sha256(raw).hexdigest(),csv_bytes=len(raw))
+    req["dataset_version_sha256"] = c.dataset_identity(meta["original"]["csv_sha256"],c.digest(meta))
+    req["channel_sha256"] = req["split"]["sealed_values_sha256"] = c.channel_identity(rows)
+    for op in req["operations"]:
+        op["input_channel_sha256"] = req["channel_sha256"]
+    from magnetic_line_validation import geometry_manifest
+    req["split"]["geometry_manifest_sha256"] = c.digest(geometry_manifest(rows))
+    manifest = v.make_partitions(rows,req)
+    run = p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(req),manifest["outer_training_ids"])
+    for row in run["rows"]:
+        assert row["magnetic_nT"] == pytest.approx(7+.002*row["easting_m"]-.003*row["northing_m"],abs=1e-6)
+    assert run["channels"][-1]["parent_sha256"] == run["state"][-2]["output_channel_sha256"]
+
+
+def test_leveling_dag_refuses_unverified_or_sealed_calibration():
+    c,g = modules()
+    p,v = processing(),validation()
+    raw,meta,req = leveling_request(g,c,*g.control_input("S2"))
+    manifest = v.make_partitions(c.parse_csv(raw)["rows"],req)
+    for mutation in ("stale","gauge","sealed"):
+        bad = deepcopy(req)
+        supplied = bad["operations"][-1]["parameters"]["heldout_calibration"]
+        if mutation == "stale":
+            supplied["values"][4]["offset_nT"] += 1.
+        elif mutation == "gauge":
+            supplied["reference_gauge_id"] = "T01"
+            payload = {k:supplied[k] for k in ("values","reference_gauge_id")}
+            supplied["calibration"]["identity"] = g.authored_identity(payload,meta["rights"])
+            supplied["calibration"]["coefficient_receipt_sha256"] = c.digest(payload)
+        else:
+            supplied["calibration"]["calibration_row_ids"] = ["F04.000"]
+        with pytest.raises(c.MagneticContractError):
+            p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(bad),manifest["outer_training_ids"])
+    bad = deepcopy(req)
+    bad["operations"][-1]["parameters"]["heldout_calibration"] = None
+    run = p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(bad),manifest["outer_training_ids"])
+    assert all(r["magnetic_nT"] is None and "uncalibrated_line" in flags
+               for r,flags in zip(run["rows"],run["masks"]) if r["line_id"]=="F04")
+
+
+def test_reference_dag_authored_rereference_and_already_target_identity():
+    c,g = modules()
+    p = processing()
+    raw,meta,req = g.control_input("S3")
+    run = p.apply_corrections(raw,c.canonical_bytes(meta),c.canonical_bytes(req))
+    rows = run["rows"]
+    old = run["reference"]
+    meta["quantity"]["kind"] = "scalar_total_field_anomaly"
+    meta["reference"],meta["channel_state"] = old,run["state"]
+    new = deepcopy(old)
+    for key in ("vector_east_nT","vector_north_nT","vector_up_nT","scalar_F_nT"):
+        new[key] = [v*48010/48000 for v in old[key]]
+    new["evaluator"]["revision"] = "instrument-2"
+    new["receipt_sha256"] = c.digest({k:v for k,v in new.items() if k!="receipt_sha256"})
+    parameters = dict(old_reference=old,new_reference=new,input_reference_receipt_sha256=old["receipt_sha256"],
+        old_applied_state_evidence_sha256=run["state"][-1]["evidence_sha256"],sign="add_old_F_subtract_new_F")
+    result,reference = p.apply_reference(rows,meta,parameters,"rereference")
+    assert reference == new
+    assert [r["magnetic_nT"] for r in result] == pytest.approx([r["magnetic_nT"]-10 for r in rows],abs=1e-6)
+    same = deepcopy(old)
+    same["evaluator"]["revision"] = "same-field-distinct-record"
+    same["receipt_sha256"] = c.digest({k:v for k,v in same.items() if k!="receipt_sha256"})
+    parameters["new_reference"] = same
+    with pytest.raises(c.MagneticContractError):
+        p.apply_reference(rows,meta,parameters,"rereference")
+    parameters["new_reference"] = new
+    parameters["old_applied_state_evidence_sha256"] = "0"*64
+    with pytest.raises(c.MagneticContractError):
+        p.apply_reference(rows,meta,parameters,"rereference")
+
+
+def test_utc_bracket_nanoseconds_signed_lag_and_exact_closed_gap():
+    p = processing()
+    rows = [dict(utc="2001-01-01T00:00:00.000000001Z",x=0.),
+            dict(utc="2001-01-01T00:00:00.500000001Z",x=10.)]
+    assert p._bracket(rows,"2001-01-01T00:00:00.250000001Z",.5,("x",)) == [5.]
+    assert p._bracket(rows,"2001-01-01T00:00:00.500000001Z",.5,("x",),-.25) == [5.]
+    assert p._bracket(rows,"2001-01-01T00:00:00.000000001Z",.5,("x",),.25) == [5.]
+    assert p._bracket(rows,"2001-01-01T00:00:00Z",.5,("x",)) is None
+    rows[-1]["utc"] = "2001-01-01T00:00:00.500000002Z"
+    assert p._bracket(rows,"2001-01-01T00:00:00.250000001Z",.5,("x",)) is None
