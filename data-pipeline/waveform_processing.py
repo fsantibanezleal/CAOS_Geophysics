@@ -105,6 +105,75 @@ def _read_inventory(raw):
     return inventory
 
 
+def _native_response_matches(response, selected):
+    """Do not treat the reader's automatic unit propagation as provider metadata."""
+    stages = selected["response"]["stages"]
+    native = response.response_stages
+    ledger = selected["response_unit_ledger"]
+    expected_types = {
+        "PolesZeros": "PolesZerosResponseStage",
+        "Coefficients": "CoefficientsTypeResponseStage",
+        "FIR": "FIRResponseStage",
+        "gain-only": "ResponseStage",
+    }
+    if len(native) != len(stages):
+        return False
+    sensitivity = response.instrument_sensitivity
+    declared = selected["response"]["sensitivity"]
+    if sensitivity is None or any(
+        getattr(sensitivity, attribute) != declared.get(key)
+        for attribute, key in (
+            ("value", "Value"),
+            ("frequency", "Frequency"),
+            ("input_units", "InputUnits"),
+            ("output_units", "OutputUnits"),
+        )
+    ):
+        return False
+    for stage, item, units in zip(stages, native, ledger):
+        if (
+            type(item).__name__ != expected_types.get(stage["kind"])
+            or item.stage_sequence_number != stage["number"]
+            or item.stage_gain != stage["gain"].get("Value")
+            or item.stage_gain_frequency != stage["gain"].get("Frequency")
+            or item.input_units != units["effective_input_unit"]
+            or item.output_units != units["effective_output_unit"]
+        ):
+            return False
+        if any(
+            getattr(item, attribute) != stage["decimation"].get(key)
+            for attribute, key in (
+                ("decimation_input_sample_rate", "InputSampleRate"),
+                ("decimation_factor", "Factor"),
+                ("decimation_offset", "Offset"),
+                ("decimation_delay", "Delay"),
+                ("decimation_correction", "Correction"),
+            )
+        ):
+            return False
+        values = stage["values"]
+        if stage["kind"] == "PolesZeros":
+            if (
+                item.pz_transfer_function_type != values.get("PzTransferFunctionType")
+                or item.normalization_factor != values.get("NormalizationFactor")
+                or item.normalization_frequency != values.get("NormalizationFrequency")
+                or [(p.real, p.imag) for p in item.poles] != stage["poles"]
+                or [(p.real, p.imag) for p in item.zeros] != stage["zeros"]
+            ):
+                return False
+        elif stage["kind"] == "Coefficients":
+            if (
+                item.cf_transfer_function_type != values.get("CfTransferFunctionType")
+                or list(item.numerator) != stage["numerator"]
+                or list(item.denominator) != stage["denominator"]
+            ):
+                return False
+        elif stage["kind"] == "FIR":
+            if item.symmetry != values.get("Symmetry") or list(item.coefficients) != stage["fir"]:
+                return False
+    return True
+
+
 def _fft_size(n):
     # Source-pinned preallocation equivalent; checked against actual _npts2nfft.
     k = 2 * (n + (n & 1))
@@ -455,6 +524,11 @@ def process_waveform_record(raw_mseed, raw_stationxml, request):
                 if selected["response"]
                 else [],
             )
+            if selected.get("response_unit_ledger") and (
+                any(item["derivation"] != "provider-declared" for item in selected["response_unit_ledger"])
+                or any(stage["gain"].get("Frequency") == 0 for stage in selected["response"]["stages"])
+            ):
+                channel["response_unit_ledger"] = selected["response_unit_ledger"]
         if selected and not xml_reasons:
             metadata["processing"]["response_work_units"] += response_work(selected["response"]["stages"], k)
         if metadata["processing"]["response_work_units"] > 20000000:
@@ -551,6 +625,8 @@ def process_waveform_record(raw_mseed, raw_stationxml, request):
         ]
         if len(found) != 1 or found[0].response is None:
             fail("waveform_decode")
+        if not _native_response_matches(found[0].response, selected):
+            return _qc_finalize(metadata, arrays, units, ["response_chain_inconsistent"], warnings_all)
         responses.append(found[0].response)
     metadata["candidates"] = []
     for plan, response in zip(plans, responses):

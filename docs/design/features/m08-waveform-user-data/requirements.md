@@ -1,6 +1,6 @@
 # EARS requirements and future named gates
 
-Status: FIXED_REQUIREMENTS / PARTIAL_LOCAL_IMPLEMENTATION. The original proposed all-NOT_RUN/file-absent status is historical: MAIN approved the initial ordinary modules and they now exist. Requirements and thresholds below are unchanged. Current executed coverage and explicit missing CLI/resource/field gates are in [tasks](tasks.md) and the [local review packet](continuation-review-packet.md). A documentation/source-invariance check is not a numerical or admission PASS. These requirements implement one local subvertical, not whole #42/#50 acceptance.
+Status: FIXED_REQUIREMENTS / PARTIAL_LOCAL_IMPLEMENTATION. The original proposed all-NOT_RUN/file-absent status is historical; ordinary modules now exist. Requirements and thresholds below are unchanged. Current executed coverage and explicit missing CLI/resource/field gates are in [tasks](tasks.md) and the [local review packet](continuation-review-packet.md). A documentation/source-invariance check is not a numerical or admission PASS. These requirements implement one local subvertical, not whole #42/#50 acceptance.
 
 R-W08-001 THE local boundary SHALL use exactly supplied immutable MiniSEED/StationXML bytes and independently measured byte counts/SHA, keeping request/scientific/binary/source-declaration hash dialects distinct. Gate: `tests/data/test_waveform_input.py::test_exact_bytes_hash_domains_and_immutability`.
 

@@ -14,7 +14,7 @@ The [SCEDC cloud documentation](https://scedc.caltech.edu/data/cloud.html) expli
 
 These published paths are not proof of today's object availability, length, encoding, calibration or scientific eligibility. SCEDC's2020 Ridgecrest DAS hourly SEG-Y is a different dataset and excluded. No marine/FWI source or full-event station set is touched.
 
-The [SCEDC-managed registry licence](https://registry.opendata.aws/southern-california-earthquakes/) specifies non-exclusive, royalty-free, non-transferable worldwide use/reproduction/public display of public SCSN data. Retain its exact retrieved document hash and attribution. The [citation policy](https://scedc.caltech.edu/about/citation.html) requires SCEDC DOI `10.7909/C3WD3xH1`, CI DOI `10.7914/SN/CI`, and other network-specific citations where applicable. This plan admits only an actual CI object within that scope, after Main's per-object rights review. Other networks, extra research datasets, third-party mirrors or private response files do not inherit those permissions. The code's licence is irrelevant to field-data rights.
+The [SCEDC-managed registry licence](https://registry.opendata.aws/southern-california-earthquakes/) specifies non-exclusive, royalty-free, non-transferable worldwide use/reproduction/public display of public SCSN data. Retain its exact retrieved document hash and attribution. The [citation policy](https://scedc.caltech.edu/about/citation.html) requires SCEDC DOI `10.7909/C3WD3xH1`, CI DOI `10.7914/SN/CI`, and other network-specific citations where applicable. This plan admits only an actual CI object within that scope, after independent review's per-object rights review. Other networks, extra research datasets, third-party mirrors or private response files do not inherit those permissions. The code's licence is irrelevant to field-data rights.
 
 Rights verdicts are separate: local processing permission, raw redistribution, derivative publication. Unknown/forbidden local permission yields `rights_ineligible`; unclear publication permits no public original/array commit. Retain URL/retrieval failure/rights refusal in the case inventory. Do not silently substitute a different station/event or invoke another dataset's licence to manufacture a positive case.
 
@@ -22,7 +22,7 @@ Rights verdicts are separate: local processing permission, raw redistribution, d
 
 Initial candidate is **CI.GSC, empty location, HNZ**, one instrument-native channel. This is a predeclared candidate inspired by SCEDC's published channel example, not an assertion that its2019 data/response exists or passes. No switch to a visually better trace. A separately reviewed amendment can add more candidates, but the failed initial candidate remains in the denominator/inventory.
 
-Before acquisition, seal this station/window and numerical profile without reading picks or scoring waveform quality. An operator, separately authorized by Main, makes one serial acquisition at a time to approved HTTPS SCEDC/AWS endpoints, with bounded streaming reads and fresh explicit private destination files. Calculation helper and scientific tests never fetch providers. No STP client installation, public origin, provider write or whole-day/event bulk download is needed.
+Before acquisition, seal this station/window and numerical profile without reading picks or scoring waveform quality. An operator, separately authorized by independent review, makes one serial acquisition at a time to approved HTTPS SCEDC/AWS endpoints, with bounded streaming reads and fresh explicit private destination files. Calculation helper and scientific tests never fetch providers. No STP client installation, public origin, provider write or whole-day/event bulk download is needed.
 
 Use [SCEDC station](https://service.scedc.caltech.edu/fdsnws/station/1/), [availability](https://service.scedc.caltech.edu/fdsnws/availability/1/) and [dataselect](https://service.scedc.caltech.edu/fdsnws/dataselect/1/) semantics:
 
@@ -72,7 +72,7 @@ Run the separately sealed evaluator exactly as [algorithms](algorithms.md) secti
 
 No positive status is promised for this real candidate. Actual alternatives: `not_available`, `rights_ineligible`, `source_over_limit`, `reference_unsupported`, parser `rejected`, retained `qc_only`, or conditional `computed` with possibly zero onsets and `not_evaluable` reference status. Record the observed outcome with original hashes. A successful synthetic control does not close the original field case gate.
 
-Real case gate: `tests/data/test_waveform_ridgecrest.py::test_original_bytes_response_epoch_and_retained_outcome`. Independent original-byte replay must match source identities, exact NSLC/time/response stage selection, raw decoded samples and QC verdict; numerical parity tolerances are predeclared separately. Missing private actual files yields explicit unresolved/skip and blocks real-case acceptance, not permission to create fake live fixtures. Resource gates are authored controls, not field observations.
+Real format gate: `tests/data/test_waveform_ridgecrest.py::test_original_rejection_seal_and_current_format_admission_only`; actual original native physical processing remains a distinct open gate. Independent original-byte replay must match source identities, exact NSLC/time/response stage selection, raw decoded samples and QC verdict; numerical parity tolerances are predeclared separately. Missing private actual files yields explicit unresolved/skip and blocks real-case acceptance, not permission to create fake live fixtures. Resource gates are authored controls, not field observations.
 
 Negative case controls use new derived copies labelled `authored_negative_from_original`: remove an epoch, alter a gain, change NSLC, insert a gap or clip values. Each carries original parent hash and exact modification; none retains the original raw hash or is called an observed provider failure. The original outcome remains immutable. No actual field bytes, negative derivatives or private QA outputs are committed without explicit rights/scope approval.
 
@@ -85,7 +85,7 @@ Negative case controls use new derived copies labelled `authored_negative_from_o
 | MiniSEED/StationXML/phase measured bytes and SHA | null |
 | Actual rate/response native quantity/epoch | null |
 | Actual local/runtime/resource receipts | null |
-| Raw publication rights approval | pending per-object Main review |
+| Raw publication rights approval | pending per-object independent review review |
 | Field truth/calibration sigma | null |
 
-The only measured provider-related bodies currently retained as hashes are research documents in [primary retrieval metadata](evidence/primary-retrieval.json). They cannot fill any scientific source field above.
+The table above is the historical pre-acquisition plan, not current execution state. Actual source/failure identities remain in immutable public acquisition/terminal/phase receipts; current representation semantics are separate. Operational retrieval/diagnostic receipts are private and cannot substitute for scientific source bytes. See [current tasks](tasks.md).

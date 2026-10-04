@@ -1,8 +1,8 @@
 # M08 actual local waveform processing sub-SDD
 
-Status: PROPOSED / FULL_MAIN_APPROVAL_REQUIRED. Research is persisted at `851bc581ee46bb7f0576c739525c9a5e6f338215`. This packet designs an ordinary local calculation on user-owned MiniSEED and StationXML, not an API boundary, online activation or release. No proposed source/test/fixture/engine has been written or executed.
+Status: ordinary local implementation / native and field gates open. This packet defines the local calculation, not online activation or release.
 
-Read in order: [research](research.md), [contracts](contracts.md), [algorithms](algorithms.md), [requirements](requirements.md), [validation](validation-plan.md), [real case plan](ridgecrest-case.md), [tasks](tasks.md). Each requirement has a future named gate. All such gates are NOT_RUN, including the product SDD's literal M08 numerical gate.
+Read in order: [research](research.md), [contracts](contracts.md), [algorithms](algorithms.md), [requirements](requirements.md), [validation](validation-plan.md), [real case plan](ridgecrest-case.md), [tasks](tasks.md). Each requirement has a future named gate. Ordinary tests exist; resource/field/full-method gates remain separate. See tasks for current scope.
 
 ## 1. Scientific question and complete local result
 
@@ -61,4 +61,4 @@ Excluded: MiniSEED3, full SEED, floating sample encodings, arbitrary stations/ar
 
 ## 6. Approval and evidence sequence
 
-Main reads this entire packet and resolves algorithm/limits/engine/case-rights choices before any code/test/env change. Then: authored test-first gates; new ordinary parser and real scientific engine integration; independent numerical oracles/negative controls; actual user-data case with rights and exact bytes; cold resource/crash/cancel controls; independent source-pinned repeat; scoped local-unit handoff. Every absent engine, retained case failure and skipped gate is disclosed. Full #42/#50 method completion, API/UI linkage, browser QA and host release remain separate, unfulfilled gates.
+Sequence: authored test-first gates; ordinary parser and real engine integration; independent numerical controls; unchanged original case and rights; separately reviewed cold resource/crash/cancel controls; independent pinned review. Missing engines, retained failures and skipped gates remain disclosed. API/UI/browser/host release is separate.

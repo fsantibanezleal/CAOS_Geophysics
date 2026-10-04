@@ -316,7 +316,7 @@ def test_xml_bounds_duplicates_and_declared_encoding(monkeypatch):
     monkeypatch.setattr(processing, "_read_inventory", lambda *a: calls.append(a))
     good = inventory()
     variants = [
-        good.replace(b'encoding="UTF-8"', b'encoding="ISO-8859-1"'),
+        good.replace(b'encoding="UTF-8"', b'encoding="ISO-8859-15"'),
         good.replace(b"<SampleRate>100</SampleRate>", b"<SampleRate>100</SampleRate>" * 2),
         good.replace(b"<Source>authored control</Source>", b"<Source>" + b"x" * 8193 + b"</Source>"),
         good.replace(

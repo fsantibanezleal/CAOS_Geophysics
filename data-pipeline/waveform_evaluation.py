@@ -71,6 +71,71 @@ class SealedWaveform:
     calculation_sha256: str
 
 
+def _unit_ledger(channel):
+    if "response_unit_ledger" not in channel:
+        return
+    ledger = channel["response_unit_ledger"]
+    numbers, originals = channel.get("response_stage_numbers"), channel.get("original_unit_literals")
+    if (
+        type(ledger) is not list
+        or not 1 <= len(ledger) <= 32
+        or type(numbers) is not list
+        or type(originals) is not list
+        or len(ledger) != len(numbers)
+        or len(ledger) != len(originals)
+        or any(type(o) is not dict or set(o) - {"InputUnits", "OutputUnits"} for o in originals)
+        or any(type(n) is not int or not 1 <= n <= 32 for n in numbers)
+    ):
+        fail("waveform_contract")
+    inferred = 0
+    for i, item in enumerate(ledger):
+        keys(
+            item,
+            "stage_number original_input_unit original_output_unit effective_input_unit effective_output_unit derivation neighbour_stage_numbers",
+        )
+        if (
+            type(item["stage_number"]) is not int
+            or type(numbers[i]) is not int
+            or item["stage_number"] != numbers[i]
+            or not 1 <= numbers[i] <= 32
+            or type(originals[i]) is not dict
+            or set(originals[i]) - {"InputUnits", "OutputUnits"}
+            or type(item["neighbour_stage_numbers"]) is not list
+            or any(type(n) is not int for n in item["neighbour_stage_numbers"])
+        ):
+            fail("waveform_contract")
+        for suffix, literal in (("input_unit", "InputUnits"), ("output_unit", "OutputUnits")):
+            if item["original_" + suffix] != originals[i].get(literal):
+                fail("waveform_contract")
+            for prefix in ("original_", "effective_"):
+                value = item[prefix + suffix]
+                if value is not None and (type(value) is not str or not 0 < len(value) <= 128):
+                    fail("waveform_contract")
+        derivation = item["derivation"]
+        if derivation in ("provider-declared", "unresolved"):
+            if item["neighbour_stage_numbers"] or any(
+                item["original_" + s] != item["effective_" + s] for s in ("input_unit", "output_unit")
+            ):
+                fail("waveform_contract")
+        elif derivation == "transparent-unity-gain-between-equal-declared-units":
+            inferred += 1
+            if (
+                not 0 < i < len(ledger) - 1
+                or originals[i]
+                or item["neighbour_stage_numbers"] != [numbers[i - 1], numbers[i + 1]]
+                or item["effective_input_unit"] is None
+                or item["effective_output_unit"] is None
+                or item["effective_input_unit"] != originals[i - 1].get("OutputUnits")
+                or item["effective_output_unit"] != originals[i + 1].get("InputUnits")
+                or item["effective_input_unit"].upper() != item["effective_output_unit"].upper()
+            ):
+                fail("waveform_contract")
+        else:
+            fail("waveform_contract")
+    if inferred > 1:
+        fail("waveform_contract")
+
+
 def _sealed_metadata(m):
     """Bounded typed seal, not evidence that a caller-authored result is field truth."""
     native_precount(m, 2097152, max_nodes=2097152, max_depth=16)
@@ -111,6 +176,7 @@ def _sealed_metadata(m):
         identity = nslc(dict(zip(("network", "station", "location", "channel"), c["nslc"])))
         if identity != nslc(submitted["channels"][i]):
             fail("waveform_contract")
+        _unit_ledger(c)
         identities.add(i)
     candidates = m["candidates"]
     if m["status"] == "qc_only":
@@ -245,6 +311,15 @@ def _stp_number(token):
 
 
 def references_from_stp(raw, event_id, selected_nslc):
+    return _references_from_stp(raw, event_id, selected_nslc, cloud=False)
+
+
+def references_from_scedc_cloud_stp(raw, event_id, selected_nslc):
+    """Explicit bounded SCEDC cloud10 variant; never shift legacy9 tokens."""
+    return _references_from_stp(raw, event_id, selected_nslc, cloud=True)
+
+
+def _references_from_stp(raw, event_id, selected_nslc, *, cloud):
     exact_bytes(raw, 1048576)
     if (
         type(event_id) is not str
@@ -279,12 +354,22 @@ def references_from_stp(raw, event_id, selected_nslc):
                 fields = fields[1:]
             elif fields[0].startswith("#"):
                 fields[0] = fields[0][1:]
-            if len(fields) != 9:
+            if len(fields) != (10 if cloud else 9):
                 fail()
-            eid, kind, stamp, lat, lon, depth, mag, magtype, quality = fields
+            if cloud:
+                eid, kind, geographic, stamp, lat, lon, depth, mag, magtype, quality = fields
+                if (
+                    kind != "eq"
+                    or geographic not in ("l", "r", "t")
+                    or magtype not in ("b", "l", "c", "w", "e", "s", "n", "h")
+                ):
+                    fail()
+            else:
+                eid, kind, stamp, lat, lon, depth, mag, magtype, quality = fields
             if (
                 eid != event_id
-                or kind not in ("le", "ts")
+                or not cloud
+                and kind not in ("le", "ts")
                 or not re.fullmatch(r"[A-Za-z]", magtype)
                 or not re.fullmatch(r"[0-9]{4}/[0-9]{2}/[0-9]{2},[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,6})?", stamp)
             ):
@@ -359,7 +444,7 @@ def references_from_stp(raw, event_id, selected_nslc):
         fail()
     phases = Counter(row["phase"] for row in rows)
     ambiguous = [r["source_record_id"] for r in rows if phases[r["phase"]] > 1]
-    return {
+    converted = {
         "event_id": event_id,
         "origin_utc": format_utc(origin),
         "raw_bytes": len(raw),
@@ -367,6 +452,9 @@ def references_from_stp(raw, event_id, selected_nslc):
         "rows": rows,
         "unsupported_or_ambiguous_rows": ambiguous,
     }
+    if cloud:
+        converted.update(source_format="scedc-cloud-stp-10/v1", event_type=kind, geographic_type=geographic)
+    return converted
 
 
 def evaluate_waveform_candidates(sealed_result, reference_bytes):

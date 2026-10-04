@@ -1,4 +1,4 @@
-"""Exact opt-in original negative. No download, repair or native hostile decode."""
+"""Original negative seal plus admitted format replay; physical execution held."""
 
 import hashlib
 import json
@@ -10,9 +10,17 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "data-pipeline"))
-from waveform_input import WaveformInputError, validate_request, scan_miniseed, scientific_identity
+from waveform_input import (
+    WaveformInputError,
+    validate_request,
+    scan_miniseed,
+    scientific_identity,
+    scan_stationxml,
+    resolve_channel,
+    utc_us,
+)
 import waveform_processing as processing
-from waveform_evaluation import references_from_stp
+from waveform_evaluation import references_from_stp, references_from_scedc_cloud_stp
 
 PRIVATE_ORIGINAL = ROOT / "data/experiments/m08-oct3-42b6e910"
 PINS = {
@@ -68,50 +76,24 @@ def bounded_original(name):
 
 
 def original_outcome():
-    """Read-only reproducible terminal proof; no result arrays for rejected input."""
+    """Reopen historical rejection; never pretend current parser returned it."""
     request = original_request()
     raw, xml = bounded_original("miniseed.raw"), bounded_original("stationxml.raw")
     records = scan_miniseed(raw, request)
-    try:
-        processing.process_waveform_record(raw, xml, request)
-    except WaveformInputError as error:
-        assert error.__cause__ is None and error.__context__ is None
-        outcome = {"code": error.code, "field": error.field, "message": error.message}
-    else:
-        raise AssertionError("The frozen original must not acquire invented eligibility")
-    assert outcome["code"] == "waveform_format"
-    return {
-        "schema": "caos.m08-original-terminal.v1",
-        "event_id": "38457511",
-        "nslc": ["CI", "GSC", "", "HNZ"],
-        "sources": {
-            name: {"bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()}
-            for name, body in (("miniseed", raw), ("stationxml", xml))
-        },
-        "request": request,
-        "scientific_sha256": scientific_identity(request),
-        "record_count": len(records),
-        "sample_count": sum(row["npts"] for row in records),
-        "sample_rates_hz": sorted({row["sample_rate_hz"] for row in records}),
-        "status": "input_rejected",
-        "safe_error": outcome,
-        "original_changed": False,
-        "decoder_called": False,
-        "response_called": False,
-        "physical_arrays_emitted": False,
-        "phase_accessed_before_terminal_seal": False,
-        "selected_cases": 1,
-        "rejected_cases": 1,
-        "reference_evaluation": "unavailable_for_rejected_calculation",
-        "field_truth": None,
-        "field_eligible": False,
-        "method_accepted": False,
-        "host_admitted": False,
-        "original_publication_approved": False,
-    }
+    receipt = ROOT / "docs/design/features/m08-waveform-user-data/evidence/ridgecrest-terminal-20261003.json"
+    body = receipt.read_bytes()
+    assert hashlib.sha256(body).hexdigest() == "6e340817230a8096c5f9eefda4b138e8fb985e7b9982dfb50a93535bacb1af2d"
+    outcome = json.loads(body)
+    assert outcome["request"] == request and outcome["scientific_sha256"] == scientific_identity(request)
+    assert outcome["record_count"] == len(records)
+    assert outcome["sample_count"] == sum(row["npts"] for row in records)
+    assert outcome["safe_error"]["code"] == "waveform_format"
+    for name, value in (("miniseed", raw), ("stationxml", xml)):
+        assert outcome["sources"][name] == {"bytes": len(value), "sha256": hashlib.sha256(value).hexdigest()}
+    return outcome
 
 
-def test_original_bytes_response_epoch_and_retained_outcome(monkeypatch):
+def test_original_rejection_seal_and_current_format_admission_only(monkeypatch):
     if os.environ.get("CAOS_M08_ORIGINAL") != "1":
         pytest.skip("Explicit private exact-original opt-in required; no automatic acquisition")
     calls = []
@@ -122,6 +104,16 @@ def test_original_bytes_response_epoch_and_retained_outcome(monkeypatch):
     assert calls == []
     assert outcome["status"] == "input_rejected" and outcome["safe_error"]["field"] == "document"
     assert outcome["physical_arrays_emitted"] is False
+    dto = scan_stationxml(bounded_original("stationxml.raw"))
+    req = original_request()
+    selected, reasons = resolve_channel(
+        dto, ("CI", "GSC", "", "HNZ"), utc_us(req["conditioning_start_utc"]), utc_us(req["conditioning_end_utc"]), 100
+    )
+    assert reasons == []
+    assert selected["native_unit"] == "m/s2"
+    assert selected["response_unit_ledger"][1]["original_input_unit"] is None
+    assert selected["response_unit_ledger"][1]["effective_input_unit"] == "V"
+    assert calls == []  # No physical engine execution, even after successful preflight.
     # Raw hashes and source bytes are rechecked, not repaired for a positive case.
     for name in PINS:
         assert hashlib.sha256(bounded_original(name)).hexdigest() == PINS[name][1]
@@ -151,3 +143,6 @@ def test_original_catalogue_retains_unsupported_after_terminal_seal():
         references_from_stp(raw, "38457511", ("CI", "GSC", "", "HNZ"))
     assert info.value.code == "waveform_format" and info.value.field == "document"
     assert info.value.__cause__ is None and info.value.__context__ is None
+    cloud = references_from_scedc_cloud_stp(raw, "38457511", ("CI", "GSC", "", "HNZ"))
+    assert cloud["source_format"] == "scedc-cloud-stp-10/v1"
+    assert cloud["rows"] == [] and cloud["unsupported_or_ambiguous_rows"] == []

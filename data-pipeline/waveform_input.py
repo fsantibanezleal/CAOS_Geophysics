@@ -709,6 +709,19 @@ def scan_stationxml(raw):
 
 
 def _scan_xml(raw):
+    encoding = "utf-8"
+    if raw.startswith(b"<?xml") and raw[5:6] in (b" ", b"\t", b"\r", b"\n"):
+        end = raw.find(b"?>", 0, 512)
+        if end < 0:
+            fail()
+        declaration_bytes = raw[: end + 2]
+        declaration_bytes.decode("ascii", "strict")
+        found = re.search(rb"""\bencoding\s*=\s*(["'])([^"']+)\1""", declaration_bytes)
+        if found:
+            literal = found[2]
+            if literal not in (b"UTF-8", b"ISO-8859-1"):
+                fail()
+            encoding = "iso-8859-1" if literal == b"ISO-8859-1" else "utf-8"
     parser = expat.ParserCreate(namespace_separator="}")
     parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
     frames = []
@@ -727,7 +740,7 @@ def _scan_xml(raw):
         fail()
 
     def declaration(version, encoding, standalone):
-        if encoding is not None and encoding.upper() != "UTF-8":
+        if version != "1.0" or encoding not in (None, "UTF-8", "ISO-8859-1"):
             fail()
 
     def start(name, attrs):
@@ -959,6 +972,8 @@ def _scan_xml(raw):
             elif tag not in ("InputUnits", "OutputUnits", "Pole", "Zero"):
                 stage["values"][tag] = value
         elif tag == "Stage":
+            if stage["kind"] is None and set(stage["gain"]) == {"Value", "Frequency"}:
+                stage["kind"] = "gain-only"
             stage = None
         elif tag == "Channel":
             result["channels"].append(channel)
@@ -978,7 +993,7 @@ def _scan_xml(raw):
     parser.EntityDeclHandler = forbidden
     parser.ExternalEntityRefHandler = forbidden
     parser.UnparsedEntityDeclHandler = forbidden
-    decoder = codecs.getincrementaldecoder("utf-8")("strict")
+    decoder = codecs.getincrementaldecoder(encoding)("strict")
     for i in range(0, len(raw), 4096):
         chunk = raw[i : i + 4096]
         decoder.decode(chunk, final=False)
@@ -1081,6 +1096,45 @@ def resolve_channel(dto, identity, t0, t1, fs):
         "M/S/S": "m/s2",
     }
     counts_units = ("COUNTS", "counts", "COUNT")
+
+    def intermediate_unit(unit):
+        return aliases.get(unit) or ("counts" if unit in counts_units else "V" if unit == "V" else None)
+
+    effective = [dict(stage["units"]) for stage in stages]
+    ledger = []
+    gain_only = [i for i, stage in enumerate(stages) if stage["kind"] == "gain-only"]
+    for i, stage in enumerate(stages):
+        entry = {
+            "stage_number": stage["number"],
+            "original_input_unit": stage["units"].get("InputUnits"),
+            "original_output_unit": stage["units"].get("OutputUnits"),
+            "effective_input_unit": stage["units"].get("InputUnits"),
+            "effective_output_unit": stage["units"].get("OutputUnits"),
+            "derivation": "provider-declared",
+            "neighbour_stage_numbers": [],
+        }
+        if stage["kind"] == "gain-only":
+            entry["derivation"] = "unresolved"
+            if (
+                len(gain_only) == 1
+                and 0 < i < len(stages) - 1
+                and stage["gain"].get("Value") == 1
+                and 0 < stage["gain"].get("Frequency", 0) < fs / 2
+                and not stage["decimation"]
+                and not stage["units"]
+            ):
+                left = stages[i - 1]["units"].get("OutputUnits")
+                right = stages[i + 1]["units"].get("InputUnits")
+                if intermediate_unit(left) is not None and intermediate_unit(left) == intermediate_unit(right):
+                    effective[i] = {"InputUnits": left, "OutputUnits": right}
+                    entry.update(
+                        effective_input_unit=left,
+                        effective_output_unit=right,
+                        derivation="transparent-unity-gain-between-equal-declared-units",
+                        neighbour_stage_numbers=[stages[i - 1]["number"], stages[i + 1]["number"]],
+                    )
+        ledger.append(entry)
+    c["response_unit_ledger"] = ledger
     first = stages[0]["units"].get("InputUnits")
     c["native_unit"] = aliases.get(first)
     if first not in aliases or stages[-1]["units"].get("OutputUnits") not in counts_units:
@@ -1094,7 +1148,7 @@ def resolve_channel(dto, identity, t0, t1, fs):
     for i, s in enumerate(stages):
         if s["number"] != i + 1:
             reasons.append("response_chain_inconsistent")
-        units = s["units"]
+        units = effective[i]
         inp, out = units.get("InputUnits"), units.get("OutputUnits")
         if not inp or not out:
             reasons.append("response_units_missing")
@@ -1102,7 +1156,9 @@ def resolve_channel(dto, identity, t0, t1, fs):
             reasons.append("response_chain_inconsistent")
         previous = out
         kind = s["kind"]
-        if kind not in ("PolesZeros", "Coefficients", "FIR"):
+        if kind not in ("PolesZeros", "Coefficients", "FIR") and not (
+            kind == "gain-only" and ledger[i]["derivation"] == "transparent-unity-gain-between-equal-declared-units"
+        ):
             reasons.append("response_stage_unsupported")
         d = s["decimation"]
         val = s["values"]
@@ -1121,7 +1177,27 @@ def resolve_channel(dto, identity, t0, t1, fs):
                     reasons.append("response_chain_inconsistent")
                 next_rate = stage_fs / d["Factor"]
         gain = s["gain"]
-        if not gain.get("Value", 0) > 0 or not 0 < gain.get("Frequency", 0) < stage_fs / 2:
+        frequency = gain.get("Frequency")
+        dc_allowed = False
+        if kind == "FIR" and frequency == 0 and s["fir"]:
+            try:
+                taps = s["fir"]
+                symmetry = val.get("Symmetry")
+                dc = (
+                    math.fsum(taps)
+                    if symmetry == "NONE"
+                    else (
+                        2 * math.fsum(taps[:-1]) + taps[-1]
+                        if symmetry == "ODD"
+                        else 2 * math.fsum(taps)
+                        if symmetry == "EVEN"
+                        else float("nan")
+                    )
+                )
+                dc_allowed = bool(d and inp and out and math.isfinite(dc) and dc != 0)
+            except OverflowError:
+                pass
+        if not gain.get("Value", 0) > 0 or not (dc_allowed or frequency is not None and 0 < frequency < stage_fs / 2):
             reasons.append("response_chain_inconsistent")
         if kind == "PolesZeros":
             transfer = val.get("PzTransferFunctionType")
