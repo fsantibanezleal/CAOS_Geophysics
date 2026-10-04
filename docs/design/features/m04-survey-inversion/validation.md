@@ -55,6 +55,9 @@ native physical Jq for this test only. W is a SciPy triangular-solve
 LinearOperator, not a dense NumPy array subject to elementwise multiplication.
 Independent Choclo unit-SI columns, pairwise faces/averages and covariance solves
 must satisfy the existing tolerances above, without tuning the test geometry.
+For covariance, test the explicit public Jtvec/W.T/W/Jvec Hessian action from
+algorithms section3; separately assert the pinned vendor deriv2's W*W result
+differs. For SD, both actions must agree with the same independent oracle.
 Passing these algebra/operator controls does not satisfy BVLS, accepted-core
 certification, L2/IRLS convergence, nonlinear, acquisition or fullcap gates.
 
@@ -87,6 +90,10 @@ A stall, cap or nonzero final KKT is FAIL, never an IRLS success badge.
 Tiny true-smallness control delta=+/-1e-10,epsilon=.1 requires a strictly
 positive value matching independent Decimal80 direct sqrt difference at
 relative error<=2e-8 without an absolute floor; delta=0 is exactly zero.
+The preparatory objective test path above executes weights/value/gradient/
+surrogate-Hessian and Decimal tiny-smallness controls on the same frozen tiny
+mesh. It does not execute reweight-and-solve, certify descent/stationarity,
+advance epsilon or satisfy a completed IRLS workflow gate.
 
 ## Frozen acquisition and six scientific regimes
 

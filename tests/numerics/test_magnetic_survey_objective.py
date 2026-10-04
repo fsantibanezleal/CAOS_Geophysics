@@ -1,6 +1,7 @@
 """Tiny physical likelihood/regularizer oracles, not fitted-survey acceptance."""
 
 import math
+from decimal import Decimal, ROUND_HALF_EVEN, localcontext
 
 import choclo
 from choclo.constants import VACUUM_MAGNETIC_PERMEABILITY as MU0
@@ -181,7 +182,15 @@ def test_vendor_objective_against_independent_physical_covariance_stencil(physic
     hv = 2*j_oracle.T @ np.linalg.solve(c, j_oracle @ V) + 2*beta*r.T @ (r @ V)
     np.testing.assert_allclose(misfit(Q)+beta*reg(Q), phi_d+beta*phi_m, rtol=1e-10, atol=1e-10)
     np.testing.assert_allclose(misfit.deriv(Q)+beta*reg.deriv(Q), gradient, rtol=1e-10, atol=1e-8)
-    np.testing.assert_allclose(misfit.deriv2(Q, V)+beta*reg.deriv2(Q, V), hv, rtol=1e-10, atol=1e-8)
+    # Pinned vendor deriv2 uses W*W, valid for diagonal SD but not triangular W.
+    # Compose public physical J actions and the actual transpose; no vendor patch.
+    action = 2*linear.Jtvec(Q, w.T @ (w @ linear.Jvec(Q, V))) + beta*reg.deriv2(Q, V)
+    np.testing.assert_allclose(action, hv, rtol=1e-10, atol=1e-8)
+    vendor_action = misfit.deriv2(Q, V)+beta*reg.deriv2(Q, V)
+    if noise == "sd":
+        np.testing.assert_allclose(vendor_action, hv, rtol=1e-10, atol=1e-8)
+    else:
+        assert not np.allclose(vendor_action, hv, rtol=1e-5, atol=1e-8)
     weighted = w @ j
     exact_diag = np.diag(j.T @ np.linalg.solve(c, j))
     np.testing.assert_allclose(np.sum(weighted**2, axis=0), exact_diag, rtol=1e-12, atol=1e-10)
@@ -203,3 +212,60 @@ def test_oracles_detect_wrong_reference_length_and_volume(physical):
     assert not np.isclose(correct, np.linalg.norm(r @ Q)**2, rtol=1e-5)
     assert not np.isclose(correct, np.linalg.norm(r @ delta)**2*volumes.sum(), rtol=1e-5)
     assert not np.isclose(correct, np.dot(delta, delta), rtol=1e-5)
+
+
+@pytest.mark.parametrize("epsilon", [.1, .05, .025, .0125, .00625, .003125, .0015625, .001])
+@pytest.mark.parametrize("model", [Q, QREF, np.zeros(7)])
+def test_actual_sparse_weights_true_gradient_and_surrogate_distinction(physical, epsilon, model):
+    sim, _, _, _, _, _, _, r, volumes = physical
+    sparse = regularization.Sparse(
+        sim.mesh, active_cells=sim.active_cells, mapping=maps.IdentityMap(nP=7),
+        reference_model=QREF.copy(), reference_model_in_smooth=True,
+        alpha_s=1., alpha_x=LENGTHS[0]**2, alpha_y=LENGTHS[1]**2,
+        alpha_z=LENGTHS[2]**2, alpha_xx=0., alpha_yy=0., alpha_zz=0.,
+        weights={"total_volume": np.full(7, 1./volumes.sum())},
+        norms=[1., 2., 2., 2.], gradient_type="components", irls_scaled=False,
+        irls_threshold=epsilon)
+    for child, ell in zip(sparse.objfcts[1:], LENGTHS):
+        child.irls_threshold = epsilon/ell
+    sparse.update_weights(model)
+    delta = model-QREF
+    fraction = volumes/volumes.sum()
+    weights = 1./np.sqrt(delta**2+epsilon**2)
+    np.testing.assert_allclose(sparse.objfcts[0].get_weights("irls"), weights, rtol=1e-12, atol=1e-10)
+    for child, ell in zip(sparse.objfcts[1:], LENGTHS):
+        assert child.irls_scaled is False and child.irls_threshold == epsilon/ell
+        np.testing.assert_array_equal(child.get_weights("irls"), np.ones(child.f_m(model).shape))
+    smooth = r[7:]
+    true_smallness = 2*np.sum(fraction*delta**2/(np.sqrt(delta**2+epsilon**2)+epsilon))
+    true_value = true_smallness + np.linalg.norm(smooth @ delta)**2
+    true_gradient = 2*fraction*delta/np.sqrt(delta**2+epsilon**2)+2*smooth.T @ (smooth @ delta)
+    surrogate = np.sum(fraction*weights*delta**2)+np.linalg.norm(smooth @ delta)**2
+    surrogate_hv = 2*fraction*weights*V+2*smooth.T @ (smooth @ V)
+    np.testing.assert_allclose(sparse(model), surrogate, rtol=1e-10, atol=1e-10)
+    np.testing.assert_allclose(sparse.deriv(model), true_gradient, rtol=1e-10, atol=1e-8)
+    np.testing.assert_allclose(sparse.deriv2(model, V), surrogate_hv, rtol=1e-10, atol=1e-8)
+    if np.array_equal(model, QREF):
+        assert true_value == surrogate == 0.
+        np.testing.assert_array_equal(weights, np.full(7, 1./epsilon))
+    else:
+        assert true_value > surrogate > 0.
+        # Equality of refreshed gradients does not make frozen-surrogate H the true H.
+        true_hv = 2*fraction*epsilon**2*V/(delta**2+epsilon**2)**1.5 + 2*smooth.T @ (smooth @ V)
+        assert not np.allclose(surrogate_hv, true_hv, rtol=1e-5, atol=1e-8)
+
+
+@pytest.mark.parametrize("delta", [-1e-10, 0., 1e-10])
+def test_tiny_true_sparse_smallness_has_no_absolute_floor(delta):
+    epsilon = .1
+    actual = 2*delta**2/(math.sqrt(delta**2+epsilon**2)+epsilon)
+    with localcontext() as context:
+        context.prec = 80
+        context.rounding = ROUND_HALF_EVEN
+        d, e = Decimal.from_float(delta), Decimal.from_float(epsilon)
+        oracle = float(2*((d*d+e*e).sqrt()-e))
+    if delta == 0.:
+        assert actual == oracle == 0.
+    else:
+        assert actual > 0. and oracle > 0.
+        assert abs(actual/oracle-1.) <= 2e-8

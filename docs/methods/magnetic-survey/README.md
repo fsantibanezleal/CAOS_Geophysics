@@ -4,6 +4,10 @@
 describe the executable authored Choclo/Decimal/PCG64 inputs, not fitted inverse
 success or field acceptance.
 
+[Physical objective / Objetivo físico](03_physical-objective.md) explains
+executable tiny kernel/covariance/active-face/sparse-weight controls and the
+pinned vendor covariance-Hessian limitation, not a completed inverse fit.
+
 The ordinary local **geometry foundation is executable**. L2, sparse IRLS,
 quantity-specific fitting, held-out prediction, fitted-result bundles and linked
 views remain the complete [continuation contract](../../design/features/m04-survey-inversion/research.md),

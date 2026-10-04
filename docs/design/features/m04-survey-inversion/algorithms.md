@@ -112,6 +112,20 @@ GN H_d=2 J_q^T W^T W J_q. Exact total-magnitude uses GN, not an assertion
 that its ignored second derivatives vanish. Export residual is d-H, opposite
 to optimizer r. Component count D, not station count N, divides whitened RMS.
 
+Installed/pinned SimPEG0.25.2 L2DataMisfit value and gradient implement this
+definition with W and W.T, but its deriv2 applies W*W to Jvec_approx, not
+W.T*W. This is only appropriate for symmetric W, including diagonal SD, and
+is NOT the declared Cholesky triangular whitening for correlated covariance.
+For that lane, explicitly compose the Hessian action from public physical
+Jvec/Jtvec and triangular solves as2*Jtvec(W.T*(W*Jvec(v))); add actual vendor
+regularization.deriv2 with beta. No vendor patch, symmetry assumption,
+diagonal approximation, dense inverse or tolerance waiver. Assert the original
+vendor deriv2 discrepancy on correlated controls and test the correct public
+operator composition against independent covariance solves. This is ordinary
+Jacobian algebra, not a substituted magnetic kernel or copied optimizer.
+The actual versioned primary definition is
+[SimPEG0.25.2 data_misfit.py](https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/data_misfit.py).
+
 Preconditioner uses diagonal of the complete GN+regularizer quadratic:
 2*column_norms(W J_q)^2+2*beta*diag(R^T R), with the accepted M02 policy for
 zero/scale handling. No UpdateSensitivityWeights/getJtJdiag diagonal shortcut
