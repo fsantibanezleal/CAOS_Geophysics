@@ -234,3 +234,150 @@ Cancellation/numerical/nonconverged API mapping is later integration-owned,
 not an API modification here. Failure priority follows pure contract; first
 latched safe failure survives cleanup diagnostics. Abrupt native death/OOM may
 provide no frame at all; EOF/death custody must handle that unavailable case.
+
+## 7. I01 deterministic C test facade, not a native runner
+
+MAIN's reviewer instruction at2dac0ad accepts the24-byte drain timestamp and
+50ms wait and /MT I01-only build, under the already human-authorized scope.
+See approval.md section5. This facade supplies no measured values or authority.
+No JSON/receipt encoder/hash, clock, callbacks, heap, file, native process or
+platform API belongs in controller.h/c. Safe arithmetic and private wire/state
+consistency only; complete pure receipt/trace validation remains unchanged.
+
+All exports are ncc_ prefixed C17 functions returning0 or fixed safe enum1..17,
+except ncc_error_text (fixed immutable ASCII literal). Error outputs never carry
+input bytes/native errors. Scalar out parameters remain unchanged on failure.
+uint64 scalar arguments are representation-level integers, NOT Python objects;
+the test adapter rejects bool/non-int before ctypes narrowing. The core cannot
+recover a bool once a foreign caller has coerced it to integer1. Binary flag
+slots instead reject every value except0/1; no JSON null is encoded as a SAMPLE.
+
+Exact caller-owned state:1024 zero bytes,8-byte aligned; init once, matching
+capacity1024 and two nonnil16-byte UUID bindings. No caller-owned buffer pointer
+is retained. State is opaque, not a public C struct serialized on the wire.
+Reinitializing an initialized state fails HELD, cannot reset or rebind. Raw
+caller memory tampering is outside the trusted in-process facade, not admission.
+
+| Export | Exact purpose |
+| --- | --- |
+| ncc_windows_cpu(user,kernel,out) | checked signed-range ticks sum then100ns conversion |
+| ncc_linux_cpu(usage,user,system,out) | checked U64 sum/max then1000ns conversion |
+| ncc_delta(current,previous,out) | I64 ns range, checked nonnegative delta |
+| ncc_next_sequence(previous,supplied) | exact+1, rejectU64 exhaustion before addition |
+| ncc_qpc_ns(current,previous,frequency,out) | supplied I64 ticks/frequency only; checked quotient/remainder ceil, no clock call/wide-integer assumption |
+| ncc_time_ns(seconds,fraction,quantum,out) | supplied timespec/timeval, quantum exactly1/1000, checked ns conversion |
+| ncc_parent_cpu(lane,controller,worker,reported) | supplied checked sum==reported, frozen5/10s ceiling; no post-exit measurement claim |
+| ncc_limits(lane,out,count) | exact8 integers B,S,M,wall,RSS,scratch,result,parent; lanes1/2 only |
+| ncc_frame_preflight(bytes,length,out_kind) | exact64-byte header, known kind/length/reserved; cap BEFORE pointer read/copy |
+| ncc_state_init(state,capacity,attempt,object) | once-only zero state/bound nonnil IDs, no OS object |
+| ncc_apply(state,capacity,direction,bytes,length) | complete bounded frame only; direction1bridge/2native, separate exact sequences, atomic valid event or absorbing HELD |
+| ncc_account_bytes(state,capacity,channel,amount) | pre-add byte caps, channels1stdout/2stderr/3receipt/4result/5scratch/6canonical-sample-bytes |
+| ncc_queue(state,capacity,action) | supplied enqueue1/dequeue2 counters, cap4/checked underflow, no real queue or blocked writer |
+| ncc_snapshot(state,capacity,out,count) | exact22 uint64 diagnostic scalars, no authority or private input |
+| ncc_error_text(code,which) | which0code/1message, unknown selects fixed protocol_invalid, never stringifies input |
+
+Snapshot slots: phase,reason_code,computation_failed,stop_required,
+runtime_authorized(always0),sample_count,final_count,last_cpu_ns,last_offset_ns,
+bridge_sequence,native_sequence,queue_count,canonical_bytes,stdout_bytes,
+stderr_bytes,receipt_bytes,result_bytes,scratch_bytes,required_stop_reason,
+stopped_ns,drained_ns,root_exit_raw32. No protocol_eligible/runtime grant export.
+Phases0PREPARED/1CONTAINED/2RUNNING/3STOP_REQUIRED/4STOPPING/5DRAINED/
+6FINAL_NATIVE/7RECEIPT_BOUND/8ACK_CHECKED/9RELEASE_ASSERTED/10FAILED_HELD.
+RELEASE_ASSERTED acknowledges supplied wire consistency ONLY, never actual
+release, final parent counters, durable receipt or publication. Runtime stays0.
+
+START binds platform1/2 and lane1/2 once while PREPARED. Native CONTAINED then
+STARTED must precede SAMPLE. DRAINED requires started<=stopped<=drained and
+last observation<=drained; requested stop timestamp matches exactly and kill
+interval<=250ms. Clean STOP16 is natural metadata, never a stop request or a
+repair of prior required stop; natural DRAINED may omit clean STOP. First final
+offset-drain>=50ms, final spacings>=20ms, <=2s drain deadline; query<=20ms,
+empty variants, same counters across final3, no regressions. Invalid native/
+phase/identity/length/sequence rejects before observation update. Well-formed
+bad timing/budget observations are retained as failed supplied evidence. No
+event certifies actual containment/emptiness/visibility/liveness.
+
+Count<=32768 before sample update. The caller separately supplies exact canonical
+byte amounts includingLF to channel6 (cap16777216); C does NOT compute/hash or
+certify canonical JSON bytes. The unchanged pure decoder/session must still
+check real canonical bytes/digest. Resource channels likewise account supplied
+amounts only, no filesystem/RSS/scratch measurement or enforcement claim.
+Byte/queue helpers reject before additions and hold failure; they cannot block,
+drop observations, allocate, emit or free actual resources. Unknown channels/
+actions/directions/kinds/platforms/lanes have no fallback. Complete33-bit/unknown
+native flags fail before narrowed conversion. ERROR accepts fixed enums only;
+errno is never retained in diagnostics, unavailable has no available-zero SAMPLE.
+
+Failed computation is sticky; first HELD error is absorbing. Matched32-byte
+bind/ack tokens are consistency, not SHA computation/durability/authentication.
+Preliminary SELF in RELEASED cannot pass as final parent closure. State copies
+and local buffers are fixed-sized; no stream/trace retention or raw-struct ABI.
+Test-only ctypes DLL binding is not a production platform/bridge implementation.
+
+## 8. I01 operator-only build capture contract
+
+`scripts/native_physical_cpu/capture_build.py` imports without execution or writes.
+Its only executable recipe consists of core compile/link then probe compile/link,
+the exact C17 /MT and five-library /NODEFAULTLIB commands in the build inventory.
+No DLL load, ABI execution, test execution, compiler discovery, fallback, install,
+environment mutation, native science launch or public API is provided. Executing
+the recipe requires an independently reviewed private source/manifest pin.
+
+Private CLI arguments are source/output/VC/SDK/SystemRoot, approval manifest and
+manifest SHA256; absolute device paths do not belong in the public repository.
+The exact `i01-build-approval-1` object has schema, source_commit, source_hashes,
+tree_files, execute_i01_build, roots. The execute flag is literaltrue, not a runtime
+authority token. roots has EXACT source/output/vc/sdk/system strings. Each root
+must match the reviewed supplied argument; no relative, parent traversal, symlink
+or reparse component. The output leaf must be absent and outside source/tools/OS.
+Source hashes bind all eight C/header/probe/helper/test files, including the helper
+and its separate test_capture_build.py, and the source commit is40 lowercase hex.
+Hash pinning binds actual file identities. source_commit is a reviewed receipt
+claim, NOT a Git HEAD check performed by this helper. Hashes are64 lowercase hex.
+
+The private manifest is reviewed/hash-pinned operator input, NOT hostile waveform,
+physical JSON or browser data. Raw manifest<=2MiB, duplicate decoded keys reject.
+tree_files is exactly five maps of relative file name to hash, respectively the
+compiler-bin and four include roots. Full member/count/byte totals match the
+inventory:90/361/66/303/2214 files and88183442/16162316/1055527/11723353/126821714
+bytes. Each file is independently rehashed without relying on a different
+culture's reconstructed aggregate hash. Recheck all inputs before each stage;
+the two selected tools, five static libraries and read-only Python additionally
+match the inventory's fixed hashes. No alternate include/library/root admitted.
+Hash pinning does not attest dynamically loaded tool/system dependencies.
+After compilation/linking, independently inspect expected PE imports/closure
+BEFORE a separate decision authorizes any ABI probe run or DLL load/test.
+
+Each child receives only SystemRoot, pinned PATH, and private TEMP/TMP. No inherited
+CL/LINK/INCLUDE/LIB/user injection options. One tool stage at a time, stdin closed,
+no shell, only reviewed absolute executable. Two reader threads retain at most
+2MiB each, check before append, and latch over-limit/unavailable; captured prefixes
+on failure are labelled, not presented as full raw stream hashes. Immutable copies
+are sealed under a lock after stopping readers. Deadline90s is checked with20ms
+polls; root wait after an owned-handle kill<=2s and bounded pipe joins. No broad PID
+sweep, tree deletion, retry, extra tool stage or automatic artifact execution.
+
+Output is an exclusive new private root, allowlisted core.obj/dll/lib/exp,
+abi.obj/exe, eight bounded stage stdout/stderr streams and build.json. Observe
+<=64MiB/32 files and reject unapproved files/reparse/subdirectories. Logs/receipt
+use exclusive creation, pre-write remaining-byte check and flush/fsync. No output
+is removed or overwritten, including after failure. A successful four-stage build
+requires all six artifacts; each actual artifact hash/bytes is retained. Any held
+stage stops the sequence and does not hash possibly still-mutating artifacts.
+
+Important limitation: this helper kills ONLY the exact owned tool root handle on
+failure. It supplies NO compiler-descendant kill/drain or hard filesystem quota
+proof. Output monitoring is a sampled rejection policy, not a zero-overshoot
+kernel cap; inherited pipes may remain live, leaving custody uncertain. These
+outcomes are held and cannot start another stage or claim artifact/native success.
+`descendant_drain_proven` remainsfalse even for normal root exit. Separate measured
+build containment/context is needed if execution review requires a hard bound on
+compiler descendants; this helper cannot self-admit that stronger contract.
+
+The private `i01-build-capture-1` receipt preserves source pin, stage return code,
+measured tool wall float, held code, captured stream bytes/hashes and actual artifact
+hashes where stable. compiled_tests, abi_execution and loaded_dependency_closure
+remain NOT_RUN, runtime_authorizedfalse. Filesystem/launch/capture failure may make
+a receipt unavailable; retain output and request review, never report success or
+fabricate missing CPU/RSS/ABI values. It is not a science CPU accounting receipt,
+durable publication acknowledgment, parent finality or Linux/Windows admission.
