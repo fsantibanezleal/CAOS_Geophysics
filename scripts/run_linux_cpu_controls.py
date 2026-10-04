@@ -39,7 +39,7 @@ BUILD_ARTIFACT_NAMES = frozenset(target + extension
 COMMON_FLAGS = ["-std=c17", "-Wall", "-Wextra", "-Werror", "-Wconversion", "-Wshadow",
                 "-fstack-protector-strong", "-D_FORTIFY_SOURCE=2", "-O2", "-fPIE"]
 CASES = {
-    "nominal": ("--nominal", 1), "threads": ("--threads", 1),
+    "nominal": ("--nominal", 1), "system_cpu": ("--system-cpu", 1), "threads": ("--threads", 1),
     "exited": ("--exited", 1), "grandchild": ("--grandchild", 1),
     "escape": ("--escape", 1), "upper60": ("--upper", 1), "upper240": ("--upper", 2),
     "cancel": ("--cancel", 1), "eof": ("--cancel", 1),

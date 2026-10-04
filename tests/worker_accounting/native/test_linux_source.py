@@ -51,3 +51,11 @@ def test_enum_names_are_distinct_before_linux_compile():
     header = (CORE / "linux_controller.h").read_text("utf-8")
     entries = re.findall(r"\b(LC_[A-Z_]+)\s*=\s*[0-9]+", header)
     assert len(entries) == 33 and len(set(entries)) == len(entries)
+
+
+def test_fixture_system_cpu_has_native_work_not_supplied_accounting():
+    fixture = (CORE / "linux_fixture.c").read_text("utf-8")
+    from scripts.run_linux_cpu_controls import CASES
+    assert CASES["system_cpu"] == ("--system-cpu", 1)
+    assert "syscall(SYS_gettid)" in fixture
+    assert "CLOCK_THREAD_CPUTIME_ID" in fixture and "UINT64_C(200000000)" in fixture

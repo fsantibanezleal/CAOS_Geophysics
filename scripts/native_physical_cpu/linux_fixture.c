@@ -33,6 +33,14 @@ static void burn(uint64_t duration) {
     while (ns(CLOCK_THREAD_CPUTIME_ID)-start<duration)
         for (unsigned i=0;i<1000;++i) x=x*UINT64_C(6364136223846793005)+1;
 }
+static int system_cpu(void) {
+    uint64_t start=ns(CLOCK_THREAD_CPUTIME_ID);
+    while (ns(CLOCK_THREAD_CPUTIME_ID)-start<UINT64_C(200000000)) {
+        /* Real kernel transitions. No input/fixture supplied CPU counter. */
+        for (unsigned i=0;i<1000;++i) if (syscall(SYS_gettid)<=0) return 110;
+    }
+    return 0;
+}
 static int marker(void) {
     char group[256],status[4096];
     int fd=open("/proc/self/cgroup",O_RDONLY|O_CLOEXEC);
@@ -141,6 +149,7 @@ int main(int argc,char **argv) {
         return code;
     }
     int result=marker();if (result) return result;
+    if (!strcmp(argv[1],"--system-cpu")) return system_cpu();
     if (!strcmp(argv[1],"--nominal")) {burn(UINT64_C(50000000));return 0;}
     if (!strcmp(argv[1],"--exited")) return exited();
     if (!strcmp(argv[1],"--grandchild")) return grandchild();

@@ -333,8 +333,8 @@ occupy10MiB before bounded final/digest frames. This correction affects only the
 new qualification protocol, not existing public receipts, method ceilings or
 the frozen I01 wire. All source/recipe changes still precede compilation review.
 
-The native host suite contains26 planned actual case profiles, including nominal,
-threads, sixteen exited children, reparented live grandchild, denied own cgroup
+The native host suite now contains27 planned actual case profiles, including nominal,
+actual system-CPU load, threads, sixteen exited children, reparented live grandchild, denied own cgroup
 write, both CPU classes, cancel/EOF/heartbeat loss, output overflow/OOM, wrong
 IDs/malformed frame, bad/missing ACK, three manager death orders and output
 backpressure, denied clone/setup, early ACK, delayed observer and deliberately
@@ -358,7 +358,7 @@ concurrent busy sibling/observer exclusion, counter unavailability/regression,
 exact equality/one-quantum boundary,
 cross-attempt signal/broker denial, scratch/full-write failures
 and complete post-exit worker/storage custody. Existing native15 gates remain
-NOT_RUN, profiles CLOSED. The26-profile harness is not all-gate acceptance and
+NOT_RUN, profiles CLOSED. The27-profile harness is not all-gate acceptance and
 is not a real scientific-method fixture. Do not substitute its result for those
 still-required controls.
 
@@ -397,3 +397,31 @@ Artifact integrity guard passed20 truths/120 experiments/348 method results;
 content and CI-budget guards passed. Ledger structure passed with18 unresolved
 and one failed requirement, unchanged. No source/numerical guard was weakened,
 no scientific case fabricated and no whole-method/native15 gate promoted.
+
+## 9. Distinct system-CPU source freeze
+
+The fresh candidate adds only a finite200ms CLOCK_THREAD_CPUTIME_ID loop with
+actual SYS_gettid kernel transitions. Its host test requires nonzero native
+wait4 and cgroup system CPU, complete200ms charge and the unchanged independent
+family-oracle bound. No supplied CPU counters, cap or numerical tolerance change.
+The added static test first failed for absent system_cpu; after implementation,
+a fresh local capture passed340 tests, zero failures/errors/skips (179 unchanged
+compiled-pure +74 unchanged helper +87 local Linux tests). XML time1.109s,
+capture wall1,484,000,000ns, XML SHA256
+0eb97762ec0b96eea228ceb672c34de42f597e020ac5f649bd2f8a850b874f59;
+stdout9a56f5bd3422f7ad525993682729065db0b629299f39a3ed90b7d792772a446c;
+stderr empty. Earlier339 and failed314+1 records above are historical and remain
+unchanged. All27 actual native profiles still NOT_RUN, not passing skips.
+
+The existing escape marker writes24 bytes:23 literal bytes plus its C trailing
+NUL. It is a private existence marker, never a public string/value or accounting
+oracle; source is unchanged and that byte count is now explicit. Qualification
+runner failure stores a safe exception class only; that field is not evidence of
+counter stability/success. Host tests require their explicit native finals,
+availability/error/verdict and extinction independently. A missing/failed final
+never becomes successful from a null/opaque diagnostic field.
+
+The separate [production broker SDD](../physical-native-linux-broker/requirements.md)
+defines exact process/packet authentication, immutable launch allowlist and
+distinct production context without giving the worker root/systemd permission.
+It is design-only pending full seam review, not implemented in this controller.

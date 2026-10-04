@@ -266,6 +266,9 @@ def test_exited_descendants_accounted(host_results):
         oracle_ns = (f[16] + f[17]) * 1000
         assert oracle_ns >= minimum
         assert abs(f[2] * 1000 - oracle_ns) <= (2 * entities + 2) * 1000
+    system = complete(host_results["system_cpu"])
+    assert system[5] >= 200_000_000 and system[17] > 0 and system[4] > 0
+    assert abs(system[2] * 1000 - (system[16] + system[17]) * 1000) <= 4000
 
 
 def test_cancel_and_root_exit_descendants(host_results):
