@@ -6,6 +6,8 @@ import { ProcessingApi } from "../api/processing";
 import { FLAG_METHOD, M05_METHOD, isFlagJob, isGravityReceipt, type ProjectDatasetReceipt, type ProjectProcessingJob, type FlagResult, type GravityDataset, type MethodEligibility, type ProcessingState } from "../api/processing-contracts";
 import { GravityStationInstrument } from "./GravityStationInstrument";
 import { MtProjectWorkbench } from "./MtProjectWorkbench";
+import { ResultBundleInput } from "./ResultBundleInput";
+import { readSavedResult } from "./result-view-data";
 
 export function processingProblem(error: unknown, es: boolean): string {
   const t = (en: string, sp: string) => es ? sp : en;
@@ -178,7 +180,7 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
       <button className="btn mobile-controls-toggle" aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}>{t("Processing controls", "Controles de procesamiento")}</button>
       {session === "ready" && <div className="processing-controls">
         <label className="select-control"><span>{t("Control section", "Sección de controles")}</span><select className="select" value={section} onChange={event => setSection(event.target.value)}>
-          <option value="data">{t("Data validation", "Validación de datos")}</option><option value="run">{t("Flag QC parameters", "Parámetros de QC de marcas")}</option><option value="history">{t("Job history", "Historial de trabajos")}</option></select></label>
+          <option value="data">{t("Data validation", "Validación de datos")}</option><option value="run">{t("Flag QC parameters", "Parámetros de QC de marcas")}</option><option value="history">{t("Job history", "Historial de trabajos")}</option><option value="open">{t("Open saved result", "Abrir resultado guardado")}</option></select></label>
         <label className="select-control"><span>{t("Validated dataset", "Conjunto validado")}</span><select className="select" disabled={busy || !gravityDatasets.length} value={datasetId} onChange={event => { setResult(null); setDataset(null); setDatasetId(event.target.value); setNotice(null); }}>
           {!gravityDatasets.length && <option value="">{t("No gravity dataset yet", "Aún sin conjunto gravimétrico")}</option>}{gravityDatasets.map((item, i) => <option key={item.dataset_id} value={item.dataset_id}>{i + 1} · {assets.find(asset => asset.asset_id === item.raw_asset_id)?.original_filename ?? item.dataset_id} · {item.row_count} {t("stations", "estaciones")}</option>)}</select></label>
         {section === "data" && <>
@@ -209,9 +211,11 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
           {job && <><p className="project-note">{t("Submitted threshold", "Umbral enviado")}: {job.request.parameters.threshold} [1]</p>
             <button className="btn" disabled={busy || !active(job) || job.cancel_requested} onClick={cancel}>{job.cancel_requested ? t("Cancellation requested", "Cancelación solicitada") : t("Cancel job", "Cancelar trabajo")}</button>
             <dl className="processing-limits"><dt>{t("Estimated memory / limit", "Memoria estimada / límite")}</dt><dd>{(job.preflight.estimated_memory_bytes / 1048576).toFixed(1)} / {(job.preflight.memory_limit_bytes / 1048576).toFixed(1)} MiB</dd><dt>{t("Scratch / wall limits", "Límites temporales / duración")}</dt><dd>{(job.preflight.scratch_limit_bytes / 1048576).toFixed(1)} MiB / {job.preflight.wall_limit_seconds} s</dd><dt>{t("Measured wall / peak RSS", "Duración / RSS máximo medidos")}</dt><dd>{job.wall_ms === null ? t("not measured", "sin medición") : `${job.wall_ms} ms`} / {job.peak_rss_bytes === null ? t("not measured", "sin medición") : `${(job.peak_rss_bytes / 1048576).toFixed(1)} MiB`}</dd><dt>{t("Measured scratch", "Temporales medidos")}</dt><dd>{job.scratch_bytes === null ? t("not measured", "sin medición") : `${job.scratch_bytes} bytes`}</dd></dl>
-            <button className="btn" disabled={busy || job.state !== "succeeded" || !result} onClick={download}>{t("Verify & export processing ZIP", "Verificar y exportar ZIP de procesamiento")}</button></>}
+            <button className="btn" disabled={busy || job.state !== "succeeded" || !result} onClick={download}>{t("Verify & export processing ZIP", "Verificar y exportar ZIP de procesamiento")}</button>
+            </>}
           <button className="btn" disabled={busy} onClick={() => setRevision(n => n + 1)}>{t("Refresh history", "Actualizar historial")}</button>
         </>}
+        {section === "open" && (job?.state === "succeeded" && dataset ? <><p className="project-note">{t("Selected job", "Trabajo seleccionado")}: {job.job_id} · {t("Select another job in History before opening its ZIP.", "Seleccione otro trabajo en Historial antes de abrir su ZIP.")}</p><ResultBundleInput key={`${dataset.dataset_id}:${job.job_id}:${job.result_sha256}`} es={es} verify={file => readSavedResult(file, { kind: "gravity", job, dataset })} onOpened={setResult}/></> : <p className="project-note">{t("Select a successful job in History first. Saved files do not admit or execute jobs.", "Seleccione primero un trabajo exitoso en Historial. Los archivos no admiten ni ejecutan trabajos.")}</p>)}
       </div>}
     </aside>
     <section className="instrument-main processing-main" aria-label={t("Selected project processing", "Procesamiento del proyecto seleccionado")}>

@@ -12,7 +12,8 @@ environment or shared shell is changed. M01 course and curated widgets stay inta
 
 ## Open a previously exported result
 
-History's existing successful-job selection remains authoritative. A local file
+History's existing successful-job selection remains authoritative; opening has
+its own compact control section, not an additional history-rail form. A local file
 input opens only that job's saved ZIP, with the same17MiB limit and ZIP_STORED
 member bounds already enforced by verifyProcessingBundle/verifyMtBundle. Check
 File size before arrayBuffer. Do not weaken either verifier or infer a job from
@@ -32,7 +33,9 @@ offline producer importer or proof of field geology/authenticity from hashes alo
 result-view-data builds a separate JSON inspection snapshot, schema
 `geophysics.result-inspection/v1`, not a replacement processing-result or signed
 producer bundle. Native JSON number serialization preserves finite returned
-float64 values without display rounding. Snapshot export is a local download,
+float64 values without display rounding, with native JSON semantics (negative
+zero serializes as zero; no bit-pattern or original-byte identity claim).
+Snapshot export is a local download,
 never a server operation. It carries dataset/job/request/raw/engine identity,
 source rights/physical metadata, units, literal arrays and the view selection.
 Gravity retains all stations/declared sigma/false masks and optional returned
