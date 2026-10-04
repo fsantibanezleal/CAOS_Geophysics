@@ -17,6 +17,7 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [M05/M06 online MT course](problem-types/05_online-mt-course.md): complete complex mathematics, source/variance/frame QC, actual TRF/array protocol, independent worked fixed-h/wrong-h controls and conditional limits.
 - [Use and reproduce the MT course](guides/09_online-mt-course.md): bilingual in-app exercises, exact numerical/render gates and separately pending host admission.
 - [Earthquake phase picking](problem-types/phase-picking.md): M08/M13 theory, frozen input and asset contracts, held-out denominator, browser inference and parity gate.
+- [Local instrument-aware waveform science](methods/waveform-processing.md): exact QC/response/filter/PSD/unlabelled-onset calculation, independent worked controls, real same-input counts replay and retained Ridgecrest failures; native/field/host gates remain unaccepted.
 - [M12 learned velocity validation](problem-types/04_learned-velocity-validation.md): synthetic first-arrival tomography, independent forward oracle, matched classical comparison and retained failure.
 - [Data contract](data-contract/data-contract.md): accepted inputs, units, outlier policy, replay schema, and provenance.
 - [Source to result](data-contract/01_source-to-result.md): rights, immutable raw bytes, typed observations, physical eligibility, processing and evidence boundaries, with a reproducible current API calculation.

@@ -1,0 +1,473 @@
+{
+  "authored_burst_indices": [
+    [
+      1200,
+      1300
+    ],
+    [
+      2000,
+      2100
+    ]
+  ],
+  "burst_indices_are_phase_labels": false,
+  "field_truth": null,
+  "fs_hz": 100,
+  "host_admitted": false,
+  "method_accepted": false,
+  "runs": [
+    {
+      "analysis_slice": {
+        "start": 800,
+        "stop": 3200
+      },
+      "array_sha256": {
+        "characteristic": "930d703ebce901134839b945c76b86df8b97263e6e5d2616ba05a0ab69429dc8",
+        "counts": "4c58216250136dbb143763a3466930ec61d4c5017d7045f4f38dcdfd98d59731",
+        "counts_psd": "b7754e7bd372823e8dd77fc9c9b6c8591458fd6a87f9e6ecc8fddb4639884fbc",
+        "edge_valid": "6408ee48ad43020014f2c02e2de7f03d2595404e1144a85a143cddb8d9ba8a8a",
+        "filter_sos": "4d2e8c8a4fe9400dcde2f15174d1c2b8da003e88b191900fa4ca8f964bd71f26",
+        "filtered_native": "b31f9e43a395d4220c81d60f642a5c9ac8ebbcecc582d8df76af3da7152ab3f0",
+        "filtered_psd": "c9c03489f890e46383d369e43c96a009cc420c9b8fddd0f83e60f4c21a833b52",
+        "inverse_imag": "f1088d31949b46a9505aab7fc722db7ec014d14e40b1882b7a0cc423ba448f1f",
+        "inverse_real": "5f69d64b2d4fae5dce4053544bfc633083e0b74104e47c8dbe808eef77c31c89",
+        "physical_native": "c67c5a204e2d3aeec3e0eb077f1473c4fd8edc9a955affb4ae795f323a7da4c1",
+        "physical_psd": "60f6c580925344fa6d2f1ab14d4fa5adc5f1c64078089083dc899799a938c320",
+        "prefilter_weight": "84cbb6a6bc0bf3c62aeb2092bc9a10c8231a189c56ff6539c14b982a75d7fafb",
+        "psd_frequency_hz": "414d0da9627845992e1e507697d68830b65e71a3c6b022a79073a5682c3f8bfd",
+        "response_frequency_hz": "c4135abb25093f5c990bf0fd1eaa6b4142cc233f3952fd33a83b1ea522acb6b8",
+        "response_imag": "d30db7e8c7f05c16f0b8ad81f6d533986c645bec0ff9d4e880b4f053cbeae1e2",
+        "response_real": "98d28ad1d49f530684d8d413c65cc75454e56e6901df873a9efa9c737d5d818e",
+        "time_taper": "6c0262f25636ea271b1db117c9a1ea7819301a07ec263a18e08f40d79285b520"
+      },
+      "calculation_sha256": "45758b5373626c579c1272ddc6180f322433deb6d6c1569d1e864675211013e5",
+      "candidates": [
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 1298,
+          "on_index": 1171,
+          "on_relative_s": 11.71,
+          "on_utc": "2020-01-01T00:00:11.710000Z",
+          "peak_index": 1209,
+          "peak_ratio": 9.413062256433962,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        },
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 2098,
+          "on_index": 1971,
+          "on_relative_s": 19.71,
+          "on_utc": "2020-01-01T00:00:19.710000Z",
+          "peak_index": 2009,
+          "peak_ratio": 9.413062210168182,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        }
+      ],
+      "guard_samples": 500,
+      "miniseed_sha256": "e7f757fb24747540ffe9d51652146b96a56caeb52abf9b0f1742f5797ba3c1da",
+      "name": "base",
+      "native_unit": "m/s",
+      "operator_tail_energy_fraction": 1.1817673600819286e-13,
+      "processing": {
+        "bandpass_hz": [
+          2,
+          10
+        ],
+        "edge_guard_s": 5,
+        "filter_mode": "offline-zero-phase",
+        "filter_order": 4,
+        "lta_s": 2,
+        "output": "native",
+        "prefilter_hz": [
+          0.5,
+          1,
+          20,
+          25
+        ],
+        "refractory_s": 1,
+        "sta_s": 0.2,
+        "taper_fraction": 0.05,
+        "threshold_off": 1.5,
+        "threshold_on": 3.5,
+        "water_level_db": 60,
+        "welch_segment_samples": 256
+      },
+      "psd_integrals": {
+        "counts": 4448538.443206602,
+        "filtered": 3.9927443334247332,
+        "physical": 4.334580482994852
+      },
+      "scientific_sha256": "384453ca9eafc895e0d0544f5afc1b0365a0e0810dffac5eec359082d4f0819b",
+      "stationxml_sha256": "50dd8c9284b2dc3d9dd9b9c1a00e78fa07d55a9275fbf8cfd51c584d8830d713"
+    },
+    {
+      "analysis_slice": {
+        "start": 800,
+        "stop": 3200
+      },
+      "array_sha256": {
+        "characteristic": "930d703ebce901134839b945c76b86df8b97263e6e5d2616ba05a0ab69429dc8",
+        "counts": "4c58216250136dbb143763a3466930ec61d4c5017d7045f4f38dcdfd98d59731",
+        "counts_psd": "b7754e7bd372823e8dd77fc9c9b6c8591458fd6a87f9e6ecc8fddb4639884fbc",
+        "edge_valid": "6408ee48ad43020014f2c02e2de7f03d2595404e1144a85a143cddb8d9ba8a8a",
+        "filter_sos": "4d2e8c8a4fe9400dcde2f15174d1c2b8da003e88b191900fa4ca8f964bd71f26",
+        "filtered_native": "8f9bc1a4bb16f5f290e6112bb1b73b374a27a3f20e4406462f21007715b779e7",
+        "filtered_psd": "12f9579248607fef5274a18ca3c3c1bf8e946c9be2be01ba608914ee01428020",
+        "inverse_imag": "f1088d31949b46a9505aab7fc722db7ec014d14e40b1882b7a0cc423ba448f1f",
+        "inverse_real": "4f5f350580d1c2544ea6dd88c031d1238c014e51a105368fff30cc37fa5e058d",
+        "physical_native": "1948b19bb5a1cd6ef10643818afa2b122ce4c9b1603d9173f0f3a9e36d02ea4f",
+        "physical_psd": "82d536d38197a1b486fdd6bb022b0f0af32a927aac2a367199c0a0e656776543",
+        "prefilter_weight": "84cbb6a6bc0bf3c62aeb2092bc9a10c8231a189c56ff6539c14b982a75d7fafb",
+        "psd_frequency_hz": "414d0da9627845992e1e507697d68830b65e71a3c6b022a79073a5682c3f8bfd",
+        "response_frequency_hz": "c4135abb25093f5c990bf0fd1eaa6b4142cc233f3952fd33a83b1ea522acb6b8",
+        "response_imag": "d30db7e8c7f05c16f0b8ad81f6d533986c645bec0ff9d4e880b4f053cbeae1e2",
+        "response_real": "4da545f261373a61a5ef28028628068451593ea1bd2c60465cba84c26f942ab7",
+        "time_taper": "6c0262f25636ea271b1db117c9a1ea7819301a07ec263a18e08f40d79285b520"
+      },
+      "calculation_sha256": "7d863dee7ca1fb50a8850e869340b9b5adbf553a9357105ba5fa5c9bac8897b4",
+      "candidates": [
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 1298,
+          "on_index": 1171,
+          "on_relative_s": 11.71,
+          "on_utc": "2020-01-01T00:00:11.710000Z",
+          "peak_index": 1209,
+          "peak_ratio": 9.413062256433962,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        },
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 2098,
+          "on_index": 1971,
+          "on_relative_s": 19.71,
+          "on_utc": "2020-01-01T00:00:19.710000Z",
+          "peak_index": 2009,
+          "peak_ratio": 9.413062210168182,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        }
+      ],
+      "guard_samples": 500,
+      "miniseed_sha256": "e7f757fb24747540ffe9d51652146b96a56caeb52abf9b0f1742f5797ba3c1da",
+      "name": "gain_double",
+      "native_unit": "m/s",
+      "operator_tail_energy_fraction": 1.1817673600819286e-13,
+      "processing": {
+        "bandpass_hz": [
+          2,
+          10
+        ],
+        "edge_guard_s": 5,
+        "filter_mode": "offline-zero-phase",
+        "filter_order": 4,
+        "lta_s": 2,
+        "output": "native",
+        "prefilter_hz": [
+          0.5,
+          1,
+          20,
+          25
+        ],
+        "refractory_s": 1,
+        "sta_s": 0.2,
+        "taper_fraction": 0.05,
+        "threshold_off": 1.5,
+        "threshold_on": 3.5,
+        "water_level_db": 60,
+        "welch_segment_samples": 256
+      },
+      "psd_integrals": {
+        "counts": 4448538.443206602,
+        "filtered": 0.9981860833561833,
+        "physical": 1.083645120748713
+      },
+      "scientific_sha256": "384453ca9eafc895e0d0544f5afc1b0365a0e0810dffac5eec359082d4f0819b",
+      "stationxml_sha256": "6730f01073252d353ebdd8507130573dbc04d635c544f26f5ba35a66db2706c3"
+    },
+    {
+      "analysis_slice": {
+        "start": 800,
+        "stop": 3200
+      },
+      "array_sha256": {
+        "characteristic": "92b653cce55af55aa06e1ee5dc344b077d0718d2db5a0e0b743b3054c1d14157",
+        "counts": "4c58216250136dbb143763a3466930ec61d4c5017d7045f4f38dcdfd98d59731",
+        "counts_psd": "b7754e7bd372823e8dd77fc9c9b6c8591458fd6a87f9e6ecc8fddb4639884fbc",
+        "edge_valid": "6408ee48ad43020014f2c02e2de7f03d2595404e1144a85a143cddb8d9ba8a8a",
+        "filter_sos": "5bea0ca505cde29574865e1df13243298ca5fbb2b3d2842c79fa96113223dced",
+        "filtered_native": "47a2a57d955606b552d4289214ba24d4eae768e0757fcbeecdf042f8d9ce60c4",
+        "filtered_psd": "108f12c74b0cde9b60e9c080ef257763d416850cd6cdf8fd5980699baeb1896f",
+        "inverse_imag": "f1088d31949b46a9505aab7fc722db7ec014d14e40b1882b7a0cc423ba448f1f",
+        "inverse_real": "5f69d64b2d4fae5dce4053544bfc633083e0b74104e47c8dbe808eef77c31c89",
+        "physical_native": "c67c5a204e2d3aeec3e0eb077f1473c4fd8edc9a955affb4ae795f323a7da4c1",
+        "physical_psd": "60f6c580925344fa6d2f1ab14d4fa5adc5f1c64078089083dc899799a938c320",
+        "prefilter_weight": "84cbb6a6bc0bf3c62aeb2092bc9a10c8231a189c56ff6539c14b982a75d7fafb",
+        "psd_frequency_hz": "414d0da9627845992e1e507697d68830b65e71a3c6b022a79073a5682c3f8bfd",
+        "response_frequency_hz": "c4135abb25093f5c990bf0fd1eaa6b4142cc233f3952fd33a83b1ea522acb6b8",
+        "response_imag": "d30db7e8c7f05c16f0b8ad81f6d533986c645bec0ff9d4e880b4f053cbeae1e2",
+        "response_real": "98d28ad1d49f530684d8d413c65cc75454e56e6901df873a9efa9c737d5d818e",
+        "time_taper": "6c0262f25636ea271b1db117c9a1ea7819301a07ec263a18e08f40d79285b520"
+      },
+      "calculation_sha256": "2c6c0d0663f64dd9f17c943b54b49b4f9b6fe561d9033778b45cca402295fdda",
+      "candidates": [
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 1228,
+          "on_index": 1023,
+          "on_relative_s": 10.23,
+          "on_utc": "2020-01-01T00:00:10.230000Z",
+          "peak_index": 1195,
+          "peak_ratio": 9.29347954352518,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        },
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 2028,
+          "on_index": 1823,
+          "on_relative_s": 18.23,
+          "on_utc": "2020-01-01T00:00:18.230000Z",
+          "peak_index": 1995,
+          "peak_ratio": 9.293479543874644,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        }
+      ],
+      "guard_samples": 500,
+      "miniseed_sha256": "e7f757fb24747540ffe9d51652146b96a56caeb52abf9b0f1742f5797ba3c1da",
+      "name": "band_6_10",
+      "native_unit": "m/s",
+      "operator_tail_energy_fraction": 5.144827473466575e-18,
+      "processing": {
+        "bandpass_hz": [
+          6,
+          10
+        ],
+        "edge_guard_s": 5,
+        "filter_mode": "offline-zero-phase",
+        "filter_order": 4,
+        "lta_s": 2,
+        "output": "native",
+        "prefilter_hz": [
+          0.5,
+          1,
+          20,
+          25
+        ],
+        "refractory_s": 1,
+        "sta_s": 0.2,
+        "taper_fraction": 0.05,
+        "threshold_off": 1.5,
+        "threshold_on": 3.5,
+        "water_level_db": 60,
+        "welch_segment_samples": 256
+      },
+      "psd_integrals": {
+        "counts": 4448538.443206602,
+        "filtered": 0.014586121674353912,
+        "physical": 4.334580482994852
+      },
+      "scientific_sha256": "fd1192e4d149e6129b0d8200cc548d4686ae1c43546ced5d9a2391f618090030",
+      "stationxml_sha256": "50dd8c9284b2dc3d9dd9b9c1a00e78fa07d55a9275fbf8cfd51c584d8830d713"
+    },
+    {
+      "analysis_slice": {
+        "start": 800,
+        "stop": 3200
+      },
+      "array_sha256": {
+        "characteristic": "930d703ebce901134839b945c76b86df8b97263e6e5d2616ba05a0ab69429dc8",
+        "counts": "4c58216250136dbb143763a3466930ec61d4c5017d7045f4f38dcdfd98d59731",
+        "counts_psd": "b7754e7bd372823e8dd77fc9c9b6c8591458fd6a87f9e6ecc8fddb4639884fbc",
+        "edge_valid": "6408ee48ad43020014f2c02e2de7f03d2595404e1144a85a143cddb8d9ba8a8a",
+        "filter_sos": "4d2e8c8a4fe9400dcde2f15174d1c2b8da003e88b191900fa4ca8f964bd71f26",
+        "filtered_native": "b31f9e43a395d4220c81d60f642a5c9ac8ebbcecc582d8df76af3da7152ab3f0",
+        "filtered_psd": "c9c03489f890e46383d369e43c96a009cc420c9b8fddd0f83e60f4c21a833b52",
+        "inverse_imag": "f1088d31949b46a9505aab7fc722db7ec014d14e40b1882b7a0cc423ba448f1f",
+        "inverse_real": "5f69d64b2d4fae5dce4053544bfc633083e0b74104e47c8dbe808eef77c31c89",
+        "physical_native": "c67c5a204e2d3aeec3e0eb077f1473c4fd8edc9a955affb4ae795f323a7da4c1",
+        "physical_psd": "60f6c580925344fa6d2f1ab14d4fa5adc5f1c64078089083dc899799a938c320",
+        "prefilter_weight": "84cbb6a6bc0bf3c62aeb2092bc9a10c8231a189c56ff6539c14b982a75d7fafb",
+        "psd_frequency_hz": "414d0da9627845992e1e507697d68830b65e71a3c6b022a79073a5682c3f8bfd",
+        "response_frequency_hz": "c4135abb25093f5c990bf0fd1eaa6b4142cc233f3952fd33a83b1ea522acb6b8",
+        "response_imag": "d30db7e8c7f05c16f0b8ad81f6d533986c645bec0ff9d4e880b4f053cbeae1e2",
+        "response_real": "98d28ad1d49f530684d8d413c65cc75454e56e6901df873a9efa9c737d5d818e",
+        "time_taper": "6c0262f25636ea271b1db117c9a1ea7819301a07ec263a18e08f40d79285b520"
+      },
+      "calculation_sha256": "e9efd979322a01a798d1463e35df748d7a070b4ba7c6d1bd3f3fd9829f8cfff1",
+      "candidates": [
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 1298,
+          "on_index": 1177,
+          "on_relative_s": 11.77,
+          "on_utc": "2020-01-01T00:00:11.770000Z",
+          "peak_index": 1209,
+          "peak_ratio": 9.413062256433962,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        },
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 2098,
+          "on_index": 1977,
+          "on_relative_s": 19.77,
+          "on_utc": "2020-01-01T00:00:19.770000Z",
+          "peak_index": 2009,
+          "peak_ratio": 9.413062210168182,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        }
+      ],
+      "guard_samples": 500,
+      "miniseed_sha256": "e7f757fb24747540ffe9d51652146b96a56caeb52abf9b0f1742f5797ba3c1da",
+      "name": "threshold_on_5",
+      "native_unit": "m/s",
+      "operator_tail_energy_fraction": 1.1817673600819286e-13,
+      "processing": {
+        "bandpass_hz": [
+          2,
+          10
+        ],
+        "edge_guard_s": 5,
+        "filter_mode": "offline-zero-phase",
+        "filter_order": 4,
+        "lta_s": 2,
+        "output": "native",
+        "prefilter_hz": [
+          0.5,
+          1,
+          20,
+          25
+        ],
+        "refractory_s": 1,
+        "sta_s": 0.2,
+        "taper_fraction": 0.05,
+        "threshold_off": 1.5,
+        "threshold_on": 5,
+        "water_level_db": 60,
+        "welch_segment_samples": 256
+      },
+      "psd_integrals": {
+        "counts": 4448538.443206602,
+        "filtered": 3.9927443334247332,
+        "physical": 4.334580482994852
+      },
+      "scientific_sha256": "d297e55f1426192ed5d190de89b9279643d9624737b6a61d7b14c112a51aa8d0",
+      "stationxml_sha256": "50dd8c9284b2dc3d9dd9b9c1a00e78fa07d55a9275fbf8cfd51c584d8830d713"
+    },
+    {
+      "analysis_slice": {
+        "start": 900,
+        "stop": 3100
+      },
+      "array_sha256": {
+        "characteristic": "930d703ebce901134839b945c76b86df8b97263e6e5d2616ba05a0ab69429dc8",
+        "counts": "4c58216250136dbb143763a3466930ec61d4c5017d7045f4f38dcdfd98d59731",
+        "counts_psd": "e60f6f09f380cfb683c0e76278d50dbe665f923b2ed9d00d9f4993b5c6cee2a5",
+        "edge_valid": "755ecc63ff88ec939dc2cecd912502f6e20949d28c6dcd80fc3410c2275b69e8",
+        "filter_sos": "4d2e8c8a4fe9400dcde2f15174d1c2b8da003e88b191900fa4ca8f964bd71f26",
+        "filtered_native": "b31f9e43a395d4220c81d60f642a5c9ac8ebbcecc582d8df76af3da7152ab3f0",
+        "filtered_psd": "b7a9d209803cd44ed6317c03d9648171801800cd523ae36c997bfea326f5b5c0",
+        "inverse_imag": "f1088d31949b46a9505aab7fc722db7ec014d14e40b1882b7a0cc423ba448f1f",
+        "inverse_real": "5f69d64b2d4fae5dce4053544bfc633083e0b74104e47c8dbe808eef77c31c89",
+        "physical_native": "c67c5a204e2d3aeec3e0eb077f1473c4fd8edc9a955affb4ae795f323a7da4c1",
+        "physical_psd": "e7a7b95b197427a212156c3872cfdeda09ace58ecba22924f908ed4176c74326",
+        "prefilter_weight": "84cbb6a6bc0bf3c62aeb2092bc9a10c8231a189c56ff6539c14b982a75d7fafb",
+        "psd_frequency_hz": "414d0da9627845992e1e507697d68830b65e71a3c6b022a79073a5682c3f8bfd",
+        "response_frequency_hz": "c4135abb25093f5c990bf0fd1eaa6b4142cc233f3952fd33a83b1ea522acb6b8",
+        "response_imag": "d30db7e8c7f05c16f0b8ad81f6d533986c645bec0ff9d4e880b4f053cbeae1e2",
+        "response_real": "98d28ad1d49f530684d8d413c65cc75454e56e6901df873a9efa9c737d5d818e",
+        "time_taper": "6c0262f25636ea271b1db117c9a1ea7819301a07ec263a18e08f40d79285b520"
+      },
+      "calculation_sha256": "a12e93cf6286ca9d06b2d129048410e2f87dd526f920aae2dc62aa1c1040428e",
+      "candidates": [
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 1298,
+          "on_index": 1171,
+          "on_relative_s": 11.71,
+          "on_utc": "2020-01-01T00:00:11.710000Z",
+          "peak_index": 1209,
+          "peak_ratio": 9.413062256433962,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        },
+        {
+          "channel_index": 0,
+          "off_exclusive_index": 2098,
+          "on_index": 1971,
+          "on_relative_s": 19.71,
+          "on_utc": "2020-01-01T00:00:19.710000Z",
+          "peak_index": 2009,
+          "peak_ratio": 9.413062210168182,
+          "phase": null,
+          "timing_sigma_s": null,
+          "truncated_at_valid_end": false,
+          "truncated_at_valid_start": false
+        }
+      ],
+      "guard_samples": 900,
+      "miniseed_sha256": "e7f757fb24747540ffe9d51652146b96a56caeb52abf9b0f1742f5797ba3c1da",
+      "name": "guard_9",
+      "native_unit": "m/s",
+      "operator_tail_energy_fraction": 6.344617545214822e-15,
+      "processing": {
+        "bandpass_hz": [
+          2,
+          10
+        ],
+        "edge_guard_s": 9,
+        "filter_mode": "offline-zero-phase",
+        "filter_order": 4,
+        "lta_s": 2,
+        "output": "native",
+        "prefilter_hz": [
+          0.5,
+          1,
+          20,
+          25
+        ],
+        "refractory_s": 1,
+        "sta_s": 0.2,
+        "taper_fraction": 0.05,
+        "threshold_off": 1.5,
+        "threshold_on": 3.5,
+        "water_level_db": 60,
+        "welch_segment_samples": 256
+      },
+      "psd_integrals": {
+        "counts": 5125274.120849893,
+        "filtered": 4.72814787449006,
+        "physical": 5.031110591663562
+      },
+      "scientific_sha256": "3a9ccaa60ffe4d776cee8ea71b6eb8c8376eacbae6fb8f1fec63579d1b9564c7",
+      "stationxml_sha256": "50dd8c9284b2dc3d9dd9b9c1a00e78fa07d55a9275fbf8cfd51c584d8830d713"
+    }
+  ],
+  "same_count_bytes": true,
+  "samples": 4000,
+  "schema": "caos.m08-authored-worked.v1",
+  "source": "Authored integer-count amplitude bursts, not field data"
+}

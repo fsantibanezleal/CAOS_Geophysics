@@ -321,6 +321,45 @@ def test_zero_matches_are_evaluated_not_missing_reference_truth():
     assert evaluate_waveform_candidates(sealed, json.dumps(refs).encode())["status"] == "not_evaluable"
 
 
+@pytest.mark.parametrize("flag", ["truncated_at_valid_start", "truncated_at_valid_end"])
+def test_reference_matching_excludes_both_truncated_interval_variants(flag):
+    from waveform_processing import WaveformResult
+
+    out = process_waveform_record(source(), inventory(), request())
+    metadata = copy.deepcopy(out.metadata)
+    # Authored state-machine candidate, not a provider arrival. This checks the
+    # exact approved 'nontruncated' matching policy, not detector performance.
+    candidate = candidate_intervals(np.array([0.0, 4.0, 1.0]), 0, 3, 3.0, 1.0, 0, 0, 100, 1577836800000000 + 10000000)[
+        0
+    ]
+    candidate[flag] = True
+    metadata["candidates"] = [candidate]
+    sealed = seal_result(WaveformResult(metadata, out.arrays))
+    refs = {
+        "schema": "caos.waveform-analyst-references.v1",
+        "event_id": "38457511",
+        "source": {"raw_sha256": "1" * 64, "citation": "authored", "rights": "private-use-attested"},
+        "selection_sealed_before_scoring": True,
+        "references": [
+            {
+                "network": "XX",
+                "station": "TEST",
+                "location": "",
+                "channel": "BHZ",
+                "phase": "P",
+                "pick_utc": candidate["on_utc"],
+                "uncertainty_s": None,
+                "analyst_status": "catalogue-unspecified",
+                "source_record_id": "authored",
+            }
+        ],
+    }
+    evaluated = evaluate_waveform_candidates(sealed, json.dumps(refs).encode())
+    assert evaluated["reference_status_counts"] == {"unmatched": 1}
+    assert evaluated["unmatched_candidate_count"] == 1
+    assert evaluated["median_absolute_residual_s"] is None
+
+
 def test_sealing_rejects_nonfinite_arrays_even_with_matching_digest():
     from waveform_processing import WaveformResult
 
@@ -362,11 +401,17 @@ def test_sealing_includes_metadata_bytes_in_total_output_bound():
     counts.setflags(write=False)
     metadata = copy.deepcopy(out.metadata)
     metadata.update(status="qc_only", candidates=None)
-    metadata["array_descriptors"] = [{
-        "channel_index": 0, "name": "counts", "dtype": "<i4", "shape": list(counts.shape),
-        "unit": "counts", "bytes": counts.nbytes,
-        "sha256": hashlib.sha256(memoryview(counts).cast("B")).hexdigest(),
-    }]
+    metadata["array_descriptors"] = [
+        {
+            "channel_index": 0,
+            "name": "counts",
+            "dtype": "<i4",
+            "shape": list(counts.shape),
+            "unit": "counts",
+            "bytes": counts.nbytes,
+            "sha256": hashlib.sha256(memoryview(counts).cast("B")).hexdigest(),
+        }
+    ]
     rejected(lambda: seal_result(WaveformResult(metadata, {(0, "counts"): counts})), "waveform_contract")
 
 
@@ -551,3 +596,84 @@ def test_sealed_reference_conversion_matching_and_residuals():
     assert seal_result(result) == before
     assert evaluation["schema"] == "caos.local-waveform-evaluation.v1"
     assert "phase_f1" not in evaluation and evaluation["field_truth"] is None
+
+
+def authored_worked_report():
+    """Actual same-count controls; no field observation or catalogue calibration."""
+    values = [
+        round(
+            (10000 if 1200 <= n < 1300 or 2000 <= n < 2100 else 250) * math.sin(2 * math.pi * 3 * n / 100)
+            + 50 * math.sin(2 * math.pi * 17 * n / 100)
+        )
+        for n in range(4000)
+    ]
+    raw = source(values)
+    runs = []
+    outputs = {}
+    for name in ("base", "gain_double", "band_6_10", "threshold_on_5", "guard_9"):
+        req = request()
+        xml = inventory(gain=2000 if name == "gain_double" else 1000)
+        if name == "band_6_10":
+            req["processing"]["bandpass_hz"] = [6.0, 10.0]
+        elif name == "threshold_on_5":
+            req["processing"]["threshold_on"] = 5.0
+        elif name == "guard_9":
+            req["processing"]["edge_guard_s"] = 9.0
+            req["analysis_start_utc"] = "2020-01-01T00:00:09Z"
+            req["analysis_end_utc"] = "2020-01-01T00:00:31Z"
+        out = process_waveform_record(raw, xml, req)
+        assert out.metadata["status"] == "computed"
+        outputs[name] = out
+        diagnostic = out.metadata["processing"]["channels"][0]
+        runs.append(
+            {
+                "name": name,
+                "miniseed_sha256": out.metadata["sources"]["miniseed"]["raw_sha256"],
+                "stationxml_sha256": out.metadata["sources"]["stationxml"]["raw_sha256"],
+                "scientific_sha256": out.metadata["request"]["scientific_sha256"],
+                "calculation_sha256": seal_result(out).calculation_sha256,
+                "processing": req["processing"],
+                "native_unit": "m/s",
+                "analysis_slice": diagnostic["analysis_slice"],
+                "guard_samples": diagnostic["effective_guard_samples"],
+                "psd_integrals": diagnostic["psd_integrals"],
+                "operator_tail_energy_fraction": diagnostic["operator_tail_energy_fraction"],
+                "candidates": out.metadata["candidates"],
+                "array_sha256": {d["name"]: d["sha256"] for d in out.metadata["array_descriptors"]},
+            }
+        )
+    base, double = outputs["base"], outputs["gain_double"]
+    np.testing.assert_allclose(
+        double.arrays[(0, "physical_native")], base.arrays[(0, "physical_native")] / 2, rtol=1e-10, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        double.arrays[(0, "physical_psd")], base.arrays[(0, "physical_psd")] / 4, rtol=1e-10, atol=1e-12
+    )
+    assert base.metadata["candidates"] != outputs["threshold_on_5"].metadata["candidates"]
+    assert not np.array_equal(base.arrays[(0, "filtered_native")], outputs["band_6_10"].arrays[(0, "filtered_native")])
+    assert not np.array_equal(base.arrays[(0, "edge_valid")], outputs["guard_9"].arrays[(0, "edge_valid")])
+    return {
+        "schema": "caos.m08-authored-worked.v1",
+        "source": "Authored integer-count amplitude bursts, not field data",
+        "samples": 4000,
+        "fs_hz": 100,
+        "authored_burst_indices": [[1200, 1300], [2000, 2100]],
+        "burst_indices_are_phase_labels": False,
+        "same_count_bytes": True,
+        "runs": runs,
+        "field_truth": None,
+        "method_accepted": False,
+        "host_admitted": False,
+    }
+
+
+def test_worked_same_input_response_filter_and_threshold_effects():
+    worked = authored_worked_report()
+    assert len({r["miniseed_sha256"] for r in worked["runs"]}) == 1
+    assert all(c["phase"] is None and c["timing_sigma_s"] is None for row in worked["runs"] for c in row["candidates"])
+
+
+def test_authored_worked_artifact_matches_actual_local_calculation():
+    assert (
+        json.loads((ROOT / "data/derived/waveform/m08-authored-worked.json").read_bytes()) == authored_worked_report()
+    )

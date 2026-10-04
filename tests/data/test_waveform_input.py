@@ -498,3 +498,19 @@ def test_response_science_outside_parent_and_epoch_ambiguity():
         assert out.metadata["candidates"] is None and all(name == "counts" for ci, name in out.arrays)
     open_end = process_waveform_record(source(), good.replace(b' endDate="2021-01-01T00:00:00Z"', b""), request())
     assert open_end.metadata["status"] == "computed"
+
+
+def test_missing_engine_is_fixed_and_never_decodes(monkeypatch):
+    import waveform_processing as processing
+
+    calls = []
+    monkeypatch.setattr(processing, "_decode_record", lambda *a: calls.append("decode"))
+    monkeypatch.setattr(processing, "_read_inventory", lambda *a: calls.append("inventory"))
+    # Exact unavailable-import path, not a mocked successful scientific engine.
+    monkeypatch.setitem(sys.modules, "obspy", None)
+    rejected(lambda: process_waveform_record(source(), inventory(), request()), "waveform_engine")
+    assert calls == []
+    req = request()
+    req["source"]["rights"] = "unknown"
+    qc = process_waveform_record(source(), inventory(), req)
+    assert qc.arrays == {} and qc.metadata["qc"]["reasons"] == ["rights_ineligible"]

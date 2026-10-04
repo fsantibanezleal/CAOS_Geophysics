@@ -42,12 +42,27 @@ REFERENCE_KEYS = (
     "source_record_id",
 )
 
-ARRAY_NAMES = frozenset((
-    "counts", "physical_native", "filtered_native", "edge_valid", "time_taper",
-    "response_frequency_hz", "response_real", "response_imag", "inverse_real", "inverse_imag",
-    "prefilter_weight", "characteristic", "psd_frequency_hz", "counts_psd", "physical_psd",
-    "filtered_psd", "filter_sos",
-))
+ARRAY_NAMES = frozenset(
+    (
+        "counts",
+        "physical_native",
+        "filtered_native",
+        "edge_valid",
+        "time_taper",
+        "response_frequency_hz",
+        "response_real",
+        "response_imag",
+        "inverse_real",
+        "inverse_imag",
+        "prefilter_weight",
+        "characteristic",
+        "psd_frequency_hz",
+        "counts_psd",
+        "physical_psd",
+        "filtered_psd",
+        "filter_sos",
+    )
+)
 
 
 @dataclass(frozen=True)
@@ -161,8 +176,10 @@ def _sealed_metadata(m):
             if d["shape"] != [submitted["processing"]["filter_order"], 6]:
                 fail("waveform_contract")
         elif len(d["shape"]) != 1 or d["shape"][0] > (
-            65537 if d["name"].startswith(("response_", "inverse_")) or d["name"] == "prefilter_weight"
-            else 4097 if d["name"].endswith("_psd") or d["name"] == "psd_frequency_hz"
+            65537
+            if d["name"].startswith(("response_", "inverse_")) or d["name"] == "prefilter_weight"
+            else 4097
+            if d["name"].endswith("_psd") or d["name"] == "psd_frequency_hz"
             else 60000
         ):
             fail("waveform_contract")
@@ -430,6 +447,7 @@ def evaluate_waveform_candidates(sealed_result, reference_bytes):
                 if i not in used
                 and c["channel_index"] == identities[identity]
                 and not c["truncated_at_valid_start"]
+                and not c["truncated_at_valid_end"]
                 and abs(utc_us(c["on_utc"]) - pick) <= 500000
             ]
             if eligible:

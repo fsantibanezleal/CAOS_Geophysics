@@ -1,0 +1,210 @@
+{
+  "M13_executed": false,
+  "field_truth": null,
+  "host_admitted": false,
+  "interpreter": {
+    "sha256": "0b471133e110cfb53a061cad528ce8e517d7b9ac41a0a396c39ad795a487fc14",
+    "version": "3.12.10"
+  },
+  "native_engine_files": {
+    "evresp.cp312-win_amd64.pyd": {
+      "bytes": 92672,
+      "sha256": "cf75f2d2ffa6f58d37058330f9ecd1e76006fd582236770a84d6df54b7c42773"
+    },
+    "mseed.cp312-win_amd64.pyd": {
+      "bytes": 148992,
+      "sha256": "cefbf2a975ee90037452bacf61ffd1d13419bb97d79e5aad0dab60e72a0a74fe"
+    }
+  },
+  "native_malformed_executed": false,
+  "original_terminal_commit": "9a9bc3cb1f947da0e1afce4b150f72a277d6de70",
+  "positive_response_corrected_field_accepted": false,
+  "private_receipt_directory_identifier": "m08-resume-20261003-6f83b491",
+  "private_receipts": {
+    "baseline.xml": {
+      "bytes": 8867,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "a52b186a8efdfd7efce5a659a6a5b05a921fa430663b0cdfb2a7c706b500ec3a",
+      "skipped": 0,
+      "tests": 63,
+      "time_s": "13.983",
+      "timestamp": "2026-10-03T22:34:02.648707-03:00"
+    },
+    "core.xml": {
+      "bytes": 9427,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "a521afca226c8e2b17c35b217700d706a0fa2616cafa25ff492e2cf676c58a50",
+      "skipped": 0,
+      "tests": 67,
+      "time_s": "5.000",
+      "timestamp": "2026-10-03T22:38:50.077788-03:00"
+    },
+    "final.xml": {
+      "bytes": 10475,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "6c38df4dcdc6211d615b48b7d32fd98a176454dbfc421efc6af6c03b9758c48e",
+      "skipped": 0,
+      "tests": 74,
+      "time_s": "4.149",
+      "timestamp": "2026-10-03T22:51:17.506609-03:00"
+    },
+    "formatted.xml": {
+      "bytes": 10475,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "34da6e6baf9e8ec35de83535a4836a498df8383c3696beac5936c6c2487ff66c",
+      "skipped": 0,
+      "tests": 74,
+      "time_s": "5.718",
+      "timestamp": "2026-10-03T22:52:24.560894-03:00"
+    },
+    "full.xml": {
+      "bytes": 10135,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "cd818d48172096b93c8ef42e33d971e53c86b9f9051ab7f12bd12aedf52dc093",
+      "skipped": 0,
+      "tests": 72,
+      "time_s": "6.642",
+      "timestamp": "2026-10-03T22:50:09.332287-03:00"
+    },
+    "heldout-red.xml": {
+      "bytes": 6100,
+      "errors": 0,
+      "failures": 2,
+      "sha256": "02d3267d4fab1bbf5126faa031a5e0aa129bdfec869da74d70fc9a97a60a6c27",
+      "skipped": 0,
+      "tests": 2,
+      "time_s": "0.320",
+      "timestamp": "2026-10-03T22:40:26.784420-03:00"
+    },
+    "milestone.xml": {
+      "bytes": 9709,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "a31af5060160b5ee55284aab9cc4a5a3e4e7bab339ff082d1e938abaf5872905",
+      "skipped": 0,
+      "tests": 69,
+      "time_s": "8.190",
+      "timestamp": "2026-10-03T22:41:50.622386-03:00"
+    },
+    "public.xml": {
+      "bytes": 11011,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "a6bf13a7d5064356059aa990eb59da1d85c25cdaebfc1b540599d8c55145a0d5",
+      "skipped": 2,
+      "tests": 74,
+      "time_s": "3.616",
+      "timestamp": "2026-10-03T22:53:34.687009-03:00"
+    },
+    "seal-red.xml": {
+      "bytes": 5149,
+      "errors": 0,
+      "failures": 3,
+      "sha256": "fd4e477767799bb10c75627d0d03e82145df0f04c9c4011de83f84460ee02203",
+      "skipped": 0,
+      "tests": 3,
+      "time_s": "2.152",
+      "timestamp": "2026-10-03T22:37:03.272730-03:00"
+    },
+    "truncated-red.xml": {
+      "bytes": 2750,
+      "errors": 0,
+      "failures": 1,
+      "sha256": "665b6f3fd6c92a67d5536fcd34ac386f7e1c59bc73edba94e2804ec87a5c4af1",
+      "skipped": 0,
+      "tests": 2,
+      "time_s": "1.792",
+      "timestamp": "2026-10-03T22:50:57.456393-03:00"
+    },
+    "worked.xml": {
+      "bytes": 384,
+      "errors": 0,
+      "failures": 0,
+      "sha256": "85ae583b0bb69a7f1ac26de96ce1408236eb264418e3e3549a8f881fafb49346",
+      "skipped": 0,
+      "tests": 1,
+      "time_s": "1.807",
+      "timestamp": "2026-10-03T22:46:52.063576-03:00"
+    },
+    "validated.xml": {
+      "sha256": "5aec8d4a9bbe2e22bc4d90e97be92e593510cadba7f3c3f149d94445e2594f7d",
+      "bytes": 10597,
+      "tests": 75,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "time_s": "3.981",
+      "timestamp": "2026-10-03T22:55:52.467078-03:00"
+    },
+    "validated-public.xml": {
+      "sha256": "e74585777923e0bb7d9d6925aa7a5b0cebc05263c0d068e7e4d1aab0cd7cef58",
+      "bytes": 11133,
+      "tests": 75,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2,
+      "time_s": "3.734",
+      "timestamp": "2026-10-03T22:57:35.278223-03:00"
+    }
+  },
+  "production_changes": false,
+  "resource_profile_accepted": false,
+  "schema": "caos.m08-local-continuation-validation.v1",
+  "source_and_artifact_files": {
+    "data-pipeline/waveform_evaluation.py": {
+      "bytes": 18730,
+      "sha256": "d003164da610a34b133268c2bb92d06b525f155498eb3c2fecfaba3b5d7dad03"
+    },
+    "data-pipeline/waveform_input.py": {
+      "bytes": 45614,
+      "sha256": "61f68be65af2b37eb81f07e4bb70510b722f2cc9a05879b7c1966584a4c377a3"
+    },
+    "data-pipeline/waveform_processing.py": {
+      "bytes": 30396,
+      "sha256": "605cbe13d430278f564e533873387ea75498aa5d048d3d57986287359354f137"
+    },
+    "data/derived/waveform/m08-authored-worked.json": {
+      "bytes": 19347,
+      "sha256": "713a472ad90c3b659b87af7d761239132ea59d9ffd8e9c40b05c9484656f5925"
+    },
+    "data/derived/waveform/m08-heldout-display-replay.json": {
+      "bytes": 14827,
+      "sha256": "3c2648b96f0e9000983a0ef1f7dffa164207e16005c41c83185b3a91cb529028"
+    },
+    "tests/data/test_waveform_input.py": {
+      "bytes": 22340,
+      "sha256": "4e3dca8ec96ef5b7b14a8c4d7550617f1a9a3786b822d790e025bf88ed772cda"
+    },
+    "tests/data/test_waveform_ridgecrest.py": {
+      "bytes": 6590,
+      "sha256": "d45c60853eeb6831dd2a8499bd9488565046e6230b0e678f7164c0109252e9b0"
+    },
+    "tests/fixtures/waveform_m08/authored-controls.json": {
+      "bytes": 545,
+      "sha256": "f540c38a09e49e6c0bfc834e2ed9bd49e3d77295e39df75f1b0feb9e7b075398"
+    },
+    "tests/numerics/test_waveform_heldout.py": {
+      "bytes": 8253,
+      "sha256": "ceb883c320b8cc7cd41f098d7a9d0eda44c92c0d1cbf8f26c642a20f366c607b"
+    },
+    "tests/numerics/test_waveform_picks.py": {
+      "bytes": 30622,
+      "sha256": "f42a600ed62deb87783306d615eed891dfb3f7d41e0f4c0006e449e8a6e4f46b"
+    }
+  },
+  "source_base": "b2611adcd702f704486590f5c00bfc57c25ecedd",
+  "versions": {
+    "numpy": "2.2.6",
+    "obspy": "1.4.2",
+    "pytest": "9.0.3",
+    "scipy": "1.15.2",
+    "setuptools": "81.0.0"
+  },
+  "final_private_run": "validated.xml",
+  "final_public_run": "validated-public.xml"
+}
