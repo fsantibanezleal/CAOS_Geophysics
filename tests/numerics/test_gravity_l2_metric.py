@@ -227,3 +227,49 @@ def test_MP02_old_face_callback_does_not_keep_optimizer_parent_alive(monkeypatch
     assert ref() is None and all(v() is None for v in arrays)
     # Retaining even a native operator from an old face cannot resurrect it.
     with pytest.raises(ValueError,match='disposed'): callback@np.ones(5)
+
+
+@pytest.mark.parametrize('fault',['false_recurrence','count201'])
+def test_MP06_false_native_recurrence_or_count_cannot_bypass_true_H(monkeypatch,fault):
+    import gravity_l2 as l2
+    from test_gravity_l2 import tiny,noise
+    req,data,prior,_,_=tiny()
+    problem=l2._build_problem(req,data,noise(),prior,np.arange(4,dtype=np.int64),.01)
+    original=l2.optimization.ProjectedGNCG.findSearchDirection
+    calls=[]
+    def damaged(self):
+        actual=original(self)
+        assert self._joseph is not None
+        calls.append(self._joseph)
+        # A native recurrence PASS is necessary but not sufficient. Returning
+        # the wrong actual H direction must be rejected BEFORE any trial.
+        if fault=='false_recurrence':
+            self.cg_abs_resid=0.
+            self.cg_rel_resid=0.
+            return actual+np.ones_like(actual)
+        self.cg_count=201
+        return actual
+    monkeypatch.setattr(l2.optimization.ProjectedGNCG,'findSearchDirection',damaged)
+    result=l2._solve_partition(problem,prior)
+    assert calls and result['status']=='nonconverged' and result['reason']=='cg_cap'
+    assert result['iterations']==0
+    assert not problem['optimizer_evidence']['precision_trials']
+    assert problem['metric_evidence']['metric_disposed'] is True
+    assert all(v.live_payload_bytes==0 for v in calls)
+
+
+def test_MP04_exception_cycle_keeps_cause_but_not_native_scratch(monkeypatch):
+    refs=[]
+    def cyclic(a,**kwargs):
+        refs.append(weakref.ref(a))
+        outer=RuntimeError('cyclic native diagnostic')
+        inner=ValueError('preserved cause identity')
+        outer.__cause__=inner
+        inner.__context__=outer
+        raise outer
+    monkeypatch.setattr(metric.la,'cho_factor',cyclic)
+    with pytest.raises(RuntimeError,match='cyclic native diagnostic') as caught:
+        metric.JosephMetric(sp.eye(3,format='csr'),np.ones((4,3)),sp.eye(4,format='csr'),
+                            np.arange(3,dtype=np.int64),monotonic()+120.)
+    assert caught.value.__cause__.__context__ is caught.value
+    assert all(v() is None for v in refs)
