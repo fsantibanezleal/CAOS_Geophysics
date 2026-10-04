@@ -121,8 +121,10 @@ Retain every failed run. Test-owned project cleanup uses the real exact-ID API;
 it never deletes the database or any operator-owned file/project.
 
 Each integration control gets its own fresh database/server, with the unchanged
-ten-auth-attempt/600-second policy. The owner control makes seven real auth
-attempts, checks three further invalid attempts and the eleventh429/Retry-After.
+ten-auth-attempt/fixed-600-second UTC policy. A dedicated fresh rate control
+checks ten invalid login attempts and the eleventh429/Retry-After in one bucket,
+using the server Date and bounded boundary wait described in
+[the fixed-window gate](fixed-window-rate-gate.md).
 This avoids unrelated matrix cases exhausting each other's rate windows, not
 a rate-policy bypass. The static test mount rejects unmatched /api/ paths rather
 than returning SPA HTML/StaticFiles405; it adds no API handler. Extracted backend
