@@ -184,17 +184,30 @@ def qc(survey: Survey) -> dict:
     }
 
 
-def shot_splits(survey: Survey) -> dict[str, dict[str, np.ndarray]]:
+def shot_splits(survey: Survey, *, policy: str = "pinned-15/v1") -> dict[str, dict[str, np.ndarray]]:
     """Freeze two whole-shot tests without looking at picked times."""
     shots = np.unique(survey.shot_geophone[:, 0])
-    if len(shots) != 15:
-        raise TraveltimeError(f"whole-shot validation requires the pinned 15 shots; found {len(shots)}")
-    held_groups = {"interleaved": shots[4::5], "central_block": shots[6:9]}
+    if policy == "pinned-15/v1":
+        if len(shots) != 15:
+            raise TraveltimeError(f"whole-shot validation requires the pinned 15 shots; found {len(shots)}")
+        held_groups = {"interleaved": shots[4::5], "central_block": shots[6:9]}
+        held_count = 3
+    elif policy == "supplied-whole-shot/v1":
+        n = len(shots)
+        if n < 10:
+            raise TraveltimeError("supplied whole-shot validation requires at least ten shots")
+        held_count = (n + 4) // 5
+        interleaved = np.asarray([((j + 1) * n) // held_count - 1 for j in range(held_count)])
+        start = (n - held_count) // 2
+        held_groups = {"interleaved": shots[interleaved],
+                       "central_block": shots[start:start + held_count]}
+    else:
+        raise TraveltimeError("unsupported whole-shot validation policy")
     result = {}
     for name, held_shots in held_groups.items():
         held = np.flatnonzero(np.isin(survey.shot_geophone[:, 0], held_shots))
         training = np.flatnonzero(~np.isin(survey.shot_geophone[:, 0], held_shots))
-        if len(held_shots) != 3 or len(training) < 100 or len(held) < 30:
+        if len(held_shots) != held_count or len(training) < 100 or len(held) < 30:
             raise TraveltimeError(f"{name}: insufficient whole-shot training or held-out picks")
         result[name] = {"held_shots": held_shots, "held_rows": held, "training_rows": training}
     return result
@@ -413,18 +426,19 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     return result
 
 
-def _field_verdict(results: dict[str, dict]) -> tuple[str, str | None]:
+def _field_verdict(results: dict[str, dict], *, minimum_improved_shots: int = 2) -> tuple[str, str | None]:
     for name in ("interleaved", "central_block"):
         result = results[name]
         if not result["engine_stopped_before_limit"]:
             return "not-converged", f"{name} inverse reached its iteration ceiling"
         if (not math.isfinite(result["heldout_improvement"]) or result["heldout_improvement"] < 0.10
-                or result["improved_held_shot_count"] < 2):
+                or result["improved_held_shot_count"] < minimum_improved_shots):
             return "not-converged", f"{name} whole-shot prediction failed the frozen improvement gate"
     return "passed", None
 
 
-def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
+def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
+        validation_policy: str = "pinned-15/v1") -> dict:
     """Preserve source QC, then attempt only the predeclared conditional inverse."""
     survey = parse_sgt(path)
     report: dict = {
@@ -439,7 +453,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         return report
     started = time.perf_counter()
     try:
-        splits = shot_splits(survey)
+        splits = shot_splits(survey, policy=validation_policy)
     except TraveltimeError as error:
         report.update(inverse_status="ineligible", inverse_reason=str(error))
         report["wall_seconds"] = round(time.perf_counter() - started, 3)
@@ -467,13 +481,19 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         {key: value for key, value in report["engine"].items() if key != "options"},
         sort_keys=True).encode()).hexdigest()
     report["split"] = {name: _split_record(name, parts) for name, parts in splits.items()}
-    report["configuration_sha256"] = hashlib.sha256(json.dumps(
-        {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
+    configuration = {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
          "finer_mesh": FINER_MESH_OPTIONS, "cgls_max_iterations": CGLS_MAX_ITER,
          "cgls_residual_squared_tolerance": CGLS_TOLERANCE,
          "weight_rule": report["weighting"]["sigma_t_s"],
-         "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}},
-        sort_keys=True).encode()).hexdigest()
+         "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}}
+    minimum_improved = 2
+    if validation_policy != "pinned-15/v1":
+        held_count = len(splits["interleaved"]["held_shots"])
+        minimum_improved = (2 * held_count + 2) // 3
+        report["validation_policy"] = {"name": validation_policy, "held_shot_count": held_count,
+                                        "minimum_improved_shots": minimum_improved}
+        configuration["validation_policy"] = report["validation_policy"]
+    report["configuration_sha256"] = hashlib.sha256(json.dumps(configuration, sort_keys=True).encode()).hexdigest()
     report["observations"] = {"sensor_xy_m": survey.sensor_xy_m.tolist(),
                               "shot_geophone_zero_based": survey.shot_geophone.tolist(),
                               "picked_t_s": survey.time_s.tolist(),
@@ -492,7 +512,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
                                                     FINER_MESH_OPTIONS, retain_arrays=False)},
             "meaning": "diagnostic perturbations only; never select primary model on held-out picks",
         }
-        report["inverse_status"], reason = _field_verdict(report["inverse"])
+        report["inverse_status"], reason = _field_verdict(report["inverse"], minimum_improved_shots=minimum_improved)
         if reason is not None:
             report["inverse_reason"] = reason
     except (TraveltimeError, RuntimeError, ValueError, TypeError, AssertionError, IndexError) as error:

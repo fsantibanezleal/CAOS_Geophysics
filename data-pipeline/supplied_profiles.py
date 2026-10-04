@@ -182,7 +182,11 @@ def process_profile(path: Path, metadata: dict) -> dict:
     code = Path(engine.__file__)
     code_raw, code_identity = _read(code, MAX_INPUT_BYTES)
     wrapper_raw, wrapper_identity = _read(Path(__file__), MAX_INPUT_BYTES)
-    report = engine.run(Path(path), source_sha256=binding["sha256"])
+    if METHODS[meta["method"]] == "traveltime":
+        report = engine.run(Path(path), source_sha256=binding["sha256"],
+                            validation_policy="supplied-whole-shot/v1")
+    else:
+        report = engine.run(Path(path), source_sha256=binding["sha256"])
     fresh, fresh_identity = _read(path, MAX_INPUT_BYTES)
     if identity != fresh_identity or _hash(fresh) != binding["sha256"]:
         raise ProfileError("original changed during calculation")
@@ -225,6 +229,7 @@ def _validate_result(result):
             or report.get("source_sha256") != result["original"]["sha256"]
             or report.get("truth") is not None or report.get("raw_publication") is not False
             or report.get("rights_decision") != "supplied-declaration-not-verified"
+            or type(report.get("inverse_status")) is not str
             or report.get("inverse_status") not in {"passed", "ineligible", "unverified", "not-converged"}):
         raise ProfileError("engine report binding or verdict disagreement")
     expected_engine_schema = ("inverse-earth.local-ert-m07/v1" if METHODS[result["method"]] == "ert"
@@ -257,8 +262,9 @@ def _validate_result(result):
             raise ProfileError("original coordinate geometry")
     width = 4 if METHODS[result["method"]] == "ert" else 2
     for row in rows:
-        if (type(row) is not list or len(row) != width or len(set(row)) != width
-                or any(type(v) is not int or not 0 <= v < len(points) for v in row)):
+        if (type(row) is not list or len(row) != width
+                or any(type(v) is not int or not 0 <= v < len(points) for v in row)
+                or len(set(row)) != width):
             raise ProfileError("original measurement row geometry")
     if geometry["row_ids_zero_based"] != list(range(len(rows))):
         raise ProfileError("original measurement row identities")
