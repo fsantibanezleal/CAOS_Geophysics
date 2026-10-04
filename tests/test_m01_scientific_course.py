@@ -731,9 +731,11 @@ def test_shared_shell_and_scoped_mount():
         text = (ROOT / f"frontend/src/components/{name}.tsx").read_text(encoding="utf-8")
         assert "@fasl-work/caos-app-shell" in text
         assert ".css" not in text and "@font-face" not in text
-    assert "Research.tsx" in (FEATURE / "tasks.md").read_text(encoding="utf-8")
-    # This gate only checks source integration discipline, NOT the MAIN-owned
-    # mount or actual rendered product QA, which require separate receipts.
+    integration = (ROOT / "frontend/src/pages/Research.tsx").read_text(encoding="utf-8")
+    assert 'import { M01ScientificCourse } from "../components/M01ScientificCourse";' in integration
+    assert integration.count("content: <M01ScientificCourse />") == 2
+    # Actual theory/implementation source mounts, not an initiative checklist.
+    # This remains distinct from real rendered browser acceptance.
 
 
 def test_negative_controls_and_field_gate(controls):
@@ -770,10 +772,9 @@ def test_negative_controls_and_field_gate(controls):
 
 
 def test_stage_authorization_and_nonclaims(tmp_path, monkeypatch):
-    text = (FEATURE / "tasks.md").read_text(encoding="utf-8")
-    assert "96b583eefad4e8c8c4281800df219432c3b5a45e" in text
-    assert "--produce-course-records OUTPUT_ROOT" in text and "explicitly authorized" in text
-    assert "MAIN" in text and "ledger" in text
+    text = (FEATURE / "validation.md").read_text(encoding="utf-8")
+    assert "--produce-course-records OUTPUT_ROOT" in text and "fresh absent output" in text
+    assert "full_method_accepted=false" in text and "not rendered browser acceptance" in text
     monkeypatch.setitem(globals(), "OWNED_RUN_ROOT", tmp_path / "owned")
     for path in (tmp_path, tmp_path / "other", tmp_path / "owned"):
         with pytest.raises(ValueError):
