@@ -45,6 +45,58 @@ def test_transport_fragmentation_digest_and_native_integers(chunk):
     assert type(t.final[0]) is int
 
 
+def unavailable_packets(values=None):
+    values = values or (0,) * 11 + (7, 0, 200, 201, 0) + (0,) * 6 + (4,)
+    a = output(257, 1, struct.pack("<23Q", *values))
+    b = output(258, 2, hashlib.sha256(a).digest())
+    return a + b, values
+
+
+@pytest.mark.parametrize("chunk", [1, 63, 64, 159, 4160])
+def test_transport_unavailable_before_first_sample_is_failure_custody(chunk):
+    raw, values = unavailable_packets()
+    t = Transcript(ATTEMPT, OBJECT)
+    for offset in range(0, len(raw), chunk):
+        t.feed(raw[offset:offset + chunk])
+    assert t.final == values and t.final[15] == 0 and t.final[11] == 7
+    assert t.samples == 0 and t.last is None and t.release is None
+    assert t.native_digest == hashlib.sha256(raw[:248]).digest()
+    assert not t.pending  # zero words are unavailable, not an observed sample
+    with pytest.raises(ControlError):
+        t.feed(output(259, 3, struct.pack("<Q", 7)))
+
+
+@pytest.mark.parametrize("index,value", [
+    *((i, 1) for i in range(11)), (11, 0), (11, 24), (12, 1),
+    (13, 0), (14, 199), (15, 1), (15, 2),
+    *((i, 1) for i in range(16, 22)), (22, 0), (22, 2**32),
+])
+def test_transport_unavailable_before_sample_rejects_false_observation(index, value):
+    raw, values = unavailable_packets()
+    changed = list(values); changed[index] = value
+    with pytest.raises(ControlError):
+        Transcript(ATTEMPT, OBJECT).feed(unavailable_packets(changed)[0])
+
+
+def test_transport_unavailable_digest_and_terminal_order_still_strict():
+    raw, values = unavailable_packets()
+    with pytest.raises(ControlError):
+        Transcript(ATTEMPT, OBJECT).feed(raw[:-1] + bytes([raw[-1] ^ 1]))
+    t = Transcript(ATTEMPT, OBJECT); t.feed(raw)
+    for packet in (output(257, 3, struct.pack("<23Q", *values)),
+                   output(258, 3, t.native_digest),
+                   output(256, 3, struct.pack("<12Q", *([0] * 12)))):
+        with pytest.raises(ControlError):
+            t.feed(packet)
+        t = Transcript(ATTEMPT, OBJECT); t.feed(raw)
+
+
+def test_transport_unavailable_custody_cannot_send_bind_or_ack():
+    import inspect
+    source = inspect.getsource(runner.run_control)
+    assert 'if trace.final[15] == 1 and case != "no_ack":' in source
+
+
 @pytest.mark.parametrize("offset", [0, 4, 6, 8, 12, 16, 32, 48, 64 + 40])
 def test_transport_corrupt_source_bytes_are_not_repaired(offset):
     raw, unused, ignored = authored_packets()

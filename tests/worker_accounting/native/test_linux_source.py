@@ -76,3 +76,17 @@ def test_science_cwd_path_descriptor_is_leaf_only():
     assert native.index("setresuid(") < native.index("science_filter() || fchdir(6)")
     for forbidden in ("CAP_DAC_OVERRIDE", "CAP_DAC_READ_SEARCH", "setfsuid(", "chmod("):
         assert forbidden not in native
+
+
+def test_cpu_dialect_optional_force_idle_never_changes_charge():
+    native = (CORE / "linux_controller.c").read_text("utf-8")
+    body = native[native.index("int lc_parse_cpu("):native.index("int lc_parse_events(")]
+    keys = re.findall(r'"([a-z_.]+)"', body)
+    assert keys == ["usage_usec", "user_usec", "system_usec", "nr_periods",
+                    "nr_throttled", "throttled_usec", "nr_bursts", "burst_usec",
+                    "core_sched.force_idle_usec"]
+    assert "keyed(p, n, keys, 9, v, &seen)" in body and "(seen & 7u) != 7u" in body
+    assert "ncc_linux_cpu(v[0], v[1], v[2], &s->cpu_ns)" in body
+    assert "v[8]" not in body  # optional idle diagnostic is not executed CPU
+    keyed = native[native.index("static int keyed("):native.index("int lc_parse_cpu(")]
+    assert "key == count" in keyed and "(*seen & (1u << key))" in keyed

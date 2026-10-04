@@ -505,3 +505,27 @@ the actual test_birth_and_credential_barrier under the unchanged unit policy.
 Wrong owner/mode/link still rejects; failed setup has no science marker. Actual
 first nominal exit6/no marker and its bounded permission diagnostic are retained
 as failures at their original source pin, not relabelled as later successes.
+
+## 13. Exact kernel CPU dialect and unavailable early FINAL custody
+
+The selected host's actual cpu.stat additionally emits
+core_sched.force_idle_usec. [Linux6.8 rstat.c](https://raw.githubusercontent.com/torvalds/linux/v6.8/kernel/cgroup/rstat.c)
+accounts force idle separately and emits this exact microsecond diagnostic
+conditionally under CONFIG_SCHED_CORE. Accept ONLY that optional ninth key
+alongside the existing8 literals; no unknown prefix/suffix allowance. All
+required3 execution fields, duplicates/decimal-u64 overflow/key/text/line bounds
+remain unchanged. Charge remains checked max(usage,user+system)*1000ns; force
+idle is NOT charged as executed CPU, nor does it repair missing execution data.
+
+A native counter loss before first SAMPLE can emit FINAL with no observation.
+Custody may retain it ONLY with first11 observation words zero, availability0,
+known nonzero error1..23, drained0, stop>0 and kill_end>=stop. Zero is required
+also for wait4/stream/OOM/root-status slots16..21; logical CPUs must be1..2^32-1.
+This matches pre-birth failure, not a fabricated measured sample. Zero words are
+unavailable sentinels, NOT measured zero CPU. Exact FINAL bytes enter the same
+digest; no SAMPLE may follow, no successful RELEASE may follow and the harness
+must not BIND/ACK an unavailable FINAL. Ordinary available FINAL continues to
+match the preceding SAMPLE exactly. Retained native failed runs stay failed.
+Test gates include exact diagnostic key/charge independence, unknown/duplicate/
+overflow rejection and adversarial early-FINAL availability/word/order/digest
+controls. This changes no native acceptance threshold or public protocol.

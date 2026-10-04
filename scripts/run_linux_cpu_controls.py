@@ -395,18 +395,27 @@ class Transcript:
                 self.max_gap, self.max_query = max(self.max_gap, gap), max(self.max_query, query)
                 self.digest.update(packet)
             elif kind == 257:
-                if self.final is not None or self.last is None:
+                if self.final is not None:
                     reject()
-                self.final = struct.unpack("<23Q", body)
-                if self.final[:11] != self.last[:11]:
+                values = struct.unpack("<23Q", body)
+                if values[15] not in (0, 1):
                     reject()
+                if self.last is None:
+                    # Explicit unavailable sentinel, not an observed zero CPU.
+                    if (any(values[:11]) or not 1 <= values[11] <= 23 or values[12] or
+                            not values[13] or values[14] < values[13] or values[15] or
+                            any(values[16:22]) or not 1 <= values[22] < 2**32):
+                        reject()
+                elif values[:11] != self.last[:11]:
+                    reject()
+                self.final = values
                 self.digest.update(packet)
             elif kind == 258:
                 if self.final is None or self.native_digest is not None or body != self.digest.digest():
                     reject()
                 self.native_digest = body
             else:
-                if self.native_digest is None or self.release is not None:
+                if self.native_digest is None or self.release is not None or self.final[15] != 1:
                     reject()
                 self.release = struct.unpack("<Q", body)[0]
             self.sequence = seq
@@ -710,7 +719,7 @@ def run_control(manifest_path, expected_sha256):
                 receipt_bytes = (json.dumps(receipt, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
                 exclusive(root / "transcript-receipt.json", receipt_bytes)
                 receipt_hash = hashlib.sha256(receipt_bytes).digest()
-                if case != "no_ack":
+                if trace.final[15] == 1 and case != "no_ack":
                     send(4, trace.native_digest + receipt_hash)
                     send(5, (b"\0" * 32 if case == "bad_ack" else receipt_hash))
                 custody = True

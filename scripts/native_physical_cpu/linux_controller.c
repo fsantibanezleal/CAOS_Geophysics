@@ -230,9 +230,11 @@ static int keyed(const unsigned char *p, size_t n, const char *const *keys,
 }
 int lc_parse_cpu(const unsigned char *p, size_t n, struct lc_sample *s) {
     static const char *const keys[] = { "usage_usec", "user_usec", "system_usec",
-        "nr_periods", "nr_throttled", "throttled_usec", "nr_bursts", "burst_usec" };
-    uint64_t v[8] = {0}; uint32_t seen;
-    if (keyed(p, n, keys, 8, v, &seen) || (seen & 7u) != 7u ||
+        "nr_periods", "nr_throttled", "throttled_usec", "nr_bursts", "burst_usec",
+        "core_sched.force_idle_usec" };
+    uint64_t v[9] = {0}; uint32_t seen;
+    /* Optional forced-idle diagnostic is parsed strictly, never charged as CPU. */
+    if (keyed(p, n, keys, 9, v, &seen) || (seen & 7u) != 7u ||
         ncc_linux_cpu(v[0], v[1], v[2], &s->cpu_ns) != 0) return LC_COUNTER;
     s->usage_us = v[0]; s->user_us = v[1]; s->system_us = v[2];
     return LC_OK;
