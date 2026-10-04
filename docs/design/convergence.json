@@ -2,16 +2,15 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "1b112bb258520a5679a865335cec30b6a97a1a0d",
-  "assessed_at": "2026-10-03T11:14:22Z",
+  "assessed_revision": "e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe",
+  "assessed_at": "2026-10-04T00:03:59Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
     "application_origins": [
-      "https://geophysics.ml.fasl-work.com/",
-      "https://fsantibanezleal.github.io/CAOS_Geophysics/"
+      "https://geophysics.ml.fasl-work.com/"
     ],
-    "pages_publishes_application": true
+    "pages_publishes_application": false
   },
   "requirements": [
     {
@@ -48,11 +47,15 @@
       "id": "R-003",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_formats.py::test_missing_physical_metadata_rejection.",
-      "note": "Strict raw metadata and several local scientific parsers exist. Full modality ingestion and exact product gate are incomplete.",
+      "note": "Strict raw metadata and several local scientific parsers exist. Local-only physical gravity JSON and its executed correction workflow are merged through PR127/131/134; independent final integration passed179 tests without skips and fifteen cold allocation/structural controls. No API/storage/worker/provider activation follows. Full modality ingestion and exact product gate are incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
           "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+        },
+        {
+          "path": "docs/validation/physical-json-independent-review-2026-10-03.md",
+          "sha256": "5463f9d6a3f6bf3c80b1bf3dd1dcdad018ac936f8a61107b6c4580dc0e7d71f9"
         }
       ],
       "receipts": []
@@ -112,7 +115,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Local API, strict recovery and paired Git-object bundle reviews pass separately; public-service and complete product admission remain open.",
+      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Separately merged pure accounting and its independent review passed419 unit tests and43 supplied-record checks; these are not OS measurements, runtime authority remains false and all15 native gates remain closed. Local API/recovery/source-bundle controls do not establish public-service or complete product admission.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -125,6 +128,10 @@
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
           "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
+        },
+        {
+          "path": "docs/validation/physical-accounting-independent-review-2026-10-03.md",
+          "sha256": "3c32a7d42196d925f33ac7158e1b093aef760018bb97f75d18b43cc384b7f5ac"
         }
       ],
       "receipts": []
@@ -133,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity still loses to its matched classical baseline. Independently accepted FWI/MT science and guarded canonical container retain the original private backup. M01 local transforms/adapter and the narrow M02 ordinary prism forward operator pass independent local controls. Submitted-survey L2/IRLS, field/host and complete M01-M13 acceptance remain failed or pending; no whole-method verdict is upgraded from the forward unit.",
+      "note": "M12 learned velocity still loses to its matched classical baseline. FWI/MT evidence and private original backup remain preserved. M01 local transforms/adapter and the narrow M02 forward unit pass independent controls. Later merged L2 reviews retain134 original passes, then168 regressions/12 metadata controls at d7c6670, but the new independent physical oracle has two tight-bound failures and two wide-bound passes. L2 candidate code remains unmerged; an approved active-set amendment is not numerical success. Complete submitted-survey L2/IRLS, field/host and M01-M13 acceptance remain failed or pending.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -158,6 +165,14 @@
         {
           "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
           "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
+        },
+        {
+          "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
+          "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
+        },
+        {
+          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
+          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
         }
       ],
       "receipts": []
@@ -217,8 +232,13 @@
       "id": "R-012",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/routes-shell.spec.ts plus scripts/check_single_origin.py::main.",
-      "note": "The development frontend uses the shared shell and six routes. Legacy Pages and VPS still both publish the old app; replacement one-origin release is unexecuted.",
-      "evidence": [],
+      "note": "The development frontend uses the shared shell and six routes. The obsolete secondary publication was withdrawn on 2026-10-03; workflow disabled, repository endpoint and public URL return404. Source/build policy is now root-only, with101 frontend and11 local deployment-policy tests passing. The existing VPS still serves legacy0.04.001. Whole replacement browser and one-origin release acceptance remain unexecuted.",
+      "evidence": [
+        {
+          "path": "docs/validation/pages-withdrawal-2026-10-03.md",
+          "sha256": "1c36f2771c2b86f8c39fcdbf6744ee2855ade14cdb696a4cc9e3713114ade15e"
+        }
+      ],
       "receipts": []
     },
     {
@@ -288,7 +308,7 @@
       "id": "R-017",
       "verdict": "unresolved",
       "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
-      "note": "Main/public app remain legacy 0.04.001 with no replacement cutover or Pages withdrawal. Actual-host admission failed disk headroom. Strict local MT recovery and paired source-builder reviews pass, but actual Linux drill, externally durable deletion authority, identity, SMTP and complete acceptance remain open.",
+      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Secondary publication was withdrawn and active source/build publication paths removed; that is not replacement acceptance. Actual-host admission failed disk headroom. Strict local MT recovery and paired source-builder reviews pass, but actual Linux drill, externally durable deletion authority, identity, SMTP and complete acceptance remain open.",
       "evidence": [
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
