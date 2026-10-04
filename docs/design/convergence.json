@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
+  "sdd_sha256": "a4db32e53e4ac2de78602ad043e31ca625289904e1861fd7912688fcc56a27e0",
   "assessed_revision": "e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe",
   "assessed_at": "2026-10-04T00:03:59Z",
   "release": {
@@ -308,7 +308,7 @@
       "id": "R-017",
       "verdict": "unresolved",
       "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
-      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Secondary publication was withdrawn and active source/build publication paths removed; that is not replacement acceptance. Actual-host admission failed disk headroom. Strict local MT recovery and paired source-builder reviews pass, but actual Linux drill, externally durable deletion authority, identity, SMTP and complete acceptance remain open.",
+      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Pages publication was withdrawn and active source/build paths removed; this is not replacement acceptance. The owner amendment on 2026-10-03 removes SMTP, off-host backup/deletion-journal and arbitrary whole-host 30% free-space prerequisites for this test deployment. Full scientific/UI, actual-host job capacity, account/ownership and single-origin cutover gates remain unresolved. Existing hostname retained; current plus two rollback releases required. Historical failed disk/restore evidence is preserved, not relabelled passed.",
       "evidence": [
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
