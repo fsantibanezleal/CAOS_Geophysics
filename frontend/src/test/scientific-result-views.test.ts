@@ -2,9 +2,23 @@ import { describe, expect, it, vi } from "vitest";
 import actual from "./fixtures/mt-actual.json";
 import { fixture } from "./fixtures/processing";
 import { parseMtResult } from "../api/mt-contracts";
-import { gravityInspection, mtInspection, mtReadout, recordedMtState, readSavedResult } from "../components/result-view-data";
+import { gravityInspection, mtInspection, mtReadout, recordedMtState, readSavedResult, recordedPlaybackAllowed } from "../components/result-view-data";
 
 describe("server result inspection, not computation", () => {
+  it.each([
+    [false, false, 0, 4, true],
+    [true, false, 0, 4, false],
+    [false, true, 0, 4, false],
+    [true, true, 0, 4, false],
+    [false, false, 4, 4, false],
+    [false, false, 0, 0, false],
+  ])("playback admission reduced=%s hidden=%s frame=%s last=%s", (reduced, hidden, frame, last, expected) => {
+    expect(recordedPlaybackAllowed(reduced as boolean, hidden as boolean, frame as number, last as number)).toBe(expected);
+  });
+  it("restoring visibility changes eligibility without starting playback", () => {
+    expect(recordedPlaybackAllowed(false, true, 2, 4)).toBe(false);
+    expect(recordedPlaybackAllowed(false, false, 2, 4)).toBe(true);
+  });
   it("checks ZIP size and success before any byte read", async () => {
     const f = fixture(), read = vi.fn(() => Promise.resolve(new ArrayBuffer(0)));
     for (const size of [0, 21, 17 * 1048576 + 1, NaN, Infinity, 22.5]) {

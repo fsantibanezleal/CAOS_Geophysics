@@ -4,6 +4,10 @@ import type { MtProcessingJob } from "../api/processing-contracts";
 
 type GravityContext = { kind: "gravity"; job: ProcessingJob; dataset: GravityDataset };
 type MtContext = { kind: "mt"; job: MtProcessingJob; dataset: EdiDataset };
+/** Eligibility only: visibility restoration never starts playback itself. */
+export function recordedPlaybackAllowed(reduced: boolean, hidden: boolean, frame: number, last: number) {
+  return !reduced && !hidden && frame < last;
+}
 export function readSavedResult(blob: Blob, context: GravityContext): Promise<FlagResult>;
 export function readSavedResult(blob: Blob, context: MtContext): Promise<MtResult>;
 export async function readSavedResult(blob: Blob, context: GravityContext | MtContext) {
