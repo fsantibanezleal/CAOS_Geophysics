@@ -21,14 +21,23 @@ const diagramLabels = [
  * Frozen physical geometry and bilingual labels stay unchanged; explicit
  * shell theme overrides the image's system preference, without global CSS.
  */
-export function theoryDiagramUrl(chapter: number, dark: boolean): string {
-  const palette = dark
-    ? "--bg:#0d1117;--surface:#161b22;--fg:#c9d1d9;--muted:#9aa6b2;--border:#30363d;--blue:#58a6ff;--cyan:#3fb1c8;--pink:#f778ba;--warn:#d29922"
-    : "--bg:#f6f8fa;--surface:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--blue:#0969da;--cyan:#0a7c8a;--pink:#bf3989;--warn:#9a6700";
+export function theoryDiagramUrl(chapter: number, _dark: boolean): string {
   const raw = diagrams[chapter - 1];
   if (!raw) throw new Error("Unknown physical diagram.");
+  // A data-URI image is a separate document. Resolve the actual shell tokens,
+  // not a second palette, then embed only those declarations in the image.
+  // SSR keeps the reviewed standalone image; browser painting uses shell state.
+  if (typeof document === "undefined") return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(raw);
+  const style = getComputedStyle(document.documentElement);
+  const tokens: Record<string, string> = {
+    bg: "--color-bg", surface: "--color-surface", fg: "--color-fg", muted: "--color-fg-subtle",
+    border: "--color-border", blue: "--color-accent", cyan: "--color-accent-2",
+    pink: "--color-magenta", warn: "--color-warn",
+  };
+  const palette = Object.entries(tokens).map(([key, token]) => `--${key}:${style.getPropertyValue(token).trim()}`).join(";");
   const image = raw.replace(/@media\(prefers-color-scheme:dark\)\{:root\{[^}]*\}\}/, "")
-    .replace(/:root\{[^}]*\}/, ":root{" + palette + "}");
+    .replace(/:root\{[^}]*\}/, ":root{" + palette + "}")
+    .replace(/font:24px [^}]+(?=})/, `font:24px ${style.getPropertyValue("--font-sans").trim()}`);
   return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(image);
 }
 export type MapField = "field" | "sigma" | "residual";
