@@ -86,6 +86,9 @@ planner and development admission, never return a blindly relabelled JSON object
 magnetic. Each modality exactly `rows_sha256`, `observations_file_sha256`,
 `noise_file_sha256`, `count` integer1..2048, `noise_kind` matching its native
 declaration. This first directory contains NO sealed arrays or truth files.
+Each count must equal the admitted plan's sealed row count; rows_sha256 must
+equal SHA256 of those exact native int64 row IDs' C-order bytes. Observation and
+noise file commitments are not reinterpreted as bare-array value hashes.
 These are caller commitments only, not verified file/data hashes. Changes here
 may alter intake/source envelope identity, but must not alter native plan,
 development identity, calibration/selected scientific identities or weights.
