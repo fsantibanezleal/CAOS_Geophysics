@@ -9,7 +9,7 @@ interval. Fresh realizations, selection and limitations are fixed in the
 
 Forty epochs on RTX4070 Laptop selected epoch40 by validation only. Checkpoint
 SHA256 `23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1`;
-committed LF receipt SHA256 `15768618bd0801ef5f2989aa0f5a4bc7ff39e149bdfe29029211564290396cef`.
+committed LF receipt SHA256 `d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1`.
 The original Windows-generated receipt is retained separately; Git's declared
 LF normalization changes text bytes, not values, checkpoint or replay metrics.
 All480 held-out records and160 validation records are independently replayed

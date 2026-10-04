@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "6cc226eb0de1f4765d04bfa76dfe1eaa5e1740910cc431b0f704b9b09e4a40dd",
-  "assessed_revision": "e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe",
-  "assessed_at": "2026-10-04T00:03:59Z",
+  "assessed_revision": "c82b07ebec19bc14cd8f7c95fdc9b235b57a3385",
+  "assessed_at": "2026-10-04T08:04:57Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -140,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity still loses to its matched classical baseline. FWI/MT evidence and private original backup remain preserved. M01 local transforms/adapter and the narrow M02 forward unit pass independent controls. Later merged L2 reviews retain134 original passes, then168 regressions/12 metadata controls at d7c6670, but the new independent physical oracle has two tight-bound failures and two wide-bound passes. L2 candidate code remains unmerged; an approved active-set amendment is not numerical success. Complete submitted-survey L2/IRLS, field/host and M01-M13 acceptance remain failed or pending.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. Actual user-data first-arrival tools now compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish these scoped implementations, not learned superiority or field validity. M02 full-cap CG and full M01-M13/user-data/host/visual acceptance remain failed or pending.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -194,7 +194,7 @@
       "id": "R-010",
       "verdict": "unresolved",
       "declared_gate": "tests/learning/test_split_and_benchmark.py::test_disjoint_groups_and_matched_inputs.",
-      "note": "M13 has frozen event/station-disjoint STEAD evidence and browser parity. M12 retains its failed independent family/acquisition benchmark; complete product acceptance remains open.",
+      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
@@ -203,6 +203,14 @@
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
           "sha256": "300fa2617be1edd3a682c6adf97259c166b520703f5f391f6057f92b9d867b00"
+        },
+        {
+          "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
+          "sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1"
+        },
+        {
+          "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
+          "sha256": "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
         }
       ],
       "receipts": []
