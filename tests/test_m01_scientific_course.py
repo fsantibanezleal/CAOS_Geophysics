@@ -14,6 +14,8 @@ import os
 from pathlib import Path
 import platform
 import re
+import shutil
+import subprocess
 import sys
 import time
 import xml.etree.ElementTree as ET
@@ -202,6 +204,170 @@ def write_new_json(path, value):
     with path.open("x", encoding="utf-8", newline="\n") as stream:
         json.dump(value, stream, indent=2, sort_keys=True, allow_nan=False)
         stream.write("\n")
+
+
+def frontend_runtime_audit():
+    """Real TS arithmetic, byte transport and React SSR, NOT product/browser QA.
+
+    Uses the already-approved owned npm installation. No config/package edits,
+    lifecycle scripts, browser install, file write or fake scientific result.
+    """
+    node = shutil.which("node")
+    require(node is not None and (ROOT / "frontend/node_modules/vite").is_dir())
+    script = r"""
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import { createHash } from "node:crypto";
+import { createServer } from "vite";
+import react from "@vitejs/plugin-react";
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { CitationsProvider, useLangStore, useThemeStore } from "@fasl-work/caos-app-shell";
+const started = performance.now(), cpu = process.cpuUsage();
+const server = await createServer({configFile:false,root:process.cwd(),plugins:[react()],optimizeDeps:{noDiscovery:true,include:[]},
+  server:{middlewareMode:true},appType:"custom"});
+let checks=0, renders=0, negatives=0;
+function near(a,b,tolerance=1e-10) { assert.ok(Math.abs(a-b)<=tolerance); checks++; }
+try {
+  const d = await server.ssrLoadModule("/src/data/m01-scientific-course.ts");
+  const diagram = await server.ssrLoadModule("/src/components/M01CourseDiagram.tsx");
+  const exercise = await server.ssrLoadModule("/src/components/M01CourseExercise.tsx");
+  const course = await server.ssrLoadModule("/src/components/M01ScientificCourse.tsx");
+  near(d.calculateExplanation("E01",{latitude_deg:0}).surface_reference_mgal,978032.53359,1e-5);
+  near(d.calculateExplanation("E01",{latitude_deg:90}).surface_reference_mgal,983218.49378,1e-5);
+  const plate = d.calculateExplanation("E02",{density_kg_m3:2670,plate_thickness_m:1000});
+  near(plate.plate_mgal,111.9687560676875,1e-9); near(plate.subtractive_mgal,-plate.plate_mgal);
+  const covariance={a1:1,a2:1,sigma1_mgal:.02,sigma2_mgal:.02,correlation:-1};
+  near(d.calculateExplanation("E03",covariance).linear_sd_mgal,0);
+  near(d.calculateExplanation("E03",covariance).marginal_sd_upper_bound_mgal,.04);
+  near(d.calculateExplanation("E03",{...covariance,correlation:1}).linear_sd_mgal,.04);
+  near(d.calculateExplanation("E03",{...covariance,a2:-1,correlation:1}).linear_sd_mgal,0);
+  const wave=d.calculateExplanation("E04",{wavelength_m:500,delta_height_m:300,amplitude_mgal:2});
+  near(wave.attenuation,0.023054110763106823); near(wave.continued_amplitude_mgal,2*wave.attenuation);
+  for (const id of ["E01","E02","E03","E04"]) {
+    const values=Object.fromEntries(d.explanationFields[id].map(f=>[f.key,f.initial]));
+    for(const f of d.explanationFields[id]) {
+      for(const value of [f.min,f.max]) { d.calculateExplanation(id,{...values,[f.key]:value}); checks++; }
+      for(const value of [NaN,Infinity,-Infinity,true,"1",null,f.min-1,f.max+1]) {
+        assert.throws(()=>d.calculateExplanation(id,{...values,[f.key]:value}),/Invalid explanatory/); negatives++;
+      }
+      const missing={...values}; delete missing[f.key];
+      assert.throws(()=>d.calculateExplanation(id,missing)); negatives++;
+    }
+    assert.throws(()=>d.calculateExplanation(id,{...values,unknown:1})); negatives++;
+  }
+  const catalogue=await d.verifiedCatalogue(), loads=[];
+  assert.equal(catalogue.length,3);
+  const signal=new AbortController().signal;
+  function transport(raw,headers={}) {
+    let position=0;
+    return new Response(new ReadableStream({pull(c){
+      if(position===raw.length) { c.close(); return; }
+      const end=Math.min(position+8191,raw.length);c.enqueue(raw.subarray(position,end));position=end;
+    }}),{headers});
+  }
+  for(const item of catalogue) {
+    const calls=[];
+    const fetcher=async(url,init)=>{
+      assert.equal(init.cache,"no-store"); assert.equal(init.signal,signal);
+      assert.ok(url.startsWith("/data/m01-scientific-course/"+item.scenario_id+"/"));
+      calls.push(url);
+      return transport(new Uint8Array(fs.readFileSync("../data/derived/m01-scientific-course/"+url.split("/data/m01-scientific-course/")[1])),{"Content-Length":"1"});
+    };
+    const record=await d.loadCourseRecord(item.scenario_id,signal,fetcher);
+    assert.equal(calls.length,3);assert.equal(record.load.parsed_objects,3);
+    assert.equal(record.result.geometry.easting_m.length,196);
+    loads.push({scenario_id:item.scenario_id,...record.load});
+    for(const lang of ["en","es"]) for(const theme of ["light","dark"]) {
+      // SSR reads getInitialState, unlike mounted client state. Explicitly
+      // select its initial snapshot in this isolated harness only.
+      useLangStore.getInitialState().lang=lang;useThemeStore.getInitialState().theme=theme;
+      for(const field of ["field","sigma","residual"]) for(let heightIndex=0;heightIndex<3;heightIndex++) {
+        const markup=renderToStaticMarkup(React.createElement(diagram.M01CourseDiagram,{result:record.result,heightIndex,field,coverage:true}));
+        assert.ok(markup.includes("mGal") && markup.includes("<svg") && markup.includes("null"));
+        assert.ok(!markup.includes("NaN") && !markup.includes("undefined"));renders++;
+      }
+    }
+  }
+  const entry=catalogue[0].artifacts.find(a=>a.role==="request");
+  const raw=new Uint8Array(fs.readFileSync("../data/derived/m01-scientific-course/"+entry.path));
+  for(const bytes of [raw.subarray(0,raw.length-1),new Uint8Array([...raw,0]),Uint8Array.from(raw,(v,i)=>i===0?v^1:v)]) {
+    await assert.rejects(d.readBoundArtifact(entry,signal,async()=>transport(bytes)));
+    negatives++;
+  }
+  let reached=0;
+  for(const change of [{path:"../request.json"},{role:"unknown"},{role:"__proto__",path:"prism-case-0/[object Object]"},
+    {bytes:0},{bytes:32*1024*1024+1},{sha256:"bad"},{extra:"unknown"}]) {
+    await assert.rejects(d.readBoundArtifact({...entry,...change},signal,async()=>{reached++;return transport(raw);}));
+    negatives++;
+  }
+  assert.equal(reached,0);
+  const aborted=new AbortController();aborted.abort();
+  await assert.rejects(d.readBoundArtifact(entry,aborted.signal,async()=>{reached++;return transport(raw);}));
+  assert.equal(reached,0);negatives++;
+  // Supplied request/result corruption never reaches JSON.parse.
+  const saved=JSON.parse;let materializations=0;
+  JSON.parse=(...args)=>{materializations++;return saved(...args);};
+  try { await assert.rejects(d.readBoundArtifact(entry,signal,async()=>transport(new Uint8Array([...raw,0])))); }
+  finally { JSON.parse=saved; }
+  assert.equal(materializations,0);negatives++;
+  for(const lang of ["en","es"]) for(const theme of ["light","dark"]) {
+    useLangStore.getInitialState().lang=lang;useThemeStore.getInitialState().theme=theme;
+    const wrap=child=>React.createElement(CitationsProvider,{items:d.M01_COURSE_CITATIONS},child);
+    for(const lesson of d.lessons) {
+      const body=d.lessonBody(lesson,lang==="es"?1:0);
+      assert.ok(!/wiki milestone|wiki stage|hito wiki|for this wiki stage/.test(body));
+      const text=renderToStaticMarkup(wrap(React.createElement(course.PhysicsText,{text:body,es:lang==="es"})));
+      assert.ok(text.includes("katex") && !text.includes("katex-error"));renders++;
+      const picture=renderToStaticMarkup(React.createElement(diagram.M01CourseDiagram,{chapter:lesson.id}));
+      assert.ok(picture.includes("data:image/svg+xml"));renders++;
+    }
+    for(const id of ["E01","E02","E03","E04"]) {
+      const markup=renderToStaticMarkup(React.createElement(exercise.M01CourseExercise,{exercise:id}));
+      assert.ok(markup.includes(lang==="es"?"Aplicar":"Apply"));renders++;
+    }
+    const article=renderToStaticMarkup(wrap(React.createElement(course.M01ScientificCourse)));
+    assert.ok(article.includes("data-m01-course"));renders++;
+  }
+  const usage=process.cpuUsage(cpu);
+  console.log(JSON.stringify({kind:"local_typescript_arithmetic_transport_react_ssr",
+    node:process.version,checks,negative_assertions:negatives,ssr_renders:renders,loads,
+    wall_ms:performance.now()-started,cpu_microseconds:usage,
+    process_memory_snapshot_bytes:process.memoryUsage(),process_peak_rss_kib:process.resourceUsage().maxRSS,
+    source_sha256:Object.fromEntries(["components/M01ScientificCourse.tsx","components/M01CourseDiagram.tsx","components/M01CourseExercise.tsx","data/m01-scientific-course.ts"]
+      .map(name=>[name,createHash("sha256").update(fs.readFileSync("src/"+name)).digest("hex")])),
+    product_browser_qa:false,host_admission:false,field_eligibility:false}));
+} finally {await server.close();}
+"""
+    result = subprocess.run([node, "--input-type=module", "-e", script], cwd=ROOT / "frontend",
+                            capture_output=True, text=True, encoding="utf-8", timeout=180)
+    assert result.returncode == 0, result.stderr[-2000:]  # bounded local diagnostic, never a web error
+    assert not result.stderr.strip(), result.stderr[-2000:]
+    return json.loads(result.stdout.strip().splitlines()[-1])
+
+
+@pytest.fixture(scope="module")
+def frontend_checks():
+    return frontend_runtime_audit()
+
+
+def measure_single_layer():
+    """Fresh-process single-layer/height comparison, no extra catalogue/export."""
+    started, cpu = time.perf_counter(), time.process_time()
+    request, _ = control_request(case=0, noisy=True)
+    request["config"].update(depths_m=[700.0], dampings=[100.0], heights_m=[300.0])
+    original = digest(request)
+    result = transform_survey(request)
+    require(digest(request) == original and result["selection"]["status"] == "passed")
+    return {"kind": "single_layer_single_height_authored_control", "request_sha256": original,
+            "result_sha256": digest(result), "source_pins": PINS,
+            "test_module_sha256": sha256(Path(__file__).read_bytes()).hexdigest(),
+            "runtime": {"python": platform.python_version(), "engines": ENGINES},
+            "wall_seconds": time.perf_counter() - started, "process_cpu_seconds": time.process_time() - cpu,
+            "process_peak_working_set_bytes": peak_working_set_bytes(),
+            "selection": result["selection"] | {"candidates": "retained in memory; not an extra teaching record"},
+            "condition": result["condition"], "evaluation": result["evaluation"],
+            "grid_nodes": len(result["grids"][0]["covered"]), "full_method_accepted": False}
 
 
 def produce_course_records(output):
@@ -469,16 +635,18 @@ def test_continuation_support_height_and_residual_sign(controls, records):
         assert result["selection"]["height_m"] == min(g["height_m"] for g in result["grids"] if g["height_precision_passed"])
 
 
-def test_explanatory_controls_not_physical_jobs():
+def test_explanatory_controls_not_physical_jobs(frontend_checks):
     component = (ROOT / "frontend/src/components/M01CourseExercise.tsx").read_text(encoding="utf-8")
     data = (ROOT / "frontend/src/data/m01-scientific-course.ts").read_text(encoding="utf-8")
     assert all(e in data for e in ("E01", "E02", "E03", "E04"))
     assert "Apply" in component and "Reset" in component and "explanatory" in component.lower()
     assert "fetch(" not in component and "submitJob" not in component
     assert "calculateExplanation" in data
+    assert frontend_checks["checks"] >= 30 and frontend_checks["negative_assertions"] >= 90
+    assert frontend_checks["ssr_renders"] >= 150 and not frontend_checks["product_browser_qa"]
 
 
-def test_recorded_scenario_identity_and_stale_negatives(records, controls):
+def test_recorded_scenario_identity_and_stale_negatives(records, controls, frontend_checks):
     selected = os.environ.get("M01_COURSE_CANDIDATE_ROOT")
     base = Path(selected).resolve() if selected else WEB
     catalogue = [item for _, _, item in records]
@@ -488,6 +656,15 @@ def test_recorded_scenario_identity_and_stale_negatives(records, controls):
         assert result == transform_survey(request)
     assert len({i["request_sha256"] for i in catalogue}) == 3
     assert len({i["result_sha256"] for i in catalogue}) == 3
+    assert [load["scenario_id"] for load in frontend_checks["loads"]] == list(IDS)
+    # Actual committed HEAD blobs, not Git's default normalized text dialect.
+    if not selected:
+        for item in catalogue:
+            for entry in item["artifacts"]:
+                blob = subprocess.run(["git", "show", "HEAD:data/derived/m01-scientific-course/" + entry["path"]],
+                                      cwd=ROOT, capture_output=True, check=True).stdout
+                assert blob == (base / entry["path"]).read_bytes()
+                assert len(blob) == entry["bytes"] and sha256(blob).hexdigest() == entry["sha256"]
     original = catalogue[0]
     for key, value in (("scenario_id", "unknown"), ("source_pins", {**PINS, "gravity_processing.py": "0"*64}),
                        ("request_sha256", "0"*64), ("result_sha256", "0"*64),
