@@ -112,7 +112,7 @@ def geometry_request(rows):
 
 def control_rows(regime):
     """Original controls:truth only after the regime's prescribed geometry seal."""
-    if regime not in ("S1", "S2"):
+    if regime not in ("S1", "S2", "S4", "S5", "S6"):
         raise ValueError("This generator revision has not implemented the other regimes.")
     from magnetic_line_validation import make_partitions
     rows = geometry_rows()
@@ -130,6 +130,21 @@ def control_rows(regime):
         else:
             vector = analytic_dipole_vector((row["easting_m"], row["northing_m"], row["upward_m"]))
             row["magnetic_nT"] = math.fsum(a*b for a, b in zip(direction, vector))
+            if regime == "S5":
+                row["magnetic_nT"] += math.sin(2*math.pi*row["northing_m"]/150)
+            elif regime == "S6":
+                # Explicit unit-amplitude geology/stripe controls, never tuned
+                # to original heldout scores. Both vary north, invariant east.
+                row["magnetic_nT"] += math.cos(2*math.pi*row["northing_m"]/1600)+math.cos(2*math.pi*row["northing_m"]/800)
+    if regime == "S4":
+        # Explicit inspection derivatives; no claim these are a new eligible
+        # magnetic forward acquisition at their edited descriptive coordinates.
+        rows[16]["magnetic_nT"] = None
+        rows[50]["easting_m"],rows[50]["northing_m"] = rows[49]["easting_m"],rows[49]["northing_m"]
+        rows[83]["upward_m"] += 50.
+        rows[83]["clearance_m"] = rows[83]["upward_m"]
+        rows[117]["upward_m"] = rows[117]["clearance_m"] = None
+        rows[150]["utc"] = None
     return rows
 
 
@@ -168,6 +183,13 @@ def control_input(regime):
         metadata["revision"] = "plane-leveling-1"
         metadata["authored_control"].update(generator_revision="plane-leveling-1",
             truth_definition="Authored common80m plane:10+0.002e-0.003n nT, flight offsets2*(line_index-3),ties0")
+        request = geometry_request(rows)
+    elif regime in ("S4","S5","S6"):
+        metadata["dataset_id"],metadata["revision"] = "authored-"+regime.lower(),"negative-controls-1"
+        definition = {"S4":"Inspection derivative:missing F00.016 value;F01.017 duplicates XY;F02.017 upward+50m;F03.018 missing height;F04.018 missing UTC",
+            "S5":"Three independent SI dipoles plus unit1nT*sin(2pi*n/150m), intentionally unresolved cross-line wavelength",
+            "S6":"Three independent SI dipoles plus true unit1nT*cos(2pi*n/1600m) and stripe unit1nT*cos(2pi*n/800m),both invariant along east"}
+        metadata["authored_control"].update(generator_revision="negative-controls-1",truth_definition=definition[regime])
         request = geometry_request(rows)
     raw = csv_bytes(rows)
     metadata["original"].update(csv_sha256=sha256(raw).hexdigest(), csv_bytes=len(raw))

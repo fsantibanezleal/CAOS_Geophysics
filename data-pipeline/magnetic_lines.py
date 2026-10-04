@@ -298,7 +298,7 @@ def _channel_descriptor(rows, masks):
                 values=values,values_sha256=digest(values),masks=masks,mask_sha256=digest(masks))
 
 
-def apply_corrections(csv_original, sidecar_original, request_original, training_ids=None):
+def apply_corrections(csv_original, sidecar_original, request_original, training_ids=None, *, defer_microlevel=False):
     """Replay exact originals into immutable DAG channels; not a serialized Result.
 
     Authored auxiliary byte/clock custody is implemented. Field independent
@@ -309,6 +309,8 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
     from copy import deepcopy
     from magnetic_line_contract import channel_identity,load_lines
     intake = load_lines(csv_original,sidecar_original,request_original)
+    if type(defer_microlevel) is not bool:
+        fail("correction.defer_grid_diagnostic")
     metadata,request = intake["metadata"],intake["request"]
     if request is None or metadata["source_kind"] in ("provider_grid","provider_image"):
         fail("correction.input", "metadata_ineligible", "correction")
@@ -320,6 +322,8 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
     state = deepcopy(metadata["channel_state"])
     kind = metadata["quantity"]["kind"]
     reference = metadata["reference"]
+    leveling_result = None
+    pending_grid_operations = []
     parent = channel_identity(rows)
     channels = [dict(channel_id="original",kind=kind,role="original",data=_channel_descriptor(rows,deepcopy(masks)),
                      state=deepcopy(state),parent_sha256=None,
@@ -332,6 +336,9 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
         if name == "lag" and (kind != "scalar_total_intensity" or not any(
             s["operation"]=="main_field" and s["status"]=="not_applied" for s in state)):
             fail("lag.reference_subtracted_or_unknown", "metadata_ineligible", "correction")
+        if name=="microlevel" and defer_microlevel:
+            pending_grid_operations.append(deepcopy(operation))
+            continue
         if name in ("lag","diurnal","heading"):
             rows,masks = apply_instrument_corrections(rows,metadata,operation,masks)
         elif name in ("main_field","rereference"):
@@ -352,6 +359,7 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
                 fail("leveling.partition_identity", "custody_mismatch", "correction")
             before_level = deepcopy(rows)
             leveling = level_offsets(rows,request["geometry_policy"],training_ids,parameters["weights_policy"],metadata["uncertainty"])
+            leveling_result = deepcopy(leveling)
             if not leveling["common_relative_gauge"]:
                 fail("leveling.disconnected_relative_datums", "metadata_ineligible", "correction")
             rows = leveling["rows"]
@@ -389,7 +397,8 @@ def apply_corrections(csv_original, sidecar_original, request_original, training
             state=deepcopy(state),parent_sha256=parent,reference_receipt_sha256=None if reference is None else reference["receipt_sha256"]))
         parent = output
     return dict(original_rows=intake["rows"],rows=rows,masks=masks,state=state,kind=kind,channels=channels,
-                output_sha256=parent,reference=reference,provider_authenticated=False,numerical_success=False)
+                output_sha256=parent,reference=reference,leveling=leveling_result,
+                pending_grid_operations=pending_grid_operations,provider_authenticated=False,numerical_success=False)
 
 
 def weak_anomaly_diagnostic(perturbation_enu_nT, direction_enu, scalar_F_nT):
@@ -736,8 +745,9 @@ def fit_equivalent(rows, config, depth_m, damping):
         sigma = _array([r["uncertainty_nT"] for r in rows])
         if np.any(sigma <= 0):
             fail("fit.uncertainty", "metadata_ineligible", "fit")
-        weights = 1/sigma**2
-        if not np.isfinite(weights).all():
+        with np.errstate(over="ignore",under="ignore",divide="ignore",invalid="ignore"):
+            weights = 1/sigma**2
+        if not np.isfinite(weights).all() or np.any(weights<=0):
             fail("fit.weights", "metadata_ineligible", "fit")
     scaled = jacobian/scales
     augmented = np.vstack((np.sqrt(weights)[:, None]*scaled, math.sqrt(damping)*np.eye(len(sources))))
@@ -748,15 +758,21 @@ def fit_equivalent(rows, config, depth_m, damping):
             fail("fit.condition", "metadata_ineligible", "fit")
         model = hm.EquivalentSources(points=tuple(sources[:, j] for j in range(3)),
                                      damping=damping, dtype="float64", parallel=False)
-        model.fit(tuple(coordinates[:, j] for j in range(3)), values,
-                  weights=None if config["weights_policy"] == "unweighted" else weights)
-        predicted = model.predict(tuple(coordinates[:, j] for j in range(3)))
+        try:
+            model.fit(tuple(coordinates[:, j] for j in range(3)), values,
+                      weights=None if config["weights_policy"] == "unweighted" else weights)
+            predicted = model.predict(tuple(coordinates[:, j] for j in range(3)))
+        except (ValueError,FloatingPointError,OverflowError,np.linalg.LinAlgError):
+            fail("fit.native_solve","metadata_ineligible","fit")
     coefficients = np.asarray(model.coefs_, dtype=np.float64)
     if not np.isfinite(coefficients).all() or not np.isfinite(predicted).all():
         fail("fit.nonfinite", "metadata_ineligible", "fit")
     scaled_coefficients = coefficients*scales
-    data_term = float(np.sum(weights*(values-predicted)**2))
-    regularization = float(damping*np.sum(scaled_coefficients**2))
+    with np.errstate(over="ignore",invalid="ignore"):
+        data_term = float(np.sum(weights*(values-predicted)**2))
+        regularization = float(damping*np.sum(scaled_coefficients**2))
+    if not all(math.isfinite(t) for t in (data_term,regularization,data_term+regularization)):
+        fail("fit.objective_range","metadata_ineligible","fit")
     return dict(source_positions=basis["sources"], source_block_map=basis["map"],
                 coefficients=coefficients.tolist(), column_scales=scales.tolist(),
                 objective=dict(data_term=data_term, regularization_term=regularization, total=data_term+regularization,
@@ -776,15 +792,46 @@ def predict_equivalent(fitted, coordinates):
     return predicted
 
 
-def blocked_fit(rows, request, sealed):
-    """Frozen8x3 fits, one final fit, then one outer opening; no outer tuning."""
-    from magnetic_line_contract import channel_identity
+def blocked_fit(rows, request, sealed, *, original_inputs=None):
+    """Frozen8x3 fits; corrected channels require exact independent input replay.
+
+    No supplied parent hash can substitute for original bytes. Training-only
+    leveling is recomputed per inner/final partition, never once on all rows.
+    Existing uncorrected S1 recipe/outputs/candidates remain unchanged.
+    """
+    from magnetic_line_contract import channel_identity,load_lines
     from magnetic_line_validation import make_partitions
     np, _ = engines()
     request = validate_named("Request", request, len(rows))
     if sealed != make_partitions(rows, request):
         fail("partition.custody", "custody_mismatch", "fit")
-    if request["split"]["sealed_values_sha256"] != channel_identity(rows):
+    processing_lineage = None
+    fold_rows = None
+    if original_inputs is not None:
+        if type(original_inputs) is not tuple or len(original_inputs)!=3 or any(type(v) is not bytes for v in original_inputs):
+            fail("fit.original_input_bytes")
+        intake = load_lines(*original_inputs)
+        if intake["request"] != request:
+            fail("fit.original_request","custody_mismatch","fit")
+        final_run = apply_corrections(*original_inputs,training_ids=sealed["outer_training_ids"],defer_microlevel=True)
+        if final_run["rows"] != rows or final_run["kind"]!="scalar_total_field_anomaly":
+            fail("fit.derived_channel_replay","custody_mismatch","fit")
+        scopes = [fold["training_ids"] for fold in sealed["inner"]]+[sealed["outer_training_ids"]]
+        runs = [apply_corrections(*original_inputs,training_ids=scope,defer_microlevel=True) for scope in scopes[:3]]+[final_run]
+        for run,scope,validation_ids in zip(runs,scopes,
+            [fold["validation_ids"] for fold in sealed["inner"]]+[sealed["outer_validation_ids"]]):
+            selected = set(scope+validation_ids)
+            if any(flags for r,flags in zip(run["rows"],run["masks"]) if r["row_id"] in selected):
+                fail("fit.corrected_training_or_holdout_masks","metadata_ineligible","fit")
+        fold_rows = [{r["row_id"]:r for r in run["rows"]} for run in runs[:3]]
+        processing_lineage = dict(input_channel_sha256=intake["channel_sha256"],derived_output_sha256=final_run["output_sha256"],
+            request_original_sha256=sha256(original_inputs[2]).hexdigest(),csv_original_sha256=intake["csv_sha256"],
+            sidecar_original_sha256=intake["sidecar_sha256"],fold_local=True,
+            correction_output_sha256=[run["output_sha256"] for run in runs],
+            leveling_training_sha256=[digest(scope) for scope in scopes] if final_run["leveling"] is not None else [],
+            leveling_constraints_sha256=[digest([x for x in run["leveling"]["crossovers"] if x["disposition"]=="admitted"
+                and x["constraint_representative"]==x["crossover_id"]]) for run in runs] if final_run["leveling"] is not None else [])
+    elif request["operations"] or request["split"]["sealed_values_sha256"] != channel_identity(rows):
         fail("partition.sealed_values", "custody_mismatch", "fit")
     by_id = {r["row_id"]: r for r in rows}
     config = request["equivalent_sources"]
@@ -792,10 +839,11 @@ def blocked_fit(rows, request, sealed):
     for depth in config["depth_candidates_m"]:
         for damping in config["damping_candidates"]:
             scores = []
-            for fold in sealed["inner"]:
-                train = [by_id[rid] for rid in fold["training_ids"]]
+            for fold_index,fold in enumerate(sealed["inner"]):
+                actual = by_id if fold_rows is None else fold_rows[fold_index]
+                train = [actual[rid] for rid in fold["training_ids"]]
                 unsupported = set(fold["geometry_only_coverage"]["unsupported_ids"])
-                validation = [by_id[rid] for rid in fold["validation_ids"] if rid not in unsupported]
+                validation = [actual[rid] for rid in fold["validation_ids"] if rid not in unsupported]
                 if not validation:
                     fail("fit.fold_support", "metadata_ineligible", "fit")
                 fitted = fit_equivalent(train, config, depth, damping)
@@ -822,7 +870,7 @@ def blocked_fit(rows, request, sealed):
     predicted = predict_equivalent(final, [[r[k] for k in ("easting_m", "northing_m", "upward_m")] for r in validation])
     observed = _array([r["magnetic_nT"] for r in validation])
     residual = observed-predicted
-    return dict(selected_candidate=dict(depth_m=selected["depth_m"], damping=selected["damping"]),
+    result = dict(selected_candidate=dict(depth_m=selected["depth_m"], damping=selected["damping"]),
                 candidates=candidates, training_sha256=digest(train), production_fit_count=25,
                 evaluation_count=1, coverage=sealed["geometry_only_coverage"]["fraction"],
                 outer_row_ids=[r["row_id"] for r in validation],
@@ -831,3 +879,451 @@ def blocked_fit(rows, request, sealed):
                 rmse_nT=float(np.sqrt(np.mean(residual**2))), signal_rms_nT=float(np.sqrt(np.mean(observed**2))),
                 outer_observed_nT=observed.tolist(), outer_predicted_nT=predicted.tolist(),
                 outer_observed_minus_predicted_nT=residual.tolist(), final_fit=final)
+    if processing_lineage is not None:
+        result["processing_lineage"] = processing_lineage
+    return result
+
+
+def geometric_comparator(rows, coordinates, *, same_plane_height_tolerance_m):
+    """Actual LinearND triangle interpolation, no height transfer or extrapolation."""
+    from magnetic_line_validation import validate_geometry_rows
+    validate_geometry_rows(rows)
+    if same_plane_height_tolerance_m is None:
+        fail("comparator.height_policy","metadata_ineligible","fit")
+    tolerance = _type(same_plane_height_tolerance_m,"Nonneg","comparator.height_tolerance",len(rows))
+    np,_ = engines()
+    data = _array([[r[k] for k in ("easting_m","northing_m","upward_m")] for r in rows],3)
+    query = _array(coordinates,3,16384,"comparator.query")
+    values = _array([r["magnetic_nT"] for r in rows])
+    if len(rows)<3 or np.max(np.abs(data[:,2]-data[0,2]))>tolerance or np.max(np.abs(query[:,2]-data[0,2]))>tolerance:
+        fail("comparator.height_mismatch","metadata_ineligible","fit")
+    origin = np.min(data[:,:2],axis=0)
+    xy = data[:,:2]-origin
+    if not np.isfinite(xy).all() or np.linalg.matrix_rank(xy-xy[0])<2:
+        fail("comparator.xy_rank","metadata_ineligible","fit")
+    from scipy.interpolate import LinearNDInterpolator
+    from scipy.spatial import QhullError
+    from threadpoolctl import threadpool_limits
+    try:
+        with threadpool_limits(limits=1):
+            interpolator = LinearNDInterpolator(xy,values,fill_value=np.nan)
+            predicted = interpolator(query[:,:2]-origin)
+    except QhullError:
+        fail("comparator.triangulation","metadata_ineligible","fit")
+    if np.isinf(predicted).any():
+        fail("comparator.nonfinite","metadata_ineligible","fit")
+    return dict(values=[None if math.isnan(v) else float(v) for v in predicted],
+        masks=[["outside_hull"] if math.isnan(v) else [] for v in predicted],height_transform_claim=False,
+        method="scipy_linear_nd",verdict="eligible")
+
+
+def _partition_geometry(intake):
+    """Independent known navigation precedes the seal; no magnetic fitting."""
+    from copy import deepcopy
+    rows,flags = deepcopy(intake["rows"]),[[] for _ in intake["rows"]]
+    for op in intake["request"]["operations"]:
+        if op["operation"]=="lag":
+            state = [s for s in intake["metadata"]["channel_state"] if s["operation"]=="lag"]
+            if not state or any(s["status"]!="not_applied" for s in state):
+                fail("lag.geometry_state","metadata_ineligible","partition")
+            rows,flags = apply_instrument_corrections(rows,intake["metadata"],op,flags)
+            if any(flags):
+                fail("lag.geometry_overlap","metadata_ineligible","partition")
+    return rows
+
+
+def fit_grid(csv_original, sidecar_original, request_original):
+    """Local correction/blocked fit/height/support orchestration, NOT Result JSON.
+
+    No field-source approval is inferred. Synthetic quality failure is retained
+    alongside actual computed diagnostics. A future complete serializer/export
+    has additional exact contracts; this internal mapping is not that result.
+    """
+    from magnetic_line_contract import load_lines,preflight,MagneticContractError
+    from magnetic_line_validation import make_partitions
+    original = (csv_original,sidecar_original,request_original)
+    intake = load_lines(*original)
+    meta,request = intake["metadata"],intake["request"]
+    if request is None or meta["rights"]["decision"]!="allowed" or meta["rights"]["private_processing"]!="allowed":
+        fail("fit.input_or_rights","metadata_ineligible","fit")
+    unresolved = set(intake["eligibility_reasons"])-{"uncertainty_unresolved"}
+    if meta["source_kind"]!="original_synthetic_acquisition" or unresolved:
+        fail("fit.physical_metadata_or_independent_source_review","metadata_ineligible","fit")
+    aligned = _partition_geometry(intake)
+    sealed = make_partitions(aligned,request)
+    counts = preflight(aligned,meta,request)
+    processed = apply_corrections(*original,training_ids=sealed["outer_training_ids"],defer_microlevel=True)
+    if processed["kind"]!="scalar_total_field_anomaly":
+        fail("fit.reference_subtracted_anomaly_required","metadata_ineligible","fit")
+    fitted = blocked_fit(processed["rows"],request,sealed,original_inputs=original)
+    by_id = {r["row_id"]:r for r in processed["rows"]}
+    training = [by_id[r] for r in sealed["outer_training_ids"]]
+    validation = [by_id[r] for r in fitted["outer_row_ids"]]
+    config = request["grid"]
+    np,_ = engines()
+    east = config["origin_e_m"]+np.arange(config["nx"])*config["spacing_e_m"]
+    north = config["origin_n_m"]+np.arange(config["ny"])*config["spacing_n_m"]
+    ee,nn = np.meshgrid(east,north)
+    support = support_masks(processed["rows"],training,config,request["geometry_policy"],sensor_id=request["sensor_id"])
+    final = fitted["final_fit"]
+    if config["plane_upward_m"]<max(r["upward_m"] for r in training) or any(
+        s["upward_m"]>=config["plane_upward_m"] for s in final["source_positions"]):
+        fail("grid.source_free_higher_plane","metadata_ineligible","predict")
+    coordinates = np.column_stack((ee.ravel(),nn.ravel(),np.full(ee.size,config["plane_upward_m"])))
+    predictions = predict_equivalent(final,coordinates).reshape(config["ny"],config["nx"])
+    def plane(values,height,method):
+        return dict(values=values,east_axis=east,north_axis=north,plane_upward_m=height,method=method,
+            masked_values=[None if denied else float(value) for value,denied in zip(values.ravel(),support["excluded"])],
+            masks=support["masks"],excluded=support["excluded"])
+    grid = plane(predictions,config["plane_upward_m"],"harmonica_equivalent_sources")
+    continued = None
+    fft = dict(verdict="ineligible",reason="No positive requested height transfer",result=None)
+    if config["continuation_delta_m"] is not None:
+        height = config["plane_upward_m"]+config["continuation_delta_m"]
+        if not math.isfinite(height) or height<=config["plane_upward_m"]:
+            fail("grid.continued_height_float64","metadata_ineligible","predict")
+        query = coordinates.copy()
+        query[:,2] = height
+        continued = plane(predict_equivalent(final,query).reshape(predictions.shape),height,"direct_equivalent_source_prediction")
+        if not any(support["excluded"]):
+            fft = dict(verdict="eligible",reason=None,
+                result=continue_plane(predictions,config,datum=meta["coordinates"]["vertical_datum"],source_free=True))
+        else:
+            fft["reason"] = "Incomplete supported plane; no FFT fill/extrapolation"
+    query = [[r[k] for k in ("easting_m","northing_m","upward_m")] for r in validation]
+    try:
+        comparator = geometric_comparator(training,query,
+            same_plane_height_tolerance_m=request["geometry_policy"]["same_plane_height_tolerance_m"])
+    except MagneticContractError as exc:
+        if exc.error["code"]!="metadata_ineligible":
+            raise
+        comparator = dict(method="scipy_linear_nd",verdict="ineligible",reason=exc.error["reason"],values=None,masks=None,
+                          height_transform_claim=False)
+    spectrum = None
+    exclusion_masks = [flags if denied else [] for flags,denied in zip(support["masks"],support["excluded"])]
+    if request["spectrum"] is not None:
+        spectrum = power_spectrum(predictions,config,request["spectrum"],exclusion_masks)
+    microlevel = None
+    for op in processed["pending_grid_operations"]:
+        # IDs do not establish flight kind for user data.
+        flight_ids = {r["line_id"] for r in processed["rows"] if r["line_kind"] in ("flight","reflight")}
+        azimuths = [s["azimuth_deg"] for s in support["line_statistics"] if s["line_id"] in flight_ids]
+        microlevel = microlevel_diagnostic(predictions,config,op["parameters"],
+            acquisition_azimuths_deg=azimuths,masks=exclusion_masks)
+    baseline_control = meta["authored_control"]["regime"]=="S1"
+    quality = ("pass" if fitted["rmse_nT"]<=max(.05*fitted["signal_rms_nT"],1e-6) else "fail") if baseline_control else "unresolved"
+    return dict(intake=intake,processing=processed,partitions=sealed,preflight=counts,fit=fitted,grid=grid,
+        continued_grid=continued,fft_continuation=fft,comparator=comparator,support=support,spectrum=spectrum,microlevel=microlevel,
+        synthetic_quality_verdict=quality,provider_authenticated=False,field_acceptance="unresolved")
+
+
+MASK_ORDER = ("missing_value","duplicate_identity_error","duplicate_location","invalid_geometry","gap","unsupported_time",
+              "height_mismatch","uncalibrated_line","outer_sealed","spatial_buffer","outside_hull","beyond_support_radius",
+              "sampling_unresolved","unsupported_operation")
+
+
+def support_masks(original_rows, training_rows, grid_config, geometry_policy, *, sensor_id):
+    """Closed hull/distance support, conservative actual-gap tubes and spacing.
+
+    Broken ORIGINAL adjacencies mask points within the declared support radius.
+    CV removal alone never invents an acquisition gap. Sampling flags are
+    diagnostic; an output pixel does not establish a recoverable wavelength.
+    """
+    from magnetic_line_validation import validate_geometry_rows,_hull,_cross
+    from statistics import median
+    from fractions import Fraction
+    validate_geometry_rows(original_rows)
+    validate_geometry_rows(training_rows)
+    _type(sensor_id,"ID","support.sensor_id",len(original_rows))
+    grid = validate_named("GridConfig",grid_config)
+    policy = validate_named("GeometryPolicy",geometry_policy)
+    nx,ny = grid["nx"],grid["ny"]
+    if nx*ny>16384:
+        fail("support.cells","resource_refused","predict")
+    originals = {r["row_id"]:r for r in original_rows}
+    keys = ("line_id","line_kind","sensor_id","ordinal","utc","easting_m","northing_m","upward_m")
+    if any(r["row_id"] not in originals or any(r[k]!=originals[r["row_id"]][k] for k in keys) for r in training_rows):
+        fail("support.training_geometry_identity","custody_mismatch","predict")
+    selected = [r for r in original_rows if r["sensor_id"]==sensor_id]
+    training = [r for r in training_rows if r["sensor_id"]==sensor_id and r["magnetic_nT"] is not None and r["upward_m"] is not None]
+    if not selected or len(training)<3:
+        fail("support.eligible_training","metadata_ineligible","predict")
+    np,_ = engines()
+    _grid_array(np.zeros((ny,nx)),grid)
+    origin = (min(r["easting_m"] for r in training),min(r["northing_m"] for r in training))
+    points = [(r["easting_m"]-origin[0],r["northing_m"]-origin[1]) for r in training]
+    # Hull/intersection algebra squares coordinate spans. Refuse nonfinite
+    # arithmetic rather than admit an apparent hull from +/-inf products.
+    spans = [max(p[k] for p in points)-min(p[k] for p in points) for k in (0,1)]
+    if not all(math.isfinite(s*s) for s in spans):
+        fail("support.hull_float64_range","metadata_ineligible","predict")
+    hull = _hull(points)
+    groups = {}
+    for r in selected:
+        groups.setdefault(r["line_id"],[]).append(r)
+    stats,gaps,lines = [],[],[]
+    for line,rows in groups.items():
+        distances,azimuths,reversals,gap_count = [],[],0,0
+        for a,b in zip(rows,rows[1:]):
+            delta = (b["easting_m"]-a["easting_m"],b["northing_m"]-a["northing_m"])
+            length = math.hypot(*delta)
+            reasons = []
+            if not math.isfinite(length):
+                fail("support.distance_range","metadata_ineligible","predict")
+            if length==0:
+                reasons.append("duplicate_location")
+            if length>policy["max_segment_gap_m"] or b["ordinal"]!=a["ordinal"]+1:
+                reasons.append("gap")
+            if any(r["magnetic_nT"] is None for r in (a,b)):
+                reasons += ["missing_value","gap"]
+            if any(r["upward_m"] is None for r in (a,b)):
+                reasons.append("height_mismatch")
+            if policy["max_time_gap_s"] is not None:
+                if a["utc"] is None or b["utc"] is None:
+                    reasons.append("unsupported_time")
+                elif not 0<_utc_ns(b["utc"])-_utc_ns(a["utc"])<=Fraction.from_float(policy["max_time_gap_s"])*1000000000:
+                    reasons.append("gap")
+            if reasons:
+                gap_count += 1
+                gaps.append((a,b,reasons))
+            else:
+                distances.append(length)
+                azimuths.append(math.degrees(math.atan2(delta[0],delta[1]))%360)
+        start,end = rows[0],rows[-1]
+        de,dn = end["easting_m"]-start["easting_m"],end["northing_m"]-start["northing_m"]
+        length = math.hypot(de,dn)
+        azimuth = None if length==0 else math.degrees(math.atan2(de,dn))%360
+        if azimuth is not None:
+            reversals = sum(abs((a-azimuth+180)%360-180)>90 for a in azimuths)
+            if rows[0]["line_kind"]!="tie":
+                lines.append(dict(line_id=line,azimuth_deg=azimuth,
+                    center=(math.fsum(r["easting_m"]/len(rows) for r in rows),
+                            math.fsum(r["northing_m"]/len(rows) for r in rows))))
+        stats.append(dict(line_id=line,sensor_id=sensor_id,spacing_min_m=min(distances) if distances else None,
+            spacing_median_m=median(distances) if distances else None,spacing_max_m=max(distances) if distances else None,
+            local_perpendicular_spacing_m=None,azimuth_deg=azimuth,reversals=reversals,gap_count=gap_count,row_count=len(rows)))
+    sampling_resolved = policy["minimum_resolved_wavelength_m"] is not None
+    for line in lines:
+        angle = math.radians(line["azimuth_deg"])
+        spacing = []
+        for other in lines:
+            if other["line_id"]==line["line_id"]:
+                continue
+            if abs((other["azimuth_deg"]-line["azimuth_deg"]+90)%180-90)>5:
+                sampling_resolved = False
+                continue
+            distance = abs((other["center"][0]-line["center"][0])*math.cos(angle)-
+                           (other["center"][1]-line["center"][1])*math.sin(angle))
+            if distance>0:
+                spacing.append(distance)
+        record = next(s for s in stats if s["line_id"]==line["line_id"])
+        record["local_perpendicular_spacing_m"] = min(spacing) if spacing else None
+        if not spacing or record["spacing_max_m"] is None or policy["minimum_resolved_wavelength_m"] is None or \
+           policy["minimum_resolved_wavelength_m"]<2*max(min(spacing),record["spacing_max_m"]):
+            sampling_resolved = False
+    if len(lines)<2:
+        sampling_resolved = False
+    masks,excluded,nearest = [],[],[]
+    radius = grid["support_radius_m"]
+    for j in range(ny):
+        for i in range(nx):
+            point = (grid["origin_e_m"]+i*grid["spacing_e_m"],grid["origin_n_m"]+j*grid["spacing_n_m"])
+            translated = (point[0]-origin[0],point[1]-origin[1])
+            flags = []
+            distance = min(math.dist(translated,p) for p in points)
+            nearest.append(distance)
+            if not all(_cross(a,hull[(k+1)%len(hull)],translated)>=0 for k,a in enumerate(hull)):
+                flags.append("outside_hull")
+            if distance>radius:
+                flags.append("beyond_support_radius")
+            for a,b,reasons in gaps:
+                start = (a["easting_m"],a["northing_m"])
+                delta = (b["easting_m"]-start[0],b["northing_m"]-start[1])
+                length = math.hypot(*delta)
+                direction = (0.,0.) if length==0 else tuple(d/length for d in delta)
+                fraction = 0. if length==0 else math.fsum((point[k]-start[k])*direction[k] for k in (0,1))/length
+                if not math.isfinite(fraction):
+                    fail("support.gap_projection_range","metadata_ineligible","predict")
+                weight = max(0.,min(1.,fraction))
+                distance = math.hypot(*(point[k]-start[k]-weight*delta[k] for k in (0,1)))
+                if distance<=radius:
+                    flags += reasons
+            denied = bool(flags)
+            if not sampling_resolved:
+                flags.append("sampling_unresolved")
+            masks.append([f for f in MASK_ORDER if f in flags])
+            excluded.append(denied)
+    return dict(masks=masks,excluded=excluded,nearest_training_m=nearest,
+        total_count=nx*ny,eligible_count=sum(not f for f in excluded),line_statistics=stats,
+        sampling_resolved=sampling_resolved,gap_policy="original_broken_adjacency_closed_support_radius_tubes")
+
+
+def _grid_array(values, config, masks=None):
+    """Exact bounded scalar plane. No holes/strings/booleans become numeric zeros."""
+    config = validate_named("GridConfig",config)
+    nx,ny = config["nx"],config["ny"]
+    if nx*ny > 16384:
+        fail("grid.cells","resource_refused","predict",nx*ny,16384)
+    boundary = config["boundary_policy"]
+    if boundary["mode"]=="periodic" and (boundary["pad_e_cells"] or boundary["pad_n_cells"] or
+        boundary["detrend"]!="none" or boundary["taper"]!="none"):
+        fail("grid.periodic_boundary_policy")
+    data = _array(values,nx,ny,"grid.values")
+    if len(data) != ny:
+        fail("grid.shape")
+    np,_ = engines()
+    for origin,spacing,count in ((config["origin_e_m"],config["spacing_e_m"],nx),
+                                 (config["origin_n_m"],config["spacing_n_m"],ny)):
+        with np.errstate(over="ignore",invalid="ignore"):
+            axis = origin+np.arange(count)*spacing
+            steps = np.diff(axis)
+        if not np.isfinite(axis).all() or np.any(steps<=0) or np.any(np.abs(steps-spacing)>64*EPSILON*spacing):
+            fail("grid.float64_geometry","metadata_ineligible","predict")
+    if masks is not None:
+        if type(masks) is not list or len(masks) != nx*ny or any(
+            type(flags) is not list or len(flags)>16 or any(type(f) is not str or f not in MASK_ORDER for f in flags)
+            or flags != [f for f in MASK_ORDER if f in flags] for flags in masks):
+            fail("grid.masks")
+    return data,config
+
+
+def _real_inverse(coefficients):
+    np,_ = engines()
+    result = np.fft.ifft2(coefficients)
+    if not np.isfinite(result).all() or np.max(np.abs(result.imag)) > 1024*EPSILON*max(1.,float(np.max(np.abs(result.real)))):
+        fail("grid.inverse_real_domain","metadata_ineligible","spectrum")
+    return result.real
+
+
+def continue_plane(values, config, *, datum, source_free, masks=None):
+    """FFT height transfer on an explicitly complete, source-free declared plane.
+
+    source_free=True is a caller-supplied physical assertion, not independent
+    provider review or an inference from successful FFT. Unknown field domains
+    cannot be admitted by this operator alone.
+    """
+    data,config = _grid_array(values,config,masks)
+    if type(datum) is not str or datum != config["datum"] or source_free is not True:
+        fail("continuation.datum_or_source_free","metadata_ineligible","predict")
+    if masks is not None and any(masks):
+        fail("continuation.holes","metadata_ineligible","predict")
+    delta = config["continuation_delta_m"]
+    if delta is None:
+        fail("continuation.positive_displacement","metadata_ineligible","predict")
+    target_height = config["plane_upward_m"]+delta
+    if not math.isfinite(target_height) or target_height <= config["plane_upward_m"]:
+        fail("continuation.height_float64","metadata_ineligible","predict")
+    boundary = config["boundary_policy"]
+    pe,pn = boundary["pad_e_cells"],boundary["pad_n_cells"]
+    nx,ny = config["nx"],config["ny"]
+    if (nx+2*pe)*(ny+2*pn)>65536 or 2*pe>nx or 2*pn>ny:
+        fail("continuation.padding","resource_refused","predict")
+    np,_ = engines()
+    with np.errstate(over="ignore",invalid="ignore"):
+        mean = float(np.mean(data)) if boundary["detrend"]=="remove_mean" else 0.
+        work = data-mean
+    if not np.isfinite(work).all():
+        fail("continuation.detrend_range","metadata_ineligible","predict")
+    if boundary["taper"]=="hann":
+        work = work*np.hanning(ny)[:,None]*np.hanning(nx)[None,:]
+    if pe or pn:
+        work = np.pad(work,((pn,pn),(pe,pe)),mode="constant" if boundary["mode"]=="zero_pad" else "reflect")
+    ke = 2*np.pi*np.fft.fftfreq(work.shape[1],config["spacing_e_m"])
+    kn = 2*np.pi*np.fft.fftfreq(work.shape[0],config["spacing_n_m"])
+    transfer = np.exp(-np.hypot(kn[:,None],ke[None,:])*delta)
+    transformed = _real_inverse(np.fft.fft2(work)*transfer)
+    output = transformed[pn:pn+ny,pe:pe+nx]+mean
+    if not np.isfinite(output).all():
+        fail("continuation.output_range","metadata_ineligible","predict")
+    return dict(values=output,transfer=transfer,east_axis_rad_per_m=ke,north_axis_rad_per_m=kn,
+        plane_upward_m=target_height,boundary_policy=dict(boundary),mean_removed_nT=mean,
+        domain_interpretation="declared_complete_source_free_plane_not_provider_authentication")
+
+
+def power_spectrum(values, grid_config, spectrum_config, masks=None):
+    """Full two-sided window-normalized nT^2 bin power on the declared rectangle."""
+    data,grid = _grid_array(values,grid_config,masks)
+    config = validate_named("SpectrumConfig",spectrum_config)
+    rectangle = config["rectangle"]
+    e,n,nx,ny = (rectangle[k] for k in ("e_start","n_start","nx","ny"))
+    if e+nx>grid["nx"] or n+ny>grid["ny"]:
+        fail("spectrum.rectangle")
+    if masks is not None and any(masks[j*grid["nx"]+i] for j in range(n,n+ny) for i in range(e,e+nx)):
+        fail("spectrum.rectangle_holes","metadata_ineligible","spectrum")
+    np,_ = engines()
+    crop = data[n:n+ny,e:e+nx]
+    window = np.ones((ny,nx)) if config["window"]=="rectangular" else np.hanning(ny)[:,None]*np.hanning(nx)[None,:]
+    c2 = float(np.mean(window*window))
+    if c2<=0:
+        fail("spectrum.degenerate_window","metadata_ineligible","spectrum")
+    with np.errstate(over="ignore",invalid="ignore"):
+        mean = float(np.mean(crop))
+        work = window*(crop-mean)
+    if not np.isfinite(work).all():
+        fail("spectrum.demean_range","metadata_ineligible","spectrum")
+    coefficients = np.fft.fft2(work)
+    with np.errstate(over="ignore",invalid="ignore"):
+        power = np.abs(coefficients)**2/(nx*ny)**2/c2
+        parseval = float(np.mean(work*work)/c2)
+    with np.errstate(over="ignore",invalid="ignore"):
+        power_sum = float(power.sum())
+    if not np.isfinite(power).all() or not math.isfinite(parseval) or not math.isfinite(power_sum):
+        fail("spectrum.power_range","metadata_ineligible","spectrum")
+    fe,fn = np.fft.fftfreq(nx,grid["spacing_e_m"]),np.fft.fftfreq(ny,grid["spacing_n_m"])
+    azimuth = np.degrees(np.arctan2(fe[None,:],fn[:,None]))%360
+    nonzero = (fe[None,:]!=0)|(fn[:,None]!=0)
+    sectors = []
+    for sector in config["direction_sectors"]:
+        selected = nonzero & (azimuth>=sector["azimuth_start_deg"]) & (azimuth<sector["azimuth_end_deg"])
+        sectors.append(dict(sector_id=sector["sector_id"],bin_count=int(selected.sum()),power_nT2=float(power[selected].sum())))
+    return dict(config=config,power=power,east_axis=fe*(2*np.pi if config["axis_unit"]=="rad_per_m" else 1),
+        north_axis=fn*(2*np.pi if config["axis_unit"]=="rad_per_m" else 1),window_mean_square=c2,
+        mean_removed_nT=mean,parseval_sum_nT2=power_sum,windowed_mean_square_nT2=parseval,sectors=sectors)
+
+
+def microlevel_diagnostic(values, grid_config, parameters, *, acquisition_azimuths_deg, masks=None):
+    """Conditional directional filter; retains explicit geological-loss semantics."""
+    data,grid = _grid_array(values,grid_config,masks)
+    parameters = validate_named("MicrolevelParameters",parameters)
+    azimuths = _array(acquisition_azimuths_deg,maximum=32,field="microlevel.acquisition_azimuths")
+    np,_ = engines()
+    if np.any((azimuths<0)|(azimuths>=360)):
+        fail("microlevel.acquisition_degrees")
+    # Reversed flight acquisition is the same undirected line orientation.
+    difference = np.abs((azimuths-parameters["flight_azimuth_deg"]+90)%180-90)
+    if np.any(difference>parameters["max_azimuth_spread_deg"]):
+        fail("microlevel.nonparallel_acquisition","metadata_ineligible","spectrum")
+    spec = parameters["spectrum_policy"]
+    spectrum = power_spectrum(data,grid,spec,masks)
+    rect = spec["rectangle"]
+    e,n,nx,ny = (rect[k] for k in ("e_start","n_start","nx","ny"))
+    crop = data[n:n+ny,e:e+nx]
+    ke = 2*np.pi*np.fft.fftfreq(nx,grid["spacing_e_m"])
+    kn = 2*np.pi*np.fft.fftfreq(ny,grid["spacing_n_m"])
+    angle = math.radians(parameters["flight_azimuth_deg"])
+    parallel = ke[None,:]*math.sin(angle)+kn[:,None]*math.cos(angle)
+    perpendicular = ke[None,:]*math.cos(angle)-kn[:,None]*math.sin(angle)
+    # Ratio form avoids overflow in k^8 and preserves the exact prescribed H.
+    kp,kc,ka = np.abs(perpendicular),parameters["kc_rad_per_m"],parameters["ka_rad_per_m"]
+    with np.errstate(over="ignore",divide="ignore",invalid="ignore",under="ignore"):
+        ratio = kp/kc
+        high = np.where(ratio<=1,ratio**4/np.sqrt(1+ratio**8),1/np.sqrt(1+(kc/kp)**8))
+        transfer = high*np.exp(-(parallel/ka)**2)
+    transfer[0,0] = 0.
+    if not np.isfinite(transfer).all():
+        fail("microlevel.transfer_range","metadata_ineligible","spectrum")
+    removed = _real_inverse(np.fft.fft2(crop)*transfer)
+    retained = crop-removed
+    local_grid = dict(grid,nx=nx,ny=ny)
+    from copy import deepcopy
+    local_spec = deepcopy(spec)
+    local_spec["rectangle"] = dict(e_start=0,n_start=0,nx=nx,ny=ny)
+    removed_power = power_spectrum(removed,local_grid,local_spec)["parseval_sum_nT2"]
+    retained_power = power_spectrum(retained,local_grid,local_spec)["parseval_sum_nT2"]
+    cap = parameters["amplitude_cap_nT"]
+    clipped = None if cap is None else np.clip(removed,-cap,cap)
+    clipped_spectrum = None if clipped is None else power_spectrum(clipped,local_grid,local_spec)
+    return dict(parameters=parameters,transfer=transfer,removed=removed,retained=retained,
+        removed_power_nT2=removed_power,retained_power_nT2=retained_power,
+        clipped_removed=clipped,clipped_spectrum=clipped_spectrum,geological_preservation_claim=False,
+        source_spectrum=spectrum)

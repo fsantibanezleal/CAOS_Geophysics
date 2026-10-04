@@ -373,6 +373,85 @@ arrays and transfer functions must remain diagnostic, with no automatic
 promotion to corrected field observations.
 [USGS documented directional-processing example](https://cmgds.marine.usgs.gov/catalog/pcmsc/DataReleases/ScienceBase/DR_F7GT5K8R/B-04-12-NC_Magnetic_metadata.html).
 
+## Worked spectral and geological-loss controls
+
+An exactly periodic supplementary plane uses40 east cells at25m and32 north
+cells at30m, origin(0,0), so the periodic lengths are1000m and960m:
+
+$$
+d(e,n)=7+2.3\cos[2\pi(3e/1000+2n/960)+0.31]\quad\mathrm{nT}.
+$$
+
+At upward displacement100m, its cosine amplitude becomes
+2.3exp[-100sqrt((6pi/1000)^2+(4pi/960)^2)] while its mean remains7.
+This independently derived amplitude/phase agrees with the official Harmonica
+operator. No padding is hidden in that periodic oracle. Reflection or zero
+padding plus a named taper changes the boundary model and is recorded separately.
+[Harmonica FFT height transfer](https://www.fatiando.org/harmonica/v0.7.0/api/generated/harmonica.upward_continuation.html).
+
+After subtracting7, rectangular two-sided power has two nonzero conjugate bins,
+(north2,east3) and(-2,-3), each2.3^2/4nT^2. Their sum2.3^2/2 equals variance.
+Hann-window power instead uses its measured C2; it is not silently called the
+original variance. Frequency axes are cycles/m; multiplication by2pi gives
+rad/m without changing power units. The zero mode belongs to no directional
+sector, avoiding an invented orientation.
+[NumPy Fourier conventions](https://numpy.org/doc/2.2/reference/routines.fft.html).
+
+For east-west flights, consider genuine geology cos(2pi*n/960) and an acquisition
+stripe cos(8pi*n/960), both of authored unit1nT amplitude. With kc=2pi/960 and
+ka=2pi/1000rad/m, the prescribed directional filter removes fractions
+1/sqrt(2) of the geology and4^4/sqrt(4^8+1) of the stripe. Thus stripe removal
+cannot be advertised as preserving line-parallel geology. Removed+retained
+reconstruct the input; a separately declared clipping cap affects its own
+diagnostic array/spectrum, not the unclipped transfer or physical truth.
+Oppositely acquired headings90/270degrees describe the same undirected flight
+orientation. Nonparallel lines and a gapped rectangle are ineligible.
+
+The recorded S5 family adds1nT*sin(2pi*n/150m) to the independent dipole field.
+Its authored flights have330..450m nominal perpendicular spacing;50m output
+cells cannot resolve that150m cross-line wavelength. A supplementary uniform
+400m sampling oracle shows cos(2pi*n/150) and its aliased frequency
+1/150-3/400 give identical samples. No scalar gridding method can uniquely
+distinguish them from those samples. Irregular jitter changes exact alias
+equality but does not justify a universal Nyquist-resolution claim.
+
+S6 adds explicit unit1nT geology cos(2pi*n/1600m) and a stripe
+cos(2pi*n/800m), both invariant east, to the dipoles. These are known authored
+negative controls, not fitted field components or a new unopened validation
+target. S4 separately retains edited inspection records with missing values,
+duplicate XY, mixed/missing heights and missing UTC; their coordinates do not
+become a new valid forward acquisition merely because the CSV still parses.
+
+## Support versus approximation
+
+The local support operator intersects the closed training hull with the nearest
+training-distance policy. It preserves every grid cell and uses null plus
+exclusion reasons, never a filled-zero estimate. Actual broken ORIGINAL
+adjacencies produce conservative closed support-radius tubes; this masks gaps
+rather than joining around them. A complete-line CV exclusion is a partition
+decision, not an acquisition gap, so it does not manufacture those tubes.
+Sampling_unresolved is separately diagnostic and does not itself fabricate a
+hole. Local along/perpendicular spacings remain in the output.
+
+Corrected fitting accepts no arbitrary claimed parent hash. It independently
+replays the exact original CSV/sidecar/request and compares the derivative rows,
+then recomputes corrections inside each fold. The source/hash definitions stay
+distinct even when request whitespace changes but its typed meaning does not.
+[The original calibration-support diagnosis](../../design/features/m03-aeromagnetic-lines/calibration-support-diagnosis.md)
+shows why frozen fold A cannot estimate training crossover offsets: it has
+zero admitted constraints. That refusal does not change the original S1
+predictive threshold or authorize selecting geometry from its opened test.
+
+The source-bound local `fit_grid` orchestration produces real corrected rows,
+blocked fits, comparator applicability, supported grid and higher-plane
+predictions. It reports S1 quality failure explicitly. It is an internal
+numerical mapping, not yet the complete serialized/replayable `magnetic-result/1`.
+FFT requires a complete declared supported plane; source-free=True on the
+ordinary transform is a physical caller assertion, not provider authentication.
+Strict float64 axes/padding/cell/byte preconditions and known datum/sign remain
+necessary. Field reference/auxiliary review and genuine full-survey execution
+are not established by these controls.
+
 ## Bounded user-file inspection
 
 Use an existing declared compatible interpreter. Supply actual files;

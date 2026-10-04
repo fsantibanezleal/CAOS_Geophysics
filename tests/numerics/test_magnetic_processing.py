@@ -649,3 +649,399 @@ def test_utc_bracket_nanoseconds_signed_lag_and_exact_closed_gap():
     assert p._bracket(rows,"2001-01-01T00:00:00Z",.5,("x",)) is None
     rows[-1]["utc"] = "2001-01-01T00:00:00.500000002Z"
     assert p._bracket(rows,"2001-01-01T00:00:00.250000001Z",.5,("x",)) is None
+
+
+def periodic_control():
+    import numpy as np
+    _,g = modules()
+    _,_,req = g.geometry_input()
+    grid = deepcopy(req["grid"])
+    grid.update(nx=40,ny=32,origin_e_m=0.,origin_n_m=0.,spacing_e_m=25.,spacing_n_m=30.)
+    spectrum = dict(rectangle=dict(e_start=0,n_start=0,nx=40,ny=32),window="rectangular",
+        mean_policy="subtract_arithmetic_mean",normalization="full_two_sided_bin_power",axis_unit="cycles_per_m",
+        direction_sectors=[dict(sector_id="north",azimuth_start_deg=0.,azimuth_end_deg=90.),
+                           dict(sector_id="east",azimuth_start_deg=90.,azimuth_end_deg=180.)])
+    e,n = np.meshgrid(np.arange(40)*25.,np.arange(32)*30.)
+    phase = 2*np.pi*(3*e/1000+2*n/960)+.31
+    values = 7+2.3*np.cos(phase)
+    return grid,spectrum,phase,values
+
+
+def test_dipole_and_fourier_continuation_oracles():
+    import numpy as np
+    import xarray as xr
+    import harmonica as hm
+    p = processing()
+    grid,_,phase,values = periodic_control()
+    delta = grid["continuation_delta_m"]
+    attenuation = math.exp(-math.hypot(2*math.pi*3/1000,2*math.pi*2/960)*delta)
+    result = p.continue_plane(values,grid,datum=grid["datum"],source_free=True)
+    assert result["values"] == pytest.approx(7+2.3*attenuation*np.cos(phase),rel=1e-10,abs=1e-12)
+    # Separate official physical implementation; same declared periodic domain.
+    control = xr.DataArray(values,coords={"northing":np.arange(32)*30.,"easting":np.arange(40)*25.},
+                           dims=("northing","easting"))
+    assert result["values"] == pytest.approx(hm.upward_continuation(control,delta).values,rel=1e-10,abs=1e-12)
+    assert result["plane_upward_m"] == 220.
+    assert result["transfer"][0,0] == 1.
+    assert result["boundary_policy"] == grid["boundary_policy"]
+
+
+def test_spectrum_parseval_axis_and_holes():
+    import numpy as np
+    p = processing()
+    grid,spec,_,values = periodic_control()
+    result = p.power_spectrum(values,grid,spec)
+    assert result["mean_removed_nT"] == pytest.approx(7.,abs=1e-12)
+    assert result["parseval_sum_nT2"] == pytest.approx(2.3**2/2,rel=1e-10,abs=1e-12)
+    assert result["power"][2,3] == pytest.approx(2.3**2/4,rel=1e-10)
+    assert result["power"][-2,-3] == pytest.approx(2.3**2/4,rel=1e-10)
+    assert result["east_axis"][3] == pytest.approx(3/1000)
+    assert result["north_axis"][2] == pytest.approx(2/960)
+    rad = deepcopy(spec)
+    rad["axis_unit"] = "rad_per_m"
+    other = p.power_spectrum(values,grid,rad)
+    assert other["east_axis"] == pytest.approx(2*np.pi*result["east_axis"])
+    assert other["power"] == pytest.approx(result["power"])
+    spec["window"] = "hann"
+    windowed = p.power_spectrum(values,grid,spec)
+    window = np.hanning(32)[:,None]*np.hanning(40)[None,:]
+    assert windowed["parseval_sum_nT2"] == pytest.approx(
+        np.mean(window**2*(values-7)**2)/np.mean(window**2),rel=1e-10,abs=1e-12)
+    spec["rectangle"] = dict(e_start=3,n_start=2,nx=16,ny=12)
+    crop = p.power_spectrum(values,grid,spec)
+    assert crop["power"].shape == (12,16)
+    assert crop["config"] == spec
+
+
+def test_microlevel_stripes_and_parallel_geology():
+    import numpy as np
+    p = processing()
+    grid,spec,_,_ = periodic_control()
+    e,n = np.meshgrid(np.arange(40)*25.,np.arange(32)*30.)
+    # E-W flights: both true cross-line geology and stripes vary only north.
+    geology = np.cos(2*np.pi*n/960)
+    stripe = np.cos(2*np.pi*4*n/960)
+    kc,ka = 2*np.pi/960,2*np.pi/1000
+    params = dict(flight_azimuth_deg=90.,max_azimuth_spread_deg=5.,kc_rad_per_m=kc,ka_rad_per_m=ka,
+        amplitude_cap_nT=None,promotion="diagnostic_only",spectrum_policy=spec)
+    result = p.microlevel_diagnostic(geology+stripe,grid,params,acquisition_azimuths_deg=[90.,270.])
+    hg,hs = 1/math.sqrt(2),4**4/math.sqrt(4**8+1)
+    assert result["removed"] == pytest.approx(hg*geology+hs*stripe,rel=1e-9,abs=1e-6)
+    assert result["retained"]+result["removed"] == pytest.approx(geology+stripe,rel=1e-10,abs=1e-12)
+    assert result["geological_preservation_claim"] is False
+    assert result["transfer"][0,0] == 0.
+    assert result["removed_power_nT2"] == pytest.approx((hg*hg+hs*hs)/2,rel=1e-10)
+    assert result["retained_power_nT2"] == pytest.approx(((1-hg)**2+(1-hs)**2)/2,rel=1e-10)
+    params["amplitude_cap_nT"] = .2
+    clipped = p.microlevel_diagnostic(geology+stripe,grid,params,acquisition_azimuths_deg=[90.])
+    assert np.max(np.abs(clipped["clipped_removed"])) <= .2
+    assert clipped["removed"] == pytest.approx(result["removed"])
+    assert clipped["clipped_spectrum"]["parseval_sum_nT2"] > 0
+
+
+def test_grid_transforms_strict_domain_bounds_and_no_zero_fill():
+    import numpy as np
+    c,_ = modules()
+    p = processing()
+    grid,spec,_,values = periodic_control()
+    for bad in (np.full(values.shape,np.nan),np.full(values.shape,np.inf),np.ones(values.shape,dtype=bool),
+                values.astype(str),values[0],[[1.,None]]):
+        with pytest.raises(c.MagneticContractError):
+            p.power_spectrum(bad,grid,spec)
+    flags = [[] for _ in range(values.size)]
+    flags[0] = ["gap"]
+    with pytest.raises(c.MagneticContractError):
+        p.continue_plane(values,grid,datum=grid["datum"],source_free=True,masks=flags)
+    with pytest.raises(c.MagneticContractError):
+        p.power_spectrum(values,grid,spec,masks=flags)
+    for delta in (-100.,0.,None):
+        bad = deepcopy(grid)
+        bad["continuation_delta_m"] = delta
+        with pytest.raises(c.MagneticContractError):
+            p.continue_plane(values,bad,datum=grid["datum"],source_free=True)
+    for datum,free in (("unknown",True),(grid["datum"],False),(grid["datum"],1)):
+        with pytest.raises(c.MagneticContractError):
+            p.continue_plane(values,grid,datum=datum,source_free=free)
+    bad = deepcopy(grid)
+    bad.update(nx=129,ny=129)
+    with pytest.raises(c.MagneticContractError):
+        p.power_spectrum(np.zeros((129,129)),bad,spec)
+    bad = deepcopy(grid)
+    bad["boundary_policy"].update(mode="reflect_pad",pad_e_cells=21,pad_n_cells=0)
+    with pytest.raises(c.MagneticContractError):
+        p.continue_plane(values,bad,datum=bad["datum"],source_free=True)
+    params = dict(flight_azimuth_deg=90.,max_azimuth_spread_deg=5.,kc_rad_per_m=.01,ka_rad_per_m=.01,
+        amplitude_cap_nT=None,promotion="diagnostic_only",spectrum_policy=spec)
+    with pytest.raises(c.MagneticContractError):
+        p.microlevel_diagnostic(values,grid,params,acquisition_azimuths_deg=[90.,110.])
+    with pytest.raises(c.MagneticContractError):
+        p.microlevel_diagnostic(values,grid,params,acquisition_azimuths_deg=[])
+    for change in (dict(origin_e_m=1e16,spacing_e_m=3.),dict(plane_upward_m=1e16,continuation_delta_m=1.)):
+        bad = dict(grid,**change)
+        with pytest.raises(c.MagneticContractError):
+            p.continue_plane(values,bad,datum=bad["datum"],source_free=True)
+    bad = deepcopy(grid)
+    bad["boundary_policy"].update(pad_e_cells=1)
+    with pytest.raises(c.MagneticContractError):
+        p.continue_plane(values,bad,datum=bad["datum"],source_free=True)
+    for mode in ("zero_pad","reflect_pad"):
+        bad = deepcopy(grid)
+        bad["boundary_policy"].update(mode=mode,pad_e_cells=10,pad_n_cells=8,detrend="remove_mean",taper="hann")
+        result = p.continue_plane(values,bad,datum=bad["datum"],source_free=True)
+        assert result["values"].shape == values.shape
+        assert result["transfer"].shape == (48,60)
+        assert result["boundary_policy"] == bad["boundary_policy"]
+    # A hole outside an explicitly selected supported rectangle does not
+    # authorize full-plane continuation, but need not block its own spectrum.
+    subset = deepcopy(spec)
+    subset["rectangle"] = dict(e_start=2,n_start=2,nx=12,ny=12)
+    assert p.power_spectrum(values,grid,subset,masks=flags)["power"].shape == (12,12)
+
+
+def test_corrected_channel_blocked_fit_requires_original_replay():
+    c,g = modules()
+    p,v = processing(),validation()
+    raw,meta,req = g.control_input("S3")
+    original = (raw,c.canonical_bytes(meta),c.canonical_bytes(req))
+    run = p.apply_corrections(*original)
+    manifest = v.make_partitions(run["rows"],req)
+    with pytest.raises(c.MagneticContractError):
+        p.blocked_fit(run["rows"],req,manifest)
+    result = p.blocked_fit(run["rows"],req,manifest,original_inputs=original)
+    assert result["selected_candidate"] == dict(depth_m=500.,damping=.0001)
+    assert result["production_fit_count"] == 25
+    assert result["evaluation_count"] == 1
+    assert result["processing_lineage"]["input_channel_sha256"] == req["channel_sha256"]
+    assert result["processing_lineage"]["derived_output_sha256"] == run["output_sha256"]
+    assert result["processing_lineage"]["fold_local"] is True
+    assert result["rmse_nT"] == pytest.approx(18.799740861734186,abs=1e-6)
+    changed = deepcopy(run["rows"])
+    changed[0]["magnetic_nT"] += 1.
+    with pytest.raises(c.MagneticContractError):
+        p.blocked_fit(changed,req,manifest,original_inputs=original)
+    bad = list(original)
+    bad[-1] = bad[-1]+b" "
+    # Extra whitespace keeps request meaning but its exact original hash is
+    # distinct provenance; no arbitrary claimed input hash is accepted.
+    replay = p.blocked_fit(run["rows"],req,manifest,original_inputs=tuple(bad))
+    from hashlib import sha256
+    assert replay["processing_lineage"]["request_original_sha256"] == sha256(bad[-1]).hexdigest()
+
+
+def test_fold_local_leveling_replay_never_calibrates_from_test_values():
+    c,g = modules()
+    p,v = processing(),validation()
+    raw,meta,req = leveling_request(g,c,*g.control_input("S2"))
+    original = (raw,c.canonical_bytes(meta),c.canonical_bytes(req))
+    manifest = v.make_partitions(c.parse_csv(raw)["rows"],req)
+    run = p.apply_corrections(*original,training_ids=manifest["outer_training_ids"])
+    # Frozen geometry A leaves only three isolated tie rows and no admissible
+    # training crossings. A positive whole-DAG leveling expectation failed in
+    # the retained first-run XML. Do not recover it by shrinking buffers,
+    # leaking validation endpoints or bypassing the requested graph operation.
+    inventory = p.crossovers(c.parse_csv(raw)["rows"],req["geometry_policy"],manifest["inner"][0]["training_ids"])
+    assert sum(x["disposition"]=="admitted" for x in inventory) == 0
+    with pytest.raises(c.MagneticContractError) as err:
+        p.blocked_fit(run["rows"],req,manifest,original_inputs=original)
+    assert err.value.error["field"] == "leveling.no_training_constraints"
+    altered = c.parse_csv(raw)["rows"]
+    for row in altered:
+        if row["line_id"]=="F04":
+            row["magnetic_nT"] += 10000.
+    other_raw = g.csv_bytes(altered)
+    from hashlib import sha256
+    other_meta,other_req = deepcopy(meta),deepcopy(req)
+    other_meta["original"].update(csv_sha256=sha256(other_raw).hexdigest(),csv_bytes=len(other_raw))
+    other_req["dataset_version_sha256"] = c.dataset_identity(other_meta["original"]["csv_sha256"],c.digest(other_meta))
+    other_req["channel_sha256"] = other_req["split"]["sealed_values_sha256"] = c.channel_identity(altered)
+    for op in other_req["operations"]:
+        op["input_channel_sha256"] = other_req["channel_sha256"]
+    other = (other_raw,c.canonical_bytes(other_meta),c.canonical_bytes(other_req))
+    other_run = p.apply_corrections(*other,training_ids=manifest["outer_training_ids"])
+    other_manifest = v.make_partitions(other_run["rows"],other_req)
+    assert other_run["leveling"]["offsets"] == run["leveling"]["offsets"]
+    for a,b in zip(run["rows"],other_run["rows"]):
+        assert b["magnetic_nT"] == pytest.approx(a["magnetic_nT"]+(10000 if a["line_id"]=="F04" else 0),abs=1e-6)
+    with pytest.raises(c.MagneticContractError) as err:
+        p.blocked_fit(other_run["rows"],other_req,other_manifest,original_inputs=other)
+    assert err.value.error["field"] == "leveling.no_training_constraints"
+    bad = deepcopy(req)
+    bad["operations"][-1]["parameters"]["heldout_calibration"] = None
+    failed_inputs = (raw,c.canonical_bytes(meta),c.canonical_bytes(bad))
+    failed = p.apply_corrections(*failed_inputs,training_ids=manifest["outer_training_ids"])
+    with pytest.raises(c.MagneticContractError):
+        p.blocked_fit(failed["rows"],bad,v.make_partitions(failed["rows"],bad),original_inputs=failed_inputs)
+
+
+def test_s4_s5_s6_original_controls_are_distinct_and_not_field_completion():
+    c,g = modules()
+    p,v = processing(),validation()
+    baseline = g.control_rows("S1")
+    for regime in ("S4","S5","S6"):
+        raw,meta,req = g.control_input(regime)
+        intake = c.load_lines(raw,c.canonical_bytes(meta),c.canonical_bytes(req))
+        assert meta["authored_control"]["notice"] == "synthetic, not field"
+        assert meta["authored_control"]["regime"] == regime
+        assert intake["provider_authenticated"] is False
+        assert len(intake["rows"]) == 363
+        assert g.control_input(regime) == (raw,meta,req)
+        if regime=="S4":
+            assert "measurement_missing" in intake["eligibility_reasons"]
+            assert "upward_missing" in intake["eligibility_reasons"]
+            assert "timestamp_missing" in intake["eligibility_reasons"]
+            with pytest.raises(c.MagneticContractError):
+                v.make_partitions(intake["rows"],req)
+        else:
+            assert v.make_partitions(intake["rows"],req)["geometry_only_coverage"]["fraction"] == 1.
+            for row,parent in zip(intake["rows"],baseline):
+                n = row["northing_m"]
+                term = math.sin(2*math.pi*n/150) if regime=="S5" else math.cos(2*math.pi*n/1600)+math.cos(2*math.pi*n/800)
+                assert row["magnetic_nT"]-parent["magnetic_nT"] == pytest.approx(term,abs=1e-12)
+    # A periodic supplementary S5 oracle: two distinct wavelengths produce
+    # identical observations at exactly uniform400m cross-line positions.
+    import numpy as np
+    positions = np.arange(-1600,1601,400.)
+    fine_frequency = 1/150
+    alias_frequency = fine_frequency-3/400
+    assert np.cos(2*np.pi*fine_frequency*positions) == pytest.approx(np.cos(2*np.pi*alias_frequency*positions),abs=1e-12)
+    assert abs(alias_frequency) != fine_frequency
+    assert p.MASK_ORDER[-2] == "sampling_unresolved"
+
+
+def test_sampling_aliasing_and_support_masks():
+    c,g = modules()
+    p = processing()
+    raw,_,req = g.control_input("S5")
+    rows = c.parse_csv(raw)["rows"]
+    policy = deepcopy(req["geometry_policy"])
+    policy["minimum_resolved_wavelength_m"] = 150.
+    grid = deepcopy(req["grid"])
+    grid.update(origin_e_m=-2300.,origin_n_m=-1600.,nx=93,ny=65)
+    result = p.support_masks(rows,rows,grid,policy,sensor_id="S0")
+    assert result["total_count"] == 93*65
+    assert len(result["masks"]) == result["total_count"]
+    assert all("sampling_unresolved" in flags for flags in result["masks"])
+    assert any("outside_hull" in flags for flags in result["masks"])
+    assert any("beyond_support_radius" in flags for flags in result["masks"])
+    assert result["eligible_count"] < result["total_count"]
+    assert len(result["line_statistics"]) == 11
+    assert all(s["spacing_max_m"]>0 for s in result["line_statistics"])
+    # Authored +/-5m jitter can change centroid separations by up to10m.
+    assert all(320<s["local_perpendicular_spacing_m"]<460 for s in result["line_statistics"] if s["line_id"].startswith("F"))
+    fine = deepcopy(grid)
+    fine.update(spacing_e_m=25.,spacing_n_m=25.,nx=145,ny=121)
+    # Cannot silently shrink this requested grid below its explicit cell cap.
+    with pytest.raises(c.MagneticContractError):
+        p.support_masks(rows,rows,fine,policy,sensor_id="S0")
+    gap_rows = deepcopy(rows)
+    gap_rows[16]["magnetic_nT"] = None
+    hole = p.support_masks(gap_rows,[r for r in gap_rows if r["magnetic_nT"] is not None],grid,policy,sensor_id="S0")
+    assert any("gap" in flags for flags in hole["masks"])
+    assert hole["eligible_count"] < result["eligible_count"]
+    # A deliberate CV exclusion is not a missing acquisition hole.
+    training = [r for r in rows if r["line_id"]!="F04"]
+    excluded = p.support_masks(rows,training,grid,policy,sensor_id="S0")
+    assert not any("gap" in flags for flags in excluded["masks"])
+    noheight = deepcopy(rows)
+    noheight[0]["upward_m"] = None
+    unresolved = p.support_masks(noheight,[r for r in noheight if r["upward_m"] is not None],grid,policy,sensor_id="S0")
+    assert any("height_mismatch" in flags for flags in unresolved["masks"])
+    with pytest.raises(c.MagneticContractError):
+        p.support_masks(rows,rows,grid,policy,sensor_id="missing")
+
+
+def test_geometric_baseline_and_source_preserving_grid_orchestration():
+    import numpy as np
+    c,g = modules()
+    p = processing()
+    plane = [r for r in g.control_rows("S2") if r["line_kind"]=="tie"]
+    query = [[-300.,-300.,80.],[400.,700.,80.],[5000.,0.,80.]]
+    result = p.geometric_comparator(plane,query,same_plane_height_tolerance_m=0.)
+    assert result["values"][:2] == pytest.approx([10+.002*q[0]-.003*q[1] for q in query[:2]],abs=1e-9)
+    assert result["values"][-1] is None
+    assert result["masks"][-1] == ["outside_hull"]
+    assert result["height_transform_claim"] is False
+    # Independent barycentric plane oracle at a single triangle.
+    triangle = [dict(plane[0],row_id=f"R{i}",easting_m=e,northing_m=n,magnetic_nT=10+.002*e-.003*n,ordinal=i)
+        for i,(e,n) in enumerate(((0.,0.),(100.,0.),(0.,100.)))]
+    one = p.geometric_comparator(triangle,[[25.,25.,80.]],same_plane_height_tolerance_m=0.)
+    assert one["values"] == pytest.approx([.5*10+.25*10.2+.25*9.7],abs=1e-9)
+    for tolerance,coords in ((None,query),(0.,[[0.,0.,81.]])):
+        with pytest.raises(c.MagneticContractError):
+            p.geometric_comparator(plane,coords,same_plane_height_tolerance_m=tolerance)
+    bad = deepcopy(triangle)
+    for row in bad:
+        row["northing_m"] = 0.
+    with pytest.raises(c.MagneticContractError):
+        p.geometric_comparator(bad,[[0.,0.,80.]],same_plane_height_tolerance_m=0.)
+    # Actual source-preserving complete local orchestration for S1. The run
+    # reports its failed quality target; this test does not waive that gate.
+    raw,meta,req = g.control_input("S1")
+    run = p.fit_grid(raw,c.canonical_bytes(meta),c.canonical_bytes(req))
+    assert run["fit"]["evaluation_count"] == 1
+    assert run["synthetic_quality_verdict"] == "fail"
+    assert run["fit"]["rmse_nT"] == pytest.approx(18.799740861734186,abs=1e-9)
+    assert run["comparator"]["verdict"] == "ineligible"
+    assert run["grid"]["values"].shape == (49,65)
+    assert run["continued_grid"]["values"].shape == (49,65)
+    assert run["continued_grid"]["plane_upward_m"] == 220.
+    assert run["continued_grid"]["method"] == "direct_equivalent_source_prediction"
+    assert run["fft_continuation"]["verdict"] == "eligible"
+    assert run["fft_continuation"]["result"]["values"].shape == (49,65)
+    # Original grid extent lies within the anchors and nearest-flight radius.
+    # Geometric support does not make its failed predictive target acceptable.
+    assert all(v is not None for v in run["grid"]["masked_values"])
+    assert run["processing"]["original_rows"] == c.parse_csv(raw)["rows"]
+    assert run["provider_authenticated"] is False
+    assert run["field_acceptance"] == "unresolved"
+    fit = run["fit"]["final_fit"]
+    coords = [[-450.,150.,220.],[650.,-250.,220.]]
+    source = np.array([[s[k] for k in ("easting_m","northing_m","upward_m")] for s in fit["source_positions"]])
+    independent = sum(coefficient/np.linalg.norm(np.array(coords)-pos,axis=1) for coefficient,pos in zip(fit["coefficients"],source))
+    assert p.predict_equivalent(fit,coords) == pytest.approx(independent,rel=1e-9,abs=1e-6)
+
+
+def test_weighted_augmented_qr_raw_units_and_negative_error_range():
+    import numpy as np
+    from scipy.linalg import lstsq
+    c,g = modules()
+    p = processing()
+    rows = g.control_rows("S1")[:33]+g.control_rows("S1")[66:99]
+    for i,row in enumerate(rows):
+        row["uncertainty_nT"] = 1.+.1*(i%7)  # Authored oracle errors, not field.
+    _,_,req = g.geometry_input()
+    config = deepcopy(req["equivalent_sources"])
+    config.update(weights_policy="admitted_inverse_variance",damping_unit="nT^-2")
+    run = p.fit_equivalent(rows,config,200.,.01)
+    xyz = np.array([[r[k] for k in ("easting_m","northing_m","upward_m")] for r in rows])
+    sources = np.array([[r[k] for k in ("easting_m","northing_m","upward_m")] for r in run["source_positions"]])
+    kernel = 1/np.linalg.norm(xyz[:,None,:]-sources[None,:,:],axis=2)
+    scale = kernel.std(axis=0,ddof=0)
+    a = kernel/scale
+    d = np.array([r["magnetic_nT"] for r in rows])
+    w = 1/np.array([r["uncertainty_nT"] for r in rows])**2
+    def solve(data,weights,penalty):
+        augmented = np.vstack((np.sqrt(weights)[:,None]*a,math.sqrt(penalty)*np.eye(a.shape[1])))
+        rhs = np.concatenate((np.sqrt(weights)*data,np.zeros(a.shape[1])))
+        coefficients = lstsq(augmented,rhs,lapack_driver="gelsy")[0]
+        objective = np.sum(weights*(a@coefficients-data)**2)+penalty*np.sum(coefficients**2)
+        return coefficients,objective
+    coefficients,objective = solve(d,w,.01)
+    assert run["coefficients"] == pytest.approx(coefficients/scale,rel=1e-9,abs=1e-6)
+    assert run["objective"]["total"] == pytest.approx(objective,rel=1e-8)
+    assert run["objective"]["unit"] == "dimensionless"
+    assert run["objective"]["damping_unit"] == "nT^-2"
+    scaled,scaled_objective = solve(d,7*w,7*.01)
+    assert scaled == pytest.approx(coefficients,rel=1e-9,abs=1e-6)
+    assert scaled_objective == pytest.approx(7*objective,rel=1e-8)
+    changed,_ = solve(d,7*w,.01)
+    assert np.linalg.norm(changed-coefficients)>1e-3
+    converted,converted_objective = solve(1000*d,w/1000**2,.01/1000**2)
+    assert converted == pytest.approx(1000*coefficients,rel=1e-9,abs=1e-6)
+    assert converted_objective == pytest.approx(objective,rel=1e-8)
+    for sigma in (1e-300,1e308,0.):
+        bad = deepcopy(rows)
+        for row in bad:
+            row["uncertainty_nT"] = sigma
+        with pytest.raises(c.MagneticContractError):
+            p.fit_equivalent(bad,config,200.,.01)
