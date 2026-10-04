@@ -40,6 +40,29 @@ API environment gets a generated64-hex-character stable secret and the canonical
 
 ### Isolated candidate API before activation
 
+#### Historical bootstrap and compatible later candidates
+
+The initial bootstrap receipt records the source that originally created private
+state, not the source of every later candidate. Initial bootstrap remains exclusive
+and must never be rerun against that state. For the same source, the existing
+verified candidate is the reference. For a different source, the operator must
+provide the original immutable bundle path directly under the fixed releases root
+and its explicit manifest SHA-256. The qualifier rehashes that complete original
+bundle and checks its source against the historical bootstrap receipt. Its exact
+`app/migrations/` member inventory must equal the new candidate's inventory;
+non-migration scientific/UI changes do not require replacing a database.
+
+Read the existing database in SQLite read-only mode, with a bounded query timeout,
+and verify service UID/GID,0600 mode, `quick_check`, the committed current head
+and at least one active internal account. Return only schema, permissions and
+account count, never usernames or hashes. Plural state is valid. Unknown migration
+sets, changed heads or integrity failures refuse before creating qualification
+evidence/accounts/units; explicit compatibility design is needed for actual
+schema-changing releases. Stable environment hashes still match initial bootstrap.
+Receipts separately name initial-source and candidate-source identities. This is
+an operator-controlled compatibility check, not hostile-root authentication.
+Actual CPUQuotaPerSecUSec must be1.500000s, alongside the existing API restrictions.
+
 The optional authenticated qualification is an explicit operator flag plus a private credential path; the default remains read-only transport. Before starting its candidate daemon the controller generates a distinct qualification account identifier and random password, writes them to a new root0600 file in the private evidence directory, then provisions through the existing bounded unprivileged anonymous-pipe helper. It does not reset any existing user. The actual Unix HTTP client holds each session's secure/HttpOnly/SameSite-strict cookie and CSRF token in memory only; this restricted-socket client checks HTTPS cookie attributes, but does not substitute for final browser/TLS tests. Requests have a shared remaining deadline, bounded response bytes and no response/secret logging. Two freshly named owner projects and one qualification-user project establish plural state. A rights-attested locally authored small CSV original is uploaded, downloaded byte-for-byte, exported with its manifest/hash and converted to a processing dataset; there is no heavy job or implicit scientific admission. The second user must see404 for owner project/assets/export/dataset, and the owner must see404 for the second user's project. Missing-CSRF/cross-origin writes must be403; logout must revoke access. Only recorded newly created project IDs may be deleted through the API after all verification passes, leaving normal deletion receipts. Failure retains project IDs/files; no broad cleanup or direct database deletion is allowed. The private generated operator account remains available for qualification reruns and is not exposed on the site.
 
 An operator-only Linux qualifier reuses the exact installed-runtime and bundle verification from bootstrap, but requires existing service state/configuration instead of replacing it. It takes explicit immutable release and receipt SHA-256 values and a fresh private evidence child. A random twelve-hex suffix names two exclusively created runtime units and one Unix socket under `/run`; names cannot be supplied as arbitrary service targets. No enable/install operation or production-unit edit is allowed. The candidate must not be current and production API/worker must be inactive so qualification does not create parallel writers. All fixed environment/state permissions and the dedicated identity must match bootstrap. The application deploy lock is exclusive throughout.
