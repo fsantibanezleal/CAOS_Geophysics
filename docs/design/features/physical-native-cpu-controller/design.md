@@ -8,6 +8,9 @@ is PENDING exact review, not adopted in source. [Build inventory](build-inventor
 proposes /MT for I01 tests/probe ONLY; section7 future runner /MD stays unchanged.
 Read [research](research.md), [requirements](requirements.md),
 [contracts](contracts.md), [validation](validation-plan.md) and [tasks](tasks.md).
+The [worker operations supplement](worker-operations.md) records measured I01
+ABI/pure evidence and the concrete native operation implementation boundary;
+the original pre-execution statements below are historical, not current I01 status.
 Parent [design](../physical-worker-accounting/design.md) and approved pure
 [contracts](../physical-accounting-protocol/contracts.md) remain unchanged.
 
@@ -313,7 +316,9 @@ No commands in this section were executed, no output root created or files built
 
 No platform becomes admitted by OS version, SDK presence, ABI pass, mocked unit
 return, 419 pure tests, local scientific gates or docs merge. No host/production
-action; MAIN's reported headroom failure and30% gate are unchanged, not remeasured.
+action. Historical host headroom failures remain evidence, not a current arbitrary
+disk-percentage admission requirement for this native operation unit. Actual
+resource allocation/write failure is a failure; no host measurement is inferred.
 No arbitrary code sandbox, physics certification, source-byte ceiling admission,
 RSS proof, zero overshoot or final-counter availability after abrupt death claim.
 

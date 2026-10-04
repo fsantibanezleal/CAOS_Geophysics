@@ -1,5 +1,16 @@
 # Native CPU controller full pre-code review packet
 
+## Current measured I01 evidence
+
+The original documentation-only review below is retained as historical evidence.
+Actual I01 build, Windows SDK layout47 and compiled-pure179 PASS0skip are recorded
+separately in [the measured receipt](../../../validation/native-i01-abi-pure-20261004.json).
+The [worker operations supplement](worker-operations.md) specifies the next real
+native operation boundary. No historical docs result is relabelled as execution;
+all platform/security/resource/parent-tail/durable-release gates remain distinct.
+
+## Original pre-execution review
+
 Date: 2026-10-03. Status: original67c621c FULL MAIN read; narrow I01 authoring
 approved, compiler execution and later amendments pending separate review.
 Issue [140](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/140).

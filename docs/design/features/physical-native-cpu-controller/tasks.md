@@ -1,7 +1,11 @@
 # Native CPU controller tasks and approval holds
 
 Date: 2026-10-03. Issue [140](https://github.com/fsantibanezleal/CAOS_Geophysics/issues/140).
-Status: docs authored; source/ABI/OS/integration NOT_RUN, both platforms CLOSED.
+Current evidence: I01 core compiled-pure179 and Windows SDK layout47 PASS;
+native OS operations/integration NOT_RUN, both profiles UNSET/CLOSED. See the
+[measured receipt](../../../validation/native-i01-abi-pure-20261004.json) and
+[concrete worker operations](worker-operations.md). Original pre-execution
+milestones below retain their historical scope; no native gate is upgraded.
 
 ## 1. Authorized seven-document work
 
@@ -23,21 +27,23 @@ Status: docs authored; source/ABI/OS/integration NOT_RUN, both platforms CLOSED.
   handoff identify the stable SHA. MAIN FULL read67c621c; narrow I01 authoring
   approved only, no merge/OS runtime permission.
 
-## 2. Mandatory holds, before any implementation
+## 2. Distinct native execution and integration gates
 
 | Hold | Needed decision/evidence | Owner / current |
 | --- | --- | --- |
-| H00 | MAIN FULL read67c621c and narrow exact core/test/optional-probe authoring scope | MAIN; RECORDED in approval.md at914a4bbe; later wire/finality amendments PENDING |
+| H00 | Original core/test/probe design and exact wire/finality amendments | Recorded in approval.md section5; adopted by frozen I01 source, no OS admission |
 | H01 | Actual Windows effective token/DACL/ancestor chain, controller-handle rights and reachable broker denial; no guessed security policy | MAIN/security owner; ABSENT/CLOSED |
 | H02 | Actual Linux compiler/headers/libc read-only pins and approved existing delegation, credential transitions, cgroup ownership and simultaneous-death manager | MAIN/owner; ABSENT/CLOSED |
 | H03 | Per-platform admitted topology, accounting visibility/rounding, max observation/kill/drain evidence and accepted non-real-time monitored risk | MAIN; NOT_RUN |
 | H04 | Full post-exit controller and worker attempt tail/publication CPU with exact final counter custody, not pre-finalwrite SELF | MAIN worker/integration owner; UNRESOLVED/CLOSED |
 | H05 | Durable receipt/intent/ack/release and uncertain-commit/deletion/quota state plus explicit new schema/DDL/inventory adapter | Storage/ops owners under MAIN; UNIMPLEMENTED/CLOSED |
-| H06 | Exact toolchain/CRT/recipe and separate compiler/linker/compiled-test/ABI execution decision | Windows read-only inventory COMPLETE; MAIN execution approval PENDING, Linux inventory ABSENT; NOT_RUN |
+| H06 | Exact toolchain/CRT/recipe and distinct platform execution decision | I01 /MT build, ABI47 and compiled-pure179 measured; actual /MD runner and Linux inventory/execution remain pending |
 
-Actual contexts remain unavailable. H00 does not silently release H01..06;
-MAIN may assign a bounded future deterministic source task, but no OS compile/
-creation/provisioning is implied. Tests/probes themselves need explicit authority.
+Actual security/delegation/manager contexts remain unavailable. I01 does not
+silently release H01..05 or the new platform executable boundary. Native operation
+authoring targets the concrete call-order supplement, not another deterministic
+facade. New source/recipe/import closure and real context are reviewed before
+OS compilation/creation/controls; no provisioning or profile activation is implied.
 This design is not an application-facing profile and makes no production pass.
 
 ## 3. Sequenced future scopes
@@ -46,15 +52,18 @@ This design is not an application-facing profile and makes no production pass.
   resolve concrete read-only Windows compiler/SDK/CRT inventory and recipe.
   No compiler/linker/binary run. Request exact MAIN inventory and amendment review.
 
-- [ ] I01 (NCC010/012/016): exact core/header and three test paths assigned in
-  approval.md, NOT_CREATED. Wire/finality amendments and compile recipe pending
-  MAIN review; then write failing golden units/caps/state/safeerrors before logic.
-  Deterministic tests prove no OS capability and cannot release H01/H02.
-- [ ] I02 (002/003/004/010): after explicit native compile/probe approval and
-  each platform toolchain inventory, compile exact ABI probe; review sizes,
-  offsets, APIs/UAPI/CRT and pin binary/header/compiler receipts independently.
+- [x] I01 (NCC010/012/016, deterministic scope only): exact core/header/probe
+  and tests authored, reviewed and frozen; ordinary four-stage /MT build and
+  measured three-file compiled-pure179 PASS0skip. No OS capability or H01/H02
+  release is inferred. Original artifact/source identity stays distinct from
+  later documentation commits.
+- [ ] I02 (002/003/004/010): Windows I01 SDK probe47 sizeof/alignof/offsetof
+  checks PASS at reviewed hashes. Linux ABI remains NOT_RUN/uninventoried;
+  platform operation executables, API behavior and loaded closures are separate
+  unmeasured gates, not implied by the layout probe.
 - [ ] I03 (001..010/012): implement isolated platform controller and bounded
-  bridge only after source scope/context approval; no existing worker hook.
+  bridge against the concrete operation supplement, then freeze exact source,
+  recipe and context for independent execution review; no existing worker hook.
   Test actual containment/limits/lifetime/death per platform separately.
 - [ ] I04 (006..009/015): authorized real positives/adversarials and independent
   timing/oracle controls; MAIN owns installer/context/actual host execution.
@@ -70,10 +79,11 @@ This design is not an application-facing profile and makes no production pass.
 
 ## 4. Ownership, exclusions and convergence
 
-This ops unit owns the nine new docs here and has explicit future I01 authoring
-authority for only the NEW core/header, three tests and optional ABI probe in
-approval.md. None exists yet; no other source scope was assigned. MAIN owns exact
-independent review, context/toolchain/installer/execution and any host authority.
+The I01 core/header/probe, three original tests, separate bounded build capture
+and its tests now exist. Their actual evidence and platform-operation boundary
+are specified in the linked supplement. The standalone native operation source,
+exact build/loaded closure and real context controls remain distinct reviews;
+no application integration, installer or host change follows from I01 evidence.
 Storage owner owns durable intent/debt/migration; later ops owner owns explicit
 recovery inventory, tombstones and maintenance acceptance. No imaginary provider.
 
@@ -86,9 +96,10 @@ or VPS access. No automatic branch update beneath another agent.
 | Layer | Current verdict |
 | --- | --- |
 | Seven-doc67c621c design milestone | FULL MAIN read; narrow I01 authoring approved, not full runner |
-| Approval/build inventory milestone | Authored; separate MAIN compiler and amendment review PENDING |
+| Original approval/build inventory | Historical prerequisite; I01 measured evidence is now separately pinned |
 | Documentation checks | See measured review packet; cannot pass runtime gates |
-| Native source/tests/ABI | NOT_IMPLEMENTED/NOT_RUN |
+| I01 source/compiled-pure/Windows SDK layout | Authored; 179/47 measured PASS, no native operation proof |
+| Windows/Linux platform operation source/runtime | Concrete supplement specified; NOT_IMPLEMENTED/NOT_RUN |
 | NCC001..016, original15 native gates | ALL NOT_RUN |
 | Windows/Linux actual profile | UNSET/CLOSED |
 | Parent CPU/durable publication/recovery integration | CLOSED |

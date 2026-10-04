@@ -1,6 +1,10 @@
 # I01 read-only Windows build inventory and separate execution review
 
 Date: 2026-10-03. Status: INVENTORIED, compiler/linker/ABI/core tests NOT_RUN.
+That status is the original pre-execution checkpoint. Subsequent actual I01
+measurements are separately pinned in [the measured receipt](../../../validation/native-i01-abi-pure-20261004.json)
+and [worker operations](worker-operations.md); no original inventory observation
+or requested proposal is rewritten as native operation/admission proof.
 This packet is the prerequisite requested by MAIN, not a build-execution grant.
 Read [approval](approval.md), [contracts](contracts.md), [design](design.md),
 [validation](validation-plan.md) and [review packet](review-packet.md).
