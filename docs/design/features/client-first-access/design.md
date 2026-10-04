@@ -28,6 +28,8 @@ The operator command reads a private JSON file with `username` and `password`, o
 
 Exactly one ML VPS origin: the existing canonical hostname. Retain current plus two rollback releases, never delete shared-host data indiscriminately. Scientific artifacts are produced and validated locally; deployment publishes them without training or recalculating benchmarks. No off-host backup destination, SMTP sender or arbitrary whole-host 30% free-space threshold is a prerequisite for this owner-tested stage. Measure enough real capacity for the release/rollback set, existing project bytes and configured active-job resources. Existing historical tooling/evidence is preserved, not relabelled as current production acceptance.
 
+Project deletion in the local operating profile reports `external_backup_status=not_configured`: the application has no off-host integration in this profile, not a proof that no external copy exists. `backup_erasure_status=not_attempted` remains unchanged. Existing recorded local backup custody still refuses deletion, rather than deleting or pretending to erase those files. The explicit historical email profile retains `pending_reconciliation` for wire regression compatibility. Neither response establishes off-host erasure; no database migration or backup automation is added.
+
 ## Source verification
 
 - [FastAPI Users password hashing](https://fastapi-users.github.io/fastapi-users/latest/configuration/password-hash/): library Argon2/default PasswordHelper, automatic upgrades.

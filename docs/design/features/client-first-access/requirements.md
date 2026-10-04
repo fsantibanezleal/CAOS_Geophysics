@@ -17,3 +17,5 @@ R-005 THE platform SHALL support multiple independent accounts with multiple pro
 R-006 THE frontend SHALL leave public research and supported browser computation accessible without login and offer only local login for protected server operations in the local profile. Gate: frontend/e2e/local-access.spec.ts and frontend/src/test/local-access.test.ts.
 
 R-007 THE source and browser build SHALL contain no supplied owner password or private credential file, and account provisioning SHALL consume an operator-controlled private file or interactive secret input rather than a command-line password. Gate: tests/api/test_local_auth.py::test_provisioning_cli_redacts_invalid_secret_input.
+
+R-008 WHEN a local-profile project is deleted, THE response SHALL identify off-host integration as not_configured without claiming external erasure, and SHALL retain the existing refusal to delete a project with recorded local backup custody. Gate: tests/api/test_local_auth.py::test_local_deletion_profile_and_existing_backup_custody.
