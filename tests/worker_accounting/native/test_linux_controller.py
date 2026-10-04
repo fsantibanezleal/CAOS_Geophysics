@@ -258,7 +258,7 @@ def test_build_linker_scratch_is_phase_specific(tmp_path, suffix):
     assert observe_inventory(output, scratch, linker=True)["invalid"] is True
 
 
-@pytest.mark.parametrize("name", ["ccA012bZ.res", "ccA012bZ.x", "ccA012bZ.cdtor.cpp", "ccBAD.cdtor.c"])
+@pytest.mark.parametrize("name", ["ccA012bZ.resp", "ccA012bZ.x", "ccA012bZ.cdtor.cpp", "ccBAD.cdtor.c"])
 def test_build_linker_scratch_unknown_stays_failed(tmp_path, name):
     from scripts.run_linux_cpu_controls import observe_inventory
     output, scratch = tmp_path / "output", tmp_path / "scratch"
@@ -267,6 +267,27 @@ def test_build_linker_scratch_unknown_stays_failed(tmp_path, name):
     assert observe_inventory(output, scratch, linker=True)["invalid"] is True
     with pytest.raises(ControlError):
         observe_inventory(output, scratch, linker=1)
+
+
+@pytest.mark.parametrize("size", [0, 65536])
+def test_build_resolution_scratch_exact_phase_count_bytes(tmp_path, size):
+    from scripts.run_linux_cpu_controls import observe_inventory
+    output, scratch = tmp_path / "output", tmp_path / "scratch"
+    output.mkdir(); scratch.mkdir()
+    f = scratch / "ccA012bZ.res"
+    f.write_bytes(b"x" * size)
+    assert observe_inventory(output, scratch)["invalid"] is True
+    assert observe_inventory(output, scratch, linker=True)["invalid"] is False
+    (scratch / "ccB345cY.res").write_bytes(b"")
+    assert observe_inventory(output, scratch, linker=True)["invalid"] is True
+
+
+def test_build_resolution_scratch_plus_one_rejected(tmp_path):
+    from scripts.run_linux_cpu_controls import observe_inventory
+    output, scratch = tmp_path / "output", tmp_path / "scratch"
+    output.mkdir(); scratch.mkdir()
+    (scratch / "ccA012bZ.res").write_bytes(b"x" * 65537)
+    assert observe_inventory(output, scratch, linker=True)["invalid"] is True
 
 
 def test_build_first_invalid_sample_is_retained(tmp_path, monkeypatch):

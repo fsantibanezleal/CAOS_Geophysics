@@ -464,3 +464,22 @@ stdoutbd91de16bfb2783f9a0abd030106a911ac42e9f13dfed44a7552f4c8fe6b1cca;
 stderr empty. Authored transport doubles are explicit unit controls, not a
 compiler/native live fixture. These tests do not execute a retry or admit a
 runtime. The failed b1017ac build and earlier340/339/314+1 records stay distinct.
+
+## 11. Observed GCC resolution-file closure
+
+The distinct5fb33d5 build again compiled all five objects; link6 failed with the
+first invalid snapshot now retained: one root-owned single-link regular
+ccXXXXXX.res of0bytes. No complete ELF/binary execution; both failed builds stay
+unchanged. [GCC13.3 driver source](https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-13.3.0/gcc/gcc.cc)
+LINK_PLUGIN_SPEC uses a .res resolution file for its default linker plugin even
+without an explicit LTO request. The actual selected compiler's specs match.
+This is not an assumed .res name or a generic response/telemetry allowance.
+
+Before test-first correction: permit at most ONE regular root-owned single-link
+ccXXXXXX.res <=65536bytes ONLY in link phase6..8, in addition to maximum2 cdtor
+leaves. Compile phase rejects .res; wrong/extra/oversized/link/UID entries fail.
+All combined limits, argv/compiler flags/native C/science caps remain unchanged.
+The selected existing linker-plugin and wrapper input identities are captured
+in the private build runtime-input closure; no plugin disable, fallback or install.
+No scratch content is adopted into artifacts. First invalid snapshot/failed CLI
+remain authoritative, regardless of subsequent manager/final-directory status.

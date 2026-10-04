@@ -187,6 +187,7 @@ def observe_inventory(output, scratch, *, linker=False):
     total = 0
     invalid = False
     linker_leaves = 0
+    resolution_leaves = 0
     for kind, root in (("output", Path(output)), ("scratch", Path(scratch))):
         for entry in root.iterdir():
             if len(entries) >= 128:
@@ -202,9 +203,14 @@ def observe_inventory(output, scratch, *, linker=False):
             if kind == "scratch":
                 ordinary = re.fullmatch(r"cc[A-Za-z0-9]{6}\.(s|o)", entry.name)
                 ctor = re.fullmatch(r"cc[A-Za-z0-9]{6}\.cdtor\.(c|o)", entry.name)
+                resolution = re.fullmatch(r"cc[A-Za-z0-9]{6}\.res", entry.name)
                 if ctor:
                     linker_leaves += 1
-                if not ordinary and not (linker and ctor and linker_leaves <= 2):
+                if resolution:
+                    resolution_leaves += 1
+                known_linker = linker and ((ctor and linker_leaves <= 2) or
+                    (resolution and resolution_leaves <= 1 and status.st_size <= 65536))
+                if not ordinary and not known_linker:
                     invalid = True
             entries.append(dict(kind=kind, name=entry.name, bytes=status.st_size,
                                 mode=stat.S_IFMT(status.st_mode), uid=status.st_uid, nlink=status.st_nlink))
