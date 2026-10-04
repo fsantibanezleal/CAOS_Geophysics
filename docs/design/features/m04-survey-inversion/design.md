@@ -1,9 +1,11 @@
 # Full induced survey inverse design
 
-This is a proposed continuation to the [product SDD](../../SDD.md), not code
-authorization or a report of implemented inversion. It includes L2 and sparse
+This is the continuation definition for the [product SDD](../../SDD.md), not
+method acceptance or a report of implemented inversion. It includes L2 and sparse
 fitting, user-data tools, persisted results, field evaluation and linked views.
 P04 physical source and tests are not modified by this proposal.
+The ordinary input/geometry/private export foundation is implemented separately
+from numerical fitting, with its exact limited closure defined in contracts.
 
 ## Data flow and separation
 

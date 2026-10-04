@@ -1,7 +1,9 @@
 # Dependency-ordered full M04 continuation tasks
 
 This is an executable design task graph, not a method acceptance ledger.
-All continuation gates remain NOT_RUN; no placeholder code is requested.
+The ordinary input/geometry foundation has executable verification gates; the
+numerical/full-generation/integration gates remain unimplemented, not satisfied
+by those foundation tests. No placeholder code is requested.
 The product holds scientific definitions and implementation; private execution,
 coordination and release records remain in management.
 

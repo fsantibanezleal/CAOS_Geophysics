@@ -8,7 +8,7 @@ from magnetic_survey import plan_geometry
 from magnetic_survey_bundle import export_geometry, import_geometry, write_geometry, read_geometry
 
 
-def test_roundtrip_and_interrupted_generation(tmp_path, monkeypatch):
+def test_geometry_roundtrip_and_write_failure(tmp_path, monkeypatch):
     raw = encode(request())
     handle = parse_request(raw)
     blob = export_geometry(handle)
@@ -51,3 +51,23 @@ def test_export_closure_rejects_tampering(attack):
         blob = json.dumps(obj).encode()
     with pytest.raises(InputError):
         import_geometry(blob)
+
+
+@pytest.mark.parametrize("attack", ["extra", "claims", "unit", "partition", "bytes"])
+def test_rehashed_hostile_export_cannot_upgrade_plan(attack):
+    from magnetic_survey_support import digest
+    doc = json.loads(export_geometry(parse_request(encode(request()))))
+    if attack == "extra":
+        doc["plan"]["engine_accepted"] = True
+    elif attack == "claims":
+        doc["plan"]["claims"]["field_source_verified"] = True
+    elif attack == "unit":
+        doc["plan"]["inventory"]["receivers_m"]["dtype"] = "float32"
+    elif attack == "partition":
+        doc["plan"]["partition"]["outer_rows"]["data"] = [0]
+    else:
+        doc["request_bytes"] = float(doc["request_bytes"])
+    doc.pop("generation_sha256")
+    doc["generation_sha256"] = digest(doc)
+    with pytest.raises(InputError):
+        import_geometry(json.dumps(doc).encode())
