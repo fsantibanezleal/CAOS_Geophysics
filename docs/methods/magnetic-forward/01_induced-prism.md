@@ -28,6 +28,13 @@ Those physical inputs must be authenticated separately.
 
 ![Bounded input, actual induced engine, distinct quantities and separate oracles](induced-prism.svg)
 
+This EN/ES scientific figure uses the published shell's color/font tokens when
+inlined. Its standalone fallback values mirror the actual
+`@fasl-work/caos-app-shell0.6.8` stylesheet exactly, because an image cannot inherit
+parent CSS. Light/dark fallback follows the system theme; an inline host's tokens
+remain authoritative. Paired labels follow `data-arch-lang`, English by default.
+This document figure is not the complete bilingual in-app course or linked view.
+
 For the secondary vector b at each receiver, three different outputs matter:
 
 ```text
