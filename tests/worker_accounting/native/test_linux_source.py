@@ -1,0 +1,42 @@
+"""Static scope/call-path controls, never native runtime qualification."""
+import hashlib
+from pathlib import Path
+import re
+
+ROOT = Path(__file__).resolve().parents[3]
+CORE = ROOT / "scripts/native_physical_cpu"
+
+
+def test_frozen_i01_bytes():
+    frozen = {
+        "controller.h": "f6ed0337b98c98470db4b1e6f57bdc5d81426e4f5534a0e726018a56ad40492f",
+        "controller.c": "801dad97ae188f99a7b672eec2aee0fc673be065ac04d0a0ce46d2535be92d7a",
+        "abi_probe.c": "d002f82464a234c1ce8f3bd39152df21d230624201d7d6a56d5459c6718a88d1",
+        "capture_build.py": "136ea6af5ad102944010c8815871255ecebdbc0210b425bd458251b92a20cd36",
+    }
+    for name, expected in frozen.items():
+        assert hashlib.sha256((CORE / name).read_bytes()).hexdigest() == expected
+
+
+def test_no_fallback_or_activation():
+    native = (CORE / "linux_controller.c").read_text("utf-8")
+    loop = (CORE / "linux_main.c").read_text("utf-8")
+    assert "SYS_clone3" in native and "CLONE_INTO_CGROUP | CLONE_PIDFD" in native
+    assert '"cgroup.kill"' in native and '"cpu.stat"' in native
+    assert "setgroups(0, NULL)" in native
+    assert "PR_SET_NO_NEW_PRIVS" in native and "SYS_capset" in native
+    assert "PR_SET_PDEATHSIG" in native and "getppid() != expected_parent" in native
+    assert "poll(" in loop and "lc_sample(" in loop
+    assert "lc_stop(" in loop and "lc_sha_update(" in loop
+    for text in (native, loop):
+        assert not re.search(r"\b(?:fork|vfork|system|popen|malloc|calloc|realloc)\s*\(", text)
+        assert "psutil" not in text and "cgroup.procs\", O_WRONLY" not in text
+    assert "geophysics-cpu-qual-" in native
+    assert "user.slice" not in native
+
+
+def test_probe_has_no_native_operations():
+    probe = (CORE / "linux_probe.c").read_text("utf-8")
+    assert "struct clone_args" in probe and "offsetof(" in probe
+    for call in ("clone3", "syscall", "setuid", "mkdir", "execve", "kill"):
+        assert not re.search(r"\b" + call + r"\s*\(", probe)
