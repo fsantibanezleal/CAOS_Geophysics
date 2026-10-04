@@ -100,3 +100,40 @@ and complete coverage; perturb all observed times without changing split;
 original refusal on N20, supplied refusal on N<10/insufficient picks; scaled
 held-shot gate retains failed verdict. This extends the actual Dijkstra inverse,
 not a wrapper that marks unsupported other data as computed success.
+
+## Exact parameter mesh and public local inspection
+
+Export the actual parameter mesh's ordered physical x/elevation nodes and
+three-node cells, no raster reconstruction or interpolation from centres.
+At most200000 nodes/100000 cells; finite points, unique node IDs, contiguous
+ordered cell IDs, three distinct referenced nodes per cell and nonzero area.
+The physical model/coverage length equals the exported cell count. The shared
+profile_mesh.py serializer is hashed alongside the actual engine and wrapper;
+changing those files during the calculation prevents completion. Numerical
+settings, gradients, held folds, forward mesh and model values do not change.
+Only primary ERT and both primary traveltime retained arrays gain this topology;
+no invented iteration history or ray trajectory is generated.
+
+A separate public `instrument=profile-local` workbench takes original result.json
+and matching manifest.json before rendering. Both file sizes are checked before
+either read;32MiB result/64KiB manifest, strict UTF8/duplicate-key lexical admission,
+bounded nesting/nodes, finite arrays and exact manifest hash/bytes/source/method/
+configuration binding. Reuse the existing bounded JSON lexical implementation
+with explicit limits, preserving its existing velocity defaults. Matching hashes
+are not signatures or independent physical replay. No account, network request,
+upload, server job, source authenticity, known field truth or browser inverse.
+
+Actual triangular cells render at native topology, with physical elevation-up
+axes and terrain/sensor positions, selection links to original measurement row
+and actual model cell. Controls include resistivity/velocity versus the actual
+sensitivity/path-length coverage, selected shot/quad, returned fold, observed/
+predicted/error/residual plot, exact values, display-only colour limits, pan/zoom
+and keyboard alternatives. Coverage must not be labelled posterior uncertainty.
+Native cells do not imply subcell resolution. Failed/QC-only report remains
+inspectable without fabricating a missing model. All controls/text EN/ES, shared
+ADR shell classes/tokens/fonts, no new CSS/theme system. Read/unmount epochs
+prevent stale results; failed import leaves a labelled previous admitted result.
+Original-byte bindings and exact selected values export as an inspection sidecar,
+not a re-signed producer bundle. Test-first byte/tamper/array/fold controls,
+actual producer files and real browser phone/desktop/theme/language inspection
+are required, independently of the original physical numerical receipts.
