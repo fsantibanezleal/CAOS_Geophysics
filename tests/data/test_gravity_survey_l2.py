@@ -223,7 +223,7 @@ def calibration_request():
     return {'schema': 'gravity-survey-l2-calibration-request-1', 'plan': plan,
             'observations': observed, 'noise': noise, 'prior': prior,
             'policy': {'name': 'ordinary-l2-beta-grid-1', 'beta_candidates': l2.BETA_CANDIDATES,
-                       'optimizer': 'projected-gncg-binding-release-1', 'training': 'not_applicable_classical'},
+                       'optimizer': l2.OPTIMIZER_POLICY, 'training': 'not_applicable_classical'},
             'runtime_epoch': l2.RUNTIME_EPOCH}
 
 
@@ -295,11 +295,11 @@ def test_amended_optimizer_epoch_rejects_old_before_work(monkeypatch, old):
 
 
 def test_binding_epoch_identity_and_nominal_compact_admission():
-    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-3'
-    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-1'
+    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-4'
+    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-certified-delta-1'
     req = calibration_request()
     admitted = l2._admit_calibration(req)
-    assert admitted['runtime_epoch'] == 'm02-survey-l2-cpu-3'
+    assert admitted['runtime_epoch'] == 'm02-survey-l2-cpu-4'
     assert not admitted['observations']['gz_up_mgal'].flags.writeable
 
 
@@ -308,6 +308,7 @@ def test_binding_epoch_identity_and_nominal_compact_admission():
     ('m02-survey-l2-cpu-2', 'projected-gncg-degenerate-release-1'),
     ('m02-survey-l2-cpu-2', 'projected-gncg-binding-release-1'),
     ('m02-survey-l2-cpu-3', 'projected-gncg-degenerate-release-1'),
+    ('m02-survey-l2-cpu-3', 'projected-gncg-binding-release-1'),
     ('m02-survey-l2-cpu-3', 'projected-gncg-recorded-1')])
 def test_binding_epoch_exact_no_upgrade(monkeypatch, epoch, policy):
     req = calibration_request()
