@@ -156,7 +156,11 @@ static int open_path(const char *path, int directory, uid_t leaf_owner, int writ
         size_t size = slash ? (size_t)(slash - part) : strlen(part);
         char name[1025]; struct stat st;
         memcpy(name, part, size); name[size] = '\0';
-        int next = openat(fd, name, O_RDONLY | O_CLOEXEC | O_NOFOLLOW |
+        /* The science-owned0700 cwd is not readable by the capability-limited
+           observer. O_PATH on that leaf retains identity without adding DAC
+           privilege; child fchdir checks search permission after credential drop. */
+        int access = (!slash && directory && writable_leaf) ? O_PATH : O_RDONLY;
+        int next = openat(fd, name, access | O_CLOEXEC | O_NOFOLLOW |
                           ((slash || directory) ? O_DIRECTORY : 0));
         close(fd); fd = next;
         if (fd < 0 || fstat(fd, &st) != 0 ||

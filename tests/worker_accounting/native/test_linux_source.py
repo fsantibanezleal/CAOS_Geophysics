@@ -59,3 +59,20 @@ def test_fixture_system_cpu_has_native_work_not_supplied_accounting():
     assert CASES["system_cpu"] == ("--system-cpu", 1)
     assert "syscall(SYS_gettid)" in fixture
     assert "CLOCK_THREAD_CPUTIME_ID" in fixture and "UINT64_C(200000000)" in fixture
+
+
+def test_science_cwd_path_descriptor_is_leaf_only():
+    native = (CORE / "linux_controller.c").read_text("utf-8")
+    start = native.index("static int open_path(")
+    stop = native.index("static int read_fd(", start)
+    opener = native[start:stop]
+    assert "int access = (!slash && directory && writable_leaf) ? O_PATH : O_RDONLY;" in opener
+    assert "openat(fd, name, access | O_CLOEXEC | O_NOFOLLOW" in opener
+    assert "((slash || directory) ? O_DIRECTORY : 0)" in opener
+    assert "st.st_uid != (slash ? 0u : leaf_owner)" in opener
+    assert "(st.st_mode & 0777u) != 0700u" in opener
+    assert "open_path(c->cwd, 1, (uid_t)c->uid, 1)" in native
+    assert "open_path(c->executable, 0, 0, 0)" in native
+    assert native.index("setresuid(") < native.index("science_filter() || fchdir(6)")
+    for forbidden in ("CAP_DAC_OVERRIDE", "CAP_DAC_READ_SEARCH", "setfsuid(", "chmod("):
+        assert forbidden not in native

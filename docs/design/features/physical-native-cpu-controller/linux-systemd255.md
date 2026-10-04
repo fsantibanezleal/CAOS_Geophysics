@@ -483,3 +483,25 @@ The selected existing linker-plugin and wrapper input identities are captured
 in the private build runtime-input closure; no plugin disable, fallback or install.
 No scratch content is adopted into artifacts. First invalid snapshot/failed CLI
 remain authoritative, regardless of subsequent manager/final-directory status.
+
+## 12. Science cwd descriptor under the unchanged capability policy
+
+The observer has no CAP_DAC_OVERRIDE or CAP_DAC_READ_SEARCH. The exclusive
+science-owned0700 working directory therefore cannot be opened O_RDONLY by
+that observer. Use O_PATH ONLY for the final directory component selected as
+the writable science cwd; ancestor, executable and cgroup opens remain O_RDONLY.
+Keep O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC and fstat ownership/mode/type checks.
+No capability addition, chmod/group permission, fsuid transition, path fallback
+or link traversal is permitted. The child retains that descriptor through the
+same fixed remapping, drops credentials/capabilities, then fchdir checks search
+permission as the actual science owner before READY/GO. Close cwd before exec.
+
+[Linux open](https://man7.org/linux/man-pages/man2/open.2.html) specifies that
+O_PATH requires no object read permission, retains directory/no-follow flags,
+and allows fchdir with its subsequent search-permission check. This is an
+implementation correction to the descriptor contract, not a broader sandbox.
+Gate: test_linux_source.py::test_science_cwd_path_descriptor_is_leaf_only plus
+the actual test_birth_and_credential_barrier under the unchanged unit policy.
+Wrong owner/mode/link still rejects; failed setup has no science marker. Actual
+first nominal exit6/no marker and its bounded permission diagnostic are retained
+as failures at their original source pin, not relabelled as later successes.
