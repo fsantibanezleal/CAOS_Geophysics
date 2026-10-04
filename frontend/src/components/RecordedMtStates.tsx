@@ -33,10 +33,10 @@ export function RecordedMtStates({ result, es }: {
       <button className="btn" onClick={() => select(0)}>{t("Reset recorded state", "Restablecer estado registrado")}</button>
     </div>
     <label className="select-control"><span>{t("Recorded evaluation index [1]", "Índice de evaluación registrada [1]")}</span><input type="range" min={0} max={last} step={1} value={frame} onChange={event => select(Number(event.target.value))}/></label>
-    <output data-testid="mt-recorded-state">{frame}/{last} · {state.state.kind} · step {state.state.step} · ρ {state.model_ohm_m.join(" / ")} Ω m · J {state.objective} · Jdata {state.state.objective.data} · Jreg {state.state.objective.regularization}</output>
+    <output data-testid="mt-recorded-state">{frame}/{last} · {state.state.kind} · {t("step", "paso")} {state.state.step} · ρ {state.model_ohm_m.join(" / ")} Ω m · J {state.objective} · Jdata {state.state.objective.data} · Jreg {state.state.objective.regularization}</output>
     <LayerColumn rho={state.model_ohm_m} thickness={state.thickness_m} selectedLayer={layer} onSelect={setLayer} title={t("Recorded evaluation model; not the selected final response", "Modelo de evaluación registrada; no la respuesta final seleccionada")}/>
     <p className="plot-note">{t("500 ms per stored record, no interpolation or loop. Records are residual evaluations, not accepted iterations or physical time. Response panels always use the selected final model; historical predictions are not supplied.", "500 ms por registro almacenado, sin interpolación ni ciclo. Son evaluaciones residuales, no iteraciones aceptadas ni tiempo físico. Los paneles de respuesta usan el modelo final seleccionado; no se proporcionan predicciones históricas.")}</p>
-    {reduced && <p>{t("Reduced motion: use manual step/scrub; automatic playback is disabled.", "Movimiento reducido: use pasos/manual; reproducción automática desactivada.")}</p>}
+    {reduced && <p>{t("Reduced motion: use manual step/scrub; automatic playback is disabled.", "Movimiento reducido: use los controles manuales; reproducción automática desactivada.")}</p>}
     <button className="btn" onClick={() => downloadInspection(state, `recorded-mt-${result.job_id}-${frame}.json`)}>{t("Export recorded state JSON", "Exportar estado registrado JSON")}</button>
   </section>;
 }
