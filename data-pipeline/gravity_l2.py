@@ -15,10 +15,11 @@ from simpeg import data, data_misfit, inverse_problem, inversion, maps, optimiza
 import gravity_forward as forward
 import gravity_survey_l2 as survey
 import gravity_l2_precision as precision
+import gravity_l2_metric as metric
 
 
-RUNTIME_EPOCH = 'm02-survey-l2-cpu-4'
-OPTIMIZER_POLICY = 'projected-gncg-binding-release-certified-delta-1'
+RUNTIME_EPOCH = 'm02-survey-l2-cpu-5'
+OPTIMIZER_POLICY = metric.POLICY
 FORWARD_SOURCE = '46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5'
 BETA_CANDIDATES = (.0001, .001, .01, .1, 1., 10., 100., 1000.)
 
@@ -226,6 +227,7 @@ def _build_problem(request, observations, noise, prior, rows, beta_candidate, ob
             'rows': survey._readonly(rows), 'background': survey._readonly(fixed_background),
             'observations': survey._readonly(observations[selected]),
             'reference_q': survey._readonly(reference),
+            'metric_profile': (n,len(observations),active_count,noise['kind']=='full_covariance'),
             'alpha': (normalizer, float(alphas[0]), float(alphas[1]), float(alphas[2]))}
 
 
@@ -265,6 +267,36 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         self._last_trial_check = None
         self._precision, self._precision_trials = None, []
         self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
+        self._joseph,self._diagonal_metric = None,None
+        self._metric_evidence = []
+        self._true_cg_absolute = None
+
+    def close_metric(self):
+        if self._joseph is not None: self._joseph.close()
+        self._joseph=None
+        if self._diagonal_metric is not None: self.approxHinv=self._diagonal_metric
+
+    def _set_free_metric(self):
+        free=np.flatnonzero(~self.activeSet(self.xc))
+        if self._joseph is None or not np.array_equal(free,self._joseph.free):
+            self.close_metric()  # BEFORE new face/factor allocation.
+            p=self._problem
+            metric.allocation(*p['metric_profile'])
+            regularizer=(p['beta_engine']*p['regularization'].deriv2(self.xc)).tocsr()
+            try:
+                self._joseph=metric.JosephMetric(regularizer,p['simulation'].G,p['misfit'].W,
+                    free,self._deadline,profile=p['metric_profile'])
+            except metric.DeadlineExceeded:
+                self._fail('wall_cap')
+            finally:
+                del regularizer
+            # Bound native callback owns only metric arrays, never self/parent.
+            self._metric_evidence.append({'state_index':int(self.iter),'free_count':int(len(free)),
+                'setup_seconds':float(self._joseph.setup_seconds),
+                'live_payload_bytes':int(self._joseph.live_payload_bytes),
+                'allocation':dict(self._joseph.allocation),'metric_source_sha256':metric.SOURCE_SHA256})
+        owner=self._joseph
+        self.approxHinv=sp.linalg.LinearOperator(self.H.shape,matvec=owner.apply,rmatvec=owner.apply,dtype=np.float64)
 
     def _fail(self, reason):
         self._reason = reason
@@ -384,6 +416,9 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
 
     def findSearchDirection(self):
         self.cg_count, self.cg_abs_resid, self.cg_rel_resid = 0, None, None
+        self._true_cg_absolute=None
+        if self._diagonal_metric is None: self._diagonal_metric=self.approxHinv
+        self.approxHinv=self._diagonal_metric
         self._last_direction_kind = 'binding_release' if self._release_next else 'native_CG'
         active = self.activeSet(self.xc)
         inward = active & ~self.bindingSet(self.xc)
@@ -396,13 +431,24 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         self._direction_decisions.append(decision)
         if not self._release_next:
             if not np.isfinite(self._initial_free_residual): self._fail('nonfinite')
-            direction = super().findSearchDirection()
+            self._set_free_metric()
+            try: direction = super().findSearchDirection()
+            except metric.DeadlineExceeded: self._fail('wall_cap')
             try:
                 with np.errstate(over='raise', invalid='raise'):
                     slope = float(np.inner(self.g, direction))
             except ArithmeticError:
                 self._fail('nonfinite')
             if not np.isfinite(direction).all() or not np.isfinite(slope): self._fail('nonfinite')
+            # BOTH the native recurrence verdict and the actual free H equation
+            # must pass before vendor deletes H. No approximate factor residual.
+            if (not np.isfinite(self.cg_abs_resid) or self.cg_count>200
+                or self.cg_abs_resid>max(self.cg_rtol*self._initial_free_residual,self.cg_atol)):
+                self._fail('cg_cap')
+            residual=(~active)*(self.H@direction+self.g)
+            self._true_cg_absolute=float(np.linalg.norm(residual))
+            if not np.isfinite(residual).all() or not np.isfinite(self._true_cg_absolute): self._fail('nonfinite')
+            if self._true_cg_absolute>max(self.cg_rtol*self._initial_free_residual,self.cg_atol): self._fail('cg_cap')
             decision['candidate_slope'] = slope
             if not np.any(direction) or slope >= 0.: self._fail('zero_free_direction')
             return direction
@@ -415,14 +461,14 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
                 inverse_diagonal = self.approxHinv.diagonal()
                 if not np.isfinite(inverse_diagonal).all() or np.any(inverse_diagonal <= 0.):
                     self._fail('nonfinite')
-                metric = float(np.sum(direction**2/inverse_diagonal))
+                metric_norm = float(np.sum(direction**2/inverse_diagonal))
         except ArithmeticError:
             self._fail('nonfinite')
-        if not np.isfinite(direction).all() or not np.isfinite(slope) or not np.isfinite(metric):
+        if not np.isfinite(direction).all() or not np.isfinite(slope) or not np.isfinite(metric_norm):
             self._fail('nonfinite')
         decision['candidate_slope'] = slope
-        if not np.any(direction) or slope >= 0. or metric <= 0.: self._fail('zero_free_direction')
-        decision['pg_metric_norm_squared'] = metric
+        if not np.any(direction) or slope >= 0. or metric_norm <= 0.: self._fail('zero_free_direction')
+        decision['pg_metric_norm_squared'] = metric_norm
         return direction
 
     def modifySearchDirection(self, p):
@@ -481,6 +527,9 @@ def _solve_partition(problem, prior, deadline=None):
         opt._reason = 'nonfinite'
     except (RuntimeError, ValueError):
         opt._reason = 'engine_error'
+    finally:
+        opt.close_metric()
+        opt._precision=None
     states = opt._states
     reason = opt._reason or 'state_mismatch'
     if terminal is not None and states:
@@ -541,6 +590,11 @@ def _solve_partition(problem, prior, deadline=None):
         'trial_checks': survey._readonly(np.array(opt._trial_checks, dtype=np.float64).reshape(-1, 5)),
         'last_trial_check': dict(opt._last_trial_check) if opt._last_trial_check is not None else None,
         'precision_trials': tuple(dict(precision._validate_record(item)) for item in opt._precision_trials)}
+    # Distinct bounded CPU5 evidence; preserve the original eleven-key observer
+    # record and never mislabel a native recurrence metric as the true-H check.
+    problem['metric_evidence']={'last_true_cg_absolute_residual':opt._true_cg_absolute,
+        'metric_setups':tuple(dict(item) for item in opt._metric_evidence),
+        'metric_disposed':opt._joseph is None}
     converged = reason in ('kkt_stable', 'absolute_stationary')
     return {'status': 'converged' if converged else ('failed' if reason in ('engine_error', 'nonfinite', 'state_mismatch')
                                                   else 'nonconverged'),
@@ -567,14 +621,7 @@ def _preflight_calibration(request):
     # Charge actual submitted mask population, not a potentially inconsistent
     # redundant geometry record that has not yet been recomputed.
     a = int(np.count_nonzero(plan['request']['mesh']['active']))
-    sensitivity = 8*n*a
-    covariance = 8*m*m if request['noise']['kind']=='full_covariance' else 0
-    # <=a smallness rows plus <=3a BOTH-active first-order face rows.
-    intervals = 4096*(12*a+12*m+32*a)
-    projected = 8*sensitivity+12*covariance+intervals+(256+256+64)*1024**2
-    if sensitivity>64*1024**2 or covariance>32*1024**2 or projected>2*1024**3:
-        raise ValueError('calibration: projected native/interval workspace exceeds existing budget')
-    return projected
+    return metric.allocation(n,m,a,request['noise']['kind']=='full_covariance')['maximum']
 
 
 def _marginal_metrics(prediction, observed, noise, indices):

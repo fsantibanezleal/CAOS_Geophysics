@@ -63,7 +63,13 @@ def rational_nested_objective(problem, q):
     return total
 
 
-def test_certified_delta_native_six_cell_full_chord(monkeypatch):
+@pytest.mark.parametrize('search_metric',['retained_cpu4_diagonal','cpu5_joseph'])
+def test_certified_delta_native_six_cell_full_chord(monkeypatch,search_metric):
+    if search_metric=='retained_cpu4_diagonal':
+        # Preserve the original genuine upward-rounded chord control under its
+        # original metric as well as the NEWpolicy's actual physical solve.
+        # This is test-only isolation, never a production fallback/selector.
+        monkeypatch.setattr(l2._RecordedProjectedGNCG,'_set_free_metric',lambda self:None)
     states = []
     original = l2._RecordedProjectedGNCG._record
     def observe(optimizer):
@@ -78,7 +84,8 @@ def test_certified_delta_native_six_cell_full_chord(monkeypatch):
     assert result['iterations'] <= 200
     records = problem['optimizer_evidence']['precision_trials']
     assert records and all(r['passes'] <= 3 for r in records)
-    assert any(r['decision'] == 'certified_accept' and r['native_phi_trial'] > r['native_phi_current'] for r in records)
+    if search_metric=='retained_cpu4_diagonal':
+        assert any(r['decision'] == 'certified_accept' and r['native_phi_trial'] > r['native_phi_current'] for r in records)
     assert len(result['trace']['models_kg_m3']) == result['iterations']+1
     for record in records:
         if record['decision']!='certified_accept': continue
@@ -91,8 +98,8 @@ def test_certified_delta_native_six_cell_full_chord(monkeypatch):
         interval_contains(record['delta_interval'],delta)
         interval_contains(record['slope_interval'],slope)
         interval_contains(record['armijo_margin_interval'],delta-F.from_float(1e-4)*slope)
-    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-4'
-    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-certified-delta-1'
+    assert l2.RUNTIME_EPOCH == 'm02-survey-l2-cpu-5'
+    assert l2.OPTIMIZER_POLICY == 'projected-gncg-binding-release-joseph-ic0-certified-delta-1'
 
 
 @pytest.mark.parametrize('kind', ['noop', 'zero_slope', 'rounded_zero'])

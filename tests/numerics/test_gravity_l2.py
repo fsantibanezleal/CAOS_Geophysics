@@ -366,6 +366,7 @@ def test_private_optimizer_deadline_precedence_after_failed_line_search(monkeypa
     clock = [0.]
     monkeypatch.setattr(l2, 'monotonic', lambda: clock[0])
     monkeypatch.setattr(l2.precision, 'monotonic', lambda: clock[0])
+    monkeypatch.setattr(l2.metric, 'monotonic', lambda: clock[0])
     official_ls = l2.optimization.ProjectedGNCG.modifySearchDirection
     def rejected(opt, direction):
         trial, _ = official_ls(opt, direction)
@@ -542,6 +543,10 @@ def diagnostic_opt(monkeypatch, q, g, inverse, lower, upper):
     opt = l2._RecordedProjectedGNCG({}, prior, l2.monotonic()+120.)
     opt.xc, opt.g, opt.f, opt.iter = q, g, 1., 0
     opt.approxHinv = sp.diags(inverse, format='csr')
+    # Retained CPU4 branch/chord arithmetic controls intentionally isolate the
+    # native algorithm under their fixed test diagonal. Actual physical/six-cell
+    # and full-cap controls exercise CPU5's real constructor and Joseph action.
+    monkeypatch.setattr(opt,'_set_free_metric',lambda:None)
     monkeypatch.setattr(opt, '_record', lambda: (float(np.linalg.norm(g, ord=np.inf)), 1.))
     return opt
 
