@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import sys
+import traceback
 from time import monotonic
 
 import numpy as np
@@ -78,16 +79,30 @@ def _workspace_closure():
         raise ValueError('metric: Python object workspace closure unsupported')
 
 
-def _stencil(matrix):
-    if (type(matrix) is not sp.csr_matrix or matrix.dtype!=np.float64
-        or matrix.indices.dtype!=np.int32 or matrix.indptr.dtype!=np.int32
-        or not 1<=matrix.shape[0]<=4096 or matrix.shape[0]!=matrix.shape[1]
-        or matrix.nnz>7*matrix.shape[0] or not np.isfinite(matrix.data).all()):
-        raise ValueError('metric: native first-order float64/int32 CSR required')
-    n=matrix.shape[0]
-    if (len(matrix.indptr)!=n+1 or matrix.indptr[0]!=0 or matrix.indptr[-1]!=matrix.nnz
-        or np.any(np.diff(matrix.indptr)<0) or np.any(matrix.indices<0) or np.any(matrix.indices>=n)):
+def _csr_storage(matrix,n,maximum):
+    # Validate backing arrays BEFORE dtype/nnz properties, sparse slicing/copy
+    # or a native entry can index malformed pointers. No user refusal assert.
+    if (type(matrix) is not sp.csr_matrix or matrix.shape!=(n,n)
+        or any(type(v) is not np.ndarray or v.ndim!=1 or not v.flags.c_contiguous
+               for v in (matrix.data,matrix.indices,matrix.indptr))
+        or matrix.data.dtype!=np.float64 or matrix.indices.dtype!=np.int32
+        or matrix.indptr.dtype!=np.int32 or len(matrix.data)!=len(matrix.indices)
+        or len(matrix.data)>maximum or len(matrix.indptr)!=n+1):
+        raise ValueError('metric: exact bounded float64/int32 CSR storage')
+    count=len(matrix.data)
+    if (matrix.indptr[0]!=0 or matrix.indptr[-1]!=count
+        or np.any(matrix.indptr<0) or np.any(matrix.indptr>count)
+        or np.any(np.diff(matrix.indptr)<0) or np.any(matrix.indices<0) or np.any(matrix.indices>=n)
+        or not np.isfinite(matrix.data).all()):
         raise ValueError('metric: invalid CSR index structure')
+
+
+def _stencil(matrix):
+    if (type(matrix) is not sp.csr_matrix or not 1<=matrix.shape[0]<=4096
+        or matrix.shape[0]!=matrix.shape[1]):
+        raise ValueError('metric: native first-order square CSR required')
+    n=matrix.shape[0]
+    _csr_storage(matrix,n,7*n)
     for i in range(n):
         columns=matrix.indices[matrix.indptr[i]:matrix.indptr[i+1]]
         values=matrix.data[matrix.indptr[i]:matrix.indptr[i+1]]
@@ -207,10 +222,12 @@ class JosephMetric:
             or free.dtype!=np.int64 or free.ndim!=1 or not 1<=len(free)<=self.a
             or np.any(free<0) or np.any(free>=self.a) or np.any(np.diff(free)<=0)):
             raise ValueError('metric: exact native operands/free principal face')
+        _csr_storage(weights,g.shape[0],g.shape[0]**2)
+        principal=t=s=chol=None
         try:
             principal=regularizer[free][:,free].tocsr()
             self.lower,self.pivots=_factor(principal,deadline)
-            del principal
+            principal=None
             _time(deadline)
             with np.errstate(over='raise',invalid='raise'):
                 self.b=_finite_array(np.sqrt(2.)*(weights@g[:,free]))
@@ -231,15 +248,30 @@ class JosephMetric:
             self.f=t
             # Actual independent S/factor/multi-RHS scratch cannot coexist with
             # CG or NI. Stored F reuses T; no parent/closure holds local scratch.
-            del s,chol,t
+            s=chol=t=None
             self.free=free.copy()
             for value in (self.pivots,self.b,self.f,self.free): value.flags.writeable=False
             for value in (self.lower.data,self.lower.indices,self.lower.indptr): value.flags.writeable=False
             _time(deadline)
             self.setup_seconds=monotonic()-started
-        except BaseException:
+        except BaseException as exc:
             self.close()
+            # Keep the original exception/cause/stack identity, but dispose
+            # inactive native-wrapper/factor frames even when a caller retains
+            # the failure traceback. The current executing frame is cleared by
+            # the explicit finally below, not by relying on cycle collection.
+            pending,seen=[exc],set()
+            while pending:
+                failure=pending.pop()
+                if id(failure) in seen: continue
+                seen.add(id(failure))
+                traceback.clear_frames(failure.__traceback__)
+                for linked in (failure.__cause__,failure.__context__):
+                    if linked is not None and id(linked) not in seen: pending.append(linked)
             raise
+        finally:
+            principal=t=s=chol=None
+            pending=seen=failure=linked=None
 
     @property
     def live_payload_bytes(self):
