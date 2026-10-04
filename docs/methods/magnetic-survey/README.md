@@ -1,5 +1,9 @@
 # Magnetic survey input and geometry seal / Entrada y sello geométrico magnético
 
+[Recorded independent acquisition controls / Controles independientes](02_acquisition-controls.md)
+describe the executable authored Choclo/Decimal/PCG64 inputs, not fitted inverse
+success or field acceptance.
+
 The ordinary local **geometry foundation is executable**. L2, sparse IRLS,
 quantity-specific fitting, held-out prediction, fitted-result bundles and linked
 views remain the complete [continuation contract](../../design/features/m04-survey-inversion/research.md),

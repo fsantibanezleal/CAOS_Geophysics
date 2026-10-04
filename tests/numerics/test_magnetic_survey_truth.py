@@ -2,7 +2,7 @@
 
 import ast
 from copy import deepcopy
-from decimal import Decimal, localcontext
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_EVEN, localcontext
 import hashlib
 import importlib.util
 import json
@@ -72,6 +72,10 @@ def test_recorded_regimes_preserve_sealed_geometry(regime, quantity):
         "b784c2e62476cc8926a948fa3c20787df9dcf017a54497d1a696fddb2026538a")
     assert control["provenance"]["membership_sha256"] == (
         "2336754f197bcf8470fdcf267df80af962f2483860bad37b5dacefb9691f2d45")
+    assert control["provenance"]["geometry_metadata_sha256"] == (
+        "c1f25af64ed06a896bcddf5990180c82c2021687978b2cbe840f00317ea1014f")
+    assert control["provenance"]["truth_source_sha256"] == (
+        "4e41feee63a5d7a5997dd35d99fe17d62016db003568fe7f7f6108724163254b")
     assert control["kind"] == "authored_synthetic" and control["acquisition"]["timestamps"] is None
     assert all(value is False for value in after["claims"].values())
     c = 3 if quantity == QUANTITIES[0] else 1
@@ -81,21 +85,25 @@ def test_recorded_regimes_preserve_sealed_geometry(regime, quantity):
 
 
 @pytest.mark.parametrize("quantity", QUANTITIES)
-def test_actual_choclo_components_and_independent_decimal_scalar(quantity):
-    control = fixture.generate_control("A", quantity)
+@pytest.mark.parametrize("regime", tuple("ABCDE"))
+def test_actual_choclo_components_and_independent_decimal_scalar(quantity, regime):
+    control = fixture.generate_control(regime, quantity)
     i, d = math.radians(37.), math.radians(-73.)
     direction = np.array([math.cos(i)*math.sin(d), math.cos(i)*math.cos(d), -math.sin(i)])
     background = 50000.*direction
     bodies = [([310., 770., 1700., 2570., -510., -130.], .012),
               ([960., 1430., 3980., 4830., -980., -420.], .021)]
+    if regime == "B": bodies = [(bodies[0][0], .025), (bodies[1][0], .003)]
+    if regime == "C": bodies = [([310., 770., 1700., 2570., -1050., -470.], .021), bodies[1]]
     xyz = np.array(control["geometry"]["receivers_m"]["data"]).reshape(288, 3)
     # Separate component callables, not the generator's magnetic_field callable.
     selected = [0, 13, 24, 63, 118, 206, 287]
     independent = []
     for row in selected:
         expected = np.zeros(3)
-        for bounds, chi in bodies:
+        for index, (bounds, chi) in enumerate(bodies):
             magnetization = chi * background * 1e-9 / MU0
+            if regime == "D" and index == 0: magnetization += np.array([8., -5.5, 2.3])
             expected += np.array([function(*xyz[row], *bounds, *magnetization)
                                   for function in (choclo.prism.magnetic_e,
                                                    choclo.prism.magnetic_n,
@@ -143,12 +151,13 @@ def test_noise_raw_record_reproducibility_and_truth_separation(regime, quantity)
     assert handle.metadata()["source"]["original_bytes"] == len(control["original_bytes"])
 
 
-def test_remanence_wrong_field_and_depth_controls_are_not_relabelled_passes():
-    a = fixture.generate_control("A", QUANTITIES[0])
-    b = fixture.generate_control("B", QUANTITIES[0])
-    c = fixture.generate_control("C", QUANTITIES[0])
-    d = fixture.generate_control("D", QUANTITIES[0])
-    e = fixture.generate_control("E", QUANTITIES[0])
+@pytest.mark.parametrize("quantity", QUANTITIES)
+def test_remanence_wrong_field_and_depth_controls_are_not_relabelled_passes(quantity):
+    a = fixture.generate_control("A", quantity)
+    b = fixture.generate_control("B", quantity)
+    c = fixture.generate_control("C", quantity)
+    d = fixture.generate_control("D", quantity)
+    e = fixture.generate_control("E", quantity)
     assert a["bodies"][0]["bounds_m"] == b["bodies"][0]["bounds_m"]
     assert b["bodies"][0]["chi_si"] == .025 and b["bodies"][1]["chi_si"] == .003
     assert c["bodies"][0]["bounds_m"][-2:] == [-1050., -470.]
@@ -188,7 +197,7 @@ def test_null_observations_and_deficient_coverage_are_separate(quantity):
     doc["processing"]["nodes"][-1]["output_sha256"] = doc["observations"]["values_sha256"]
     doc["noise"]["values"] = descriptor("float64", [96, c], [.5]*(96*c))
     doc["source"]["scope"] = "declared_subset"
-    with pytest.raises(reader.SurveyInputError, match="insufficient_partition_geometry"):
+    with pytest.raises(reader.InputError, match="twelve indivisible"):
         planner.plan_geometry(reader.parse_request(encode(doc)))
 
 
@@ -208,7 +217,8 @@ def test_regime_is_literal_not_coerced(bad):
         fixture.generate_control(bad, QUANTITIES[0])
 
 
-def test_owned_snapshots_and_corrupted_geometry_fail_before_values(monkeypatch):
+@pytest.mark.parametrize("fault", ["coordinates", "width", "active", "qc", "timestamp", "group", "buffer"])
+def test_owned_snapshots_and_corrupted_geometry_fail_before_values(fault, monkeypatch):
     control = fixture.generate_control("A", QUANTITIES[0])
     arrays = [control[key] for key in ("secondary_enu_nT", "signal_nT", "observed_nT", "sd_nT")]
     for i, value in enumerate(arrays):
@@ -221,9 +231,91 @@ def test_owned_snapshots_and_corrupted_geometry_fail_before_values(monkeypatch):
     original_geometry = fixture.geometry
     def wrong():
         acquisition, geometry = original_geometry()
-        geometry["receivers_m"]["data"][0] += 1.
+        if fault == "coordinates": geometry["receivers_m"]["data"][0] += 1.
+        if fault == "width": geometry["mesh"]["widths_z_m"]["data"][0] += 1.
+        if fault == "active": geometry["mesh"]["active"]["data"][0] = False
+        if fault == "qc": geometry["qc_reason"][0] = "provider_qc_excluded"
+        if fault == "timestamp": acquisition["timestamps"] = ["invented"]*288
+        if fault == "group": acquisition["group_ids"][0] = "changed"
+        if fault == "buffer": geometry["partition"]["buffer_m"] = 199.
         return acquisition, geometry
     monkeypatch.setattr(fixture, "geometry", wrong)
     monkeypatch.setattr(choclo.prism, "magnetic_field", lambda *args: pytest.fail("truth before geometry seal"))
     with pytest.raises(ValueError, match="frozen geometry"):
+        fixture.generate_control("A", QUANTITIES[0])
+
+
+@pytest.mark.parametrize("secondary", [(0., 0., 0.), (1e-20, -2e-20, 3e-20),
+                                        (-100., 20., 30.), (100., -20., -30.)])
+def test_native_norm_baseline_rational_and_outward_sqrt_oracle(secondary):
+    """Test-only algebra/interval oracle, NOT an implemented nonlinear certificate."""
+    i, d = math.radians(37.), math.radians(-73.)
+    b0_float = [50000.*math.cos(i)*math.sin(d),
+                50000.*math.cos(i)*math.cos(d), -50000.*math.sin(i)]
+    b0 = [Decimal.from_float(x) for x in b0_float]
+    b = [Decimal.from_float(x) for x in secondary]
+    f = Decimal.from_float(50000.)
+    with localcontext() as context:
+        context.prec = 160
+        context.rounding = ROUND_HALF_EVEN
+        radicand = sum((x+y)**2 for x, y in zip(b0, b))
+        reference_norm = radicand.sqrt()
+        direct = reference_norm-f
+        delta0 = sum(x*x for x in b0)-f*f
+        full = (delta0+2*sum(x*y for x, y in zip(b0, b))+sum(x*x for x in b))/(reference_norm+f)
+        assert delta0 != 0
+        assert abs(full-direct) <= Decimal("1e-140")
+        if secondary == (0., 0., 0.):
+            assert direct != 0 and (2*sum(x*y for x, y in zip(b0, b))+sum(x*x for x in b)) == 0
+        elif max(abs(x) for x in secondary) < 1e-19:
+            omitted = (2*sum(x*y for x, y in zip(b0, b))+sum(x*x for x in b))/(reference_norm+f)
+            assert abs(omitted-direct) > Decimal("1e-12")
+    with localcontext() as context:
+        context.prec = 80
+        lows, highs = [], []
+        for x, y in zip(b0, b):
+            context.rounding = ROUND_FLOOR
+            lo = x+y
+            context.rounding = ROUND_CEILING
+            hi = x+y
+            context.rounding = ROUND_FLOOR
+            lows.append(Decimal(0) if lo <= 0 <= hi else min(lo*lo, hi*hi))
+            context.rounding = ROUND_CEILING
+            highs.append(max(lo*lo, hi*hi))
+        context.rounding = ROUND_FLOOR
+        lower_s = sum(lows)
+        context.rounding = ROUND_CEILING
+        upper_s = sum(highs)
+        assert 0 < lower_s <= upper_s
+        # sqrt ignores FLOOR/CEILING; neighbours are needed AFTER sqrt.
+        lower_t = lower_s.sqrt().next_minus(context)
+        upper_t = upper_s.sqrt().next_plus(context)
+        assert lower_t <= reference_norm <= upper_t
+        context.rounding = ROUND_FLOOR
+        lower_h = lower_t-f
+        context.rounding = ROUND_CEILING
+        upper_h = upper_t-f
+        assert lower_h <= direct <= upper_h
+
+
+@pytest.mark.parametrize("quantity", ["secondary_amplitude", "total_intensity", None, True, "exact_total_anomaly_nT "])
+def test_unpromised_quantities_reject_before_truth(quantity, monkeypatch):
+    monkeypatch.setattr(choclo.prism, "magnetic_field", lambda *args: pytest.fail("truth before quantity rejection"))
+    with pytest.raises((TypeError, ValueError)):
+        fixture.generate_control("A", quantity)
+
+
+@pytest.mark.parametrize("fault", ["version", "source", "nonfinite"])
+def test_truth_dependency_and_nonfinite_failures_remain_failures(fault, monkeypatch):
+    if fault == "version": monkeypatch.setattr(choclo, "__version__", "v0.3.3")
+    if fault == "source":
+        original_read = Path.read_bytes
+        def changed(path):
+            return b"unreviewed physical source" if path.name == "_magnetic.py" else original_read(path)
+        monkeypatch.setattr(Path, "read_bytes", changed)
+    if fault == "nonfinite":
+        monkeypatch.setattr(choclo.prism, "magnetic_field", lambda *args: (np.inf, 0., 0.))
+    else:
+        monkeypatch.setattr(choclo.prism, "magnetic_field", lambda *args: pytest.fail("truth before dependency rejection"))
+    with pytest.raises(RuntimeError):
         fixture.generate_control("A", QUANTITIES[0])
