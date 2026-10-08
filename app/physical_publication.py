@@ -46,13 +46,26 @@ def audit_correction_ancestry(connection, files, parent, *, approved_manifests):
     """
     require(type(approved_manifests) is dict,'physical_publication_registration')
     owner,project=parent['owner_id'],parent['project_id']
-    _parent_chain(connection,parent,owner,project)
-    chain,current=[],parent
+    chain,current,seen=[],parent,set()
     while current['kind']!='root':
+        require(current['id'] not in seen and len(chain)<4,'physical_publication_cycle_or_depth')
+        seen.add(current['id'])
+        require(current['kind']=='derived' and current['payload_schema']=='gravity-station-adapter-result-1' and
+                tuple(current[k] for k in ('owner_id','project_id','root_dataset_id','raw_asset_id','parser_version'))==
+                (owner,project,parent['root_dataset_id'],parent['raw_asset_id'],'gravity-stations-json/v1'),
+                'physical_publication_ancestry_identity')
         chain.append(current)
-        current=_row(connection,'SELECT * FROM observation_datasets WHERE id=?',(current['parent_dataset_id'],))
+        ancestor=_row(connection,'SELECT * FROM observation_datasets WHERE id=?',(current['parent_dataset_id'],))
+        edge=_row(connection,'SELECT * FROM physical_dataset_edges WHERE child_dataset_id=?',(current['id'],))
+        require(ancestor['version']<current['version'] and edge['parent_dataset_id']==ancestor['id'] and
+                edge['parent_dataset_sha256']==ancestor['sha256'] and edge['role']=='scientific_input',
+                'physical_publication_ancestry_edge')
+        current=ancestor
     require(current['parser_version']=='gravity-stations-json/v1' and current['payload_schema']=='gravity-stations-1'
-            and current['modality']=='gravity_physical_station','physical_publication_root_tuple')
+            and current['modality']=='gravity_physical_station' and current['id']==parent['root_dataset_id']
+            and current['version']==1 and current['parent_dataset_id'] is None and
+            (current['owner_id'],current['project_id'],current['raw_asset_id'])==(owner,project,parent['raw_asset_id']),
+            'physical_publication_root_tuple')
     raw=_row(connection,'SELECT * FROM raw_assets WHERE id=? AND owner_id=? AND project_id=?',
              (current['raw_asset_id'],owner,project))
     source=_row(connection,'SELECT * FROM source_records WHERE id=? AND owner_id=? AND project_id=?',
@@ -143,6 +156,9 @@ def publish_correction(connection, files, *, owner_id, project_id, intent_id,
                 and (intent['parent_dataset_id'],intent['parent_dataset_sha256'],intent['request_sha256'],intent['stage_id'])==
                 (job['dataset_id'],job['dataset_sha256'],job['request_sha256'],job['id']), 'physical_publication_control')
         parent=_row(connection,'SELECT * FROM observation_datasets WHERE id=?',(job['dataset_id'],))
+        # New publication adds one edge. Read-only audit below permits an
+        # already committed four-edge node, unlike the allocator precondition.
+        _parent_chain(connection,parent,owner_id,project_id)
         input_body,prior=audit_correction_ancestry(connection,files,parent,approved_manifests=approved_manifests)
         batch,inventory=sealed_stage(connection,control)
         roles={slot['role']:slot for slot in inventory['initial_files']}
