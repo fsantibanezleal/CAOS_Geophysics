@@ -4,6 +4,7 @@ import { ApiClient } from "./client";
 import { ProcessingApi } from "./processing";
 import { profileJsonMembers, readProfileFiles, type ProfileAdmission } from "./profile-local-contracts";
 import { strictVelocityJson } from "./velocity-local-contracts";
+import { verifyProfileLinuxPair } from "./profile-linux-receipt";
 import { M07_METHOD,M09_METHOD,isProfileJob,isProfileReceipt,parseProjectDatasetReceipt,parseProjectProcessingJob,
   processingId as id,processingObject as obj,processingText as text,same,
   type ProfileDatasetReceipt,type ProfileProcessingJob } from "./processing-contracts";
@@ -27,6 +28,7 @@ export async function readProtectedProfile(bytes:Uint8Array,job:ProfileProcessin
   const environment=profileJsonMembers(raw).get("environment");check(environment);
   same(await digest(new TextEncoder().encode(raw.slice(environment.valueStart,environment.valueEnd))),result.environment_sha256,"producer environment hash");
   same(result.raw_bytes,originalBytes(profile),"original byte count");
+  await verifyProfileLinuxPair(raw,result,job);
   const portable=new TextEncoder().encode(raw.slice(member.valueStart,member.valueEnd));
   const settings=profileJsonMembers(new TextDecoder().decode(portable)).get("numerical_settings");check(settings);
   const original=obj(profile.original,"profile original");
