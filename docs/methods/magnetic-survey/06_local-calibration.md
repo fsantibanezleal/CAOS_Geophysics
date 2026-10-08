@@ -40,6 +40,13 @@ actual vendor regularizer. Re-factor each selected principal covariance: no
 subset of a full whitening matrix, diagonal approximation, jitter or anomaly-
 derived SD. Validate the complete declared SD/SPD model after the seal and before
 fitting. Unresolved rights or non-original unresolved processing lineage rejects.
+Unselected observation lexemes are advanced without number conversion in the
+row reader, after complete transport/hash validation. A literal
+`cross_partition_dependence=declared_absent` requires actual zero covariance
+across outer/development and inner fit/validation blocks. Nonzero entries reject
+that contradictory declaration; use the truthful `possible_not_removed` label
+and keep the full principal likelihood. Buffering never removes this dependence
+or creates statistical independence. No covariance entry is repaired or zeroed.
 
 Each sparse fit starts from that fold/beta's converged L2 model. Each of the eight
 positive thresholds constructs a fresh actual unscaled SimPEG Sparse object.
@@ -233,3 +240,8 @@ Espectro de vista únicamente en línea contigua regularmente espaciada en dista
 horizontal, Hann/rfft/PSD firmada; huecos rechazan sin remuestreo. Las pruebas
 numéricas pequeñas/null no sustituyen adquisición S2 con 528 celdas, remanencia,
 campo incorrecto, datos físicos externos, contención ni aceptación completa.
+
+Native unrepresentable likelihood metrics and failed resolution solves/spectra
+remain numerical failures, without an SD floor, rank cutoff or nugget fallback.
+Métricas no representables y fallos nativos de resolución/espectro se conservan
+como fallos numéricos, sin piso SD, corte de rango ni nugget.

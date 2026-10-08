@@ -70,6 +70,25 @@ def test_heldout_values_change_no_fit_or_seal():
     np.testing.assert_array_equal(first.read(rows, role='fit', fold=0)[0], second.read(rows, role='fit', fold=0)[0])
 
 
+def test_unselected_observation_tokens_are_not_decoded_in_fit_reader(monkeypatch):
+    request = data()
+    before = SealedLikelihood(support.encode(request))
+    rows = tuple(before.plan['partition']['folds'][0]['fit_rows']['data'])
+    for row in before.plan['partition']['outer_rows']['data']:
+        request['observations']['values']['data'][3*row:3*row+3] = [31415.125]*3
+    support.rehash(request, 'observations/values')
+    reader = SealedLikelihood(support.encode(request))  # complete byte validation/seal
+    import magnetic_likelihood as module
+    original = module._Lexer.scalar
+    def trap(self):
+        value = original(self)
+        assert value != 31415.125, 'An unselected outer observation was decoded during fitting'
+        return value
+    monkeypatch.setattr(module._Lexer, 'scalar', trap)
+    observed, _ = reader.read(rows, role='fit', fold=0)
+    assert observed.shape == (144, 3)
+
+
 def test_principal_full_covariance_and_actual_scalar_indices():
     request = data()
     request['processing']['quantity'] = request['observations']['quantity'] = 'linear_tmi_nT'
@@ -80,6 +99,7 @@ def test_principal_full_covariance_and_actual_scalar_indices():
     covariance = sigma[:, None]*sigma[None, :]*.2**abs(np.arange(288)[:, None]-np.arange(288))
     request['noise']['kind'] = 'full_covariance'
     request['noise']['unit'] = 'nT^2'
+    request['noise']['cross_partition_dependence'] = 'possible_not_removed'
     request['noise']['values'] = support.descriptor('float64', [288, 288], covariance.ravel().tolist())
     reader = SealedLikelihood(support.encode(request))
     reader.validate_noise()
@@ -87,3 +107,18 @@ def test_principal_full_covariance_and_actual_scalar_indices():
     observed, noise = reader.read(rows, role='validation', fold=0)
     np.testing.assert_array_equal(noise['values'], covariance[np.ix_(rows, rows)])
     np.testing.assert_array_equal(observed.ravel(), np.array(rows))
+    request['noise']['cross_partition_dependence'] = 'declared_absent'
+    with pytest.raises(InputError, match='contradicts declared_absent'):
+        SealedLikelihood(support.encode(request)).validate_noise()
+
+
+def test_actual_zero_cross_partition_covariance_accepts_declared_absence():
+    request = data()
+    request['processing']['quantity'] = request['observations']['quantity'] = 'linear_tmi_nT'
+    request['processing']['background_relation'] = 'projection_of_secondary_declared'
+    request['observations']['values'] = support.descriptor('float64', [288, 1], [0.]*288)
+    support.rehash(request, 'observations/values')
+    request['noise'].update(kind='full_covariance', unit='nT^2',
+        values=support.descriptor('float64', [288, 288], (.25*np.eye(288)).ravel().tolist()))
+    reader = SealedLikelihood(support.encode(request))
+    reader.validate_noise()

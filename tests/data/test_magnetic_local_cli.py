@@ -55,6 +55,11 @@ def test_actual_file_cli_calibrate_import_and_reused_evaluation(tmp_path):
     assert result['execution_scope'] == 'local_candidate_only' and not any(result['claims'].values())
     freeze = json.loads((tmp_path/'generation.frozen.json').read_bytes())
     assert freeze['state'] == 'frozen_before_outer_evaluation' and freeze['candidate'] == result['selected']
+    previous = (tmp_path/'generation'/'manifest.json').read_bytes()
+    code, refused = run('calibrate', *common, '--output', tmp_path/'generation', '--binding-receipt',
+        tmp_path/'receipt.json', '--allow-candidate-core')
+    assert code == 5 and refused['code'] == 'durability'
+    assert (tmp_path/'generation'/'manifest.json').read_bytes() == previous
     code, imported = run('import', '--bundle', tmp_path/'generation', '--temp-root', tmp_path)
     assert code == 0 and imported['generation_sha256'] == result['generation_sha256']
     code, evaluated = run('evaluate', '--bundle', tmp_path/'generation', '--temp-root', tmp_path)
@@ -89,3 +94,12 @@ def test_operator_receipt_cannot_hide_transitive_certificate_validator(tmp_path)
     (tmp_path/'receipt.json').write_bytes(canonical(receipt))
     with pytest.raises(ValueError, match='inventory mismatch'):
         cli.reviewed_binding(tmp_path/'receipt.json', True)
+
+
+def test_existing_output_gate_precedes_request_original_and_source_io(tmp_path):
+    output = tmp_path/'old.json'
+    output.write_bytes(b'Prior external generation')
+    code, result = run('validate', '--request', tmp_path/'missing_request', '--original', tmp_path/'missing_original',
+        '--output', output, '--data-root', tmp_path, '--temp-root', tmp_path)
+    assert code == 5 and result['code'] == 'durability' and 'before fitting' in result['message']
+    assert output.read_bytes() == b'Prior external generation'

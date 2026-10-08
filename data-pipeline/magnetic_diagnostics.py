@@ -37,14 +37,20 @@ def resolution(objective, q, *, deadline):
             data = wj[:, free].T@wj
             # Positive regularizer smallness guarantees this local SPD system.
             # No inverse, nugget, rank cutoff or zero-mode replacement.
-            local = np.linalg.solve(gram, data)
+            try:
+                local = np.linalg.solve(gram, data)
+            except np.linalg.LinAlgError:
+                fail('numerical', '$/diagnostics', 'Native local resolution solve failed; no inverse/rank/nugget fallback')
             matrix[free] = local
             point[:] = matrix[:, selected]
             stacked = [wj[:, free]]
             for term in terms:
                 stacked.append(np.sqrt(objective.beta*term['alpha'])*
                                term['weights'][:, None]*term['derivative'][:, free].toarray())
-            spectrum = descriptor(np.linalg.svd(np.vstack(stacked), compute_uv=False))
+            try:
+                spectrum = descriptor(np.linalg.svd(np.vstack(stacked), compute_uv=False))
+            except np.linalg.LinAlgError:
+                fail('numerical', '$/diagnostics', 'Native stacked-system spectrum unavailable; no rank fallback')
         else:
             h = LinearOperator((len(free), len(free)), matvec=action, dtype=np.float64)
             diagonal = .5*objective.binding_diagonal(q)[free]

@@ -34,3 +34,11 @@ def test_nested_git_root_detected_before_creation(tmp_path):
     (checkout/'.git').mkdir()
     with pytest.raises(InputError, match='repository'):
         external_path(checkout/'raw'/'model.npy')
+
+
+def test_resolution_loop_has_closed_durability_error(tmp_path, monkeypatch):
+    def loop(*args, **kwargs):
+        raise RuntimeError('injected resolution loop')
+    monkeypatch.setattr(Path, 'resolve', loop)
+    with pytest.raises(InputError, match='resolution failed or loops'):
+        external_path(tmp_path/'new')

@@ -11,6 +11,7 @@ import pytest
 import magnetic_calibration as calibration
 import magnetic_optimizer_adapter as adapter
 import physical_optimizer as core
+from magnetic_survey_json import InputError
 
 spec = importlib.util.spec_from_file_location('calibration_control', Path(__file__).with_name('test_magnetic_optimizer_adapter.py'))
 control = importlib.util.module_from_spec(spec)
@@ -104,3 +105,9 @@ def test_selection_ties_and_failed_candidate_score_not_averaged():
     assert calibration.select_candidate(candidates)['id'] == 'b03-l2'
     with pytest.raises(ValueError, match='No complete'):
         calibration.select_candidate(candidates[-1:])
+
+
+def test_unrepresentable_native_metric_rejects_without_sd_floor():
+    with pytest.raises(InputError, match='no SD floor'):
+        calibration.metrics(np.zeros((30, 1)), np.ones((30, 1)),
+                            dict(kind='diagonal_sd', values=np.full((30, 1), 1e-300)))

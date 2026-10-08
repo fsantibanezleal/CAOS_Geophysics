@@ -41,3 +41,15 @@ def test_horizontal_signed_spectrum_parseval_and_gap_rejection(n):
     np.testing.assert_allclose(result['power'].sum(axis=0)*step, variance, rtol=1e-12, atol=1e-12)
     xyz[3, 0] += 5.
     assert line_spectrum(xyz, residual)['status'] == 'unavailable'
+
+
+def test_native_resolution_failure_has_no_rank_or_nugget_fallback(monkeypatch):
+    physical = control.physical.__wrapped__()
+    obj, _, _, _, _, _ = control.make(physical, 'linear_tmi_nT', False)
+
+    def rejected(*args, **kwargs):
+        raise np.linalg.LinAlgError('injected native solve failure')
+
+    monkeypatch.setattr(np.linalg, 'solve', rejected)
+    with pytest.raises(InputError, match='no inverse/rank/nugget fallback'):
+        resolution(obj, control.control.Q, deadline=monotonic()+120.)

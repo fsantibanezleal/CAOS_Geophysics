@@ -44,14 +44,22 @@ def mesh_from_metadata(meta):
 
 
 def metrics(prediction, observed, noise):
-    residual = observed-prediction
-    if noise['kind'] == 'full_covariance':
-        wr = solve_triangular(np.linalg.cholesky(noise['values']), residual.ravel(), lower=True)
-    else:
-        wr = (residual/noise['values']).ravel()
-    pd = float(wr@wr)
+    try:
+        with np.errstate(over='raise', divide='raise', invalid='raise'):
+            residual = observed-prediction
+            if noise['kind'] == 'full_covariance':
+                wr = solve_triangular(np.linalg.cholesky(noise['values']), residual.ravel(), lower=True)
+            else:
+                wr = (residual/noise['values']).ravel()
+            pd = float(wr@wr)
+            rms = float(np.sqrt(np.mean(residual*residual)))
+            normalized = float(np.sqrt(pd/observed.size))
+    except (FloatingPointError, np.linalg.LinAlgError):
+        fail('numerical', '$/metrics', 'Native likelihood metric is unrepresentable; no SD floor or score fallback')
+    if not np.isfinite([pd, rms, normalized]).all():
+        fail('numerical', '$/metrics', 'Native likelihood metric is unrepresentable; no SD floor or score fallback')
     return dict(n_rows=len(observed), n_components=observed.size, phi_d=pd,
-                rms_nT=float(np.sqrt(np.mean(residual*residual))), normalized_rms=float(np.sqrt(pd/observed.size)))
+                rms_nT=rms, normalized_rms=normalized)
 
 
 def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, binding,

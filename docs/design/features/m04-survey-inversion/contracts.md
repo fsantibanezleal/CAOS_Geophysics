@@ -188,6 +188,10 @@ No symmetrization, nugget, estimated noise floor or row subtraction.
 Unusable/partition rows are selected by component-flat index row*C+component,
 and each subset gets its principal covariance. Correlation across partitions
 is not removed by a spatial buffer or principal extraction.
+The scientific reader checks a declared_absent claim against literal zero
+cross-outer/development and cross-inner-fit/validation covariance blocks.
+Contradictions reject; possible_not_removed preserves actual correlation with no
+independence claim, repair or buffer-derived zeroing.
 
 Prior exactly {lower_si,upper_si,start_si,reference_si,chi_scale_si,lengths_m,
 reference_in_smooth,spatial_weights,basis}:

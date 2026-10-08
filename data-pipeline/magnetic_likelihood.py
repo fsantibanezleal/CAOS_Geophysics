@@ -8,7 +8,7 @@ This is a trusted local separation seam, not a hostile-process security boundary
 import hashlib
 import struct
 
-from magnetic_survey_json import _Lexer, parse_request, fail
+from magnetic_survey_json import _Lexer, _NUMBER, parse_request, fail
 from magnetic_survey import plan_geometry
 
 
@@ -21,9 +21,18 @@ def _selected_tokens(text, span, indices):
     requested = set(indices)
     values = {}
     for index in range(span.count):
-        value = lexer.scalar()
         if index in requested:
-            values[index] = float(value)
+            values[index] = float(lexer.scalar())
+        else:
+            # Complete type/lexeme/hash validation already occurred before the
+            # seal. Advance unrequested numeric lexemes WITHOUT converting the
+            # observation into a Python number, even transiently in this reader.
+            lexer.whitespace()
+            number = _NUMBER.match(text, lexer.i)
+            if number is None:
+                fail('type', '$/likelihood', 'Previously validated numeric span required')
+            lexer.i = number.end()
+            lexer.token()
         lexer.whitespace()
         if index+1 < span.count:
             lexer.punctuation(',')
@@ -116,6 +125,17 @@ class SealedLikelihood:
                 fail('uncertainty', '$/noise', 'Complete covariance SPD required')
             if float(np.linalg.cond(covariance, 2)) > 1e8:
                 fail('uncertainty', '$/noise', 'Complete covariance condition exceeds 1e8')
+            if self.metadata['noise']['cross_partition_dependence'] == 'declared_absent':
+                c = self.metadata['observations']['values']['shape'][1]
+                partition = self.plan['partition']
+                pairs = [(partition['outer_rows']['data'], partition['development_rows']['data'])]
+                pairs += [(fold['fit_rows']['data'], fold['validation_rows']['data']) for fold in partition['folds']]
+                for left, right in pairs:
+                    i = [row*c+component for row in left for component in range(c)]
+                    j = [row*c+component for row in right for component in range(c)]
+                    if np.any(covariance[np.ix_(i, j)] != 0.):
+                        fail('uncertainty', '$/noise/cross_partition_dependence',
+                             'Nonzero cross-partition covariance contradicts declared_absent; do not remove it')
 
     def freeze(self, candidate, chi_si, *, receipt=None):
         import numpy as np

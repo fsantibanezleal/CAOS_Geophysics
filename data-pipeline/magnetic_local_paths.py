@@ -12,12 +12,17 @@ def external_path(path):
         fail('durability', '$/path', 'Explicit absolute external device path required')
     # Inspect lexical parents before resolving so a repository symlink cannot
     # disguise a repository-owned output as an external data location.
-    resolved = value.resolve()
-    for candidate in (value, resolved):
+    def check(candidate):
         for parent in (candidate, *candidate.parents):
             if (parent.is_symlink() or parent.is_junction() or (parent/'.git').exists()
                     or parent.name.lower() in ('_repos', '_worktrees', '.git')):
                 fail('durability', '$/path', 'Data/models/temp cannot be inside a repository or worktree')
+    check(value)
+    try:
+        resolved = value.resolve()
+    except (OSError, RuntimeError):
+        fail('durability', '$/path', 'External path resolution failed or loops')
+    check(resolved)
     if resolved == Path(resolved.anchor):
         fail('durability', '$/path', 'A whole device volume is not a data generation root')
     return resolved

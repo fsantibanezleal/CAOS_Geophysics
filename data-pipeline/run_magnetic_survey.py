@@ -129,6 +129,8 @@ def main(argv=None):
                 summary.update(evaluation='reused_sealed_evaluation', outer=replay)
         else:
             output = data_output(args.output, args.data_root)
+            if output.exists() or (args.operation == 'calibrate' and output.with_name(output.name+'.frozen.json').exists()):
+                fail('durability', '$/output', 'Fresh external output and model-freeze paths required before fitting')
             raw = read_bounded(args.request, MAX_BYTES)
             handle = parse_request(raw)
             verify_original(args.original, handle.metadata()['source'])
@@ -167,10 +169,14 @@ def main(argv=None):
     except InputError as error:
         print(canonical(error.envelope()).decode())
         return 5 if error.code == 'durability' else 3 if error.code in ('dependency', 'resource', 'convergence', 'numerical') else 2
-    except (OSError, ImportError):
-        print(json.dumps(dict(schema='magnetic-input-error-1', code='dependency', path='$/local',
-            message='Explicit local file or source dependency unavailable'), sort_keys=True))
+    except OSError:
+        print(json.dumps(dict(schema='magnetic-input-error-1', code='durability', path='$/local',
+            message='Explicit local file operation unavailable'), sort_keys=True))
         return 5
+    except ImportError:
+        print(json.dumps(dict(schema='magnetic-input-error-1', code='dependency', path='$/local',
+            message='Reviewed local source dependency unavailable'), sort_keys=True))
+        return 3
 
 
 if __name__ == '__main__':
