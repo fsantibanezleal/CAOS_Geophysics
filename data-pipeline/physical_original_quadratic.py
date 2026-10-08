@@ -22,6 +22,32 @@ import gravity_l2_precision as intervals
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 RESERVE_BYTES = 8*1024**2
 ENDPOINT_PAIR_BYTES = 2048
+ALLOCATION_EPOCH = 'original-source-disjoint-native-factory-certificate-1'
+
+
+def _owned_source_allocation(n, m, a, covariance, payload, arithmetic):
+    """Internal original-source phases, never a caller disjointness grant.
+
+    All native/setup/action reserves are retained. The generic certificate's
+    interval workspace is not live in this source-owned original certificate.
+    Its independently bounded original arithmetic replaces that PHASE, not H,
+    the numeric metric, native reserve, limit or original noise nesting.
+    """
+    native_phases = owned.kernel.allocation(n, m, a, covariance)
+    if (type(payload) is not int or not 0 < payload <= RESERVE_BYTES
+            or type(arithmetic) is not dict or set(arithmetic) != {
+                'operand_and_sparse_copy_bytes', 'endpoint_bytes',
+                'native_row_scratch_bytes', 'metadata_bytes'}
+            or any(type(v) is not int or v <= 0 for v in arithmetic.values())
+            or arithmetic['operand_and_sparse_copy_bytes'] != 2*payload):
+        raise ValueError('original quadratic: owned complete source phase storage')
+    source_bytes = sum(arithmetic.values())
+    factory = native_phases['setup']+2*payload+arithmetic['metadata_bytes']
+    certificate = native_phases['action']+max(RESERVE_BYTES, source_bytes)
+    return dict(epoch=ALLOCATION_EPOCH, original_native_phases=native_phases,
+        factory_bytes=factory, original_certificate_bytes=certificate,
+        original_arithmetic_bytes=source_bytes,
+        maximum=max(factory, certificate))
 
 
 @dataclass(frozen=True)
@@ -169,7 +195,9 @@ def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
         endpoint_bytes=ENDPOINT_PAIR_BYTES*(6*a+6*o.source_components+4*maximum_term_rows),
         native_row_scratch_bytes=8*16*(a+o.source_components+maximum_term_rows), metadata_bytes=32768)
     arithmetic_phase_bytes = sum(phase.values())
-    maximum = allocation['maximum']+max(RESERVE_BYTES, arithmetic_phase_bytes)
+    owned_phases = _owned_source_allocation(o.source_components, m, a,
+        covariance, payload, phase)
+    maximum = owned_phases['maximum']
     if payload > RESERVE_BYTES or maximum > admitted_bytes:
         raise ValueError('original quadratic: source-bound original phases plus operand reserve')
     if monotonic() > deadline:
@@ -230,7 +258,8 @@ def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
         raise intervals._Expired
     return dict(original=allocation, operand_payload_bytes=payload,
         reserve_bytes=RESERVE_BYTES, arithmetic_phase=phase,
-        arithmetic_phase_bytes=arithmetic_phase_bytes, maximum=maximum)
+        arithmetic_phase_bytes=arithmetic_phase_bytes,
+        owned_source_phases=owned_phases, maximum=maximum)
 
 
 def _divide(ar, pair, positive):

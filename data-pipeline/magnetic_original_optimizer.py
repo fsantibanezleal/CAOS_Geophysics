@@ -19,6 +19,61 @@ SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 RESIDUAL_TERMINAL_SHA256 = 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7'
 
 
+def allocation_plan(source_components, fit_components, parameters, covariance,
+        original_bytes, observation_components):
+    """PUBLIC pre-G upper plan for literal original M04 physical construction.
+
+    Four native first-order terms have <=a rows, diagonal W and <=2a D entries.
+    Actual original operands/free face/audits are independently checked by the
+    public owner before any certificate/factory. No caller byte deduction,
+    supplied phase flag, native callback or RSS-based permission is accepted.
+    """
+    import importlib
+    limit = 805306368
+    if (type(original_bytes) is not int or not 0 < original_bytes <= limit
+            or type(observation_components) is not int or observation_components not in (1, 3)
+            or type(source_components) is not int or source_components % 3
+            or type(fit_components) is not int or fit_components % observation_components
+            or type(parameters) is not int or type(covariance) is not bool):
+        raise ValueError('original magnetic allocation: literal source/count/noise metadata')
+    native = owned.kernel.allocation(source_components, fit_components, parameters, covariance)
+    raw_rows = 3*(fit_components//observation_components)
+    if raw_rows > source_components or covariance and fit_components > 512:
+        raise ValueError('original magnetic allocation: whole source or original covariance cap')
+    if original.RESERVE_BYTES != 8*1024**2 or original.ENDPOINT_PAIR_BYTES != 2048:
+        raise ValueError('original magnetic allocation: literal reviewed arithmetic constants')
+    # Both occurrences are charged even when aliased; no identity deduction.
+    payload = (16*raw_rows*parameters+16*fit_components+24*parameters+48
+        +4*(44*parameters+8)+(16*fit_components*fit_components if covariance else 0))
+    arithmetic = dict(operand_and_sparse_copy_bytes=2*payload,
+        endpoint_bytes=2048*(10*parameters+6*source_components),
+        native_row_scratch_bytes=128*(2*parameters+source_components), metadata_bytes=32768)
+    phases = original._owned_source_allocation(source_components, fit_components,
+        parameters, covariance, payload, arithmetic)
+    minimum = max(original_bytes, phases['maximum'])+original.RESERVE_BYTES+32768
+    if minimum > limit:
+        raise ValueError('original magnetic allocation: original source arithmetic quota exceeded')
+    names = ('physical_original_optimizer', 'physical_original_terminal',
+        'magnetic_original_optimizer', 'physical_original_quadratic', 'physical_owned_spd',
+        'physical_reduced_optimizer', 'physical_original_residual_terminal', 'physical_original_rows')
+    sources = {}
+    for name in names:
+        module = importlib.import_module(name)
+        sha = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
+        if sha != module.SOURCE_SHA256:
+            raise ValueError('original magnetic allocation: loaded public source drift')
+        sources[name] = sha
+    return dict(schema='magnetic-original-allocation-2', source_components=source_components,
+        fit_components=fit_components, parameters=parameters, covariance=covariance,
+        observation_components=observation_components, original_bytes=original_bytes,
+        native_phases=native, owned_source_phases=phases,
+        source_payload_upper_bytes=payload, source_arithmetic_upper=arithmetic,
+        minimum_phase_bytes=minimum,
+        actual_terminal_phase_gate='public-owned-source-face-audit-before-allocation',
+        admitted_bytes=limit, source_binding=sources, epoch=optimizer.LINEAR_EPOCH,
+        policy=optimizer.POLICY)
+
+
 class _MagneticDTO:
     def __init__(self, objective, source_components):
         from magnetic_optimizer_adapter import MagneticObjective
