@@ -7,7 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.physical_classifier import classify_snapshot
-from app.physical_contract import M, byte_sha, canonical, validate_custody
+from app.physical_contract import M, byte_sha, canonical
 from app.physical_deleted_inventory import save_current_tombstone
 from tests.api.test_physical_classifier import CensusFiles
 from tests.api.test_physical_deleted_inventory import POLICY, case
@@ -18,12 +18,52 @@ from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey
 
 
-def retired(root_case):
+def retired(root_case, *, extra_waveform=False):
     """Declared SQL/file cut fixture, NOT the production original DELETE."""
     inventory, receipt = case(root_case)
     path, files, values, body, original = root_case
     owner, project = values['owner_id'], values['project_id']
     rid, batch_id = str(uuid4()), str(uuid4())
+    extras = []
+    if extra_waveform:
+        # Explicit compact-deleted structural control, NOT a numerical M08 job,
+        # pre-delete producer proof or retrofit of a real project's receipts.
+        from tests.api.test_physical_deleted_inventory import append_root
+        dataset, mseed, xml, ms_source, xml_source, job = [str(uuid4()) for _ in range(6)]
+        raw_body, xml_body, data_body, result_body, member_body = (
+            b'compact declared mseed', b'compact declared xml', b'compact declared waveform dataset',
+            b'compact declared waveform result', b'compact declared waveform member')
+        append_root(inventory,receipt,identifier=dataset,raw_id=mseed,source_id=ms_source,
+            raw_sha=byte_sha(raw_body),dataset_sha=byte_sha(data_body),count=len(raw_body),
+            parser='m08/v1/'+'c'*64,modality='waveform_counts_response',schema='geophysics.waveform-dataset/v1')
+        next(r for r in inventory['datasets'] if r['dataset_id']==dataset)['bytes']=len(data_body)
+        next(r for r in receipt['derived_manifest'] if r.get('id')==dataset)['byte_count']=len(data_body)
+        inventory['raw_assets'].append(dict(asset_id=xml,source_id=xml_source,sha256=byte_sha(xml_body),bytes=len(xml_body)))
+        inventory['raw_assets'].sort(key=lambda r:r['asset_id'])
+        receipt['asset_manifest'].append(dict(asset_id=xml,sha256=byte_sha(xml_body),byte_count=len(xml_body)))
+        inventory['waveform_sources']=[dict(dataset_id=dataset,role=role,asset_id=asset,source_id=source,
+            raw_sha256=byte_sha(payload),raw_bytes=len(payload),source_version=1)
+            for role,asset,source,payload in [('miniseed',mseed,ms_source,raw_body),('stationxml',xml,xml_source,xml_body)]]
+        inventory['jobs'].append(dict(job_id=job,dataset_id=dataset,dataset_sha256=byte_sha(data_body),
+            method_id='seismic.waveform-qc-classical/v1',state='succeeded',request_sha256='a'*64,
+            result_sha256=byte_sha(result_body),result_bytes=len(result_body),physical_fingerprint=None,
+            physical_control_sha256=None,scientific_verdict=None))
+        receipt['derived_manifest'].append(dict(kind='result',id=job,sha256=byte_sha(result_body),byte_count=len(result_body)))
+        # Equal bytes/hashes for two members must still be two charged copies.
+        for name in ('calculation.json','evaluation.json'):
+            inventory['waveform_artifacts'].append(dict(job_id=job,name=name,sha256=byte_sha(member_body),bytes=len(member_body)))
+            receipt['derived_manifest'].append(dict(kind='waveform_artifact',id=job,name=name,
+                relative_path=f'waveforms/{job}/{name}',sha256=byte_sha(member_body),byte_count=len(member_body)))
+        extras = [('raw_delete','deleting_raw',mseed,mseed,1024*M,raw_body),
+                  ('raw_delete','deleting_raw',xml,xml,1024*M,xml_body),
+                  ('dataset_copy','deleting_derived',dataset,f'datasets/{dataset}.json',64*M,data_body),
+                  ('result_copy','deleting_derived',job,f'results/{job}.json',64*M,result_body)] + [
+                  ('result_copy','deleting_derived',job,f'waveforms/{job}/{name}',52690944,member_body)
+                  for name in ('calculation.json','evaluation.json')]
+        for _,location,_,leaf,_,payload in extras:
+            lane='projects' if location=='deleting_raw' else 'derived'
+            target=files.root / f'{lane}/{owner}/{project}/{leaf}'
+            target.parent.mkdir(parents=True,exist_ok=True); target.write_bytes(payload)
     deleting = files.root / '.deleting'
     deleting.mkdir()
     (files.root / f'projects/{owner}/{project}').rename(deleting / f'{owner}--{project}')
@@ -36,12 +76,13 @@ def retired(root_case):
                   max_bytes=cap,actual_bytes=len(payload),actual_sha256=byte_sha(payload))
         for i,(role,location,identifier,leaf,cap,payload) in enumerate([
             ('raw_delete','deleting_raw',values['raw_asset_id'],values['raw_asset_id'],1024*M,original),
-            ('dataset_copy','deleting_derived',values['root_dataset_id'],f"datasets/{values['root_dataset_id']}.json",64*M,body)],1)]
-    inv = dict(schema='geophysics.physical-custody/v1',batch_id=batch_id,owner_id=owner,project_id=project,
+            ('dataset_copy','deleting_derived',values['root_dataset_id'],f"datasets/{values['root_dataset_id']}.json",64*M,body),*extras],1)]
+    inv = dict(schema='geophysics.physical-custody/v2' if extra_waveform else 'geophysics.physical-custody/v1',batch_id=batch_id,owner_id=owner,project_id=project,
         origin_kind='project_deletion',origin_id=project,stage_id=None,deletion_receipt_id=rid,
         raw_asset_id=None,raw_sha256=None,raw_bytes=None,parser_version=None,method_id=None,
-        capacity_bytes=len(original)+len(body),initial_files=slots,removed_ordinals=[])
-    charge = validate_custody(inv)
+        capacity_bytes=sum(s['actual_bytes'] for s in slots),initial_files=slots,removed_ordinals=[])
+    from app.physical_current_custody import validate_current_custody
+    charge = validate_current_custody(inv)
     inventory['custody'].append(dict(batch_id=batch_id,origin_kind='project_deletion',origin_id=project,
                                      initial_inventory_sha256=charge['initial_inventory_sha256']))
     inventory['custody'].sort(key=lambda row:row['batch_id'])
@@ -145,3 +186,29 @@ def test_recorded_removed_ordinal_preserves_initial_inventory_and_other_literal_
     assert result.classification=='coherent_committed',result.reason
     assert result.account_charges[values['owner_id']]['custody']==(
         sum(s['actual_bytes'] for s in inv['initial_files'])+inv['initial_files'][1]['actual_bytes'])
+
+
+@pytest.mark.parametrize('damage',[None,'missing','wrong-name','missing-row','wrong-owner','v1','initial-inventory'])
+def test_m08_named_member_trash_binds_complete_deleted_projection_without_dedup(root_case,damage):
+    path,files,values,_,batch_id,inv=retired(root_case,extra_waveform=True)
+    if damage=='missing':
+        (files.root / f".deleting/{values['owner_id']}--{values['project_id']}--derived/{inv['initial_files'][-1]['leaf']}").unlink()
+    with connect(path) as db:
+        if damage in ('wrong-name','v1','initial-inventory'):
+            row=deepcopy(inv)
+            if damage=='wrong-name': row['initial_files'][-1]['leaf']=row['initial_files'][-1]['leaf'].replace('evaluation.json','manifest.json')
+            elif damage=='v1': row['schema']='geophysics.physical-custody/v1'
+            else: row['initial_files'][-1]['actual_sha256']='f'*64
+            db.execute('UPDATE physical_custody_batches SET inventory_bytes=?,inventory_sha256=? WHERE batch_id=?',
+                       (canonical(row),byte_sha(canonical(row)),batch_id))
+        elif damage=='missing-row':
+            db.execute('DELETE FROM physical_custody_files WHERE batch_id=? AND ordinal=?',(batch_id,inv['initial_files'][-1]['ordinal']))
+        elif damage=='wrong-owner':
+            db.execute('UPDATE physical_custody_batches SET project_id=? WHERE batch_id=?',(str(uuid4()),batch_id))
+        db.commit()
+    result=classified(path,files)
+    if damage is None:
+        assert result.classification=='coherent_committed',result.reason
+        assert result.account_charges[values['owner_id']]['custody']==sum(s['actual_bytes'] for s in inv['initial_files'])+len(root_case[3])+len(root_case[4])
+    else:
+        assert result.classification=='inconsistent' and not result.operations and result.inventory_sha256 is None

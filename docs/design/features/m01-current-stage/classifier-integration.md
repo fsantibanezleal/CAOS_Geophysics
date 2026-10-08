@@ -40,9 +40,16 @@ Already acknowledged removal permits only exact recorded empty parents. The
 historical tombstone/custody validators remain unchanged; no old v1 upgrade or
 lost-science numerical revalidation is inferred from a compact projection.
 
+Current named M08 extra-member deletion copies have an explicit positive
+physical-custody/v2 project-deletion dispatch. Exact job/member leaf, size and
+hash are included in the complete retired projection. Equal hashes for distinct
+members remain distinct charged copies. Ordinary v1 stays frozen; unknown names,
+origins, roles, missing members/rows, wrong ownership and altered initial inventory
+refuse without dispositions. Current cleanup and projection use the same narrow
+dispatch; successful retained-profile/v2 ownership grammar is not altered.
+
 Remaining current-stage integration is active implementation, not an added
-release prerequisite: M08 extra-member deletion custody
-dispatch, original owned DELETE physical rows/debt, runtime startup/recovery
+release prerequisite: original owned DELETE physical rows/debt, runtime startup/recovery
 assembly, actual bounded science/resources/cancel and physical HTTP/export/client
 gates. Unsupported deletion origins/roles remain closed/preserved. Default
 migration/worker/config/live pointer are untouched. Native deleted-classifier

@@ -15,10 +15,11 @@ from types import MappingProxyType, SimpleNamespace
 from app.physical_accounting import account_private_charge
 from app.physical_contract import (
     CORRECTION, TRANSFORM, M, byte_sha, canonical, custody_file, custody_header,
-    decode_source, digest, fields, integer, parse_record, require, sha, validate_custody,
+    decode_source, digest, fields, integer, require, sha,
 )
 from app.errors import ApiError
 from app.physical_debt import ERRORS
+from app.physical_current_custody import parse_current_custody, validate_current_custody
 from app.physical_forest import SUCCESSOR_DDL, _row, _targets
 from app.physical_persistence import TABLES
 from app.physical_publication import audit_correction_ancestry, audit_transform_producer, decode
@@ -179,14 +180,17 @@ class _Audit:
                     'physical_classifier_deletion_receipt_custody')
             # Every originally moved copy is retained in the complete initial
             # inventory, including ordinals already durably acknowledged removed.
-            projection = []
-            for slot in inventory['initial_files']:
-                projection.append((slot['role'], slot['artifact_id'], slot['actual_bytes'], slot['actual_sha256']))
-            expected = ([('raw_delete', r['asset_id'], r['bytes'], r['sha256']) for r in deleted['raw_assets'].values()] +
-                [('dataset_copy', r['dataset_id'], r['bytes'], r['sha256']) for r in deleted['datasets'].values()] +
-                [('result_copy', r['job_id'], r['result_bytes'], r['result_sha256']) for r in deleted['jobs'].values()
-                 if r['state'] == 'succeeded'])
-            require(sorted(projection) == sorted(expected) and not deleted['inventory']['waveform_artifacts'],
+            # A repeated waveform job owns several differently named copies.
+            # Include the exact leaf in projection, never SHA deduplication.
+            projection = [(s['role'], s['artifact_id'], s['leaf'], s['actual_bytes'], s['actual_sha256'])
+                          for s in inventory['initial_files']]
+            expected = ([('raw_delete', r['asset_id'], r['asset_id'], r['bytes'], r['sha256']) for r in deleted['raw_assets'].values()] +
+                [('dataset_copy', r['dataset_id'], f"datasets/{r['dataset_id']}.json", r['bytes'], r['sha256']) for r in deleted['datasets'].values()] +
+                [('result_copy', r['job_id'], f"results/{r['job_id']}.json", r['result_bytes'], r['result_sha256']) for r in deleted['jobs'].values()
+                 if r['state'] == 'succeeded'] +
+                [('result_copy', r['job_id'], f"waveforms/{r['job_id']}/{r['name']}", r['bytes'], r['sha256'])
+                 for r in deleted['inventory']['waveform_artifacts']])
+            require(sorted(projection) == sorted(expected),
                     'physical_classifier_deletion_complete_files')
         else:
             raw = deleted['raw_assets'].get(batch['raw_asset_id'])
@@ -247,7 +251,15 @@ class _Audit:
             header = {key: batch[key] for key in ('batch_id owner_id project_id origin_kind origin_id stage_id '
                 'deletion_receipt_id raw_asset_id raw_sha256 raw_bytes parser_version method_id capacity_bytes').split()}
             header['schema'] = 'geophysics.physical-custody/v1'
-            custody_header(header)
+            if type(batch['inventory_bytes']) is bytes:
+                header['schema'] = parse_current_custody([batch['inventory_bytes']])['schema']
+            # Header v2 is narrowly inherited project-deletion grammar only.
+            if header['schema'] != 'geophysics.physical-custody/v1':
+                require(header['schema'] == 'geophysics.physical-custody/v2' and
+                        header['origin_kind'] == 'project_deletion', 'physical_classifier_custody_dispatch')
+                custody_header(dict(header, schema='geophysics.physical-custody/v1'))
+            else:
+                custody_header(header)
             slots = sorted(by_batch[batch['batch_id']], key=lambda row: row['ordinal'])
             require(batch['state'] != 'quarantined', 'physical_classifier_quarantined')
             retired = batch['project_id'] in self.deleted
@@ -276,8 +288,8 @@ class _Audit:
                 body = batch['inventory_bytes']
                 require(type(body) is bytes and byte_sha(body) == batch['inventory_sha256'],
                         'physical_classifier_custody_hash')
-                inventory = parse_record([body])
-                charge = validate_custody(inventory)
+                inventory = parse_current_custody([body])
+                charge = validate_current_custody(inventory)
                 require(all(inventory[k] == v for k, v in header.items())
                         and charge['retained_bytes'] == batch['charged_bytes'], 'physical_classifier_custody_charge')
                 if retired:

@@ -15,6 +15,7 @@ from app.physical_contract import (
 from app.physical_forest import SUCCESSOR_DDL, _row, _targets
 from app.physical_persistence import CORRECTION, TRANSFORM, M
 from app.physical_successor import REVISION, ddl_sha256
+from app.physical_current_custody import parse_current_custody, validate_current_custody
 
 
 METRICS = "wall_ms cpu_ms peak_rss_bytes scratch_bytes"
@@ -216,8 +217,8 @@ def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, remo
         require(batch["state"] == "cleanup_pending", "physical_cleanup_state")
         body = batch["inventory_bytes"]
         require(type(body) is bytes and byte_sha(body) == batch["inventory_sha256"], "physical_inventory_hash")
-        inventory = parse_record([body])
-        measured = validate_custody(inventory)
+        inventory = parse_current_custody([body])
+        measured = validate_current_custody(inventory)
         require(all(inventory[key] == batch[key] for key in inventory
                     if key not in ("schema", "initial_files", "removed_ordinals")), "physical_inventory_header")
         require(measured["retained_bytes"] == batch["charged_bytes"], "physical_cleanup_charge")
@@ -256,7 +257,7 @@ def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, remo
         if failure_cut:
             failure_cut("before_sql_acknowledgement")
         inventory["removed_ordinals"] = sorted([*removed, ordinal])
-        charge = validate_custody(inventory)["retained_bytes"]
+        charge = validate_current_custody(inventory)["retained_bytes"]
         body = canonical(inventory)
         complete = len(inventory["removed_ordinals"]) == len(slots)
         connection.execute("UPDATE physical_custody_files SET state='removed' WHERE batch_id=? AND ordinal=?", (batch_id, ordinal))

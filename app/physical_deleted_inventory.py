@@ -8,12 +8,13 @@ separately; unknown entries never disappear into a legacy fallback.
 
 from app.physical_contract import (
     CORRECTION, TRANSFORM, M, METHODS as OLD_METHODS,
-    byte_sha, canonical, descriptor, digest, fields, integer, parse_record,
-    require, sha, uuid, instant, validate_custody, validate_deleted_inventory,
+    byte_sha, canonical, descriptor, digest, fields, integer,
+    require, sha, uuid, instant, validate_deleted_inventory,
 )
 from app.physical_persistence import DATASET_REGISTRY
 from app.physical_successor import METHODS, REVISION, predecessor_payload, ddl_sha256
 from app.physical_forest import SUCCESSOR_DDL
+from app.physical_current_custody import parse_current_custody, validate_current_custody
 from app.profile_archive_custody import SCHEMA as ARCHIVE_SCHEMA, validate_saved_entry, validate_original_receipt_entry, _json
 
 
@@ -204,7 +205,7 @@ def project_inventory(connection, *, owner_id, project_id, source_policy_sha256,
     for batch in rows('physical_custody_batches'):
         require(batch['state'] in ('cleanup_pending','removed') and type(batch['inventory_bytes']) is bytes
                 and byte_sha(batch['inventory_bytes'])==batch['inventory_sha256'],'current_deletion_custody_unresolved')
-        inv=parse_record([batch['inventory_bytes']]); measured=validate_custody(inv)
+        inv=parse_current_custody([batch['inventory_bytes']]); measured=validate_current_custody(inv)
         require(measured['retained_bytes']==batch['charged_bytes'],'current_deletion_custody_charge')
         value['custody'].append(dict(batch_id=batch['batch_id'],origin_kind=batch['origin_kind'],origin_id=batch['origin_id'],
                                     initial_inventory_sha256=measured['initial_inventory_sha256']))
