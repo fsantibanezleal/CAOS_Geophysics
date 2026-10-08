@@ -25,10 +25,22 @@ IDs, raw hash/count, parser version, method, exact supplied metadata and origina
 geometry/count/QC. It is an immutable dataset version and can be independently
 revalidated. No inferred field truth is created.
 
+Local acquisition and numerical receipts use an explicit external data root,
+selected by `--data-root` or `GEOPHYSICS_LOCAL_DATA_ROOT`. The product's reviewed
+ledger remains in the repository. The configured root preserves ledger-relative
+storage keys, immutable raw hashes and receipt bytes; it is not a new acquisition
+or a reason to rewrite historical provenance. A missing root is a configuration
+error, not permission to write raw working data into a checkout. Sandboxed tests
+use explicitly configured external temporary roots.
+
 ## Compute and state
 
 New `app/profile_contract.py` and `app/profile_compute.py` implement the
-method-specific envelope and child execution. Children receive the verified
+method-specific envelope and child command. A path-invoked
+`scripts/process_profile_job.py` child needs only the pinned profile environment,
+not API/account libraries. That environment remains separate because its
+NumPy/SciPy requirements differ from the MT/API runtime. This is a dependency
+boundary within the same worker and origin, not another service. Children receive the verified
 original path and strict dataset/request bytes from the worker, not an
 arbitrary URL, executable, import name or user Python expression. Native
 diagnostics stay in private stderr. The scientific core remains
