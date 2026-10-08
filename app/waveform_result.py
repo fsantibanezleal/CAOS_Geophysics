@@ -226,6 +226,27 @@ def verified_artifacts(settings, job, payload, rows):
     return directory
 
 
+def preflight_publication_paths(target, directory, members, *, platform):
+    """Pure destination check; never create, normalize or bypass a path limit."""
+    try:
+        if platform not in ("nt", "posix"):
+            raise ValueError()
+        if platform != "nt":
+            return
+        # The selected Windows API interpreter has the observed MAX_PATH limit.
+        # Count UTF-16 code units, not Python characters or UTF-8 bytes. Include
+        # the exact metadata target and every independently generated member.
+        paths = [target, directory, *(directory / row["name"] for row in members)]
+        for path in paths:
+            value = str(path)
+            if (not value or "\0" in value or value.startswith(("\\\\?\\", "\\\\.\\"))
+                    or len(value.encode("utf-16-le", errors="strict")) // 2 >= 260):
+                raise ValueError()
+    except (ValueError, TypeError, KeyError, UnicodeError):
+        raise ApiError(503, "waveform_storage_unavailable",
+                       "Waveform publication destinations exceed supported storage paths") from None
+
+
 async def publish_result(settings, sessions, job, export_path, receipt, release):
     """Only called after the actual supervisor finishes and acknowledges release."""
     from app.waveform_processing import validate_source_rows
@@ -258,6 +279,7 @@ async def publish_result(settings, sessions, job, export_path, receipt, release)
     key = result_key(str(job.owner_id), job.project_id, job.id)
     target = checked_derived_path(settings, key)
     directory = artifact_path(settings, artifact_key(str(job.owner_id), job.project_id, job.id, "manifest.json")).parent
+    preflight_publication_paths(target, directory, members, platform=os.name)
     async with sessions() as session:
         await session.execute(text("BEGIN IMMEDIATE"))
         current = (await session.execute(select(ProcessingJob).where(ProcessingJob.id == job.id))).scalar_one()
