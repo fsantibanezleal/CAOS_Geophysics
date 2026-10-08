@@ -38,6 +38,55 @@ def scan_stream(stream, *, byte_count, sha256, descriptor):
     return dict(bytes=count, sha256=whole.hexdigest())
 
 
+def original_inventory(rows, files):
+    """Close every completed joint upload, including not-yet-bound originals.
+
+    A dataset-only reader cannot authorize the shared raw namespace: ordinary
+    uploads may precede dataset creation. These are typed custody declarations,
+    not permission to ignore unknown files or to decode scientific values.
+    The caller still closes the complete native namespace census.
+    """
+    assets = {r['id']: r for r in rows['raw_assets'] if r['detected_format'] == 'joint_native'}
+    sources = {r['id']: r for r in rows['source_records'] if r['declared_format'] == 'joint_native'}
+    projects = {r['id']: r for r in rows['projects']}
+    require(len(assets) == sum(r['detected_format'] == 'joint_native' for r in rows['raw_assets'])
+            and len(sources) == sum(r['declared_format'] == 'joint_native' for r in rows['source_records']),
+            'physical_joint_original_duplicate')
+    require(len({r['source_id'] for r in assets.values()}) == len(assets)
+            and {r['source_id'] for r in assets.values()} == set(sources),
+            'physical_joint_original_source_inventory')
+    expected = {}
+    for asset in assets.values():
+        owner, project = asset['owner_id'], asset['project_id']
+        require(project in projects and projects[project]['owner_id'] == owner,
+                'physical_joint_original_owner')
+        source = sources[asset['source_id']]
+        native.source_identity(SimpleNamespace(**asset), SimpleNamespace(**source),
+                               owner_id=owner, project_id=project)
+        require(asset['validation_status'] == 'raw_metadata_checked'
+                and source['expected_bytes'] in (None, asset['byte_count']),
+                'physical_joint_original_binding')
+        meta = native.bounded_json(asset['physical_metadata'].encode('utf-8', 'strict'))
+        fields(meta, 'schema role name descriptor scientific_values_decoded scientific_accepted')
+        require(meta['schema'] == 'joint-native-member-1' and meta['name'] == asset['filename']
+                and meta['scientific_values_decoded'] is False and meta['scientific_accepted'] is False,
+                'physical_joint_original_metadata')
+        native.member_metadata(canonical(dict(role=meta['role'], name=meta['name'],
+            descriptor=meta['descriptor'], source=dict(expected_bytes=asset['byte_count'],
+                                                     expected_sha256=asset['sha256']))))
+        key = f"projects/{owner}/{project}/{asset['id']}"
+        require(asset['storage_key'] == key, 'physical_joint_original_key')
+        cap = INDEX_CAP if meta['name'].endswith('.json') else native.MAX_BYTES
+        if meta['name'].endswith('.json'):
+            body = files.read(key, cap=cap, expected_bytes=asset['byte_count'], expected_sha256=asset['sha256'])
+            native.bounded_json(body)
+        else:
+            files.scan_joint_member(key, byte_count=asset['byte_count'], sha256=asset['sha256'],
+                                    descriptor=meta['descriptor'])
+        expected[key] = dict(cap=cap, bytes=asset['byte_count'], sha256=asset['sha256'])
+    return dict(asset_ids=frozenset(assets), source_ids=frozenset(sources), files=expected)
+
+
 def dataset_inventory(rows, files, dataset):
     """Close actual original dependencies, manifests, native headers and data."""
     body = files.read(dataset['storage_key'], cap=INDEX_CAP,
