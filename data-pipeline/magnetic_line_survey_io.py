@@ -206,7 +206,8 @@ class Reader:
                 sequence += 1
             if page['rows'] != count-start:
                 raise core.SurveyError('custody_mismatch', 'replay')
-        if count != rows or digest.hexdigest() != manifest['content_sha256']:
+        if count != rows or digest.hexdigest() != manifest['content_sha256'] or \
+           (array and ref['role'] == 'row_id' and digest.hexdigest() != ref['ordered_ids_sha256']):
             raise core.SurveyError('custody_mismatch', 'replay')
 
     def cells(self, ref):
@@ -218,7 +219,18 @@ class Reader:
                     token = payload[pos:pos+width].rstrip(b'\0')
                     if b'\0' in token:
                         raise core.SurveyError('custody_mismatch', 'replay')
-                    yield token.decode('ascii')
+                    try:
+                        decoded = token.decode('ascii')
+                    except UnicodeError:
+                        raise core.SurveyError('custody_mismatch', 'replay') from None
+                    if ref['role'] == 'row_id' and not base.ID_PATTERN.fullmatch(decoded):
+                        raise core.SurveyError('custody_mismatch', 'replay')
+                    if ref['role'] == 'utc' and (decoded or ref['mask_array_id'] is None):
+                        try:
+                            base.utc_key(decoded)
+                        except base.MagneticContractError:
+                            raise core.SurveyError('custody_mismatch', 'replay') from None
+                    yield decoded
             else:
                 for (value,) in struct.iter_unpack(FORMATS[dtype], payload):
                     if dtype == 'float64' and not math.isfinite(value):

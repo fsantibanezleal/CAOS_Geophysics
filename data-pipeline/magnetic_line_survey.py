@@ -158,9 +158,12 @@ class GlobalOperator:
     are upstream responsibilities, not claimed to be checked by this class.
     Full-shape execution remains refused until native lifetime control exists.
     """
-    def __init__(self, xyz, sources, sigma_nT=None, *, chunk_rows=4096, chunk_sources=128):
+    def __init__(self, xyz, sources, sigma_nT=None, *, chunk_rows=4096, chunk_sources=128, job_handle=None):
         _count(chunk_rows, 1, 4096)
         _count(chunk_sources, 1, 128)
+        if job_handle is not None:
+            from magnetic_line_survey_runtime import require_job
+            require_job(job_handle)
         # Type discovery is an import, not an unbounded scientific allocation.
         np, hm = engines()
         if type(xyz) not in (np.ndarray, np.memmap) or xyz.ndim != 2 or xyz.shape[1] != 3 or \
@@ -171,7 +174,7 @@ class GlobalOperator:
         if n < 2:
             raise SurveyError("invalid_contract", "fit")
         # No caller boolean or provisional envelope grants large-run execution.
-        if n > 128 or m > 32:
+        if (n > 128 or m > 32) and job_handle is None:
             raise SurveyError("resource_refused", "fit")
         self.xyz = _array(np, xyz, (n, 3))
         self.sources = _array(np, sources, (m, 3))
@@ -288,9 +291,9 @@ class GlobalOperator:
         return result
 
 
-def global_operator(xyz, sources, sigma_nT=None, *, chunk_rows=4096, chunk_sources=128):
+def global_operator(xyz, sources, sigma_nT=None, *, chunk_rows=4096, chunk_sources=128, job_handle=None):
     return GlobalOperator(xyz, sources, sigma_nT, chunk_rows=chunk_rows,
-                          chunk_sources=chunk_sources)
+                          chunk_sources=chunk_sources, job_handle=job_handle)
 
 
 def _damping(value):
@@ -386,6 +389,10 @@ def solve_global(model, values, damping):
             c.flags.writeable = False
             if not all(math.isfinite(float(t)) and t >= 0 for t in output[3:]):
                 raise SurveyError("nonconverged", "fit")
+            # Keep the unchanged 14-key algebra return; the owner adapter can
+            # obtain real recurrence estimates, not invent zero receipt fields.
+            model.solver_estimates = dict(zip(('normr_estimate', 'normar_estimate',
+                'norma_estimate', 'conda_estimate', 'normx_estimate'), map(float, output[3:])))
             diagnostics = check_stationarity(model, y, damping, c, int(output[1]), float(output[6]))
     except (FloatingPointError, OverflowError, np.linalg.LinAlgError):
         raise SurveyError("nonconverged", "fit") from None
@@ -604,11 +611,14 @@ def _original_identity(value, contract):
 def _identity_index(parent):
     # Verification scratch is a separately fresh owned directory. No caller
     # arrays, user databases or immutable artifact directory are modified.
+    from magnetic_line_survey_io import external_path
+    parent = external_path(parent)
     with tempfile.TemporaryDirectory(prefix='m03-verify-', dir=parent) as temporary:
         db = sqlite3.connect(Path(temporary) / 'identity.sqlite3')
         try:
             db.execute('PRAGMA cache_size=-8192')
             db.execute('PRAGMA temp_store=FILE')
+            db.execute("PRAGMA temp_store_directory='"+temporary.replace("'", "''")+"'")
             db.execute('PRAGMA max_page_count=8388608')
             db.execute('CREATE TABLE identities (id TEXT PRIMARY KEY)')
             db.execute('CREATE TABLE ordinals (line INTEGER, sensor INTEGER, ordinal INTEGER, PRIMARY KEY(line,sensor))')
@@ -629,17 +639,18 @@ def inspect_geometry(csv_path, output_root, original, rights, line_definitions, 
         sensors = _definitions(sensor_definitions, 'SensorDefinition', 'sensor_id', 4, contract)
         line_map = {x['line_id']: (i, x['kind']) for i, x in enumerate(lines)}
         sensor_map = {x['sensor_id']: i for i, x in enumerate(sensors)}
-        source = _plain_path(csv_path)
+        from magnetic_line_survey_io import external_path
+        source = external_path(csv_path, directory=False)
         if type(output_root) not in (str, type(Path())):
             raise SurveyError('invalid_contract', 'ingest')
-        root = Path(os.path.abspath(output_root))
-        _plain_path(root.parent, directory=True)
+        root = external_path(output_root)
         root.mkdir()  # Fresh absent destination only, no overwrite/retry adoption.
         index = root / 'geometry-index.sqlite3'
         db = sqlite3.connect(index)
         try:
             db.execute('PRAGMA cache_size=-8192')
             db.execute('PRAGMA temp_store=FILE')
+            db.execute("PRAGMA temp_store_directory='"+str(root).replace("'", "''")+"'")
             db.execute('PRAGMA max_page_count=8388608')
             db.execute('CREATE TABLE row_geometry (pos INTEGER PRIMARY KEY, id TEXT UNIQUE, line TEXT, sensor TEXT, ordinal INTEGER, data BLOB)')
             db.execute('CREATE INDEX line_ordinal ON row_geometry(line,sensor,ordinal)')
@@ -830,7 +841,8 @@ def verify_geometry_inspection(output_root, receipt):
     """Verify byte/semantic custody, never substitute for scientific replay."""
     contract = _contract()
     try:
-        root = _plain_path(output_root, directory=True)
+        from magnetic_line_survey_io import external_path
+        root = external_path(output_root)
         _closed(receipt, 'schema original rows lines sensors arrays dictionaries geometry_sha256 value_access', 'replay')
         if receipt['schema'] != 'm03-geometry-inspection/1' or receipt['value_access'] != 'not_opened':
             raise SurveyError('custody_mismatch', 'replay')
