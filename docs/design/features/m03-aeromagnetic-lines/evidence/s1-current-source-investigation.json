@@ -1,0 +1,3295 @@
+{
+  "approved_design_commit": "89249842fb3485a7d47d9678c8574b28c6eb0fff",
+  "authored_channel_sha256": "bc1d19bd77af479af897b2846be936fd23431df6aeb125b00059cae687fe6bab",
+  "cpu_seconds": 4.453125,
+  "dataset_sha256": "8789fe9d48852ae0e542549b386186fb8a2eb6e4c3baa5885a3d775d0cf83872",
+  "engine_versions": {
+    "harmonica": "0.7.0",
+    "numpy": "2.2.6",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.15.2",
+    "threadpoolctl": "3.7.0",
+    "verde": "1.9.0",
+    "xarray": "2026.9.0"
+  },
+  "field_acceptance": false,
+  "files": [
+    {
+      "bytes": 21184,
+      "path": "data-pipeline/magnetic_lines.py",
+      "sha256": "a19d087fd362af346b24cd7936a46dd6278e3c4f45ab0afdbccf187c314d5155"
+    },
+    {
+      "bytes": 43398,
+      "path": "data-pipeline/magnetic_line_contract.py",
+      "sha256": "33720f8510a273292c45b7554010b90886b707a086168ff5c001ec6ca2e78645"
+    },
+    {
+      "bytes": 15567,
+      "path": "data-pipeline/magnetic_line_validation.py",
+      "sha256": "b51cba661ff21ebb075de27a63cdc1d214b7f9296b61f0535aa74508c1f60554"
+    },
+    {
+      "bytes": 10321,
+      "path": "tests/fixtures/magnetic_lines/generate.py",
+      "sha256": "037fc0d8226fe3b134fa68c8c7eebe23c62d9ea55a3295f287eace83c2920448"
+    },
+    {
+      "bytes": 15848,
+      "path": "tests/numerics/test_magnetic_processing.py",
+      "sha256": "f00869ea409c6fcc6a54f47d067f664e62aa1cc6211373200e66a07a4b52adbc"
+    },
+    {
+      "bytes": 18033,
+      "path": "tests/data/test_magnetic_lines.py",
+      "sha256": "bcda1d05032c1e43217e2ec465fa062071d409dbf43dde3997af46886ee352a2"
+    }
+  ],
+  "finished_utc": "2026-10-04T02:51:35.534619+00:00",
+  "full_method_accepted": false,
+  "geometry_manifest_sha256": "ff94a5574f7161b21cf226fab640c70cee352835eec2e06d13ab7b304cfcfcf6",
+  "intake_reasons": [
+    "uncertainty_unresolved"
+  ],
+  "native_admission": false,
+  "original_csv_bytes": 45539,
+  "original_csv_sha256": "ac28e5f7c8344b94ebe0c408484eede8ade5a4074c8ef44661bcfe774ff0bfae",
+  "original_sidecar_sha256": "54815e06b0fc444c91e1c90c2b37d8e0d0c9f0b762cfdbe93d723f1d96527475",
+  "peak_rss_bytes": null,
+  "python": "3.12.10",
+  "quality_limit_nT": 0.25966396538773057,
+  "quality_verdict": "fail",
+  "request": {
+    "channel_sha256": "bc1d19bd77af479af897b2846be936fd23431df6aeb125b00059cae687fe6bab",
+    "dataset_version_sha256": "8789fe9d48852ae0e542549b386186fb8a2eb6e4c3baa5885a3d775d0cf83872",
+    "equivalent_sources": {
+      "candidate_order": "depth_then_damping_ascending",
+      "column_scaling": "unweighted_population_std_no_mean",
+      "damping_candidates": [
+        0.0001,
+        0.01,
+        1,
+        100
+      ],
+      "damping_unit": "dimensionless",
+      "depth_candidates_m": [
+        200,
+        500
+      ],
+      "dtype": "float64",
+      "fit_intercept": false,
+      "parallel": false,
+      "source_geometry": {
+        "block_e_m": 400,
+        "block_n_m": 400,
+        "edge_policy": "floor_half_open_positive_side",
+        "max_sources": 256,
+        "origin_e_m": -1600,
+        "origin_n_m": -1600,
+        "representative": "unweighted_xy_mean_fsum_sorted_row_ids",
+        "version": "half_open_training_blocks/1",
+        "vertical_policy": "minimum_training_upward_minus_depth"
+      },
+      "tie_break": "larger_damping_then_depth",
+      "weight_multiplier": 1,
+      "weights_policy": "unweighted"
+    },
+    "export_policy": {
+      "derivative_requested": "private",
+      "destination_policy": "new_directory_only",
+      "include_replay_inputs": true,
+      "network_during_replay": false,
+      "raw_requested": "exclude",
+      "redaction_policy": "deny_members_keep_reason"
+    },
+    "geometry_policy": {
+      "crossover": {
+        "channel_policy": "same_channel_state",
+        "collinear_policy": "reject_overlap",
+        "max_height_separation_m": 0,
+        "max_time_separation_s": null,
+        "min_crossing_sine": 0.000001,
+        "sensor_policy": "same_sensor",
+        "shared_endpoint_policy": "retain_pairs_one_physical_constraint",
+        "uncertainty_policy": "unweighted"
+      },
+      "direction_tolerance_deg": 0.5,
+      "gap_policy": "break_and_mask",
+      "max_segment_gap_m": 150,
+      "max_time_gap_s": 1,
+      "minimum_resolved_wavelength_m": null,
+      "numerical_tolerances": {
+        "epsilon": 2.220446049250313e-16,
+        "max_parameter_tolerance": 0.000001,
+        "multiplier": 64,
+        "version": "float64-scaled-intersection/1"
+      },
+      "same_plane_height_tolerance_m": null,
+      "support_policy": "closed_hull_and_nearest_training",
+      "version": "lines-geometry/1"
+    },
+    "grid": {
+      "boundary_policy": {
+        "crop": "original_extent",
+        "detrend": "none",
+        "mode": "periodic",
+        "pad_e_cells": 0,
+        "pad_n_cells": 0,
+        "taper": "none"
+      },
+      "continuation_delta_m": 100,
+      "datum": "authored engineering zero",
+      "nx": 65,
+      "ny": 49,
+      "origin_e_m": -1600,
+      "origin_n_m": -1200,
+      "plane_upward_m": 120,
+      "spacing_e_m": 50,
+      "spacing_n_m": 50,
+      "support_radius_m": 470
+    },
+    "operations": [],
+    "schema": "magnetic-request/1",
+    "sensor_id": "S0",
+    "spectrum": null,
+    "split": {
+      "anchor_line_ids": [
+        "F00",
+        "F07"
+      ],
+      "buffer_m": 470,
+      "geometry_manifest_sha256": "ff94a5574f7161b21cf226fab640c70cee352835eec2e06d13ab7b304cfcfcf6",
+      "heldout_blocks": [
+        {
+          "block_id": "outer-F04",
+          "boundary": "closed",
+          "e_max_m": 1610,
+          "e_min_m": -1610,
+          "n_max_m": 245,
+          "n_min_m": 215
+        }
+      ],
+      "inner_folds": [
+        {
+          "fold_id": "A",
+          "validation_blocks": [
+            {
+              "block_id": "A-F01",
+              "boundary": "closed",
+              "e_max_m": 1610,
+              "e_min_m": -1610,
+              "n_max_m": -935,
+              "n_min_m": -965
+            },
+            {
+              "block_id": "A-F06",
+              "boundary": "closed",
+              "e_max_m": 1610,
+              "e_min_m": -1610,
+              "n_max_m": 1065,
+              "n_min_m": 1035
+            }
+          ],
+          "validation_line_ids": [
+            "F01",
+            "F06"
+          ]
+        },
+        {
+          "fold_id": "B",
+          "validation_blocks": [
+            {
+              "block_id": "B-F02",
+              "boundary": "closed",
+              "e_max_m": 1610,
+              "e_min_m": -1610,
+              "n_max_m": -505,
+              "n_min_m": -535
+            },
+            {
+              "block_id": "B-F05",
+              "boundary": "closed",
+              "e_max_m": 1610,
+              "e_min_m": -1610,
+              "n_max_m": 625,
+              "n_min_m": 595
+            }
+          ],
+          "validation_line_ids": [
+            "F02",
+            "F05"
+          ]
+        },
+        {
+          "fold_id": "C",
+          "validation_blocks": [
+            {
+              "block_id": "C-F03",
+              "boundary": "closed",
+              "e_max_m": 1610,
+              "e_min_m": -1610,
+              "n_max_m": -155,
+              "n_min_m": -185
+            }
+          ],
+          "validation_line_ids": [
+            "F03"
+          ]
+        }
+      ],
+      "maximum_outer_evaluations": 1,
+      "minimum_supported_fraction": 1,
+      "outer_line_ids": [
+        "F04"
+      ],
+      "sealed_values_sha256": "bc1d19bd77af479af897b2846be936fd23431df6aeb125b00059cae687fe6bab",
+      "tuning_candidate_order": "depth_then_damping_ascending",
+      "version": "full_lines_buffered_ties/1"
+    }
+  },
+  "request_bytes_sha256": "6f2a6c61a6ed29c685e202e715e51b86885d68749d170d4e7e77d93b78566f3c",
+  "result": {
+    "candidates": [
+      {
+        "damping": 0.0001,
+        "depth_m": 200,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 6.7813515719728725,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 10.100348147207944,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 30.086944470118233,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 15.656214729766349
+      },
+      {
+        "damping": 0.01,
+        "depth_m": 200,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 6.781697217334356,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 10.100810662569835,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 30.087193035358606,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 15.656566971754266
+      },
+      {
+        "damping": 1,
+        "depth_m": 200,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 6.8162328316069845,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 10.143401687940292,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 30.11196991874317,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 15.690534812763483
+      },
+      {
+        "damping": 100,
+        "depth_m": 200,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 8.482368447520763,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 10.631800303173783,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 31.215639384082184,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 16.776602711592243
+      },
+      {
+        "damping": 0.0001,
+        "depth_m": 500,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 5.80556429629866,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 11.463085278613253,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 28.471006739523727,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 15.246552104811881
+      },
+      {
+        "damping": 0.01,
+        "depth_m": 500,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 5.807672657525528,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 11.491316337520912,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 28.463270939228753,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 15.254086644758397
+      },
+      {
+        "damping": 1,
+        "depth_m": 500,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 5.540747959203039,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 12.010050269916684,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 28.640837179089754,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 15.397211802736493
+      },
+      {
+        "damping": 100,
+        "depth_m": 500,
+        "folds": [
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "A",
+            "rmse_nT": 9.268917578834065,
+            "scored_count": 66,
+            "source_map_sha256": "ac45d729349320479ec75ca26c0dab58d2734d4ead814dc5ea38f74daae7011b",
+            "training_sha256": "d7668421dea55b06bfdb6e95519fad34b35c182fcfc525b8e4f8d8433344a6fd"
+          },
+          {
+            "coverage": {
+              "eligible_count": 66,
+              "fraction": 1,
+              "total_count": 66,
+              "unsupported_ids": []
+            },
+            "fold_id": "B",
+            "rmse_nT": 12.153225370554836,
+            "scored_count": 66,
+            "source_map_sha256": "9a80cfa603434cfd3169f3e40e47e11e867b76f4e799987f9eeabba435126daa",
+            "training_sha256": "1181701d4a679ea65c37d63cf8e61599acfbbde929c66db9ecb1b3c15545830a"
+          },
+          {
+            "coverage": {
+              "eligible_count": 33,
+              "fraction": 1,
+              "total_count": 33,
+              "unsupported_ids": []
+            },
+            "fold_id": "C",
+            "rmse_nT": 31.784732847685202,
+            "scored_count": 33,
+            "source_map_sha256": "76bc290f7b38c296b2bff8fbe44d09c0ec365999897455e8cb606bebd790c9af",
+            "training_sha256": "080a973286059537a98d7dc43eebc022c3b135941a35058807aad69ee139ea86"
+          }
+        ],
+        "mean_rmse_nT": 17.735625265691368
+      }
+    ],
+    "coverage": 1,
+    "evaluation_count": 1,
+    "final_fit": {
+      "coefficients": [
+        919.18654097713,
+        -3006.4646888937755,
+        -3147.2290521726136,
+        9332.331655454353,
+        5485.689514879922,
+        -1531.3443224254174,
+        -896.6968001058724,
+        -866.9111349287222,
+        3154.999121125379,
+        10765.211853111166,
+        -24031.258882266793,
+        -15597.728190802563,
+        9988.964715730628,
+        -9072.061051130187,
+        8014.32273554796,
+        2210.527466732353,
+        -5589.089594539949,
+        -27352.547152978,
+        51865.55747711802,
+        -21183.870042882936,
+        7349.763310212879,
+        -1939.049636981686,
+        -12153.704743896733,
+        22882.670052568108,
+        42576.06095744318,
+        20575.136605347165,
+        33213.88049388803,
+        -13756.256574453797,
+        14706.044846024952,
+        21746.337417293835,
+        -64571.210442011245,
+        33001.54037562052,
+        -240309.1008957986,
+        26329.616277408662,
+        -19372.958308986166,
+        21880.505357380403,
+        -23193.270961214745,
+        -19186.72630404603,
+        60032.59557450474,
+        37833.763356945754,
+        148966.5953301403,
+        6204.0227017769075,
+        -2729.048811313775,
+        -1228.3525127881276,
+        -11796.992816393324,
+        5934.43789011084,
+        12455.388378298294,
+        -139546.596178121,
+        1977.5884907247807,
+        -2697.5773112257316,
+        5574.432800880744,
+        -2331.0640101002737,
+        15866.039156777726,
+        -22543.76574127641,
+        -79672.51188685588,
+        197807.31508509623,
+        -6147.565832558057,
+        1076.4386505314017,
+        -3334.107261006799,
+        -9110.98931395702,
+        9750.885913361284,
+        68899.0604299164,
+        -143272.98115321228,
+        9259.739725984711,
+        -1771.6488160629403,
+        3070.216993101479
+      ],
+      "column_scales": [
+        0.00035054322628173226,
+        0.0003767023856170762,
+        0.0003571883455662663,
+        0.0003259610255075384,
+        0.0003209495940775417,
+        0.0003596477844311299,
+        0.0003477288219258021,
+        0.0003787886073199741,
+        0.00040352839847737946,
+        0.00038953515034116507,
+        0.0003511729997696175,
+        0.000334280990681663,
+        0.0003870149033626689,
+        0.0003856742035528476,
+        0.0003623974954340009,
+        0.00035550695507967453,
+        0.0003730472349182567,
+        0.0003523400417661972,
+        0.00032090667304317917,
+        0.00031448221013350585,
+        0.00036162032926615335,
+        0.00036370943919066337,
+        0.0003696505320528451,
+        0.0003813658950035755,
+        0.0003517636281542236,
+        0.00030588703567196524,
+        0.0003043394376382062,
+        0.00036771644135228873,
+        0.00037410957634569217,
+        0.000368525644303942,
+        0.0003792313321299616,
+        0.00035854567216908617,
+        0.00030448697375943254,
+        0.0003034343725343628,
+        0.0003706673682877694,
+        0.0003769286509760698,
+        0.00035966820035030574,
+        0.00036913544318498945,
+        0.00038197739643631377,
+        0.000360247818622328,
+        0.00031347716565213176,
+        0.00031263141842971347,
+        0.0003705303464230545,
+        0.0003659352325260684,
+        0.0003867122870652103,
+        0.00040396892942222174,
+        0.00038913297930476655,
+        0.0003456616732133158,
+        0.0003314531816098005,
+        0.0003923194508372954,
+        0.0003836972267943061,
+        0.00036159069190577964,
+        0.00034569795512400317,
+        0.000375925200236489,
+        0.0003664839453191255,
+        0.0003262262599440806,
+        0.0003158507189649861,
+        0.0003620504731870655,
+        0.00033905047236636307,
+        0.0003064795195619158,
+        0.0003289911684356761,
+        0.0003240583951142756,
+        0.0002989661330018796,
+        0.0002887650515765537,
+        0.000315599388408854,
+        0.00030019346819451026
+      ],
+      "objective": {
+        "condition": 1822.2899686716455,
+        "damping": 0.0001,
+        "damping_unit": "dimensionless",
+        "data_term": 3727.872574765302,
+        "rank": 66,
+        "regularization_term": 2.03391312083846,
+        "total": 3729.9064878861404,
+        "unit": "nT^2",
+        "weight_multiplier": 1
+      },
+      "source_block_map": [
+        {
+          "block_e": 0,
+          "block_n": 0,
+          "row_id": "F00.000",
+          "source_id": "B.0.0"
+        },
+        {
+          "block_e": 0,
+          "block_n": 0,
+          "row_id": "F00.001",
+          "source_id": "B.0.0"
+        },
+        {
+          "block_e": 0,
+          "block_n": 0,
+          "row_id": "F00.002",
+          "source_id": "B.0.0"
+        },
+        {
+          "block_e": 0,
+          "block_n": 0,
+          "row_id": "F00.003",
+          "source_id": "B.0.0"
+        },
+        {
+          "block_e": 0,
+          "block_n": 0,
+          "row_id": "F00.004",
+          "source_id": "B.0.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "F00.005",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "F00.006",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "F00.007",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "F00.008",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 2,
+          "block_n": 0,
+          "row_id": "F00.009",
+          "source_id": "B.2.0"
+        },
+        {
+          "block_e": 2,
+          "block_n": 0,
+          "row_id": "F00.010",
+          "source_id": "B.2.0"
+        },
+        {
+          "block_e": 2,
+          "block_n": 0,
+          "row_id": "F00.011",
+          "source_id": "B.2.0"
+        },
+        {
+          "block_e": 2,
+          "block_n": 0,
+          "row_id": "F00.012",
+          "source_id": "B.2.0"
+        },
+        {
+          "block_e": 3,
+          "block_n": 0,
+          "row_id": "F00.013",
+          "source_id": "B.3.0"
+        },
+        {
+          "block_e": 3,
+          "block_n": 0,
+          "row_id": "F00.014",
+          "source_id": "B.3.0"
+        },
+        {
+          "block_e": 3,
+          "block_n": 0,
+          "row_id": "F00.015",
+          "source_id": "B.3.0"
+        },
+        {
+          "block_e": 4,
+          "block_n": 0,
+          "row_id": "F00.016",
+          "source_id": "B.4.0"
+        },
+        {
+          "block_e": 4,
+          "block_n": 0,
+          "row_id": "F00.017",
+          "source_id": "B.4.0"
+        },
+        {
+          "block_e": 4,
+          "block_n": 0,
+          "row_id": "F00.018",
+          "source_id": "B.4.0"
+        },
+        {
+          "block_e": 4,
+          "block_n": 0,
+          "row_id": "F00.019",
+          "source_id": "B.4.0"
+        },
+        {
+          "block_e": 5,
+          "block_n": 0,
+          "row_id": "F00.020",
+          "source_id": "B.5.0"
+        },
+        {
+          "block_e": 5,
+          "block_n": 0,
+          "row_id": "F00.021",
+          "source_id": "B.5.0"
+        },
+        {
+          "block_e": 5,
+          "block_n": 0,
+          "row_id": "F00.022",
+          "source_id": "B.5.0"
+        },
+        {
+          "block_e": 5,
+          "block_n": 0,
+          "row_id": "F00.023",
+          "source_id": "B.5.0"
+        },
+        {
+          "block_e": 5,
+          "block_n": 0,
+          "row_id": "F00.024",
+          "source_id": "B.5.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "F00.025",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "F00.026",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "F00.027",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "F00.028",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 7,
+          "block_n": 0,
+          "row_id": "F00.029",
+          "source_id": "B.7.0"
+        },
+        {
+          "block_e": 7,
+          "block_n": 0,
+          "row_id": "F00.030",
+          "source_id": "B.7.0"
+        },
+        {
+          "block_e": 7,
+          "block_n": 0,
+          "row_id": "F00.031",
+          "source_id": "B.7.0"
+        },
+        {
+          "block_e": 8,
+          "block_n": 0,
+          "row_id": "F00.032",
+          "source_id": "B.8.0"
+        },
+        {
+          "block_e": 8,
+          "block_n": 1,
+          "row_id": "F01.000",
+          "source_id": "B.8.1"
+        },
+        {
+          "block_e": 7,
+          "block_n": 1,
+          "row_id": "F01.001",
+          "source_id": "B.7.1"
+        },
+        {
+          "block_e": 7,
+          "block_n": 1,
+          "row_id": "F01.002",
+          "source_id": "B.7.1"
+        },
+        {
+          "block_e": 7,
+          "block_n": 1,
+          "row_id": "F01.003",
+          "source_id": "B.7.1"
+        },
+        {
+          "block_e": 7,
+          "block_n": 1,
+          "row_id": "F01.004",
+          "source_id": "B.7.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "F01.005",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "F01.006",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "F01.007",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 5,
+          "block_n": 1,
+          "row_id": "F01.008",
+          "source_id": "B.5.1"
+        },
+        {
+          "block_e": 5,
+          "block_n": 1,
+          "row_id": "F01.009",
+          "source_id": "B.5.1"
+        },
+        {
+          "block_e": 5,
+          "block_n": 1,
+          "row_id": "F01.010",
+          "source_id": "B.5.1"
+        },
+        {
+          "block_e": 5,
+          "block_n": 1,
+          "row_id": "F01.011",
+          "source_id": "B.5.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 1,
+          "row_id": "F01.012",
+          "source_id": "B.4.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 1,
+          "row_id": "F01.013",
+          "source_id": "B.4.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 1,
+          "row_id": "F01.014",
+          "source_id": "B.4.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 1,
+          "row_id": "F01.015",
+          "source_id": "B.4.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 1,
+          "row_id": "F01.016",
+          "source_id": "B.4.1"
+        },
+        {
+          "block_e": 3,
+          "block_n": 1,
+          "row_id": "F01.017",
+          "source_id": "B.3.1"
+        },
+        {
+          "block_e": 3,
+          "block_n": 1,
+          "row_id": "F01.018",
+          "source_id": "B.3.1"
+        },
+        {
+          "block_e": 3,
+          "block_n": 1,
+          "row_id": "F01.019",
+          "source_id": "B.3.1"
+        },
+        {
+          "block_e": 2,
+          "block_n": 1,
+          "row_id": "F01.020",
+          "source_id": "B.2.1"
+        },
+        {
+          "block_e": 2,
+          "block_n": 1,
+          "row_id": "F01.021",
+          "source_id": "B.2.1"
+        },
+        {
+          "block_e": 2,
+          "block_n": 1,
+          "row_id": "F01.022",
+          "source_id": "B.2.1"
+        },
+        {
+          "block_e": 2,
+          "block_n": 1,
+          "row_id": "F01.023",
+          "source_id": "B.2.1"
+        },
+        {
+          "block_e": 2,
+          "block_n": 1,
+          "row_id": "F01.024",
+          "source_id": "B.2.1"
+        },
+        {
+          "block_e": 1,
+          "block_n": 1,
+          "row_id": "F01.025",
+          "source_id": "B.1.1"
+        },
+        {
+          "block_e": 1,
+          "block_n": 1,
+          "row_id": "F01.026",
+          "source_id": "B.1.1"
+        },
+        {
+          "block_e": 1,
+          "block_n": 1,
+          "row_id": "F01.027",
+          "source_id": "B.1.1"
+        },
+        {
+          "block_e": 0,
+          "block_n": 1,
+          "row_id": "F01.028",
+          "source_id": "B.0.1"
+        },
+        {
+          "block_e": 0,
+          "block_n": 1,
+          "row_id": "F01.029",
+          "source_id": "B.0.1"
+        },
+        {
+          "block_e": 0,
+          "block_n": 1,
+          "row_id": "F01.030",
+          "source_id": "B.0.1"
+        },
+        {
+          "block_e": 0,
+          "block_n": 1,
+          "row_id": "F01.031",
+          "source_id": "B.0.1"
+        },
+        {
+          "block_e": 0,
+          "block_n": 1,
+          "row_id": "F01.032",
+          "source_id": "B.0.1"
+        },
+        {
+          "block_e": 0,
+          "block_n": 2,
+          "row_id": "F02.000",
+          "source_id": "B.0.2"
+        },
+        {
+          "block_e": 0,
+          "block_n": 2,
+          "row_id": "F02.001",
+          "source_id": "B.0.2"
+        },
+        {
+          "block_e": 0,
+          "block_n": 2,
+          "row_id": "F02.002",
+          "source_id": "B.0.2"
+        },
+        {
+          "block_e": 0,
+          "block_n": 2,
+          "row_id": "F02.003",
+          "source_id": "B.0.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "F02.004",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "F02.005",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "F02.006",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "F02.007",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 2,
+          "block_n": 2,
+          "row_id": "F02.008",
+          "source_id": "B.2.2"
+        },
+        {
+          "block_e": 2,
+          "block_n": 2,
+          "row_id": "F02.009",
+          "source_id": "B.2.2"
+        },
+        {
+          "block_e": 2,
+          "block_n": 2,
+          "row_id": "F02.010",
+          "source_id": "B.2.2"
+        },
+        {
+          "block_e": 2,
+          "block_n": 2,
+          "row_id": "F02.011",
+          "source_id": "B.2.2"
+        },
+        {
+          "block_e": 2,
+          "block_n": 2,
+          "row_id": "F02.012",
+          "source_id": "B.2.2"
+        },
+        {
+          "block_e": 3,
+          "block_n": 2,
+          "row_id": "F02.013",
+          "source_id": "B.3.2"
+        },
+        {
+          "block_e": 3,
+          "block_n": 2,
+          "row_id": "F02.014",
+          "source_id": "B.3.2"
+        },
+        {
+          "block_e": 3,
+          "block_n": 2,
+          "row_id": "F02.015",
+          "source_id": "B.3.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "F02.016",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "F02.017",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "F02.018",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "F02.019",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "F02.020",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 5,
+          "block_n": 2,
+          "row_id": "F02.021",
+          "source_id": "B.5.2"
+        },
+        {
+          "block_e": 5,
+          "block_n": 2,
+          "row_id": "F02.022",
+          "source_id": "B.5.2"
+        },
+        {
+          "block_e": 5,
+          "block_n": 2,
+          "row_id": "F02.023",
+          "source_id": "B.5.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "F02.024",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "F02.025",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "F02.026",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "F02.027",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 7,
+          "block_n": 2,
+          "row_id": "F02.028",
+          "source_id": "B.7.2"
+        },
+        {
+          "block_e": 7,
+          "block_n": 2,
+          "row_id": "F02.029",
+          "source_id": "B.7.2"
+        },
+        {
+          "block_e": 7,
+          "block_n": 2,
+          "row_id": "F02.030",
+          "source_id": "B.7.2"
+        },
+        {
+          "block_e": 7,
+          "block_n": 2,
+          "row_id": "F02.031",
+          "source_id": "B.7.2"
+        },
+        {
+          "block_e": 8,
+          "block_n": 2,
+          "row_id": "F02.032",
+          "source_id": "B.8.2"
+        },
+        {
+          "block_e": 8,
+          "block_n": 3,
+          "row_id": "F03.000",
+          "source_id": "B.8.3"
+        },
+        {
+          "block_e": 7,
+          "block_n": 3,
+          "row_id": "F03.001",
+          "source_id": "B.7.3"
+        },
+        {
+          "block_e": 7,
+          "block_n": 3,
+          "row_id": "F03.002",
+          "source_id": "B.7.3"
+        },
+        {
+          "block_e": 7,
+          "block_n": 3,
+          "row_id": "F03.003",
+          "source_id": "B.7.3"
+        },
+        {
+          "block_e": 6,
+          "block_n": 3,
+          "row_id": "F03.004",
+          "source_id": "B.6.3"
+        },
+        {
+          "block_e": 6,
+          "block_n": 3,
+          "row_id": "F03.005",
+          "source_id": "B.6.3"
+        },
+        {
+          "block_e": 6,
+          "block_n": 3,
+          "row_id": "F03.006",
+          "source_id": "B.6.3"
+        },
+        {
+          "block_e": 6,
+          "block_n": 3,
+          "row_id": "F03.007",
+          "source_id": "B.6.3"
+        },
+        {
+          "block_e": 6,
+          "block_n": 3,
+          "row_id": "F03.008",
+          "source_id": "B.6.3"
+        },
+        {
+          "block_e": 5,
+          "block_n": 3,
+          "row_id": "F03.009",
+          "source_id": "B.5.3"
+        },
+        {
+          "block_e": 5,
+          "block_n": 3,
+          "row_id": "F03.010",
+          "source_id": "B.5.3"
+        },
+        {
+          "block_e": 5,
+          "block_n": 3,
+          "row_id": "F03.011",
+          "source_id": "B.5.3"
+        },
+        {
+          "block_e": 5,
+          "block_n": 3,
+          "row_id": "F03.012",
+          "source_id": "B.5.3"
+        },
+        {
+          "block_e": 4,
+          "block_n": 3,
+          "row_id": "F03.013",
+          "source_id": "B.4.3"
+        },
+        {
+          "block_e": 4,
+          "block_n": 3,
+          "row_id": "F03.014",
+          "source_id": "B.4.3"
+        },
+        {
+          "block_e": 4,
+          "block_n": 3,
+          "row_id": "F03.015",
+          "source_id": "B.4.3"
+        },
+        {
+          "block_e": 3,
+          "block_n": 3,
+          "row_id": "F03.016",
+          "source_id": "B.3.3"
+        },
+        {
+          "block_e": 3,
+          "block_n": 3,
+          "row_id": "F03.017",
+          "source_id": "B.3.3"
+        },
+        {
+          "block_e": 3,
+          "block_n": 3,
+          "row_id": "F03.018",
+          "source_id": "B.3.3"
+        },
+        {
+          "block_e": 3,
+          "block_n": 3,
+          "row_id": "F03.019",
+          "source_id": "B.3.3"
+        },
+        {
+          "block_e": 3,
+          "block_n": 3,
+          "row_id": "F03.020",
+          "source_id": "B.3.3"
+        },
+        {
+          "block_e": 2,
+          "block_n": 3,
+          "row_id": "F03.021",
+          "source_id": "B.2.3"
+        },
+        {
+          "block_e": 2,
+          "block_n": 3,
+          "row_id": "F03.022",
+          "source_id": "B.2.3"
+        },
+        {
+          "block_e": 2,
+          "block_n": 3,
+          "row_id": "F03.023",
+          "source_id": "B.2.3"
+        },
+        {
+          "block_e": 2,
+          "block_n": 3,
+          "row_id": "F03.024",
+          "source_id": "B.2.3"
+        },
+        {
+          "block_e": 1,
+          "block_n": 3,
+          "row_id": "F03.025",
+          "source_id": "B.1.3"
+        },
+        {
+          "block_e": 1,
+          "block_n": 3,
+          "row_id": "F03.026",
+          "source_id": "B.1.3"
+        },
+        {
+          "block_e": 1,
+          "block_n": 3,
+          "row_id": "F03.027",
+          "source_id": "B.1.3"
+        },
+        {
+          "block_e": 1,
+          "block_n": 3,
+          "row_id": "F03.028",
+          "source_id": "B.1.3"
+        },
+        {
+          "block_e": 0,
+          "block_n": 3,
+          "row_id": "F03.029",
+          "source_id": "B.0.3"
+        },
+        {
+          "block_e": 0,
+          "block_n": 3,
+          "row_id": "F03.030",
+          "source_id": "B.0.3"
+        },
+        {
+          "block_e": 0,
+          "block_n": 3,
+          "row_id": "F03.031",
+          "source_id": "B.0.3"
+        },
+        {
+          "block_e": 0,
+          "block_n": 3,
+          "row_id": "F03.032",
+          "source_id": "B.0.3"
+        },
+        {
+          "block_e": 8,
+          "block_n": 5,
+          "row_id": "F05.000",
+          "source_id": "B.8.5"
+        },
+        {
+          "block_e": 7,
+          "block_n": 5,
+          "row_id": "F05.001",
+          "source_id": "B.7.5"
+        },
+        {
+          "block_e": 7,
+          "block_n": 5,
+          "row_id": "F05.002",
+          "source_id": "B.7.5"
+        },
+        {
+          "block_e": 7,
+          "block_n": 5,
+          "row_id": "F05.003",
+          "source_id": "B.7.5"
+        },
+        {
+          "block_e": 6,
+          "block_n": 5,
+          "row_id": "F05.004",
+          "source_id": "B.6.5"
+        },
+        {
+          "block_e": 6,
+          "block_n": 5,
+          "row_id": "F05.005",
+          "source_id": "B.6.5"
+        },
+        {
+          "block_e": 6,
+          "block_n": 5,
+          "row_id": "F05.006",
+          "source_id": "B.6.5"
+        },
+        {
+          "block_e": 6,
+          "block_n": 5,
+          "row_id": "F05.007",
+          "source_id": "B.6.5"
+        },
+        {
+          "block_e": 5,
+          "block_n": 5,
+          "row_id": "F05.008",
+          "source_id": "B.5.5"
+        },
+        {
+          "block_e": 5,
+          "block_n": 5,
+          "row_id": "F05.009",
+          "source_id": "B.5.5"
+        },
+        {
+          "block_e": 5,
+          "block_n": 5,
+          "row_id": "F05.010",
+          "source_id": "B.5.5"
+        },
+        {
+          "block_e": 5,
+          "block_n": 5,
+          "row_id": "F05.011",
+          "source_id": "B.5.5"
+        },
+        {
+          "block_e": 5,
+          "block_n": 5,
+          "row_id": "F05.012",
+          "source_id": "B.5.5"
+        },
+        {
+          "block_e": 4,
+          "block_n": 5,
+          "row_id": "F05.013",
+          "source_id": "B.4.5"
+        },
+        {
+          "block_e": 4,
+          "block_n": 5,
+          "row_id": "F05.014",
+          "source_id": "B.4.5"
+        },
+        {
+          "block_e": 4,
+          "block_n": 5,
+          "row_id": "F05.015",
+          "source_id": "B.4.5"
+        },
+        {
+          "block_e": 3,
+          "block_n": 5,
+          "row_id": "F05.016",
+          "source_id": "B.3.5"
+        },
+        {
+          "block_e": 3,
+          "block_n": 5,
+          "row_id": "F05.017",
+          "source_id": "B.3.5"
+        },
+        {
+          "block_e": 3,
+          "block_n": 5,
+          "row_id": "F05.018",
+          "source_id": "B.3.5"
+        },
+        {
+          "block_e": 3,
+          "block_n": 5,
+          "row_id": "F05.019",
+          "source_id": "B.3.5"
+        },
+        {
+          "block_e": 2,
+          "block_n": 5,
+          "row_id": "F05.020",
+          "source_id": "B.2.5"
+        },
+        {
+          "block_e": 2,
+          "block_n": 5,
+          "row_id": "F05.021",
+          "source_id": "B.2.5"
+        },
+        {
+          "block_e": 2,
+          "block_n": 5,
+          "row_id": "F05.022",
+          "source_id": "B.2.5"
+        },
+        {
+          "block_e": 2,
+          "block_n": 5,
+          "row_id": "F05.023",
+          "source_id": "B.2.5"
+        },
+        {
+          "block_e": 2,
+          "block_n": 5,
+          "row_id": "F05.024",
+          "source_id": "B.2.5"
+        },
+        {
+          "block_e": 1,
+          "block_n": 5,
+          "row_id": "F05.025",
+          "source_id": "B.1.5"
+        },
+        {
+          "block_e": 1,
+          "block_n": 5,
+          "row_id": "F05.026",
+          "source_id": "B.1.5"
+        },
+        {
+          "block_e": 1,
+          "block_n": 5,
+          "row_id": "F05.027",
+          "source_id": "B.1.5"
+        },
+        {
+          "block_e": 0,
+          "block_n": 5,
+          "row_id": "F05.028",
+          "source_id": "B.0.5"
+        },
+        {
+          "block_e": 0,
+          "block_n": 5,
+          "row_id": "F05.029",
+          "source_id": "B.0.5"
+        },
+        {
+          "block_e": 0,
+          "block_n": 5,
+          "row_id": "F05.030",
+          "source_id": "B.0.5"
+        },
+        {
+          "block_e": 0,
+          "block_n": 5,
+          "row_id": "F05.031",
+          "source_id": "B.0.5"
+        },
+        {
+          "block_e": 0,
+          "block_n": 5,
+          "row_id": "F05.032",
+          "source_id": "B.0.5"
+        },
+        {
+          "block_e": 0,
+          "block_n": 6,
+          "row_id": "F06.000",
+          "source_id": "B.0.6"
+        },
+        {
+          "block_e": 0,
+          "block_n": 6,
+          "row_id": "F06.001",
+          "source_id": "B.0.6"
+        },
+        {
+          "block_e": 0,
+          "block_n": 6,
+          "row_id": "F06.002",
+          "source_id": "B.0.6"
+        },
+        {
+          "block_e": 0,
+          "block_n": 6,
+          "row_id": "F06.003",
+          "source_id": "B.0.6"
+        },
+        {
+          "block_e": 0,
+          "block_n": 6,
+          "row_id": "F06.004",
+          "source_id": "B.0.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "F06.005",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "F06.006",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "F06.007",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "F06.008",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 2,
+          "block_n": 6,
+          "row_id": "F06.009",
+          "source_id": "B.2.6"
+        },
+        {
+          "block_e": 2,
+          "block_n": 6,
+          "row_id": "F06.010",
+          "source_id": "B.2.6"
+        },
+        {
+          "block_e": 2,
+          "block_n": 6,
+          "row_id": "F06.011",
+          "source_id": "B.2.6"
+        },
+        {
+          "block_e": 3,
+          "block_n": 6,
+          "row_id": "F06.012",
+          "source_id": "B.3.6"
+        },
+        {
+          "block_e": 3,
+          "block_n": 6,
+          "row_id": "F06.013",
+          "source_id": "B.3.6"
+        },
+        {
+          "block_e": 3,
+          "block_n": 6,
+          "row_id": "F06.014",
+          "source_id": "B.3.6"
+        },
+        {
+          "block_e": 3,
+          "block_n": 6,
+          "row_id": "F06.015",
+          "source_id": "B.3.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 6,
+          "row_id": "F06.016",
+          "source_id": "B.4.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 6,
+          "row_id": "F06.017",
+          "source_id": "B.4.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 6,
+          "row_id": "F06.018",
+          "source_id": "B.4.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 6,
+          "row_id": "F06.019",
+          "source_id": "B.4.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 6,
+          "row_id": "F06.020",
+          "source_id": "B.4.6"
+        },
+        {
+          "block_e": 5,
+          "block_n": 6,
+          "row_id": "F06.021",
+          "source_id": "B.5.6"
+        },
+        {
+          "block_e": 5,
+          "block_n": 6,
+          "row_id": "F06.022",
+          "source_id": "B.5.6"
+        },
+        {
+          "block_e": 5,
+          "block_n": 6,
+          "row_id": "F06.023",
+          "source_id": "B.5.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "F06.024",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "F06.025",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "F06.026",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "F06.027",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 7,
+          "block_n": 6,
+          "row_id": "F06.028",
+          "source_id": "B.7.6"
+        },
+        {
+          "block_e": 7,
+          "block_n": 6,
+          "row_id": "F06.029",
+          "source_id": "B.7.6"
+        },
+        {
+          "block_e": 7,
+          "block_n": 6,
+          "row_id": "F06.030",
+          "source_id": "B.7.6"
+        },
+        {
+          "block_e": 7,
+          "block_n": 6,
+          "row_id": "F06.031",
+          "source_id": "B.7.6"
+        },
+        {
+          "block_e": 8,
+          "block_n": 6,
+          "row_id": "F06.032",
+          "source_id": "B.8.6"
+        },
+        {
+          "block_e": 8,
+          "block_n": 7,
+          "row_id": "F07.000",
+          "source_id": "B.8.7"
+        },
+        {
+          "block_e": 7,
+          "block_n": 7,
+          "row_id": "F07.001",
+          "source_id": "B.7.7"
+        },
+        {
+          "block_e": 7,
+          "block_n": 7,
+          "row_id": "F07.002",
+          "source_id": "B.7.7"
+        },
+        {
+          "block_e": 7,
+          "block_n": 7,
+          "row_id": "F07.003",
+          "source_id": "B.7.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "F07.004",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "F07.005",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "F07.006",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "F07.007",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 5,
+          "block_n": 7,
+          "row_id": "F07.008",
+          "source_id": "B.5.7"
+        },
+        {
+          "block_e": 5,
+          "block_n": 7,
+          "row_id": "F07.009",
+          "source_id": "B.5.7"
+        },
+        {
+          "block_e": 5,
+          "block_n": 7,
+          "row_id": "F07.010",
+          "source_id": "B.5.7"
+        },
+        {
+          "block_e": 5,
+          "block_n": 7,
+          "row_id": "F07.011",
+          "source_id": "B.5.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "F07.012",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "F07.013",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "F07.014",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "F07.015",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 3,
+          "block_n": 7,
+          "row_id": "F07.016",
+          "source_id": "B.3.7"
+        },
+        {
+          "block_e": 3,
+          "block_n": 7,
+          "row_id": "F07.017",
+          "source_id": "B.3.7"
+        },
+        {
+          "block_e": 3,
+          "block_n": 7,
+          "row_id": "F07.018",
+          "source_id": "B.3.7"
+        },
+        {
+          "block_e": 3,
+          "block_n": 7,
+          "row_id": "F07.019",
+          "source_id": "B.3.7"
+        },
+        {
+          "block_e": 3,
+          "block_n": 7,
+          "row_id": "F07.020",
+          "source_id": "B.3.7"
+        },
+        {
+          "block_e": 2,
+          "block_n": 7,
+          "row_id": "F07.021",
+          "source_id": "B.2.7"
+        },
+        {
+          "block_e": 2,
+          "block_n": 7,
+          "row_id": "F07.022",
+          "source_id": "B.2.7"
+        },
+        {
+          "block_e": 2,
+          "block_n": 7,
+          "row_id": "F07.023",
+          "source_id": "B.2.7"
+        },
+        {
+          "block_e": 2,
+          "block_n": 7,
+          "row_id": "F07.024",
+          "source_id": "B.2.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 7,
+          "row_id": "F07.025",
+          "source_id": "B.1.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 7,
+          "row_id": "F07.026",
+          "source_id": "B.1.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 7,
+          "row_id": "F07.027",
+          "source_id": "B.1.7"
+        },
+        {
+          "block_e": 0,
+          "block_n": 7,
+          "row_id": "F07.028",
+          "source_id": "B.0.7"
+        },
+        {
+          "block_e": 0,
+          "block_n": 7,
+          "row_id": "F07.029",
+          "source_id": "B.0.7"
+        },
+        {
+          "block_e": 0,
+          "block_n": 7,
+          "row_id": "F07.030",
+          "source_id": "B.0.7"
+        },
+        {
+          "block_e": 0,
+          "block_n": 7,
+          "row_id": "F07.031",
+          "source_id": "B.0.7"
+        },
+        {
+          "block_e": 0,
+          "block_n": 7,
+          "row_id": "F07.032",
+          "source_id": "B.0.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "T00.000",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "T00.001",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "T00.002",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "T00.003",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 0,
+          "row_id": "T00.004",
+          "source_id": "B.1.0"
+        },
+        {
+          "block_e": 1,
+          "block_n": 1,
+          "row_id": "T00.005",
+          "source_id": "B.1.1"
+        },
+        {
+          "block_e": 1,
+          "block_n": 1,
+          "row_id": "T00.006",
+          "source_id": "B.1.1"
+        },
+        {
+          "block_e": 1,
+          "block_n": 1,
+          "row_id": "T00.007",
+          "source_id": "B.1.1"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "T00.008",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "T00.009",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "T00.010",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 2,
+          "row_id": "T00.011",
+          "source_id": "B.1.2"
+        },
+        {
+          "block_e": 1,
+          "block_n": 3,
+          "row_id": "T00.012",
+          "source_id": "B.1.3"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "T00.025",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "T00.026",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "T00.027",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 6,
+          "row_id": "T00.028",
+          "source_id": "B.1.6"
+        },
+        {
+          "block_e": 1,
+          "block_n": 7,
+          "row_id": "T00.029",
+          "source_id": "B.1.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 7,
+          "row_id": "T00.030",
+          "source_id": "B.1.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 7,
+          "row_id": "T00.031",
+          "source_id": "B.1.7"
+        },
+        {
+          "block_e": 1,
+          "block_n": 8,
+          "row_id": "T00.032",
+          "source_id": "B.1.8"
+        },
+        {
+          "block_e": 4,
+          "block_n": 0,
+          "row_id": "T01.000",
+          "source_id": "B.4.0"
+        },
+        {
+          "block_e": 3,
+          "block_n": 0,
+          "row_id": "T01.001",
+          "source_id": "B.3.0"
+        },
+        {
+          "block_e": 4,
+          "block_n": 0,
+          "row_id": "T01.002",
+          "source_id": "B.4.0"
+        },
+        {
+          "block_e": 3,
+          "block_n": 0,
+          "row_id": "T01.003",
+          "source_id": "B.3.0"
+        },
+        {
+          "block_e": 3,
+          "block_n": 1,
+          "row_id": "T01.004",
+          "source_id": "B.3.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 1,
+          "row_id": "T01.005",
+          "source_id": "B.4.1"
+        },
+        {
+          "block_e": 3,
+          "block_n": 1,
+          "row_id": "T01.006",
+          "source_id": "B.3.1"
+        },
+        {
+          "block_e": 3,
+          "block_n": 1,
+          "row_id": "T01.007",
+          "source_id": "B.3.1"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "T01.008",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "T01.009",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 3,
+          "block_n": 2,
+          "row_id": "T01.010",
+          "source_id": "B.3.2"
+        },
+        {
+          "block_e": 4,
+          "block_n": 2,
+          "row_id": "T01.011",
+          "source_id": "B.4.2"
+        },
+        {
+          "block_e": 3,
+          "block_n": 2,
+          "row_id": "T01.012",
+          "source_id": "B.3.2"
+        },
+        {
+          "block_e": 3,
+          "block_n": 6,
+          "row_id": "T01.025",
+          "source_id": "B.3.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 6,
+          "row_id": "T01.026",
+          "source_id": "B.4.6"
+        },
+        {
+          "block_e": 3,
+          "block_n": 6,
+          "row_id": "T01.027",
+          "source_id": "B.3.6"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "T01.028",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 3,
+          "block_n": 7,
+          "row_id": "T01.029",
+          "source_id": "B.3.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "T01.030",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 7,
+          "row_id": "T01.031",
+          "source_id": "B.4.7"
+        },
+        {
+          "block_e": 4,
+          "block_n": 8,
+          "row_id": "T01.032",
+          "source_id": "B.4.8"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "T02.000",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "T02.001",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "T02.002",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "T02.003",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 0,
+          "row_id": "T02.004",
+          "source_id": "B.6.0"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "T02.005",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "T02.006",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "T02.007",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 1,
+          "row_id": "T02.008",
+          "source_id": "B.6.1"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "T02.009",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "T02.010",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 2,
+          "row_id": "T02.011",
+          "source_id": "B.6.2"
+        },
+        {
+          "block_e": 6,
+          "block_n": 3,
+          "row_id": "T02.012",
+          "source_id": "B.6.3"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "T02.025",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "T02.026",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "T02.027",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 6,
+          "row_id": "T02.028",
+          "source_id": "B.6.6"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "T02.029",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "T02.030",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 7,
+          "row_id": "T02.031",
+          "source_id": "B.6.7"
+        },
+        {
+          "block_e": 6,
+          "block_n": 8,
+          "row_id": "T02.032",
+          "source_id": "B.6.8"
+        }
+      ],
+      "source_positions": [
+        {
+          "count": 5,
+          "easting_m": -1399.81,
+          "northing_m": -1398.79,
+          "source_id": "B.0.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -1399.3700000000001,
+          "northing_m": -949.96,
+          "source_id": "B.0.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": -1451.9575,
+          "northing_m": -519.86,
+          "source_id": "B.0.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": -1451.4924999999998,
+          "northing_m": -171.6975,
+          "source_id": "B.0.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -1400.462,
+          "northing_m": 609.038,
+          "source_id": "B.0.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -1401.492,
+          "northing_m": 1048.726,
+          "source_id": "B.0.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -1398.648,
+          "northing_m": 1499.6380000000001,
+          "source_id": "B.0.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 9,
+          "easting_m": -1033.3422222222223,
+          "northing_m": -1401.2466666666667,
+          "source_id": "B.1.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": -1049.0433333333333,
+          "northing_m": -973.3083333333334,
+          "source_id": "B.1.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 8,
+          "easting_m": -1074.53,
+          "northing_m": -583.355,
+          "source_id": "B.1.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -1060.126,
+          "northing_m": -215.80599999999998,
+          "source_id": "B.1.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": -1000.77,
+          "northing_m": 608.6,
+          "source_id": "B.1.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 8,
+          "easting_m": -1026.32125,
+          "northing_m": 1048.17375,
+          "source_id": "B.1.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": -1048.6016666666667,
+          "northing_m": 1449.7849999999999,
+          "source_id": "B.1.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": -1100,
+          "northing_m": 1600,
+          "source_id": "B.1.8",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": -549.73,
+          "northing_m": -1400.5,
+          "source_id": "B.2.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -598.534,
+          "northing_m": -950.7360000000001,
+          "source_id": "B.2.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -601.332,
+          "northing_m": -519.022,
+          "source_id": "B.2.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": -647.2,
+          "northing_m": -172.3175,
+          "source_id": "B.2.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -600.9979999999999,
+          "northing_m": 609.384,
+          "source_id": "B.2.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": -600.64,
+          "northing_m": 1049.9233333333334,
+          "source_id": "B.2.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": -647.275,
+          "northing_m": 1499.1950000000002,
+          "source_id": "B.2.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -121.46399999999998,
+          "northing_m": -1400.8380000000002,
+          "source_id": "B.3.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": -100.55000000000001,
+          "northing_m": -991.9033333333333,
+          "source_id": "B.3.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -120.45,
+          "northing_m": -511.59400000000005,
+          "source_id": "B.3.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": -199.95999999999998,
+          "northing_m": -172.01600000000002,
+          "source_id": "B.3.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": -149.3325,
+          "northing_m": 610.8475,
+          "source_id": "B.3.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": -166.90333333333334,
+          "northing_m": 1034.9116666666666,
+          "source_id": "B.3.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": -167.535,
+          "northing_m": 1467.6216666666667,
+          "source_id": "B.3.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": 99.29333333333334,
+          "northing_m": -1433.3266666666668,
+          "source_id": "B.4.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": 167.4,
+          "northing_m": -974.2516666666667,
+          "source_id": "B.4.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 8,
+          "easting_m": 126.88875,
+          "northing_m": -574.7524999999999,
+          "source_id": "B.4.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 198.61333333333332,
+          "northing_m": -172.01,
+          "source_id": "B.4.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 203.90333333333334,
+          "northing_m": 610.99,
+          "source_id": "B.4.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": 168.57833333333335,
+          "northing_m": 1043.2866666666666,
+          "source_id": "B.4.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 7,
+          "easting_m": 142.72285714285712,
+          "northing_m": 1443.8485714285714,
+          "source_id": "B.4.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 0,
+          "northing_m": 1600,
+          "source_id": "B.4.8",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": 600.954,
+          "northing_m": -1399.126,
+          "source_id": "B.5.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 649.3125,
+          "northing_m": -950.89,
+          "source_id": "B.5.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 601.8000000000001,
+          "northing_m": -521.1566666666666,
+          "source_id": "B.5.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 552.8,
+          "northing_m": -170.5575,
+          "source_id": "B.5.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 5,
+          "easting_m": 601.3399999999999,
+          "northing_m": 611.4100000000001,
+          "source_id": "B.5.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 598.6066666666667,
+          "northing_m": 1049.6599999999999,
+          "source_id": "B.5.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 647.4875,
+          "northing_m": 1498.65,
+          "source_id": "B.5.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 9,
+          "easting_m": 1020.8133333333333,
+          "northing_m": -1400.2844444444445,
+          "source_id": "B.6.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 7,
+          "easting_m": 999.2685714285715,
+          "northing_m": -952.1085714285715,
+          "source_id": "B.6.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 7,
+          "easting_m": 971.5714285714286,
+          "northing_m": -554.6714285714286,
+          "source_id": "B.6.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 6,
+          "easting_m": 998.8033333333333,
+          "northing_m": -206.60333333333332,
+          "source_id": "B.6.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 1048.395,
+          "northing_m": 609.4575,
+          "source_id": "B.6.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 8,
+          "easting_m": 976.52625,
+          "northing_m": 1049.0175,
+          "source_id": "B.6.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 7,
+          "easting_m": 1030.0557142857144,
+          "northing_m": 1457.712857142857,
+          "source_id": "B.6.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1000,
+          "northing_m": 1600,
+          "source_id": "B.6.8",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 1399.6000000000001,
+          "northing_m": -1398.0566666666666,
+          "source_id": "B.7.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 1350.8225,
+          "northing_m": -949.145,
+          "source_id": "B.7.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 1351.0275000000001,
+          "northing_m": -518.5600000000001,
+          "source_id": "B.7.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 1402.24,
+          "northing_m": -169.40666666666667,
+          "source_id": "B.7.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 1398.2866666666669,
+          "northing_m": 610.48,
+          "source_id": "B.7.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 4,
+          "easting_m": 1352.1399999999999,
+          "northing_m": 1051.1799999999998,
+          "source_id": "B.7.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 3,
+          "easting_m": 1396.8066666666666,
+          "northing_m": 1497.7066666666667,
+          "source_id": "B.7.7",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": -1400,
+          "source_id": "B.8.0",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": -950,
+          "source_id": "B.8.1",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": -520,
+          "source_id": "B.8.2",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": -170,
+          "source_id": "B.8.3",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": 610,
+          "source_id": "B.8.5",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": 1050,
+          "source_id": "B.8.6",
+          "upward_m": -444.84239409854206
+        },
+        {
+          "count": 1,
+          "easting_m": 1600,
+          "northing_m": 1500,
+          "source_id": "B.8.7",
+          "upward_m": -444.84239409854206
+        }
+      ]
+    },
+    "outer_observed_minus_predicted_nT": [
+      -1.46279663824954,
+      -0.842878502684605,
+      0.027329804414964798,
+      0.9249256364075542,
+      1.6759841468807166,
+      2.0078962850530298,
+      1.993895478407208,
+      2.0882725329718674,
+      3.012173741896839,
+      4.9604482615568095,
+      8.778745917104551,
+      13.837612573098545,
+      20.396456501616953,
+      27.14710238203059,
+      33.41151412436533,
+      37.40049824361708,
+      39.034026040807376,
+      40.789037179196164,
+      40.98106722304312,
+      36.93652438570426,
+      28.10176346467486,
+      18.4541601301778,
+      10.93725719536323,
+      6.85366214440633,
+      6.044628121374548,
+      6.3910692917253895,
+      5.91381648504822,
+      3.448596447917942,
+      0.6391991636092474,
+      -1.8060037676738907,
+      -2.083026142405089,
+      0.1378947855218522,
+      3.69975805525527
+    ],
+    "outer_observed_nT": [
+      -0.7214567920857957,
+      -0.973722607310326,
+      -1.298490200156837,
+      -1.5707591551337639,
+      -1.9992173018171777,
+      -2.097263387139246,
+      -1.8663909967637313,
+      -0.8360548306109783,
+      1.1223655800012549,
+      3.576070133731524,
+      7.167258440190808,
+      10.385723459659769,
+      13.175187279685868,
+      14.641278922160769,
+      13.70494556937639,
+      8.870109345546588,
+      3.013857071787881,
+      1.8993778662034484,
+      1.792069566394557,
+      2.6167789869122755,
+      3.1426448534747435,
+      2.468987637956233,
+      1.5761687875348507,
+      0.5689407717144004,
+      -0.0509592945242201,
+      -0.47962406484923575,
+      -0.6670659304242925,
+      -0.6603770121815782,
+      -0.6955083981156008,
+      -0.6036366797406932,
+      -0.5158489222621954,
+      -0.43524082633492656,
+      -0.3603716347622282
+    ],
+    "outer_predicted_nT": [
+      0.7413398461637444,
+      -0.13084410462572105,
+      -1.3258200045718018,
+      -2.495684791541318,
+      -3.6752014486978943,
+      -4.105159672192276,
+      -3.8602864751709394,
+      -2.9243273635828455,
+      -1.8898081618955838,
+      -1.3843781278252858,
+      -1.6114874769137442,
+      -3.451889113438776,
+      -7.221269221931086,
+      -12.50582345986982,
+      -19.70656855498894,
+      -28.53038889807049,
+      -36.020168969019494,
+      -38.88965931299271,
+      -39.18899765664856,
+      -34.31974539879199,
+      -24.959118611200118,
+      -15.985172492221567,
+      -9.36108840782838,
+      -6.28472137269193,
+      -6.095587415898768,
+      -6.870693356574625,
+      -6.580882415472512,
+      -4.10897346009952,
+      -1.3347075617248483,
+      1.2023670879331974,
+      1.5671772201428933,
+      -0.5731356118567787,
+      -4.060129690017498
+    ],
+    "outer_row_ids": [
+      "F04.000",
+      "F04.001",
+      "F04.002",
+      "F04.003",
+      "F04.004",
+      "F04.005",
+      "F04.006",
+      "F04.007",
+      "F04.008",
+      "F04.009",
+      "F04.010",
+      "F04.011",
+      "F04.012",
+      "F04.013",
+      "F04.014",
+      "F04.015",
+      "F04.016",
+      "F04.017",
+      "F04.018",
+      "F04.019",
+      "F04.020",
+      "F04.021",
+      "F04.022",
+      "F04.023",
+      "F04.024",
+      "F04.025",
+      "F04.026",
+      "F04.027",
+      "F04.028",
+      "F04.029",
+      "F04.030",
+      "F04.031",
+      "F04.032"
+    ],
+    "outer_scored_count": 33,
+    "outer_total_count": 33,
+    "outer_unsupported_ids": [],
+    "production_fit_count": 25,
+    "rmse_nT": 18.799740861734186,
+    "selected_candidate": {
+      "damping": 0.0001,
+      "depth_m": 500
+    },
+    "signal_rms_nT": 5.1932793077546116,
+    "training_sha256": "76fb5de0e990ea9b62be0e28a5996199b6d56f7583390396c925d5427f55024c"
+  },
+  "schema": "m03-s1-investigation/1",
+  "scope": "one authored byte-bound operator investigation, not a full correction/export/replay run or native profile",
+  "sidecar": {
+    "acquisition": {
+      "declared_precision_s": 0.5,
+      "height_consistency_tolerance_m": 0,
+      "line_dictionary": [
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F00",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F01",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F02",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F03",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F04",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F05",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F06",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "flight",
+          "line_id": "F07",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "tie",
+          "line_id": "T00",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "tie",
+          "line_id": "T01",
+          "provider_code": null
+        },
+        {
+          "description": "Original authored ordered geometry",
+          "kind": "tie",
+          "line_id": "T02",
+          "provider_code": null
+        }
+      ],
+      "max_segment_gap_m": 150,
+      "max_time_gap_s": 1,
+      "sensor_dictionary": [
+        {
+          "description": "Authored geometry channel",
+          "provider_column": null,
+          "sensor_id": "S0",
+          "unit": "nT"
+        }
+      ],
+      "timestamp_basis": "UTC"
+    },
+    "authored_control": {
+      "authored_clock_and_datum": "Explicit local engineering datum and synthetic 2001 UTC",
+      "generator_revision": "dipole-1",
+      "notice": "synthetic, not field",
+      "regime": "S1",
+      "seed": 0,
+      "truth_definition": "Three explicit independent SI dipoles; weak projection on authored F48000nT/D12deg/I55deg"
+    },
+    "channel_state": [],
+    "coordinates": {
+      "axis_order": "easting_northing",
+      "datum_transform": null,
+      "geometry_accuracy_m": null,
+      "horizontal_crs": "Authored local metric engineering ENU, no field transform",
+      "vertical_axis": "upward",
+      "vertical_datum": "authored engineering zero",
+      "xy_unit": "m",
+      "z_unit": "m"
+    },
+    "dataset_id": "authored-dipoles",
+    "original": {
+      "csv_bytes": 45539,
+      "csv_sha256": "ac28e5f7c8344b94ebe0c408484eede8ade5a4074c8ef44661bcfe774ff0bfae",
+      "provider_identifier": null,
+      "retrieval_utc": null,
+      "source_url": null
+    },
+    "quantity": {
+      "channel_name": "authored-weak-anomaly",
+      "kind": "scalar_total_field_anomaly",
+      "sign_definition": "authored_weak_projection",
+      "unit": "nT"
+    },
+    "reference": null,
+    "revision": "dipole-1",
+    "rights": {
+      "attribution": [
+        "Felipe Santibanez-Leal"
+      ],
+      "decision": "allowed",
+      "derivative_publication": "allowed",
+      "evidence_sha256": null,
+      "evidence_uri": null,
+      "private_processing": "allowed",
+      "raw_mirroring": "denied"
+    },
+    "schema": "magnetic-lines/1",
+    "source_kind": "original_synthetic_acquisition",
+    "subset": null,
+    "uncertainty": null
+  },
+  "source_bytes_domain": "actual working files executed; Git LF blob identities recorded separately",
+  "started_utc": "2026-10-04T02:51:31.045310+00:00",
+  "wall_seconds": 4.491320100001758
+}
