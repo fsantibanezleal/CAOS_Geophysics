@@ -13,7 +13,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parents[1]/'data-pipeline'))
 from magnetic_local_paths import external_path
-from magnetic_survey_json import canonical, digest
+from magnetic_survey_json import InputError, canonical, digest
 
 
 def exclusive(path, raw):
@@ -27,6 +27,12 @@ def exclusive(path, raw):
 def original_prerequisite_failed(record):
     """Fail-first ledger gate, not authority to run an unqualified full matrix."""
     return record['scientific_verdict'].startswith('failed') or record['scientific_verdict'] == 'synthetic_predictive_fail'
+
+
+def refused_native_observation(error):
+    if type(error) is not InputError:
+        raise TypeError('Exact native refusal required')
+    return dict(native=None, scientific_verdict='failed_native_observation', reason=error.envelope())
 
 
 def observe_frozen_model(result, doc, evaluator, *, matched_a=None):
@@ -178,8 +184,15 @@ def main():
             temp_root=str(scratch), binding_receipt=str(data/'binding.json'), wall_seconds=args.wall_seconds)
         exclusive(scratch/'plan.json', canonical(plan))
         print('START '+label, flush=True)
-        lifetime = run_local_survey(args.executable, args.packages, tuple(args.dependencies), scratch/'plan.json',
-                                   cancel_after=args.cancel_after)
+        native_error = None
+        try:
+            lifetime = run_local_survey(args.executable, args.packages, tuple(args.dependencies), scratch/'plan.json',
+                                       cancel_after=args.cancel_after)
+        except InputError as error:
+            # A refused observer supplies NO resource/lifetime receipt. Preserve
+            # this exact non-success and reach the common dependency gate.
+            lifetime = None
+            native_error = refused_native_observation(error)
         output = data/'generation'
         record = dict(case=label, source_sha256=doc['source']['original_sha256'], rows=288, active_cells=528,
             native=lifetime, scientific_verdict='failed_no_complete_result', result_status=None, reason=None,
@@ -188,7 +201,9 @@ def main():
         if conditioned and audit_path.exists():
             record['optimizer_audit_sha256'] = hashlib.sha256(audit_path.read_bytes()).hexdigest()
             record['optimizer_audit_bytes'] = audit_path.stat().st_size
-        if (output/'manifest.json').exists() and lifetime['cause'] is None and lifetime['exit_code'] == 0:
+        if native_error is not None:
+            record.update(native_error)
+        elif (output/'manifest.json').exists() and lifetime['cause'] is None and lifetime['exit_code'] == 0:
             from magnetic_result_bundle import read_bundle
             result = read_bundle(output)['result']
             # Observe zero-model baseline ONLY AFTER already frozen one-time fit.

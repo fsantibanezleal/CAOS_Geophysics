@@ -48,6 +48,28 @@ def scratch_bytes(scratch, *, settled):
     return size
 
 
+def settled_job_counters(api, psapi, job, process):
+    """Fresh whole-Job accounting, even after the process handle is signalled.
+
+    Keep all observed peaks through the original10s reserve. This never turns
+    an unavailable reader, a foreign birth or timeout into an empty Job.
+    """
+    from magnetic_line_survey_runtime import counters
+    started = time.monotonic()
+    peaks = dict(cpu_s=0., peak_rss_bytes=0, peak_committed_bytes=0)
+    while True:
+        sample = counters(api, psapi, job, process)
+        for name in peaks:
+            peaks[name] = max(peaks[name], sample[name])
+        if time.monotonic()-started >= 10.:
+            fail('resource', '$/native', 'Actual whole-job accounting did not drain within reserve')
+        if (sample['active_processes'] not in (0, 1) or sample['total_processes'] not in (0, 1)):
+            fail('resource', '$/native', 'Actual whole-job process-count proof failed')
+        if sample['active_processes'] == 0 and sample['total_processes'] == 1:
+            return dict(sample, **peaks)
+        time.sleep(.01)
+
+
 def run_local_survey(executable, package_root, dependency_roots, plan_path, *, cancel_after=None):
     from magnetic_line_survey_runtime import apis, query, counters, Limits, Security, REQUIRED_FLAGS
     plan_path = external_path(plan_path)
@@ -127,7 +149,7 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                     break
                 if stopped is not None and time.monotonic()-stopped > 10.:
                     fail('resource', '$/native', 'Whole-job stop did not drain within reserve')
-            final = counters(api, psapi, job, int(process._handle))
+            final = settled_job_counters(api, psapi, job, int(process._handle))
             peak_rss = max(peak_rss, final['peak_rss_bytes'])
             peak_private = max(peak_private, final['peak_committed_bytes'])
             final_scratch = scratch_bytes(scratch, settled=True)

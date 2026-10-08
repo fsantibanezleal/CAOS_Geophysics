@@ -6,11 +6,24 @@ from pathlib import Path
 import pytest
 
 from magnetic_survey_json import digest
+from magnetic_survey_json import InputError
 
 spec = importlib.util.spec_from_file_location('frozen_matrix_observer',
     Path(__file__).parents[2]/'scripts/run_magnetic_frozen_matrix.py')
 observer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(observer)
+
+
+def test_refused_native_observation_has_no_lifetime_and_blocks_dependencies():
+    error = InputError('resource', '$/native', 'Authored refused observation')
+    record = observer.refused_native_observation(error)
+    assert record == dict(native=None, scientific_verdict='failed_native_observation', reason=error.envelope())
+    assert observer.original_prerequisite_failed(record)
+    record['case'] = 'A:secondary_enu_nT'
+    gate = observer.matrix_observation_gate([record], [record['case']])
+    assert gate['selected_controls_passed'] is False and gate['full_method_accepted'] is False
+    with pytest.raises(TypeError):
+        observer.refused_native_observation(RuntimeError('Not a completed/native counter'))
 
 
 def analytical_record(regime, quantity='secondary_enu_nT'):
