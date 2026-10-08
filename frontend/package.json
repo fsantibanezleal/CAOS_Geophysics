@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fasl-work/caos-app-shell": "0.6.8",
+    "@fasl-work/caos-app-shell": "0.8.1",
     "fflate": "0.8.3",
     "katex": "^0.16.11",
     "lucide-react": "^0.577.0",
