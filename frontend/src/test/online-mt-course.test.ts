@@ -81,6 +81,14 @@ describe("online MT course", () => {
     expected = expected.replace('tabs={released(["potential", "mt", "joint"])}', 'tabs={[\n        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },\n        ...released(["potential", "mt", "joint"]),\n      ]}');
     expected = expected.replace('ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={chapters', 'ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={[\n        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },\n        ...chapters');
     expected = expected.replace('        }))} />,\n    },\n    {\n      id: "waves",', '        })),\n      ]} />,\n    },\n    {\n      id: "waves",');
+    // The reviewed pure-theory mount changes only these three exact seams;
+    // keep full-file equality for every existing MT equation and algorithm.
+    expected = expected.replace('import { M01ScientificCourse } from "../components/M01ScientificCourse";',
+      'import { M01ScientificCourse } from "../components/M01ScientificCourse";\nimport { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";');
+    expected = expected.replace('        ...released(["potential", "mt", "joint"]),',
+      '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse /> },\n        ...released(["potential", "mt", "joint"]),');
+    expected = expected.replace('        ...chapters\n',
+      '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse implementation /> },\n        ...chapters\n');
     // Exactly two deployment prose exceptions; retain whole-file science checks.
     const deploymentCopy = [
       ["The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",

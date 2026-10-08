@@ -19,6 +19,7 @@ import { PhasePickingContent } from "../components/PhasePickingContent";
 import { PhasePickerPanel } from "../components/PhasePickerPanel";
 import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
 import { M01ScientificCourse } from "../components/M01ScientificCourse";
+import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
@@ -383,6 +384,7 @@ export function Methodology() {
       label: t("Fields", "Campo"),
       content: <SubTabs orientation="vertical" ariaLabel={t("Field and MT methods", "Métodos de campos y MT")} tabs={[
         { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },
+        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse /> },
         ...released(["potential", "mt", "joint"]),
       ]} />,
     },
@@ -574,6 +576,7 @@ export function Implementation() {
       label: t("Fields", "Campo"),
       content: <SubTabs orientation="vertical" ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={[
         { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },
+        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse implementation /> },
         ...chapters
         .filter((chapter) => ["potential", "mt", "joint"].includes(chapter.id))
         .map((chapter) => ({

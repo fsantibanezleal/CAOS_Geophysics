@@ -1,8 +1,10 @@
 import type { Citation } from "@fasl-work/caos-app-shell";
 import { M01_COURSE_CITATIONS } from "./m01-scientific-course";
 import { M11_COURSE_CITATIONS } from "./m11-scientific-course";
+import { MAGNETIC_CITATIONS } from "./magnetic-course-citations";
 
 export const CITATIONS: Citation[] = [
+  ...MAGNETIC_CITATIONS,
   ...M11_COURSE_CITATIONS,
   ...M01_COURSE_CITATIONS,
   { id: "processingcontract", label: "Owned processing contract", citation: "Implemented authenticated owner CSV flag-processing workflow: immutable originals, dataset/job/result identity, private worker, export verification and explicit capability boundary. Develop baseline afac8ab.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/afac8ab/docs/guides/07_processing_jobs.md" },
