@@ -115,3 +115,20 @@ def test_explicit_external_roots_only(tmp_path, monkeypatch):
 def test_new_schemas_do_not_modify_bounded_contract():
     assert 'SurveyInput' not in bounded.SCHEMAS
     assert bounded.SCHEMAS['SourceGeometry']['max_sources'] == bounded.I(1, 256)
+
+
+def test_writer_cannot_execute_foreign_scalar_conversion_hook(tmp_path):
+    class Foreign:
+        def item(self):
+            pytest.fail('Foreign array/scalar hooks are not admitted')
+    with pytest.raises(core.SurveyError):
+        array(tmp_path, values=[Foreign()])
+
+
+def test_source_and_grid_role_counts_refuse_before_member_creation(tmp_path):
+    with pytest.raises(core.SurveyError):
+        io.write_array(tmp_path,'sources','source_position',[],[65537,3],'float64','m',HASH)
+    assert not list(tmp_path.iterdir())
+    with pytest.raises(core.SurveyError):
+        io.write_array(tmp_path,'grid','grid_value',[],[1025,1025],'float64','nT',HASH)
+    assert not list(tmp_path.iterdir())

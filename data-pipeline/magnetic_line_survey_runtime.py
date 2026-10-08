@@ -134,7 +134,9 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
     scratch = external_path(scratch)
     plan_path = external_path(plan_path, directory=False)
     source_names = ('magnetic_line_contract.py', 'magnetic_line_survey.py', 'magnetic_line_survey_contract.py',
-                    'magnetic_line_survey_io.py', 'magnetic_line_survey_runtime.py', 'magnetic_line_survey_worker.py')
+                    'magnetic_line_survey_io.py', 'magnetic_line_survey_runtime.py', 'magnetic_line_survey_worker.py',
+                    'magnetic_line_survey_geometry.py', 'magnetic_line_survey_measurements.py',
+                    'magnetic_line_survey_crossovers.py', 'magnetic_line_survey_support.py', 'magnetic_line_survey_seal.py')
     def source_identity():
         return {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}
     sources_before = source_identity()
@@ -231,6 +233,18 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                 admission='not_established', source_sha256=sources_before, actual_executable_sha256=executable_hash)
             from magnetic_line_survey import _write_member
             from magnetic_line_contract import canonical_bytes
+            # Count the terminal receipt itself in the owned scratch inventory.
+            # Only the digit width changes; require an exact serialization fixed
+            # point rather than report the pre-receipt directory as total bytes.
+            for _ in range(8):
+                final_size = size + len(canonical_bytes(receipt))
+                if receipt['scratch_bytes'] == final_size:
+                    break
+                receipt['scratch_bytes'] = final_size
+            else:
+                raise SurveyError('resource_refused', 'export')
+            if receipt['scratch_bytes'] > SCRATCH_LIMIT:
+                raise SurveyError('resource_refused', 'export')
             write_cpu, write_wall = time.process_time(), time.perf_counter()
             _write_member(scratch, 'lifetime.json', canonical_bytes(receipt))
             # Parent receipt serialization is explicitly outside child lifetime;

@@ -61,6 +61,10 @@ def test_actual_8201_row_full_global_zero_native_lifetime(tmp_path):
     assert receipt['verdict'] == 'component_pass', (receipt, (path.parent/'stderr.log').read_text())
     assert receipt['total_processes'] == 1 and receipt['active_processes'] == 0
     assert receipt['cpu_s'] > 0 and receipt['peak_rss_bytes'] > 0 and receipt['peak_committed_bytes'] > 0
+    assert receipt['scratch_bytes'] == runtime.owned_bytes(path.parent)
+    stored = base.strict_json((path.parent/'lifetime.json').read_bytes())
+    assert stored['scratch_bytes'] == receipt['scratch_bytes']
+    assert 'magnetic_line_survey_seal.py' in stored['source_sha256']
     ready = base.strict_json((path.parent/'native-ready.json').read_bytes())
     assert ready['rows'] == 8201 and ready['sources'] == 66 and ready['zero_target'] is True
     assert ready['objective'] == 0 and ready['scientific_acceptance'] == 'not_established'

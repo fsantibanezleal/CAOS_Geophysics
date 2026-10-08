@@ -267,6 +267,14 @@ def conditions(name, v):
             raise SurveyError('invalid_contract', 'ingest')
         if not v['shape'][0] and v['role'] not in ('row_id', 'partition_index'):
             raise SurveyError('invalid_contract', 'ingest')
+        if v['role'] in ('source_position', 'source_scale', 'coefficient') and v['shape'][0] > 65536:
+            raise SurveyError('resource_refused', 'seal')
+        if v['role'] == 'source_block_member' and v['shape'][0] > 8000000:
+            raise SurveyError('resource_refused', 'seal')
+        if v['role'] in ('grid_value', 'grid_mask') and (len(v['shape']) != 2 or math.prod(v['shape']) > 1048576):
+            raise SurveyError('resource_refused', 'seal')
+        if v['role'] == 'grid_coordinate' and v['shape'][0] > 1048576:
+            raise SurveyError('resource_refused', 'seal')
     if name == 'TableRef':
         limit = {'sensor_definition': 4, 'aux_identity': 16, 'operation_state': 64, 'candidate_fit': 24, 'sector_power': 16}.get(v['row_schema'],
                   8000000 if v['row_schema'] in ('crossover_geometry', 'crossover_value', 'source_block') else 65536)

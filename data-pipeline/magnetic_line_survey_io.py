@@ -6,6 +6,7 @@ import math
 import os
 from pathlib import Path
 import struct
+import sys
 import tempfile
 
 import magnetic_line_contract as base
@@ -45,6 +46,13 @@ def local_root(root=None, *, temporary=False):
 
 
 def encoded_cell(value, dtype):
+    if type(value) not in (int, float, str):
+        # Only exact native NumPy scalar classes from an already loaded engine.
+        # Do not invoke an arbitrary object's item/array/conversion hook.
+        np = sys.modules.get('numpy')
+        if np is None or type(value) not in (np.float64, np.int64, np.uint64, np.int32, np.uint32, np.uint8):
+            raise core.SurveyError('invalid_contract', 'export')
+        value = value.item()
     if dtype.startswith('ascii'):
         if type(value) is not str:
             raise core.SurveyError('invalid_contract', 'export')
@@ -68,6 +76,14 @@ class Writer(core._ChunkWriter):
     def __init__(self, root, identifier, *, role=None, row_schema=None, shape=None,
                  dtype=None, unit=None, mask_array_id=None):
         root = external_path(root)
+        # Preflight descriptor metadata before creating even a chunk/page.
+        if role:
+            schema.validate('ArrayRef', dict(array_id=identifier,role=role,shape=shape,dtype=dtype,unit=unit,
+                chunk_rows=1,manifest=dict(name=f'array-{identifier}.json',bytes=1,sha256='0'*64),
+                ordered_ids_sha256='0'*64,mask_array_id=mask_array_id))
+        else:
+            schema.validate('TableRef', dict(table_id=identifier,row_schema=row_schema,rows=1,
+                manifest=dict(name=f'table-{identifier}.json',bytes=1,sha256='0'*64)))
         super().__init__(root, identifier, role=role, row_schema=row_schema)
         self.shape, self.dtype, self.unit, self.mask = shape, dtype, unit, mask_array_id
         if role:
@@ -116,7 +132,7 @@ def write_array(root, identifier, role, values, shape, dtype, unit, ordered_ids_
     writer = Writer(root, identifier, role=role, shape=shape, dtype=dtype, unit=unit, mask_array_id=mask)
     for value in values:
         cells = value if len(shape) == 2 else (value,)
-        writer.append(b''.join(encoded_cell(x.item() if hasattr(x, 'item') else x, dtype) for x in cells))
+        writer.append(b''.join(encoded_cell(x, dtype) for x in cells))
     return writer.finish(ordered_ids_sha256)
 
 
