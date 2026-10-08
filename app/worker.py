@@ -187,7 +187,7 @@ def _clear_known_stage(stage: Path) -> None:
 
 async def _finish_failure(
     sessions: async_sessionmaker, job_id: str, code: str, message: str,
-    *, wall_ms: int, peak_rss: int, scratch_bytes: int,
+    *, wall_ms: int, peak_rss: int | None, scratch_bytes: int | None,
 ) -> None:
     async with sessions() as session:
         await session.execute(text("BEGIN IMMEDIATE"))
@@ -205,6 +205,10 @@ async def _finish_failure(
 
 
 async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionmaker, job: ProcessingJob, poll_interval: float) -> None:
+    if job.method_id == 'seismic.waveform-qc-classical/v1':
+        from app.waveform_worker import execute
+        await execute(settings,sessions,job,poll_interval)
+        return
     stage_root = settings.data_dir / ".job-staging"
     if stage_root.is_symlink():
         raise RuntimeError("worker staging root requires operator recovery")

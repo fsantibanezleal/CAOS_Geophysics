@@ -384,13 +384,16 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         jobs = (await session.execute(select(ProcessingJob).where(
             ProcessingJob.project_id == project_id, ProcessingJob.owner_id == user.id,
         ))).scalars().all()
+        from app.models import WaveformResultArtifact
+        waveform_artifacts=(await session.execute(select(WaveformResultArtifact).where(
+            WaveformResultArtifact.job_id.in_([job.id for job in jobs])))).scalars().all()
         assets.sort(key=lambda item: item.id)
         hashes = [item.sha256 for item in assets]
         manifest = [{"asset_id": item.id, "sha256": item.sha256, "byte_count": item.byte_count} for item in assets]
         used = sum(item.byte_count for item in assets)
         project_dir = await asyncio.to_thread(_exact_project_directory, settings, str(user.id), project_id, assets)
         derived_dir, derived_manifest = await asyncio.to_thread(
-            exact_derived_project, settings, str(user.id), project_id, datasets, jobs,
+            exact_derived_project, settings, str(user.id), project_id, datasets, jobs, waveform_artifacts,
         )
         _require_no_project_backup(settings, str(user.id), project_id)
         deleting_dir = settings.data_dir / ".deleting" / f"{user.id}--{project_id}"
@@ -410,6 +413,11 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             if derived_dir.exists():
                 await asyncio.to_thread(derived_dir.rename, deleting_derived)
                 renamed_derived = True
+            from app.models import WaveformDatasetSource, WaveformResultArtifact
+            await session.execute(delete(WaveformResultArtifact).where(
+                WaveformResultArtifact.job_id.in_([job.id for job in jobs])))
+            await session.execute(delete(WaveformDatasetSource).where(
+                WaveformDatasetSource.dataset_id.in_([dataset.id for dataset in datasets])))
             await session.execute(delete(ProcessingJob).where(
                 ProcessingJob.project_id == project_id, ProcessingJob.owner_id == user.id,
             ))
