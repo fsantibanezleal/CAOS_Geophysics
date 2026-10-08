@@ -37,6 +37,7 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--conditioned-core', action='store_true')
     mode.add_argument('--feasible-core', action='store_true')
+    mode.add_argument('--reduced-core', action='store_true')
     args = parser.parse_args()
     root, scratch_root = external_path(args.data_root), external_path(args.temp_root)
     if not root.is_dir() or not scratch_root.is_dir() or not 0. < args.wall_seconds <= 7200.:
@@ -46,10 +47,10 @@ def main():
     import physical_nonlinear_optimizer as nonlinear
     from run_magnetic_survey import source_inventory
     from magnetic_native_runtime import run_local_survey
-    conditioned = args.conditioned_core or args.feasible_core
-    if args.feasible_core and any(label.endswith(':exact_total_anomaly_nT') for label in args.cases):
-        raise ValueError('Public contact source is LINEAR-only')
-    sources = source_inventory(conditioned=conditioned, feasible=args.feasible_core)
+    conditioned = args.conditioned_core or args.feasible_core or args.reduced_core
+    if (args.feasible_core or args.reduced_core) and any(label.endswith(':exact_total_anomaly_nT') for label in args.cases):
+        raise ValueError('Public contact/reduced source is LINEAR-only')
+    sources = source_inventory(conditioned=conditioned, feasible=args.feasible_core, reduced=args.reduced_core)
     inventory_hash = digest(sources)
     fixture = Path(__file__).parents[1]/'tests'/'fixtures'/'magnetic_survey'/'full_request.py'
     spec = importlib.util.spec_from_file_location('full_frozen_s2', fixture)
@@ -69,6 +70,9 @@ def main():
             from magnetic_conditioned_adapter import binding_for_sources
             import physical_conditioned_optimizer as core
             binding = binding_for_sources(sources, inventory_hash, nonlinear=quantity == 'exact_total_anomaly_nT', feasible=args.feasible_core)
+            if args.reduced_core:
+                from magnetic_reduced_adapter import binding_for_sources as reduced_binding
+                binding = reduced_binding(sources, inventory_hash)
         doc, original, evaluator = generator.generate(regime, quantity, binding)
         name = regime+'-'+quantity
         data, scratch = root/name, scratch_root/name

@@ -1,4 +1,4 @@
-"""ONE original full528 firstfold prerequisite, no dependent matrix or retry."""
+"""Original full528 firstfold prerequisites, no dependent matrix or retry."""
 import hashlib
 import importlib.util
 from pathlib import Path
@@ -7,6 +7,7 @@ from time import monotonic
 import choclo
 from choclo.constants import VACUUM_MAGNETIC_PERMEABILITY as MU0
 import numpy as np
+import pytest
 from scipy.optimize import lsq_linear
 
 import magnetic_reduced_adapter as adapter
@@ -19,18 +20,16 @@ from run_magnetic_survey import source_inventory
 import physical_reduced_optimizer as core
 
 
-def test_original_A_full528_firstfold_convergence_and_independent_precision(tmp_path):
-    sources = source_inventory(conditioned=True)
-    for name in ('magnetic_reduced_adapter', 'physical_reduced_optimizer'):
-        module = __import__(name)
-        sources[name] = hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
+@pytest.mark.parametrize('quantity', ['secondary_enu_nT', 'linear_tmi_nT'])
+def test_original_A_full528_firstfold_convergence_and_independent_precision(tmp_path, quantity):
+    sources = source_inventory(reduced=True)
     inventory = digest(sources)
     binding = adapter.binding_for_sources(sources, inventory)
     location = Path(__file__).parents[1]/'fixtures'/'magnetic_survey'/'full_request.py'
     spec = importlib.util.spec_from_file_location('unchanged_firstfold_s2', location)
     generator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(generator)
-    doc, original, evaluator = generator.generate('A', 'secondary_enu_nT', binding)
+    doc, original, evaluator = generator.generate('A', quantity, binding)
     raw = canonical(doc)
     assert hashlib.sha256(original).hexdigest() == doc['source']['original_sha256']
     reader = SealedLikelihood(raw)
@@ -39,7 +38,11 @@ def test_original_A_full528_firstfold_convergence_and_independent_precision(tmp_
     assert len(rows) == 144 and reader.plan['preflight']['active_cells'] == 528
     assert not set(rows)&set(reader.plan['partition']['outer_rows']['data'])
     observed, noise = reader.read(rows, role='fit', fold=0)
-    plan = adapter.allocation(864, 432, 528, False, reader.plan['preflight']['conservative_bytes'])
+    components = 3 if quantity == 'secondary_enu_nT' else 1
+    # Every quantity retains the complete three-component physical source
+    # kernel; only the principal likelihood component count is scalar.
+    plan = adapter.allocation(864, 144*components, 528, False,
+        reader.plan['preflight']['conservative_bytes'])
     # Allocation gate above precedes the original full physical kernel.
     operator = build_operator(raw, rows, deadline=monotonic()+120.)
     mesh, prior = mesh_from_metadata(reader.metadata), doc['prior']
@@ -84,9 +87,11 @@ def test_original_A_full528_firstfold_convergence_and_independent_precision(tmp_
     xyz = np.array(doc['geometry']['receivers_m']['data']).reshape(288, 3)[list(rows)]
     _, background, _, _, _ = operator.operand_snapshot()
     magnetization = background*1e-9/MU0
-    independent = np.array([[[fun(*receiver, *cell, *magnetization)*1e9
+    vector = np.array([[[fun(*receiver, *cell, *magnetization)*1e9
         for cell in bounds] for fun in (choclo.prism.magnetic_e, choclo.prism.magnetic_n,
-        choclo.prism.magnetic_u)] for receiver in xyz]).reshape(432, 528)*.01
+        choclo.prism.magnetic_u)] for receiver in xyz])*.01
+    independent = (vector.reshape(432, 528) if components == 3 else
+        np.einsum('rck,c->rk', vector, background/np.linalg.norm(background)))
     native = operator.evaluate(start)['jacobian_nT_per_q']
     np.testing.assert_allclose(native, independent, rtol=2e-8, atol=1e-7)
     sd = noise['values'].ravel()

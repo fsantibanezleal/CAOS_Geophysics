@@ -93,7 +93,7 @@ def recorded_objective_terms(obj, trace, inner, *, nonlinear):
 
 def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, binding,
                   deadline, admitted_bytes, allocation_sha256, source_inventory_sha256,
-                  source_components=None, optimizer_audit=None):
+                  source_components=None, optimizer_audit=None, reduced_plan=None):
     """Complete fixed-beta L2 and optionally eight-stage true-p1 continuation."""
     import physical_optimizer as core
     nonlinear = operator.quantity == 'exact_total_anomaly_nT'
@@ -102,9 +102,12 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         from magnetic_nonlinear_adapter import MagneticNonlinearObjective, solve_nonlinear
     conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
     feasible = conditioned and binding.accepted_export == 'physical_feasible_optimizer.solve_bounded_linear'
+    reduced = conditioned and binding.accepted_export == 'physical_reduced_optimizer.solve_bounded_linear'
     if conditioned:
         import physical_conditioned_optimizer as conditioned_core
         from magnetic_conditioned_adapter import MagneticConditionedObjective, solve_conditioned
+        if reduced:
+            from magnetic_reduced_adapter import MagneticReducedObjective, solve_reduced
     kkt_gradient = nonlinear_projected_gradient if nonlinear else projected_gradient
     reference = np.array(prior['reference_si']['data'], dtype=np.float64)/.01
     lower = np.array(prior['lower_si']['data'], dtype=np.float64)/.01
@@ -119,6 +122,8 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         obj = MagneticObjective(operator, reg, observed, noise, lower, upper, float(beta),
                                 source_inventory_sha256, allocation_sha256, stage)
         physical = MagneticNonlinearObjective(obj, q) if nonlinear else obj
+        if reduced:
+            return MagneticReducedObjective(physical, reduced_plan)
         return MagneticConditionedObjective(physical, source_components, feasible=feasible) if conditioned else physical
 
     def append_trace(obj, solved, phase, outer, epsilon):
@@ -137,7 +142,7 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         nonlocal steps
         budget_type = conditioned_core.ConditionedBudget if conditioned else core.NonlinearBudget if nonlinear else core.OptimizerBudget
         budget = budget_type(deadline, 200-steps, 805306368, admitted_bytes, allocation_sha256)
-        solver = solve_conditioned if conditioned else solve_nonlinear if nonlinear else solve_linear
+        solver = solve_reduced if reduced else solve_conditioned if conditioned else solve_nonlinear if nonlinear else solve_linear
         result = solver(obj, lower, upper, q, budget=budget, binding=binding)
         if conditioned and optimizer_audit is not None:
             optimizer_audit(result)
@@ -254,6 +259,7 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         import physical_nonlinear_optimizer as core
         binding_type = core.NonlinearBinding
     conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
+    reduced = conditioned and binding.accepted_export == 'physical_reduced_optimizer.solve_bounded_linear'
     if conditioned:
         import physical_conditioned_optimizer as core
         import physical_owned_spd as spd
@@ -262,6 +268,10 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
             if nonlinear:
                 fail('dependency', '$/policy/optimizer_binding', 'Public contact source is LINEAR-only')
             import physical_feasible_optimizer as core
+        if reduced:
+            if nonlinear:
+                fail('dependency', '$/policy/optimizer_binding', 'Public reduced source is LINEAR-only')
+            import physical_reduced_optimizer as core
     epoch = (core.NONLINEAR_EPOCH if nonlinear else core.LINEAR_EPOCH) if conditioned else core.RUNTIME_EPOCH
     if (type(binding) is not binding_type or requested != dict(accepted_source=binding.optimizer_source_sha256,
             accepted_export=binding.accepted_export, epoch=binding.runtime_epoch)
@@ -285,6 +295,8 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
     source_components = 3*plan['preflight']['rows']
     if conditioned:
         from magnetic_conditioned_adapter import allocation as phase_allocation
+        if reduced:
+            from magnetic_reduced_adapter import allocation as phase_allocation
         fit_sizes = [len(f['fit_rows']['data']) for f in plan['partition']['folds']]+[len(plan['final_refit_rows']['data'])]
         try:
             phases = [phase_allocation(source_components, n*plan['preflight']['components'],
@@ -321,10 +333,15 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
     def fit(rows, role, fold, beta, penalty, cid):
         state.update(active_candidate=cid, active_fold=-1 if fold is None else fold, active_reason=None)
         observed, noise = reader.read(rows, role=role, fold=fold)
+        solve_admitted, solve_allocation, reduced_plan = admitted_bytes, allocation, None
+        if reduced:
+            reduced_plan = next(p for p in phases if p['fit_components'] == len(rows)*plan['preflight']['components'])
+            solve_admitted, solve_allocation = reduced_plan['admitted_bytes'], digest(reduced_plan)
         result = fit_partition(op(rows), mesh, meta['prior'], observed, noise, beta, penalty, binding=binding,
-            deadline=deadline, admitted_bytes=admitted_bytes, allocation_sha256=allocation,
+            deadline=deadline, admitted_bytes=solve_admitted, allocation_sha256=solve_allocation,
             source_inventory_sha256=source_inventory_sha256, source_components=source_components,
-            optimizer_audit=(lambda solved: optimizer_audit(cid, fold, solved)) if optimizer_audit is not None else None)
+            optimizer_audit=(lambda solved: optimizer_audit(cid, fold, solved)) if optimizer_audit is not None else None,
+            reduced_plan=reduced_plan)
         state['active_reason'] = result['reason']
         for record in result['history']:
             if len(history) >= 4096:
