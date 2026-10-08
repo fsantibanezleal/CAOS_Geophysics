@@ -8,7 +8,7 @@ Runtime registration and aggregate telemetry come from the trusted supervisor.
 from app.physical_contract import (
     CORRECTION, TRANSFORM, M, byte_sha, canonical, decode_source, digest, fields, instant, require, uuid,
 )
-from app.physical_debt import begin_ledger, sealed_stage
+from app.physical_debt import sealed_stage
 from app.physical_forest import _row, _parent_chain, _targets
 from app.physical_producer import verify_correction_producer
 from app.physical_transform_producer import NULL_ADAPTER, verify_transform_producer
@@ -166,15 +166,25 @@ def audit_transform_producer(connection, files, child_row, *, approved_manifests
 
 
 def publish_correction(connection, files, **values):
-    return _publish(connection,files,method=CORRECTION,**values)
+    return _publish(connection,files,method=CORRECTION,caller_owned=False,**values)
 
 
 def publish_transform(connection, files, **values):
-    return _publish(connection,files,method=TRANSFORM,**values)
+    return _publish(connection,files,method=TRANSFORM,caller_owned=False,**values)
+
+
+def publish_correction_transaction(connection, files, **values):
+    """Unchanged complete producer proof in the caller's verified WAL TX."""
+    return _publish(connection,files,method=CORRECTION,caller_owned=True,**values)
+
+
+def publish_transform_transaction(connection, files, **values):
+    """Same terminal transform proof; does not commit the caller's TX."""
+    return _publish(connection,files,method=TRANSFORM,caller_owned=True,**values)
 
 
 def _publish(connection, files, *, method, owner_id, project_id, intent_id,
-             approved_manifests, metrics, finished_at, failure_cut=None):
+             approved_manifests, metrics, finished_at, caller_owned, failure_cut=None):
     """Verify original/staged/installed copies, then co-commit all terminal rows.
 
     The caller's measured metrics are compared to the result, not inferred from
@@ -189,8 +199,8 @@ def _publish(connection, files, *, method, owner_id, project_id, intent_id,
         uuid(value)
     instant(finished_at,legacy=True)
     fields(metrics,'wall_ms cpu_ms peak_rss_bytes scratch_bytes')
-    begin_ledger(connection)
-    try:
+    from app.physical_roots import _ledger
+    with _ledger(connection, caller_owned=caller_owned):
         intent=_row(connection,'SELECT * FROM physical_publication_intents WHERE intent_id=? AND owner_id=? AND project_id=?',
                     (intent_id,owner_id,project_id))
         require(intent['kind']=='job' and intent['phase']=='prepared','physical_publication_intent')
@@ -308,8 +318,4 @@ def _publish(connection, files, *, method, owner_id, project_id, intent_id,
         if failure_cut:
             failure_cut('retired')
         require(not connection.execute('PRAGMA foreign_key_check').fetchall(),'physical_publication_foreign_keys')
-        connection.commit()
         return snapshot
-    except BaseException:
-        connection.rollback()
-        raise
