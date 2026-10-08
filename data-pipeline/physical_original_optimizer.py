@@ -15,14 +15,22 @@ import numpy as np
 import physical_reduced_optimizer as reduced
 import physical_original_quadratic as source
 import physical_original_terminal as accuracy
+import physical_original_residual_terminal as residual_accuracy
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-8'
-POLICY = 'closed-original-noise-reduced-joseph-free-face-accuracy-1'
+LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-9'
+POLICY = 'closed-original-noise-reduced-joseph-free-face-residual-accuracy-2'
+RESIDUAL_TERMINAL_SHA256 = 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7'
 ConditionedBinding = reduced.ConditionedBinding
 ConditionedBudget = reduced.ConditionedBudget
 VENDOR_SOURCE_SHA256 = reduced.VENDOR_SOURCE_SHA256
+
+
+def _check_residual_source():
+    if (residual_accuracy.SOURCE_SHA256 != RESIDUAL_TERMINAL_SHA256 or
+            hashlib.sha256(Path(residual_accuracy.__file__).read_bytes()).hexdigest() != RESIDUAL_TERMINAL_SHA256):
+        raise ValueError('original solver: closed residual certificate source drift')
 
 
 @dataclass(frozen=True)
@@ -124,6 +132,7 @@ class _OriginalObjective:
 class _Linear(reduced._Linear):
     def stronger_terminal(self):
         self.check()
+        _check_residual_source()
         self.dispose_metric()
         started = monotonic()
         row = dict(iteration=int(self.iter), q=self.xc.copy(), seconds=0., check=None, failure=None)
@@ -145,11 +154,12 @@ class _Linear(reduced._Linear):
             audits = self._audit_bytes + sum(s[0].nbytes+128 for s in self.states)
             audits += 2048*len(self.line_search_trials)+4096*len(self.objective.domain_checks)
             audits += (32768+1024*len(q))*len(self.terminal_audits)
-            owner = accuracy.OwnedOriginalTerminal(self.objective.metric_operands(q),
+            owner = residual_accuracy.OwnedOriginalResidualTerminal(self.objective.metric_operands(q),
                 original, self.identity_value, q, self.g, float(self.initial_norm),
                 deadline=self.budget.deadline, resource_limit_bytes=self.budget.resource_limit_bytes,
                 admitted_bytes=self.budget.admitted_bytes, retained_audit_bytes=audits)
             row['check'] = owner.certify(self.terminal_policy)
+            _check_residual_source()
             self.check()
             return row['check']['passed']
         except source.intervals._Expired:
@@ -166,6 +176,7 @@ class _Linear(reduced._Linear):
 
 def solve_bounded_linear(objective, lower_q, upper_q, start_q, *, budget, binding, terminal):
     """Trusted original magnetic DTO bridge only, not a general callback recipe."""
+    _check_residual_source()
     proxy = _OriginalObjective(objective, budget)
     # First source/box binding before native initialization; no caller recipe
     # can certify a different box than the one whose native directions run.
@@ -179,5 +190,6 @@ def solve_bounded_linear(objective, lower_q, upper_q, start_q, *, budget, bindin
         source_epoch=('physical_original_optimizer', SOURCE_SHA256, POLICY, LINEAR_EPOCH))
     result['magnetic_domain_checks'] = tuple(proxy.domain_checks)
     result['source_binding'].update(original_arithmetic=source.SOURCE_SHA256,
-        original_terminal=accuracy.SOURCE_SHA256, reduced_dependency=reduced.SOURCE_SHA256)
+        original_terminal=accuracy.SOURCE_SHA256, original_residual_terminal=RESIDUAL_TERMINAL_SHA256,
+        reduced_dependency=reduced.SOURCE_SHA256)
     return result

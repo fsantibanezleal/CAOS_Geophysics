@@ -1,6 +1,6 @@
 # Original source exact-row certificate arithmetic
 
-Prospective public original source epoch candidate8. This arithmetic is not a
+Public original source epoch candidate9 uses arithmetic epoch2. This arithmetic is not a
 native-host grant, a full M02/M04 acceptance or a compiled/quartic bridge.
 Original source6/source7 receipts and failed complete firstfits remain historical.
 
@@ -65,7 +65,7 @@ drift and the unchanged native stored-noise/strong-accuracy negative controls.
 Fit acceptance still requires all actual source chords, native true CG
 residual<=1e-6, summedCG<=200, accepted<=200/states<=201/LS<=20,
 uninterrupted120 s clock, strict physical field ratio>1e-8, original source
-strong-convexity/Neumann/free-box/active-sign/KKT/model/objective/prediction
+strong-convexity/residual/free-box/active-sign/KKT/model/objective/prediction
 certificates and original768MiB M04 or2GiB M02 source-bound quota. A faster
 microbenchmark or independent L2 pass never unlocks incomplete sparse stages.
 
