@@ -1,6 +1,7 @@
 import { describe,it,expect } from 'vitest';
 import { parseStart,parseJob,parseRepresentation,type ArrayRef,type FileIdentity } from './contract';
 import { readArrayWindow,readCrossoverWindow } from './members';
+import { parseRegistry,registryReader,type RegistryPage } from './registry';
 
 const id=(index:number)=>`00000000-0000-0000-0000-${String(index).padStart(12,'0')}`;
 const start=()=>({schema:'m03-owner-start/1',dataset_id:id(1),original_asset_id:id(2),metadata_asset_id:id(3),request_asset_id:id(4),
@@ -69,5 +70,52 @@ describe('bounded actual finite fragments',()=>{
     await expect(readArrayWindow(ref,0,2,reader,signal)).rejects.toThrow();
     payload[0]^=1;
     await expect(readArrayWindow({...ref,shape:[3]},0,1,reader,signal)).rejects.toThrow();
+  });
+});
+
+describe('actual durable UUID registry',()=>{
+  function completed() {return parseJob({...job(),state:'succeeded',started_at:'2001-01-01T00:00:00Z',
+    finished_at:'2001-01-01T00:00:01Z',result_sha256:'a'.repeat(64),result_bytes:123});}
+  function page() {return {schema:'m03-owner-members/1',job_id:id(6),result_sha256:'a'.repeat(64),offset:0,total:1,next_offset:null,
+    entries:[{member_id:id(8),name:'result/result.json',bytes:123,sha256:'a'.repeat(64),kind:'result'}]};}
+  it('binds exact schema and refuses malformed pagination, paths, duplicate names and extra fields',()=>{
+    expect(parseRegistry(page())).toEqual(page());
+    for(const wrong of [{...page(),next_offset:1},{...page(),offset:1},{...page(),total:2},{...page(),url:'/x'},
+      {...page(),entries:[{...page().entries[0],name:'result/../raw.csv'}]},
+      {...page(),total:2,entries:[page().entries[0],page().entries[0]]}]) expect(()=>parseRegistry(wrong)).toThrow();
+  });
+  it('resolves a real member UUID and never guesses one from a file name',async()=>{
+    const calls:string[]=[];
+    const read=registryReader(completed(),async()=>parseRegistry(page()),async(entry)=>{calls.push(entry.member_id);return new Uint8Array(123);});
+    const identity={name:'result.json',bytes:123,sha256:'a'.repeat(64)};
+    await read(identity,new AbortController().signal);
+    expect(calls).toEqual([id(8)]);
+    await expect(read({...identity,sha256:'b'.repeat(64)},new AbortController().signal)).rejects.toThrow();
+    await expect(read({...identity,name:'unknown.bin'},new AbortController().signal)).rejects.toThrow();
+  });
+  it('refuses stale cross-job/result SHA and aborted generations',async()=>{
+    for(const wrong of [{...page(),job_id:id(9)},{...page(),result_sha256:'b'.repeat(64)}]) {
+      const read=registryReader(completed(),async()=>parseRegistry(wrong),async()=>{throw new Error('must not read bytes');});
+      await expect(read({name:'result.json',bytes:123,sha256:'a'.repeat(64)},new AbortController().signal)).rejects.toThrow();
+    }
+    const abort=new AbortController();abort.abort();
+    await expect(registryReader(completed(),async()=>{throw new Error('no request');},async()=>new Uint8Array())(
+      {name:'result.json',bytes:123,sha256:'a'.repeat(64)},abort.signal)).rejects.toThrow();
+  });
+  it('walks exact sorted 512-entry pages without materializing an unbounded map',async()=>{
+    const first={...page(),total:513,next_offset:512,entries:Array.from({length:512},(_,i)=>({member_id:id(i+10),
+      name:`result/a-${String(i).padStart(8,'0')}.bin`,bytes:8,sha256:'c'.repeat(64),kind:'chunk'}))};
+    const last={...page(),offset:512,total:513};
+    const offsets:number[]=[];
+    const read=registryReader(completed(),async offset=>{offsets.push(offset);return parseRegistry(offset?last:first);},async()=>new Uint8Array(123));
+    await read({name:'result.json',bytes:123,sha256:'a'.repeat(64)},new AbortController().signal);
+    expect(offsets).toEqual([0,512]);
+    await read({name:'result.json',bytes:123,sha256:'a'.repeat(64)},new AbortController().signal);
+    expect(offsets).toEqual([0,512]);
+    const changed=registryReader(completed(),async offset=>parseRegistry(offset?{...last,total:514,
+      entries:[...last.entries,{...last.entries[0],member_id:id(999),name:'result/z.bin'}]}:first),async()=>new Uint8Array());
+    await expect(changed({name:'result.json',bytes:123,sha256:'a'.repeat(64)},new AbortController().signal)).rejects.toThrow();
+    const malformed=registryReader(completed(),async()=>({...parseRegistry(page()),offset:512} as RegistryPage),async()=>new Uint8Array());
+    await expect(malformed({name:'result.json',bytes:123,sha256:'a'.repeat(64)},new AbortController().signal)).rejects.toThrow();
   });
 });

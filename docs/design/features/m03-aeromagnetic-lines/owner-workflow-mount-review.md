@@ -164,6 +164,46 @@ must be reviewed before their mount; none is fabricated by this leaf.
 
 ## Verification and remaining verdict
 
+### Executing leaf contract, before implementation
+
+The fixed native controller additionally observes exactly `cancel.request`
+inside its already measured attempt directory. Its bytes are exactly
+`m03-owner-cancel/1\n`, written by the internal DB cancellation monitor with
+exclusive creation and fsync of `cancel.request.pending`, then atomic rename
+to `cancel.request`, never a submitted path or callback. Both names remain
+counted. This prevents a controller seeing an incomplete write. Read stability
+compares device/inode/size/mtime and each API's ctime, excluding access time
+which a legitimate read can change. A malformed,
+linked, nonregular or multiply linked marker is a custody refusal, not ignored
+cancellation. The existing 100 ms controller poll, actual TerminateJobObject,
+one-process/no-descendant containment and 10 CPU/10 wall drain reserve remain.
+The marker and partial attempt files stay counted after cancellation; queued
+cancellation requires no child. Completed publication rechecks the DB cancel
+flag and attempt identity under BEGIN IMMEDIATE, so a completion/cancel race
+cannot publish a cancelled job as success.
+
+CLI local plans dispatch only from the literal validated input/request epoch.
+Input/1 with Request/1 calls the unchanged fixed-basis DAG; Input/2 with
+Request/2 calls the fresh 16-map proof and complete 96-inner/one-final DAG.
+Mixed epochs refuse before geometry/value decoding. Original metadata/request
+bytes are retained by both paths, without canonicalizing uploaded documents
+into new originals. Replay treats candidate_fit_v2 resource clocks in the same
+explicit comparison domain as candidate_fit; every candidate identity, score,
+numerical diagnostic and geometry remains compared. A nonconverged required
+candidate retains actual failure evidence and cannot produce a partial result.
+
+Persistence uses owned additive admission, attempt, member and export rows with
+the existing ProcessingJob FK and owner/project joins. MAIN now allocated
+0007_magnetic_line_artifacts after0006_joint_artifacts; the isolated capsule and
+its custody-preserving downgrade are specified in durable-owner-lifecycle.md.
+The actual combined chain remains MAIN's review gate. The canonical admitted
+request domain is distinct from the uploaded scientific request SHA; the job
+response request_sha256 identifies the canonical admitted envelope. Finite
+physical member UUIDs resolve only stored verified receipts, never filenames
+from HTTP. Attempt inventory and failed-publication debt remain counted until
+exact reconciliation. These are implementation contracts, not a mounted or
+host-qualified acceptance assertion.
+
 The leaf gate is `tests/api/test_magnetic_line_survey_wire.py`. Its tests cover
 all required fields, strict UUID/hash grammar, unknown path/URL/callback fields,
 every pair of duplicate UUID references, auxiliary bounds/length equality,

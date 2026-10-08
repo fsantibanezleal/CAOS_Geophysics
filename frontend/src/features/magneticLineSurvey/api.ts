@@ -1,6 +1,7 @@
 /** Owner/project-bound same-origin calls; no device paths or solver callbacks. */
 import { ApiClient } from '../../api/client';
 import { object,parseStart,parseJob,parseResult,uuid,hash, type SurveyStart,type SurveyJob,type FileIdentity } from './contract';
+import { parseRegistry,registryReader } from './registry';
 
 const path = (project: string) => `/api/projects/${uuid(project)}/magnetic-line-surveys/jobs`;
 const same = (left: string,right: string) => { if (left !== right) throw new Error('Survey identity mismatch'); };
@@ -33,8 +34,17 @@ export class MagneticLineSurveyApi {
   async result(project: string,job: SurveyJob,signal?: AbortSignal) {
     this.bind(job,project);
     if (job.state !== 'succeeded' || !job.result_sha256) throw new Error('No completed execution result');
-    // Parsing is representation validation, not byte/native/field acceptance.
-    return this.transport.requestJson(`${path(project)}/${uuid(job.job_id)}/result`,parseResult,{signal});
+    if(!job.result_bytes || job.result_bytes>2097152) throw new Error('Invalid result byte receipt');
+    const bytes=await this.reader(project,job)({name:'result.json',bytes:job.result_bytes,sha256:job.result_sha256},signal??new AbortController().signal);
+    const result=parseResult(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));
+    same(result.run_id,job.job_id);
+    return result;
+  }
+  reader(project:string,job:SurveyJob) {
+    this.bind(job,project);
+    return registryReader(job,async(offset,signal)=>this.transport.requestJson(
+      `${path(project)}/${uuid(job.job_id)}/members`,parseRegistry,{signal,query:new URLSearchParams({offset:String(offset)})}),
+      (entry,signal)=>this.member(project,job,entry.member_id,entry,signal));
   }
   async export(project: string,id: string,scope: 'private'|'public',signal?: AbortSignal) {
     if (scope !== 'private' && scope !== 'public') throw new Error('Invalid export scope');

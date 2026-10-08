@@ -24,13 +24,19 @@ and resolution-v2 epochs. All109 pinned server schema descriptors are checked by
 the exact client schema-parity gate; finite, safe integer, UTC and closed-field
 checks are representation validation, not scientific or host certification.
 
-`readMember(job)` must be supplied by the actual durable owner/job/member UUID
-registry. The member adapter never guesses UUIDs from filenames or accepts URLs
+The default `api.reader(project,job)` consumes the actual paged durable registry
+schema m03-owner-members/1, binding every page to the job/result SHA, exact
+offset/total/next-offset and sorted unique names/UUIDs. One512-entry page is
+cached, not an unbounded survey-sized member map. The parent may supply the
+same reviewed reader explicitly. The member adapter never guesses UUIDs from filenames or accepts URLs
 and paths. Registry lookup must check owner/project/job/member scope and exact
 named identity. Responses use `application/octet-stream` even for finite JSON
 manifest bytes, because the shared downloadable-byte transport refuses JSON
 success responses. Each fragment is counted and SHA256-verified before decoding.
 Server validation still checks the entire finite closure before publishing it.
+Result loading also resolves the actual result.json member UUID, verifies its
+exact job SHA/byte receipt and original bytes (maximum2MiB), then parses Result/2
+and binds run_id to the job. Parsing a reserialized HTTP object is not custody.
 
 Public/private export requests use the reviewed closed scope DTO. The currently
 unresolved persisted artifact UUID/download projection must be reviewed and

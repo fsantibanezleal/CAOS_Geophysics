@@ -23,12 +23,13 @@ function bounds(values: number[]): [number,number] {
   const pad=Math.max((high-low)*.05,Math.max(Math.abs(low),Math.abs(high),1)*1e-9);
   return [low-pad,high+pad];
 }
-export function SurveyInstrument({api,projectId,sources,readMember}: {
+export function SurveyInstrument({api,projectId,sources,readMember:suppliedReader}: {
   api: MagneticLineSurveyApi; projectId: string; sources: SurveySourceChoice[];
   // An actual persisted owner/job/member UUID binding supplied by the parent,
   // not a filename-to-URL fallback or direct provider request.
-  readMember: (job: SurveyJob) => MemberReader;
+  readMember?: (job: SurveyJob) => MemberReader;
 }) {
+  const readMember=useMemo(()=>suppliedReader??((job:SurveyJob)=>api.reader(projectId,job)),[suppliedReader,api,projectId]);
   const es=useShellLang()==='es',format=useFormat(),t=(en:string,sp:string)=>es?sp:en;
   const [sourceId,setSourceId]=useState(sources[0]?.id??'');
   const source=sources.find(item=>item.id===sourceId);
