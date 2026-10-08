@@ -25,6 +25,14 @@ reader and descriptor-held external custody; never run the production API/worker
 as root. Previous nice-case receipts remain historical scientific/lifecycle proof,
 not evidence that either safety gap is closed.
 
+R-M08S-13..15 continuation: first failing closed installation/owned-reader/import
+inventory tests, then fixed root configuration/helper with descriptor-held
+external custody and nonroot source snapshots, then additive waveform-only
+async worker dispatch/publication. Requalify exact source/runtime on the separate
+private VPS with actual nonroot queue, cancellation/readback and original controls
+before any production enablement. Preserve513 guardian receipts and every MAIN
+shared/config/profile/FWI/UI seam. These gates are not passed by the design.
+
 ## Approved structured-controls order
 
 1. Persist R-M08S-09..12 and this design before structured UI code changes.

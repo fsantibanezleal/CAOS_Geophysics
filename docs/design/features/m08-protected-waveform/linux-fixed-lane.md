@@ -65,6 +65,60 @@ retain debt. Native scientific result and original resource ceilings are unchang
 Missing fixed installation authority must make production Linux unavailable,
 not select the qualification root command or an uncontained fallback.
 
+### Closed installation and retention protocol
+
+The installed root configuration is one bounded canonical JSON file under
+`/etc/fasl/geophysics-waveform-runtime.json`. It pins the source namespace and
+revision, scientific interpreter/site-packages/native admission, complete import
+inventory, application UID/GID, private database root and separate external
+custody root. The worker command is fixed sudo with isolated distro Python and
+the installed waveform supervisor plus ONE canonical job UUID. No installation
+parameter is accepted through HTTP, stdin or request JSON. A checked installation
+snapshot is kept through receipt verification, including cancellation, rather
+than discarded after constructing argv. Windows remains its separate lane.
+
+The root helper forks a reader before SQLite/WAL/original opens; that reader
+closes inherited root descriptors and irrevocably drops groups/GID/UID. It reads
+the current running job, project owner, dataset, both dependency rows and both
+asset/source relations in one bounded read transaction. All generated storage
+keys, closed request, scientific/implementation identities, versions/rights and
+original byte counts/hashes must agree. Only bounded JSON and base64 snapshots
+return over anonymous pipes. Root never follows worker-controlled SQLite paths.
+
+An exclusive root-owned plan precedes new custody directories and input copies.
+At most four outstanding plans and 80 MiB held-input debt and at most256 bounded
+64 KiB receipts are allowed. These are operational retention bounds, not changes
+to any scientific input, scratch, CPU, memory or timing envelope. Unknown names,
+links, owners, missing/changed plans and exceeded bounds refuse launches without
+deletion. Originals, requests and operational files live beneath the configured
+external custody root; `/run` is not application working storage. An operational
+lock can use manager runtime IPC without becoming a raw-copy destination.
+
+The existing descriptor-bound guardian and fixed scientific supervisor execute
+inside internally constructed custody. Caller CANCEL/EOF is checked before ACK
+and during scientific wait; only exact owned scopes are stopped. A full bounded
+installation receipt binds job/request/dataset/source versions, installation,
+import closure, stage identity, original snapshots, native receipt/release and
+extinction. Missing readback never becomes cancelled or success. The worker holds
+its ordinary stage before launch, verifies exact retained export/native/receipt
+bytes and source-bound custody, then uses existing scientific verification and
+transactional publication. Successful exact cleanup follows the commit only;
+failed/uncertain stages and root debt remain recoverable. No fourth SQL artifact
+or numerical-method change is required.
+
+### Complete interpreted runtime closure
+
+The inventory includes exact names and file/directory/link identities, owners,
+modes, sizes and hashes across every admitted stdlib, dynamic-module and selected
+scientific import root, plus the exact source namespace and pinned mapped ELF
+closure. Immutable ancestor ownership and link targets are checked, not only
+listed file bytes. Unknown additions, missing names, byte/mode/identity changes,
+escaped links and startup hooks refuse execution. Fixed isolated no-site startup
+avoids executing `.pth`, sitecustomize or usercustomize before the barrier;
+selected scientific modules are added only after native ACK. Absent startup/search
+paths remain absent. An independently measured actual import/search/mapped-image
+receipt precedes installation; regenerating a digest is not acceptance.
+
 ## Qualification boundary
 
 Previous successful native/API/browser calculations retain their original
