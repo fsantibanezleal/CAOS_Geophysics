@@ -21,13 +21,21 @@ verified generation, not an invented demonstration or upgraded failed fit.
 
 Give the four existing pinned SimPEG/Choclo primary reference records stable
 IDs and compose the shell CitationsProvider/Cite/Refs API. References remain
-chapter-local; no bottom bibliography. Preserve all nine equations and first
-eight research paragraphs verbatim. Rewrite only the lede and operational ninth
+chapter-local; no bottom bibliography. Reuse the canonical nine-lesson research,
+nine derivations (eighteen equations), worked questions and conceptual figures.
+Preserve the first eight chapters verbatim. Rewrite only the lede and operational ninth
 chapter's explanation/limit into scientific reproducibility and validity terms,
 keeping its selected-receipt equation and implementation mapping. Use actual
 supplied package roots in the browser harness so current shell typing and render
 do not silently resolve different locally installed shells. No shared root or
 M11-owned composition changes; M11 retains instrument-layout integration.
+
+The deep derivation and citation data also serve the separate pure-theory course.
+The protected result consumer depends on that canonical data ABI rather than
+replacing the theory wrapper or its shared registry. A consumer-local scientific
+scope overlay for chapter nine does not alter the canonical data or numerical
+definitions. The rendered gate requires two equations, a conceptual figure and
+a worked question in every chapter, not just a short paragraph and reference.
 
 1. Add stable source IDs and shared citation composition.
 2. Replace visible engineering scope with physical/reproducibility limitations.
