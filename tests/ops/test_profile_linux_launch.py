@@ -9,9 +9,10 @@ from app.profile_linux_exec import LaunchError, SOURCE_FILES, canonical, digest,
 
 def fixture():
     job_id, owner, project, dataset, asset, source = (str(uuid4()) for _ in range(6))
-    config = {"schema":"geophysics.profile-linux-config/v2",
+    config = {"schema":"geophysics.profile-linux-config/v3",
               "source_root":"/opt/fasl/geophysics/profile-source",
               "data_root":"/var/lib/fasl/geophysics/private",
+              "custody_root":"/srv/fasl-data/geophysics-profile-custody",
               "python":"/opt/fasl/geophysics/profile-runtime/bin/python",
               "python_sha256":"a"*64,"environment_root":"/opt/fasl/geophysics/profile-runtime",
               "environment_sha256":"b"*64,"uid":61901,"gid":61901,
@@ -368,9 +369,27 @@ def test_mount_custody_cannot_be_chosen_through_worker_directory():
     values = fixture()
     launch = construct_launch(*values)
     assert launch["host_stage"].startswith(values[0]["data_root"]+"/.job-staging/")
-    assert launch["stage"] == f'/run/fasl-geophysics-profile-jobs/{values[1]["id"]}/scratch'
-    assert launch["held"] == f'/run/fasl-geophysics-profile-jobs/{values[1]["id"]}/inputs'
+    assert launch["stage"] == f'{values[0]["custody_root"]}/{values[1]["id"]}/scratch'
+    assert launch["held"] == f'{values[0]["custody_root"]}/{values[1]["id"]}/inputs'
     assert f'BindReadOnlyPaths={launch["held"]}' in launch["properties"]
+
+
+@pytest.mark.parametrize("root",["/run/job-copies","/tmp/job-copies","/var/tmp/job-copies","/dev/shm/job-copies",
+    "/opt/fasl/geophysics/profile-source/custody","/opt/fasl/geophysics/profile-runtime/custody",
+    "/var/lib/fasl/geophysics/private/custody","/opt/fasl/geophysics/closure/custody",
+    "/var/lib/fasl/geophysics"])
+def test_application_custody_requires_nonoverlapping_external_configured_root(root):
+    values = fixture()
+    values[0]["custody_root"] = root
+    with pytest.raises(LaunchError):
+        construct_launch(*values)
+
+
+def test_missing_external_custody_does_not_fall_back_to_system_temp():
+    values = fixture()
+    values[0].pop("custody_root")
+    with pytest.raises(LaunchError):
+        construct_launch(*values)
 
 
 @pytest.mark.parametrize("split",range(1,5))

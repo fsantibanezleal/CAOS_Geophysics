@@ -18,7 +18,7 @@ SOURCE_FILES = ("app/profile_linux_exec.py", "scripts/profile_linux_supervisor.p
                 "data-pipeline/ert.py", "data-pipeline/traveltime.py",
                 "data-pipeline/profile_mesh.py", "data-pipeline/supplied_profiles.py",
                 "data-pipeline/sources.py", "data/source-ledger.json")
-CONFIG_KEYS = set("schema source_root data_root python python_sha256 environment_root environment_sha256 import_closure import_closure_sha256 systemd_library systemd_library_sha256 uid gid source_hashes".split())
+CONFIG_KEYS = set("schema source_root data_root custody_root python python_sha256 environment_root environment_sha256 import_closure import_closure_sha256 systemd_library systemd_library_sha256 uid gid source_hashes".split())
 JOB_KEYS = set("id owner_id project_id dataset_id dataset_sha256 method_id state cancel_requested request_json request_sha256 preflight".split())
 DATA_KEYS = set("id owner_id project_id raw_asset_id raw_sha256 sha256 byte_count storage_key parser_version modality".split())
 RAW_KEYS = set("id owner_id project_id source_id sha256 byte_count storage_key detected_format".split())
@@ -82,13 +82,18 @@ def path(value):
 
 def validate_configuration(config):
     fields(config, CONFIG_KEYS)
-    require(config["schema"] == "geophysics.profile-linux-config/v2", "configuration_schema")
+    require(config["schema"] == "geophysics.profile-linux-config/v3", "configuration_schema")
     source, data, python, environment = (path(config[key]) for key in ("source_root","data_root","python","environment_root"))
     require(source != data and not source.is_relative_to(data) and not data.is_relative_to(source), "configuration_overlap")
     require(python.is_relative_to(environment) and python != environment, "interpreter_boundary")
     require(environment != data and not environment.is_relative_to(data) and not data.is_relative_to(environment), "environment_boundary")
     closure = path(config["import_closure"])
     require(not closure.is_relative_to(data), "closure_boundary")
+    custody = path(config["custody_root"])
+    for boundary in (source,data,environment,closure.parent):
+        require(not custody.is_relative_to(boundary) and not boundary.is_relative_to(custody), "custody_boundary")
+    for temporary in ("/run","/tmp","/var/tmp","/dev/shm"):
+        require(not custody.is_relative_to(PurePosixPath(temporary)), "custody_system_temp")
     library = path(config["systemd_library"])
     require(str(library).startswith("/usr/lib/") and library.name.startswith("libsystemd.so."), "manager_library_boundary")
     for key in ("uid","gid"):
@@ -145,7 +150,7 @@ def construct_launch(config, job, dataset, raw, origin):
         integer(limits["estimated_memory_bytes"],1,2*1024**3)
         integer(limits["estimated_scratch_bytes"],1,64*1024**2)
         host_stage = str(data/".job-staging"/identifier)
-        custody = PurePosixPath("/run/fasl-geophysics-profile-jobs")/identifier
+        custody = path(config["custody_root"])/identifier
         stage = str(custody/"scratch")
         held = custody/"inputs"
         # The reviewed producer imports its sibling CLI module. -I would remove
@@ -185,3 +190,11 @@ def construct_launch(config, job, dataset, raw, origin):
         if isinstance(error,LaunchError):
             raise
         raise LaunchError("invalid_launch_relation") from None
+
+
+def installation_binding(config, job, dataset, raw, origin):
+    """Independent prelaunch snapshot; its constructor is not a host proof."""
+    launch = construct_launch(config,job,dataset,raw,origin)
+    return dict(configuration_sha256=digest(canonical(config)),python_sha256=config["python_sha256"],
+                environment_sha256=config["environment_sha256"],invocation_sha256=digest(canonical(launch)),
+                source_hashes=json.loads(canonical(config["source_hashes"])))

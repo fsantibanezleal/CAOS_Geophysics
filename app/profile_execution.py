@@ -10,6 +10,7 @@ from app.processing_contract import canonical_bytes, sha256
 
 KEYS = set("schema job_id request_sha256 dataset_sha256 raw_sha256 environment_sha256 unit terminal stop_reason failure launch_attempted extinction guardian_status guardian_scope invocation_sha256 source_hashes configuration_sha256 python_sha256 mounted_input_identities retained_stage_identity wall_seconds resources retained originals_reverified held_inputs_state cpu_accounting_admitted host_admission".split())
 RESOURCE_KEYS = set("sampled_root_rss_peak_bytes rss_samples kernel_memcg_peak_bytes sampled_unit_rss_peak_bytes unit_rss_samples memcg_reads memory_events cgroup_events exact_group_removed hard_writable_scratch_bytes held_input_bytes".split())
+INSTALLATION_KEYS = set("configuration_sha256 python_sha256 environment_sha256 invocation_sha256 source_hashes".split())
 
 
 def require(value):
@@ -44,9 +45,21 @@ def guardian_binding(receipt,job):
         require(guardian["wall_limit_seconds"] == job.preflight["wall_limit_seconds"]+30)
 
 
-def validate_terminal(receipt,job,stage_identity):
+def validate_installation(receipt,expected):
+    closed(expected,INSTALLATION_KEYS)
+    for key in INSTALLATION_KEYS-{"source_hashes"}:
+        digest(expected[key])
+        require(receipt[key] == expected[key])
+    closed(expected["source_hashes"],set(SOURCE_FILES))
+    for value in expected["source_hashes"].values():
+        digest(value)
+    require(receipt["source_hashes"] == expected["source_hashes"])
+
+
+def validate_terminal(receipt,job,stage_identity,installation):
     """Extinction for a failed/cancelled job is not a successful science claim."""
     closed(receipt,KEYS)
+    validate_installation(receipt,installation)
     require(len(canonical_bytes(receipt)) <= 65536 and receipt["schema"] == "geophysics.profile-linux-execution/v1" and
             receipt["job_id"] == job.id and receipt["request_sha256"] == job.request_sha256 and
             receipt["dataset_sha256"] == job.dataset_sha256 and receipt["raw_sha256"] == job.request_json["raw_sha256"] and
@@ -72,9 +85,11 @@ def validate_terminal(receipt,job,stage_identity):
 def validate_execution(payload,job,stage_identity=None):
     """Check stored evidence on read/export; absent means no Linux claim."""
     if "linux_execution" not in payload:
+        require("linux_installation" not in payload)
         return
     receipt = payload["linux_execution"]
     closed(receipt,KEYS)
+    validate_installation(receipt,payload.get("linux_installation"))
     require(len(canonical_bytes(receipt)) <= 65536 and
             receipt["schema"] == "geophysics.profile-linux-execution/v1")
     for key,expected in (("job_id",job.id),("request_sha256",job.request_sha256),
@@ -140,15 +155,16 @@ def validate_execution(payload,job,stage_identity=None):
         closed(record,{"bytes","sha256"})
         integer(record["bytes"],1 if name == "result.json" else 0,32*1024**2)
         digest(record["sha256"])
-    producer = {key:value for key,value in payload.items() if key != "linux_execution"}
+    producer = {key:value for key,value in payload.items() if key not in ("linux_execution","linux_installation")}
     original = canonical_bytes(producer)
     require(retained["result.json"] == {"bytes":len(original),"sha256":sha256(original)})
 
 
-def attach_execution(producer_bytes,receipt,job,stage_identity):
+def attach_execution(producer_bytes,receipt,job,stage_identity,installation):
     require(type(producer_bytes) is bytes and 0 < len(producer_bytes) <= 8*1024**2)
     payload = json.loads(producer_bytes)
-    require(type(payload) is dict and "linux_execution" not in payload and canonical_bytes(payload) == producer_bytes)
+    require(type(payload) is dict and not {"linux_execution","linux_installation"}.intersection(payload) and canonical_bytes(payload) == producer_bytes)
     payload["linux_execution"] = receipt
+    payload["linux_installation"] = json.loads(canonical_bytes(installation))
     validate_execution(payload,job,stage_identity)
     return payload

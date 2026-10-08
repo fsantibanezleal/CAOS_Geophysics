@@ -219,3 +219,23 @@ Primary execution references: [systemd's execution settings](https://github.com/
 and [control-group API](https://systemd.io/CONTROL_GROUP_INTERFACE/).
 Verify the installed systemd255 interface; current upstream documentation alone
 does not prove the installed host supports every setting.
+
+### Installation epoch and external custody
+
+Configuration v3 requires an operator-provided `custody_root`, outside source,
+runtime, private data and import closure, and outside `/run`, `/tmp`, `/var/tmp`
+and `/dev/shm`. No device storage path is hardcoded in the product. The root
+launcher opens and validates its root-owned, non-writable ancestors and group
+traversal policy; only the singleton IPC lock remains in `/run`.
+
+The ordinary worker retains its checked configuration and independently computes
+the closed launch envelope from all four owned relations before subprocess
+creation. Configuration/interpreter/environment/invocation/full-source digests
+form a closed independent binding. A root receipt must match it before terminal
+extinction or cancellation classification, not just before successful results.
+Success persists it as `linux_installation` next to `linux_execution`. Reads and
+exports compare both records, the admitted numerical sources and immutable job
+result digest; old results are not compared to a changed current installation.
+Only these two exact operational members are excluded when reconstructing the
+unchanged producer bytes. Neither member is present for the separate Windows
+lane. Missing pairs, extra fields or an installation epoch mismatch refuse.

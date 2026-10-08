@@ -23,7 +23,8 @@ def installed_fixture(monkeypatch):
     runtime = NativePath("/opt/fasl-admission/runtime")
     helper = source/"scripts/profile_linux_supervisor.py"
     body = b"fixed installed source"
-    configuration = dict(schema="geophysics.profile-linux-config/v2",source_root=str(source),
+    configuration = dict(schema="geophysics.profile-linux-config/v3",source_root=str(source),
+        custody_root="/srv/fasl-data/geophysics-profile-custody",
         data_root=str(data),python=str(runtime/"bin/python"),python_sha256="a"*64,
         environment_root=str(runtime),environment_sha256="b"*64,
         import_closure="/opt/fasl-admission/closure/inventory.json",import_closure_sha256="c"*64,
@@ -48,6 +49,14 @@ def test_command_contains_only_fixed_installed_helper_and_canonical_job(monkeypa
     assert adapter.installed_command(settings,job) == ["/usr/bin/sudo","-n","/usr/bin/python3","-I","-B",
         str(settings.profile_linux_supervisor),job.id]
     assert len(opened) == 2 and closed == [1,2]
+
+
+def test_checked_configuration_is_retained_before_creating_child(monkeypatch):
+    settings,job,configuration,_,_,_ = installed_fixture(monkeypatch)
+    command,snapshot = adapter.installed_command(settings,job,with_configuration=True)
+    assert command[-1] == job.id and snapshot == configuration
+    configuration["environment_sha256"] = "9"*64
+    assert snapshot["environment_sha256"] != configuration["environment_sha256"]
 
 
 @pytest.mark.parametrize("change",[

@@ -820,7 +820,12 @@ def execute(configuration,module,identifier):
     uid,gid = configuration["uid"],configuration["gid"]
     stage_fd = tree_fd(Path(launch["host_stage"]))
     require(os.fstat(stage_fd).st_uid == uid,"stage_owner")
-    custody_root = tree_fd(Path("/run/fasl-geophysics-profile-jobs"))
+    custody_path = Path(configuration["custody_root"])
+    for ancestor in (custody_path,*custody_path.parents):
+        ancestor_info = ancestor.lstat()
+        require(stat.S_ISDIR(ancestor_info.st_mode) and ancestor_info.st_uid == 0 and
+                not ancestor_info.st_mode & 0o022,"custody_ancestor")
+    custody_root = tree_fd(custody_path)
     root_info = os.fstat(custody_root)
     require(root_info.st_uid == 0 and root_info.st_gid == gid and
             not root_info.st_mode & 0o022 and root_info.st_mode & 0o050 == 0o050,"custody_parent")

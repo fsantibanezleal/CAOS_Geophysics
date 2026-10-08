@@ -38,12 +38,14 @@ def execution_fixture():
         retained={"result.json":dict(bytes=len(canonical_bytes(producer)),sha256=sha256(canonical_bytes(producer))),
                   "stderr.txt":dict(bytes=0,sha256=sha256(b""))},originals_reverified=True,
         held_inputs_state="declared_copies_removed",cpu_accounting_admitted=False,host_admission=False)
+    job.installation = {key:deepcopy(receipt[key]) for key in (
+        "configuration_sha256","python_sha256","environment_sha256","invocation_sha256","source_hashes")}
     return producer,receipt,job,stage
 
 
 def test_execution_is_durable_outer_metadata_without_changing_scientific_producer():
     producer,receipt,job,stage = execution_fixture()
-    encoded = attach_execution(canonical_bytes(producer),receipt,job,stage)
+    encoded = attach_execution(canonical_bytes(producer),receipt,job,stage,job.installation)
     assert encoded["profile"] == producer["profile"] and encoded["linux_execution"] == receipt
     validate_execution(encoded,job)
     assert "linux_execution" not in producer
@@ -70,21 +72,21 @@ def test_altered_or_unproved_execution_cannot_be_published(change):
     producer,receipt,job,stage = execution_fixture()
     change(receipt)
     with pytest.raises(ValueError):
-        attach_execution(canonical_bytes(producer),receipt,job,stage)
+        attach_execution(canonical_bytes(producer),receipt,job,stage,job.installation)
 
 
 def test_stage_replacement_and_changed_producer_bytes_refuse_publication():
     producer,receipt,job,stage = execution_fixture()
     with pytest.raises(ValueError):
-        attach_execution(canonical_bytes(producer),receipt,job,dict(device=1,inode=5))
+        attach_execution(canonical_bytes(producer),receipt,job,dict(device=1,inode=5),job.installation)
     producer["profile"] = {"changed":True}
     with pytest.raises(ValueError):
-        attach_execution(canonical_bytes(producer),receipt,job,stage)
+        attach_execution(canonical_bytes(producer),receipt,job,stage,job.installation)
 
 
 def test_stored_receipt_reconstructs_exact_producer_digest_on_every_read():
     producer,receipt,job,stage = execution_fixture()
-    encoded = attach_execution(canonical_bytes(producer),receipt,job,stage)
+    encoded = attach_execution(canonical_bytes(producer),receipt,job,stage,job.installation)
     encoded["profile"] = {"changed_after_publication":True}
     with pytest.raises(ValueError):
         validate_execution(encoded,job)
@@ -99,9 +101,9 @@ def test_cancelled_execution_proves_extinction_without_claiming_scientific_succe
     producer,receipt,job,stage = execution_fixture()
     receipt.update(stop_reason="owner_cancel",originals_reverified=False,held_inputs_state="retained_unverified")
     receipt["terminal"].update(Result="signal",ExecMainStatus="9")
-    validate_terminal(receipt,job,stage)
+    validate_terminal(receipt,job,stage,job.installation)
     with pytest.raises(ValueError):
-        attach_execution(canonical_bytes(producer),receipt,job,stage)
+        attach_execution(canonical_bytes(producer),receipt,job,stage,job.installation)
 
 
 @pytest.mark.parametrize("change",[
@@ -118,7 +120,7 @@ def test_cancel_request_is_not_extinction_proof(change):
     _,receipt,job,stage = execution_fixture()
     change(receipt)
     with pytest.raises(ValueError):
-        validate_terminal(receipt,job,stage)
+        validate_terminal(receipt,job,stage,job.installation)
 
 
 def test_linux_environment_cannot_enable_legacy_soft_supervision(monkeypatch):

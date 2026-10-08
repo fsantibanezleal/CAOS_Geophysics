@@ -13,10 +13,10 @@ from sqlalchemy import select, text
 
 from app.bundle import build_bundle
 from app.errors import ApiError
-from app.models import ObservationDataset, ProcessingJob, RawAsset, utcnow
+from app.models import ObservationDataset, ProcessingJob, RawAsset, SourceRecord, utcnow
 from app.processing_contract import canonical_bytes, checked_derived_path, dataset_key, result_key, sha256, validate_dataset_identity, validate_result_identity, verified_json
 from app.profile_execution import attach_execution, validate_terminal
-from app.profile_linux_exec import validate_configuration, uuid
+from app.profile_linux_exec import JOB_KEYS, DATA_KEYS, RAW_KEYS, ORIGIN_KEYS, installation_binding, validate_configuration, uuid
 from app.projects import _verified_file
 
 CONFIG = Path("/etc/fasl/geophysics-profile-runtime.json")
@@ -61,7 +61,7 @@ def regular_at(fd,name,cap):
         os.close(member)
 
 
-def installed_command(settings,job):
+def installed_command(settings,job,*,with_configuration=False):
     """Only root installation configuration chooses this privileged executable."""
     require(os.name == "posix" and settings.profile_linux_supervisor is not None)
     uuid(job.id)
@@ -85,7 +85,13 @@ def installed_command(settings,job):
         require(sha256(regular_at(source,expected.name,2*1024**2)) == config["source_hashes"]["scripts/profile_linux_supervisor.py"])
     finally:
         os.close(source)
-    return ["/usr/bin/sudo","-n","/usr/bin/python3","-I","-B",str(expected),job.id]
+    command = ["/usr/bin/sudo","-n","/usr/bin/python3","-I","-B",str(expected),job.id]
+    return (command,config) if with_configuration else command
+
+
+def relation(record,keys):
+    """Exact SQL relation snapshot; UUID owners use the same canonical SQL form."""
+    return {key:str(getattr(record,key)) if key == "owner_id" else getattr(record,key) for key in keys}
 
 
 async def bounded_stream(stream,cap):
@@ -123,13 +129,17 @@ async def execute(settings,sessions,job,poll_interval):
     extinction_proved = False
     try:
         require(settings.profile_online_enabled)
-        command = installed_command(settings,job)
+        command,configuration = installed_command(settings,job,with_configuration=True)
         async with sessions() as session:
             dataset = (await session.execute(select(ObservationDataset).where(
                 ObservationDataset.id == job.dataset_id,ObservationDataset.owner_id == job.owner_id,
                 ObservationDataset.project_id == job.project_id))).scalar_one()
             asset = (await session.execute(select(RawAsset).where(RawAsset.id == dataset.raw_asset_id,
                 RawAsset.owner_id == job.owner_id,RawAsset.project_id == job.project_id))).scalar_one()
+            origin = (await session.execute(select(SourceRecord).where(SourceRecord.id == asset.source_id,
+                SourceRecord.owner_id == job.owner_id,SourceRecord.project_id == job.project_id))).scalar_one()
+        installation = installation_binding(configuration,relation(job,JOB_KEYS),relation(dataset,DATA_KEYS),
+            relation(asset,RAW_KEYS),relation(origin,ORIGIN_KEYS))
         key = dataset_key(str(job.owner_id),job.project_id,job.dataset_id)
         require(dataset.storage_key == key and dataset.sha256 == job.dataset_sha256 and
                 asset.sha256 == job.request_json["raw_sha256"] and asset.id == job.request_json["raw_asset_id"] and
@@ -168,7 +178,7 @@ async def execute(settings,sessions,job,poll_interval):
         require(stdout == canonical_bytes(receipt)+b"\n" and identity(stage.lstat()) == held)
         stored = regular_at(stage_fd,"linux-execution.json",65536)
         require(stored == canonical_bytes(receipt))
-        validate_terminal(receipt,job,dict(device=held[0],inode=held[1]))
+        validate_terminal(receipt,job,dict(device=held[0],inode=held[1]),installation)
         extinction_proved = True
         if reason:
             raise ApiError(409,reason,"Profile stopped before eligible result publication")
@@ -177,7 +187,7 @@ async def execute(settings,sessions,job,poll_interval):
         producer = regular_at(stage_fd,"result.json",8*1024**2)
         diagnostics = regular_at(stage_fd,"linux-stderr.txt",32*1024**2)
         require(receipt["retained"]["stderr.txt"] == {"bytes":len(diagnostics),"sha256":sha256(diagnostics)})
-        result = attach_execution(producer,receipt,job,dict(device=held[0],inode=held[1]))
+        result = attach_execution(producer,receipt,job,dict(device=held[0],inode=held[1]),installation)
         validate_result_identity(result,job)
         encoded = canonical_bytes(result)
         build_bundle(payload,result,dataset.sha256,sha256(encoded))
