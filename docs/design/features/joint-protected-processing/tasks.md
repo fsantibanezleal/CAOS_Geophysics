@@ -14,3 +14,12 @@
    matrix; retain all historical failures, original tolerances and negative cases.
 7. Record actual commits/source pins/tests and remaining numerical/host/platform
    gates. No activation/deployment by this leaf, no SMTP/backup/Pages dependency.
+
+Executed native-member custody controls:19PASS0SKIP through the real canonical
+authentication/security/session assembly. Complete original role pair, independent
+file/data hashes, native/header/shape/rights/archive/cap negatives, source/version
+rows, owner-only download, byte-exact raw project export, quota, startup audit,
+deletion, persistent member rate, CSRF/origin and both uncertain commit outcomes.
+All fixture storage is external; repository/relative roots reject before creation.
+These source/transport gates do not complete dataset/worker/result/sidebar or
+grant scientific accuracy/host acceptance. Canonical MAIN files remain untouched.
