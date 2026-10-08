@@ -45,6 +45,21 @@ def test_native_uint64_clocks_project_only_safe_measured_resource_fields():
     assert result["runtime_authorized"] is False and result["host_admitted"] is False
 
 
+def test_actual_kernel_cpu_stat_core_scheduling_field_preserves_lifetime():
+    from waveform_m08_linux import parse_cpu
+    raw = b'usage_usec 13000\nuser_usec 5000\nsystem_usec 8000\ncore_sched.force_idle_usec 91\nnr_periods 0\n'
+    assert parse_cpu(raw) == (13000000,5000000,8000000)
+
+
+@pytest.mark.parametrize('extra',[b'core_sched.other_usec 0\n',b'other.dotted 0\n',
+    b'core_sched.force_idle_usec -1\n',b'core_sched.force_idle_usec 1\ncore_sched.force_idle_usec 2\n'])
+def test_cpu_stat_exact_new_field_does_not_admit_arbitrary_or_duplicate_fields(extra):
+    from waveform_m08_linux import parse_cpu
+    from waveform_m08_windows import ControlError
+    with pytest.raises(ControlError):
+        parse_cpu(b'usage_usec 13\nuser_usec 5\nsystem_usec 8\n'+extra)
+
+
 @pytest.mark.parametrize("key,value", [("cpu_ns", S), ("cpu_ns", B + 1), ("user_cpu_ns", 13001),
     ("system_cpu_ns", 13001), ("budget_ns", float(B)), ("stop_ns", float(S)), ("active_processes", False),
     ("active_processes", 1), ("peak_charge_bytes", MEMORY + 1), ("max_sample_gap_ns", GAP + 1),
