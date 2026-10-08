@@ -12,6 +12,7 @@ from app.physical_contract import (
 
 
 SCHEMA = 'geophysics.physical-custody/v2'
+JOINT_SCHEMA = 'geophysics.physical-custody/v3'
 
 
 def validate_current_custody(value):
@@ -19,7 +20,7 @@ def validate_current_custody(value):
     if value.get('schema') == 'geophysics.physical-custody/v1':
         return validate_custody(value)
     fields(value, CUSTODY_HEADER + ' initial_files removed_ordinals')
-    require(value['schema'] == SCHEMA and value['origin_kind'] == 'project_deletion',
+    require(value['schema'] in (SCHEMA,JOINT_SCHEMA) and value['origin_kind'] == 'project_deletion',
             'current_custody_dispatch')
     header = {key:value[key] for key in CUSTODY_HEADER.split()}
     # Reuse the closed unchanged original header predicates, not a fallback for
@@ -28,12 +29,26 @@ def validate_current_custody(value):
     custody_header(inherited)
     entries = value['initial_files']
     require(type(entries) is list and len(entries) <= 4096, 'current_custody_count')
+    require(value['schema'] != JOINT_SCHEMA or any(type(item) is dict
+            and type(item.get('leaf')) is str and item['leaf'].startswith('joint/') for item in entries),
+            'current_custody_joint_dispatch_required')
     ordinals, slots = [], set()
     from app.waveform_contract import MEMBER, SCRATCH
     for item in entries:
         fields(item, 'ordinal role location artifact_id leaf max_bytes actual_bytes actual_sha256')
         text(item['leaf'], 180)
-        if item['leaf'].startswith('waveforms/'):
+        if value['schema']==JOINT_SCHEMA and item['leaf'].startswith('joint/'):
+            from app.physical_joint_custody import NAME
+            from app.physical_joint_native_contract import MAX_BYTES
+            pieces = item['leaf'].split('/',2)
+            require(len(pieces)==3 and pieces[0]=='joint' and uuid(pieces[1])==uuid(item['artifact_id'])
+                    and NAME.fullmatch(pieces[2]) is not None
+                    and (item['role'],item['location'])==('result_copy','deleting_derived'),
+                    'current_custody_joint_member')
+            integer(item['ordinal'],1,4096); integer(item['max_bytes'],1,MAX_BYTES)
+            integer(item['actual_bytes'],1,item['max_bytes']); sha(item['actual_sha256'])
+            require(len(canonical(item))<=1024,'current_custody_file_cap')
+        elif item['leaf'].startswith('waveforms/'):
             pieces = item['leaf'].split('/')
             require(len(pieces) == 3 and pieces[0] == 'waveforms'
                     and uuid(pieces[1]) == uuid(item['artifact_id'])

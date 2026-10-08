@@ -66,3 +66,45 @@ def test_ordinary_v1_and_ordinary_slots_in_v2_preserve_original_rules():
     old=dict(value,schema='geophysics.physical-custody/v1')
     assert parse_current_custody([canonical(old)]) == parse_record([canonical(old)])
     assert validate_current_custody(value)['retained_bytes']==20
+
+
+def joint_inventory():
+    value = inventory()
+    job = str(uuid4())
+    value['schema']='geophysics.physical-custody/v3'
+    value['initial_files'].append(dict(ordinal=2,role='result_copy',location='deleting_derived',
+        artifact_id=job,leaf=f'joint/{job}/calibration/field.npy',max_bytes=256*M,
+        actual_bytes=17,actual_sha256='b'*64))
+    value['capacity_bytes']=37
+    return value
+
+
+def test_joint_schema_requires_a_real_closed_member_without_promoting_old_slots():
+    value = joint_inventory()
+    measured = validate_current_custody(value)
+    assert measured['retained_bytes']==37
+    assert parse_current_custody([canonical(value)])==value
+    assert validate_current_custody(dict(value,removed_ordinals=[2]))['retained_bytes']==20
+    for old in ('geophysics.physical-custody/v1','geophysics.physical-custody/v2'):
+        with pytest.raises(ValueError): parse_current_custody([canonical(dict(value,schema=old))])
+    without_joint=dict(value,initial_files=value['initial_files'][:1],capacity_bytes=20)
+    with pytest.raises(ValueError,match='current_custody_joint_dispatch_required'):
+        parse_current_custody([canonical(without_joint)])
+
+
+@pytest.mark.parametrize('damage',['empty','uuid','method','name','path','role','location','zero','cap','hash','extra'])
+def test_registered_joint_custody_does_not_accept_unknown_or_unbound_members(damage):
+    value = joint_inventory()
+    member=value['initial_files'][1]
+    if damage=='empty': value.update(initial_files=[],capacity_bytes=1)
+    elif damage=='uuid': member['artifact_id']=str(uuid4())
+    elif damage=='method': member['leaf']=member['leaf'].replace('joint/','m03/',1)
+    elif damage=='name': member['leaf']=member['leaf'].replace('field.npy','field.zip')
+    elif damage=='path': member['leaf']=member['leaf'].replace('calibration/','calibration/../')
+    elif damage=='role': member['role']='cache'
+    elif damage=='location': member['location']='stage'
+    elif damage=='zero': member['actual_bytes']=0;value['capacity_bytes']=20
+    elif damage=='cap': member['max_bytes']=256*M+1
+    elif damage=='hash': member['actual_sha256']='bad'
+    else: member['source_id']=str(uuid4())
+    with pytest.raises(ValueError): parse_current_custody([canonical(value)])
