@@ -2,6 +2,26 @@
 
 Status: proposed; no new route, worker method or UI is activated by this document.
 
+Prospective owned implementation is authorized by the full M02 continuation;
+source/host/online mounting remains separately reviewed. Corrected cpu2 uses
+the same inspection wire, explicit fit runtime_epoch/policy and auxiliary/native
+phase labels. A safeguarded anchor has an auxiliary merit observation, NOT a
+fixed-inner physical objective row; its phi/KKT/LS/CG fixed-stage fields are null.
+Actual initialization/native frames carry their ORIGINAL trace metrics.
+Frame metrics and terminal metrics are separate, each with explicit stage.
+Stage book retains zero-step scheduled observations, epsilon, weight/operator
+identities, actual inner reason and canonical audit availability. Actual
+auxiliary CG scalar count/residual/timing rows are separate from native counts.
+No new score/objective/tolerance or field/native claim is introduced by JSON.
+
+Implementation order starts with whole native replay and isolated owned JSON
+producer. Legacy L2/cpu1 and corrected cpu2 readers remain distinct. Unstarted
+fits have zero actual states, null frame/density/metrics/predictions. All eight
+candidate/24fold verdicts remain visible; failed final refit is never substituted.
+The UI consumes published shared-shell0.8.1 (verified available), not local
+copies of base components. Owner/source/host mounting is still closed until
+its dedicated leaf/auth/worker/rendered gates pass; no MAIN edits or activation.
+
 ## Boundary
 
 The admitted native workflow is authoritative. The display projector consumes a
