@@ -118,6 +118,16 @@ an unknown method does not inherit the flag-QC fallback.
 
 ## Native filesystem and cleanup boundary
 
+Saved correction producer verification uses the exact 30-key parent snapshot,
+all four original input/child/request/result byte bodies, and the independently
+registered producing module manifest. It binds the complete 6-key scientific
+request, 4-key adapter output and unchanged 13-key adapter receipt, SQL job and
+production receipts, false acceptance declarations, immutable family/source,
+submitted versus normalized config and both digest dialects. Numerical replay,
+uncertainty reconstruction and source file access are forbidden in this parent.
+Each earlier edge requires its own complete audit; a nested snapshot alone is
+not a verified ancestry or a new runtime/host approval.
+
 `physical_posix` retains no-follow directory descriptors and ancestry identity,
 rejects links/device changes/root replacement, reads exact ordinary-file
 identities and hashes, and installs independent exclusive copies. Installation
