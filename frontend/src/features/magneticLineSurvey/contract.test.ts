@@ -1,9 +1,40 @@
 import { describe,it,expect } from 'vitest';
+import {profileOrdinal,sameDisplayWindow,type DisplayWindowBinding} from './display';
 import { parseStart,parseJob,parseRepresentation,type ArrayRef,type FileIdentity } from './contract';
 import { readArrayWindow,readCrossoverWindow } from './members';
 import { parseRegistry,registryReader,type RegistryPage } from './registry';
 
 const id=(index:number)=>`00000000-0000-0000-0000-${String(index).padStart(12,'0')}`;
+describe('display-only source-order selection',()=>{
+  it('maps actual SVG coordinates independently of CSS letterboxing',()=>{
+    expect(profileOrdinal(55,363)).toBe(0);
+    expect(profileOrdinal(615,363)).toBe(362);
+    expect(profileOrdinal(335,363)).toBe(181);
+    expect(profileOrdinal(-100,363)).toBe(0);
+    expect(profileOrdinal(999,363)).toBe(362);
+    expect(profileOrdinal(335,1)).toBe(0);
+  });
+  it('does not turn invalid display geometry into a fabricated ordinal',()=>{
+    for(const x of [NaN,Infinity,-Infinity])expect(profileOrdinal(x,363)).toBeNull();
+    for(const rows of [0,4097,1.5,NaN,Infinity])expect(profileOrdinal(55,rows)).toBeNull();
+  });
+});
+describe('asynchronous display-window custody',()=>{
+  const binding:DisplayWindowBinding={job_id:id(6),result_sha256:'a'.repeat(64),view:'lines',selection:2,first:4096};
+  it('matches the exact job, bytes, scientific view, channel/plane and window',()=>{
+    expect(sameDisplayWindow(binding,{...binding})).toBe(true);
+    for(const changed of [{job_id:id(7)},{result_sha256:'b'.repeat(64)},
+      {view:'validation' as const},{view:'grid' as const},{selection:1},{first:0}])
+      expect(sameDisplayWindow(binding,{...binding,...changed})).toBe(false);
+  });
+  it('does not reuse equal-hash evidence across jobs or equal-ordinal evidence across views',()=>{
+    for(const view of ['lines','validation','grid'] as const){
+      const saved={...binding,view,selection:0,first:0};
+      expect(sameDisplayWindow(saved,{...saved,job_id:id(8)})).toBe(false);
+      expect(sameDisplayWindow(saved,{...saved,view:view==='grid'?'lines':'grid'})).toBe(false);
+    }
+  });
+});
 const start=()=>({schema:'m03-owner-start/1',dataset_id:id(1),original_asset_id:id(2),metadata_asset_id:id(3),request_asset_id:id(4),
   auxiliary_asset_ids:[id(5)],dataset_sha256:'a'.repeat(64),original_sha256:'b'.repeat(64),metadata_sha256:'c'.repeat(64),request_sha256:'d'.repeat(64),auxiliary_sha256:['e'.repeat(64)]});
 const job=()=>({schema:'m03-owner-job/1',job_id:id(6),project_id:id(7),dataset_id:id(1),method:'magnetic_line_survey_v1',state:'queued',cancel_requested:false,

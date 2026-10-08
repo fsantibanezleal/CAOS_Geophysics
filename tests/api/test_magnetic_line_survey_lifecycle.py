@@ -89,6 +89,25 @@ def test_actual_retained_native_receipt_required_not_boolean():
             validate_drain(receipt)
 
 
+def test_corrupt_admission_and_native_hashes_are_closed_recovery_errors():
+    from tests.api.test_magnetic_line_survey_storage import counter_fixture
+    job,admission=example_job()
+    for mutation in ({'authority_sha256':'NOT-A-HASH'}, {'start_json':{}}, {'start_json':None}):
+        wrong=deepcopy(admission)
+        for key,value in mutation.items():
+            setattr(wrong,key,value)
+        with pytest.raises(ApiError) as error:
+            check_admission(job,wrong)
+        assert error.value.code=='survey_admission_invalid'
+    for mutation in ({'actual_executable_sha256':False}, {'source_sha256':{}},
+                     {'source_sha256':{'source.py':'NOT-A-HASH'}}):
+        receipt=counter_fixture()
+        receipt.update(mutation)
+        with pytest.raises(ApiError) as error:
+            validate_drain(receipt)
+        assert error.value.code=='survey_drain_unverified'
+
+
 def test_real_sql_queued_cancel_and_foreign_project_method_refusal(registered):  # noqa: F811
     from app.magnetic_line_survey_lifecycle import cancel_owned, owned_job
     from app.models import User
@@ -136,6 +155,39 @@ def test_exact_external_inventory_detects_bytes_and_aliases(tmp_path):
     os.link(root/'result'/'chunk.bin',root/'alias.bin')
     with pytest.raises(ApiError):
         collect_inventory(tmp_path,root)
+
+
+def test_inventory_requires_actual_accessible_root_and_rejects_empty_alias(tmp_path):
+    import os
+    from app.magnetic_line_survey_lifecycle import collect_inventory
+    with pytest.raises(ApiError) as missing:
+        collect_inventory(tmp_path,tmp_path/'missing')
+    assert missing.value.code=='survey_storage_invalid'
+    root=tmp_path/'allocated'
+    root.mkdir()
+    (root/'empty.log').write_bytes(b'')
+    assert collect_inventory(tmp_path,root)==[dict(name='empty.log',bytes=0,sha256=sha256(b''))]
+    os.link(root/'empty.log',root/'empty-alias.log')
+    with pytest.raises(ApiError) as aliased:
+        collect_inventory(tmp_path,root)
+    assert aliased.value.code=='survey_inventory_mismatch'
+
+
+def test_publication_document_reads_only_exact_inventory_snapshot(tmp_path):
+    from app.magnetic_line_survey_lifecycle import _document,collect_inventory
+    root=tmp_path/'attempt'
+    root.mkdir()
+    path=root/'ready.json'
+    path.write_bytes(b'{"status":"kept"}')
+    inventory=collect_inventory(tmp_path,root)
+    assert _document(root,'ready.json',inventory)=={'status':'kept'}
+    path.write_bytes(b'{"status":"fake"}')
+    assert path.stat().st_size==inventory[0]['bytes']
+    with pytest.raises(ApiError) as changed:
+        _document(root,'ready.json',inventory)
+    assert changed.value.code=='survey_result_invalid'
+    with pytest.raises(ApiError):
+        _document(root,'ready.json',[])
 
 
 def test_long_device_custody_preserves_relative_identity_and_byte_checks(tmp_path):

@@ -66,6 +66,15 @@ def test_every_attempt_debt_unknown_drain_and_no_generic_result_double_count(tmp
             session.add(old)
             await session.commit()
             assert await account_m03_custody_usage(session,job.owner_id)==4000
+            for verdict in ('cancelled','resource_refused'):
+                wrong=deepcopy(attempt.lifetime)
+                wrong.update(verdict=verdict,exit_code=1,stop_cpu_s=0,stop_wall_s=0)
+                attempt.lifetime=wrong
+                await session.commit()
+                with pytest.raises(ApiError) as error:
+                    await account_m03_custody_usage(session,job.owner_id)
+                assert error.value.code=='survey_recovery_required'
+            attempt.lifetime=counter_fixture()
             wrong=deepcopy(attempt.lifetime);wrong['active_processes']=1
             attempt.lifetime=wrong
             await session.commit()

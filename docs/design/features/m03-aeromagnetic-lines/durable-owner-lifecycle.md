@@ -92,6 +92,24 @@ DB/file inconsistencies refuse; no broad directory allowlist is introduced.
 Cancel and publication use the same attempt fence; stale workers cannot publish.
 Commit exceptions preserve bytes and reserved debt for exact recovery.
 
+The readiness fence binds the exact bounded inventory-snapshotted Result and
+ready document, exact physical-fit document, epoch, completed fit count, original
+row count, original CSV identity and the existing native readiness schema.
+Physical-fit original/rows/fit/seal/evaluation identities must agree; resolution
+readiness hashes that full physical-fit document, not the Result.fit subobject.
+Fixed-basis readiness must
+preserve the Result's scientific verdict, including FAIL. Resolution readiness
+must retain its existing unresolved field/host and opened diagnostic markers;
+none establishes a completed97-fit result until the native prerequisite passes.
+Unknown readiness keys, missing semantic subobjects and malformed stored
+admission/native hashes return closed recovery errors, not an uncaught parse
+exception. This fence does not replace native semantic/DAG/model verification.
+Accounting refuses a published receipt whose actual drain is cancelled or
+resource-refused. Inventory measurement requires an actual accessible attempt
+root, refuses inaccessible subtrees and over-envelope files before hashing,
+and applies the same identity/size/mtime/link and stable-read checks to empty
+logs as to nonempty members. Missing storage is not a permissive empty inventory.
+
 Windows disk-root custody uses the standard extended-length filesystem spelling
 internally, preserving the same relative owner/project/job/attempt identity in
 SQL and HTTP. It does not shorten UUIDs, relocate data into the repository or
@@ -156,3 +174,9 @@ intento publicado. Se verifica cada byte y cada archivo desconocido impide
 reconciliación. El estado de ejecución no cambia FAIL científico. MAIN debe
 revisar y montar migración, admisión, contabilidad, recuperación y supervisor;
 el archivo original8201, QA del navegador y validación integrada siguen abiertos.
+
+La publicación vincula los documentos medidos de resultado y disponibilidad,
+época, conteo de ajustes y filas originales. Un FAIL científico permanece FAIL.
+Una constancia cancelada o rechazada no libera deuda como si estuviera publicada.
+Raíces ausentes, subárboles inaccesibles, enlaces incluso en archivos vacíos y
+cambios durante lectura se rechazan; ningún contador desconocido equivale a cero.

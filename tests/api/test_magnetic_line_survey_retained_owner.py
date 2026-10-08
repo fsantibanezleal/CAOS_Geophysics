@@ -5,6 +5,7 @@ production startup assertion. The supplied external test DB/root must retain
 the actual previously completed original S1 attempt and its immutable members.
 """
 import asyncio
+from copy import deepcopy
 import json
 import os
 from pathlib import Path
@@ -14,16 +15,18 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker
+import pytest
 
 from app.auth import install_auth
 from app.config import Settings
 from app.database import make_engine
 from app.errors import ApiError,api_error_handler
-from app.magnetic_line_survey_lifecycle import METHOD,attempt_root,cancel_owned
+from app.magnetic_line_survey_lifecycle import METHOD,attempt_root,cancel_owned,_document,_publication_receipts
 from app.magnetic_line_survey_models import SurveyAttempt
 from app.magnetic_line_survey_saved_api import install_magnetic_line_survey_saved_routes
 from app.magnetic_line_survey_storage import account_m03_custody_usage,reconcile_m03_project
 from app.models import ProcessingJob,User
+from app.magnetic_line_survey_wire import BoundSurveyFile
 from app.processing_contract import sha256
 from app.security import install_security
 
@@ -50,6 +53,35 @@ def test_retained_original_native_owner_http_and_exact_recovery(tmp_path):
             assert result['input']['original']['csv_sha256']=='ac28e5f7c8344b94ebe0c408484eede8ade5a4074c8ef44661bcfe774ff0bfae'
             assert result['verdict']['overall']=='fail' and result['evaluation']['verdict']['overall']=='fail'
             assert abs(result['evaluation']['rmse_nT']-18.799740861734186)<1e-6
+            ready=_document(root,'result-ready.json',attempt.inventory)
+            fitted=_document(root,'fit/physical-fit.json',attempt.inventory)
+            fit_receipt=next(item for item in attempt.inventory if item['name']=='fit/physical-fit.json')
+            actual=next(item for item in attempt.inventory if item['name']=='result/result.json')
+            original=BoundSurveyFile(UUID(job.id),result['input']['original']['csv_sha256'],
+                result['input']['original']['csv_bytes'],root/'unused-original-identity')
+            # Actual retained completed S1 output, not a fabricated successful
+            # v2 Result. This custody fence must preserve its scientific FAIL.
+            _publication_receipts(result,ready,actual,original,fitted,fit_receipt)
+            for mutation in ({'schema':'m03-resolution-fit-ready/1'}, {'rows':8201},
+                             {'policy_epoch':'resolution_v2'}, {'scientific_verdict':'pass'},
+                             {'result_sha256':'0'*64}, {'unexpected':True}):
+                wrong=deepcopy(ready)
+                wrong.update(mutation)
+                with pytest.raises(ApiError) as error:
+                    _publication_receipts(result,wrong,actual,original,fitted,fit_receipt)
+                assert error.value.code=='survey_result_invalid'
+            for key in ('fit','inventory','input','verdict'):
+                wrong=deepcopy(result)
+                wrong[key]=None
+                with pytest.raises(ApiError):
+                    _publication_receipts(wrong,ready,actual,original,fitted,fit_receipt)
+            for mutation in ({'schema':'m03-global-physical-fit/2'}, {'evaluation_count':2},
+                             {'rows':8201}, {'fit':None}, {'geometry_sha256':'0'*64}):
+                wrong=deepcopy(fitted)
+                wrong.update(mutation)
+                with pytest.raises(ApiError):
+                    _publication_receipts(result,ready,actual,original,wrong,fit_receipt)
+            assert result['verdict']['overall']=='fail'
             user=await session.get(User,job.owner_id)
             actual=await reconcile_m03_project(session,settings,user,UUID(job.project_id))
             assert actual['retained_bytes']==attempt.retained_bytes==attempt.lifetime['scratch_bytes']
@@ -111,3 +143,63 @@ def test_retained_original_native_owner_http_and_exact_recovery(tmp_path):
         assert served.content==raw and served.headers['x-content-sha256']==sha256(raw)
         assert client.get(prefix+'/members/'+str(uuid4())).status_code==404
     asyncio.run(engine.dispose())
+
+
+def test_current_publication_fence_on_consistent_retained_database_copy(tmp_path):
+    """Real SQL/file publication fence, NOT a new native attempt or science run.
+
+    SQLite backup preserves a consistent copied fixture. Reopening the terminal
+    rows occurs ONLY in that explicitly labelled test DB; original DB, worker
+    receipts and scientific bytes remain untouched. Native evidence still
+    belongs to the original retained attempt, not this transaction exercise.
+    """
+    import sqlite3
+    from sqlalchemy import delete
+    from app.magnetic_line_survey_models import SurveyAdmission,SurveyMember
+    from app.magnetic_line_survey_lifecycle import publish_drained_result
+
+    source_db=Path(os.environ['GEOPHYSICS_M03_RETAINED_OWNER_DB'])
+    copied_db=tmp_path/'consistent-terminal-fixture.sqlite3'
+    with sqlite3.connect(source_db.as_uri()+'?mode=ro',uri=True) as source,sqlite3.connect(copied_db) as destination:
+        source.backup(destination)
+    settings=Settings(data_dir=Path(os.environ['GEOPHYSICS_M03_RETAINED_OWNER_ROOT']),db_path=copied_db,
+        auth_secret='test-secret-with-at-least-32-characters-123456',public_origin='http://testserver',cookie_secure=False)
+    engine=make_engine(settings)
+    sessions=async_sessionmaker(engine,expire_on_commit=False)
+    async def run():
+        async with sessions() as session:
+            job=(await session.execute(select(ProcessingJob).where(ProcessingJob.method_id==METHOD))).scalar_one()
+            attempt=(await session.execute(select(SurveyAttempt).where(SurveyAttempt.job_id==job.id))).scalar_one()
+            admission=await session.get(SurveyAdmission,job.id)
+            assert job.state=='succeeded' and attempt.state=='published'
+            identity,worker,authority=UUID(attempt.id),attempt.worker_id,admission.authority_sha256
+            source_pins=deepcopy(attempt.lifetime['source_sha256'])
+            expected=job.result_sha256,job.result_bytes
+            inventory=deepcopy(attempt.inventory)
+            job.state='running'
+            job.finished_at=None
+            attempt.state='drained'
+            await session.execute(delete(SurveyMember).where(SurveyMember.attempt_id==attempt.id))
+            await session.commit()
+            # One unknown persisted inventory is NOT a license to publish the
+            # matching Result only. Preserve all actual original files.
+            attempt.inventory=[]
+            await session.commit()
+            with pytest.raises(ApiError) as refused:
+                await publish_drained_result(session,settings,identity,worker,authority,source_pins)
+            assert refused.value.code=='survey_inventory_mismatch'
+            await session.rollback()
+            attempt=await session.get(SurveyAttempt,str(identity))
+            attempt.inventory=inventory
+            await session.commit()
+            view=await publish_drained_result(session,settings,identity,worker,authority,source_pins)
+            assert view['state']=='succeeded'
+            assert (view['result_sha256'],view['result_bytes'])==expected
+            attempt=await session.get(SurveyAttempt,str(identity))
+            assert attempt.state=='published' and attempt.inventory==inventory
+            members=(await session.execute(select(SurveyMember).where(SurveyMember.attempt_id==str(identity)))).scalars().all()
+            assert len(members)==216 and len({member.id for member in members})==216
+            root=attempt_root(settings.data_dir,await session.get(ProcessingJob,view['job_id']),attempt)
+            assert json.loads((root/'result/result.json').read_bytes())['verdict']['overall']=='fail'
+        await engine.dispose()
+    asyncio.run(run())

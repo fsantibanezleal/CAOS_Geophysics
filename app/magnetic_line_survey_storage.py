@@ -39,6 +39,10 @@ def _retained(attempt:SurveyAttempt) -> int:
     validate_drain(attempt.lifetime)
     if attempt.retained_bytes!=attempt.lifetime['scratch_bytes'] or attempt.state not in ('drained','publication_uncertain','published'):
         _refuse()
+    if attempt.state=='published' and attempt.lifetime['verdict']!='component_pass':
+        # Publication is a factual completed execution, not an alternative
+        # release path for failed/cancelled or corrupted native receipts.
+        _refuse()
     return attempt.retained_bytes
 
 

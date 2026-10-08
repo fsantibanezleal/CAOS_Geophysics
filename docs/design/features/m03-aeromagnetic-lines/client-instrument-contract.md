@@ -15,6 +15,14 @@ There is no default data, provider fetch, embedded survey, route fallback or
 scientific parameter rewrite. A new scientific recipe requires a newly admitted
 immutable request attachment, not client editing of a successful Result.
 
+An explicit saved-job UUID form opens an actual already registered job through
+the same authenticated project-scoped GET. It requires a canonical UUID and
+does not depend on a source selector, invoke start, fabricate a dataset choice,
+write admission or silently restore a job from local storage. It is disabled
+while an observed job remains queued/running or an action is pending. Opening
+retained evidence is read-only and does not rerun an outer evaluation. Source
+intake, dispatch, export/download and parent navigation remain distinct gates.
+
 The owner API uses existing same-origin cookie, CSRF, no-store and redirect-error
 transport. Start/job/result/cancel projections are closed, checked and bound to
 project/job/dataset identities. Polling observes an actually queued/running job;
@@ -52,6 +60,16 @@ channel resolves its actual declared QC-mask target; rejected values are omitted
 never replaced by zeros. Pointer selection links the profile, metric plan, row
 ordinal, actual original ID and aligned E/N/Z coordinates. Coordinates retain the
 admitted upward/datum convention; no web projection or inferred terrain is added.
+Profile pointer coordinates are transformed through the inverse SVG screen matrix
+before mapping to the bounded source-order ordinal. CSS aspect-ratio letterboxing
+must not select a different row from the visible point. The focused profile also
+supports Left/Right/Home/End with the same linked readouts; these controls only
+select retained observations and never trigger a fit or modify source/QC bytes.
+Displayed row/grid windows are additionally bound to the actual Result SHA,
+view, ordinal window and channel/plane selection. A render before the next
+asynchronous load must hide the old incompatible window, not interpret line
+data as an outer residual or another plane/job's values. No placeholder or
+default-zero window is introduced while the correctly bound bytes load.
 
 The plan uses an equal metric scale in E/N, shows only the current declared row
 and crossover windows and labels its actual display extents. It does not draw
@@ -83,6 +101,22 @@ bilingual message without paths, raw values or tracebacks. Scientific gates,
 actual fit count and selected training parameters remain visible independently of
 execution state. Source review distinguishes authored control and genuine field
 acquisition; numerical/local byte success is not field or host acceptance.
+
+Opening a saved UUID clears the previous evidence before lookup, including when
+the new UUID is invalid, foreign or missing; failed lookup never keeps the old
+result under the newly entered identity. Loaded display windows bind the actual
+job UUID, result SHA, view, channel/plane and first ordinal before rendering.
+The original-row/evaluation window caption is HTML outside the SVG, so it is
+readable and wraps at phone width rather than being clipped/scaled in the plot.
+The linked metric SVG is a labelled group, not an image with hidden focusable
+descendants; its actual sealed crossover controls remain keyboard-addressable.
+
+Abrir un UUID guardado borra la evidencia anterior antes de buscarlo, incluso
+si es inválido, ajeno o ausente. Una búsqueda fallida nunca conserva el resultado
+anterior bajo la identidad nueva. Las ventanas vinculan UUID real, SHA, vista,
+canal/plano y ordinal inicial; el rótulo HTML externo al SVG se adapta al teléfono.
+El SVG métrico es un grupo rotulado, no una imagen que oculta controles
+enfocables; los cruces sellados reales conservan selección por teclado.
 
 The actual browser gate must mount the real owner adapter and durable registry,
 choose a registered original source/request, start the full cold worker, await

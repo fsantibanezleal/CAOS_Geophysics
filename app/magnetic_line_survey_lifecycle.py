@@ -23,7 +23,7 @@ from app.errors import ApiError
 from app.config import WorkerSettings
 from app.magnetic_line_survey_models import SurveyAdmission, SurveyAttempt, SurveyMember
 from app.magnetic_line_survey_wire import BoundSurveyFile, OwnedSurveySources, SurveyStart, _hash, _verify_bytes, bind_owned_survey_sources
-from app.magnetic_line_survey_wire import _unique_object, _reject_constant
+from app.magnetic_line_survey_wire import _unique_object, _reject_constant, _stamp
 from app.models import ProcessingJob, User, utcnow
 from app.processing import _owned_job
 from app.processing_contract import canonical_bytes, sha256
@@ -58,8 +58,11 @@ async def owned_job(session: AsyncSession, user: User, project_id: UUID, job_id:
 
 
 def admitted_envelope(job: ProcessingJob, admission: SurveyAdmission) -> dict:
-    start=SurveyStart.model_validate(admission.start_json).model_dump(mode='json',by_alias=True)
-    _hash(admission.authority_sha256)
+    try:
+        start=SurveyStart.model_validate(admission.start_json).model_dump(mode='json',by_alias=True)
+        _hash(admission.authority_sha256)
+    except ValueError as exc:
+        raise ApiError(409,'survey_admission_invalid','Survey admission differs from its receipt') from exc
     if type(admission.reservation_bytes) is not int or not 0<admission.reservation_bytes<=32*1024**3 or \
        start['dataset_id']!=job.dataset_id or start['dataset_sha256']!=job.dataset_sha256 or admission.job_id!=job.id:
         raise ApiError(409,'survey_admission_invalid','Survey admission differs from its receipt')
@@ -240,11 +243,14 @@ def validate_drain(receipt: dict) -> None:
             value=receipt[key]
             if type(value) not in (int,float) or not math.isfinite(value) or not 0<=value<=10:
                 raise ApiError(409,'survey_drain_unverified','Actual bounded cancellation drain is required')
-    _hash(receipt['actual_executable_sha256'])
-    if type(receipt['source_sha256']) is not dict or not receipt['source_sha256']:
-        raise ApiError(409,'survey_drain_unverified','Actual native source pins are required')
-    for value in receipt['source_sha256'].values():
-        _hash(value)
+    try:
+        _hash(receipt['actual_executable_sha256'])
+        if type(receipt['source_sha256']) is not dict or not receipt['source_sha256']:
+            raise ValueError('Missing source pins')
+        for value in receipt['source_sha256'].values():
+            _hash(value)
+    except ValueError as exc:
+        raise ApiError(409,'survey_drain_unverified','Actual native source pins are required') from exc
 
 
 async def record_terminal_attempt(session: AsyncSession, attempt_id: UUID, worker_id: str,
@@ -314,9 +320,13 @@ def collect_inventory(storage: Path, root: Path) -> list:
     root=storage_root(root)
     if not root.is_relative_to(storage):
         raise ValueError('Invalid owned storage boundary')
+    if not root.is_dir():
+        raise ApiError(409,'survey_storage_invalid','Survey storage requires recovery')
     inventory=[]
     retained=0
-    for directory,folders,files in os.walk(root,followlinks=False):
+    def walk_error(_exception):
+        raise ApiError(409,'survey_storage_invalid','Survey storage requires recovery')
+    for directory,folders,files in os.walk(root,followlinks=False,onerror=walk_error):
         for name in folders:
             path=Path(directory)/name
             if path.is_symlink() or getattr(path,'is_junction',lambda:False)():
@@ -325,18 +335,32 @@ def collect_inventory(storage: Path, root: Path) -> list:
             path=Path(directory)/name
             relative=path.relative_to(root).as_posix()
             member_path(root,relative)
-            size=path.stat().st_size
             digest=hashlib.sha256()
-            with path.open('rb') as stream:
-                while data:=stream.read(1024*1024):
-                    digest.update(data)
-            if size==0:
-                # Empty logs are legitimate retained evidence, not members.
-                from app.magnetic_line_survey_wire import _stamp
-                if _stamp(path.lstat())[2]!=0:
-                    raise ApiError(409,'survey_inventory_mismatch','Survey storage changed')
-            else:
-                _verify_bytes(storage,path,digest.hexdigest(),size,'survey_inventory_mismatch')
+            try:
+                _ordinary_member_parents(root,path)
+                before=_stamp(path.lstat())
+                size=before[2]
+                # Refuse BEFORE hashing an over-envelope file, including a
+                # sparse file. Empty logs receive the same alias/race checks.
+                if len(inventory)>=1000000 or retained+size>32*1024**3:
+                    raise ValueError('Inventory exceeds envelope')
+                count=0
+                with path.open('rb') as stream:
+                    opened=_stamp(os.fstat(stream.fileno()))
+                    if opened[:4]+opened[5:]!=before[:4]+before[5:]:
+                        raise ValueError('Storage changed before read')
+                    while data:=stream.read(min(1024*1024,size-count+1)):
+                        count+=len(data)
+                        if count>size:
+                            raise ValueError('Storage grew during read')
+                        digest.update(data)
+                    if _stamp(os.fstat(stream.fileno()))!=opened:
+                        raise ValueError('Storage changed during read')
+                if count!=size or _stamp(path.lstat())!=before:
+                    raise ValueError('Storage changed during read')
+                _ordinary_member_parents(root,path)
+            except (OSError,ValueError) as exc:
+                raise ApiError(409,'survey_inventory_mismatch','Survey storage requires recovery') from exc
             inventory.append(dict(name=relative,bytes=size,sha256=digest.hexdigest()))
             retained+=size
             if len(inventory)>1000000 or retained>32*1024**3:
@@ -344,17 +368,82 @@ def collect_inventory(storage: Path, root: Path) -> list:
     return sorted(inventory,key=lambda item:item['name'])
 
 
-def _document(root: Path, name: str) -> dict:
+def _ordinary_member_parents(root: Path, path: Path) -> None:
+    if not path.is_relative_to(root):
+        raise ValueError('Invalid member boundary')
+    for parent in path.parents:
+        if parent.is_symlink() or getattr(parent,'is_junction',lambda:False)() or (parent/'.git').exists():
+            raise ValueError('Unsafe member ancestor')
+        if parent==root:
+            return
+    raise ValueError('Missing member boundary')
+
+
+def _document(root: Path, name: str, inventory: list) -> dict:
+    """Parse the exact bounded inventory snapshot, not a pathname reopened blind."""
     path=member_path(root,name)
-    if not 0<path.stat().st_size<=2097152:
+    matches=[item for item in inventory if item['name']==name]
+    if len(matches)!=1 or not 0<matches[0]['bytes']<=2097152:
         raise ApiError(409,'survey_result_invalid','Survey result receipt is invalid')
     try:
-        result=json.loads(path.read_bytes(),object_pairs_hook=_unique_object,parse_constant=_reject_constant)
+        receipt=matches[0]
+        _ordinary_member_parents(root,path)
+        before=_stamp(path.lstat())
+        with path.open('rb') as stream:
+            opened=_stamp(os.fstat(stream.fileno()))
+            if opened[:4]+opened[5:]!=before[:4]+before[5:] or before[2]!=receipt['bytes']:
+                raise ValueError('Storage changed before read')
+            raw=stream.read(receipt['bytes']+1)
+            if _stamp(os.fstat(stream.fileno()))!=opened:
+                raise ValueError('Storage changed during read')
+        if len(raw)!=receipt['bytes'] or sha256(raw)!=receipt['sha256'] or _stamp(path.lstat())!=before:
+            raise ValueError('Document differs from inventory')
+        _ordinary_member_parents(root,path)
+        result=json.loads(raw.decode('utf-8',errors='strict'),object_pairs_hook=_unique_object,parse_constant=_reject_constant)
         if type(result) is not dict:
             raise ValueError('Invalid object')
         return result
-    except (ValueError,RecursionError) as exc:
+    except (OSError,ValueError,RecursionError) as exc:
         raise ApiError(409,'survey_result_invalid','Survey result receipt is invalid') from exc
+
+
+def _publication_receipts(result: dict, ready: dict, actual: dict, original: BoundSurveyFile,
+                          fitted: dict, fit_receipt: dict) -> None:
+    """Bind readiness to completed epoch/rows/parents without relabeling science.
+
+    This is a custody fence after the fixed native semantic verifier, NOT a
+    replacement for whole Result/DAG/model verification or a new fit policy.
+    """
+    try:
+        epoch=result['policy_epoch']
+        resolution=epoch=='resolution_v2'
+        if epoch not in ('resolution_v2','fixed_basis_v1') or \
+           type(result['fit']['fit_count']) is not int or result['fit']['fit_count']!=(97 if resolution else 25) or \
+           type(result['inventory']['original_rows']) is not int or not 0<result['inventory']['original_rows']<=8000000 or \
+           result['input']['original']['csv_sha256']!=original.sha256 or \
+           result['input']['original']['csv_bytes']!=original.byte_count:
+            raise ValueError('Result completion differs from original')
+        if fitted['schema']!=('m03-global-physical-fit/2' if resolution else 'm03-global-physical-fit/1') or \
+           fitted['original']!=result['input']['original'] or fitted['rows']!=result['inventory']['original_rows'] or \
+           type(fitted['rows']) is not int or type(fitted['evaluation_count']) is not int or \
+           fitted['evaluation_count']!=1 or fitted['fit']!=result['fit'] or \
+           fitted['geometry_sha256']!=sha256(canonical_bytes(result['geometry'])):
+            raise ValueError('Physical fit differs from completed Result')
+        common=dict(result_sha256=actual['sha256'],rows=result['inventory']['original_rows'],policy_epoch=epoch)
+        if resolution:
+            expected=dict(schema='m03-resolution-fit-ready/1',**common,original=result['input']['original'],
+                fit_count=97,evaluation_count=1,outer_status='opened_authored_diagnostic',field_acceptance='unresolved',
+                full_result='assembled',host_admission='not_established')
+            # This is the exact full physical-fit document hash, NOT a hash of
+            # Result.fit (a distinct subobject/domain).
+            expected['fit_sha256']=_hash(fit_receipt['sha256'])
+        else:
+            expected=dict(schema='m03-full-result-ready/1',**common,scientific_verdict=result['verdict']['overall'])
+        if ready!=expected or type(ready['rows']) is not int or \
+           resolution and (type(ready['fit_count']) is not int or type(ready['evaluation_count']) is not int):
+            raise ValueError('Readiness differs from completed Result')
+    except (KeyError,TypeError,ValueError) as exc:
+        raise ApiError(409,'survey_result_invalid','Survey result differs from its original parents') from exc
 
 
 async def publish_drained_result(session: AsyncSession, settings: WorkerSettings, attempt_id: UUID,
@@ -398,22 +487,20 @@ async def publish_drained_result(session: AsyncSession, settings: WorkerSettings
     inventory=await asyncio.to_thread(collect_inventory,settings.data_dir,root)
     if inventory!=attempt.inventory or sum(item['bytes'] for item in inventory)!=attempt.retained_bytes:
         raise ApiError(409,'survey_inventory_mismatch','Actual retained attempt bytes differ')
-    result=_document(root,'result/result.json')
+    result=_document(root,'result/result.json',inventory)
     if result.get('schema')!='magnetic-line-survey-result/2' or result.get('run_id')!=job.id:
         raise ApiError(409,'survey_result_invalid','Survey result identity differs from its job')
     # The fixed full native producer independently validates all result/DAG/
     # selected-model/grid semantics before writing readiness. This publication
     # fence is additional DB/file custody, not a substitute numerical verifier.
     resolution=result.get('policy_epoch')=='resolution_v2'
-    if result.get('policy_epoch') not in ('resolution_v2','fixed_basis_v1') or \
-       result.get('fit',{}).get('fit_count')!=(97 if resolution else 25):
-        raise ApiError(409,'survey_result_invalid','Full required scientific workflow did not complete')
-    ready=_document(root,'resolution-fit-ready.json' if resolution else 'result-ready.json')
+    ready=_document(root,'resolution-fit-ready.json' if resolution else 'result-ready.json',inventory)
     actual=next((item for item in inventory if item['name']=='result/result.json'),None)
-    if actual is None or ready.get('result_sha256')!=actual['sha256'] or \
-       result['input']['original']['csv_sha256']!=bound.original.sha256 or \
-       result['input']['original']['csv_bytes']!=bound.original.byte_count:
+    if actual is None:
         raise ApiError(409,'survey_result_invalid','Survey result differs from its original parents')
+    fitted=_document(root,'fit/physical-fit.json',inventory)
+    fit_receipt=next(item for item in inventory if item['name']=='fit/physical-fit.json')
+    _publication_receipts(result,ready,actual,bound.original,fitted,fit_receipt)
     for role,parent in [('metadata',bound.metadata),('request',bound.request)]:
         await asyncio.to_thread(_verify_bytes,storage_root(settings.data_dir),root/'result'/(role+'.json'),
             parent.sha256,parent.byte_count,'survey_result_invalid')
