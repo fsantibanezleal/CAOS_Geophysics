@@ -20,6 +20,7 @@ from app.processing_contract import canonical_bytes
 PARSER_VERSION = "mag-survey/v1"
 MODALITY = "magnetic_survey"
 MAX_REQUEST = 8388608
+MAX_DATASET = 8388608  # Complete serialized body, including escaped request and geometry.
 MAX_ORIGINAL = 128 * 1024**2
 DATASET_KEYS = frozenset("schema dataset_id version owner_id project_id raw_asset_id parent_raw_sha256 parent_raw_bytes parser_version modality dimensions axis_order request_utf8 request_sha256 geometry_plan source_record_id survey_source_id rights_decision private_storage_permission qc_verdict".split())
 

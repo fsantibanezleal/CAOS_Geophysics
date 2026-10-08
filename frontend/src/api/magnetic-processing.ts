@@ -123,6 +123,9 @@ export class MagneticProcessingApi {
     parseMagneticDatasetReceipt(receipt); equal(project, receipt.project_id, "project");
     const datasetBytes = await this.api.requestBoundedBytes(`${root(project)}/datasets/${processingId(receipt.dataset_id)}`, 8388608, {signal});
     checkAbort(signal);
+    const datasetSha = await digest(datasetBytes);
+    checkAbort(signal);
+    equal(datasetSha, receipt.sha256, "complete dataset byte hash");
     const payload = object(JSON.parse(new TextDecoder("utf-8", {fatal:true}).decode(datasetBytes)));
     keys(payload, "schema dataset_id version owner_id project_id raw_asset_id parent_raw_sha256 parent_raw_bytes parser_version modality dimensions axis_order request_utf8 request_sha256 geometry_plan source_record_id survey_source_id rights_decision private_storage_permission qc_verdict".split(" "), "magnetic physical dataset");
     equal(payload.schema, receipt.schema, "dataset schema"); equal(payload.modality, receipt.modality, "modality");

@@ -151,7 +151,8 @@ def _dataset(settings, dataset, asset, source):
     key = dataset_key(str(dataset.owner_id), dataset.project_id, dataset.id)
     if dataset.storage_key != key:
         _bad()
-    raw = _read(checked_derived_path(settings, key), maximum=16 * 1024**2)
+    from app.magnetic_contract import MAX_DATASET
+    raw = _read(checked_derived_path(settings, key), maximum=MAX_DATASET)
     if len(raw) != dataset.byte_count or hashlib.sha256(raw).hexdigest() != dataset.sha256:
         _bad()
     payload = json.loads(raw)
@@ -204,7 +205,7 @@ def _parse_owned_original(settings, asset, source, request_raw, dataset_id):
 async def _install_charged_dataset(session, settings, user, asset_id, request_raw, *, project_id, owner, cancelled):
     from app.magnetic_custody_owner import bounded_work, LIFETIME
     from app.magnetic_line_survey_models import SurveyDatasetAttempt
-    from app.magnetic_contract import MODALITY
+    from app.magnetic_contract import MODALITY, MAX_DATASET
     asset, source = await _owned_asset(session, user, asset_id, project_id)
     for item in (asset, source):
         session.expunge(item)
@@ -225,7 +226,7 @@ async def _install_charged_dataset(session, settings, user, asset_id, request_ra
         return previous
     await session.rollback()
     body = canonical_bytes(payload)
-    if not 0 < len(body) <= 16*1024**2:
+    if not 0 < len(body) <= MAX_DATASET:
         _bad("magnetic_dataset_capacity_refused", 413)
     dataset = ObservationDataset(id=payload["dataset_id"], owner_id=user.id, project_id=project_id,
         raw_asset_id=asset.id, version=1, parser_version=payload["parser_version"], modality=MODALITY,
@@ -253,7 +254,7 @@ async def _install_charged_dataset(session, settings, user, asset_id, request_ra
         for key in ("derived", f"derived/{user.id}", f"derived/{user.id}/{project_id}", f"derived/{user.id}/{project_id}/datasets"):
             files.create_directory(key, exist_ok=True)
             files.private_directory_identity(key)
-        await bounded_work(lambda: files.write_new(dataset.storage_key, body, cap=16*1024**2), timeout=timeout)
+        await bounded_work(lambda: files.write_new(dataset.storage_key, body, cap=MAX_DATASET), timeout=timeout)
         if cancelled.is_set():
             raise asyncio.CancelledError()
         await session.execute(text("BEGIN IMMEDIATE"))

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClient } from "../api/client";
 import { MagneticProcessingApi, parseMagneticDatasetReceipt, parseMagneticReplayJob, verifyMagneticDownload } from "../api/magnetic-processing";
@@ -12,10 +13,16 @@ const receipt = parseMagneticDatasetReceipt(actual.receipt), job = parseMagnetic
 const inputFixture = process.env.GEOPHYSICS_MAGNETIC_BROWSER_INPUT_CONTROL;
 if (!inputFixture) throw new Error("Supply actual owned dataset/source mapping fixture");
 const input = JSON.parse(readFileSync(inputFixture,"utf8"));
+const datasetPath = input.dataset_bytes_path ?? process.env.GEOPHYSICS_MAGNETIC_BROWSER_DATASET_BYTES;
+if (!datasetPath) throw new Error("Supply retained Python-produced dataset body; never JS reserialization");
+const datasetBytes = new Uint8Array(readFileSync(datasetPath));
+if (createHash("sha256").update(datasetBytes).digest("hex") !== input.receipt.sha256)
+  throw new Error("Retained dataset fixture bytes differ from authenticated receipt");
 function client(replies: unknown[]) {
   const fetcher = vi.fn(async () => {
     const value = replies.shift();
-    return value instanceof Blob ? new Response(value, {headers:{"content-type":"application/zip"}})
+    return value instanceof Uint8Array ? new Response(new Uint8Array(value), {headers:{"content-type":"application/json"}})
+      : value instanceof Blob ? new Response(value, {headers:{"content-type":"application/zip"}})
       : new Response(JSON.stringify(value), {headers:{"content-type":"application/json"}});
   });
   return {api: new MagneticProcessingApi(new ApiClient(origin, fetcher as typeof fetch)), fetcher};
@@ -60,11 +67,40 @@ describe("actual local magnetic custody client, not nonzero scientific acceptanc
     await expect(streamed("dataset", stream)).rejects.toThrow();
   });
   it("consumes the actual lexical input and executable closed-online mapping", async () => {
-    const {api}=client([input.payload,input.mapping]);
+    const {api}=client([datasetBytes,input.mapping]);
     const inputReceipt=parseMagneticDatasetReceipt(input.receipt);
     expect((await api.dataset(inputReceipt.project_id,inputReceipt)).request_utf8).toBe(input.payload.request_utf8);
     const mapping=await api.method(inputReceipt.project_id,inputReceipt);
     expect(mapping.online_admitted).toBe(false);
+  });
+  it.each([['"rights_decision":"mirror"', '"rights_decision":"unknown"'],
+           ['"active_cells":7', '"active_cells":8']])("refuses exact raw-body mutation %s with unchanged IDs/request hash",async (before,after)=>{
+    const raw=new TextDecoder().decode(datasetBytes), changed=raw.replace(before,after);
+    expect(changed).not.toBe(raw);
+    const decoded=JSON.parse(changed);
+    expect(decoded.dataset_id).toBe(input.receipt.dataset_id);
+    expect(decoded.request_sha256).toBe(input.payload.request_sha256);
+    expect(decoded.request_utf8).toBe(input.payload.request_utf8);
+    const {api}=client([new TextEncoder().encode(changed)]);
+    const r=parseMagneticDatasetReceipt(input.receipt);
+    await expect(api.dataset(r.project_id,r)).rejects.toThrow("complete dataset byte hash");
+  });
+  it("refuses unbound bytes before JSON parsing",async()=>{
+    const {api}=client([new TextEncoder().encode('{Not valid JSON')]);
+    const r=parseMagneticDatasetReceipt(input.receipt), parse=vi.spyOn(JSON,"parse");
+    try {await expect(api.dataset(r.project_id,r)).rejects.toThrow("complete dataset byte hash");
+      expect(parse).not.toHaveBeenCalled();
+    } finally {parse.mockRestore();}
+  });
+  it("refuses completion after abort during complete-byte hashing before parse",async()=>{
+    const abort=new AbortController(), actualDigest=crypto.subtle.digest.bind(crypto.subtle);
+    const hash=vi.spyOn(crypto.subtle,"digest").mockImplementation(async (algorithm,data)=>{
+      const result=await actualDigest(algorithm,data);abort.abort();return result;
+    });
+    const {api}=client([datasetBytes]), r=parseMagneticDatasetReceipt(input.receipt), parse=vi.spyOn(JSON,"parse");
+    try {await expect(api.dataset(r.project_id,r,abort.signal)).rejects.toMatchObject({name:"AbortError"});
+      expect(parse).not.toHaveBeenCalled();
+    } finally {parse.mockRestore();hash.mockRestore();}
   });
   it.each(["request","claim","mapping"])("refuses supplied input %s drift",async attack=>{
     const payload=structuredClone(input.payload),mapping=structuredClone(input.mapping);
