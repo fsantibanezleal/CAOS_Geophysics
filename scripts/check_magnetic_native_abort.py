@@ -26,7 +26,9 @@ def main():
     parser.add_argument('--mode', choices=('cancel', 'controller-crash'), required=True)
     parser.add_argument('--case', choices=('A:secondary_enu_nT', 'F:secondary_enu_nT'), default='A:secondary_enu_nT')
     parser.add_argument('--cancel-after', type=float, default=45.)
-    parser.add_argument('--conditioned-core', action='store_true')
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument('--conditioned-core', action='store_true')
+    mode.add_argument('--feasible-core', action='store_true')
     args = parser.parse_args()
     sys.path.insert(0, str(Path(__file__).parents[1]/'data-pipeline'))
     sys.path.extend(args.dependencies)
@@ -46,6 +48,8 @@ def main():
         '--cases', args.case, '--wall-seconds', '7200']
     if args.conditioned_core:
         command += ['--conditioned-core']
+    if args.feasible_core:
+        command += ['--feasible-core']
     if args.mode == 'cancel':
         command += ['--cancel-after', str(args.cancel_after)]
     api, _ = apis()
@@ -111,6 +115,7 @@ def main():
             proof = dict(schema='magnetic-native-abort-proof-1', gate=args.mode, verdict='pass', actual=actual,
                 case=args.case, actual_scientific_objective_started=True,
                 conditioned_core=args.conditioned_core,
+                feasible_core=args.feasible_core,
                 native_log_sha256=hashlib.sha256(native_log.read_bytes()).hexdigest(),
                 birth=birth, fixed_runner_sha256=hashlib.sha256(runner.read_bytes()).hexdigest(),
                 field_accepted=False, scientific_acceptance=False, native_security_admitted=False,

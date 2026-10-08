@@ -14,8 +14,9 @@ control = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(control)
 
 
-@pytest.mark.parametrize('quantity', ['secondary_enu_nT', 'exact_total_anomaly_nT'])
-def test_full_supplied_file_sequence_under_distinct_public_epoch(tmp_path, quantity):
+@pytest.mark.parametrize('quantity,feasible', [('secondary_enu_nT', False), ('exact_total_anomaly_nT', False),
+                                              ('secondary_enu_nT', True)])
+def test_full_supplied_file_sequence_under_distinct_public_epoch(tmp_path, quantity, feasible):
     doc = control.inputs(tmp_path)
     nonlinear = quantity == 'exact_total_anomaly_nT'
     if nonlinear:
@@ -25,8 +26,8 @@ def test_full_supplied_file_sequence_under_distinct_public_epoch(tmp_path, quant
         doc['processing']['background_relation'] = 'total_norm_minus_declared_uniform_F'
         doc['noise']['values'] = descriptor('float64', [288, 1], [.5]*288)
         rehash(doc, 'observations/values')
-    sources = cli.source_inventory(conditioned=True)
-    binding = binding_for_sources(sources, digest(sources), nonlinear=nonlinear)
+    sources = cli.source_inventory(conditioned=True, feasible=feasible)
+    binding = binding_for_sources(sources, digest(sources), nonlinear=nonlinear, feasible=feasible)
     doc['policy']['optimizer_binding'] = dict(accepted_source=binding.optimizer_source_sha256,
         accepted_export=binding.accepted_export, epoch=binding.runtime_epoch)
     (tmp_path/'request.json').write_bytes(canonical(doc))

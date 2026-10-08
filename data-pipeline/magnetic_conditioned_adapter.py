@@ -18,10 +18,15 @@ from magnetic_nonlinear_adapter import MagneticNonlinearObjective
 LIMIT = 805306368
 
 
-def binding_for_sources(sources, inventory_sha256, *, nonlinear):
+def binding_for_sources(sources, inventory_sha256, *, nonlinear, feasible=False):
     import physical_conditioned_optimizer as core
     import physical_owned_spd as spd
-    return core.ConditionedBinding('physical_conditioned_optimizer.solve_bounded_'+('nonlinear' if nonlinear else 'linear'),
+    if type(feasible) is not bool or (feasible and nonlinear):
+        raise ValueError('contact magnetic: explicit LINEAR-only source')
+    if feasible:
+        import physical_feasible_optimizer as core
+    module = 'physical_feasible_optimizer' if feasible else 'physical_conditioned_optimizer'
+    return core.ConditionedBinding(module+'.solve_bounded_'+('nonlinear' if nonlinear else 'linear'),
         core.SOURCE_SHA256, spd.SOURCE_SHA256, spd.KERNEL_SHA256, core.VENDOR_SOURCE_SHA256,
         sources['magnetic_inverse_precision'], inventory_sha256,
         core.NONLINEAR_EPOCH if nonlinear else core.LINEAR_EPOCH, core.POLICY)
@@ -78,9 +83,12 @@ def allocation(source_components, fit_components, parameters, covariance, origin
 
 class MagneticConditionedObjective:
     """Exact original physical methods with new public identity/closed operands."""
-    def __init__(self, physical, source_components):
+    def __init__(self, physical, source_components, *, feasible=False):
         if type(physical) not in (MagneticObjective, MagneticNonlinearObjective):
             raise TypeError('conditioned magnetic: actual original physical objective')
+        if type(feasible) is not bool or (feasible and type(physical) is MagneticNonlinearObjective):
+            raise ValueError('contact magnetic: explicit LINEAR-only source')
+        self.feasible = feasible
         self.physical = physical
         for key in ('operator', 'regularizer', 'lower', 'upper', 'beta'):
             setattr(self, key, getattr(physical, key))
@@ -92,6 +100,8 @@ class MagneticConditionedObjective:
     def identity(self):
         import physical_conditioned_optimizer as core
         value = self.physical.identity()
+        if self.feasible:
+            import physical_feasible_optimizer as core
         value['runtime_epoch'] = core.NONLINEAR_EPOCH if value['mode'] == 'nonlinear_gauss_newton' else core.LINEAR_EPOCH
         return value
 
@@ -145,6 +155,8 @@ def solve_conditioned(objective, lower, upper, start, *, budget, binding):
             or budget.resource_limit_bytes != LIMIT):
         raise ValueError('conditioned magnetic: original certificate/step/resource binding')
     nonlinear = objective.identity()['mode'] == 'nonlinear_gauss_newton'
+    if objective.feasible:
+        import physical_feasible_optimizer as core
     budget = core.ConditionedBudget(min(budget.deadline, monotonic()+120.), budget.remaining_steps,
         budget.resource_limit_bytes, budget.admitted_bytes, budget.allocation_plan_sha256)
     function = core.solve_bounded_nonlinear if nonlinear else core.solve_bounded_linear

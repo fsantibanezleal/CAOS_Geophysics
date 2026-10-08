@@ -3,6 +3,10 @@
 [Exact nonlinear composition](07_nonlinear-composition.md) documents the reviewed
 public single-SI seam, independent exact/PSD Hessians and unchanged norm proof.
 
+[Public contact and directed enclosure / Contacto y enclosure dirigido](10_contact-and-directed-enclosure.md)
+defines the distinct LINEAR-only29-source lane, same-operand directed FMA proof,
+independent rational controls and unchanged full-fit acceptance gates.
+
 [Complete field and native gates](08_complete-field-and-native-gates.md) retains
 full-input finite-cap failures and actual resource/cancellation claim boundaries.
 [Verified result views and numeric export / Vistas y exportación verificadas](09_result-views-and-export.md)

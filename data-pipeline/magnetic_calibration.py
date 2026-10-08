@@ -101,6 +101,7 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         import physical_nonlinear_optimizer as core
         from magnetic_nonlinear_adapter import MagneticNonlinearObjective, solve_nonlinear
     conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
+    feasible = conditioned and binding.accepted_export == 'physical_feasible_optimizer.solve_bounded_linear'
     if conditioned:
         import physical_conditioned_optimizer as conditioned_core
         from magnetic_conditioned_adapter import MagneticConditionedObjective, solve_conditioned
@@ -118,7 +119,7 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         obj = MagneticObjective(operator, reg, observed, noise, lower, upper, float(beta),
                                 source_inventory_sha256, allocation_sha256, stage)
         physical = MagneticNonlinearObjective(obj, q) if nonlinear else obj
-        return MagneticConditionedObjective(physical, source_components) if conditioned else physical
+        return MagneticConditionedObjective(physical, source_components, feasible=feasible) if conditioned else physical
 
     def append_trace(obj, solved, phase, outer, epsilon):
         for inner, q in enumerate(solved['trace']['models_q']):
@@ -257,6 +258,10 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         import physical_conditioned_optimizer as core
         import physical_owned_spd as spd
         binding_type = core.ConditionedBinding
+        if binding.accepted_export == 'physical_feasible_optimizer.solve_bounded_linear':
+            if nonlinear:
+                fail('dependency', '$/policy/optimizer_binding', 'Public contact source is LINEAR-only')
+            import physical_feasible_optimizer as core
     epoch = (core.NONLINEAR_EPOCH if nonlinear else core.LINEAR_EPOCH) if conditioned else core.RUNTIME_EPOCH
     if (type(binding) is not binding_type or requested != dict(accepted_source=binding.optimizer_source_sha256,
             accepted_export=binding.accepted_export, epoch=binding.runtime_epoch)
@@ -267,7 +272,7 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
             or (conditioned and (binding.metric_source_sha256 != spd.SOURCE_SHA256
                 or binding.numeric_kernel_source_sha256 != spd.KERNEL_SHA256
                 or binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256
-                or binding.accepted_export != 'physical_conditioned_optimizer.solve_bounded_'+('nonlinear' if nonlinear else 'linear')))):
+                or binding.accepted_export != core.__name__+'.solve_bounded_'+('nonlinear' if nonlinear else 'linear')))):
         fail('dependency', '$/policy/optimizer_binding', 'Reviewed loaded binding required before kernel construction')
     if meta['policy']['resource_profile'] != 'local_bounded':
         fail('dependency', '$/policy/resource_profile', 'Online source/native admission is separate and closed')

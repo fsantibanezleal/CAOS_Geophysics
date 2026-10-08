@@ -86,7 +86,18 @@ class _Arithmetic:
 
     def dot(self, coefficients, vector):
         self.check()
-        return self.sum(self.mul(self.exact(a), x) for a, x in zip(coefficients, vector))
+        lower = upper = Decimal(0)
+        for index, (coefficient, interval) in enumerate(zip(coefficients, vector)):
+            if index % 128 == 0:
+                self.check()
+            exact = self.exact(coefficient)[0]
+            lo, hi = interval if exact >= 0 else (interval[1], interval[0])
+            # Fixed exact coefficient: monotone endpoint selection followed by
+            # directed fused multiply-add encloses the SAME stored-real sum.
+            # No rounded coefficient, BLAS approximation or Decimal matrix cache.
+            lower = self.lo.fma(exact, lo, lower)
+            upper = self.hi.fma(exact, hi, upper)
+        return lower, upper
 
     def strings(self, value):
         if not value[0].is_finite() or not value[1].is_finite() or value[0] > value[1]:

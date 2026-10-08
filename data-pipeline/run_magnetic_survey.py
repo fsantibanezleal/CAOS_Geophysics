@@ -32,11 +32,12 @@ CONDITIONED_SOURCES = ('physical_conditioned_optimizer', 'physical_owned_spd', '
                        'magnetic_conditioned_adapter')
 
 
-def source_inventory(*, conditioned=False):
+def source_inventory(*, conditioned=False, feasible=False):
     # An operator receipt must include the actual transitive generic certificate
     # validator dependency. Do not hash a filename without loading that source.
     return {name: hashlib.sha256(Path(importlib.import_module(name).__file__).read_bytes()).hexdigest()
-            for name in SOURCES+(CONDITIONED_SOURCES if conditioned else ())}
+            for name in SOURCES+(CONDITIONED_SOURCES if conditioned or feasible else ())+
+            (('physical_feasible_optimizer',) if feasible else ())}
 
 
 def read_bounded(path, limit):
@@ -76,8 +77,9 @@ def reviewed_binding(path, allow_candidate, quantity='secondary_enu_nT'):
     if (receipt['schema'] != 'magnetic-local-binding-1' or receipt['scope'] != 'local_candidate_only'
             or type(receipt['review_reference']) is not str or not 1 <= len(receipt['review_reference']) <= 512):
         fail('dependency', '$/binding', 'Explicit operator-reviewed local-candidate receipt required')
-    conditioned = receipt['runtime_epoch'] in ('physical-gncg-linear-joseph-candidate-2', 'physical-gncg-nonlinear-joseph-candidate-3')
-    sources = source_inventory(conditioned=conditioned)
+    feasible = receipt['runtime_epoch'] == 'physical-gncg-linear-joseph-contact-candidate-4'
+    conditioned = feasible or receipt['runtime_epoch'] in ('physical-gncg-linear-joseph-candidate-2', 'physical-gncg-nonlinear-joseph-candidate-3')
+    sources = source_inventory(conditioned=conditioned, feasible=feasible)
     if receipt['sources'] != sources or receipt['source_inventory_sha256'] != digest(sources):
         fail('dependency', '$/binding', 'Complete reviewed loaded-source inventory mismatch')
     import physical_optimizer as core
@@ -85,12 +87,16 @@ def reviewed_binding(path, allow_candidate, quantity='secondary_enu_nT'):
         import physical_nonlinear_optimizer as core
     if conditioned:
         import physical_conditioned_optimizer as core
+    if feasible:
+        if quantity == 'exact_total_anomaly_nT':
+            fail('dependency', '$/binding', 'Public contact source is LINEAR-only')
+        import physical_feasible_optimizer as core
     epoch = (core.NONLINEAR_EPOCH if quantity == 'exact_total_anomaly_nT' else core.LINEAR_EPOCH) if conditioned else core.RUNTIME_EPOCH
     if receipt['runtime_epoch'] != epoch or receipt['policy'] != core.POLICY:
         fail('dependency', '$/binding', 'Exact public dependency epoch/policy mismatch')
     if conditioned:
         from magnetic_conditioned_adapter import binding_for_sources
-        return binding_for_sources(sources, receipt['source_inventory_sha256'], nonlinear=quantity == 'exact_total_anomaly_nT')
+        return binding_for_sources(sources, receipt['source_inventory_sha256'], nonlinear=quantity == 'exact_total_anomaly_nT', feasible=feasible)
     if quantity == 'exact_total_anomaly_nT':
         return core.NonlinearBinding('physical_nonlinear_optimizer.solve_bounded_nonlinear', core.SOURCE_SHA256,
             core.VENDOR_SOURCE_SHA256, receipt['source_inventory_sha256'], core.RUNTIME_EPOCH, core.POLICY)
