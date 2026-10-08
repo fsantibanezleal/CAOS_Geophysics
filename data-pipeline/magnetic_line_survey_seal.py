@@ -67,6 +67,9 @@ def _coordinates(db, datum):
 
 def _pack(root, references, destination):
     """Only verified members; never copy unrelated raw/value files."""
+    # Owner plans cross the process boundary as JSON path strings. Apply the
+    # same external-path validation as the in-process Path entry points.
+    root, destination = io.external_path(root), io.external_path(destination)
     reader = io.Reader(root)
     for ref in references:
         reader.verify(ref)

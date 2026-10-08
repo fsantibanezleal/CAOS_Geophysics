@@ -26,6 +26,9 @@ def main(argv=None):
         phase = 'plan'
         plan_path = io.external_path(args.plan, directory=False)
         plan = base.strict_json(base.read_bounded(plan_path, 2097152))
+        if type(plan) is dict and plan.get('schema') in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1'):
+            from magnetic_line_survey_corrections import run_instrument_worker
+            return run_instrument_worker(plan, plan_path.parent, args.job_handle)
         if type(plan) is dict and plan.get('schema') == 'm03-training-diagnosis-plan/1':
             from magnetic_line_survey_diagnosis import diagnose_retained_s1
             return diagnose_retained_s1(plan,plan_path.parent,args.job_handle)
