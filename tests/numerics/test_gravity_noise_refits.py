@@ -119,3 +119,19 @@ def test_actual_l2_cli_refit_archive_and_no_optimizer_verification(actual,tmp_pa
     monkeypatch.setattr(l2,'_solve_partition',denied)
     monkeypatch.setattr(irls,'_solve_partition',denied)
     assert refits.workflow.main(['verify',*args,'--input','refits.gza','--calibration','calibration.gza'])==0
+
+
+def test_actual_full_covariance_refits_regenerated_principal_noise(tmp_path):
+    req=calibration_request();rows=req['observations']['rows'];n=len(rows)
+    covariance=.01**2*(.8*np.eye(n)+.2*np.ones((n,n)))
+    req['noise'].update(kind='full_covariance',values=covariance,unit='mGal^2',
+        cross_partition_dependence='possible_not_removed')
+    req['noise']['values_sha256']=survey._digest({k:req['noise'][k] for k in ('kind','unit','values')}|{'rows':rows})
+    frozen=l2.calibrate_gravity_l2(req)
+    assert frozen['selection_status']=='selected'
+    actual=refits.refit_gravity_noise(req,frozen)
+    generator=np.random.Generator(np.random.PCG64(refits.SEED))
+    expected=generator.standard_normal((32,n))@np.linalg.cholesky(covariance).T+req['observations']['gz_up_mgal']
+    np.testing.assert_array_equal(actual['targets_mgal'],expected)
+    refits.validate_noise_refits(actual,req,frozen)
+    refits.workflow.publish_archive(tmp_path/'data',tmp_path/'temp','full-covariance.gza',actual)
