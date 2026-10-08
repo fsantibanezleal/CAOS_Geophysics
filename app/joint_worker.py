@@ -82,6 +82,53 @@ def validate_child_receipt(receipt,control,context,stage):
         phases['instrument_replay']['instrument_manifest_sha256'],'joint_child_instrument_digest')
 
 
+def completed_child(control_sha256, control, context, stage):
+    """Post-exit validation, never a successful child digest on a failed check."""
+    try:
+        receipt,encoded=execution.read_json(stage/'receipt.json')
+        execution.require(receipt['control_sha256']==control_sha256,'joint_child_receipt_binding')
+        validate_child_receipt(receipt,control,context,stage)
+        execution.validate_context(context)
+        execution.validate_control(control,context)
+        if time.monotonic()>=control['deadline']: return None,'job_timeout'
+        return execution.digest(encoded),None
+    except (OSError,ValueError,TypeError,KeyError,UnicodeError):
+        return None,('job_timeout' if time.monotonic()>=control['deadline']
+                     else 'joint_child_validation_failed')
+
+
+def write_supervisor(stage, scratch, outcome, *, started=None):
+    """Count the exclusive receipt itself; rejection bytes remain charged.
+
+    The stopped child's private stage has one writer. Unexpected tree drift
+    fails finalization and retains the file for recovery, never DB promotion.
+    This is not an OS reservation or permission to release rejected bytes.
+    """
+    current=directory_bytes(stage)+directory_bytes(scratch)
+    value=dict(outcome)
+    if started is not None: value['wall_seconds']=time.monotonic()-started
+    for _ in range(16):
+        if value['execution_completed'] and time.monotonic()>=value['deadline']:
+            value.update(execution_completed=False,reason='job_timeout')
+        encoded=execution.canonical(value)
+        execution.require(len(encoded)<=65536,'joint_metadata_cap')
+        peak=max(outcome['peak_sum_stage_scratch_bytes'],current+len(encoded))
+        if peak>value['limits']['scratch_bytes'] and value['execution_completed']:
+            value.update(execution_completed=False,reason='job_scratch_limit')
+        if value['peak_sum_stage_scratch_bytes']==peak:
+            final=execution.canonical(value)
+            if max(outcome['peak_sum_stage_scratch_bytes'],current+len(final))==peak: break
+        value['peak_sum_stage_scratch_bytes']=peak
+    else: raise ValueError('joint_supervisor_byte_fixed_point')
+    execution.write_json(stage/'supervisor.json',value)
+    observed=directory_bytes(stage)+directory_bytes(scratch)
+    execution.require(observed==current+len(final) and observed<=value['peak_sum_stage_scratch_bytes'],
+                      'joint_supervisor_tree_changed_requires_recovery')
+    execution.require(not value['execution_completed'] or time.monotonic()<value['deadline'],
+                      'joint_supervisor_deadline_requires_recovery')
+    return value
+
+
 async def run_fixed_child(control_path, control_sha256, *, cancel, poll_interval=.05):
     """Actual execution, not DB promotion. Parent unions result/source lifecycle.
 
@@ -132,28 +179,23 @@ async def run_fixed_child(control_path, control_sha256, *, cancel, poll_interval
         if not failure and await cancel(): failure='user_cancelled'
         if not failure and max(stdout.stat().st_size,stderr.stat().st_size)>65536: failure='joint_log_limit'
         if not failure and process.returncode!=0: failure='joint_native_child_failed'
-        receipt=None
+        child_sha=None
         if not failure:
-            receipt,encoded=execution.read_json(stage/'receipt.json')
-            execution.require(receipt['control_sha256']==control_sha256,'joint_child_receipt_binding')
-            validate_child_receipt(receipt,control,context,stage)
             # Reopen exact selected context and every opaque original AFTER the
             # process exits; publication still rechecks actual SQL source rows.
-            execution.validate_context(context)
-            execution.validate_control(control,context)
+            child_sha,failure=completed_child(control_sha256,control,context,stage)
             disk_peak=max(disk_peak,directory_bytes(stage)+directory_bytes(scratch))
-            if time.monotonic()>=control['deadline']: failure='job_timeout'
-            elif disk_peak>control['limits']['scratch_bytes']: failure='job_scratch_limit'
+            if not failure and time.monotonic()>=control['deadline']: failure='job_timeout'
+            elif not failure and disk_peak>control['limits']['scratch_bytes']: failure='job_scratch_limit'
         outcome={'schema':'geophysics.joint-supervisor-receipt/v1','execution_completed':failure is None,
             'reason':failure,'returncode':None if process is None else process.returncode,
             'job_id':control['job_id'],'control_sha256':control_sha256,'wall_seconds':time.monotonic()-started,
             'deadline':control['deadline'],'limits':control['limits'],'peak_sampled_tree_rss_bytes':peak,
             'peak_sum_stage_scratch_bytes':disk_peak,'samples':samples,'child_receipt_sha256':
-                None if receipt is None else execution.digest(encoded),'os_reservation':False,
+                child_sha,'os_reservation':False,
             'tree_termination_verified':tree_termination_verified,
             'scientific_acceptance_verified':False,'host_admission':False,'public_activation':False}
-        execution.write_json(stage/'supervisor.json',outcome)
-        return outcome
+        return write_supervisor(stage,scratch,outcome,started=started)
     finally:
         if process is not None and process.poll() is None:
             terminate_tree(process);process.wait(timeout=5)

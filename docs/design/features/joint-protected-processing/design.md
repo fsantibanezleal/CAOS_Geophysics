@@ -142,6 +142,20 @@ accepted states and known stage bytes. No failed or merely inspected output is
 promoted to scientific acceptance. These envelopes preserve original v1 arrays
 and receipts; they never relabel historical624/384 failures.
 
+## Supervisor finalization
+
+Post-exit receipt/context/source/original errors retain a literal failed
+supervisor record with no promoted child digest. Expiration remains the same
+job timeout. Finalization closes the canonical receipt byte-count fixed point
+before its exclusive write and independently measures the actual full SUM
+afterward; the receipt is not uncharged overhead. Receipt-induced lower scratch
+overflow rejects execution. Already-rejected or uncertain bytes remain retained
+and charged. Unexpected tree drift requires recovery, never SQL publication.
+The original observer start supplies the pre-write wall snapshot, not a new
+job clock. The same absolute deadline binds closure and post-fsync measurement;
+write-time expiry refuses finalization/SQL promotion with retained unqualified
+bytes. No successful return after expiry or hard-real-time IO guarantee.
+
 ## Conditioning applicability
 
 The separate reduced LINEAR baseline adapter binds the actual public working-

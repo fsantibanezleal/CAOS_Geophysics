@@ -46,6 +46,21 @@ actual counters, exit/failure and any termination verification. Both explicitly
 leave scientific acceptance, host admission and public activation false. The
 original v1 arrays, selection and historical failure receipts are not rewritten.
 
+After child exit, invalid JSON, missing or changed receipt/context/originals
+produce a literal failed supervisor receipt. A failed validation never promotes
+a candidate child digest; expiration still uses the same job deadline. The
+final byte charge includes the exclusive supervisor receipt itself, including
+its serialized integer byte count. Receipt-induced lower scratch overflow is
+rejection, not an extra metadata allowance. A rejected stage remains charged
+and retained. Independent post-write tree measurement must match the closed
+count; unexpected concurrent changes require recovery, not publication.
+The wall snapshot includes the final pre-write measurement using the original
+observer start. The same absolute job deadline is checked through closure and
+after fsync/measurement. Pre-write expiry is a failed timeout; expiry during
+an uninterruptible write refuses finalization and retains an unqualified
+receipt for recovery. The snapshot is not a hard-real-time write-interruption
+or permission to publish a receipt whose finalization raised an error.
+
 Gates exercise an actual full26 child, original/instrument replay, original-byte
 stability and loaded magnetic source provenance; closed source/interpreter/input
 controls; full-size-before-hash refusal; original lower caps; real prelaunch and

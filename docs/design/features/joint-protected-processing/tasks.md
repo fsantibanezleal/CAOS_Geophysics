@@ -43,6 +43,16 @@ hashes are retained, not a full transitive/native or host/precision certificate.
 Canonical singleton dispatch, durable member publication/quota/recovery and
 the shared sidebar still require their separately tested additive integrations.
 
+Post-exit validation failures and the serialized supervisor's own byte charge
+have independent external-directory controls. Historical completed26 receipts
+remain unchanged and are explicitly refused as new-source acceptance. Exact
+receipt self-count, one-byte deficit, retained rejection/peak, metadata cap,
+foreign-byte drift, malformed/missing/binding/source and same-deadline expiry
+controls do not run a scientific fit. Existing real adverse-child/cancellation/
+resource controls remain binding. A changed worker source invalidates automatic
+reuse of historical positive full26 execution; scientific prerequisites must
+unlock its later fresh end-to-end qualification.
+
 Allocated successor controls use immutable committed M01 source and fresh
 external candidates:45PASS0FAIL0ERROR0SKIP. Exact0006 DDL/source/blob binding,
 plural root/type preservation, empty round trip, restrictive complete artifact
