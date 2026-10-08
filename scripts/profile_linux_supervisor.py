@@ -182,6 +182,13 @@ def verify_import_closure(configuration, module):
                     not Path(absent).exists() and not Path(absent).is_symlink(),"unexpected_runpath")
 
 
+def verify_executing_supervisor(configuration):
+    expected = Path(configuration["source_root"])/"scripts/profile_linux_supervisor.py"
+    require(Path(__file__).resolve() == expected,"executing_supervisor_changed")
+    require(sha(root_regular(expected,2*1024**2)) ==
+            configuration["source_hashes"]["scripts/profile_linux_supervisor.py"],"executing_supervisor_changed")
+
+
 def installation():
     configuration = decode(root_regular(CONFIG,65536),65536)
     source = Path(configuration["source_root"])
@@ -193,6 +200,7 @@ def installation():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     module.validate_configuration(configuration)
+    verify_executing_supervisor(configuration)
     for name,digest in configuration["source_hashes"].items():
         require(sha(root_regular(source/name,2*1024**2)) == digest,"source_changed")
     runtime = Path(configuration["environment_root"])
@@ -347,7 +355,16 @@ def show(unit):
 
 
 def stop(unit):
-    subprocess.run(["/usr/bin/systemctl","stop",unit],capture_output=True,timeout=5,check=True)
+    require(re.fullmatch(r"geophysics-profile-[a-f0-9-]{36}\.service",unit),"guardian_unit")
+    result = subprocess.run(["/usr/bin/systemctl","stop",unit],capture_output=True,timeout=5,check=False)
+    if result.returncode:
+        # Parent and guardian both drain. systemd may already have collected
+        # this transient unit; only actual manager AND kernel absence permit
+        # that repeated stop. Timeouts/unreadable state still propagate.
+        state = subprocess.run(["/usr/bin/systemctl","show",unit,"--property=LoadState","--value"],
+                               capture_output=True,timeout=3,check=True)
+        require(state.stdout.strip() == b"not-found" and
+                not (Path("/sys/fs/cgroup/system.slice")/unit).exists(),"stop_refused")
 
 
 def exclusive(fd, name, raw, uid, gid, mode=0o600):
@@ -805,7 +822,8 @@ def execute(configuration,module,identifier):
     require(os.fstat(stage_fd).st_uid == uid,"stage_owner")
     custody_root = tree_fd(Path("/run/fasl-geophysics-profile-jobs"))
     root_info = os.fstat(custody_root)
-    require(root_info.st_uid == 0 and not root_info.st_mode & 0o022,"custody_parent")
+    require(root_info.st_uid == 0 and root_info.st_gid == gid and
+            not root_info.st_mode & 0o022 and root_info.st_mode & 0o050 == 0o050,"custody_parent")
     plan = prepare_custody_plan(custody_root,module,packet,launch)
     os.mkdir(identifier,0o750,dir_fd=custody_root)
     custody_fd = os.open(identifier,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_root)

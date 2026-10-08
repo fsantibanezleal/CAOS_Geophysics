@@ -110,6 +110,50 @@ def supervisor_module():
     return module
 
 
+@pytest.mark.parametrize("load,kernel_exists,accepted",[(b"not-found\n",False,True),(b"loaded\n",False,False),(b"not-found\n",True,False)])
+def test_collected_unit_stop_requires_manager_and_kernel_absence(monkeypatch,load,kernel_exists,accepted):
+    from types import SimpleNamespace
+    module = supervisor_module()
+    calls = []
+    def run(command,**kwargs):
+        calls.append((command,kwargs))
+        return SimpleNamespace(returncode=5 if command[1] == "stop" else 0,stdout=load,stderr=b"not loaded")
+    monkeypatch.setattr(module.subprocess,"run",run)
+    monkeypatch.setattr(module.Path,"exists",lambda self:kernel_exists)
+    unit = "geophysics-profile-"+str(uuid4())+".service"
+    if accepted:
+        module.stop(unit)
+    else:
+        with pytest.raises(ValueError):
+            module.stop(unit)
+    assert calls[0][0] == ["/usr/bin/systemctl","stop",unit]
+    assert len(calls) == 2 and calls[1][0][-2:] == ["--property=LoadState","--value"]
+
+
+def test_stop_cannot_target_an_unowned_name(monkeypatch):
+    module = supervisor_module()
+    monkeypatch.setattr(module.subprocess,"run",lambda *args,**kwargs:pytest.fail("must refuse before manager call"))
+    with pytest.raises(ValueError):
+        module.stop("unrelated.service")
+
+
+def test_executing_supervisor_must_match_configured_source(monkeypatch):
+    from pathlib import Path
+    module = supervisor_module()
+    source = Path(module.__file__).resolve().parents[1]
+    body = b"actual pinned test bytes"
+    config = dict(source_root=str(source),source_hashes={"scripts/profile_linux_supervisor.py":module.sha(body)})
+    monkeypatch.setattr(module,"root_regular",lambda path,cap:body)
+    module.verify_executing_supervisor(config)
+    config["source_root"] = str(source/"another")
+    with pytest.raises(ValueError):
+        module.verify_executing_supervisor(config)
+    config["source_root"] = str(source)
+    config["source_hashes"]["scripts/profile_linux_supervisor.py"] = "0"*64
+    with pytest.raises(ValueError):
+        module.verify_executing_supervisor(config)
+
+
 def test_source_closure_includes_the_actual_imported_provider_helper_and_ledger():
     assert "data-pipeline/sources.py" in SOURCE_FILES
     assert "data/source-ledger.json" in SOURCE_FILES
