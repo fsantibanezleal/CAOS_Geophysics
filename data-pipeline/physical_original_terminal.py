@@ -21,7 +21,7 @@ SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 ZERO, ONE = Decimal(0), Decimal(1)
 # Transitive closed source binding until consumers add the named module to
 # their full inventories. The literal terminal file itself binds this hash.
-ROWS_SHA256 = '9d346dc3b5f3e45e7ca689eb5fed57389ef7217ceb25195ee022ed4b6ac2be10'
+ROWS_SHA256 = '8a18a0ae04bfd09336480e06d2e9526aecab79a232033e9ca5d0040b16e9f399'
 
 
 def original_row_arithmetic(digits, deadline):

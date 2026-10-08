@@ -19,7 +19,7 @@ MAX_DIGITS = 1200
 MIN_EXPONENT, MAX_EXPONENT = -1200, 1200
 ENDPOINT_SLOT_BYTES = 2048
 ROW_WORKSPACE_BYTES = 8*1024*1024
-ARITHMETIC_EPOCH = 'exact-dyadic-original-terminal-1'
+ARITHMETIC_EPOCH = 'exact-dyadic-original-terminal-2'
 
 
 def _endpoint(value):
@@ -28,9 +28,7 @@ def _endpoint(value):
     parts = value.as_tuple()
     if len(parts.digits) > MAX_DIGITS or not MIN_EXPONENT <= parts.exponent <= MAX_EXPONENT:
         raise ValueError('original rows: bounded endpoint digits/exponent')
-    integer = int(''.join(map(str, parts.digits)))
-    if parts.sign:
-        integer = -integer
+    integer = int(Decimal((parts.sign, parts.digits, 0)))
     return integer, parts.exponent if integer else 0
 
 
