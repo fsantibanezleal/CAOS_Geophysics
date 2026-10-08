@@ -1,6 +1,7 @@
 """Authored orchestration controls plus actual local process-custody negatives."""
 
 import ctypes
+import hashlib
 import importlib.util
 import json
 import os
@@ -10,6 +11,7 @@ import subprocess
 import sys
 import threading
 import time
+from types import SimpleNamespace
 
 import pytest
 
@@ -427,3 +429,74 @@ def test_closed_schema_rejects_boolean(case):
     with pytest.raises(harness.Refusal, match="schema"):
         harness.run(str(path), str(root), str(root / "cache"), str(root / "reports"))
     assert not (root / "counter.txt").exists()
+
+
+def test_directory_inventory_exact_bytes_without_per_file_resolution(case, monkeypatch):
+    root, _ = case
+    closure = root / "many-files"
+    closure.mkdir()
+    (closure / "empty").mkdir()
+    for index in range(128):
+        directory = closure / str(index % 8)
+        directory.mkdir(exist_ok=True)
+        (directory / f"{index}.txt").write_bytes(str(index).encode())
+    expected, byte_count = {}, 0
+    for path in closure.rglob("*"):
+        if path.is_dir():
+            expected[path.relative_to(closure).as_posix()] = None
+        else:
+            body = path.read_bytes()
+            expected[path.relative_to(closure).as_posix()] = {
+                "bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()}
+            byte_count += len(body)
+    calls, original = [], harness.absolute
+
+    def observed(value, exists=True):
+        calls.append(value)
+        return original(value, exists)
+
+    monkeypatch.setattr(harness, "absolute", observed)
+    inventory = harness.inventory([str(closure)])
+    assert calls == [str(closure)]
+    assert inventory[str(closure)] == {
+        "inventory_sha256": hashlib.sha256(harness.canonical(expected)).hexdigest(),
+        "member_count": len(expected), "bytes": byte_count}
+
+
+def test_directory_membership_change_during_hash_refused(case, monkeypatch):
+    root, _ = case
+    closure = root / "changing"
+    closure.mkdir()
+    (closure / "first.txt").write_bytes(b"first")
+    original = harness.file_record
+    changed = False
+
+    def mutate(path):
+        nonlocal changed
+        record = original(path)
+        if not changed:
+            (closure / "late.txt").write_bytes(b"late member")
+            changed = True
+        return record
+
+    monkeypatch.setattr(harness, "file_record", mutate)
+    with pytest.raises(harness.Refusal, match="directory changed during hash"):
+        harness.inventory([str(closure)])
+
+
+def test_recursive_reparse_directory_refused(case, monkeypatch):
+    root, _ = case
+    closure = root / "parent"
+    nested = closure / "linked"
+    nested.mkdir(parents=True)
+    original = Path.lstat
+
+    def reparse(path):
+        info = original(path)
+        if path == nested:
+            return SimpleNamespace(st_mode=info.st_mode, st_file_attributes=0x400)
+        return info
+
+    monkeypatch.setattr(Path, "lstat", reparse)
+    with pytest.raises(harness.Refusal, match="linked path"):
+        harness.inventory([str(closure)])

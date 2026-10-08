@@ -56,6 +56,11 @@ orchestration bounds, not scientific CPU, RAM or scratch caps. The whole graph
 and every file are validated before spawning anything.
 Top-level declared path existence and link checks for the whole graph precede
 content hashing, so a later missing source does not hash earlier runtime trees.
+Directory inventories check the root/ancestors once, inspect every interior
+entry for links/reparse points, hash every file, then recheck each directory's
+identity and membership metadata. They do not repeatedly resolve all ancestors
+for each file. This preserves the complete byte/name inventory without the
+measured Windows per-file ancestor-resolution overhead.
 
 ## Evidence and failure reuse
 
