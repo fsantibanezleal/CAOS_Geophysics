@@ -22,8 +22,10 @@ first-order7n graph. The public metric validates actual storage/graph, not prose
 The public source owns Joseph factor/action/lifetime and installed native CG.
 Adapter passes actual whitened A, original total receiver-component count,
 training component count and literal original covariance kind. Source budget
-max(old M11 whole problem envelope, public allocation.maximum) is bound to a
-new allocation digest; no observed-RSS subtraction or native tuple guessing.
+sum(old M11 whole problem envelope, public allocation.maximum) is conservatively
+bound to a new allocation digest. This deliberately double-charges possible
+overlaps until a tighter joint lifetime proof exists; no observed-RSS subtraction
+or native tuple guessing. The public maximum and original2GiB limits remain.
 Actual single-thread binary/runtime checks remain public kernel authority.
 
 Original relative objective/model oracle thresholds use denominator>=1. Thus
