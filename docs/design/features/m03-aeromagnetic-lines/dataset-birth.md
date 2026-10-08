@@ -95,6 +95,40 @@ intake and joined source routes; default quota/staged deficit; original native
 geometry publication; source drift, first failure, postmove uncertainty and
 retained recovery. Parent owns route/migration mounting and shared accounting.
 
+## Fixed installation/controller and actual service semantics
+
+The owned Windows controller executes the existing suspended-process Job
+runtime. Its mandatory backend installation verifier must independently bind
+`m03.owner-dataset-preparation/v1`, actual source/executable/environment bytes,
+configured external roots and caps. There is no default grant, posted authority,
+dynamic command, callback or module. An ERT/TT-only configuration cannot grant
+this method. The immutable authority snapshot is rechecked at every phase and
+publication; native source/executable receipts must match it exactly. Test-only
+installation verifiers are controls, never production assembly evidence.
+
+The synchronous service commits16MiB inspection debt before mkdir, derives
+every bundle UUID from genuine intake roles, verifies the original metadata,
+independently proves/reserves phase2 before allocating it, and checks full
+geometry without measurement decoding. Whole attempt CPU<=600s, wall<=min(600,
+configured wall) and parent CPU<=300s include all phases; phase2 receives only
+the remaining budget. Failed inspection never starts phase2. Cancellation waits
+actual contained drain, never treats coroutine cancellation as process drain.
+
+Only strict original-row/dictionary geometry, complete inventories and actual
+counter agreement permit a descriptor. Ordered row IDs use the inspected
+fixed-width row_id content identity, never sorted or downsampled IDs. Windows
+exclusive move and Linux renameat2 NOREPLACE refuse overwrite; no racy exists
+check grants an overwrite. Commit uncertainty before move, verify both sides,
+then atomically publish the Dataset and terminal attempt. Raw byte accounting
+is unchanged: existing derived accounting charges the descriptor once while
+retained preparation bytes remain separate debt. No automatic adoption/retry.
+
+Read-only recovery checks source parents, descriptor, both native receipts,
+complete workspace inventory and one Dataset per published attempt. Unknown
+empty directories and every interrupted/uncertain attempt refuse destructive
+parent integration. These leaves do not mount routes, grant Linux admission,
+change the allocated0007 capsule, or change shared accounting/deletion defaults.
+
 ## Espanol
 
 La reserva inicial corresponde a inspeccion acotada, no al techo de32GiB.
@@ -119,3 +153,23 @@ This qualifies the native inspection/preparation components, not the SQL owner
 quota transaction, publication/recovery, authenticated dataset endpoint, full
 scientific fit, provider original, host admission or integration. The quota
 one-byte-deficit gate still requires the actual owner service transaction.
+
+## Explicit phase allocation and repeated cancellation
+
+The owner creates the committed attempt namespace, then the inspection phase
+exactly once without recursive phase re-entry. Both operations occur after the
+durable reservation, not before it. The original independent SQL observer and
+all native positive/adverse assertions remain required. An earlier real201
+control stopped at a duplicated recursive mkdir observation; it remains a
+failed control, not a retroactively passed workflow or scientific verdict.
+
+On caller cancellation, the service publishes the exact existing cancellation
+marker and waits for the actual bounded native task. Additional cancellations
+cannot interrupt that wait or durable failure/debt recording. Even marker-write
+failure must drain the native operation. An operation's real exception or
+cancellation never becomes a success receipt. Six deterministic running-thread
+controls supplement, not replace, the two real native owner controls.
+
+ES: La reserva se confirma antes de crear el namespace y la fase. Cancelaciones
+HTTP repetidas no prueban cierre nativo: se espera su terminacion real y se
+conserva deuda durable; fallos anteriores y pruebas negativas quedan intactos.

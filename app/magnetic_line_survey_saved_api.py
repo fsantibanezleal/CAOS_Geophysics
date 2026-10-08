@@ -95,7 +95,10 @@ def install_magnetic_line_survey_saved_routes(app,settings: Settings,current_use
             value=json.loads(raw,object_pairs_hook=_unique_object,parse_constant=_reject_constant)
         except (ValueError,RecursionError) as exc:
             raise ApiError(409,'survey_result_invalid','Survey result is invalid') from exc
-        if type(value) is not dict or value.get('schema')!='magnetic-line-survey-result/2' or value.get('run_id')!=job.id:
+        if type(value) is not dict or value.get('run_id')!=job.id or (
+            value.get('schema')=='magnetic-line-survey-result/3' and value.get('policy_epoch')!='augmented_direct_qr_v3') or \
+           value.get('schema') not in ('magnetic-line-survey-result/2','magnetic-line-survey-result/3') or (
+            value.get('schema')=='magnetic-line-survey-result/2' and value.get('policy_epoch') not in ('fixed_basis_v1','resolution_v2')):
             raise ApiError(409,'survey_result_invalid','Survey result identity differs from its job')
         # Return original verified UTF-8 bytes, not a reserialized identity.
         return Response(raw,media_type='application/json',headers={'Cache-Control':'no-store','X-Content-SHA256':stored.sha256})

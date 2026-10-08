@@ -416,14 +416,16 @@ def _publication_receipts(result: dict, ready: dict, actual: dict, original: Bou
     """
     try:
         epoch=result['policy_epoch']
-        resolution=epoch=='resolution_v2'
-        if epoch not in ('resolution_v2','fixed_basis_v1') or \
+        qr=epoch=='augmented_direct_qr_v3'
+        resolution=epoch=='resolution_v2' or qr
+        if epoch not in ('resolution_v2','fixed_basis_v1','augmented_direct_qr_v3') or \
+           result['schema']!=('magnetic-line-survey-result/3' if qr else 'magnetic-line-survey-result/2') or \
            type(result['fit']['fit_count']) is not int or result['fit']['fit_count']!=(97 if resolution else 25) or \
            type(result['inventory']['original_rows']) is not int or not 0<result['inventory']['original_rows']<=8000000 or \
            result['input']['original']['csv_sha256']!=original.sha256 or \
            result['input']['original']['csv_bytes']!=original.byte_count:
             raise ValueError('Result completion differs from original')
-        if fitted['schema']!=('m03-global-physical-fit/2' if resolution else 'm03-global-physical-fit/1') or \
+        if fitted['schema']!=('m03-global-physical-fit/3' if qr else 'm03-global-physical-fit/2' if resolution else 'm03-global-physical-fit/1') or \
            fitted['original']!=result['input']['original'] or fitted['rows']!=result['inventory']['original_rows'] or \
            type(fitted['rows']) is not int or type(fitted['evaluation_count']) is not int or \
            fitted['evaluation_count']!=1 or fitted['fit']!=result['fit'] or \
@@ -431,7 +433,7 @@ def _publication_receipts(result: dict, ready: dict, actual: dict, original: Bou
             raise ValueError('Physical fit differs from completed Result')
         common=dict(result_sha256=actual['sha256'],rows=result['inventory']['original_rows'],policy_epoch=epoch)
         if resolution:
-            expected=dict(schema='m03-resolution-fit-ready/1',**common,original=result['input']['original'],
+            expected=dict(schema='m03-qr-fit-ready/1' if qr else 'm03-resolution-fit-ready/1',**common,original=result['input']['original'],
                 fit_count=97,evaluation_count=1,outer_status='opened_authored_diagnostic',field_acceptance='unresolved',
                 full_result='assembled',host_admission='not_established')
             # This is the exact full physical-fit document hash, NOT a hash of
@@ -488,19 +490,23 @@ async def publish_drained_result(session: AsyncSession, settings: WorkerSettings
     if inventory!=attempt.inventory or sum(item['bytes'] for item in inventory)!=attempt.retained_bytes:
         raise ApiError(409,'survey_inventory_mismatch','Actual retained attempt bytes differ')
     result=_document(root,'result/result.json',inventory)
-    if result.get('schema')!='magnetic-line-survey-result/2' or result.get('run_id')!=job.id:
+    qr=result.get('schema')=='magnetic-line-survey-result/3' and result.get('policy_epoch')=='augmented_direct_qr_v3'
+    if (not qr and (result.get('schema')!='magnetic-line-survey-result/2' or
+        result.get('policy_epoch') not in ('fixed_basis_v1','resolution_v2'))) or result.get('run_id')!=job.id:
         raise ApiError(409,'survey_result_invalid','Survey result identity differs from its job')
     # The fixed full native producer independently validates all result/DAG/
     # selected-model/grid semantics before writing readiness. This publication
     # fence is additional DB/file custody, not a substitute numerical verifier.
     resolution=result.get('policy_epoch')=='resolution_v2'
-    ready=_document(root,'resolution-fit-ready.json' if resolution else 'result-ready.json',inventory)
+    ready=_document(root,'qr-fit-ready.json' if qr else 'resolution-fit-ready.json' if resolution else 'result-ready.json',inventory)
     actual=next((item for item in inventory if item['name']=='result/result.json'),None)
     if actual is None:
         raise ApiError(409,'survey_result_invalid','Survey result differs from its original parents')
     fitted=_document(root,'fit/physical-fit.json',inventory)
     fit_receipt=next(item for item in inventory if item['name']=='fit/physical-fit.json')
     _publication_receipts(result,ready,actual,bound.original,fitted,fit_receipt)
+    if qr:
+        _qr_publication_execution(result,root,inventory,source_sha256)
     for role,parent in [('metadata',bound.metadata),('request',bound.request)]:
         await asyncio.to_thread(_verify_bytes,storage_root(settings.data_dir),root/'result'/(role+'.json'),
             parent.sha256,parent.byte_count,'survey_result_invalid')
@@ -532,3 +538,41 @@ async def publish_drained_result(session: AsyncSession, settings: WorkerSettings
         await session.rollback()
         raise
     return job_view(job)
+
+
+def _qr_publication_execution(result:dict,root:Path,inventory:list,source_sha256:dict)->None:
+    """Actual prevalue execution/source/file binding AFTER full native semantics.
+
+    Does not recreate a seal, import a numerical engine or reinterpret LSMR.
+    Parent-supplied fixed installed authority and actual native verification
+    remain mandatory. This is an additive DB/file fence, not that authority.
+    """
+    try:
+        identity=result['execution']
+        if type(identity) is not dict or set(identity)!=set('name bytes sha256'.split()) or identity['name']!='qr-execution.json':
+            raise ValueError('Missing exact execution identity')
+        stored=next(item for item in inventory if item['name']=='result/qr-execution.json')
+        if (stored['bytes'],stored['sha256'])!=(identity['bytes'],identity['sha256']):raise ValueError('Execution differs')
+        execution=_document(root,'result/qr-execution.json',inventory)
+        if set(execution)!=set('schema epoch policy original geometry_sha256 metadata_sha256 request_sha256 prerequisite_sha256 source_sha256 capacity proof value_access'.split()) or \
+           execution!=_document(root,'qr-execution.json',inventory) or execution['schema']!='m03-qr-execution/1' or \
+           execution['epoch']!='augmented_direct_qr_v3' or execution['value_access']!='not_opened' or \
+           execution['original']!=result['input']['original'] or execution['geometry_sha256']!=sha256(canonical_bytes(result['geometry'])) or \
+           execution['policy']!=result['fit']['solver'] or result['fit']['fit_count']!=97:
+            raise ValueError('Execution parent differs')
+        pins=execution['source_sha256']
+        # The prevalue execution seal pins the complete owned source set.
+        # Environment also records dotted third-party implementation modules;
+        # those have their own package/native evidence, not invented local .py
+        # names. The fixed native semantic verifier checks the required owned
+        # set; every member here must additionally bind trusted runtime pins.
+        expected={item['module_name']+'.py':item['sha256'] for item in result['environment']['loaded_modules']
+                  if '.' not in item['module_name']}
+        if type(pins) is not dict or not pins or pins!=expected or \
+           any(_hash(value)!=source_sha256.get(name) for name,value in pins.items()):
+            raise ValueError('Execution source differs')
+        for key in ('metadata','request'):
+            receipt=result['input']['metadata'] if key=='metadata' else result['request']
+            if execution[key+'_sha256']!=receipt['sha256']:raise ValueError('Execution document differs')
+    except (KeyError,TypeError,ValueError,StopIteration) as error:
+        raise ApiError(409,'survey_result_invalid','QR execution differs from its original receipt') from error

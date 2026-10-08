@@ -87,7 +87,27 @@ class SurveyExport(BaseModel):
     scope: Literal["private", "public"]
 
 
-DTO = TypeVar("DTO", SurveyStart, SurveyExport)
+class SurveyDatasetRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid',strict=True,frozen=True)
+    schema_version:Literal['m03-owner-dataset-request/1']=Field(alias='schema')
+    original_asset_id:WireUUID
+    original_sha256:Hash
+    metadata_asset_id:WireUUID
+    metadata_sha256:Hash
+    request_asset_id:WireUUID
+    request_sha256:Hash
+    auxiliary_asset_ids:list[WireUUID]=Field(min_length=0,max_length=16)
+    auxiliary_sha256:list[Hash]=Field(min_length=0,max_length=16)
+
+    @model_validator(mode='after')
+    def distinct_references(self):
+        identities=[self.original_asset_id,self.metadata_asset_id,self.request_asset_id,*self.auxiliary_asset_ids]
+        if len(set(identities))!=len(identities) or len(self.auxiliary_asset_ids)!=len(self.auxiliary_sha256):
+            raise ValueError('Distinct paired input references required')
+        return self
+
+
+DTO = TypeVar("DTO", SurveyStart, SurveyExport, SurveyDatasetRequest)
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict:
@@ -129,6 +149,10 @@ def parse_survey_export(raw: bytes) -> SurveyExport:
     return _parse(raw, SurveyExport)
 
 
+def parse_survey_dataset(raw:bytes)->SurveyDatasetRequest:
+    return _parse(raw,SurveyDatasetRequest)
+
+
 @dataclass(frozen=True)
 class BoundSurveyFile:
     id: UUID
@@ -153,6 +177,57 @@ class OwnedSurveySources:
     metadata: BoundSurveyAsset
     request: BoundSurveyAsset
     auxiliaries: tuple[BoundSurveyAsset, ...]
+
+
+@dataclass(frozen=True)
+class OwnedDatasetInputs:
+    owner_id:UUID
+    project_id:UUID
+    original:BoundSurveyAsset
+    metadata:BoundSurveyAsset
+    request:BoundSurveyAsset
+    auxiliaries:tuple[BoundSurveyAsset,...]
+
+
+async def bind_owned_dataset_inputs(session:AsyncSession,settings:Settings,project_id:UUID,
+                                    user:User,request:SurveyDatasetRequest)->OwnedDatasetInputs:
+    """Real joined parents, no fabricated Dataset dependency for first upload."""
+    from app.magnetic_line_survey_intake import SurveyAssetHeader
+    from app.magnetic_line_survey_models import SurveyIntake
+    from app.magnetic_line_survey_lifecycle import storage_root
+    request=SurveyDatasetRequest.model_validate(request.model_dump(by_alias=True))
+    project=str(project_id);await _owned_project(session,project,user)
+    root=storage_root(settings.data_dir)
+    inputs=[]
+    references=[(request.original_asset_id,request.original_sha256,'original_csv'),
+        (request.metadata_asset_id,request.metadata_sha256,'metadata_json'),
+        (request.request_asset_id,request.request_sha256,'request_json'),
+        *((key,digest,None) for key,digest in zip(request.auxiliary_asset_ids,request.auxiliary_sha256,strict=True))]
+    for key,digest,role in references:
+        raw,source=await _owned_asset(session,project,str(key),user)
+        intake=await session.get(SurveyIntake,str(key))
+        if intake is None or intake.owner_id!=user.id or intake.project_id!=project or intake.state!='published' or \
+           intake.asset_id!=raw.id or intake.retained_bytes!=0 or intake.inventory or source.project_id!=project or \
+           raw.validation_status!='m03_bytes_custodied' or raw.detected_format!='m03_'+intake.role or \
+           raw.physical_metadata!=dict(schema='m03-owner-asset/1',role=intake.role):
+            raise _integrity('survey_source_role_invalid')
+        if (role is not None and intake.role!=role) or (role is None and intake.role not in (
+            'typed_auxiliary_bundle','navigation_original','base_original','calibration_original','reference_original','offset_original')):
+            raise _integrity('survey_source_role_invalid')
+        try:header=SurveyAssetHeader.model_validate(intake.header_json)
+        except ValueError as exc:raise _integrity('survey_source_role_invalid') from exc
+        if header.filename!=raw.filename or header.mime!=raw.client_mime or header.role!=intake.role or \
+           header.source.expected_bytes!=raw.byte_count or raw.sha256!=digest or source.sha256!=digest or \
+           header.source.expected_sha256!=digest or source.expected_bytes!=raw.byte_count or \
+           source.declared_format!=raw.detected_format or source.rights_decision!='mirror' or source.private_storage_permission!='attested' or \
+           raw.storage_key!=f'projects/{user.id}/{project}/{raw.id}' or \
+           any(getattr(source,key)!=getattr(header.source,key) for key in ('provider','doi','citation','rights_statement','rights_decision','attribution')):
+            raise _integrity('survey_source_role_invalid')
+        checked_storage_path(settings,raw.storage_key)
+        path=root/raw.storage_key
+        await asyncio.to_thread(_verify_bytes,root,path,digest,raw.byte_count,'raw_integrity_failed')
+        inputs.append(BoundSurveyAsset(UUID(raw.id),digest,raw.byte_count,path,UUID(source.id),source.rights_decision,source.private_storage_permission))
+    return OwnedDatasetInputs(user.id,project_id,*inputs[:3],tuple(inputs[3:]))
 
 
 def _integrity(code: str) -> ApiError:
