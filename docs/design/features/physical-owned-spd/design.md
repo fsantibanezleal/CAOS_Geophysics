@@ -8,7 +8,8 @@ in either historical optimizer. Epochs:
 
 The adapter supplies original physical DTOs, not a metric/operator callback.
 `MetricOperands` contains original beta-weighted regularization CSR A and the
-actual whitened physical Jacobian K at the requested exact q. It binds actual
+actual whitened physical Jacobian K at the requested exact q and the literal
+original likelihood normalization c (1 or1/2, never a tuning knob). It binds actual
 q, objective/source/allocation hashes, full source COMPONENT count, fit COMPONENT
 count, parameter count and literal covariance kind. No caller-supplied factor,
 P, F, SPD assertion, perturbation or user-upload native callback is accepted.
@@ -17,7 +18,7 @@ entry; principal indices come from the public optimizer's actual active set.
 The adapter's source admission remains separate from this typed numerical ABI.
 
 For free face J, use A_J with the examined fixed-natural IC0 numeric kernel:
-stored unit-lower L and positive D; no shift/permutation/floor/retry. B=sqrt(2)K_J,
+stored unit-lower L and positive D; no shift/permutation/floor/retry. B=sqrt(2c)K_J,
 T=(LDL^T)^-1 B^T, S=I+BT, symmetrize METRIC S only, Cholesky without jitter,
 F=T S^-1 in64-row chunks. P=(I-FB)(LDL^T)^-1(I-FB)^T+FF^T. Stored-real SPD:
 both square terms vanishing would give F^T v=0 and (I-FB)^T v=v, impossible for
@@ -71,6 +72,11 @@ absolute limits; no terminal boolean callback. These are conservative sufficient
 conditions, not a replacement for independent physical scientific tests.
 Optional relative thresholds must first be converted to declared absolute
 original units by independently reviewed source adapters, not hidden score data.
+The physical prediction-row set may be a declared bounded subset of the original
+source geometry (at least1 and no more than charged source COMPONENT count).
+The receipt records its actual row count; a fit-row bound is NOT a heldout/full-
+geometry bound. Do not duplicate or synthesize rows to fill the source allocation
+shape. Full source component accounting stays unchanged even for a subset audit.
 No quadratic bounds are used for nonlinear total-norm or quartic cross-gradient
 without a separate exact global curvature proof. Stronger nonlinear KKT alone
 is NOT model/prediction/objective accuracy acceptance.
