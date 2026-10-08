@@ -149,6 +149,8 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                     'magnetic_line_survey_navigation.py', 'magnetic_line_survey_diagnosis.py',
                     'magnetic_line_survey_reference.py', 'magnetic_line_survey_corrections.py',
                     'magnetic_line_survey_physical_fit.py',
+                    'magnetic_line_survey_contract_v2.py','magnetic_line_survey_representation.py',
+                    'magnetic_line_survey_capacity_v2.py','magnetic_line_survey_grid.py','magnetic_line_survey_transforms.py',
                     'magnetic_lines.py', 'magnetic_line_validation.py')
     def source_identity():
         return {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}

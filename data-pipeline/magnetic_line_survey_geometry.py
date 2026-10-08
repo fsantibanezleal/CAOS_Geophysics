@@ -232,6 +232,8 @@ def plan_partitions(geometry_root, inspection, request, request_root, output, *,
                                 sources=sources, source_members=members, source_blocks=source_table))
         grid = request['grid']
         cells = grid['nx']*grid['ny']*(2 if grid['continuation_delta_m'] is not None else 1)
+        if request['spectrum'] is not None:
+            cells+=request['spectrum']['rectangle']['nx']*request['spectrum']['rectangle']['ny']
         boundary = grid['boundary_policy']
         fft = (grid['nx']+2*boundary['pad_e_cells'])*(grid['ny']+2*boundary['pad_n_cells'])
         capacity = core.plan_capacity(inspection['rows'], max(f['sources']['shape'][0] for f in results),

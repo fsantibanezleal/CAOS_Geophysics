@@ -31,7 +31,7 @@ def run_instrument_worker(plan, workspace, job_handle):
     require_job(job_handle)
     core._closed(plan, 'schema csv_path geometry_root inspection metadata request request_root navigation_root '
                         'auxiliary_roots reference_definitions', 'correction')
-    if plan['schema'] not in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1'):
+    if plan['schema'] not in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1','m03-physical-grid-plan/1'):
         raise core.SurveyError('invalid_contract', 'correction')
     metadata, request = schema.validate('SurveyInput', plan['metadata']), schema.validate('SurveyRequest', plan['request'])
     from magnetic_line_survey_seal import seal_geometry
@@ -50,7 +50,7 @@ def run_instrument_worker(plan, workspace, job_handle):
         original=metadata['original'], rows=result['rows'], result_sha256=base.digest(result),
         output_sha256=result['output_sha256'], edges=len(result['edges']), numerical_admission='not_established',
         full_result='not_assembled', field_acceptance='unresolved')))
-    if plan['schema'] == 'm03-physical-fit-plan/1':
+    if plan['schema'] in ('m03-physical-fit-plan/1','m03-physical-grid-plan/1'):
         from magnetic_line_survey_physical_fit import fit_corrected
         print('m03-worker:physical-global-fit', flush=True)
         fitted = fit_corrected(workspace/'sealed', sealed, workspace/'measurements', measurements,
@@ -59,6 +59,15 @@ def run_instrument_worker(plan, workspace, job_handle):
             schema='m03-physical-fit-ready/1', original=metadata['original'], rows=fitted['rows'],
             result_sha256=base.digest(fitted), fit_count=fitted['fit']['fit_count'], evaluation_count=fitted['evaluation_count'],
             full_result='not_assembled', field_acceptance='unresolved', predictive_acceptance='not_established')))
+        if plan['schema']=='m03-physical-grid-plan/1':
+            from magnetic_line_survey_grid import predict_grids
+            print('m03-worker:physical-global-grid',flush=True)
+            grids=predict_grids(workspace/'sealed',sealed,workspace/'fit',fitted,metadata,request,
+                workspace/'grids',temp_root=workspace,job_handle=job_handle)
+            core._write_member(workspace,'physical-grid-ready.json',base.canonical_bytes(dict(
+                schema='m03-physical-grid-ready/1',original=metadata['original'],rows=fitted['rows'],
+                result_sha256=base.digest(grids),grid_count=len(grids['grid']),
+                full_result='not_assembled',field_acceptance='unresolved',predictive_acceptance='not_established')))
     return 0
 
 
