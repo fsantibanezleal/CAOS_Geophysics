@@ -11,3 +11,9 @@
    commit/push and public manifest to M04. M04 reruns its full original matrix.
 5. M02 original tests/full24/refits/noise/repeatedcaps and additive actual API/UI/
    course remain open; no source/native/Linux/host/public activation inferred.
+
+Actual current controls:19 new public seam PASS, preceding combined97 PASS
+(18 corrected IRLS,18 then-current SPD,61 historical linear/nonlinear public
+controls),zero skips. Full original528 prospective fit clears all attemptedCG
+in1..3iterations but FAILS original20LS after20accepted,KKT.08255,101.875s.
+That failure is retained, not full-fit scientific PASS or matrix acceptance.

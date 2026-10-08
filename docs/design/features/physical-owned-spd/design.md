@@ -58,6 +58,12 @@ Linear native200 accepted/20LS/120s remains; nonlinear250/30LS/1800s remains,
 with lower caller remaining/deadline applied (M04 actual200/120s). Same native
 minimize/history; no terminal restart. Preserve nested linear certificate and
 nonlinear actual chord Armijo plus any original adapter certificate.
+Retain each actually evaluated LS trial's scalar alpha/F/slope/decision and
+exact trial-model hash, plus the final failed trial vector. Maximum4020 linear
+or7530 nonlinear scalar rows; each bounded closed row<768 Python/native bytes,
+plus one<=32768byte trial vector, fits the existing8MiB wrapper reserve. No
+repeated full q/g/p per trial. Direction rows retain actual original p/q/g for
+reconstruction. These observational rows are not new acceptance certificates.
 
 `TerminalPolicy` declares normalized exact-bound KKT no larger than original
 1e-5; public computation uses native original gradient and initial norm. When
