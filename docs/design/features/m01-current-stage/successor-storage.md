@@ -26,6 +26,10 @@ active jobs, inconsistent ownership or unsupported tuples refuse without
 mutation. The new schema registration must bind actual successor source bytes,
 Git blob and independently measured DDL; a revision name alone cannot admit it.
 Until independently reviewed, the measured registration is not runtime approval.
+The exact measured record is [successor-schema-registration.json](successor-schema-registration.json).
+Its positive revision pair extends the current-stage chain only; historical
+isolated 0004/v1 restore validators still refuse it. No runtime source-policy or
+native patch admission follows from this registration's mere presence.
 
 The isolated SQLite candidate uses delete/memory journal only. Foreign keys are
 disabled only before its explicit transaction, restored and checked afterwards.

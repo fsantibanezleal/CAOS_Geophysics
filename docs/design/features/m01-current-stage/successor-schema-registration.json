@@ -1,0 +1,8 @@
+{
+  "schema": "geophysics.physical-schema-registration/v1",
+  "revision": "0005_physical_forest",
+  "down_revision": "0004_waveform_artifacts",
+  "ddl_sha256": "b35d30cbbc77e7c26ad4d4c0efa7d2365cdd582e7e22979ca1ae0461ef1dacb4",
+  "migration_sha256": "77610d1f49dc1ffe2b4cd8bbb5c8f3afa39c63266c1a89850c2f17afa7803a8f",
+  "migration_git_blob": "a2cbc8328e48ec4dd2b2efefc0afba6a01a39162"
+}
