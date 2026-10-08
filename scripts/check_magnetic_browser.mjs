@@ -9,6 +9,8 @@ const course=args.includes("--course");
 const viewPath=arg("--view"),output=arg("--output-root"),packages=arg("--packages"),bundleExport=arg("--bundle-export"),repo=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 for(const p of [viewPath,output,bundleExport])if(p.toLowerCase().startsWith("d:\\_repos\\")||p.toLowerCase().startsWith("e:\\_worktrees\\"))throw Error("Explicit external artifacts required");
 await mkdir(output); // Fresh directory only, never reuse or delete prior proof.
+// Playwright's profiles/downloads must obey the same explicit external root.
+process.env.TEMP=output;process.env.TMP=output;process.env.TMPDIR=output;
 const {build}=await import(pathToFileURL(join(packages,"esbuild/lib/main.js")).href);
 await build({entryPoints:[join(repo,"tests/ui/magnetic_leaf.tsx")],outfile:join(output,"leaf.js"),bundle:true,format:"esm",platform:"browser",nodePaths:[packages],jsx:"automatic",loader:{".woff":"dataurl",".woff2":"dataurl",".ttf":"dataurl"},define:{"process.env.NODE_ENV":"\"production\""}});
 const raw=await readFile(viewPath),v=JSON.parse(raw), receipt=JSON.stringify(v.binding);
@@ -43,6 +45,11 @@ try{
       if(count!==9)throw Error("Complete nine-chapter course required");
       for(let k=0;k<count;k++){await chapter.selectOption(String(k));await root.locator(".katex").first().waitFor();
         if(await root.locator(".katex-error").count())throw Error("Equation failed to render");
+        if(await root.locator(".equation").count()!==2||await root.locator("svg[data-magnetic-method-diagram]").count()!==1)throw Error("Complete captioned derivation and method diagram required");
+        const references=root.locator("article a[href^='https://']");
+        if(await references.count()<2)throw Error("Inline and section primary citations missing");
+        for(const href of await references.evaluateAll(nodes=>nodes.map(n=>n.getAttribute("href"))))if(!href?.startsWith("https://raw.githubusercontent.com/"))throw Error("Unexpected primary citation identity");
+        if(await root.locator("article").textContent().then(text=>/\.py\b|data-pipeline\/|M02|CAOS_MANAGE/.test(text??"")))throw Error("Internal implementation path exposed in course UI");
         lessons.push(await root.getAttribute("data-lesson"));
         // Shell/body owns scrolling. A full-page capture can show blank regions
         // outside that actual viewport; paint and capture every substantive pane.
@@ -50,13 +57,19 @@ try{
         await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-text.png`)});
         const equation=root.locator(".equation").first();await equation.scrollIntoViewIfNeeded();
         await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-equation.png`)});
+        await root.locator(".equation").nth(1).scrollIntoViewIfNeeded();
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-derivation.png`)});
+        await root.locator("svg[data-magnetic-method-diagram]").scrollIntoViewIfNeeded();
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-diagram.png`)});
+        await references.last().scrollIntoViewIfNeeded();
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-worked-question.png`)});
         await root.locator("aside").scrollIntoViewIfNeeded();
         await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-readout.png`)});
         await chapter.scrollIntoViewIfNeeded();
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error("Course horizontal overflow");
       }
       if(new Set(lessons).size!==9||errors.length)throw Error("Course chapter control/error gate failed");
-      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,actual_scroll_equation_and_readout_captured:true,horizontal_overflow:false,errors});
+      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,actual_scroll_equation_and_readout_captured:true,actual_derivation_equation_captured:true,actual_diagram_and_worked_question_captured:true,primary_citations_rendered:true,two_captioned_equations_per_chapter:true,horizontal_overflow:false,errors});
       console.log(`PASS ${width} ${lang} ${theme} nine source-bound course chapters`);await context.close();continue;
     }
     await page.locator(".magnetic-result").waitFor();

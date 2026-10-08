@@ -41,6 +41,15 @@ thinning, absent-data interpolation or automatic physical validity inference.
 Map/flight point selection retains the same original identity across views.
 Shared-shell EN/ES language and light/dark tokens remain parent-owned.
 
+The nine-chapter course transcribes the fixed physical and validation definitions.
+Each chapter contains two captioned equations, principal-operand derivations,
+an explicitly conceptual bilingual theme-aware SVG, and a worked question with
+its answer. The diagrams explain dependencies; they are not artificial magnetic
+data. Inline `Cite` and per-chapter `Refs` resolve versioned primary sources
+through the parent's single root citation registry. Internal filenames are not
+shown as public teaching text. Supplied-generation counts and outer RMS remain
+computed from verified rows, distinct from authored geometry arithmetic.
+
 Numeric export is a deterministic ZIP of the verified generation manifest and
 all native NPY members; original provider bytes are excluded. Fixed ZIP member
 timestamps, stored compression and regular-file modes make repeated export
@@ -90,6 +99,15 @@ disponible, nunca como cero. La historia contiene estados realmente retenidos.
 El espectro requiere un grupo original completo con al menos tres posiciones
 horizontales equiespaciadas: residuo sin media, ventana Hann y DFT unilateral,
 en ciclos/m y nT² m. No se duplica Nyquist par ni se interpola o diezma.
+
+El curso de nueve capítulos transcribe definiciones físicas y de validación
+fijas. Cada capítulo tiene dos ecuaciones con símbolos definidos, derivaciones
+de operandos, SVG conceptual bilingüe adaptable al tema y ejercicio con respuesta.
+Los diagramas explican dependencias; no son datos magnéticos artificiales.
+`Cite` en texto y `Refs` por capítulo resuelven fuentes primarias versionadas
+en el registro único del padre. Los nombres internos de archivos no son texto
+público. Cantidades y RMS externos se calculan de filas de generación verificada,
+separados de la aritmética geométrica del control escrito.
 
 El ZIP numérico determinista contiene manifiesto y todos los NPY verificados,
 sin originales del proveedor. Destinos externos explícitos y nuevos: no se

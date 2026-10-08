@@ -88,6 +88,14 @@ readout derives counts/outer RMS from the same selected immutable generation,
 never an independent fabricated example. Parent may mount it in its existing
 method/course view; the private loopback harness is not that integration.
 
+The existing root citation registry must merge `MAGNETIC_CITATIONS` before
+mounting the course under its single `CitationsProvider`. The component uses
+inline `Cite` and per-chapter `Refs`, not a plain-link bibliography or nested
+provider. Nine chapters include two captioned equations, native-operand and
+physical derivations, a bilingual theme-aware conceptual SVG and a worked
+question/answer. Implementation filenames remain source-checkable teaching
+metadata, not visible UI. Conceptual diagrams never pose as measured data.
+
 Original rows remain ordered and identifiable in map, selected flight and signed
 observed-minus-predicted residual views. Missing/excluded predictions remain
 null. Map and line selection share the same original row. Susceptibility cells
