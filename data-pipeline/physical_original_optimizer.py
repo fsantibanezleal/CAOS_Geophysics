@@ -19,8 +19,8 @@ import physical_original_residual_terminal as residual_accuracy
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-9'
-POLICY = 'closed-original-noise-reduced-joseph-free-face-residual-accuracy-2'
+LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-10'
+POLICY = 'closed-original-noise-reduced-joseph-free-face-residual-owned-phases-3'
 RESIDUAL_TERMINAL_SHA256 = 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7'
 ConditionedBinding = reduced.ConditionedBinding
 ConditionedBudget = reduced.ConditionedBudget
