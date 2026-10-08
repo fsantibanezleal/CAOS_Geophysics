@@ -110,6 +110,29 @@ stay external. Exit 0 means all commands PASS, 1 includes FAIL/BLOCKED/REFUSED,
 2 means preflight/dispatcher refusal. The original scientific/API/browser/content
 assertions determine acceptance, not this return code alone.
 
+## Read retained results without rerunning commands
+
+```text
+python -B scripts/validation_digest.py --report <absolute-completed-report> --device-root <device-data-root>
+```
+
+This read-only command verifies the report's node bindings, canonical plan
+fingerprints, predecessor evidence and complete sealed command files. It emits
+compact JSON with counts, elapsed times and the first failed/refused node. It
+does not execute commands, re-inventory current sources, remove locks or alter
+receipts. Optional `--output <new-external-json>` persists the digest exclusively
+without overwriting an existing file. Identical failed runs should be diagnosed from this evidence, not
+resubmitted. Exit 0 means all retained commands passed, 1 means a retained
+failure/block/refusal, and 2 means the evidence cannot be verified.
+
+Logs and command environments are not printed. For a genuinely new failure,
+`--failure-tail-bytes 4096` explicitly exposes at most 4096 bytes per stream from
+the first failed command. This diagnostic can contain private data; never
+publish it. Keep the complete original logs externally for deeper local analysis.
+The reader establishes internal evidence consistency, not independent signed
+authenticity, current-source acceptance, scientific correctness, generated-output
+existence or release readiness. See [the reader contract](../design/features/validation-digest/requirements.md).
+
 ## Local command ownership
 
 Windows uses a non-inheritable Job Object with only
