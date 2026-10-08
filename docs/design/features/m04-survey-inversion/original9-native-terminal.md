@@ -6,6 +6,7 @@ R-467 AFTER the retained process becomes signalled, THE local observer SHALL
 still require fresh whole-Job active=0 and total=1 before issuing a lifetime
 receipt. Delayed Job bookkeeping may be observed only within the existing10s
 drain reserve. Every actual sample contributes its CPU/RSS/committed maxima;
+an explicit stop's existing reserve is not restarted when its process signals.
 no counter refusal, foreign process count or elapsed reserve becomes zero.
 Gate: authored delayed-empty, foreign-count, unavailable-reader and drain-timeout
 controls, followed by separately queued actual Windows retained-handle proof.

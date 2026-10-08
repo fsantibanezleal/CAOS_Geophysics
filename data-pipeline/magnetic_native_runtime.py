@@ -48,14 +48,14 @@ def scratch_bytes(scratch, *, settled):
     return size
 
 
-def settled_job_counters(api, psapi, job, process):
+def settled_job_counters(api, psapi, job, process, *, stopped=None):
     """Fresh whole-Job accounting, even after the process handle is signalled.
 
     Keep all observed peaks through the original10s reserve. This never turns
     an unavailable reader, a foreign birth or timeout into an empty Job.
     """
     from magnetic_line_survey_runtime import counters
-    started = time.monotonic()
+    started = time.monotonic() if stopped is None else stopped
     peaks = dict(cpu_s=0., peak_rss_bytes=0, peak_committed_bytes=0)
     while True:
         sample = counters(api, psapi, job, process)
@@ -149,7 +149,7 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                     break
                 if stopped is not None and time.monotonic()-stopped > 10.:
                     fail('resource', '$/native', 'Whole-job stop did not drain within reserve')
-            final = settled_job_counters(api, psapi, job, int(process._handle))
+            final = settled_job_counters(api, psapi, job, int(process._handle), stopped=stopped)
             peak_rss = max(peak_rss, final['peak_rss_bytes'])
             peak_private = max(peak_private, final['peak_committed_bytes'])
             final_scratch = scratch_bytes(scratch, settled=True)

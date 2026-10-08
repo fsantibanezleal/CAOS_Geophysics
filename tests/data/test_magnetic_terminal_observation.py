@@ -44,3 +44,10 @@ def test_unavailable_counter_is_not_a_zero_sample(monkeypatch):
     monkeypatch.setattr(observed, 'counters', unavailable)
     with pytest.raises(OSError, match='reader refusal'):
         runtime.settled_job_counters(None, None, 1, 2)
+
+
+def test_signalled_process_cannot_restart_existing_stop_reserve(monkeypatch):
+    monkeypatch.setattr(runtime.time, 'monotonic', lambda: 11.)
+    monkeypatch.setattr(observed, 'counters', lambda *_: sample())
+    with pytest.raises(InputError, match='did not drain within reserve'):
+        runtime.settled_job_counters(None, None, 1, 2, stopped=1.)
