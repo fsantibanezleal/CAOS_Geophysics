@@ -42,3 +42,7 @@ F's linear null control SHALL check the actual zero model and predictions;
 a complete ZIP alone cannot establish null physics. No fit, changed acquisition,
 new threshold, inferred field truth or nonlinear admission is introduced.
 Gate: source-only observer controls and prospective actual original9 matrix.
+The matrix process SHALL return nonzero for failed, not-run or unresolved
+scientific controls. Exit zero is not granted just because a failure ledger
+was written. Its report SHALL distinguish selected controls from complete
+original linear A..F coverage; neither is field/native/full-method admission.
