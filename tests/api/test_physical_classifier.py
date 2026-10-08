@@ -81,7 +81,7 @@ def complete_fixture_root_custody(db, files):
     This does not retrofit a production database or replace a source failure.
     """
     from uuid import uuid4
-    from tests.api.test_physical_persistence_schema import insert
+    from tests.ops.physical_sql_fixture import insert
     cursor = db.execute("SELECT * FROM observation_datasets WHERE kind='root' AND parser_version='gravity-stations-json/v1'")
     headers = [c[0] for c in cursor.description]
     for values in cursor.fetchall():

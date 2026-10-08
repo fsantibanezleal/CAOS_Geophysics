@@ -14,7 +14,7 @@ from app.physical_forest import reserve_child_intent
 from app.physical_persistence import M
 from app.physical_successor import REVISION
 from tests.api.test_physical_successor import successor as _successor_fixture
-from tests.api.test_physical_persistence_schema import seed, insert
+from tests.ops.physical_sql_fixture import seed, insert
 
 successor = _successor_fixture
 

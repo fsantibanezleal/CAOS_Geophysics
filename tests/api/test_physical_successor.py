@@ -12,7 +12,7 @@ from alembic import command
 from alembic.config import Config
 
 from app.physical_successor import PREDECESSOR, REVISION, ddl_sha256
-from tests.api.test_physical_persistence_schema import inventory, seed
+from tests.ops.physical_sql_fixture import inventory, seed
 
 ROOT = Path(__file__).resolve().parents[2]
 WAVEFORM_SHA = "82c827b94940d803fae42eb7137fda63f2b4d816e11dddd481f79c5b3cb41ac3"

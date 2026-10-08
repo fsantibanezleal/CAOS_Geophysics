@@ -16,7 +16,7 @@ from app.physical_forest import reserve_child_intent
 from app.physical_publication import publish_correction, audit_correction_ancestry
 from app.physical_successor import REVISION
 from tests.api.test_physical_forest import connect
-from tests.api.test_physical_persistence_schema import insert, inventory as sql_inventory
+from tests.ops.physical_sql_fixture import insert, inventory as sql_inventory
 from tests.api.test_physical_roots import FixtureFiles
 from tests.api.test_physical_successor import successor as successor
 

@@ -13,7 +13,7 @@ from app.physical_contract import M, byte_sha, canonical, digest
 from app.physical_forest import reserve_child_intent
 from app.physical_publication import publish_correction, publish_transform, audit_transform_producer
 from tests.api.test_physical_forest import connect
-from tests.api.test_physical_persistence_schema import insert, inventory as sql_inventory
+from tests.ops.physical_sql_fixture import insert, inventory as sql_inventory
 from tests.api.test_physical_publication import decoded, publication
 from tests.api.test_physical_successor import successor as successor
 
