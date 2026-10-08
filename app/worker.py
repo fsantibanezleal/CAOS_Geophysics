@@ -234,6 +234,10 @@ async def _finish_failure(
 
 
 async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionmaker, job: ProcessingJob, poll_interval: float) -> None:
+    if job.method_id in PROFILE_METHODS and os.name == "posix" and settings.profile_linux_supervisor is not None:
+        from app.profile_linux_worker import execute
+        await execute(settings,sessions,job,poll_interval)
+        return
     if job.method_id == 'seismic.waveform-qc-classical/v1':
         from app.waveform_worker import execute
         await execute(settings,sessions,job,poll_interval)

@@ -180,6 +180,8 @@ def validate_profile_result(payload: dict, job) -> None:
         raise ApiError(409, "derived_integrity_failed", "Profile result differs from its admitted job")
     workflow = _workflow()
     try:
+        from app.profile_execution import validate_execution
+        validate_execution(payload,job)
         result = payload["profile"]
         workflow._validate_result(result)
         if result["engine_report"]["inverse_status"] == "passed":

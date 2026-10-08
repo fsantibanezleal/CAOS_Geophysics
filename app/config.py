@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -29,6 +30,13 @@ def configured_data_path() -> Path:
     return external_storage_path(Path(value), "GEOPHYSICS_DATA_DIR")
 
 
+def configured_profile_supervisor() -> Path | None:
+    value = os.environ.get("GEOPHYSICS_PROFILE_LINUX_SUPERVISOR")
+    if sys.platform == "linux" and os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1" and not value:
+        raise ValueError("Enabled Linux profiles require GEOPHYSICS_PROFILE_LINUX_SUPERVISOR")
+    return Path(value) if value else None
+
+
 @dataclass(frozen=True)
 class Settings:
     data_dir: Path
@@ -52,9 +60,13 @@ class Settings:
     mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
     profile_online_enabled: bool = False
     profile_python: Path | None = None
+    profile_linux_supervisor: Path | None = None
     auth_mode: str = "local"
 
     def __post_init__(self) -> None:
+        if self.profile_linux_supervisor is not None and (not self.profile_linux_supervisor.is_absolute()
+                or not self.profile_linux_supervisor.is_file()):
+            raise ValueError("Linux profiles require an explicit installed supervisor")
         if self.profile_online_enabled and (self.profile_python is None
                 or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
             raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
@@ -110,6 +122,7 @@ class Settings:
             mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
             profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
             profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
+            profile_linux_supervisor=configured_profile_supervisor(),
             auth_mode=os.environ.get("GEOPHYSICS_AUTH_MODE", "local"),
         )
 
@@ -123,8 +136,12 @@ class WorkerSettings:
     mt_online_enabled: bool = False
     profile_online_enabled: bool = False
     profile_python: Path | None = None
+    profile_linux_supervisor: Path | None = None
 
     def __post_init__(self) -> None:
+        if self.profile_linux_supervisor is not None and (not self.profile_linux_supervisor.is_absolute()
+                or not self.profile_linux_supervisor.is_file()):
+            raise ValueError("Linux profiles require an explicit installed supervisor")
         if self.profile_online_enabled and (self.profile_python is None
                 or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
             raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
@@ -149,4 +166,5 @@ class WorkerSettings:
         return cls(data_dir=data, db_path=Path(db) if db else None,
                    mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
                    profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
-                   profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None)
+                   profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
+                   profile_linux_supervisor=configured_profile_supervisor())
