@@ -566,3 +566,20 @@ All remain one fixed byte, LC_SETUP and child exit126, with no dynamic values.
 For setresuid failure only, fixed O/P/Q identify permission/resource/invalid-ID
 categories, respectively; N retains all other failures. These emit fixed literals
 only, no numeric errno or identity, and never retry or change admission policy.
+
+## 16. Actual system-manager credentials before science creation
+
+The retained host trace shows CAP_SETUID missing from effective/permitted sets
+while its bounding bit is present. systemd255 exec-invoke's explicit User=root
+plus seccomp path drops CAP_SETUID unless ambient, then NNP exec cannot regain it.
+The fixed system-manager recipe therefore uses its default root UID/GID without
+the redundant User/Group properties. Do not add ambient capabilities or disable
+NNP/seccomp. See the [upstream exec-invoke source](https://raw.githubusercontent.com/systemd/systemd/v255/src/core/exec-invoke.c).
+
+Before creating science, native observer_credentials verifies actual UID/GID0,
+exact CAP_SETUID/SETGID/SETPCAP effective/permitted/bounding sets, zero inheritable
+and ambient sets, and NNP1. Missing or extra authority refuses before birth.
+Science still drops all bounding/ambient/permitted/effective/inheritable caps
+and all IDs/groups before READY/GO. The qualification recipe has no user-manager
+fallback. Gates: test_linux_context.py::test_system_manager_recipe_is_attempt_specific_and_not_activation
+and test_linux_source.py::test_observer_actual_credentials_checked_before_object_creation.

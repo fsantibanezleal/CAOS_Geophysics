@@ -278,6 +278,27 @@ static int controller_set(int dir) {
     /* Exact delegated set, not substring matches or unexpected controllers. */
     return strcmp((const char *)p, "cpu memory pids\n") ? -1 : 0;
 }
+static int observer_credentials(void) {
+    struct __user_cap_header_struct header = {_LINUX_CAPABILITY_VERSION_3, 0};
+    struct __user_cap_data_struct caps[2] = {{0}, {0}};
+    const uint32_t expected = (1u << CAP_SETUID) | (1u << CAP_SETGID) | (1u << CAP_SETPCAP);
+    if (getuid() || geteuid() || getgid() || getegid() ||
+        syscall(SYS_capget, &header, caps) ||
+        caps[0].effective != expected || caps[0].permitted != expected || caps[0].inheritable ||
+        caps[1].effective || caps[1].permitted || caps[1].inheritable ||
+        prctl(PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0) != 1) return -1;
+    for (int capability = 0; capability < 64; ++capability) {
+        int has = prctl(PR_CAPBSET_READ, capability, 0, 0, 0);
+        if (has < 0) {
+            if (errno == EINVAL && capability > CAP_LAST_CAP) break;
+            return -1;
+        }
+        int wanted = capability == CAP_SETUID || capability == CAP_SETGID || capability == CAP_SETPCAP;
+        if (has != wanted || prctl(PR_CAP_AMBIENT, PR_CAP_AMBIENT_IS_SET, capability, 0, 0) != 0)
+            return -1;
+    }
+    return 0;
+}
 int lc_prepare(struct lc_object *o, const struct lc_context *c) {
     unsigned char proc[512]; size_t n; char unit_path[160], own_path[180], hex[33];
     struct stat st; struct statfs fs; cpu_set_t affinity;
@@ -285,8 +306,7 @@ int lc_prepare(struct lc_object *o, const struct lc_context *c) {
     o->unit_fd = o->science_fd = o->cpu_fd = o->events_fd = o->kill_fd = o->memory_fd = -1;
     o->executable_fd = o->cwd_fd = o->null_fd = o->pidfd = o->ready_fd = o->go_fd = -1;
     o->out_fd = o->err_fd = -1;
-    if (getuid() || geteuid() || getgid() || getegid() ||
-        sched_getaffinity(0, sizeof(affinity), &affinity)) return LC_TOPOLOGY;
+    if (observer_credentials() || sched_getaffinity(0, sizeof(affinity), &affinity)) return LC_TOPOLOGY;
     int logical = CPU_COUNT(&affinity);
     long online = sysconf(_SC_NPROCESSORS_ONLN);
     if (logical < 1 || logical > 8 || online < logical || online > 8) return LC_TOPOLOGY;

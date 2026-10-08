@@ -103,6 +103,11 @@ def test_system_manager_recipe_is_attempt_specific_and_not_activation():
     assert "--property=DelegateSubgroup=observer" in command
     assert "--property=KillMode=control-group" in command
     assert "--property=CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_SETPCAP" in command
+    # v255's redundant explicit root UID transition plus seccomp removes
+    # CAP_SETUID before NNP exec. System-manager default root avoids that path;
+    # the native controller independently checks all actual IDs/capabilities.
+    assert not any(item.startswith(("--property=User=", "--property=Group=",
+                                    "--property=AmbientCapabilities=")) for item in command)
     # v255 blocks clone3 under RestrictNamespaces, before native birth. Science
     # receives its own post-birth filter instead; preserve the actual syscall.
     assert not any("RestrictNamespaces" in item for item in command)

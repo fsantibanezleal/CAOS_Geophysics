@@ -114,3 +114,15 @@ def test_reaped_setup_failure_still_drains_fixed_stage_without_go():
     assert "if (l.born && !l.go && l.object.ready_fd >= 0)" in loop
     assert "else if (l.error) { close(l.object.ready_fd); l.object.ready_fd=-1; }" in loop
     assert "if (l.born && !l.go && !l.error)" not in loop
+
+
+def test_observer_actual_credentials_checked_before_object_creation():
+    native = (CORE / "linux_controller.c").read_text("utf-8")
+    start = native.index("static int observer_credentials(")
+    body = native[start:native.index("int lc_prepare(", start)]
+    assert "caps[0].effective != expected || caps[0].permitted != expected || caps[0].inheritable" in body
+    assert "caps[1].effective || caps[1].permitted || caps[1].inheritable" in body
+    assert "(1u << CAP_SETUID) | (1u << CAP_SETGID) | (1u << CAP_SETPCAP)" in body
+    assert "PR_CAP_AMBIENT_IS_SET" in body and "has != wanted" in body
+    assert "PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0) != 1" in body
+    assert native.index("if (observer_credentials()") < native.index('mkdirat(o->unit_fd, "science"')

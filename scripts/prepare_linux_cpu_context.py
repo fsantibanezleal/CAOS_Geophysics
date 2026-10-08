@@ -123,7 +123,10 @@ def unit_arguments(systemd_run, controller, context, attempt, parent, budget_cla
     properties = [
         "Type=exec", "ExitType=main", "Delegate=cpu memory pids",
         "DelegateSubgroup=observer", "KillMode=control-group", "SendSIGKILL=yes",
-        "TimeoutStopSec=1s", "Restart=no", "User=root", "Group=root",
+        # System-manager default root; explicit User=root triggers v255's
+        # seccomp UID setup path, dropping CAP_SETUID before NNP exec.
+        # lc_prepare independently verifies the actual root IDs/three caps.
+        "TimeoutStopSec=1s", "Restart=no",
         "CPUAccounting=yes", "MemoryAccounting=yes", "TasksAccounting=yes",
         "BindsTo=" + parent, "After=" + parent,
         "RuntimeMaxSec=" + ("120s" if budget_class == 1 else "300s"),
