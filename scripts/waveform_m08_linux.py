@@ -8,7 +8,6 @@ import hashlib
 import os
 from pathlib import Path
 import re
-import select
 import socket
 import stat
 import struct
@@ -25,8 +24,8 @@ from waveform_m08_files import external_work_path, validate_path, open_input, op
 from waveform_m08_windows import B, S, POLL, GAP, MEMORY, SCRATCH, ControlError, require, integer, canonical, terminal, prepare_engine, decode_control
 from waveform_m08_windows import exit_status as exit_status
 
-ADMISSION = "caos.m08-linux-admission.v1"
-RESOURCE = "caos.m08-linux-resources.v1"
+ADMISSION = "caos.m08-linux-admission.v2"
+RESOURCE = "caos.m08-linux-resources.v2"
 RELEASE = "caos.m08-linux-release.v1"
 CODE_FILES = (
     "scripts/waveform_m08_linux.py", "scripts/waveform_m08_windows.py",
@@ -36,6 +35,7 @@ CODE_FILES = (
     "data-pipeline/waveform_evaluation.py", "app/waveform_contract.py",
     "app/waveform_processing.py", "app/waveform_result.py", "app/waveform_worker.py",
     "app/waveform_linux_exec.py", "scripts/qualify_waveform_m08_linux.py",
+    "scripts/waveform_m08_guardian.py",
 )
 TOOLS = {"run": "/usr/bin/systemd-run", "ctl": "/usr/bin/systemctl", "bus": "/usr/bin/busctl"}
 
@@ -167,7 +167,7 @@ def read_admission(path, python):
     with open_input(external_work_path(path), 65536) as source:
         raw = source.read_bytes()
     value = decode_control(raw)
-    require(type(value) is dict and set(value) == set("schema platform source_revision observer_uid uid gid python python_sha256 site_packages parent code runtime supervisor".split()))
+    require(type(value) is dict and set(value) == set("schema platform source_revision observer_uid uid gid python python_sha256 site_packages parent code runtime supervisor guardian_library".split()))
     require(value["schema"] == ADMISSION and value["platform"] == "linux" and
             type(value["source_revision"]) is str and re.fullmatch("[a-f0-9]{40}", value["source_revision"]))
     require(type(value["uid"]) is int and 1 <= value["uid"] < 2**32 and
@@ -177,6 +177,10 @@ def read_admission(path, python):
     require(type(value["code"]) is dict and value["code"] == code_hashes(), "closure_mismatch")
     require(type(value["supervisor"]) is dict and set(value["supervisor"]) == set(TOOLS) and
             all(value["supervisor"][role] == image_sha(path) for role, path in TOOLS.items()), "closure_mismatch")
+    from waveform_m08_guardian import root_library
+    library = value["guardian_library"]
+    require(type(library) is dict and set(library) == {"path", "sha256"}, "closure_mismatch")
+    root_library(library["path"], library["sha256"])
     runtime = value["runtime"]
     require(type(runtime) is list and 1 <= len(runtime) <= 256, "closure_mismatch")
     names = []
@@ -419,10 +423,13 @@ def _namespace_listener(pid, run):
         os.close(namespace)
 
 
-def _launch(admission, service, scope, work, run, observer):
+def _launch(admission, service, scope, work, run, guardian_scope):
+    from waveform_m08_guardian import guardian_names
+    require((service, scope, guardian_scope) == guardian_names(run), "membership")
     uid, gid = admission["uid"], admission["gid"]
     properties = ["Slice=" + scope, "User=" + str(uid), "Group=" + str(gid), "SupplementaryGroups=",
         "Type=exec", "RemainAfterExit=yes", "KillMode=control-group", "TimeoutStopSec=2", "RuntimeMaxSec=60", "SendSIGKILL=yes",
+        "KillSignal=SIGKILL", "BindsTo=" + guardian_scope, "After=" + guardian_scope,
         "NoNewPrivileges=yes", "CapabilityBoundingSet=", "AmbientCapabilities=",
         "ProtectSystem=strict", "ProtectHome=yes", "ProtectControlGroups=yes", "PrivateDevices=yes",
         "PrivateNetwork=yes", "RestrictAddressFamilies=AF_UNIX", "RestrictNamespaces=yes", "RestrictRealtime=yes",
@@ -436,7 +443,7 @@ def _launch(admission, service, scope, work, run, observer):
         " MPLCONFIGDIR=" + str(work / "environment/matplotlib") + " XDG_CACHE_HOME=" + str(work / "environment/cache")]
     _command([TOOLS["run"], "--quiet", "--unit=" + service, *["--property=" + item for item in properties],
               "--", admission["python"], "-I", "-B", str(Path(__file__).resolve()), "--science",
-              "caos-m08-" + run, run, str(observer)], timeout=10)
+              "caos-m08-" + run, run], timeout=10)
 
 
 def run_cli(paths, reference, admission_path):
@@ -444,6 +451,7 @@ def run_cli(paths, reference, admission_path):
     stage = None
     fd = work_fd = None
     monitor = None
+    guardian = None
     service = scope = None
     began = time.monotonic_ns()
     checkpoint = "admission"
@@ -462,6 +470,11 @@ def run_cli(paths, reference, admission_path):
                       for name, cap in (("mseed", 16777216), ("stationxml", 2097152), ("request", 65536))]
             if reference is not None:
                 inputs.append(stack.enter_context(open_input(external_work_path(reference), 1048576)))
+            from waveform_m08_guardian import Guardian
+            checkpoint = "guardian"
+            # Must precede manager submission AND observer threads: parent pidfd
+            # is held before fork, guardian child unreaped before FD enrollment.
+            guardian = Guardian(run, admission["guardian_library"])
             checkpoint = "slice"
             _slice(scope)
             group = _cgroup_path(scope)
@@ -474,7 +487,8 @@ def run_cli(paths, reference, admission_path):
             monitor.sample()
             monitor.thread.start()
             checkpoint = "launch"
-            _launch(admission, service, scope, work, run, os.getpid())
+            guardian.check()
+            _launch(admission, service, scope, work, run, guardian.scope)
             pid = _decimal(_show(service, "MainPID").encode())
             leaf = _cgroup_path(service)
             leaf_fd = os.open(leaf, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
@@ -486,6 +500,7 @@ def run_cli(paths, reference, admission_path):
             stack.callback(os.close, pidfd)
             stack.enter_context(listener)
             while True:
+                guardian.check()
                 monitor.check()
                 require(time.monotonic_ns() - began < 120000000000, "timeout")
                 try:
@@ -512,6 +527,8 @@ def run_cli(paths, reference, admission_path):
                                       "ProtectControlGroups": "yes", "PrivateNetwork": "yes", "TasksMax": "2",
                                       "MemoryMax": str(MEMORY), "MemorySwapMax": "0"}.items():
                     require(_show(service, key) == expected, "native_contract")
+                require(guardian.scope in _show(service, "BindsTo").split() and
+                        guardian.scope in _show(service, "After").split(), "native_contract")
                 status = Path(f"/proc/{pid}/status").read_text()
                 require("NoNewPrivs:\t1\n" in status and "CapEff:\t0000000000000000\n" in status, "membership")
                 work_fd = os.open(f"/proc/{pid}/cwd", os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
@@ -522,6 +539,7 @@ def run_cli(paths, reference, admission_path):
                 rights = array.array("i", [item.fd for item in inputs])
                 require(connection.sendmsg([packet(run, 1, "ack", control)], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, rights)]) > 0, "wire_invalid")
                 while True:
+                    guardian.check()
                     monitor.check()
                     require(time.monotonic_ns() - began < 120000000000, "timeout")
                     try:
@@ -542,6 +560,7 @@ def run_cli(paths, reference, admission_path):
                     monitor.life.drained(drained["stamp"])
                 until = time.monotonic_ns() + 5000000000
                 while not monitor.life.final_ready:
+                    guardian.check()
                     monitor.check()
                     require(time.monotonic_ns() < until, "timeout")
                     time.sleep(0.005)
@@ -589,6 +608,8 @@ def run_cli(paths, reference, admission_path):
             require(not group.exists(), "termination_unresolved")
             _released_unit(service)
             _released_unit(scope)
+            guardian.close(True)
+            receipt["guardian"] = {**guardian.receipt, "status": "complete", "scope_removed": True}
             release = {"schema": RELEASE, "run_id": run, "receipt_sha256": sha(canonical(receipt)),
                        "all_native_owned_handles_closed": True, "scope_removed": True, "runtime_authorized": False}
             # All held original/socket handles close before release is persisted.
@@ -600,13 +621,13 @@ def run_cli(paths, reference, admission_path):
                 os.fsync(stream.fileno())
         return {"status": drained["status"], "reason": "measured", "run_id": run,
                 "receipt_sha256": sha(canonical(receipt)), "release_sha256": sha(canonical(release)), "runtime_authorized": False}
-    except (ControlError, WaveformInputError, OSError, ValueError, TypeError, KeyError) as error:
+    except (ControlError, WaveformInputError, OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
         print("M08_LINUX_BOOTSTRAP:" + checkpoint + ":" + (error.reason if type(error) is ControlError else type(error).__name__) +
               (":" + str(error.errno) if type(error) is OSError else ""), file=sys.stderr, flush=True)
         return terminal(error.reason if type(error) is ControlError else "native_contract")
     finally:
+        cleanup_failed = False
         if fd is not None:
-            cleanup_failed = False
             try:
                 if group.exists():
                     _kill(fd, service)
@@ -624,21 +645,15 @@ def run_cli(paths, reference, admission_path):
                     _released_unit(scope)
                 except (ControlError, OSError):
                     cleanup_failed = True
-            if cleanup_failed:
-                return terminal("termination_unresolved")
         if work_fd is not None:
             os.close(work_fd)
-
-
-def _watch_observer(pid, ready):
-    try:
-        fd = os.pidfd_open(pid)
-        poller = select.poll()
-        poller.register(fd, select.POLLIN | select.POLLHUP | select.POLLERR)
-        ready.set()
-        poller.poll()
-    finally:
-        os._exit(99)
+        if guardian is not None and guardian.pidfd is not None:
+            try:
+                guardian.close(False)
+            except (OSError, ValueError, subprocess.SubprocessError):
+                cleanup_failed = True
+        if cleanup_failed:
+            return terminal("termination_unresolved")
 
 
 def _read_original(fd, item):
@@ -656,12 +671,9 @@ def _read_original(fd, item):
     return b"".join(chunks)
 
 
-def _science(wire, run, observer):
+def _science(wire, run):
     """Fixed bootstrap: no scientific import/original body read before ACK."""
-    require(os.geteuid() != 0 and type(observer) is int and observer > 0, "membership")
-    ready = threading.Event()
-    threading.Thread(target=_watch_observer, args=(observer, ready), daemon=True).start()
-    require(ready.wait(2), "membership")
+    require(os.geteuid() != 0, "membership")
     with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as connection:
         require(wire == "caos-m08-" + run, "wire_invalid")
         until = time.monotonic_ns() + 2000000000
@@ -738,7 +750,7 @@ def _science(wire, run, observer):
 
 if __name__ == "__main__":
     try:
-        require(len(sys.argv) == 5 and sys.argv[1] == "--science" and re.fullmatch("[0-9]{1,10}", sys.argv[4]) is not None)
-        raise SystemExit(_science(sys.argv[2], sys.argv[3], int(sys.argv[4])))
+        require(len(sys.argv) == 4 and sys.argv[1] == "--science")
+        raise SystemExit(_science(sys.argv[2], sys.argv[3]))
     except (ControlError, OSError, ValueError):
         raise SystemExit(3) from None

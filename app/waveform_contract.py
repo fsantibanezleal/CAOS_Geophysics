@@ -32,6 +32,8 @@ IMPLEMENTATION_FILES = (
     "scripts/waveform_m08_child.py", "scripts/process_waveform_m08.py", "data-pipeline/waveform_input.py",
     "data-pipeline/waveform_processing.py", "data-pipeline/waveform_evaluation.py", "app/waveform_contract.py",
     "app/waveform_processing.py", "app/waveform_worker.py", "app/waveform_result.py",
+    "scripts/waveform_m08_linux.py", "scripts/waveform_m08_guardian.py",
+    "scripts/qualify_waveform_m08_linux.py", "app/waveform_linux_exec.py",
     "scripts/waveform_m08_linux.py", "app/waveform_linux_exec.py", "scripts/qualify_waveform_m08_linux.py",
 )
 

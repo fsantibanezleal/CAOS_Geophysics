@@ -59,13 +59,15 @@ def main(argv=None):
     require(result.returncode == 0 and len(result.stdout) <= 65536)
     captured = json.loads(result.stdout)
     with open_output(staging) as held:
+        library = Path("/usr/lib/x86_64-linux-gnu/libsystemd.so.0").resolve(strict=True)
         admission = {"schema": ADMISSION, "platform": "linux", "source_revision": args.source_revision,
                      "observer_uid": os.geteuid(), "uid": args.uid, "gid": args.gid,
                      "python": args.python, "python_sha256": image_sha(args.python), "site_packages": args.site_packages,
                      "parent": {"path": str(staging), "identity": list(held.identity),
                                 "context_receipt_sha256": __import__("hashlib").sha256(canonical(captured)).hexdigest()},
                      "code": code_hashes(), "runtime": captured["runtime"],
-                     "supervisor": {role: image_sha(path) for role, path in TOOLS.items()}}
+                     "supervisor": {role: image_sha(path) for role, path in TOOLS.items()},
+                     "guardian_library": {"path": str(library), "sha256": image_sha(library)}}
     encoded = canonical(admission)
     path = context / "admission.json"
     with path.open("xb") as stream:

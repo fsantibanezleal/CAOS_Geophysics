@@ -315,7 +315,7 @@ async def finalize_success_stage(settings, sessions, job, stage, receipt, releas
         raise ApiError(409, "waveform_stage_invalid", "Unknown success staging entry; stage retained")
     local_export(stage / "export")
     names = {p.name for p in native.iterdir()}
-    linux = receipt.get("schema") == "caos.m08-linux-resources.v1"
+    linux = receipt.get("schema") in {"caos.m08-linux-resources.v1", "caos.m08-linux-resources.v2"}
     if linux:
         if names != {"eligibility.json", "release.json"}:
             raise ApiError(409, "waveform_stage_invalid", "Unknown Linux staging entry; stage retained")

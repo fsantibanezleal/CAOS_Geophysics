@@ -40,7 +40,7 @@ def checked_resources(receipt, release):
         # below their unchanged scientific/resource limits.
         precount(receipt, 65536, max_nodes=4096, max_depth=8)
         precount(release, 65536, max_nodes=4096, max_depth=8)
-        require(type(receipt) is dict and set(receipt) == set("schema run_id status cpu_ns user_cpu_ns system_cpu_ns budget_ns stop_ns sample_count max_sample_gap_ns peak_charge_bytes active_processes drained_ns stable_final_ns admission_sha256 memory_kind runtime_authorized method_accepted host_admitted".split()))
+        require(type(receipt) is dict and set(receipt) == set("schema run_id status cpu_ns user_cpu_ns system_cpu_ns budget_ns stop_ns sample_count max_sample_gap_ns peak_charge_bytes active_processes drained_ns stable_final_ns admission_sha256 memory_kind runtime_authorized method_accepted host_admitted guardian".split()))
         require(receipt["schema"] == RESOURCE and receipt["status"] == "measured"
                 and receipt["memory_kind"] == "linux_cgroup_charge"
                 and integer(receipt["budget_ns"]) == B and integer(receipt["stop_ns"]) == S)
@@ -54,6 +54,16 @@ def checked_resources(receipt, release):
         require(integer(receipt["active_processes"]) == 0 and integer(receipt["sample_count"]) >= 2
                 and integer(receipt["stable_final_ns"]) >= integer(receipt["drained_ns"]) + GAP)
         require(all(receipt[k] is False for k in ("runtime_authorized", "method_accepted", "host_admitted")))
+        from waveform_m08_guardian import guardian_names
+        guardian = receipt["guardian"]
+        expected_scope = guardian_names(receipt["run_id"])[2]
+        require(type(guardian) is dict and set(guardian) == set("scope group identity_transport memory_limit_bytes tasks_max wall_limit_seconds manager_job status scope_removed".split())
+                and guardian["scope"] == expected_scope and guardian["group"] == "/system.slice/" + expected_scope
+                and guardian["identity_transport"] == "PIDFDs/ah" and type(guardian["memory_limit_bytes"]) is int and guardian["memory_limit_bytes"] == 128*1024**2
+                and type(guardian["tasks_max"]) is int and guardian["tasks_max"] == 16
+                and type(guardian["wall_limit_seconds"]) is int and guardian["wall_limit_seconds"] == 150
+                and type(guardian["manager_job"]) is str and re.fullmatch(r"/org/freedesktop/systemd1/job/[0-9]{1,20}", guardian["manager_job"])
+                and guardian["status"] == "complete" and guardian["scope_removed"] is True)
         expected = {"schema": RELEASE, "run_id": receipt["run_id"], "receipt_sha256": sha256(canonical(receipt)),
                     "all_native_owned_handles_closed": True, "scope_removed": True, "runtime_authorized": False}
         require(release == expected and release["all_native_owned_handles_closed"] is True and release["scope_removed"] is True

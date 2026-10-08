@@ -56,7 +56,7 @@ def local_export(path):
 
 
 def checked_resources(receipt, release):
-    if type(receipt) is dict and receipt.get("schema") == "caos.m08-linux-resources.v1":
+    if type(receipt) is dict and receipt.get("schema") in {"caos.m08-linux-resources.v1", "caos.m08-linux-resources.v2"}:
         from app.waveform_linux_exec import checked_resources as checked_linux_resources
         return checked_linux_resources(receipt, release)
     try:

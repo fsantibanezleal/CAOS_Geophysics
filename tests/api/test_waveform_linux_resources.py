@@ -24,7 +24,11 @@ def measured():
                "sample_count": 4, "max_sample_gap_ns": GAP, "peak_charge_bytes": 1024,
                "active_processes": 0, "drained_ns": stamp, "stable_final_ns": stamp + GAP,
                "admission_sha256": "b" * 64, "memory_kind": "linux_cgroup_charge",
-               "runtime_authorized": False, "method_accepted": False, "host_admitted": False}
+               "runtime_authorized": False, "method_accepted": False, "host_admitted": False,
+               "guardian": {"scope": "m08guard-" + "a"*32 + ".scope",
+                    "group": "/system.slice/m08guard-" + "a"*32 + ".scope", "identity_transport": "PIDFDs/ah",
+                    "memory_limit_bytes": 128*1024**2, "tasks_max": 16, "wall_limit_seconds": 150,
+                    "manager_job": "/org/freedesktop/systemd1/job/123", "status": "complete", "scope_removed": True}}
     return receipt
 
 
@@ -63,3 +67,13 @@ def test_release_digest_or_scope_extinction_cannot_be_substituted():
         bad[key] = value
         with pytest.raises(ApiError):
             checked_resources(receipt, bad)
+
+
+@pytest.mark.parametrize("key,value", [("status", "failed"), ("scope_removed", False),
+    ("identity_transport", "numeric-PIDs"), ("scope", "another.scope"), ("group", "/user.slice"),
+    ("memory_limit_bytes", 134217728.0), ("tasks_max", 16.0), ("wall_limit_seconds", 150.0)])
+def test_guardian_identity_completion_and_readbacks_are_required(key, value):
+    receipt = measured()
+    receipt["guardian"][key] = value
+    with pytest.raises(ApiError):
+        checked_resources(receipt, released(receipt))
