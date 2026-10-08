@@ -22,6 +22,12 @@ path or a terminal successful receipt. Retain these records as bounded evidence;
 count them in the existing 256-record/64-KiB census, reserving new records before
 admission. Four jobs/16-MiB snapshot limits are not raised.
 
+The record reservation includes existing plan files and reserves six prospective
+files: one plan, two prelaunch authorities, execution receipt and two recovery
+journals (the incomplete branch instead uses four). Every root record creation
+also checks the actual closed namespace/count/individual-size ceiling under the
+singleton; a historical full or unknown store remains debt, not overwritten.
+
 ## Root recovery
 
 Hold the root singleton. Independently bind the terminal failed/cancelled job and
@@ -87,6 +93,9 @@ Use bounded retaining readers that continue discarding overflow until EOF;
 stream collection timeout must not cancel them and deadlock a writer. Actual
 ordinary Python subprocess controls test this async lifecycle and the original
 singleton, separately from still-pending privileged Linux guardian/queue proof.
+Shield asynchronous process creation too, so cancellation cannot lose an already
+created child before its handle is transferred. Adoption and drain happen before
+any held descriptor or caller lease is released.
 
 ## References and claim limits
 
