@@ -1,7 +1,9 @@
 import type { Citation } from "@fasl-work/caos-app-shell";
 import { M01_COURSE_CITATIONS } from "./m01-scientific-course";
+import { M11_COURSE_CITATIONS } from "./m11-scientific-course";
 
 export const CITATIONS: Citation[] = [
+  ...M11_COURSE_CITATIONS,
   ...M01_COURSE_CITATIONS,
   { id: "processingcontract", label: "Owned processing contract", citation: "Implemented authenticated owner CSV flag-processing workflow: immutable originals, dataset/job/result identity, private worker, export verification and explicit capability boundary. Develop baseline afac8ab.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/afac8ab/docs/guides/07_processing_jobs.md" },
   { id: "mtcode", label: "MT scientific implementation", citation: "Reviewed strict EDI and electromagnetic implementation: original source, complex forward recurrence, objective, local sensitivity and conditional bootstrap. Scientific baseline 7b69404.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/tree/7b69404/data-pipeline" },

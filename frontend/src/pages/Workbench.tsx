@@ -9,6 +9,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import { Tabs, useShellLang } from "@fasl-work/caos-app-shell";
+import { M11ScientificCourse } from "../components/M11ScientificCourse";
 import { EarthScene } from "../components/EarthScene";
 import {
   Heatmap,
@@ -1228,6 +1229,11 @@ export default function Workbench() {
               key={selected}
               ariaLabel={t("Scientific views", "Vistas científicas")}
               tabs={[
+                ...(run.family === "joint" ? [{
+                  id: "supplied-joint-method",
+                  label: t("Supplied-survey theory", "Teoría para levantamientos"),
+                  content: <M11ScientificCourse />,
+                }] : []),
                 {
                   id: "earth",
                   label: t("Model", "Modelo"),

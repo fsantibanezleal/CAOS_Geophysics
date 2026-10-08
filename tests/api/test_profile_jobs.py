@@ -20,6 +20,8 @@ from app.profile_compute import profile_command
 from app.worker import run_one, _stage_bytes, _clear_known_stage
 from app.bundle import verify_bundle
 from app.processing_contract import canonical_bytes, sha256
+from app.models import ProcessingJob
+from sqlalchemy import select
 from test_profile_contract import profile_fixture, admit
 from test_profile_uploads import upload_fixture
 from tests.api.test_local_auth import provision, login
@@ -208,6 +210,36 @@ def test_actual_running_profile_cancel_preserves_original(make_harness):
     assert state["state"] == "cancelled" and state["error"]["code"] == "user_cancelled"
     assert harness.client.get(asset["download_url"]).content == raw
     assert harness.client.get(f"{base}/{job_id}/result").status_code == 409
+    assert not (harness.settings.data_dir/".job-staging"/job_id).exists()
+
+
+@pytest.mark.parametrize("limit,value,code", [("wall_limit_seconds", .2, "job_timeout"),
+                                               ("memory_limit_bytes", 8*1024*1024, "job_memory_limit"),
+                                               ("scratch_limit_bytes", 64, "job_scratch_limit")])
+def test_actual_native_profile_runtime_limits(make_harness, limit, value, code):
+    configured, root = os.environ.get("GEOPHYSICS_PROFILE_TEST_PYTHON"), os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT")
+    if not configured or not root:
+        pytest.skip("explicit native runtime and external original root required")
+    raw = (Path(root)/"data/downloads/pygimli/slagdump.ohm").read_bytes()
+    harness = profile_harness(make_harness, python=Path(configured))
+    project, asset, dataset, meta = owned_dataset(harness, raw, "ert_ohm", 38, 222)
+    base = f"/api/projects/{project['id']}/jobs"
+    response = harness.request("POST", base, json={"dataset_id":dataset["dataset_id"],"method_id":meta["method"],"parameters":{}})
+    assert response.status_code == 202
+    job_id = response.json()["job_id"]
+    # Administrative gate intervention AFTER ordinary admission: lower only
+    # the execution ceiling, not any scientific parameter, data or source.
+    async def lower_runtime_ceiling():
+        async with harness.app.state.sessions() as session:
+            job = (await session.execute(select(ProcessingJob).where(ProcessingJob.id == job_id))).scalar_one()
+            job.preflight = {**job.preflight,limit:value}
+            await session.commit()
+    harness.client.portal.call(lower_runtime_ceiling)
+    assert asyncio.run(run_one(harness.settings)) == job_id
+    state = harness.client.get(f"{base}/{job_id}").json()
+    assert state["state"] == "failed" and state["error"]["code"] == code, state
+    assert state["wall_ms"] > 0 and state["result_sha256"] is None
+    assert harness.client.get(asset["download_url"]).content == raw
     assert not (harness.settings.data_dir/".job-staging"/job_id).exists()
 
 

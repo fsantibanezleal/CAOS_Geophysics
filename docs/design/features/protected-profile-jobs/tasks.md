@@ -59,6 +59,20 @@ The refreshed API/local-account suite passed all 30 tests, no skips, in
 cleanup changes the producer-script digest, so final producer-hash field-job
 re-execution is pending rather than reusing an old producer receipt as proof.
 
-R-P04 full runtime-limit matrix and R-P07 actual ML VPS
-qualification are still open. The host flag remains closed. This is not a
-release-complete or deployed-method declaration.
+## Final producer and actual runtime interventions, 2026-10-08 05:58 UTC
+
+The final producer-hash field rerun passed both actual owned native inverses
+in 421.05 seconds, with no skips (`native-final.xml`, external receipt root
+`E:/_Temp/geophysics-resume-20261008`). This supersedes the pending final-pin
+statement above, not the independently preserved earlier results.
+
+R-P04 actual child wall/RSS/scratch intervention tests passed all three controls
+in 30.72 seconds (`runtime-limits.xml`). They lower only the stored execution
+ceiling after ordinary queue admission, deliberately leaving original bytes,
+method parameters and native source unchanged. Each genuine child terminates
+with its specific limit code, unchanged original and no result or orphan staging.
+These are execution-limit proofs, not nominal upper-capacity measurements.
+
+R-P07 actual ML VPS qualification remains open. The host profile flag remains
+closed until those measurements pass. No release-complete or deployed-method
+declaration follows from local Windows execution.
