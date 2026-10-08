@@ -27,11 +27,12 @@ def test_exact_independent_first_bound(q, p):
     bounds = [Fraction(1 if v > 0 else -1)-Fraction(float(x)) for x, v in zip(q, p)]
     ratios = [d/Fraction(float(v)) for d, v in zip(bounds, p)]
     best = min(Fraction(1), *ratios)
-    assert Fraction(alpha) <= best
-    assert alpha == 1. or Fraction(float(np.nextafter(alpha, np.inf))) > best
+    assert Fraction(alpha) >= best
+    assert Fraction(float(np.nextafter(alpha, 0.))) < best
     assert coordinate == (-1 if best == 1 else ratios.index(best))
-    assert all(Fraction(-1) <= Fraction(float(x))+Fraction(alpha)*Fraction(float(v)) <= Fraction(1)
-               for x, v in zip(q, p))
+    # Actual native projection, not a fabricated exact-real feasible-q claim.
+    actual = np.clip(np.array(q)+alpha*np.array(p), -1., 1.)
+    assert np.all(actual >= -1.) and np.all(actual <= 1.)
 
 
 @pytest.mark.parametrize('q,p,message', [([1., 0.], [-1., 1.], 'active'),
@@ -47,13 +48,25 @@ def test_non_descent_underflow_clock_and_pg():
     with pytest.raises(ValueError, match='descent'):
         ray.initial_ray(q, p, p, lo, hi, pg=False, deadline=monotonic()+120.)
     tiny = np.nextafter(0., 1.)
-    with pytest.raises(ValueError, match='representable'):
-        choose([0.], [1.e308], lo=[-tiny], hi=[tiny])
+    alpha, _ = choose([0.], [1.e308], lo=[-tiny], hi=[tiny])
+    assert alpha == tiny  # Directed conversion, not a configured step floor.
+    assert np.clip(alpha*1.e308, -tiny, tiny) == tiny
     with pytest.raises(ray.core.spd.kernel.DeadlineExceeded):
         choose([0.], [1.], seconds=-1.)
     assert choose([1., -1.], [-.3, .2], pg=True) == (1., -1)
     with pytest.raises(ValueError, match='literal'):
         choose([0.], [1.], pg=1)
+
+
+@pytest.mark.parametrize('q,p', [(.123, -1.e8), (np.nextafter(0., 1.), -1.),
+    (.432, -1.e308), (-.123, 1.e8)])
+def test_actual_zero_bound_contact_no_vanishing_inward_distance(q, p):
+    lower, upper = (0., 1.) if q > 0. else (-1., 0.)
+    alpha, coordinate = choose([q], [p], lo=[lower], hi=[upper])
+    assert coordinate == 0
+    # Same actual native multiply, add and projection, no model snapping.
+    actual = np.clip(np.array([q])+alpha*np.array([p]), lower, upper)
+    assert actual[0] == 0.
 
 
 class FeasiblePhysical(Physical):

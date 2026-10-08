@@ -9,8 +9,8 @@ import numpy as np
 import physical_conditioned_optimizer as core
 
 
-LINEAR_EPOCH = 'physical-gncg-linear-joseph-feasible-candidate-3'
-POLICY = 'closed-firstorder-joseph-feasible-native-true-residual-terminal-1'
+LINEAR_EPOCH = 'physical-gncg-linear-joseph-contact-candidate-4'
+POLICY = 'closed-firstorder-joseph-contact-native-true-residual-terminal-1'
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 VENDOR_SOURCE_SHA256 = core.VENDOR_SOURCE_SHA256
 ConditionedBinding = core.ConditionedBinding
@@ -18,7 +18,7 @@ ConditionedBudget = core.ConditionedBudget
 
 
 def initial_ray(q, p, gradient, lower, upper, *, pg, deadline):
-    """Exact stored-real ratios, down-rounded once, no floor/snap/extra trial."""
+    """Exact stored-real ratios, contact-rounded once, no floor/snap/extra trial."""
     if type(pg) is not bool or not core.linear._finite(deadline):
         raise ValueError('ray: literal branch/deadline')
     if type(q) is not np.ndarray or q.ndim != 1 or not 1 <= len(q) <= 4096:
@@ -52,8 +52,8 @@ def initial_ray(q, p, gradient, lower, upper, *, pg, deadline):
         if ratio < best:
             best, coordinate = ratio, i
     alpha = float(best)
-    if Fraction(alpha) > best:
-        alpha = float(np.nextafter(alpha, 0.))
+    if Fraction(alpha) < best:
+        alpha = float(np.nextafter(alpha, np.inf))
     if not np.isfinite(alpha) or not 0. < alpha <= 1.:
         raise ValueError('ray: no positive representable initial step')
     return alpha, coordinate
