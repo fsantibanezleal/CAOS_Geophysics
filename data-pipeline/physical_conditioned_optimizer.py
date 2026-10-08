@@ -47,11 +47,11 @@ class ConditionedBudget:
     allocation_plan_sha256: str
 
 
-def _identity(objective, mode):
+def _identity(objective, mode, expected_epoch=None):
     value = objective.identity()
     if type(value) is not dict or set(value) != linear._IDENTITY_KEYS:
         raise ValueError('conditioned: original exact13 physical identity')
-    epoch = LINEAR_EPOCH if mode == 'fixed_linear_quadratic' else NONLINEAR_EPOCH
+    epoch = expected_epoch or (LINEAR_EPOCH if mode == 'fixed_linear_quadratic' else NONLINEAR_EPOCH)
     if value['mode'] != mode or value['runtime_epoch'] != epoch:
         raise ValueError('conditioned: explicit separate mode/source epoch')
     for name in ('objective_sha256', 'source_inventory_sha256', 'allocation_plan_sha256'):
@@ -76,7 +76,7 @@ def _identity(objective, mode):
     return value.copy()
 
 
-def _preflight(objective, lower, upper, start, budget, binding, terminal, mode):
+def _preflight(objective, lower, upper, start, budget, binding, terminal, mode, source_epoch=None):
     methods = ('identity', 'evaluate', 'components', 'binding_diagonal', 'metric_operands', 'release_state')
     if mode == 'fixed_linear_quadratic':
         methods += ('certify',)
@@ -84,15 +84,18 @@ def _preflight(objective, lower, upper, start, budget, binding, terminal, mode):
         methods += ('exact_hessian',)
     if any(not callable(getattr(objective, name, None)) for name in methods):
         raise ValueError('conditioned: complete trusted ORIGINAL physical DTO adapter')
-    identity = _identity(objective, mode)
+    # Only source-owned exports call this internal seam; no public recipe DTO.
+    module, source, policy, expected_epoch = source_epoch or (
+        'physical_conditioned_optimizer', SOURCE_SHA256, POLICY, None)
+    identity = _identity(objective, mode, expected_epoch)
     epoch = identity['runtime_epoch']
     export = 'solve_bounded_linear' if mode == 'fixed_linear_quadratic' else 'solve_bounded_nonlinear'
-    if (type(binding) is not ConditionedBinding or binding.accepted_export != 'physical_conditioned_optimizer.'+export
-        or binding.optimizer_source_sha256 != SOURCE_SHA256 or binding.metric_source_sha256 != spd.SOURCE_SHA256
+    if (type(binding) is not ConditionedBinding or binding.accepted_export != module+'.'+export
+        or binding.optimizer_source_sha256 != source or binding.metric_source_sha256 != spd.SOURCE_SHA256
         or binding.numeric_kernel_source_sha256 != spd.KERNEL_SHA256
         or binding.vendor_source_sha256 != VENDOR_SOURCE_SHA256 or not spd._hash(binding.certificate_source_sha256)
         or binding.source_inventory_sha256 != identity['source_inventory_sha256']
-        or binding.runtime_epoch != epoch or binding.policy != POLICY):
+        or binding.runtime_epoch != epoch or binding.policy != policy):
         raise ValueError('conditioned: exact reviewed loaded binding required')
     cap = 200 if mode == 'fixed_linear_quadratic' else 250
     if (type(budget) is not ConditionedBudget or not linear._finite(budget.deadline)
@@ -116,15 +119,16 @@ def _preflight(objective, lower, upper, start, budget, binding, terminal, mode):
 
 
 class _Conditioning:
-    def prepare_owned(self, terminal, mode):
+    def prepare_owned(self, terminal, mode, source_epoch=None):
         self.terminal_policy, self.mode = terminal, mode
         self.owned_metric = None
         self.conditioning_attempts, self.terminal_audits = [], []
         self.line_search_trials = []
+        self.source_epoch = source_epoch or ('physical_conditioned_optimizer', SOURCE_SHA256, POLICY, None)
 
     def check_identity(self):
         try:
-            current = _identity(self.objective, self.mode)
+            current = _identity(self.objective, self.mode, self.source_epoch[3])
         except (ValueError, TypeError, KeyError):
             self.fail('state_mismatch')
         if current != self.identity_value:
@@ -306,11 +310,11 @@ class _Nonlinear(_Conditioning, nonlinear._NativeRecorded):
     pass
 
 
-def _solve(objective, lower, upper, start, *, budget, binding, terminal, mode):
-    identity, budget = _preflight(objective, lower, upper, start, budget, binding, terminal, mode)
-    cls = _Linear if mode == 'fixed_linear_quadratic' else _Nonlinear
+def _solve(objective, lower, upper, start, *, budget, binding, terminal, mode, source_epoch=None, optimizer_class=None):
+    identity, budget = _preflight(objective, lower, upper, start, budget, binding, terminal, mode, source_epoch)
+    cls = optimizer_class or (_Linear if mode == 'fixed_linear_quadratic' else _Nonlinear)
     opt = cls(objective, identity, lower, upper, budget)
-    opt.prepare_owned(terminal, mode)
+    opt.prepare_owned(terminal, mode, source_epoch)
     try:
         opt.check()
         q = opt.minimize(opt.evaluate, start.copy())
@@ -336,12 +340,15 @@ def _solve(objective, lower, upper, start, *, budget, binding, terminal, mode):
     a = identity['parameter_count']
     result = (linear._result(opt.states, a, reason, opt.cg_counts, opt.ls_counts) if mode == 'fixed_linear_quadratic'
               else nonlinear._result(opt.states, opt.steps, a, reason))
-    result.update(runtime_epoch=identity['runtime_epoch'], policy=POLICY,
+    result.update(runtime_epoch=identity['runtime_epoch'], policy=opt.source_epoch[2],
         conditioning_attempts=tuple(opt.conditioning_attempts), terminal_audits=tuple(opt.terminal_audits),
         line_search_trials=tuple(opt.line_search_trials),
-        source_binding=dict(optimizer=SOURCE_SHA256, metric=spd.SOURCE_SHA256, numeric_kernel=spd.KERNEL_SHA256,
+        source_binding=dict(optimizer=opt.source_epoch[1], metric=spd.SOURCE_SHA256, numeric_kernel=spd.KERNEL_SHA256,
                             vendor=VENDOR_SOURCE_SHA256, original_linear=linear.SOURCE_SHA256,
                             original_nonlinear=nonlinear.SOURCE_SHA256))
+    if source_epoch is not None:
+        result['source_binding']['conditioned_dependency'] = SOURCE_SHA256
+        result['ray_initializations'] = tuple(opt.ray_initializations)
     if result['status'] != 'converged' and opt.line_search_trials:
         result['failed_trial'].update(last_actual_line_search=opt.line_search_trials[-1].copy(),
             model_q=linear._owned(opt._LS_xt),
