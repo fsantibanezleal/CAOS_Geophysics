@@ -78,6 +78,16 @@ the accepted method job; they cannot repaint an old result as a new fit.
 
 ## Actual leaf semantics and independent gates
 
+The additive `MagneticSurveyCourse` component is the source-linked nine-chapter
+EN/ES course. It uses existing shared-shell equation/callout/language primitives
+and only a parent-verified `MagneticView`; it introduces no calculation service.
+Original quantities, physical units, covariance, L2, true-p1 IRLS, sealed
+selection, nonlinear norm proof, conditional diagnostics and custody/export each
+name actual source functions and primary version-pinned references. Its worked
+readout derives counts/outer RMS from the same selected immutable generation,
+never an independent fabricated example. Parent may mount it in its existing
+method/course view; the private loopback harness is not that integration.
+
 Original rows remain ordered and identifiable in map, selected flight and signed
 observed-minus-predicted residual views. Missing/excluded predictions remain
 null. Map and line selection share the same original row. Susceptibility cells

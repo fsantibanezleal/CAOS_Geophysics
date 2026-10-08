@@ -5,6 +5,7 @@ import { resolve, dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 const args=process.argv.slice(2),arg=k=>{const i=args.indexOf(k);if(i<0||!args[i+1])throw Error(`Required ${k}`);return resolve(args[i+1]);};
+const course=args.includes("--course");
 const viewPath=arg("--view"),output=arg("--output-root"),packages=arg("--packages"),bundleExport=arg("--bundle-export"),repo=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 for(const p of [viewPath,output,bundleExport])if(p.toLowerCase().startsWith("d:\\_repos\\")||p.toLowerCase().startsWith("e:\\_worktrees\\"))throw Error("Explicit external artifacts required");
 await mkdir(output); // Fresh directory only, never reuse or delete prior proof.
@@ -34,7 +35,23 @@ try{
     const context=await browser.newContext({viewport:{width,height},reducedMotion:"reduce"}),page=await context.newPage(),errors=[];
     page.on("pageerror",e=>errors.push(String(e)));page.on("console",m=>{if(m.type()==="error")errors.push(m.text());});
     page.on("response",r=>{if(r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
-    await page.goto(`${origin}/?lang=${lang}&theme=${theme}`);await page.locator(".magnetic-result").waitFor();
+    await page.goto(`${origin}/?lang=${lang}&theme=${theme}${course?"&course=1":""}`);
+    if(course){
+      const root=page.locator(".magnetic-course");await root.waitFor();
+      if(await root.getAttribute("data-generation")!==v.binding.generation_sha256)throw Error("Course result binding differs");
+      const chapter=root.locator("select"),count=await chapter.locator("option").count(),lessons=[];
+      if(count!==9)throw Error("Complete nine-chapter course required");
+      for(let k=0;k<count;k++){await chapter.selectOption(String(k));await root.locator(".katex").first().waitFor();
+        if(await root.locator(".katex-error").count())throw Error("Equation failed to render");
+        lessons.push(await root.getAttribute("data-lesson"));
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}.png`),fullPage:true});
+        if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error("Course horizontal overflow");
+      }
+      if(new Set(lessons).size!==9||errors.length)throw Error("Course chapter control/error gate failed");
+      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,horizontal_overflow:false,errors});
+      console.log(`PASS ${width} ${lang} ${theme} nine source-bound course chapters`);await context.close();continue;
+    }
+    await page.locator(".magnetic-result").waitFor();
     if(await page.locator(".magnetic-result").getAttribute("data-generation")!==v.binding.generation_sha256)throw Error("Wrong generation displayed");
     const tr=(en,es)=>lang==="es"?es:en,visited=[];
     const click=async(name)=>{const tab=page.getByRole("tab",{name,exact:true});await tab.scrollIntoViewIfNeeded();const box=await tab.boundingBox();if(!box)throw Error(`Unreachable ${name}`);await page.mouse.click(box.x+box.width/2,box.y+box.height/2);};
@@ -63,6 +80,6 @@ try{
     proofs.push({width,height,lang,theme,reduced_motion:true,views:visited,same_original_row_linked:true,horizontal_overflow:false,numeric_export_sha256:zipHash,errors});
     console.log(`PASS ${width} ${lang} ${theme} eight scientific leaf views`);await context.close();
   }
-  const proof={schema:"magnetic-local-browser-proof-1",view_sha256:createHash("sha256").update(raw).digest("hex"),generation_sha256:v.binding.generation_sha256,states:proofs,authenticated_api:false,field_acceptance:false,online_admitted:false};
+  const proof={schema:course?"magnetic-local-course-browser-proof-1":"magnetic-local-browser-proof-1",view_sha256:createHash("sha256").update(raw).digest("hex"),generation_sha256:v.binding.generation_sha256,states:proofs,authenticated_api:false,field_acceptance:false,online_admitted:false};
   await writeFile(join(output,"browser-proof.json"),JSON.stringify(proof),{flag:"wx"});
 }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}

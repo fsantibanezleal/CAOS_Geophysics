@@ -8,6 +8,10 @@ full-input finite-cap failures and actual resource/cancellation claim boundaries
 [Verified result views and numeric export / Vistas y exportación verificadas](09_result-views-and-export.md)
 describes the owned local replay, physical voxels, spectrum, complete numeric ZIP
 and the unapplied authenticated-parent mount proposal, not live integration.
+The additive `MagneticSurveyCourse` offers nine source-linked EN/ES chapters with
+shared-shell equations and a worked readout from the same verified generation.
+`scripts/check_magnetic_docs.py` checks actual source symbols and local wiki
+links; it is a structural gate, not science, browser or parent-mount acceptance.
 
 [Recorded independent acquisition controls / Controles independientes](02_acquisition-controls.md)
 describe the executable authored Choclo/Decimal/PCG64 inputs, not fitted inverse

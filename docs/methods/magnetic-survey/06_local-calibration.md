@@ -7,10 +7,12 @@ linear TMI likelihoods with the public M02 **candidate** optimizer. They execute
 all eight fixed betas, L2 and sparse-smallness candidates, three sealed inner
 folds, selected-candidate development refit and one-time outer evaluation.
 This is not a stored-example replay. The source closure and reviewed native
-acceptance registry remain separate gates. Exact total anomaly has a physical
-operator/Jacobian/actual-displacement certificate, but this driver refuses it
-before building a kernel: the public dependency has no accepted nonlinear GN
-export or norm-domain validator. A linear fit is never substituted for it.
+acceptance registry remain separate gates. Exact total anomaly now composes the
+reviewed public nonlinear candidate export with a physical Jacobian, refreshed
+PSD GN and independently audited native-norm chords; see
+[exact nonlinear composition](07_nonlinear-composition.md). Candidate execution
+is not an accepted nonlinear source registry or independent magnetic convergence.
+A linear fit is never substituted for an exact-magnitude observation.
 
 The complete feature also still needs the frozen nontrivial S2 comparisons,
 complete provider field acquisitions, owned API integration, linked interactive
@@ -79,9 +81,8 @@ not a claim that this acquisition has never been seen in a previous study.
 
 ## English: explicit storage and real tools
 
-On the device, resolve governance roots read-only with
-`python tools/_shared/workspace.py data` in CAOS_MANAGE. If the profile declares
-only temp, this does not invent a data or model root. Supply an absolute
+Use caller-configured external device roots. A configured temporary root does
+not implicitly supply a data or model root. Supply an absolute
 `--data-root` or `GEOPHYSICS_LOCAL_DATA_ROOT`, plus the explicit external
 `--temp-root` (or `GEOPHYSICS_TEMP_ROOT` in trusted composition). Do not put raw,
 models, cache, pytest receipts or result generations in any checkout. The product
@@ -116,7 +117,8 @@ JSON of that table. Review the actual code first; a matching self-hash alone is
 not acceptance. The receipt does not choose alternate sources or Python callbacks.
 The request binding must match the exact public export/source/epoch. The explicit
 candidate flag only permits this local candidate experiment. There is no flag
-to enable exactnorm, claim field truth or admit an online job.
+to bypass native norm proofs, claim field truth or admit an online job. The
+quantity remains an explicit physical declaration in the admitted request.
 
 Stdout is one bounded JSON summary; vendor diagnostics go to stderr and complete
 actual iteration history stays in the result. Exit 0 means that named local
@@ -190,9 +192,10 @@ La calibración local usa observaciones entregadas, no resultados guardados. Las
 ramas vector ENU y TMI lineal ejecutan ocho betas, L2 y Sparse, tres particiones
 internas, selección fija, reajuste en desarrollo y evaluación externa única.
 El núcleo público M02 sigue siendo **candidato**, no registro de aceptación.
-La anomalía exacta del módulo total se rechaza antes del kernel porque faltan
-exportación GN y validador del dominio normativo no lineal. No se reemplaza por
-TMI lineal. Persisten controles S2 no triviales, datos de campo completos,
+La anomalía exacta del módulo total compone ahora la exportación pública no lineal
+candidata, GN semidefinido actualizado y auditoría independiente de cada paso
+con el certificado de norma. No equivale a registro de aceptación ni convergencia
+magnética independiente; no se reemplaza por TMI lineal. Persisten controles S2 no triviales, datos de campo completos,
 integración API/vistas y admisión nativa/host. No se despliega ni activa servicio.
 
 Susceptibilidad física `chi=.01*q`; Phi sin factor medio; covarianza principal
@@ -211,8 +214,8 @@ Cambiar valores externos en la prueba deja selección/modelo/historia iguales y
 cambia sólo evaluación e identidades que corresponden. No demuestra que la
 adquisición nunca se haya evaluado en otro estudio.
 
-Resuelva raíces del dispositivo con `tools/_shared/workspace.py data`. Si sólo
-existe temp declarada, no invente data/models. Configure raíz externa absoluta
+Use raíces externas configuradas por el usuario. Si sólo existe temp declarada,
+no infiera una raíz data/models. Configure raíz externa absoluta
 mediante `GEOPHYSICS_LOCAL_DATA_ROOT` o `--data-root`, y scratch externo explícito.
 Datos crudos, modelos, caché y salidas dentro de repositorios/worktrees se rechazan.
 Use los cuatro comandos anteriores con rutas absolutas reales y entorno aprobado.
@@ -222,7 +225,7 @@ El recibo de operador revisado tiene alcance literal `local_candidate_only`,
 inventario completo del código cargado (incluido validador transitivo M02),
 hash de inventario, epoch, policy y referencia de revisión. Hash propio correcto
 no equivale a aceptación científica. `--allow-candidate-core` habilita únicamente
-experimento local candidato: no exactnorm, verdad geológica, campo verificado,
+experimento local candidato: no omite certificado normativo, verdad geológica, campo verificado,
 ejecución en línea ni despliegue. Los cuatro claims siempre son falsos.
 
 Importar valida hashes/tipos/unidades/orden, incertidumbre completa, residual y
