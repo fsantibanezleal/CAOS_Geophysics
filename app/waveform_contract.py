@@ -32,6 +32,7 @@ IMPLEMENTATION_FILES = (
     "scripts/waveform_m08_child.py", "scripts/process_waveform_m08.py", "data-pipeline/waveform_input.py",
     "data-pipeline/waveform_processing.py", "data-pipeline/waveform_evaluation.py", "app/waveform_contract.py",
     "app/waveform_processing.py", "app/waveform_worker.py", "app/waveform_result.py",
+    "scripts/waveform_m08_linux.py", "app/waveform_linux_exec.py", "scripts/qualify_waveform_m08_linux.py",
 )
 
 
@@ -256,7 +257,8 @@ def context_available(settings):
         return (
             set(context) == {"schema", "platform", "python", "python_sha256", "admission_path", "admission_sha256"}
             and context["schema"] == "geophysics.waveform-worker-context/v1"
-            and os.name == "nt" and context["platform"] == "windows"
+            and ((os.name == "nt" and context["platform"] == "windows")
+                 or (__import__("sys").platform == "linux" and context["platform"] == "linux"))
             and all(
                 type(context[k]) is str and re.fullmatch("[a-f0-9]{64}", context[k])
                 for k in ("python_sha256", "admission_sha256")

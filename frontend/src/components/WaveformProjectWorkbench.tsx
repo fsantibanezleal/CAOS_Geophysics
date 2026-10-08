@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ApiClient } from "../api/client";
 import { LifecycleApi } from "../api/lifecycle";
 import type { RawAsset } from "../api/contracts";
@@ -23,7 +23,7 @@ export function WaveformTrace({x,y,unit,title,cursor,onCursor,axis="t [s]"}:{x:n
   </svg></figure>;
 }
 
-export function WaveformProjectWorkbench({projectId,es,onManage,onCurated}:{projectId:string;es:boolean;onManage:()=>void;onCurated:()=>void}){
+export function WaveformProjectWorkbench({projectId,es,onManage,onCurated,methodNavigation}:{projectId:string;es:boolean;onManage:()=>void;onCurated:()=>void;methodNavigation?:ReactNode}){
   const t=(en:string,sp:string)=>es?sp:en;
   const clients=useMemo(()=>{const api=new ApiClient(typeof window==="undefined"?"http://127.0.0.1":window.location.origin);return {wave:new WaveformApi(api),life:new LifecycleApi(api)};},[]);
   const [assets,setAssets]=useState<RawAsset[]>([]),[receipts,setReceipts]=useState<WaveformReceipt[]>([]),[jobs,setJobs]=useState<WaveformJob[]>([]);
@@ -48,6 +48,7 @@ export function WaveformProjectWorkbench({projectId,es,onManage,onCurated}:{proj
   const channelMetadata=result?.calculation.channels[channel];
   function xFor(name:string,values:number[]){if(name.endsWith("psd"))return arrays.psd_frequency_hz??[];const rate=channelMetadata?.sample_rate_hz??1;const start=name==="counts"&&dataset?(Number(channelMetadata?.start_us)/1e6-Date.parse(String(dataset.request.conditioning_start_utc))/1000):0;return values.map((_,i)=>start+i/rate);}
   return <div className="page-body wide workbench processing-workbench" data-testid="waveform-project"><aside className={`instrument-sidebar processing-sidebar ${controlsOpen?"expanded":""}`}>
+    {methodNavigation}
     <div className="instrument-brand"><h1>{t("Own waveform processing","Procesamiento de ondas propias")}</h1></div><p className="processing-scope">{t("MiniSEED + exact owned StationXML. Structural indexing is not physical QC.","MiniSEED + StationXML propio exacto. El índice estructural no es QC físico.")}</p>
     <button className="btn" onClick={onManage}>{t("Projects · upload originals","Proyectos · cargar originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases","Casos curados")}</button>
     <button className="btn mobile-controls-toggle" aria-expanded={controlsOpen} onClick={()=>setControlsOpen(!controlsOpen)}>{t("Processing controls","Controles de procesamiento")}</button><div className="processing-controls">
@@ -63,7 +64,7 @@ export function WaveformProjectWorkbench({projectId,es,onManage,onCurated}:{proj
     {job&&<><p role="status">{stateLabel(job.state)} {job.error?.code}</p><button className="btn" disabled={busy||!["queued","running"].includes(job.state)||job.cancel_requested} onClick={()=>void act(async signal=>{const j=await clients.wave.cancel(projectId,job.job_id,signal);if(!signal.aborted&&j.method_id===WAVEFORM_METHOD)setJobs(rows=>rows.map(row=>row.job_id===j.job_id?j:row));})}>{t("Cancel job","Cancelar trabajo")}</button><details><summary>{t("Submitted parameters and limits","Parámetros enviados y límites")}</summary><pre>{JSON.stringify(job.request.scientific_request,null,2)}</pre><p>{job.preflight.memory_limit_bytes/1048576} MiB · {job.preflight.scratch_limit_bytes} bytes · {job.preflight.wall_limit_seconds} s</p></details></>}
     <button className="btn" disabled={busy} onClick={()=>setRevision(v=>v+1)}>{t("Reload project","Recargar proyecto")}</button>
   </div></aside><section className="instrument-main processing-main"><h2>M08 · {t("QC, response, filter, PSD and unlabelled arrivals","QC, respuesta, filtro, PSD y llegadas sin etiquetas")}</h2>
-    {result&&job&&<><p>{result.scientific_status} · {result.calculation.qc.reasons.join(", ")}</p><p>{t("Job committed-memory peak, not RSS","Memoria comprometida máxima, no RSS")}: {(result.resources.peak_memory_bytes/1048576).toFixed(1)} MiB · CPU {(result.resources.cpu_ns/1e9).toFixed(3)} s</p>
+    {result&&job&&<><p>{result.scientific_status} · {result.calculation.qc.reasons.join(", ")}</p><p>{result.resources.memory_kind==="linux_cgroup_charge"?t("Cgroup memory-charge peak, not RSS","Carga de memoria cgroup máxima, no RSS"):t("Job committed-memory peak, not RSS","Memoria comprometida máxima, no RSS")}: {(result.resources.peak_memory_bytes/1048576).toFixed(1)} MiB · CPU {(result.resources.cpu_ns/1e9).toFixed(3)} s</p>
       <button className="btn" disabled={busy} onClick={()=>void act(async signal=>{const blob=await clients.wave.waveformExport(projectId,job,result,signal);const decoded=await verifyWaveformZip(blob,result);if(signal.aborted)return;setFiles(decoded);const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`waveform-${job.job_id}.zip`;a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);})}>{t("Verify, plot and export all arrays","Verificar, graficar y exportar todas las matrices")}</button>
       <label>{t("Reopen saved ZIP against this successful job","Reabrir ZIP guardado contra este trabajo exitoso")}<input type="file" accept=".zip,application/zip" disabled={busy} onChange={e=>{const f=e.target.files?.[0];if(f)void act(async signal=>{setFiles(null);const decoded=await verifyWaveformZip(f,result);if(!signal.aborted)setFiles(decoded);});}}/></label>
       <label>{t("Measured channel","Canal medido")}<select value={channel} onChange={e=>setChannel(Number(e.target.value))}>{result.calculation.channels.map((_,i)=><option key={i} value={i}>c0{i} · {String((dataset?.request.channels as {channel:string}[]|undefined)?.[i]?.channel??"")}</option>)}</select></label>

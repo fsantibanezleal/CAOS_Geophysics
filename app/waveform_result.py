@@ -56,6 +56,9 @@ def local_export(path):
 
 
 def checked_resources(receipt, release):
+    if type(receipt) is dict and receipt.get("schema") == "caos.m08-linux-resources.v1":
+        from app.waveform_linux_exec import checked_resources as checked_linux_resources
+        return checked_linux_resources(receipt, release)
     try:
         INPUT.native_precount(receipt, 65536, max_nodes=4096, max_depth=8)
         INPUT.native_precount(release, 65536, max_nodes=4096, max_depth=8)
@@ -190,7 +193,7 @@ def validate_result(payload, job):
             or resources["schema"] != "geophysics.waveform-resources/v1"
             or resources["runtime_authorized"] is not False
             or resources["host_admitted"] is not False
-            or resources["memory_kind"] != "windows_job_committed"
+            or resources["memory_kind"] not in ("windows_job_committed", "linux_cgroup_charge")
         ):
             raise ValueError()
         for key, maximum in (

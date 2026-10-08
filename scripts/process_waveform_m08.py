@@ -2,8 +2,8 @@
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data-pipeline"))
 from waveform_input import WaveformInputError, fail
@@ -45,7 +45,10 @@ def main(argv=None):
             admission = external_work_path(args.admission)
             if admission in paths.values() or admission == reference:
                 fail("waveform_contract")
-            from waveform_m08_windows import run_cli, exit_status
+            if sys.platform == "linux":
+                from waveform_m08_linux import run_cli, exit_status
+            else:
+                from waveform_m08_windows import run_cli, exit_status
 
             result = run_cli(paths, reference, admission)
             print(json.dumps(result, sort_keys=True, separators=(",", ":")))

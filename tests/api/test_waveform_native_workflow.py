@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import zipfile
 
 import pytest
@@ -14,6 +15,7 @@ import pytest
 from tests.api.test_waveform_service import metadata, make_case
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
 
 
 def actual_metadata(body, kind, fixture, request, companion=None):
@@ -49,25 +51,20 @@ def actual_metadata(body, kind, fixture, request, companion=None):
     return value
 
 
-@pytest.mark.skipif(os.environ.get("M08_RUN_NATIVE") != "1", reason="Explicit selected SDK/native context required")
+@pytest.mark.skipif(not ((os.name == "nt" and os.environ.get("M08_RUN_NATIVE") == "1")
+                       or (sys.platform == "linux" and os.environ.get("M08_RUN_LINUX_NATIVE") == "1")),
+                    reason="Explicit selected actual platform/native context required")
 @pytest.mark.parametrize("case", ["nominal1", "upper3", "ridgecrest-original", "ridgecrest-original-aligned"])
 def test_actual_owned_worker_full_processing(harness, case):
     from app.worker import run_one
     from app.waveform_contract import INPUT, METHOD_ID
 
     python = os.environ["M08_TEST_SCIENCE_PYTHON"]
-    revision = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
+    revision = os.environ.get("M08_TEST_SOURCE_REVISION") or subprocess.check_output(
+        ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
     environment = {k: v for k, v in os.environ.items() if k.upper() in {"SYSTEMROOT", "WINDIR", "SYSTEMDRIVE"}}
     environment.update(TMP=str(harness.settings.data_dir), TEMP=str(harness.settings.data_dir),
                        TMPDIR=str(harness.settings.data_dir), PYTHONDONTWRITEBYTECODE="1", OPENBLAS_NUM_THREADS="1", OMP_NUM_THREADS="1")
-    qualified = subprocess.run([
-        python, "-B", str(ROOT / "scripts/qualify_waveform_m08.py"),
-        "--data-root", str(harness.settings.data_dir),
-        "--abi-executable", os.environ["M08_ABI_EXECUTABLE"],
-        "--abi-sha256", os.environ["M08_ABI_SHA256"], "--review", os.environ["M08_NATIVE_REVIEW"],
-        "--source-revision", revision,
-    ], capture_output=True, timeout=120, env=environment)
-    assert qualified.returncode == 0, qualified.stderr.decode(errors="replace")
     request = None
     if case.startswith("ridgecrest-original"):
         spec = __import__("importlib.util", fromlist=["util"])
@@ -92,6 +89,30 @@ def test_actual_owned_worker_full_processing(harness, case):
     else:
         fixture = make_case(case)
         request = json.loads(fixture["request"])
+    if sys.platform == "linux":
+        from waveform_m08_files import external_work_path
+        inputs = external_work_path(harness.settings.data_dir.parent / "m08-linux-inputs")
+        inputs.mkdir(mode=0o700)
+        for name, key in (("input.ms", "mseed"), ("station.xml", "stationxml"), ("request.json", "request")):
+            (inputs / name).write_bytes(fixture[key])
+        image = str(Path(python).resolve())
+        site = os.environ["M08_TEST_SCIENCE_SITE_PACKAGES"]
+        qualified = subprocess.run([
+            image, "-I", "-B", str(ROOT / "scripts/qualify_waveform_m08_linux.py"),
+            "--data-root", str(harness.settings.data_dir), "--python", image, "--site-packages", site,
+            "--mseed", str(inputs / "input.ms"), "--stationxml", str(inputs / "station.xml"),
+            "--request", str(inputs / "request.json"), "--source-revision", revision,
+            "--uid", "65534", "--gid", "65534",
+        ], capture_output=True, timeout=150, env=environment)
+    else:
+        qualified = subprocess.run([
+            python, "-B", str(ROOT / "scripts/qualify_waveform_m08.py"),
+            "--data-root", str(harness.settings.data_dir),
+            "--abi-executable", os.environ["M08_ABI_EXECUTABLE"],
+            "--abi-sha256", os.environ["M08_ABI_SHA256"], "--review", os.environ["M08_NATIVE_REVIEW"],
+            "--source-revision", revision,
+        ], capture_output=True, timeout=120, env=environment)
+    assert qualified.returncode == 0, qualified.stderr.decode(errors="replace")
     harness.account()
     project = harness.project("Actual worker " + case)
     response = harness.upload(project["id"], fixture["stationxml"], actual_metadata(fixture["stationxml"], "stationxml", fixture, request))
@@ -124,7 +145,7 @@ def test_actual_owned_worker_full_processing(harness, case):
         assert {d["name"] for d in result["calculation"]["array_descriptors"]} == {"counts"}
     else:
         assert result["scientific_status"] == "computed", result["calculation"]
-    assert result["resources"]["memory_kind"] == "windows_job_committed"
+    assert result["resources"]["memory_kind"] == ("linux_cgroup_charge" if sys.platform == "linux" else "windows_job_committed")
     assert result["resources"]["host_admitted"] is False
     assert status["peak_rss_bytes"] is None
     assert not list((harness.settings.data_dir / ".job-staging").iterdir())
