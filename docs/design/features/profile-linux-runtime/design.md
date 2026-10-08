@@ -77,6 +77,16 @@ extinction. Record guardian outcome separately; no port, shell or arbitrary
 signal target is exposed. Actual crash/death/interrupted-submission controls are
 required before enabling the path. No same-UID watcher is retained.
 
+Bound installation-owned retained custody independently of unit scratch: at
+most four outstanding job plans and 16 MiB of declared held originals, and at
+most 256 bounded 64 KiB operational receipts. Write an immutable exclusive plan
+before any UUID directory or held copy is created. Unknown names/links/owners,
+missing or altered plan identities and exceeded caps refuse new launches, not
+delete anything. Success removes only checked declared copies and empty checked
+directories after extinction, then retains a root-owned receipt. Failure/crash
+retains the plan and known debt for a separately reviewed exact-UUID recovery;
+there is no recursive adoption, sweeping delete, backup or external service.
+
 ## Review and qualification boundary
 
 First implement failing closed-packet/constructor/source and relation tests,
