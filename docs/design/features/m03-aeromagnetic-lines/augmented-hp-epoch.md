@@ -81,8 +81,9 @@ terms too; it does not echo the old25-fit bound or fabricate actual97 counts.
 
 ## Actual first prerequisite, 2026-10-08
 
-`E:/_Temp/geophysics-m03-resume-20261008/hp-prerequisite2` retains seven PASS
-small oracles and ONE actual candidate39 solve. The fresh16-map HP seal and
+The externally retained prerequisite evidence contains seven PASS
+small oracles and ONE actual candidate39 solve. Device paths and coordination
+records are private, not part of this product contract. The fresh16-map HP seal and
 full proof preceded training-value decoding. Solve FAIL: istop7,2000iterations,
 2000forward/2001adjoint, relative original gradient1.0764842455268023e-8>
 unchanged1e-9. Absolute gradient1.0125350297346836e-5;
