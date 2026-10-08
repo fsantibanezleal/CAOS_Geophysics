@@ -103,11 +103,16 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
     conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
     feasible = conditioned and binding.accepted_export == 'physical_feasible_optimizer.solve_bounded_linear'
     reduced = conditioned and binding.accepted_export == 'physical_reduced_optimizer.solve_bounded_linear'
+    original = conditioned and binding.accepted_export == 'physical_original_optimizer.solve_bounded_linear'
     if conditioned:
         import physical_conditioned_optimizer as conditioned_core
         from magnetic_conditioned_adapter import MagneticConditionedObjective, solve_conditioned
         if reduced:
             from magnetic_reduced_adapter import MagneticReducedObjective, solve_reduced
+        if original:
+            from magnetic_original_adapter import solve_original
+            if nonlinear:
+                fail('dependency', '$/processing', 'Public original-noise source is LINEAR-only')
     kkt_gradient = nonlinear_projected_gradient if nonlinear else projected_gradient
     reference = np.array(prior['reference_si']['data'], dtype=np.float64)/.01
     lower = np.array(prior['lower_si']['data'], dtype=np.float64)/.01
@@ -122,6 +127,8 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         obj = MagneticObjective(operator, reg, observed, noise, lower, upper, float(beta),
                                 source_inventory_sha256, allocation_sha256, stage)
         physical = MagneticNonlinearObjective(obj, q) if nonlinear else obj
+        if original:
+            return physical
         if reduced:
             return MagneticReducedObjective(physical, reduced_plan)
         return MagneticConditionedObjective(physical, source_components, feasible=feasible) if conditioned else physical
@@ -142,8 +149,9 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         nonlocal steps
         budget_type = conditioned_core.ConditionedBudget if conditioned else core.NonlinearBudget if nonlinear else core.OptimizerBudget
         budget = budget_type(deadline, 200-steps, 805306368, admitted_bytes, allocation_sha256)
-        solver = solve_reduced if reduced else solve_conditioned if conditioned else solve_nonlinear if nonlinear else solve_linear
-        result = solver(obj, lower, upper, q, budget=budget, binding=binding)
+        solver = solve_original if original else solve_reduced if reduced else solve_conditioned if conditioned else solve_nonlinear if nonlinear else solve_linear
+        result = solver(obj, lower, upper, q, budget=budget, binding=binding,
+            **({'plan': reduced_plan} if original else {}))
         if conditioned and optimizer_audit is not None:
             optimizer_audit(result)
         steps += result['iterations']
@@ -260,6 +268,7 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         binding_type = core.NonlinearBinding
     conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
     reduced = conditioned and binding.accepted_export == 'physical_reduced_optimizer.solve_bounded_linear'
+    original = conditioned and binding.accepted_export == 'physical_original_optimizer.solve_bounded_linear'
     if conditioned:
         import physical_conditioned_optimizer as core
         import physical_owned_spd as spd
@@ -272,13 +281,18 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
             if nonlinear:
                 fail('dependency', '$/policy/optimizer_binding', 'Public reduced source is LINEAR-only')
             import physical_reduced_optimizer as core
+        if original:
+            if nonlinear:
+                fail('dependency', '$/policy/optimizer_binding', 'Public original-noise source is LINEAR-only')
+            import physical_original_optimizer as core
     epoch = (core.NONLINEAR_EPOCH if nonlinear else core.LINEAR_EPOCH) if conditioned else core.RUNTIME_EPOCH
     if (type(binding) is not binding_type or requested != dict(accepted_source=binding.optimizer_source_sha256,
             accepted_export=binding.accepted_export, epoch=binding.runtime_epoch)
             or binding.optimizer_source_sha256 != core.SOURCE_SHA256 or binding.runtime_epoch != epoch
             or binding.policy != core.POLICY or binding.source_inventory_sha256 != source_inventory_sha256
             or (binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256 if nonlinear and not conditioned else
-                binding.certificate_source_sha256 != hashlib.sha256(Path(certificate_source()).read_bytes()).hexdigest())
+                binding.certificate_source_sha256 != (core.source.SOURCE_SHA256 if original else
+                    hashlib.sha256(Path(certificate_source()).read_bytes()).hexdigest()))
             or (conditioned and (binding.metric_source_sha256 != spd.SOURCE_SHA256
                 or binding.numeric_kernel_source_sha256 != spd.KERNEL_SHA256
                 or binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256
@@ -297,10 +311,13 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         from magnetic_conditioned_adapter import allocation as phase_allocation
         if reduced:
             from magnetic_reduced_adapter import allocation as phase_allocation
+        if original:
+            from magnetic_original_adapter import allocation as phase_allocation
         fit_sizes = [len(f['fit_rows']['data']) for f in plan['partition']['folds']]+[len(plan['final_refit_rows']['data'])]
         try:
             phases = [phase_allocation(source_components, n*plan['preflight']['components'],
-                plan['preflight']['active_cells'], meta['noise']['kind'] == 'full_covariance', admitted_bytes) for n in fit_sizes]
+                plan['preflight']['active_cells'], meta['noise']['kind'] == 'full_covariance', admitted_bytes,
+                *([plan['preflight']['components']] if original else [])) for n in fit_sizes]
         except ValueError as error:
             fail('resource', '$/preflight', str(error))
         allocation_plan = dict(original_preflight=plan['preflight'], fit_refit_metric_phases=phases)
@@ -334,7 +351,7 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         state.update(active_candidate=cid, active_fold=-1 if fold is None else fold, active_reason=None)
         observed, noise = reader.read(rows, role=role, fold=fold)
         solve_admitted, solve_allocation, reduced_plan = admitted_bytes, allocation, None
-        if reduced:
+        if reduced or original:
             reduced_plan = next(p for p in phases if p['fit_components'] == len(rows)*plan['preflight']['components'])
             solve_admitted, solve_allocation = reduced_plan['admitted_bytes'], digest(reduced_plan)
         result = fit_partition(op(rows), mesh, meta['prior'], observed, noise, beta, penalty, binding=binding,

@@ -24,6 +24,11 @@ def exclusive(path, raw):
         os.fsync(stream.fileno())
 
 
+def original_prerequisite_failed(record):
+    """Fail-first ledger gate, not authority to run an unqualified full matrix."""
+    return record['scientific_verdict'].startswith('failed') or record['scientific_verdict'] == 'synthetic_predictive_fail'
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-root', required=True)
@@ -38,6 +43,7 @@ def main():
     mode.add_argument('--conditioned-core', action='store_true')
     mode.add_argument('--feasible-core', action='store_true')
     mode.add_argument('--reduced-core', action='store_true')
+    mode.add_argument('--original-core', action='store_true')
     args = parser.parse_args()
     root, scratch_root = external_path(args.data_root), external_path(args.temp_root)
     if not root.is_dir() or not scratch_root.is_dir() or not 0. < args.wall_seconds <= 7200.:
@@ -47,10 +53,11 @@ def main():
     import physical_nonlinear_optimizer as nonlinear
     from run_magnetic_survey import source_inventory
     from magnetic_native_runtime import run_local_survey
-    conditioned = args.conditioned_core or args.feasible_core or args.reduced_core
-    if (args.feasible_core or args.reduced_core) and any(label.endswith(':exact_total_anomaly_nT') for label in args.cases):
+    conditioned = args.conditioned_core or args.feasible_core or args.reduced_core or args.original_core
+    if (args.feasible_core or args.reduced_core or args.original_core) and any(label.endswith(':exact_total_anomaly_nT') for label in args.cases):
         raise ValueError('Public contact/reduced source is LINEAR-only')
-    sources = source_inventory(conditioned=conditioned, feasible=args.feasible_core, reduced=args.reduced_core)
+    sources = source_inventory(conditioned=conditioned, feasible=args.feasible_core,
+        reduced=args.reduced_core, original=args.original_core)
     inventory_hash = digest(sources)
     fixture = Path(__file__).parents[1]/'tests'/'fixtures'/'magnetic_survey'/'full_request.py'
     spec = importlib.util.spec_from_file_location('full_frozen_s2', fixture)
@@ -73,6 +80,9 @@ def main():
             if args.reduced_core:
                 from magnetic_reduced_adapter import binding_for_sources as reduced_binding
                 binding = reduced_binding(sources, inventory_hash)
+            if args.original_core:
+                from magnetic_original_adapter import binding_for_sources as original_binding
+                binding = original_binding(sources, inventory_hash)
         doc, original, evaluator = generator.generate(regime, quantity, binding)
         name = regime+'-'+quantity
         data, scratch = root/name, scratch_root/name
@@ -133,6 +143,14 @@ def main():
         exclusive(data/'scientific-verdict.json', canonical(record))
         results.append(record)
         print('END '+label+' '+record['scientific_verdict']+' '+str(record['reason']), flush=True)
+        if args.original_core and original_prerequisite_failed(record):
+            # New source is explicitly fail-first. No downstream native birth,
+            # fabricated evaluation, or unchanged failed-matrix repetition.
+            for dependent in args.cases[len(results):]:
+                results.append(dict(case=dependent, scientific_verdict='not_run',
+                    reason='prerequisite_failed:'+label, full_method_accepted=False,
+                    field_source_verified=False))
+            break
     exclusive(root/'matrix.json', canonical(dict(schema='magnetic-frozen-matrix-1', cases=results,
         field_truth=False, online_admitted=False, native_security_admitted=False,
         frozen_scientific_gates_modified=False, source_inventory=sources)))
