@@ -17,6 +17,10 @@ can still write. Repeated request cancellation SHALL drain the owned work
 before failure recording and guard release. A timeout is non-success, never
 scientific success or inferred native group extinction.
 Gate: held-worker timeout/repeated-cancellation controls and event-loop progress.
+The actual executor completion is distinct from the asyncio bridge: cancelling
+that bridge during application shutdown SHALL not release guards while its
+underlying thread still runs. Gate: separately cancel the bridge while actual
+work is held, then verify executor completion before any guard release.
 
 R-461 WHEN publication starts, THE service SHALL commit publication uncertainty
 BEFORE installing a fresh permanent target, then co-commit the exact successful
