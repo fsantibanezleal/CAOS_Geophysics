@@ -46,3 +46,9 @@ The matrix process SHALL return nonzero for failed, not-run or unresolved
 scientific controls. Exit zero is not granted just because a failure ledger
 was written. Its report SHALL distinguish selected controls from complete
 original linear A..F coverage; neither is field/native/full-method admission.
+
+The fixed native worker SHALL prefer its caller-explicit frozen dependency
+roots over historical repository roots in an embedded interpreter path file.
+The declared package root remains explicit. Job membership still precedes any
+numerical import; source precedence cannot manufacture containment admission.
+Gate: capture actual import search order at the pre-science membership boundary.
