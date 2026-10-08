@@ -46,6 +46,32 @@ def directory_fd(path):
         raise
 
 
+def private_stage_parent(data_dir):
+    """Create privately or refuse existing debt; never chmod/adopt its bytes."""
+    data_fd = directory_fd(data_dir)
+    parent_fd = None
+    try:
+        try:
+            os.mkdir(".job-staging",0o700,dir_fd=data_fd)
+        except FileExistsError:
+            pass
+        parent_fd = os.open(".job-staging",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=data_fd)
+        info = os.fstat(parent_fd)
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.geteuid() and not info.st_mode & 0o077)
+        current = directory_fd(data_dir/".job-staging")
+        try:
+            require(identity(os.fstat(current)) == identity(info))
+        finally:
+            os.close(current)
+        return parent_fd
+    except BaseException:
+        if parent_fd is not None:
+            os.close(parent_fd)
+        raise
+    finally:
+        os.close(data_fd)
+
+
 def regular_at(fd,name,cap):
     member = os.open(name,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK,dir_fd=fd)
     try:
@@ -120,6 +146,7 @@ async def execute(settings,sessions,job,poll_interval):
     from app.worker import _cancel_requested, _finish_failure
     started = time.monotonic()
     stage_fd = None
+    stage_parent_fd = None
     process = None
     readers = []
     reason = None
@@ -147,12 +174,13 @@ async def execute(settings,sessions,job,poll_interval):
         payload = verified_json(settings,key,dataset.sha256,dataset.byte_count)
         validate_dataset_identity(payload,dataset)
         _verified_file(settings,asset)
-        parent = stage.parent
-        require(not parent.is_symlink())
-        parent.mkdir(exist_ok=True)
-        stage.mkdir(mode=0o700)
-        stage_fd = directory_fd(stage)
+        stage_parent_fd = private_stage_parent(settings.data_dir)
+        os.mkdir(job.id,0o700,dir_fd=stage_parent_fd)
+        stage_fd = os.open(job.id,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=stage_parent_fd)
+        info = os.fstat(stage_fd)
+        require(stat.S_ISDIR(info.st_mode) and info.st_uid == os.geteuid() and not info.st_mode & 0o077)
         held = identity(os.fstat(stage_fd))
+        require(identity(stage.lstat()) == held)
         process = await asyncio.create_subprocess_exec(*command,cwd=stage,
             env={"PATH":"/usr/bin:/bin","PYTHONDONTWRITEBYTECODE":"1","PYTHONIOENCODING":"utf-8"},
             stdin=asyncio.subprocess.PIPE,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
@@ -246,3 +274,5 @@ async def execute(settings,sessions,job,poll_interval):
             await asyncio.gather(*readers,return_exceptions=True)
         if stage_fd is not None:
             os.close(stage_fd)
+        if stage_parent_fd is not None:
+            os.close(stage_parent_fd)
