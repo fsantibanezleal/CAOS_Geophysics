@@ -139,6 +139,18 @@ from an external device temp/data root, never /run or system temp, and is absent
 from HTTP/job argv. Actual POSIX `200/CHDIR` failures cannot be counted as guard
 controls or hidden by permissive drvfs modes.
 
+The scientific UID has search, not directory-read authority on these fixed
+traverse-only ancestors. On Linux, held ancestor leases therefore use
+`O_PATH|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC`; the final directory still uses
+`O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC` for actual inventory/file operations.
+Ancestor handles remain descriptor-relative, type/identity-checked and retained
+for the entire lease. They cannot enumerate an inaccessible custody/anchor or
+replace a readable final export handle. Windows handles and non-Linux POSIX
+behavior remain unchanged. Do not chmod an existing parent to make traversal
+work. Gate: `tests/data/test_waveform_search_handles.py` on ordinary nonroot
+Linux storage (search-only ancestor, final readable handle, link refusal and
+replacement identity), followed by actual changed-source installed native queue.
+
 The existing descriptor-bound guardian and fixed scientific supervisor execute
 inside internally constructed custody. Caller CANCEL/EOF is checked before ACK
 and during scientific wait; only exact owned scopes are stopped. A full bounded

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import sys
 
 from waveform_input import fail
 
@@ -113,7 +114,9 @@ def _info(fd):
     )
 
 
-def _open_fd(path, *, directory=False, create=False, parent_fd=None):
+def _open_fd(path, *, directory=False, create=False, parent_fd=None, directory_search=False):
+    if directory_search and not directory:
+        fail("waveform_contract")
     failure = False
     fd = None
     try:
@@ -138,11 +141,13 @@ def _open_fd(path, *, directory=False, create=False, parent_fd=None):
         else:
             if not hasattr(os, "O_NOFOLLOW") or not hasattr(os, "O_DIRECTORY"):
                 fail("waveform_contract")
+            if directory_search and sys.platform == "linux" and not hasattr(os, "O_PATH"):
+                fail("waveform_contract")
             flags = (
                 os.O_NOFOLLOW
                 | os.O_CLOEXEC
                 | (
-                    os.O_DIRECTORY | os.O_RDONLY
+                    os.O_DIRECTORY | (os.O_PATH if directory_search and sys.platform == "linux" else os.O_RDONLY)
                     if directory
                     else os.O_CREAT | os.O_EXCL | os.O_RDWR
                     if create
@@ -170,7 +175,8 @@ def _lease(path):
     held = []
     try:
         for item in (*reversed(path.parents), path):
-            fd = _open_fd(item, directory=True, parent_fd=held[-1] if held and os.name != "nt" else None)
+            fd = _open_fd(item, directory=True, directory_search=item != path,
+                          parent_fd=held[-1] if held and os.name != "nt" else None)
             held.append(fd)
         return held
     except BaseException:
