@@ -6,7 +6,7 @@
    native inputs and cross-owner/hash/header/cap negatives, no engine in API.
 3. JP03/04: fixed actual child and singleton dispatch proposal; source-pinned real
    solve/replay/export, cancellation/deadline/memory/scratch/retained-failure gates.
-4. JP05: migration after0004, exact member publication/download, source rows,
+4. JP05: allocated0006 after0005_physical_forest, exact member publication/download, source rows,
    reservations/quota/startup reconciliation/deletion and uncertain-commit gates.
 5. JP06: existing shell request/state/import lifecycle and exact downloads; parent
    integrates canonical unions/mount and checks actual render in all eight cells.
@@ -42,3 +42,11 @@ failure explicitly leaves descendant termination unverified. Loaded module
 hashes are retained, not a full transitive/native or host/precision certificate.
 Canonical singleton dispatch, durable member publication/quota/recovery and
 the shared sidebar still require their separately tested additive integrations.
+
+Allocated successor controls use immutable committed M01 source and fresh
+external candidates:45PASS0FAIL0ERROR0SKIP. Exact0006 DDL/source/blob binding,
+plural root/type preservation, empty round trip, restrictive complete artifact
+identity/paths, retained-state/unknown/active/head refusals, all DDL/revision cuts
+and actual36-member family/root publication/rollback/source negatives execute.
+Historical0004 evidence is unchanged. Default registry, canonical mount, full
+file custody/result lifecycle and scientific acceptance are not inferred.

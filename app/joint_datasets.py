@@ -237,7 +237,7 @@ async def audit_dependencies(settings, session, datasets):
         await validate_source_rows(settings,session,dataset,payload)
 
 
-def install_joint_dataset_routes(app, settings, current_user, get_session):
+def install_joint_dataset_routes(app, settings, current_user, get_session, *, register_root=None):
     router = APIRouter(prefix='/api/projects/{project_id}',tags=['joint-native'])
 
     @router.post('/joint-datasets',status_code=201)
@@ -294,7 +294,10 @@ def install_joint_dataset_routes(app, settings, current_user, get_session):
             dataset = ObservationDataset(id=identity,project_id=project_id,owner_id=user.id,raw_asset_id=primary.id,
                 version=1,parser_version=native.PARSER,modality=native.MODALITY,row_count=count,raw_sha256=primary.sha256,
                 sha256=sha256(encoded),byte_count=len(encoded),storage_key=key,created_at=utcnow())
-            session.add(dataset); await session.flush()
+            if register_root is None:
+                session.add(dataset); await session.flush()
+            else:
+                dataset = await register_root(session,dataset,payload)
             for role, names in bindings.items():
                 for name,binding in names.items():
                     session.add(JointDatasetSource(dataset_id=identity,role=role,name=name,

@@ -1,0 +1,19 @@
+{
+  "schema": "geophysics.joint-schema-registration/v1",
+  "revision": "0006_joint_artifacts",
+  "down_revision": "0005_physical_forest",
+  "predecessor_commit": "16b911dc58744c53e936677436a63370dbc0c02b",
+  "predecessor_ddl_sha256": "b35d30cbbc77e7c26ad4d4c0efa7d2365cdd582e7e22979ca1ae0461ef1dacb4",
+  "ddl_sha256": "f8adb510cd7ababbc2bfcc78bd511da64222f055526455c9ba6c1ee51c7f702c",
+  "sources": {
+    "app/migrations/candidates/0006_joint_artifacts.py": {"sha256": "1543352aa96da92c56741f246ee12e484f0c27ea15a9c373b43d28362736274c", "git_blob": "f163e8cd132dfc52aae775d2fba01d8b7d90853a"},
+    "app/joint_successor.py": {"sha256": "a2b410c4e0f60b5e66e6935f49af3172a51711b7b7db1b734be8842a64c7fa1f", "git_blob": "1848fbc5be8fc94677f4ee42ae813eacbcaad0a3"},
+    "app/joint_models.py": {"sha256": "345a1e4d2fe767b196482a8ef4acdba66d6ba1a436e24646062dbe751055db3f", "git_blob": "892f9a09b0ebdbf06af4b2a0f75755480ff71cb0"},
+    "app/joint_roots.py": {"sha256": "e632ce100d88daa85aa198b381edd7dd16693973ce62c348a3bc4d8ac2b2db08", "git_blob": "e5501bb299cf24f34aa5efbc206f1d97704fba77"},
+    "app/joint_datasets.py": {"sha256": "ee79d86d306415944e0f66950c83346388986b85d1bfd07aa0e23125024b75a4", "git_blob": "051dbbd8d20f6a814ef1fe6bdaec9a550de6966b"}
+  },
+  "canonical_mount": false,
+  "source_policy_admitted": false,
+  "scientific_acceptance": false,
+  "native_host_admission": false
+}

@@ -8,8 +8,10 @@ This is precode, not a claim those files contain M11. Parent may advance them.
 Owned files will be app/joint_{contract,processing,worker,result,models}.py,
 scripts/joint_processing_child.py and owned API/frontend tests. Parent receives
 an explicit additive union/mount patch, not replacement canonical files. New
-dependency/artifact tables follow current0004_waveform_artifacts; migration
-head and reconciliation must union M08, never revert its source rows/members.
+The allocated dependency/artifact revision is0006_joint_artifacts after
+M01's0005_physical_forest; M03's0007 follows it. Migration head and
+reconciliation must union M01/M08, never revert their rows/members. Historical
+0004/table-only fixtures are not evidence of the allocated successor.
 
 Native indexing holds each original file across scan and checks independent
 held-descriptor and named-path stat snapshots. Their device/inode/size/mtime
@@ -20,6 +22,16 @@ drift within either namespace is tolerated. Close combined declared member
 bytes before any hash scan and retain explicit role/name dependency rows.
 
 ## Source custody and transport
+
+Allocated successor precode: source-bound0005 DDL, explicit transactional
+rollback-journal registry, closed joint root tuple extension preserving all
+other literal DDL/rows/types/indexes/FKs, original native dependency model and
+complete job/owner/project/dataset/hash/method/request artifact FK. Root indexing
+uses an explicitly mounted family/root transaction rather than bypassing M01.
+Empty0006->0005 restores exact original DDL; retained native roots/families,
+dependencies, jobs or artifacts refuse. Unknown DDL and injected cuts roll back
+all changes. M01's own0005 downgrade remains forbidden. No file cleanup, source
+policy, worker, scientific or host admission follows from this schema test.
 
 The existing generic upload archive ban remains. Add an authenticated ordinary
 native-member endpoint under the existing project, using existing RawAsset,
@@ -75,6 +87,20 @@ hashes, exact member inventory and true total-byte/quota checks.
 
 ## Protected publication and shell
 
+The independent native-input client closes both original directories and the
+combined40-member/256MiB envelope before reading any member. Only bounded
+request/sealed JSON and literal NPY headers are inspected; native values,
+including sealed observations, remain opaque. Exact declared file/data SHA
+and length checks precede upload, using the existing cookie/CSRF same-origin
+transport with the dedicated X-Joint-Member-Metadata header. User attests
+provider/rights/private-storage permission, never inferred from a result file.
+Partial successful upload receipts remain visible after cancellation/failure;
+there is no automatic destructive rollback or uncertain upload retry. Structural
+dataset creation uses the exact role/name receipt map and verifies the returned
+project/source/hash identities. The parent sidebar receives the selected dataset
+through an explicit callback. Indexing is never a scientific run; offline
+scientific execution and the existing full native result inspector stay distinct.
+
 Publish at derived/{owner}/{project}/joint/{job}/{fixed-relative-native-member}
 with a canonical result index at the existing result_key. Nested member names
 are exactly the existing calibration/frozen/models/result/instrument inventory;
@@ -117,6 +143,22 @@ promoted to scientific acceptance. These envelopes preserve original v1 arrays
 and receipts; they never relabel historical624/384 failures.
 
 ## Conditioning applicability
+
+The separate reduced LINEAR baseline adapter binds the actual public working-
+face source epoch and every loaded dependency; the original conditional source
+guard is not relaxed or patched. It reuses only source-verified original M11
+quadratic operands, exact original native objective/gradient/Hessian, frozen
+matrix/noise definition, bounds, beta grid and half normalization. The closed
+metric owns the native working mask and successful subspace refinements; no
+caller mask, inverse, SPD assertion, copied CG or oracle enters execution.
+Allocation charges the SUM of original source envelope, owned factory peak,
+8MiB workspace, at most512 retained phases at8*a+8192+16*a each and8*a
+prospective indices, bound to a new allocation digest under original2GiB.
+Original120s/200accepted/201states/20LS/200 summedCG limits and same workflow
+deadline remain. Independent original precision predicates are unchanged.
+Only changed source-bound targeted prerequisites run before dependent full
+matrices; unchanged failed fingerprints stop those dependent runs. No quartic
+coupling, original-noise reinterpretation, host or scientific grant is inherited.
 
 M02 physical_conditioned_optimizer is prospective until committed public source
 is read. Linear CG200 and nonlinear CG512 are distinct unchanged limits.
