@@ -64,6 +64,26 @@ Authored analytic and direct numerical controls, held-out counts-comparator repl
 
 The API and worker require explicit absolute external `GEOPHYSICS_DATA_DIR`; `GEOPHYSICS_DB_PATH`, if set, must also be external. No repository raw/model/temp default exists. The selected `.waveform-context/context.json` binds actual interpreter and admission bytes; `scripts/qualify_waveform_m08.py` requires an explicit external root, selected compiled SDK probe/hash, review and exact source revision. It measures only a Windows local context and grants no scientific/host authority. Requalify after scientific/controller source changes. Queued jobs bind `implementation_sha256` and reject changed code rather than silently executing the new version.
 
+The CLI and native transaction reject repository-contained working input,
+request, reference, admission and output paths before I/O or launch. Use the
+device's external data/temp roots for these files. The selected interpreter and
+reviewed code are different roles: the existing product scientific environment
+may execute an isolated worktree's sources. Relative database paths are rejected,
+not silently converted into an absolute path. Qualification inventories the
+direct Python image's actual closed bootstrap and scientific environment;
+case-equivalent Windows image paths collapse only when their byte hashes agree.
+The admitted native closure still rejects unknown images and duplicate keys.
+
+The isolated browser harness uses a separate `qa-waveform.html`, existing shared
+shell/styles and the actual migrated API and waveform worker, not mock results.
+It requires explicit external `GEOPHYSICS_QA_DATA`, `GEOPHYSICS_QA_DIST`,
+`GEOPHYSICS_QA_CACHE` and `GEOPHYSICS_QA_EVIDENCE` roots, plus the selected SDK
+probe/review/scientific interpreter. `tests/ui/waveform_devserver.py` requires
+`GEOPHYSICS_WAVEFORM_QA=isolated-loopback-only` and binds loopback only. Run the
+isolated Vite build with `vite.waveform-qa.config.ts` and the browser checks with
+`playwright.waveform-qa.config.ts`. This entry point does not mount or activate
+the production router, qualify Linux, or establish public host acceptance.
+
 Owned MiniSEED indexing requires `waveform_request` and the exact owned `physical.geometry.stationxml_asset_id`. `0004_waveform_artifacts` records both source roles and immutable result members. Structural indexing is not physical QC. The fixed worker validates original/index/request identities, final resources, complete export and release before transactional publication. Unknown or uncertain stage bytes are retained for recovery; only verified committed successful stages are removed. Startup independently audits inventory, quota and dependencies. Project deletion includes the validated waveform artifacts and sources.
 
 The bilingual `WaveformProjectWorkbench` uses existing workbench/shell styles and the same protected session/CSRF client. It supports explicit requests, indexed datasets, job history/cancellation, exact scientific results, unit-bearing traces/PSD, verified ZIP export/reopen and source/QC/edge/pick provenance. It does not tune with catalogue labels, invent timing uncertainty or assign P/S. Router integration must preserve other positive modality guards. Working reports are written only under an explicitly selected external root, never `data/derived/waveform`; compact golden identities in tests are not raw fixture mirrors or field acceptance.

@@ -94,7 +94,7 @@ class Settings:
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(
             data_dir=data,
-            db_path=Path(db).resolve() if db else None,
+            db_path=Path(db) if db else None,
             auth_secret=os.environ["GEOPHYSICS_AUTH_SECRET"],
             public_origin=os.environ["GEOPHYSICS_PUBLIC_ORIGIN"].rstrip("/"),
             smtp_host=os.environ.get("GEOPHYSICS_SMTP_HOST", ""),
@@ -134,5 +134,5 @@ class WorkerSettings:
     def from_env(cls) -> "WorkerSettings":
         data = configured_data_path()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
-        return cls(data_dir=data, db_path=Path(db).resolve() if db else None,
+        return cls(data_dir=data, db_path=Path(db) if db else None,
                    mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1")

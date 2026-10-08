@@ -16,9 +16,10 @@ from app.processing_contract import canonical_bytes, checked_derived_path, resul
 from app.waveform_contract import INPUT, METHOD_ID, SCRATCH, artifact_key, artifact_path
 
 # The path-invoked ordinary scripts must share one class namespace with their CLI.
-_SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
-if str(_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(_SCRIPTS))
+_ROOT = Path(__file__).resolve().parents[1]
+for _ordinary_root in (_ROOT / "data-pipeline", _ROOT / "scripts"):
+    if str(_ordinary_root) not in sys.path:
+        sys.path.insert(0, str(_ordinary_root))
 
 
 def local_export(path):

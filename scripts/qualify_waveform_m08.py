@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -21,7 +20,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "data-pipeline"))
 
 from app.config import external_storage_path
-from waveform_m08_windows import Native, binary_sha, canonical, code_paths, parse_abi, prepare_engine, environment as native_environment
+from waveform_m08_windows import Native, binary_sha, canonical, code_paths, parse_abi, environment as native_environment
 from waveform_m08_files import open_output, open_input
 
 
@@ -30,6 +29,27 @@ def write_new(path, raw):
         handle.write(raw)
         handle.flush()
         os.fsync(handle.fileno())
+
+
+def runtime_rows(paths):
+    """Windows closure keys are case-insensitive, but every image hash is exact.
+
+    Separately measured bootstrap/science images can name the same DLL with
+    different casing. Conflicting bytes still fail; the native admission reader
+    continues to reject duplicate keys and never broadens its allowed closure.
+    """
+    rows = {}
+    for path in sorted(paths, key=lambda value: (value.casefold(), value)):
+        digest = binary_sha(path)
+        key = path.casefold()
+        if key in rows:
+            if rows[key]["sha256"] != digest:
+                raise ValueError("Case-equivalent runtime images have conflicting hashes")
+        else:
+            rows[key] = {"path": path, "sha256": digest}
+    if not 1 <= len(rows) <= 256:
+        raise ValueError("Runtime image union exceeds the selected native closure bound")
+    return list(rows.values())
 
 
 def qualify(root, executable, expected_probe_sha, review, revision):
@@ -100,18 +120,31 @@ def qualify(root, executable, expected_probe_sha, review, revision):
     # Discover genuine loaded images, including the actual full response/FFT
     # reader plugins. The discovery calculation is authored, NOT containment
     # evidence, field evidence, or a passed resource profile.
-    prepare_engine()
-    spec = importlib.util.spec_from_file_location("m08_qualification_fixture", ROOT / "tests/fixtures/waveform_m08/full_workflow.py")
-    fixture = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(fixture)
-    from waveform_m08_child import calculate_bytes
-    case = fixture.make_case("nominal3")
-    calculate_bytes(case["mseed"], case["stationxml"], case["request"])
-    paths = baseline_images | set(native.loaded_paths()) | {str(Path(sys.executable).resolve())}
+    # A venv process with inherited user environment is NOT the contained
+    # direct-image scientific process. Measure the same -I/-B bootstrap,
+    # selected science site-packages and closed private environment instead.
+    # This authored discovery remains uncontained, not native acceptance.
+    science = subprocess.run([
+        python_image, "-I", "-B", "-c",
+        "import sys,json,importlib.util;sys.path.insert(0,sys.argv[1]);"
+        "import waveform_m08_windows as w;sys.path.insert(0,sys.argv[2]);"
+        "n=w.Native();w.prepare_engine();before=set(n.loaded_paths());"
+        "s=importlib.util.spec_from_file_location('m08_discovery',sys.argv[3]);"
+        "f=importlib.util.module_from_spec(s);s.loader.exec_module(f);"
+        "from waveform_m08_child import calculate_bytes;c=f.make_case('nominal3');"
+        "calculate_bytes(c['mseed'],c['stationxml'],c['request']);"
+        "print(json.dumps(sorted(before|set(n.loaded_paths()))));n.cleanup()",
+        str(ROOT / "scripts"), str(site_packages),
+        str(ROOT / "tests/fixtures/waveform_m08/full_workflow.py"),
+    ], cwd=context_root, env=direct_env, stdin=subprocess.DEVNULL, capture_output=True, timeout=60, check=True)
+    if science.stderr or len(science.stdout) > 65536:
+        raise ValueError("Closed scientific image inventory failed")
+    science_images = json.loads(science.stdout)
+    if not isinstance(science_images, list) or not 1 <= len(science_images) <= 256 or any(not isinstance(p, str) for p in science_images):
+        raise ValueError("Closed scientific image inventory malformed")
+    paths = baseline_images | set(science_images) | set(native.loaded_paths()) | {str(Path(sys.executable).resolve())}
     for _ in range(8):
-        if len(paths) > 256:
-            raise ValueError("Selected runtime exceeds the fixed image inventory cap")
-        runtime = [{"path": p, "sha256": binary_sha(p)} for p in sorted(paths, key=str.casefold)]
+        runtime = runtime_rows(paths)
         after = paths | set(native.loaded_paths()) | {str(Path(sys.executable).resolve())}
         if after == paths:
             break

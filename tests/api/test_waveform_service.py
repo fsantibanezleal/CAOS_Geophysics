@@ -57,6 +57,32 @@ def pair(harness):
     return project, fixture, xml, raw.json()
 
 
+def test_fresh_interpreter_reads_exact_pair_without_test_import_paths(tmp_path):
+    """A new API process must not depend on test collection's sys.path."""
+    fixture = make_case("nominal1")
+    paths = [tmp_path / "trace.mseed", tmp_path / "response.xml"]
+    for path, raw in zip(paths, (fixture["mseed"], fixture["stationxml"]), strict=True):
+        path.write_bytes(raw)
+    script = """
+import hashlib,sys
+from pathlib import Path
+from types import SimpleNamespace
+sys.path.insert(0,sys.argv[1])
+from app.waveform_processing import read_original_pair
+paths=[Path(p) for p in sys.argv[2:]]
+raw=[p.read_bytes() for p in paths]
+assets=[SimpleNamespace(byte_count=len(b),sha256=hashlib.sha256(b).hexdigest()) for b in raw]
+assert list(read_original_pair(paths,assets))==raw
+from app.waveform_result import local_export
+from waveform_m08_windows import binary_sha
+assert callable(local_export) and callable(binary_sha)
+"""
+    completed = subprocess.run([sys.executable, "-I", "-B", "-c", script,
+                                str(Path(__file__).resolve().parents[2]), *map(str, paths)],
+                               capture_output=True, timeout=30)
+    assert completed.returncode == 0, completed.stderr.decode(errors="replace")
+
+
 def index(harness, project, fixture, raw):
     return harness.request(
         "POST",
@@ -125,6 +151,7 @@ def test_worker_dispatch_and_closed_context(harness):
     receipt = indexed.json()
     eligibility = harness.client.get(f"/api/projects/{project['id']}/datasets/{receipt['dataset_id']}/methods").json()
     assert eligibility["unavailable"][0]["method_id"] == "seismic.waveform-qc-classical/v1"
+    assert set(eligibility["unavailable"][0]) == {"method_id", "eligible", "lane", "reason"}
     response = harness.request(
         "POST",
         f"/api/projects/{project['id']}/jobs",
@@ -169,6 +196,8 @@ def test_publication_and_roundtrip(harness, tmp_path, monkeypatch):
     assert indexed.status_code == 201
     data = indexed.json()
     monkeypatch.setattr("app.processing.context_available", lambda _settings: True)
+    eligible = harness.client.get(f"/api/projects/{project['id']}/datasets/{data['dataset_id']}/methods").json()
+    assert set(eligible["methods"][0]) == {"method_id", "eligible", "lane", "scope"}
     submitted = harness.request(
         "POST",
         f"/api/projects/{project['id']}/jobs",

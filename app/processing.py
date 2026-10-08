@@ -254,8 +254,8 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             available = context_available(settings)
             method = {"method_id": WAVEFORM_ID, "eligible": available,
                 "lane": "online_processing" if available else "native_context_pending",
-                "scope": "Conditional native response/QC/filter/PSD and unlabelled onset candidates",
-                "reason": "Selected native context must be validated by the worker before execution"}
+                **({"scope": "Conditional native response/QC/filter/PSD and unlabelled onset candidates"}
+                   if available else {"reason": "Selected native context must be validated by the worker before execution"})}
             return {"dataset_id": dataset.id, "methods": [method] if available else [],
                     "unavailable": [] if available else [method]}
         if dataset.modality == "edi_transfer_function":

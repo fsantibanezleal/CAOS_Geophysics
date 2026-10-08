@@ -53,7 +53,7 @@ export function parseWaveformSources(value:unknown):WaveformSources {
 export function parseWaveformDataset(value:unknown):WaveformDataset {
   const data=obj(value,"waveform dataset");keys(data,"schema dataset_id version owner_id project_id raw_asset_id parent_raw_sha256 parser_version modality dimensions sources request scientific_request_sha256 qc_verdict".split(" "),"waveform dataset");
   for(const key of ["dataset_id","owner_id","project_id","raw_asset_id"])id(data[key]);hash(data.parent_raw_sha256);hash(data.scientific_request_sha256);
-  if(data.schema!=="geophysics.waveform-dataset/v1"||data.version!==1||data.modality!=="waveform_counts_response"||data.qc_verdict!=="structural_index_not_physical_qc"||data.parser_version!==`m08-counts-response/v1/${data.scientific_request_sha256}`)throw new Error("Waveform dataset schema");
+  if(data.schema!=="geophysics.waveform-dataset/v1"||data.version!==1||data.modality!=="waveform_counts_response"||data.qc_verdict!=="structural_index_not_physical_qc"||data.parser_version!==`m08/v1/${data.scientific_request_sha256}`)throw new Error("Waveform dataset schema");
   const dimensions=obj(data.dimensions,"dimensions");keys(dimensions,["channel","sample","record"],"dimensions");integer(dimensions.channel,1,3);integer(dimensions.sample,1,180000);integer(dimensions.record,1,4096);
   const sources=parseWaveformSources(data.sources);same(sources.miniseed.asset_id,data.raw_asset_id,"original asset");same(sources.miniseed.raw_sha256,data.parent_raw_sha256,"original digest");obj(data.request,"scientific request");
   return value as WaveformDataset;
