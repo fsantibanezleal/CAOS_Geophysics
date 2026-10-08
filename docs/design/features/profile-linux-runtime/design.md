@@ -126,6 +126,33 @@ own path and bytes to configuration, not merely a different installed copy.
 Installation custody parent must remain root-owned/non-writable and traversable
 by the configured scientific group. Preserve q02/q03 original failure receipts.
 
+### Exact terminal-job recovery
+
+Add an explicit operator-only recovery path for one canonical UUID, never a
+directory sweep. The fixed supervisor accepts the literal `--recover` mode and
+keeps its same installed configuration/source/UID checks and singleton lock.
+Recovery first proves both exact scientific and guardian groups already empty
+and their manager units inactive; it cannot stop a live job or adopt another
+process. A complete root-only plan/receipt must bind UUID, raw/dataset/request
+and invocation hashes. Known held copies are removable only after exact bounded
+byte/hash/descriptor validation, declared launch envelope validation and empty
+scratch verification. Unknown, incomplete or mismatched debt refuses unchanged.
+Write an exclusive root-only recovery intent before any unlink; preserve the
+original operational receipt and a final bounded recovery receipt. No original
+or private project data is opened or deleted by privileged recovery.
+
+The unprivileged operator command holds the existing worker lock, resolves the
+owned terminal job and checks the fixed root receipt/retained-stage identity.
+It requests exact root recovery, then preserves the verified bounded stage in
+an exclusive `.profile-retained/<UUID>` archive with an immutable manifest.
+Archive intent precedes an atomic same-filesystem rename and records any exact
+uncommitted derived result; remove only that checked duplicate after evidence
+preservation. A succeeded result is never demoted, a failed job never promoted.
+Startup still refuses unknown staging/derivative bytes. This is local bounded
+operational recovery, not a project backup or external service requirement.
+Portable negative/duplicate/replaced-directory controls and actual cancelled
+job recovery followed by restart precede live queue activation.
+
 ### Owned API/worker adaptation
 
 Keep the Windows path-invoked profile lane and its actual tests unchanged. Add
