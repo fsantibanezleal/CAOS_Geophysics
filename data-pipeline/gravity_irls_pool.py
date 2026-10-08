@@ -94,6 +94,8 @@ def encode(value):
 def decode(pool):
     # COMPLETE external pool guard BEFORE value/hash scans/views/allocations.
     l2._result_native_metadata(pool)
+    if type(pool) is dict and pool.get('schema') == 'gravity-irls-typed-pool-2':
+        pool = _expand_text(pool)
     survey._keys(pool, _KEYS, 'IRLS typed pool')
     survey._enum(pool['schema'], 'gravity-irls-typed-pool-1', 'IRLS typed pool epoch')
     if (type(pool['node_count']) is not int or not 1 <= pool['node_count'] <= 65536
@@ -200,3 +202,55 @@ def decode(pool):
     if pool['raw_sha256'] != survey._digest(result):
         raise ValueError('IRLS pool: exact original logical hash')
     return result
+
+
+def encode_compact(value):
+    """Same logical v1 guards, exact UTF8 text bank, no precision conversion."""
+    encoded = encode(value)
+    strings = encoded['strings']
+    pieces = [word.encode('utf8', errors='strict') for word in strings]
+    offsets = np.r_[0, np.cumsum([len(piece) for piece in pieces], dtype=np.int64)]
+    raw = b''.join(pieces)
+    if len(raw) > survey.MAX_METADATA_BYTES:
+        raise ValueError('IRLS pool: unchanged text byte cap')
+    text = dict(schema='gravity-irls-utf8-table-1', count=len(strings), byte_count=len(raw),
+        offsets=_grid(offsets), bytes=_grid(np.frombuffer(raw, dtype=np.uint8).astype(np.int64)))
+    result = dict(encoded, schema='gravity-irls-typed-pool-2', strings=text)
+    result['pool_sha256'] = survey._digest({k:v for k,v in result.items() if k != 'pool_sha256'})
+    l2._result_native_metadata(result)
+    return result
+
+
+def _expand_text(value):
+    survey._keys(value, _KEYS, 'compact IRLS typed pool')
+    text = value['strings']
+    survey._keys(text, ('schema', 'count', 'byte_count', 'offsets', 'bytes'), 'IRLS UTF8 table')
+    if (text['schema'] != 'gravity-irls-utf8-table-1' or type(text['count']) is not int
+        or not 0 <= text['count'] <= 32768 or type(text['byte_count']) is not int
+        or not 0 <= text['byte_count'] <= survey.MAX_METADATA_BYTES):
+        raise ValueError('IRLS pool: closed bounded text table')
+    for key, length in (('offsets', text['count']+1), ('bytes', text['byte_count'])):
+        v = text[key]
+        if (type(v) is not np.ndarray or v.dtype != np.int64 or v.ndim != 2
+            or any(d > 4096 for d in v.shape) or v.size < length
+            or v.size-length >= max(1, v.shape[1])):
+            raise ValueError('IRLS pool: bounded exact text bank')
+    if value['pool_sha256'] != survey._digest({k:v for k,v in value.items() if k != 'pool_sha256'}):
+        raise ValueError('IRLS pool: complete compact hash')
+    offsets, bank = text['offsets'].ravel(), text['bytes'].ravel()
+    count, length = text['count'], text['byte_count']
+    if (np.any(offsets[count+1:]) or np.any(bank[length:]) or offsets[0] != 0
+        or offsets[count] != length or np.any(np.diff(offsets[:count+1]) < 0)
+        or np.any(bank[:length] < 0) or np.any(bank[:length] > 255)):
+        raise ValueError('IRLS pool: canonical offsets/byte/padding')
+    raw = bank[:length].astype(np.uint8).tobytes()
+    try:
+        words = tuple(raw[int(offsets[i]):int(offsets[i+1])].decode('utf8', errors='strict') for i in range(count))
+    except UnicodeError as error:
+        raise ValueError('IRLS pool: exact UTF8') from error
+    expanded = dict(value, schema='gravity-irls-typed-pool-1', strings=words)
+    # The original v1 decoder still charges the complete logical text metadata,
+    # checks unique/used words and every node/edge/span/hash without aliases.
+    l2._result_native_metadata(expanded)
+    expanded['pool_sha256'] = survey._digest({k:v for k,v in expanded.items() if k != 'pool_sha256'})
+    return expanded

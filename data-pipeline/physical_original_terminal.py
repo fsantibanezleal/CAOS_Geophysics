@@ -279,8 +279,14 @@ class OwnedOriginalTerminal:
             gap = ar.hi.divide(squared, ar.lo.multiply(Decimal(2), mu))
             record.update(normalized_exact_bound_kkt=native_kkt,
                 source_normalized_kkt_upper=str(source_kkt), required_normalized_kkt=policy.required_kkt_normalized)
+            # Exact source KKT plus the ORIGINAL positive scientific smallness
+            # proves q is the unique box optimum directly. This is not a float
+            # nearzero test or an uncomputed assertion about P H. All source
+            # operands, native KKT, free-box and active signs still apply.
+            exact_stationary = squared == ZERO
+            record['proof_basis'] = ('exact_source_feasible_kkt' if exact_stationary else 'free_face_neumann')
             error, kappa, eta = ZERO, ZERO, ZERO
-            if f:
+            if f and not exact_stationary:
                 restricted = np.ascontiguousarray(o.sensitivity[:, self.free])
                 terms = [(t, t.derivative[:, self.free].T.tocsr()) for t in o.terms]
                 transpose = self._metric._numeric.lower.T.tocsr()
@@ -299,7 +305,7 @@ class OwnedOriginalTerminal:
                 error = ar.hi.divide(eta, ar.lo.subtract(ONE, kappa))
             inside = all(ar.lo.subtract(Decimal.from_float(float(q[i])), error) > Decimal.from_float(float(o.lower[i]))
                 and ar.hi.add(Decimal.from_float(float(q[i])), error) < Decimal.from_float(float(o.upper[i])) for i in self.free)
-            coupling = self._coupling(ar) if f else [ZERO]*len(q)
+            coupling = self._coupling(ar) if f and error else [ZERO]*len(q)
             free_mask = np.zeros(len(q), dtype=bool)
             free_mask[self.free] = True
             margins = []
@@ -312,7 +318,7 @@ class OwnedOriginalTerminal:
             model = ar.hi.multiply(ar.hi.next_plus(ar.hi.sqrt(Decimal(f))), error) if f else ZERO
             maximum = ZERO
             rows = o.prediction_sensitivity
-            for i in range(len(rows) if o.prediction_projection is None else len(rows)//3):
+            for i in range((len(rows) if o.prediction_projection is None else len(rows)//3) if model else 0):
                 ar.check()
                 if o.prediction_projection is None:
                     values = [ar.exact(v) for v in rows[i]]
@@ -321,7 +327,8 @@ class OwnedOriginalTerminal:
                         for j in range(len(q))]
                 maximum = max(maximum, _norm(ar, values))
             prediction = ar.hi.multiply(maximum, model)
-            record.update(kappa_upper=str(kappa), eta_upper=str(eta), free_error_inf_upper=str(error),
+            record.update(kappa_upper=None if exact_stationary else str(kappa),
+                eta_upper=None if exact_stationary else str(eta), free_error_inf_upper=str(error),
                 inside_original_bounds=bool(inside), active_signs=margins, active_sign_pass=bool(signs),
                 bounds=dict(mu_lower=str(mu), feasible_gradient_inf_upper=str(inf),
                     model_error_upper=str(model), objective_gap_upper=str(gap),

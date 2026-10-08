@@ -43,6 +43,13 @@ not a claim about nonlinear Gauss-Newton. Additional normalized KKT1e-7,
 model error2 in q<=1e-8, gap<=1e-8, and physical prediction sup<=1e-6 gates are
 sufficient requirements, not replacements for unchanged independent tests.
 
+Exactly zero outward source feasible gradient has the separate direct strongly
+convex KKT proof: q is already the unique box optimum. Record proof_basis
+`exact_source_feasible_kkt` and unavailable kappa/eta, not fabricated contraction
+values. Original operand/native/source KKT, active/free and positive-mu checks
+still apply. Nonzero source gradients retain `free_face_neumann` unchanged;
+no nearzero test, callback approval or failed-solver fallback is introduced.
+
 Resource receipts distinguish the original native phase dictionary, source
 snapshots/endpoints/sparse-transpose phases, free factors/endpoints/workspace
 and actual retained native traces/audits. Before construction and use each must
