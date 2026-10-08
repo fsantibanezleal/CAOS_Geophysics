@@ -145,8 +145,28 @@ counts co-commit. All four precommit cuts roll back every public row while
 retaining both installed files and reservations. This is an explicit ordinary
 publication, never automatic adoption of an uncertain prepared outcome.
 
-The complete global fresh classifier, transform terminal publication, logical
-deletion and integrated queue/API/export/client remain separate mechanisms;
+Transform terminal publication uses the same write-locked dual-copy transaction,
+with its distinct 128-MiB permanent and 512-MiB stage reservations. A produced
+correction and its complete saved 30-key snapshot are mandatory; root and terminal
+transform inputs refuse. The pure `physical_transform_producer` binds the full
+original correction, geometry/config, all candidate/fold/partition/checkpoint/
+station/axis/grid/coverage/error/provenance structures, resource receipt and SQL
+relations. Both unchanged full-volume passed and unmet-height-precision outputs
+remain execution success, with literal passed/non_pass scientific verdicts.
+No transform adapter or correction-parent snapshot is fabricated: all six SQL
+adapter fields remain null. Complete inner and outer source/node/depth ceilings
+remain enforced. The reader imports no scientific dependencies or replay engine.
+
+The read-only terminal transform audit first verifies every earlier correction
+to the retained original root, then the exact edge/control/producer/job and all
+four saved bodies. It cannot authorize a transform as a new scientific input.
+Publication compares actual staged science/completion and both installed copies,
+trusted metrics and saved environment/output lengths. The same four precommit
+cuts preserve every original byte, public row and charge when rolled back.
+Fixture telemetry remains explicitly fixture-only, never a resource proof.
+
+The complete global fresh classifier, logical deletion and integrated
+queue/API/export/client remain separate mechanisms;
 this correction transaction does not manufacture their approval or native WAL
 admission. Default startup and migration registries remain unchanged.
 

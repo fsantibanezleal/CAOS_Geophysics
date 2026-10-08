@@ -1,4 +1,4 @@
-"""Correction ancestry and same-terminal-commit publication, no numerical solve.
+"""Physical ancestry and same-terminal-commit publication, no numerical solve.
 
 Native exclusion/full namespace classification precede this transaction. The
 isolated ledger is not production WAL admission; unknown bytes stay preserved.
@@ -6,11 +6,12 @@ Runtime registration and aggregate telemetry come from the trusted supervisor.
 """
 
 from app.physical_contract import (
-    CORRECTION, M, byte_sha, canonical, decode_source, digest, fields, instant, require, uuid,
+    CORRECTION, TRANSFORM, M, byte_sha, canonical, decode_source, digest, fields, instant, require, uuid,
 )
 from app.physical_debt import begin_ledger, sealed_stage
 from app.physical_forest import _row, _parent_chain, _targets
 from app.physical_producer import verify_correction_producer
+from app.physical_transform_producer import NULL_ADAPTER, verify_transform_producer
 from app.physical_wire import SOURCE_KEYS, parse_root, root_envelope, scientific_digest
 
 
@@ -21,7 +22,8 @@ def decode(body, cap):
 def _dataset_body(files, row):
     key=f"derived/{row['owner_id']}/{row['project_id']}/datasets/{row['id']}.json"
     require(row['storage_key']==key,'physical_publication_dataset_key')
-    return files.read(key,cap=16*M,expected_bytes=row['byte_count'],expected_sha256=row['sha256'])
+    cap=64*M if row['payload_schema']=='gravity-transform-result-1' else 16*M
+    return files.read(key,cap=cap,expected_bytes=row['byte_count'],expected_sha256=row['sha256'])
 
 
 def _snapshot(child, child_body, job, production, manifest):
@@ -127,8 +129,52 @@ def audit_correction_ancestry(connection, files, parent, *, approved_manifests):
     return body,previous
 
 
-def publish_correction(connection, files, *, owner_id, project_id, intent_id,
-                       approved_manifests, metrics, finished_at, failure_cut=None):
+def audit_transform_producer(connection, files, child_row, *, approved_manifests):
+    """Terminal transform and every actual earlier correction, without replay."""
+    require(child_row['kind']=='derived' and child_row['payload_schema']=='gravity-transform-result-1'
+            and child_row['modality']=='gravity_equivalent_source_transform', 'physical_publication_transform_tuple')
+    parent=_row(connection,'SELECT * FROM observation_datasets WHERE id=?',(child_row['parent_dataset_id'],))
+    _parent_chain(connection,parent,child_row['owner_id'],child_row['project_id'])
+    input_body,prior=audit_correction_ancestry(connection,files,parent,approved_manifests=approved_manifests)
+    edge=_row(connection,'SELECT * FROM physical_dataset_edges WHERE child_dataset_id=?',(child_row['id'],))
+    require(edge==dict(child_dataset_id=child_row['id'],parent_dataset_id=parent['id'],
+        owner_id=child_row['owner_id'],project_id=child_row['project_id'],raw_asset_id=child_row['raw_asset_id'],
+        root_dataset_id=child_row['root_dataset_id'],role='scientific_input',parent_dataset_sha256=parent['sha256'],child_kind='derived'),
+        'physical_publication_transform_edge')
+    production=_row(connection,'SELECT * FROM physical_dataset_productions WHERE child_dataset_id=?',(child_row['id'],))
+    job=_row(connection,'SELECT * FROM processing_jobs WHERE id=?',(production['job_id'],))
+    control=_row(connection,'SELECT * FROM physical_job_controls WHERE job_id=?',(job['id'],))
+    require(control['permanent_reservation_bytes']==0 and control['stage_id']==job['id'], 'physical_publication_transform_reservation')
+    request=decode(control['request_bytes'],34*M); manifest=decode(control['module_manifest_bytes'],65536)
+    require(canonical(request['parent_production'])==canonical(prior) and control['parent_production_bytes']==canonical(prior)
+        and canonical(decode(job['request_json'].encode(),35*M))==canonical(request)
+        and control['request_sha256']==digest(request) and control['module_manifest_sha256']==digest(manifest)
+        and control['submitted_parameters_sha256']==request['submitted_parameters_sha256']
+        and control['scientific_request_sha256']==request['scientific_request_sha256']
+        and control['admission_receipt_sha256']==request['admission_receipt_sha256']
+        and all(control[k]==request[k] for k in ('owner_id','project_id','dataset_id','dataset_sha256','root_dataset_id',
+            'raw_asset_id','raw_sha256','raw_bytes','method_id')), 'physical_publication_transform_control')
+    body=_dataset_body(files,child_row)
+    result=files.read(job['result_key'],cap=64*M,expected_bytes=job['result_bytes'],expected_sha256=job['result_sha256'])
+    child=verify_transform_producer(parent_snapshot=prior,input_bytes=input_body,child_bytes=body,
+        request_bytes=control['request_bytes'],result_bytes=result,approved_manifest=approved_manifests.get(digest(manifest)),job=job,production=production)
+    require(tuple(child[k] for k in ('dataset_id','version','owner_id','project_id','raw_asset_id','raw_sha256','root_dataset_id',
+        'parent_dataset_id','payload_schema','modality','parser_version','kind'))==tuple(child_row[k] for k in
+        ('id','version','owner_id','project_id','raw_asset_id','raw_sha256','root_dataset_id','parent_dataset_id','payload_schema','modality','parser_version','kind'))
+        and child_row['row_count']==len(child['payload']['stations']['station_ids']), 'physical_publication_transform_row')
+    return child
+
+
+def publish_correction(connection, files, **values):
+    return _publish(connection,files,method=CORRECTION,**values)
+
+
+def publish_transform(connection, files, **values):
+    return _publish(connection,files,method=TRANSFORM,**values)
+
+
+def _publish(connection, files, *, method, owner_id, project_id, intent_id,
+             approved_manifests, metrics, finished_at, failure_cut=None):
     """Verify original/staged/installed copies, then co-commit all terminal rows.
 
     The caller's measured metrics are compared to the result, not inferred from
@@ -136,6 +182,9 @@ def publish_correction(connection, files, *, owner_id, project_id, intent_id,
     After an uncertain commit: close the connection and classify fresh; NEVER
     repeat this operation to adopt a prepared outcome automatically.
     """
+    require(method in (CORRECTION,TRANSFORM), 'physical_publication_method')
+    correction=method==CORRECTION
+    dataset_cap=16*M if correction else 64*M
     for value in (owner_id,project_id,intent_id):
         uuid(value)
     instant(finished_at,legacy=True)
@@ -147,12 +196,12 @@ def publish_correction(connection, files, *, owner_id, project_id, intent_id,
         require(intent['kind']=='job' and intent['phase']=='prepared','physical_publication_intent')
         job=_row(connection,'SELECT * FROM processing_jobs WHERE id=?',(intent['job_id'],))
         control=_row(connection,'SELECT * FROM physical_job_controls WHERE job_id=?',(job['id'],))
-        require(job['state']=='running' and job['cancel_requested']==0 and job['method_id']==CORRECTION and
+        require(job['state']=='running' and job['cancel_requested']==0 and job['method_id']==method and
                 job['physical_fingerprint'] is not None and job['result_key'] is job['result_sha256'] is job['result_bytes'] is None,
                 'physical_publication_job_not_publishable')
         require((control['owner_id'],control['project_id'],control['dataset_id'],control['dataset_sha256'],control['request_sha256'],
                  control['stage_id'],control['root_dataset_id'],control['method_id'],control['permanent_reservation_bytes'])==
-                (owner_id,project_id,job['dataset_id'],job['dataset_sha256'],job['request_sha256'],job['id'],intent['root_dataset_id'],CORRECTION,80*M)
+                (owner_id,project_id,job['dataset_id'],job['dataset_sha256'],job['request_sha256'],job['id'],intent['root_dataset_id'],method,80*M if correction else 128*M)
                 and (intent['parent_dataset_id'],intent['parent_dataset_sha256'],intent['request_sha256'],intent['stage_id'])==
                 (job['dataset_id'],job['dataset_sha256'],job['request_sha256'],job['id']), 'physical_publication_control')
         parent=_row(connection,'SELECT * FROM observation_datasets WHERE id=?',(job['dataset_id'],))
@@ -160,6 +209,7 @@ def publish_correction(connection, files, *, owner_id, project_id, intent_id,
         # already committed four-edge node, unlike the allocator precondition.
         _parent_chain(connection,parent,owner_id,project_id)
         input_body,prior=audit_correction_ancestry(connection,files,parent,approved_manifests=approved_manifests)
+        require(correction or prior is not None, 'physical_publication_transform_requires_correction')
         batch,inventory=sealed_stage(connection,control)
         roles={slot['role']:slot for slot in inventory['initial_files']}
         require(len(roles)==len(inventory['initial_files']) and
@@ -188,36 +238,43 @@ def publish_correction(connection, files, *, owner_id, project_id, intent_id,
         targets=[dict(zip(('kind','artifact_id','storage_key','bytes','sha256'),row)) for row in targets]
         _targets(connection,control,targets,intent['child_dataset_id'],job['id'],owner_id,project_id)
         for target in targets:
-            require(files.read(target['storage_key'],cap=16*M if target['kind']=='dataset' else 64*M,
+            require(files.read(target['storage_key'],cap=dataset_cap if target['kind']=='dataset' else 64*M,
                                expected_bytes=target['bytes'],expected_sha256=target['sha256'])==bodies[target['kind']+'_copy'],
                     'physical_publication_installed_copy')
-        child=decode(bodies['dataset_copy'],16*M)
+        child=decode(bodies['dataset_copy'],dataset_cap)
         require(child['dataset_id']==intent['child_dataset_id'] and child['version']==intent['ordinal'],
                 'physical_publication_reserved_child')
-        receipt=child['payload']['receipt']
+        receipt=child['payload']['receipt'] if correction else None
         production=dict(child_dataset_id=child['dataset_id'],job_id=job['id'],owner_id=owner_id,project_id=project_id,
                         root_dataset_id=intent['root_dataset_id'],raw_asset_id=control['raw_asset_id'],
-                        parent_dataset_id=job['dataset_id'],parent_dataset_sha256=job['dataset_sha256'],method_id=CORRECTION,
+                        parent_dataset_id=job['dataset_id'],parent_dataset_sha256=job['dataset_sha256'],method_id=method,
                         request_sha256=job['request_sha256'],submitted_parameters_sha256=control['submitted_parameters_sha256'],
                         scientific_request_sha256=control['scientific_request_sha256'],scientific_result_sha256=scientific_digest(child['payload']),
                         module_manifest_sha256=control['module_manifest_sha256'],result_sha256=byte_sha(bodies['result_copy']),
-                        result_bytes=len(bodies['result_copy']),scientific_verdict='passed',adapter_result_sha256=scientific_digest(child['payload']),
-                        adapter_receipt_sha256=scientific_digest(receipt),core_result_sha256=receipt['correction_result_sha256'],
-                        submitted_config_sha256=receipt['submitted_config_sha256'],normalized_config_sha256=receipt['normalized_config_sha256'],
-                        adapter_receipt_bytes=canonical(receipt))
+                        result_bytes=len(bodies['result_copy']),scientific_verdict=child['production']['scientific_verdict'])
+        if correction:
+            production.update(adapter_result_sha256=scientific_digest(child['payload']),adapter_receipt_sha256=scientific_digest(receipt),
+                core_result_sha256=receipt['correction_result_sha256'],submitted_config_sha256=receipt['submitted_config_sha256'],
+                normalized_config_sha256=receipt['normalized_config_sha256'],adapter_receipt_bytes=canonical(receipt))
+        else:
+            production.update({key:None for key in NULL_ADAPTER})
         terminal=dict(job,state='succeeded',finished_at=finished_at,result_key=f"derived/{owner_id}/{project_id}/results/{job['id']}.json",
                       result_sha256=production['result_sha256'],result_bytes=production['result_bytes'],wall_ms=metrics['wall_ms'],
                       physical_cpu_ms=metrics['cpu_ms'],peak_rss_bytes=metrics['peak_rss_bytes'],scratch_bytes=metrics['scratch_bytes'],
                       error_code=None,error_message=None)
-        snapshot=_snapshot(child,bodies['dataset_copy'],terminal,production,manifest)
-        verify_correction_producer(snapshot,input_bytes=input_body,child_bytes=bodies['dataset_copy'],request_bytes=bodies['request_spool'],
-                                   result_bytes=bodies['result_copy'],approved_manifest=approved_manifests.get(digest(manifest)),
-                                   job=terminal,production=production)
+        proof=dict(input_bytes=input_body,child_bytes=bodies['dataset_copy'],request_bytes=bodies['request_spool'],
+                   result_bytes=bodies['result_copy'],approved_manifest=approved_manifests.get(digest(manifest)),job=terminal,production=production)
+        if correction:
+            snapshot=_snapshot(child,bodies['dataset_copy'],terminal,production,manifest)
+            verify_correction_producer(snapshot,**proof)
+        else:
+            verify_transform_producer(parent_snapshot=prior,**proof)
+            snapshot=child  # Terminal output, NEVER a correction-parent snapshot.
         require(canonical(child['payload'],scientific=True)==bodies['scientific_output'],'physical_publication_scientific_bytes')
         complete=decode(bodies['completion'],4096)
-        require(complete==dict(schema='geophysics.physical-child-completion/v1',job_id=job['id'],method_id=CORRECTION,
+        require(complete==dict(schema='geophysics.physical-child-completion/v1',job_id=job['id'],method_id=method,
                               scientific_request_sha256=control['scientific_request_sha256'],scientific_result_sha256=scientific_digest(child['payload']),
-                              output_bytes=len(bodies['scientific_output']),output_sha256=byte_sha(bodies['scientific_output']),scientific_verdict='passed'),
+                              output_bytes=len(bodies['scientific_output']),output_sha256=byte_sha(bodies['scientific_output']),scientific_verdict=production['scientific_verdict']),
                 'physical_publication_completion')
         family=_row(connection,'SELECT * FROM physical_dataset_families WHERE root_dataset_id=?',(intent['root_dataset_id'],))
         require(family['state']=='published' and family['reserved_count']>=1 and intent['ordinal']<family['next_ordinal'] and
@@ -225,10 +282,11 @@ def publish_correction(connection, files, *, owner_id, project_id, intent_id,
                 family['reserved_count']==connection.execute('SELECT count(*) FROM physical_publication_intents WHERE root_dataset_id=?',(intent['root_dataset_id'],)).fetchone()[0],
                 'physical_publication_allocator')
         row=dict(id=child['dataset_id'],project_id=project_id,owner_id=owner_id,raw_asset_id=control['raw_asset_id'],version=intent['ordinal'],
-                 parser_version='gravity-stations-json/v1',modality='gravity_physical_station',row_count=len(child['payload']['correction_result']['dataset']['stations']),
+                 parser_version='gravity-stations-json/v1',modality='gravity_physical_station' if correction else 'gravity_equivalent_source_transform',
+                 row_count=len(child['payload']['correction_result']['dataset']['stations']) if correction else len(child['payload']['stations']['station_ids']),
                  raw_sha256=control['raw_sha256'],sha256=byte_sha(bodies['dataset_copy']),byte_count=len(bodies['dataset_copy']),
                  storage_key=f"derived/{owner_id}/{project_id}/datasets/{child['dataset_id']}.json",created_at=finished_at,kind='derived',
-                 root_dataset_id=intent['root_dataset_id'],parent_dataset_id=job['dataset_id'],payload_schema='gravity-station-adapter-result-1')
+                 root_dataset_id=intent['root_dataset_id'],parent_dataset_id=job['dataset_id'],payload_schema='gravity-station-adapter-result-1' if correction else 'gravity-transform-result-1')
         connection.execute(f"INSERT INTO observation_datasets({','.join(row)}) VALUES ({','.join('?' for _ in row)})",tuple(row.values()))
         if failure_cut:
             failure_cut('child')
