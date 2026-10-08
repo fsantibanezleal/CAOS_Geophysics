@@ -66,6 +66,16 @@ reservation or hard realtime interruption. Over-budget evidence is a failure,
 never a completed-workflow resource pass. Maximum-shape projected admission and
 complete scientific runtime measurements are separate gates.
 
+The complete workflow additionally emits a models directory with model.json
+(envelope joint-survey-physical-model-file-1). Native payload is
+joint-survey-physical-model-1 with frozen/input identities, declared ENU frame,
+fixed scales, physical units, inducing field/epochs and explicit false recovery,
+rights, global-optimum and redistribution claims. Exactly ten NPY arrays contain
+physical signed density/SI susceptibility, active centres/bounds/volumes and
+ascending full indices, mesh origin/three widths. Validation recomputes exact
+q-to-physical scaling AND actual geometry; a normalized vector is never relabelled
+kg/m3 or SI. Export includes no original observations or inferred datum conversion.
+
 Executed regression:46 frozen-evaluation/resource tests pass in both diagonal
 and covariance modes. The original-inclusive epoch2 nonlinear/evaluation/resource
 suite passes71 tests. These are actual model evaluation and adverse I/O/resource

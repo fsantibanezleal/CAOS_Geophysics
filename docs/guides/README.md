@@ -9,6 +9,7 @@
 - [Run bounded private processing jobs](07_processing_jobs.md).
 - [Run private EDI tensor QC and bounded layered MT jobs](08_online_edi_mt.md).
 - [Use and reproduce the source-valid M05/M06 course](09_online-mt-course.md).
+- [Run the complete private supplied gravity/magnetic methodology](22_local_joint_survey.md): separate real baselines, all coupling candidates, frozen held-out evaluation, strict exports and actual scientific replay; no field or activation certificate.
 - [Measure isolated actual-host admission](12_actual_host_admission.md): retained failed headroom measurements are not production activation.
 - [Run the ordinary physical station adapter](13_local_station_adapter.md): exact parent/configuration identities, real correction and safe-error boundary; authenticated online children remain separate.
 - [Calculate local prism gravity](14_local_gravity_forward.md): exact declared geometry, density units, upward response and Jacobian; not a measured-data inverse or host job.

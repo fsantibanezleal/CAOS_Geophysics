@@ -10,6 +10,7 @@ import joint_survey_evaluation as evaluation
 import joint_survey_files as files
 import joint_survey_intake as intake
 import joint_survey_plan as planner
+import joint_survey_model_export as model_export
 from test_joint_survey_intake import fixture,write_request
 
 
@@ -137,3 +138,20 @@ def test_external_writer_guard_before_scans(tmp_path,monkeypatch):
     monkeypatch.setattr(np,'isfinite',lambda *a,**k:pytest.fail('repository writer scanned values'))
     with pytest.raises(ValueError,match='repository'):
         files.write_arrays(str(repository/'output'),'result.json','x',{}, {'q':np.zeros(2)})
+
+
+def test_physical_units_and_actual_geometry_export(prepared):
+    root,problem,frozen,_,_,_=prepared
+    record=model_export.physical_model_record(problem,frozen)
+    np.testing.assert_array_equal(record['arrays']['density_kg_m3'],frozen['q'][:problem.n]*problem.scales[:problem.n])
+    np.testing.assert_array_equal(record['arrays']['susceptibility_si'],frozen['q'][problem.n:]*problem.scales[problem.n:])
+    np.testing.assert_array_equal(record['arrays']['active_cell_bounds_m'],problem.geometry['active_cell_bounds_m'])
+    assert record['payload']['density_unit']=='kg_m3' and record['payload']['susceptibility_unit']=='si'
+    assert not record['payload']['inverse_execution_asserted_by_this_model']
+    destination=root/'physical'
+    model_export.write_physical_model(str(destination),problem,frozen)
+    assert model_export.validate_physical_model(str(destination),problem,frozen)['physical_model_verified']
+    forged=model_export.physical_model_record(problem,frozen);forged['arrays']['density_kg_m3']=np.zeros(problem.n)
+    files.write_arrays(str(root/'forged-model'),'model.json','joint-survey-physical-model-file-1',forged['payload'],forged['arrays'])
+    if np.any(frozen['q'][:problem.n]!=0):
+        with pytest.raises(ValueError): model_export.validate_physical_model(str(root/'forged-model'),problem,frozen)

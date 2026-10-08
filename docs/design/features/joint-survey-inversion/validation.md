@@ -227,3 +227,50 @@ frontend tests pass;48 actual client interactions cover six questions x EN/ES x
 light/dark x390/1440px. Exact source/render/mount/type/runtime limitations are in
 course-unit.md. The explicit host mount patch checks independently; the
 course does not expose a solve or claim acceptance of the full supplied inverse.
+
+## Actual public nonlinear composition and strict private workflow
+
+The reviewed public candidate source is
+physical-gncg-nonlinear-candidate-2 / exact-bound-native-gncg-actual-armijo-1,
+optimizer SHA772c4de0b7747bbc9075b6fbf1357b04de752bfd900f88c9a5ddead2a91931fd
+and loaded vendor optimization SHA
+0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4.
+This is applicable candidate composition, not parent scientific acceptance.
+Actual calibration runs sixteen separate beta fits and ten frozen lambda/two-start
+joint fits, exact actual-F/KKT/Armijo replay, original absolute workflow deadline,
+validation-only selection and durable freeze before sealed reads. No private
+helper, copied CG, production BVLS fallback or tolerance amendment is used.
+
+Executed original-inclusive nonlinear/evaluation/resource regression:89PASS,
+no skips,515.31s. Subsequent strict-ledger actual CLI regression:15PASS, no
+skips,471.44s. Additional inverse controls:14PASS, no skips,29.13s. Counts
+overlap and are not summed. Repeated actual26-fit execution preserves calibration/
+selection hashes when only external sealed values/truth change. Rehashed training
+observations change genuine fits. Four physical bound starts and trace-forgery
+negatives exercise exact active/binding/branch/alpha/CG and failure identities.
+Actual expiration after a genuine first fit and after durable freeze retains
+accepted states while refusing sealed reads and completed-workflow validation.
+Fresh-process strict CLI evaluation/validation preserves false inverse claims.
+
+Maximum simultaneous admitted-count CPU gate:4096 full cells,1932active cells,
+2048receiver rows per modality, full covariance;1933active rejects projected
+export before engines. Complete actual solve/export157.578s, sampled peak RSS
+953622528bytes, private export arrays/metadata2386008bytes before receipt.
+Independent replay27.078s, sampled peak RSS964415488bytes. Analytical zero-property
+RESOURCE control, not geological recovery or representative nonzero solver cost.
+Receipt SHA256:aec611be0906ad0c957eb5076c9b0a52aa9040202bbdf5b293540e32909b119a.
+
+Measured RSS uses a stable Windows counter type; its earlier per-read ctypes type
+creation leaked pointer-cache classes and caused a genuine2GiB failure. Original
+failed resource/matrix packets remain separate. Ten thousand actual repeated
+reads now stay below16MiB growth. Sampling covers the explicit scratch directory,
+not all operating-system temp or an OS reservation. No upper-envelope runtime
+proof, CUDA lane, Linux qualification or public activation follows from this run.
+
+The separate full24-case nonzero method matrix remains a distinct gate. It retains
+raw BVLS exact-KKT negatives, actual failed/nonconverged candidates, original
+objective/model/prediction precision predicates and forced-positive coupling
+comparisons. The earlier19/192 near-optimum gradient precision failures remain
+failures at the original tolerances. Completed CLI execution, stationary selected
+models and small residuals are not all-predicate scientific acceptance, field
+eligibility, verified rights/corrections, geological recovery or a global optimum.

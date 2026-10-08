@@ -1,6 +1,7 @@
 """Actual resource measurements and explicit adverse budget controls."""
 import numpy as np
 import pytest
+import ctypes
 
 import joint_survey_resources as resources
 
@@ -33,3 +34,14 @@ def test_real_gate_failure_not_allocation_estimate(tmp_path,monkeypatch,bad):
 def test_repository_scratch_rejected(tmp_path):
     (tmp_path/'.git').mkdir()
     with pytest.raises(ValueError,match='repository'): resources.JointResourceBudget(str(tmp_path))
+
+
+def test_repeated_rss_samples_do_not_create_new_pointer_types():
+    first=ctypes.POINTER(resources._WindowsCounters)
+    before=resources.process_rss_bytes()
+    for _ in range(10000):
+        assert resources.process_rss_bytes()>0
+        assert ctypes.POINTER(resources._WindowsCounters) is first
+    after=resources.process_rss_bytes()
+    # A sampler's repeated reads must not consume tens of MiB of pointer types.
+    assert after-before<16*1024**2

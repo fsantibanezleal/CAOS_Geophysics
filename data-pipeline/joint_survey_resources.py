@@ -14,19 +14,26 @@ MAX_RSS=2*1024**3
 MAX_SCRATCH=256*1024**2
 
 
+class _WindowsCounters(ctypes.Structure):
+    # One stable type. ctypes.POINTER caches its argument type globally; defining
+    # a new Structure on EVERY sample leaks those classes in that cache.
+    _fields_=[('cb',ctypes.c_ulong),('PageFaultCount',ctypes.c_ulong),
+        ('PeakWorkingSetSize',ctypes.c_size_t),('WorkingSetSize',ctypes.c_size_t),
+        ('QuotaPeakPagedPoolUsage',ctypes.c_size_t),('QuotaPagedPoolUsage',ctypes.c_size_t),
+        ('QuotaPeakNonPagedPoolUsage',ctypes.c_size_t),('QuotaNonPagedPoolUsage',ctypes.c_size_t),
+        ('PagefileUsage',ctypes.c_size_t),('PeakPagefileUsage',ctypes.c_size_t)]
+
+
+if os.name=='nt':
+    _kernel=ctypes.WinDLL('kernel32',use_last_error=True);_psapi=ctypes.WinDLL('psapi',use_last_error=True)
+    _kernel.GetCurrentProcess.restype=ctypes.c_void_p
+    _psapi.GetProcessMemoryInfo.argtypes=[ctypes.c_void_p,ctypes.POINTER(_WindowsCounters),ctypes.c_ulong]
+
+
 def process_rss_bytes():
     if os.name=='nt':
-        class Counters(ctypes.Structure):
-            _fields_=[('cb',ctypes.c_ulong),('PageFaultCount',ctypes.c_ulong),
-                ('PeakWorkingSetSize',ctypes.c_size_t),('WorkingSetSize',ctypes.c_size_t),
-                ('QuotaPeakPagedPoolUsage',ctypes.c_size_t),('QuotaPagedPoolUsage',ctypes.c_size_t),
-                ('QuotaPeakNonPagedPoolUsage',ctypes.c_size_t),('QuotaNonPagedPoolUsage',ctypes.c_size_t),
-                ('PagefileUsage',ctypes.c_size_t),('PeakPagefileUsage',ctypes.c_size_t)]
-        counters=Counters();counters.cb=ctypes.sizeof(counters)
-        kernel=ctypes.WinDLL('kernel32',use_last_error=True);psapi=ctypes.WinDLL('psapi',use_last_error=True)
-        kernel.GetCurrentProcess.restype=ctypes.c_void_p
-        psapi.GetProcessMemoryInfo.argtypes=[ctypes.c_void_p,ctypes.POINTER(Counters),ctypes.c_ulong]
-        if not psapi.GetProcessMemoryInfo(kernel.GetCurrentProcess(),ctypes.byref(counters),counters.cb):
+        counters=_WindowsCounters();counters.cb=ctypes.sizeof(counters)
+        if not _psapi.GetProcessMemoryInfo(_kernel.GetCurrentProcess(),ctypes.byref(counters),counters.cb):
             raise OSError(ctypes.get_last_error(),'actual process RSS unavailable')
         return int(counters.WorkingSetSize)
     # Linux deployment profile only. Do not substitute ru_maxrss as current RSS.
@@ -55,7 +62,7 @@ class JointResourceBudget:
     def __init__(self,scratch_root):
         self.root=_external(scratch_root,existing=True)
         self.started=time.monotonic();self.deadline=self.started+MAX_SECONDS
-        self.peak_rss=0;self.peak_scratch=0;self.samples=0;self.failure=None
+        self.peak_rss=0;self.peak_scratch=0;self.samples=0;self.failure=None;self._failure_exported=False
         self._stop=threading.Event();self._lock=threading.Lock();self._thread=None
 
     def _sample(self):
@@ -84,10 +91,18 @@ class JointResourceBudget:
     def __exit__(self,exc_type,exc,tb):
         self._stop.set()
         if self._thread is not None: self._thread.join(timeout=2.)
-        self.checkpoint()
+        if exc_type is None and not self._failure_exported: self.checkpoint()
 
     def receipt(self,*,workflow_completed):
         self.checkpoint()
+        return self._receipt(workflow_completed)
+
+    def failure_receipt(self):
+        """Already measured adverse state; no new scientific work or fake PASS."""
+        self._failure_exported=True
+        return self._receipt(False)
+
+    def _receipt(self,workflow_completed):
         with self._lock:
             return {'schema':'joint-survey-resource-receipt-1','elapsed_seconds':time.monotonic()-self.started,
                 'peak_sampled_rss_bytes':self.peak_rss,'peak_sampled_scratch_bytes':self.peak_scratch,

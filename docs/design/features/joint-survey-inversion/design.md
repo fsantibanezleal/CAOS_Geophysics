@@ -59,6 +59,13 @@ read-only dependencies. Native functions accept exact builtin containers and
 native arrays, run no file/network/environment I/O, and expose private caller
 errors, not safe HTTP responses. Caller inputs must be private during snapshot.
 
+The implemented strict entry point is `scripts/run_joint_survey.py`; the
+prospective process_joint_survey filename above is not another implementation.
+Actual validation harnesses are validate_joint_matrix.py and
+validate_joint_resources.py. Reviewed candidate composition uses the separate
+public physical_nonlinear_optimizer export and its typed epoch2 binding, not the
+linear gravity certificate. Parent scientific acceptance remains separate.
+
 Initial scientific epoch: CPython3.12.10 Windows64; NumPy2.2.6, SciPy1.15.2,
 SimPEG0.25.2, Geoana0.8.1, discretize0.12.0. Independent test oracles use
 Choclo0.3.2 and Torch2.14.0+cu126. Actual loaded versions and externally verified
