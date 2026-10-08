@@ -44,6 +44,11 @@ Actual source/physical-metadata receipts SHALL be rechecked before publication;
 the published FK and dataset co-commit. Fresh worker sessions SHALL not commit
 or roll back the authenticating caller's unrelated read/write transaction.
 Gate: dataset birth/duplicate/uncertain-target and caller-transaction controls.
+The publication fence SHALL repopulate already loaded ORM identities from the
+current database transaction; identity-map reuse is not fresh SQL evidence.
+Gate: an independent SQLite writer changes source rights or physical metadata
+after exclusive target copy but before publication; publication refuses and
+the exact target plus conservative attempt charge remain.
 
 R-465 WHEN the existing excluded startup/delete owner dispatches M04 attempts,
 THE additive reader SHALL reject malformed/unknown discriminators, incomplete
