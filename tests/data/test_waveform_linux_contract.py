@@ -217,3 +217,47 @@ def test_guardian_first_empty_transport_uses_original_caller_exception():
     with pytest.raises(lane.CallerTermination):
         lane.receive_science(SimpleNamespace(recv=lambda cap:b''),cancelled,
             SimpleNamespace(check=lambda:None),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())
+
+
+def test_guardian_first_accept_timeout_parses_original_caller_before_derived_child_failure(monkeypatch):
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def timeout():
+        raise TimeoutError()
+    def caller():
+        raise lane.CallerTermination('cancelled')
+    monkeypatch.setattr(lane,'_show',lambda *args:pytest.fail('late manager absence is not primary'))
+    with pytest.raises(lane.CallerTermination):
+        lane.accept_science(SimpleNamespace(accept=timeout),'owned',caller,
+            SimpleNamespace(check=lambda:None),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())
+
+
+def test_available_hello_connection_is_received_before_pending_caller():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    fail = lambda:pytest.fail('pending control cannot replace an available native packet')
+    connection = object()
+    assert lane.accept_science(SimpleNamespace(accept=lambda:(connection,None)),'owned',fail,
+        SimpleNamespace(check=fail),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns()) is connection
+
+
+def test_original_accept_native_error_is_not_rewritten_as_caller_loss():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def native():
+        raise OSError('original transport refusal')
+    fail = lambda:pytest.fail('native refusal remains primary')
+    with pytest.raises(OSError,match='original transport refusal'):
+        lane.accept_science(SimpleNamespace(accept=native),'owned',fail,
+            SimpleNamespace(check=fail),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())
+
+
+def test_accept_retained_resource_failure_precedes_pending_caller():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def stopped():
+        raise ControlError('sample_gap')
+    fail = lambda:pytest.fail('retained resource failure wins')
+    with pytest.raises(ControlError,match='sample_gap'):
+        lane.accept_science(SimpleNamespace(accept=fail),'owned',fail,
+            SimpleNamespace(check=fail),SimpleNamespace(check=stopped),lane.time.monotonic_ns())

@@ -548,6 +548,20 @@ def receive_science(connection, caller_check, guardian, monitor, began):
         raise ControlError("child_failed")
 
 
+def accept_science(listener, service, caller_check, guardian, monitor, began):
+    while True:
+        monitor.check()
+        require(time.monotonic_ns() - began < 120000000000, "timeout")
+        try:
+            connection, _ = listener.accept()
+            return connection
+        except TimeoutError:
+            monitor.check()
+            caller_check()  # Parse guard-first control before deriving inactivity.
+            guardian.check()
+            require(_show(service, "ActiveState") in {"activating", "active"}, "child_failed")
+
+
 def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, work_root=None):
     """Actual scope+sealed science, not a fixture or unit-test launch adapter."""
     stage = None
@@ -626,20 +640,11 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
             listener, pidfd = _namespace_listener(pid, run)
             stack.callback(os.close, pidfd)
             stack.enter_context(listener)
-            while True:
-                caller_check()
-                guardian.check()
-                monitor.check()
-                require(time.monotonic_ns() - began < 120000000000, "timeout")
-                try:
-                    connection, _ = listener.accept()
-                    break
-                except TimeoutError:
-                    require(_show(service, "ActiveState") in {"activating", "active"}, "child_failed")
+            connection = accept_science(listener,service,caller_check,guardian,monitor,began)
             with connection:
                 connection.settimeout(0.05)
                 checkpoint = "hello"
-                hello = read_packet(connection.recv(65537), run, 1, "hello")
+                hello = read_packet(receive_science(connection,caller_check,guardian,monitor,began), run, 1, "hello")
                 require(set(hello) == {"pid"} and type(hello["pid"]) is int, "wire_invalid")
                 pid, uid, gid = struct.unpack("3i", connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
                 require((uid, gid) == (admission["uid"], admission["gid"]) and hello["pid"] == pid

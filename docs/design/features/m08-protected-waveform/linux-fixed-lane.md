@@ -412,3 +412,12 @@ reason is cancelled, without a primary_failure. A primary error with late caller
 control is waveform_processing_failed, not user_cancelled/job_timeout. Native
 extinction uncertainty still yields waveform_execution_unproved. The worker does
 not infer native cancellation from the DB request bit alone.
+
+Before ACK, a timed-out accept rechecks retained monitor failures and the original
+caller parser before deriving a child_failed reason from manager inactivity.
+The guardian may have stopped science during that wait. Available connections
+and nonempty hello/error packets are read first, as in the scientific receive
+loop; complete caller control may govern an empty transport, never overwrite a
+nonempty invalid/native packet. The retained first birth-EOF child_crash receipt
+remains a failure, with separate caller_lost and proved126ms extinction. Gates:
+accept/hello precedence controls then a fresh changed-source installed EOF run.
