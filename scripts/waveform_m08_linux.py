@@ -274,15 +274,19 @@ class Monitor:
         self.lock, self.stop = threading.Lock(), threading.Event()
         self.thread = threading.Thread(target=self._run, daemon=True)
 
-    def sample(self):
+    def counters(self):
         values = parse_cpu(_read_at(self.fd, "cpu.stat"))
         tasks = _decimal(_read_at(self.fd, "pids.current"))
         peak = _decimal(_read_at(self.fd, "memory.peak"))
         events = _read_at(self.fd, "memory.events")
         require(all(line.split()[1] == b"0" for line in events.splitlines()
                     if line.split()[0] in (b"max", b"oom", b"oom_kill", b"oom_group_kill")), "resource_exceeded")
+        return (*values,tasks,peak)
+
+    def sample(self):
+        values = self.counters()
         with self.lock:
-            self.life.sample(time.monotonic_ns(), *values, tasks, peak)
+            self.life.sample(time.monotonic_ns(), *values)
 
     def _run(self):
         while not self.stop.is_set():
@@ -302,6 +306,19 @@ class Monitor:
         self.stop.set()
         self.thread.join(timeout=1)
         require(not self.thread.is_alive(), "termination_unresolved")
+
+    def seal_final(self):
+        """Successful exited science only; publication CPU is outside this scope."""
+        self.close()
+        self.check()
+        require(self.life.final_ready and self.life.stable is not None and
+                self.life.last is not None and self.life.last[4] == 0, "drain_invalid")
+        row = tuple(self.life.last)
+        self.confirm_final(row)
+        return row
+
+    def confirm_final(self, row):
+        require(self.counters() == row[1:], "drain_invalid")
 
 
 class LinuxHeldDirectory(OwnedDirectory):
@@ -623,6 +640,7 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
                     require(time.monotonic_ns() < until, "timeout")
                     time.sleep(0.005)
                 require(_show(service, "ExecMainStatus") == "0" and _show(service, "Result") == "success", "child_failed")
+                final_row = monitor.seal_final()
             for item in inputs:
                 require(_info(item.fd) == item.initial, "closure_mismatch")
                 with open_input(item.path, item.cap) as fresh:
@@ -649,7 +667,7 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
                                 require(dst.write(chunk) == len(chunk), "export_invalid")
                             target.flush_file(dst)
                     require(verify_export(target).calculation_sha256 == sealed.calculation_sha256, "export_invalid")
-            monitor.close()
+            monitor.confirm_final(final_row)
             life = monitor.life
             final_counters = dict(cpu_ns=life.last[1],user_cpu_ns=life.last[2],system_cpu_ns=life.last[3],
                                   active_tasks=life.last[4],peak_charge_bytes=life.last[5])

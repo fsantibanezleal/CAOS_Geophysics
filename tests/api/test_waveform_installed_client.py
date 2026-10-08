@@ -29,6 +29,18 @@ def test_proved_scientific_failure_is_not_good_rss_success_or_unknown_cancel():
     assert failure_code(ApiError(409,"waveform_processing_failed","authored"),None,terminal,True) == "waveform_processing_failed"
 
 
+def test_invalid_native_resource_api_error_is_unproved_not_classification_escape(monkeypatch):
+    from tests.api.test_waveform_linux_terminal import packet
+    import app.waveform_linux_worker as client
+    job,terminal,_ = packet()
+    monkeypatch.setattr(client,"identity",lambda _:terminal["stage"])
+    assert client.terminal_proved(terminal,job,None,terminal["installation"])
+    terminal["native"]["eligibility"]["max_sample_gap_ns"] = 551294670
+    assert not client.terminal_proved(terminal,job,None,terminal["installation"])
+    assert failure_code(ApiError(409,"waveform_resource_invalid","authored"),None,terminal,False) == "waveform_execution_unproved"
+    assert not client.terminal_proved(None,job,None,terminal["installation"])
+
+
 def test_full_source_map_and_no_linux_generic_observer_command():
     from app.waveform_contract import IMPLEMENTATION_FILES
     from scripts.waveform_m08_installation import SOURCE_FILES

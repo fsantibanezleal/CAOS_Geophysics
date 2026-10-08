@@ -336,6 +336,20 @@ No proc path becomes an unverified output authority. A readonly held-directory
 type permits only bounded openat/no-follow regular members of this verified
 namespace; no duck-typed directory/path substitution is accepted.
 
+Seal the scientific sampler only after successful child exit and the existing
+stable zero-task final barrier. Stop/join its thread, check every retained failure
+and final-ready invariant, then retain that exact final row before observer-side
+scientific export reopening/hashing/copying. Those post-exit observer operations
+are not scientific tasks or a reason to relax the100ms scientific sampling cap.
+Immediately before native release, reread the held accounting scope's CPU/task/
+peak/event values and require exact equality to the sealed empty row. A late
+failure, changed counter or task refuses, never produces measured success.
+The actual nominal3 q06 post-exit551294670ns sampler gap remains a failed
+receipt. API resource-validation errors must also classify as unproved terminal
+failure and retain stage/debt, not escape leaving a running SQL job. Gates:
+closed final-seal and invalid-terminal classification regressions, followed by
+changed-source installed nominal/upper qualification with original limits.
+
 An exact Linux final receipt and digest-bound release acknowledge measured scope
 extinction and owned handle closure. Portable resources discriminate positively
 between linux_cgroup_charge and windows_job_committed; neither is RSS. All
