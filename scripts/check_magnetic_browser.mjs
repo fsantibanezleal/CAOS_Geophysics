@@ -6,11 +6,26 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 const args=process.argv.slice(2),arg=k=>{const i=args.indexOf(k);if(i<0||!args[i+1])throw Error(`Required ${k}`);return resolve(args[i+1]);};
 const course=args.includes("--course");
+const spectrumControls=args.includes("--spectrum-controls");
+if(course&&spectrumControls)throw Error("Separate course and spectrum gates required");
 const viewPath=arg("--view"),output=arg("--output-root"),packages=arg("--packages"),bundleExport=arg("--bundle-export"),repo=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 for(const p of [viewPath,output,bundleExport])if(p.toLowerCase().startsWith("d:\\_repos\\")||p.toLowerCase().startsWith("e:\\_worktrees\\"))throw Error("Explicit external artifacts required");
 await mkdir(output); // Fresh directory only, never reuse or delete prior proof.
 const {build}=await import(pathToFileURL(join(packages,"esbuild/lib/main.js")).href);
-await build({entryPoints:[join(repo,"tests/ui/magnetic_leaf.tsx")],outfile:join(output,"leaf.js"),bundle:true,format:"esm",platform:"browser",nodePaths:[packages],jsx:"automatic",loader:{".woff":"dataurl",".woff2":"dataurl",".ttf":"dataurl"},define:{"process.env.NODE_ENV":"\"production\""}});
+const shellRaw=await readFile(join(packages,"@fasl-work/caos-app-shell/package.json")),shellVersion=JSON.parse(shellRaw).version;
+if(shellVersion!=="0.8.1")throw Error("Explicit current shared shell0.8.1 required; no stale local resolution");
+const alias=Object.fromEntries(["@fasl-work/caos-app-shell","react","react-dom","react-router","katex","lucide-react"].map(name=>[name,join(packages,name)]));
+alias["@fasl-work/caos-app-shell/styles.css"]=join(packages,"@fasl-work/caos-app-shell/styles.css");
+alias["@fasl-work/caos-app-shell"]=join(packages,"@fasl-work/caos-app-shell/dist/index.js");
+alias["react-router"]=join(packages,"react-router/dist/production/index.js");
+const spectrumPlugin={name:"magnetic-spectrum-test-counter",setup(builder){
+  builder.onLoad({filter:/magnetic-result\.ts$/},async ({path})=>{
+    const text=await readFile(path,"utf8"),marker="export function magneticSpectrum(rows: MagneticRow[], component: number) {";
+    if(text.split(marker).length!==2)throw Error("Exact production spectrum signature required for test-only counter");
+    return {contents:text.replace(marker,marker+"\nglobalThis.__magneticSpectrumCalls=(globalThis.__magneticSpectrumCalls??0)+1;"),loader:"ts"};
+  });
+}};
+await build({entryPoints:[join(repo,"tests/ui/magnetic_leaf.tsx")],outfile:join(output,"leaf.js"),bundle:true,format:"esm",platform:"browser",nodePaths:[packages],alias,plugins:spectrumControls?[spectrumPlugin]:[],jsx:"automatic",loader:{".woff":"dataurl",".woff2":"dataurl",".ttf":"dataurl"},define:{"process.env.NODE_ENV":"\"production\""}});
 const raw=await readFile(viewPath),v=JSON.parse(raw), receipt=JSON.stringify(v.binding);
 const zip=await readFile(bundleExport);if(zip.length>128*1024**2)throw Error("Bounded actual numeric ZIP required");
 const zipHash=createHash("sha256").update(zip).digest("hex");
@@ -43,12 +58,19 @@ try{
       if(count!==9)throw Error("Complete nine-chapter course required");
       for(let k=0;k<count;k++){await chapter.selectOption(String(k));await root.locator(".katex").first().waitFor();
         if(await root.locator(".katex-error").count())throw Error("Equation failed to render");
+        if(await root.locator("article > .equation, article .katex-display").count()<2||await root.locator("[data-magnetic-method-diagram]").count()!==1)throw Error("Complete derivation equations and conceptual figure required");
+        if(await root.locator("article > p").count()<5)throw Error("Research derivation and worked question depth missing");
+        const inline=await root.locator("article > p:first-of-type .cite-inline a").evaluateAll(links=>links.map(a=>a.href));
+        const section=await root.locator("article > .th-refs .cite-inline a").evaluateAll(links=>links.map(a=>a.href));
+        if(inline.length<1||JSON.stringify(inline)!==JSON.stringify(section)||inline.some(url=>!url.startsWith("https://raw.githubusercontent.com/")))throw Error("Chapter inline/section primary references differ or are unresolved");
+        if(await root.locator("article ul, article .reference-list").count())throw Error("Custom bibliography must not replace shell citations");
+        if(/authenticated API mounting|montaje API autenticado|owner bootstrap|bootstrap de dueño/i.test(await root.innerText()))throw Error("Operational mounting backlog in scientific course");
         lessons.push(await root.getAttribute("data-lesson"));
         await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}.png`),fullPage:true});
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error("Course horizontal overflow");
       }
       if(new Set(lessons).size!==9||errors.length)throw Error("Course chapter control/error gate failed");
-      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,horizontal_overflow:false,errors});
+      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,chapter_inline_and_section_references:true,scientific_scope:true,horizontal_overflow:false,errors});
       console.log(`PASS ${width} ${lang} ${theme} nine source-bound course chapters`);await context.close();continue;
     }
     await page.locator(".magnetic-result").waitFor();
@@ -69,7 +91,37 @@ try{
       if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error(`Horizontal overflow ${width} ${label}`);
     }
     await click(tr("Observations","Observaciones"));await click(tr("Map","Mapa"));
+    let spectrumProof=null;
+    if(spectrumControls){
+      const calls=()=>page.evaluate(()=>globalThis.__magneticSpectrumCalls);
+      const before=await calls();if(!Number.isSafeInteger(before)||before<1)throw Error("Instrumented real spectrum invocation missing");
+      const point=page.locator(".magnetic-result svg:visible circle[role=button]").nth(1);
+      await point.scrollIntoViewIfNeeded();const box=await point.boundingBox();if(!box)throw Error("Original point is not pointer reachable");
+      await page.mouse.move(box.x+box.width/2,box.y+box.height/2);
+      await page.waitForFunction(id=>document.querySelector('.magnetic-readout')?.getAttribute('data-row-id')===id,v.rows[1].row_id);
+      if(await calls()!==before)throw Error(`Pointer selection recomputed quadratic spectrum (${before} -> ${await calls()})`);
+      await click(tr("Susceptibility","Susceptibilidad"));await click(tr("3D cells","Celdas 3D"));
+      const rotation=page.locator(".magnetic-result input[type=range]:visible").first();
+      const previous=await rotation.inputValue();await rotation.focus();await rotation.press("ArrowRight");
+      if(await rotation.inputValue()===previous)throw Error("Camera control did not change");
+      if(await calls()!==before)throw Error("Camera scrub recomputed spectrum");
+      const target=page.locator(".magnetic-cell:visible").last();await target.scrollIntoViewIfNeeded();const cellBox=await target.boundingBox();if(!cellBox)throw Error("Physical cell is not pointer reachable");
+      await page.mouse.move(cellBox.x+cellBox.width/2,cellBox.y+cellBox.height/2);
+      const expectedCell=await target.getAttribute("aria-label");
+      await page.waitForFunction(index=>document.querySelector('.magnetic-readout[data-cell-index]')?.getAttribute('data-cell-index')===index,expectedCell.split(':')[0]);
+      if(await calls()!==before)throw Error("Cell pointer selection recomputed spectrum");
+      await click(tr("Iteration","Iteración"));const history=page.locator(".magnetic-result input[type=range]:visible").first();
+      if(await history.count()&&Number(await history.getAttribute('max'))>0){const previous=await history.inputValue();await history.focus();await history.press("ArrowRight");if(await history.inputValue()===previous)throw Error("Objective history control did not change");}
+      if(await calls()!==before)throw Error("Objective scrub recomputed spectrum");
+      const component=page.locator(".magnetic-controls select").first();
+      if(await component.locator('option').count()<2)throw Error("Actual multi-component fixture required");
+      await component.selectOption("1");await page.waitForFunction(n=>globalThis.__magneticSpectrumCalls>=n,before+1);
+      if(await calls()!==before+1)throw Error("Component must recompute exactly once");
+      spectrumProof={baseline_calls:before,pointer_camera_cell_history_calls:before,component_change_calls:before+1,group_change_calls:null};
+      await click(tr("Observations","Observaciones"));await click(tr("Map","Mapa"));
+    }
     await page.locator(".magnetic-result label").filter({hasText:tr("Original acquisition group","Grupo de adquisición original")}).locator("select").selectOption(v.rows.find(r=>r.group_id!==v.rows[0].group_id).group_id);
+    if(spectrumControls){await page.waitForFunction(n=>globalThis.__magneticSpectrumCalls>=n,spectrumProof.component_change_calls+1);spectrumProof.group_change_calls=await page.evaluate(()=>globalThis.__magneticSpectrumCalls);if(spectrumProof.group_change_calls!==spectrumProof.component_change_calls+1)throw Error("Group must recompute exactly once");}
     const selected=await page.locator(".magnetic-readout:visible").first().getAttribute("data-row-id");
     if(selected===v.rows[0].row_id)throw Error("Original group control is a no-op");
     await click(tr("Flight","Vuelo"));if(await page.locator(".magnetic-readout:visible").first().getAttribute("data-row-id")!==selected)throw Error("Map/flight linked row changed");
@@ -77,9 +129,11 @@ try{
     const download=await downloadEvent, downloaded=join(output,`${width}-${lang}-${theme}-numeric.zip`);await download.saveAs(downloaded);
     if(createHash("sha256").update(await readFile(downloaded)).digest("hex")!==zipHash)throw Error("Browser numeric export bytes changed");
     if(errors.length)throw Error(errors.join("\n"));
-    proofs.push({width,height,lang,theme,reduced_motion:true,views:visited,same_original_row_linked:true,horizontal_overflow:false,numeric_export_sha256:zipHash,errors});
+    proofs.push({width,height,lang,theme,reduced_motion:true,views:visited,same_original_row_linked:true,horizontal_overflow:false,numeric_export_sha256:zipHash,spectrum_recomputation:spectrumProof,errors});
     console.log(`PASS ${width} ${lang} ${theme} eight scientific leaf views`);await context.close();
   }
-  const proof={schema:course?"magnetic-local-course-browser-proof-1":"magnetic-local-browser-proof-1",view_sha256:createHash("sha256").update(raw).digest("hex"),generation_sha256:v.binding.generation_sha256,states:proofs,authenticated_api:false,field_acceptance:false,online_admitted:false};
+  const proof={schema:course?"magnetic-local-course-browser-proof-1":"magnetic-local-browser-proof-1",view_sha256:createHash("sha256").update(raw).digest("hex"),generation_sha256:v.binding.generation_sha256,shell_version:shellVersion,shell_package_sha256:createHash("sha256").update(shellRaw).digest("hex"),instrumented_spectrum_counter:spectrumControls,component_sha256:createHash("sha256").update(await readFile(join(repo,"frontend/src/components/MagneticSurveyResult.tsx"))).digest("hex"),spectrum_source_sha256:createHash("sha256").update(await readFile(join(repo,"frontend/src/api/magnetic-result.ts"))).digest("hex"),states:proofs,authenticated_api:false,field_acceptance:false,online_admitted:false};
   await writeFile(join(output,"browser-proof.json"),JSON.stringify(proof),{flag:"wx"});
+}catch(error){
+  await writeFile(join(output,"failed-browser-proof.json"),JSON.stringify({status:"FAIL",error:String(error),completed_states:proofs,instrumented_spectrum_counter:spectrumControls,component_sha256:createHash("sha256").update(await readFile(join(repo,"frontend/src/components/MagneticSurveyResult.tsx"))).digest("hex"),scientific_acceptance:false,authenticated_api:false}),{flag:"wx"});throw error;
 }finally{if(browser)await browser.close();await new Promise(r=>server.close(r));}
