@@ -84,7 +84,7 @@ def diagnose_retained_s1(plan, workspace, job_handle):
     expected = source_blocks(training, config, 500.)['sources']
     if source_cells != [row[key] for row in expected for key in ('easting_m', 'northing_m', 'upward_m')]:
         raise core.SurveyError('custody_mismatch', 'fit')
-    np, _ = core.engines()
+    np, hm = core.engines()
     from scipy.linalg import lstsq, svd
     from threadpoolctl import threadpool_limits
     xyz = np.array([[row[key] for key in ('easting_m', 'northing_m', 'upward_m')] for row in training], dtype=np.float64)
@@ -131,5 +131,59 @@ def diagnose_retained_s1(plan, workspace, job_handle):
         root_cause='selected_original_basis_training_representation_error_not_observed_solver_disagreement',
         limits='Numerical training projection is not a rigorous outer-error bound or a universal 1/r impossibility result',
         field_acceptance='unresolved')
+    # Separate forensic receipt: immutable original selected training basis only.
+    # A common metric rescaling cancels in G/s; no unit conversion can be selected
+    # from an outer score. The constant column is NOT a production intercept.
+    metric = np.array([[1/math.hypot(*(float(x[k]-p[k]) for k in range(3)))
+                        for p in sources] for x in xyz], dtype=np.float64)
+    with threadpool_limits(limits=1):
+        kernel = hm.EquivalentSources(dtype='float64', parallel=False).jacobian(
+            tuple(xyz[:, k] for k in range(3)), tuple(sources[:, k] for k in range(3)))
+        augmented_constant = np.column_stack((a, np.ones(294)))
+        constant_coefficient, _, constant_rank, constant_singular = lstsq(
+            augmented_constant, y, lapack_driver='gelsd')
+    translated_x, translated_p = xyz+np.array([1., 2., 3.]), sources+np.array([1., 2., 3.])
+    translated = 1/np.sqrt(np.sum((translated_x[:, None, :]-translated_p[None, :, :])**2, axis=2))
+    scaled_x, scaled_p = xyz*.001, sources*.001
+    scaled_g = 1/np.sqrt(np.sum((scaled_x[:, None, :]-scaled_p[None, :, :])**2, axis=2))
+    scaled_a = scaled_g/np.std(scaled_g, axis=0, ddof=0)
+    permuted = 1/np.sqrt(np.sum((xyz[:, None, [2, 0, 1]]-sources[None, :, [2, 0, 1]])**2, axis=2))
+    relative = lambda difference, scale: float(np.max(np.abs(difference)/np.abs(scale)))
+    checks = dict(independent_hypot_relative=relative(metric-g, g),
+        harmonica_kernel_relative=relative(kernel-metric, metric),
+        common_translation_relative=relative(translated-g, g),
+        common_metric_rescale_normalized_relative=relative(scaled_a-a, a),
+        common_axis_permutation_relative=relative(permuted-g, g))
+    if any(not math.isfinite(value) or value > 1e-12 for value in checks.values()):
+        raise core.SurveyError('nonconverged', 'fit')
+    constant_residual = np.ones(294)-u[:, :rank]@(u[:, :rank].T@np.ones(294))
+    constant_norm_squared = float(constant_residual@constant_residual)
+    if constant_norm_squared <= np.finfo(np.float64).eps*294 or constant_rank != 67:
+        raise core.SurveyError('nonconverged', 'fit')
+    constant_nT = float(constant_residual@projection_residual)/constant_norm_squared
+    forensic_residual = projection_residual-constant_nT*constant_residual
+    constant_prediction = augmented_constant@constant_coefficient
+    constant_projection_difference = float(np.max(np.abs((y-forensic_residual)-constant_prediction)))
+    if constant_projection_difference > tolerance:
+        raise core.SurveyError('nonconverged', 'fit')
+    forensics = dict(schema='m03-original-s1-basis-forensics/1',
+        original_sha256=ORIGINAL_S1_SHA256, retained_result_sha256=plan['retained_result_sha256'],
+        retained_seal_sha256=plan['retained_seal_sha256'], training_ids_sha256=training_hash,
+        source_manifest_sha256=fit['sources']['manifest']['sha256'], rows=294, sources=66,
+        G_unit='1_per_m', scale_unit='1_per_m', scaled_coefficient_unit='nT', coefficient_unit='nT*m',
+        normalized_operator_unit='dimensionless', checks=checks,
+        original_source_plane_m=float(sources[0, 2]), minimum_training_upward_m=float(np.min(xyz[:, 2])),
+        source_depth_m=500., minimum_distance_m=float(np.min(1/metric)), maximum_distance_m=float(np.max(1/metric)),
+        original_projection_rmse_nT=rmse(projection_residual),
+        residualized_constant_norm_squared=constant_norm_squared,
+        diagnostic_constant_nT=constant_nT, constant_augmented_rank=int(constant_rank),
+        constant_augmented_condition=float(constant_singular[0]/constant_singular[-1]),
+        constant_diagnostic_projection_rmse_nT=rmse(forensic_residual),
+        constant_oracle_prediction_difference_nT=constant_projection_difference,
+        original_applied_corrections=0, original_leveling_fits=0,
+        original_s1_predictive_verdict='fail', new_outer_evaluations=0, production_fits=0,
+        additional_training_oracles=1, field_acceptance='unresolved',
+        limits='Training constant projection is forensic only, not a production intercept, physical correction or predictive repair')
+    core._write_member(workspace, 'training-basis-forensics.json', base.canonical_bytes(forensics))
     core._write_member(workspace, 'training-diagnosis.json', base.canonical_bytes(diagnosis))
     return 0

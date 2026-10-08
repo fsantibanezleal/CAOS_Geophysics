@@ -40,3 +40,15 @@ def test_actual_original_s1_training_root_cause_without_new_outer(tmp_path):
     assert result['max_prediction_difference_nT']<=result['frozen_prediction_tolerance_nT']
     assert result['relative_objective_difference']<=1e-8
     assert result['field_acceptance']=='unresolved'
+    forensic=base.strict_json((tmp_path/'training-basis-forensics.json').read_bytes())
+    assert forensic['original_sha256']==result['original_sha256']
+    assert forensic['training_ids_sha256']==result['training_ids_sha256']
+    assert forensic['new_outer_evaluations']==forensic['production_fits']==0
+    assert forensic['original_applied_corrections']==forensic['original_leveling_fits']==0
+    assert forensic['original_s1_predictive_verdict']=='fail' and forensic['field_acceptance']=='unresolved'
+    assert max(forensic['checks'].values())<=1e-12
+    assert forensic['constant_augmented_rank']==67
+    assert forensic['constant_oracle_prediction_difference_nT']<=result['frozen_prediction_tolerance_nT']
+    assert forensic['constant_diagnostic_projection_rmse_nT']<=forensic['original_projection_rmse_nT']
+    assert forensic['source_depth_m']==500
+    assert forensic['original_source_plane_m']==forensic['minimum_training_upward_m']-500

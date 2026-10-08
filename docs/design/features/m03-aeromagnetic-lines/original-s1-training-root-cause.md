@@ -69,6 +69,39 @@ the harmonic scalar representation and source-block guidance follow
 [Harmonica's pinned model documentation](https://www.fatiando.org/harmonica/v0.7.0/api/generated/harmonica.EquivalentSources.html).
 The independent oracle uses [SciPy's SVD least-squares API](https://docs.scipy.org/doc/scipy-1.15.2/reference/generated/scipy.linalg.lstsq.html).
 
+### Actual metric/constant discrimination, 2026-10-08
+
+The separate `training-basis-forensics.json` from the same actual contained
+training-only run reconstructs direct Python hypot distances and the pinned
+Harmonica Jacobian on all294x66 original pairs. Relative disagreements are
+3.10e-16; common XYZ translation2.88e-16, axis permutation3.12e-16, and normalized
+operator after common metric rescaling1.31e-15, all below unchanged1e-12 controls.
+G and population scales have units m^-1, c has nT, q has nT*m. A common units
+factor cancels from G/s; no metres/kilometres multiplier repairs this basis error.
+Training-source distances are502.44788944824734..4351.557926366724m; all sources
+lie at -444.84239409854206m, exactly minimum training height55.157605901457934
+minus the frozen500m. Original half-open membership/representatives were already
+independently reconstructed. This is not validation of an unknown field datum.
+
+Residualizing a constant column against the selected basis gives norm-squared
+0.013374725844610547. A diagnostic training-only constant coefficient
+5.0864251368563895nT changes projection RMSE only from3.560874605601467 to
+3.560709338551843nT, about0.00464% improvement. Independent augmented SVD has
+rank67/condition2419.7890932066366 and prediction discrepancy5.00e-13nT.
+Therefore an absent constant alone does not explain the large training
+representation error. This does NOT add an intercept, center values, change
+main-field subtraction, choose a correction or predict on outer data.
+
+The original S1 diagnostic is explicitly uncorrected: zero correction requests
+and zero leveling fits. No crossover/gauge offset was applied, so changing a
+non-applied leveling offset cannot explain its numeric failure. Real empty
+inner-A calibration stays ineligible. Additional training oracles1, new outer
+evaluations0, production fits0; original predictive FAIL and field unresolved.
+These checks narrow the observed cause to the selected spatial representation,
+not a demonstrated global units/distance/constant/leveling implementation error.
+They do not prove which untested basis will predict well. Prospective resolution
+selection is separately specified in the pre-code corrective workflow packet.
+
 ## Español
 
 El diagnóstico consume artefactos streamed originales S1 ya ejecutados y
@@ -108,3 +141,14 @@ permanentemente el fallo original. Campo/referencia/datum, flujo corregido de
 SurveyResult/exportación/replay, GUI y host siguen requisitos separados; la
 capacidad CLOSED no cuenta como implementación online. Las fuentes científicas
 y numéricas primarias son las enlazadas en la sección inglesa.
+
+La discriminación métrica real adicional compara todos los294x66 pares con
+hypot independiente y Harmonica; las discrepancias de distancia, traslación,
+permutación y escala normalizada son menores que1e-12. Fuentes a altura mínima
+de entrenamiento menos500m, unidades G/s m^-1 y coeficientes nT*m: un factor
+métrico común no repara el error. Una constante diagnóstica interna de5,0864nT
+reduce RMSE de3,5608746 a3,5607093nT apenas0,00464%; no explica el error grande,
+no agrega intercepto ni cambia referencia. S1 tenía cero correcciones y cero
+nivelaciones; una compensación de cruces no aplicada no causa su diferencia.
+Se conserva la calibración A vacía, FAIL original, cero evaluaciones externas y
+cero ajustes de producción nuevos. Aún no se prueba una base predictiva válida.
