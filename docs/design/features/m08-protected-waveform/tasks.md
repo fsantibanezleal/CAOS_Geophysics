@@ -41,6 +41,14 @@ census, native CANCEL/EOF terminal extinction, receipt persistence and actual VP
 queue remain the following implementation gates; existing root WSL science
 receipts cannot substitute for them.
 
+Historical terminal continuation uses `tests/api/test_waveform_linux_terminal.py`
+for closed job/source/prelaunch installation/stage/native/member bindings,
+uint64 clocks, bounded failures and cancel/caller-loss. These authored contract
+tests do not execute a root helper or prove a nonroot protected queue. The full
+installation source map includes the historical validator; the ordinary worker
+source cutover and complete installed runtime qualification remain required
+before fixed-helper dispatch is enabled.
+
 Installed caller continuation: document the guardian's pre-submission held
 anonymous worker-pipe observer, then failing fixed-frame/descriptor and actual
 paused-observer caller-loss controls. Only the observer parses bytes; guardian

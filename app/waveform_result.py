@@ -121,10 +121,26 @@ def checked_resources(receipt, release):
 
 def validate_result(payload, job):
     try:
-        INPUT.native_precount(payload, 4194304, max_nodes=2097152, max_depth=24)
         expected = set(
             "schema job_id project_id dataset_id dataset_sha256 method_id request_sha256 scientific_request_sha256 sources scientific_status calculation_sha256 calculation members resources".split()
         )
+        native_keys = {"linux_execution","linux_installation"}
+        if type(payload) is not dict:
+            raise ValueError()
+        if native_keys & set(payload):
+            if not native_keys <= set(payload):
+                raise ValueError()
+            from app.waveform_linux_execution import validate_terminal
+            from waveform_m08_installation import validate_installation_binding
+            validate_terminal(payload["linux_execution"],job,payload=payload)
+            validate_installation_binding(payload["linux_installation"],checked=payload["linux_execution"]["installation"])
+            if payload["resources"]["memory_kind"] != "linux_cgroup_charge":
+                raise ValueError()
+            expected |= native_keys
+        # The separately bounded private native graph has uint64 monotonic clocks.
+        # Scientific/public metadata keeps its unchanged JS-safe integer dialect.
+        INPUT.native_precount({key:value for key,value in payload.items() if key not in native_keys},
+                              4194304,max_nodes=2097152,max_depth=24)
         if (
             type(payload) is not dict
             or set(payload) != expected
@@ -250,7 +266,7 @@ def preflight_publication_paths(target, directory, members, *, platform):
                        "Waveform publication destinations exceed supported storage paths") from None
 
 
-async def publish_result(settings, sessions, job, export_path, receipt, release):
+async def publish_result(settings, sessions, job, export_path, receipt, release, *, linux_execution=None, linux_installation=None):
     """Only called after the actual supervisor finishes and acknowledges release."""
     from app.waveform_processing import validate_source_rows
     from app.processing_contract import verified_json, dataset_key
@@ -275,6 +291,11 @@ async def publish_result(settings, sessions, job, export_path, receipt, release)
         "members": members,
         "resources": resources,
     }
+    if linux_execution is not None or linux_installation is not None:
+        if (linux_execution is None or linux_installation is None
+                or linux_execution.get("native") != {"eligibility":receipt,"release":release}):
+            raise ApiError(409,"waveform_resource_invalid","Linux waveform terminal differs from retained native bytes")
+        payload.update(linux_execution=linux_execution,linux_installation=linux_installation)
     validate_result(payload, job)
     encoded = canonical_bytes(payload)
     if len(encoded) > 4194304:

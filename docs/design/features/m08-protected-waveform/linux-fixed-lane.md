@@ -129,6 +129,20 @@ transactional publication. Successful exact cleanup follows the commit only;
 failed/uncertain stages and root debt remain recoverable. No fourth SQL artifact
 or numerical-method change is required.
 
+The outer result may include `linux_execution` and `linux_installation` only as
+a complete pair. The first is a closed65536-byte native terminal graph, the
+second is the exact five-field prelaunch binding already carried by that graph.
+The historical `app/waveform_linux_execution.py` validator binds the retained
+job/request/dataset/source identities, stage/custody, unchanged native resource
+receipt/release, complete guardian removal and final counters. Measured success
+also binds the actual calculation/member inventory, scientific status and
+projected charge resources. Terminal quiescence cannot precede the native final
+seal. Cancel/caller-loss retain exact matching timing and extinction evidence.
+Native uint64 monotonic stamps remain separately bounded; scientific metadata
+keeps its existing JS-safe integer grammar. Historical reads never inspect or
+adopt the current installation. Original Windows results without the pair keep
+their existing result grammar and make no installed-Linux claim.
+
 In the installed nonroot caller model, the independent guardian also holds the
 inherited read end of the worker's anonymous stdin pipe before native submission.
 It polls readable/HUP/error without consuming bytes, so the root observer remains

@@ -22,6 +22,7 @@ SOURCE_FILES = (
     "scripts/waveform_m08_guardian.py", "scripts/waveform_m08_installation.py",
     "scripts/waveform_m08_owned_reader.py", "scripts/waveform_m08_supervisor.py",
     "app/waveform_linux_worker.py",
+    "app/waveform_linux_execution.py",
 )
 CONFIG_KEYS = set("schema source_root source_revision data_root custody_root science_work_root uid gid science_uid science_gid python python_sha256 launch_python_sha256 site_packages admission_path admission_sha256 import_closure_path import_closure_sha256 source_hashes".split())
 
