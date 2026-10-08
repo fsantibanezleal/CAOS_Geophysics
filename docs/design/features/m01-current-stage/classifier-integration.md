@@ -57,6 +57,12 @@ work before caller lifetime guards can unwind. No connection is opened, closed,
 committed or rolled back by the seam. Source/VFS/WAL admission and actual writer
 exclusion remain caller responsibilities, not inferred from this transport.
 
+An unregistered .profile-incomplete namespace is refused by the original
+archive deletion seam before original moves, whether a successful-v2 participant
+is installed or not. It cannot inherit successful-v2 authority or silently lose
+its live ownership relations. Positive incomplete-descriptor dispatch remains a
+separate source-reviewed consumer, not an upgrade of older evidence.
+
 Remaining current-stage integration is active implementation, not an added
 release prerequisite: original owned DELETE physical rows/debt, runtime startup/recovery
 assembly, actual bounded science/resources/cancel and physical HTTP/export/client

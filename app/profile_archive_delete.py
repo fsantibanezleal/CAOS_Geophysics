@@ -107,6 +107,13 @@ class ProfileArchiveDeletion:
 
 async def prepare_archive_deletion(app, settings, session, owner_id, project_id, jobs):
     """Called before the original route moves anything, under its transaction."""
+    incomplete=Path(settings.data_dir)/'.profile-incomplete'
+    # Distinct incomplete custody is not successful execution-v2. Until its
+    # source-positive descriptor consumer is installed, do not silently discard
+    # the live SQL identities required by that future archive. Even an empty or
+    # malformed namespace remains unresolved; never sweep or adopt it here.
+    if incomplete.exists() or incomplete.is_symlink():
+        raise ApiError(409,'profile_archive_custody_unresolved','Incomplete profile custody requires its recognized deletion participant')
     participant=getattr(app.state,'profile_archive_deletion',None)
     path=Path(settings.data_dir)/'.profile-retained'
     if participant is None:
