@@ -11,6 +11,7 @@
 - [Use and reproduce the source-valid M05/M06 course](09_online-mt-course.md).
 - [Run the complete private supplied gravity/magnetic methodology](22_local_joint_survey.md): separate real baselines, all coupling candidates, frozen held-out evaluation, strict exports and actual scientific replay; no field or activation certificate.
 - [Inspect every native joint model/state](../data-contract/04_joint-local-inspection.md): exact physical responses/residuals, post-freeze holdout metrics, face-Gram coupling and source-bound private exports; offline scientific execution stays separate from local browser inspection.
+- [Validate original compiled joint baseline conditioning](23_conditioned_joint_baselines.md): exact public source/factor/error-unit contract, real native384-fit comparison, unchanged caps and explicit retained failures; not coupled or online acceptance.
 - [Measure isolated actual-host admission](12_actual_host_admission.md): retained failed headroom measurements are not production activation.
 - [Run the ordinary physical station adapter](13_local_station_adapter.md): exact parent/configuration identities, real correction and safe-error boundary; authenticated online children remain separate.
 - [Calculate local prism gravity](14_local_gravity_forward.md): exact declared geometry, density units, upward response and Jacobian; not a measured-data inverse or host job.

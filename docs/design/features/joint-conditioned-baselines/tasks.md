@@ -11,3 +11,10 @@
 6. Separately review full26-fit/new-source archive and exact coupled factor graph
    before changing scientific workflow/client schemas. Parent mount stays owned
    by parent; no online/host/public activation follows from this narrowed gate.
+
+Executed11 native unit controls PASS0SKIP against the exact public c184 source.
+Literal original potential/gradient/Hv, exact stored CSR row reconstruction,
+whole phase accounting/source drift/refusal, real native high-beta precision
+and retained low-beta line-search-failure controls are covered. Full384 actual
+comparison remains independent; unit PASS is not an all-case precision claim.
+All historical assertions/thresholds and original source-frozen outputs remain.
