@@ -93,6 +93,29 @@ values, source/version/hash identities, original selection/holdout states and
 explicit false scientific/authenticity/public-activation claims. One existing
 citations provider and ADR CSS only. Parent owns final integrated render.
 
+## Fixed-child execution envelope
+
+The owned fixed child runs with bytecode and site startup disabled, an explicit
+selected interpreter/site tree and a closed inventory of defining product files.
+It verifies installation source bytes before imports and after execution; uploaded
+members never supply a source path, Python module, optimizer or runtime selector.
+The parent-only control binds its exact SHA, selected context bytes, job/project/
+owner/dataset identities and every materialized original hash. It derives all
+development/sealed/output/scratch locations from exclusive external job roots.
+Original targeted vendor pins remain mandatory. Loaded module paths/hashes are
+retained as provenance, not a claim of full transitive/native supply-chain or
+platform admission. JI01 and Linux qualification remain separate obligations.
+
+One parent monotonic deadline covers input materialization, solve, strict replay,
+supplement and its strict verification. The supervisor charges the full child
+tree sampled RSS and the SUM of all stage and scratch bytes, bounded by the
+lower job limits and original256MiB scratch cap; logs independently bound64KiB.
+Native internal1800s receipts do not reset or extend that deadline. Cancel,
+measurement failure, native rejection and changed sources retain original
+accepted states and known stage bytes. No failed or merely inspected output is
+promoted to scientific acceptance. These envelopes preserve original v1 arrays
+and receipts; they never relabel historical624/384 failures.
+
 ## Conditioning applicability
 
 M02 physical_conditioned_optimizer is prospective until committed public source

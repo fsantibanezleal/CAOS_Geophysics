@@ -32,3 +32,13 @@ uncertain index commit and exact canonical dataset deletion/quota accounting.
 No native observation values are decoded by indexing. The parent still owns
 real migration/head/validator/reconciliation/route unions; fixed scientific child,
 singleton execution, native result artifacts and existing sidebar remain separate.
+
+Fixed-child execution controls run actual original26-fit solve, strict original
+replay, full native-state export and instrument replay in one lower job deadline.
+Source/context/interpreter/input stability, original lower limits, whole-input
+cap before hashing, prelaunch/running cancellation and real child timeout/RSS/
+scratch/log failures retain all known inputs/stages. Measurement enumeration
+failure explicitly leaves descendant termination unverified. Loaded module
+hashes are retained, not a full transitive/native or host/precision certificate.
+Canonical singleton dispatch, durable member publication/quota/recovery and
+the shared sidebar still require their separately tested additive integrations.
