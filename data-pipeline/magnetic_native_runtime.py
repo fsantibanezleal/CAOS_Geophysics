@@ -8,6 +8,7 @@ is installed/activated. Native security/tail/cross-platform admission is separat
 import ctypes as c
 from ctypes import wintypes as w
 import hashlib
+import importlib
 import os
 from pathlib import Path
 import subprocess
@@ -15,6 +16,36 @@ import time
 
 from magnetic_local_paths import external_path
 from magnetic_survey_json import canonical, fail
+
+
+OBSERVATION_SOURCES = ('magnetic_line_survey_runtime', 'magnetic_line_survey', 'magnetic_line_survey_io',
+                       'magnetic_line_contract', 'magnetic_line_survey_contract')
+
+
+def observation_pins():
+    return {str(Path(importlib.import_module(name).__file__)): hashlib.sha256(
+        Path(importlib.import_module(name).__file__).read_bytes()).hexdigest() for name in OBSERVATION_SOURCES}
+
+
+def resource_exceeded(sample, elapsed, scratch_bytes):
+    # Apply to EVERY observation, including the signalled terminal process.
+    # RSS, committed Job charge and cumulative CPU remain distinct quantities.
+    return (elapsed >= 7200. or sample['cpu_s'] >= 3600. or sample['peak_rss_bytes'] > 805306368
+            or sample['peak_committed_bytes'] > 805306368 or scratch_bytes > 536870912)
+
+
+def scratch_bytes(scratch, *, settled):
+    size = 0
+    for directory, folders, files in os.walk(scratch, followlinks=False):
+        for name in folders+files:
+            path = external_path(Path(directory)/name)
+            if name in files:
+                try:
+                    size += path.stat().st_size
+                except FileNotFoundError:
+                    if settled:
+                        raise
+    return size
 
 
 def run_local_survey(executable, package_root, dependency_roots, plan_path, *, cancel_after=None):
@@ -30,12 +61,14 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
         fail('resource', '$/native', 'Bounded explicit cancellation time required')
     worker = Path(__file__).with_name('magnetic_native_worker.py')
     pins = {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in (executable, worker, Path(__file__))}
+    observed_sources = observation_pins()
     api, psapi = apis()
     security = Security(c.sizeof(Security), None, True)
     job = api.CreateJobObjectW(c.byref(security), None)
     if not job:
         fail('resource', '$/native', 'Job creation failed before scientific birth')
     process = None
+    assigned = False
     clock, parent_cpu = time.monotonic(), time.process_time()
     cause, stopped = None, None
     try:
@@ -62,6 +95,10 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                 env=env, cwd=scratch, startupinfo=startup, close_fds=True, creationflags=0x4|0x08000000)
             if not api.AssignProcessToJobObject(job, int(process._handle)):
                 fail('resource', '$/native', 'Suspended child assignment failed; no running fallback')
+            assigned = True
+            member = w.BOOL()
+            if not api.IsProcessInJob(int(process._handle), job, c.byref(member)) or not member.value:
+                fail('resource', '$/native', 'Assigned suspended child membership unavailable')
             nt = c.WinDLL('ntdll')
             nt.NtResumeProcess.argtypes, nt.NtResumeProcess.restype = [w.HANDLE], c.c_long
             if nt.NtResumeProcess(int(process._handle)) != 0:
@@ -74,34 +111,29 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                 sample = counters(api, psapi, job, int(process._handle))
                 peak_rss = max(peak_rss, sample['peak_rss_bytes'])
                 peak_private = max(peak_private, sample['peak_committed_bytes'])
-                size = 0
-                for directory, folders, files in os.walk(scratch, followlinks=False):
-                    for name in folders+files:
-                        path = external_path(Path(directory)/name)
-                        if name in files:
-                            try:
-                                size += path.stat().st_size
-                            except FileNotFoundError:
-                                # Producer can finish/rename a pending file.
-                                # Final after-drain inventory below is strict.
-                                if status == 0:
-                                    raise
+                size = scratch_bytes(scratch, settled=status == 0)
                 peak_scratch = max(peak_scratch, size)
                 elapsed = time.monotonic()-clock
-                if status == 0:
-                    break
                 if cause is None:
-                    if cancel_after is not None and elapsed >= cancel_after:
+                    if status != 0 and cancel_after is not None and elapsed >= cancel_after:
                         cause = 'cancelled'
-                    elif elapsed >= 7200. or sample['cpu_s'] >= 3600. or peak_rss > 805306368 or peak_scratch > 536870912:
+                    elif resource_exceeded(sample, elapsed, peak_scratch):
                         cause = 'resource'
-                    if cause:
+                    if cause and status != 0:
                         stopped = time.monotonic()
                         if not api.TerminateJobObject(job, 4):
                             fail('resource', '$/native', 'Whole-job stop failed')
+                if status == 0:
+                    break
                 if stopped is not None and time.monotonic()-stopped > 10.:
                     fail('resource', '$/native', 'Whole-job stop did not drain within reserve')
             final = counters(api, psapi, job, int(process._handle))
+            peak_rss = max(peak_rss, final['peak_rss_bytes'])
+            peak_private = max(peak_private, final['peak_committed_bytes'])
+            final_scratch = scratch_bytes(scratch, settled=True)
+            peak_scratch = max(peak_scratch, final_scratch)
+            if resource_exceeded(final, time.monotonic()-clock, peak_scratch):
+                cause = 'resource'
             if final['active_processes'] != 0 or final['total_processes'] != 1:
                 fail('resource', '$/native', 'Actual whole-job drain/process-count proof failed')
             code = w.DWORD()
@@ -109,12 +141,16 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                 fail('resource', '$/native', 'Actual retained exit unavailable')
             if pins != {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in (executable, worker, Path(__file__))}:
                 fail('dependency', '$/native', 'Loaded local worker/interpreter changed')
+            if observed_sources != observation_pins():
+                fail('dependency', '$/native', 'Loaded public observation dependency changed')
             receipt = dict(schema='magnetic-local-lifetime-1', execution='actual_windows_job_component',
                 exit_code=int(code.value), cause=cause, wall_s=time.monotonic()-clock, cpu_s=final['cpu_s'],
                 peak_rss_bytes=peak_rss, peak_private_committed_bytes=peak_private, peak_scratch_bytes=peak_scratch,
                 active_processes=final['active_processes'], total_processes=final['total_processes'],
                 stop_drain_s=None if stopped is None else time.monotonic()-stopped,
                 parent_cpu_s=time.process_time()-parent_cpu, source_pins=pins,
+                observation_source_pins=observed_sources, final_scratch_bytes=final_scratch,
+                hard_writable_scratch_admitted=False,
                 native_security_admitted=False, online_admitted=False)
             with (scratch/'native-lifetime.json').open('xb') as stream:
                 stream.write(canonical(receipt))
@@ -122,9 +158,16 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                 os.fsync(stream.fileno())
             return receipt
     finally:
-        if process is not None and api.WaitForSingleObject(int(process._handle), 0) != 0:
-            api.TerminateJobObject(job, 4)
-            if api.WaitForSingleObject(int(process._handle), 10000) != 0:
-                api.CloseHandle(job)
-                fail('resource', '$/native', 'Failed worker did not drain')
-        api.CloseHandle(job)
+        try:
+            if process is not None and api.WaitForSingleObject(int(process._handle), 0) != 0:
+                if assigned:
+                    if not api.TerminateJobObject(job, 4):
+                        fail('resource', '$/native', 'Failed assigned worker stop unavailable')
+                else:
+                    # Popen.kill targets the retained Windows process handle,
+                    # not a recyclable PID. The empty Job cannot stop this child.
+                    process.kill()
+                if api.WaitForSingleObject(int(process._handle), 10000) != 0:
+                    fail('resource', '$/native', 'Failed worker did not drain')
+        finally:
+            api.CloseHandle(job)

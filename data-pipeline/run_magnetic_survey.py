@@ -23,7 +23,9 @@ SOURCES = ('physical_optimizer', 'physical_nonlinear_optimizer', 'gravity_l2_pre
            'magnetic_inverse_precision', 'magnetic_optimizer_adapter', 'magnetic_likelihood',
            'magnetic_calibration', 'magnetic_diagnostics', 'magnetic_survey', 'magnetic_survey_json',
            'magnetic_result_bundle', 'magnetic_local_paths', 'magnetic_nonlinear_adapter', 'run_magnetic_survey',
-           'magnetic_native_runtime', 'magnetic_native_worker', 'simpeg.optimization')
+           'magnetic_native_runtime', 'magnetic_native_worker', 'simpeg.optimization',
+           'magnetic_line_survey_runtime', 'magnetic_line_survey', 'magnetic_line_survey_io',
+           'magnetic_line_contract', 'magnetic_line_survey_contract')
 
 
 def source_inventory():

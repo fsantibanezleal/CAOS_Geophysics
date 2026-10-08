@@ -82,7 +82,7 @@ def main():
         record = dict(case=label, source_sha256=doc['source']['original_sha256'], rows=288, active_cells=528,
             native=lifetime, scientific_verdict='failed_no_complete_result', result_status=None, reason=None,
             selected=None, outer=None, full_method_accepted=False, field_source_verified=False)
-        if (output/'manifest.json').exists():
+        if (output/'manifest.json').exists() and lifetime['cause'] is None and lifetime['exit_code'] == 0:
             from magnetic_result_bundle import read_bundle
             result = read_bundle(output)['result']
             # Observe zero-model baseline ONLY AFTER already frozen one-time fit.
@@ -102,6 +102,9 @@ def main():
                 scientific_verdict='synthetic_predictive_pass' if passed and regime in 'ABC' else
                     'null_numerical_control' if regime == 'F' else 'synthetic_predictive_fail' if regime in 'ABC' else
                     'adverse_discrimination_requires_matched_A')
+        elif (output/'manifest.json').exists():
+            record.update(scientific_verdict='failed_native_lifetime',
+                          reason='Complete generation exists but actual native lifetime refused it')
         elif (output/'failure.json').exists():
             failed = json.loads((output/'failure.json').read_bytes())
             record.update(result_status=failed['status'], reason=failed['diagnostics']['reason'],

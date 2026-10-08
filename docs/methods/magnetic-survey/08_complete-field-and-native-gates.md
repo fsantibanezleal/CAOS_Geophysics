@@ -25,6 +25,17 @@ parent last-handle death can stop it. Native cumulative CPU, process peak RSS,
 job peak private committed bytes and scratch bytes are observed through drain.
 No live PID sum becomes lifetime CPU and unavailable measurements are not zero.
 
+Membership is also verified on the retained suspended child before resume.
+Before assignment succeeds, failure stops that exact retained process handle,
+not the empty Job. After assignment, failure stops the whole Job. The controller
+pins the loaded public observation module and its direct support sources before
+birth and after drain. Terminal signalled observations still enforce the same
+CPU/RSS/private/scratch caps; exit zero cannot bypass an excess. Final settled
+scratch bytes are recorded separately from sampled peak scratch. This is soft
+file-byte observation, not a hard writable quota. The frozen matrix refuses a
+generation when its actual lifetime has a resource cause or nonzero exit,
+retaining that generation for diagnosis rather than calling it native acceptance.
+
 This composes the separately reviewed provisional public line-survey Win32
 operations; it is not the hardened native controller or its Linux equivalent.
 Creation-bound birth, token/DACL/broker denial, complete parent publication tail,
@@ -54,6 +65,13 @@ hasta vaciar el objeto. Es componente provisional local, no admision del
 controlador endurecido, Linux ni servicio. Campos de admision permanecen falsos.
 S2 conserva todas las verdades y adversos originales; un fallo/cap no se cambia
 por un modelo alternativo, un promedio parcial o tolerancias mas debiles.
+
+Antes de liberar se verifica tambien el proceso suspendido retenido. Si falla
+la asignacion, se detiene ese handle exacto, no un Job vacio. Tras asignacion,
+se detiene el Job completo. Las observaciones finales aplican los mismos limites
+CPU/RSS/memoria privada/scratch incluso si el proceso termina con codigo cero.
+Bytes finales estables y pico observado se distinguen; no son cuota dura. Una
+generacion con rechazo de su vida nativa se conserva, sin aceptacion falsa.
 
 Primary provenance: [USGS Bartlett release](https://doi.org/10.5066/P90F5TGH),
 [author archive v2](https://doi.org/10.5281/zenodo.16975696), and
