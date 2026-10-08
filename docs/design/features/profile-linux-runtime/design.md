@@ -77,6 +77,19 @@ extinction. Record guardian outcome separately; no port, shell or arbitrary
 signal target is exposed. Actual crash/death/interrupted-submission controls are
 required before enabling the path. No same-UID watcher is retained.
 
+Do not leave the root guardian inside the caller service's control group:
+stopping the worker service could otherwise kill launcher and guardian together.
+Enroll the already-held unreaped root guardian in its own exact transient scope
+through the systemd255 manager's PIDs interface, before scientific submission.
+Verify active state and actual group membership. Bind the science service with
+`BindsTo` and `After` to this scope, so guardian failure is independently handled
+by the manager as well as the launcher. Names and properties are constructor-
+owned, never browser input. Give the guardian a separately recorded bounded
+operator memory/task/wall allowance; it is not scientific RSS/CPU admission.
+Test caller-service stop, guardian kill and launcher loss independently.
+Primary interfaces: [systemd255 unit dependencies](https://raw.githubusercontent.com/systemd/systemd/v255/man/systemd.unit.xml)
+and [scope lifecycle](https://raw.githubusercontent.com/systemd/systemd/v255/man/systemd.scope.xml).
+
 Bound installation-owned retained custody independently of unit scratch: at
 most four outstanding job plans and 16 MiB of declared held originals, and at
 most 256 bounded 64 KiB operational receipts. Write an immutable exclusive plan
