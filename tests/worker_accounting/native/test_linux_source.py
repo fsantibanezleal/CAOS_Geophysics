@@ -104,3 +104,10 @@ def test_child_failure_stages_are_fixed_safe_literals():
     assert '"linux_child_setup_unknown\\n"' in loop
     assert all('"linux_child_setup_' + stage + '\\n"' in loop for stage in "ABCDEFGHIJKL")
     assert "fputs(setup_failures[byte-'A'],stderr)" in loop
+
+
+def test_reaped_setup_failure_still_drains_fixed_stage_without_go():
+    loop = (CORE / "linux_main.c").read_text("utf-8")
+    assert "if (l.born && !l.go && l.object.ready_fd >= 0)" in loop
+    assert "else if (l.error) { close(l.object.ready_fd); l.object.ready_fd=-1; }" in loop
+    assert "if (l.born && !l.go && !l.error)" not in loop

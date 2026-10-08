@@ -188,11 +188,26 @@ def observe_inventory(output, scratch, *, linker=False):
     invalid = False
     linker_leaves = 0
     resolution_leaves = 0
+    vanished_scratch = []
     for kind, root in (("output", Path(output)), ("scratch", Path(scratch))):
         for entry in root.iterdir():
             if len(entries) >= 128:
                 return dict(bytes=total, leaves=len(entries), entries=entries, invalid=True, truncated=True)
-            status = entry.lstat()
+            try:
+                status = entry.lstat()
+            except FileNotFoundError:
+                # GCC may unlink its exact temporary leaf between readdir and
+                # lstat. Only a reviewed scratch name can disappear harmlessly;
+                # artifact loss or an unknown transient remains a failed build.
+                ordinary = re.fullmatch(r"cc[A-Za-z0-9]{6}\.(s|o)", entry.name)
+                transient_linker = linker and re.fullmatch(
+                    r"cc[A-Za-z0-9]{6}\.(cdtor\.(c|o)|res)", entry.name)
+                if kind != "scratch" or not (ordinary or transient_linker):
+                    raise
+                vanished_scratch.append(entry.name)
+                if len(vanished_scratch) > 128:
+                    reject()
+                continue
             if not stat.S_ISREG(status.st_mode) or status.st_nlink != 1 or status.st_uid != 0:
                 invalid = True
             total += status.st_size
@@ -214,7 +229,8 @@ def observe_inventory(output, scratch, *, linker=False):
                     invalid = True
             entries.append(dict(kind=kind, name=entry.name, bytes=status.st_size,
                                 mode=stat.S_IFMT(status.st_mode), uid=status.st_uid, nlink=status.st_nlink))
-    return dict(bytes=total, leaves=len(entries), entries=entries, invalid=invalid, truncated=False)
+    return dict(bytes=total, leaves=len(entries), entries=entries, invalid=invalid,
+                truncated=False, vanished_scratch=vanished_scratch)
 
 
 def inventory(output, scratch, *, linker=False):

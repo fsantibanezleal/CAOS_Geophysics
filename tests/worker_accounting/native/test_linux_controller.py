@@ -222,6 +222,41 @@ def test_build_transport_inventory_links_are_not_followed(tmp_path, monkeypatch)
         runner.inventory(out, scratch)
 
 
+@pytest.mark.parametrize("name,linker", [("ccABC123.s", False), ("ccABC123.res", True)])
+def test_build_exact_temporary_unlink_race_is_retained(tmp_path, monkeypatch, name, linker):
+    out, scratch = tmp_path / "out", tmp_path / "scratch"
+    out.mkdir(); scratch.mkdir()
+    entry = scratch / name
+    entry.write_bytes(b"temporary")
+    original = runner.Path.lstat
+    def vanished(self):
+        if self == entry:
+            raise FileNotFoundError
+        return original(self)
+    monkeypatch.setattr(runner.Path, "lstat", vanished)
+    observed = runner.observe_inventory(out, scratch, linker=linker)
+    assert observed["invalid"] is False and observed["bytes"] == 0
+    assert observed["vanished_scratch"] == [name]
+
+
+@pytest.mark.parametrize("kind,name,linker", [
+    ("output", "core.o", False), ("scratch", "unknown", True),
+    ("scratch", "ccABC123.res", False)])
+def test_build_unknown_or_artifact_unlink_race_remains_failure(tmp_path, monkeypatch, kind, name, linker):
+    out, scratch = tmp_path / "out", tmp_path / "scratch"
+    out.mkdir(); scratch.mkdir()
+    entry = (out if kind == "output" else scratch) / name
+    entry.write_bytes(b"retained")
+    original = runner.Path.lstat
+    def vanished(self):
+        if self == entry:
+            raise FileNotFoundError
+        return original(self)
+    monkeypatch.setattr(runner.Path, "lstat", vanished)
+    with pytest.raises(FileNotFoundError):
+        runner.observe_inventory(out, scratch, linker=linker)
+
+
 def test_build_transport_inventory_combined_bytes_and_leaves(tmp_path):
     out, scratch = tmp_path / "out", tmp_path / "scratch"
     out.mkdir(); scratch.mkdir()

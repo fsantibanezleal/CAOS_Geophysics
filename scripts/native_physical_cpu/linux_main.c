@@ -217,7 +217,10 @@ int main(int argc, char **argv) {
                 if (result) latch(&l,(uint32_t)result);
                 else { l.born=1; l.birth_ns=now; }
             }
-            if (l.born && !l.go && !l.error) {
+            /* A reaped setup failure may be observed before the READY pipe.
+               Retain its fixed stage even after the sticky failure is latched;
+               an already failed attempt can never receive GO. */
+            if (l.born && !l.go && l.object.ready_fd >= 0) {
                 unsigned char byte;
                 ssize_t got=read(l.object.ready_fd,&byte,1);
                 if (got==1) {
@@ -230,7 +233,9 @@ int main(int argc, char **argv) {
                         if (byte>='A' && byte<='L') fputs(setup_failures[byte-'A'],stderr);
                         else fputs("linux_child_setup_unknown\n",stderr);
                         latch(&l,LC_SETUP);
-                    } else if (write(l.object.go_fd,"G",1)!=1) latch(&l,LC_SETUP);
+                        close(l.object.ready_fd); l.object.ready_fd=-1;
+                    } else if (l.error) { close(l.object.ready_fd); l.object.ready_fd=-1; }
+                    else if (write(l.object.go_fd,"G",1)!=1) latch(&l,LC_SETUP);
                     else { l.go=1; close(l.object.ready_fd); close(l.object.go_fd);
                         l.object.ready_fd=-1; l.object.go_fd=-1; }
                 } else if (got==0 || (got<0 && errno!=EAGAIN && errno!=EINTR) ||

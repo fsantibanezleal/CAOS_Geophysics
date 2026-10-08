@@ -541,3 +541,21 @@ errno, syscall arguments, context, UID/path/input or dynamic exception content.
 Every non-R remains sticky LC_SETUP and child exit126. No fallback, privilege,
 mode, seccomp, credential, timing or scientific acceptance change. Failed runs
 without this diagnostic remain unknown-stage failures at their actual pins.
+
+## 15. Sampled compiler scratch unlink race
+
+Compiler temporary leaves can disappear between directory enumeration and lstat.
+Retain the exact missing name in a bounded vanished_scratch diagnostic only for
+the existing reviewed ccXXXXXX.s/.o names, or the phase-specific linker names.
+Unknown vanished entries and disappearing output artifacts still fail. No bytes
+or metadata are invented for missing leaves. This is a sampled build inventory,
+not a hard filesystem quota or a complete instantaneous directory snapshot.
+The original interrupted build remains failed; rebuild uses fresh exclusive roots.
+Gates: test_linux_controller.py::test_build_exact_temporary_unlink_race_is_retained
+and test_build_unknown_or_artifact_unlink_race_remains_failure.
+
+A setup child can exit and be reaped before the observer reads its READY byte.
+Drain the existing fixed-stage byte even after latching the failed exit, while
+prohibiting GO on an already failed attempt. Keep the first error and all failed
+counter/custody evidence. No stage is inferred for an older empty diagnostic.
+Gate: test_linux_source.py::test_reaped_setup_failure_still_drains_fixed_stage_without_go.
