@@ -16,6 +16,7 @@ import physical_owned_spd as owned
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+RESIDUAL_TERMINAL_SHA256 = 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7'
 
 
 class _MagneticDTO:
@@ -65,3 +66,61 @@ def solve_magnetic_original(objective, start_q, *, source_components, budget, bi
     dto = _MagneticDTO(objective, source_components)
     return optimizer.solve_bounded_linear(dto, objective.lower, objective.upper, start_q,
         budget=budget, binding=binding, terminal=terminal)
+
+
+def certify_magnetic_original_state(objective, q, *, source_components, budget, binding, terminal):
+    """Closed original state proof only; never a restarted native fit acceptance.
+
+    Native source/G/g/box and free principal metric are owned here. No caller
+    gradient, normalization, mask, inverse, certificate or solver hook exists.
+    A research/read caller's proof clock does not reset an archived fit clock.
+    """
+    return _certify_magnetic_state(objective, q, source_components=source_components,
+        budget=budget, binding=binding, terminal=terminal, residual=False)
+
+
+def certify_magnetic_original_residual_state(objective, q, *, source_components, budget, binding, terminal):
+    """Separate original convex residual state proof, not production fit policy."""
+    return _certify_magnetic_state(objective, q, source_components=source_components,
+        budget=budget, binding=binding, terminal=terminal, residual=True)
+
+
+def _certify_magnetic_state(objective, q, *, source_components, budget, binding, terminal, residual):
+    dto = _MagneticDTO(objective, source_components)
+    factory = optimizer.accuracy.OwnedOriginalTerminal
+    if residual:
+        import physical_original_residual_terminal as module
+        if (module.SOURCE_SHA256 != RESIDUAL_TERMINAL_SHA256 or
+                hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest() != RESIDUAL_TERMINAL_SHA256):
+            raise ValueError('original magnetic state: closed residual source drift')
+        factory = module.OwnedOriginalResidualTerminal
+    identity, budget = optimizer.reduced.core._preflight(dto,
+        objective.lower, objective.upper, q, budget, binding, terminal,
+        'fixed_linear_quadratic', ('physical_original_optimizer',
+            optimizer.SOURCE_SHA256, optimizer.POLICY, optimizer.LINEAR_EPOCH))
+    if binding.certificate_source_sha256 != original.SOURCE_SHA256:
+        raise ValueError('original magnetic state: literal original certificate source')
+    operands = dto.quadratic_operands(q)
+    original.validate(operands, identity, q, deadline=budget.deadline,
+        resource_limit_bytes=budget.resource_limit_bytes, admitted_bytes=budget.admitted_bytes)
+    domain = dto.magnetic_domain(q)
+    passed, ratio = optimizer.magnetic_domain_check(domain, operands, q, q, deadline=budget.deadline)
+    if not passed:
+        raise ValueError('original magnetic state: strict original field domain')
+    try:
+        gradient = np.ascontiguousarray(objective.evaluate(q, True, False)[1])
+        # This state-only diagnostic has no fit-start authority. Absolute KKT
+        # is stricter than max(1, ||g(start)||inf); never replace fit policy.
+        owner = factory(dto.metric_operands(q), operands,
+            identity, q, gradient, 1., deadline=budget.deadline,
+            resource_limit_bytes=budget.resource_limit_bytes, admitted_bytes=budget.admitted_bytes)
+        check = owner.certify(terminal)
+        if residual and (module.SOURCE_SHA256 != RESIDUAL_TERMINAL_SHA256 or
+                hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest() != RESIDUAL_TERMINAL_SHA256):
+            raise ValueError('original magnetic state: residual source changed during proof')
+    finally:
+        objective.release_state()
+    return dict(schema='magnetic-original-state-proof-1', identity=identity,
+        model_sha256=owned.digest(q), domain_ratio_lower=ratio, check=check,
+        normalization='absolute_unit_state_only',
+        native_fit_accepted=False, full_method_accepted=False, host_accepted=False)

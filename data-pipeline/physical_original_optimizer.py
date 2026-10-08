@@ -18,7 +18,7 @@ import physical_original_terminal as accuracy
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-7'
+LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-8'
 POLICY = 'closed-original-noise-reduced-joseph-free-face-accuracy-1'
 ConditionedBinding = reduced.ConditionedBinding
 ConditionedBudget = reduced.ConditionedBudget

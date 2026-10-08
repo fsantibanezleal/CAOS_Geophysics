@@ -117,6 +117,50 @@ def serial(value):
     return value
 
 
+@pytest.mark.parametrize('public_proof', [bridge.certify_magnetic_original_state,
+    bridge.certify_magnetic_original_residual_state])
+def test_closed_actual_state_proof_and_denials(monkeypatch, public_proof):
+    control = native_control()
+    obj, *_ = control.make(control.physical.__wrapped__(), 'secondary_enu_nT', False)
+    kwargs = dict(source_components=90,
+        budget=optimizer.ConditionedBudget(monotonic()+120., 0, 805306368, 805306368, obj.allocation),
+        binding=binding_for(obj), terminal=owned.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6))
+    # An actual nonstationary state is proved/rejected, never moved to an oracle
+    # optimum or described as a native fit. No CG/minimize may run here.
+    def forbidden(*args, **kw):
+        pytest.fail('state proof cannot invoke native minimize')
+    monkeypatch.setattr(optimizer.reduced.core.linear.optimization.ProjectedGNCG, 'minimize', forbidden)
+    q = np.zeros(7, dtype=np.float64)
+    result = public_proof(obj, q, **kwargs)
+    assert not result['check']['passed'] and result['check']['disposed']
+    assert obj._cache is None and np.array_equal(q, np.zeros(7))
+    assert result['normalization'] == 'absolute_unit_state_only'
+    assert not any(result[k] for k in ('native_fit_accepted', 'full_method_accepted', 'host_accepted'))
+    for changed in (dict(binding=replace(kwargs['binding'], runtime_epoch='foreign')),
+        dict(binding=replace(kwargs['binding'], certificate_source_sha256='f'*64)),
+        dict(budget=replace(kwargs['budget'], admitted_bytes=True)),
+        dict(budget=replace(kwargs['budget'], allocation_plan_sha256='f'*64))):
+        with pytest.raises(ValueError):
+            public_proof(obj, q, **dict(kwargs, **changed))
+    with pytest.raises(optimizer.source.intervals._Expired):
+        public_proof(obj, q,
+            **dict(kwargs, budget=replace(kwargs['budget'], deadline=monotonic()-1.)))
+    with pytest.raises(TypeError):
+        public_proof(object(), q, **kwargs)
+
+
+def test_residual_state_literal_source_drift_is_refused(monkeypatch):
+    import physical_original_residual_terminal as residual
+    control = native_control()
+    obj, *_ = control.make(control.physical.__wrapped__(), 'secondary_enu_nT', False)
+    monkeypatch.setattr(residual, 'SOURCE_SHA256', 'f'*64)
+    with pytest.raises(ValueError, match='closed residual source drift'):
+        bridge.certify_magnetic_original_residual_state(obj, np.zeros(7), source_components=90,
+            budget=optimizer.ConditionedBudget(monotonic()+120., 0, 805306368, 805306368, obj.allocation),
+            binding=binding_for(obj), terminal=owned.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6))
+    assert obj._cache is None
+
+
 def test_actual_original_full528_firstfold_strong_accuracy():
     """Exactly one new source epoch/prerequisite; dependent matrix is external."""
     from magnetic_likelihood import SealedLikelihood

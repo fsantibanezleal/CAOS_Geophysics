@@ -1,8 +1,8 @@
 # Original source exact-row certificate arithmetic
 
-Prospective public original source epoch candidate7. This arithmetic is not a
+Prospective public original source epoch candidate8. This arithmetic is not a
 native-host grant, a full M02/M04 acceptance or a compiled/quartic bridge.
-Original source6 receipts and failed complete firstfits remain historical.
+Original source6/source7 receipts and failed complete firstfits remain historical.
 
 The source-owned terminal and magnetic field-domain proof use exact integer
 row reductions. The non-native lanes of the original chord proof use the same
@@ -68,3 +68,18 @@ uninterrupted120 s clock, strict physical field ratio>1e-8, original source
 strong-convexity/Neumann/free-box/active-sign/KKT/model/objective/prediction
 certificates and original768MiB M04 or2GiB M02 source-bound quota. A faster
 microbenchmark or independent L2 pass never unlocks incomplete sparse stages.
+
+## Exact endpoint conversion
+
+Arithmetic epoch2 constructs an integer significand directly from the
+Decimal sign/digit tuple with exponent0. This conversion is exact and does
+not use the ambient Decimal precision or a string-digit conversion limit.
+The original endpoint exponent is retained separately. Row reductions use
+the bounded object-integer schedule above, with no additional limb lane.
+
+The additive public magnetic state-proof function is for diagnostic/read
+proofs only. It owns actual MagneticObjective source/gradient/metric/bounds
+and uses absolute-unit KKT (stricter than fit normalization), exact closed
+source preflight and disposal. It cannot accept caller gradients, masks,
+inverses or success hooks. It does not run CG/minimize, reset the original
+fit clock or grant retrospective native fit, full method or host acceptance.
