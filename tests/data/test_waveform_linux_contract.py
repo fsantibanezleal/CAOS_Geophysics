@@ -107,3 +107,44 @@ def test_final_seal_refuses_late_failure_or_changed_held_scope(monkeypatch,chang
         monkeypatch.setattr(monitor,"counters",lambda:tuple(values))
     with pytest.raises(ControlError):
         monitor.seal_final()
+
+
+def test_failed_owned_service_reset_requires_retained_kernel_and_manager_zero(monkeypatch):
+    import waveform_m08_linux as lane
+    unit = 'm08-'+'a'*32+'.service'
+    commands = []
+    monkeypatch.setattr(lane,'_read_at',lambda fd,key:b'0\n')
+    monkeypatch.setattr(lane,'_show',lambda unit,key:{'ActiveState':'failed','MainPID':'0',
+        'ControlPID':'0','ControlGroup':''}[key])
+    monkeypatch.setattr(lane,'_command',lambda argv:commands.append(argv))
+    monkeypatch.setattr(lane,'_released_unit',lambda unit:commands.append(('released',unit)))
+    lane.retire_failed_service(17,unit)
+    assert commands == [[lane.TOOLS['ctl'],'reset-failed',unit],('released',unit)]
+
+
+@pytest.mark.parametrize('changed',['tasks','MainPID','ControlPID','ControlGroup','name'])
+def test_failed_owned_service_no_reset_with_live_unbound_or_missing_evidence(monkeypatch,changed):
+    import waveform_m08_linux as lane
+    unit = 'm08-'+'a'*32+'.service'
+    values = {'ActiveState':'failed','MainPID':'0','ControlPID':'0','ControlGroup':''}
+    if changed in values:
+        values[changed] = '/retained-group' if changed == 'ControlGroup' else '8'
+    monkeypatch.setattr(lane,'_read_at',lambda fd,key:b'1\n' if changed == 'tasks' else b'0\n')
+    monkeypatch.setattr(lane,'_show',lambda unit,key:values[key])
+    monkeypatch.setattr(lane,'_command',lambda argv:pytest.fail('unproved reset'))
+    monkeypatch.setattr(lane,'_released_unit',lambda unit:pytest.fail('unproved release'))
+    with pytest.raises(ControlError):
+        lane.retire_failed_service(17,'other.service' if changed == 'name' else unit)
+
+
+@pytest.mark.parametrize('part,reason',[(b'CANCEL\n','cancelled'),(b'','caller_lost'),
+    (b'CANC',None),(b'INVALID\n',None)])
+def test_pending_caller_frame_on_refused_native_operation_never_invents_cancel(monkeypatch,part,reason):
+    import waveform_m08_linux as lane
+    caller = object.__new__(lane.LinuxCallerControl)
+    caller.fd,caller.buffer,caller.reason,caller.started_ns = 17,b'',None,None
+    monkeypatch.setattr(lane.select,'select',lambda *args:([17],[],[]))
+    monkeypatch.setattr(lane.os,'read',lambda fd,cap:part)
+    assert lane.refused_caller_reason(caller) == reason
+    assert caller.reason == reason
+    assert (caller.started_ns is not None) == (reason is not None)

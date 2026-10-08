@@ -242,7 +242,19 @@ def _slice(unit):
     props = ["CPUAccounting", "b", "true", "MemoryAccounting", "b", "true", "TasksAccounting", "b", "true",
              "MemoryMax", "t", str(MEMORY), "MemorySwapMax", "t", "0", "TasksMax", "t", "2"]
     _command([TOOLS["bus"], "call", "org.freedesktop.systemd1", "/org/freedesktop/systemd1",
-              "org.freedesktop.systemd1.Manager", "StartTransientUnit", "ssa(sv)a(sa(sv))", unit, "fail", "6", *props, "0"])
+             "org.freedesktop.systemd1.Manager", "StartTransientUnit", "ssa(sv)a(sa(sv))", unit, "fail", "6", *props, "0"])
+
+
+def retire_failed_service(fd, service):
+    """Only exact killed science, with held zero-task/empty manager evidence."""
+    require(type(service) is str and re.fullmatch(r"m08-[a-f0-9]{32}\.service",service),
+            "termination_unresolved")
+    require(_decimal(_read_at(fd,"pids.current")) == 0,"termination_unresolved")
+    if _show(service,"ActiveState") == "failed":
+        require(_show(service,"MainPID") == "0" and _show(service,"ControlPID") == "0" and
+                _show(service,"ControlGroup") == "","termination_unresolved")
+        _command([TOOLS["ctl"],"reset-failed",service])
+    _released_unit(service)
 
 
 def _cgroup_path(unit):
@@ -400,6 +412,7 @@ def _kill(fd, service):
         require(time.monotonic_ns() - started <= 2000000000, "termination_unresolved")
         time.sleep(0.005)
     _command([TOOLS["ctl"], "stop", service])
+    retire_failed_service(fd,service)
 
 
 def _namespace_listener(pid, run):
@@ -490,6 +503,17 @@ class LinuxCallerControl:
                 self.started_ns = time.monotonic_ns()
         if self.reason is not None:
             raise ControlError("cancelled")
+
+
+def refused_caller_reason(caller):
+    """Guardian can drain first; only original complete frame/EOF is a reason."""
+    if caller is None:
+        return None
+    try:
+        caller.check()
+    except (ControlError,OSError):
+        pass
+    return caller.reason if caller.reason in ("cancelled","caller_lost") else None
 
 
 def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, work_root=None):
@@ -701,9 +725,14 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
         return {"status": drained["status"], "reason": "measured", "run_id": run,
                 "receipt_sha256": sha(canonical(receipt)), "release_sha256": sha(canonical(release)), "runtime_authorized": False}
     except (ControlError, WaveformInputError, OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
+        caller_reason = refused_caller_reason(caller)
         print("M08_LINUX_BOOTSTRAP:" + checkpoint + ":" + (error.reason if type(error) is ControlError else type(error).__name__) +
               (":" + str(error.errno) if type(error) is OSError else ""), file=sys.stderr, flush=True)
-        return terminal(error.reason if type(error) is ControlError else "native_contract")
+        result = terminal("cancelled" if caller_reason else
+                          (error.reason if type(error) is ControlError else "native_contract"))
+        if caller_reason == "caller_lost":
+            result["reason"] = "caller_lost"
+        return result
     finally:
         cleanup_failed = False
         quiescent_ns = None
@@ -717,7 +746,7 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
                     final_counters = dict(cpu_ns=usage,user_cpu_ns=user,system_cpu_ns=system,active_tasks=0,
                                           peak_charge_bytes=_decimal(_read_at(fd,"memory.peak")))
                 else:
-                    _released_unit(service)
+                    retire_failed_service(fd,service)
                     quiescent_ns = time.monotonic_ns()
             except (ControlError, OSError):
                 cleanup_failed = True

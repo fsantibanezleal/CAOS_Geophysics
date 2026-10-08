@@ -360,3 +360,20 @@ Ordinary packet/counter tests are not OS proof. Actual original, nominal/upper,
 cancel/observer-loss, exited-CPU, memory/scratch/gap/process controls and API/
 restart/delete/export/browser qualification are separate gates. WSL mechanics
 cannot establish the single ML VPS gate. No public activation follows here.
+
+### Pending caller frame and exact failed-service retirement
+
+An independent guardian may drain a live scientific child while the observer
+is still checking launch/namespace membership. On a refused native operation,
+the observer checks its original held caller pipe before classifying the
+terminal. Only the complete unchanged CANCEL frame or actual pipe EOF sets
+the caller reason and timestamp; malformed/partial frames do not invent cancel.
+Cleanup still requires retained zero-task counters and original quiescence.
+A killed constructor-owned service can remain failed after successful stop.
+Reset only that exact generated service after the held accounting descriptor
+reports zero tasks and manager readback proves MainPID0, ControlPID0 and an
+empty ControlGroup. Then require the original strict inactive/not-found
+readback. Failed state, good RSS or missing readback is never extinction proof;
+no unknown unit, numeric root signal or counter reset is authorized. Gate:
+closed frame/failed-service controls, then fresh installed original CANCEL/EOF
+under unchanged limits. The first failed installed cancellation remains retained.
