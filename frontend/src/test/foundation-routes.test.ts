@@ -43,6 +43,25 @@ describe("frontend route and shell foundation", () => {
     expect(read("../../index.html")).not.toContain('name="theme-color"');
   });
 
+  it("the_exact_shared_shell_consumer_declares_product_metadata_and_containment", () => {
+    const manifest = JSON.parse(read("../../package.json"));
+    const lock = JSON.parse(read("../../package-lock.json"));
+    const installed = JSON.parse(read("../../node_modules/@fasl-work/caos-app-shell/package.json"));
+    expect(manifest.dependencies["@fasl-work/caos-app-shell"]).toBe("0.8.1");
+    expect(lock.packages[""].dependencies["@fasl-work/caos-app-shell"]).toBe("0.8.1");
+    expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.8.1");
+    expect(installed.version).toBe("0.8.1");
+    const entry = read("../main.tsx");
+    const metadata = entry.slice(entry.indexOf('version: "0.04.001"'), entry.indexOf("  architecture,"));
+    expect(metadata).toContain('visibility: "public"');
+    expect(metadata).toContain("contain: true");
+    expect(metadata).toContain("license: {");
+    expect(metadata).toContain('en: "Apache-2.0 code and CC-BY-4.0 content"');
+    expect(metadata).toContain('es: "Código Apache-2.0 y contenido CC-BY-4.0"');
+    expect(read("../../vite.config.ts")).toContain("dedupe: ['react', 'react-dom', 'react-router']");
+    // This is an ABI/consumer guard, not a measured mobile instrument-area gate.
+  });
+
   it("no_unreleased_operation_route", () => {
     expect(PRODUCT_ROUTES.map(route => route.path)).not.toEqual(expect.arrayContaining([
       "/catalogue", "/projects", "/processing", "/modelling", "/evaluation",
