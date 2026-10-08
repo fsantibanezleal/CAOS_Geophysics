@@ -1,5 +1,9 @@
 """Closed native direction controls, not native fit/recurrence acceptance."""
 from time import monotonic
+import hashlib
+import json
+import os
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -8,6 +12,55 @@ from fractions import Fraction
 import gravity_irls_face as face
 import gravity_irls_face_direction as direction
 from test_gravity_irls_face_source import owner_and_model, policy
+
+
+def _retain_native_record(branch, phase, record, budget):
+    """Optional immutable external evidence, including actual failed rows.
+
+    This TEST-only transport is not a solver/certificate authority. It keeps
+    exact float bits, array dtype/shape/bytes, every attempted CG/trial and the
+    actual combined counters before an assertion can truncate a failure.
+    """
+    output_name = os.environ.get('GEOPHYSICS_M02_FACE_DIRECTION_OUTPUT')
+    if output_name is None:
+        return
+    root_name = os.environ.get('GEOPHYSICS_M02_FACE_RESEARCH_TEMP_ROOT')
+    assert root_name and Path(root_name).is_absolute() and Path(output_name).is_absolute()
+    root, output = Path(root_name).resolve(), Path(output_name).resolve()
+    repository = Path(__file__).resolve().parents[2]
+    assert root.is_dir() and not root.is_relative_to(repository)
+    assert not repository.is_relative_to(root)
+    assert output.is_relative_to(root) and output != root
+    assert branch in ('binding_plateau', 'binding_unique', 'free_unique', 'free_unique_with_binding')
+    assert phase in ('direction', 'merit_direction', 'merit_candidate')
+    def encode(value):
+        if isinstance(value, np.ndarray):
+            assert value.dtype.kind in 'bifu' and value.nbytes <= 2*1024**2
+            return {'array_dtype': value.dtype.str, 'shape': list(value.shape),
+                'bytes_hex': value.tobytes(order='C').hex()}
+        if type(value) is float:
+            return {'float_hex': value.hex()}
+        if value is None or type(value) in (str, bool, int):
+            return value
+        if type(value) is dict:
+            assert all(type(key) is str for key in value)
+            return {key: encode(item) for key, item in value.items()}
+        if type(value) in (list, tuple):
+            return {'sequence_kind': type(value).__name__, 'values': [encode(v) for v in value]}
+        raise TypeError('literal native research transport type')
+    body = encode(dict(branch=branch, phase=phase, record=record,
+        combined_counters=dict(calls=budget.calls, steps=budget.steps,
+            evaluations=budget.evaluations,
+            stage_proposals=tuple(getattr(budget, '_face_stage_calls', {}).items()))))
+    # Stage counter integer keys are not a product DTO. Preserve their literal
+    # identity in this research envelope instead of silently string-coercing.
+    payload = json.dumps(body, sort_keys=True, allow_nan=False, indent=2).encode('utf-8')
+    assert len(payload) <= 2*1024**2
+    output.mkdir(parents=True, exist_ok=True)
+    with (output/f'{branch}-{phase}.json').open('xb') as stream:
+        stream.write(payload)
+    with (output/f'{branch}-{phase}.sha256').open('x', encoding='ascii') as stream:
+        stream.write(hashlib.sha256(payload).hexdigest()+'\n')
 
 
 @pytest.mark.parametrize('branch', ['binding_plateau', 'binding_unique', 'free_unique', 'free_unique_with_binding'])
@@ -39,6 +92,7 @@ def test_actual_library_cg_free_direction_against_independent_source_rows(branch
         derivative.close(); derivative = None
         budget = face.interior._Budget(owner.deadline)
         record = direction._native_direction(owner, q, policy(), 17, policy()['epsilon_floor'], budget)
+        _retain_native_record(branch, 'direction', record, budget)
         assert record['status'] == 'direction', record
         assert record['disposed'] and record['seconds'] > 0.
         assert len(record['cg']) == (1 if branch in ('binding_plateau', 'binding_unique') else 2)
@@ -80,15 +134,46 @@ def test_actual_library_cg_free_direction_against_independent_source_rows(branch
         owner.close()
 
 
+def test_external_record_is_exact_immutable_and_never_repo_or_device_root(tmp_path, monkeypatch):
+    # Test-owned temporary fixture only; this function executes no native CG.
+    external = tmp_path.resolve()
+    monkeypatch.setenv('GEOPHYSICS_M02_FACE_RESEARCH_TEMP_ROOT', str(external))
+    output = external/'records'
+    monkeypatch.setenv('GEOPHYSICS_M02_FACE_DIRECTION_OUTPUT', str(output))
+    budget = face.interior._Budget(monotonic()+120.)
+    budget._face_stage_calls = {17: 1}
+    record = dict(status='failed', reason='actual_refusal', disposed=True,
+        cg=(dict(rhs=np.array([.1, -.0]), solution=None, info=None),),
+        seconds=.25, trials=())
+    _retain_native_record('binding_plateau', 'direction', record, budget)
+    payload = (output/'binding_plateau-direction.json').read_bytes()
+    body = json.loads(payload)
+    assert body['record']['seconds'] == {'float_hex': .25.hex()}
+    rhs = body['record']['cg']['values'][0]['rhs']
+    assert rhs == dict(array_dtype='<f8', shape=[2], bytes_hex=np.array([.1, -.0]).tobytes().hex())
+    assert body['combined_counters']['stage_proposals']['values'][0]['values'] == [17, 1]
+    assert (output/'binding_plateau-direction.sha256').read_text().strip() == hashlib.sha256(payload).hexdigest()
+    with pytest.raises(FileExistsError):
+        _retain_native_record('binding_plateau', 'direction', record, budget)
+    monkeypatch.setenv('GEOPHYSICS_M02_FACE_DIRECTION_OUTPUT', str(external))
+    with pytest.raises(AssertionError):
+        _retain_native_record('binding_plateau', 'direction', record, budget)
+    monkeypatch.setenv('GEOPHYSICS_M02_FACE_DIRECTION_OUTPUT', str(Path(__file__).resolve().parents[2]/'records'))
+    with pytest.raises(AssertionError):
+        _retain_native_record('binding_plateau', 'direction', record, budget)
+
+
 @pytest.mark.parametrize('branch', ['binding_unique', 'free_unique', 'free_unique_with_binding'])
 def test_actual_library_cg_merit_alltrial_replay_and_adversaries(branch):
     owner, q = owner_and_model(branch)
     try:
         budget = face.interior._Budget(owner.deadline)
         native = direction._native_direction(owner, q, policy(), 17, policy()['epsilon_floor'], budget)
+        _retain_native_record(branch, 'merit_direction', native, budget)
         assert native['status'] == 'direction', native
         calls = budget.calls
         candidate = direction._merit_candidate(owner, native, policy(), policy()['epsilon_floor'], budget)
+        _retain_native_record(branch, 'merit_candidate', candidate, budget)
         assert candidate['status'] == 'candidate', candidate
         assert direction._validate_merit_candidate(owner, native, candidate,
             policy(), policy()['epsilon_floor']) is candidate
@@ -215,4 +300,35 @@ def test_feasible_scale_exact_fraction_and_outward_bound_refusal():
         assert result['alpha0'] == 0. and result['exact_ratio'] == '0'
         assert budget.calls == budget.steps == 0
     finally:
+        owner.close()
+
+
+def test_principal_metric_keeps_full_native_vector_abi():
+    owner, q = owner_and_model('binding_plateau')
+    derivative = None
+    try:
+        derivative = face._CanonicalFaceLinearization(owner, q, policy(), 17, policy()['epsilon_floor'])
+        free = derivative.face['free']
+        assert 0 < len(free) < len(q)
+        metric = derivative.metric()
+        value = np.linspace(.017, -.023, len(free))
+        # Exact source ABI refusal explains the prior failed first direction;
+        # it is not a reason to change native shape authority or solve H dense.
+        with pytest.raises(ValueError, match='exact native CG vector'):
+            metric.apply(value)
+        embedded = np.zeros(len(q)); embedded[free] = value
+        result = metric.apply(embedded)
+        assert result.shape == q.shape and np.all(result[derivative.face['binding']] == 0.)
+        # Natural IC0/Joseph is SPD, not the exact inverse of native M.
+        # True M residual1e-6 belongs to each ACTUAL CG, not this metric ABI.
+        assert np.inner(value, result[free]) > 0.
+        other = np.linspace(-.011, .037, len(free))
+        embedded_other = np.zeros(len(q)); embedded_other[free] = other
+        transformed_other = metric.apply(embedded_other)[free]
+        np.testing.assert_allclose(np.inner(value, transformed_other),
+            np.inner(other, result[free]), rtol=1e-12, atol=1e-13)
+        assert not derivative.record['native_fit_accepted']
+    finally:
+        if derivative is not None:
+            derivative.close()
         owner.close()

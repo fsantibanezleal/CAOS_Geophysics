@@ -130,3 +130,15 @@ a candidate. Actual retained-state proof and direction/trial positives are
 prerequisites to enabling a new outer epoch, followed by unchanged complete
 21-stage fixed-point assertions and original24/noise/refits. The historical
 plain/interior-only failures remain unchanged.
+
+The source-owned Joseph metric has a **full native parameter-vector ABI** even
+when its factor is a free principal face. The free CG preconditioner therefore
+zero-embeds into native space, applies that same owned metric, and restricts
+back to `F`. An `F`-sized argument is an ABI error, not permission to replace
+the physical action. Natural IC0/Joseph is an SPD metric, not an exact inverse
+of `M_FF`; exact-inverse equality is not its contract. Each actual CG must
+still independently satisfy the unchanged true `M_FF` residual threshold.
+The research tests can retain complete failed and successful direction/trial
+records under explicitly configured external temporary custody, before any
+assertion, using exclusive files and exact float/array bits. This transport
+does not approve a candidate or upgrade an earlier failed receipt.

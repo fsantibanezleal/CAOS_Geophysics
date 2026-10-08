@@ -101,7 +101,12 @@ def _run_direction(owner, q, policy, index, initial, budget):
                 return value
             def precondition(v):
                 check(); row['metric_actions'] += 1
-                value = metric.apply(v)
+                # The public Joseph ABI is full native parameter space, even
+                # for a source-owned principal face. Restrict/embed on BOTH
+                # sides; never pass a free-size vector to that full ABI.
+                embedded = np.zeros(len(derivative.q))
+                embedded[free] = v
+                value = metric.apply(embedded)[free]
                 check()
                 return face.interior._finite(value)
             def observe(v):
