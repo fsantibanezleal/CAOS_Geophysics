@@ -20,6 +20,7 @@ from app.profile_linux_exec import validate_configuration, uuid
 from app.projects import _verified_file
 
 CONFIG = Path("/etc/fasl/geophysics-profile-runtime.json")
+STREAM_DRAIN_SECONDS = 5
 
 
 def require(value):
@@ -97,6 +98,18 @@ async def bounded_stream(stream,cap):
         chunks.extend(block)
 
 
+async def finish_streams(readers):
+    """Byte bounds alone do not bound a retained writer after launcher exit."""
+    return await asyncio.wait_for(asyncio.gather(*readers),STREAM_DRAIN_SECONDS)
+
+
+def eligible_publication(current,extinction_proved):
+    require(current is not None and current.state == "running")
+    if current.cancel_requested:
+        code = "user_cancelled" if extinction_proved else "profile_extinction_unproved"
+        raise ApiError(409,code,"Profile stopped before eligible result publication")
+
+
 async def execute(settings,sessions,job,poll_interval):
     from app.worker import _cancel_requested, _finish_failure
     started = time.monotonic()
@@ -150,7 +163,7 @@ async def execute(settings,sessions,job,poll_interval):
                 break
             await asyncio.sleep(min(poll_interval,.1))
         await asyncio.wait_for(asyncio.shield(waiting),40)
-        stdout,stderr = await asyncio.gather(*readers)
+        stdout,stderr = await finish_streams(readers)
         receipt = json.loads(stdout)
         require(stdout == canonical_bytes(receipt)+b"\n" and identity(stage.lstat()) == held)
         stored = regular_at(stage_fd,"linux-execution.json",65536)
@@ -189,7 +202,7 @@ async def execute(settings,sessions,job,poll_interval):
         async with sessions() as session:
             await session.execute(text("BEGIN IMMEDIATE"))
             current = await session.get(ProcessingJob,job.id)
-            require(current.state == "running" and not current.cancel_requested)
+            eligible_publication(current,extinction_proved)
             current.state,current.result_key = "succeeded",target_key
             current.result_sha256,current.result_bytes = sha256(encoded),len(encoded)
             current.wall_ms,current.peak_rss_bytes,current.scratch_bytes = int((time.monotonic()-started)*1000),peak,scratch

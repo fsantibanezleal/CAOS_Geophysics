@@ -91,3 +91,31 @@ def test_bounded_stream_preserves_exact_bytes():
         stream.feed_eof()
         return await adapter.bounded_stream(stream,65536)
     assert asyncio.run(read()) == b"root receipt\n"
+
+
+def test_retained_writer_after_launcher_exit_has_bounded_drain(monkeypatch):
+    monkeypatch.setattr(adapter,"STREAM_DRAIN_SECONDS",.01)
+    async def read():
+        stream = asyncio.StreamReader()
+        stream.feed_data(b"complete bytes but no EOF")
+        task = asyncio.create_task(adapter.bounded_stream(stream,65536))
+        with pytest.raises(asyncio.TimeoutError):
+            await adapter.finish_streams([task])
+        assert task.cancelled()
+    asyncio.run(read())
+
+
+def test_transaction_time_cancel_is_cancelled_only_after_proved_extinction():
+    current = SimpleNamespace(state="running",cancel_requested=True)
+    with pytest.raises(ApiError) as error:
+        adapter.eligible_publication(current,True)
+    assert error.value.code == "user_cancelled"
+    with pytest.raises(ApiError) as error:
+        adapter.eligible_publication(current,False)
+    assert error.value.code == "profile_extinction_unproved"
+    current.cancel_requested = False
+    adapter.eligible_publication(current,True)
+    current.state = "failed"
+    with pytest.raises(ApiError) as error:
+        adapter.eligible_publication(current,True)
+    assert error.value.code == "profile_execution_invalid"
