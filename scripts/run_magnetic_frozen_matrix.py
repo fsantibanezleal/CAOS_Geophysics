@@ -29,6 +29,56 @@ def original_prerequisite_failed(record):
     return record['scientific_verdict'].startswith('failed') or record['scientific_verdict'] == 'synthetic_predictive_fail'
 
 
+def observe_frozen_model(result, doc, evaluator, *, matched_a=None):
+    """Observe an already verified/frozen generation; never a fitting callback.
+
+    Structural fixtures in unit tests exercise wiring, not scientific fits.
+    The actual caller supplies read_bundle's full verified native result.
+    """
+    if (result['status'] != 'complete' or evaluator['schema'] != 'magnetic-s2-evaluator-1'
+            or evaluator['modelling_request_sha256'] != digest(doc)
+            or evaluator['original_bytes'] != doc['source']['original_bytes']
+            or evaluator['provenance']['original_sha256'] != doc['source']['original_sha256']
+            or evaluator['quantity'] != doc['processing']['quantity']
+            or evaluator['field_truth'] is not False or evaluator['frozen_generator_modified'] is not False):
+        raise ValueError('Original frozen evaluator/request identity required')
+    from magnetic_s2_evaluation import evaluate_model, adverse_verdict
+    regime = evaluator['regime']
+    if regime not in tuple('ABCDEF'):
+        raise ValueError('Exact original S2 regime required')
+    model = result['model']['chi_si']['data']
+    observed = dict(model_evaluation=evaluate_model(doc['geometry']['mesh'], evaluator['bodies'], model))
+    if regime in 'DE':
+        # Never use another quantity's A or a partial/failed metric substitute.
+        matched = (matched_a['outer']['rms_nT'] if matched_a is not None
+            and matched_a['case'] == 'A:'+evaluator['quantity']
+            and matched_a['scientific_verdict'] == 'synthetic_predictive_pass' else None)
+        observed['adverse_discrimination'] = adverse_verdict(result['metrics']['outer']['rms_nT'], matched)
+    if regime == 'F':
+        values = result['prediction']['values_nT']['data']
+        observed['null_control'] = dict(model_exactly_zero=bool(model) and all(value == 0. for value in model),
+            predictions_exactly_zero=bool(values) and all(value == 0. for value in values),
+            linear_quantity=evaluator['quantity'] in ('secondary_enu_nT', 'linear_tmi_nT'))
+    return observed
+
+
+def matrix_observation_gate(results, requested):
+    """Process-level fail-first signal, never a product/native admission."""
+    permitted = {regime+':'+quantity for regime in 'ABCDEF'
+        for quantity in ('secondary_enu_nT', 'linear_tmi_nT', 'exact_total_anomaly_nT')}
+    if (type(requested) is not list or not requested or len(requested) != len(set(requested))
+            or not set(requested) <= permitted or [item['case'] for item in results] != requested):
+        raise ValueError('Exact unique requested matrix controls required')
+    passed = {'synthetic_predictive_pass', 'adverse_degradation_demonstrated', 'null_numerical_control'}
+    verdicts = [item['scientific_verdict'] for item in results]
+    successful = all(verdict in passed for verdict in verdicts)
+    linear_matrix = {regime+':'+quantity for regime in 'ABCDEF'
+        for quantity in ('secondary_enu_nT', 'linear_tmi_nT')}
+    return dict(status='selected_scientific_controls_passed' if successful else 'scientific_controls_not_passed',
+        selected_controls_passed=successful, complete_original_linear_coverage=set(requested) == linear_matrix,
+        full_method_accepted=False, field_source_verified=False, native_security_admitted=False)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-root', required=True)
@@ -45,6 +95,8 @@ def main():
     mode.add_argument('--reduced-core', action='store_true')
     mode.add_argument('--original-core', action='store_true')
     args = parser.parse_args()
+    # Refuse malformed/duplicate case identities BEFORE numerical imports or birth.
+    matrix_observation_gate([dict(case=label, scientific_verdict='not_run') for label in args.cases], args.cases)
     root, scratch_root = external_path(args.data_root), external_path(args.temp_root)
     if not root.is_dir() or not scratch_root.is_dir() or not 0. < args.wall_seconds <= 7200.:
         raise ValueError('Explicit existing external roots and bounded wall budget required')
@@ -130,6 +182,15 @@ def main():
                 scientific_verdict='synthetic_predictive_pass' if passed and regime in 'ABC' else
                     'null_numerical_control' if regime == 'F' else 'synthetic_predictive_fail' if regime in 'ABC' else
                     'adverse_discrimination_requires_matched_A')
+            matched_a = next((item for item in results if item['case'] == 'A:'+quantity), None)
+            observed = observe_frozen_model(result, doc, evaluator, matched_a=matched_a)
+            record.update(observed)
+            if regime in 'DE':
+                record['scientific_verdict'] = observed['adverse_discrimination']['verdict']
+            if regime == 'F':
+                null = observed['null_control']
+                record['scientific_verdict'] = ('null_numerical_control' if all(null.values()) else
+                    'failed_null_control' if null['linear_quantity'] else 'unresolved_nonlinear_null_baseline')
         elif (output/'manifest.json').exists():
             record.update(scientific_verdict='failed_native_lifetime',
                           reason='Complete generation exists but actual native lifetime refused it')
@@ -151,10 +212,11 @@ def main():
                     reason='prerequisite_failed:'+label, full_method_accepted=False,
                     field_source_verified=False))
             break
-    exclusive(root/'matrix.json', canonical(dict(schema='magnetic-frozen-matrix-1', cases=results,
+    observation = matrix_observation_gate(results, args.cases)
+    exclusive(root/'matrix.json', canonical(dict(schema='magnetic-frozen-matrix-1', cases=results, observation=observation,
         field_truth=False, online_admitted=False, native_security_admitted=False,
         frozen_scientific_gates_modified=False, source_inventory=sources)))
-    return 0
+    return 0 if observation['selected_controls_passed'] else 2
 
 
 if __name__ == '__main__':
