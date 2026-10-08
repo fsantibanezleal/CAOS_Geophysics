@@ -155,4 +155,41 @@ export class ApiClient {
       throw new Error("API returned JSON instead of downloadable bytes");
     return response.blob();
   }
+
+  /** Bound native custody downloads before assembling the complete buffer. */
+  async requestBoundedBytes(path: string, maximum: number, request: Pick<ApiRequest, "signal" | "query"> = {}): Promise<Uint8Array> {
+    if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 268435456) throw new Error("Native transport cap");
+    request.signal?.throwIfAborted();
+    const response = await this.send(path, request), declared = response.headers.get("content-length");
+    if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > maximum)) {
+      await response.body?.cancel(); throw new Error("Native transport declared byte cap");
+    }
+    if (!response.body) throw new Error("Native transport body missing");
+    const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0;
+    try {
+      for (;;) {
+        request.signal?.throwIfAborted();
+        const part = await reader.read(); if (part.done) break;
+        bytes += part.value.length;
+        if (bytes > maximum) throw new Error("Native transport byte cap");
+        chunks.push(part.value);
+      }
+    } catch (error) { await reader.cancel().catch(() => undefined); throw error; }
+    finally { reader.releaseLock(); }
+    request.signal?.throwIfAborted();
+    if (declared !== null && Number(declared) !== bytes) throw new Error("Native transport size drift");
+    const result = new Uint8Array(bytes); let offset = 0;
+    for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
+    return result;
+  }
+
+  /** Native members use their dedicated closed metadata contract. */
+  async requestNativeMember<T>(path: string, file: Blob, metadata: string, parse: (value: unknown) => T, csrfToken: string, signal?: AbortSignal): Promise<T> {
+    if (new TextEncoder().encode(metadata).length > 16384) throw new Error("Native metadata exceeds 16 KiB");
+    const response = await this.send(path, { method: "POST", body: file, csrfToken, signal,
+      headers: { "Content-Type": "application/octet-stream", "X-Joint-Member-Metadata": metadata } });
+    if (!/\bapplication\/(?:[\w.-]+\+)?json\b/i.test(response.headers.get("content-type") ?? ""))
+      throw new Error("API returned a non-JSON native receipt");
+    return parse(await response.json());
+  }
 }

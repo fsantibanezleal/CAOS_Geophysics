@@ -8,7 +8,7 @@ import { ProfileProjectWorkbench } from "../components/ProfileProjectWorkbench";
 // output, authenticated API workflow or native host qualification is claimed.
 describe("shared owned-project instrument navigation", () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
-  for (const instrument of ["gravity", "mt", "profiles", "waveform"]) {
+  for (const instrument of ["gravity", "mt", "profiles", "waveform", "joint"]) {
     it.each([false, true])(`mounts ${instrument} without switching project, Spanish=%s`, es => {
       const projectId = "11111111-1111-4111-8111-111111111111";
       const consoleError=vi.spyOn(console,"error");
