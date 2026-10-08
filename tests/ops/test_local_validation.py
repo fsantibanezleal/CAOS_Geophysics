@@ -184,6 +184,21 @@ def test_all_preflight_before_any_spawn(case, bad):
     assert not (root / "cache").exists()
 
 
+@pytest.mark.parametrize("field", ["sources", "inputs"])
+def test_later_missing_declaration_refuses_before_hashing(case, field, monkeypatch):
+    root, first = case
+    second = {**first, "id": "second", field: [str(root / "absent.txt")]}
+
+    def unexpected_snapshot(_):
+        raise AssertionError("structural refusal must precede expensive hashing")
+
+    monkeypatch.setattr(harness, "snapshot", unexpected_snapshot)
+    with pytest.raises(harness.Refusal, match="missing path"):
+        run(case, [first, second])
+    assert not (root / "counter.txt").exists()
+    assert not (root / "cache").exists()
+
+
 @pytest.mark.parametrize("bad", ["stdout", "receipt", "seal", "missing_receipt", "unknown_file"])
 def test_changed_or_incomplete_cache_refused(case, bad):
     root, _ = case

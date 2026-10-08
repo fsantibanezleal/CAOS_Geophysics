@@ -54,6 +54,8 @@ file or directory declarations (including directory membership), finite timeout
 0.1..86400 seconds and combined stdout/stderr bound 1..67108864 bytes. These are
 orchestration bounds, not scientific CPU, RAM or scratch caps. The whole graph
 and every file are validated before spawning anything.
+Top-level declared path existence and link checks for the whole graph precede
+content hashing, so a later missing source does not hash earlier runtime trees.
 
 ## Evidence and failure reuse
 

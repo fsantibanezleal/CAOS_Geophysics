@@ -184,6 +184,11 @@ def declaration(config, device_root):
         for key in ("sources", "inputs", "needs"):
             require(type(node[key]) is list and len(node[key]) <= MAX_FILES and
                     all(type(s) is str for s in node[key]) and len(set(node[key])) == len(node[key]), f"invalid {key}")
+        # Reject a later node's missing/linked declarations before hashing any
+        # earlier runtime closure. Structural mistakes are not expensive runs.
+        for key in ("sources", "inputs"):
+            for value in node[key]:
+                absolute(value)
         require(node["sources"], "explicit complete source declaration required")
         env = node["env"]
         require(type(env) is dict and len(env) <= 128 and all(
