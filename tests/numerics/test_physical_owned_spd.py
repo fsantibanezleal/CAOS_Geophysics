@@ -229,3 +229,52 @@ def test_original_half_normalization_and_no_tuning():
                                rtol=1e-14, atol=1e-15)
     with pytest.raises(ValueError):
         owned.validate_operands(replace(dto, likelihood_scale=.51), obj.identity(), obj.start, 2*1024**3)
+
+
+@pytest.mark.parametrize('nonlinear', [False, True])
+def test_deadline_after_actual_acceptance_retains_step(monkeypatch, nonlinear):
+    obj = NonlinearPhysical() if nonlinear else Physical()
+    clock = [monotonic()]
+    for module in (core, core.linear, core.nonlinear, owned.kernel):
+        monkeypatch.setattr(module, 'monotonic', lambda: clock[0])
+    original = core.optimization.ProjectedGNCG.doEndIteration
+    def expired_after_acceptance(opt, q):
+        original(opt, q)
+        clock[0] += 1801. if nonlinear else 121.
+    monkeypatch.setattr(core.optimization.ProjectedGNCG, 'doEndIteration', expired_after_acceptance)
+    result = run(obj, deadline=clock[0]+(1800. if nonlinear else 120.))
+    assert result['reason'] == 'wall_cap' and result['status'] != 'converged'
+    assert result['iterations'] == 1 and len(result['trace']['models_q']) == 2
+    assert not np.array_equal(result['q'], obj.start)
+    assert len([r for r in result['line_search_trials'] if r['accepted']]) == 1
+
+
+def test_actual_failed_metric_disposal_without_diagonal_rescue(monkeypatch):
+    obj = Physical()
+    actual = owned.OwnedMetric
+    instances = []
+    class FailedAction(actual):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            instances.append(self)
+        def apply(self, v):
+            super().apply(v)
+            raise ArithmeticError('Actual action failure retained, no fallback')
+    monkeypatch.setattr(owned, 'OwnedMetric', FailedAction)
+    result = run(obj)
+    assert result['reason'] == 'metric_construction_failed' and result['iterations'] == 0
+    assert len(result['conditioning_attempts']) == 1 and len(instances) == 1
+    assert all(m.live_payload_bytes == 0 for m in instances)
+    assert not result['line_search_trials'] and obj.released == 1
+
+
+def test_actual_quartic_graph_not_automatically_admitted():
+    obj = NonlinearPhysical()
+    obj.weight = .01
+    q = obj.reference+.03*np.sin(np.arange(len(obj.start)))
+    # Actual installed CrossGradient PSD search contribution, NOT a made-up
+    # visual scalar or an adapter assertion that its factor graph is firstorder.
+    combined = (sp.eye(len(q), format='csr')*obj.beta+obj.weight*obj.psd.deriv2(q)).tocsr().sorted_indices()
+    dto = replace(obj.metric_operands(q), regularizer=combined)
+    with pytest.raises(ValueError):
+        owned.validate_operands(dto, obj.identity(), q, 2*1024**3)

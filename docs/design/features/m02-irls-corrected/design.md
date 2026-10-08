@@ -52,3 +52,31 @@ differences on signed/nonzero-reference branches. Dense eigensolvers/LU occur
 only in tests,never production. Original IR-C06 same fixture/assertions determines
 positive correction; retained plain test stillfails. Full24/noise/refits/cap
 resources and additive actual API/UI/course remain completion obligations.
+
+## Compact workflow representation frozen before codec code
+
+Full25 partitions use shallow typed native pools, not deeper nested metadata or
+larger limits. Each partition's original closed dictionaries/tuples/scalars/
+float64,int64,bool arrays is encoded as a postorder node table (six int64 fields:
+kind,offset,count,ndim,dim0,dim1), child/key-index edge pool, bounded unique string
+table and dtype-specific flat numeric banks. Banks/tables are reshaped into
+native grids with each dimension<=4096; unused final grid padding is zero.
+Kinds:None,bool,int,float,string,array,dict,tuple. Children precede parents,
+root last; no callbacks, external paths, pickle, object arrays or cycles.
+All old256MiB/metadata256KiB/scalar32768/depth8/ZIP4096member limits remain.
+Decoder performs WHOLE pool metadata/shape/size guards before scans or views,
+then checks indices/order/exact types, bounded original logical expansion before
+constructing containers, and original source/physics replay WITHOUT any solver.
+Each raw partition independently satisfies original whole native metadata cap;
+the full encoded wrapper is also charged including request/duplicate logical
+occurrences. Pooling never substitutes a hash for physical validation.
+
+New corrected request/result/evaluation schemas bind cpu2/policy/inventory. All
+original8betas/3folds and one selected development refit use actual solve_partition
+and one1800s absolute calibration deadline/120s individual fit deadline. Expired
+unstarted fits are explicitly unavailable, not successful dummy states. All
+actual failed attempts/weights/native states preserved. Scores require complete
+converged folds and original marginal likelihood; original selection/tie rule.
+Outer values remain in a separate frozen evaluation only. CLI uses the existing
+bounded lossless ZIP transport and explicit external data/temp roots; no repo or
+system-temp fallback. Full24/noise/refits/source/native/API/UI gates still apply.

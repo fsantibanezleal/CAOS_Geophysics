@@ -17,3 +17,8 @@ Actual current controls:19 new public seam PASS, preceding combined97 PASS
 controls),zero skips. Full original528 prospective fit clears all attemptedCG
 in1..3iterations but FAILS original20LS after20accepted,KKT.08255,101.875s.
 That failure is retained, not full-fit scientific PASS or matrix acceptance.
+
+Fresh focused source-bound receipt:102PASS/0FAIL/0SKIP,29.722s, including actual
+post-acceptance deadline retention, failed action disposal/no rescue and actual
+installed quartic graph refusal. Original plain IR-C06 separately rerun and
+stillFAIL at37accepted/all21inners converged; original assertion unchanged.
