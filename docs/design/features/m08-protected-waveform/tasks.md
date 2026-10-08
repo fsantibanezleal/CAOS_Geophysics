@@ -16,3 +16,23 @@ scientific, resource or full-VPS qualification.
 6. Complete native measured resource/original controls on the selected platform only after its real source/ABI/context closure. Retain every failure and unavailable gate. Full local scientific suite and API/UI regressions before integration review.
 
 Convergence is recorded only from actual named gates. This initial design claims none executed. Native/field/platform acceptance cannot be inferred from ordinary fixtures or source doubles.
+
+## Approved structured-controls order
+
+1. Persist R-M08S-09..12 and this design before structured UI code changes.
+2. Complete actual fixed Linux science/API evidence without relaxing B60/S57,
+   original QC negatives or platform containment; retain outstanding native/VPS
+   gates separately.
+3. Add failing exact editor roundtrip/source-binding/response-transform tests;
+   implement grouped explicit controls and advanced JSON import/export together.
+4. Display verified complex-response amplitude/phase, actual masks/taper, units,
+   exact UTC windows and unlabelled triggers using existing instrument styles.
+5. Adopt shared WorkbenchLayout/RailSections and individually selectable request
+   field groups, keeping methodNavigation inside the one shared aside. First
+   measure actual control/plot reachability against explicitly declared retained
+   real artifacts with `frontend/e2e/waveform-layout.spec.ts`, without a new job.
+   Exact document height is measured1280px up; below900px document scrolling is
+   allowed. Width, hit-testing and readability apply at every size. No custom CSS.
+6. Repeat ordinary UI/API and real ZIP browser proof in EN/ES, both themes and
+   phone/desktop, preserving the one-aside methodNavigation seam. No public
+   activation. The new structured UI gates are NOT_RUN at this precode amendment.

@@ -42,4 +42,72 @@ WaveformProjectWorkbench uses the existing authenticated ApiClient/CSRF, uploads
 
 ## Proof and nonclaims
 
+## Structured scientific controls amendment
+
+The shared WorkbenchLayout rail divides source/indexing, explicit scientific
+editing and jobs into RailSections. Scientific editing selects one field group
+at a time. Sections use existing shell/native controls and preserve drafts and
+verified arrays while navigating. All exported arrays and both complex-response
+display transforms remain reachable in the instrument's scrolling content.
+The one shared aside retains methodNavigation. No product CSS or containment
+override is introduced. The browser measures document width at every size,
+height equality from1280px up, and below900px whole-document scrolling with
+hit-tested reachability and readable controls/plots, as ADR0071 requires.
+A layout-only gate consumes explicitly declared retained real artifacts before
+a fresh complete native workflow gate; neither substitutes for the other.
+
+The approved grouped-controls extension is a view/editor of the existing exact
+caos.local-waveform-request.v1 contract, not a second method or request schema.
+The editor uses the same explicit JSON draft as advanced import/export. Blank
+drafts have no numerical defaults. Groups cover UTC conditioning/analysis and
+one-to-three explicit NSLC rows; source citation, rights and processing statement;
+response output native, optional water level and four prefilter corners;
+offline-zero-phase bandpass/order/taper/edge guard; STA/LTA windows, on/off
+thresholds/refractory; Welch segment samples. Existing source/ADC-rail evidence
+survives edits unchanged unless explicitly edited through advanced JSON. Native
+output is fixed by the method and its unit comes from the actual StationXML
+calculation, not a velocity/acceleration selector. Invalid or incomplete fields
+remain visible and block indexing; no blank-to-zero, silent coercion or fallback
+defaults are admitted. Backend validation remains authoritative.
+
+Raw source identity and its declared companion are displayed from owned asset
+metadata. Source fields are never inferred from a filename or catalogue. An
+original-selection change clears the review binding; the user explicitly reviews
+the draft against the new pair before indexing. Each index creates/selects its
+own immutable request identity. Earlier jobs/results stay bound to their earlier
+dataset. Advanced JSON import/export remains available, including explicit ADC
+rails; unknown or invalid schema fields are not silently discarded.
+
+Verified ZIP arrays alone feed plots. The two response displays derive amplitude
+with Math.hypot(response_real, response_imag) and principal phase with
+Math.atan2(response_imag, response_real); x is response_frequency_hz. They are
+labelled display transforms of exact complex response, not new solver artifacts.
+Amplitude keeps the descriptor's response unit and phase is rad (no undocumented
+unwrap). PSD uses psd_frequency_hz. Time plots alone share the conditioning-relative
+cursor. Actual edge_valid/time_taper arrays, UTC analysis/conditioning boundaries,
+native physical units and exact candidate intervals are visible; triggers remain
+unlabelled and filtering explicitly offline/acausal. Raw QC-only results do not
+fabricate missing response, PSD or triggers.
+
+The parent shell keeps one instrument root. Optional ReactNode methodNavigation
+is inserted inside the owned instrument aside, never as a sibling workbench column.
+Use existing select-control/select/input/btn and processing plot styles; introduce
+no fonts, colors or CSS. Test-first structured roundtrip and display-transform
+tests precede implementation; real API/ZIP browser proof follows fixed Linux
+execution proof and preserves original negative controls. These are UX gates,
+not native adversarial, cold-start or actual ML VPS acceptance.
+
+Private draft, source-review binding, selections, datasets/jobs/results, exact
+receipt bytes and decoded arrays belong to one project/session generation.
+Mount the owned instrument with the project as its React key, independently of
+the parent mount. A 401 or signed-out session aborts all outstanding owned loads
+and actions, invalidates their generation and clears that whole private state,
+including request and review binding. Late asynchronous completion cannot refill
+it. Forgetting the selected source clears its draft/review and selected scientific
+results; selecting another nonempty source keeps an explicitly unreviewed draft.
+Revoke owned temporary download Blob URLs at the same invalidation boundary;
+already authorized files saved by the user are not deleted or remotely erased.
+No new polling service or authentication mechanism is added. Gates: actual DOM
+expiry/project/source-forget controls and source-bound browser receipt roundtrip.
+
 Test-first pure/real API controls use temporary migrated SQLite and fresh private fixture directories, original bytes and native engine comparisons. Ordinary science tests can use a separate read-only scientific interpreter; API imports never install or decode. Tests of authored supervisor doubles are dispatch/validation proof only. Actual Windows/Linux safety, cold nominal/upper/original controls and selected runtime/context are separate measured gates. Missing evidence remains NOT_RUN/FAIL, not xfail/skip-as-PASS, host admission or public activation. No altered thresholds, resampling, alternate channels, provider rewriting or imaginary runtime provider closes a gate.
