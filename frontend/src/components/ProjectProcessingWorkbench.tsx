@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ApiClient, ApiHttpError } from "../api/client";
 import { LifecycleApi, type ProjectView } from "../api/lifecycle";
 import type { RawAsset } from "../api/contracts";
@@ -7,6 +7,7 @@ import { FLAG_METHOD, M05_METHOD, isFlagJob, isGravityReceipt, isEdiReceipt, isM
 import { GravityStationInstrument } from "./GravityStationInstrument";
 import { MtProjectWorkbench } from "./MtProjectWorkbench";
 import { ProfileProjectWorkbench } from "./ProfileProjectWorkbench";
+import { WaveformProjectWorkbench } from "./WaveformProjectWorkbench";
 import { ResultBundleInput } from "./ResultBundleInput";
 import { readSavedResult } from "./result-view-data";
 
@@ -52,11 +53,20 @@ export function ProjectProcessingWorkbench({ projectId, es, onManage, onCurated 
 }) {
   const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).get("instrument") ?? "gravity");
   const select = (value: string) => { const url = new URL(window.location.href); if (value !== "gravity") url.searchParams.set("instrument", value); else url.searchParams.delete("instrument"); window.history.replaceState(null, "", url); setMode(value); };
-  if (mode === "profiles") return <ProfileProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onGravity={() => select("gravity")} onMt={() => select("mt")} />;
-  return mode === "mt" ? <MtProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onGravity={() => select("gravity")} onProfiles={() => select("profiles")} /> : <GravityProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onMt={() => select("mt")} onProfiles={() => select("profiles")} />;
+  const methodNavigation = <nav className="processing-actions" aria-label={es?"Método del proyecto":"Project method"}><label className="select-control"><span>{es?"Método del proyecto":"Project method"}</span><select className="select" aria-label={es?"Método del proyecto":"Project method"} value={mode} onChange={event=>select(event.target.value)}>{[
+    {value:"gravity",label:es?"Estaciones gravimétricas":"Gravity stations"},
+    {value:"mt",label:es?"Magnetotelúrica":"Magnetotellurics"},
+    {value:"profiles",label:es?"ERT / primeras llegadas":"ERT / first arrivals"},
+    {value:"waveform",label:es?"Ondas / respuesta instrumental":"Waveforms / instrument response"},
+  ].map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label></nav>;
+  const shared = {projectId,es,onManage,onCurated,methodNavigation};
+  return mode === "waveform" ? <WaveformProjectWorkbench key={projectId} {...shared}/>
+    : mode === "profiles" ? <ProfileProjectWorkbench key={projectId} {...shared} onGravity={() => select("gravity")} onMt={() => select("mt")} />
+    : mode === "mt" ? <MtProjectWorkbench key={projectId} {...shared} onGravity={() => select("gravity")} onProfiles={() => select("profiles")} />
+    : <GravityProjectWorkbench key={projectId} {...shared} onMt={() => select("mt")} onProfiles={() => select("profiles")} />;
 }
-function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt, onProfiles }: {
-  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onMt: () => void; onProfiles: () => void;
+function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt, onProfiles, methodNavigation }: {
+  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onMt: () => void; onProfiles: () => void; methodNavigation?: ReactNode;
 }) {
   const t = (en: string, sp: string) => es ? sp : en;
   const clients = useMemo(() => { const client = new ApiClient(window.location.origin); return { lifecycle: new LifecycleApi(client), processing: new ProcessingApi(client) }; }, []);
@@ -177,6 +187,7 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt, onP
   const rawGuidance = !selectedAsset ? t("Select a stored original.", "Seleccione un original almacenado.") : selectedAsset.detected_format !== "gravity_csv" ? t("This adapter accepts gravity station CSV; this original remains available in Projects.", "Este adaptador admite CSV gravimétrico; este original sigue disponible en Proyectos.") : !selectedAsset.physical_metadata.geometry.sigma_column ? t("No sigma column declared. Re-upload with explicit per-station uncertainty to use this adapter.", "No se declaró columna sigma. Cargue de nuevo con incertidumbre por estación para usar este adaptador.") : t("The API checks every row, geometry, units and positive sigma. A raw receipt alone is not eligible.", "La API revisa cada fila, geometría, unidades y sigma positiva. El recibo original por sí solo no es elegible.");
   return <div className="page-body wide workbench processing-workbench">
     <aside className={`instrument-sidebar processing-sidebar ${controlsOpen ? "expanded" : ""}`}>
+      {methodNavigation}
       <div className="instrument-brand"><span className="small-caps">{t("PRIVATE PROJECT · PROCESSING", "PROYECTO PRIVADO · PROCESAMIENTO")}</span><h1>{project?.name ?? t("Project processing", "Procesamiento de proyecto")}</h1></div>
       <div className="processing-actions"><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>
       <button className="btn" onClick={onProfiles}>{t("ERT / first-arrival profiles", "Perfiles ERT / primeras llegadas")}</button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ApiClient } from "../api/client";
 import { LifecycleApi } from "../api/lifecycle";
 import type { RawAsset } from "../api/contracts";
@@ -9,7 +9,7 @@ import type { MethodEligibility } from "../api/processing-contracts";
 export function WaveformTrace({x,y,unit,title,cursor,onCursor,axis="t [s]"}:{x:number[];y:number[];unit:string;title:string;cursor:number;onCursor:(value:number)=>void;axis?:string}){
   const svg=useRef<SVGSVGElement|null>(null),[size,setSize]=useState({width:650,height:310});
   useEffect(()=>{const element=svg.current;if(!element)return;const measure=()=>{const box=element.getBoundingClientRect();const next={width:Math.max(280,box.width),height:Math.max(220,box.height)};setSize(old=>old.width===next.width&&old.height===next.height?old:next);};measure();const observer=new ResizeObserver(measure);observer.observe(element);return()=>observer.disconnect();},[x.length,y.length]);
-  if(x.length!==y.length||!x.length)return <p>{title} · —</p>;
+  if(x.length!==y.length||!x.length)return <p>{title} · n/a</p>;
   let lo=Infinity,hi=-Infinity;for(const v of y){lo=Math.min(lo,v);hi=Math.max(hi,v);}const span=hi-lo||1,x0=x[0],dx=x[x.length-1]-x0||1;
   const left=64,right=size.width-20,top=24,bottom=size.height-44,plotWidth=right-left,plotHeight=bottom-top;
   // Rendering extrema preserves narrow peaks; science and exported arrays are
@@ -23,7 +23,7 @@ export function WaveformTrace({x,y,unit,title,cursor,onCursor,axis="t [s]"}:{x:n
   </svg></figure>;
 }
 
-export function WaveformProjectWorkbench({projectId,es,onManage,onCurated}:{projectId:string;es:boolean;onManage:()=>void;onCurated:()=>void}){
+export function WaveformProjectWorkbench({projectId,es,onManage,onCurated,methodNavigation}:{projectId:string;es:boolean;onManage:()=>void;onCurated:()=>void;methodNavigation?:ReactNode}){
   const t=(en:string,sp:string)=>es?sp:en;
   const clients=useMemo(()=>{const api=new ApiClient(typeof window==="undefined"?"http://127.0.0.1":window.location.origin);return {wave:new WaveformApi(api),life:new LifecycleApi(api)};},[]);
   const [assets,setAssets]=useState<RawAsset[]>([]),[receipts,setReceipts]=useState<WaveformReceipt[]>([]),[jobs,setJobs]=useState<WaveformJob[]>([]);
@@ -48,18 +48,19 @@ export function WaveformProjectWorkbench({projectId,es,onManage,onCurated}:{proj
   const channelMetadata=result?.calculation.channels[channel];
   function xFor(name:string,values:number[]){if(name.endsWith("psd"))return arrays.psd_frequency_hz??[];const rate=channelMetadata?.sample_rate_hz??1;const start=name==="counts"&&dataset?(Number(channelMetadata?.start_us)/1e6-Date.parse(String(dataset.request.conditioning_start_utc))/1000):0;return values.map((_,i)=>start+i/rate);}
   return <div className="page-body wide workbench processing-workbench" data-testid="waveform-project"><aside className={`instrument-sidebar processing-sidebar ${controlsOpen?"expanded":""}`}>
+    {methodNavigation}
     <div className="instrument-brand"><h1>{t("Own waveform processing","Procesamiento de ondas propias")}</h1></div><p className="processing-scope">{t("MiniSEED + exact owned StationXML. Structural indexing is not physical QC.","MiniSEED + StationXML propio exacto. El índice estructural no es QC físico.")}</p>
     <button className="btn" onClick={onManage}>{t("Projects · upload originals","Proyectos · cargar originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases","Casos curados")}</button>
     <button className="btn mobile-controls-toggle" aria-expanded={controlsOpen} onClick={()=>setControlsOpen(!controlsOpen)}>{t("Processing controls","Controles de procesamiento")}</button><div className="processing-controls">
     {error&&<p role="alert" className="project-error">{error}</p>}
-    <label className="select-control">{t("Stored MiniSEED","MiniSEED almacenado")}<select className="select" value={assetId} disabled={!ready||busy} onChange={e=>setAssetId(e.target.value)}><option value="">—</option>{assets.map(a=><option key={a.asset_id} value={a.asset_id}>{a.original_filename}</option>)}</select></label>
+    <label className="select-control">{t("Stored MiniSEED","MiniSEED almacenado")}<select className="select" value={assetId} disabled={!ready||busy} onChange={e=>setAssetId(e.target.value)}><option value="">{t("Select original","Seleccionar original")}</option>{assets.map(a=><option key={a.asset_id} value={a.asset_id}>{a.original_filename}</option>)}</select></label>
     <label className="select-control">{t("Explicit scientific request JSON","Solicitud científica JSON explícita")}<textarea className="input" aria-label={t("Scientific request JSON","Solicitud científica JSON")} value={request} onChange={e=>setRequest(e.target.value)} rows={10} maxLength={65536}/></label>
     <label>{t("Load request file","Cargar archivo de solicitud")}<input type="file" accept=".json,application/json" disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)void act(async()=>{if(file.size>65536)throw new Error(t("Request exceeds 64 KiB","Solicitud supera 64 KiB"));setRequest(await file.text());});}}/></label>
     <button className="btn" disabled={!ready||busy||!assetId||!request.trim()} onClick={()=>void act(async signal=>{const r=await clients.wave.index(projectId,assetId,JSON.parse(request),signal);if(signal.aborted)return;setReceipts(rows=>[...rows,r]);setDatasetId(r.dataset_id);setJobId("");})}>{t("Index exact pair and request","Indexar par y solicitud exactos")}</button>
-    <label className="select-control">{t("Immutable dataset","Conjunto inmutable")}<select className="select" value={datasetId} disabled={busy} onChange={e=>{setDatasetId(e.target.value);setJobId("");}}><option value="">—</option>{receipts.map(r=><option key={r.dataset_id} value={r.dataset_id}>{r.dataset_id.slice(0,8)} · {r.row_count} {t("samples","muestras")}</option>)}</select></label>
+    <label className="select-control">{t("Immutable dataset","Conjunto inmutable")}<select className="select" value={datasetId} disabled={busy} onChange={e=>{setDatasetId(e.target.value);setJobId("");}}><option value="">{t("Select dataset","Seleccionar conjunto")}</option>{receipts.map(r=><option key={r.dataset_id} value={r.dataset_id}>{r.dataset_id.slice(0,8)} · {r.row_count} {t("samples","muestras")}</option>)}</select></label>
     {methods?.unavailable.map(m=><p key={m.method_id} role="status">{m.reason}</p>)}
     <button className="btn" disabled={!dataset||!receipt||!enabled||active||busy} onClick={()=>void act(async signal=>{if(!receipt||!dataset)return;const j=await clients.wave.submitWaveform(projectId,receipt,dataset,signal);if(signal.aborted)return;setJobs(rows=>[...rows,j]);setJobId(j.job_id);})}>{t("Run full processing","Ejecutar procesamiento completo")}</button>
-    <label className="select-control">{t("Job history","Historial de trabajos")}<select className="select" value={jobId} onChange={e=>setJobId(e.target.value)}><option value="">—</option>{history.map(j=><option key={j.job_id} value={j.job_id}>{j.job_id.slice(0,8)} · {stateLabel(j.state)}</option>)}</select></label>
+    <label className="select-control">{t("Job history","Historial de trabajos")}<select className="select" value={jobId} onChange={e=>setJobId(e.target.value)}><option value="">{t("Select job","Seleccionar trabajo")}</option>{history.map(j=><option key={j.job_id} value={j.job_id}>{j.job_id.slice(0,8)} · {stateLabel(j.state)}</option>)}</select></label>
     {job&&<><p role="status">{stateLabel(job.state)} {job.error?.code}</p><button className="btn" disabled={busy||!["queued","running"].includes(job.state)||job.cancel_requested} onClick={()=>void act(async signal=>{const j=await clients.wave.cancel(projectId,job.job_id,signal);if(!signal.aborted&&j.method_id===WAVEFORM_METHOD)setJobs(rows=>rows.map(row=>row.job_id===j.job_id?j:row));})}>{t("Cancel job","Cancelar trabajo")}</button><details><summary>{t("Submitted parameters and limits","Parámetros enviados y límites")}</summary><pre>{JSON.stringify(job.request.scientific_request,null,2)}</pre><p>{job.preflight.memory_limit_bytes/1048576} MiB · {job.preflight.scratch_limit_bytes} bytes · {job.preflight.wall_limit_seconds} s</p></details></>}
     <button className="btn" disabled={busy} onClick={()=>setRevision(v=>v+1)}>{t("Reload project","Recargar proyecto")}</button>
   </div></aside><section className="instrument-main processing-main"><h2>M08 · {t("QC, response, filter, PSD and unlabelled arrivals","QC, respuesta, filtro, PSD y llegadas sin etiquetas")}</h2>

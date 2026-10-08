@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ApiClient, ApiHttpError } from "../api/client";
 import { LifecycleApi, type ProjectView } from "../api/lifecycle";
 import type { RawAsset } from "../api/contracts";
@@ -10,7 +10,7 @@ import { ResultBundleInput } from "./ResultBundleInput";
 import { readSavedResult } from "./result-view-data";
 
 const active=(job:ProjectProcessingJob)=>job.state==="queued"||job.state==="running";
-export function MtProjectWorkbench({projectId,es,onManage,onCurated,onGravity,onProfiles}:{projectId:string;es:boolean;onManage:()=>void;onCurated:()=>void;onGravity:()=>void;onProfiles?:()=>void}) {
+export function MtProjectWorkbench({projectId,es,onManage,onCurated,onGravity,onProfiles,methodNavigation}:{projectId:string;es:boolean;onManage:()=>void;onCurated:()=>void;onGravity:()=>void;onProfiles?:()=>void;methodNavigation?:ReactNode}) {
   const t=(en:string,sp:string)=>es?sp:en;
   const clients=useMemo(()=>{const c=new ApiClient(window.location.origin);return {life:new LifecycleApi(c),mt:new MtProcessingApi(c)};},[]);
   const [project,setProject]=useState<ProjectView|null>(null),[assets,setAssets]=useState<RawAsset[]>([]),[receipts,setReceipts]=useState<EdiDatasetReceipt[]>([]),[jobs,setJobs]=useState<ProjectProcessingJob[]>([]);
@@ -51,7 +51,9 @@ export function MtProjectWorkbench({projectId,es,onManage,onCurated,onGravity,on
   const num=(label:string,value:string,set:(v:string)=>void,min:number,max:number,step="any")=><label className="select-control"><span>{label}</span><input className="select" type="number" required min={min} max={max} step={step} value={value} onChange={e=>set(e.target.value)}/></label>;
   const states:Record<ProcessingState,string>={queued:t("Queued","En cola"),running:t("Running","En ejecución"),succeeded:t("Succeeded","Finalizado"),failed:t("Failed","Fallido"),cancelled:t("Cancelled","Cancelado")};
   return <div className="page-body wide workbench processing-workbench mt-workbench">
-    <aside className={`instrument-sidebar processing-sidebar ${expanded?"expanded":""}`}><div className="instrument-brand"><span className="small-caps">{t("PRIVATE PROJECT · MT","PROYECTO PRIVADO · MT")}</span><h1>{project?.name??t("MT processing","Procesamiento MT")}</h1></div><div className="processing-actions"><button className="btn" onClick={onGravity}>{t("Gravity station QC","QC de estaciones gravimétricas")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data","Proyectos y datos originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases","Casos curados")}</button></div>
+    <aside className={`instrument-sidebar processing-sidebar ${expanded?"expanded":""}`}>
+      {methodNavigation}
+      <div className="instrument-brand"><span className="small-caps">{t("PRIVATE PROJECT · MT","PROYECTO PRIVADO · MT")}</span><h1>{project?.name??t("MT processing","Procesamiento MT")}</h1></div><div className="processing-actions"><button className="btn" onClick={onGravity}>{t("Gravity station QC","QC de estaciones gravimétricas")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data","Proyectos y datos originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases","Casos curados")}</button></div>
       {onProfiles && <button className="btn" onClick={onProfiles}>{t("ERT / first-arrival profiles","Perfiles ERT / primeras llegadas")}</button>}
       <button className="btn mobile-controls-toggle" aria-expanded={expanded} onClick={()=>setExpanded(!expanded)}>{t("MT processing controls","Controles de procesamiento MT")}</button>
       {session==="ready"&&<div className="processing-controls"><label className="select-control"><span>{t("Control section","Sección de controles")}</span><select className="select" value={section} onChange={e=>setSection(e.target.value)}><option value="data">{t("EDI validation","Validación EDI")}</option><option value="run">{t("MT parameters","Parámetros MT")}</option><option value="history">{t("Job history / export","Historial / exportación")}</option><option value="open">{t("Open saved result","Abrir resultado guardado")}</option></select></label>

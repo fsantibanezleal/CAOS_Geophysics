@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ApiClient, ApiHttpError } from "../api/client";
 import { LifecycleApi, type ProjectView } from "../api/lifecycle";
 import type { RawAsset } from "../api/contracts";
@@ -9,8 +9,8 @@ import { ProfileLocalInstrument } from "./ProfileLocalInstrument";
 import { ResultBundleInput } from "./ResultBundleInput";
 
 const active = (job: ProjectProcessingJob) => job.state === "queued" || job.state === "running";
-export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, onGravity, onMt }: {
-  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onGravity: () => void; onMt: () => void;
+export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, onGravity, onMt, methodNavigation }: {
+  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onGravity: () => void; onMt: () => void; methodNavigation?: ReactNode;
 }) {
   const t = (en: string, sp: string) => es ? sp : en;
   const clients = useMemo(() => { const client = new ApiClient(window.location.origin); return { life: new LifecycleApi(client), profile: new ProfileProcessingApi(client) }; }, []);
@@ -65,6 +65,7 @@ export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, on
   const eligible = eligibility?.methods.some(value => value.method_id === method), unavailable = eligibility?.unavailable.find(value => value.method_id === method);
   return <div className="page-body wide workbench processing-workbench">
     <aside className={`instrument-sidebar processing-sidebar ${expanded ? "expanded" : ""}`}>
+      {methodNavigation}
       <div className="instrument-brand"><div><span className="small-caps">{t("PRIVATE PROJECT · ERT / TRAVELTIME", "PROYECTO PRIVADO · ERT / TIEMPOS")}</span><h1>{project?.name ?? t("Profile processing", "Procesamiento de perfiles")}</h1></div></div>
       <div className="processing-actions"><button className="btn" onClick={onGravity}>{t("Gravity station QC", "QC gravimétrico")}</button><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button></div>
       <button className="btn mobile-controls-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{t("Processing controls", "Controles de procesamiento")}</button>

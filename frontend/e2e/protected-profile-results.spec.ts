@@ -31,6 +31,9 @@ test("owned_result_roundtrip",async({browser})=>{
         await context.addInitScript(({lang,theme})=>{localStorage.setItem("caos.lang",lang);localStorage.setItem("caos.theme",theme);},{lang,theme});await page.setViewportSize({width,height:width===390?844:900});
         await page.goto(`${origin}/?project=${packet.job.project_id}&instrument=profiles`);
         await expect(page.getByTestId("profile-local-instrument")).toBeVisible();
+        const methodNav=page.getByRole("navigation",{name:lang==="es"?"Método del proyecto":"Project method",exact:true});
+        const methodSelect=methodNav.getByRole("combobox");
+        await expect(methodSelect.locator("option")).toHaveCount(4);
         expect(await page.locator("polygon[data-cell-index]").count()).toBe(item.name==="ert"?original.profile.engine_report.inverse.mesh_cells:original.profile.engine_report.inverse.interleaved.mesh_cells);
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
         const main=page.locator(".processing-main");await main.locator(".science-plot").first().scrollIntoViewIfNeeded();await page.screenshot({path:join(evidence,`${item.name}-${lang}-${theme}-${width}-mesh.png`)});
@@ -42,7 +45,23 @@ test("owned_result_roundtrip",async({browser})=>{
           const [bundle]=await Promise.all([page.waitForEvent("download"),page.getByRole("button",{name:"Download verified result ZIP",exact:true}).click()]);const zipPath=join(evidence,item.name+"-export.zip");await bundle.saveAs(zipPath);
           await page.getByLabel("Open saved ZIP for selected job",{exact:true}).setInputFiles(zipPath);await expect(page.getByText("Saved ZIP verified against this selected job; no upload or new computation.",{exact:true})).toBeVisible();
           await page.getByRole("button",{name:"MT transfer functions",exact:true}).click();await expect(page.getByRole("button",{name:"ERT / first-arrival profiles",exact:true})).toBeVisible();await page.getByRole("button",{name:"ERT / first-arrival profiles",exact:true}).click();await expect(page.getByTestId("profile-local-instrument")).toBeVisible();
+          await methodSelect.selectOption("waveform");
+          await expect(page.getByRole("textbox",{name:"Scientific request JSON",exact:true})).toBeVisible();
+          await expect(page.getByRole("combobox",{name:"Stored MiniSEED",exact:true})).toBeEnabled();
+          expect(new URL(page.url()).searchParams.get("project")).toBe(packet.job.project_id);
+          expect(new URL(page.url()).searchParams.get("instrument")).toBe("waveform");
+          await methodSelect.selectOption("profiles");
+          await expect(page.getByTestId("profile-local-instrument")).toBeVisible();
         }
+        await methodSelect.selectOption("waveform");
+        if(width===390)await page.getByRole("button",{name:lang==="es"?"Controles de procesamiento":"Processing controls",exact:true}).click();
+        await expect(page.getByRole("textbox",{name:lang==="es"?"Solicitud científica JSON":"Scientific request JSON",exact:true})).toBeVisible();
+        await expect(page.getByRole("combobox",{name:lang==="es"?"MiniSEED almacenado":"Stored MiniSEED",exact:true})).toBeEnabled();
+        await page.screenshot({path:join(evidence,`${item.name}-${lang}-${theme}-${width}-waveform-navigation.png`)});
+        expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+        await methodSelect.selectOption("profiles");await expect(page.getByTestId("profile-local-instrument")).toBeVisible();
+        const instrumentBox=await page.locator(".processing-main").boundingBox();
+        expect(instrumentBox!.width).toBeGreaterThan(width===390?width*.85:width*.65);
         outcomes.push({case:item.name,lang,theme,width,verdict:original.numerical_verdict,result_sha256:packet.job.result_sha256});
       }
       expect(errors).toEqual([]);
