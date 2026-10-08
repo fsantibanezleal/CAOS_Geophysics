@@ -18,11 +18,13 @@ from app.processing_contract import canonical_bytes, sha256
 from app.profile_bundle import build_profile_bundle
 
 
-async def export(root: Path, output: Path):
+async def export(root: Path, output: Path, local_output: Path | None = None):
     root, output = root.resolve(), output.resolve()
     checkout = Path(__file__).resolve().parents[2]
     if output.is_relative_to(checkout) or root.is_relative_to(checkout):
         raise ValueError("test inputs and outputs must be external")
+    if local_output is not None and local_output.resolve().is_relative_to(checkout):
+        raise ValueError("local inspection output must be external")
     database = root / "api.sqlite3"
     if not database.is_file() or database.is_symlink():
         raise ValueError("explicit test database missing")
@@ -44,6 +46,16 @@ async def export(root: Path, output: Path):
         for name, encoded in (("bindings.json", packet), ("dataset.json", dataset_bytes), ("result.json", result_bytes), ("export.zip", bundle)):
             with (output / name).open("xb") as stream:
                 stream.write(encoded)
+        if local_output is not None:
+            # Reopen the genuine stored inner contract; never solve again or
+            # relabel the original code hashes as a new producer execution.
+            import sys
+            sys.path.insert(0, str(checkout/"data-pipeline"))
+            from supplied_profiles import export_result, import_result
+            profile = json.loads(result_bytes)["profile"]
+            export_result(profile, local_output.resolve())
+            if import_result(local_output.resolve()) != profile:
+                raise ValueError("local stored-profile extraction differs")
         print(json.dumps({"method":job.method_id,"result_sha256":job.result_sha256,"raw_bytes_exported":False}))
     finally:
         await engine.dispose()
@@ -53,5 +65,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--local-output", type=Path)
     arguments = parser.parse_args()
-    asyncio.run(export(arguments.case, arguments.output))
+    asyncio.run(export(arguments.case, arguments.output, arguments.local_output))

@@ -60,7 +60,7 @@ arrays are [depth,distance], gather arrays [shot,receiver,time], frames
 [iteration,depth,distance]. Complete member inventory with no unknown names;
 every array carries dimensions, units, bytes, SHA-256. Manifest retains request,
 raw hashes, actual receiver mask, history/solver/state identities, environment,
-source hashes and truth=null. Reopening validates all bytes, shapes, values,
+source hashes, the exact bounded original request UTF8 and truth=null. Reopening validates all bytes, shapes, values,
 state linkage and residual identity before a completed marker is written. No
 pickle, external executable, archive decompression or overwrite. Public import
 uses selected local files only; it cannot submit an authenticated server job.
