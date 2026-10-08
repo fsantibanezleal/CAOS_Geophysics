@@ -9,6 +9,7 @@ from app import profile_linux_recovery as recovery
 from app.errors import ApiError
 from app.processing_contract import canonical_bytes, sha256
 from test_profile_execution_receipt import execution_fixture
+from uuid import uuid4
 
 
 def fixture():
@@ -89,3 +90,48 @@ def test_recovery_resolves_real_terminal_owned_sql_relations_before_privileged_c
         asyncio.run(recovery.recover_job(harness.settings,identifier))
     assert not (harness.settings.data_dir/".profile-retained").exists()
     assert harness.client.get(path+"/"+identifier).json()["state"] == "cancelled"
+
+
+def ownership_fixture():
+    owner,project,job,dataset,asset,source = (str(uuid4()) for _ in range(6))
+    return dict(owner_id=owner,project_id=project,job_id=job,dataset_id=dataset,raw_asset_id=asset,
+        source_id=source,method_id="ert.topographic-profile/v1",terminal_state="cancelled",
+        dataset_sha256="d"*64,raw_sha256="e"*64,request_sha256="f"*64)
+
+
+def manifest_fixture():
+    owner = ownership_fixture()
+    return dict(schema="geophysics.profile-retained-stage/v2",job_id=owner["job_id"],
+        request_sha256=owner["request_sha256"],ownership=owner,installation={},stage_identity={},
+        members={},recovery={},uncommitted_duplicate=None)
+
+
+def test_manifest_carries_explicit_surviving_relation_not_directory_inference():
+    manifest = manifest_fixture()
+    recovery.validate_manifest_ownership(manifest,deepcopy(manifest["ownership"]))
+
+
+@pytest.mark.parametrize("field",sorted(recovery.OWNERSHIP_KEYS))
+def test_each_archive_identity_is_frozen_to_live_owned_relation(field):
+    manifest = manifest_fixture()
+    expected = deepcopy(manifest["ownership"])
+    manifest["ownership"][field] = str(uuid4()) if field.endswith("_id") and field != "method_id" else (
+        "succeeded" if field == "terminal_state" else "traveltime.first-arrival-profile/v1" if field == "method_id" else "a"*64)
+    with pytest.raises((ValueError,ApiError)):
+        recovery.validate_manifest_ownership(manifest,expected)
+
+
+@pytest.mark.parametrize("change",[
+    lambda m:m.update(schema="geophysics.profile-retained-stage/v1"),
+    lambda m:m["ownership"].update(extra="unknown"),lambda m:m["ownership"].pop("owner_id"),
+    lambda m:m["ownership"].update(owner_id="not-a-uuid"),
+    lambda m:m["ownership"].update(raw_sha256="not-a-digest"),
+    lambda m:m["ownership"].update(terminal_state="running"),
+    lambda m:m["ownership"].update(method_id="gravity.survey/v1"),
+    lambda m:m.update(job_id=str(uuid4())),lambda m:m.update(request_sha256="a"*64),
+])
+def test_unknown_legacy_incomplete_or_contradictory_ownership_refuses(change):
+    manifest = manifest_fixture()
+    change(manifest)
+    with pytest.raises((ValueError,ApiError)):
+        recovery.validate_manifest_ownership(manifest)
