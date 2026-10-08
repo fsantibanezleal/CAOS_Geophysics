@@ -72,3 +72,26 @@ def test_exactnorm_cannot_inherit_original_linear_before_kernel(tmp_path):
 def test_no_combined_original_reduced_epoch():
     with pytest.raises(ValueError, match='[Dd]istinct'):
         cli.source_inventory(original=True, reduced=True)
+
+
+def test_prospective9_inventory_closes_named_residual_and_exact_rows(monkeypatch):
+    import magnetic_original_adapter as adapter
+    import physical_original_rows as rows
+    sources = cli.source_inventory(original=True)
+    assert set(adapter.PUBLIC_SOURCES) <= set(sources)
+    assert sources['physical_original_residual_terminal'] and sources['physical_original_rows']
+    assert adapter.source_binding() == {name: sources[name] for name in adapter.PUBLIC_SOURCES}
+    monkeypatch.setattr(rows, 'SOURCE_SHA256', '0'*64)
+    with pytest.raises(ValueError, match='loaded source drift'):
+        adapter.source_binding()
+
+
+def test_historical6_receipt_cannot_select_current9_source(tmp_path):
+    sources = cli.source_inventory(original=True)
+    binding = binding_for_sources(sources, digest(sources))
+    receipt = dict(schema='magnetic-local-binding-1', scope='local_candidate_only', review_reference='negative only',
+        sources=sources, source_inventory_sha256=digest(sources),
+        runtime_epoch='physical-gncg-original-noise-reduced-joseph-candidate-6', policy=binding.policy)
+    (tmp_path/'historical-receipt.json').write_bytes(canonical(receipt))
+    with pytest.raises(InputError):
+        cli.reviewed_binding(tmp_path/'historical-receipt.json', True)

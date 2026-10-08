@@ -42,7 +42,8 @@ def source_inventory(*, conditioned=False, feasible=False, reduced=False, origin
             (('physical_feasible_optimizer',) if feasible else ())+
             (('physical_reduced_optimizer', 'magnetic_reduced_adapter') if reduced else ())+
             (('physical_reduced_optimizer', 'physical_original_optimizer', 'physical_original_terminal',
-              'physical_original_quadratic', 'magnetic_original_optimizer', 'magnetic_original_adapter') if original else ()))}
+              'physical_original_quadratic', 'physical_original_residual_terminal', 'physical_original_rows',
+              'magnetic_original_optimizer', 'magnetic_original_adapter') if original else ()))}
 
 
 def read_bounded(path, limit):
@@ -84,7 +85,7 @@ def reviewed_binding(path, allow_candidate, quantity='secondary_enu_nT'):
         fail('dependency', '$/binding', 'Explicit operator-reviewed local-candidate receipt required')
     feasible = receipt['runtime_epoch'] == 'physical-gncg-linear-joseph-contact-candidate-4'
     reduced = receipt['runtime_epoch'] == 'physical-gncg-linear-reduced-joseph-candidate-5'
-    original = receipt['runtime_epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-6'
+    original = receipt['runtime_epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-9'
     conditioned = feasible or reduced or original or receipt['runtime_epoch'] in ('physical-gncg-linear-joseph-candidate-2', 'physical-gncg-nonlinear-joseph-candidate-3')
     sources = source_inventory(conditioned=conditioned, feasible=feasible, reduced=reduced, original=original)
     if receipt['sources'] != sources or receipt['source_inventory_sha256'] != digest(sources):

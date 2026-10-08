@@ -13,7 +13,8 @@ import sys
 import xml.etree.ElementTree as ET
 
 PUBLIC = ("physical_original_optimizer", "physical_original_terminal", "physical_original_quadratic",
-          "physical_owned_spd", "physical_reduced_optimizer", "magnetic_original_optimizer")
+          "physical_owned_spd", "physical_reduced_optimizer", "magnetic_original_optimizer",
+          "physical_original_residual_terminal", "physical_original_rows")
 JOBS = (("firstfold", "tests/numerics/test_magnetic_original_firstfold.py"),
         ("complete-firstfit", "tests/numerics/test_magnetic_original_sparse_firstfit.py"))
 
@@ -57,7 +58,10 @@ def run_gate(*, scientific_root, public_root, line_root, python, output,
             or failed.get("full_matrix_run") is not False):
         raise ValueError("Exact failed original complete-firstfit predecessor required")
     snapshots = inventory(scientific_root, public_root, line_root)
-    if all(snapshots["public/" + name + ".py"] == failed["sources"][name] for name in PUBLIC):
+    historical = tuple(name for name in PUBLIC if name in failed["sources"])
+    if not historical:
+        raise ValueError("Original predecessor has no public source closure")
+    if all(snapshots["public/" + name + ".py"] == failed["sources"][name] for name in historical):
         return {"status": "blocked_unchanged_public_failure", "launched": [], "full_matrix_unlocked": False}
     if public_qualification is None or qualification_sha is None:
         return {"status": "blocked_unqualified_nonzero_corrector", "launched": [], "full_matrix_unlocked": False}

@@ -19,7 +19,8 @@ the source-owned outward original-noise free-face proof on every native solve.
 No original fit is run against an unchanged failed source. On failure preserve
 the existing failed receipt before assertions; emit no qualification. On actual
 success, write the closed magnetic-public-original-nonzero-qualification-1
-receipt expected by the fail-first runner, binding all six exact public hashes,
+receipt expected by the fail-first runner, binding all eight exact public hashes
+(the original six plus named residual terminal and exact-row arithmetic),
 original528/864/432 counts, eight stages, unchanged120s/200/CG200/20LS/768MiB
 and independent1e-6 model /1e-8 objective /1e-6nT prediction /1e-7 KKT limits.
 The observer's independent calculation occurs after the fit clock is stopped;

@@ -16,7 +16,7 @@ from magnetic_survey_json import digest
 LIMIT = 805306368
 PUBLIC_SOURCES = ('physical_original_optimizer', 'physical_original_terminal',
     'magnetic_original_optimizer', 'physical_original_quadratic', 'physical_owned_spd',
-    'physical_reduced_optimizer')
+    'physical_reduced_optimizer', 'physical_original_residual_terminal', 'physical_original_rows')
 
 
 def source_binding():
