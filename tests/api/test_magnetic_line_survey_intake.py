@@ -12,8 +12,8 @@ from sqlalchemy import select
 from app.errors import ApiError
 from app.magnetic_line_survey_intake import parse_asset_header, inspect_bundle, account_intake_usage
 from app.magnetic_line_survey_intake_api import install_magnetic_line_survey_intake_routes
-from app.magnetic_line_survey_models import SurveyIntake
-from app.models import AccountUsage, RawAsset
+from app.magnetic_line_survey_models import SurveyIntake, PARENT_KEYS
+from app.models import AccountUsage, RawAsset, Base
 from app.processing_storage import account_derived_usage
 
 
@@ -70,6 +70,9 @@ def install(harness, *, ledger=None):
     async def tables():
         async with harness.app.state.sessions() as session:
             connection = await session.connection()
+            for name, table, _ in PARENT_KEYS:
+                index=next(item for item in Base.metadata.tables[table].indexes if item.name==name)
+                await connection.run_sync(lambda conn, index=index: index.create(conn,checkfirst=True))
             await connection.run_sync(lambda conn: SurveyIntake.__table__.create(conn))
             await session.commit()
     asyncio.run(tables())
