@@ -6,6 +6,11 @@ remains open. Historical local-only/API-UI exclusions in the original subvertica
 are not current authority holds. Parent owns shared-shell mounting and activation;
 no field, host or VPS acceptance is inferred from these implementation changes.
 
+The [lossless record ledger amendment](record-ledger.md) corrects the repeated
+per-record key representation at the already admitted4096-record bound. It
+retains exact every-field reconstruction and historical list reads under the
+unchanged2MiB metadata cap; it does not change science, decoding or admission.
+
 ## Boundary and scientific invariants
 
 The method is seismic.waveform-qc-classical/v1: immutable integer counts plus exact StationXML, raw QC, native response deconvolution, offline acausal SOS bandpass, unit-bearing Welch PSD, unlabelled classical STA/LTA intervals and separately sealed optional evaluation. Source samples, response stages, declared units, UTC windows and thresholds never change to obtain a pass. The ordinary local waveform contract/algorithms remain authoritative. Computed is not accepted field geology, authenticated provider data, calibrated timing or a P/S classifier. All scientific acceptance flags remain false. Existing held-out replay and original Ridgecrest failure seals are unchanged.

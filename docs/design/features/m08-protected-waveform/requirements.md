@@ -6,6 +6,10 @@ implementation authorized and qualification open. See the current
 not claims that every native/host gate passed. Historical local-only exclusions
 do not limit the currently approved user/API/UI workflow.
 
+The lossless record transport requirements R-M08L-01..04 and their named gates
+are in [record-ledger.md](record-ledger.md); all original scientific and native
+resource predicates below remain unchanged.
+
 R-M08S-01 WHEN a user submits an owned MiniSEED asset and its declared StationXML companion, THE service SHALL index only the exact unchanged original pair with strict source rights, sample/record/XML caps, NSLC and explicit request; it SHALL not decode or compute in an API request. Gate: `tests/api/test_waveform_service.py::test_owned_pair_and_request_index`.
 
 R-M08S-02 IF identity, companion, rights, schema, request or source bytes differ, THEN THE service SHALL reject with safe typed errors and no derived publication. Gate: `tests/api/test_waveform_service.py::test_pair_rejections`.

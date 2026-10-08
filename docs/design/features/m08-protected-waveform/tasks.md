@@ -91,3 +91,17 @@ qualification against the actual configured anchor before activation.
 5. Repeat ordinary UI/API and real ZIP browser proof in EN/ES, both themes and
    phone/desktop, preserving the one-aside methodNavigation seam. No public
    activation. The new structured UI gates are NOT_RUN at this precode amendment.
+
+## Lossless record ledger correction order
+
+1. Preserve the full raw-bound failure and measured repeated-key contradiction;
+   specify R-M08L-01..04 in record-ledger.md before implementation.
+2. G-M08L-01/02: failing exact scanner-row roundtrip, grammar, caps and full
+   literal4096-record controls in tests/data/test_waveform_record_ledger.py.
+3. Implement only the versioned closed representation in existing input,
+   processing and evaluation modules; keep one-record decoding and23-source set.
+4. G-M08L-03: actual calculation/seal/export/reopen and byte-unchanged historical
+   list reads, with no native/resource claim from ordinary tests.
+5. G-M08L-04: fresh immutable installation source epoch and full native queue,
+   array/export comparison under original ceilings; preserve failures and stop
+   dependents on first failure. Recovery/adverse/whole-host gates stay separate.

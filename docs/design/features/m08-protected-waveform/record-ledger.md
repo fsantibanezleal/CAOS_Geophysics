@@ -8,12 +8,13 @@ fixed-lane contract. Historical result bytes and failures remain immutable.
 
 ## Requirement and defect
 
-R-M08L-01: every admitted record retains byte offset/length, channel/NSLC,
+R-M08L-01: THE pipeline SHALL retain every admitted record's byte offset/length, channel/NSLC,
 sequence/quality, both byte orders, encoding/data offset, sample count/rate,
 corrected start/end, all flags, header correction/applied bit, microsecond
 offset, timing quality/frame count, STEIM endpoints/capacity when present, and
 the cumulative decoded sample interval. No provenance field may be discarded,
 inferred from its neighbour, averaged or recoded into an approximate number.
+Gate: tests/data/test_waveform_record_ledger.py::test_exact_scanner_row_roundtrip
 
 The existing2MiB metadata cap also applies to4096 records. An actual authored
 16MiB/4096record/180000sample three-channel input's record ledger alone needs
@@ -24,7 +25,7 @@ unchanged. Input raw bytes, hashes and native one-record decoding are unchanged.
 
 ## Closed transport
 
-R-M08L-02: new channel `records` uses a versioned closed object with exactly
+R-M08L-02: WHERE new channel `records` is packed, THE pipeline SHALL use a versioned closed object with exactly
 `schema,fields,rows`. Schema is `caos.waveform-record-ledger/v1`. Fields are the
 fixed ordered registered names below, repeated once per channel; each row is
 exactly one value per field. This is ordinary positional JSON, not compressed
@@ -45,8 +46,9 @@ never present-null, so this preserves missing-vs-null exactly. Nullable timing
 quality/frame count remain present-null as before. `sample_interval` remains
 the exact `{start,stop}` object and NSLC remains its explicit four-item list.
 No record or optional-field deduplication/reordering/renumbering occurs.
+Gate: tests/data/test_waveform_record_ledger.py::test_full_admitted_ledger_fits_without_raising_cap
 
-R-M08L-03: strict readers reject unknown schema/fields, reordered/duplicate
+R-M08L-03: IF a packed ledger is malformed, THEN THE reader SHALL reject unknown schema/fields, reordered/duplicate
 fields, short/long rows, extra keys, incorrect exact primitive types (including
 bool-as-int), invalid known scanner field domains, malformed nested objects,
 illegal absent STEIM fields, cycles and nonfinite/unsafe numbers. Per-row
@@ -58,8 +60,10 @@ Outer result/request/export/API/resource schemas remain unchanged. Historical
 `records` list results keep their original bytes/hash/read contract; they are
 never rewritten merely by reading. Only the explicit versioned new envelope
 enters the new strict grammar.
+Gate: tests/data/test_waveform_record_ledger.py::test_closed_ledger_rejects_mutation
+Gate: tests/data/test_waveform_record_ledger.py::test_historical_list_seal_is_not_rewritten
 
-R-M08L-04: pack after all existing per-record decoding/checks/interval assignment
+R-M08L-04: THE pipeline SHALL pack after all existing per-record decoding/checks/interval assignment
 but before final metadata pre-count. Neither decode order nor engine operations
 change. The packer lives in the existing stdlib input module; seal validation
 uses it from the existing evaluation module. The installation keeps its exact23
@@ -68,6 +72,7 @@ changed source; old native grants cannot qualify these new bytes. Client/API
 consumers continue to receive source-bound metadata and all arrays unchanged.
 The current UI displays retained metadata rather than assuming records is a
 list; no UI/CSS/SQL/shared worker or installation policy change is required.
+Gate: tests/data/test_waveform_record_ledger.py::test_actual_calculation_seal_and_export_reopen
 
 ## Verification order and review boundaries
 
