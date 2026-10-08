@@ -137,6 +137,16 @@ unlinks one ordinary file and syncs its containing directory before committing
 the SQL removed ordinal, updated inventory and reduced charge. A failed SQL
 acknowledgement keeps charge; later pathname absence alone cannot release it.
 
+Its complete census consumes only trusted declared slots, exact caps and optional
+presealed partial slots. It recursively streams the closed namespace through
+retained descriptors, refuses unknown names and links before body reads, and
+bounds entries, elapsed time and aggregate bytes. Each ordinary file is hashed
+in bounded chunks with unchanged inode/size/time/link checks. Declared optional
+absence is not adoption or charge relief. Actual Linux controls cover complete
+and partial inventories, unknown bodies/directories, links/FIFO, wrong sizes and
+hashes, missing required slots and a real mutation during the read. This primitive
+still requires independent writer exclusion and the complete SQL/forest classifier.
+
 `physical_leases` provides task-scoped Linux shared/exclusive flock acquisition
 on an already initialized immutable lock inode. Acquisition does not create or
 replace that lock, upgrade shared to exclusive, expire a live lease, or inherit
