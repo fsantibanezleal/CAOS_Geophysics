@@ -23,6 +23,8 @@ def account_private_charge_transaction(connection, owner_id, *, profile_records,
     """Closed WAL snapshot transport; no unregistered schema or missing census."""
     from app.physical_roots import _ledger
     with _ledger(connection, caller_owned=True):
+        from app.physical_schema import require_bound_extensions
+        require_bound_extensions(connection)
         return account_private_charge(connection, owner_id, profile_records=profile_records,
                                       approved_installations=approved_installations)
 
@@ -30,6 +32,10 @@ def account_private_charge_transaction(connection, owner_id, *, profile_records,
 def account_private_charge(connection, owner_id, *, profile_records=None, approved_installations=None):
     uuid(owner_id)
     require(connection.in_transaction, "physical_accounting_requires_consistent_transaction")
+    # Native root intake and preparation call this same accounting function.
+    # Recognized union DDL cannot silently omit another method's stored copies.
+    from app.physical_schema import require_bound_extensions
+    require_bound_extensions(connection)
     require(connection.execute("SELECT 1 FROM user WHERE id=?", (owner_id,)).fetchone() is not None, "physical_account_owner")
     def total(sql):
         value = connection.execute(sql, (owner_id,)).fetchone()[0]

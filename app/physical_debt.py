@@ -213,9 +213,13 @@ def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, remo
     integer(ordinal, 1, 4096)
     integer(removed_us)
     if _caller_transaction:
-        require(connection.in_transaction and connection.execute('PRAGMA foreign_keys').fetchone()==(1,)
-                and connection.execute('SELECT version_num FROM alembic_version').fetchall()==[(REVISION,)]
-                and ddl_sha256(connection)==SUCCESSOR_DDL,'physical_cleanup_caller_transaction')
+        from app.physical_schema import schema_tables
+        require(connection.in_transaction and connection.execute('PRAGMA foreign_keys').fetchone()==(1,),
+                'physical_cleanup_caller_transaction')
+        try:
+            schema_tables(connection)
+        except ValueError as error:
+            raise ValueError('physical_cleanup_caller_transaction') from error
     else:
         begin_ledger(connection)
     try:

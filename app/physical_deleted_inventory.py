@@ -12,8 +12,7 @@ from app.physical_contract import (
     require, sha, uuid, instant, validate_deleted_inventory,
 )
 from app.physical_persistence import DATASET_REGISTRY
-from app.physical_successor import METHODS, REVISION, predecessor_payload, ddl_sha256
-from app.physical_forest import SUCCESSOR_DDL
+from app.physical_successor import METHODS, predecessor_payload
 from app.physical_current_custody import parse_current_custody, validate_current_custody
 from app.profile_archive_custody import ARCHIVE_SCHEMAS, archive_limits, validate_saved_entry, validate_original_receipt_entry, _json
 
@@ -178,8 +177,9 @@ def project_inventory(connection, *, owner_id, project_id, source_policy_sha256,
     recomputation is claimed after deletion; saved native descriptors survive.
     """
     uuid(owner_id); uuid(project_id); sha(source_policy_sha256)
-    require(connection.in_transaction and connection.execute('SELECT version_num FROM alembic_version').fetchall()==[(REVISION,)]
-            and ddl_sha256(connection)==SUCCESSOR_DDL, 'current_deletion_snapshot')
+    from app.physical_schema import schema_tables
+    require(connection.in_transaction, 'current_deletion_snapshot')
+    schema_tables(connection)
     require(connection.execute('SELECT owner_id FROM projects WHERE id=?',(project_id,)).fetchone()==(owner_id,),
             'current_deletion_owner')
     def rows(table, where='owner_id=? AND project_id=?', values=(owner_id,project_id)):
@@ -267,7 +267,8 @@ def receipt_values(value):
 
 def validate_current_tombstone(value, *, expected_source_policy_sha256, approved_installations):
     fields(value,'schema id project_id owner_id deleted_at origin_revision legacy_receipt physical_inventory')
-    require(value['schema']=='geophysics.physical-deletion/v2' and value['origin_revision']==REVISION,
+    from app.physical_schema import DDL
+    require(value['schema']=='geophysics.physical-deletion/v2' and value['origin_revision'] in DDL,
             'current_deletion_revision_dispatch')
     receipt=receipt_values(value['legacy_receipt'])
     require(all(value[k]==receipt[k] for k in ('id','owner_id','project_id','deleted_at')),
@@ -287,7 +288,9 @@ def save_current_tombstone(connection, *, receipt_id, inventory, expected_source
     native=observe_receipt(connection,receipt_id)
     require(connection.execute('SELECT 1 FROM projects WHERE id=?',(native['project_id'],)).fetchone() is None,
             'current_deletion_project_still_live')
-    value=dict(schema='geophysics.physical-deletion/v2',origin_revision=REVISION,legacy_receipt=native,
+    from app.physical_schema import schema_tables
+    revision, _ = schema_tables(connection)
+    value=dict(schema='geophysics.physical-deletion/v2',origin_revision=revision,legacy_receipt=native,
                physical_inventory=inventory,**{k:native[k] for k in ('id','owner_id','project_id','deleted_at')})
     validate_current_tombstone(value,expected_source_policy_sha256=expected_source_policy_sha256,
                                approved_installations=approved_installations)

@@ -337,6 +337,69 @@ class PrivateFiles:
         self.check_root()
         return result
 
+    def create_directory(self, key, *, exist_ok=False):
+        """One declared private directory; never recursive discovery or repair."""
+        require(type(exist_ok) is bool, 'physical_directory_creation_policy')
+        parent, name = self._parent(key)
+        descriptor = None
+        try:
+            created = False
+            try:
+                os.mkdir(name, mode=0o700, dir_fd=parent)
+                created = True
+            except FileExistsError:
+                if not exist_ok:
+                    raise
+            descriptor = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW,
+                                 dir_fd=parent)
+            info = os.fstat(descriptor)
+            require(info.st_dev == self.identity[0] and info.st_uid == os.geteuid()
+                    and stat.S_IMODE(info.st_mode) == 0o700
+                    and self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(info),
+                    'physical_private_directory')
+            if created:
+                os.fsync(descriptor)
+                os.fsync(parent)
+            self.check_root()
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
+    def write_new(self, target, body, *, cap, failure_cut=None):
+        """Exclusive bounded private bytes; failed writes remain charged."""
+        integer(cap, 1, 1024*1048576)
+        require(type(body) is bytes and 0 < len(body) <= cap, 'physical_new_file_limit')
+        parent, name = self._parent(target)
+        descriptor = None
+        try:
+            descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW,
+                                 0o600, dir_fd=parent)
+            info = os.fstat(descriptor)
+            require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_dev == self.identity[0]
+                    and info.st_uid == os.geteuid() and stat.S_IMODE(info.st_mode) == 0o600,
+                    'physical_new_file_identity')
+            view = memoryview(body)
+            while view:
+                count = os.write(descriptor, view[:65536])
+                require(count > 0, 'physical_short_write')
+                view = view[count:]
+            if failure_cut:
+                failure_cut('copy')
+            os.fsync(descriptor)
+            if failure_cut:
+                failure_cut('file_sync')
+            os.fsync(parent)
+            if failure_cut:
+                failure_cut('directory_sync')
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(info),
+                    'physical_file_replaced')
+            self.check_root()
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
     def install(self, source, target, *, cap, expected_bytes, expected_sha256, failure_cut=None):
         """Exclusive independent copy, then file fsync, then directory fsync.
 
@@ -344,27 +407,7 @@ class PrivateFiles:
         It remains an inconsistent or prepared charged copy for fresh recovery.
         """
         body = self.read(source, cap=cap, expected_bytes=expected_bytes, expected_sha256=expected_sha256)
-        parent, name = self._parent(target)
-        descriptor = None
-        try:
-            descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW, 0o600, dir_fd=parent)
-            view = memoryview(body)
-            while view:
-                count = os.write(descriptor, view[:65536])
-                require(count > 0, "physical_short_write")
-                view = view[count:]
-            if failure_cut:
-                failure_cut("copy")
-            os.fsync(descriptor)
-            if failure_cut:
-                failure_cut("file_sync")
-            os.fsync(parent)
-            if failure_cut:
-                failure_cut("directory_sync")
-        finally:
-            if descriptor is not None:
-                os.close(descriptor)
-            os.close(parent)
+        self.write_new(target, body, cap=cap, failure_cut=failure_cut)
 
     def move_project_directory(self, owner_id, project_id, lane, *, reverse=False):
         """Original DELETE's fixed directory rename, no replace and both fsyncs.

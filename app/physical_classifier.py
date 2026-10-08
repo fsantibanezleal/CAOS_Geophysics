@@ -20,12 +20,11 @@ from app.physical_contract import (
 from app.errors import ApiError
 from app.physical_debt import ERRORS
 from app.physical_current_custody import parse_current_custody, validate_current_custody
-from app.physical_forest import SUCCESSOR_DDL, _row, _targets
-from app.physical_persistence import TABLES
+from app.physical_forest import _row, _targets
 from app.physical_publication import audit_correction_ancestry, audit_transform_producer, decode
 from app.physical_producer import REQUEST_KEYS
 from app.physical_roots import _verified
-from app.physical_successor import FORMATS, METHODS, REVISION, ddl_sha256, predecessor_payload
+from app.physical_successor import FORMATS, METHODS, predecessor_payload
 from app.profile_archive_custody import METHODS as PROFILE_METHODS, INCOMPLETE_SCHEMA, archive_inventory, _json
 
 
@@ -43,15 +42,14 @@ def _snapshot(connection):
     """Preserve native SQL representations; no JSON reserialization backfill."""
     require(isinstance(connection, sqlite3.Connection) and connection.in_transaction,
             'physical_classifier_transaction')
-    require(connection.execute('SELECT version_num FROM alembic_version').fetchall() == [(REVISION,)]
-            and ddl_sha256(connection) == SUCCESSOR_DDL, 'physical_classifier_schema')
+    from app.physical_schema import schema_tables
+    _, registered_tables = schema_tables(connection)
     deadline = time.monotonic() + 60
     connection.set_progress_handler(lambda: int(time.monotonic() > deadline), 10000)
     try:
         require(connection.execute('PRAGMA integrity_check').fetchall() == [('ok',)]
                 and not connection.execute('PRAGMA foreign_key_check').fetchall(), 'physical_classifier_sql_integrity')
-        from app.models import Base
-        names = sorted(set(Base.metadata.tables) | set(TABLES) | {'alembic_version'})
+        names = sorted(registered_tables)
         require({r[0] for r in connection.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
                 == set(names), 'physical_classifier_tables')
         rows, descriptors = {}, {}
@@ -125,13 +123,17 @@ class _Audit:
     def __init__(self, connection, files, rows, manifests, installations, metadata, source_policy):
         self.connection, self.files, self.rows = connection, files, rows
         self.manifests, self.installations = manifests, installations
-        self.expected, self.absent, self.empty, self.operations = {}, set(), set(), {}
+        # Original upload/export namespaces may remain empty after a completed
+        # response. This declares only the exact empty directories, never a
+        # wildcard allowance for interrupted uploads, exports or descendants.
+        self.expected, self.absent, self.empty, self.operations = {}, set(), {'.staging', '.exports', '.job-staging', '.deleting'}, {}
         self.relocations = {}
         self.predeletion = set()
         require(type(manifests) is dict and type(installations) is dict and type(metadata) is dict,
                 'physical_classifier_registration')
         # Exact operator-declared native files only; never wildcard DB suffixes.
-        require(set(metadata) <= {'geophysics.sqlite3', 'geophysics.sqlite3-wal', 'geophysics.sqlite3-shm',
+        require(set(metadata) <= {'api.sqlite3', 'api.sqlite3-wal', 'api.sqlite3-shm',
+                                  'geophysics.sqlite3', 'geophysics.sqlite3-wal', 'geophysics.sqlite3-shm',
                                   '.physical-writers.lock', '.processing-worker.lock'},
                 'physical_classifier_native_metadata')
         for key, record in metadata.items():
@@ -655,6 +657,8 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
     """
     try:
         rows, descriptors = _snapshot(connection)
+        from app.physical_schema import require_bound_extensions
+        require_bound_extensions(connection)
         audit = _Audit(connection, files, rows, approved_manifests, approved_installations, native_metadata,
                        expected_source_policy_sha256)
         audit.deleted_projects()
@@ -673,7 +677,7 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
         charges = {row['id']: MappingProxyType(dict(account_private_charge(connection, row['id'],
             profile_records=records, approved_installations=approved_installations))) for row in rows['user']}
         require(all(c['total'] <= 1024*M for c in charges.values()), 'physical_classifier_account_quota')
-        fingerprint = digest(dict(schema='geophysics.physical-classification/v1', revision=REVISION,
+        fingerprint = digest(dict(schema='geophysics.physical-classification/v1', revision=rows['alembic_version'][0]['version_num'],
                                   rows=descriptors, files=measured, profile_records=records))
         prepared = bool(rows['physical_publication_intents']) or any(r['state'] in ('reserved', 'active', 'sealed')
             for r in rows['physical_custody_batches']) or any(r['state'] in ('queued', 'running') for r in rows['processing_jobs'])
