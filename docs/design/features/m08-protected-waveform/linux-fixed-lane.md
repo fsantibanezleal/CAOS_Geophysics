@@ -77,6 +77,15 @@ parameter is accepted through HTTP, stdin or request JSON. A checked installatio
 snapshot is kept through receipt verification, including cancellation, rather
 than discarded after constructing argv. Windows remains its separate lane.
 
+The closed installation configuration v2 also pins the isolated distro launch
+interpreter separately from the scientific interpreter. The prelaunch operational
+binding has exactly five fields: configuration, scientific interpreter,
+environment and invocation SHA256 plus the complete source-hash map. The
+invocation includes the one job UUID, fixed argv, launch interpreter digest,
+working root and fixed environment. Terminal records compare to the independently
+retained snapshot before success OR cancellation classification. Historical
+read/export validation uses the recorded binding, never today's configuration.
+
 The root helper forks a reader before SQLite/WAL/original opens; that reader
 closes inherited root descriptors and irrevocably drops groups/GID/UID. It reads
 the current running job, project owner, dataset, both dependency rows and both
@@ -118,6 +127,14 @@ avoids executing `.pth`, sitecustomize or usercustomize before the barrier;
 selected scientific modules are added only after native ACK. Absent startup/search
 paths remain absent. An independently measured actual import/search/mapped-image
 receipt precedes installation; regenerating a digest is not acceptance.
+
+Closure v2 records every startup search path and directory-root identity; a
+bounded isolated no-site probe must reproduce the sealed search list. Existing
+inactive wheel `.pth`/customization files, if present in an independently reviewed
+installation, are inventoried by exact name and hash as inactive hooks. No hook
+is executed or newly adopted; an addition or any change refuses the exact census.
+Immutable code/native images may retain pinned hardlinks; uploaded originals
+must always remain single-link no-follow regular files.
 
 ## Qualification boundary
 

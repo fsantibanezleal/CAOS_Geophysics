@@ -33,6 +33,14 @@ private VPS with actual nonroot queue, cancellation/readback and original contro
 before any production enablement. Preserve513 guardian receipts and every MAIN
 shared/config/profile/FWI/UI seam. These gates are not passed by the design.
 
+The installation/owned-reader milestone is separately additive and does not
+activate or dispatch the production Linux lane. Closed five-field snapshot and
+pair-relation controls, plus an actual irrevocably nonroot SQLite/original reader,
+can be validated before the privileged helper/async adapter exist. Full runtime
+census, native CANCEL/EOF terminal extinction, receipt persistence and actual VPS
+queue remain the following implementation gates; existing root WSL science
+receipts cannot substitute for them.
+
 ## Approved structured-controls order
 
 1. Persist R-M08S-09..12 and this design before structured UI code changes.
