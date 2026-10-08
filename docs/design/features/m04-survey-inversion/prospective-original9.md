@@ -31,3 +31,14 @@ device lane precedes any new M04 fit or independent full528 precision run.
    receipts and scientific clock separately from post-fit precision timing.
 4. Only on current-source complete prerequisites run one fingerprinted fail-first
    original matrix; retain all original adverse regimes and not-run dependencies.
+
+## Post-freeze matrix observer
+
+R-412's existing exact rectangle/cell overlap observer SHALL be called only on
+the actual selected immutable generation after native drain. D/E SHALL use the
+existing matched-quantity A raw-RMS degradation predicate (at least20 percent).
+Missing/failed A or unresolved discrimination SHALL remain unresolved, not PASS.
+F's linear null control SHALL check the actual zero model and predictions;
+a complete ZIP alone cannot establish null physics. No fit, changed acquisition,
+new threshold, inferred field truth or nonlinear admission is introduced.
+Gate: source-only observer controls and prospective actual original9 matrix.
