@@ -1,4 +1,5 @@
 import { unzipSync } from "fflate";
+import { isVerifiedWaveformEnvelope } from "./waveform-linux-receipt";
 import { processingObject as obj, processingId as id, processingText as text, keys, hash, integer, same, type DatasetReceipt, type ProcessingJob } from "./processing-contracts";
 
 export const WAVEFORM_METHOD = "seismic.waveform-qc-classical/v1" as const;
@@ -37,7 +38,7 @@ export interface WaveformResult {
   scientific_request_sha256:string; sources:WaveformSources; scientific_status:"computed"|"qc_only";
   calculation_sha256:string; calculation:WaveformCalculation;
   members:{name:string;bytes:number;sha256:string}[];
-  resources:{schema:string; cpu_ns:number; max_sample_gap_ns:number; peak_memory_bytes:number; memory_kind:"windows_job_committed"; native_receipt_sha256:string; release_sha256:string; runtime_authorized:false; host_admitted:false};
+  resources:{schema:string; cpu_ns:number; max_sample_gap_ns:number; peak_memory_bytes:number; memory_kind:"windows_job_committed"|"linux_cgroup_charge"; native_receipt_sha256:string; release_sha256:string; runtime_authorized:false; host_admitted:false};
 }
 const arrays = "counts physical_native filtered_native edge_valid time_taper response_frequency_hz response_real response_imag inverse_real inverse_imag prefilter_weight characteristic psd_frequency_hz counts_psd physical_psd filtered_psd filter_sos".split(" ");
 export function waveformMember(name:unknown):string {
@@ -71,7 +72,7 @@ export function parseWaveformResult(value:unknown):WaveformResult {
   if(!Array.isArray(data.members)||data.members.length<3||data.members.length>55)throw new Error("Waveform members");let total=0;const names=new Set<string>();for(const item of data.members){const member=obj(item,"member");keys(member,["name","bytes","sha256"],"member");const name=waveformMember(member.name);if(names.has(name))throw new Error("Duplicate waveform member");names.add(name);integer(member.bytes,1,33554432);total+=member.bytes;hash(member.sha256);}if(total>33554432||!["calculation.json","receipt.json","manifest.json"].every(n=>names.has(n))||[...descriptors].some(n=>!names.has(n)))throw new Error("Waveform inventory");
   for(const item of c.array_descriptors){const a=item as unknown as ArrayDescriptor;if(a.channel_index>=c.channels.length)throw new Error("Waveform descriptor channel");const member=(data.members as WaveformResult["members"]).find(m=>m.name===`c0${a.channel_index}-${a.name}.bin`)!;same(member.bytes,a.bytes,"Waveform array member size");same(member.sha256,a.sha256,"Waveform array member hash");}
   for(const name of names)if(name.endsWith(".bin")&&!descriptors.has(name))throw new Error("Unlisted waveform array");same((data.members as WaveformResult["members"]).find(m=>m.name==="calculation.json")!.sha256,data.calculation_sha256,"Waveform calculation member hash");
-  const r=obj(data.resources,"resources");keys(r,"schema cpu_ns max_sample_gap_ns peak_memory_bytes memory_kind native_receipt_sha256 release_sha256 runtime_authorized host_admitted".split(" "),"resources");if(r.schema!=="geophysics.waveform-resources/v1"||r.memory_kind!=="windows_job_committed"||r.runtime_authorized!==false||r.host_admitted!==false)throw new Error("Waveform accounting kind/authority");integer(r.cpu_ns,0,60000000000);integer(r.max_sample_gap_ns,0,100000000);integer(r.peak_memory_bytes,0,1073741824);hash(r.native_receipt_sha256);hash(r.release_sha256);
+  const r=obj(data.resources,"resources");keys(r,"schema cpu_ns max_sample_gap_ns peak_memory_bytes memory_kind native_receipt_sha256 release_sha256 runtime_authorized host_admitted".split(" "),"resources");const accounting=r.memory_kind==="windows_job_committed"||(r.memory_kind==="linux_cgroup_charge"&&isVerifiedWaveformEnvelope(data));if(r.schema!=="geophysics.waveform-resources/v1"||!accounting||r.runtime_authorized!==false||r.host_admitted!==false)throw new Error("Waveform accounting kind/authority");integer(r.cpu_ns,0,60000000000);integer(r.max_sample_gap_ns,0,100000000);integer(r.peak_memory_bytes,0,1073741824);hash(r.native_receipt_sha256);hash(r.release_sha256);
   return value as WaveformResult;
 }
 export function bindWaveformResult(result:WaveformResult,job:WaveformJob,dataset:WaveformDataset){for(const key of ["job_id","project_id","dataset_id","dataset_sha256","request_sha256"])same(result[key as keyof WaveformResult],job[key as keyof WaveformJob],`waveform ${key}`);same(result.sources,dataset.sources,"waveform original pair");same(result.scientific_request_sha256,dataset.scientific_request_sha256,"waveform scientific hash");same(result.calculation.request.submitted,dataset.request,"waveform submitted request");}
