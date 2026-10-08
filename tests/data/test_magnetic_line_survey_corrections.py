@@ -15,10 +15,10 @@ import magnetic_line_survey_io as io
 from test_magnetic_line_survey_navigation import fixture, streamed_request
 
 
-def full_case(tmp_path):
+def full_case(tmp_path,*,raw_mirroring='denied'):
     from magnetic_line_survey_seal import seal_geometry
     from magnetic_line_survey_measurements import decode_measurements
-    _, metadata, ordinary_metadata, inspection, lag, ordinary, _ = fixture(tmp_path)
+    _, metadata, ordinary_metadata, inspection, lag, ordinary, _ = fixture(tmp_path,raw_mirroring=raw_mirroring)
     request = streamed_request(tmp_path/'request', ordinary, metadata, inspection, lag)
     request['operations'] = [lag]+deepcopy(ordinary['operations'][1:])
     base_root, heading_root, reference_root = (tmp_path/name for name in ('base', 'heading', 'reference'))

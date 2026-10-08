@@ -57,8 +57,9 @@ def plan_capacity(rows, training_counts, validation_counts, source_counts, *,
     inner_prediction_pairs=sum(8*validation_counts[f]*source_counts[g][f] for g in range(4) for f in range(1,4))
     final_fit_pairs=max(4004*training_counts[0]*counts[0] for counts in source_counts)
     final_prediction_pairs=(validation_counts[0]+exported_cells)*max(counts[0] for counts in source_counts)
+    final_verification_pairs=max(4*training_counts[0]*counts[0] for counts in source_counts)+final_prediction_pairs
     comparator_pairs=final_fit_pairs+final_prediction_pairs if comparator else 0
-    pairs=inner_fit_pairs+inner_prediction_pairs+final_fit_pairs+final_prediction_pairs+comparator_pairs
+    pairs=inner_fit_pairs+inner_prediction_pairs+final_fit_pairs+final_prediction_pairs+final_verification_pairs+comparator_pairs
     m=max(count for counts in source_counts for count in counts)
     bounds=core.allocation_bounds(rows,m,exported_cells,fft_cells)
     # Sixteen maps each retain exact N_f two-column uint64 membership and M_gf
@@ -77,6 +78,7 @@ def plan_capacity(rows, training_counts, validation_counts, source_counts, *,
     proof=dict(mandatory_fit_count=97,maximum_fit_count=98 if comparator else 97,
         inner_shapes=inner_shapes,inner_fit_pairs=inner_fit_pairs,inner_prediction_pairs=inner_prediction_pairs,
         final_fit_pairs=final_fit_pairs,final_prediction_pairs=final_prediction_pairs,comparator_pairs=comparator_pairs,
+        final_verification_pairs=final_verification_pairs,
         map_bytes=maps,partition_bytes=partitions,retained_member_bytes=retained_member_bytes,
         retained_index_bytes=retained_index_bytes,logical_members=logical_members,arrays=arrays,dictionaries=dictionaries)
     return capacity,proof

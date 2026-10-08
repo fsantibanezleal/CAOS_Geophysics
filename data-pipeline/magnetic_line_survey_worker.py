@@ -26,9 +26,18 @@ def main(argv=None):
         phase = 'plan'
         plan_path = io.external_path(args.plan, directory=False)
         plan = base.strict_json(base.read_bounded(plan_path, 2097152))
-        if type(plan) is dict and plan.get('schema') in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1','m03-physical-grid-plan/1'):
+        if type(plan) is dict and plan.get('schema')=='m03-local-run-plan/2':
+            from magnetic_line_survey_local_worker import run_local_plan
+            return run_local_plan(plan,plan_path.parent,args.job_handle,args.packages)
+        if type(plan) is dict and plan.get('schema')=='m03-result-verification-plan/1':
+            core._closed(plan,'schema result_root','replay')
+            from magnetic_line_survey_result import verify_result
+            checked=verify_result(plan['result_root'],temp_root=plan_path.parent,job_handle=args.job_handle)
+            core._write_member(plan_path.parent,'verification.json',base.canonical_bytes(checked))
+            return 0
+        if type(plan) is dict and plan.get('schema') in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1','m03-physical-grid-plan/1','m03-full-result-plan/1'):
             from magnetic_line_survey_corrections import run_instrument_worker
-            return run_instrument_worker(plan, plan_path.parent, args.job_handle)
+            return run_instrument_worker(plan, plan_path.parent, args.job_handle,package_root=args.packages)
         if type(plan) is dict and plan.get('schema') == 'm03-training-diagnosis-plan/1':
             from magnetic_line_survey_diagnosis import diagnose_retained_s1
             return diagnose_retained_s1(plan,plan_path.parent,args.job_handle)

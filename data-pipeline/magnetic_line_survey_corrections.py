@@ -21,7 +21,7 @@ from magnetic_line_survey_reference import validate_authored_reference
 from magnetic_lines import _utc_ns
 
 
-def run_instrument_worker(plan, workspace, job_handle):
+def run_instrument_worker(plan, workspace, job_handle, *, package_root=None,original_documents=None):
     """Execute original intake/seal/measurement/physical edges inside actual Job.
 
     This fixed component plan is not an owner HTTP recipe or full Result. The
@@ -29,9 +29,11 @@ def run_instrument_worker(plan, workspace, job_handle):
     """
     from magnetic_line_survey_runtime import require_job
     require_job(job_handle)
-    core._closed(plan, 'schema csv_path geometry_root inspection metadata request request_root navigation_root '
-                        'auxiliary_roots reference_definitions', 'correction')
-    if plan['schema'] not in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1','m03-physical-grid-plan/1'):
+    keys='schema csv_path geometry_root inspection metadata request request_root navigation_root auxiliary_roots reference_definitions'
+    if type(plan) is dict and plan.get('schema')=='m03-full-result-plan/1':
+        keys+=' run_id'
+    core._closed(plan,keys,'correction')
+    if plan['schema'] not in ('m03-instrument-correction-plan/1', 'm03-physical-fit-plan/1','m03-physical-grid-plan/1','m03-full-result-plan/1'):
         raise core.SurveyError('invalid_contract', 'correction')
     metadata, request = schema.validate('SurveyInput', plan['metadata']), schema.validate('SurveyRequest', plan['request'])
     from magnetic_line_survey_seal import seal_geometry
@@ -50,7 +52,7 @@ def run_instrument_worker(plan, workspace, job_handle):
         original=metadata['original'], rows=result['rows'], result_sha256=base.digest(result),
         output_sha256=result['output_sha256'], edges=len(result['edges']), numerical_admission='not_established',
         full_result='not_assembled', field_acceptance='unresolved')))
-    if plan['schema'] in ('m03-physical-fit-plan/1','m03-physical-grid-plan/1'):
+    if plan['schema'] in ('m03-physical-fit-plan/1','m03-physical-grid-plan/1','m03-full-result-plan/1'):
         from magnetic_line_survey_physical_fit import fit_corrected
         print('m03-worker:physical-global-fit', flush=True)
         fitted = fit_corrected(workspace/'sealed', sealed, workspace/'measurements', measurements,
@@ -59,7 +61,7 @@ def run_instrument_worker(plan, workspace, job_handle):
             schema='m03-physical-fit-ready/1', original=metadata['original'], rows=fitted['rows'],
             result_sha256=base.digest(fitted), fit_count=fitted['fit']['fit_count'], evaluation_count=fitted['evaluation_count'],
             full_result='not_assembled', field_acceptance='unresolved', predictive_acceptance='not_established')))
-        if plan['schema']=='m03-physical-grid-plan/1':
+        if plan['schema'] in ('m03-physical-grid-plan/1','m03-full-result-plan/1'):
             from magnetic_line_survey_grid import predict_grids
             print('m03-worker:physical-global-grid',flush=True)
             grids=predict_grids(workspace/'sealed',sealed,workspace/'fit',fitted,metadata,request,
@@ -68,6 +70,21 @@ def run_instrument_worker(plan, workspace, job_handle):
                 schema='m03-physical-grid-ready/1',original=metadata['original'],rows=fitted['rows'],
                 result_sha256=base.digest(grids),grid_count=len(grids['grid']),
                 full_result='not_assembled',field_acceptance='unresolved',predictive_acceptance='not_established')))
+            if plan['schema']=='m03-full-result-plan/1':
+                from magnetic_line_survey_environment import environment_identity
+                from magnetic_line_survey_result import assemble_fixed_result
+                if package_root is None:
+                    raise core.SurveyError('custody_mismatch','export')
+                print('m03-worker:full-environment',flush=True)
+                environment=environment_identity(package_root,job_handle=job_handle)
+                print('m03-worker:semantic-result',flush=True)
+                full=assemble_fixed_result(workspace,sealed,measurements,result,fitted,grids,metadata,request,
+                    plan['request_root'],plan['navigation_root'],plan['auxiliary_roots'],plan['reference_definitions'],
+                    run_id=plan['run_id'],environment=environment,temp_root=workspace,job_handle=job_handle,
+                    original_documents=original_documents)
+                core._write_member(workspace,'result-ready.json',base.canonical_bytes(dict(
+                    schema='m03-full-result-ready/1',result_sha256=base.digest(full),rows=full['inventory']['original_rows'],
+                    policy_epoch=full['policy_epoch'],scientific_verdict=full['verdict']['overall'])))
     return 0
 
 
@@ -153,7 +170,8 @@ def correct_instrument(seal_root, sealed, geometry_root, inspection, measurement
         raise core.SurveyError('unsupported_operation', 'correction')
     if metadata['source_kind'] != 'original_synthetic_acquisition' or \
        metadata['rights']['decision'] != 'allowed' or metadata['rights']['private_processing'] != 'allowed' or \
-       metadata['quantity']['kind'] != 'scalar_total_intensity':
+       metadata['quantity']['kind'] not in ('scalar_total_intensity','scalar_total_field_anomaly') or \
+       ('main_field' in operations and metadata['quantity']['kind']!='scalar_total_intensity'):
         raise core.SurveyError('metadata_ineligible', 'correction')
     if metadata['original'] != inspection['original'] or metadata['arrays'] != inspection['arrays'] or \
        seal['original'] != metadata['original'] or sealed['partitions']['request_sha256'] != base.digest(request):

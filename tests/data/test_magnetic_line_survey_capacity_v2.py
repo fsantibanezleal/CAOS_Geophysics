@@ -22,7 +22,8 @@ def test_all_96_shapes_and_unknown_final_bound(monkeypatch):
     expected_inner=sum(8*4004*n[f]*m[g][f] for g in range(4) for f in range(1,4))
     expected_scores=sum(8*v[f]*m[g][f] for g in range(4) for f in range(1,4))
     expected_final=4004*n[0]*80
-    assert capacity['kernel_pair_bound']==expected_inner+expected_scores+expected_final+(20+100)*80
+    assert proof['final_verification_pairs']==4*n[0]*80+(20+100)*80
+    assert capacity['kernel_pair_bound']==expected_inner+expected_scores+expected_final+(20+100)*80+proof['final_verification_pairs']
     assert proof['final_fit_pairs']==expected_final
     assert proof['map_bytes']==sum(16*n[f]+24*m[g][f] for g in range(4) for f in range(4))
     assert capacity['resource_state']=='unmeasured'

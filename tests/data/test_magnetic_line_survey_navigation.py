@@ -39,11 +39,11 @@ def streamed_request(root, ordinary, metadata, inspection, operation):
     return request
 
 
-def fixture(tmp_path):
+def fixture(tmp_path,*,raw_mirroring='denied'):
     spec=spec_from_file_location('original_navigation_controls',Path(__file__).parents[1]/'fixtures/magnetic_lines/generate.py')
     controls=module_from_spec(spec)
     spec.loader.exec_module(controls)
-    raw,metadata,request=controls.instrument_input()
+    raw,metadata,request=controls.instrument_input(raw_mirroring=raw_mirroring)
     original_metadata=deepcopy(metadata)
     csv=tmp_path/'s3-original.csv'
     csv.write_bytes(raw)

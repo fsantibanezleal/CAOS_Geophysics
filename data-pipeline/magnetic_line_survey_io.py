@@ -23,7 +23,12 @@ def external_path(path, *, directory=True):
     if not Path(path).is_absolute():
         raise core.SurveyError('invalid_contract', 'export')
     target = Path(os.path.abspath(path))
-    for ancestor in (target, *target.parents):
+    # A file is not an ancestor directory. Probing journal.bin/.git while an
+    # active SQLite journal is replaced yields WinError5, not evidence of a
+    # repository. Check the leaf itself only for directory destinations; the
+    # actual leaf type/link/stat is still checked below, with no permission
+    # errors swallowed or unmeasured bytes counted as zero.
+    for ancestor in ((target, *target.parents) if directory else target.parents):
         if (ancestor / '.git').exists():
             raise core.SurveyError('invalid_contract', 'export')
     system_temp = [os.environ.get(k) for k in ('TEMP', 'TMP', 'TMPDIR')]
