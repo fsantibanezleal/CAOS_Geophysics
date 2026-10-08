@@ -240,6 +240,62 @@ def test_unknown_live_lock_refuses(case):
     assert not (root / "counter.txt").exists()
 
 
+def test_live_lock_refuses_before_expensive_inventory(case, monkeypatch):
+    root, _ = case
+    (root / "cache").mkdir()
+    lock = root / "cache" / "dispatcher.lock"
+    lock.write_text("unknown owner")
+    monkeypatch.setattr(harness, "inventory", lambda _: pytest.fail("live owner must precede hashing"))
+    with pytest.raises(harness.Refusal, match="lock"):
+        run(case)
+    assert lock.read_text() == "unknown owner"
+    assert not (root / "counter.txt").exists()
+
+
+def test_identical_preflight_inventories_are_shared_but_every_later_snapshot_is_fresh(case, monkeypatch):
+    root, node = case
+    second = json.loads(harness.canonical(node))
+    second["id"] = "second"
+    second["needs"] = ["first"]
+    calls = []
+    original = harness.inventory
+
+    def counted(paths):
+        calls.append(tuple(paths))
+        return original(paths)
+
+    monkeypatch.setattr(harness, "inventory", counted)
+    indexed, order, bases = harness.declaration({"schema": 1, "nodes": [node, second]}, root)
+    assert order == ["first", "second"]
+    assert calls == [tuple(node["sources"]), tuple(node["inputs"])]
+    assert bases["first"]["sources"] == bases["second"]["sources"]
+    assert bases["first"]["inputs"] == bases["second"]["inputs"]
+    assert bases["first"]["sources"] is not bases["second"]["sources"]
+    assert bases["first"]["inputs"] is not bases["second"]["inputs"]
+    source = Path(node["sources"][0])
+    source.write_text(source.read_text() + "\n# independent later change\n")
+    fresh = harness.snapshot(indexed["first"])
+    assert len(calls) == 4
+    assert fresh["sources"] != bases["first"]["sources"]
+    harness.snapshot(indexed["second"])
+    assert len(calls) == 6
+    _, _, next_bases = harness.declaration({"schema": 1, "nodes": [node, second]}, root)
+    assert len(calls) == 8
+    assert next_bases["first"]["sources"] == fresh["sources"]
+
+
+def test_preflight_refusal_releases_only_its_own_dispatcher_lock(case, monkeypatch):
+    root, _ = case
+    def refused(_):
+        raise harness.Refusal("authored inventory refusal")
+    monkeypatch.setattr(harness, "inventory", refused)
+    with pytest.raises(harness.Refusal, match="authored inventory refusal"):
+        run(case)
+    assert (root / "cache").exists()
+    assert not (root / "cache" / "dispatcher.lock").exists()
+    assert not (root / "counter.txt").exists()
+
+
 def test_report_allocation_failure_releases_owned_lock(case, monkeypatch):
     root, _ = case
     original = Path.mkdir

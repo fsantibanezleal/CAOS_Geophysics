@@ -171,7 +171,7 @@ def inventory(paths):
     return records
 
 
-def declaration(config, device_root):
+def declaration(config, device_root, *, capture=True):
     require(type(config) is dict and set(config) == {"schema", "nodes"} and
             type(config["schema"]) is int and config["schema"] == 1,
             "closed DAG schema 1 required")
@@ -233,14 +233,30 @@ def declaration(config, device_root):
 
     for name in indexed:
         visit(name)
+    return indexed, order, preflight(indexed, order) if capture else None
+
+
+def preflight(indexed, order):
     # Hash every complete declaration before ANY spawn, including independent branches.
-    base = {name: snapshot(indexed[name]) for name in order}
+    # One initial content inventory per identical path declaration. Never reuse
+    # this cache across runs or for the fresh pre/post-execution snapshots.
+    inventory_cache = {}
+    base = {name: snapshot(indexed[name], inventory_cache=inventory_cache) for name in order}
     require(all(len(canonical(value)) < MAX_JSON - 20000 for value in base.values()), "complete node plan exceeds bound")
-    return indexed, order, base
+    return base
 
 
-def snapshot(node):
-    return {"node": json.loads(canonical(node)), "sources": inventory(node["sources"]), "inputs": inventory(node["inputs"]),
+def snapshot(node, *, inventory_cache=None):
+    def captured(paths):
+        if inventory_cache is None:
+            return inventory(paths)
+        key = tuple(paths)
+        if key not in inventory_cache:
+            inventory_cache[key] = inventory(paths)
+        # Each node owns its declaration; mutation cannot alter another base.
+        return json.loads(canonical(inventory_cache[key]))
+
+    return {"node": json.loads(canonical(node)), "sources": captured(node["sources"]), "inputs": captured(node["inputs"]),
             "executable": file_record(Path(node["argv"][0])), "harness": file_record(SELF),
             "dispatcher": file_record(Path(sys.executable).resolve()), "python": sys.version,
             "dispatcher_image": file_record(dispatcher_image()),
@@ -600,7 +616,8 @@ def run(config_path, device_root, cache_root, report_root):
     reports = external(report_root, root, exists=False)
     require(cache != reports and cache not in reports.parents and reports not in cache.parents, "cache/report overlap")
     config = read_json(config_path)
-    nodes, order, base = declaration(config, root)
+    # Closed fields, paths and dependency graph still fail before allocation.
+    nodes, order, _ = declaration(config, root, capture=False)
     cache.mkdir(parents=True, exist_ok=True)
     reports.mkdir(parents=True, exist_ok=True)
     lock_path = cache / "dispatcher.lock"
@@ -611,6 +628,9 @@ def run(config_path, device_root, cache_root, report_root):
         raise Refusal("live/unknown dispatcher lock; no automatic takeover") from error
     old_signals = {}
     try:
+        # Exclude expensive preflight inventories too. A known/unknown live
+        # owner is refused before re-reading its complete runtime/data graph.
+        base = preflight(nodes, order)
         cancelled = threading.Event()
         if threading.current_thread() is threading.main_thread():
             for sig in (signal.SIGINT, signal.SIGTERM):
