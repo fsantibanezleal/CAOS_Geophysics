@@ -7,7 +7,9 @@ import { createHash } from "node:crypto";
 const args=process.argv.slice(2),arg=k=>{const i=args.indexOf(k);if(i<0||!args[i+1])throw Error(`Required ${k}`);return resolve(args[i+1]);};
 const course=args.includes("--course");
 const spectrumControls=args.includes("--spectrum-controls");
+const modelControls=args.includes("--model-state-controls");
 if(course&&spectrumControls)throw Error("Separate course and spectrum gates required");
+if(course&&modelControls)throw Error("Separate course and saved-model gates required");
 const viewPath=arg("--view"),output=arg("--output-root"),packages=arg("--packages"),bundleExport=arg("--bundle-export"),repo=resolve(dirname(fileURLToPath(import.meta.url)),"..");
 for(const p of [viewPath,output,bundleExport])if(p.toLowerCase().startsWith("d:\\_repos\\")||p.toLowerCase().startsWith("e:\\_worktrees\\"))throw Error("Explicit external artifacts required");
 await mkdir(output); // Fresh directory only, never reuse or delete prior proof.
@@ -101,7 +103,7 @@ try{
       await page.waitForFunction(id=>document.querySelector('.magnetic-readout')?.getAttribute('data-row-id')===id,v.rows[1].row_id);
       if(await calls()!==before)throw Error(`Pointer selection recomputed quadratic spectrum (${before} -> ${await calls()})`);
       await click(tr("Susceptibility","Susceptibilidad"));await click(tr("3D cells","Celdas 3D"));
-      const rotation=page.locator(".magnetic-result input[type=range]:visible").first();
+      const rotation=page.locator(".magnetic-result label").filter({hasText:tr("View rotation (degrees; does not refit)","Rotación de vista (grados; no reajusta)")}).locator("input");
       const previous=await rotation.inputValue();await rotation.focus();await rotation.press("ArrowRight");
       if(await rotation.inputValue()===previous)throw Error("Camera control did not change");
       if(await calls()!==before)throw Error("Camera scrub recomputed spectrum");
@@ -120,6 +122,35 @@ try{
       spectrumProof={baseline_calls:before,pointer_camera_cell_history_calls:before,component_change_calls:before+1,group_change_calls:null};
       await click(tr("Observations","Observaciones"));await click(tr("Map","Mapa"));
     }
+    let modelProof=null;
+    if(modelControls){
+      if(v.schema!=="magnetic-owner-result-view-2"||!v.model_states)throw Error("Actual versioned saved-model projection required");
+      await click(tr("Susceptibility","Susceptibilidad"));await click(tr("3D cells","Celdas 3D"));
+      const count=v.model_states.chi_si.shape[0],saved=page.locator("[data-saved-model-state]:visible"),scrub=saved.locator("input[type=range]");
+      if(await scrub.getAttribute("step")!=="1"||Number(await scrub.getAttribute("max"))!==count-1||Number(await scrub.inputValue())!==count-1)throw Error("Discrete final saved model was not selected");
+      const assertState=async index=>{
+        const history=Number(v.model_states.history_indices.data[index]);
+        if(Number(await saved.getAttribute("data-saved-model-state"))!==index||Number(await saved.getAttribute("data-saved-history-index"))!==history)throw Error("Saved model/history readout drift");
+        const cell=page.locator(".magnetic-cell:visible").first();await cell.scrollIntoViewIfNeeded();await cell.focus();await cell.press("Enter");
+        const k=v.model.active_indices.data.indexOf(Number((await cell.getAttribute("aria-label")).split(':')[0])),chi=Number(v.model_states.chi_si.data[index*v.model.chi_si.data.length+k]);
+        const expected=new Intl.NumberFormat(lang,{maximumSignificantDigits:6}).format(chi);
+        if(!(await page.locator(".magnetic-readout[data-cell-index]:visible").innerText()).includes(`χ ${expected} SI`))throw Error("Actual saved physical cell readout differs");
+        if(Math.abs(Number(await cell.getAttribute("opacity"))-(.15+.65*chi/.1))>1e-14)throw Error("Opacity must use fixed 0..0.1 SI, not per-case normalization");
+      };
+      await assertState(count-1);
+      if(count===1){if(!await scrub.isDisabled()||!/zero accepted moves|cero movimientos aceptados/.test(await saved.innerText()))throw Error("One actual state must not invent motion");}
+      else {await scrub.focus();await scrub.press("Home");await assertState(0);await scrub.press("End");await assertState(count-1);}
+      const finalState=await saved.getAttribute("data-saved-model-state");
+      await click(tr("Iteration","Iteración"));const record=page.locator(".magnetic-result input[type=range]:visible").first();
+      if(await record.count()&&Number(await record.getAttribute("max"))>0){await record.focus();await record.press("End");}
+      if(!/no model replay|sin reproducción de modelo/.test(await page.locator(".magnetic-result label:visible").allTextContents().then(x=>x.join(" "))))throw Error("Objective records must not claim model replay");
+      await click(tr("Susceptibility","Susceptibilidad"));await click(tr("3D cells","Celdas 3D"));
+      if(await saved.getAttribute("data-saved-model-state")!==finalState)throw Error("Objective record control changed physical model");
+      await assertState(count-1);
+      await page.screenshot({path:join(output,`${width}-${lang}-${theme}-saved-final-model.png`),fullPage:true});
+      modelProof={schema:v.model_states.schema,count,initially_final:true,discrete_indices:true,exact_history_mapping:true,actual_cell_SI:true,fixed_opacity_range_SI:[0,.1],zero_move_no_motion:count===1,objective_records_do_not_change_model:true};
+      await click(tr("Observations","Observaciones"));await click(tr("Map","Mapa"));
+    }
     await page.locator(".magnetic-result label").filter({hasText:tr("Original acquisition group","Grupo de adquisición original")}).locator("select").selectOption(v.rows.find(r=>r.group_id!==v.rows[0].group_id).group_id);
     if(spectrumControls){await page.waitForFunction(n=>globalThis.__magneticSpectrumCalls>=n,spectrumProof.component_change_calls+1);spectrumProof.group_change_calls=await page.evaluate(()=>globalThis.__magneticSpectrumCalls);if(spectrumProof.group_change_calls!==spectrumProof.component_change_calls+1)throw Error("Group must recompute exactly once");}
     const selected=await page.locator(".magnetic-readout:visible").first().getAttribute("data-row-id");
@@ -129,7 +160,7 @@ try{
     const download=await downloadEvent, downloaded=join(output,`${width}-${lang}-${theme}-numeric.zip`);await download.saveAs(downloaded);
     if(createHash("sha256").update(await readFile(downloaded)).digest("hex")!==zipHash)throw Error("Browser numeric export bytes changed");
     if(errors.length)throw Error(errors.join("\n"));
-    proofs.push({width,height,lang,theme,reduced_motion:true,views:visited,same_original_row_linked:true,horizontal_overflow:false,numeric_export_sha256:zipHash,spectrum_recomputation:spectrumProof,errors});
+    proofs.push({width,height,lang,theme,reduced_motion:true,views:visited,same_original_row_linked:true,horizontal_overflow:false,numeric_export_sha256:zipHash,spectrum_recomputation:spectrumProof,saved_models:modelProof,errors});
     console.log(`PASS ${width} ${lang} ${theme} eight scientific leaf views`);await context.close();
   }
   const proof={schema:course?"magnetic-local-course-browser-proof-1":"magnetic-local-browser-proof-1",view_sha256:createHash("sha256").update(raw).digest("hex"),generation_sha256:v.binding.generation_sha256,shell_version:shellVersion,shell_package_sha256:createHash("sha256").update(shellRaw).digest("hex"),instrumented_spectrum_counter:spectrumControls,component_sha256:createHash("sha256").update(await readFile(join(repo,"frontend/src/components/MagneticSurveyResult.tsx"))).digest("hex"),spectrum_source_sha256:createHash("sha256").update(await readFile(join(repo,"frontend/src/api/magnetic-result.ts"))).digest("hex"),states:proofs,authenticated_api:false,field_acceptance:false,online_admitted:false};

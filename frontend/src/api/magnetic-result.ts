@@ -14,8 +14,14 @@ export interface MagneticHistory {
   beta: number; epsilon_q: number | null; phi_d: number; phi_regularizer: number;
   objective: number; kkt_inf: number; model_sha256: string; status: string;
 }
+export interface MagneticModelStates {
+  schema: "magnetic-selected-final-model-states-1"; candidate: string; fold: -1;
+  source_inventory_sha256: string; audit_sha256: string;
+  q_unit: "chi_over_0.01"; physical_unit: "SI"; physical_scale: 0.01;
+  q_models: MagneticArray; chi_si: MagneticArray; history_indices: MagneticArray;
+}
 export interface MagneticView {
-  schema: "magnetic-owner-result-view-1"; binding: MagneticBinding; lane: "local_replay";
+  schema: "magnetic-owner-result-view-1" | "magnetic-owner-result-view-2"; binding: MagneticBinding; lane: "local_replay";
   online_admitted: false; claims: Record<string, false>; quantity: string; components: string[];
   coordinate_frame: Record<string, unknown>; original: Record<string, unknown>;
   rows: MagneticRow[]; mesh: { origin_m: MagneticArray; widths_x_m: MagneticArray; widths_y_m: MagneticArray; widths_z_m: MagneticArray; active: MagneticArray };
@@ -23,6 +29,7 @@ export interface MagneticView {
   selected: string; candidates: unknown[]; metrics: Record<string, unknown>; history: MagneticHistory[];
   diagnostics: { resolution_kind: string; resolution_arrays: null | { selected_indices: MagneticArray; point_spread: MagneticArray; singular_values: MagneticArray | null }; reason: string | null };
   sensitivity: null; sensitivity_reason: string; resolution_interpretation: string;
+  model_states?: MagneticModelStates;
 }
 const fail = (why: string): never => { throw new Error(`Magnetic result: ${why}`); };
 const object = (x: unknown): Record<string, unknown> => x !== null && typeof x === "object" && !Array.isArray(x) ? x as Record<string, unknown> : fail("object");
@@ -33,8 +40,9 @@ const numbers = (x: unknown, count: number): x is number[] => Array.isArray(x) &
 export function parseMagneticView(value: unknown, expected: MagneticBinding): MagneticView {
   const v = object(value), binding = object(v.binding);
   const names = ["schema", "binding", "lane", "online_admitted", "claims", "quantity", "components", "coordinate_frame", "original", "rows", "mesh", "model", "selected", "candidates", "metrics", "history", "diagnostics", "sensitivity", "sensitivity_reason", "resolution_interpretation"];
+  if (v.schema === "magnetic-owner-result-view-2") names.push("model_states");
   if (Object.keys(v).length !== names.length || names.some(k => !(k in v))) fail("closed fields");
-  if (v.schema !== "magnetic-owner-result-view-1" || v.lane !== "local_replay" || v.online_admitted !== false || Object.values(object(v.claims)).some(x => x !== false)) fail("lane or claims");
+  if ((v.schema !== "magnetic-owner-result-view-1" && v.schema !== "magnetic-owner-result-view-2") || v.lane !== "local_replay" || v.online_admitted !== false || Object.values(object(v.claims)).some(x => x !== false)) fail("lane or claims");
   if (JSON.stringify(Object.keys(object(v.claims)).sort()) !== JSON.stringify(["field_source_verified","full_method_accepted","geology_truth_known","online_admitted"])) fail("complete closed claims");
   const frame=object(v.coordinate_frame),original=object(v.original);
   if (frame.axes!=="ENU" || frame.coordinate_unit!=="m" || frame.vertical_positive!=="up" || original.id!==expected.source_id || original.original_sha256!==expected.original_sha256 || original.scope!=="complete_acquisition") fail("original source/physical frame");
@@ -76,6 +84,18 @@ export function parseMagneticView(value: unknown, expected: MagneticBinding): Ma
   if (mask.data.length !== widths.reduce((a, b) => a*b.data.length, 1) || JSON.stringify(active.data) !== JSON.stringify(mask.data.flatMap((x,i)=>x?[i]:[]))) fail("active mapping");
   if (!Array.isArray(v.history) || v.history.length > 4096 || !Array.isArray(v.candidates) || v.candidates.length !== 16) fail("frozen candidate/history bounds");
   for (const raw of v.history as unknown[]) { const h = object(raw); for (const k of ["beta", "phi_d", "phi_regularizer", "objective", "kkt_inf"]) if (typeof h[k] !== "number" || !Number.isFinite(h[k])) fail("actual history"); }
+  if (v.schema === "magnetic-owner-result-view-2") {
+    const states=object(v.model_states), stateKeys=["schema","candidate","fold","source_inventory_sha256","audit_sha256","q_unit","physical_unit","physical_scale","q_models","chi_si","history_indices"];
+    if(Object.keys(states).length!==stateKeys.length||stateKeys.some(k=>!(k in states))||states.schema!=="magnetic-selected-final-model-states-1"||states.candidate!==v.selected||states.fold!==-1||states.q_unit!=="chi_over_0.01"||states.physical_unit!=="SI"||states.physical_scale!==.01||!hash(states.source_inventory_sha256)||!hash(states.audit_sha256)) fail("closed selected-final states");
+    const q=array(states.q_models,"float64",201*2048), saved=array(states.chi_si,"float64",201*2048), indices=array(states.history_indices,"int64",201);
+    const n=q.shape[0], a=chi.data.length;
+    if(q.shape.length!==2||!Number.isSafeInteger(n)||n<1||n>201||a<1||a>2048||q.shape[1]!==a||JSON.stringify(saved.shape)!==JSON.stringify([n,a])||JSON.stringify(indices.shape)!==JSON.stringify([n])||n*(16*a+8)>8*1024**2) fail("saved state capacity/shape");
+    for(let i=0;i<n;i++) {
+      const index=Number(indices.data[i]), h=object((v.history as unknown[])[index]);
+      if(index<0||index>=(v.history as unknown[]).length||(i>0&&index<=Number(indices.data[i-1]))||h.candidate!==states.candidate||h.fold!==-1||!["l2","irls_surrogate"].includes(String(h.phase))||h.status==="failed"||!hash(h.model_sha256)) fail("exact state/history mapping");
+      for(let j=0;j<a;j++) {const value=Number(saved.data[i*a+j]);if(value<0||value>.1||!Object.is(value,.01*Number(q.data[i*a+j])))fail("saved native physical conversion");if(i===n-1&&!Object.is(value,Number(chi.data[j])))fail("saved final model");}
+    }
+  }
   if (v.sensitivity !== null || typeof v.sensitivity_reason !== "string" || typeof v.resolution_interpretation !== "string") fail("unmeasured sensitivity");
   const diagnostics = object(v.diagnostics);
   if (diagnostics.resolution_arrays !== null) {
@@ -93,6 +113,15 @@ export function magneticCells(view: MagneticView) {
     const x = index%widths[0].length, y = Math.floor(index/widths[0].length)%widths[1].length, z = Math.floor(index/(widths[0].length*widths[1].length));
     return { index, k, xyz_m: [centers[0][x], centers[1][y], centers[2][z]], widths_m:[widths[0][x],widths[1][y],widths[2][z]], chi_si: Number(view.model.chi_si.data[k]), volume_m3: widths[0][x]*widths[1][y]*widths[2][z], layer: z };
   });
+}
+
+/** Discrete saved physical values only; no interpolated model or new hash. */
+export function magneticStateCells(view: MagneticView, state: number) {
+  const cells=magneticCells(view), saved=view.model_states;
+  if(!saved) {if(state!==0)fail("legacy has no saved states");return cells;}
+  const count=saved.chi_si.shape[0];
+  if(!Number.isSafeInteger(state)||state<0||state>=count)fail("saved state index");
+  return cells.map((cell,i)=>({...cell,chi_si:Number(saved.chi_si.data[state*cells.length+i])}));
 }
 
 /** Orthographic camera, one physical metres-to-pixels scale, full mesh edges. */
@@ -131,6 +160,16 @@ export async function verifyMagneticView(value: unknown, expected: MagneticBindi
       const actual=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),n=>n.toString(16).padStart(2,"0")).join("");
       if (actual!==a.sha256) fail("native descriptor SHA256 mismatch");
     } else pending.push(...Object.values(a));
+  }
+  if(parsed.model_states) {
+    const states=parsed.model_states, a=states.q_models.shape[1];
+    for(let i=0;i<states.q_models.shape[0];i++) {
+      const bytes=new Uint8Array(8*a), native=new DataView(bytes.buffer);
+      for(let j=0;j<a;j++)native.setFloat64(8*j,Number(states.q_models.data[i*a+j]),true);
+      const sha=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",bytes)),n=>n.toString(16).padStart(2,"0")).join("");
+      const record=parsed.history[Number(states.history_indices.data[i])];
+      if(sha!==record.model_sha256)fail("saved q-model history SHA256 mismatch");
+    }
   }
   return parsed;
 }

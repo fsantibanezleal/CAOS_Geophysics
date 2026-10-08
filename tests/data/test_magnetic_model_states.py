@@ -157,6 +157,7 @@ def test_actual_v2_numeric_zip_and_owner_projection_keep_v1_closed(actual, tmp_p
         host_qualified=False, accepted_method=False, view=view, zip_receipt=receipt,
         zip_path=str(archive), extraction_only=True)
     (tmp_path/'state-browser-control.json').write_bytes(canonical(control))
+    (tmp_path/'state-view.json').write_bytes(canonical(view))
 
 
 @pytest.mark.parametrize('attack', ['extra_file', 'removed_file', 'rehash_model', 'wrong_unit'])

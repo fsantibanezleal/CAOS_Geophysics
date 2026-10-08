@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Tabs, SubTabs, useShellLang } from "@fasl-work/caos-app-shell";
-import { magneticCells, magneticProjection, magneticSpectrum, type MagneticView } from "../api/magnetic-result";
+import { magneticStateCells, magneticProjection, magneticSpectrum, type MagneticView } from "../api/magnetic-result";
 import "./MagneticSurveyResult.css";
 
 /** Mounted only for a receipt-bound immutable result. This is a replay viewer. */
@@ -12,9 +12,12 @@ export function MagneticSurveyResult({ value, onExport }: { value: MagneticView;
   const [group, setGroup] = useState(value.rows[0].group_id), [layer, setLayer] = useState(0);
   const [cellIndex, setCellIndex] = useState(0), [angle, setAngle] = useState(35), [historyIndex, setHistoryIndex] = useState(0);
   const [sourceIndex, setSourceIndex] = useState(0);
+  const stateCount=value.model_states?.chi_si.shape[0]??1;
+  const [stateSelection,setStateSelection]=useState({generation:value.binding.generation_sha256,index:stateCount-1});
+  const stateIndex=stateSelection.generation===value.binding.generation_sha256?Math.min(stateSelection.index,stateCount-1):stateCount-1;
   const rows = useMemo(()=>value.rows.filter(r=>r.group_id===group),[value,group]);
   const row=value.rows[selectedRow];
-  const cells = useMemo(()=>magneticCells(value),[value]), cell=cells[cellIndex];
+  const cells = useMemo(()=>magneticStateCells(value,stateIndex),[value,stateIndex]), cell=cells[cellIndex];
   const psf=value.diagnostics.resolution_arrays;
   const spectrum=useMemo(()=>magneticSpectrum(rows,component),[rows,component]);
   const limits = (v:number[])=>{ const a=Math.min(...v), b=Math.max(...v); return [a,b===a?a+1:b]; };
@@ -47,26 +50,32 @@ export function MagneticSurveyResult({ value, onExport }: { value: MagneticView;
     </>)}</>;
   };
   const camera=useMemo(()=>magneticProjection(value,angle),[value,angle]), projected=camera.project;
-  const maxChi=Math.max(0,...cells.map(c=>c.chi_si));
+  const savedRecord=value.model_states?value.history[Number(value.model_states.history_indices.data[stateIndex])]:null;
+  const savedControl=value.model_states?<div data-saved-model-state={stateIndex} data-saved-history-index={Number(value.model_states.history_indices.data[stateIndex])}>
+    <label>{t("Saved selected-final model (discrete records)","Modelo final seleccionado guardado (registros discretos)")}<input type="range" min="0" max={stateCount-1} step="1" value={stateIndex} disabled={stateCount===1} onChange={e=>setStateSelection({generation:value.binding.generation_sha256,index:Number(e.target.value)})}/></label>
+    <output>{stateIndex+1} / {stateCount} · {savedRecord!.candidate} · {savedRecord!.phase} · {t("Iteration","Iteración")} {savedRecord!.inner_iteration} · φd {f(savedRecord!.phi_d)} · F {f(savedRecord!.objective)}</output>
+    <p>{stateCount===1?t("One saved initial/final model; zero accepted moves. No motion is invented.","Un modelo inicial/final guardado; cero movimientos aceptados. No se inventa movimiento."):t("Only saved native accepted arrays are replayed. No interpolated geology or new fit.","Solo se reproducen arreglos nativos aceptados y guardados. Sin geología interpolada ni nuevo ajuste.")}</p>
+  </div>:<p>{t("Legacy result has no saved model arrays; the final physical model is shown, without model playback.","El resultado anterior no contiene arreglos de modelos guardados; se muestra el modelo físico final sin reproducción de modelos.")}</p>;
   const cellReadout=<output className="magnetic-readout" data-cell-index={cell.index}>{t("Cell", "Celda")} {cell.index} · E {f(cell.xyz_m[0])} m · N {f(cell.xyz_m[1])} m · U {f(cell.xyz_m[2])} m · χ {f(cell.chi_si)} SI · {f(cell.volume_m3)} m³</output>;
   const model=(slice:boolean)=> <>
+    {savedControl}
     {slice?<label>{t("Depth layer", "Capa en profundidad")}<select value={layer} onChange={e=>setLayer(Number(e.target.value))}>{(value.mesh.widths_z_m.data as number[]).map((_,i)=><option key={i} value={i}>{i+1}</option>)}</select></label>:
       <label>{t("View rotation (degrees; does not refit)", "Rotación de vista (grados; no reajusta)")}<input type="range" min="0" max="360" step="1" value={angle} onChange={e=>setAngle(Number(e.target.value))}/></label>}
     {cellReadout}
     {frame(slice?t("Susceptibility depth slice", "Corte de susceptibilidad en profundidad"):t("Susceptibility physical cells in 3D projection", "Celdas físicas de susceptibilidad en proyección 3D"),
-      cells.filter(c=>!slice||c.layer===layer).map(c=>{const opacity=maxChi===0?.3:.15+.65*c.chi_si/maxChi;
+      cells.filter(c=>!slice||c.layer===layer).map(c=>{const opacity=.15+.65*c.chi_si/.1;
         const corners=Array.from({length:8},(_,i)=>projected(c.xyz_m.map((x,axis)=>x+((i>>axis)&1?1:-1)*c.widths_m[axis]/2)));
         return <g key={c.index} opacity={opacity} className="magnetic-cell" tabIndex={0} role="button" aria-label={`${c.index}: ${f(c.chi_si)} SI`} onPointerEnter={()=>setCellIndex(c.k)} onClick={()=>setCellIndex(c.k)} onKeyDown={e=>{if(e.key==="Enter")setCellIndex(c.k);}}>
           {slice?<rect x={camera.slice([c.xyz_m[0]-c.widths_m[0]/2,c.xyz_m[1]+c.widths_m[1]/2,c.xyz_m[2]])[0]} y={camera.slice([c.xyz_m[0]-c.widths_m[0]/2,c.xyz_m[1]+c.widths_m[1]/2,c.xyz_m[2]])[1]} width={camera.sliceScale*c.widths_m[0]} height={camera.sliceScale*c.widths_m[1]} stroke="currentColor" strokeWidth={cellIndex===c.k?2:.3}/>: [[4,5,7,6],[0,1,5,4],[0,2,6,4]].map((face,i)=><polygon key={i} points={face.map(j=>corners[j].join(",")).join(" ")} stroke="currentColor" strokeWidth={cellIndex===c.k?2:.3}/>)}
         </g>;}))}
-    <p>{t("Opacity encodes susceptibility, not certainty. Full cell edges use one physical camera scale, without vertical exaggeration or interpolated geology.", "La opacidad codifica susceptibilidad, no certeza. Las aristas completas usan una escala física común, sin exageración vertical ni geología interpolada.")}</p>
+    <p>{t("Opacity uses the fixed susceptibility range 0 to 0.1 SI, not certainty or a per-case maximum. Full cell edges use one physical camera scale, without vertical exaggeration or interpolated geology.", "La opacidad usa el rango fijo de susceptibilidad de 0 a 0,1 SI, no certeza ni un máximo por caso. Las aristas completas usan una escala física común, sin exageración vertical ni geología interpolada.")}</p>
   </>;
   const resolution=<>{psf?<><label>{t("Point-spread source cell", "Celda fuente de dispersión puntual")}<select value={sourceIndex} onChange={e=>setSourceIndex(Number(e.target.value))}>{psf.selected_indices.data.map((i,k)=><option key={k} value={k}>{Number(i)}</option>)}</select></label>
     {frame(t("Local point spread", "Dispersión puntual local"),cells.map(c=>{const p=projected(c.xyz_m),n=Number(psf.point_spread.data[c.k*psf.selected_indices.data.length+sourceIndex]); return <circle key={c.index} cx={p[0]} cy={p[1]} r={cellIndex===c.k?7:4} className={n<0?"magnetic-outer":"magnetic-development"} onPointerEnter={()=>setCellIndex(c.k)}><title>{c.index}: {f(n)}</title></circle>;}))}
     {cellReadout}<output>{t("Response", "Respuesta")}: {f(Number(psf.point_spread.data[cellIndex*psf.selected_indices.data.length+sourceIndex]))}</output></>:<p>{t("Local resolution unavailable; not replaced by zero.", "Resolución local no disponible; no se reemplaza por cero.")}</p>}
     <p>{t("Fixed-objective free-face resolution is conditional on this mesh, field, regularizer and active bounds. It is not posterior geological uncertainty. Physical sensitivity was not exported and is unavailable.", "La resolución local depende de esta malla, campo, regularizador y límites activos. No es incertidumbre geológica posterior. La sensibilidad física no se exportó y no está disponible.")}</p></>;
   const h=value.history[Math.min(historyIndex,Math.max(0,value.history.length-1))];
-  const history=<>{h?<><label>{t("Accepted objective state (replay only)", "Estado de objetivo aceptado (solo reproducción)")}<input type="range" min="0" max={value.history.length-1} value={historyIndex} onChange={e=>setHistoryIndex(Number(e.target.value))}/></label>
+  const history=<>{h?<><label>{t("Recorded objective record (no model replay)", "Registro de objetivo guardado (sin reproducción de modelo)")}<input type="range" min="0" max={value.history.length-1} value={historyIndex} onChange={e=>setHistoryIndex(Number(e.target.value))}/></label>
     <dl><dt>{t("Candidate / fold", "Candidato / partición")}</dt><dd>{h.candidate} / {h.fold}</dd><dt>{t("Phase / iteration", "Fase / iteración")}</dt><dd>{h.phase} / {h.inner_iteration}</dd><dt>β</dt><dd>{f(h.beta)}</dd><dt>φd / φm / F</dt><dd>{f(h.phi_d)} / {f(h.phi_regularizer)} / {f(h.objective)}</dd><dt>{t("Projected gradient", "Gradiente proyectado")}</dt><dd>{f(h.kkt_inf)}</dd></dl>
     {frame(t("Recorded objective history", "Historial de objetivo registrado"),value.history.map((state,i)=>{const max=Math.max(1,...value.history.map(s=>s.objective));return <circle key={i} cx={45+610*i/Math.max(1,value.history.length-1)} cy={395-350*state.objective/max} r={historyIndex===i?5:2} className="magnetic-development" onPointerEnter={()=>setHistoryIndex(i)}/>;}))}
   </>:<p>{t("No iteration history.", "Sin historial de iteración.")}</p>}<p>{t("Different candidates and epsilon stages are distinct objectives; a joined history is not one monotone solve. No model states are invented between saved records.", "Candidatos y etapas epsilon son objetivos distintos; el historial no es una única resolución monótona. No se inventan estados entre registros guardados.")}</p></>;

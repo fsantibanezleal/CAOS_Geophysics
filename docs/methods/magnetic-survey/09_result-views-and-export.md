@@ -64,6 +64,50 @@ nontrivial S2 convergence, complete field eligibility, host qualification,
 physical API registration, publication or deployment. Original adverse controls,
 failed candidates, solver caps and independent scientific thresholds remain.
 
+## Selected-final saved model replay
+
+Version1 contains recorded objective values and model hashes, not an animation
+of model arrays. Its history control is labelled as objective records; training
+folds, failed candidates and distinct fixed-surrogate objectives are not one
+monotone final solve. Selecting a record never changes physical cells.
+
+The explicit version2 result/view adds the closed
+`magnetic-selected-final-model-states-1` member. The original driver's bounded
+closed audit is read only AFTER a complete final refit has stopped. The extractor
+keeps the selected candidate's final-refit initial model and actual accepted
+native arrays, not trial steps or training models. Repeated stage-entry arrays
+must equal the preceding final array exactly and are not duplicated. Every
+retained array matches its exact original history index, q-model SHA256,
+objective values, native source/epoch and final physical model. The complete
+source inventory and audit byte hashes are retained. No new solve, callback,
+fit clock or native allowance is introduced.
+
+The physical conversion is $\chi=0.01q$, with dimensionless SI susceptibility.
+The bundle declares separate little-endian float64 q/SI arrays and int64
+history indices as ordinary hash-checked NPY members. Before reading or
+materializing them, the extractor enforces the complete64MiB audit,16MiB line,
+4096 record,2048 active parameter,201 saved state and8MiB numeric payload
+capacities. The unchanged64 numeric-member/128MiB bundle limits also apply.
+An oversized or incomplete sequence refuses publication rather than selecting
+a subset or fabricating missing states. Legacy version1 remains closed.
+
+The protected browser verifies each native descriptor and independently hashes
+every q row against its mapped history hash. Saved-model selection is discrete:
+only the chosen recorded SI array supplies the cell values, without interpolation
+between geologies. The final saved model is initially selected. A one-state null
+control has a disabled model scrubber and explicitly reports zero accepted
+moves; it does not pretend to animate. Objective history remains a separate
+control. Opacity uses the fixed0..0.1 SI range across states/cases, never a
+per-case maximum or an uncertainty interpretation.
+
+The genuine retained null audit verifies one selected-final seven-cell array.
+This is extraction/replay evidence only. Authored two-state consumer controls
+exercise index and hash grammar, not a measured nonzero fit. New complete
+nonzero final-refit precision, frozen adverse cases, multi-state temporal
+evidence, authenticated service assembly, shared-shell instrument occupancy
+and native resource/cancel/crash qualification remain separate scientific and
+product gates. No historical failed fit is relabelled by version2.
+
 ## Español
 
 La vista local reproduce una generación ajustada completa; no invierte en el
