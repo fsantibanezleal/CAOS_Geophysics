@@ -83,6 +83,20 @@ source geometry (at least1 and no more than charged source COMPONENT count).
 The receipt records its actual row count; a fit-row bound is NOT a heldout/full-
 geometry bound. Do not duplicate or synthesize rows to fill the source allocation
 shape. Full source component accounting stays unchanged even for a subset audit.
+
+Public chord proof amendment, frozen BEFORE code: `certify_quadratic_chord`
+uses closed ORIGINAL QuadraticOperands (c=.5or1), actual q/qt/nativegradient/F/
+Ftrial/iteration0..199/trial0..19 and same absolute deadline. Whole original
+factor/resource metadata precedes arithmetic. Directed delta=c*change(W(Gq-d),
+WG(qt-q))+beta*sum alpha_j*change(WjDj(q-qref),WjDj(qt-q)); DO NOT pre-round
+WG/WjDj or beta*alpha. Slope is ORIGINAL recorded native gradient dot actual
+qt-q. Strict negative slope AND delta-1e-4*slope upper<0 required, unchanged
+34/50/80 ladder and exact14-key original certificate grammar, zero displacement/
+range/deadline/non-descent/reject/unresolved explicit. Public implementation
+uses the registered interval numeric dependency; adapters do NOT import/copy
+private M02 helpers. Certificate is actual arithmetic, NOT a caller pass boolean.
+No new tolerance, alternate physical potential or optimizer; source admission
+still separate, including original native matrix/reduction workspace closure.
 No quadratic bounds are used for nonlinear total-norm or quartic cross-gradient
 without a separate exact global curvature proof. Stronger nonlinear KKT alone
 is NOT model/prediction/objective accuracy acceptance.

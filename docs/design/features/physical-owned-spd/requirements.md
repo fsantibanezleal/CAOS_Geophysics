@@ -42,3 +42,9 @@ receipts SHALL be relayed to adapters after push. All original M04 full-fit
 matrix and M02 tests/refits retain their original independent scientific gates.
 No full-fit accuracy PASS is inferred from the two-iteration research direction.
 Gate: tests/numerics/test_physical_owned_spd.py::test_original_physical_fit
+
+SPD07 WHEN a half-normalized linear source requires a chord proof, THE public
+closed QuadraticOperands API SHALL compute actual nested physical delta/slope/
+strict Armijo with literal ORIGINAL c=.5or1 and the unchanged34/50/80 ladder,
+same clock/resource caps, without a private adapter helper or supplied decision.
+Gate: tests/numerics/test_physical_owned_spd.py::test_public_half_certificate_fit
