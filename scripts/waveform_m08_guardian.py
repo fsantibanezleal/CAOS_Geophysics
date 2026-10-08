@@ -149,9 +149,10 @@ def scope_transport(scope, pidfd, library):
             native.sd_bus_unref(bus)
 
 
-def drain(run):
+def drain(run, *, retain_accounting=False):
+    require(type(retain_accounting) is bool)
     service, accounting, _scope = guardian_names(run)
-    for unit in (service, accounting):
+    for unit in ((service,) if retain_accounting else (service, accounting)):
         state = subprocess.run(["/usr/bin/systemctl", "show", unit, "--property=LoadState", "--value"],
             capture_output=True, timeout=3)
         require(len(state.stdout) <= 256 and state.stdout.strip() in (b"loaded", b"not-found"))
@@ -167,6 +168,8 @@ def drain(run):
             require((group / "cgroup.events").read_bytes().splitlines().count(b"populated 0") == 1)
         except FileNotFoundError:
             require(not group.exists())
+        if retain_accounting:
+            return  # Exact empty group is retained for the living observer's final counters.
         require(time.monotonic() < deadline)
         time.sleep(.01)
 
@@ -188,6 +191,7 @@ def _child(run, parent_fd, control, ready, caller=None):
             except OSError:
                 pass
     normal = False
+    caller_pending = False
     try:
         os.write(ready, b"READY\n")
         os.close(ready)
@@ -204,6 +208,7 @@ def _child(run, parent_fd, control, ready, caller=None):
             # Never consume worker bytes: the observer is the sole frame parser.
             # Any pending control/EOF drains even when that observer is paused.
             if caller is not None and caller in readable:
+                caller_pending = True
                 break
             if parent_fd in readable:
                 break
@@ -223,10 +228,16 @@ def _child(run, parent_fd, control, ready, caller=None):
     deadline = time.monotonic() + 15
     while time.monotonic() < deadline:
         try:
-            drain(run)
+            events = dict(poller.poll(0))
+            observer_lost = parent_fd in events or bool(events.get(control,0) & (select.POLLHUP|select.POLLERR))
+            drain(run,retain_accounting=caller_pending and not observer_lost)
         except BaseException:
             pass
         time.sleep(.05)
+    try:
+        drain(run)  # The same bounded sweep always releases accounting, including paused observer.
+    except BaseException:
+        pass
     os._exit(2)
 
 

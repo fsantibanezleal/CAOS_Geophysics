@@ -377,3 +377,15 @@ readback. Failed state, good RSS or missing readback is never extinction proof;
 no unknown unit, numeric root signal or counter reset is authorized. Gate:
 closed frame/failed-service controls, then fresh installed original CANCEL/EOF
 under unchanged limits. The first failed installed cancellation remains retained.
+
+When the original caller pipe becomes pending while its descriptor-bound root
+observer remains alive, the independent guardian stops scientific execution
+immediately but retains the accounting slice during its existing bounded
+15-second late-submission sweep. The observer can then capture zero-task lifetime
+counters and quiescence before its separate guardian reap. Original parent-pidfd
+death, observer-control EOF or sweep expiry also removes accounting. A paused
+observer cannot keep science alive; it cannot retain accounting beyond the
+existing sweep. The original two-second scientific quiescence bound is never
+replaced by guardian-reap time. No final counter is invented when readback fails.
+Gates: exact guardian stop-set/empty-group controls, actual paused caller controls
+and fresh full installed CANCEL/EOF. Prior lost-accounting failures stay failed.

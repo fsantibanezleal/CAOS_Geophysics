@@ -31,6 +31,45 @@ def test_fragmented_completion_is_not_eof_or_implicit_success():
             completion_frame(b"", bad)
 
 
+@pytest.mark.parametrize('retain',[False,True])
+def test_guardian_stop_set_retains_only_empty_accounting_for_live_observer(monkeypatch,retain):
+    import waveform_m08_guardian as guard
+    from types import SimpleNamespace
+    run = 'a'*32
+    commands = []
+    monkeypatch.setattr(guard.subprocess,'run',lambda *args,**kwargs:SimpleNamespace(stdout=b'loaded\n'))
+    monkeypatch.setattr(guard,'manager',lambda argv:commands.append(argv))
+    class Absent:
+        def __truediv__(self,other):
+            return self
+        def exists(self):
+            return False
+    monkeypatch.setattr(guard,'Path',lambda *args:Absent())
+    guard.drain(run,retain_accounting=retain)
+    service,accounting,_ = guard.guardian_names(run)
+    assert commands == [['/usr/bin/systemctl','stop',unit] for unit in
+                        ((service,) if retain else (service,accounting))]
+
+
+@pytest.mark.parametrize('events',[b'populated 1\n',b'populated 0\npopulated 0\n',b''])
+def test_guardian_never_calls_populated_or_unknown_group_quiescent(monkeypatch,events):
+    import waveform_m08_guardian as guard
+    from types import SimpleNamespace
+    monkeypatch.setattr(guard.subprocess,'run',lambda *args,**kwargs:SimpleNamespace(stdout=b'not-found\n'))
+    class Present:
+        def __truediv__(self,other):
+            return self
+        def exists(self):
+            return True
+        def is_symlink(self):
+            return False
+        def read_bytes(self):
+            return events
+    monkeypatch.setattr(guard,'Path',lambda *args:Present())
+    with pytest.raises(ValueError):
+        guard.drain('a'*32,retain_accounting=True)
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="anonymous Linux caller descriptor contract")
 def test_caller_guard_accepts_only_held_anonymous_pipe_read_end(tmp_path):
     from waveform_m08_guardian import caller_pipe
@@ -222,6 +261,9 @@ def test_actual_worker_pipe_loss_drains_even_with_root_observer_paused(tmp_path,
             time.sleep(.005)
         quiescent = time.monotonic_ns()
         assert quiescent-began <= 2000000000 and select.select([science_fd],[],[],0)[0]
+        # Independent science drain does not destroy the living observer's
+        # lifetime accounting before it can seal zero-task final counters.
+        assert group.exists() and (group/'cgroup.events').read_bytes().splitlines().count(b'populated 0') == 1
         # The observer is STILL stopped/alive: it could not parse or kill science.
         assert not select.select([observer_fd],[],[],0)[0]
         assert re.search(r"^State:\s+T",Path(f"/proc/{observer}/status").read_text(),re.M)
@@ -233,6 +275,7 @@ def test_actual_worker_pipe_loss_drains_even_with_root_observer_paused(tmp_path,
         assert not group.exists() and not (work/"final").exists()
         (tmp_path/"actual-caller-guard.json").write_text(json.dumps(dict(run_id=run,control=control,
             held_anonymous_pipe=True,observer_stopped=True,observer_alive_at_quiescence=True,
+            accounting_retained_at_quiescence=True,
             guardian=receipt,quiescence_ns=quiescent-began,science_scope_removed=True,
             guardian_scope_removed=True,scientific_ack=False,production_api_proved=False)))
     finally:
