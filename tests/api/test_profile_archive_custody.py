@@ -39,25 +39,30 @@ class Files:
         return dict(device=value.st_dev, inode=value.st_ino)
 
 
-def archive_fixture(tmp_path):
+def archive_fixture(tmp_path, *, declared_relation=None, declared_installation=None):
     from app.profile_archive_custody import SOURCE_FILES, EXECUTION
     owner,project,job,dataset,raw,source = [str(uuid4()) for _ in range(6)]
     installation = dict(configuration_sha256='1'*64,python_sha256='2'*64,environment_sha256='3'*64,
         invocation_sha256='4'*64,source_hashes={name:'5'*64 for name in SOURCE_FILES})
     relation = dict(id=job,owner_id=owner,project_id=project,dataset_id=dataset,dataset_sha256='6'*64,
         raw_asset_id=raw,source_id=source,raw_sha256='7'*64,request_sha256='8'*64,method_id='ert.topographic-profile/v1',state='cancelled')
+    if declared_relation is not None:
+        relation=dict(declared_relation)
+        job=relation['id']
+    if declared_installation is not None:
+        installation=dict(declared_installation)
     files=Files(tmp_path); stage=tmp_path/f'.profile-retained/{job}'; stage.mkdir(parents=True)
     identity=files.directory_identity(f'.profile-retained/{job}')
     execution=dict.fromkeys(EXECUTION.split())
-    execution.update(schema='geophysics.profile-linux-execution/v1',job_id=job,request_sha256='8'*64,
-        dataset_sha256='6'*64,raw_sha256='7'*64,retained_stage_identity=identity,retained={'stderr.txt':dict(bytes=10,sha256=byte_sha(b'diagnostic'))},
+    execution.update(schema='geophysics.profile-linux-execution/v1',job_id=job,request_sha256=relation['request_sha256'],
+        dataset_sha256=relation['dataset_sha256'],raw_sha256=relation['raw_sha256'],retained_stage_identity=identity,retained={'stderr.txt':dict(bytes=10,sha256=byte_sha(b'diagnostic'))},
         **installation)
     members={'linux-execution.json':canonical(execution),'linux-stderr.txt':b'diagnostic'}
     recovery=dict(schema='geophysics.profile-linux-recovery/v1',job_id=job,receipt_sha256=byte_sha(members['linux-execution.json']),
         intent_sha256='9'*64,installation=installation,retained_stage_identity=identity,known_root_copies_removed=True,
         terminal={f'geophysics-profile-{job}.service':dict(MainPID='0',ActiveState='inactive',SubState='dead',ControlGroup=''),
                   f'geophysics-profile-guardian-{job}.scope':dict(ActiveState='inactive',SubState='dead',ControlGroup='')})
-    manifest=dict(schema='geophysics.profile-retained-stage/v2',job_id=job,request_sha256='8'*64,installation=installation,
+    manifest=dict(schema='geophysics.profile-retained-stage/v2',job_id=job,request_sha256=relation['request_sha256'],installation=installation,
         stage_identity=identity,members={name:dict(bytes=len(body),sha256=byte_sha(body)) for name,body in members.items()},
         recovery=recovery,uncommitted_duplicate=None,ownership=dict(job_id=job,request_sha256=relation['request_sha256'],
         method_id=relation['method_id'],terminal_state=relation['state'],
@@ -117,6 +122,32 @@ def test_other_owner_never_receives_archive(tmp_path):
     files,relation,_,installation,_=archive_fixture(tmp_path)
     records=retained_inventory(files,[relation],[],approved_installations={relation['id']:installation})
     assert deletion_entries(records,owner_id=str(uuid4()),project_id=relation['project_id'])==[]
+
+
+def test_exact_parent_recovery_ownership_closure_reused(tmp_path):
+    from app.profile_linux_recovery import OWNERSHIP_KEYS, validate_manifest_ownership
+    files,relation,manifest,installation,_=archive_fixture(tmp_path)
+    assert set(manifest['ownership'])==OWNERSHIP_KEYS and len(OWNERSHIP_KEYS)==11
+    validate_manifest_ownership(manifest,manifest['ownership'])
+    assert retained_inventory(files,[relation],[],approved_installations={relation['id']:installation})
+
+
+@pytest.mark.parametrize('damage',[None,'name','path','extra','hash'])
+def test_registered_m08_receipt_members_not_future_fallback(damage,tmp_path):
+    files,relation,_,installation,_=archive_fixture(tmp_path)
+    identifier=str(uuid4())
+    entry=dict(kind='waveform_artifact',id=identifier,name='calculation.json',
+        relative_path=f'waveforms/{identifier}/calculation.json',sha256='a'*64,byte_count=12)
+    receipt=dict(id=str(uuid4()),owner_id=str(uuid4()),project_id=str(uuid4()),derived_manifest=[entry])
+    if damage=='name': entry['name']='unknown.bin'
+    elif damage=='path': entry['relative_path']='../original'
+    elif damage=='extra': entry['future']=True
+    elif damage=='hash': entry['sha256']='not-a-digest'
+    if damage is None:
+        assert retained_inventory(files,[relation],[receipt],approved_installations={relation['id']:installation})
+    else:
+        with pytest.raises(ValueError):
+            retained_inventory(files,[relation],[receipt],approved_installations={relation['id']:installation})
 
 
 def test_real_sql_receipt_attachment_rolls_back_with_deletion(tmp_path):

@@ -108,6 +108,17 @@ def _manifest(value, relation, approved):
             'profile_archive_schema')
     fields(value,MANIFEST_V2)
     _relation(relation); _installation(approved)
+    # Reuse the recovery owner's public closure, not a second evolving dialect.
+    # Lazy import avoids the existing projects/worker assembly import cycle.
+    from app.errors import ApiError
+    from app.profile_linux_recovery import OWNERSHIP_KEYS, validate_manifest_ownership
+    expected=dict(job_id=relation['id'],terminal_state=relation['state'],method_id=relation['method_id'],
+                  request_sha256=relation['request_sha256'],**{key:relation[key] for key in IDENTITY.split()})
+    require(OWNERSHIP_KEYS==set(OWNERSHIP.split()),'profile_archive_ownership_registry')
+    try:
+        validate_manifest_ownership(value,expected)
+    except (ApiError,ValueError):
+        raise ValueError('profile_archive_relation') from None
     require(value['job_id']==relation['id'] and value['request_sha256']==relation['request_sha256'],
             'profile_archive_relation')
     ownership=value['ownership']; fields(ownership,OWNERSHIP)
@@ -201,8 +212,17 @@ def retained_inventory(files, relations, receipts, *, approved_installations):
             else:
                 # Only the unchanged original derived receipt tuple is skipped;
                 # this bridge cannot silently skip a future custody extension.
-                require(set(entry)=={'kind','id','sha256','byte_count'} and entry['kind'] in ('dataset','result'),
-                        'profile_archive_unknown_receipt_entry')
+                if entry.get('kind')=='waveform_artifact':
+                    from app.waveform_contract import MEMBER, SCRATCH
+                    fields(entry,'kind id name relative_path sha256 byte_count')
+                    uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],0,SCRATCH)
+                    require(type(entry['name']) is str and MEMBER.fullmatch(entry['name']) is not None and
+                            entry['relative_path']==f'waveforms/{entry["id"]}/{entry["name"]}',
+                            'profile_archive_unknown_receipt_entry')
+                else:
+                    require(set(entry)=={'kind','id','sha256','byte_count'} and entry['kind'] in ('dataset','result'),
+                            'profile_archive_unknown_receipt_entry')
+                    uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],0,128*M)
     try:
         names=set(files.names('.profile-retained',limit=127))
     except FileNotFoundError:

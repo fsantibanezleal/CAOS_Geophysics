@@ -15,7 +15,7 @@ async def archive_relations(session):
     """Complete profile job relations in the caller's current SQL snapshot."""
     jobs=(await session.execute(select(ProcessingJob.id,ProcessingJob.owner_id,ProcessingJob.project_id,
         ProcessingJob.dataset_id,ProcessingJob.dataset_sha256,ProcessingJob.request_sha256,ProcessingJob.method_id,
-        ProcessingJob.state).where(ProcessingJob.method_id.in_(METHODS)).limit(100001))).all()
+        ProcessingJob.state,ProcessingJob.request_json).where(ProcessingJob.method_id.in_(METHODS)).limit(100001))).all()
     require(len(jobs)<=100000,'profile_archive_relation_cap')
     result=[]
     # Batched complete relation sets, not an N+1 request loop or filtered joins
@@ -36,8 +36,17 @@ async def archive_relations(session):
         source=sources.get(raw.source_id)
         require(source is not None,'profile_archive_source_missing')
         require(all((str(row.owner_id),row.project_id)==(str(job.owner_id),job.project_id) for row in (dataset,raw,source)) and
-                job.dataset_sha256==dataset.sha256 and dataset.raw_sha256==raw.sha256==source.sha256,
+                job.dataset_sha256==dataset.sha256 and dataset.raw_sha256==raw.sha256==source.sha256 and
+                type(job.request_json) is dict and job.request_json.get('raw_asset_id')==raw.id and
+                job.request_json.get('raw_sha256')==raw.sha256,
                 'profile_archive_live_relations')
+        if job.state in ('failed','cancelled','succeeded'):
+            from app.profile_linux_recovery import retained_ownership
+            from app.errors import ApiError
+            try:
+                retained_ownership(job,dataset,raw,source)
+            except (ApiError,ValueError,KeyError):
+                raise ValueError('profile_archive_live_relations') from None
         require(dataset.parser_version=='supplied-profile-original/v1' and
                 dataset.modality==('ert_profile' if job.method_id=='ert.topographic-profile/v1' else 'traveltime_profile') and
                 raw.detected_format==('ert_ohm' if job.method_id=='ert.topographic-profile/v1' else 'traveltime_sgt'),
@@ -60,10 +69,14 @@ class ProfileArchiveDeletion:
     creation. It neither upgrades a lease nor obtains one inside the SQL TX.
     Runtime assembly must register all API/worker/recovery writers separately.
     """
-    def __init__(self, leases, *, approved_installations):
+    def __init__(self, leases, *, worker_exclusion, approved_installations):
         from app.physical_leases import WriterLeases
+        from app.physical_participation import WorkerExclusion
         require(isinstance(leases,WriterLeases),'profile_archive_native_lease')
+        require(isinstance(worker_exclusion,WorkerExclusion) and worker_exclusion.leases is leases,
+                'profile_archive_worker_exclusion')
         self.leases=leases
+        self.worker_exclusion=worker_exclusion
         # Source/runtime/configuration binding comes from the fixed trusted
         # operator installer, never the archived manifest or an HTTP field.
         self.approval_bytes=canonical(approved_installations)
@@ -71,6 +84,7 @@ class ProfileArchiveDeletion:
 
     def check_exclusion(self):
         self.leases.require_held(exclusive=True)
+        self.worker_exclusion.require_held()
 
     async def prepare(self, settings, session, owner_id, project_id, jobs):
         import json
