@@ -100,7 +100,7 @@ export function parseProfileResult(value:unknown):ParsedProfile {
 
 async function digest(raw:Uint8Array){return [...new Uint8Array(await crypto.subtle.digest("SHA-256",raw as Uint8Array<ArrayBuffer>))].map(v=>v.toString(16).padStart(2,"0")).join("");}
 /** Extract root member original lexical bytes, preserving Python floating tokens. */
-function members(raw:string){
+export function profileJsonMembers(raw:string){
   const found=new Map<string,{start:number;end:number;valueStart:number;valueEnd:number}>();let depth=0;
   for(let i=0;i<raw.length;i++){
     const c=raw[i];if(c==='"'){
@@ -125,7 +125,7 @@ export async function readProfileFiles(resultFile:Blob,manifestFile:Blob):Promis
   const m=closed(strictVelocityJson(new Uint8Array(b),40000,65536),["schema","result","method","source_sha256","content_sha256","configuration_sha256"]);
   const member=closed(m.result,["name","bytes","sha256"]),resultSha256=await digest(bytes);
   require(m.schema==="geophysics.supplied-profile-manifest/v1"&&member.name==="result.json"&&member.bytes===a.byteLength&&member.sha256===resultSha256&&m.method===result.result.method&&m.source_sha256===obj(result.result.original).sha256&&m.content_sha256===result.result.content_sha256);
-  const raw=new TextDecoder("utf-8",{fatal:true}).decode(bytes),fields=members(raw),content=fields.get("content_sha256"),settings=fields.get("numerical_settings");require(content&&settings);
+  const raw=new TextDecoder("utf-8",{fatal:true}).decode(bytes),fields=profileJsonMembers(raw),content=fields.get("content_sha256"),settings=fields.get("numerical_settings");require(content&&settings);
   let without:string;if(raw[content.end]===",")without=raw.slice(0,content.start)+raw.slice(content.end+1);else{require(raw[content.start-1]===",");without=raw.slice(0,content.start-1)+raw.slice(content.end);}
   require(await digest(new TextEncoder().encode(without))===result.result.content_sha256);
   require(await digest(new TextEncoder().encode(raw.slice(settings.valueStart,settings.valueEnd)))===m.configuration_sha256);

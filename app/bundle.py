@@ -15,6 +15,9 @@ MAX_MEMBER_BYTES = 8 * 1024 * 1024
 
 
 def build_bundle(dataset: dict, result: dict, dataset_sha: str, result_sha: str) -> bytes:
+    if dataset.get("modality") in {"ert_profile", "traveltime_profile"}:
+        from app.profile_bundle import build_profile_bundle
+        return build_profile_bundle(dataset, result, dataset_sha, result_sha)
     if dataset.get("modality") == "edi_transfer_function":
         from app.mt_bundle import build_mt_bundle
         return build_mt_bundle(dataset, result, dataset_sha, result_sha)
@@ -81,6 +84,10 @@ def verify_bundle(encoded: bytes) -> tuple[dict, dict, dict]:
     if dataset.get("modality") == "edi_transfer_function":
         from app.mt_bundle import verify_mt_contents
         verify_mt_contents(manifest, dataset, result, sha256(raw["dataset.json"]))
+        return manifest, dataset, result
+    if dataset.get("modality") in {"ert_profile", "traveltime_profile"}:
+        from app.profile_bundle import verify_profile_contents
+        verify_profile_contents(manifest, dataset, result, sha256(raw["dataset.json"]), sha256(raw["result.json"]))
         return manifest, dataset, result
     if (not isinstance(dataset.get("dimensions"), dict)
             or not isinstance(result.get("parameters"), dict)

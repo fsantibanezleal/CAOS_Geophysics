@@ -69,14 +69,21 @@ needed. For example, with the original and its metadata already prepared:
 
 ```powershell
 .venv-traveltime/Scripts/python.exe -B scripts/process_supplied_profile.py `
-  --input survey.sgt --metadata survey.metadata.json --output results/survey-run-01
+  --input "$env:GEOPHYSICS_LOCAL_DATA_ROOT/survey.sgt" `
+  --metadata "$env:GEOPHYSICS_LOCAL_DATA_ROOT/survey.metadata.json" `
+  --output "$env:GEOPHYSICS_LOCAL_DATA_ROOT/results/survey-run-01"
 ```
 
 ```bash
 .venv-traveltime/bin/python -B scripts/process_supplied_profile.py \
-  --input survey.sgt --metadata survey.metadata.json --output results/survey-run-01
+  --input "${GEOPHYSICS_LOCAL_DATA_ROOT}/survey.sgt" \
+  --metadata "${GEOPHYSICS_LOCAL_DATA_ROOT}/survey.metadata.json" \
+  --output "${GEOPHYSICS_LOCAL_DATA_ROOT}/results/survey-run-01"
 ```
 
+Set `GEOPHYSICS_LOCAL_DATA_ROOT` to an absolute external data directory first;
+originals, run outputs and temporary working files do not belong in the Git
+checkout. Virtual environments remain repository-local and ignored.
 Use the ERT environment and `.ohm` original for ERT. The output directory must
 be new; reruns never overwrite an earlier result. `result.json` and
 `manifest.json` are exclusive, hashed outputs. The single stdout JSON receipt

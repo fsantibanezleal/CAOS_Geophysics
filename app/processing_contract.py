@@ -162,6 +162,10 @@ def parse_gravity_dataset(
 
 
 def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> None:
+    if dataset.modality in {"ert_profile", "traveltime_profile"}:
+        from app.profile_contract import validate_profile_dataset
+        validate_profile_dataset(payload, dataset)
+        return
     if dataset.modality == "edi_transfer_function":
         from app.mt_contract import validate_edi_dataset
         validate_edi_dataset(payload, dataset)
@@ -181,6 +185,11 @@ def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> Non
 
 
 def validate_result_identity(payload: dict, job: ProcessingJob) -> None:
+    from app.profile_contract import PROFILE_METHODS
+    if job.method_id in PROFILE_METHODS:
+        from app.profile_contract import validate_profile_result
+        validate_profile_result(payload, job)
+        return
     if job.method_id.startswith("mt.edi-"):
         from app.mt_contract import validate_mt_result
         validate_mt_result(payload, job)

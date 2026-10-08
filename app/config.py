@@ -32,9 +32,14 @@ class Settings:
     worker_scratch_bytes: int = 1024 * MIB
     worker_wall_seconds: int = 600
     mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
+    profile_online_enabled: bool = False
+    profile_python: Path | None = None
     auth_mode: str = "local"
 
     def __post_init__(self) -> None:
+        if self.profile_online_enabled and (self.profile_python is None
+                or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
+            raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
         if self.auth_mode not in {"local", "email"}:
             raise ValueError("GEOPHYSICS_AUTH_MODE must be local or email")
         if len(self.auth_secret) < 32:
@@ -69,7 +74,7 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        data = Path(os.environ.get("GEOPHYSICS_DATA_DIR", "data/raw/api")).resolve()
+        data = Path(os.environ["GEOPHYSICS_DATA_DIR"]).resolve()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(
             data_dir=data,
@@ -82,6 +87,8 @@ class Settings:
             smtp_password=os.environ.get("GEOPHYSICS_SMTP_PASSWORD", ""),
             smtp_from=os.environ.get("GEOPHYSICS_SMTP_FROM", ""),
             mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+            profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
+            profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
             auth_mode=os.environ.get("GEOPHYSICS_AUTH_MODE", "local"),
         )
 
@@ -93,8 +100,13 @@ class WorkerSettings:
     data_dir: Path
     db_path: Path | None = None
     mt_online_enabled: bool = False
+    profile_online_enabled: bool = False
+    profile_python: Path | None = None
 
     def __post_init__(self) -> None:
+        if self.profile_online_enabled and (self.profile_python is None
+                or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
+            raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
         if not self.data_dir.is_absolute() or (self.db_path is not None and not self.db_path.is_absolute()):
             raise ValueError("worker data and database paths must be absolute")
 
@@ -108,7 +120,9 @@ class WorkerSettings:
 
     @classmethod
     def from_env(cls) -> "WorkerSettings":
-        data = Path(os.environ.get("GEOPHYSICS_DATA_DIR", "data/raw/api")).resolve()
+        data = Path(os.environ["GEOPHYSICS_DATA_DIR"]).resolve()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(data_dir=data, db_path=Path(db).resolve() if db else None,
-                   mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1")
+                   mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+                   profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
+                   profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None)
