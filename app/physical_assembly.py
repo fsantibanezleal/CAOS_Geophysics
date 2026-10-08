@@ -29,6 +29,17 @@ class PhysicalAssembly:
                 and engine.url.database is not None
                 and Path(engine.url.database) == Path(settings.database_path),
                 'physical_assembly_root_binding')
+        database = Path(settings.database_path)
+        declared = set(self.participant.arguments()['native_metadata'])
+        database_names = declared - {'.physical-writers.lock', '.processing-worker.lock'}
+        if database.is_relative_to(self.leases.files.root_path):
+            require(database.parent == self.leases.files.root_path
+                    and database.name in ('api.sqlite3', 'geophysics.sqlite3')
+                    and database.name in database_names
+                    and database_names <= {database.name, database.name+'-wal', database.name+'-shm'},
+                    'physical_assembly_database_metadata_binding')
+        else:
+            require(not database_names, 'physical_assembly_database_metadata_binding')
 
         @event.listens_for(engine.sync_engine, 'connect')
         def durability(connection, _):

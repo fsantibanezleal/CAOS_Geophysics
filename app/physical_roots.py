@@ -27,16 +27,17 @@ def _ledger(connection, *, caller_owned):
             connection.rollback()
             raise
         return
-    from app.physical_forest import SUCCESSOR_DDL
-    from app.physical_successor import REVISION, ddl_sha256
+    from app.physical_schema import schema_tables
     require(type(connection) is sqlite3.Connection and connection.in_transaction
             and connection.row_factory is None and connection.text_factory is str
             and connection.execute('PRAGMA foreign_keys').fetchone() == (1,)
             and connection.execute('PRAGMA journal_mode').fetchone() == ('wal',)
             and connection.execute('PRAGMA synchronous').fetchone() == (2,)
-            and connection.execute('PRAGMA trusted_schema').fetchone() == (0,)
-            and connection.execute('SELECT version_num FROM alembic_version').fetchall() == [(REVISION,)]
-            and ddl_sha256(connection) == SUCCESSOR_DDL, 'physical_root_native_transaction')
+            and connection.execute('PRAGMA trusted_schema').fetchone() == (0,), 'physical_root_native_transaction')
+    try:
+        schema_tables(connection)
+    except ValueError as error:
+        raise ValueError('physical_root_native_transaction') from error
     # The native thread is serialized by run_native_transaction. Never roll
     # back another operation's rows or commit the original session transaction.
     connection.execute('SAVEPOINT physical_root_operation')
@@ -83,7 +84,7 @@ def _stage(connection, files, owner, project, raw, root):
     return batch, roles
 
 
-def _verified(connection, files, owner, project, raw_id, root):
+def _original(connection, files, owner, project, raw_id):
     raw = _row(connection, "SELECT * FROM raw_assets WHERE id=? AND owner_id=? AND project_id=?", (raw_id, owner, project))
     source = _row(connection, "SELECT * FROM source_records WHERE id=? AND owner_id=? AND project_id=?", (raw["source_id"], owner, project))
     require(_row(connection, "SELECT owner_id FROM projects WHERE id=?", (project,))["owner_id"] == owner, "physical_root_owner")
@@ -96,6 +97,11 @@ def _verified(connection, files, owner, project, raw_id, root):
     require(raw["storage_key"] == key, "physical_root_raw_key")
     original = files.read(key, cap=16*M, expected_bytes=raw["byte_count"], expected_sha256=raw["sha256"])
     scientific = parse_root([original])
+    return raw, source, original, scientific
+
+
+def _verified(connection, files, owner, project, raw_id, root):
+    raw, source, _, scientific = _original(connection, files, owner, project, raw_id)
     batch, roles = _stage(connection, files, owner, project, raw, root)
     slot = roles["dataset_copy"]
     body = files.read(f".job-staging/{root}/dataset.json", cap=16*M,

@@ -73,7 +73,8 @@ def _dataset_view(item: ObservationDataset) -> dict:
         "version": item.version, "schema": "geophysics.observation-dataset/v1",
         "modality": item.modality, "row_count": item.row_count, "parser_version": item.parser_version,
         "raw_sha256": item.raw_sha256, "sha256": item.sha256, "created_at": _date(item.created_at),
-        "qc_verdict": "structural_index_not_physical_qc" if item.modality == WAVEFORM_MODALITY
+        "qc_verdict": "structural_only_not_scientifically_admitted" if item.parser_version == 'gravity-stations-json/v1'
+                      else "structural_index_not_physical_qc" if item.modality == WAVEFORM_MODALITY
                       else "awaiting_full_tensor_qc" if item.modality == "edi_transfer_function"
                       else "parsed_not_numerically_inverted" if item.modality in {"ert_profile", "traveltime_profile"}
                       else "parsed_for_flag_qc_only",
@@ -168,6 +169,16 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         await session.execute(text("BEGIN IMMEDIATE"))
         await session.refresh(user)
         asset, source = await _owned_asset(session, project_id, str(request.asset_id), user)
+        if asset.detected_format == 'gravity_stations_json':
+            from app.physical_assembly import PhysicalAssembly
+            from app.physical_root_route import create_physical_root
+            physical = getattr(app.state, 'physical_assembly', None)
+            if not isinstance(physical, PhysicalAssembly):
+                raise ApiError(409, 'physical_admission_closed', 'Physical dataset assembly is not installed')
+            if request.waveform_request is not None or request.profile_metadata is not None:
+                raise ApiError(422, 'method_ineligible', 'Physical originals do not accept waveform or profile metadata')
+            return _dataset_view(await create_physical_root(settings, session, physical,
+                owner_id=str(user.id), project_id=project_id, raw_asset_id=asset.id))
         if asset.detected_format == "miniseed":
             from app.waveform_processing import create_waveform_dataset
             return _dataset_view(await create_waveform_dataset(settings, session, user, project_id,
@@ -254,6 +265,10 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         session: AsyncSession = Depends(get_session),
     ):
         dataset = await _owned_dataset(session, project_id, dataset_id, user)
+        if dataset.parser_version == 'gravity-stations-json/v1':
+            from app.physical_read import owned_dataset_payload
+            value = await owned_dataset_payload(session, getattr(app.state, 'physical_assembly', None), dataset)
+            return JSONResponse(value, headers={'Cache-Control': 'no-store'})
         return JSONResponse(_dataset_payload(settings, dataset), headers={"Cache-Control": "no-store"})
 
     @router.get("/datasets/{dataset_id}/methods")
@@ -262,6 +277,17 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         session: AsyncSession = Depends(get_session),
     ):
         dataset = await _owned_dataset(session, project_id, dataset_id, user)
+        if dataset.parser_version == 'gravity-stations-json/v1':
+            from app.physical_read import owned_dataset_payload
+            from app.physical_persistence import CORRECTION, TRANSFORM
+            await owned_dataset_payload(session, getattr(app.state, 'physical_assembly', None), dataset)
+            # No flag-QC fallback or source-hash-only claim of child admission.
+            # The concrete native dispatcher must supply its fixed reviewed
+            # runtime before these two actual scientific methods can be queued.
+            return {'dataset_id': dataset.id, 'methods': [], 'unavailable': [
+                dict(method_id=method, eligible=False, lane='native_context_pending',
+                    reason='Physical scientific worker runtime is not yet installed')
+                for method in (CORRECTION, TRANSFORM)]}
         data = _dataset_payload(settings, dataset)
         if dataset.modality in {"ert_profile", "traveltime_profile"}:
             method = data["method_id"]
