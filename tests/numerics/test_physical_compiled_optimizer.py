@@ -189,12 +189,15 @@ def test_proxy_native_delegation_and_closed_owned_metric_not_caller_factor():
     native = NativeProbe(o, identity, retained)
     b = public.ConditionedBudget(monotonic()+120., 200, 2*1024**3, plan['admitted_bytes'], plan['allocation_plan_sha256'])
     proxy = public._CompiledObjective(native, b, q)
-    assert proxy.evaluate.__self__ is native and proxy.components.__self__ is native
+    assert proxy.components.__self__ is native
     assert proxy.binding_diagonal.__self__ is native and proxy.release_state.__self__ is native
     metric = proxy.metric_operands(q)
     assert metric.binding == o.binding and metric.likelihood_scale == .5 and metric.covariance is False
     assert np.array_equal(metric.regularizer.toarray(), (o.scientific_beta*(o.prior.T@o.prior)).toarray())
     assert not native.calls  # No copied physical evaluation/Hessian or fit.
+    value = proxy.evaluate(q, True, True)
+    assert type(value) is object and native.calls[0][0] == 'native_evaluate'
+    assert native.calls[0][1][0] is q and native.calls[0][1][1:] == (True, True)
 
 
 @pytest.mark.parametrize('field', ['sensitivity', 'observations', 'prior', 'scientific_beta', 'reference', 'physical_sensitivity'])

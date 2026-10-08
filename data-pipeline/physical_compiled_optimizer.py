@@ -295,6 +295,16 @@ class _CompiledObjective:
     def __getattr__(self, name):
         return getattr(self.native, name)
 
+    def evaluate(self, *args, **kwargs):
+        if monotonic() > self.budget.deadline:
+            raise source.intervals._Expired
+        _check_source()
+        if self.native.identity() != self.canonical_identity:
+            raise ValueError('compiled original: canonical native identity drift')
+        # No reconstructed potential/gradient/Hessian here: actual native
+        # outputs and action objects are returned literally unchanged.
+        return self.native.evaluate(*args, **kwargs)
+
     def original(self, q):
         if monotonic() > self.budget.deadline:
             raise source.intervals._Expired
@@ -342,6 +352,18 @@ class _CompiledObjective:
 
 
 class _Linear(reduced._Linear):
+    def evaluate(self, *args, **kwargs):
+        try:
+            return super().evaluate(*args, **kwargs)
+        except source.intervals._Expired:
+            self.fail('wall_cap')
+
+    def stoppingCriteria(self, inLS=False):
+        try:
+            return super().stoppingCriteria(inLS)
+        except source.intervals._Expired:
+            self.fail('wall_cap')
+
     def prepare_owned(self, terminal, mode, source_epoch=None):
         super().prepare_owned(terminal, mode, source_epoch)
         self._kernel_base_bytes = 0
@@ -350,7 +372,10 @@ class _Linear(reduced._Linear):
         # Parent computes kernel and prospective history BEFORE factory setup.
         # Add, never MAX away, the coexisting complete original joint Problem.
         self._base_bytes = self._kernel_base_bytes
-        count = super()._admit_phase(phase)
+        try:
+            count = super()._admit_phase(phase)
+        except source.intervals._Expired:
+            self.fail('wall_cap')
         self._kernel_base_bytes = self._base_bytes
         self._base_bytes += self.objective.allocation['original_retained_problem_bytes']
         prospective = (self._base_bytes+reduced.WORKSPACE_BYTES+self._audit_bytes+count
