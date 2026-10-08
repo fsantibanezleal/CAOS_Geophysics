@@ -64,6 +64,17 @@ data, public optimizer, accepted method or service activation is changed.
 
 ## Tasks and scope of gates
 
+The final-fit qualifier is a closed `magnetic-original-final-fit-qualification-1`
+record for unchanged S2-A secondary ENU, 528 active cells, 864 source components,
+216 development rows/648 fitting components and all eight epsilon stages. It
+binds exact A request/original hashes, the complete loaded source inventory and
+the public source subset. Original caps are120s/200accepted/200CG/20line-search/
+805306368bytes; independent model/prediction1e-6, objective1e-8 and normalized
+KKT1e-7 thresholds remain unchanged. The caller supplies both external record
+and its exact SHA. Missing, altered, first432-component or wrong-source records
+refuse before birth. An authored record tests grammar, not an actual fitted
+qualifier. This seam does not permit producing or accepting a fake passed fit.
+
 1. Replace late PID observer acquisition with pre-release held Job custody.
 2. Add bounded fresh whole-observer accounting and exact failure cleanup.
 3. Add original-linear geometry-only prerequisite before controller birth.
