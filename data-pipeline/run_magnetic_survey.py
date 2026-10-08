@@ -25,7 +25,8 @@ SOURCES = ('physical_optimizer', 'physical_nonlinear_optimizer', 'gravity_l2_pre
            'magnetic_result_bundle', 'magnetic_local_paths', 'magnetic_nonlinear_adapter', 'run_magnetic_survey',
            'magnetic_native_runtime', 'magnetic_native_worker', 'simpeg.optimization',
            'magnetic_line_survey_runtime', 'magnetic_line_survey', 'magnetic_line_survey_io',
-           'magnetic_line_contract', 'magnetic_line_survey_contract')
+           'magnetic_line_contract', 'magnetic_line_survey_contract',
+           'magnetic_line_validation', 'magnetic_lines')
 
 
 CONDITIONED_SOURCES = ('physical_conditioned_optimizer', 'physical_owned_spd', 'gravity_l2_metric',

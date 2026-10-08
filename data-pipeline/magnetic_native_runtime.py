@@ -19,7 +19,8 @@ from magnetic_survey_json import canonical, fail
 
 
 OBSERVATION_SOURCES = ('magnetic_line_survey_runtime', 'magnetic_line_survey', 'magnetic_line_survey_io',
-                       'magnetic_line_contract', 'magnetic_line_survey_contract')
+                       'magnetic_line_contract', 'magnetic_line_survey_contract',
+                       'magnetic_line_validation', 'magnetic_lines')
 
 
 def observation_pins():

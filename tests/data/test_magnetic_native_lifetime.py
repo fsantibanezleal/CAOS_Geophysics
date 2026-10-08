@@ -35,7 +35,7 @@ def test_actual_scratch_bytes_and_loaded_observation_sources(tmp_path):
     (tmp_path/'inner'/'two').write_bytes(b'ab')
     assert runtime.scratch_bytes(tmp_path, settled=True) == 16
     pins = runtime.observation_pins()
-    assert len(pins) == 5 and all(len(v) == 64 and Path(k).is_file() for k, v in pins.items())
+    assert len(pins) == 7 and all(len(v) == 64 and Path(k).is_file() for k, v in pins.items())
 
 
 @pytest.mark.parametrize('fault', ['assign', 'membership', 'resume'])
