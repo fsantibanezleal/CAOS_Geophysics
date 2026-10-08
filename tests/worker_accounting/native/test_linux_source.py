@@ -126,3 +126,10 @@ def test_observer_actual_credentials_checked_before_object_creation():
     assert "PR_CAP_AMBIENT_IS_SET" in body and "has != wanted" in body
     assert "PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0) != 1" in body
     assert native.index("if (observer_credentials()") < native.index('mkdirat(o->unit_fd, "science"')
+
+
+def test_complete_observation_gap_includes_query_duration():
+    loop = (CORE / "linux_main.c").read_text("utf-8")
+    assert "gap = s.end_ns - previous_end, query = s.end_ns - s.start_ns" in loop
+    assert "gap = s.start_ns - previous_end" not in loop
+    assert "if (gap > LC_QUERY_NS || query > LC_QUERY_NS) latch(l, LC_GAP)" in loop

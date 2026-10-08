@@ -590,3 +590,10 @@ heartbeat may follow ACK. The native ACK terminal-state check stays strict.
 Actual i14 reached a clean available final but a late bridge heartbeat caused
 failed release13; retain that run as failed, not a passing nominal. Gate:
 test_linux_controller.py::test_transport_no_heartbeat_after_custody_bind.
+
+Complete observation gap includes the current counter query: current end minus
+previous end (or prepared clock for first sample). Do not admit separate20ms
+sleep and20ms query intervals. The diagnostic maximum and fail-closed check use
+that complete interval; the query maximum remains separately retained. Q1ms in
+the margin design is aggregate counter rounding reserve, not query duration.
+Gate: test_linux_source.py::test_complete_observation_gap_includes_query_duration.

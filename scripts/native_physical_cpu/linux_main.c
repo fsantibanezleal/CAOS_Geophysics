@@ -123,7 +123,9 @@ static int observe(struct loop *l) {
     if (result) { l->counter_lost = 1; return result; }
     uint64_t previous_end = l->samples ? l->previous.end_ns : l->created_ns;
     if (s.start_ns < previous_end || s.end_ns < s.start_ns) return LC_CLOCK;
-    uint64_t gap = s.start_ns - previous_end, query = s.end_ns - s.start_ns;
+    /* Complete observation gap includes the current query, not two separately
+       admitted intervals whose sum could exceed the unchanged20ms bound. */
+    uint64_t gap = s.end_ns - previous_end, query = s.end_ns - s.start_ns;
     if (gap > l->max_gap_ns) l->max_gap_ns = gap;
     if (query > l->max_query_ns) l->max_query_ns = query;
     if (gap > LC_QUERY_NS || query > LC_QUERY_NS) latch(l, LC_GAP);
