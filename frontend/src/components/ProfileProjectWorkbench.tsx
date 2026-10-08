@@ -7,6 +7,7 @@ import { M07_METHOD, M09_METHOD, isProfileReceipt, isProfileJob, type ProfileDat
 import type { ProfileAdmission } from "../api/profile-local-contracts";
 import { ProfileLocalInstrument } from "./ProfileLocalInstrument";
 import { ResultBundleInput } from "./ResultBundleInput";
+import { WorkbenchLayout } from "@fasl-work/caos-app-shell";
 
 const active = (job: ProjectProcessingJob) => job.state === "queued" || job.state === "running";
 export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, onGravity, onMt, methodNavigation }: {
@@ -63,12 +64,10 @@ export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, on
     const admitted = await clients.profile.validateProfile(projectId, asset.asset_id, metadata, signal); if (signal.aborted) return; setReceipts(values => [...values, admitted]); setDatasetId(admitted.dataset_id);
   }); };
   const eligible = eligibility?.methods.some(value => value.method_id === method), unavailable = eligibility?.unavailable.find(value => value.method_id === method);
-  return <div className="page-body wide workbench processing-workbench">
-    <aside className={`instrument-sidebar processing-sidebar ${expanded ? "expanded" : ""}`}>
-      {methodNavigation}
+  return <WorkbenchLayout railLabel={t("Protected profile controls", "Controles del perfil protegido")} railHead={methodNavigation} rail={<details open={expanded} onToggle={event => setExpanded(event.currentTarget.open)}>
+      <summary>{t("Processing controls", "Controles de procesamiento")}</summary>
       <div className="instrument-brand"><div><span className="small-caps">{t("PRIVATE PROJECT · ERT / TRAVELTIME", "PROYECTO PRIVADO · ERT / TIEMPOS")}</span><h1>{project?.name ?? t("Profile processing", "Procesamiento de perfiles")}</h1></div></div>
-      <div className="processing-actions"><button className="btn" onClick={onGravity}>{t("Gravity station QC", "QC gravimétrico")}</button><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button></div>
-      <button className="btn mobile-controls-toggle" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{t("Processing controls", "Controles de procesamiento")}</button>
+      <div className="processing-actions">{!methodNavigation && <><button className="btn" onClick={onGravity}>{t("Gravity station QC", "QC gravimétrico")}</button><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button></>}<button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button></div>
       {session === "ready" && <div className="processing-controls">
         <label className="select-control"><span>{t("Stored original", "Original almacenado")}</span><select className="select" value={assetId} disabled={busy} onChange={event => { setAssetId(event.target.value); setHolder(""); setPermission(false); setRedistribution(false); }}>{!assets.length && <option value="">{t("Upload an .ohm or .sgt in Projects", "Cargue .ohm o .sgt en Proyectos")}</option>}{assets.map(value => <option key={value.asset_id} value={value.asset_id}>{value.original_filename} · {value.detected_format}</option>)}</select></label>
         <p className="project-note">{t("Original local distance/elevation in metres, elevation positive up. Counts must match every original row; no coordinate conversion or missing-value substitution.", "Distancia/elevación local original en metros, elevación positiva hacia arriba. Los conteos deben coincidir con cada fila; sin conversión de coordenadas ni sustitución de valores.")}</p>
@@ -87,19 +86,19 @@ export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, on
         <label className="select-control"><span>{t("Job history", "Historial de trabajos")}</span><select className="select" value={jobId} onChange={event => setJobId(event.target.value)}>{!history.length && <option value="">{t("No job", "Sin trabajo")}</option>}{history.map(value => <option key={value.job_id} value={value.job_id}>{value.state} · {value.job_id}</option>)}</select></label>
         {job && <><button className="btn" disabled={busy || !active(job) || job.cancel_requested} onClick={() => void act(async signal => { const updated = await clients.profile.cancel(projectId, job.job_id, signal); if (!signal.aborted) setJobs(values => values.map(value => value.job_id === updated.job_id ? updated : value)); })}>{job.cancel_requested ? t("Cancellation requested", "Cancelación solicitada") : t("Cancel job", "Cancelar trabajo")}</button>
           <p className="project-note">{job.method_id} · {job.job_id}</p></>}
+        {job && <details><summary>{t("Measured child resources", "Recursos medidos del proceso")}</summary><p className="project-note">{job.wall_ms ?? "n/a"} ms · RSS {job.peak_rss_bytes ?? "n/a"} B · {t("scratch", "temporales")} {job.scratch_bytes ?? "n/a"} B</p></details>}
         {job?.state === "succeeded" && receipt && <><button className="btn" disabled={busy} onClick={() => void act(async signal => { const blob = await clients.profile.profileExport(projectId, job, receipt, signal); if (signal.aborted) return; const url = URL.createObjectURL(blob), link = document.createElement("a"); link.href = url; link.download = `profile-${job.job_id}.zip`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 30000); })}>{t("Download verified result ZIP", "Descargar ZIP de resultado verificado")}</button><ResultBundleInput key={`${job.job_id}:${job.result_sha256}`} es={es} verify={blob => verifyProfileBundle(blob, job, receipt)} onOpened={setResult} /></>}
         <button className="btn" disabled={busy} onClick={() => setRevision(value => value + 1)}>{t("Refresh project data", "Actualizar datos del proyecto")}</button>
       </div>}
-    </aside>
-    <section className="instrument-main processing-main" aria-label={t("Protected profile results", "Resultados protegidos de perfiles")}>
+    </details>}>
+    <section className="instrument-main processing-main processing-instrument" aria-label={t("Protected profile results", "Resultados protegidos de perfiles")}>
       {session !== "ready" ? <div className="load-state" role="status">{session === "checking" ? t("Checking project ownership…", "Comprobando titular del proyecto…") : t("Sign in through Projects, or retry if the private service is unavailable.", "Inicie sesión en Proyectos, o reintente si el servicio privado no está disponible.")}<button className="btn" onClick={() => setRevision(value => value + 1)}>{t("Retry", "Reintentar")}</button></div> : <>
         <div className="processing-status"><strong>{t("M07 topographic ERT / M09 first arrivals", "M07 ERT topográfico / M09 primeras llegadas")}</strong><span role="status" data-testid="job-status">{job?.state ?? t("No job selected", "Sin trabajo seleccionado")}</span></div>
-        {job && <p className="project-note">{t("Measured child resources", "Recursos medidos del proceso")}: {job.wall_ms ?? "n/a"} ms · RSS {job.peak_rss_bytes ?? "n/a"} B · {t("scratch", "temporales")} {job.scratch_bytes ?? "n/a"} B</p>}
         {job?.error && <p role="alert" className="project-error">{job.error.code}: {job.error.message}</p>}
-        {result ? <ProfileLocalInstrument admitted={result} es={es} lane="protected-worker" /> : <p className="load-state">{t("Select a completed job to inspect its exact native result. No preset model is displayed for your original.", "Seleccione un trabajo finalizado para inspeccionar su resultado nativo exacto. No se muestra modelo predefinido para su original.")}</p>}
+        {result ? <ProfileLocalInstrument key={result.resultSha256} admitted={result} es={es} lane="protected-worker" /> : <p className="load-state">{t("Select a completed job to inspect its exact native result. No preset model is displayed for your original.", "Seleccione un trabajo finalizado para inspeccionar su resultado nativo exacto. No se muestra modelo predefinido para su original.")}</p>}
       </>}
       {problem != null && <p role="alert" className="project-error">{message(problem)}</p>}
       {pollError != null && <p role="alert" className="project-error">{message(pollError)} <button className="btn" onClick={() => setPollRetry(value => value + 1)}>{t("Resume status check", "Reanudar revisión de estado")}</button></p>}
     </section>
-  </div>;
+  </WorkbenchLayout>;
 }
