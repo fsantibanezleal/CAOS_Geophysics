@@ -1,0 +1,11 @@
+.m03-instrument { min-width: 0; }
+.m03-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-block: var(--space-3); }
+.m03-profile { display: block; width: 100%; height: clamp(280px, 45vh, 520px); color: var(--color-fg); }
+.m03-profile text { fill: var(--color-fg); font-size: 12px; }
+.m03-axis { fill: none; stroke: var(--color-border); }
+.m03-point { fill: var(--color-accent); }
+.m03-picked { fill: var(--color-magenta); }
+.m03-plan { display: block; width: 100%; height: clamp(280px, 45vh, 520px); color: var(--color-fg); }
+.m03-plan text { fill: var(--color-fg); font-size: 12px; }
+.m03-cross { fill: var(--color-surface-2); stroke: var(--color-magenta); stroke-width: 1.5; cursor: pointer; }
+.m03-grid { display: block; width: 100%; height: clamp(280px, 45vh, 520px); background: var(--color-surface-2); image-rendering: pixelated; }
