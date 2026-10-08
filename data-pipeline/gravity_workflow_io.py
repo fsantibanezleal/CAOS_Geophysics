@@ -189,6 +189,7 @@ def _target(root, name):
 
 
 def read_archive(root, name):
+    root=external_root(root,'GEOPHYSICS_LOCAL_DATA_ROOT')
     target = _target(root,name)
     with target.open('rb') as stream: raw = stream.read(MAX_FILE+1)
     return native_from_archive(raw)

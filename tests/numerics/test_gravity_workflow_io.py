@@ -89,9 +89,11 @@ def test_external_roots_and_no_overwrite(tmp_path,monkeypatch):
     with pytest.raises(ValueError): workflow.external_root('relative','GEOPHYSICS_LOCAL_DATA_ROOT')
     repo = Path(__file__).resolve().parents[2]
     with pytest.raises(ValueError): workflow.external_root(repo/'data','GEOPHYSICS_LOCAL_DATA_ROOT')
+    with pytest.raises(ValueError): workflow.read_archive(repo/'data','untouched.gza')
     data,temp = tmp_path/'data',tmp_path/'temp'
     target=workflow.publish_archive(data,temp,'one.gza',{'v':np.array([1.])})
     before=target.read_bytes()
+    assert workflow.read_archive(str(data),'one.gza')['v'][0]==1.
     with pytest.raises(FileExistsError): workflow.publish_archive(data,temp,'one.gza',{'v':np.array([2.])})
     assert target.read_bytes()==before
     with pytest.raises(ValueError): workflow.publish_archive(data,temp,'../bad.gza',{})
