@@ -54,3 +54,33 @@ def test_sampler_error_retained_as_failed_measurement(tmp_path):
     with prefix.with_suffix('.json').open() as stream: science=json.load(stream)
     harness._write(replacement.with_suffix('.json'),science)
     assert harness._completed(replacement,'cap',0)['sampling_complete'] is False
+
+
+def test_resume_reruns_failed_sampling_without_overwriting_receipts(tmp_path):
+    import json
+    prefix=tmp_path/'cap-00'
+    receipts(prefix)
+    resource=prefix.with_suffix('.resource.json')
+    record=json.loads(resource.read_text())
+    record.update(sampling_complete=False,sampling_errors=[{'type':'OSError','winerror':1455}])
+    resource.unlink()  # Test fixture only, never a real measurement receipt.
+    harness._write(resource,record)
+    original=resource.read_bytes()
+    retry,completed=harness._resume_attempt(tmp_path,'cap',0)
+    assert retry==tmp_path/'cap-00-retry-1' and completed is None
+    assert resource.read_bytes()==original
+    receipts(retry)
+    selected,completed=harness._resume_attempt(tmp_path,'cap',0)
+    assert selected==retry and completed['sampling_complete'] is True
+    assert resource.read_bytes()==original
+
+
+def test_resume_summary_keeps_previous_failed_measurement(tmp_path):
+    original=tmp_path/'summary.json'
+    harness._write(original,{'nominal':{'sampling_complete_count':19}})
+    old=original.read_bytes()
+    target=harness._summary_target(tmp_path)
+    assert target==tmp_path/'summary-retry-1.json'
+    harness._write(target,{'nominal':{'sampling_complete_count':20}})
+    assert original.read_bytes()==old
+    assert harness._summary_target(tmp_path)==tmp_path/'summary-retry-2.json'

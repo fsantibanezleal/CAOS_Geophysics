@@ -94,6 +94,29 @@ def _completed(prefix,kind,index):
     return record
 
 
+def _resume_attempt(out,kind,index):
+    """Reuse complete sampling only; retain every failed/incomplete attempt."""
+    prefix=out/f'{kind}-{index:02d}'
+    attempt=0
+    while True:
+        completed=_completed(prefix,kind,index)
+        if completed is not None and completed.get('sampling_complete',True):
+            return prefix,completed
+        if not any(prefix.with_suffix(suffix).exists() for suffix in ('.log','.json','.resource.json')):
+            return prefix,None
+        attempt+=1
+        prefix=out/f'{kind}-{index:02d}-retry-{attempt}'
+
+
+def _summary_target(out):
+    target=out/'summary.json'
+    attempt=0
+    while target.exists():
+        attempt+=1
+        target=out/f'summary-retry-{attempt}.json'
+    return target
+
+
 def run(out,count,resume=False):
     out=external_path(out)
     if out==ROOT or ROOT in out.parents or any((p/'.git').exists() for p in (out,*out.parents)):
@@ -107,21 +130,10 @@ def run(out,count,resume=False):
         for index in range(count):
             prefix=out/f'{kind}-{index:02d}'
             if resume:
-                completed=_completed(prefix,kind,index)
+                prefix,completed=_resume_attempt(out,kind,index)
                 if completed is not None:
                     measurements.append(completed)
                     continue
-                # Preserve interrupted logs/science records. An incomplete
-                # sampler receipt cannot be invented from the child alone.
-                attempt=0
-                while any(prefix.with_suffix(suffix).exists() for suffix in ('.log','.json','.resource.json')):
-                    attempt+=1
-                    prefix=out/f'{kind}-{index:02d}-retry-{attempt}'
-                    completed=_completed(prefix,kind,index)
-                    if completed is not None:
-                        measurements.append(completed)
-                        break
-                if completed is not None: continue
             with prefix.with_suffix('.log').open('xb') as log:
                 process=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),
                     '--child',kind,'--output',str(prefix.with_suffix('.json'))],
@@ -164,7 +176,9 @@ def run(out,count,resume=False):
             'sampled_process_tree_peak_rss_p95_bytes':float(np.percentile([r['sampled_process_tree_peak_rss_bytes'] for r in actual],95)),
             'total_wall_p95_seconds':float(np.percentile([r['wall_seconds'] for r in actual],95)),
             'resource_upper_proof':False,'host_accepted':False}
-    _write(out/'summary.json',groups)
+    summary=_summary_target(out)
+    _write(summary,groups)
+    print(json.dumps({'summary':str(summary)},sort_keys=True),flush=True)
     return 0 if all(r['exit_code']==0 and r.get('sampling_complete',True) for r in measurements) else 1
 
 
