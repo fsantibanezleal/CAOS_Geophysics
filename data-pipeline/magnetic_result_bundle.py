@@ -66,6 +66,8 @@ def _metric(value, rows, components, route):
 
 
 def _unit(path):
+    if '/model_states/q_models' in path:
+        return 'chi_over_0.01'
     if any(p in path for p in ('receivers_m', 'origin_m', 'widths_', 'lengths_m', 'block_width_m')):
         return 'm'
     if any(p in path for p in ('chi_si', 'lower_si', 'upper_si', 'start_si', 'reference_si')):
@@ -156,6 +158,17 @@ def _validate_history(history, candidates, *, allow_empty):
 def validate_result(result, request):
     """Replay supplied schema, geometry, identities and actual residual sign."""
     import numpy as np
+    if type(result) is dict and result.get('schema') == 'magnetic-survey-result-2':
+        keys(result, 'schema status identity inventory partition candidates selected model prediction '
+            'metrics history diagnostics claims model_states', '$/result')
+        base = {k: v for k, v in result.items() if k != 'model_states'}
+        base['schema'] = 'magnetic-survey-result-1'
+        validate_result(base, request)
+        if result['status'] != 'complete':
+            fail('convergence', '$/model_states', 'Failed generations cannot publish model-state replay')
+        from magnetic_model_states import validate
+        validate(result['model_states'], base, request)
+        return result
     keys(result, 'schema status identity inventory partition candidates selected model prediction metrics history diagnostics claims', '$/result')
     if result['schema'] != 'magnetic-survey-result-1' or result['status'] not in ('complete', 'failed'):
         fail('convergence', '$/result', 'Literal complete/failed local result required')

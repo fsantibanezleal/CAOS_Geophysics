@@ -37,7 +37,7 @@ def project_result(bundle_path, receipt):
             qc_reason=result['inventory']['qc_reason'][i], role='outer' if i in outer else 'development',
             observed_nT=observed[c*i:c*i+c], predicted_nT=None if k is None else p[k:k+c],
             residual_nT=None if k is None else r[k:k+c]))
-    return dict(schema='magnetic-owner-result-view-1', binding=receipt.copy(),
+    view = dict(schema='magnetic-owner-result-view-1', binding=receipt.copy(),
         lane='local_replay', online_admitted=False, claims=result['claims'],
         quantity=result['prediction']['quantity'], components=result['prediction']['components'],
         coordinate_frame=request['frame'], original=request['source'],
@@ -46,3 +46,6 @@ def project_result(bundle_path, receipt):
         diagnostics=result['diagnostics'], sensitivity=None,
         sensitivity_reason='Not exported by this immutable generation; no display recomputation or invented zero',
         resolution_interpretation='Local fixed-objective free-face point-spread; not posterior geological uncertainty')
+    if result['schema'] == 'magnetic-survey-result-2':
+        view.update(schema='magnetic-owner-result-view-2', model_states=result['model_states'])
+    return view

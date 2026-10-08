@@ -23,10 +23,16 @@ def validate_owned_magnetic_result(payload, *, user, job, dataset, expected_bind
             or expected_binding['original_sha256'] != dataset.raw_sha256
             or job.dataset_sha256 != dataset.sha256):
         raise ApiError(409, 'derived_integrity_failed', 'Durable magnetic receipt or dataset identity differs')
-    if (type(payload) is not dict or payload.get('schema') != 'magnetic-owner-result-view-1'
+    if (type(payload) is not dict or payload.get('schema') not in (
+            'magnetic-owner-result-view-1', 'magnetic-owner-result-view-2')
             or payload.get('binding') != expected_binding or payload.get('lane') != 'local_replay'
             or payload.get('online_admitted') is not False or type(payload.get('claims')) is not dict
             or set(payload['claims']) != {'full_method_accepted', 'field_source_verified', 'geology_truth_known', 'online_admitted'}
             or any(value is not False for value in payload['claims'].values())):
         raise ApiError(409, 'derived_integrity_failed', 'Magnetic result binding or execution claim differs')
+    if payload['schema'] == 'magnetic-owner-result-view-2':
+        states = payload.get('model_states')
+        if (type(states) is not dict or states.get('schema') != 'magnetic-selected-final-model-states-1'
+                or states.get('candidate') != payload.get('selected') or states.get('fold') != -1):
+            raise ApiError(409, 'derived_integrity_failed', 'Selected-final state replay differs')
     return payload

@@ -20,7 +20,7 @@ from magnetic_local_paths import configure_scratch, data_output, external_path
 
 
 SOURCES = ('physical_optimizer', 'physical_nonlinear_optimizer', 'gravity_l2_precision', 'magnetic_forward', 'magnetic_inverse',
-           'magnetic_inverse_precision', 'magnetic_optimizer_adapter', 'magnetic_likelihood',
+           'magnetic_inverse_precision', 'magnetic_optimizer_adapter', 'magnetic_likelihood', 'magnetic_model_states',
            'magnetic_calibration', 'magnetic_diagnostics', 'magnetic_survey', 'magnetic_survey_json',
            'magnetic_result_bundle', 'magnetic_local_paths', 'magnetic_nonlinear_adapter', 'run_magnetic_survey',
            'magnetic_native_runtime', 'magnetic_native_worker', 'simpeg.optimization',
@@ -217,6 +217,10 @@ def main(argv=None):
                     print(canonical(dict(schema=result['schema'], status='failed', identity=result['identity'],
                         reason=result['diagnostics']['reason'], claims=result['claims'])).decode())
                     return 3
+                if audit is not None and binding.accepted_export == 'physical_original_optimizer.solve_bounded_linear':
+                    from magnetic_model_states import from_closed_audit
+                    states = from_closed_audit(audit.path, result, request, binding.source_inventory_sha256)
+                    result = dict(result, schema='magnetic-survey-result-2', model_states=states)
                 generation = write_bundle(output, result, request)
                 summary = dict(schema=result['schema'], status=result['status'], identity=result['identity'],
                     selected=result['selected'], generation_sha256=generation, original_bytes_verified=True,
