@@ -123,6 +123,52 @@ def test_reservation_visible_to_independent_connection_before_any_directory(tmp_
     asyncio.run(gate())
 
 
+def test_cancelled_asyncio_bridge_is_not_actual_thread_extinction(tmp_path, monkeypatch):
+    async def gate():
+        engine, sessions, settings, _, _, owner = await case(tmp_path)
+        started, release, finished = threading.Event(), threading.Event(), threading.Event()
+        bridges = []
+        real_wrap = asyncio.wrap_future
+        def capture(*args, **kwargs):
+            bridge = real_wrap(*args, **kwargs)
+            bridges.append(bridge)
+            return bridge
+        monkeypatch.setattr(asyncio, 'wrap_future', capture)
+        def actual_work():
+            started.set()
+            assert release.wait(10)
+            finished.set()
+        async def run():
+            async with sessions() as session, owner.lifetime(session, settings):
+                await bounded_work(actual_work, timeout=5)
+        pending = asyncio.create_task(run())
+        try:
+            async with asyncio.timeout(10):
+                while not started.is_set():
+                    assert not pending.done()
+                    await asyncio.sleep(.001)
+                # Last bridge is this worker (SQLite also uses async futures).
+                bridges[-1].cancel()
+                await asyncio.sleep(.02)
+                pending.cancel()
+                await asyncio.sleep(.02)
+                assert not pending.done() and not finished.is_set()
+                assert owner.physical.worker.task is not None
+                release.set()
+                with pytest.raises(asyncio.CancelledError):
+                    await pending
+                assert finished.is_set()
+            assert owner.physical.worker.task is None and owner.physical.leases.task is None
+        finally:
+            release.set()
+            try:
+                await pending
+            except BaseException:
+                pass
+            await engine.dispose()
+    asyncio.run(gate())
+
+
 @pytest.mark.parametrize("attack", ["quota", "device", "unbound"])
 def test_refusal_has_no_stage_or_attempt(tmp_path, attack):
     async def gate():

@@ -23,6 +23,12 @@ the existing unknown-extension guard must not be bypassed. The old examples
 are parameter mappings, not permission to mount without those lifetime guards.
 See [charged replay custody](charged-replay-custody.md).
 
+The excluded reader returns explicit `unhandled_m03_attempt_ids`; parent must
+reconcile those exact rows with the M03 reader before admitting the whole table.
+It rejects every other discriminator, incomplete M04 attempt, nonliteral boolean
+lifetime, malformed target inventory, changed request/preflight or surviving
+scratch. A zero M04 subtotal never grants another method's source authority.
+
 The owner binds the existing application's `async_sessionmaker` once with
 `owner.bind_sessions(app.state.sessions)`, AFTER the physical assembly has bound
 it. Every public magnetic writer/reader uses a fresh session and owns its own

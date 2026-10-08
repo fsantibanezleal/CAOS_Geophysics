@@ -19,20 +19,26 @@ class Leases:
     def __init__(self, root):
         self.files = Files(root)
         self.tasks = {}
+        self.modes = {}
 
     @asynccontextmanager
     async def acquire(self, *, exclusive=False):
         task = asyncio.current_task()
         self.tasks[task] = self.tasks.get(task, 0) + 1
+        self.modes.setdefault(task, []).append(exclusive)
         try:
             yield
         finally:
             self.tasks[task] -= 1
+            self.modes[task].pop()
             if not self.tasks[task]:
                 del self.tasks[task]
+                del self.modes[task]
 
     def require_held(self, *, exclusive=False):
         assert asyncio.current_task() in self.tasks
+        if exclusive:
+            assert any(self.modes[asyncio.current_task()])
 
 
 class Worker:

@@ -12,6 +12,7 @@ import hashlib
 import json
 import os
 import stat
+import zipfile
 from uuid import uuid4
 
 from sqlalchemy import select, text
@@ -529,20 +530,7 @@ async def _read_charged_replay(session, settings, user, job_id, *, project_id, o
         session.expunge(item)
     await session.rollback()
     payload, request = await bounded_work(_dataset, settings, dataset, asset, source, timeout=timeout)
-    req, preflight = job.request_json, job.preflight
-    if (job.state != "succeeded" or job.method_id != LOCAL_MAGNETIC_METHOD_ID or job.cancel_requested
-            or job.dataset_sha256 != dataset.sha256 or job.project_id != dataset.project_id
-            or type(req) is not dict or set(req) != REQUEST_KEYS or req["schema"] != "magnetic-owned-replay-request-1"
-            or type(req["parameters"]) is not dict or set(req["parameters"]) != PARAMETER_KEYS
-            or req["dataset_id"] != dataset.id or req["dataset_sha256"] != dataset.sha256
-            or req["method_id"] != LOCAL_MAGNETIC_METHOD_ID
-            or hashlib.sha256(canonical_bytes(req)).hexdigest() != job.request_sha256
-            or type(preflight) is not dict or set(preflight) != {"schema", "magnetic_binding", "source_record_id", "request_sha256", "online_admitted"}
-            or preflight["schema"] != "magnetic-owned-replay-custody-1" or preflight["online_admitted"] is not False
-            or preflight["source_record_id"] != source.id or preflight["request_sha256"] != payload["request_sha256"]
-            or req["parameters"]["request_sha256"] != payload["request_sha256"]):
-        _bad()
-    binding = preflight["magnetic_binding"]
+    req, binding = _replay_record(job, dataset, source, payload)
     key = zip_result_key(str(user.id), dataset.project_id, job.id)
     if job.result_key != key:
         _bad()
@@ -585,6 +573,34 @@ async def _read_charged_replay(session, settings, user, job_id, *, project_id, o
     except BaseException as error:
         await _record_debt(session, identifier, error)
         raise
+
+
+def _replay_record(job, dataset, source, payload):
+    """One closed job/request guard shared by reads and excluded reconciliation."""
+    req, preflight = job.request_json, job.preflight
+    if (job.state != "succeeded" or job.method_id != LOCAL_MAGNETIC_METHOD_ID or job.cancel_requested
+            or job.dataset_sha256 != dataset.sha256 or job.project_id != dataset.project_id
+            or type(req) is not dict or set(req) != REQUEST_KEYS or req["schema"] != "magnetic-owned-replay-request-1"
+            or type(req["parameters"]) is not dict or set(req["parameters"]) != PARAMETER_KEYS
+            or req["dataset_id"] != dataset.id or req["dataset_sha256"] != dataset.sha256
+            or req["method_id"] != LOCAL_MAGNETIC_METHOD_ID
+            or hashlib.sha256(canonical_bytes(req)).hexdigest() != job.request_sha256
+            or type(preflight) is not dict or set(preflight) != {"schema", "magnetic_binding", "source_record_id", "request_sha256", "online_admitted"}
+            or preflight["schema"] != "magnetic-owned-replay-custody-1" or preflight["online_admitted"] is not False
+            or preflight["source_record_id"] != source.id or preflight["request_sha256"] != payload["request_sha256"]
+            or req["parameters"]["request_sha256"] != payload["request_sha256"]):
+        _bad()
+    binding = preflight["magnetic_binding"]
+    if (type(binding) is not dict or set(binding) != {"job_id", "dataset_id", "source_id", "generation_sha256",
+            "configuration_sha256", "original_sha256"}
+            or binding["job_id"] != job.id or binding["dataset_id"] != dataset.id
+            or binding["original_sha256"] != dataset.raw_sha256
+            or binding["source_id"] != payload["survey_source_id"]
+            or binding["configuration_sha256"] != payload["geometry_plan"]["identity"]["configuration_sha256"]
+            or req["parameters"]["configuration_sha256"] != binding["configuration_sha256"]
+            or req["parameters"]["generation_sha256"] != binding["generation_sha256"]):
+        _bad()
+    return req, binding
 
 
 def _project_checked(raw, stage, request, binding, req, user, job, dataset):
@@ -634,6 +650,18 @@ def exact_zip_inventory(settings, job):
         _bad()
     raw = _read(zip_result_path(settings, key))
     if len(raw) != job.result_bytes or hashlib.sha256(raw).hexdigest() != job.result_sha256:
+        _bad()
+    from magnetic_result_export import inspect_zip_bytes
+    try:
+        manifest = inspect_zip_bytes(raw)
+        binding = job.preflight["magnetic_binding"]
+        if (manifest["generation_sha256"] != binding["generation_sha256"]
+                or manifest["original"]["included"] is not False
+                or manifest["original"]["sha256"] != binding["original_sha256"]
+                or manifest["request_metadata"]["source"]["id"] != binding["source_id"]
+                or manifest["result"]["identity"]["configuration_sha256"] != binding["configuration_sha256"]):
+            _bad()
+    except (ValueError, KeyError, TypeError, OSError, zipfile.BadZipFile):
         _bad()
     return {"kind": "magnetic_result", "id": job.id, "relative_path": f"results/{job.id}.zip",
             "byte_count": len(raw), "sha256": job.result_sha256}

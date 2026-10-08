@@ -7,7 +7,9 @@ grant custody. Local read-only CPU work does not claim OS/native admission.
 from __future__ import annotations
 
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
+from contextvars import copy_context
 import hashlib
 import re
 import shutil
@@ -49,15 +51,26 @@ async def bounded_work(function, *args, timeout):
     A timed-out/cancelled worker MUST actually complete before the caller can
     release guards. This is not a hard native CPU/memory containment receipt.
     """
-    pending = asyncio.create_task(asyncio.to_thread(function, *args))
+    executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="magnetic-custody")
+    actual = executor.submit(copy_context().run, function, *args)
+    pending = asyncio.wrap_future(actual)
+    pending.add_done_callback(lambda future: None if future.cancelled() else future.exception())
     try:
         return await asyncio.wait_for(asyncio.shield(pending), timeout)
-    except BaseException:
-        try:
-            await drain(pending)
-        except BaseException:
-            pass  # Preserve original timeout/cancellation; work is now done.
-        raise
+    finally:
+        # A separately cancelled asyncio bridge is NOT executor completion.
+        # Its concurrent future cannot be cancelled once the function starts.
+        # Repeated shutdown/request cancellation must retain the actual owner.
+        while not actual.done():
+            try:
+                await asyncio.sleep(0.01)
+            except asyncio.CancelledError:
+                continue
+        executor.shutdown(wait=True)
+        # Consume a failed bridge after timeout; do not replace the original
+        # timeout/cancel with the worker exception or an unhandled future log.
+        if pending.done() and not pending.cancelled():
+            pending.exception()
 
 
 class MagneticCustodyOwner:
@@ -186,8 +199,25 @@ def validate_attempt(row):
     else:
         _uuid(request["job_id"])
     validate_sources(row.source_receipts, request)
+    if type(row.inventory) is not list or len(row.inventory) > 1:
+        refuse()
+    if row.inventory:
+        record = row.inventory[0]
+        dataset = request["operation"] == "dataset"
+        identifier = request["dataset_id"] if dataset else request["job_id"]
+        relative = f"datasets/{identifier}.json" if dataset else f"results/{identifier}.zip"
+        cap = 16*1024**2 if dataset else MAX_ZIP
+        if (type(record) is not dict or set(record) != {"kind", "id", "relative_path", "byte_count", "sha256"}
+                or record["kind"] != ("dataset" if dataset else "magnetic_result")
+                or record["id"] != identifier or record["relative_path"] != relative
+                or type(record["byte_count"]) is not int or not 0 < record["byte_count"] <= cap
+                or type(record["sha256"]) is not str or not re.fullmatch("[0-9a-f]{64}", record["sha256"])):
+            refuse()
     if row.state == "published":
-        if row.lifetime != dict(schema=LIFETIME, work_completed=True, scratch_removed=True, native_admission=False):
+        lifetime = row.lifetime
+        if (type(lifetime) is not dict or set(lifetime) != {"schema", "work_completed", "scratch_removed", "native_admission"}
+                or lifetime["schema"] != LIFETIME or lifetime["work_completed"] is not True
+                or lifetime["scratch_removed"] is not True or lifetime["native_admission"] is not False):
             refuse()
         if row.inventory or row.retained_bytes:
             refuse()
@@ -217,25 +247,35 @@ async def reconcile_attempts(session, owner, settings):
     """Exact additive startup/delete reader; debt/unknown dirs stay refused."""
     owner.require(session, settings, excluded=True)
     rows = (await session.execute(select(SurveyDatasetAttempt))).scalars().all()
-    selected = [row for row in rows if type(row.input_json) is dict and row.input_json.get("schema") == SCHEMA]
+    selected, unhandled = [], []
+    for row in rows:
+        if type(row.input_json) is not dict:
+            refuse()
+        schema = row.input_json.get("schema")
+        if schema == SCHEMA:
+            selected.append(row)
+        elif schema == "m03-owner-dataset-request/1":
+            unhandled.append(row.id)
+        else:
+            refuse()
     for row in selected:
         validate_attempt(row)
         if row.state != "published":
             refuse()
-        from app.magnetic_custody import _owned, _sources, exact_zip_inventory
+        from app.magnetic_custody import _owned, _sources, _dataset, _replay_record, exact_zip_inventory
         from app.models import ProcessingJob
         from types import SimpleNamespace
         dataset, asset, source = await _owned(session, SimpleNamespace(id=row.owner_id), row.dataset_id, row.project_id)
         if _sources(dataset, asset, source) != row.source_receipts:
             refuse()
+        payload, _ = await bounded_work(_dataset, settings, dataset, asset, source, timeout=min(120, settings.worker_wall_seconds))
         if row.input_json["operation"] == "dataset":
-            from app.magnetic_custody import _dataset
-            await bounded_work(_dataset, settings, dataset, asset, source, timeout=min(120, settings.worker_wall_seconds))
             continue
         job = await session.get(ProcessingJob, row.input_json["job_id"])
         if (job is None or (job.owner_id, job.project_id, job.dataset_id, job.dataset_sha256) !=
                 (row.owner_id, row.project_id, row.dataset_id, row.input_json["dataset_sha256"])):
             refuse()
+        _replay_record(job, dataset, source, payload)
         await bounded_work(exact_zip_inventory, settings, job, timeout=min(120, settings.worker_wall_seconds))
     files = owner.physical.leases.files
     try:
@@ -246,4 +286,5 @@ async def reconcile_attempts(session, owner, settings):
     # requires excluded recovery, not an inferred zero-byte empty namespace.
     if names:
         refuse()
-    return dict(schema="magnetic-owned-custody-reconciliation-1", attempts=len(selected), retained_bytes=0)
+    return dict(schema="magnetic-owned-custody-reconciliation-1", attempts=len(selected), retained_bytes=0,
+                unhandled_m03_attempt_ids=sorted(unhandled))
