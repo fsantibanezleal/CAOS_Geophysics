@@ -77,11 +77,13 @@ The controls independently check quadrature convergence and compare with the pin
 From the repository root, create or extend only your owned isolated environment using data-pipeline/requirements-m01-transforms.txt. The pins include the unchanged correction engines and exact plotting dependencies. Then generate an original control request:
 
 ```powershell
-.venv-m01/Scripts/python.exe data-pipeline/gravity_transform_controls.py --case 0 --output data/raw/gravity-m01-transforms/control-0.json
-scripts/run_m01_transforms.ps1 --input data/raw/gravity-m01-transforms/control-0.json --output-dir data/raw/gravity-m01-transforms/control-0-run
+if (-not $env:GEOPHYSICS_LOCAL_DATA_ROOT) { throw 'Set an absolute external GEOPHYSICS_LOCAL_DATA_ROOT first.' }
+$ControlInput = Join-Path $env:GEOPHYSICS_LOCAL_DATA_ROOT 'm01-transforms/control-0.json'
+.venv-m01/Scripts/python.exe data-pipeline/gravity_transform_controls.py --case 0 --output $ControlInput
+scripts/run_m01_transforms.ps1 --input $ControlInput --output-dir (Join-Path $env:GEOPHYSICS_LOCAL_DATA_ROOT 'm01-transforms/control-0-run')
 ```
 
-The paired shell entrypoint is scripts/run_m01_transforms.sh with identical arguments; it uses the same local environment on Windows and the corresponding owned POSIX environment when available. Existing outputs are never overwritten. A bundle contains the full request, JSON result, model checkpoint, axes, masks, station partition/predictions, candidate comparisons, light/dark SVG and PNG maps/diagnostics and a SHA-256 receipt. Re-importing the numeric layer reproduces its covered grid without pickle, array-object execution or provider scripts. Keep protected field bundles local; only original control diagnostics and compact receipts may be published here.
+The paired shell entrypoint is scripts/run_m01_transforms.sh with identical arguments; it uses the same local environment on Windows and the corresponding owned POSIX environment when available. Output must be an explicit absolute external path; all repository directories, including ignored storage, are refused. Existing outputs are never overwritten. A bundle contains the full request, JSON result, model checkpoint, axes, masks, station partition/predictions, candidate comparisons, light/dark SVG and PNG maps/diagnostics and a SHA-256 receipt. Re-importing the numeric layer reproduces its covered grid without pickle, array-object execution or provider scripts. Keep protected field bundles local; only original control diagnostics and compact receipts may be published here.
 
 The CLI reads at most 32 MiB plus a sentinel byte, checks the actual read length and rejects an oversized growing file without trusting its earlier stat. Strict UTF-8/JSON parsing rejects duplicate keys, NaN/Infinity, overflowing numeric literals and structural nesting beyond 16 before any numerical call or output publication. Brackets inside quoted citations are not structural nesting. These are local input safety bounds, not online host admission. Original pre-review receipts are retained as historical runs; current full-receipt checks have separate updated identities rather than retroactively relabelling the old executions.
 

@@ -20,11 +20,13 @@ import tracemalloc
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "data-pipeline/gravity_station_json.py"
-CORE_SHA = "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321"
+# Current external-output epoch. Historical resource/teaching receipts keep
+# their original source identities; these assertions bind new executions only.
+CORE_SHA = "dc6d529bdaef766012d076a5786fefd8388f6e6ad310c6239aa91ca43da425fe"
 SOURCE_PINS = {
     "gravity_processing.py": CORE_SHA,
-    "gravity_station_adapter.py": "b770b16ef87e83dd92f65a90472145ef93a525a9cedf7f55ee3e6f20f8a10cf8",
-    "gravity_transforms.py": "d11d0f207c89c308c9f8711da2a31b84b8adaeb0c12597a5ecc89ce527fdecf0",
+    "gravity_station_adapter.py": "77e855b63bf31bd292ef8302253a06e49db3e0a332f936e0a06b53b478e492fd",
+    "gravity_transforms.py": "25ba24d4aaf442641d15924139e4ef1a131d7f6fe0dabab3eaa6549a5ba15312",
     "edi.py": "1a6226f34cd36e3e30f6406a296c6f4e3bc38aa93ca5bda1d4f4428d3852b543",
 }
 RAW_CAP = 16 * 1024 * 1024

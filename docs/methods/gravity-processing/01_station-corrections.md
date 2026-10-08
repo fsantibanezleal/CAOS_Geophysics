@@ -79,18 +79,20 @@ Create the dedicated local environment with Python 3.12; install the complete pi
 ```powershell
 py -3.12 -m venv .venv-m01
 .\.venv-m01\Scripts\python.exe -m pip install -r data-pipeline/requirements-m01.txt
-.\scripts\run_m01_gravity.ps1 --input docs/methods/gravity-processing/examples/station-control.json --output-dir data/raw/gravity-m01/control-run
+if (-not $env:GEOPHYSICS_LOCAL_DATA_ROOT) { throw 'Set an absolute external GEOPHYSICS_LOCAL_DATA_ROOT first.' }
+.\scripts\run_m01_gravity.ps1 --input docs/methods/gravity-processing/examples/station-control.json --output-dir (Join-Path $env:GEOPHYSICS_LOCAL_DATA_ROOT 'm01/control-run')
 .\.venv-m01\Scripts\python.exe -m pytest tests/numerics/test_gravity_processing.py -q
 ```
 
 ```bash
 python3.12 -m venv .venv-m01
 .venv-m01/bin/python -m pip install -r data-pipeline/requirements-m01.txt
-bash scripts/run_m01_gravity.sh --input docs/methods/gravity-processing/examples/station-control.json --output-dir data/raw/gravity-m01/control-run
+: "${GEOPHYSICS_LOCAL_DATA_ROOT:?Set an absolute external data root first}"
+bash scripts/run_m01_gravity.sh --input docs/methods/gravity-processing/examples/station-control.json --output-dir "$GEOPHYSICS_LOCAL_DATA_ROOT/m01/control-run"
 .venv-m01/bin/python -m pytest tests/numerics/test_gravity_processing.py -q
 ```
 
-Output consists of `gravity-result.json` and `receipt.json`. The result includes source metadata/originals, full correction history, module/engine/config identity, uncertainty and QC. The receipt includes actual input/result file SHA-256 and UTC execution time. Dataset/result content is deterministic; receipt time naturally differs between runs. Choose a **new** output directory each time: overwrite is forbidden. Inside the checkout only ignored `data/raw/gravity-m01/` outputs are permitted; canonical cases and app artifacts cannot be replaced by this command.
+Output consists of `gravity-result.json` and `receipt.json`. The result includes source metadata/originals, full correction history, module/engine/config identity, uncertainty and QC. The receipt includes actual input/result file SHA-256 and UTC execution time. Dataset/result content is deterministic; receipt time naturally differs between runs. Choose a **new absolute external** output directory each time: overwrite is forbidden. Every repository output, including ignored directories, and symlink/junction parents are refused before input reading or computation. The environment variable in these examples is an explicit operator choice, not an implicit repository fallback.
 
 ## 7. Use the processor on other data
 
