@@ -26,7 +26,8 @@ const config: ShellConfig = {
 function IntegrationMount(){
   const es=useShellLang()==="es", [manage,setManage]=useState(false);
   const [project,setProject]=useState(new URLSearchParams(location.search).get("project")??"");
-  return <><WaveformProjectWorkbench key={project} projectId={project} es={es} onManage={()=>setManage(true)} onCurated={()=>setManage(true)}/>
+  // No caller key: exercise the instrument's own project-custody boundary.
+  return <><WaveformProjectWorkbench projectId={project} es={es} onManage={()=>setManage(true)} onCurated={()=>setManage(true)}/>
     {manage&&<ProjectDrawer es={es} onClose={()=>setManage(false)} onOpenWorkbench={id=>{setProject(id);setManage(false);history.replaceState(null,"",`/?project=${id}`);}} onOwnerCleared={()=>setProject("")}/>}</>;
 }
 createRoot(document.getElementById("root")!).render(<BrowserRouter><AppShell config={config}><IntegrationMount/></AppShell></BrowserRouter>);
