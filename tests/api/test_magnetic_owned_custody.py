@@ -286,3 +286,118 @@ def test_selected_project_precedes_file_io(tmp_path, actual_generation, monkeypa
         finally:
             await engine.dispose()
     asyncio.run(gate())
+
+
+def test_existing_cookie_csrf_auth_assembly(tmp_path, actual_generation):
+    """Actual auth + ABI fixture, NOT the mounted shared product union."""
+    from fastapi import FastAPI, Depends
+    from fastapi.responses import JSONResponse, Response
+    from fastapi.testclient import TestClient
+    from fastapi_users.password import PasswordHelper
+    from pydantic import BaseModel, ConfigDict, Field
+    from app.auth import install_auth
+    from app.errors import api_error_handler
+    from app.security import install_security
+    from app.processing import _job_view, _owned_job
+
+    password = "Actual-cookie-control-password-1"
+    other_id = uuid4()
+    other_project = str(uuid4())
+    async def prepare():
+        engine, sessions, settings, user, dataset, asset, scratch = await seeded(tmp_path, actual_generation)
+        async with sessions() as session:
+            owner = await session.get(User, user.id)
+            owner.hashed_password = PasswordHelper().hash(password)
+            session.add_all([User(id=other_id, email="other-cookie@example.org",
+                hashed_password=PasswordHelper().hash(password), is_active=True, is_verified=True),
+                Project(id=other_project, owner_id=user.id, name="Other owned route")])
+            await session.commit()
+            job = await install_replay(session, settings, user, dataset.id, actual_generation[0],
+                                       project_id=dataset.project_id, temp_root=scratch)
+        return engine, sessions, settings, user, dataset, asset, scratch, job
+    engine, sessions, settings, user, dataset, asset, scratch, job = asyncio.run(prepare())
+    app = FastAPI()
+    app.state.sessions = sessions
+    app.add_exception_handler(ApiError, api_error_handler)
+    async def no_mail(*args):
+        raise AssertionError("No registration, verification mail or SMTP prerequisite")
+    current_user, get_session = install_auth(app, settings, no_mail)
+    install_security(app, settings)
+
+    class DatasetInput(BaseModel):
+        model_config = ConfigDict(extra="forbid")
+        asset_id: UUID
+        magnetic_request_utf8: str = Field(min_length=1, max_length=8388608)
+
+    @app.post("/api/projects/{project_id}/datasets", status_code=201)
+    async def create(project_id: str, body: DatasetInput, owner=Depends(current_user)):
+        async with sessions() as session:
+            item = await install_dataset(session, settings, owner, str(body.asset_id),
+                body.magnetic_request_utf8.encode("utf-8"), project_id=project_id)
+            return magnetic_dataset_receipt(item)
+
+    @app.get("/api/projects/{project_id}/datasets/{dataset_id}")
+    async def input_read(project_id: str, dataset_id: str, owner=Depends(current_user), session=Depends(get_session)):
+        return JSONResponse(await read_dataset(session, settings, owner, dataset_id, project_id=project_id),
+                            headers={"Cache-Control":"no-store"})
+
+    @app.get("/api/projects/{project_id}/datasets/{dataset_id}/methods")
+    async def method_read(project_id: str, dataset_id: str, owner=Depends(current_user), session=Depends(get_session)):
+        return await read_method(session, settings, owner, dataset_id, project_id=project_id)
+
+    @app.get("/api/projects/{project_id}/jobs/{job_id}")
+    async def job_read(project_id: str, job_id: str, owner=Depends(current_user), session=Depends(get_session)):
+        return _job_view(await _owned_job(session, project_id, job_id, owner))
+
+    @app.get("/api/projects/{project_id}/jobs/{job_id}/result")
+    async def result_read(project_id: str, job_id: str, owner=Depends(current_user), session=Depends(get_session)):
+        return await read_replay(session, settings, owner, job_id, project_id=project_id, temp_root=scratch)
+
+    @app.get("/api/projects/{project_id}/jobs/{job_id}/export")
+    async def export_read(project_id: str, job_id: str, owner=Depends(current_user), session=Depends(get_session)):
+        return Response(await read_replay(session, settings, owner, job_id,
+            project_id=project_id, temp_root=scratch, export=True), media_type="application/zip",
+            headers={"Cache-Control":"no-store"})
+
+    prefix = f"/api/projects/{dataset.project_id}"
+    paths = [f"{prefix}/datasets/{dataset.id}", f"{prefix}/datasets/{dataset.id}/methods",
+             f"{prefix}/jobs/{job.id}", f"{prefix}/jobs/{job.id}/result", f"{prefix}/jobs/{job.id}/export"]
+    def login(client, email):
+        csrf = client.get("/api/auth/csrf").json()["csrf_token"]
+        headers = {"Origin":settings.public_origin,"X-CSRF-Token":csrf}
+        response = client.post("/api/auth/cookie/login",data={"username":email,"password":password},headers=headers)
+        assert response.status_code == 204, response.text
+        assert "geophysics_session" in client.cookies
+        assert client.get("/api/auth/me").status_code == 200
+        return headers
+    try:
+        with TestClient(app, base_url=settings.public_origin) as client:
+            for path in paths:
+                assert client.get(path).status_code == 401
+            headers = login(client, user.email)
+            body = dict(asset_id=asset.id, magnetic_request_utf8=canonical_bytes(actual_generation[2]["request"]).decode())
+            assert client.post(prefix+"/datasets",json=body).status_code == 403
+            response = client.post(prefix+"/datasets",json=body,headers=headers)
+            assert response.status_code == 201, response.text
+            assert response.json()["dataset_id"] == dataset.id
+            assert client.get(paths[0]).json()["request_utf8"] == body["magnetic_request_utf8"]
+            assert client.get(paths[1]).json()["online_admitted"] is False
+            assert client.get(paths[2]).json()["result_sha256"] == job.result_sha256
+            result = client.get(paths[3])
+            assert result.status_code == 200 and not any(result.json()["claims"].values())
+            exported = client.get(paths[4])
+            assert exported.status_code == 200 and exported.headers["cache-control"] == "no-store"
+            assert hashlib.sha256(exported.content).hexdigest() == job.result_sha256
+            assert exported.content == (tmp_path/job.result_key).read_bytes()
+            for path in paths:
+                assert client.get(path.replace(dataset.project_id,other_project)).status_code == 404
+            assert client.post(f"/api/projects/{other_project}/datasets",json=body,headers=headers).status_code == 404
+            assert client.post("/api/auth/cookie/logout",headers=headers).status_code == 204
+            headers = login(client,"other-cookie@example.org")
+            for path in paths:
+                assert client.get(path).status_code == 404
+            assert client.post(prefix+"/datasets",json=body,headers=headers).status_code == 404
+            assert (tmp_path/asset.storage_key).read_bytes() == actual_generation[1]
+            assert list(scratch.iterdir()) == []
+    finally:
+        asyncio.run(engine.dispose())

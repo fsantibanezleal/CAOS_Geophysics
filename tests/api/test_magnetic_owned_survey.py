@@ -136,3 +136,82 @@ def test_original_columns_are_actual_observations(attack):
         refs["asset"].byte_count = doc["source"]["original_bytes"] = len(original)
         doc["processing"]["nodes"][0]["input_sha256"] = digest
     with pytest.raises(ApiError): parse_magnetic_dataset(canonical_bytes(doc), original, **refs)
+
+
+def bind_new_original(doc, original, refs):
+    digest = hashlib.sha256(original).hexdigest()
+    refs["asset"].sha256 = refs["source"].sha256 = doc["source"]["original_sha256"] = digest
+    refs["asset"].byte_count = doc["source"]["original_bytes"] = len(original)
+    doc["processing"]["nodes"][0]["input_sha256"] = digest
+
+
+def csv_bytes(rows, names):
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=names, lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    return output.getvalue().encode()
+
+
+@pytest.mark.parametrize("quantity,relation", [
+    ("linear_tmi_nT", "projection_of_secondary_declared"),
+    ("exact_total_anomaly_nT", "total_norm_minus_declared_uniform_F"),
+])
+def test_scalar_columns_preserve_declared_quantity_not_a_fit(quantity, relation):
+    from magnetic_survey_support import descriptor
+    doc, original, refs = control()
+    reader = csv.DictReader(io.StringIO(original.decode()))
+    rows = [{k:v for k,v in row.items() if k not in ("bN","bU")} for row in reader]
+    original = csv_bytes(rows,["row","line","E_m","N_m","U_m","bE"])
+    doc["processing"].update(quantity=quantity, background_relation=relation)
+    values = descriptor("float64",[288,1],[0.]*288)
+    doc["observations"] = dict(quantity=quantity, unit="nT", values=values, values_sha256=values["sha256"])
+    doc["noise"]["values"] = descriptor("float64",[288,1],[.5]*288)
+    doc["processing"]["nodes"][0]["output_sha256"] = values["sha256"]
+    physical = refs["asset"].physical_metadata
+    physical["component_frame"] = "total field"
+    physical["geometry"]["quantity"] = quantity
+    del physical["geometry"]["component_columns"]
+    bind_new_original(doc, original, refs)
+    payload = parse_magnetic_dataset(canonical_bytes(doc),original,**refs)
+    assert payload["dimensions"] == {"row":288,"component":1}
+    assert not any(payload["geometry_plan"]["claims"].values())
+    assert validate_magnetic_dataset(payload,dataset_record(payload))["observations"]["quantity"] == quantity
+
+
+@pytest.mark.parametrize("attack", [None, "changed", "missing_column"])
+def test_recorded_timestamps_require_actual_column(attack):
+    doc, original, refs = control()
+    reader = csv.DictReader(io.StringIO(original.decode()))
+    names = [*reader.fieldnames,"utc"]
+    rows = list(reader)
+    times = ["2020-01-01T00:00:00Z"]*288
+    doc["acquisition"].update(timestamp_policy="recorded_utc",timestamps=times)
+    for i,row in enumerate(rows): row["utc"] = times[i]
+    refs["asset"].physical_metadata["geometry"]["timestamp_column"] = "utc"
+    if attack == "changed": rows[0]["utc"] = "2020-01-01T00:00:01Z"
+    if attack == "missing_column": del refs["asset"].physical_metadata["geometry"]["timestamp_column"]
+    original = csv_bytes(rows,names)
+    bind_new_original(doc, original, refs)
+    if attack:
+        with pytest.raises(ApiError): parse_magnetic_dataset(canonical_bytes(doc),original,**refs)
+    else:
+        payload = parse_magnetic_dataset(canonical_bytes(doc),original,**refs)
+        assert json_request_timestamps(payload) == times
+
+
+def json_request_timestamps(payload):
+    import json
+    return json.loads(payload["request_utf8"])["acquisition"]["timestamps"]
+
+
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "1e-400", "-0.0", ""])
+def test_original_finite_values_and_signed_zero_cannot_drift_under_rehash(token):
+    doc, original, refs = control()
+    reader = csv.DictReader(io.StringIO(original.decode()))
+    names = reader.fieldnames
+    rows = list(reader)
+    rows[0]["bE"] = token
+    original = csv_bytes(rows,names)
+    bind_new_original(doc, original, refs)
+    with pytest.raises(ApiError): parse_magnetic_dataset(canonical_bytes(doc),original,**refs)
