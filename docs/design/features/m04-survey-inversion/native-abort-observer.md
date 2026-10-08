@@ -62,6 +62,20 @@ The original768MiB RSS/committed,3600CPU/7200wall and120s per-fit caps and froze
 adversarial regimes are unchanged. No scientific worker, objective, original
 data, public optimizer, accepted method or service activation is changed.
 
+Use CREATE_SUSPENDED | DETACHED_PROCESS for the owned controller and M04
+worker, with explicit redirected standard handles. CREATE_NO_WINDOW can create
+an additional headless console-host process per launch; omitting that member
+from a process census is not permissible. DETACHED_PROCESS avoids inheriting
+or allocating a console without permitting Job breakaway. The original one
+scientific worker/two ancestor members and fresh full-group extinction remain
+strict; no process name is exempted, total cap is not raised and arbitrary PID
+acquisition/signalling is not introduced. See Microsoft's
+[Process Creation Flags](https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags).
+Gate: unchanged strict census on the actual detached nested primitive, explicit
+redirected output, retained failure on any extra member, and original actual
+suspended-assignment refusal cleanup regressions. This changes M04 launch
+source, not M03's generic controller or a public numerical implementation.
+
 ## Tasks and scope of gates
 
 The final-fit qualifier is a closed `magnetic-original-final-fit-qualification-1`
