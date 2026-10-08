@@ -3,7 +3,7 @@
 Base: 8b76a66101b50fed13f183ec3c8ba35b041b3125.
 Pre-code: 23e82f8408f6707fe3c3f1465aaf5ea011ee9076, committed/pushed before code.
 
-Fresh focused suite: **353 passed, zero failed/errors/skips, 21.411 seconds**.
+Initial focused suite: **353 passed, zero failed/errors/skips, 21.411 seconds**.
 It includes the unchanged launch, root recovery, execution receipt, installation
 adapter and ownership-v2 controls, new closed incomplete schemas and descriptor,
 the real asynchronous archive executor with modeled descriptors/privileged
@@ -25,6 +25,23 @@ literal copy from prospective archive usage. The focused negative was run RED
 353-test final suite. Earlier Windows descriptor-model missing POSIX constants
 and unstable modeled root-response identity failures are retained separately;
 neither is silently relabelled a product/native success.
+
+Independent parent review identified the helper-lifetime leak after that initial
+pin. Pre-code refinements d4b3730/ee8798d preceded the correction. Four actual
+ordinary subprocess negatives ran RED, then all four GREEN after mandatory
+shielded handle adoption, reap and EOF drain. The expanded fresh suite is
+**373 passed, zero failed/errors/skips, 27.109 seconds**, including seven actual
+ordinary subprocess/singleton controls: timeout, cancellation, repeated
+cancellation, cancellation during creation, cancellation during timeout cleanup,
+and two 2-MiB stdout/stderr overflow writers. No privileged helper or science
+was invoked in these actual lifecycle tests. Timeout/cancellation still refuse;
+they cannot release caller custody until that exact child has exited and streams
+drained. No recovery receipt, raw deletion or successful execution is fabricated.
+
+The actual root-record census counts all eight plan/authority/receipt/journal
+kinds. Admission reserves six new files including the plan and both possible
+recovery journals; individual writes also enforce 256 records, 64 KiB each and
+four directories. Old/full/unknown debt is preserved and refused, not upgraded.
 
 This is **portable source validation**, not Linux kernel/manager proof. Parent
 qualification must pin the changed eleven-file closure/configuration, allow the

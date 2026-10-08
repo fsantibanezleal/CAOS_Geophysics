@@ -774,9 +774,9 @@ def prepare_custody_plan(root_fd,module,packet,launch):
     require(directories <= set(planned),"custody_unplanned_directory")
     new_bytes = packet["raw"]["byte_count"]+packet["dataset"]["byte_count"]
     custody_budget(list(planned.values()),receipts,new_bytes)
-    # Reserve prelaunch authority/manifest, execution receipt and both recovery
-    # records within the unchanged record ceiling, before creating anything.
-    require(len(receipts)+5 <= 256, "custody_receipt_cap")
+    # Count existing plans too. Reserve a new plan, authority/manifest, execution
+    # receipt and both recovery journals within the unchanged record ceiling.
+    require(len(receipts)+len(planned)+6 <= 256, "custody_receipt_cap")
     plan = dict(schema="geophysics.profile-linux-custody-plan/v1",job_id=packet["job"]["id"],
                 held_bytes=new_bytes,request_sha256=packet["job"]["request_sha256"],
                 raw_sha256=packet["raw"]["sha256"],dataset_sha256=packet["dataset"]["sha256"],
@@ -803,6 +803,7 @@ def finish_custody(root_fd,custody_fd,identifier,plan,receipt,module):
     require(current_plan == module.canonical(plan),"custody_plan_changed")
     body = module.canonical(receipt)
     require(len(body) <= 65536,"custody_receipt_size")
+    custody_record_capacity(root_fd)
     fd = os.open(identifier+".receipt.json",os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600,dir_fd=root_fd)
     try:
         with os.fdopen(os.dup(fd),"wb") as stream:
@@ -1107,6 +1108,7 @@ def recovery_extinction(identifier):
 
 def root_record(fd,name,body):
     require(re.fullmatch(r"[a-f0-9-]{36}\.(recovery-intent|recovery)\.json",name) and 0 < len(body) <= 65536,"recovery_record")
+    custody_record_capacity(fd)
     member = os.open(name,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600,dir_fd=fd)
     try:
         with os.fdopen(os.dup(member),"wb") as stream:
@@ -1257,10 +1259,30 @@ def recover(configuration,module,identifier):
                 os.close(fd)
 
 
+def custody_record_capacity(fd):
+    """All plans/authorities/receipts/journals count; no metadata exception."""
+    names = os.listdir(fd)
+    require(len(names) <= 260,"custody_receipt_cap")
+    records = directories = 0
+    for name in names:
+        require(re.fullmatch(r"[a-f0-9-]{36}(\.(plan|receipt|recovery-intent|recovery|custody-intent|custody|incomplete-recovery-intent|incomplete-recovery)\.json)?",name),"custody_unknown_name")
+        info = os.stat(name,dir_fd=fd,follow_symlinks=False)
+        require(info.st_uid == 0 and not info.st_mode & 0o022,"custody_changed_owner")
+        if stat.S_ISDIR(info.st_mode):
+            require("." not in name,"custody_directory_type")
+            directories += 1
+        else:
+            require("." in name and stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and
+                    0 < info.st_size <= 65536,"custody_record_type")
+            records += 1
+    require(directories <= 4 and records+1 <= 256,"custody_receipt_cap")
+
+
 def custody_record(fd,name,body,gid):
     """Separate immutable cleanup authority; never an execution receipt."""
     require(re.fullmatch(r"[a-f0-9-]{36}\.(custody-intent|custody|incomplete-recovery-intent|incomplete-recovery)\.json",name)
             and 0 < len(body) <= 65536,"custody_authority_record")
+    custody_record_capacity(fd)
     member = os.open(name,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o440,dir_fd=fd)
     try:
         os.fchown(member,0,gid)
