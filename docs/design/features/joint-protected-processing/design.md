@@ -11,6 +11,14 @@ an explicit additive union/mount patch, not replacement canonical files. New
 dependency/artifact tables follow current0004_waveform_artifacts; migration
 head and reconciliation must union M08, never revert its source rows/members.
 
+Native indexing holds each original file across scan and checks independent
+held-descriptor and named-path stat snapshots. Their device/inode/size/mtime
+must match exactly; each snapshot's ctime must remain unchanged within its own
+stat namespace. Windows fstat/lstat expose different ctime semantics, so their
+ctime fields must not be equated to each other. No inode, byte/hash or timestamp
+drift within either namespace is tolerated. Close combined declared member
+bytes before any hash scan and retain explicit role/name dependency rows.
+
 ## Source custody and transport
 
 The existing generic upload archive ban remains. Add an authenticated ordinary

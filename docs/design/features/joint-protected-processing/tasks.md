@@ -23,3 +23,12 @@ deletion, persistent member rate, CSRF/origin and both uncertain commit outcomes
 All fixture storage is external; repository/relative roots reject before creation.
 These source/transport gates do not complete dataset/worker/result/sidebar or
 grant scientific accuracy/host acceptance. Canonical MAIN files remain untouched.
+
+Owned structural dataset/dependency gates execute against the actual committed
+M08 predecessor: complete role pair, closed original hashes/shape/noise/plan
+bindings, immutable index, explicit dependency rows, source tampering/ownership,
+exclusive byte-exact worker input materialization, startup orphan refusal,
+uncertain index commit and exact canonical dataset deletion/quota accounting.
+No native observation values are decoded by indexing. The parent still owns
+real migration/head/validator/reconciliation/route unions; fixed scientific child,
+singleton execution, native result artifacts and existing sidebar remain separate.

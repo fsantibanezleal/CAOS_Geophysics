@@ -10,6 +10,10 @@ supplement, physical properties, exact face-Gram contributions, post-freeze
 holdout diagnostics and private exports. It is separate from cached replay and
 does not create an authenticated online processing job.
 
+The separately installed [native dataset leaf](06_joint-native-datasets.md) closes
+every role/name/source dependency and retains original bytes for the fixed child;
+structural indexing does not decode sealed values or grant a scientific run.
+
 The separately installed [native member leaf](05_joint-native-source-members.md)
 binds ordinary original files to authenticated source/raw rows. Structural
 transport receipts do not imply dataset eligibility or an executed inverse.
