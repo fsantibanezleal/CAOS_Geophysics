@@ -11,3 +11,6 @@
    gate the owner union separately from local scientific/portable tests.
 5. After a changed public certificate-cost prerequisite passes, execute the
    original nonzero full-science DAG. No null control substitutes for this gate.
+6. R-453..454: require selected-project authority in the public custody ABI and
+   expose fully reverified dataset/method readers; retain actual other-project,
+   source-drift and before-file-I/O negatives.

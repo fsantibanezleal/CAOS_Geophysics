@@ -5,6 +5,16 @@ Status: planned
 This unit implements the existing survey-inversion R-414..417 custody boundary.
 It does not authorize online inversion or accept a failed scientific matrix.
 
+R-453 WHEN an owned asset, dataset or job is selected under a project URL, THE
+public custody function SHALL require that exact project ID before original,
+generation or result I/O. Another project of the same owner is not interchangeable.
+Gate: tests/api/test_magnetic_owned_custody.py::test_selected_project_precedes_file_io.
+
+R-454 WHEN the protected owner reads a magnetic dataset or method mapping, THE
+public reader SHALL revalidate current owned original/source/physical custody
+before returning the lexical dataset or executable closed-online mapping.
+Gate: tests/api/test_magnetic_owned_custody.py::test_public_input_and_method_readers.
+
 R-441 WHEN original bytes and a physical request are supplied, THE adapter SHALL
 verify their exact owned asset/source relationship, full source hash/count and
 explicit ENU datum/units/quantity before creating a geometry-only dataset.

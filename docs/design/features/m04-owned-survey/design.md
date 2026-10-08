@@ -49,6 +49,13 @@ members are removed only after manifest/inventory and hash recheck. Unknown
 files refuse cleanup. No generic raw-directory sweep or successful crash claim.
 
 The additive functions are executable owner-union seams, not a second auth/server.
+Each public install/read function requires the selected project ID; this predicate
+runs in the same owned transaction before file or numerical-bundle access. Public
+read_dataset/read_method reuse full original/dataset validation, rather than
+requiring a route to assemble private implementation helpers. Writers require
+a fresh session: existing authentication can already have opened a read
+transaction. The parent may use its existing session factory for the owned writer,
+keeping its authenticated user/dependencies and CSRF middleware unchanged.
 Existing protected dataset/job/result/export dispatchers mount them in the parent
 assembly. Existing generic deletion and result validators require explicit
 magnetic ZIP dispatch before mounting; this unit supplies exact inventory and
