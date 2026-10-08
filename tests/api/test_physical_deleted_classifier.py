@@ -12,7 +12,7 @@ from app.physical_deleted_inventory import save_current_tombstone
 from tests.api.test_physical_classifier import CensusFiles
 from tests.api.test_physical_deleted_inventory import POLICY, case
 from tests.api.test_physical_forest import connect
-from tests.api.test_physical_persistence_schema import insert
+from tests.ops.physical_sql_fixture import insert
 from tests.api.test_physical_roots import root_case as root_case
 from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey

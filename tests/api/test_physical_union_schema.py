@@ -9,7 +9,7 @@ from alembic import command
 import pytest
 
 from app.physical_successor import ddl_sha256
-from tests.api.test_physical_persistence_schema import seed, inventory, insert
+from tests.ops.physical_sql_fixture import seed, inventory, insert
 from tests.api.test_physical_successor import ROOTS
 from tests.ops.physical_union_fixture import capsule, mount_packet
 

@@ -11,7 +11,7 @@ from app.physical_roots import prepare_root, publish_root
 from app.physical_successor import REVISION
 from app.physical_wire import make_root_envelope
 from tests.api.test_physical_forest import connect
-from tests.api.test_physical_persistence_schema import insert
+from tests.ops.physical_sql_fixture import insert
 from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey
 
