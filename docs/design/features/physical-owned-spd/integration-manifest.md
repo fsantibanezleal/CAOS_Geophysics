@@ -1,5 +1,23 @@
 # Owned SPD/terminal adapter manifest
 
+Separate LINEAR reduced-space API: `physical_reduced_optimizer.solve_bounded_linear`.
+Same closed DTO/binding/budget/terminal types, accepted_export names this module,
+optimizer_source_sha256 binds its loaded bytes, runtime_epoch is
+`physical-gncg-linear-reduced-joseph-candidate-5`, policy is
+`closed-reduced-firstorder-joseph-native-true-residual-terminal-1`.
+See [working-face, original caps and incremental accounting](reduced-space.md).
+No supplied active mask/factor/SPD, failed-solve fallback or nonlinear grant.
+Conditioning rows retain q/g once per direction (phase0), each original native
+phase direction/count/residual/time/face/source/allocation and frozen index
+deltas. Reconstruct masks from native binding(q,g), then apply deltas in phase
+order. Trace cg_counts is the SUM across phases, capped200, not the final phase.
+Source-bound allocation digest must include the new8MiB reserve, incremental
+audits and literal admitted_bytes; old base761838864 alone is insufficient.
+Successful diagnostic original528 fit:26 accepted/104 actual CG phases,96.281s,
+physical exact-bound normalized KKT6.93e-17. Original200CG/200accepted/20LS/120s,
+768MiB unchanged. This diagnostic does NOT meet or replace the unexecuted
+original independent error/whole-matrix/RSS/host gates. Prior failures retained.
+
 New API: `physical_conditioned_optimizer.solve_bounded_linear` and
 `solve_bounded_nonlinear`. Source hashes are exposed as module constants and in
 each result `source_binding`; bind their ACTUAL loaded bytes, never historical
