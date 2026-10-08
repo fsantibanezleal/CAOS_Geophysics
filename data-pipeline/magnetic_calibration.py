@@ -35,6 +35,15 @@ def projected_gradient(q, gradient, lower, upper):
     return float(np.linalg.norm(result, np.inf))
 
 
+def nonlinear_projected_gradient(q, gradient, lower, upper):
+    # Match the reviewed nonlinear seam's EXACT bounds, never the linear
+    # near-bound numerical tolerance. Independent M04 threshold stays1e-7.
+    result = gradient.copy()
+    result[q == lower] = np.minimum(gradient[q == lower], 0.)
+    result[q == upper] = np.maximum(gradient[q == upper], 0.)
+    return float(np.linalg.norm(result, np.inf))
+
+
 def mesh_from_metadata(meta):
     spec = meta['geometry']['mesh']
     result = {k: np.array(spec[source]['data'], dtype=np.float64) for k, source in (
@@ -66,6 +75,11 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
                   deadline, admitted_bytes, allocation_sha256, source_inventory_sha256):
     """Complete fixed-beta L2 and optionally eight-stage true-p1 continuation."""
     import physical_optimizer as core
+    nonlinear = operator.quantity == 'exact_total_anomaly_nT'
+    if nonlinear:
+        import physical_nonlinear_optimizer as core
+        from magnetic_nonlinear_adapter import MagneticNonlinearObjective, solve_nonlinear
+    kkt_gradient = nonlinear_projected_gradient if nonlinear else projected_gradient
     reference = np.array(prior['reference_si']['data'], dtype=np.float64)/.01
     lower = np.array(prior['lower_si']['data'], dtype=np.float64)/.01
     upper = np.array(prior['upper_si']['data'], dtype=np.float64)/.01
@@ -76,8 +90,9 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
 
     def objective(q, sparse=False, epsilon=0., stage=0):
         reg = MagneticRegularizer(mesh, reference, lengths, 'sparse_smallness' if sparse else 'l2', epsilon, q)
-        return MagneticObjective(operator, reg, observed, noise, lower, upper, float(beta),
-                                 source_inventory_sha256, allocation_sha256, stage)
+        obj = MagneticObjective(operator, reg, observed, noise, lower, upper, float(beta),
+                                source_inventory_sha256, allocation_sha256, stage)
+        return MagneticNonlinearObjective(obj, q) if nonlinear else obj
 
     def append_trace(obj, solved, phase, outer, epsilon):
         for inner, q in enumerate(solved['trace']['models_q']):
@@ -85,7 +100,7 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
             records.append(dict(phase=phase, outer_iteration=outer, inner_iteration=inner,
                 beta=float(beta), epsilon_q=epsilon, phi_d=float(solved['trace']['phi_d'][inner]),
                 phi_regularizer=float(solved['trace']['phi_m'][inner]), objective=float(solved['trace']['phi_engine'][inner]),
-                kkt_inf=projected_gradient(q, g, lower, upper), model_sha256=_hash_model(q),
+                kkt_inf=kkt_gradient(q, g, lower, upper), model_sha256=_hash_model(q),
                 status='converged' if inner == len(solved['trace']['models_q'])-1 and solved['status'] == 'converged' else
                        'failed' if inner == len(solved['trace']['models_q'])-1 and solved['status'] != 'converged' else 'iterating'))
             if len(records) > 4096:
@@ -93,8 +108,9 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
 
     def solve(obj, q):
         nonlocal steps
-        budget = core.OptimizerBudget(deadline, 200-steps, 805306368, admitted_bytes, allocation_sha256)
-        result = solve_linear(obj, lower, upper, q, budget=budget, binding=binding)
+        budget_type = core.NonlinearBudget if nonlinear else core.OptimizerBudget
+        budget = budget_type(deadline, 200-steps, 805306368, admitted_bytes, allocation_sha256)
+        result = (solve_nonlinear if nonlinear else solve_linear)(obj, lower, upper, q, budget=budget, binding=binding)
         steps += result['iterations']
         return result
 
@@ -105,7 +121,7 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         return dict(status='failed', reason=solved['reason'], q=solved['q'], kkt_inf=None, history=records, objective=l2)
     q = owned(solved['q'])
     initial_norm = max(1., float(np.linalg.norm(l2.evaluate(start, True, False)[1], np.inf)))
-    kkt = projected_gradient(q, l2.evaluate(q, True, False)[1], lower, upper)
+    kkt = kkt_gradient(q, l2.evaluate(q, True, False)[1], lower, upper)
     if kkt > 1e-7*initial_norm:
         return dict(status='failed', reason='independent_kkt', q=q, kkt_inf=kkt, history=records, objective=l2)
     if penalty == 'l2':
@@ -138,7 +154,7 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
             # Derive data gradient from this SAME actual likelihood, not an L2
             # cached surrogate or stale weight gradient.
             gradient = refreshed.evaluate(q, True, False)[1]-beta*refreshed.regularizer.vendor.deriv(q)+beta*true_g
-            kkt = projected_gradient(q, gradient, lower, upper)
+            kkt = kkt_gradient(q, gradient, lower, upper)
             change = float(np.linalg.norm(q-previous, np.inf)/max(1., float(np.linalg.norm(q, np.inf))))
             records.append(dict(phase='irls_fixed', outer_iteration=outer, inner_iteration=solved['iterations'],
                 beta=float(beta), epsilon_q=epsilon, phi_d=pd, phi_regularizer=true_pm, objective=after,
@@ -202,14 +218,18 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
     if not plan['eligibility']['local_processing']:
         fail('lineage', '$/processing', 'Local processing rights/lineage unresolved')
     requested = meta['policy']['optimizer_binding']
-    if (type(binding) is not core.OptimizerBinding or requested != dict(accepted_source=binding.optimizer_source_sha256,
+    nonlinear = meta['processing']['quantity'] == 'exact_total_anomaly_nT'
+    binding_type = core.OptimizerBinding
+    if nonlinear:
+        import physical_nonlinear_optimizer as core
+        binding_type = core.NonlinearBinding
+    if (type(binding) is not binding_type or requested != dict(accepted_source=binding.optimizer_source_sha256,
             accepted_export=binding.accepted_export, epoch=binding.runtime_epoch)
             or binding.optimizer_source_sha256 != core.SOURCE_SHA256 or binding.runtime_epoch != core.RUNTIME_EPOCH
             or binding.policy != core.POLICY or binding.source_inventory_sha256 != source_inventory_sha256
-            or binding.certificate_source_sha256 != hashlib.sha256(Path(certificate_source()).read_bytes()).hexdigest()):
+            or (binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256 if nonlinear else
+                binding.certificate_source_sha256 != hashlib.sha256(Path(certificate_source()).read_bytes()).hexdigest())):
         fail('dependency', '$/policy/optimizer_binding', 'Reviewed loaded binding required before kernel construction')
-    if meta['processing']['quantity'] == 'exact_total_anomaly_nT':
-        fail('dependency', '$/processing/quantity', 'Actual nonlinear GN source registration remains unavailable')
     if meta['policy']['resource_profile'] != 'local_bounded':
         fail('dependency', '$/policy/resource_profile', 'Online source/native admission is separate and closed')
     if type(deadline) is not float or not np.isfinite(deadline) or deadline > clock+7200.:

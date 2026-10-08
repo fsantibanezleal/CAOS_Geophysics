@@ -540,3 +540,16 @@ candidate execution does not establish acceptance of the full magnetic method.
 Paired executable tests live in tests/numerics/test_magnetic_optimizer_adapter.py.
 BVLS is independent TEST ONLY, never a production retry or substituted optimizer.
 Bounds, nonfinite native values and zero chords never create acceptance.
+
+## Reviewed nonlinear public composition amendment
+
+MagneticNonlinearObjective/solve_nonlinear in magnetic_nonlinear_adapter.py
+compose the actual public physical_nonlinear_optimizer seven-method seam.
+Its distinct native epoch/policy, SI scale tuple(.01,), exact-bound feasible
+gradient, fixed initial positive diagonal, refreshed PSD GN and separate exact
+Hessian are defined in [the nonlinear chapter](../../../methods/magnetic-survey/07_nonlinear-composition.md).
+Five weighted operands are(0,phi_d,0,beta*phi_regularizer,0); engine beta=1.
+Native trace acceptance is NOT a native-norm interval certificate. Independently
+audit every recorded actual accepted chord; non-certified chords fail M04 while
+retaining trace/proof. Native1e-5 does not waive independent M04 KKT1e-7 or IRLS.
+No public-source acceptance registry, scientific tolerance or proof is weakened.

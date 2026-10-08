@@ -19,10 +19,11 @@ from magnetic_survey import plan_geometry
 from magnetic_local_paths import configure_scratch, data_output, external_path
 
 
-SOURCES = ('physical_optimizer', 'gravity_l2_precision', 'magnetic_forward', 'magnetic_inverse',
+SOURCES = ('physical_optimizer', 'physical_nonlinear_optimizer', 'gravity_l2_precision', 'magnetic_forward', 'magnetic_inverse',
            'magnetic_inverse_precision', 'magnetic_optimizer_adapter', 'magnetic_likelihood',
            'magnetic_calibration', 'magnetic_diagnostics', 'magnetic_survey', 'magnetic_survey_json',
-           'magnetic_result_bundle', 'magnetic_local_paths', 'run_magnetic_survey')
+           'magnetic_result_bundle', 'magnetic_local_paths', 'magnetic_nonlinear_adapter', 'run_magnetic_survey',
+           'magnetic_native_runtime', 'magnetic_native_worker', 'simpeg.optimization')
 
 
 def source_inventory():
@@ -61,7 +62,7 @@ def verify_original(path, source):
         fail('hash', '$/original', 'Retained original byte count/hash mismatch')
 
 
-def reviewed_binding(path, allow_candidate):
+def reviewed_binding(path, allow_candidate, quantity='secondary_enu_nT'):
     if not allow_candidate:
         fail('dependency', '$/binding', 'Current generic core is candidate-only; actual acceptance registry remains required')
     receipt = _Lexer(read_bounded(path, 16384), max_bytes=16384, max_tokens=4096, defer=False).document()
@@ -73,8 +74,13 @@ def reviewed_binding(path, allow_candidate):
     if receipt['sources'] != sources or receipt['source_inventory_sha256'] != digest(sources):
         fail('dependency', '$/binding', 'Complete reviewed loaded-source inventory mismatch')
     import physical_optimizer as core
+    if quantity == 'exact_total_anomaly_nT':
+        import physical_nonlinear_optimizer as core
     if receipt['runtime_epoch'] != core.RUNTIME_EPOCH or receipt['policy'] != core.POLICY:
         fail('dependency', '$/binding', 'Exact public dependency epoch/policy mismatch')
+    if quantity == 'exact_total_anomaly_nT':
+        return core.NonlinearBinding('physical_nonlinear_optimizer.solve_bounded_nonlinear', core.SOURCE_SHA256,
+            core.VENDOR_SOURCE_SHA256, receipt['source_inventory_sha256'], core.RUNTIME_EPOCH, core.POLICY)
     return core.OptimizerBinding('physical_optimizer.solve_bounded_physical', core.SOURCE_SHA256,
         sources['magnetic_inverse_precision'], receipt['source_inventory_sha256'], core.RUNTIME_EPOCH, core.POLICY)
 
@@ -143,7 +149,7 @@ def main(argv=None):
             else:
                 if not 0. < args.wall_seconds <= 7200.:
                     fail('resource', '$/wall-seconds', 'Finite whole local wall cap in (0,7200] required')
-                binding = reviewed_binding(args.binding_receipt, args.allow_candidate_core)
+                binding = reviewed_binding(args.binding_receipt, args.allow_candidate_core, handle.metadata()['processing']['quantity'])
                 from magnetic_calibration import calibrate
                 from magnetic_result_bundle import write_bundle, write_failure
                 # Keep vendor diagnostics out of the one-line JSON protocol;

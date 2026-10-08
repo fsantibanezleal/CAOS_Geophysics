@@ -1,5 +1,8 @@
 # Magnetic survey input and geometry seal / Entrada y sello geométrico magnético
 
+[Exact nonlinear composition](07_nonlinear-composition.md) documents the reviewed
+public single-SI seam, independent exact/PSD Hessians and unchanged norm proof.
+
 [Recorded independent acquisition controls / Controles independientes](02_acquisition-controls.md)
 describe the executable authored Choclo/Decimal/PCG64 inputs, not fitted inverse
 success or field acceptance.
