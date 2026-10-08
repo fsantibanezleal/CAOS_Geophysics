@@ -109,6 +109,7 @@ def reserve_child_intent(connection, *, owner_id, project_id, parent_dataset_id,
         uuid(value)
     sha(parent_dataset_sha256)
     integer(created_us)
+    require(stage_id == job_id, "forest_stage_job_identity")
     require(connection.execute("PRAGMA foreign_keys").fetchone() == (1,), "forest_foreign_keys_required")
     require(connection.execute("PRAGMA journal_mode").fetchone()[0] in ("delete", "memory"), "forest_native_wal_not_admitted")
     connection.execute("BEGIN IMMEDIATE")

@@ -47,7 +47,7 @@ def forest(successor):
                dataset_sha256="b"*64, method_id="gravity.station-corrections/v1", request_json='{"fixture":true}',
                request_sha256="c"*64, preflight='{"fixture":true}', state="running", cancel_requested=0,
                created_at="2026-10-08 01:00:00", physical_fingerprint="d"*64))
-        stage = uid()
+        stage = job
         insert(db, "physical_job_controls", dict(job_id=job, owner_id=owner, project_id=project, dataset_id=root,
                dataset_sha256="b"*64, root_dataset_id=root, raw_asset_id=raw, raw_sha256="a"*64, raw_bytes=7,
                method_id="gravity.station-corrections/v1", request_sha256="c"*64, request_bytes=b'{"fixture":true}',

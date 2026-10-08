@@ -74,3 +74,60 @@ gaps, stale/foreign parent and depth/capacity limits. No solver, API activation,
 external backup authority, whole-host percentage gate or weakened tolerance is
 introduced by this contract. Production API/worker/native/filesystem/browser
 qualification remains distinct from these storage tests.
+
+## Literal charges, root publication and terminal debt
+
+`physical_wire` structurally reads the complete original gravity JSON before
+exposing a root. UTF-8, EOF, duplicate keys, finite literal numbers, station
+identities and explicit height/geoid/instrument metadata are checked. It does
+not wrap longitude, convert height or units, replay history, or run a solver.
+The canonical v2 envelope retains the scientific payload and supplied source;
+root producer and parent bindings are null, not fabricated scientific proof.
+
+`physical_roots` binds raw/source ownership, permission, discriminator, original
+hash/length and complete sealed stage inventory before reserving the family.
+The root intent and single exact target commit together. Only an independently
+installed, fully re-read target permits the final root/family publication,
+intent retirement and stage-cleanup debt transition in the same transaction.
+An uncertain SQL commit retains the installed copy and preparation; it never
+adopts a pathname as a root merely because that pathname exists.
+
+`physical_debt` transfers failed/cancelled running jobs, their complete sealed
+stage, exact installed target subset, permanent reservation retirement and
+family reservation decrement in one terminal transaction. Installed targets
+become independently charged abandonment custody. Gaps are retained, and no
+child or result is published. Unknown files, mismatched controls or incomplete
+target declarations refuse without reducing liabilities.
+
+Account charge sums each literal retained copy: original raw, datasets, main
+results, waveform extra artifacts, saved control BLOBs and native UTF-8 JSON
+text, permanent reservations, custody and admitted legacy active scratch caps.
+`AccountUsage.raw_bytes` remains raw-only and must equal the actual raw sum.
+Identical hashes do not deduplicate copies. Positive legacy caps preserve flag
+QC, EDI QC/inversion, protected ERT/TT and M08's exact 52690944-byte contract;
+an unknown method does not inherit the flag-QC fallback.
+
+## Native filesystem and cleanup boundary
+
+`physical_posix` retains no-follow directory descriptors and ancestry identity,
+rejects links/device changes/root replacement, reads exact ordinary-file
+identities and hashes, and installs independent exclusive copies. Installation
+orders file fsync before containing-directory fsync. Uncertain installed copies
+are never unlinked in a finally clause. Cleanup verifies the exact saved slot,
+unlinks one ordinary file and syncs its containing directory before committing
+the SQL removed ordinal, updated inventory and reduced charge. A failed SQL
+acknowledgement keeps charge; later pathname absence alone cannot release it.
+
+`physical_leases` provides task-scoped Linux shared/exclusive flock acquisition
+on an already initialized immutable lock inode. Acquisition does not create or
+replace that lock, upgrade shared to exclusive, expire a live lease, or inherit
+its descriptor through exec. All participating writers must hold the shared
+lease until their children quiesce. Recovery/cleanup uses an independently
+obtained exclusive lease and full fresh audit. The primitive does not exclude
+nonparticipants or privileged operators by itself.
+
+The isolated native drills execute these actual file/SQL mechanisms under a
+source-bound patched SQLite build, including fresh WAL visibility and stale
+main-file rejection. They do not establish power-loss survival, all-production
+writer participation, full forest/scientific classification, queue/API wiring
+or activation. Default startup and migration registries remain unchanged.
