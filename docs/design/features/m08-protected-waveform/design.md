@@ -1,5 +1,11 @@
 # Protected M08 waveform vertical
 
+Current scope pointer (2026-10-08): the approved protected user/API/UI workflow
+includes the [fixed Linux lane](linux-fixed-lane.md), whose actual qualification
+remains open. Historical local-only/API-UI exclusions in the original subvertical
+are not current authority holds. Parent owns shared-shell mounting and activation;
+no field, host or VPS acceptance is inferred from these implementation changes.
+
 ## Boundary and scientific invariants
 
 The method is seismic.waveform-qc-classical/v1: immutable integer counts plus exact StationXML, raw QC, native response deconvolution, offline acausal SOS bandpass, unit-bearing Welch PSD, unlabelled classical STA/LTA intervals and separately sealed optional evaluation. Source samples, response stages, declared units, UTC windows and thresholds never change to obtain a pass. The ordinary local waveform contract/algorithms remain authoritative. Computed is not accepted field geology, authenticated provider data, calibrated timing or a P/S classifier. All scientific acceptance flags remain false. Existing held-out replay and original Ridgecrest failure seals are unchanged.

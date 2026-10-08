@@ -1,5 +1,14 @@
 # Proposed M08 calculation: literal algorithms and physical meaning
 
+Current scope pointer (2026-10-08): the approved full user workflow is governed
+by [protected waveform design](../m08-protected-waveform/design.md) and its
+[Linux fixed-lane amendment](../m08-protected-waveform/linux-fixed-lane.md).
+The local-only/file-excluded/API-UI-excluded/A5-not-authorized wording below
+records the earlier scoped stage; it is not a current implementation-authority
+hold. Linux implementation is now authorized, with actual platform qualification
+still separate and open. Scientific contracts, original negative seals and
+resource ceilings below remain unchanged; no full-VPS/field acceptance follows.
+
 Status: PROPOSED, NOT_RUN. These equations specify the actual operations to implement after approval, not an executed field recipe. Inputs/bounds/errors are in [contracts](contracts.md). All arithmetic except raw integer counts/time identities is float64; complex operators are complex128. No interpolation, rotation, response fitting, posterior inference or model training occurs.
 
 ## 1. Observation and channel frame

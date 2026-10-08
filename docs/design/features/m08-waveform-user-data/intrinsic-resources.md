@@ -1,5 +1,14 @@
 # M08 local resource contract
 
+Current scope pointer (2026-10-08): the approved full user workflow is governed
+by [protected waveform design](../m08-protected-waveform/design.md) and its
+[Linux fixed-lane amendment](../m08-protected-waveform/linux-fixed-lane.md).
+The local-only/file-excluded/API-UI-excluded/A5-not-authorized wording below
+records the earlier scoped stage; it is not a current implementation-authority
+hold. Linux implementation is now authorized, with actual platform qualification
+still separate and open. Scientific contracts, original negative seals and
+resource ceilings below remain unchanged; no full-VPS/field acceptance follows.
+
 Resource/profile acceptance remains CLOSED until actual platform controls and measurements exist. Ordinary science tests and exported arrays do not establish native containment, an accepted memory floor, exited-descendant CPU accounting or deployment readiness. Operational inventories, native signatures/ABI/context and execution receipts are private evidence, not public scientific source.
 
 The ordinary envelope remains16MiB MiniSEED,2MiB StationXML,64KiB request,1..3 channels,4096 records,60000 samples/channel,180000 total,300s conditioning,131072 FFT points and20000000 response work units. No resampling/thinning, raw-to-float repair, scalar-response substitute or tolerance change may be used to fit this envelope.
