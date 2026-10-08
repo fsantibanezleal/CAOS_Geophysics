@@ -1,5 +1,14 @@
 # Exact local waveform inputs, QC and result contracts
 
+Current scope pointer (2026-10-08): the approved full user workflow is governed
+by [protected waveform design](../m08-protected-waveform/design.md) and its
+[Linux fixed-lane amendment](../m08-protected-waveform/linux-fixed-lane.md).
+The local-only/file-excluded/API-UI-excluded/A5-not-authorized wording below
+records the earlier scoped stage; it is not a current implementation-authority
+hold. Linux implementation is now authorized, with actual platform qualification
+still separate and open. Scientific contracts, original negative seals and
+resource ceilings below remain unchanged; no full-VPS/field acceptance follows.
+
 Status: FIXED ordinary local contract, not a wire/API schema. Native execution gates remain separate. All intervals in this lane are half-open. Standards inform parsing; stricter lane limits below are proposed product policies, not universal format limits. [SEED 2.4](https://www.fdsn.org/pdf/SEEDManual_V2.4.pdf) and [StationXML](https://docs.fdsn.org/projects/stationxml/en/latest/reference.html) are the primary format references.
 
 ## 1. Raw inputs and preallocation limits

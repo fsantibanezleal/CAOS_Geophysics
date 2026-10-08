@@ -1,5 +1,13 @@
 # Implementation order and convergence
 
+Current scope pointer (2026-10-08): the initial all-unexecuted description below
+is historical. The protected user/API/UI implementation is committed; actual
+Windows workflow and ordinary API/browser receipts are recorded separately in
+the private qualification ledger. The approved [Linux fixed lane](linux-fixed-lane.md)
+is implementation work in progress with native/host gates still open. Preserve
+the original failure seals and ceilings; a successful API job does not close
+scientific, resource or full-VPS qualification.
+
 1. R-M08S-08: preserve test-first full workflow and implement deterministic authored fixture; real independent same-input science/export comparisons.
 2. R-M08S-01/02: failing owned-pair/request API tests, strict indexing/contract, explicit0004 relationship migration and compatibility regression.
 3. R-M08S-03/04: failing worker/closed-context/publication tests, fixed platform dispatch, result/member validation and immutable transactional publication.

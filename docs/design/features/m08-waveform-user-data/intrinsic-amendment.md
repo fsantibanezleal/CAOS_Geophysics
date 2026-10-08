@@ -1,5 +1,14 @@
 # M08 intrinsic completion amendment: originals, CLI and exported evidence
 
+Current scope pointer (2026-10-08): the approved full user workflow is governed
+by [protected waveform design](../m08-protected-waveform/design.md) and its
+[Linux fixed-lane amendment](../m08-protected-waveform/linux-fixed-lane.md).
+The local-only/file-excluded/API-UI-excluded/A5-not-authorized wording below
+records the earlier scoped stage; it is not a current implementation-authority
+hold. Linux implementation is now authorized, with actual platform qualification
+still separate and open. Scientific contracts, original negative seals and
+resource ceilings below remain unchanged; no full-VPS/field acceptance follows.
+
 Status: A1-A3 ordinary implementation; native A4 execution unavailable. No change to the original scientific tolerances, algorithms, input byte/sample/work ceilings, request selection or scientific acceptance thresholds.
 
 Read the [representation semantics](ridgecrest-format-diagnostic.md), this amendment, [resource contract](intrinsic-resources.md), [validation](intrinsic-validation.md) and existing contracts/algorithms. Existing failure receipts remain immutable. This is ordinary local M08, not API/UI/auth/storage/recovery/production work.

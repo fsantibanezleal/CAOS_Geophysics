@@ -1,6 +1,15 @@
 # EARS requirements and future named gates
 
-Status: FIXED_REQUIREMENTS / PARTIAL_LOCAL_IMPLEMENTATION. The original proposed all-NOT_RUN/file-absent status is historical; ordinary modules now exist. Requirements and thresholds below are unchanged. Current executed coverage and explicit missing CLI/resource/field gates are in [tasks](tasks.md) and the [local review packet](continuation-review-packet.md). A documentation/source-invariance check is not a numerical or admission PASS. These requirements implement one local subvertical, not whole #42/#50 acceptance.
+Current scope pointer (2026-10-08): the approved full user workflow is governed
+by [protected waveform design](../m08-protected-waveform/design.md) and its
+[Linux fixed-lane amendment](../m08-protected-waveform/linux-fixed-lane.md).
+The local-only/file-excluded/API-UI-excluded/A5-not-authorized wording below
+records the earlier scoped stage; it is not a current implementation-authority
+hold. Linux implementation is now authorized, with actual platform qualification
+still separate and open. Scientific contracts, original negative seals and
+resource ceilings below remain unchanged; no full-VPS/field acceptance follows.
+
+Status: FIXED_REQUIREMENTS / HISTORICAL_LOCAL_SUBVERTICAL. The original proposed all-NOT_RUN/file-absent status is historical; ordinary modules now exist. Requirements and thresholds below are unchanged. Current protected implementation scope and outstanding platform gates are in [protected tasks](../m08-protected-waveform/tasks.md) and the [Linux amendment](../m08-protected-waveform/linux-fixed-lane.md). A documentation/source-invariance check is not a numerical or admission PASS. The requirements below describe the original local subvertical, not whole #42/#50 acceptance.
 
 R-W08-001 THE local boundary SHALL use exactly supplied immutable MiniSEED/StationXML bytes and independently measured byte counts/SHA, keeping request/scientific/binary/source-declaration hash dialects distinct. Gate: `tests/data/test_waveform_input.py::test_exact_bytes_hash_domains_and_immutability`.
 
