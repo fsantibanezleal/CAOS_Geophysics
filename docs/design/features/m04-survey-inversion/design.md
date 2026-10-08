@@ -6,6 +6,10 @@ fitting, user-data tools, persisted results, field evaluation and linked views.
 P04 physical source and tests are not modified by this proposal.
 The ordinary input/geometry/private export foundation is implemented separately
 from numerical fitting, with its exact limited closure defined in contracts.
+The separately documented [local candidate composition](../../../methods/magnetic-survey/06_local-calibration.md)
+now implements linear L2/IRLS, nested fitting, frozen evaluation and fitted NPY
+generations. This does not upgrade the still-required accepted source/nonlinear,
+S2/field, linked-view, resource/native and integration gates below.
 
 ## Data flow and separation
 
@@ -36,14 +40,22 @@ trusted calibration state.
 | magnetic_survey.py | geometry, metadata eligibility, IDs/QC, exact seal, preflight | observed amplitudes, uncertainty values, solver |
 | magnetic_inverse.py | actual physical G, quantity composition/J, WLS/Sparse, fit/score/refit | alternate prism kernel, IGRF, guessed corrections |
 | magnetic_optimizer_adapter.py | verify and compose accepted M02 mathematical core | gravity-private constructors, copied optimizer |
-| magnetic_survey_bundle.py | bounded arrays/manifest/hash roundtrip, local atomic generation | auth, hosted secrets, provider acquisition |
+| magnetic_likelihood.py | geometry-first authorized likelihood rows, uncertainty validation, model freeze | outer likelihood in fitting, noise repair |
+| magnetic_calibration.py | actual candidate linear L2/IRLS/folds/refit/sealed evaluation, retained failures | accepted-method badge, alternative optimizer |
+| magnetic_diagnostics.py | local free-face/fixed-weight resolution and horizontal spectrum helper | posterior certainty, resampling gaps |
+| magnetic_survey_bundle.py | bounded geometry-only JSON export | fitted-generation or inverse claims |
+| magnetic_result_bundle.py | bounded fitted arrays/manifest/hash roundtrip and local publication/readback | auth, hosted secrets, provider acquisition |
+| magnetic_local_paths.py | caller-explicit external data/temp roots | repo raw/model/temp defaults |
 | run_magnetic_survey.py | explicit local source/config/output commands and non-success exits | implicit HTTP, install, native controller activation |
 
 The accepted M02 binding is required to supply reviewed objective/gradient/GN
 callbacks and convergence certification. Its accepted source pin and public
 export are currently unavailable. algorithms defines the needed mathematical
 boundary; no placeholder implementation or unreviewed vendor default fills it.
-A reviewer must bind that boundary to the accepted M02 core before inverse code.
+A reviewer must bind that boundary before accepted inverse execution. Ordinary
+trusted controls can explicitly exercise the current candidate export with a
+reviewed local-candidate inventory; this is not source/native admission and the
+four scientific/online result claims remain false. No nonlinear substitution.
 Other source-definition, byte, geometry and independent-oracle tests can be
 designed without pretending that dependency passed.
 

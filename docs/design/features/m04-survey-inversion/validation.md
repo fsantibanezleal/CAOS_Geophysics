@@ -21,11 +21,26 @@ Choclo total norm differentiated with centered steps chi=1e-6,5e-7,2.5e-7,
 using only interior production bounds. Require consecutive derivative estimates
 converge at rtol2e-6/atol1e-6 nT/SI, then analytic candidate agrees at the same
 fixed tolerance. At chi=0 use a permitted one-sided three-point derivative and
-confirm its limit is linear projection. Check adjoint
+confirm its limit uses native B0/norm(B0); do not assume a rounded B0 norm equals
+the separately retained F or reset its tiny baseline. Check adjoint
 u dot (J v)=v dot (J^T u) with relative error<=1e-12 or absolute1e-10 nT/SI;
 freeze vectors independently of the candidate. Zero-norm/guard-domain negatives
 must fail without fallback. These proposed derivative tolerances do not weaken
 the stricter P04 component or ordinary magnitude comparisons.
+
+The kernel/certificate source paths are magnetic_inverse.py and
+magnetic_inverse_precision.py; paired test paths are
+tests/numerics/test_magnetic_inverse.py and test_magnetic_inverse_precision.py.
+Test the strict internal contracts before copies and physical construction,
+all three actual quantities, cardinal/oblique physical columns, asymmetric
+active holes, native rounded baseline and portable independent direct norms.
+Directed certificate controls compare full nonlinear objective changes and
+actual native-gradient chord against independent Decimal160 calculations,
+including both signs, null/tiny, mixed-sign rational numerators, off-diagonal
+covariance, true bound projection, cancellation, all precision/domain/deadline
+failures and caller-context isolation. No quadratic-only norm certificate.
+These tests do not satisfy the accepted-optimizer binding or completed inverse
+fit gates; a norm certificate alone does not certify true sparse stationarity.
 
 ## Objective, covariance and optimizer oracles
 
@@ -37,6 +52,28 @@ GN at rtol1e-10, atol1e-10 dimensionless (objective),1e-8 (gradient),1e-8
 Cholesky oracle independently checks ||W r||^2=r^T C^-1 r and weighted
 column norms including off-diagonal covariance; at rtol1e-12/atol1e-10.
 No covariance correction or user-uncertainty estimator in this test.
+
+Preparatory executable path: tests/numerics/test_magnetic_survey_objective.py.
+This verifies the actual physical kernel and public vendor linear objective,
+not an optimizer adapter or fitted survey. Freeze a separate tiny nonuniform
+12-cell mesh origin[-140,-180,-260],hx[40,70],hy[30,50,90],hz[60,110]m;
+active x-fast indices[0,1,2,3,6,7,11].30 exterior receivers have
+E=-260+90*s,N=-350+220*l,U=100+17*((l+s)%3),l0..2,s0..9.
+Use F50000,I37,D-73, lengths[400,1200,600]m, beta.3 and3, and explicit
+nonzero q/reference vectors in the test. Test secondary ENU and linear TMI,
+all rows and a geometry-fixed12-receiver principal subset. Separate SD.5nT
+and full SPD C_ij=(.5+.002*i)*(.5+.002*j)*.22^abs(i-j) are authored controls,
+not field uncertainties. Re-factor each principal covariance; do not subset a
+full-survey whitening matrix. Actual public LinearSimulation composes retained
+native physical Jq for this test only. W is a SciPy triangular-solve
+LinearOperator, not a dense NumPy array subject to elementwise multiplication.
+Independent Choclo unit-SI columns, pairwise faces/averages and covariance solves
+must satisfy the existing tolerances above, without tuning the test geometry.
+For covariance, test the explicit public Jtvec/W.T/W/Jvec Hessian action from
+algorithms section3; separately assert the pinned vendor deriv2's W*W result
+differs. For SD, both actions must agree with the same independent oracle.
+Passing these algebra/operator controls does not satisfy BVLS, accepted-core
+certification, L2/IRLS convergence, nonlinear, acquisition or fullcap gates.
 
 Independent SciPy1.15.2 lsq_linear(method="bvls",tol=1e-12,max_iter=10000)
 on stacked [W J_q; sqrt(beta)*R], RHS [W d;sqrt(beta)*R*q_ref],
@@ -67,6 +104,10 @@ A stall, cap or nonzero final KKT is FAIL, never an IRLS success badge.
 Tiny true-smallness control delta=+/-1e-10,epsilon=.1 requires a strictly
 positive value matching independent Decimal80 direct sqrt difference at
 relative error<=2e-8 without an absolute floor; delta=0 is exactly zero.
+The preparatory objective test path above executes weights/value/gradient/
+surrogate-Hessian and Decimal tiny-smallness controls on the same frozen tiny
+mesh. It does not execute reweight-and-solve, certify descent/stationarity,
+advance epsilon or satisfy a completed IRLS workflow gate.
 
 ## Frozen acquisition and six scientific regimes
 
@@ -92,7 +133,10 @@ For A-E use deterministic authored conditional Gaussian SD.5nT every component,
 noise generated NumPy PCG64 seed20261004, raw generator/seed/source version
 recorded; vectors and scalar modes are separate measurements with respective
 noise, not identical likelihoods. F null uses zero observations with SD.5,
-an explicitly noiseless realization of a declared conditional test covariance.
+an explicitly zero-observation control with a declared conditional test covariance.
+In the exact scalar lane retain the separate native-vector clean baseline
+norm(B0)-F, which may be nonzero; this zero-observation test does not assert
+exact identity between rounded-vector norm and F and does not change P04.
 Physical truth fields from Choclo, scalar exact values from Decimal80 direct
 norm, no SimPEG inverse-crime generator. Timestamps use unavailable_declared
 rather than fake collection dates. No generated anomaly amplitude determines SD.

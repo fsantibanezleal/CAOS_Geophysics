@@ -53,7 +53,8 @@ def import_geometry(raw):
 
 def write_geometry(path, handle):
     """Create only a new explicit local export; no provider reads or overwrite."""
-    target = Path(path)
+    from magnetic_local_paths import external_path
+    target = external_path(path)
     raw = export_geometry(handle)
     created = False
     try:

@@ -2,8 +2,10 @@
 
 This is an executable design task graph, not a method acceptance ledger.
 The ordinary input/geometry foundation has executable verification gates; the
-numerical/full-generation/integration gates remain unimplemented, not satisfied
-by those foundation tests. No placeholder code is requested.
+full accepted numerical/field/integration gates remain open, not satisfied
+by foundation or local candidate tests. Actual linear local L2/IRLS/fitted tools
+are implemented separately and described in the [deep workflow](../../../methods/magnetic-survey/06_local-calibration.md).
+No placeholder code is requested.
 The product holds scientific definitions and implementation; private execution,
 coordination and release records remain in management.
 

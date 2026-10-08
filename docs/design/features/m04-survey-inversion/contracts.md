@@ -188,6 +188,10 @@ No symmetrization, nugget, estimated noise floor or row subtraction.
 Unusable/partition rows are selected by component-flat index row*C+component,
 and each subset gets its principal covariance. Correlation across partitions
 is not removed by a spatial buffer or principal extraction.
+The scientific reader checks a declared_absent claim against literal zero
+cross-outer/development and cross-inner-fit/validation covariance blocks.
+Contradictions reject; possible_not_removed preserves actual correlation with no
+independence claim, repair or buffer-derived zeroing.
 
 Prior exactly {lower_si,upper_si,start_si,reference_si,chi_scale_si,lengths_m,
 reference_in_smooth,spatial_weights,basis}:
@@ -399,15 +403,153 @@ readback verification, never overwrites a prior export; partial failure unlinks
 only the newly created file. A foundation export proves neither the future NPY
 result bundle nor crash-recovery/host durability. No external path is accepted
 inside this document. No solver, likelihood load or claim upgrade on reimport.
-The ordinary module's local command is exactly magnetic_survey.py validate
---request PATH --export NEW_FILE (both mandatory). Unknown commands/flags reject.
+The ordinary module's local command is magnetic_survey.py validate
+--request PATH --export NEW_FILE (both mandatory), with optional --data-root
+or GEOPHYSICS_LOCAL_DATA_ROOT to restrict its explicit external output root.
+Repository/worktree/relative outputs reject. Unknown commands/flags reject.
 Exit0 means complete geometry validation/export only,2 invalid input/partition,
 5 file/durability failure. It reads at most8MiB request bytes and never the
 provider original, so source.original_sha256 remains unverified raw provenance.
-It never advertises calibrate/evaluate. Those full tools remain R-414 scope.
+It never advertises calibrate/evaluate. Separate run_magnetic_survey.py tools
+implement candidate local calibration/import/reused evaluation, not accepted
+method or online source admission. The [actual tool contract](../../../methods/magnetic-survey/06_local-calibration.md)
+defines mandatory original, external data/temp and reviewed local receipt inputs,
+explicit candidate opt-in, failure ledger versus success bundle and exit codes.
 
 API adapter uses existing owner-scoped source/job IDs, not client-supplied owner.
 Submit a hash-bound config plus source ID; return existing queued/running/
 succeeded/failed/cancelled state with this method result reference. Until actual
 optimizer+native/profile+ownership acceptance, return ineligible with local
 recipe. No invented endpoint path or auth protocol replaces MAIN's existing ABI.
+
+## Internal physical operator and actual-displacement certificate
+
+These are trusted in-process scientific functions, not new upload/HTTP endpoints
+or callbacks accepted from users. They implement the already defined equations;
+they do not supply an accepted nonlinear optimizer or completed fit by themselves.
+data-pipeline/magnetic_inverse.py build_operator(raw,rows,deadline=...) parses
+the same bounded original bytes and seals metadata before engine import. rows
+is an exact built-in tuple of1..2048 strictly increasing original usable row
+indices (exact int, no bool); geometry-only prediction may include outer
+coordinates but never reads their observations. deadline is an explicit finite
+native monotonic float. Unresolved rights or non-original unresolved lineage
+rejects. No field/original-source verification claim follows from this kernel.
+
+MagneticQuantity is the internal native-kernel composition: actual Gchi
+F64(3N,A), B0 F64(3), direction F64(3), F native float[1,1e6], quantity one
+of the three declared quantities. Metadata/counts precede scans/copies;
+N<=2048,A<=2048,3N*A<=12582912. Store rounded A_b=.01*Gchi once, including
+its exact payload hash, not separate unrounded scale multiplication. Native
+q F64(A) must be finite and in[0,10]. Returned evaluate(q) has exactly
+{prediction_nT,jacobian_nT_per_q,secondary_enu_nT,total_norm_nT}; shapes are
+(N,C),(N*C,A),(N,3),(N,) respectively, owned C-order write-protected arrays.
+Native point norms use isolated Decimal80/from_float on retained B0 and native
+b, full delta0 rational numerator and positive denominator, not the old P04
+expression. The analytic Jacobian uses the actual total-vector direction;
+all inverse T/F>1e-8 guards apply without fallback. Hash-bound operand snapshots
+are owned/write-protected, not tamperproof process memory.
+
+data-pipeline/magnetic_inverse_precision.py MagneticCertificate owns that
+operator's fixed native operands and explicit observed F64(N,C), noise exactly
+{kind,values} (diagonal_sd/F64(N,C) or full_covariance/F64(D,D)), reference_q,
+lower_q,upper_q F64(A), beta positive native float and a tuple of0..7 fixed
+regularization terms. Each term is exact{alpha,weights,derivative}: alpha
+nonnegative native float, weights positive F64(K), derivative canonical float64
+CSR(K,A),K<=2A,nnz<=8A with native int32 indices/indptr, no duplicates or
+foreign hooks. These are actual vendor component W diagonals, derivative
+coefficients and multipliers, not a pre-rounded normal matrix or copied solver.
+Skip alpha0 terms without changing them. All metadata and a conservative live
+interval-vector/copy byte bound must pass<=805306368 before snapshots; domain,
+CSR/order/finite, SD positivity and SPD checks follow. Full covariance D<=512,
+exact symmetric positive-definite C, condition2<=1e8, no jitter; factor this
+already principal C and bind the actual retained binary64 Cholesky L. Whiten
+by native/interval triangular solves, never a constructed inverse.
+
+certify(q,qt,native_gradient,native_phi,native_phi_trial,iteration,trial,deadline)
+uses the actual projected chord, not an unprojected search vector. Exact native
+F64(A) models/gradient, finite native phi floats, iteration int0..199,trial
+int0..19, explicit finite monotonic deadline. Its exact14 return keys are
+iteration,trial,native_phi_current,native_phi_trial,displacement_inf_q,
+precision_digits,slope_interval,delta_interval,armijo_margin_interval,
+arithmetic_domain,slope_domain,decision,cause,passes. Domain is
+fixed_native_operand_magnetic_norm for exact magnitude or
+fixed_native_operand_quadratic for the two linear lanes; slope domain is
+recorded_native_gradient. This DIFFERENT norm domain cannot be submitted to a
+quadratic-only M02 validator or relabelled accepted nonlinear execution.
+precision_digits nullable34/50/80;passes exact int0..3. Intervals nullable exact
+tuple(str,str) of finite ordered Decimal endpoints, each<=192chars, exponent
+range[-9999,9999]. unavailable metadata is None, never fictitious zero.
+decision enum certified_accept,certified_reject,unresolved,not_run; cause enum
+armijo,non_descent,zero_displacement,precision_limit,range_unsupported,wall_cap,
+native_failure. Accept ONLY certified negative slope upper and strict negative
+Armijo-margin upper for actual real native-operand objective difference minus
+the exact retained binary64 coefficient1e-4 times slope. Reject certified
+non-descent lower>=0 or margin lower>0. Exhaust all three precisions with a
+straddling interval ->unresolved/precision_limit. Expired/unsupported/incomplete
+arithmetic ->not_run with all partial intervals/precision cleared and passes0.
+
+## Trusted vendor regularizer and public optimizer composition
+
+magnetic_optimizer_adapter.py defines internal MagneticRegularizer and
+MagneticObjective, not another request format or user-callable registration.
+MagneticRegularizer(mesh,reference_q,lengths_m,penalty,epsilon_q,weight_model)
+requires mesh exact{origin_m,hx_m,hy_m,hz_m,active}, native F64(3), three native
+F64(axis1..64) and native Bool(full_cells<=4096); active1..2048. Other arrays
+are native F64(A),F64(3),F64(A) respectively. Lengths strictlypositive<=1e5m;
+reference/weight models finite[0,10]. P04 local geometry/volume fidelity applies.
+penalty exactly l2 or sparse_smallness. epsilon_q nativefloat exactly0 for l2;
+for sparse one of the eight frozen positive epsilon values. All arguments are
+mandatory. Constructor owns copies and creates actual public WeightedLeastSquares
+or Sparse with the explicit algorithms section4/6 settings. No foreign vendor
+object, callback or guessed parameter default is accepted. It refreshes Sparse
+weights ONCE at weight_model; a later outer iteration constructs a new object.
+Its terms() returns independent fixed{alpha,weights,derivative} snapshots matching
+the certificate table. A genuinely empty physical face component contributes
+zero and is omitted, not replaced by a fabricated derivative. Positive multipliers
+and nonempty terms retain actual coefficients/weights without a rounded normal
+matrix. Terms with zero multiplier need not be evaluated by the certificate.
+
+MagneticObjective(operator,regularizer,observed,noise,lower_q,upper_q,beta,
+source_inventory_sha256,allocation_plan_sha256,stage_index) takes EXACT native
+MagneticQuantity/MagneticRegularizer instances, likelihood/bound types from the
+certificate table, positivefloat beta, two explicit Hash identities and native
+int stage_index0..20. It owns snapshots. The source/allocator identities are
+trusted-driver inputs, not verified by accepting their strings. Counts and
+conservative capacity precede derived matrices. Real registered source admission
+is still required; these constructors cannot turn an upload into authorization.
+
+The seven public methods map to PhysicalObjective without gravity constructors:
+
+| Method | Exact composition |
+| --- | --- |
+| identity() | Fresh13keys mode,runtime_epoch,objective_sha256,source_inventory_sha256,q_unit,physical_unit,physical_scale,parameter_count,observation_rows,observation_components,beta_engine,stage_index,allocation_plan_sha256. q_unit literal chi_over_0.01; physical_unit SI; physical_scale .01. Mode fixed_linear_quadratic for vector/linearTMI, nonlinear_gauss_newton for exactnorm. Digests bind native operands and actual regularizer coefficients/settings. Epoch comes from the reviewed public core, not request choice. |
+| evaluate(q,return_g=False,return_H=False) | Two exactbool flags; nativefloat Phi, tuple(Phi,g), tuple(Phi,H), or tuple(Phi,g,H). Phi=phi_d+beta*actual_vendor_regularizer(q). g=2Jq.T W.T W r+beta*vendor.deriv(q). H actual float64 LinearOperator(A,A):2Jq.T W.T W Jq action+beta*vendor.deriv2(q,v), GN only for exactnorm. |
+| components(q) | Fresh exact{phi_d,phi_m,phi_engine} finite nonnegative nativefloats from SAME current evaluation. No surrogate relabelled true p1. |
+| binding_diagonal(q) | Native positive F64(A) full GN plus actual fixed vendor regularizer diagonal; no floor/nugget/normalization. |
+| free_metric(q,free_indices) | Native I64 vector unique increasing0..A-1, permits genuine zero count. Exact reviewed diagonal inverse action on this face, zero outside, real float64 LinearOperator(A,A). Store native inverse=1/diagonal once, then multiply inverse[free]*v[free], matching the public core's literal arithmetic. Native v/diagonal can differ by one ulp and is not that registered action. No gravity Joseph policy substitution. |
+| certify(...) | Complete14key MagneticCertificate, SAME native model/gradient/Phi and fixed vendor terms. Norm-domain record cannot pass quadratic-only core. |
+| release_state() | Clears only this adapter's ephemeral evaluation/Jacobian cache; no disk/source/provider/shared-state mutation. |
+
+solve_linear(objective,lower_q,upper_q,start_q,*,budget,binding) invokes ONLY
+public physical_optimizer.solve_bounded_physical with its exact typed budget/
+binding and ten-key result/trace contract. It verifies current local optimizer
+and evaluator source hashes against that binding. No registry self-attestation:
+reviewed source inventory/native authority remains external. Exactnorm refuses
+before core evaluation until real nonlinear source/validator registration. Linear
+candidate execution does not establish acceptance of the full magnetic method.
+Paired executable tests live in tests/numerics/test_magnetic_optimizer_adapter.py.
+BVLS is independent TEST ONLY, never a production retry or substituted optimizer.
+Bounds, nonfinite native values and zero chords never create acceptance.
+
+## Reviewed nonlinear public composition amendment
+
+MagneticNonlinearObjective/solve_nonlinear in magnetic_nonlinear_adapter.py
+compose the actual public physical_nonlinear_optimizer seven-method seam.
+Its distinct native epoch/policy, SI scale tuple(.01,), exact-bound feasible
+gradient, fixed initial positive diagonal, refreshed PSD GN and separate exact
+Hessian are defined in [the nonlinear chapter](../../../methods/magnetic-survey/07_nonlinear-composition.md).
+Five weighted operands are(0,phi_d,0,beta*phi_regularizer,0); engine beta=1.
+Native trace acceptance is NOT a native-norm interval certificate. Independently
+audit every recorded actual accepted chord; non-certified chords fail M04 while
+retaining trace/proof. Native1e-5 does not waive independent M04 KKT1e-7 or IRLS.
+No public-source acceptance registry, scientific tolerance or proof is weakened.
