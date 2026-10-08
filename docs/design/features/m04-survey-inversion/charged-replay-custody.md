@@ -65,6 +65,15 @@ unknown sibling, foreign selection and unreleased-debt negatives.
 
 ## Design
 
+R-466 BEFORE reserving a new attempt, THE existing-attempt reader SHALL refuse
+non-object or unknown request discriminators and malformed published M04
+records through the controlled custody-debt boundary, before accounting
+callbacks or any new scratch/attempt creation. A JSON array/null/number is not
+an implicit empty namespace. Known M03 records remain delegated to that owner;
+this reader does not adopt or rewrite them.
+Gate: actual SQLite malformed prior-record negatives, preserved original row,
+no new attempt/stage and no accounting callback invocation.
+
 Use the existing magnetic preparation-attempt SQL model and literal migration
 unchanged, not a new table or general reservation framework. A local replay
 import/read/export is custody preparation, NOT M03 native scientific execution.
