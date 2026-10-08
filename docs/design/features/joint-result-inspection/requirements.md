@@ -1,6 +1,7 @@
 # Local supplied joint result inspection
 
-Status: planned
+Qualification is scoped to native-output inspection, not physical replay or
+integrated application acceptance. Scientific and transport gates stay distinct.
 
 JR-01 WHEN a local workflow output directory is selected, THE inspector SHALL
 admit exact completed solve/evaluate or failed workflow inventories, bounded

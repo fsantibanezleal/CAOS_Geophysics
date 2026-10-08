@@ -2,8 +2,9 @@
 
 The first actual refined matrix reference run retained32PASS/24FAIL. Every
 failed control stopped at an independently computed exact-bound KKT requirement;
-SciPy success is deliberately insufficient. This does not establish24 optimizer
-failures in M11: production M11 optimization has not run.
+SciPy success is deliberately insufficient. This historical reproduction alone
+does not establish24 optimizer failures in M11: production M11 optimization had
+not run at that reference epoch.
 
 Actual case0,beta0.0001 gravity: BVLS status1/nit14/reported optimality
 5.824108624302889e-13, but one coordinate is1.9999999999999998, upper2.0,
@@ -68,3 +69,15 @@ References that fail their independent KKT are unresolved, not usable optima.
 The separate external receipt binds original matrix/calibration manifest hashes
 and actual candidate statuses. Its failures remain failures, not a new tolerance,
 parent acceptance, field proof or a rewrite of raw-return scientific verdicts.
+
+The frozen actual24-case workflow matrix now supplies all384 baseline fits
+(24cases x2modalities x8betas). Every independent exact-face reference passes its
+own feasible-bound/originalKKT qualification. Comparing the unchanged actual
+production returns fails51relative-objective,63normalized-model,70physical-
+prediction and37normalized-exact-KKT predicates at the original thresholds.
+These counts overlap; they are not summed. All actual fitted q arrays, raw-BVLS
+records and original comparisons remain unchanged. The supplement exits1 and
+reports `all_scientific_predicates_pass=false`, even though every native workflow
+completed its actual CLI/export/replay sequence. Its immutable receipt SHA256 is
+2239ee86eaddf7a362452f85000261983725adf737907661f7fc5613f4384aae.
+This is a failed full-baseline precision qualification, not inverse acceptance.

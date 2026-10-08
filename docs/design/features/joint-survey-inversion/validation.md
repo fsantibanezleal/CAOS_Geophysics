@@ -274,3 +274,33 @@ comparisons. The earlier19/192 near-optimum gradient precision failures remain
 failures at the original tolerances. Completed CLI execution, stationary selected
 models and small residuals are not all-predicate scientific acceptance, field
 eligibility, verified rights/corrections, geological recovery or a global optimum.
+
+## Completed frozen method matrix and retained scientific precision failures
+
+The complete original-inclusive targeted numerical regression executes648PASS
+and2explicit Windows-symlink skips in1319.78s. It includes unchanged accepted
+gravity/magnetic controls and all joint evaluation, optimizer, native ledger,
+strictCLI/export, source and resource-adverse controls. Forty-eight JUnit
+record_property warnings do not alter test results. This targeted scope does
+not repair historical broader collection failures or qualify absent field
+fixtures. Receipt SHA256:
+de5c3c69e07a31442ba6d7b4d2274f40f15c2a759f66828ccfd4107ee00b8f56.
+
+All24 nonzero refined-source cases now execute the complete actual26-fit
+methodology, validation-only frozen selection, strictCLI/export and physical
+replay. The624attempts retain568converged,56nonconverged and0engine-failed
+statuses. Of240positive-coupling candidates,221are eligible under the fixed
+per-modality1.05baseline rule; each case selects a positive strength. No case
+or candidate is removed, and selection is not improvement, recovery or proof
+that the scientific precision predicates pass. Matrix receipt SHA256:
+c776c59756b5ca7ef3b6d51727ca01fbefcb2c68a13b6f208b29884c56187964.
+
+The predeclared independent exact-face supplement evaluates all384actual
+separate baseline returns. It reports51objective/63model/70physical-prediction/
+37normalized exact-KKT failures at unchanged Frel1e-8/model1e-5/prediction1e-8/
+KKT1e-5 thresholds. Counts overlap, all original precision/reference negatives
+remain, and the supplemental run exits1 with scientific acceptance false.
+See [the independent reference derivation](reference-face-check.md). Neither
+648unit passes nor24completed workflows turns these scientific failures into
+acceptance. Native counts and byte/RSS gates likewise do not qualify maximum
+nonzero history cost, Linux/GPU, field science, host/API or public activation.

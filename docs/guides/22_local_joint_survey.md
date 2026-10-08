@@ -5,6 +5,14 @@ joint example. It uses physical SimPEG/Geoana prism kernels, signed density in
 kg/m3, nonnegative SI susceptibility and the actual SimPEG face-averaged
 CrossGradient. It neither deploys a service nor uploads observations.
 
+The local browser result instrument imports the actual complete output directory
+after processing. It exposes linked response/residual/partition metrics, native
+active-cell property sections and all retained optimization attempts/states. It
+exports an original-byte private archive and separately labelled numeric inspection
+sidecar. It never runs or refits the scientific method, reads undeclared inputs,
+uses a vector-factor coupling approximation or grants redistribution rights.
+See the [local inspection contract](../data-contract/04_joint-local-inspection.md).
+
 ## Prepare external immutable inputs
 
 Set `GEOPHYSICS_LOCAL_DATA_ROOT` or pass `--data-root` to an existing external

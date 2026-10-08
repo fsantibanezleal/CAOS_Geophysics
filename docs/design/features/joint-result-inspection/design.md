@@ -56,6 +56,27 @@ is explicitly distinct from the replay-verified prefix. Interrupted output may
 contain earlier calibration/frozen/model/result files; these are preserved but not
 promoted to completed science merely because they exist.
 
+Pre-code technical review clarifications: an offline writer's replay-verified
+prefix label remains a declaration, never browser-established physics or
+authenticity. Signed residual arithmetic is predicted-minus-observed and is
+checked on imported arrays. All original occurrences are charged before reads;
+histories exceeding caps reject, never truncate. Typed float arrays share owned
+original byte buffers, but crypto/export copies still consume memory. Maximum
+input/mobile support requires actual browser measurements, not byte admission.
+Any failed workflow marker overrides earlier completed files. Historical terms
+and physical blocks bind the exact attempt/state and that attempt's fixed weights,
+not the terminal model's metrics. Missing actual fixtures remain explicit skips.
+
+Native failed-inventory clarification before admission correction: the completed
+calibration may be retained beside a separately serialized26-candidate aborted
+prefix. These are actual repeated file occurrences and both charge the unchanged
+256MiB whole-byte cap. A complete solve has at most568members; retained failure
+with duplicate calibration/abort histories and all durable directories has at
+most1090members. Use a1100file transport cap plus exact per-directory inventories,
+not a700file assumption derived from the completed-only layout. This changes no
+physical array, solver tolerance, scientific budget or accepted native schema;
+it prevents genuine late failures being excluded from inspection.
+
 ## Mounting and gates
 
 `JointResultWorkbench` is independently importable. The existing joint instrument
@@ -66,4 +87,5 @@ Vitest uses real offline output directories supplied through an external environ
 argument, with missing fixtures explicitly skipped and reported. Malformed transport
 tests use in-memory mutation, never a modified scientific result on disk. Browser
 gates import the same actual outputs and exercise both languages/themes/mobile and
-desktop, selectors and downloaded exports. Parent owns integrated mount/render.
+desktop, selectors and downloaded exports. Integrated mount/render is separately
+qualified in the actual application.
