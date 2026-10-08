@@ -44,11 +44,19 @@ try{
       for(let k=0;k<count;k++){await chapter.selectOption(String(k));await root.locator(".katex").first().waitFor();
         if(await root.locator(".katex-error").count())throw Error("Equation failed to render");
         lessons.push(await root.getAttribute("data-lesson"));
-        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}.png`),fullPage:true});
+        // Shell/body owns scrolling. A full-page capture can show blank regions
+        // outside that actual viewport; paint and capture every substantive pane.
+        await root.locator("h2").scrollIntoViewIfNeeded();
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-text.png`)});
+        const equation=root.locator(".equation").first();await equation.scrollIntoViewIfNeeded();
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-equation.png`)});
+        await root.locator("aside").scrollIntoViewIfNeeded();
+        await page.screenshot({path:join(output,`${width}-${lang}-${theme}-chapter-${k+1}-readout.png`)});
+        await chapter.scrollIntoViewIfNeeded();
         if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw Error("Course horizontal overflow");
       }
       if(new Set(lessons).size!==9||errors.length)throw Error("Course chapter control/error gate failed");
-      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,horizontal_overflow:false,errors});
+      proofs.push({width,height,lang,theme,reduced_motion:true,lessons,verified_generation:true,actual_scroll_equation_and_readout_captured:true,horizontal_overflow:false,errors});
       console.log(`PASS ${width} ${lang} ${theme} nine source-bound course chapters`);await context.close();continue;
     }
     await page.locator(".magnetic-result").waitFor();
