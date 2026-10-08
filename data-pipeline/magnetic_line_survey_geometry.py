@@ -9,11 +9,9 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from hashlib import sha256
-import itertools
 import math
 from pathlib import Path
 import sqlite3
-import struct
 
 import magnetic_line_contract as base
 import magnetic_line_survey as core
@@ -23,7 +21,7 @@ from magnetic_line_validation import segment_rectangle
 
 
 @contextmanager
-def geometry_index(root, inspection, *, temp_root):
+def geometry_index(root, inspection, *, temp_root, alignment=None):
     """Independently verify all original geometry then rebuild bounded index."""
     root = io.external_path(root)
     core.verify_geometry_inspection(root, inspection)
@@ -56,6 +54,9 @@ def geometry_index(root, inspection, *, temp_root):
             db.commit()
             if db.execute('SELECT count(*) FROM rows').fetchone()[0] != inspection['rows']:
                 raise core.SurveyError('custody_mismatch', 'seal')
+            if alignment is not None:
+                from magnetic_line_survey_navigation import apply_alignment_view
+                apply_alignment_view(db, inspection, alignment)
             yield db, reader, lines, sensors
         except core.SurveyError:
             raise
@@ -145,7 +146,7 @@ def _source_blocks(db, output, fold, configuration, depth):
     return positions, members, table
 
 
-def plan_partitions(geometry_root, inspection, request, request_root, output, *, temp_root):
+def plan_partitions(geometry_root, inspection, request, request_root, output, *, temp_root, alignment=None):
     """All whole-line folds, conservative tie exclusions and training sources.
 
     Returns a closed *internal planning* receipt, not the complete GeometrySeal:
@@ -175,7 +176,7 @@ def plan_partitions(geometry_root, inspection, request, request_root, output, *,
         raise core.SurveyError('invalid_contract', 'seal')
     if split['geometry_manifest_sha256'] != inspection['geometry_sha256']:
         raise core.SurveyError('custody_mismatch', 'seal')
-    with geometry_index(geometry_root, inspection, temp_root=temp_root) as (db, _, lines, sensors):
+    with geometry_index(geometry_root, inspection, temp_root=temp_root, alignment=alignment) as (db, _, lines, sensors):
         sensor_ids = [row['sensor_id'] for row in sensors]
         if request['sensor_id'] not in sensor_ids:
             raise core.SurveyError('metadata_ineligible', 'seal')
@@ -239,5 +240,7 @@ def plan_partitions(geometry_root, inspection, request, request_root, output, *,
             request_sha256=base.digest(request), original=inspection['original'], rows=inspection['rows'],
             partitions=results, capacity=capacity, value_access='not_opened',
             complete_geometry_seal=False, remaining_geometry_stages=['navigation', 'crossovers', 'support'])
+        if alignment is not None:
+            result['navigation_sha256'] = base.digest(alignment[1])
         core._write_member(output, 'partition-plan.json', base.canonical_bytes(result))
         return result

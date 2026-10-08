@@ -8,7 +8,6 @@ from __future__ import annotations
 import ctypes as c
 from ctypes import wintypes as w
 from hashlib import sha256
-import json
 import os
 from pathlib import Path
 import shutil
@@ -146,7 +145,9 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                     'magnetic_line_survey_io.py', 'magnetic_line_survey_runtime.py', 'magnetic_line_survey_worker.py',
                     'magnetic_line_survey_geometry.py', 'magnetic_line_survey_measurements.py',
                     'magnetic_line_survey_crossovers.py', 'magnetic_line_survey_support.py', 'magnetic_line_survey_seal.py',
-                    'magnetic_line_survey_fit.py', 'magnetic_line_survey_diagnostic.py')
+                    'magnetic_line_survey_fit.py', 'magnetic_line_survey_diagnostic.py',
+                    'magnetic_line_survey_navigation.py', 'magnetic_line_survey_diagnosis.py',
+                    'magnetic_lines.py', 'magnetic_line_validation.py')
     def source_identity():
         return {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}
     sources_before = source_identity()

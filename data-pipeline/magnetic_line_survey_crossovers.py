@@ -16,7 +16,7 @@ import magnetic_line_survey_io as io
 from magnetic_lines import intersect_segments, _utc_ns, CROSSOVER_REASONS
 
 
-def geometry_crossovers(root, inspection, geometry_policy, output, *, temp_root, candidate_limit=8000000):
+def geometry_crossovers(root, inspection, geometry_policy, output, *, temp_root, candidate_limit=8000000, alignment=None):
     policy = base.validate_named('GeometryPolicy', geometry_policy)
     if type(candidate_limit) is not int or not 1 <= candidate_limit <= 8000000:
         raise core.SurveyError('invalid_contract', 'seal')
@@ -25,7 +25,7 @@ def geometry_crossovers(root, inspection, geometry_policy, output, *, temp_root,
     if output.exists():
         raise core.SurveyError('custody_mismatch', 'seal')
     output.mkdir()
-    with planner.geometry_index(root, inspection, temp_root=temp_root) as (db, _, lines, sensors):
+    with planner.geometry_index(root, inspection, temp_root=temp_root, alignment=alignment) as (db, _, lines, sensors):
         bounds = db.execute('SELECT min(e),max(e),min(n),max(n) FROM rows').fetchone()
         span = max(bounds[1]-bounds[0], bounds[3]-bounds[2])
         tau = 64*core.EPSILON*max(1., span, *(abs(v) for v in bounds))
@@ -151,5 +151,7 @@ def geometry_crossovers(root, inspection, geometry_policy, output, *, temp_root,
         result = dict(schema='m03-crossover-geometry-plan/1', geometry_sha256=inspection['geometry_sha256'],
             geometry_policy_sha256=base.digest(policy), segments=segments,candidates=count,table=table,
             value_access='not_opened',measurement_and_partition_admission='not_opened')
+        if alignment is not None:
+            result['navigation_sha256'] = base.digest(alignment[1])
         core._write_member(output,'crossover-plan.json',base.canonical_bytes(result))
         return result

@@ -4,7 +4,6 @@ from __future__ import annotations
 from hashlib import sha256
 import math
 from fractions import Fraction
-from pathlib import Path
 
 import magnetic_line_contract as base
 import magnetic_line_survey as core
@@ -182,7 +181,7 @@ def grid_ids(config):
     return identity.hexdigest()
 
 
-def plan_support(root,inspection,request,partition_root,planned,output,*,temp_root):
+def plan_support(root,inspection,request,partition_root,planned,output,*,temp_root,alignment=None):
     request = schema.validate('SurveyRequest',request)
     output = io.external_path(output)
     if output.exists():
@@ -191,6 +190,8 @@ def plan_support(root,inspection,request,partition_root,planned,output,*,temp_ro
     stored = base.strict_json(base.read_bounded(core._plain_path(partition_root/'partition-plan.json'),2097152))
     if stored != planned or planned['request_sha256'] != base.digest(request) or planned['geometry_sha256'] != inspection['geometry_sha256']:
         raise core.SurveyError('custody_mismatch','seal')
+    if planned.get('navigation_sha256') != (None if alignment is None else base.digest(alignment[1])):
+        raise core.SurveyError('custody_mismatch','seal')
     output.mkdir()
     reader = io.Reader(partition_root)
     grid = request['grid']
@@ -198,7 +199,7 @@ def plan_support(root,inspection,request,partition_root,planned,output,*,temp_ro
     results = []
     grid_mask = None
     spectrum_qualified = False
-    with geometry.geometry_index(root,inspection,temp_root=temp_root) as (db,_,lines,sensors):
+    with geometry.geometry_index(root,inspection,temp_root=temp_root,alignment=alignment) as (db,_,lines,sensors):
         _gaps(db,request,sensors)
         sampling_resolved = _sampling(db,request,lines,sensors)
         for number,part in enumerate(planned['partitions']):
@@ -254,5 +255,7 @@ def plan_support(root,inspection,request,partition_root,planned,output,*,temp_ro
     result = dict(schema='m03-geometry-support-plan/1',geometry_sha256=inspection['geometry_sha256'],
         request_sha256=base.digest(request),partitions=results,grid_mask=grid_mask,
         spectrum_geometrically_qualified=spectrum_qualified,sampling_resolved=sampling_resolved,value_access='not_opened')
+    if alignment is not None:
+        result['navigation_sha256'] = base.digest(alignment[1])
     core._write_member(output,'support-plan.json',base.canonical_bytes(result))
     return result

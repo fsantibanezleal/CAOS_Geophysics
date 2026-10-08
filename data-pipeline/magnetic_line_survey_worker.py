@@ -6,7 +6,6 @@ from hashlib import sha256
 import os
 from pathlib import Path
 import sys
-import time
 
 
 def main(argv=None):
@@ -27,6 +26,9 @@ def main(argv=None):
         phase = 'plan'
         plan_path = io.external_path(args.plan, directory=False)
         plan = base.strict_json(base.read_bounded(plan_path, 2097152))
+        if type(plan) is dict and plan.get('schema') == 'm03-training-diagnosis-plan/1':
+            from magnetic_line_survey_diagnosis import diagnose_retained_s1
+            return diagnose_retained_s1(plan,plan_path.parent,args.job_handle)
         if type(plan) is dict and plan.get('schema') == 'm03-global-control-plan/1':
             from magnetic_line_survey_diagnostic import run_opened_s1
             return run_opened_s1(plan,plan_path.parent,args.job_handle)

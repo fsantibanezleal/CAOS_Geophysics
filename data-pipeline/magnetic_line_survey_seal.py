@@ -1,4 +1,4 @@
-"""Owner no-lag geometry seal: all original rows, no measurement decoding.
+"""Owner original/aligned geometry seal: all original rows, no measurement decoding.
 
 This seal records geometry eligibility, not predictive or measured host
 acceptance. Lag requests must run the independent navigation stage first;
@@ -19,7 +19,7 @@ from magnetic_line_survey_crossovers import geometry_crossovers
 from magnetic_line_survey_support import plan_support
 
 
-def _metadata(root, inspection, metadata, request):
+def _metadata(root, inspection, metadata, request, *, allow_navigation=False):
     schema.validate('SurveyInput', metadata)
     schema.validate('SurveyRequest', request)
     if metadata['source_kind'] not in ('field_acquisition','original_synthetic_acquisition') or \
@@ -36,7 +36,7 @@ def _metadata(root, inspection, metadata, request):
        [acq['line_dictionary'],acq['sensor_dictionary']] != inspection['dictionaries'] or \
        request['dataset_version_sha256'] != base.dataset_identity(inspection['original']['csv_sha256'],base.digest(metadata)):
         raise core.SurveyError('custody_mismatch','seal')
-    if any(op['operation']=='lag' for op in request['operations']):
+    if any(op['operation']=='lag' for op in request['operations']) and not allow_navigation:
         raise core.SurveyError('unsupported_operation','seal')
     reader = io.Reader(root)
     refs = {ref['role']:ref for ref in inspection['arrays']}
@@ -80,18 +80,28 @@ def _pack(root, references, destination):
             core._write_member(destination,name,payload)
 
 
-def seal_geometry(root, inspection, metadata, request, request_root, output, *, temp_root):
-    """Assemble independently verified no-lag geometry; values stay unopened."""
+def seal_geometry(root, inspection, metadata, request, request_root, output, *, temp_root, navigation_root=None):
+    """Assemble original or independently aligned geometry; values unopened."""
     root,output = io.external_path(root),io.external_path(output)
     core.verify_geometry_inspection(root,inspection)
-    _metadata(root,inspection,metadata,request)
+    _metadata(root,inspection,metadata,request,allow_navigation=navigation_root is not None)
     if output.exists():
         raise core.SurveyError('custody_mismatch','seal')
     with io.scratch_directory(temp_root) as scratch:
         scratch = Path(scratch)
-        partitions = plan_partitions(root,inspection,request,request_root,scratch/'partitions',temp_root=temp_root)
-        crossovers = geometry_crossovers(root,inspection,request['geometry_policy'],scratch/'crossovers',temp_root=temp_root)
-        support = plan_support(root,inspection,request,scratch/'partitions',partitions,scratch/'support',temp_root=temp_root)
+        alignment = None
+        navigation_refs = []
+        lags = [op for op in request['operations'] if op['operation']=='lag']
+        if navigation_root is not None:
+            if len(lags)!=1:
+                raise core.SurveyError('invalid_contract','seal')
+            from magnetic_line_survey_navigation import align_geometry
+            aligned = align_geometry(root,inspection,metadata,lags[0],navigation_root,scratch/'navigation',temp_root=temp_root)
+            alignment = (scratch/'navigation',aligned)
+            navigation_refs = [lags[0]['parameters']['navigation'][key] for key in ('row_ids','utc','line_index','xyz')]
+        partitions = plan_partitions(root,inspection,request,request_root,scratch/'partitions',temp_root=temp_root,alignment=alignment)
+        crossovers = geometry_crossovers(root,inspection,request['geometry_policy'],scratch/'crossovers',temp_root=temp_root,alignment=alignment)
+        support = plan_support(root,inspection,request,scratch/'partitions',partitions,scratch/'support',temp_root=temp_root,alignment=alignment)
         arrays = list(inspection['arrays'])
         dictionaries = list(inspection['dictionaries'])
         part_arrays,part_tables = [],[]
@@ -100,10 +110,12 @@ def seal_geometry(root, inspection, metadata, request, request_root, output, *, 
             part_tables.append(part['source_blocks'])
         support_arrays = [p['validation_mask'] for p in support['partitions']]+[support['grid_mask']]
         arrays.extend(part_arrays+support_arrays)
+        if alignment is not None:
+            arrays.extend(navigation_refs+[aligned['coordinates'],aligned['mask']])
         dictionaries.extend(part_tables)
         cross_tables = [] if crossovers['table'] is None else [crossovers['table']]
         dictionaries.extend(cross_tables)
-        with geometry_index(root,inspection,temp_root=temp_root) as (db,_,lines,sensors):
+        with geometry_index(root,inspection,temp_root=temp_root,alignment=alignment) as (db,_,lines,sensors):
             coordinates = _coordinates(db,metadata['coordinates']['vertical_datum'])
         geometry_request = deepcopy(request)
         for key in ('channel_sha256','dataset_version_sha256'):
@@ -114,6 +126,15 @@ def seal_geometry(root, inspection, metadata, request, request_root, output, *, 
         capacity = core.plan_capacity(inspection['rows'],max(p['sources']['shape'][0] for p in partitions['partitions']),
             crossover_candidates=crossovers['candidates'],exported_cells=partitions['capacity']['exported_cells'],
             fft_cells=partitions['capacity']['fft_cells'],raw_bytes=inspection['original']['csv_bytes'])
+        if alignment is not None:
+            auxiliary_reader = io.Reader(navigation_root)
+            for ref in navigation_refs:
+                auxiliary_reader.verify(ref)
+            auxiliary_reader.reject_unknown()
+            capacity = core.plan_capacity(inspection['rows'],max(p['sources']['shape'][0] for p in partitions['partitions']),
+                auxiliary_rows=navigation_refs[0]['shape'][0],auxiliary_bytes=sum(v['bytes'] for v in auxiliary_reader.known.values()),
+                crossover_candidates=crossovers['candidates'],exported_cells=partitions['capacity']['exported_cells'],
+                fft_cells=partitions['capacity']['fft_cells'],raw_bytes=inspection['original']['csv_bytes'])
         seal = schema.validate('GeometrySeal',dict(schema='magnetic-line-survey-geometry/1',original=inspection['original'],
             coordinates_sha256=coordinates,acquisition_sha256=base.digest(metadata['acquisition']),
             request_geometry_sha256=base.digest(geometry_request),rows=inspection['rows'],lines=len(lines),sensors=len(sensors),
@@ -125,7 +146,13 @@ def seal_geometry(root, inspection, metadata, request, request_root, output, *, 
         _pack(scratch/'partitions',part_arrays+part_tables,output)
         _pack(scratch/'crossovers',cross_tables,output)
         _pack(scratch/'support',support_arrays,output)
+        if alignment is not None:
+            _pack(navigation_root,navigation_refs,output)
+            _pack(scratch/'navigation',[aligned['coordinates'],aligned['mask']],output)
         core._write_member(output,'geometry-seal.json',base.canonical_bytes(seal))
         # The public seal is closed; additional stage mapping is an in-memory
         # owner return, not hidden extra keys in the published contract.
-        return dict(geometry=seal,partitions=partitions,crossovers=crossovers,support=support)
+        result = dict(geometry=seal,partitions=partitions,crossovers=crossovers,support=support)
+        if alignment is not None:
+            result['navigation'] = aligned
+        return result
