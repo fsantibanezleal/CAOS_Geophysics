@@ -108,6 +108,15 @@ def validate_configuration(config):
 
 def construct_launch(config, job, dataset, raw, origin):
     """Pure complete relation barrier. Never calls SQL, sudo or systemd."""
+    return _construct(config,job,dataset,raw,origin,recovery=False)
+
+
+def construct_recorded_launch(config, job, dataset, raw, origin):
+    """Terminal custody verification only; never relabel a terminal job running."""
+    return _construct(config,job,dataset,raw,origin,recovery=True)
+
+
+def _construct(config, job, dataset, raw, origin, *, recovery):
     try:
         source, data, python = validate_configuration(config)
         for value, keys in ((job,JOB_KEYS),(dataset,DATA_KEYS),(raw,RAW_KEYS),(origin,ORIGIN_KEYS)):
@@ -115,7 +124,11 @@ def construct_launch(config, job, dataset, raw, origin):
             for key in ("id","owner_id","project_id"):
                 uuid(value[key])
             require((value["owner_id"],value["project_id"]) == (job["owner_id"],job["project_id"]), "foreign_relation")
-        require(job["state"] == "running" and job["cancel_requested"] is False and job["method_id"] in METHODS, "job_state_or_method")
+        require(job["method_id"] in METHODS and type(job["cancel_requested"]) is bool, "job_state_or_method")
+        if recovery:
+            require(job["state"] in ("succeeded","failed","cancelled"), "recovery_job_state")
+        else:
+            require(job["state"] == "running" and job["cancel_requested"] is False, "job_state_or_method")
         request, limits = job["request_json"], job["preflight"]
         fields(request,REQUEST_KEYS)
         fields(limits,LIMIT_KEYS)
@@ -195,6 +208,13 @@ def construct_launch(config, job, dataset, raw, origin):
 def installation_binding(config, job, dataset, raw, origin):
     """Independent prelaunch snapshot; its constructor is not a host proof."""
     launch = construct_launch(config,job,dataset,raw,origin)
+    return dict(configuration_sha256=digest(canonical(config)),python_sha256=config["python_sha256"],
+                environment_sha256=config["environment_sha256"],invocation_sha256=digest(canonical(launch)),
+                source_hashes=json.loads(canonical(config["source_hashes"])))
+
+
+def recorded_installation_binding(config, job, dataset, raw, origin):
+    launch = construct_recorded_launch(config,job,dataset,raw,origin)
     return dict(configuration_sha256=digest(canonical(config)),python_sha256=config["python_sha256"],
                 environment_sha256=config["environment_sha256"],invocation_sha256=digest(canonical(launch)),
                 source_hashes=json.loads(canonical(config["source_hashes"])))

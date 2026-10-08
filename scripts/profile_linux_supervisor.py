@@ -232,7 +232,7 @@ def _nonroot_regular(path, cap):
         os.close(fd)
 
 
-def _query(configuration, identifier, module):
+def _query(configuration, identifier, module, *, recovery=False):
     """Called only after irrevocable ID drop; root never opens SQLite/WAL."""
     import sqlite3
     from uuid import UUID
@@ -264,6 +264,9 @@ def _query(configuration, identifier, module):
         origin = row("source_records",module.ORIGIN_KEYS,raw["source_id"])
         project = connection.execute("SELECT owner_id FROM projects WHERE id=?",(job["project_id"],)).fetchone()
         require(project is not None and str(UUID(project[0])) == job["owner_id"],"project_owner")
+        if recovery:
+            module.construct_recorded_launch(configuration,job,dataset,raw,origin)
+            return dict(job=job,dataset=dataset,raw=raw,origin=origin,bodies={})
         module.construct_launch(configuration,job,dataset,raw,origin)
         bodies = {}
         for name,value,cap in (("original",raw,1000000),("dataset.json",dataset,2*1024**2)):
@@ -275,7 +278,7 @@ def _query(configuration, identifier, module):
         connection.close()
 
 
-def nonroot_query(configuration, identifier, module):
+def nonroot_query(configuration, identifier, module, *, recovery=False):
     """Anonymous bounded response; native DB/file access has no root privilege."""
     import resource
     reader,writer = os.pipe()
@@ -303,7 +306,7 @@ def nonroot_query(configuration, identifier, module):
             os.environ.clear()
             resource.setrlimit(resource.RLIMIT_AS,(256*1024**2,256*1024**2))
             resource.setrlimit(resource.RLIMIT_CPU,(5,5))
-            response = module.canonical(_query(configuration,identifier,module))
+            response = module.canonical(_query(configuration,identifier,module,recovery=recovery))
             require(len(response) <= MAX_PACKET,"reader_packet_size")
             with os.fdopen(writer,"wb") as stream:
                 stream.write(response)
@@ -731,7 +734,7 @@ def prepare_custody_plan(root_fd,module,packet,launch):
     names = set(os.listdir(root_fd))
     planned,receipts,directories = {},[],set()
     for name in names:
-        match = re.fullmatch(r"([a-f0-9-]{36})(\.plan\.json|\.receipt\.json)?",name)
+        match = re.fullmatch(r"([a-f0-9-]{36})(\.plan\.json|\.receipt\.json|\.recovery-intent\.json|\.recovery\.json)?",name)
         require(match is not None,"custody_unknown_name")
         identifier = module.uuid(match[1])
         info = os.stat(name,dir_fd=root_fd,follow_symlinks=False)
@@ -749,8 +752,12 @@ def prepare_custody_plan(root_fd,module,packet,launch):
                 for key in ("request_sha256","raw_sha256","dataset_sha256","invocation_sha256"):
                     module.sha(record[key])
                 planned[identifier] = record["held_bytes"]
-            else:
+            elif match[2] == ".receipt.json":
                 require(record["schema"] == "geophysics.profile-linux-execution/v1","custody_receipt_schema")
+                receipts.append(info.st_size)
+            else:
+                expected_schema = "geophysics.profile-linux-recovery-intent/v1" if match[2] == ".recovery-intent.json" else "geophysics.profile-linux-recovery/v1"
+                require(record["schema"] == expected_schema,"custody_recovery_schema")
                 receipts.append(info.st_size)
     require(directories <= set(planned),"custody_unplanned_directory")
     new_bytes = packet["raw"]["byte_count"]+packet["dataset"]["byte_count"]
@@ -807,28 +814,44 @@ def finish_custody(root_fd,custody_fd,identifier,plan,receipt,module):
         os.fsync(root_fd)
 
 
-def execute(configuration,module,identifier):
-    """Actual host path, deliberately distinct from constructor unit tests."""
+def supervisor_lock():
     import fcntl
     lock_path = Path("/run/fasl-geophysics-profile-launch.lock")
     lock = os.open(lock_path,os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600)
     info = os.fstat(lock)
     require(info.st_uid == 0 and info.st_nlink == 1 and stat.S_ISREG(info.st_mode) and not info.st_mode & 0o077,"supervisor_lock")
-    fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    packet = nonroot_query(configuration,identifier,module)
-    launch = module.construct_launch(configuration,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
-    uid,gid = configuration["uid"],configuration["gid"]
-    stage_fd = tree_fd(Path(launch["host_stage"]))
-    require(os.fstat(stage_fd).st_uid == uid,"stage_owner")
+    try:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except BaseException:
+        os.close(lock)
+        raise
+    return lock
+
+
+def custody_directory(configuration):
     custody_path = Path(configuration["custody_root"])
     for ancestor in (custody_path,*custody_path.parents):
         ancestor_info = ancestor.lstat()
         require(stat.S_ISDIR(ancestor_info.st_mode) and ancestor_info.st_uid == 0 and
                 not ancestor_info.st_mode & 0o022,"custody_ancestor")
-    custody_root = tree_fd(custody_path)
-    root_info = os.fstat(custody_root)
-    require(root_info.st_uid == 0 and root_info.st_gid == gid and
-            not root_info.st_mode & 0o022 and root_info.st_mode & 0o050 == 0o050,"custody_parent")
+    fd = tree_fd(custody_path)
+    info = os.fstat(fd)
+    if not (info.st_uid == 0 and info.st_gid == configuration["gid"] and
+            not info.st_mode & 0o022 and info.st_mode & 0o050 == 0o050):
+        os.close(fd)
+        require(False,"custody_parent")
+    return fd
+
+
+def execute(configuration,module,identifier):
+    """Actual host path, deliberately distinct from constructor unit tests."""
+    lock = supervisor_lock()
+    packet = nonroot_query(configuration,identifier,module)
+    launch = module.construct_launch(configuration,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
+    uid,gid = configuration["uid"],configuration["gid"]
+    stage_fd = tree_fd(Path(launch["host_stage"]))
+    require(os.fstat(stage_fd).st_uid == uid,"stage_owner")
+    custody_root = custody_directory(configuration)
     plan = prepare_custody_plan(custody_root,module,packet,launch)
     os.mkdir(identifier,0o750,dir_fd=custody_root)
     custody_fd = os.open(identifier,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_root)
@@ -1037,13 +1060,191 @@ def execute(configuration,module,identifier):
     return 0 if failure is None and stopped is None and terminal.get("ExecMainStatus") == "0" else 2
 
 
+def recovery_extinction(identifier):
+    """Read-only fresh manager/kernel proof. Recovery never stops live work."""
+    states = {}
+    for unit in ("geophysics-profile-"+identifier+".service","geophysics-profile-guardian-"+identifier+".scope"):
+        response = subprocess.run(["/usr/bin/systemctl","show",unit,"--no-pager",
+            "--property=MainPID","--property=ActiveState","--property=SubState","--property=ControlGroup"],
+            capture_output=True,timeout=3,check=True)
+        require(len(response.stdout) <= 8192,"recovery_manager_response")
+        state = dict(line.split("=",1) for line in response.stdout.decode("ascii").splitlines())
+        group = "/system.slice/"+unit
+        require(set(state) in ({"MainPID","ActiveState","SubState","ControlGroup"},{"ActiveState","SubState","ControlGroup"}) and
+                ("MainPID" in state or unit.endswith(".scope")) and state.get("MainPID","0") == "0" and state.get("ActiveState") in ("inactive","failed") and
+                state.get("SubState") in ("dead","failed","exited") and state.get("ControlGroup") in ("",group),"recovery_active_unit")
+        path = Path("/sys/fs/cgroup"+group)
+        if path.exists():
+            fd = tree_fd(path)
+            try:
+                require("populated 0" in native(fd,"cgroup.events").decode("ascii").splitlines() and
+                        not native(fd,"cgroup.procs").strip(),"recovery_populated_group")
+            finally:
+                os.close(fd)
+        states[unit] = state
+    return states
+
+
+def root_record(fd,name,body):
+    require(re.fullmatch(r"[a-f0-9-]{36}\.(recovery-intent|recovery)\.json",name) and 0 < len(body) <= 65536,"recovery_record")
+    member = os.open(name,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o600,dir_fd=fd)
+    try:
+        with os.fdopen(os.dup(member),"wb") as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(member)
+    os.fsync(fd)
+
+
+def root_member(fd,name,cap):
+    info = os.stat(name,dir_fd=fd,follow_symlinks=False)
+    require(stat.S_ISREG(info.st_mode) and info.st_uid == 0 and info.st_nlink == 1 and not info.st_mode & 0o222,"recovery_member_owner")
+    body = capture(fd,name,cap)
+    return body,dict(device=info.st_dev,inode=info.st_ino,bytes=len(body),sha256=sha(body))
+
+
+def validate_recovery_records(configuration,module,packet,plan,receipt):
+    launch = module.construct_recorded_launch(configuration,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
+    expected = module.recorded_installation_binding(configuration,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
+    require(set(plan) == {"schema","job_id","held_bytes","request_sha256","raw_sha256","dataset_sha256","invocation_sha256"} and
+            plan["schema"] == "geophysics.profile-linux-custody-plan/v1","recovery_plan")
+    require(plan["job_id"] == packet["job"]["id"] == receipt["job_id"] and
+            receipt["schema"] == "geophysics.profile-linux-execution/v1" and
+            receipt["unit"] == launch["unit"],"recovery_identity")
+    for key,value in (("request_sha256",packet["job"]["request_sha256"]),("raw_sha256",packet["raw"]["sha256"]),
+                      ("dataset_sha256",packet["dataset"]["sha256"]),("invocation_sha256",expected["invocation_sha256"])):
+        require(plan[key] == receipt[key] == value,"recovery_identity")
+    require(plan["held_bytes"] == packet["raw"]["byte_count"]+packet["dataset"]["byte_count"] and
+            all(receipt[key] == value for key,value in expected.items()),"recovery_installation")
+    return launch,expected
+
+
+def recover(configuration,module,identifier):
+    """Exact known terminal debt only; no private original is read or removed."""
+    lock = supervisor_lock()
+    root_fd = custody_fd = inputs_fd = scratch_fd = None
+    try:
+        packet = nonroot_query(configuration,identifier,module,recovery=True)
+        states = recovery_extinction(identifier)
+        root_fd = custody_directory(configuration)
+        receipt_body = capture(root_fd,identifier+".receipt.json",65536)
+        receipt = decode(receipt_body,65536)
+        intent_name,final_name = identifier+".recovery-intent.json",identifier+".recovery.json"
+        names = set(os.listdir(root_fd))
+        if intent_name in names:
+            intent = decode(capture(root_fd,intent_name,65536),65536)
+            require(intent["schema"] == "geophysics.profile-linux-recovery-intent/v1" and
+                    intent["job_id"] == identifier and intent["receipt_sha256"] == sha(receipt_body),"recovery_intent_identity")
+            plan = intent["plan"]
+        elif identifier+".plan.json" not in names and identifier not in names:
+            require(receipt["held_inputs_state"] == "declared_copies_removed" and receipt["extinction"] == "proved" and
+                    receipt["guardian_status"] == "complete","recovery_unproved_root_absence")
+            plan = dict(schema="geophysics.profile-linux-custody-plan/v1",job_id=identifier,
+                held_bytes=packet["raw"]["byte_count"]+packet["dataset"]["byte_count"],
+                request_sha256=packet["job"]["request_sha256"],raw_sha256=packet["raw"]["sha256"],
+                dataset_sha256=packet["dataset"]["sha256"],invocation_sha256=receipt["invocation_sha256"])
+        else:
+            plan = decode(capture(root_fd,identifier+".plan.json",65536),65536)
+        launch,installation = validate_recovery_records(configuration,module,packet,plan,receipt)
+        if intent_name in names:
+            require(intent["installation"] == installation,"recovery_intent_installation")
+        if final_name in names:
+            final = decode(capture(root_fd,final_name,65536),65536)
+            require(identifier not in names and identifier+".plan.json" not in names and
+                    final["intent_sha256"] == sha(module.canonical(intent)),"recovery_duplicate_debt")
+            print(module.canonical(final).decode(),flush=True)
+            return 0
+        if identifier in names:
+            custody_fd = os.open(identifier,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=root_fd)
+            info = os.fstat(custody_fd)
+            directory = dict(device=info.st_dev,inode=info.st_ino)
+            require(info.st_uid == 0 and not info.st_mode & 0o022,"recovery_directory_owner")
+            members = set(os.listdir(custody_fd))
+            require(members <= {"inputs","scratch"},"recovery_unknown_member")
+            inventory,inputs_identity,scratch_identity = {},None,None
+            if "inputs" in members:
+                inputs_fd = os.open("inputs",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_fd)
+                info = os.fstat(inputs_fd)
+                require(info.st_uid == 0 and not info.st_mode & 0o022,"recovery_inputs_owner")
+                inputs_identity = dict(device=info.st_dev,inode=info.st_ino)
+                current = set(os.listdir(inputs_fd))
+                if intent_name not in names:
+                    require(current == {"original","dataset.json","launch.json"},"recovery_incomplete_inputs")
+                    bodies = {}
+                    for name,cap in (("original",1000000),("dataset.json",2*1024**2),("launch.json",65536)):
+                        bodies[name],inventory[name] = root_member(inputs_fd,name,cap)
+                    require(inventory["original"] == receipt["mounted_input_identities"]["original"] and
+                            inventory["dataset.json"] == receipt["mounted_input_identities"]["dataset.json"],"recovery_input_identity")
+                    wrapper = decode(bodies["launch.json"],65536)
+                    require(wrapper == dict(command=launch["command"],environment=launch["environment"],
+                        stderr=launch["stage"]+"/stderr.txt",inputs=receipt["mounted_input_identities"]),"recovery_wrapper")
+                else:
+                    inventory = intent["members"]
+                    require(current <= set(inventory) and inputs_identity == intent["inputs_identity"],"recovery_inputs_changed")
+                    for name in current:
+                        _,observed = root_member(inputs_fd,name,2*1024**2)
+                        require(observed == inventory[name],"recovery_input_changed")
+            elif intent_name not in names:
+                require(receipt["held_inputs_state"] == "declared_copies_removed","recovery_unproved_inputs_absence")
+            if "scratch" in members:
+                scratch_fd = os.open("scratch",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_fd)
+                info = os.fstat(scratch_fd)
+                require(info.st_uid == 0 and not info.st_mode & 0o022 and not os.listdir(scratch_fd),"recovery_scratch_debt")
+                scratch_identity = dict(device=info.st_dev,inode=info.st_ino)
+            elif intent_name not in names:
+                require(False,"recovery_incomplete_scratch")
+            if intent_name not in names:
+                intent = dict(schema="geophysics.profile-linux-recovery-intent/v1",job_id=identifier,
+                    receipt_sha256=sha(receipt_body),plan=plan,installation=installation,
+                    directory_identity=directory,inputs_identity=inputs_identity,scratch_identity=scratch_identity,members=inventory)
+                root_record(root_fd,intent_name,module.canonical(intent))
+            else:
+                require(directory == intent["directory_identity"] and
+                        (scratch_identity is None or scratch_identity == intent["scratch_identity"]),"recovery_directory_changed")
+            recovery_extinction(identifier)
+            if inputs_fd is not None:
+                for name in os.listdir(inputs_fd):
+                    os.unlink(name,dir_fd=inputs_fd)
+                os.fsync(inputs_fd)
+                os.rmdir("inputs",dir_fd=custody_fd)
+            if scratch_fd is not None:
+                os.rmdir("scratch",dir_fd=custody_fd)
+            os.fsync(custody_fd)
+            require(os.stat(identifier,dir_fd=root_fd,follow_symlinks=False).st_ino == os.fstat(custody_fd).st_ino,"recovery_directory_changed")
+            os.rmdir(identifier,dir_fd=root_fd)
+            os.fsync(root_fd)
+        else:
+            if intent_name not in names:
+                intent = dict(schema="geophysics.profile-linux-recovery-intent/v1",job_id=identifier,
+                    receipt_sha256=sha(receipt_body),plan=plan,installation=installation,
+                    directory_identity=None,inputs_identity=None,scratch_identity=None,members={})
+                root_record(root_fd,intent_name,module.canonical(intent))
+        if identifier+".plan.json" in names:
+            require(capture(root_fd,identifier+".plan.json",65536) == module.canonical(plan),"recovery_plan_changed")
+            os.unlink(identifier+".plan.json",dir_fd=root_fd)
+            os.fsync(root_fd)
+        final = dict(schema="geophysics.profile-linux-recovery/v1",job_id=identifier,
+            receipt_sha256=sha(receipt_body),intent_sha256=sha(module.canonical(intent)),installation=installation,
+            retained_stage_identity=receipt["retained_stage_identity"],terminal=states,known_root_copies_removed=True)
+        root_record(root_fd,final_name,module.canonical(final))
+        print(module.canonical(final).decode(),flush=True)
+        return 0
+    finally:
+        for fd in (scratch_fd,inputs_fd,custody_fd,root_fd,lock):
+            if fd is not None:
+                os.close(fd)
+
+
 def main():
-    require(os.name == "posix" and os.geteuid() == 0 and len(sys.argv) == 2,"supervisor_authority")
+    require(os.name == "posix" and os.geteuid() == 0 and
+            (len(sys.argv) == 2 or len(sys.argv) == 3 and sys.argv[1] == "--recover"),"supervisor_authority")
     configuration,module = installation()
-    identifier = module.uuid(sys.argv[1])
+    identifier = module.uuid(sys.argv[-1])
     caller = os.environ.get("SUDO_UID")
     require(caller is None or caller == str(configuration["uid"]),"caller_identity")
-    return execute(configuration,module,identifier)
+    return recover(configuration,module,identifier) if len(sys.argv) == 3 else execute(configuration,module,identifier)
 
 
 if __name__ == "__main__":

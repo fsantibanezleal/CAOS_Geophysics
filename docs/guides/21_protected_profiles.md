@@ -122,3 +122,38 @@ require explicitly configured `GEOPHYSICS_PROFILE_TEST_PYTHON` and
 The [feature task record](../design/features/protected-profile-jobs/tasks.md)
 separates local evidence from rendered and actual-VPS acceptance. A closed
 host flag is reported explicitly; it is not represented as deployed compute.
+
+## Linux execution and terminal recovery
+
+The installed Linux profile lane uses a fixed privileged observer, never a root
+API or scientific worker. The installation pins runtime, complete source/import
+closure, private database and an external `custody_root`; the browser cannot
+choose paths or commands. `linux_installation` records the independently checked
+pre-launch configuration/runtime/invocation/source digests. `linux_execution`
+records actual unit extinction, independent guardian completion and separate
+sampled RSS/kernel memory charge. Both accompany the unchanged scientific result
+in its normal ZIP. These operational records are not scientific validation or
+complete native CPU accounting. The Windows lane contains neither record.
+
+Failed or interrupted stages remain in `.job-staging`, and startup refuses them
+until inspected. With the worker stopped, the installation operator can run:
+
+```sh
+"$GEOPHYSICS_API_PYTHON" -B scripts/recover_profile_job.py JOB_UUID
+```
+
+Use the same explicit `GEOPHYSICS_DATA_DIR`, database, pinned profile interpreter
+and supervisor environment as that installation. The command holds the worker
+lock and accepts only a terminal owned job. Root recovery proves both exact
+groups are already inactive and kernel-empty; it never stops active work, reads
+an original upload as root or promotes a failed model. Known copies are removed
+only after a durable root intent; originals, original receipts and recovery
+records remain. The unprivileged stage is atomically archived under
+`.profile-retained/JOB_UUID` with a hash/byte manifest before a verified
+uncommitted duplicate is removed. Repeating a completed recovery verifies the
+same archive without replacing it. A published successful result is unchanged.
+
+Unknown bytes, changed identities, incomplete input sets or a different
+installation epoch refuse recovery unchanged. Archives are bounded to 256 MiB
+in total and 64 MiB per stage. This is terminal execution-evidence custody, not a
+project backup service; it does not require SMTP or external storage services.
