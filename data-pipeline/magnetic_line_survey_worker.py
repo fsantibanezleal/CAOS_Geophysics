@@ -26,6 +26,9 @@ def main(argv=None):
         phase = 'plan'
         plan_path = io.external_path(args.plan, directory=False)
         plan = base.strict_json(base.read_bounded(plan_path, 2097152))
+        if type(plan) is dict and plan.get('schema')=='m03-hp-prerequisite-plan/1':
+            from magnetic_line_survey_hp_prerequisite import run_prerequisite
+            return run_prerequisite(plan, plan_path.parent, args.job_handle)
         if type(plan) is dict and plan.get('schema')=='m03-resolution-fit-plan/1':
             from magnetic_line_survey_resolution_worker import run_resolution_plan
             return run_resolution_plan(plan,plan_path.parent,args.job_handle,package_root=args.packages)

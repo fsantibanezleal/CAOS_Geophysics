@@ -118,6 +118,19 @@ def owned_bytes(root, *, allow_disappearing=False):
                 # failure, permission error or link error becomes zero.
                 if not allow_disappearing:
                     raise
+            except SurveyError:
+                # external_path validates the parent when exists() races with
+                # producer deletion; that can report a directory/type mismatch
+                # rather than FileNotFoundError. Ignore ONLY independently
+                # confirmed absence during active traversal. Present unsafe
+                # entries, terminal inventory and all other errors still refuse.
+                if not allow_disappearing:
+                    raise
+                try:
+                    item.lstat()
+                except FileNotFoundError:
+                    continue
+                raise
     return total
 
 
@@ -214,7 +227,9 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                     'magnetic_line_survey_result.py','magnetic_line_survey_environment.py',
                     'magnetic_line_survey_export.py','magnetic_line_survey_cli.py','magnetic_line_survey_local_worker.py',
                     'magnetic_line_survey_resolution_geometry.py','magnetic_line_survey_resolution_worker.py',
-                    'magnetic_lines.py', 'magnetic_line_validation.py')
+                    'magnetic_lines.py', 'magnetic_line_validation.py',
+                    'magnetic_line_survey_hp.py', 'magnetic_line_survey_capacity_hp.py',
+                    'magnetic_line_survey_hp_prerequisite.py')
     def source_identity():
         return {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}
     sources_before = source_identity()
