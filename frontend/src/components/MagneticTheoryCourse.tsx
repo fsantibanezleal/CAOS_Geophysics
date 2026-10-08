@@ -17,7 +17,7 @@ export function MagneticTheoryCourse({ implementation = false }: { implementatio
     }}>{magneticLessons.map((item, index) => <option key={item.id} value={index}>{index + 1}. {item.label[i]}</option>)}</select></label>
     <article key={lesson.id}>
       <h3>{lesson.title[i]}</h3>
-      <p>{lesson.body[i]} {lesson.references.map(reference => <Cite key={reference.id} id={reference.id} />)}</p>
+      <p>{lesson.body[i]} {lesson.references.map((reference, index) => <span key={reference.id}><Cite id={reference.id} />{index + 1 < lesson.references.length ? " · " : ""}</span>)}</p>
       <Equation tex={lesson.equation} caption={lesson.symbols[i]} />
       {derivation.paragraphs.map((text, index) => <p key={index}>{text[i]}</p>)}
       <Equation tex={derivation.equation} caption={derivation.symbols[i]} />

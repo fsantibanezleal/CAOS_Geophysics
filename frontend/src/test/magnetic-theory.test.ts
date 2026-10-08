@@ -38,6 +38,15 @@ describe("magnetic theory independent of fitted results", () => {
       expect(ref.url).toMatch(/^https:\/\/raw\.githubusercontent\.com\//);
     }
   });
+  it("uses scientific subject headings rather than slogans", () => {
+    expect(magneticLessons.map(lesson => lesson.title[0])).toEqual([
+      "Magnetic observations and physical metadata", "Induced magnetization and susceptibility parameterization",
+      "Covariance-weighted data misfit", "Volume- and face-weighted L2 regularization",
+      "Smoothed L1 penalty and IRLS updates", "Geometry-defined folds and training-only selection",
+      "Bound-constrained optimization and stopping criteria", "Sensitivity and conditional model resolution",
+      "Local execution, artifacts and provenance",
+    ]);
+  });
   it.each(["en", "es"] as const)("renders %s theory with no fitted object, file input or fabricated metric", lang => {
     useLangStore.setState({ lang });
     const html = renderToStaticMarkup(createElement(CitationsProvider, { items: CITATIONS,
