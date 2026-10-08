@@ -20,6 +20,7 @@ import pytest
 
 from app import joint_successor as joint
 from app.joint_models import JointDatasetSource, JointResultArtifact
+from test_joint_protected import joint_harness
 
 OWN = Path(__file__).resolve().parents[2]
 M01_COMMIT = '16b911dc58744c53e936677436a63370dbc0c02b'
@@ -373,3 +374,65 @@ def test_native_root_source_and_authority_contradictions_cannot_publish(successo
                 await session.rollback()
         finally: await engine.dispose()
     asyncio.run(execute());assert snapshot(path)==before
+
+
+@pytest.fixture
+def allocated_harness(successor,joint_harness,monkeypatch):
+    """Explicit leaf union through actual auth/CSRF/session assembly, not MAIN."""
+    from sqlalchemy import select
+    from app import database,processing_contract,processing,processing_storage,server,joint_datasets
+    from app.models import ObservationDataset
+    from app.joint_roots import register_root
+    candidate,_,_=successor
+    real_upgrade=command.upgrade
+    def upgrade(original_config,revision):
+        # Each API fixture creates a NEW external DB under the admitted root.
+        # No SQL stamp, copied uncommitted schema or competing revision.
+        real_upgrade(candidate,joint.REVISION)
+    monkeypatch.setattr(command,'upgrade',upgrade)
+    monkeypatch.setattr(database,'MIGRATION_HEAD',joint.REVISION)
+    old_validator=processing_contract.validate_dataset_identity
+    def validate(payload,dataset):
+        if dataset.modality=='joint_gravity_magnetic_native': return joint_datasets.validate_dataset(payload,dataset)
+        return old_validator(payload,dataset)
+    for target in (processing_contract,processing,database,processing_storage):
+        monkeypatch.setattr(target,'validate_dataset_identity',validate)
+    original_audit=server.reconcile_private_files
+    async def audit(settings,sessions):
+        await original_audit(settings,sessions)
+        async with sessions() as session:
+            datasets=(await session.execute(select(ObservationDataset))).scalars().all()
+            await joint_datasets.audit_dependencies(settings,session,datasets)
+    monkeypatch.setattr(server,'reconcile_private_files',audit)
+    original_install=server.install_processing_routes
+    def install(app,settings,current_user,get_session):
+        original_install(app,settings,current_user,get_session)
+        joint_datasets.install_joint_dataset_routes(app,settings,current_user,get_session,register_root=register_root)
+    monkeypatch.setattr(server,'install_processing_routes',install)
+    return joint_harness
+
+
+def test_allocated_actual_authenticated_original_upload_index_and_reopen(allocated_harness):
+    from fastapi.testclient import TestClient
+    from app.server import create_app
+    from test_joint_datasets import upload_pair,create_dataset
+    harness=allocated_harness();owner=harness.account()['id'];project=harness.project()['id']
+    members=upload_pair(harness,project);result=create_dataset(harness,project,members)
+    assert result.status_code==201,result.text
+    view=result.json();assert view['scientific_accepted'] is False
+    actual=harness.request('GET',view['receipt_url'])
+    assert actual.status_code==200,actual.text
+    assert actual.headers['cache-control']=='no-store'
+    assert actual.json()['owner_id']==owner and actual.json()['scientific_values_decoded'] is False
+    with sqlite3.connect(harness.settings.db_path) as db:
+        assert db.execute('SELECT version_num FROM alembic_version').fetchall()==[(joint.REVISION,)]
+        assert db.execute('SELECT kind,root_dataset_id,parent_dataset_id,payload_schema FROM observation_datasets WHERE id=?',(view['dataset_id'],)).fetchone()==('root',view['dataset_id'],None,'geophysics.joint-native-dataset/v1')
+        assert db.execute('SELECT state,published_count,reserved_count FROM physical_dataset_families WHERE root_dataset_id=?',(view['dataset_id'],)).fetchone()==('published',1,0)
+        assert db.execute('SELECT count(*) FROM joint_dataset_sources').fetchone()==(36,)
+        assert db.execute('PRAGMA foreign_key_check').fetchall()==[]
+    async def mail(*args): pass
+    with TestClient(create_app(harness.settings,mail)) as reopened: assert reopened.get('/api/auth/csrf').status_code==200
+    assert create_dataset(harness,project,members).status_code==409
+    harness.account('allocated-other-owner@example.org')
+    assert harness.request('GET',view['receipt_url']).status_code==404
+    assert create_dataset(harness,project,members).status_code==404

@@ -56,3 +56,10 @@ or original full24 scientific corrective acceptance.
 See [private execution](24_private_joint_execution.md) and
 [local joint methodology](22_local_joint_survey.md) for the distinct real
 scientific workflow and browser inspection boundaries.
+
+The allocated API fixture also exercises the real authenticated/CSRF ordinary
+36-member upload, indexing, family/root co-publication, canonical startup
+reopen, duplicate refusal and cross-owner denial through an explicit test-only
+leaf union. It creates a new external migrated database, not a stamped old one.
+It does not mount the canonical application, execute a fit, qualify physical
+family deletion or establish a scientific/public/host admission.
