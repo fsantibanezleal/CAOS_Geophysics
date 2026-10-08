@@ -583,3 +583,10 @@ Science still drops all bounding/ambient/permitted/effective/inheritable caps
 and all IDs/groups before READY/GO. The qualification recipe has no user-manager
 fallback. Gates: test_linux_context.py::test_system_manager_recipe_is_attempt_specific_and_not_activation
 and test_linux_source.py::test_observer_actual_credentials_checked_before_object_creation.
+
+The qualification bridge stops creating heartbeats as soon as it queues the
+final receipt BIND/ACK. A heartbeat already ahead of BIND remains valid; no
+heartbeat may follow ACK. The native ACK terminal-state check stays strict.
+Actual i14 reached a clean available final but a late bridge heartbeat caused
+failed release13; retain that run as failed, not a passing nominal. Gate:
+test_linux_controller.py::test_transport_no_heartbeat_after_custody_bind.

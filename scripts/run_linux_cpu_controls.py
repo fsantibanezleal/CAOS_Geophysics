@@ -694,7 +694,7 @@ def run_control(manifest_path, expected_sha256):
                     signal.pidfd_send_signal(handle, signal.SIGCONT)
                 finally:
                     os.close(handle)
-            if (now - last_heartbeat >= 100_000_000 and not process.stdin.closed and
+            if (now - last_heartbeat >= 100_000_000 and not process.stdin.closed and not custody and
                     case not in ("heartbeat_loss", "wrong_attempt", "wrong_object", "malformed_frame")):
                 send(2)
                 last_heartbeat = now

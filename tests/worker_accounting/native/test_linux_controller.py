@@ -19,6 +19,13 @@ ATTEMPT = "01" * 16
 OBJECT = "02" * 16
 
 
+def test_transport_no_heartbeat_after_custody_bind():
+    import inspect
+    source = inspect.getsource(runner.run_control)
+    assert "not process.stdin.closed and not custody and" in source
+    assert source.index("send(5,") < source.index("custody = True")
+
+
 def output(kind, seq, body):
     return FRAME.pack(b"LCP1", 1, kind, len(body), 0, seq, 100 + seq,
                       bytes.fromhex(ATTEMPT), bytes.fromhex(OBJECT)) + body
