@@ -11,6 +11,24 @@ from urllib.parse import urlsplit
 MIB = 1024 * 1024
 
 
+def external_storage_path(value: Path, label: str) -> Path:
+    """Private data and runtime files must never be stored in a checkout."""
+    if not value.is_absolute():
+        raise ValueError(f"{label} must be absolute")
+    resolved = value.resolve()
+    product = Path(__file__).resolve().parents[1]
+    if resolved.is_relative_to(product) or any((parent / ".git").exists() for parent in (resolved, *resolved.parents)):
+        raise ValueError(f"{label} must be outside repository checkouts")
+    return resolved
+
+
+def configured_data_path() -> Path:
+    value = os.environ.get("GEOPHYSICS_DATA_DIR")
+    if not value:
+        raise ValueError("GEOPHYSICS_DATA_DIR must explicitly select external private storage")
+    return external_storage_path(Path(value), "GEOPHYSICS_DATA_DIR")
+
+
 @dataclass(frozen=True)
 class Settings:
     data_dir: Path
@@ -63,6 +81,9 @@ class Settings:
             raise ValueError("data_dir must be absolute")
         if self.db_path is not None and not self.db_path.is_absolute():
             raise ValueError("db_path must be absolute")
+        external_storage_path(self.data_dir, "data_dir")
+        if self.db_path is not None:
+            external_storage_path(self.db_path, "db_path")
 
     @property
     def database_path(self) -> Path:
@@ -74,7 +95,7 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        data = Path(os.environ["GEOPHYSICS_DATA_DIR"]).resolve()
+        data = configured_data_path()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(
             data_dir=data,
@@ -109,6 +130,9 @@ class WorkerSettings:
             raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
         if not self.data_dir.is_absolute() or (self.db_path is not None and not self.db_path.is_absolute()):
             raise ValueError("worker data and database paths must be absolute")
+        external_storage_path(self.data_dir, "worker data_dir")
+        if self.db_path is not None:
+            external_storage_path(self.db_path, "worker db_path")
 
     @property
     def database_path(self) -> Path:
@@ -120,7 +144,7 @@ class WorkerSettings:
 
     @classmethod
     def from_env(cls) -> "WorkerSettings":
-        data = Path(os.environ["GEOPHYSICS_DATA_DIR"]).resolve()
+        data = configured_data_path()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(data_dir=data, db_path=Path(db).resolve() if db else None,
                    mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",

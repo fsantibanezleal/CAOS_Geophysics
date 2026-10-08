@@ -37,11 +37,17 @@ from app.profile_contract import (
 )
 from app.projects import _owned_asset, _owned_project, _verified_file
 from app.views import stored_utc
+from app.waveform_contract import (
+    METHOD_ID as WAVEFORM_ID, MODALITY as WAVEFORM_MODALITY,
+    WaveformParameters, SCRATCH as WAVEFORM_SCRATCH, MEMORY as WAVEFORM_MEMORY,
+    WALL as WAVEFORM_WALL, context_available,
+)
 
 
 class DatasetCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     asset_id: uuid.UUID
+    waveform_request: dict | None = None
     profile_metadata: dict | None = None
 
 
@@ -54,7 +60,7 @@ class JobCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     dataset_id: uuid.UUID
     method_id: str = Field(min_length=1, max_length=80)
-    parameters: JobParameters | M05Parameters | M06Parameters | ProfileParameters
+    parameters: JobParameters | M05Parameters | M06Parameters | ProfileParameters | WaveformParameters
 
 
 def _date(value: datetime | None) -> str | None:
@@ -67,7 +73,8 @@ def _dataset_view(item: ObservationDataset) -> dict:
         "version": item.version, "schema": "geophysics.observation-dataset/v1",
         "modality": item.modality, "row_count": item.row_count, "parser_version": item.parser_version,
         "raw_sha256": item.raw_sha256, "sha256": item.sha256, "created_at": _date(item.created_at),
-        "qc_verdict": "awaiting_full_tensor_qc" if item.modality == "edi_transfer_function"
+        "qc_verdict": "structural_index_not_physical_qc" if item.modality == WAVEFORM_MODALITY
+                      else "awaiting_full_tensor_qc" if item.modality == "edi_transfer_function"
                       else "parsed_not_numerically_inverted" if item.modality in {"ert_profile", "traveltime_profile"}
                       else "parsed_for_flag_qc_only",
     }
@@ -161,6 +168,12 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         await session.execute(text("BEGIN IMMEDIATE"))
         await session.refresh(user)
         asset, source = await _owned_asset(session, project_id, str(request.asset_id), user)
+        if asset.detected_format == "miniseed":
+            from app.waveform_processing import create_waveform_dataset
+            return _dataset_view(await create_waveform_dataset(settings, session, user, project_id,
+                asset, source, request.waveform_request))
+        if request.waveform_request is not None:
+            raise ApiError(422, "method_ineligible", "Waveform request is only valid for MiniSEED")
         is_edi = asset.detected_format == "edi"
         is_profile = asset.detected_format in PROFILE_FORMATS
         if asset.byte_count > (PROFILE_SOURCE_LIMIT if is_profile else EDI_SOURCE_LIMIT if is_edi else settings.max_dataset_bytes):
@@ -259,6 +272,14 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             return {"dataset_id": dataset.id, "methods": [{"method_id": method, "eligible": True,
                     "lane": "online_processing", "scope": "Original profile inverse with independent physical and holdout gates"}],
                     "unavailable": []}
+        if dataset.modality == WAVEFORM_MODALITY:
+            available = context_available(settings)
+            method = {"method_id": WAVEFORM_ID, "eligible": available,
+                "lane": "online_processing" if available else "native_context_pending",
+                "scope": "Conditional native response/QC/filter/PSD and unlabelled onset candidates",
+                "reason": "Selected native context must be validated by the worker before execution"}
+            return {"dataset_id": dataset.id, "methods": [method] if available else [],
+                    "unavailable": [] if available else [method]}
         if dataset.modality == "edi_transfer_function":
             if not settings.mt_online_enabled:
                 return {"dataset_id": dataset.id, "methods": [], "unavailable": [
@@ -299,6 +320,7 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         payload = _dataset_payload(settings, dataset)
         mt = dataset.modality == "edi_transfer_function"
         profile = dataset.modality in {"ert_profile", "traveltime_profile"}
+        waveform = dataset.modality == WAVEFORM_MODALITY
         if profile:
             if not settings.profile_online_enabled:
                 raise ApiError(409, "host_admission_pending", "Profile online jobs require actual ML VPS admission")
@@ -315,6 +337,18 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             estimated_memory = 256 * 1024 * 1024 + 64 * dataset.byte_count
             estimated_scratch = PROFILE_SOURCE_LIMIT + 8 * dataset.byte_count
             qc_screen_sha = None
+        elif waveform:
+            if not context_available(settings):
+                raise ApiError(409, "waveform_context_unavailable", "Waveform execution requires its selected native context")
+            if request.method_id != WAVEFORM_ID or not isinstance(request.parameters, WaveformParameters):
+                raise ApiError(422,"method_ineligible","Method or parameters are not eligible for waveform data")
+            if request.parameters.scientific_request_sha256 != payload["scientific_request_sha256"]:
+                raise ApiError(409,"request_changed","Waveform request differs from the immutable dataset")
+            from app.waveform_processing import validate_source_rows
+            await validate_source_rows(session,settings,dataset,payload)
+            method_memory,method_scratch,method_wall=WAVEFORM_MEMORY,WAVEFORM_SCRATCH,WAVEFORM_WALL
+            estimated_memory,estimated_scratch=method_memory,method_scratch
+            qc_screen_sha=None
         elif mt:
             if not settings.mt_online_enabled:
                 raise ApiError(409, "host_admission_pending", "MT online jobs require an actual ML VPS admission receipt")
@@ -379,10 +413,19 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                                  profile_code_hashes=profile_code_hashes(request.method_id))
             if qc_screen_sha is not None:
                 immutable["qc_screen_sha256"] = qc_screen_sha
+        if waveform:
+            from app.waveform_contract import implementation_sha256
+            immutable.update(waveform_sources=payload["sources"], scientific_request=payload["request"],
+                             scientific_request_sha256=payload["scientific_request_sha256"],
+                             implementation_sha256=implementation_sha256())
         preflight = {"estimated_memory_bytes": estimated_memory, "memory_limit_bytes": memory,
                      "scratch_limit_bytes": scratch, "wall_limit_seconds": wall}
         if mt or profile:
             preflight["estimated_scratch_bytes"] = estimated_scratch
+        if waveform:
+            preflight.update(estimated_scratch_bytes=estimated_scratch,
+                memory_kind="platform_committed_or_cgroup_charge_not_rss", cpu_budget_ns=60000000000,
+                cpu_stop_ns=57000000000)
         item = ProcessingJob(
             id=job_id, project_id=project_id, owner_id=user.id,
             dataset_id=dataset.id, dataset_sha256=dataset.sha256, method_id=request.method_id,
@@ -454,6 +497,10 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         dataset = await _owned_dataset(session, project_id, job.dataset_id, user)
         data = _dataset_payload(settings, dataset)
         result = _result_payload(settings, job)
+        if job.method_id == WAVEFORM_ID:
+            from app.waveform_result import result_directory, zip_response
+            directory=await result_directory(session,settings,job,result)
+            return await asyncio.to_thread(zip_response,settings,directory,result)
         try:
             bundle = build_bundle(data, result, dataset.sha256, job.result_sha256)
         except ValueError as exc:
@@ -462,5 +509,19 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         response.headers["Content-Disposition"] = f'attachment; filename="processing-{job.id}.zip"'
         response.headers["Cache-Control"] = "no-store"
         return response
+
+    @router.get('/jobs/{job_id}/artifacts/{name}')
+    async def waveform_member(project_id: str,job_id: str,name: str,user: User=Depends(current_user),
+                              session: AsyncSession=Depends(get_session)):
+        job=await _owned_job(session,project_id,job_id,user)
+        if job.method_id!=WAVEFORM_ID:
+            raise ApiError(404,'not_found','Waveform member not found')
+        payload=_result_payload(settings,job)
+        row=next((item for item in payload['members'] if item['name']==name),None)
+        if row is None:
+            raise ApiError(404,'not_found','Waveform member not found')
+        from app.waveform_result import result_directory, member_response
+        directory=await result_directory(session,settings,job,payload)
+        return member_response(directory,name,row)
 
     app.include_router(router)

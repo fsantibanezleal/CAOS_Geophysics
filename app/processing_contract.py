@@ -166,6 +166,10 @@ def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> Non
         from app.profile_contract import validate_profile_dataset
         validate_profile_dataset(payload, dataset)
         return
+    if dataset.modality == "waveform_counts_response":
+        from app.waveform_contract import validate_dataset
+        validate_dataset(payload, dataset)
+        return
     if dataset.modality == "edi_transfer_function":
         from app.mt_contract import validate_edi_dataset
         validate_edi_dataset(payload, dataset)
@@ -189,6 +193,10 @@ def validate_result_identity(payload: dict, job: ProcessingJob) -> None:
     if job.method_id in PROFILE_METHODS:
         from app.profile_contract import validate_profile_result
         validate_profile_result(payload, job)
+        return
+    if job.method_id == "seismic.waveform-qc-classical/v1":
+        from app.waveform_result import validate_result
+        validate_result(payload, job)
         return
     if job.method_id.startswith("mt.edi-"):
         from app.mt_contract import validate_mt_result

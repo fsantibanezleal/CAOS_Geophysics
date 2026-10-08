@@ -1,5 +1,6 @@
 /** The activated processing API; deliberately separate from the future solver contracts. */
 import { unzipSync } from "fflate";
+import { WAVEFORM_METHOD, parseWaveformSources, type WaveformJob, type WaveformReceipt } from "./waveform-contracts";
 import { rawPhysical, type RawPhysicalMetadata, type RightsDecision } from "./contracts";
 
 export const FLAG_METHOD = "gravity.station-outlier-flags/v1" as const;
@@ -31,7 +32,7 @@ export type EdiDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_versio
 export type ProfileDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_version" | "qc_verdict"> & {
   modality: "ert_profile" | "traveltime_profile"; parser_version: "supplied-profile-original/v1"; qc_verdict: "parsed_not_numerically_inverted";
 };
-export type ProjectDatasetReceipt = DatasetReceipt | EdiDatasetReceipt | ProfileDatasetReceipt;
+export type ProjectDatasetReceipt = DatasetReceipt | EdiDatasetReceipt | ProfileDatasetReceipt | WaveformReceipt;
 export const isGravityReceipt = (receipt: ProjectDatasetReceipt): receipt is DatasetReceipt => receipt.modality === "gravity_station";
 export const isEdiReceipt = (receipt: ProjectDatasetReceipt): receipt is EdiDatasetReceipt => receipt.modality === "edi_transfer_function";
 export const isProfileReceipt = (receipt: ProjectDatasetReceipt): receipt is ProfileDatasetReceipt => ["ert_profile","traveltime_profile"].includes(receipt.modality);
@@ -85,7 +86,7 @@ export type ProfileProcessingJob = Omit<ProcessingJob, "method_id" | "request" |
   };
   preflight: ProcessingJob["preflight"] & {estimated_scratch_bytes:number};
 };
-export type ProjectProcessingJob = ProcessingJob | MtProcessingJob | ProfileProcessingJob;
+export type ProjectProcessingJob = ProcessingJob | MtProcessingJob | ProfileProcessingJob | WaveformJob;
 export const isFlagJob = (job: ProjectProcessingJob): job is ProcessingJob => job.method_id === FLAG_METHOD;
 export const isMtJob = (job: ProjectProcessingJob): job is MtProcessingJob => job.method_id === M05_METHOD || job.method_id === M06_METHOD;
 export const isProfileJob = (job: ProjectProcessingJob): job is ProfileProcessingJob => job.method_id === M07_METHOD || job.method_id === M09_METHOD;
@@ -180,6 +181,7 @@ export function parseProjectDatasetReceipt(value: unknown): ProjectDatasetReceip
   if (data.modality === "gravity_station" && data.parser_version === "gravity-station-csv/v1" && data.qc_verdict === "parsed_for_flag_qc_only") integer(data.row_count, 4, 4096);
   else if (data.modality === "edi_transfer_function" && data.parser_version === "edi-strict-envelope/v1" && data.qc_verdict === "awaiting_full_tensor_qc") integer(data.row_count, 2, 512);
   else if (["ert_profile","traveltime_profile"].includes(String(data.modality)) && data.parser_version === "supplied-profile-original/v1" && data.qc_verdict === "parsed_not_numerically_inverted") integer(data.row_count,4,4096);
+  else if (data.modality === "waveform_counts_response" && /^m08-counts-response\/v1\/[a-f0-9]{64}$/.test(String(data.parser_version)) && data.qc_verdict === "structural_index_not_physical_qc") integer(data.row_count, 1, 180000);
   else fail("dataset receipt modality/parser/verdict");
   hash(data.raw_sha256); hash(data.sha256); timestamp(data.created_at);
   return value as ProjectDatasetReceipt;
@@ -230,14 +232,18 @@ export function parseProjectProcessingJob(value: unknown): ProjectProcessingJob 
   keys(data, ["job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "request", "request_sha256", "preflight", "state", "cancel_requested", "created_at", "started_at", "finished_at", "wall_ms", "peak_rss_bytes", "scratch_bytes", "result_sha256", "error", "result_url"], "job");
   for (const key of ["job_id", "project_id", "dataset_id"]) processingId(data[key]);
   hash(data.dataset_sha256); hash(data.request_sha256);
-  if (!new Set<string>([FLAG_METHOD,M05_METHOD,M06_METHOD,M07_METHOD,M09_METHOD]).has(String(data.method_id))) fail("unsupported job method version");
-  const mt = data.method_id !== FLAG_METHOD, inverse = data.method_id === M06_METHOD;
+  if (!new Set<string>([FLAG_METHOD,M05_METHOD,M06_METHOD,M07_METHOD,M09_METHOD,WAVEFORM_METHOD]).has(String(data.method_id))) fail("unsupported job method version");
+  const wave = data.method_id === WAVEFORM_METHOD;
   const profile = data.method_id === M07_METHOD || data.method_id === M09_METHOD;
+  const mt = profile || data.method_id === M05_METHOD || data.method_id === M06_METHOD, inverse = data.method_id === M06_METHOD;
   const request = processingObject(data.request, "request");
-  keys(request, ["schema", "job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "parameters", ...(mt ? ["raw_asset_id","raw_sha256"] : []), ...(inverse ? ["qc_screen_sha256"] : []), ...(profile ? ["profile_child_sha256","profile_code_hashes"]:[])], "request");
+  keys(request, ["schema", "job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "parameters", ...(mt ? ["raw_asset_id","raw_sha256"] : []), ...(inverse ? ["qc_screen_sha256"] : []), ...(profile ? ["profile_child_sha256","profile_code_hashes"]:[]), ...(wave ? ["waveform_sources","scientific_request","scientific_request_sha256","implementation_sha256"] : [])], "request");
   if (request.schema !== "geophysics.processing-request/v1") fail("request schema");
   for (const key of ["job_id", "project_id", "dataset_id", "dataset_sha256", "method_id"]) same(request[key], data[key], `request ${key}`);
-  if (!mt) parameters(request.parameters);
+  if (wave) {
+    const params = processingObject(request.parameters,"waveform parameters");keys(params,["scientific_request_sha256"],"waveform parameters");hash(params.scientific_request_sha256);hash(request.scientific_request_sha256);hash(request.implementation_sha256);same(params.scientific_request_sha256,request.scientific_request_sha256,"waveform request digest");parseWaveformSources(request.waveform_sources);processingObject(request.scientific_request,"waveform scientific request");
+  }
+  else if (!mt) parameters(request.parameters);
   else {
     processingId(request.raw_asset_id); hash(request.raw_sha256);
     if (profile) {
@@ -260,10 +266,11 @@ export function parseProjectProcessingJob(value: unknown): ProjectProcessingJob 
     }
   }
   const preflight = processingObject(data.preflight, "preflight");
-  keys(preflight, ["estimated_memory_bytes", "memory_limit_bytes", "scratch_limit_bytes", "wall_limit_seconds", ...(mt ? ["estimated_scratch_bytes"] : [])], "preflight");
-  Object.values(preflight).forEach(value => integer(value, 1));
+  keys(preflight, ["estimated_memory_bytes", "memory_limit_bytes", "scratch_limit_bytes", "wall_limit_seconds", ...(mt || wave ? ["estimated_scratch_bytes"] : []), ...(wave ? ["memory_kind","cpu_budget_ns","cpu_stop_ns"] : [])], "preflight");
+  Object.entries(preflight).filter(([key])=>key!=="memory_kind").forEach(([,value]) => integer(value, 1));
+  if(wave && (preflight.memory_kind!=="platform_committed_or_cgroup_charge_not_rss"||preflight.cpu_budget_ns!==60000000000||preflight.cpu_stop_ns!==57000000000||Number(preflight.memory_limit_bytes)>1073741824||Number(preflight.scratch_limit_bytes)>52690944||Number(preflight.wall_limit_seconds)>120))fail("waveform resource contract");
   if (Number(preflight.estimated_memory_bytes) > Number(preflight.memory_limit_bytes)) fail("admitted memory estimate exceeds ceiling");
-  if (mt && Number(preflight.estimated_scratch_bytes) > Number(preflight.scratch_limit_bytes)) fail("admitted scratch estimate exceeds ceiling");
+  if ((mt || wave) && Number(preflight.estimated_scratch_bytes) > Number(preflight.scratch_limit_bytes)) fail("admitted scratch estimate exceeds ceiling");
   if (!["queued", "running", "succeeded", "failed", "cancelled"].includes(String(data.state)) || typeof data.cancel_requested !== "boolean") fail("job state");
   timestamp(data.created_at);
   for (const key of ["started_at", "finished_at"]) if (data[key] !== null) { timestamp(data[key]); if (Date.parse(data[key] as string) < Date.parse(data.created_at as string)) fail("job timestamp order"); }
