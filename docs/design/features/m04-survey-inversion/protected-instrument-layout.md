@@ -2,8 +2,9 @@
 
 This is an independent consumer review and proposal, not an applied root-layout
 patch. The existing project owner retains the single shared aside, authentication,
-job controls and method dispatcher. M02 owns the typed shared-shell0.8.1 consumer
-migration; M04 supplies scientific content within that composition. No local
+job controls and method dispatcher. The existing shared project assembly owns
+the typed shared-shell0.8.1 consumer; the magnetic leaf supplies scientific
+content within that composition. No local
 shell, invented CSS/font, global selector override or second method-navigation
 design is introduced. No protected API route or live method is enabled here.
 
@@ -26,7 +27,7 @@ it is not permanent prose displacing the primary drawing on every view.
 
 Shell0.8.1 ShellConfig requires top-level bilingual license and repository
 visibility. Use the actual product license and repository metadata already
-owned by M02; private account/project data is NOT repository visibility.
+declared by the product; private account/project data is NOT repository visibility.
 footer.license is deprecated and does not replace the required top-level field.
 Containment/fixed routes must be explicit in the reviewed parent configuration.
 A dependency bump alone is not a correct typed consumer or a mobile UX gate.
@@ -71,7 +72,7 @@ The actual0.8.1 package stacks the rail and releases document containment below
 contain:true, PlotCard fill or a package upgrade ALONE does not prove the phone
 floor;48vh is already below half of viewport height before plot padding. This
 is a consumer/package-owner qualification question, not permission for a local
-CSS override. Coordinate the shared owner composition with M02 and refer any
+CSS override. Coordinate through the existing shared owner composition and refer any
 remaining shared primitive limitation to its owner. Do not claim the migration
 fixed the screenshot without rendering the actual consumer.
 
