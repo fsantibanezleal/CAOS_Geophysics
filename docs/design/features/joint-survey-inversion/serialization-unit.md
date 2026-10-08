@@ -26,7 +26,7 @@ header bytes and serialized metadata are included in actual output admission.
 `local_joint_data_root(root=None)` resolves an explicit absolute argument or
 GEOPHYSICS_LOCAL_DATA_ROOT only. It has no repository-relative or machine-specific
 default. It creates nothing. This owned helper does not alter the product's source
-ledger/root or MAIN's acquisition, ingestion, ERT and traveltime workflows.
+ledger/root or acquisition, ingestion, ERT and traveltime workflows.
 
 Gate: tests/numerics/test_joint_survey_serialization.py::test_original_roundtrip
 checks both uncertainty modes with provided/reference originals, strict loader

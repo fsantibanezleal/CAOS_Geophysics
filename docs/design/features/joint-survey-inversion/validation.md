@@ -188,8 +188,8 @@ set is not a solver or maximum-resource acceptance. Neither historical JSON nor
 its source attribution was rewritten.
 # Oct8 resumed compiled-objective and external-storage milestone
 
-Actual E-source execution through the PRIMARY D .venv-pipeline with explicit
-no-site startup, loaded-version/source-byte checks and E:/_Temp scratch:
+Actual source execution through the existing pinned pipeline interpreter with
+explicit no-site startup, loaded-version/source-byte checks and external scratch:
 
 - Focused original-inclusive numerical regression:533PASS,2SKIP in669.84s.
   Covers planner, independent structural/objective controls, intake, gravity/
@@ -204,8 +204,8 @@ no-site startup, loaded-version/source-byte checks and E:/_Temp scratch:
   1e-10,rtol1e-9); see reference-face-check.md. A separate reproducible negative
   test requires the adverse precision result. These are NOT JS08PASS.
 
-Receipts: E:/_Temp/geophysics-m11-20261008/{focused.xml,compiled-r2.xml,
-serialization.xml,raw-reference.xml,face-reference.xml,precision_probe.json}.
+Receipts: focused.xml, compiled-r2.xml, serialization.xml, raw-reference.xml,
+face-reference.xml and precision_probe.json in operator-controlled external storage.
 Serialized inputs/model/cache/test temp are not stored in the product checkout.
 Current shared physical_optimizer still refuses nonlinear_gauss_newton; its
 quadratic certificate and200/200/20 limits are not used as the M11 solver.
@@ -220,10 +220,10 @@ intake plus serialization. Both .git directory and worktree-file ancestor
 negatives reject before scandir/read/np.load. Existing symlink fixture skips
 remain explicit. Receipt storage-r2.xml SHA256:
 a9e408d7cf713487a2c83a843495ffad832e47f4348aa375f49a4da74d07c331.
-No MAIN source acquisition, ERT, traveltime or ingest CLI was changed.
+No source acquisition, ERT, traveltime or ingest CLI was changed.
 
 Owned six-chapter bilingual course:4 targeted tests and157 original-inclusive
 frontend tests pass;48 actual client interactions cover six questions x EN/ES x
 light/dark x390/1440px. Exact source/render/mount/type/runtime limitations are in
-course-unit.md. The explicit MAIN mount patch checks but is not applied; the
+course-unit.md. The explicit host mount patch checks independently; the
 course does not expose a solve or claim acceptance of the full supplied inverse.

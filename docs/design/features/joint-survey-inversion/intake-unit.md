@@ -4,7 +4,7 @@ Oct8 governance amendment: input directories must also be outside repositories.
 During ordinary-ancestor admission, reject any ancestor containing a .git file
 or directory before directory inventory, JSON reads or array work. This admits
 explicit external data only, does not infer a path from sources.ROOT and does
-not modify MAIN acquisition/ERT/traveltime/ingest behavior. Paired test:
+not modify acquisition/ERT/traveltime/ingest behavior. Paired test:
 test_repository_intake_rejected_before_read, for both ordinary and worktree Git
 markers. Existing caller path/type/reparse/resource/precision gates remain exact.
 

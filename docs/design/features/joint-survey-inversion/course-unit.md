@@ -1,4 +1,4 @@
-# Supplied-survey M11 scientific course and MAIN mount boundary
+# Supplied-survey M11 scientific course and host integration boundary
 
 The owned bilingual M11ScientificCourse is a methodological instrument, not the
 cached joint replay or a new browser solver. Six chapters cover quantities and
@@ -9,10 +9,10 @@ definitions, limitations and an explicit reasoning exercise. No invented measure
 result, field certificate, fit button, status-only dashboard or altered tolerance.
 
 Use the existing shell Equation/InlineMath/Cite/Refs/Callout/language components.
-MAIN extends its one existing citation provider with the exported frozen citations
+The application host extends its existing citation provider with the exported citations
 and mounts the course only for joint theory; the owned change does not edit the
 Workbench, route, shell root, acquisition code or curated-data bake. An explicit
-mount diff accompanies the component; MAIN must adapt it to its concurrent UI.
+mount diff accompanies the component; adapt it to the host UI composition.
 No course interaction reads user files, network scientific data, sealed values,
 environment roots or model truth, or creates a processing job. It teaches the
 actual local pipeline equations, not a scalar toy standing in for inference.
@@ -37,11 +37,11 @@ separate obligations and are not supplied by course rendering.
   lack onnxruntime-web/wasm. No dependency install, fake module shim, disabled
   type check or source repair outside ownership was performed.
 - `git apply --check docs/design/features/joint-survey-inversion/main-mount.patch`
-  passes against this branch; the patch was NOT applied. MAIN must review/adapt
-  its concurrent Workbench/citation provider. No second provider is introduced.
+  passes against the component source; adapt the host Workbench/citation provider
+  during integration. No second provider is introduced.
 
 Actual frontend runtime:Node24.14.1,Vite7.3.6,Vitest4.1.11,Playwright1.63.0,
 shell0.6.8. Existing package inventory differs from prospective package.json pins;
 this is local scoped evidence, not a reproducible clean-lock CI/build acceptance.
-All new preview, Vite cache, reports and screenshots are external in
-E:/_Temp/geophysics-m11-20261008. Product curated data were not rebaked.
+Preview, Vite cache, reports and screenshots require operator-configured external
+storage. Product curated data were not rebaked by this component's validation.
