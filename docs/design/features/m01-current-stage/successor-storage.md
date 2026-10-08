@@ -92,6 +92,15 @@ intent retirement and stage-cleanup debt transition in the same transaction.
 An uncertain SQL commit retains the installed copy and preparation; it never
 adopts a pathname as a root merely because that pathname exists.
 
+`physical_abandon` implements the opposite verified precommit root disposition:
+the original rows/stage/raw remain; an installed exact target becomes separate
+charged abandonment custody; stage-cleanup debt, intent/target retirement and
+deletion of the empty pending family co-commit. It never creates a root, adopts
+an installed file, unlinks data or releases charge on pathname absence. Unknown
+stage/target/family/source state refuses, and injected debt/retirement cuts roll
+back the entire transaction. The caller must first obtain independent exclusive
+exclusion and a complete fresh classification; this helper is not that audit.
+
 `physical_debt` transfers failed/cancelled running jobs, their complete sealed
 stage, exact installed target subset, permanent reservation retirement and
 family reservation decrement in one terminal transaction. Installed targets
