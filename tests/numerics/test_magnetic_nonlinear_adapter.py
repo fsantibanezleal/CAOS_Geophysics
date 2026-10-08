@@ -122,3 +122,56 @@ def test_public_nonlinear_gate_retains_expired_failure(physical):
     result = solve_nonlinear(obj, np.zeros(7), np.full(7, 10.), np.zeros(7), budget=budget, binding=binding)
     assert result['status'] != 'converged' and result['reason'] == 'wall_cap' and result['q'] is None
     assert result['trace']['magnetic_norm_proofs'] == []
+
+
+@pytest.mark.parametrize('beta', [.1, 3.])
+def test_actual_nonzero_partition_history_lossless_beta_once(physical, beta):
+    from magnetic_calibration import descriptor, fit_partition
+    from magnetic_result_bundle import _encode_history, _decode_history, _validate_history
+    obj, _, noise, _ = make(physical)
+    sim = physical[0]
+    geometry = dict(origin_m=np.array(control.control.ORIGIN),
+        hx_m=np.array(control.control.WIDTHS[0]), hy_m=np.array(control.control.WIDTHS[1]),
+        hz_m=np.array(control.control.WIDTHS[2]), active=sim.active_cells.copy())
+    prior = {key: descriptor(value) for key, value in dict(
+        reference_si=.01*control.control.QREF, lower_si=np.zeros(7),
+        upper_si=np.full(7, .1), start_si=np.zeros(7),
+        lengths_m=np.array(control.control.LENGTHS)).items()}
+    binding = core.NonlinearBinding('physical_nonlinear_optimizer.solve_bounded_nonlinear', core.SOURCE_SHA256,
+        core.VENDOR_SOURCE_SHA256, 'a'*64, core.RUNTIME_EPOCH, core.POLICY)
+    result = fit_partition(obj.operator, geometry, prior, obj.base.observed, noise, beta, 'l2',
+        binding=binding, deadline=monotonic()+120., admitted_bytes=1000000,
+        allocation_sha256='b'*64, source_inventory_sha256='a'*64)
+    history = [dict(candidate='b00-l2', fold=0, **row) for row in result['history']]
+    assert len(history) > 1 and history[0]['phi_regularizer'] > 0.
+    # Actual native history remains exportable even if a stricter fit gate fails.
+    assert result['status'] in ('converged', 'failed')
+    assert all(row['objective'] == row['phi_d']+beta*row['phi_regularizer'] for row in history)
+    assert history[0]['objective'] != history[0]['phi_d']+beta**2*history[0]['phi_regularizer']
+    candidates = [dict(id=f'b{i:02d}-{p}', beta=beta, penalty='l2' if p == 'l2' else 'sparse_smallness')
+                  for i in range(8) for p in ('l2', 'sparse')]
+    _validate_history(history, candidates, allow_empty=False)
+    assert _decode_history(_encode_history(history)) == history
+
+
+@pytest.mark.parametrize('epsilon', [0., .1, .05, .025, .0125, .00625, .003125, .0015625, .001])
+def test_literal_nonlinear_history_operand_and_corruption_refusal(physical, epsilon):
+    from magnetic_calibration import recorded_objective_terms
+    from magnetic_survey_json import InputError
+    base, _, _, _, _, _ = control.make(physical, 'exact_total_anomaly_nT', False,
+        'sparse_smallness' if epsilon else 'l2', epsilon)
+    obj = MagneticNonlinearObjective(base, control.control.Q)
+    q = control.control.Q.copy()
+    native = obj.components(q)
+    trace = {k: np.array([native[k]]) for k in ('phi_d', 'phi_m', 'phi_engine')}
+    trace['models_q'] = np.array([q])
+    terms = recorded_objective_terms(obj, trace, 0, nonlinear=True)
+    assert terms['phi_regularizer'] == float(obj.regularizer.vendor(q)) > 0.
+    assert terms['objective'] == terms['phi_d']+obj.beta*terms['phi_regularizer']
+    trace['phi_m'][0] = np.nextafter(trace['phi_m'][0], np.inf)
+    with pytest.raises(InputError, match='weighted regularizer operand mismatch'):
+        recorded_objective_terms(obj, trace, 0, nonlinear=True)
+    trace['phi_m'][0] = native['phi_m']
+    trace['phi_engine'][0] = np.nextafter(trace['phi_engine'][0], np.inf)
+    with pytest.raises(InputError, match='Actual objective terms mismatch'):
+        recorded_objective_terms(obj, trace, 0, nonlinear=True)

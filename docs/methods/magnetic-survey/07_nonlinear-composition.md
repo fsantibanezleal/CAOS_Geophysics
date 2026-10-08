@@ -24,6 +24,17 @@ does not freeze the GN Jacobian. No floor, jitter or changed preconditioning.
 Inactive gravity and coupling operands are exactly zero in the five-term
 physical engine decomposition. Susceptibility is explicitly SI, scale(.01,).
 
+The public nonlinear trace's `phi_m` is the already beta-weighted penalty
+subtotal; its `beta_engine` is one. M04's lossless history instead stores beta
+and the unweighted physical regularizer separately. For every saved native
+model, `recorded_objective_terms` evaluates that same fixed vendor regularizer
+and requires exact equality with the recorded weighted operand. It retains the
+actual engine F and requires `F == phi_d + beta*phi_regularizer`, without
+dividing by beta, rounding a repair, or relaxing equality. This applies to both
+L2 and fixed IRLS surrogate records. True-p1 records retain their separate
+unweighted true objective. A mismatching trace fails rather than exporting a
+false converged history.
+
 Native accepted steps satisfy actual projected Armijo, not exact-real interval
 acceptance. M04 therefore separately audits every recorded accepted chord with
 its original directed34/50/80 native-norm certificate. Any unresolved/rejected
@@ -46,6 +57,13 @@ original de norma34/50/80 digitos. Un resultado ambiguo/rechazado conserva la
 traza y produce fallo, no aprobacion. Se mantienen limites120s/200 pasos y KKT
 independiente1e-7, todos los epsilons IRLS y ausencia de pisos, nugget o reintento.
 Exito nativo no establece geologia, datos de campo ni admision en linea.
+
+La traza publica no lineal ya incluye beta en `phi_m`. El historial M04 guarda
+beta y regularizador fisico sin ponderar por separado. En cada modelo nativo
+guardado se evalua el mismo regularizador vendor fijo y se exige igualdad
+exacta del operando ponderado y de `F == phi_d + beta*phi_regularizer`. No se
+divide por beta, no se repara el redondeo y no se debilita ninguna tolerancia.
+L2 y sustitutos IRLS usan esta regla; p1 real conserva su objetivo distinto.
 
 Definitions: [native norm proof](04_native-norm-certificate.md),
 [full workflow](06_local-calibration.md), and actual

@@ -71,6 +71,26 @@ def metrics(prediction, observed, noise):
                 rms_nT=rms, normalized_rms=normalized)
 
 
+def recorded_objective_terms(obj, trace, inner, *, nonlinear):
+    """Retain native F and the SAME-state unweighted physical regularizer.
+
+    The nonlinear public contract records the weighted penalty subtotal with
+    beta_engine=1. M04 history instead explicitly records beta and bare phi_m.
+    Re-evaluate the literal vendor operand, not weighted/beta (which can change
+    a float64 bit). Never repair a mismatching engine trace or relax equality.
+    """
+    pd = float(trace['phi_d'][inner])
+    pm = float(trace['phi_m'][inner])
+    value = float(trace['phi_engine'][inner])
+    if nonlinear:
+        pm = float(obj.regularizer.vendor(trace['models_q'][inner]))
+        if float(trace['phi_m'][inner]) != obj.beta*pm:
+            fail('numerical', '$/history', 'Native weighted regularizer operand mismatch')
+    if not np.isfinite([pd, pm, value]).all() or value != pd+obj.beta*pm:
+        fail('numerical', '$/history', 'Actual objective terms mismatch')
+    return dict(phi_d=pd, phi_regularizer=pm, objective=value)
+
+
 def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, binding,
                   deadline, admitted_bytes, allocation_sha256, source_inventory_sha256):
     """Complete fixed-beta L2 and optionally eight-stage true-p1 continuation."""
@@ -98,8 +118,8 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         for inner, q in enumerate(solved['trace']['models_q']):
             g = obj.evaluate(q, True, False)[1]
             records.append(dict(phase=phase, outer_iteration=outer, inner_iteration=inner,
-                beta=float(beta), epsilon_q=epsilon, phi_d=float(solved['trace']['phi_d'][inner]),
-                phi_regularizer=float(solved['trace']['phi_m'][inner]), objective=float(solved['trace']['phi_engine'][inner]),
+                beta=float(beta), epsilon_q=epsilon,
+                **recorded_objective_terms(obj, solved['trace'], inner, nonlinear=nonlinear),
                 kkt_inf=kkt_gradient(q, g, lower, upper), model_sha256=_hash_model(q),
                 status='converged' if inner == len(solved['trace']['models_q'])-1 and solved['status'] == 'converged' else
                        'failed' if inner == len(solved['trace']['models_q'])-1 and solved['status'] != 'converged' else 'iterating'))
