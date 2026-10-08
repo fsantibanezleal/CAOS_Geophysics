@@ -5,11 +5,49 @@ The SQL lane stays isolated until the independently reviewed native runtime is
 wired by integration. Files are read/installed under the caller's writer lease.
 """
 
+from contextlib import contextmanager
+import sqlite3
+
 from app.physical_contract import byte_sha, canonical, integer, parse_record, require, uuid, validate_custody
 from app.physical_debt import begin_ledger
 from app.physical_forest import _row
 from app.physical_persistence import M
 from app.physical_wire import SOURCE_KEYS, parse_root, root_envelope, scientific_digest
+
+
+@contextmanager
+def _ledger(connection, *, caller_owned):
+    """Keep candidate transactions distinct from the original API WAL lane."""
+    if not caller_owned:
+        begin_ledger(connection)
+        try:
+            yield
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            raise
+        return
+    from app.physical_forest import SUCCESSOR_DDL
+    from app.physical_successor import REVISION, ddl_sha256
+    require(type(connection) is sqlite3.Connection and connection.in_transaction
+            and connection.row_factory is None and connection.text_factory is str
+            and connection.execute('PRAGMA foreign_keys').fetchone() == (1,)
+            and connection.execute('PRAGMA journal_mode').fetchone() == ('wal',)
+            and connection.execute('PRAGMA synchronous').fetchone() == (2,)
+            and connection.execute('PRAGMA trusted_schema').fetchone() == (0,)
+            and connection.execute('SELECT version_num FROM alembic_version').fetchall() == [(REVISION,)]
+            and ddl_sha256(connection) == SUCCESSOR_DDL, 'physical_root_native_transaction')
+    # The native thread is serialized by run_native_transaction. Never roll
+    # back another operation's rows or commit the original session transaction.
+    connection.execute('SAVEPOINT physical_root_operation')
+    try:
+        yield
+    except BaseException:
+        connection.execute('ROLLBACK TO physical_root_operation')
+        connection.execute('RELEASE physical_root_operation')
+        raise
+    else:
+        connection.execute('RELEASE physical_root_operation')
 
 
 def _stage(connection, files, owner, project, raw, root):
@@ -73,13 +111,12 @@ def _verified(connection, files, owner, project, raw_id, root):
     return raw, batch, body, envelope
 
 
-def prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_dataset_id, intent_id, created_us,
-                 profile_records=None, approved_installations=None, failure_cut=None):
+def _prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_dataset_id, intent_id, created_us,
+                  profile_records=None, approved_installations=None, failure_cut=None, caller_owned):
     for value in (owner_id, project_id, raw_asset_id, root_dataset_id, intent_id):
         uuid(value)
     integer(created_us)
-    begin_ledger(connection)
-    try:
+    with _ledger(connection, caller_owned=caller_owned):
         _, _, body, _ = _verified(connection, files, owner_id, project_id, raw_asset_id, root_dataset_id)
         from app.physical_accounting import account_private_charge
         require(account_private_charge(connection, owner_id,profile_records=profile_records,
@@ -94,19 +131,33 @@ def prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_
                            (intent_id, root_dataset_id, f"derived/{owner_id}/{project_id}/datasets/{root_dataset_id}.json", len(body), byte_sha(body)))
         if failure_cut:
             failure_cut("prepared")
-        connection.commit()
-    except BaseException:
-        connection.rollback()
-        raise
 
 
-def publish_root(connection, files, *, owner_id, project_id, intent_id, created_at, failure_cut=None):
+def prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_dataset_id, intent_id, created_us,
+                 profile_records=None, approved_installations=None, failure_cut=None):
+    """Original isolated candidate API; owns a delete/memory transaction only."""
+    return _prepare_root(connection, files, owner_id=owner_id, project_id=project_id,
+        raw_asset_id=raw_asset_id, root_dataset_id=root_dataset_id, intent_id=intent_id,
+        created_us=created_us, profile_records=profile_records,
+        approved_installations=approved_installations, failure_cut=failure_cut, caller_owned=False)
+
+
+def prepare_root_transaction(connection, files, *, owner_id, project_id, raw_asset_id, root_dataset_id,
+                             intent_id, created_us, profile_records=None,
+                             approved_installations=None, failure_cut=None):
+    """Same verified root reservation, without owning the API's WAL commit."""
+    return _prepare_root(connection, files, owner_id=owner_id, project_id=project_id,
+        raw_asset_id=raw_asset_id, root_dataset_id=root_dataset_id, intent_id=intent_id,
+        created_us=created_us, profile_records=profile_records,
+        approved_installations=approved_installations, failure_cut=failure_cut, caller_owned=True)
+
+
+def _publish_root(connection, files, *, owner_id, project_id, intent_id, created_at, failure_cut=None, caller_owned):
     from app.physical_contract import instant
     for value in (owner_id, project_id, intent_id):
         uuid(value)
     instant(created_at, legacy=True)
-    begin_ledger(connection)
-    try:
+    with _ledger(connection, caller_owned=caller_owned):
         intent = _row(connection, "SELECT * FROM physical_publication_intents WHERE intent_id=? AND owner_id=? AND project_id=?", (intent_id, owner_id, project_id))
         require(intent["kind"] == "root" and intent["phase"] == "prepared" and intent["ordinal"] == 1,
                 "physical_root_intent")
@@ -133,8 +184,16 @@ def publish_root(connection, files, *, owner_id, project_id, intent_id, created_
         connection.execute("DELETE FROM physical_publication_targets WHERE intent_id=?", (intent_id,))
         connection.execute("DELETE FROM physical_publication_intents WHERE intent_id=?", (intent_id,))
         require(not connection.execute("PRAGMA foreign_key_check").fetchall(), "physical_root_foreign_keys")
-        connection.commit()
         return root
-    except BaseException:
-        connection.rollback()
-        raise
+
+
+def publish_root(connection, files, *, owner_id, project_id, intent_id, created_at, failure_cut=None):
+    """Original isolated candidate publication; no live-WAL admission."""
+    return _publish_root(connection, files, owner_id=owner_id, project_id=project_id,
+        intent_id=intent_id, created_at=created_at, failure_cut=failure_cut, caller_owned=False)
+
+
+def publish_root_transaction(connection, files, *, owner_id, project_id, intent_id, created_at, failure_cut=None):
+    """Original atomic publication under the caller's verified WAL transaction."""
+    return _publish_root(connection, files, owner_id=owner_id, project_id=project_id,
+        intent_id=intent_id, created_at=created_at, failure_cut=failure_cut, caller_owned=True)

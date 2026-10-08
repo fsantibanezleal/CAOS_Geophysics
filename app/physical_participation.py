@@ -68,6 +68,44 @@ class WorkerExclusion:
                 'physical_worker_exclusion_required')
         self._check(held[2])
 
+    def require_processing_held(self):
+        """Same-task singleton proof under SH, never DELETE/EX authority."""
+        self.leases.require_held()
+        held = _worker_held.get()
+        require(held is not None and held[0] is asyncio.current_task() and held[1] is self,
+                'physical_processing_exclusion_required')
+        self._check(held[2])
+
+    @asynccontextmanager
+    async def acquire_processing(self):
+        """Original singleton identity under claim-to-clean shared participation.
+
+        Acquisition opens only the already initialized fixed file. It is not
+        exclusive all-writer authority and cannot grant DELETE/recovery checks.
+        """
+        import fcntl
+        self.leases.require_held()
+        require(_worker_held.get() is None, 'physical_worker_lock_reentry')
+        fd = os.open('.processing-worker.lock', os.O_RDWR | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK,
+                     dir_fd=self.leases.files.fd)
+        acquired, token = False, None
+        try:
+            self._check(fd)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                acquired = True
+            except BlockingIOError:
+                raise ValueError('physical_worker_busy') from None
+            self._check(fd)
+            token = _worker_held.set((asyncio.current_task(), self, fd))
+            yield
+        finally:
+            if token is not None:
+                _worker_held.reset(token)
+            if acquired:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+
 
 class WriterParticipation:
     """Pure ASGI: no new task loses the same-task lease authority.

@@ -15,7 +15,8 @@ from app.physical_contract import require
 from app.physical_project_delete import PhysicalProjectDeletion
 
 
-async def audit_startup_participating(settings, sessions, participant):
+async def audit_startup_participating(settings, sessions, participant, *, require_ready=False):
+    require(type(require_ready) is bool, 'physical_startup_options')
     require(isinstance(participant,PhysicalProjectDeletion) and isinstance(sessions,async_sessionmaker),
             'physical_startup_bound_participant')
     engine=sessions.kw.get('bind')
@@ -37,7 +38,8 @@ async def audit_startup_participating(settings, sessions, participant):
                         require(value==expected,'physical_startup_sql_configuration:'+pragma)
                     await session.execute(text('BEGIN IMMEDIATE'))
                     try:
-                        result=await run_native_transaction(session,'classify_snapshot',
+                        result=await run_native_transaction(session,
+                            'classify_startup_snapshot' if require_ready else 'classify_snapshot',
                             files=participant.leases.files,**arguments)
                         require(result.classification in ('coherent_committed','prepared_uncommitted'),
                                 'physical_startup_inconsistent:'+result.reason)

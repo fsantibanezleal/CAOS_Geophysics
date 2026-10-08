@@ -18,6 +18,12 @@ from app.processing_contract import (
 
 
 async def account_derived_usage(session: AsyncSession, owner_id) -> int:
+    physical = session.info.get('physical_assembly')
+    if physical is not None:
+        from app.physical_assembly import PhysicalAssembly
+        if not isinstance(physical, PhysicalAssembly):
+            raise ApiError(409, 'physical_admission_closed', 'Private accounting participant is not recognized')
+        return await physical.derived_charge(session, owner_id)
     datasets = (await session.execute(select(func.coalesce(func.sum(ObservationDataset.byte_count), 0)).where(
         ObservationDataset.owner_id == owner_id,
     ))).scalar_one()

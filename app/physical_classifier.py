@@ -683,3 +683,20 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
         # No partial classifications, hashes or selected-family "green" escape.
         reason = error.code if isinstance(error, ApiError) else str(error)
         return Classification('inconsistent', reason[:160], MappingProxyType({}), MappingProxyType({}))
+
+
+def classify_startup_snapshot(connection, files, **arguments):
+    """Complete reconcile before serving, with no uncertain-job auto-recovery.
+
+    Honest queued jobs and measured cleanup debt may survive restart. Prepared
+    publication/active stage/running work require their exact operator recovery;
+    the legacy recover_interrupted sweep must not demote physical state first.
+    """
+    result = classify_snapshot(connection, files, **arguments)
+    require(result.classification in ('coherent_committed', 'prepared_uncommitted'),
+            'physical_startup_inconsistent:' + result.reason)
+    require(not connection.execute('SELECT 1 FROM physical_publication_intents LIMIT 1').fetchone()
+            and not connection.execute("SELECT 1 FROM physical_custody_batches WHERE state IN ('reserved','active','sealed') LIMIT 1").fetchone()
+            and not connection.execute("SELECT 1 FROM processing_jobs WHERE state='running' LIMIT 1").fetchone(),
+            'physical_startup_recovery_required')
+    return result

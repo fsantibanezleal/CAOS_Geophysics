@@ -15,14 +15,21 @@ from app.physical_contract import require
 _BUSY = 'physical_native_operation_running'
 _NAMES = frozenset(('classify_snapshot','project_inventory','observe_receipt','save_current_tombstone',
     'prepare_project_deletion','retire_project_forest_relations','retire_project_forest_families','transfer_project_deletion',
-    'cleanup_project_deletion_file'))
+    'cleanup_project_deletion_file','prepare_root_transaction','publish_root_transaction',
+    'classify_startup_snapshot','account_private_charge_transaction'))
 
 
 def _operation(name):
     require(type(name) is str and name in _NAMES,'physical_async_operation')
-    if name=='classify_snapshot':
-        from app.physical_classifier import classify_snapshot
-        return classify_snapshot
+    if name in ('classify_snapshot','classify_startup_snapshot'):
+        from app import physical_classifier
+        return getattr(physical_classifier,name)
+    if name in ('prepare_root_transaction','publish_root_transaction'):
+        from app import physical_roots
+        return getattr(physical_roots,name)
+    if name == 'account_private_charge_transaction':
+        from app.physical_accounting import account_private_charge_transaction
+        return account_private_charge_transaction
     if name in ('prepare_project_deletion','retire_project_forest_relations','retire_project_forest_families','transfer_project_deletion',
                 'cleanup_project_deletion_file'):
         from app import physical_project_deletion
