@@ -1,0 +1,24 @@
+{
+  "schema": "geophysics.prism-ready-test-addendum/v1",
+  "executed_utc": "2026-10-03 10:33:16 UTC",
+  "operator_sha256": "46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5",
+  "test_sha256": "c50158f083cba3ad096ff7b17eccdcbeb0a31f6e8293d13ffdccb3f6d78624c1",
+  "quantitative_receipt": "docs/design/features/m02-prism-operator/evidence/final-geometry-execution.json",
+  "quantitative_receipt_sha256": "3f779e1dbbdc7f8ea979ccbb0ffd07fea8c5e796991f1bee82ed27fe87367ffd",
+  "quantitative_receipt_test_hash_is_historical_not_relabelled": true,
+  "historical_pre_geometry_receipt_sha256": "3b2d8e59338e8d678a9e97a9bb35e4868c34c58164b8cb1a2dd2e71a2c4d714e",
+  "runtime_manifest_sha256": "a5aa08c23a80e15024e6499fab6805315d52dee185c5de1010b5f46e5c9f5819",
+  "interpreter": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv-pipeline/Scripts/python.exe",
+  "process_controls": {"PYTHONDONTWRITEBYTECODE": "1", "OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1"},
+  "test_runs": [
+    {"command": "python -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider", "passed": 80, "skipped": 0, "seconds": 1.88},
+    {"command": "python -m pytest tests/numerics/test_gravity_forward.py tests/data/test_potential_sources.py tests/test_rebuild.py -k 'gravity_forward or potential_sources or gravity_independent_prism or inverse_improves_data_fit or ingest_rejects_invalid or user_csv_inverse' -o addopts= -q -p no:cacheprovider", "passed": 118, "skipped": 2, "deselected": 11, "seconds": 6.42}
+  ],
+  "additions": ["Inactive invalid-centre isolation beside representable active cell", "Cumulative actual node mismatch rejection before prism", "Explicit large-offset width4 interior/physical-volume assertions"],
+  "operator_bytes_changed_by_addendum": false,
+  "geometry_fidelity_relative_budget": 1e-10,
+  "frozen_prediction_tolerances_changed": false,
+  "curie_review": {"source_prefix": "d8cf3", "type": "user-reported independent STATIC WIP review, not execution"},
+  "main_final_independent_acceptance": "pending",
+  "no_full_M02_or_inverse_or_field_or_host_claim": true
+}

@@ -27,7 +27,8 @@ SOURCE_FILES = (
 IDENTITY = 'owner_id project_id dataset_id raw_asset_id source_id dataset_sha256 raw_sha256'
 RELATION = 'id '+IDENTITY+' request_sha256 method_id state'
 MANIFEST_V1 = 'schema job_id request_sha256 installation stage_identity members recovery uncommitted_duplicate'
-MANIFEST_V2 = MANIFEST_V1+' '+IDENTITY+' method_id terminal_state'
+MANIFEST_V2 = MANIFEST_V1+' ownership'
+OWNERSHIP = IDENTITY+' job_id method_id terminal_state request_sha256'
 INSTALLATION = 'configuration_sha256 python_sha256 environment_sha256 invocation_sha256 source_hashes'
 RECOVERY = 'schema job_id receipt_sha256 intent_sha256 installation retained_stage_identity terminal known_root_copies_removed'
 EXECUTION = ('schema job_id request_sha256 dataset_sha256 raw_sha256 environment_sha256 unit terminal stop_reason failure '
@@ -103,16 +104,17 @@ def _relation(value):
 def _manifest(value, relation, approved):
     require(type(value) is dict,'profile_archive_manifest')
     schema=value.get('schema')
-    require(schema in ('geophysics.profile-retained-stage/v1','geophysics.profile-retained-stage/v2'),
+    require(schema == 'geophysics.profile-retained-stage/v2',
             'profile_archive_schema')
-    fields(value,MANIFEST_V1 if schema.endswith('/v1') else MANIFEST_V2)
+    fields(value,MANIFEST_V2)
     _relation(relation); _installation(approved)
     require(value['job_id']==relation['id'] and value['request_sha256']==relation['request_sha256'],
             'profile_archive_relation')
-    if schema.endswith('/v2'):
-        require(all(value[key]==relation[key] for key in IDENTITY.split()) and
-                value['method_id']==relation['method_id'] and value['terminal_state']==relation['state'],
-                'profile_archive_relation')
+    ownership=value['ownership']; fields(ownership,OWNERSHIP)
+    require(all(ownership[key]==relation[key] for key in IDENTITY.split()) and
+            ownership['job_id']==relation['id'] and ownership['request_sha256']==relation['request_sha256'] and
+            ownership['method_id']==relation['method_id'] and ownership['terminal_state']==relation['state'],
+            'profile_archive_relation')
     _installation(value['installation'])
     require(canonical(value['installation'])==canonical(approved),'profile_archive_authority')
     _identity(value['stage_identity'])

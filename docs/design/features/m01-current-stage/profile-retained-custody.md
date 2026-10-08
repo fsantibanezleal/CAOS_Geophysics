@@ -3,17 +3,17 @@
 The current-stage owner-approved deletion bridge uses the existing single
 project DELETE and existing deletion receipt. It adds no alternate original
 deletion path, backup dependency or change to the immutable successor migration.
-The retained profile manifest positively includes owner/project/dataset/raw IDs
-and source ID, method, terminal state and dataset/raw hashes. The v2 closed reader binds those to live terminal jobs and
+The retained profile v2 manifest has one closed ownership object: owner_id,
+project_id,job_id,dataset_id,raw_asset_id,source_id,method_id,terminal_state,
+dataset_sha256,raw_sha256,request_sha256. The closed reader binds it to live terminal jobs and
 independently approved installed source/runtime authority before logical deletion.
 
 A separate versioned entry in deletion_receipts.derived_manifest saves the exact
 archive manifest, native relation identity and both manifest-copy measurements.
 It survives project/job removal. It is not a physical gravity job_stage role,
 scientific validity certificate, erased-data receipt or external checkpoint.
-Historical v1 archives can acquire this descriptor only while matching live SQL
-relations and an independently approved job launch binding remain. A later v1
-archive without that saved descriptor is refused, never adopted by discovery.
+Historical v1 archives remain preserved and are refused by this new reader,
+never relabelled, upgraded or adopted by discovery.
 Each intent/manifest/member ordinary copy remains charged once to its original
 account. No cleanup or charge release follows from a missing pathname.
 

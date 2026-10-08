@@ -44,7 +44,7 @@ def main() -> None:
 
         app = create_app(Settings(
             data_dir=private, db_path=db, auth_secret="qa-only-not-for-deployment-secret-123456789",
-            public_origin=origin, cookie_secure=False,
+            public_origin=origin, cookie_secure=False, auth_mode="email",
         ), capture)
 
         @app.get("/__qa/mail/latest")

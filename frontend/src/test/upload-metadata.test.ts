@@ -12,13 +12,22 @@ const gravity = (): UploadDraft => ({
 });
 
 describe("explicit scientific raw-upload declaration", () => {
+  it.each(["ert_ohm", "traveltime_sgt"] as const)("requires exact local physical declarations for %s", format => {
+    const draft: UploadDraft = {...gravity(),format,mime:"text/plain",citation:"Original survey record",coordinateReference:"local",localCrs:"Declared baseline",measurementUnit:format==="ert_ohm"?"ohm":"s",componentFrame:format==="ert_ohm"?"ABMN":"source-receiver",geometry:{[format==="ert_ohm"?"electrode_count":"sensor_count"]:"8",measurement_count:"5"}};
+    const file = new File(["strict grammar is checked by API"], format==="ert_ohm"?"survey.ohm":"survey.sgt");
+    expect(prepareUpload(file,draft,[]).physical.geometry.measurement_count).toBe(5);
+    expect(()=>prepareUpload(file,{...draft,verticalPositive:"down"},[])).toThrow("vertical_positive");
+    expect(()=>prepareUpload(file,{...draft,coordinateReference:"epsg"},[])).toThrow("coordinate_reference");
+    expect(()=>prepareUpload(file,{...draft,citation:""},[])).toThrow("citation");
+    expect(()=>prepareUpload(new File([new Uint8Array(1_000_001)],file.name),draft,[])).toThrow("file limit");
+  });
   it("preserves optional gravity sigma declaration without guessing", () => {
     expect(prepareUpload(original, gravity(), []).physical.geometry).not.toHaveProperty("sigma_column");
     const draft = gravity(); draft.geometry.sigma_column = "uncertainty";
     expect(prepareUpload(original, draft, []).physical.geometry.sigma_column).toBe("uncertainty");
   });
   it("covers precisely the API envelope formats and produces no invented QC verdict", () => {
-    expect(Object.keys(FORMAT_SPECS)).toEqual(["gravity_csv", "magnetic_csv", "traveltime_csv", "ert_csv", "geotiff", "edi", "miniseed", "stationxml", "segy", "mth5"]);
+    expect(Object.keys(FORMAT_SPECS)).toEqual(["ert_ohm", "traveltime_sgt", "gravity_csv", "magnetic_csv", "traveltime_csv", "ert_csv", "geotiff", "edi", "miniseed", "stationxml", "segy", "mth5"]);
     const declaration = prepareUpload(original, gravity(), []);
     expect(declaration.source).toMatchObject({ rights_decision: "provider-link-only", private_storage_permission: "attested", citation: null });
     expect(declaration.physical).toMatchObject({ epsg: 32719, measurement_unit: "mGal", geometry: { station_id_column: "station" } });

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { PRODUCT_ROUTES } from "../lib/routes";
-import { artifactBase, routerBasename } from "../lib/deployment";
+import { artifactBase, deploymentMode, routerBasename } from "../lib/deployment";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -17,19 +17,21 @@ describe("frontend route and shell foundation", () => {
     ]);
     expect(new Set(PRODUCT_ROUTES.map(route => route.path)).size).toBe(6);
     expect(PRODUCT_ROUTES.every(route => route.es && route.en)).toBe(true);
-    expect(read("../../create-route-entrypoints.mjs")).toContain("src/lib/routes.json");
     expect(read("../main.tsx")).toContain("PRODUCT_ROUTES.map");
   });
 
-  it("deployment_modes_preserve_legacy_and_target_paths", () => {
-    expect(routerBasename("legacy", "/CAOS_Geophysics/benchmark/")).toBe("/CAOS_Geophysics");
-    expect(artifactBase("legacy", "/CAOS_Geophysics/benchmark/")).toBe("/CAOS_Geophysics/");
-    expect(routerBasename("legacy", "/benchmark/")).toBe("/");
-    expect(routerBasename("legacy", "/CAOS_Geophysics-copy/benchmark")).toBe("/");
-    expect(routerBasename("single-origin", "/CAOS_Geophysics/benchmark/")).toBe("/");
-    expect(artifactBase("single-origin", "/benchmark/")).toBe("/");
-    expect(read("../../vite.config.ts")).toContain("mode === 'single-origin' ? '/' : './'");
-    expect(read("../../package.json")).toContain("build:single-origin");
+  it("all_builds_use_one_root_origin_without_route_asset_copies", () => {
+    expect(deploymentMode).toBe("single-origin");
+    for (const path of ["/", "/benchmark/", "/CAOS_Geophysics/benchmark/", "/CAOS_Geophysics-copy/benchmark"]) {
+      expect(routerBasename(deploymentMode, path)).toBe("/");
+      expect(artifactBase(deploymentMode, path)).toBe("/");
+    }
+    expect(read("../../vite.config.ts")).toContain("base: '/'");
+    expect(read("../lib/deployment.ts")).not.toContain('"legacy"');
+    const { scripts } = JSON.parse(read("../../package.json"));
+    expect(scripts.build).toBe("tsc --noEmit && node copy-data.mjs && vite build");
+    expect(scripts["build:single-origin"]).toBe("npm run build");
+    expect(existsSync(new URL("../../create-route-entrypoints.mjs", import.meta.url))).toBe(false);
   });
 
   it("shell_tokens_and_chrome_are_centralized", () => {

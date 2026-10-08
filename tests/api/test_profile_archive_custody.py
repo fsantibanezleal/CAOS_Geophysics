@@ -59,8 +59,9 @@ def archive_fixture(tmp_path):
                   f'geophysics-profile-guardian-{job}.scope':dict(ActiveState='inactive',SubState='dead',ControlGroup='')})
     manifest=dict(schema='geophysics.profile-retained-stage/v2',job_id=job,request_sha256='8'*64,installation=installation,
         stage_identity=identity,members={name:dict(bytes=len(body),sha256=byte_sha(body)) for name,body in members.items()},
-        recovery=recovery,uncommitted_duplicate=None,method_id=relation['method_id'],terminal_state=relation['state'],
-        **{k:relation[k] for k in ('owner_id','project_id','dataset_id','raw_asset_id','source_id','dataset_sha256','raw_sha256')})
+        recovery=recovery,uncommitted_duplicate=None,ownership=dict(job_id=job,request_sha256=relation['request_sha256'],
+        method_id=relation['method_id'],terminal_state=relation['state'],
+        **{k:relation[k] for k in ('owner_id','project_id','dataset_id','raw_asset_id','source_id','dataset_sha256','raw_sha256')}))
     for name,body in members.items():
         (stage/name).write_bytes(body)
     def write():
@@ -83,7 +84,7 @@ def test_live_custody_transfers_without_copy_or_charge_loss(tmp_path):
 @pytest.mark.parametrize('field', ['owner_id','project_id','dataset_id','raw_asset_id','source_id','dataset_sha256','raw_sha256','request_sha256','job_id','method_id','terminal_state'])
 def test_rehashed_foreign_identity_never_transfers(field,tmp_path):
     files,relation,manifest,installation,write=archive_fixture(tmp_path)
-    manifest[field]=str(uuid4()) if field.endswith('_id') else 'a'*64
+    manifest['ownership'][field]=str(uuid4()) if field.endswith('_id') else 'a'*64
     write()
     with pytest.raises(ValueError):
         retained_inventory(files,[relation],[],approved_installations={relation['id']:installation})
@@ -134,18 +135,16 @@ def test_real_sql_receipt_attachment_rolls_back_with_deletion(tmp_path):
     db.close()
 
 
-def test_historical_v1_requires_live_binding_before_first_transfer(tmp_path):
-    from app.profile_archive_custody import IDENTITY
+def test_historical_v1_is_preserved_and_refused_not_upgraded(tmp_path):
     files,relation,manifest,installation,write=archive_fixture(tmp_path)
     manifest['schema']='geophysics.profile-retained-stage/v1'
-    for key in (*IDENTITY.split(),'method_id','terminal_state'):
-        del manifest[key]
+    del manifest['ownership']
     write()
     approved={relation['id']:installation}
-    records=retained_inventory(files,[relation],[],approved_installations=approved)
-    receipt=dict(id=str(uuid4()),owner_id=relation['owner_id'],project_id=relation['project_id'],
-                 derived_manifest=deletion_entries(records,owner_id=relation['owner_id'],project_id=relation['project_id']))
-    assert retained_inventory(files,[],[receipt],approved_installations=approved)==records
+    before=canonical(manifest)
+    with pytest.raises(ValueError,match='profile_archive_schema'):
+        retained_inventory(files,[relation],[],approved_installations=approved)
+    assert (files.root/f'.profile-retained/{relation["id"]}/manifest.json').read_bytes()==before
     with pytest.raises(ValueError,match='unknown_name'):
         retained_inventory(files,[],[],approved_installations=approved)
 
@@ -156,7 +155,7 @@ def test_closed_v2_fields_native_domain_and_recovery_negatives(damage,tmp_path):
     files,relation,manifest,installation,write=archive_fixture(tmp_path)
     if damage=='schema': manifest['schema']='geophysics.profile-retained-stage/v3'
     elif damage=='extra': manifest['extra']='future'
-    elif damage=='missing': del manifest['source_id']
+    elif damage=='missing': del manifest['ownership']['source_id']
     elif damage=='bool-inode': manifest['stage_identity']['inode']=True
     elif damage=='negative-inode': manifest['stage_identity']['inode']=-1
     elif damage=='large-inode': manifest['stage_identity']['inode']=2**64

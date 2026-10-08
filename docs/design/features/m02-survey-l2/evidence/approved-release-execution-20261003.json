@@ -1,0 +1,1457 @@
+{
+  "schema": "m02-survey-l2-approved-release-execution-1",
+  "recorded_date": "2026-10-03",
+  "base_head": "73da9e3687a12b3439ac13afbd1efe8e33eedf05",
+  "authority": "MAIN full read and exact AS-B approval persisted/pushed before new red tests or production changes",
+  "source_state": "Actual new hybrid bytes before scoped commit; not complete L2 acceptance",
+  "runtime_epoch": "m02-survey-l2-cpu-2",
+  "optimizer_policy": "projected-gncg-degenerate-release-1",
+  "source_sha256": {
+    "data-pipeline/gravity_l2.py": "2662dece5964fb4652c510dfcb89df99bf1b0344fe7aa9b9071f0c55c5e274df",
+    "data-pipeline/gravity_survey_l2.py": "50934e1f56fcd468787b113598d01966b0a0eb1b124cb95363605fea8278da97",
+    "tests/data/test_gravity_survey_l2.py": "59ada6fede6512149dcd55d1ebcc892d12eeb8a2f43367931028b3f39d378f99",
+    "tests/numerics/test_gravity_l2.py": "ab866e75a24ae8a3a1312764f83c08327bd7cf886ab86e3f81fd89e03d64a17a",
+    "tests/numerics/test_gravity_l2_selection.py": "44ea730ab3737e8b193141e6d27f6f9a221fb3df22ac938eecdcbc4c558b9ce5"
+  },
+  "runtime": {
+    "trusted_interpreter": "ProductCheckout/.venv-pipeline/Scripts/python.exe",
+    "python": "3.12.10",
+    "platform": "Windows",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "choclo": "0.3.2",
+    "pymatsolver": "0.4.0",
+    "bytecode_writes_disabled": true,
+    "blas_omp_threads": 1,
+    "installed_changes": 0,
+    "installed_source_pins_verified_by_focused_test": 28
+  },
+  "pre_code_red": {
+    "source_sha256": "ee006ccd26fc955a40b094676982b115e2ce95d7c00261847d66ec582aac733a",
+    "test_sha256": {
+      "tests/data/test_gravity_survey_l2.py": "59ada6fede6512149dcd55d1ebcc892d12eeb8a2f43367931028b3f39d378f99",
+      "tests/numerics/test_gravity_l2.py": "dcf3cfdb267fcf0abeaa45bb7e10f56644eb11e0f76fe062360eb9c3c80944cf"
+    },
+    "command": "& $ExistingPipelinePython -m pytest tests/data/test_gravity_survey_l2.py tests/numerics/test_gravity_l2.py -k 'amended_optimizer or degenerate_release or underflow_free or stationary_bound or release_official or release_finite or native_failure or release_trace or six_cell' -o addopts= -q -rs -p no:cacheprovider --junitxml $PrivateRedXml",
+    "receipt": "release-policy-red.xml",
+    "sha256": "ff4e97c5ef86fdaf1a611212264b5ebf0ef57caa0e250aeb60a5b6424c13d6d0",
+    "passed": 4,
+    "failed": 27,
+    "errors": 0,
+    "skipped": 0,
+    "deselected": 109,
+    "junit_seconds": 47.709,
+    "junit_timestamp": "2026-10-03T12:14:25.665523-03:00",
+    "cause": "Actual pre-code failure: original tight-bound stalls plus absent release/epoch/trace behavior; four unchanged negative controls already pass",
+    "source_files_existed_before_tests": true,
+    "approval_precedes_tests": true
+  },
+  "retained_harness_error": {
+    "tool_chunk": "594b79",
+    "description": "Malformed PowerShell --junitxml=(Join-Path...) token caused file-not-found; no tests ran, no numerical red or valid XML"
+  },
+  "intermediate_runs": [
+    {
+      "receipt": "release-first-focused.xml",
+      "sha256": "d6735cde72bacd8ac3c2ae50c9075886bbf9c9df96bda9e4ee2f7acf39e5e30a",
+      "passed": 226,
+      "failed": 0,
+      "skipped": 0,
+      "deselected": 0,
+      "warnings": 14,
+      "junit_seconds": 77.112,
+      "junit_timestamp": "2026-10-03T12:18:29.814587-03:00",
+      "l2_test_sha256": "dcf3cfdb267fcf0abeaa45bb7e10f56644eb11e0f76fe062360eb9c3c80944cf"
+    },
+    {
+      "receipt": "release-final-focused.xml",
+      "sha256": "ab25c0c6bb8400212ccf5ef0014fbf11722f705974df0188c088f40ecf8caf15",
+      "passed": 229,
+      "failed": 0,
+      "skipped": 0,
+      "deselected": 0,
+      "warnings": 20,
+      "junit_seconds": 81.17,
+      "junit_timestamp": "2026-10-03T12:25:51.657291-03:00",
+      "l2_test_sha256": "e57cdf48e3adfeee65d8c6dbd5a46ed9ceecba9f07230abbdda7a3f5d6f64018",
+      "includes": "149 new local component controls +80 unchanged accepted forward"
+    },
+    {
+      "receipt": "release-final-broader.xml",
+      "sha256": "4165d426b8cfd7a192faa92e4b0121e6cd06415495c4be6555d01b3387fb2574",
+      "passed": 336,
+      "failed": 0,
+      "skipped": 14,
+      "warnings": 20,
+      "junit_seconds": 110.325,
+      "junit_timestamp": "2026-10-03T12:34:16.584199-03:00",
+      "l2_test_sha256": "e57cdf48e3adfeee65d8c6dbd5a46ed9ceecba9f07230abbdda7a3f5d6f64018"
+    }
+  ],
+  "post_code_supplemental_tests": "Three explicitly injected actual-trial slope/nonfinite/LS20 cases, then six wide-bound start modes under both noises; no retroactive test-first claim",
+  "current_start_gate": {
+    "receipt": "release-wide-tight-starts.xml",
+    "sha256": "c8da711deed2bffee21f7f510a01aaa9aed2d3db349196e027a1b72e5fc22bfc",
+    "passed": 23,
+    "failed": 1,
+    "skipped": 0,
+    "deselected": 64,
+    "junit_seconds": 202.84,
+    "junit_timestamp": "2026-10-03T12:36:59.367791-03:00",
+    "failure": "Wide1500 diagonal lower_reference: wall_cap, KKT0.0001297087805674626; unchanged120s cap; assertion retained"
+  },
+  "quantitative_intermediate": {
+    "attribution": "Producer execution: unchanged MAIN-authored four-control helper plus producer replay of declared MAIN geometry with six starts per noise; not MAIN new-source detached acceptance",
+    "four_original_controls": [
+      {
+        "actual_reason": "absolute_stationary",
+        "actual_status": "converged",
+        "bound_kg_m3": 1500,
+        "gates": {
+          "converged": true,
+          "model_agrees": true,
+          "objective_agrees": true,
+          "prediction_agrees": true
+        },
+        "iterations": 1,
+        "kkt_normalized": 1.2713108299419272e-15,
+        "mode": "diagonal_sd",
+        "model_relative_error": 1.2821355927847284e-12,
+        "objective_relative_error": 6.938893903907228e-18,
+        "oracle_bound_active_count": 0,
+        "oracle_cost_unhalved": 0.043821538373940205,
+        "oracle_status": 3,
+        "prediction_max_abs_mgal": 4.1031360877680985e-15
+      },
+      {
+        "actual_reason": "absolute_stationary",
+        "actual_status": "converged",
+        "bound_kg_m3": 75,
+        "gates": {
+          "converged": true,
+          "model_agrees": true,
+          "objective_agrees": true,
+          "prediction_agrees": true
+        },
+        "iterations": 2,
+        "kkt_normalized": 0,
+        "mode": "diagonal_sd",
+        "model_relative_error": 3.1031676915590914e-17,
+        "objective_relative_error": 0,
+        "oracle_bound_active_count": 6,
+        "oracle_cost_unhalved": 49.396894403565916,
+        "oracle_status": 1,
+        "prediction_max_abs_mgal": 7.292358833876678e-20
+      },
+      {
+        "actual_reason": "absolute_stationary",
+        "actual_status": "converged",
+        "bound_kg_m3": 1500,
+        "gates": {
+          "converged": true,
+          "model_agrees": true,
+          "objective_agrees": true,
+          "prediction_agrees": true
+        },
+        "iterations": 1,
+        "kkt_normalized": 2.2848951562737053e-15,
+        "mode": "full_covariance",
+        "model_relative_error": 1.372088410424635e-12,
+        "objective_relative_error": 2.7755575615628914e-17,
+        "oracle_bound_active_count": 0,
+        "oracle_cost_unhalved": 0.04541021804298949,
+        "oracle_status": 3,
+        "prediction_max_abs_mgal": 4.076006029669572e-15
+      },
+      {
+        "actual_reason": "absolute_stationary",
+        "actual_status": "converged",
+        "bound_kg_m3": 75,
+        "gates": {
+          "converged": true,
+          "model_agrees": true,
+          "objective_agrees": true,
+          "prediction_agrees": true
+        },
+        "iterations": 2,
+        "kkt_normalized": 0,
+        "mode": "full_covariance",
+        "model_relative_error": 3.1031676915590914e-17,
+        "objective_relative_error": 0,
+        "oracle_bound_active_count": 6,
+        "oracle_cost_unhalved": 61.81000832095373,
+        "oracle_status": 1,
+        "prediction_max_abs_mgal": 3.776584818933027e-19
+      }
+    ],
+    "full_l2_accepted": false,
+    "main_trusted_helper_sha256": "dc4a6da238d84d9fe65592cd818961ac57ddad6f78471ecdf1e16080d35de070",
+    "old_main_d7_failures_preserved": true,
+    "optimizer_policy": "projected-gncg-degenerate-release-1",
+    "runtime_epoch": "m02-survey-l2-cpu-2",
+    "schema": "m02-l2-approved-release-quantitative-1",
+    "six_start_modes_each_noise": [
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 3.1031676915590914e-17,
+        "noise": "diagonal_sd",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          -75,
+          -75,
+          -75,
+          -75,
+          -75,
+          -75
+        ],
+        "prediction_max_abs_mgal": 7.292358833876678e-20,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              49.39689440356561
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "all_lower",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            0
+          ],
+          "kkt_normalized": [
+            1,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              -75,
+              -75,
+              -75,
+              -75,
+              -75,
+              -75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            127.352111757187,
+            49.39635383448054
+          ],
+          "phi_engine": [
+            127.35278718167542,
+            49.39689440356561
+          ],
+          "phi_m": [
+            0.013508489768307123,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.612125533357206
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 0,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 3.1031676915590914e-17,
+        "noise": "diagonal_sd",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "prediction_max_abs_mgal": 7.292358833876678e-20,
+        "private_optimizer_evidence": {
+          "direction_kinds": [],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "not_run",
+          "trial_objectives": []
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "all_upper",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [],
+          "kkt_normalized": [
+            0
+          ],
+          "line_search_counts": [],
+          "models_kg_m3": [
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            49.39635383448054
+          ],
+          "phi_engine": [
+            49.39689440356561
+          ],
+          "phi_m": [
+            0.010811381701336041
+          ],
+          "relative_changes": []
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 3.1031676915590914e-17,
+        "noise": "diagonal_sd",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          -75,
+          75,
+          -75,
+          75,
+          -75,
+          75
+        ],
+        "prediction_max_abs_mgal": 7.292358833876678e-20,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              49.39689440356561
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "lower_upper",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            0
+          ],
+          "kkt_normalized": [
+            1,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              -75,
+              75,
+              -75,
+              75,
+              -75,
+              75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            90.26775743461673,
+            49.39635383448054
+          ],
+          "phi_engine": [
+            90.27012666935374,
+            49.39689440356561
+          ],
+          "phi_m": [
+            0.04738469474040251,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.4527880238331868
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 3.1031676915590914e-17,
+        "noise": "diagonal_sd",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          75,
+          -75,
+          75,
+          -75,
+          75,
+          -75
+        ],
+        "prediction_max_abs_mgal": 7.292358833876678e-20,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              49.39689440356561
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "upper_lower",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            0
+          ],
+          "kkt_normalized": [
+            0.5108516169906546,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              75,
+              -75,
+              75,
+              -75,
+              75,
+              -75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            77.68473020201985,
+            49.39635383448054
+          ],
+          "phi_engine": [
+            77.68559218155646,
+            49.39689440356561
+          ],
+          "phi_m": [
+            0.017239590732284794,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.3641434271605764
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 3,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 3.1031676915590914e-17,
+        "noise": "diagonal_sd",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          -75,
+          -15,
+          -75,
+          -40,
+          -75,
+          0
+        ],
+        "prediction_max_abs_mgal": 7.292358833876678e-20,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            0,
+            0,
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              87.2719716455067
+            ],
+            [
+              1,
+              0,
+              56.05276184922612
+            ],
+            [
+              2,
+              0,
+              49.39689440356561
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "lower_reference",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            3,
+            3,
+            0
+          ],
+          "kkt_normalized": [
+            1,
+            0.8867046175161423,
+            0.21778166508504798,
+            0
+          ],
+          "line_search_counts": [
+            1,
+            1,
+            1
+          ],
+          "models_kg_m3": [
+            [
+              -75,
+              -15,
+              -75,
+              -40,
+              -75,
+              0
+            ],
+            [
+              -70.96550894924677,
+              75,
+              -61.87531629112235,
+              75,
+              -70.45733354925822,
+              75
+            ],
+            [
+              -75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            111.07396599066561,
+            87.26984413903762,
+            56.05177039226688,
+            49.39635383448054
+          ],
+          "phi_engine": [
+            111.07480952778721,
+            87.2719716455067,
+            56.05276184922612,
+            49.39689440356561
+          ],
+          "phi_m": [
+            0.01687074243192965,
+            0.04255012938160801,
+            0.019829139184846946,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.21429555435182482,
+            0.35772320949836056,
+            0.11874289912000838
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 3.1031676915590914e-17,
+        "noise": "diagonal_sd",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          75,
+          -15,
+          75,
+          -40,
+          75,
+          0
+        ],
+        "prediction_max_abs_mgal": 7.292358833876678e-20,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            0
+          ],
+          "last_cg_absolute_residual": 2.0827997905730069e-10,
+          "last_cg_count": 3,
+          "last_cg_relative_residual": 1.7472097263843983e-12,
+          "last_direction_kind": "native_CG",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              49.39689440356561
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "upper_reference",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            3
+          ],
+          "kkt_normalized": [
+            0.5101880797222417,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              75,
+              -15,
+              75,
+              -40,
+              75,
+              0
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            65.07766689692778,
+            49.39635383448054
+          ],
+          "phi_engine": [
+            65.07799389422188,
+            49.39689440356561
+          ],
+          "phi_m": [
+            0.006539945881955014,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.240958556837883
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 4.163336342344337e-17,
+        "noise": "full_covariance",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          -75,
+          -75,
+          -75,
+          -75,
+          -75,
+          -75
+        ],
+        "prediction_max_abs_mgal": 1.1701503590035075e-19,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              61.81000832095303
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "all_lower",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            0
+          ],
+          "kkt_normalized": [
+            1,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              -75,
+              -75,
+              -75,
+              -75,
+              -75,
+              -75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            159.89589725272495,
+            61.80946775186796
+          ],
+          "phi_engine": [
+            159.89657267721336,
+            61.81000832095303
+          ],
+          "phi_m": [
+            0.013508489768307123,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.6134375660088086
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 0,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 4.163336342344337e-17,
+        "noise": "full_covariance",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "prediction_max_abs_mgal": 1.1701503590035075e-19,
+        "private_optimizer_evidence": {
+          "direction_kinds": [],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "not_run",
+          "trial_objectives": []
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "all_upper",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [],
+          "kkt_normalized": [
+            0
+          ],
+          "line_search_counts": [],
+          "models_kg_m3": [
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            61.80946775186796
+          ],
+          "phi_engine": [
+            61.81000832095303
+          ],
+          "phi_m": [
+            0.010811381701336041
+          ],
+          "relative_changes": []
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 4.163336342344337e-17,
+        "noise": "full_covariance",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          -75,
+          75,
+          -75,
+          75,
+          -75,
+          75
+        ],
+        "prediction_max_abs_mgal": 1.1701503590035075e-19,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              61.81000832095303
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "lower_upper",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            0
+          ],
+          "kkt_normalized": [
+            1,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              -75,
+              75,
+              -75,
+              75,
+              -75,
+              75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            114.59800838938429,
+            61.80946775186796
+          ],
+          "phi_engine": [
+            114.60037762412131,
+            61.81000832095303
+          ],
+          "phi_m": [
+            0.04738469474040251,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.4606474288969259
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 1,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 4.163336342344337e-17,
+        "noise": "full_covariance",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          75,
+          -75,
+          75,
+          -75,
+          75,
+          -75
+        ],
+        "prediction_max_abs_mgal": 1.1701503590035075e-19,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              61.81000832095303
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "upper_lower",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            0
+          ],
+          "kkt_normalized": [
+            0.4887988028935076,
+            0
+          ],
+          "line_search_counts": [
+            1
+          ],
+          "models_kg_m3": [
+            [
+              75,
+              -75,
+              75,
+              -75,
+              75,
+              -75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            96.07185438630182,
+            61.80946775186796
+          ],
+          "phi_engine": [
+            96.07271636583843,
+            61.81000832095303
+          ],
+          "phi_m": [
+            0.017239590732284794,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.35663307274893025
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 4,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 4.163336342344337e-17,
+        "noise": "full_covariance",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          -75,
+          -15,
+          -75,
+          -40,
+          -75,
+          0
+        ],
+        "prediction_max_abs_mgal": 1.1701503590035075e-19,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "last_cg_absolute_residual": 0,
+          "last_cg_count": 1,
+          "last_cg_relative_residual": 0,
+          "last_direction_kind": "native_CG",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              116.86395473116553
+            ],
+            [
+              1,
+              0,
+              74.80866683971064
+            ],
+            [
+              2,
+              0,
+              67.83207917676536
+            ],
+            [
+              3,
+              0,
+              61.81000832095303
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "lower_reference",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            3,
+            3,
+            1,
+            1
+          ],
+          "kkt_normalized": [
+            1,
+            0.9133070160560226,
+            0.2234878268826685,
+            0.21263803090024608,
+            0
+          ],
+          "line_search_counts": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "models_kg_m3": [
+            [
+              -75,
+              -15,
+              -75,
+              -40,
+              -75,
+              0
+            ],
+            [
+              -70.89138509234577,
+              75,
+              -61.60195470102207,
+              -75,
+              -70.39798758493558,
+              75
+            ],
+            [
+              -75,
+              75,
+              75,
+              -58.80568428178431,
+              75,
+              75
+            ],
+            [
+              -31.503892478612016,
+              75,
+              75,
+              75,
+              75,
+              75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            140.1128150098213,
+            116.86238517092002,
+            74.80791355613272,
+            67.83132861782475,
+            61.80946775186796
+          ],
+          "phi_engine": [
+            140.1136585469429,
+            116.86395473116553,
+            74.80866683971064,
+            67.83207917676536,
+            61.81000832095303
+          ],
+          "phi_m": [
+            0.01687074243192965,
+            0.031391204910222625,
+            0.01506567155845057,
+            0.015011178812251598,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.1659345995022171,
+            0.3598653493132173,
+            0.09325908290671342,
+            0.08877909875236555
+          ]
+        }
+      },
+      {
+        "bounds_feasible": true,
+        "iterations": 2,
+        "kkt_normalized": 0,
+        "model_kg_m3": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "model_normalized_l2": 4.163336342344337e-17,
+        "noise": "full_covariance",
+        "objective_relative": 0,
+        "original_start_kg_m3": [
+          75,
+          -15,
+          75,
+          -40,
+          75,
+          0
+        ],
+        "prediction_max_abs_mgal": 1.1701503590035075e-19,
+        "private_optimizer_evidence": {
+          "direction_kinds": [
+            0,
+            1
+          ],
+          "last_cg_absolute_residual": null,
+          "last_cg_count": 0,
+          "last_cg_relative_residual": null,
+          "last_direction_kind": "degenerate_release",
+          "trial_objectives": [
+            [
+              0,
+              0,
+              66.47940469906437
+            ],
+            [
+              1,
+              0,
+              61.81000832095303
+            ]
+          ]
+        },
+        "reason": "absolute_stationary",
+        "residual_exact": true,
+        "start_mode": "upper_reference",
+        "status": "converged",
+        "trace": {
+          "cg_counts": [
+            3,
+            0
+          ],
+          "kkt_normalized": [
+            0.4885079979571024,
+            0.1536821470247977,
+            0
+          ],
+          "line_search_counts": [
+            1,
+            1
+          ],
+          "models_kg_m3": [
+            [
+              75,
+              -15,
+              75,
+              -40,
+              75,
+              0
+            ],
+            [
+              75,
+              75,
+              75,
+              -75,
+              75,
+              75
+            ],
+            [
+              75,
+              75,
+              75,
+              75,
+              75,
+              75
+            ]
+          ],
+          "phi_d": [
+            80.87929755891652,
+            66.47881760537251,
+            61.80946775186796
+          ],
+          "phi_engine": [
+            80.87962455621062,
+            66.47940469906437,
+            61.81000832095303
+          ],
+          "phi_m": [
+            0.006539945881955014,
+            0.01174187383730763,
+            0.010811381701336041
+          ],
+          "relative_changes": [
+            0.17804508782231324,
+            0.07023823993684258
+          ]
+        }
+      }
+    ],
+    "source_sha256": {
+      "data-pipeline/gravity_l2.py": "2662dece5964fb4652c510dfcb89df99bf1b0344fe7aa9b9071f0c55c5e274df",
+      "data-pipeline/gravity_survey_l2.py": "50934e1f56fcd468787b113598d01966b0a0eb1b124cb95363605fea8278da97",
+      "tests/data/test_gravity_survey_l2.py": "59ada6fede6512149dcd55d1ebcc892d12eeb8a2f43367931028b3f39d378f99",
+      "tests/numerics/test_gravity_l2.py": "e57cdf48e3adfeee65d8c6dbd5a46ed9ceecba9f07230abbdda7a3f5d6f64018",
+      "tests/numerics/test_gravity_l2_selection.py": "44ea730ab3737e8b193141e6d27f6f9a221fb3df22ac938eecdcbc4c558b9ce5"
+    }
+  },
+  "additional_actual_negative": {
+    "receipt": "additional-wide-start-negative-20261003.json",
+    "status": "nonconverged",
+    "reason": "wall_cap",
+    "iterations": 51,
+    "wall_seconds": 120.25,
+    "model_normalized_l2": 1.1286665317147966,
+    "objective_relative": 0.05268513341523953,
+    "prediction_max_abs_mgal": 0.000286669295700677,
+    "all_directions_native_CG": true,
+    "full_trace_retained": true,
+    "sha256": "949ef10ced22c56faf2e2a59f4f64ff5679e78d846d6a79faa3586eb115dfde6"
+  },
+  "source_policy_review": {
+    "exact_zero_trigger_only": true,
+    "unchanged_convergence_first": true,
+    "unchanged_native_ordinary_CG_and_Armijo": true,
+    "positive_fixed_D": true,
+    "finite_actual_slope_and_noop": true,
+    "none_not_run_CG": true,
+    "ordinary_failure_fallback": false,
+    "near_zero_trigger": false,
+    "planner_or_forward_changes": 0,
+    "numerical_thresholds_changed": false,
+    "caps_seeds_or_candidates_changed": false
+  },
+  "main_attribution": {
+    "previous_d7_failures_preserved": true,
+    "original_four_receipt_sha256": "f118d046a6be3929d9432a921c728cc5a6295bd265cfc444dfecaf8e56f774da",
+    "additional_16_start_helper_sha256": "de903e359c8791a7c9035b363308af867803d61a3cf9b2f8ce002def227024f7",
+    "additional_d7_counts_user_reported": {
+      "pass": 4,
+      "fail": 12
+    },
+    "additional_helper_executed_by_producer": false,
+    "new_source_MAIN_detached_acceptance": false,
+    "owner_report_modified_or_duplicated": false
+  },
+  "historical_receipts_rewritten": false,
+  "skip_attribution": {
+    "protected_archive_opt_in": 1,
+    "windows_symlink_privilege": 1,
+    "pygimli_not_installed": 2,
+    "rights_restricted_ert_asset_absent": 3,
+    "c15_mt_asset_absent": 3,
+    "rights_restricted_sgt_asset_absent": 4
+  },
+  "separated_unchanged_M01": "Three unchanged missing-Boule/Harmonica files explicitly separated in pipeline runtime; prior separate d7 M01 run164 PASS/1 protected-archive skip reused only for unchanged files, not fresh combined evidence",
+  "warnings": "20 installed SimPEG code_utils.py:910 NumPy array-to-scalar deprecations; no suppression or package change",
+  "full_l2_accepted": false,
+  "remaining": [
+    "One added wide-bound optimum gate FAIL; reviewed exact-zero policy does not authorize ordinary near-zero release/fallback",
+    "Full sealed calibration/evaluation and candidate selection pending",
+    "Full16 gates/all24 matrix/rank/resolution/operational resource profile pending",
+    "MAIN stable detached full review/run pending",
+    "No field/API/IRLS/GPU/host/canonical/merge/deploy acceptance"
+  ],
+  "current_complete_regression": {
+    "command": "& $ExistingPipelinePython -m pytest tests/data tests/numerics --ignore=tests/numerics/test_gravity_processing.py --ignore=tests/numerics/test_gravity_station_adapter.py --ignore=tests/numerics/test_gravity_transforms.py -o addopts= -q -rs -p no:cacheprovider --junitxml $PrivateCurrentXml",
+    "receipt": "release-current-full.xml",
+    "sha256": "2b6702c8492761147fdf78623f7a71779fb2b675f50319cd49c6d83f12461408",
+    "passed": 347,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 14,
+    "deselected": 0,
+    "warnings": 20,
+    "junit_seconds": 271.733,
+    "stdout_seconds": 271.75,
+    "junit_timestamp": "2026-10-03T12:45:58.607642-03:00",
+    "focused_subset": {
+      "tests": 241,
+      "passed": 240,
+      "failed": 1,
+      "skipped": 0,
+      "new_local_component_tests": 161,
+      "unchanged_forward_controls": 80,
+      "attribution": "Subset of same full XML, not additional execution or a green focused suite"
+    },
+    "failure": "lower_reference-1500-diagonal_sd retains wall_cap/KKT failure; not excluded/xfail"
+  },
+  "prepublication_checks": {
+    "ruff": "PASS",
+    "content_standards": "PASS",
+    "template_residue": "PASS877 tracked files, three new evidence/diagnostic paths",
+    "strict_new_json_relative_links_base_integrity": "PASS",
+    "original_five_l2_json_receipts_unchanged": true,
+    "ci_budget": "PASS",
+    "artifact_guard": "PASS20/120/348 allSHA256 and sizes; unchanged existing artifacts",
+    "product_ledger": "Structurally valid1 fail/18 unresolved; not release acceptance",
+    "protected_repository_hashes_verified": 18,
+    "accepted_forward_test_sha256": "c50158f083cba3ad096ff7b17eccdcbeb0a31f6e8293d13ffdccb3f6d78624c1",
+    "original_seven_reviewed_files_unchanged": true,
+    "planner_source_unchanged": true,
+    "private_backup": "Original137 backup present, ignored, git-untracked; no digest recomputation or mutation",
+    "remote_ci_claimed": false
+  }
+}

@@ -8,6 +8,16 @@
 - [Use authenticated raw assets](06_api.md).
 - [Run bounded private processing jobs](07_processing_jobs.md).
 - [Run private EDI tensor QC and bounded layered MT jobs](08_online_edi_mt.md).
+- [Use and reproduce the source-valid M05/M06 course](09_online-mt-course.md).
 - [Measure isolated actual-host admission](12_actual_host_admission.md): retained failed headroom measurements are not production activation.
+- [Run the ordinary physical station adapter](13_local_station_adapter.md): exact parent/configuration identities, real correction and safe-error boundary; authenticated online children remain separate.
+- [Calculate local prism gravity](14_local_gravity_forward.md): exact declared geometry, density units, upward response and Jacobian; not a measured-data inverse or host job.
+- [Read local physical gravity JSON](15_local_physical_json.md): bounded original bytes, strict root declarations, separate raw/scientific identities and the real correction adapter; no online activation.
+- [Provision internal accounts and distinguish public client work from protected server work](16_internal_accounts.md): library hashes/sessions, plural projects and no SMTP prerequisite.
+- [Verify the single site's build bytes, account boundaries and supplied capacity record](17_single_site_verification.md): read-only checks, not scientific or full-release acceptance.
+- [Process and inspect supplied ERT and first-arrival profiles](20_supplied_profiles.md): actual local inverses, variable whole-shot validation, native mesh geometry, original-byte result admission and linked inspection/export.
+- [Run protected ERT and first-arrival jobs](21_protected_profiles.md): immutable original/physical declarations, separate native runtime, scientific refusal evidence, resource accounting and verified export; host qualification remains explicit.
+- [Run supplied acoustic shot-gather FWI locally](22_local_acoustic_fwi.md): actual CPU/CUDA matched inverses, independent initial velocity, immutable full-sample arrays, explicit acoustic acquisition and local verified inspection; no VPS FWI substitution.
+- [Build paired selected-source bundles](../operations/03_paired_source_bundle.md): exact Git objects and deterministic archive provenance, not production trust or an actual-host restore.
 - [Compute explicit local gravity station corrections](../methods/gravity-processing/01_station-corrections.md): actual Python/PowerShell/Bash commands, mathematical conventions and negative admission controls.
 - [Acquire and profile pinned potential-field source members](11_potential_source_intake.md): immutable bytes and QC-only profiles, not an inferred field model.

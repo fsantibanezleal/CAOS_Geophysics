@@ -1,0 +1,142 @@
+{
+  "schema": "geophysics.prism-local-quantitative/v1",
+  "source_kind": "authored_ordinary_prism_controls",
+  "field_eligible": false,
+  "operator_sha256": "94c2bd2a8ea626b55b0e7954c48eedecf09f2d5becbb4793fb969ea865173d30",
+  "test_sha256": "897c99a395c4f9c14fe28019abf2732910cb2e5ec7a44ba85bfcd1c83c44ad91",
+  "runtime_pin_manifest_sha256": "a5aa08c23a80e15024e6499fab6805315d52dee185c5de1010b5f46e5c9f5819",
+  "runtime_source_pins_verified": 20,
+  "runtime_versions": {
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2"
+  },
+  "cases": [
+    {
+      "case": "single_prism",
+      "prediction_up_mgal": [
+        -0.2927236040238318,
+        -0.13493607735120078,
+        -0.05476427211854826
+      ],
+      "oracle_up_mgal": [
+        -0.29272360402383146,
+        -0.13493607735120078,
+        -0.054764272118546925
+      ],
+      "max_absolute_oracle_difference_mgal": 1.3322676295501878e-15,
+      "jacobian_shape": [
+        3,
+        1
+      ],
+      "volume_quadrature_levels": [
+        {
+          "order": 4,
+          "max_absolute_difference_mgal": 0.000004174748420460173
+        },
+        {
+          "order": 8,
+          "max_absolute_difference_mgal": 2.2928547949163658e-11
+        },
+        {
+          "order": 16,
+          "max_absolute_difference_mgal": 3.1433189384699745e-15
+        }
+      ]
+    },
+    {
+      "case": "nonuniform_signed_active",
+      "prediction_up_mgal": [
+        -0.08199915576799018,
+        -0.026401681657338492,
+        0.016915514071716313,
+        -0.00042972365860783626
+      ],
+      "oracle_up_mgal": [
+        -0.08199915576799041,
+        -0.026401681657333028,
+        0.01691551407171703,
+        -0.000429723658613603
+      ],
+      "max_absolute_oracle_difference_mgal": 5.7667629352331495e-15,
+      "jacobian_shape": [
+        4,
+        5
+      ]
+    }
+  ],
+  "executed_utc": "2026-10-03 10:04:34 UTC",
+  "approved_design_revision": "361b66f460bfa8beb327d6fc75f88ea69e4ff43a",
+  "interpreter": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv-pipeline/Scripts/python.exe",
+  "read_only_runtime": true,
+  "no_install_or_environment_update": true,
+  "process_controls": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1"
+  },
+  "test_runs": [
+    {
+      "command": "python -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider",
+      "passed": 66,
+      "skipped": 0,
+      "seconds": 1.86
+    },
+    {
+      "command": "python -m pytest tests/numerics/test_gravity_forward.py tests/data/test_potential_sources.py tests/test_rebuild.py -k 'gravity_forward or potential_sources or gravity_independent_prism or inverse_improves_data_fit or ingest_rejects_invalid or user_csv_inverse' -o addopts= -q -p no:cacheprovider",
+      "passed": 104,
+      "skipped": 2,
+      "deselected": 11,
+      "seconds": 6.3
+    },
+    {
+      "interpreter": "D:/_worktrees/geophysics-m01-corrections/.venv-m01/Scripts/python.exe",
+      "command": "python -m pytest tests/numerics/test_gravity_processing.py tests/numerics/test_gravity_transforms.py tests/numerics/test_gravity_station_adapter.py -o addopts= -q -p no:cacheprovider",
+      "passed": 164,
+      "skipped": 1,
+      "seconds": 20.65
+    }
+  ],
+  "artifact_guard": {
+    "command": "python scripts/check_artifacts.py",
+    "status": "pass",
+    "truths": 20,
+    "experiments": 120,
+    "method_results": 348
+  },
+  "retained_negative": {
+    "command": "python -m pytest tests/numerics/test_gravity_forward.py tests/numerics/test_gravity_processing.py tests/numerics/test_gravity_transforms.py tests/numerics/test_gravity_station_adapter.py tests/data/test_potential_sources.py -o addopts= -q -p no:cacheprovider",
+    "status": "collection_error",
+    "count": 3,
+    "reason": "Boule/Harmonica absent from unchanged pipeline runtime. Rerun M01 only in existing isolated M01 interpreter; no install/fallback inside operator."
+  },
+  "metadata_preallocation_negatives": {
+    "passed": 7,
+    "fields": [
+      "origin",
+      "axis",
+      "cell_product",
+      "active",
+      "density",
+      "receivers",
+      "receiver_columns"
+    ],
+    "forbidden_calls": [
+      "numpy.isfinite",
+      "numpy.array",
+      "numpy.count_nonzero",
+      "Simulation3DIntegral"
+    ]
+  },
+  "scope": {
+    "full_inverse": false,
+    "full_M02": false,
+    "field": false,
+    "host": false,
+    "GPU": false,
+    "independent_main_code_review": "pending",
+    "package_files_staged": 0
+  }
+}

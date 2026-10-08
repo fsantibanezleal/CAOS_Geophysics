@@ -1,0 +1,10 @@
+.course { min-width: 0; overflow-wrap: anywhere; }
+.course svg[data-mt-physics] text { font-size: 20px; }
+.table { overflow-x: auto; min-width: 0; }
+.table table { width: 100%; font-size: .85rem; }
+.table th, .table td { text-align: left; padding: .5rem; vertical-align: top; }
+.table code { overflow-wrap: anywhere; white-space: normal; }
+.exercise { border: 1px solid var(--color-border); padding: 1rem; min-width: 0; }
+.exercise label { display: block; margin-block: .65rem; }
+.exercise select { max-width: 100%; }
+.exercise output { display: block; margin-block: .8rem; }

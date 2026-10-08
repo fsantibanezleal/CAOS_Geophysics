@@ -1,28 +1,33 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "afac8ab7b0be2df474406d1b17f0a165be9e0599",
-  "assessed_at": "2026-10-03T07:08:54Z",
+  "sdd_sha256": "6cc226eb0de1f4765d04bfa76dfe1eaa5e1740910cc431b0f704b9b09e4a40dd",
+  "assessed_revision": "c82b07ebec19bc14cd8f7c95fdc9b235b57a3385",
+  "assessed_at": "2026-10-04T08:04:57Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
     "application_origins": [
-      "https://geophysics.ml.fasl-work.com/",
-      "https://fsantibanezleal.github.io/CAOS_Geophysics/"
+      "https://geophysics.ml.fasl-work.com/"
     ],
-    "pages_publishes_application": true
+    "pages_publishes_application": false
   },
   "requirements": [
     {
       "id": "R-001",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_catalogue_sources.py::test_rights_links_and_hash_receipts.",
-      "note": "Rights-aware pinned research-archive intake is merged. Actual Bartlett author bytes are acquired/profiled with missing values retained, but datum/errors and complete advertised source coverage remain unaccepted.",
-      "evidence": [{
-        "path": "docs/research/potential-source-intake-evidence-2026-10-03.json",
-        "sha256": "7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7"
-      }],
+      "note": "Pinned author intake and full-file STEAD metadata verification are merged; protected originals and rights gates remain distinct. Actual Bartlett bytes retain missing/duplicate diagnostics, but datum/errors and complete advertised field coverage remain unaccepted.",
+      "evidence": [
+        {
+          "path": "docs/research/potential-source-intake-evidence-2026-10-03.json",
+          "sha256": "7ede18b5253f3ba6ef49ff5864f1c0c71a0a4f04b2c4a504b093afbe32b11fd7"
+        },
+        {
+          "path": "docs/design/features/stead-source-reconciliation/validation.md",
+          "sha256": "2da6560749321c4738e0ef54ea677d67a7fec62e5287b83b86fd124f7a88d65a"
+        }
+      ],
       "receipts": []
     },
     {
@@ -42,11 +47,15 @@
       "id": "R-003",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_formats.py::test_missing_physical_metadata_rejection.",
-      "note": "Strict raw metadata and several local scientific parsers exist. Full modality ingestion and exact product gate are incomplete.",
+      "note": "Strict raw metadata and several local scientific parsers exist. Local-only physical gravity JSON and its executed correction workflow are merged through PR127/131/134; independent final integration passed179 tests without skips and fifteen cold allocation/structural controls. No API/storage/worker/provider activation follows. Full modality ingestion and exact product gate are incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
           "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+        },
+        {
+          "path": "docs/validation/physical-json-independent-review-2026-10-03.md",
+          "sha256": "5463f9d6a3f6bf3c80b1bf3dd1dcdad018ac936f8a61107b6c4580dc0e7d71f9"
         }
       ],
       "receipts": []
@@ -55,11 +64,19 @@
       "id": "R-004",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_provenance.py::test_transform_dag_roundtrip.",
-      "note": "Local explicit station correction, reference and uncertainty controls passed and were merged in PR99. The full uploaded physical processing DAG, transform chain and eligible field lineage remain incomplete.",
+      "note": "Local corrections/transforms and the exact ordinary physical station adapter are merged (PR99/109/119). Independent adapter integration passed 223 tests without skips, including actual-author negative admission. Authenticated immutable correction/transform children and eligible field lineage remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
+          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
         }
       ],
       "receipts": []
@@ -68,7 +85,7 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "The API distinguishes flag-only QC from unimplemented solvers. End-to-end scientific eligibility for all uploaded modalities remains incomplete.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -81,11 +98,15 @@
       "id": "R-006",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "The merged project workbench submits real owner datasets to the flag worker and verifies exported outputs. Flags are not corrections or inversions; bounded MT solves remain under review and all promised submitted-data methods are incomplete.",
+      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
         }
       ],
       "receipts": []
@@ -94,11 +115,23 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Actual-VPS isolated MT controls passed six cancellation/limit/crash checks. Forty nominal jobs completed but their overall admission failed free-disk headroom at 29.42% below the unchanged 30% threshold. Public-service and complete product admission remain open; draft PR101 retains the measured failure.",
+      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Separately merged pure accounting and its independent review passed419 unit tests and43 supplied-record checks; these are not OS measurements, runtime authority remains false and all15 native gates remain closed. Local API/recovery/source-bundle controls do not establish public-service or complete product admission.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/actual-host-mt-2026-10-03.md",
+          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+        },
+        {
+          "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
+          "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
+        },
+        {
+          "path": "docs/validation/physical-accounting-independent-review-2026-10-03.md",
+          "sha256": "3c32a7d42196d925f33ac7158e1b093aef760018bb97f75d18b43cc384b7f5ac"
         }
       ],
       "receipts": []
@@ -107,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity lost to its matched classical baseline. The FWI optimizer/replay correction and freshly recomputed MT outputs await a combined 120-case independent candidate review. Local M01 correction controls passed, but complete M01-M13 acceptance is not achieved.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. Actual user-data first-arrival tools now compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish these scoped implementations, not learned superiority or field validity. M02 full-cap CG and full M01-M13/user-data/host/visual acceptance remain failed or pending.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -116,6 +149,30 @@
         {
           "path": "docs/design/features/m06-field-mt/convergence.md",
           "sha256": "89bfb88e433262a152490c0aa379b419a33f3e6e00c3bd5223d3fbbf80188b0c"
+        },
+        {
+          "path": "docs/validation/fwi-canonical-import-20261003.json",
+          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/gravity-forward-independent-review-2026-10-03.md",
+          "sha256": "cbfc9293b23091d115bf38ca8bb75884ad000de7328aaa686139803fe1acea56"
+        },
+        {
+          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
+          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
+        },
+        {
+          "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
+          "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
+        },
+        {
+          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
+          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
         }
       ],
       "receipts": []
@@ -124,15 +181,20 @@
       "id": "R-009",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_artifact_contract.py::test_truth_only_for_synthetic.",
-      "note": "Historical artifacts distinguish known synthetic truths from the measured MT screen. Full replacement artifact contract is not accepted.",
-      "evidence": [],
+      "note": "The corrected canonical container preserves producer identities and known synthetic truths separately from the QC-only truth-null cl061 field screen. Complete replacement user-data artifact acceptance across all methods remains incomplete.",
+      "evidence": [
+        {
+          "path": "docs/validation/fwi-canonical-import-20261003.json",
+          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-010",
       "verdict": "unresolved",
       "declared_gate": "tests/learning/test_split_and_benchmark.py::test_disjoint_groups_and_matched_inputs.",
-      "note": "M13 has frozen event/station-disjoint STEAD evidence and browser parity. M12 retains its failed independent family/acquisition benchmark; complete product acceptance remains open.",
+      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
@@ -141,6 +203,14 @@
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
           "sha256": "300fa2617be1edd3a682c6adf97259c166b520703f5f391f6057f92b9d867b00"
+        },
+        {
+          "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
+          "sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1"
+        },
+        {
+          "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
+          "sha256": "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
         }
       ],
       "receipts": []
@@ -149,7 +219,7 @@
       "id": "R-011",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_export.py::test_bundle_roundtrip_and_rights.",
-      "note": "Raw-project and flag-QC bundles are locally checked. Scientific result bundle re-import across every method is incomplete.",
+      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
@@ -158,6 +228,10 @@
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
         }
       ],
       "receipts": []
@@ -166,26 +240,37 @@
       "id": "R-012",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/routes-shell.spec.ts plus scripts/check_single_origin.py::main.",
-      "note": "The development frontend uses the shared shell and six routes. Legacy Pages and VPS still both publish the old app; replacement one-origin release is unexecuted.",
-      "evidence": [],
+      "note": "The development frontend uses the shared shell and six routes. The obsolete secondary publication was withdrawn on 2026-10-03; workflow disabled, repository endpoint and public URL return404. Source/build policy is now root-only, with101 frontend and11 local deployment-policy tests passing. The existing VPS still serves legacy0.04.001. Whole replacement browser and one-origin release acceptance remain unexecuted.",
+      "evidence": [
+        {
+          "path": "docs/validation/pages-withdrawal-2026-10-03.md",
+          "sha256": "1c36f2771c2b86f8c39fcdbf6744ee2855ade14cdb696a4cc9e3713114ade15e"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-013",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
-      "note": "Real owner upload, dataset/job/result hydration, station selection, cancellation and downloaded gravity-QC bundle passed five local API/worker browser tests. MT scientific controls and all promised modality-linked views remain incomplete.",
-      "evidence": [{
-        "path": "docs/design/features/processing-workbench/validation.md",
-        "sha256": "1d7581dab9a26c489a9dbd2764417f39a27ce9e2865da0c03c321f40cd07200b"
-      }],
+      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete.",
+      "evidence": [
+        {
+          "path": "docs/design/features/processing-workbench/validation.md",
+          "sha256": "1d7581dab9a26c489a9dbd2764417f39a27ce9e2865da0c03c321f40cd07200b"
+        },
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-014",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
-      "note": "Legacy physical renderers and M13 waveforms exist. Full modality-specific user-result visualization and animation evidence remains incomplete.",
+      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete.",
       "evidence": [],
       "receipts": []
     },
@@ -193,19 +278,36 @@
       "id": "R-015",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "The real gravity-QC workbench has 21 local EN/ES light/dark desktop/phone renders, with independent desktop/phone inspection and pointer/keyboard tests. Complete scientific panel, reduced-motion and language/theme/device matrices remain open.",
-      "evidence": [],
+      "note": "Independent scoped gravity/MT browser controls and original MAIN course 32-case matrix pass at their respective pins. The course producer reran 32 combined-style cases; final MAIN integration passed 77 numerical and 101 frontend tests plus build/content guards. Tiny ADR fix and fresh develop CI pass; complete visual/user acceptance remains open.",
+      "evidence": [
+        {
+          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
+          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
+          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "Source/provenance, M08/M13 and literal M01 station-correction theory/oracles are merged. The complete deep M01-M13 bilingual wiki/course and source-to-content review remain incomplete.",
+      "note": "Source/M08/M13/M01 correction/transform wiki units and source-bound M05/M06 course are merged. Independent original course 75 numeric/89 frontend/32 browser controls remain separately pinned; final integration adds exact source-compatibility proof, 77 numeric and 101 frontend passes. Full deep M01-M13 bilingual wiki remains incomplete.",
       "evidence": [
         {
           "path": "docs/data-contract/01_source-to-result.md",
           "sha256": "60b59df62d4c72572ccd2d95b11406a1065cc99b8bbcee902277c866902aba29"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
+          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
         }
       ],
       "receipts": []
@@ -213,16 +315,29 @@
     {
       "id": "R-017",
       "verdict": "unresolved",
-      "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
-      "note": "Main remains legacy 0.04.001; no replacement cutover or Pages withdrawal occurred. Actual-host admission failed disk headroom. Final identity, mail delivery, deletion-aware actual-host restore and complete acceptance remain open.",
-      "evidence": [],
+      "declared_gate": "scripts/verify_single_vps_release.py::main plus independently reviewed private scientific/UI/actual-host jobs/ownership/HTTPS/browser/retired-publication/rollback receipts. The read-only verifier alone cannot accept this requirement.",
+      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Pages publication was withdrawn and active source/build paths removed; this is not replacement acceptance. The owner amendment on 2026-10-03 removes SMTP, off-host backup/deletion-journal and arbitrary whole-host 30% free-space prerequisites for this test deployment. Full scientific/UI, actual-host job capacity, account/ownership and single-origin cutover gates remain unresolved. Existing hostname retained; current plus two rollback releases required. Historical failed disk/restore evidence is preserved, not relabelled passed.",
+      "evidence": [
+        {
+          "path": "docs/validation/actual-host-mt-2026-10-03.md",
+          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+        },
+        {
+          "path": "docs/validation/ops-fixture-independent-review-2026-10-03.md",
+          "sha256": "73f7847eae278058d3fa6c0111fa44226c7e171b09443857cda961497aa6837e"
+        },
+        {
+          "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
+          "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger now explicitly records all 19 requirements; structural checks are not final convergence. Complete measured product gate receipts remain absent.",
+      "note": "The ledger preserves 18 unresolved and one failed whole requirement while recording merged code, canonical import, independent controls and failed host evidence. Fresh CI resolves the retained ADR failure, not release acceptance; structural/local unit passes do not replace full named convergence gates.",
       "evidence": [],
       "receipts": []
     },

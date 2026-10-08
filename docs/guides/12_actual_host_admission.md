@@ -1,5 +1,7 @@
 # Measuring bounded methods on the actual ML VPS
 
+The operating amendment supersedes this historical runner's arbitrary30% whole-host criterion with actual measured release/project/job disk and memory reserves. The retained runner and its old failed receipts still use their frozen policy; they are not current cutover authority. No SMTP or off-host backup prerequisite applies to the owner-tested local-account deployment. Scientific/resource/ownership/browser gates remain required.
+
 This is an operational guide for the approved single-VPS design, not a second deployment. The runner never edits public nginx, production accounts/data, DNS or Pages. Do not enable online methods from a Windows receipt or a green structural check.
 
 ## Isolated setup and invocation
@@ -28,6 +30,6 @@ Linux `RLIMIT_AS` bounds mapped address space, whereas sampled RSS measures resi
 
 Retain private raw JSON receipts, five benchmark ZIPs, server test output, applied service properties, immutable source revision, dependency report and host before/after capacity snapshots. Download into ignored `data/raw/host-admission/<run-id>/`; commit a sanitized measured summary and exact receipt hashes. Never commit private test-account databases, mail capture or authentication material.
 
-Passing these bounded tests does not pass full R-017. Production SMTP/security, backup/restore, integrated numerical/data method gates, public HTTPS/SNI, hydrated EN/ES browser views and single-origin cutover are still required. Preserve the current origin and Pages state until those gates pass, then disable the old Pages app through the reviewed cutover workflow. A local application read test cannot stand in for that workflow.
+Passing these bounded tests does not pass full R-017. Integrated numerical/data method gates, actual job/capacity/ownership/security measurements, public HTTPS/SNI, hydrated EN/ES browser views and same-origin rollback/cutover are still required. The secondary publication is already withdrawn and must stay absent. A local application read test cannot establish those observations. Retain current plus two rollback releases; actual deployment receipts remain private management records.
 
 Primary semantics: [Python resource](https://docs.python.org/3/library/resource.html), installed systemd 255 `systemd.exec` and `systemd.resource-control` manuals, [approved SDD](../design/SDD.md), [online MT contract](../data-contract/02_online-edi-mt.md). Upstream freedesktop manual access returned 403 during this review; installed host manuals were read directly instead.
