@@ -29,20 +29,79 @@ def installed_snapshot(settings):
 async def _capture(stream, cap, first=None):
     data = bytearray()
     emitted = False
+    failure = None
     while True:
         part = await stream.read(4096)
         if not part:
             if first is not None and not emitted and not first.done():
                 first.set_exception(ValueError("waveform_terminal_unproved"))
+            if failure is not None:
+                raise failure
             return bytes(data)
-        require(len(data)+len(part) <= cap)
-        data.extend(part)
-        if first is not None and not emitted and b"\n" in data:
-            raw = bytes(data).split(b"\n",1)[0]
-            receipt = decode(raw,65536)
-            require(raw == canonical(receipt))
-            first.set_result(receipt)
-            emitted = True
+        if failure is None:
+            try:
+                require(len(data)+len(part) <= cap)
+                data.extend(part)
+                if first is not None and not emitted and not first.done() and b"\n" in data:
+                    raw = bytes(data).split(b"\n",1)[0]
+                    receipt = decode(raw,65536)
+                    require(raw == canonical(receipt))
+                    first.set_result(receipt)
+                    emitted = True
+            except (ValueError,TypeError):
+                failure = ValueError("waveform_terminal_unproved")
+                if first is not None and not first.done():
+                    first.set_exception(failure)
+        # Refused bytes remain bounded; still consume the held pipe until EOF.
+
+
+async def drain_owned_helper(spawn, readers):
+    try:
+        process = await spawn
+    except Exception:
+        return  # Creation failed without returning an owned Process handle.
+    if process.stdin is not None:
+        process.stdin.close()
+    if not readers:
+        readers.extend((asyncio.create_task(_capture(process.stdout,65544)),
+                        asyncio.create_task(_capture(process.stderr,65536))))
+    while True:
+        try:
+            await process.wait()
+        except Exception:
+            # Uncertain reap retains the caller's authority. No numeric PID or
+            # root signal, second timeout escape or fabricated extinction.
+            await asyncio.sleep(.05)
+            continue
+        if process.returncode is not None:
+            break
+        await asyncio.sleep(.05)
+    await asyncio.gather(*readers,return_exceptions=True)
+    for stream in (process.stdout,process.stderr):
+        while not stream.at_eof():
+            try:
+                await stream.read(4096)
+            except Exception:
+                # No EOF evidence: retain the exact actor/lease, not success.
+                await asyncio.sleep(.05)
+
+
+async def mandatory_helper_drain(spawn, readers):
+    guard = asyncio.create_task(drain_owned_helper(spawn,readers))
+    cancelled = False
+    while True:
+        try:
+            await asyncio.shield(guard)
+            return cancelled
+        except asyncio.CancelledError:
+            cancelled = True
+
+
+async def finish_streams(readers):
+    _,pending = await asyncio.wait(readers,timeout=5)
+    if pending:
+        raise asyncio.TimeoutError("waveform_stream_debt")
+    return [reader.result() for reader in readers]
 
 
 from app.waveform_stage import cleanup_stage, verify_stage
@@ -73,7 +132,7 @@ async def execute(settings,sessions,job,poll_interval):
     from app.processing_contract import canonical_bytes
     from app.models import ProcessingJob
     began = time.monotonic()
-    process = None
+    process = spawn = None
     drains = []
     parent_fd = stage_fd = None
     requested = None
@@ -95,9 +154,10 @@ async def execute(settings,sessions,job,poll_interval):
         stage_fd = os.open(job.id,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=parent_fd)
         require(os.fstat(stage_fd).st_uid == config["uid"] and stat.S_IMODE(os.fstat(stage_fd).st_mode) == 0o700)
         held = identity(stage_fd)
-        process = await asyncio.create_subprocess_exec(*installed_argv(config,job.id),cwd=installed_cwd(config),
+        spawn = asyncio.create_task(asyncio.create_subprocess_exec(*installed_argv(config,job.id),cwd=installed_cwd(config),
             env=installed_environment(config),stdin=asyncio.subprocess.PIPE,stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE)
+            stderr=asyncio.subprocess.PIPE))
+        process = await asyncio.shield(spawn)
         first = asyncio.get_running_loop().create_future()
         drains = [asyncio.create_task(_capture(process.stdout,65544,first)),
                   asyncio.create_task(_capture(process.stderr,65536))]
@@ -132,8 +192,8 @@ async def execute(settings,sessions,job,poll_interval):
         process.stdin.write(b"COMMIT\n")
         await process.stdin.drain()
         process.stdin.close()
-        await asyncio.wait_for(process.wait(),5)
-        stdout,stderr = await asyncio.wait_for(asyncio.gather(*drains),5)
+        await asyncio.wait_for(asyncio.shield(asyncio.create_task(process.wait())),5)
+        stdout,stderr = await finish_streams(drains)
         require(process.returncode == 0 and stdout == canonical(terminal)+b"\nCLEAN\n" and not stderr)
         async with sessions() as session:
             current = await session.get(ProcessingJob,job.id)
@@ -161,13 +221,13 @@ async def execute(settings,sessions,job,poll_interval):
         await _finish_failure(sessions,job.id,code,"Waveform stage retained; eligible publication unavailable",
                               wall_ms=int((time.monotonic()-began)*1000),peak_rss=None,scratch_bytes=None)
     finally:
-        if process is not None and process.stdin is not None:
-            process.stdin.close()
-        for drain in drains:
-            if not drain.done():
-                drain.cancel()
-        if drains:
-            await asyncio.gather(*drains,return_exceptions=True)
-        for fd in (stage_fd,parent_fd):
-            if fd is not None:
-                os.close(fd)
+        cancelled = False
+        try:
+            if spawn is not None:
+                cancelled = await mandatory_helper_drain(spawn,drains)
+        finally:
+            for fd in (stage_fd,parent_fd):
+                if fd is not None:
+                    os.close(fd)
+        if cancelled:
+            raise asyncio.CancelledError()

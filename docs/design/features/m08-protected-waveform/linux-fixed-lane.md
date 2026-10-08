@@ -205,6 +205,35 @@ operational limits and scientific B60/S57/2s quiescence bounds are unchanged.
 Successful science closes that guardian before the separate postcommit COMMIT
 frame; COMMIT is not admitted while scientific execution can still be live.
 
+### Ordinary client lifetime under the existing writer lease
+
+Both waveform producers create a new shared `.job-staging` parent with mode
+`0700`, matching the restrictive new-root profile/generic producer correction.
+Existing parents are not chmodded or repaired. Recovery's owner/mode checks
+remain unchanged; an old unsafe parent requires exact recovery, not relaxed
+admission. Mixed-method qualification must check the actual producer/recovery
+sequence on ordinary POSIX storage with the same restrictive creation mode.
+
+The caller's existing singleton and any enclosing common all-writer lease must
+cover process creation/adoption, helper reap and stdout/stderr EOF, not only the
+scientific terminal. Shield the single creation task against caller cancellation;
+adopt that exact returned process even if cancellation arrives during creation.
+Close its anonymous stdin on failure/cancellation and keep bounded readers
+draining refused/oversized output until EOF. Refusal is signalled immediately,
+but does not strand the privileged writer on a full pipe. Repeated cancellation
+cannot cancel this mandatory cleanup or release held stage descriptors early.
+
+The normal five-second postterminal wait may report uncertainty, never authorize
+lease release with a live helper or retained stream writer. Mandatory cleanup
+keeps the original caller alive until the exact helper is reaped and both streams
+reach EOF; an uncertain reap retains authority instead of a second timeout escape.
+This is ownership containment, not an increased scientific time allowance or a
+successful extinction receipt. No root PID signal, new lock, privileged database
+write, common-lease implementation or profile recovery change is introduced.
+Actual ordinary child/lock controls verify creation cancellation, repeated cancel,
+oversized streams and retained descendant writers. Full root/native queue remains
+a separate qualification gate.
+
 ### Complete interpreted runtime closure
 
 The inventory includes exact names and file/directory/link identities, owners,

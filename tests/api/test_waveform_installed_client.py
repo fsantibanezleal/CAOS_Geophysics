@@ -73,5 +73,5 @@ def test_invalid_or_excess_terminal_capture_refuses(raw):
         stream.feed_eof()
         with pytest.raises(ValueError):
             await _capture(stream,65544,first)
-        assert not first.done()
+        assert first.done() and isinstance(first.exception(),ValueError)
     asyncio.run(run())
