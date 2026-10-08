@@ -83,3 +83,18 @@ The earlier generic-default-mode boundary above describes the preserved initial
 remain unchanged. Run the mode gate with `--root <fresh-external-posix-root>`;
 it writes only its own external fixture files and receipt.json. This gate never
 invokes a privileged launcher or changes retained production debt.
+
+## Independent integrated native crash qualification
+
+At source637f4aa873bf73187f1c88d452fd4bf49b2d61ee, the integrated selected
+eight-file suite passed273tests, zero failures/errors/skips,47.665seconds.
+A fresh private Linux qualification then passed46.832seconds: actual native
+ERT mapping, exact supervisor pidfd death, independent guardian extinction,
+missing-receipt recovery, unknown-stage refusal, immutable failed-stage archive,
+repeat recovery, unchanged original and failed row, and foreign-owner404.
+The earlier ambiguous-selector and staging-permission failures remain failures.
+
+Both exact kernel groups were absent at recovery; post-run inspection found no
+occupied profile groups. No successful science receipt or result was admitted.
+Whole startup/deletion/common-writer assembly, full scientific acceptance and
+public release activation are separate gates, not inferred from this test.
