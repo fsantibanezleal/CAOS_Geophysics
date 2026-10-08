@@ -97,12 +97,15 @@ def test_child_failure_stages_are_fixed_safe_literals():
     loop = (CORE / "linux_main.c").read_text("utf-8")
     start = native.index("static void child_setup(")
     body = native[start:native.index("int lc_birth(", start)]
-    stages = re.findall(r"child_fail\((?:ready|3), '([A-L])'\)", body)
-    assert sorted(set(stages)) == list("ABCDEFGHIJKL")
+    stages = re.findall(r"child_fail\((?:ready|3), '([A-N])'\)", body)
+    assert sorted(set(stages)) == list("ABCDEFGHIJKLM")
+    assert "uid_error == EPERM ? 'O' : uid_error == EAGAIN ? 'P' : uid_error == EINVAL ? 'Q' : 'N'" in body
     assert "science_filter()) child_fail(3, 'I')" in body
     assert "fchdir(6)) child_fail(3, 'J')" in body
     assert '"linux_child_setup_unknown\\n"' in loop
-    assert all('"linux_child_setup_' + stage + '\\n"' in loop for stage in "ABCDEFGHIJKL")
+    assert all('"linux_child_setup_' + stage + '\\n"' in loop for stage in "ABCDEFGHIJKLMN")
+    assert '"linux_child_uid_denied\\n"' in loop and '"linux_child_uid_resource\\n"' in loop
+    assert '"linux_child_uid_invalid\\n"' in loop
     assert "fputs(setup_failures[byte-'A'],stderr)" in loop
 
 

@@ -400,8 +400,12 @@ static void child_setup(const struct lc_object *o, const struct lc_context *c,
         if (has && prctl(PR_CAPBSET_DROP, capability, 0, 0, 0)) child_fail(3, 'D');
         if (prctl(PR_CAPBSET_READ, capability, 0, 0, 0) != 0) child_fail(3, 'D');
     }
-    if (setgroups(0, NULL) || setresgid((gid_t)c->gid, (gid_t)c->gid, (gid_t)c->gid) ||
-        setresuid((uid_t)c->uid, (uid_t)c->uid, (uid_t)c->uid)) child_fail(3, 'E');
+    if (setgroups(0, NULL)) child_fail(3, 'E');
+    if (setresgid((gid_t)c->gid, (gid_t)c->gid, (gid_t)c->gid)) child_fail(3, 'M');
+    if (setresuid((uid_t)c->uid, (uid_t)c->uid, (uid_t)c->uid)) {
+        int uid_error = errno;
+        child_fail(3, uid_error == EPERM ? 'O' : uid_error == EAGAIN ? 'P' : uid_error == EINVAL ? 'Q' : 'N');
+    }
     uid_t r, e, s; gid_t gr, ge, gs;
     if (getresuid(&r, &e, &s) || getresgid(&gr, &ge, &gs) ||
         r != c->uid || e != c->uid || s != c->uid || gr != c->gid || ge != c->gid || gs != c->gid ||

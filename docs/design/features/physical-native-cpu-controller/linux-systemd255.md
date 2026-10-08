@@ -559,3 +559,10 @@ Drain the existing fixed-stage byte even after latching the failed exit, while
 prohibiting GO on an already failed attempt. Keep the first error and all failed
 counter/custody evidence. No stage is inferred for an older empty diagnostic.
 Gate: test_linux_source.py::test_reaped_setup_failure_still_drains_fixed_stage_without_go.
+
+The retained actual credential-stage E failure is further distinguished without
+changing calls or permissions: E is setgroups, M is setresgid and N is setresuid.
+All remain one fixed byte, LC_SETUP and child exit126, with no dynamic values.
+For setresuid failure only, fixed O/P/Q identify permission/resource/invalid-ID
+categories, respectively; N retains all other failures. These emit fixed literals
+only, no numeric errno or identity, and never retry or change admission policy.

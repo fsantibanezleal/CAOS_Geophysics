@@ -229,8 +229,10 @@ int main(int argc, char **argv) {
                             "linux_child_setup_A\n","linux_child_setup_B\n","linux_child_setup_C\n",
                             "linux_child_setup_D\n","linux_child_setup_E\n","linux_child_setup_F\n",
                             "linux_child_setup_G\n","linux_child_setup_H\n","linux_child_setup_I\n",
-                            "linux_child_setup_J\n","linux_child_setup_K\n","linux_child_setup_L\n"};
-                        if (byte>='A' && byte<='L') fputs(setup_failures[byte-'A'],stderr);
+                            "linux_child_setup_J\n","linux_child_setup_K\n","linux_child_setup_L\n",
+                            "linux_child_setup_M\n","linux_child_setup_N\n",
+                            "linux_child_uid_denied\n","linux_child_uid_resource\n","linux_child_uid_invalid\n"};
+                        if (byte>='A' && byte<='Q') fputs(setup_failures[byte-'A'],stderr);
                         else fputs("linux_child_setup_unknown\n",stderr);
                         latch(&l,LC_SETUP);
                         close(l.object.ready_fd); l.object.ready_fd=-1;
