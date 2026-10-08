@@ -115,6 +115,40 @@ there is no recursive adoption, sweeping delete, backup or external service.
 
 ## Review and qualification boundary
 
+### Owned API/worker adaptation
+
+Keep the Windows path-invoked profile lane and its actual tests unchanged. Add
+an optional installation-only `profile_linux_supervisor` setting; POSIX protected
+jobs configured with it use the fixed sudo/isolated distro-Python command and
+one canonical UUID. The setting must match the root-owned installation config,
+source hash and private database root. It cannot be supplied in job parameters.
+The worker neither reads native memory counters itself nor signals numerical
+root PIDs. Owner cancel and its whole-job wall deadline send the bounded cancel
+frame; caller loss closes that liveness stream. Failed/uncertain supervision
+retains the stage, rather than cleaning a possibly live or replaced directory.
+
+Pin the ordinary stage directory before launching. Read the root receipt and
+producer result through that held descriptor, verify retained-stage device/inode,
+request/raw/dataset/source identities, exact retained bytes, extinction and
+guardian completion. A path rename/replacement refuses publication. Successful
+result publication adds the complete bounded operational receipt as
+`linux_execution` to the outer JSON result; the scientific inner result is not
+changed. Reconstructing the outer producer JSON without this member must match
+the supervisor's retained producer digest. This keeps execution evidence charged,
+hash-bound, downloadable and included in the existing exact three-member export,
+without a new database migration or silently discarded fourth artifact.
+Validate this optional receipt on API read, reconciliation and bundle reopen.
+It records sampled RSS and memcg charge separately and does not assert full
+native CPU admission. A successful process result can still carry an explicit
+scientific `ineligible` verdict, as in the unchanged original profile contract.
+
+Only after existing bundle/science checks and the ordinary owned transaction
+commit can checked known stage files be removed. Unknown bytes, cancellation,
+failed supervision, changed originals or ambiguous commit preserve known debt.
+Operational root receipts remain independently bounded. Exact-UUID recovery,
+resource/cancel/crash tests, original preservation and authentic API/browser
+roundtrip are required on the separate VPS candidate before live activation.
+
 The configuration also pins a root-owned import-closure inventory by SHA-256.
 Before native execution, compare complete runtime and environment name sets,
 entry kinds, ownership, modes, device/inode identities and file hashes with that
