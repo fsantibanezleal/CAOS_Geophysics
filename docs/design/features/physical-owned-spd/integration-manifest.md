@@ -5,6 +5,19 @@ New API: `physical_conditioned_optimizer.solve_bounded_linear` and
 each result `source_binding`; bind their ACTUAL loaded bytes, never historical
 epochs or a prose hash. Exact pre-code packet committed aa765cf.
 
+Separately initialized LINEAR ray API: `physical_feasible_optimizer.solve_bounded_linear`,
+precode e59e460, implementation ba59ea7. Same closed DTO/ConditionedBinding/
+ConditionedBudget/TerminalPolicy, but accepted_export names that module,
+optimizer_source_sha256 binds its loaded source, runtime_epoch is
+`physical-gncg-linear-joseph-feasible-candidate-3`, policy is
+`closed-firstorder-joseph-feasible-native-true-residual-terminal-1`.
+Original conditioned dependency SHA is also retained in result source_binding.
+See [exact policy and accounting](feasible-ray.md). Original200CG/200accepted/
+20LS/120seconds/lower remaining unchanged. No nonlinear variant or rescue.
+Native PG is unchanged; successful free-CG ray is initialized once BEFORE LS.
+Actual44guard/owned-native/independent precision controls PASS; original full528
+and full matrix remain separate actual gates, never inferred from these tests.
+
 Import `physical_owned_spd.{OperandBinding,MetricOperands,QuadraticTerm,
 QuadraticOperands,TerminalPolicy,binding_for}`. Source-bound adapter provides:
 
@@ -59,7 +72,7 @@ audits. Close occurs BEFORE replacement/after call/finally, no adapter lifetime.
 No retry, accepted upgrade, old-epoch rewrite, MAIN/M04 source overwrite, online
 source registration, Linux/host/field acceptance or deployment is granted here.
 
-Current measured gates:19 new-seam PASS,97 prior combined new/old native control PASS;
+Current measured gates:30 closed-seam PASS,109 combined new/old native control PASS;
 original full528 prospective fit still FAIL line_search_failed after20 accepted,
 all attempted CG1..3 and<=original1e-6. Original 48fold failures retained. Full
 M04 matrix must be rerun by its owner after reviewed adapter integration; no

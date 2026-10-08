@@ -40,3 +40,22 @@ descent/PG guards; actual native original caps/true residual/lifetime; original
 independent physical objective/model/prediction/KKT controls; original full528
 same-run stronger terminal and retained best failed LS; then original M04 matrix
 by its owner and M02 original24/noise/refits. No PASS inferred from one chord.
+
+## Separately frozen first-contact quantization
+
+Candidate-3 down-rounded first-ray can retain a vanishing inward distance at
+an exact native active-set boundary. Candidate-4 epoch is
+`physical-gncg-linear-joseph-contact-candidate-4`, policy
+`closed-firstorder-joseph-contact-native-true-residual-terminal-1`.
+For r<1 choose the SMALLEST binary64 alpha>=exact stored-real positive ratio.
+Only directed conversion, at most ONE nextafter correction if nearest<r,
+never repeated parameter nudging or manual bound/model snap. Original native
+projection owns actual qt and original actual strict Armijo proves adoption.
+CG direction/true residual, H/g, counts/clocks and source/lifetime unchanged.
+Zero-bound contact is independently tested with actual floating multiply/add/
+native projection; arbitrary bound contact is NOT guaranteed by exact ratios
+alone and cannot trigger a repair loop/near-bound heuristic/fallback. Down-
+rounded candidate3 actual failure stays immutable, not upgraded by new source.
+Conservative ray wrapper accounting<=2048bytes/row*200 plus32768byte scratch
+and coordinate-local exact-ratio temporaries remains inside old8MiB reserve,
+distinct from native/RSS qualification. No nonlinear or M11 recipe admission.
