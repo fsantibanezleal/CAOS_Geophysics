@@ -23,7 +23,8 @@ def export_zip(bundle, destination):
         fail('durability', '$/export', 'Fresh external numeric ZIP required')
     created = False
     try:
-        with output.open('xb') as stream:
+        fd = os.open(output, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+        with os.fdopen(fd, 'wb') as stream:
             created = True
             with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_STORED, allowZip64=False) as zipped:
                 for path in sorted(root.iterdir(), key=lambda p: p.name):
@@ -60,7 +61,7 @@ def import_zip(archive, destination):
     # its cap check would let a replacement central directory bypass that cap.
     archive_raw = _read_regular(archive, MAX_BYTES)
     created = []
-    root.mkdir()
+    root.mkdir(mode=0o700)
     try:
         with zipfile.ZipFile(io.BytesIO(archive_raw)) as zipped:
             members = zipped.infolist()
@@ -77,7 +78,8 @@ def import_zip(archive, destination):
             # Manifest closes last. No partial generation is read-successful.
             for m in sorted(members, key=lambda m: (m.filename == 'manifest.json', m.filename)):
                 path = root/m.filename
-                with path.open('xb') as stream:
+                fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_BINARY', 0) | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+                with os.fdopen(fd, 'wb') as stream:
                     created.append(path)
                     with zipped.open(m) as source:
                         count = 0

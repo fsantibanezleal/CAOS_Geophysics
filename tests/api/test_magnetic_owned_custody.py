@@ -21,6 +21,7 @@ from app.errors import ApiError
 from app.magnetic_contract import parse_magnetic_dataset, MODALITY, science, magnetic_dataset_receipt, method_mapping
 from app.magnetic_custody import install_replay, read_replay, exact_zip_inventory, install_dataset, read_dataset, read_method
 from app.models import Base, User, Project, SourceRecord, RawAsset, ObservationDataset, AccountUsage, ProcessingJob
+from app.magnetic_line_survey_models import SurveyDatasetAttempt  # register existing schema before test create_all
 from app.processing_contract import canonical_bytes, dataset_key
 
 
@@ -46,6 +47,8 @@ async def seeded(tmp_path, actual):
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     sessions = async_sessionmaker(engine, expire_on_commit=False)
+    from tests.api.magnetic_owner_transport import bind_sessions
+    bind_sessions(sessions, tmp_path)
     user = User(id=UUID(owner), email=f"{owner}@example.org", hashed_password="unusable", is_active=True, is_verified=True)
     source = SourceRecord(id=source_id, owner_id=user.id, project_id=project_id, original_filename="authored.csv",
         version=1, provider="Actual authored local control", rights_statement="Owner private control",
@@ -68,7 +71,7 @@ async def seeded(tmp_path, actual):
         path = tmp_path / key
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         path.write_bytes(data)
-    scratch = tmp_path / "scratch"
+    scratch = tmp_path / ".magnetic-custody"
     scratch.mkdir(mode=0o700)
     async with sessions() as session:
         session.add_all([user, Project(id=project_id, owner_id=user.id, name="Actual control"),
@@ -147,6 +150,7 @@ def test_read_export_drift_refused(tmp_path, actual_generation, attack):
         try:
             async with sessions() as session:
                 job = await install_replay(session, settings, user, dataset.id, actual_generation[0], project_id=dataset.project_id, temp_root=scratch)
+                session.add(job)  # fresh worker returns a detached durable row
                 if attack == "zip": (tmp_path / job.result_key).write_bytes(b"changed")
                 if attack == "zip_missing": (tmp_path / job.result_key).unlink()
                 if attack == "receipt": job.result_sha256 = "0"*64
@@ -212,19 +216,31 @@ def test_exclusive_publication_and_uncertain_commit_preserve_custody(tmp_path, a
                     unknown.write_bytes(b"unknown existing custody: never adopted or removed")
                     monkeypatch.setattr(custody, "uuid4", lambda: UUID(known_job))
                 else:
-                    async def broken(*args, **kwargs): raise RuntimeError("injected storage transaction failure")
-                    monkeypatch.setattr(session, failure, broken)
+                    original = getattr(sessions.class_, failure)
+                    async def broken(worker, *args, **kwargs):
+                        # Inject into the fresh worker's FINAL publication only,
+                        # never the caller or pre-copy reservation transaction.
+                        final = (any(isinstance(row, ProcessingJob) for row in worker.new) if failure == "flush" else
+                            any(isinstance(row, SurveyDatasetAttempt) and row.state == "published"
+                                for row in worker.identity_map.values()))
+                        if final:
+                            raise RuntimeError("injected storage transaction failure")
+                        return await original(worker, *args, **kwargs)
+                    monkeypatch.setattr(sessions.class_, failure, broken)
                 with pytest.raises((OSError, RuntimeError)):
                     await install_replay(session, settings, user, dataset.id, actual_generation[0], project_id=dataset.project_id, temp_root=scratch)
                 retained = list((tmp_path / "derived").rglob("*.zip"))
-                if failure == "flush": assert retained == []
-                if failure == "commit": assert len(retained) == 1 and retained[0].stat().st_size > 0
+                if failure in ("flush", "commit"): assert len(retained) == 1 and retained[0].stat().st_size > 0
                 if failure == "existing_path": assert retained == [unknown] and unknown.read_bytes().startswith(b"unknown existing")
             async with sessions() as session:
                 assert (await session.execute(select(ProcessingJob))).scalars().all() == []
+                debt = (await session.execute(select(SurveyDatasetAttempt))).scalar_one()
+                assert debt.state == "publication_uncertain" and debt.retained_bytes == debt.reservation_bytes
+                assert debt.inventory[0]["kind"] == "magnetic_result"
             assert (tmp_path / dataset.storage_key).read_bytes() == prior
             assert (tmp_path / asset.storage_key).read_bytes() == actual_generation[1]
-            assert list(scratch.iterdir()) == []
+            if failure != "existing_path":
+                assert list(scratch.iterdir()) == []
         finally:
             await engine.dispose()
     asyncio.run(gate())

@@ -16,7 +16,7 @@ from app.config import Settings
 from app.errors import ApiError
 from app.magnetic_custody_owner import MagneticCustodyOwner, bounded_work, attempt_charge, SCHEMA, LIFETIME
 from app.magnetic_line_survey_models import SurveyDatasetAttempt
-from app.models import Base, User, Project, SourceRecord, RawAsset, ObservationDataset
+from app.models import Base, User, Project, SourceRecord, RawAsset, ObservationDataset, AccountUsage
 
 # The old leaf consumes the reviewed existing assembly, never reimplements it.
 # This source binding is a test dependency, not a product filesystem default.
@@ -74,7 +74,8 @@ async def case(root):
         version=1, parser_version="mag-survey/v1:"+"a"*64, modality="magnetic_survey", row_count=288,
         raw_sha256="b"*64, sha256="a"*64, byte_count=10, storage_key=f"derived/{user.id}/{project}/datasets/{dataset}.json")
     async with sessions() as session:
-        session.add_all([user, Project(id=project, owner_id=user.id, name="Portable custody control"),
+        session.add_all([user, AccountUsage(user_id=user.id, raw_bytes=10),
+            Project(id=project, owner_id=user.id, name="Portable custody control"),
             SourceRecord(id=source, owner_id=user.id, project_id=project, original_filename="control.csv",
                 version=1, provider="Authored", rights_statement="Private", rights_decision="mirror",
                 private_storage_permission="attested", declared_format="magnetic_csv", sha256="b"*64,
@@ -99,7 +100,7 @@ async def case(root):
     sessions.configure(info={"magnetic_custody_owner":owner, "physical_assembly":physical})
     owner.test_sources = dict(dataset_id=dataset, dataset_sha256="a"*64, raw_asset_id=asset,
         raw_sha256="b"*64, raw_bytes=10, source_record_id=source,
-        rights_decision="mirror", private_storage_permission="attested")
+        physical_metadata_sha256="c"*64, rights_decision="mirror", private_storage_permission="attested")
     return engine, sessions, settings, user, row, owner
 
 

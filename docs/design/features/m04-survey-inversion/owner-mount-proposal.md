@@ -12,6 +12,36 @@ verification must run first. Actual dataset/import/read/export functions are now
 bind them to its existing auth/project/CSRF/storage lifecycle. Focused portable
 negative tests are not a mounted two-account HTTP or native-host claim.
 
+The charged custody correction replaces the bare-await replay ABI below.
+Mounting requires a session-bound `MagneticCustodyOwner`, the existing task-checked
+physical assembly and complete base/device accounting. The operator-owned
+scratch namespace is exactly `<data-root>/.magnetic-custody`, and attempts use
+the existing magnetic preparation-attempt table with a separate M04 discriminator.
+Import/read/export without this binding refuse before scratch writes. Parent
+must register `attempt_charge` and `reconcile_attempts` in its closed union;
+the existing unknown-extension guard must not be bypassed. The old examples
+are parameter mappings, not permission to mount without those lifetime guards.
+See [charged replay custody](charged-replay-custody.md).
+
+The owner binds the existing application's `async_sessionmaker` once with
+`owner.bind_sessions(app.state.sessions)`, AFTER the physical assembly has bound
+it. Every public magnetic writer/reader uses a fresh session and owns its own
+SH and processing lock in that task. It does not commit or roll back the caller's
+authentication snapshot. Cancellation sets a stop request but retains the parent
+lease until the child and any actual synchronous work have finished. It cannot
+produce a cancelled-native or group-extinction receipt from a Python future.
+
+Dataset birth reserves32MiB in the same existing preparation-attempt table before
+exclusive structural target writing. The planned dataset FK stays null until
+publication. Import reserves512MiB; read/export256MiB. Publication intent and its
+exact dataset/ZIP descriptor are committed before permanent target creation.
+Ordinary failure, timeout or uncertain final SQL commit keeps that attempt and
+conservative charge. There is no automatic adoption, forced cleanup or restart.
+Normal success reimports all numeric members and removes only exact checked
+scratch before the final job/dataset and published attempt co-commit. The base
+ledger must include all raw and other derived/debt exactly once; device ledger
+must include all outstanding work. Missing accounting or binding refuses.
+
 ## Executable protected owner ABI
 
 The canonical parser version is `mag-survey/v1:<full lexical request SHA256>`.

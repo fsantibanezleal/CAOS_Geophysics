@@ -28,7 +28,7 @@ R-462 WHEN accounting or reconciling M04 custody, THE owner SHALL dispatch the
 closed `magnetic-owned-custody-attempt-1` operation in the already allocated
 `magnetic_survey_dataset_attempts` table, separately from M03 preparation.
 Unreleased attempts charge max(reservation,retained); fully drained published
-attempts charge scratch once, and successful permanent ZIP is charged by the
+attempts release scratch only after the literal drain, and the permanent ZIP is charged by the
 existing result ledger once. Exact ZIP inventory remains `magnetic_result` at
 `results/<job UUID>.zip`; no JSON fallback or unknown-sibling exemption.
 Gate: exact attempt charge/inventory and incomplete/stale/foreign/unknown refusal.

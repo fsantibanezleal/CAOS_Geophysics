@@ -14,6 +14,7 @@ import shutil
 from uuid import uuid4
 
 from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.errors import ApiError
 from app.magnetic_line_survey_models import SurveyDatasetAttempt
@@ -22,8 +23,8 @@ from app.processing_contract import canonical_bytes
 SCHEMA = "magnetic-owned-custody-attempt-1"
 LIFETIME = "magnetic-owned-custody-drain-1"
 MAX_ZIP = 128 * 1024**2
-OPERATIONS = {"import": 4*MAX_ZIP, "read": 2*MAX_ZIP, "export": 2*MAX_ZIP}
-SOURCE_KEYS = frozenset("dataset_id dataset_sha256 raw_asset_id raw_sha256 raw_bytes source_record_id rights_decision private_storage_permission".split())
+OPERATIONS = {"dataset": 32*1024**2, "import": 4*MAX_ZIP, "read": 2*MAX_ZIP, "export": 2*MAX_ZIP}
+SOURCE_KEYS = frozenset("dataset_id dataset_sha256 raw_asset_id raw_sha256 raw_bytes source_record_id physical_metadata_sha256 rights_decision private_storage_permission".split())
 
 
 def refuse():
@@ -65,6 +66,17 @@ class MagneticCustodyOwner:
         if type(physical) is not PhysicalAssembly or not callable(base_charge) or not callable(device_charge):
             refuse()
         self.physical, self.base_charge, self.device_charge = physical, base_charge, device_charge
+        self.sessions = None
+
+    def bind_sessions(self, sessions):
+        if not isinstance(sessions, async_sessionmaker) or self.sessions is not None:
+            refuse()
+        info = dict(sessions.kw.get("info", {}))
+        if info.get("physical_assembly") is not self.physical or "magnetic_custody_owner" in info:
+            refuse()
+        info["magnetic_custody_owner"] = self
+        sessions.configure(info=info)
+        self.sessions = sessions
 
     def require(self, session, settings, *, excluded=False):
         if (session.info.get("magnetic_custody_owner") is not self
@@ -95,6 +107,13 @@ class MagneticCustodyOwner:
         request = dict(schema=SCHEMA, operation=operation, stage_key=f".magnetic-custody/{identifier}",
                        dataset_id=dataset.id, dataset_sha256=dataset.sha256, job_id=job_id)
         validate_sources(sources, request)
+        from app.magnetic_contract import _uuid
+        _uuid(dataset.id)
+        if operation == "dataset":
+            if job_id is not None:
+                refuse()
+        else:
+            _uuid(job_id)
         await session.execute(text("BEGIN IMMEDIATE"))
         try:
             previous = (await session.execute(select(SurveyDatasetAttempt).where(
@@ -115,7 +134,8 @@ class MagneticCustodyOwner:
             row = SurveyDatasetAttempt(id=identifier, owner_id=user.id, project_id=dataset.project_id,
                 input_json=request, source_receipts=sources,
                 authority_sha256=hashlib.sha256(canonical_bytes(request)).hexdigest(),
-                reservation_bytes=reservation, state="reserved", retained_bytes=0, inventory=[], dataset_id=dataset.id)
+                reservation_bytes=reservation, state="reserved", retained_bytes=0, inventory=[],
+                dataset_id=None if operation == "dataset" else dataset.id)
             session.add(row)
             await session.commit()  # BEFORE the first directory/archive/extraction.
             return row
@@ -142,7 +162,7 @@ def validate_sources(sources, request):
         refuse()
     for key in ("dataset_id", "raw_asset_id", "source_record_id"):
         _uuid(sources[key])
-    for key in ("dataset_sha256", "raw_sha256"):
+    for key in ("dataset_sha256", "raw_sha256", "physical_metadata_sha256"):
         if type(sources[key]) is not str or not re.fullmatch("[0-9a-f]{64}", sources[key]):
             refuse()
 
@@ -152,14 +172,19 @@ def validate_attempt(row):
     if (type(request) is not dict or set(request) != {"schema", "operation", "stage_key", "dataset_id", "dataset_sha256", "job_id"}
             or request["schema"] != SCHEMA or request["operation"] not in OPERATIONS
             or request["stage_key"] != f".magnetic-custody/{row.id}"
-            or request["dataset_id"] != row.dataset_id
+            or (request["dataset_id"] != row.dataset_id and not
+                (request["operation"] == "dataset" and row.state != "published" and row.dataset_id is None))
             or hashlib.sha256(canonical_bytes(request)).hexdigest() != row.authority_sha256
             or row.reservation_bytes != OPERATIONS[request["operation"]]
             or type(row.retained_bytes) is not int or not 0 <= row.retained_bytes <= row.reservation_bytes):
         refuse()
     from app.magnetic_contract import _uuid
     _uuid(row.id)
-    _uuid(request["job_id"])
+    if request["operation"] == "dataset":
+        if request["job_id"] is not None:
+            refuse()
+    else:
+        _uuid(request["job_id"])
     validate_sources(row.source_receipts, request)
     if row.state == "published":
         if row.lifetime != dict(schema=LIFETIME, work_completed=True, scratch_removed=True, native_admission=False):
@@ -203,6 +228,10 @@ async def reconcile_attempts(session, owner, settings):
         dataset, asset, source = await _owned(session, SimpleNamespace(id=row.owner_id), row.dataset_id, row.project_id)
         if _sources(dataset, asset, source) != row.source_receipts:
             refuse()
+        if row.input_json["operation"] == "dataset":
+            from app.magnetic_custody import _dataset
+            await bounded_work(_dataset, settings, dataset, asset, source, timeout=min(120, settings.worker_wall_seconds))
+            continue
         job = await session.get(ProcessingJob, row.input_json["job_id"])
         if (job is None or (job.owner_id, job.project_id, job.dataset_id, job.dataset_sha256) !=
                 (row.owner_id, row.project_id, row.dataset_id, row.input_json["dataset_sha256"])):

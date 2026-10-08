@@ -7,6 +7,7 @@ change the service union, runtime flags or native controller themselves.
 from __future__ import annotations
 
 from contextlib import contextmanager
+import asyncio
 import hashlib
 import json
 import os
@@ -19,9 +20,8 @@ from app.errors import ApiError
 from app.magnetic_contract import (science, validate_magnetic_dataset, _source, _uuid,
                                   parse_magnetic_dataset, validate_physical_record)
 from app.magnetic_results import LOCAL_MAGNETIC_METHOD_ID, validate_owned_magnetic_result
-from app.models import AccountUsage, ObservationDataset, ProcessingJob, Project, RawAsset, SourceRecord, utcnow
+from app.models import ObservationDataset, ProcessingJob, Project, RawAsset, SourceRecord, utcnow
 from app.processing_contract import canonical_bytes, dataset_key, checked_derived_path
-from app.processing_storage import account_derived_usage
 
 MAX_ZIP = 128 * 1024**2
 REQUEST_KEYS = frozenset("schema dataset_id dataset_sha256 method_id parameters".split())
@@ -95,7 +95,7 @@ def _write(path, raw):
 
 
 @contextmanager
-def _generation(raw, temp_root):
+def _generation(raw, temp_root, *, stage_name=None):
     """Fresh explicit external scratch; exact verified files only are removed."""
     science()
     from magnetic_local_paths import external_path
@@ -103,7 +103,7 @@ def _generation(raw, temp_root):
     root = external_path(temp_root)
     if not root.is_dir():
         _bad()
-    stage = root / f"magnetic-replay-{uuid4()}"
+    stage = root / (stage_name or f"magnetic-replay-{uuid4()}")
     stage.mkdir(mode=0o700)
     archive, bundle = stage / "numeric.zip", stage / "generation"
     _write(archive, raw)
@@ -173,113 +173,219 @@ def _dataset(settings, dataset, asset, source):
     return payload, request
 
 
-async def install_dataset(session, settings, user, asset_id, request_raw, *, project_id):
-    """Real immutable owned SQLite/file installation; no fitter is invoked."""
-    if session.in_transaction():
-        _bad("magnetic_transaction_active")
-    target, created, committed_attempt = None, False, False
-    body = None
+
+async def _owned_asset(session, user, asset_id, project_id):
+    _uuid(project_id)
+    asset = (await session.execute(select(RawAsset).where(RawAsset.id == asset_id,
+        RawAsset.owner_id == user.id, RawAsset.project_id == project_id))).scalar_one_or_none()
+    if asset is None:
+        _bad("not_found", 404)
+    project = (await session.execute(select(Project).where(Project.id == project_id,
+        Project.owner_id == user.id))).scalar_one_or_none()
+    source = (await session.execute(select(SourceRecord).where(SourceRecord.id == asset.source_id,
+        SourceRecord.project_id == project_id, SourceRecord.owner_id == user.id))).scalar_one_or_none()
+    if source is None or project is None:
+        _bad("not_found", 404)
+    _source(asset, source, str(user.id), project_id)
+    return asset, source
+
+
+def _parse_owned_original(settings, asset, source, request_raw, dataset_id):
+    from app.database import checked_storage_path
+    if asset.storage_key != f"projects/{asset.owner_id}/{asset.project_id}/{asset.id}":
+        _bad()
+    original = _read(checked_storage_path(settings, asset.storage_key))
+    return parse_magnetic_dataset(request_raw, original, dataset_id=dataset_id,
+        owner_id=str(asset.owner_id), project_id=asset.project_id, asset=asset, source=source)
+
+
+async def _install_charged_dataset(session, settings, user, asset_id, request_raw, *, project_id, owner, cancelled):
+    from app.magnetic_custody_owner import bounded_work, LIFETIME
+    from app.magnetic_line_survey_models import SurveyDatasetAttempt
+    from app.magnetic_contract import MODALITY
+    asset, source = await _owned_asset(session, user, asset_id, project_id)
+    for item in (asset, source):
+        session.expunge(item)
+    await session.rollback()
+    timeout = min(120, settings.worker_wall_seconds)
+    payload = await bounded_work(_parse_owned_original, settings, asset, source, request_raw, str(uuid4()), timeout=timeout)
+    previous = (await session.execute(select(ObservationDataset).where(
+        ObservationDataset.raw_asset_id == asset.id,
+        ObservationDataset.parser_version == payload["parser_version"]))).scalar_one_or_none()
+    if previous is not None:
+        if previous.owner_id != user.id or previous.project_id != project_id:
+            _bad("not_found", 404)
+        session.expunge(previous)
+        await session.rollback()
+        old, _ = await bounded_work(_dataset, settings, previous, asset, source, timeout=timeout)
+        if old["request_utf8"].encode() != request_raw or cancelled.is_set():
+            _bad("magnetic_custody_interrupted")
+        return previous
+    await session.rollback()
+    body = canonical_bytes(payload)
+    if not 0 < len(body) <= 16*1024**2:
+        _bad("magnetic_dataset_capacity_refused", 413)
+    dataset = ObservationDataset(id=payload["dataset_id"], owner_id=user.id, project_id=project_id,
+        raw_asset_id=asset.id, version=1, parser_version=payload["parser_version"], modality=MODALITY,
+        row_count=payload["dimensions"]["row"], raw_sha256=asset.sha256,
+        sha256=hashlib.sha256(body).hexdigest(), byte_count=len(body),
+        storage_key=dataset_key(str(user.id), project_id, payload["dataset_id"]))
+    snapshot = _sources(dataset, asset, source)
+    if cancelled.is_set():
+        raise asyncio.CancelledError()
+    attempt = await owner.reserve(session, settings, user, dataset, operation="dataset", sources=snapshot)
+    identifier = attempt.id
+    files = owner.physical.leases.files
     try:
         await session.execute(text("BEGIN IMMEDIATE"))
-        _uuid(project_id)
-        asset = (await session.execute(select(RawAsset).where(RawAsset.id == asset_id,
-            RawAsset.owner_id == user.id, RawAsset.project_id == project_id))).scalar_one_or_none()
-        if asset is None:
-            _bad("not_found", 404)
-        project = (await session.execute(select(Project).where(Project.id == asset.project_id,
-            Project.owner_id == user.id))).scalar_one_or_none()
-        source = (await session.execute(select(SourceRecord).where(SourceRecord.id == asset.source_id,
-            SourceRecord.project_id == asset.project_id, SourceRecord.owner_id == user.id))).scalar_one_or_none()
-        if source is None or project is None:
-            _bad("not_found", 404)
-        _source(asset, source, str(user.id), asset.project_id)
-        from app.database import checked_storage_path
-        if asset.storage_key != f"projects/{asset.owner_id}/{asset.project_id}/{asset.id}":
-            _bad()
-        original = _read(checked_storage_path(settings, asset.storage_key))
-        payload = parse_magnetic_dataset(request_raw, original, dataset_id=str(uuid4()),
-            owner_id=str(user.id), project_id=asset.project_id, asset=asset, source=source)
-        previous = (await session.execute(select(ObservationDataset).where(
-            ObservationDataset.raw_asset_id == asset.id,
-            ObservationDataset.parser_version == payload["parser_version"]))).scalar_one_or_none()
-        if previous is not None:
-            if previous.owner_id != user.id or previous.project_id != asset.project_id:
-                _bad("not_found", 404)
-            old, _ = _dataset(settings, previous, asset, source)
-            if old["request_utf8"].encode() != request_raw:
-                _bad()
-            session.expunge(previous)
-            await session.rollback()
-            return previous
-        body = canonical_bytes(payload)
-        usage = await session.get(AccountUsage, user.id)
-        if usage is None or usage.raw_bytes + await account_derived_usage(session, user.id) + len(body) > settings.account_quota_bytes:
-            _bad("quota_exceeded", 413)
-        from app.magnetic_contract import MODALITY
-        dataset = ObservationDataset(id=payload["dataset_id"], owner_id=user.id, project_id=asset.project_id,
-            raw_asset_id=asset.id, version=1, parser_version=payload["parser_version"], modality=MODALITY,
-            row_count=payload["dimensions"]["row"], raw_sha256=asset.sha256,
-            sha256=hashlib.sha256(body).hexdigest(), byte_count=len(body),
-            storage_key=dataset_key(str(user.id), asset.project_id, payload["dataset_id"]))
-        target = checked_derived_path(settings, dataset.storage_key)
-        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-        target = checked_derived_path(settings, dataset.storage_key)
-        _write(target, body)
-        created = True
+        current_asset, current_source = await _owned_asset(session, user, asset_id, project_id)
+        if _sources(dataset, current_asset, current_source) != snapshot:
+            _bad("magnetic_custody_debt")
+        row = await session.get(SurveyDatasetAttempt, identifier)
+        row.state = "publication_uncertain"
+        row.inventory = [dict(kind="dataset", id=dataset.id, relative_path=f"datasets/{dataset.id}.json",
+                              byte_count=len(body), sha256=dataset.sha256)]
+        await session.commit()
+        if cancelled.is_set():
+            raise asyncio.CancelledError()
+        for key in ("derived", f"derived/{user.id}", f"derived/{user.id}/{project_id}", f"derived/{user.id}/{project_id}/datasets"):
+            files.create_directory(key, exist_ok=True)
+            files.private_directory_identity(key)
+        await bounded_work(lambda: files.write_new(dataset.storage_key, body, cap=16*1024**2), timeout=timeout)
+        if cancelled.is_set():
+            raise asyncio.CancelledError()
+        await session.execute(text("BEGIN IMMEDIATE"))
+        current_asset, current_source = await _owned_asset(session, user, asset_id, project_id)
+        if _sources(dataset, current_asset, current_source) != snapshot:
+            _bad("magnetic_custody_debt")
+        row = await session.get(SurveyDatasetAttempt, identifier)
+        if row.state != "publication_uncertain":
+            _bad("magnetic_custody_debt")
         session.add(dataset)
         await session.flush()
-        committed_attempt = True
+        row.state = "published"
+        row.dataset_id = dataset.id
+        row.inventory = []
+        row.retained_bytes = 0
+        row.lifetime = dict(schema=LIFETIME, work_completed=True, scratch_removed=True, native_admission=False)
+        row.finished_at = utcnow()
         await session.commit()
         return dataset
-    except BaseException:
-        await session.rollback()
-        if created and target is not None and target.exists() and not committed_attempt:
-            if _read(target) == body:
-                target.unlink()
-            else:
-                _bad("magnetic_custody_debt")
+    except BaseException as error:
+        await _record_debt(session, identifier, error)
         raise
 
 
-async def install_replay(session, settings, user, dataset_id, generation, *, project_id, temp_root):
-    """Own fresh transaction; callers must finish any existing transaction first.
+async def install_dataset(session, settings, user, asset_id, request_raw, *, project_id):
+    """Fresh owned worker session; caller auth/unrelated transaction is untouched."""
+    from app.magnetic_custody_owner import owner_for, drain
+    owner = owner_for(session)
+    owner.physical.leases.require_held()
+    cancelled = asyncio.Event()
 
-    No queued worker and no numerical inference occur. On uncertain commit retain
-    the created file; startup inventory must reconcile it before service use.
-    """
+    async def run():
+        if owner.sessions is None:
+            _bad("magnetic_custody_session_binding")
+        async with owner.sessions() as work_session, owner.lifetime(work_session, settings):
+            return await _install_charged_dataset(work_session, settings, user, asset_id, request_raw,
+                project_id=project_id, owner=owner, cancelled=cancelled)
+
+    pending = asyncio.create_task(run())
+    try:
+        return await asyncio.shield(pending)
+    except asyncio.CancelledError:
+        cancelled.set()
+        try:
+            await drain(pending)
+        except BaseException:
+            pass
+        raise
+
+
+def _sources(dataset, asset, source):
+    return dict(dataset_id=dataset.id, dataset_sha256=dataset.sha256,
+        raw_asset_id=asset.id, raw_sha256=asset.sha256, raw_bytes=asset.byte_count,
+        source_record_id=source.id, physical_metadata_sha256=hashlib.sha256(canonical_bytes(asset.physical_metadata)).hexdigest(),
+        rights_decision=source.rights_decision,
+        private_storage_permission=source.private_storage_permission)
+
+
+def _prepare_replay(generation, request, stage, binding):
+    from magnetic_result_bundle import read_bundle
+    from magnetic_result_export import export_zip
+    from magnetic_result_view import project_result
+    from magnetic_local_paths import external_path
+    imported = read_bundle(external_path(generation))
+    if canonical_bytes(imported["request"]) != canonical_bytes(request):
+        _bad("magnetic_request_mismatch")
+    archive = stage / "source.zip"
+    export_zip(generation, archive)
+    raw = _read(archive)
+    binding = {**binding, "generation_sha256": imported["generation_sha256"]}
+    with _generation(raw, stage, stage_name="check") as (bundle, checked):
+        if checked != imported:
+            _bad()
+        view = project_result(bundle, binding)
+    return raw, imported, view, binding
+
+
+def _finish_stage(stage, raw):
+    # Only the exact reverified copy and empty checked directory are removed.
+    if set(stage.iterdir()) != {stage / "source.zip"} or _read(stage / "source.zip") != raw:
+        _bad("magnetic_custody_debt")
+    (stage / "source.zip").unlink()
+    stage.rmdir()
+
+
+async def _record_debt(session, attempt_id, error):
+    from app.magnetic_line_survey_models import SurveyDatasetAttempt
+    await session.rollback()
+    await session.execute(text("BEGIN IMMEDIATE"))
+    row = await session.get(SurveyDatasetAttempt, attempt_id)
+    if row is None:
+        _bad("magnetic_custody_debt")
+    if row.state != "published":
+        row.state = "publication_uncertain" if row.state == "publication_uncertain" else "failed"
+        # No inferred zero from an inaccessible/unknown/partial namespace.
+        row.retained_bytes = row.reservation_bytes
+        row.error_code = error.code if isinstance(error, ApiError) else "magnetic_custody_interrupted"
+        row.lifetime = dict(schema="magnetic-owned-custody-incomplete-1", work_completed=True, scratch_removed=False, native_admission=False)
+        row.finished_at = utcnow()
+        await session.commit()
+
+
+async def _install_charged_replay(session, settings, user, dataset_id, generation, *, project_id, cancelled, owner):
+    from app.magnetic_custody_owner import bounded_work, LIFETIME
+    from app.magnetic_line_survey_models import SurveyDatasetAttempt
     if session.in_transaction():
         _bad("magnetic_transaction_active")
-    target = None
-    created = False
-    committed_attempt = False
-    raw = None
+    dataset, asset, source = await _owned(session, user, dataset_id, project_id)
+    snapshot = _sources(dataset, asset, source)
+    for item in (dataset, asset, source):
+        session.expunge(item)
+    await session.rollback()
+    timeout = min(120, settings.worker_wall_seconds)
+    # Read-only complete source validation is outside the writer transaction.
+    payload, request = await bounded_work(_dataset, settings, dataset, asset, source, timeout=timeout)
+    if cancelled.is_set():
+        raise asyncio.CancelledError()
+    job_id = str(uuid4())
+    attempt = await owner.reserve(session, settings, user, dataset, operation="import", sources=snapshot, job_id=job_id)
+    attempt_id = attempt.id
+    files = owner.physical.leases.files
+    stage_key = attempt.input_json["stage_key"]
+    stage = settings.data_dir / stage_key
     try:
-        await session.execute(text("BEGIN IMMEDIATE"))
-        dataset, asset, source = await _owned(session, user, dataset_id, project_id)
-        payload, request = _dataset(settings, dataset, asset, source)
-        # Ownership and immutable raw/dataset custody precede numerical bundle
-        # imports, generation path reads, export allocation and scratch writes.
-        from magnetic_result_bundle import read_bundle
-        from magnetic_result_export import export_zip
-        from magnetic_local_paths import external_path
-        imported = read_bundle(external_path(generation))
-        temp = external_path(temp_root)
-        archive = temp / f"magnetic-import-{uuid4()}.zip"
-        export_zip(generation, archive)
-        raw = _read(archive)
-        archive.unlink()
-        if canonical_bytes(imported["request"]) != canonical_bytes(request):
-            _bad("magnetic_request_mismatch")
-        usage = await session.get(AccountUsage, user.id)
-        if usage is None:
-            _bad()
-        if usage.raw_bytes + await account_derived_usage(session, user.id) + len(raw) > settings.account_quota_bytes:
-            _bad("quota_exceeded", 413)
-        job_id = str(uuid4())
+        owner.require(session, settings)
+        files.create_directory(".magnetic-custody", exist_ok=True)
+        files.private_directory_identity(".magnetic-custody")
+        files.create_directory(stage_key)
+        files.private_directory_identity(stage_key)
         binding = dict(job_id=job_id, dataset_id=dataset.id, source_id=payload["survey_source_id"],
-            generation_sha256=imported["generation_sha256"],
-            configuration_sha256=payload["geometry_plan"]["identity"]["configuration_sha256"],
-            original_sha256=asset.sha256)
+            configuration_sha256=payload["geometry_plan"]["identity"]["configuration_sha256"], original_sha256=asset.sha256)
+        raw, imported, view, binding = await bounded_work(_prepare_replay, generation, request, stage, binding, timeout=timeout)
+        if cancelled.is_set():
+            raise asyncio.CancelledError()
         request_json = dict(schema="magnetic-owned-replay-request-1", dataset_id=dataset.id,
             dataset_sha256=dataset.sha256, method_id=LOCAL_MAGNETIC_METHOD_ID,
             parameters={k: (payload["request_sha256"] if k == "request_sha256" else binding[k]) for k in PARAMETER_KEYS})
@@ -291,49 +397,126 @@ async def install_replay(session, settings, user, dataset_id, generation, *, pro
             state="succeeded", cancel_requested=False, finished_at=utcnow(),
             result_key=zip_result_key(str(user.id), dataset.project_id, job_id),
             result_sha256=hashlib.sha256(raw).hexdigest(), result_bytes=len(raw))
-        # Verify the exact retained archive, not just the source directory that
-        # was read before export. No serializer float roundtrip creates new data.
-        with _generation(raw, temp) as (bundle, checked):
-            if checked != imported:
-                _bad()
-            from magnetic_result_view import project_result
-            view = project_result(bundle, binding)
-            validate_owned_magnetic_result(view, user=user, job=job, dataset=dataset, expected_binding=binding)
-        target = zip_result_path(settings, job.result_key)
-        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-        target = zip_result_path(settings, job.result_key)
-        _write(target, raw)
-        created = True
+        validate_owned_magnetic_result(view, user=user, job=job, dataset=dataset, expected_binding=binding)
+        await session.execute(text("BEGIN IMMEDIATE"))
+        fresh, current_asset, current_source = await _owned(session, user, dataset_id, project_id)
+        if _sources(fresh, current_asset, current_source) != snapshot:
+            _bad("magnetic_custody_debt")
+        row = await session.get(SurveyDatasetAttempt, attempt_id)
+        row.state = "publication_uncertain"
+        # Save exact permanent target identity BEFORE exclusive creation.
+        row.inventory = [dict(kind="magnetic_result", id=job_id, relative_path=f"results/{job_id}.zip",
+                              byte_count=len(raw), sha256=job.result_sha256)]
+        await session.commit()
+        if cancelled.is_set():
+            raise asyncio.CancelledError()
+        for key in ("derived", f"derived/{user.id}", f"derived/{user.id}/{project_id}", f"derived/{user.id}/{project_id}/results"):
+            files.create_directory(key, exist_ok=True)
+            files.private_directory_identity(key)
+        await bounded_work(lambda: files.write_new(job.result_key, raw, cap=MAX_ZIP), timeout=timeout)
+        await bounded_work(_finish_stage, stage, raw, timeout=timeout)
+        if cancelled.is_set():
+            raise asyncio.CancelledError()
+        await session.execute(text("BEGIN IMMEDIATE"))
+        fresh, current_asset, current_source = await _owned(session, user, dataset_id, project_id)
+        if _sources(fresh, current_asset, current_source) != snapshot:
+            _bad("magnetic_custody_debt")
+        row = await session.get(SurveyDatasetAttempt, attempt_id)
+        if row.state != "publication_uncertain":
+            _bad("magnetic_custody_debt")
         session.add(job)
         await session.flush()
-        committed_attempt = True
+        row.state = "published"
+        row.inventory = []
+        row.retained_bytes = 0
+        row.lifetime = dict(schema=LIFETIME, work_completed=True, scratch_removed=True, native_admission=False)
+        row.finished_at = utcnow()
         await session.commit()
         return job
-    except BaseException:
-        await session.rollback()
-        if created and target is not None and target.exists() and not committed_attempt:
-            if _read(target) == raw:
-                target.unlink()
-            else:
-                _bad("magnetic_custody_debt")
+    except BaseException as error:
+        # All synchronous work has actually completed before this path runs.
+        await _record_debt(session, attempt_id, error)
+        raise
+
+
+async def install_replay(session, settings, user, dataset_id, generation, *, project_id, temp_root):
+    """Reserved local custody under existing owner guards; never an online fit."""
+    from app.magnetic_custody_owner import owner_for, drain
+    owner = owner_for(session)
+    owner.physical.leases.require_held()
+    if temp_root != settings.data_dir / ".magnetic-custody":
+        _bad("magnetic_custody_root_binding")
+    cancelled = asyncio.Event()
+
+    async def run():
+        if owner.sessions is None:
+            _bad("magnetic_custody_session_binding")
+        async with owner.sessions() as work_session, owner.lifetime(work_session, settings):
+            return await _install_charged_replay(work_session, settings, user, dataset_id, generation,
+                project_id=project_id, cancelled=cancelled, owner=owner)
+
+    pending = asyncio.create_task(run())
+    try:
+        return await asyncio.shield(pending)
+    except asyncio.CancelledError:
+        cancelled.set()
+        try:
+            await drain(pending)
+        except BaseException:
+            pass
         raise
 
 
 async def read_dataset(session, settings, user, dataset_id, *, project_id):
     """Public owned lexical input read; no numerical inverse or native child."""
-    dataset, asset, source = await _owned(session, user, dataset_id, project_id)
-    return _dataset(settings, dataset, asset, source)[0]
+    return await _read_input(session, settings, user, dataset_id, project_id=project_id)
 
 
 async def read_method(session, settings, user, dataset_id, *, project_id):
     """Current source mapping only after the entire owned input is reverified."""
-    dataset, asset, source = await _owned(session, user, dataset_id, project_id)
-    payload, _ = _dataset(settings, dataset, asset, source)
+    return await _read_input(session, settings, user, dataset_id, project_id=project_id, method=True)
+
+
+async def _read_input(session, settings, user, dataset_id, *, project_id, method=False):
+    from app.magnetic_custody_owner import owner_for, drain, bounded_work
     from app.magnetic_contract import method_mapping
-    return method_mapping(payload, dataset)
+    owner = owner_for(session)
+    owner.physical.leases.require_held()
+
+    async def run():
+        if owner.sessions is None:
+            _bad("magnetic_custody_session_binding")
+        async with owner.sessions() as work_session, owner.lifetime(work_session, settings):
+            dataset, asset, source = await _owned(work_session, user, dataset_id, project_id)
+            snapshot = _sources(dataset, asset, source)
+            for item in (dataset, asset, source):
+                work_session.expunge(item)
+            await work_session.rollback()
+            timeout = min(120, settings.worker_wall_seconds)
+            payload, _ = await bounded_work(_dataset, settings, dataset, asset, source, timeout=timeout)
+            result = await bounded_work(method_mapping, payload, dataset, timeout=timeout) if method else payload
+            fresh, current_asset, current_source = await _owned(work_session, user, dataset_id, project_id)
+            if _sources(fresh, current_asset, current_source) != snapshot:
+                _bad("magnetic_custody_debt")
+            return result
+
+    pending = asyncio.create_task(run())
+    try:
+        return await asyncio.shield(pending)
+    except asyncio.CancelledError:
+        try:
+            await drain(pending)
+        except BaseException:
+            pass
+        raise
 
 
-async def read_replay(session, settings, user, job_id, *, project_id, temp_root, export=False):
+async def _read_charged_replay(session, settings, user, job_id, *, project_id, owner, cancelled, export=False):
+    from app.magnetic_custody_owner import bounded_work, LIFETIME
+    from app.magnetic_line_survey_models import SurveyDatasetAttempt
+    if session.in_transaction():
+        _bad("magnetic_transaction_active")
+    timeout = min(120, settings.worker_wall_seconds)
     _uuid(project_id)
     job = (await session.execute(select(ProcessingJob).where(
         ProcessingJob.id == job_id, ProcessingJob.owner_id == user.id,
@@ -341,7 +524,11 @@ async def read_replay(session, settings, user, job_id, *, project_id, temp_root,
     if job is None:
         _bad("not_found", 404)
     dataset, asset, source = await _owned(session, user, job.dataset_id, project_id)
-    payload, request = _dataset(settings, dataset, asset, source)
+    snapshot = _sources(dataset, asset, source)
+    for item in (job, dataset, asset, source):
+        session.expunge(item)
+    await session.rollback()
+    payload, request = await bounded_work(_dataset, settings, dataset, asset, source, timeout=timeout)
     req, preflight = job.request_json, job.preflight
     if (job.state != "succeeded" or job.method_id != LOCAL_MAGNETIC_METHOD_ID or job.cancel_requested
             or job.dataset_sha256 != dataset.sha256 or job.project_id != dataset.project_id
@@ -359,10 +546,49 @@ async def read_replay(session, settings, user, job_id, *, project_id, temp_root,
     key = zip_result_key(str(user.id), dataset.project_id, job.id)
     if job.result_key != key:
         _bad()
-    raw = _read(zip_result_path(settings, key))
+    raw = await bounded_work(_read, zip_result_path(settings, key), timeout=timeout)
     if len(raw) != job.result_bytes or hashlib.sha256(raw).hexdigest() != job.result_sha256:
         _bad()
-    with _generation(raw, temp_root) as (bundle, imported):
+
+    if cancelled.is_set():
+        raise asyncio.CancelledError()
+    attempt = await owner.reserve(session, settings, user, dataset,
+        operation="export" if export else "read", sources=snapshot, job_id=job.id)
+    identifier, stage_key = attempt.id, attempt.input_json["stage_key"]
+    files = owner.physical.leases.files
+    stage = settings.data_dir / stage_key
+    try:
+        files.create_directory(".magnetic-custody", exist_ok=True)
+        files.private_directory_identity(".magnetic-custody")
+        files.create_directory(stage_key)
+        files.private_directory_identity(stage_key)
+        view = await bounded_work(_project_checked, raw, stage, request, binding, req, user, job, dataset, timeout=timeout)
+        if cancelled.is_set():
+            raise asyncio.CancelledError()
+        files.verify_directory(stage_key, expected_files=[])
+        stage.rmdir()
+        await session.execute(text("BEGIN IMMEDIATE"))
+        fresh, current_asset, current_source = await _owned(session, user, dataset.id, project_id)
+        if _sources(fresh, current_asset, current_source) != snapshot:
+            _bad("magnetic_custody_debt")
+        current_job = await session.get(ProcessingJob, job.id)
+        if (current_job.state, current_job.result_sha256, current_job.result_bytes, current_job.request_sha256,
+                current_job.cancel_requested, current_job.preflight) != (
+                job.state, job.result_sha256, job.result_bytes, job.request_sha256, job.cancel_requested, job.preflight):
+            _bad("magnetic_custody_debt")
+        row = await session.get(SurveyDatasetAttempt, identifier)
+        row.state = "published"
+        row.lifetime = dict(schema=LIFETIME, work_completed=True, scratch_removed=True, native_admission=False)
+        row.finished_at = utcnow()
+        await session.commit()
+        return raw if export else view
+    except BaseException as error:
+        await _record_debt(session, identifier, error)
+        raise
+
+
+def _project_checked(raw, stage, request, binding, req, user, job, dataset):
+    with _generation(raw, stage, stage_name="check") as (bundle, imported):
         if (canonical_bytes(imported["request"]) != canonical_bytes(request)
                 or imported["generation_sha256"] != binding.get("generation_sha256")
                 or req["parameters"]["generation_sha256"] != binding.get("generation_sha256")
@@ -371,7 +597,34 @@ async def read_replay(session, settings, user, job_id, *, project_id, temp_root,
         from magnetic_result_view import project_result
         view = project_result(bundle, binding)
         validate_owned_magnetic_result(view, user=user, job=job, dataset=dataset, expected_binding=binding)
-    return raw if export else view
+    return view
+
+
+async def read_replay(session, settings, user, job_id, *, project_id, temp_root, export=False):
+    from app.magnetic_custody_owner import owner_for, drain
+    owner = owner_for(session)
+    owner.physical.leases.require_held()
+    if temp_root != settings.data_dir / ".magnetic-custody":
+        _bad("magnetic_custody_root_binding")
+    cancelled = asyncio.Event()
+
+    async def run():
+        if owner.sessions is None:
+            _bad("magnetic_custody_session_binding")
+        async with owner.sessions() as work_session, owner.lifetime(work_session, settings):
+            return await _read_charged_replay(work_session, settings, user, job_id,
+                project_id=project_id, owner=owner, cancelled=cancelled, export=export)
+
+    pending = asyncio.create_task(run())
+    try:
+        return await asyncio.shield(pending)
+    except asyncio.CancelledError:
+        cancelled.set()
+        try:
+            await drain(pending)
+        except BaseException:
+            pass
+        raise
 
 
 def exact_zip_inventory(settings, job):
