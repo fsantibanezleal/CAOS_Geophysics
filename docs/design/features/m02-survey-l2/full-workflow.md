@@ -4,6 +4,9 @@ This extends the lossless stage-book contract into the authorized ordinary
 submitted-data workflow. The fixed native objectives, log17/floor3 policy,
 eight betas, three folds, shared 200 accepted steps, 120 s per fit and 1800 s
 per calibration remain literal. Non-null fixed-point failures remain failures.
+The [original positive-regression causal audit](irls-positive-cause.md) derives
+the complete prescribed recurrence independently and explains its actual
+finite-profile incompatibility without changing the positive assertion.
 
 ## Contracts and replay
 
