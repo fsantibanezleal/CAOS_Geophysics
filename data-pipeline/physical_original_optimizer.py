@@ -18,7 +18,7 @@ import physical_original_terminal as accuracy
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-6'
+LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-7'
 POLICY = 'closed-original-noise-reduced-joseph-free-face-accuracy-1'
 ConditionedBinding = reduced.ConditionedBinding
 ConditionedBudget = reduced.ConditionedBudget
@@ -52,8 +52,7 @@ def _validate_domain(domain, operands):
 def magnetic_domain_check(domain, operands, q, qt, *, deadline):
     """Both original real affine endpoints retain strict ||B0+Gq||/F > 1e-8."""
     _validate_domain(domain, operands)
-    ar = source.intervals._Intervals(34, deadline)
-    ar._use_native_rows = False
+    ar = accuracy.original_row_arithmetic(34, deadline)
     minimum = None
     for model in (q, qt):
         raw = ar.matrix(operands.sensitivity, [ar.exact(v) for v in model])

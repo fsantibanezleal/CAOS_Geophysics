@@ -319,8 +319,14 @@ def certify_chord(o, identity, q, qt, native_gradient, native_phi, native_phi_tr
         record['cause'] = 'zero_displacement'
         return intervals._validate_record(record)
     for passes, digits, native_rows in ((1, 34, True), (1, 34, False), (2, 50, False), (3, 80, False)):
-        ar = intervals._Intervals(digits, deadline)
-        ar._use_native_rows = native_rows
+        if native_rows:
+            ar = intervals._Intervals(digits, deadline)
+            ar._use_native_rows = True
+        else:
+            # Same source reductions, unchanged precision ladder and factors.
+            # Import only at execution to keep the source/terminal ABI acyclic.
+            import physical_original_terminal as terminal
+            ar = terminal.original_row_arithmetic(digits, deadline)
         try:
             ar.check()
             qv = [ar.exact(v) for v in q]

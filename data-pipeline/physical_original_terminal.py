@@ -14,10 +14,23 @@ import numpy as np
 
 import physical_original_quadratic as source
 import physical_owned_spd as owned
+import physical_original_rows as exact_rows
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 ZERO, ONE = Decimal(0), Decimal(1)
+# Transitive closed source binding until consumers add the named module to
+# their full inventories. The literal terminal file itself binds this hash.
+ROWS_SHA256 = '9d346dc3b5f3e45e7ca689eb5fed57389ef7217ceb25195ee022ed4b6ac2be10'
+
+
+def original_row_arithmetic(digits, deadline):
+    if (exact_rows.SOURCE_SHA256 != ROWS_SHA256 or
+        hashlib.sha256(Path(exact_rows.__file__).read_bytes()).hexdigest() != ROWS_SHA256):
+        raise ValueError('original terminal: closed exact row source drift')
+    if type(digits) is not int or digits not in (34, 50, 80):
+        raise ValueError('original terminal: unchanged original precision ladder')
+    return exact_rows.OriginalTerminalIntervals(digits, deadline)
 
 
 def _absolute(pair):
@@ -79,6 +92,9 @@ class OwnedOriginalTerminal:
         self.actions = 0
         self._closed = True
         started = monotonic()
+        if (exact_rows.SOURCE_SHA256 != ROWS_SHA256 or
+            hashlib.sha256(Path(exact_rows.__file__).read_bytes()).hexdigest() != ROWS_SHA256):
+            raise ValueError('original terminal: closed exact row source drift')
         allocation = source.validate(original, identity, q, deadline=deadline,
             resource_limit_bytes=resource_limit_bytes, admitted_bytes=admitted_bytes)
         a, m = source._identity_metadata(identity)
@@ -247,13 +263,15 @@ class OwnedOriginalTerminal:
             raise
         started = monotonic()
         o, q, f = self._original, self._q, len(self.free)
-        ar = source.intervals._Intervals(34, self.deadline)
-        ar._use_native_rows = False
+        ar = original_row_arithmetic(34, self.deadline)
         record = dict(domain='original_noise_strongly_convex_free_face', passed=False,
             reason=None, source_sha256=self.source_sha256, model_sha256=self.model_sha256,
             face_sha256=self.face_sha256, factor_sha256=self.factor_sha256,
             free_indices=self.free.tolist(), precision_digits=34, allocation=self.allocation,
             setup_seconds=self.setup_seconds, seconds=0., actions=0, disposed=False, bounds=None)
+        record.update(terminal_arithmetic_epoch=exact_rows.ARITHMETIC_EPOCH,
+            terminal_arithmetic_sha256=ROWS_SHA256,
+            exact_row_workspace_limit_bytes=exact_rows.ROW_WORKSPACE_BYTES)
         try:
             gradient = source._gradient(ar, o, q)
             projected, squared, inf = [], ZERO, ZERO
