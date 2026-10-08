@@ -191,9 +191,10 @@ def member_chunks(member):
 
 def _directory(directory):
     from waveform_m08_files import OwnedDirectory
-
     if type(directory) is not OwnedDirectory:
-        fail("waveform_type")
+        from waveform_m08_linux import LinuxHeldDirectory
+        if type(directory) is not LinuxHeldDirectory:
+            fail("waveform_type")
     directory.check_identity()
 
 

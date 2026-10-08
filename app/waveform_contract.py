@@ -13,6 +13,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.errors import ApiError
+from scripts.waveform_m08_installation import SOURCE_FILES
 
 # Path-owned stdlib scanner, not a package or a configurable provider.
 _spec = importlib.util.spec_from_file_location(
@@ -27,12 +28,7 @@ PARSER = "m08-counts-response/v1"
 SCRATCH = 52690944
 MEMORY = 1073741824  # Experimental committed-memory/charge limit, NOT RSS admission.
 WALL = 120
-IMPLEMENTATION_FILES = (
-    "scripts/waveform_m08_windows.py", "scripts/waveform_m08_files.py", "scripts/waveform_m08_export.py",
-    "scripts/waveform_m08_child.py", "scripts/process_waveform_m08.py", "data-pipeline/waveform_input.py",
-    "data-pipeline/waveform_processing.py", "data-pipeline/waveform_evaluation.py", "app/waveform_contract.py",
-    "app/waveform_processing.py", "app/waveform_worker.py", "app/waveform_result.py",
-)
+IMPLEMENTATION_FILES = SOURCE_FILES
 
 
 def implementation_sha256():
@@ -248,6 +244,13 @@ def context_path(settings):
 
 
 def context_available(settings):
+    if __import__("sys").platform == "linux":
+        try:
+            from app.waveform_linux_worker import installed_snapshot
+            installed_snapshot(settings)
+            return True
+        except (OSError,ValueError,TypeError,KeyError):
+            return False
     path = context_path(settings)
     if not path.is_file() or path.is_symlink() or path.parent.is_symlink() or not 0 < path.stat().st_size <= 65536:
         return False

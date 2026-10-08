@@ -131,6 +131,23 @@ def _purge_exact_deletion_directory(directory: Path, assets: list[RawAsset]) -> 
     directory.rmdir()
 
 
+def _require_supported_deletion_paths(raw_directory, derived_directory, assets, manifest, *, platform):
+    """Reject unsupported rename targets before rows or original files change."""
+    if platform != "nt":
+        return
+    paths = [raw_directory, derived_directory, *(raw_directory / asset.id for asset in assets)]
+    for item in manifest:
+        relative = (item["relative_path"] if item["kind"] == "waveform_artifact"
+                    else f"{item['kind']}s/{item['id']}.json")
+        paths.append(derived_directory / relative)
+    for path in paths:
+        value = str(path)
+        if ("\0" in value or value.startswith(("\\\\?\\", "\\\\.\\"))
+                or len(value.encode("utf-16-le")) // 2 >= 260):
+            raise ApiError(503, "deletion_storage_unavailable",
+                           "Project deletion destinations exceed supported storage paths; originals are unchanged")
+
+
 def _require_no_project_backup(settings: Settings, owner_id: str, project_id: str) -> None:
     path = settings.data_dir / ".backups" / owner_id / project_id
     if not path.resolve(strict=False).is_relative_to(settings.data_dir.resolve()):
@@ -414,6 +431,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         _require_no_project_backup(settings, str(user.id), project_id)
         deleting_dir = settings.data_dir / ".deleting" / f"{user.id}--{project_id}"
         deleting_derived = settings.data_dir / ".deleting" / f"{user.id}--{project_id}--derived"
+        _require_supported_deletion_paths(deleting_dir, deleting_derived, assets, derived_manifest, platform=os.name)
         if deleting_dir.parent.is_symlink():
             raise ApiError(409, "raw_state_unresolved", "Deletion recovery path requires operator review")
         if physical_plan is None: deleting_dir.parent.mkdir(parents=True, exist_ok=True)

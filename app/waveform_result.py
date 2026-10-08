@@ -22,14 +22,22 @@ for _ordinary_root in (_ROOT / "data-pipeline", _ROOT / "scripts"):
         sys.path.insert(0, str(_ordinary_root))
 
 
-def local_export(path):
+def local_export(path, *, held_fd=None):
     # Existing strict ordinary reopener. Imports do not invoke a decoder/engine.
     import waveform_m08_child  # noqa: F401
     from waveform_m08_files import open_output
     from waveform_m08_export import verify_export
+    from waveform_m08_windows import ControlError
 
     try:
-        with open_output(path) as directory:
+        if held_fd is not None:
+            if sys.platform != "linux" or type(held_fd) is not int or held_fd < 0:
+                raise ValueError()
+            from waveform_m08_linux import LinuxHeldDirectory
+            lease = LinuxHeldDirectory(held_fd)
+        else:
+            lease = open_output(path)
+        with lease as directory:
             sealed = verify_export(directory)
             names = directory.names(55)
             members = []
@@ -51,11 +59,14 @@ def local_export(path):
             if sum(row["bytes"] for row in members) > 33554432:
                 raise ValueError()
             return sealed, members
-    except (INPUT.WaveformInputError, ValueError, OSError):
+    except (INPUT.WaveformInputError, ControlError, ValueError, OSError):
         raise ApiError(409, "waveform_export_invalid", "Waveform export failed independent validation") from None
 
 
 def checked_resources(receipt, release):
+    if type(receipt) is dict and receipt.get("schema") in {"caos.m08-linux-resources.v1", "caos.m08-linux-resources.v2"}:
+        from app.waveform_linux_exec import checked_resources as checked_linux_resources
+        return checked_linux_resources(receipt, release)
     try:
         INPUT.native_precount(receipt, 65536, max_nodes=4096, max_depth=8)
         INPUT.native_precount(release, 65536, max_nodes=4096, max_depth=8)
@@ -118,10 +129,26 @@ def checked_resources(receipt, release):
 
 def validate_result(payload, job):
     try:
-        INPUT.native_precount(payload, 4194304, max_nodes=2097152, max_depth=24)
         expected = set(
             "schema job_id project_id dataset_id dataset_sha256 method_id request_sha256 scientific_request_sha256 sources scientific_status calculation_sha256 calculation members resources".split()
         )
+        native_keys = {"linux_execution","linux_installation"}
+        if type(payload) is not dict:
+            raise ValueError()
+        if native_keys & set(payload):
+            if not native_keys <= set(payload):
+                raise ValueError()
+            from app.waveform_linux_execution import validate_terminal
+            from waveform_m08_installation import validate_installation_binding
+            validate_terminal(payload["linux_execution"],job,payload=payload)
+            validate_installation_binding(payload["linux_installation"],checked=payload["linux_execution"]["installation"])
+            if payload["resources"]["memory_kind"] != "linux_cgroup_charge":
+                raise ValueError()
+            expected |= native_keys
+        # The separately bounded private native graph has uint64 monotonic clocks.
+        # Scientific/public metadata keeps its unchanged JS-safe integer dialect.
+        INPUT.native_precount({key:value for key,value in payload.items() if key not in native_keys},
+                              4194304,max_nodes=2097152,max_depth=24)
         if (
             type(payload) is not dict
             or set(payload) != expected
@@ -190,7 +217,7 @@ def validate_result(payload, job):
             or resources["schema"] != "geophysics.waveform-resources/v1"
             or resources["runtime_authorized"] is not False
             or resources["host_admitted"] is not False
-            or resources["memory_kind"] != "windows_job_committed"
+            or resources["memory_kind"] not in ("windows_job_committed", "linux_cgroup_charge")
         ):
             raise ValueError()
         for key, maximum in (
@@ -247,14 +274,48 @@ def preflight_publication_paths(target, directory, members, *, platform):
                        "Waveform publication destinations exceed supported storage paths") from None
 
 
-async def publish_result(settings, sessions, job, export_path, receipt, release):
+async def publish_result(settings, sessions, job, export_path, receipt, release, *, linux_execution=None,
+                         linux_installation=None, linux_stage_fd=None):
+    """The installed lane adopts its held export; never makes a third copy."""
+    if linux_execution is None and linux_installation is None and linux_stage_fd is None:
+        return await _publish_result(settings,sessions,job,export_path,receipt,release)
+    from app.waveform_linux_execution import identity, validate_terminal
+    from waveform_m08_installation import canonical, regular_at, validate_installation_binding
+    export_fd = None
+    try:
+        if (sys.platform != "linux" or type(linux_stage_fd) is not int or linux_stage_fd < 0
+                or linux_execution is None or linux_installation is None
+                or Path(export_path) != settings.data_dir/".job-staging"/job.id/"export"):
+            raise ValueError()
+        held = identity(linux_stage_fd)
+        validate_terminal(linux_execution,job,held,linux_installation)
+        validate_installation_binding(linux_installation,checked=linux_execution["installation"])
+        if (set(os.listdir(linux_stage_fd)) != {"export","root_receipt.json"}
+                or regular_at(linux_stage_fd,"root_receipt.json",65536) != canonical(linux_execution)):
+            raise ValueError()
+        info = Path(export_path).parent.stat(follow_symlinks=False)
+        if dict(device=info.st_dev,inode=info.st_ino) != held:
+            raise ValueError()
+        export_fd = os.open("export",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=linux_stage_fd)
+        return await _publish_result(settings,sessions,job,export_path,receipt,release,
+            linux_execution=linux_execution,linux_installation=linux_installation,
+            linux_stage_fd=linux_stage_fd,export_fd=export_fd)
+    except (OSError,ValueError,TypeError,KeyError):
+        raise ApiError(409,"waveform_stage_changed","Waveform held publication stage changed; bytes retained") from None
+    finally:
+        if export_fd is not None:
+            os.close(export_fd)
+
+
+async def _publish_result(settings, sessions, job, export_path, receipt, release, *, linux_execution=None,
+                          linux_installation=None, linux_stage_fd=None, export_fd=None):
     """Only called after the actual supervisor finishes and acknowledges release."""
     from app.waveform_processing import validate_source_rows
     from app.processing_contract import verified_json, dataset_key
     from app.models import ObservationDataset, AccountUsage
     from app.processing_storage import account_derived_usage
 
-    sealed, members = local_export(export_path)
+    sealed, members = local_export(export_path,held_fd=export_fd)
     resources = checked_resources(receipt, release)
     payload = {
         "schema": "geophysics.waveform-result/v1",
@@ -272,6 +333,11 @@ async def publish_result(settings, sessions, job, export_path, receipt, release)
         "members": members,
         "resources": resources,
     }
+    if linux_execution is not None or linux_installation is not None:
+        if (linux_execution is None or linux_installation is None
+                or linux_execution.get("native") != {"eligibility":receipt,"release":release}):
+            raise ApiError(409,"waveform_resource_invalid","Linux waveform terminal differs from retained native bytes")
+        payload.update(linux_execution=linux_execution,linux_installation=linux_installation)
     validate_result(payload, job)
     encoded = canonical_bytes(payload)
     if len(encoded) > 4194304:
@@ -304,23 +370,21 @@ async def publish_result(settings, sessions, job, export_path, receipt, release)
         ):
             raise ApiError(507, "account_quota_exceeded", "Waveform publication exceeds reserved private bytes")
         directory.parent.mkdir(parents=True, exist_ok=True)
-        directory.mkdir(mode=0o700)  # Exclusive; no overwrite or rollback erasure.
+        if export_fd is None:
+            directory.mkdir(mode=0o700)  # Exclusive; no overwrite or rollback erasure.
+        else:
+            from app.waveform_publication import adopt_export
+            from waveform_m08_installation import directory_fd
+            parent_fd = directory_fd(directory.parent)
+            try:
+                adopt_export(linux_stage_fd,export_fd,parent_fd,job.id,linux_execution["stage"])
+            finally:
+                os.close(parent_fd)
         for row in members:
             source = Path(export_path) / row["name"]
             destination = directory / row["name"]
-            with source.open("rb") as incoming, destination.open("xb") as outgoing:
-                count = 0
-                digest = hashlib.sha256()
-                while chunk := incoming.read(65536):
-                    count += len(chunk)
-                    if count > row["bytes"]:
-                        raise ApiError(409, "waveform_export_invalid", "Waveform member changed during publication")
-                    digest.update(chunk)
-                    outgoing.write(chunk)
-                outgoing.flush()
-                os.fsync(outgoing.fileno())
-            if count != row["bytes"] or digest.hexdigest() != row["sha256"]:
-                raise ApiError(409, "waveform_export_invalid", "Waveform member changed during publication")
+            if export_fd is None:
+                _copy_member(source,destination,row)
             session.add(
                 WaveformResultArtifact(
                     job_id=job.id,
@@ -330,13 +394,20 @@ async def publish_result(settings, sessions, job, export_path, receipt, release)
                     sha256=row["sha256"],
                 )
             )
-        if local_export(directory) != (sealed, members):
+        if local_export(directory,held_fd=export_fd) != (sealed, members):
             raise ApiError(409, "waveform_export_invalid", "Installed waveform export differs from its seal")
+        if export_fd is not None:
+            from app.waveform_publication import verify_adopted_path
+            verify_adopted_path(directory,export_fd)
         target.parent.mkdir(parents=True, exist_ok=True)
         with target.open("xb") as handle:
             handle.write(encoded)
             handle.flush()
             os.fsync(handle.fileno())
+        if export_fd is not None:
+            verify_adopted_path(directory,export_fd)
+            if verified_json(settings,key,sha256(encoded),len(encoded)) != payload:
+                raise ApiError(409,"waveform_stage_changed","Waveform installed metadata changed; bytes retained")
         current.state = "succeeded"
         current.result_key = key
         current.result_sha256 = sha256(encoded)
@@ -346,6 +417,23 @@ async def publish_result(settings, sessions, job, export_path, receipt, release)
         current.finished_at = utcnow()
         await session.commit()  # Any exception retains bytes; no uncertain-commit deletion.
     return payload
+
+
+def _copy_member(source,destination,row):
+    """Unchanged ordinary/Windows exclusive member-copy path."""
+    with source.open("rb") as incoming, destination.open("xb") as outgoing:
+        count = 0
+        digest = hashlib.sha256()
+        while chunk := incoming.read(65536):
+            count += len(chunk)
+            if count > row["bytes"]:
+                raise ApiError(409, "waveform_export_invalid", "Waveform member changed during publication")
+            digest.update(chunk)
+            outgoing.write(chunk)
+        outgoing.flush()
+        os.fsync(outgoing.fileno())
+    if count != row["bytes"] or digest.hexdigest() != row["sha256"]:
+        raise ApiError(409, "waveform_export_invalid", "Waveform member changed during publication")
 
 
 async def result_directory(session, settings, job, payload):

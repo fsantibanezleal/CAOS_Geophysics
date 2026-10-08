@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 
 from sqlalchemy import select
@@ -21,11 +22,16 @@ from app.waveform_result import publish_result
 
 
 def read_context(settings):
+    if sys.platform == "linux":
+        raise ApiError(409,"waveform_context_unavailable","Linux waveform requires its fixed nonroot installation")
     if not context_available(settings):
         raise ApiError(409, "waveform_context_unavailable", "Waveform native context is absent or invalid")
     value = INPUT.bounded_json(context_path(settings).read_bytes(), 65536)
     from waveform_m08_files import open_input, validate_path
-    from waveform_m08_windows import binary_sha
+    if value["platform"] == "linux":
+        from waveform_m08_linux import image_sha as binary_sha
+    else:
+        from waveform_m08_windows import binary_sha
 
     python = validate_path(value["python"])
     admission = validate_path(value["admission_path"])
@@ -49,6 +55,9 @@ def bind_job_context(context, stage_root, stage, job_id):
     This records the new directory identity; it does not grant host acceptance
     or replace any ABI, code, runtime, or review evidence in the selected record.
     """
+    if context["platform"] == "linux":
+        from app.waveform_linux_exec import bind_context
+        return bind_context(context, stage_root, stage, job_id)
     from waveform_m08_windows import decode_control, canonical
     from waveform_m08_files import open_input, open_output, validate_path
     from copy import deepcopy
@@ -84,6 +93,8 @@ def bind_job_context(context, stage_root, stage, job_id):
 
 
 def command(context, paths):
+    if context.get("platform") != "windows":
+        raise ApiError(409,"waveform_context_unavailable","Generic waveform observer dispatch is Windows-only")
     script = Path(__file__).resolve().parents[1] / "scripts" / "process_waveform_m08.py"
     return [
         context["python"],
@@ -106,6 +117,9 @@ def command(context, paths):
 
 async def execute(settings, sessions, job, poll_interval):
     """Real fixed CLI/supervisor only. Preserved stages demand exact recovery."""
+    if sys.platform == "linux":
+        from app.waveform_linux_worker import execute as installed_execute
+        return await installed_execute(settings,sessions,job,poll_interval)
     from app.worker import _cancel_requested, _finish_failure
 
     start = time.monotonic()
@@ -146,7 +160,7 @@ async def execute(settings, sessions, job, poll_interval):
         stage_root = settings.data_dir / ".job-staging"
         if stage_root.is_symlink():
             raise ApiError(409, "waveform_context_unavailable", "Waveform staging parent is unsafe")
-        stage_root.mkdir(mode=0o700,exist_ok=True)
+        stage_root.mkdir(mode=0o700, exist_ok=True)
         stage = stage_root / job.id
         stage.mkdir(mode=0o700)
         context = bind_job_context(context, stage_root, stage, job.id)
@@ -214,8 +228,9 @@ async def execute(settings, sessions, job, poll_interval):
         if type(run_id) is not str or re.fullmatch("[a-f0-9]{32}", run_id) is None:
             raise ApiError(409, "waveform_resource_invalid", "Waveform run identity is invalid")
         native = stage / f"export.a4-{run_id}"
-        receipt = INPUT.bounded_json((native / "eligibility.json").read_bytes(), 65536)
-        release = INPUT.bounded_json((native / "release.json").read_bytes(), 65536)
+        from waveform_m08_windows import decode_control
+        receipt = decode_control((native / "eligibility.json").read_bytes())
+        release = decode_control((native / "release.json").read_bytes())
         if (
             sha256(
                 json.dumps(receipt, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False).encode()
@@ -307,11 +322,16 @@ async def finalize_success_stage(settings, sessions, job, stage, receipt, releas
                                ("request.json", "admission.json", "stdout.json", "stderr.txt", "export", native.name)}:
         raise ApiError(409, "waveform_stage_invalid", "Unknown success staging entry; stage retained")
     local_export(stage / "export")
-    local_export(native / "science")
-    from waveform_m08_windows import CONTROL_NAMES
     names = {p.name for p in native.iterdir()}
-    if not {"science", "environment", "eligibility.json", "release.json"} <= names or not names <= CONTROL_NAMES | {"science", "environment"}:
-        raise ApiError(409, "waveform_stage_invalid", "Unknown native staging entry; stage retained")
+    linux = receipt.get("schema") in {"caos.m08-linux-resources.v1", "caos.m08-linux-resources.v2"}
+    if linux:
+        if names != {"eligibility.json", "release.json"}:
+            raise ApiError(409, "waveform_stage_invalid", "Unknown Linux staging entry; stage retained")
+    else:
+        local_export(native / "science")
+        from waveform_m08_windows import CONTROL_NAMES
+        if not {"science", "environment", "eligibility.json", "release.json"} <= names or not names <= CONTROL_NAMES | {"science", "environment"}:
+            raise ApiError(409, "waveform_stage_invalid", "Unknown native staging entry; stage retained")
     # Cache bytes belong to this exclusive cold-start profile, not user originals.
     # Accept only finite known matplotlib/Windows cold-start inventories, never
     # arbitrary cache files. Every byte is accounted and hashed below first.

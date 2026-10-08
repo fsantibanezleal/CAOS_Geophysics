@@ -182,6 +182,10 @@ def test_migration_and_unknown_revision(harness):
 
 
 def test_publication_and_roundtrip(harness, tmp_path, monkeypatch):
+    _publication_roundtrip(harness,tmp_path,monkeypatch,held_linux=False)
+
+
+def _publication_roundtrip(harness, tmp_path, monkeypatch, *, held_linux):
     """Real science/files/API/DB; supplied resource record is NOT native proof."""
     from app.database import make_engine, reconcile_private_files
     from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -225,8 +229,13 @@ from waveform_m08_files import create_output
 parent=Path(sys.argv[2]);result,sealed=calculate_bytes(*[(parent/name).read_bytes() for name in ('mseed','stationxml','request')])
 with create_output(parent/'science',trusted_parent=parent) as out: write_export(plan_export(result,sealed),out)
 """
+    scientific_env = dict(os.environ)
+    scientific_env.update(OPENBLAS_NUM_THREADS="1",OMP_NUM_THREADS="1",MKL_NUM_THREADS="1",NUMEXPR_NUM_THREADS="1",
+        PYTHONDONTWRITEBYTECODE="1",TMPDIR=str(tmp_path),TMP=str(tmp_path),TEMP=str(tmp_path),
+        MPLCONFIGDIR=str(tmp_path/"matplotlib"),XDG_CACHE_HOME=str(tmp_path/"cache"),HOME=str(tmp_path))
     actual = subprocess.run(
         [str(python), "-B", "-c", script, str(Path(__file__).resolve().parents[2]), str(tmp_path)],
+        env=scientific_env,
         capture_output=True,
         timeout=60,
         check=False,
@@ -265,7 +274,47 @@ with create_output(parent/'science',trusted_parent=parent) as out: write_export(
         sessions = async_sessionmaker(engine, expire_on_commit=False)
         try:
             job = await _claim(sessions, "authored-contract-fixture-not-native")
-            output = await publish_result(harness.settings, sessions, job, export, receipt, release)
+            if held_linux:
+                import os,shutil
+                from contextlib import ExitStack
+                from tests.api.test_waveform_linux_terminal import packet
+                from app.waveform_linux_execution import expected_job,identity
+                from waveform_m08_installation import canonical,sha,SOURCE_FILES
+                from app.waveform_stage import cleanup_stage
+                _,terminal,_ = packet()
+                hashes = {name:hashlib.sha256((Path(__file__).resolve().parents[2]/name).read_bytes()).hexdigest()
+                          for name in SOURCE_FILES}
+                assert job.request_json["implementation_sha256"] == sha(canonical(hashes))
+                terminal["job"] = expected_job(job)
+                terminal["sources"] = job.request_json["waveform_sources"]
+                terminal["installation"]["source_hashes"] = hashes
+                terminal["calculation_sha256"] = sealed.calculation_sha256
+                terminal["members"] = members
+                terminal["outcome"]["status"] = json.loads(sealed.metadata_bytes)["status"]
+                stage_parent = harness.settings.data_dir/".job-staging"
+                stage_parent.mkdir(exist_ok=True)
+                stage = stage_parent/job.id
+                stage.mkdir(mode=0o700)
+                shutil.copytree(export,stage/"export")
+                with ExitStack() as leases:
+                    parent_fd = os.open(stage_parent,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC)
+                    leases.callback(os.close,parent_fd)
+                    stage_fd = os.open(job.id,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW|os.O_CLOEXEC,dir_fd=parent_fd)
+                    leases.callback(os.close,stage_fd)
+                    terminal["stage"] = identity(stage_fd)
+                    (stage/"root_receipt.json").write_bytes(canonical(terminal))
+                    before = (stage/"export/calculation.json").stat().st_ino
+                    native = terminal["native"]
+                    output = await publish_result(harness.settings,sessions,job,stage/"export",
+                        native["eligibility"],native["release"],linux_execution=terminal,
+                        linux_installation=terminal["installation"],linux_stage_fd=stage_fd)
+                    assert set(os.listdir(stage_fd)) == {"root_receipt.json"}
+                    from app.waveform_contract import artifact_path,artifact_key
+                    installed = artifact_path(harness.settings,artifact_key(str(job.owner_id),job.project_id,job.id,"calculation.json"))
+                    assert installed.stat().st_ino == before  # No third member copy.
+                    cleanup_stage(parent_fd,stage_fd,job.id,terminal)
+            else:
+                output = await publish_result(harness.settings, sessions, job, export, receipt, release)
             await reconcile_private_files(harness.settings, sessions)
             return output
         finally:
