@@ -33,6 +33,14 @@ existing result ledger once. Exact ZIP inventory remains `magnetic_result` at
 `results/<job UUID>.zip`; no JSON fallback or unknown-sibling exemption.
 Gate: exact attempt charge/inventory and incomplete/stale/foreign/unknown refusal.
 
+R-463 BEFORE installing a new immutable magnetic dataset, THE same existing
+preparation-attempt lifecycle SHALL reserve32MiB (bounded16MiB structural body
+and independent target) with a planned dataset UUID and null unpublished FK.
+Actual source/physical-metadata receipts SHALL be rechecked before publication;
+the published FK and dataset co-commit. Fresh worker sessions SHALL not commit
+or roll back the authenticating caller's unrelated read/write transaction.
+Gate: dataset birth/duplicate/uncertain-target and caller-transaction controls.
+
 ## Design
 
 Use the existing magnetic preparation-attempt SQL model and literal migration
@@ -53,6 +61,11 @@ writer transaction. SQLite transactions only reserve, fence source identities
 and publish records. A timed-out operation waits confirmed completion of its
 bounded work before releasing owner guards; absence of a result is not drain.
 No retry, fit, cap increase, provider truth or public activation is introduced.
+Dataset creation has its own closed `dataset` operation, not a fabricated
+processing job or M03 preparation receipt. Its publication intent is retained
+before exclusive target writing just like a replay ZIP. The structural body's
+existing16MiB storage bound is unchanged; the browser's8MiB wire bound is a
+separate refusal boundary. No temporary dataset copy is written off-ledger.
 
 ## Tasks
 
