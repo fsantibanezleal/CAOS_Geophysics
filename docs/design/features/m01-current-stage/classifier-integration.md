@@ -48,6 +48,15 @@ origins, roles, missing members/rows, wrong ownership and altered initial invent
 refuse without dispositions. Current cleanup and projection use the same narrow
 dispatch; successful retained-profile/v2 ownership grammar is not altered.
 
+The closed physical_async_sql operation dispatcher uses the original API
+AsyncSession's aiosqlite worker thread and already active native transaction.
+Only classifier, project inventory, native receipt observation and same-commit
+tombstone insertion are accepted. Unflushed ORM, arbitrary callbacks, missing
+native transaction and session reentry refuse. Cancellation drains queued native
+work before caller lifetime guards can unwind. No connection is opened, closed,
+committed or rolled back by the seam. Source/VFS/WAL admission and actual writer
+exclusion remain caller responsibilities, not inferred from this transport.
+
 Remaining current-stage integration is active implementation, not an added
 release prerequisite: original owned DELETE physical rows/debt, runtime startup/recovery
 assembly, actual bounded science/resources/cancel and physical HTTP/export/client
