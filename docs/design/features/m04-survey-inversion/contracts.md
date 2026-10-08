@@ -516,7 +516,7 @@ The seven public methods map to PhysicalObjective without gravity constructors:
 | evaluate(q,return_g=False,return_H=False) | Two exactbool flags; nativefloat Phi, tuple(Phi,g), tuple(Phi,H), or tuple(Phi,g,H). Phi=phi_d+beta*actual_vendor_regularizer(q). g=2Jq.T W.T W r+beta*vendor.deriv(q). H actual float64 LinearOperator(A,A):2Jq.T W.T W Jq action+beta*vendor.deriv2(q,v), GN only for exactnorm. |
 | components(q) | Fresh exact{phi_d,phi_m,phi_engine} finite nonnegative nativefloats from SAME current evaluation. No surrogate relabelled true p1. |
 | binding_diagonal(q) | Native positive F64(A) full GN plus actual fixed vendor regularizer diagonal; no floor/nugget/normalization. |
-| free_metric(q,free_indices) | Native I64 vector unique increasing0..A-1, permits genuine zero count. Exact reviewed diagonal inverse action on this face, zero outside, real float64 LinearOperator(A,A). No gravity Joseph policy substitution. |
+| free_metric(q,free_indices) | Native I64 vector unique increasing0..A-1, permits genuine zero count. Exact reviewed diagonal inverse action on this face, zero outside, real float64 LinearOperator(A,A). Store native inverse=1/diagonal once, then multiply inverse[free]*v[free], matching the public core's literal arithmetic. Native v/diagonal can differ by one ulp and is not that registered action. No gravity Joseph policy substitution. |
 | certify(...) | Complete14key MagneticCertificate, SAME native model/gradient/Phi and fixed vendor terms. Norm-domain record cannot pass quadratic-only core. |
 | release_state() | Clears only this adapter's ephemeral evaluation/Jacobian cache; no disk/source/provider/shared-state mutation. |
 
