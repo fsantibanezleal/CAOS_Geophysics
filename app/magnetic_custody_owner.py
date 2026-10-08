@@ -130,7 +130,7 @@ class MagneticCustodyOwner:
         await session.execute(text("BEGIN IMMEDIATE"))
         try:
             previous = (await session.execute(select(SurveyDatasetAttempt).where(
-                SurveyDatasetAttempt.owner_id == user.id))).scalars().all()
+                SurveyDatasetAttempt.owner_id == user.id).execution_options(populate_existing=True))).scalars().all()
             # Failed/uncertain attempts are never silently adopted or zero charged.
             for row in previous:
                 if type(row.input_json) is not dict:
@@ -236,7 +236,7 @@ def validate_attempt(row):
 
 async def attempt_charge(session, owner_id):
     rows = (await session.execute(select(SurveyDatasetAttempt).where(
-        SurveyDatasetAttempt.owner_id == owner_id))).scalars().all()
+        SurveyDatasetAttempt.owner_id == owner_id).execution_options(populate_existing=True))).scalars().all()
     charge = 0
     for row in rows:
         if type(row.input_json) is not dict:
@@ -254,7 +254,7 @@ async def attempt_charge(session, owner_id):
 async def reconcile_attempts(session, owner, settings):
     """Exact additive startup/delete reader; debt/unknown dirs stay refused."""
     owner.require(session, settings, excluded=True)
-    rows = (await session.execute(select(SurveyDatasetAttempt))).scalars().all()
+    rows = (await session.execute(select(SurveyDatasetAttempt).execution_options(populate_existing=True))).scalars().all()
     selected, unhandled = [], []
     for row in rows:
         if type(row.input_json) is not dict:
