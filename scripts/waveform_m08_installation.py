@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 import re
 import stat
 import subprocess
+import sys
 from uuid import UUID
 
 CONFIG = Path("/etc/fasl/geophysics-waveform-runtime.json")
@@ -245,9 +246,55 @@ def validate_inventory(observed, expected):
         require(observed[name] == item)
 
 
-def snapshot_tree(root):
+def inactive_hook(name):
+    return PurePosixPath(name).name in ("sitecustomize.py","usercustomize.py") or name.endswith(".pth")
+
+
+def native_library(name):
+    return re.fullmatch(r"libpython[0-9]+\.[0-9]+\.so(?:\.[0-9]+)*",PurePosixPath(name).name) is not None
+
+
+def validate_inactive_targets(targets, *, native=False):
+    require(type(targets) is dict and len(targets) <= 16)
+    for name,record in targets.items():
+        path(name)
+        require(native_library(name) if native else inactive_hook(name))
+        fields(record,{"device","inode","uid","gid","mode","links","bytes","mtime_ns","ctime_ns","sha256"})
+        for key in ("device","inode","uid","gid","mode","links","bytes","mtime_ns","ctime_ns"):
+            require(type(record[key]) is int and 0 <= record[key] < 2**64)
+        require(record["inode"] > 0 and record["uid"] == 0 and record["mode"] <= 0o7777
+                and record["links"] >= 1 and not record["mode"] & 0o022
+                and record["bytes"] <= 256*1024**2)
+        digest(record["sha256"])
+    return targets
+
+
+def verify_inactive_targets(targets, *, native=False):
+    validate_inactive_targets(targets,native=native)
+    for name,record in targets.items():
+        parent = directory_fd(Path(name).parent,root_owned=True)
+        try:
+            info = os.stat(Path(name).name,dir_fd=parent,follow_symlinks=False)
+            require(stat.S_ISREG(info.st_mode))
+            observed = dict(device=info.st_dev,inode=info.st_ino,uid=info.st_uid,gid=info.st_gid,
+                            mode=stat.S_IMODE(info.st_mode),links=info.st_nlink,bytes=info.st_size,
+                            mtime_ns=info.st_mtime_ns,ctime_ns=info.st_ctime_ns)
+            raw = regular_at(parent,Path(name).name,256*1024**2,root_owned=True,empty=True,image=True)
+            if native:
+                require(raw.startswith(b"\x7fELF"))
+            require(file_identity(os.stat(Path(name).name,dir_fd=parent,follow_symlinks=False)) == file_identity(info))
+            require({**observed,"sha256":sha(raw)} == record)
+        finally:
+            os.close(parent)
+
+
+def snapshot_tree(root, *, inactive_link_targets=None, native_link_targets=None):
     """Complete names and identities under an immutable no-follow root."""
     root = Path(root)
+    targets = {} if inactive_link_targets is None else inactive_link_targets
+    images = {} if native_link_targets is None else native_link_targets
+    verify_inactive_targets(targets)
+    verify_inactive_targets(images,native=True)
     held = directory_fd(root,root_owned=True)
     pending,records,total = [(root,held,0)],{},0
     try:
@@ -271,7 +318,9 @@ def snapshot_tree(root):
                     elif stat.S_ISLNK(info.st_mode):
                         target = os.readlink(name,dir_fd=fd)
                         resolved = member.resolve(strict=True)
-                        require(resolved.is_relative_to(root))
+                        require(resolved.is_relative_to(root) or
+                                (inactive_hook(name) and str(resolved) in targets and resolved.name == name) or
+                                (native_library(name) and str(resolved) in images and native_library(resolved.name)))
                         # Every link target must itself appear in the exact census.
                         record.update(kind="link",target=target)
                     else:
@@ -284,24 +333,76 @@ def snapshot_tree(root):
             finally:
                 os.close(fd)
         validate_inventory(records,records)
+        verify_inactive_targets(targets)
+        verify_inactive_targets(images,native=True)
         return records
     finally:
         for _,fd,_ in pending:
             os.close(fd)
 
 
+def inactive_inventory(roots, targets):
+    """Derive inactive hook hashes only from sealed exact names/targets."""
+    validate_inactive_targets(targets)
+    inactive,used_targets = {},set()
+    for name,expected in roots.items():
+        for member,item in expected.items():
+            if not inactive_hook(member):
+                continue
+            if item["kind"] == "file":
+                hook_digest = item["sha256"]
+            else:
+                require(item["kind"] == "link")
+                resolved = (Path(name)/member).resolve(strict=True)
+                root = Path(name)
+                if resolved.is_relative_to(root):
+                    target = expected.get(resolved.relative_to(root).as_posix())
+                    require(type(target) is dict and target.get("kind") == "file")
+                    hook_digest = target["sha256"]
+                else:
+                    require(str(resolved) in targets and resolved.name == PurePosixPath(member).name)
+                    used_targets.add(str(resolved))
+                    hook_digest = targets[str(resolved)]["sha256"]
+            inactive[str(PurePosixPath(name)/member)] = hook_digest
+    require(used_targets == set(targets))
+    return inactive
+
+
+def validate_native_links(roots, targets, native_images):
+    validate_inactive_targets(targets,native=True)
+    require(type(native_images) is dict)
+    used = set()
+    for name,inventory in roots.items():
+        for member,item in inventory.items():
+            if item["kind"] != "link" or not native_library(member):
+                continue
+            resolved = (Path(name)/member).resolve(strict=True)
+            if resolved.is_relative_to(Path(name)):
+                continue
+            require(str(resolved) in targets and native_library(resolved.name))
+            require(native_images.get(str(resolved)) == targets[str(resolved)]["sha256"])
+            used.add(str(resolved))
+    require(used == set(targets))
+
+
 def verify_import_closure(config):
+    require(sys.flags.isolated and sys.flags.no_site)
     body = root_regular(config["import_closure_path"],16*1024**2)
     require(sha(body) == config["import_closure_sha256"])
     closure = decode(body,16*1024**2)
-    fields(closure,{"schema","source_revision","roots","root_identities","absent_paths","startup_hooks","startup_search_path","inactive_hooks","native_images"})
+    closure_keys = {"schema","source_revision","roots","root_identities","absent_paths","startup_hooks","startup_search_path","inactive_hooks","native_images"}
+    optional = {key for key in ("inactive_link_targets","native_link_targets") if key in closure}
+    fields(closure,closure_keys | optional)
+    targets = closure.get("inactive_link_targets",{})
+    images = closure.get("native_link_targets",{})
+    verify_inactive_targets(targets)
+    verify_inactive_targets(images,native=True)
     require(closure["schema"] == "geophysics.waveform-import-closure/v2" and
             closure["source_revision"] == config["source_revision"] and closure["startup_hooks"] == [])
     roots = closure["roots"]
     require(type(roots) is dict and 2 <= len(roots) <= 8 and config["site_packages"] in roots)
     require(any(str(path(name)).startswith("/usr/lib/python") for name in roots))
     fields(closure["root_identities"],roots)
-    inactive = {}
     for name,expected in roots.items():
         path(name)
         held = directory_fd(name,root_owned=True)
@@ -311,12 +412,11 @@ def verify_import_closure(config):
             require(closure["root_identities"][name] == identity)
         finally:
             os.close(held)
-        validate_inventory(snapshot_tree(name),expected)
-        for member,item in expected.items():
-            if PurePosixPath(member).name in ("sitecustomize.py","usercustomize.py") or member.endswith(".pth"):
-                require(item["kind"] == "file")
-                inactive[str(PurePosixPath(name)/member)] = item["sha256"]
-    require(closure["inactive_hooks"] == inactive)
+        validate_inventory(snapshot_tree(name,inactive_link_targets=targets,native_link_targets=images),expected)
+    require(closure["inactive_hooks"] == inactive_inventory(roots,targets))
+    validate_native_links(roots,images,closure["native_images"])
+    verify_inactive_targets(targets)
+    verify_inactive_targets(images,native=True)
     require(type(closure["absent_paths"]) is list and len(closure["absent_paths"]) <= 16)
     for name in closure["absent_paths"]:
         path(name)

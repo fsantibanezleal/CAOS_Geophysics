@@ -226,6 +226,30 @@ is executed or newly adopted; an addition or any change refuses the exact census
 Immutable code/native images may retain pinned hardlinks; uploaded originals
 must always remain single-link no-follow regular files.
 
+An inactive distro hook may be a link to a file outside one directory inventory.
+It remains outside admission unless its exact resolved target is separately
+declared in the closed immutable closure graph. The optional
+`inactive_link_targets` member records only root-owned no-follow regular targets
+of existing inactive sitecustomize/usercustomize/PTH names, with full file identity,
+mode, link count, byte count, modification/change timestamps and SHA256. No target
+is discovered and adopted during checking. Existing inward links use their exact
+inventoried resolved regular member rather than adding an external target.
+Every declared target must be used by an exact inventoried inactive link; unknown,
+unused, changed or unbound links/targets refuse. Isolated no-site startup remains
+mandatory and no hook is executed. Old closures without this member continue to
+reject every outward link. This completes the existing interpreted-closure
+requirement; it does not widen search paths, request authority or scientific caps.
+
+The same existing complete-closure obligation covers a distro development
+libpython link whose resolved ELF image is outside its stdlib directory. Optional
+`native_link_targets` binds only libpython versioned shared-image names, using the
+same exact file-identity/byte/hash record. The target must also be present with
+the identical digest in the existing native-image map; no new native executable
+or import path is admitted by following a link. Check the ELF signature without
+loading the image. Every target must be used by its inventoried library link;
+unknown, unused, hook-as-native and unbound ordinary outward links still refuse.
+Absent optional graphs preserve the strict historical outward-link refusal.
+
 ## Qualification boundary
 
 Previous successful native/API/browser calculations retain their original
