@@ -16,6 +16,9 @@ from tests.api.test_physical_participation import TransportLease,TransportWorker
 from tests.api.test_physical_roots import root_case as root_case
 from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey
+from tests.api.test_profile_incomplete_custody import (
+    exact_owner as exact_owner, q13 as q13, incomplete_fixture, inventory,
+)
 
 
 def startup_engine(path,*,wal=True):
@@ -127,3 +130,47 @@ def test_repeated_cancel_cannot_release_guard_before_transaction_and_session_set
             finish.set()
             await engine.dispose()
     asyncio.run(run())
+
+
+@pytest.mark.parametrize('unknown',[False,True])
+def test_startup_consumes_distinct_saved_incomplete_custody_or_refuses_whole_snapshot(root_case,q13,unknown):
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from uuid import uuid4
+    from app.physical_contract import canonical
+    from tests.api.test_physical_forest import connect
+    case(root_case)
+    settings,participant=assembly(root_case)
+    fixture=incomplete_fixture(settings.data_dir,q13,owner=root_case[2]['owner_id'],partial=True)
+    files,relation,_,approved,_=fixture
+    records=inventory(fixture)
+    census=participant.leases.files
+    census.private_directory_identity=files.private_directory_identity
+    census.private_member=files.private_member
+    participant.registration=canonical(dict(approved_manifests={},
+        approved_installations={relation['id']:approved},native_metadata={}))
+    with closing(connect(root_case[0])) as db:
+        db.execute('''INSERT INTO deletion_receipts(id,project_id,owner_id,deleted_at,asset_hashes,asset_manifest,
+            derived_manifest,backup_purge_status) VALUES(?,?,?,?,?,?,?,?)''',
+            (str(uuid4()),relation['project_id'],relation['owner_id'],'2026-10-08 12:00:00','[]','[]',
+             canonical(records).decode(),'not_attempted'))
+        saved=db.execute('SELECT derived_manifest FROM deletion_receipts').fetchall()
+    if unknown: (settings.data_dir/'.profile-incomplete'/'unknown').write_bytes(b'preserve unknown')
+    before={p.relative_to(settings.data_dir).as_posix():p.read_bytes()
+            for p in (settings.data_dir/'.profile-incomplete').rglob('*') if p.is_file()}
+    async def run():
+        engine=startup_engine(root_case[0])
+        try:
+            if unknown:
+                with pytest.raises(ValueError,match='physical_startup_inconsistent'):
+                    await audit_startup_participating(settings,async_sessionmaker(engine),participant)
+            else:
+                result=await audit_startup_participating(settings,async_sessionmaker(engine),participant)
+                assert result.classification=='coherent_committed' and result.runtime is False
+                assert result.account_charges[relation['owner_id']]['profile_retained']==records[0]['charged_bytes']
+        finally: await engine.dispose()
+        assert not participant.leases.held and not participant.worker.held
+    asyncio.run(run())
+    with closing(connect(root_case[0])) as db:
+        assert db.execute('SELECT derived_manifest FROM deletion_receipts').fetchall()==saved
+    assert before=={p.relative_to(settings.data_dir).as_posix():p.read_bytes()
+                   for p in (settings.data_dir/'.profile-incomplete').rglob('*') if p.is_file()}
