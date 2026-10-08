@@ -36,6 +36,20 @@ def validate_path(value):
     return path
 
 
+def external_work_path(value):
+    """Raw/model/working/temp paths are explicit and never inside a checkout.
+
+    This is not used for code/interpreter/DLL paths, which remain separately
+    pinned and may belong to the permitted primary product environment.
+    """
+    path = validate_path(value)
+    resolved = path.resolve()
+    product = Path(__file__).resolve().parents[1]
+    if resolved.is_relative_to(product) or any((parent / ".git").exists() for parent in (resolved, *resolved.parents)):
+        fail("waveform_contract")
+    return path
+
+
 @lru_cache(maxsize=1)
 def _win_api():
     import ctypes

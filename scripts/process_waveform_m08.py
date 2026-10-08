@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data-pipeline"))
 from waveform_input import WaveformInputError, fail
-from waveform_m08_files import validate_path
+from waveform_m08_files import validate_path, external_work_path
 
 
 class StrictParser(argparse.ArgumentParser):
@@ -31,17 +31,18 @@ def main(argv=None):
             fail("waveform_contract")
         args = parser.parse_args(argv)
         paths = {
-            name: validate_path(getattr(args, name)) for name in ("mseed", "stationxml", "request", "out", "python")
+            name: (validate_path if name == "python" else external_work_path)(getattr(args, name))
+            for name in ("mseed", "stationxml", "request", "out", "python")
         }
         if len(set(paths.values())) != len(paths) or paths["out"].exists():
             fail("waveform_contract")
         reference = None
         if args.evaluate_with is not None:
-            reference = validate_path(args.evaluate_with)
+            reference = external_work_path(args.evaluate_with)
             if reference in paths.values():
                 fail("waveform_contract")
         if args.admission is not None:
-            admission = validate_path(args.admission)
+            admission = external_work_path(args.admission)
             if admission in paths.values() or admission == reference:
                 fail("waveform_contract")
             from waveform_m08_windows import run_cli, exit_status

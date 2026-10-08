@@ -181,7 +181,7 @@ export function parseProjectDatasetReceipt(value: unknown): ProjectDatasetReceip
   if (data.modality === "gravity_station" && data.parser_version === "gravity-station-csv/v1" && data.qc_verdict === "parsed_for_flag_qc_only") integer(data.row_count, 4, 4096);
   else if (data.modality === "edi_transfer_function" && data.parser_version === "edi-strict-envelope/v1" && data.qc_verdict === "awaiting_full_tensor_qc") integer(data.row_count, 2, 512);
   else if (["ert_profile","traveltime_profile"].includes(String(data.modality)) && data.parser_version === "supplied-profile-original/v1" && data.qc_verdict === "parsed_not_numerically_inverted") integer(data.row_count,4,4096);
-  else if (data.modality === "waveform_counts_response" && /^m08-counts-response\/v1\/[a-f0-9]{64}$/.test(String(data.parser_version)) && data.qc_verdict === "structural_index_not_physical_qc") integer(data.row_count, 1, 180000);
+  else if (data.modality === "waveform_counts_response" && /^m08\/v1\/[a-f0-9]{64}$/.test(String(data.parser_version)) && data.qc_verdict === "structural_index_not_physical_qc") integer(data.row_count, 1, 180000);
   else fail("dataset receipt modality/parser/verdict");
   hash(data.raw_sha256); hash(data.sha256); timestamp(data.created_at);
   return value as ProjectDatasetReceipt;

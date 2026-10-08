@@ -4,8 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { zipSync } from "fflate";
 import actual from "./fixtures/waveform-authored-calculation.json";
 import { ApiClient } from "../api/client";
-import { WaveformApi, WAVEFORM_METHOD, isWaveformJob, isWaveformReceipt, parseWaveformResult, decodeWaveformArray, verifyWaveformZip, type WaveformResult, type WaveformJob } from "../api/waveform";
-import { isMtJob, isEdiReceipt, sha } from "../api/processing-contracts";
+import { WaveformApi, WAVEFORM_METHOD, isWaveformJob, isWaveformReceipt, parseWaveformDataset, parseWaveformResult, decodeWaveformArray, verifyWaveformZip, type WaveformResult, type WaveformJob } from "../api/waveform";
+import { isMtJob, isEdiReceipt, parseProjectDatasetReceipt, sha } from "../api/processing-contracts";
 import { WaveformProjectWorkbench, WaveformTrace } from "../components/WaveformProjectWorkbench";
 
 const uuid="00000000-0000-4000-8000-000000000001", digest="a".repeat(64);
@@ -18,6 +18,14 @@ function result():WaveformResult {
 }
 afterEach(()=>vi.unstubAllGlobals());
 describe("M08 owned client and shared-shell views",()=>{
+  it("accepts the exact API parser revision and rejects invented or altered parser identities",()=>{
+    const r=result(),parser=`m08/v1/${r.scientific_request_sha256}`;
+    const receipt={dataset_id:uuid,project_id:uuid,raw_asset_id:uuid,version:1,schema:"geophysics.observation-dataset/v1",modality:"waveform_counts_response",row_count:18000,parser_version:parser,raw_sha256:r.sources.miniseed.raw_sha256,sha256:digest,created_at:"2026-10-08T00:00:00Z",qc_verdict:"structural_index_not_physical_qc"};
+    const dataset={schema:"geophysics.waveform-dataset/v1",dataset_id:uuid,project_id:uuid,owner_id:uuid,raw_asset_id:uuid,parent_raw_sha256:receipt.raw_sha256,version:1,parser_version:parser,modality:receipt.modality,dimensions:{channel:1,sample:18000,record:18},sources:r.sources,request:r.calculation.request.submitted,scientific_request_sha256:r.scientific_request_sha256,qc_verdict:receipt.qc_verdict};
+    expect(parseProjectDatasetReceipt(receipt)).toEqual(receipt);expect(parseWaveformDataset(dataset)).toEqual(dataset);
+    for(const bad of [`m08-counts-response/v1/${r.scientific_request_sha256}`,`m08/v1/${"g".repeat(64)}`]){expect(()=>parseProjectDatasetReceipt({...receipt,parser_version:bad})).toThrow();expect(()=>parseWaveformDataset({...dataset,parser_version:bad})).toThrow();}
+    expect(()=>parseWaveformDataset({...dataset,scientific_request_sha256:digest})).toThrow();
+  });
   it("accepts an actual authored calculation without granting scientific authority",()=>{const r=result();expect(parseWaveformResult(r)).toEqual(r);expect(r.calculation.field_truth).toBeNull();expect(Object.values(r.calculation.acceptance).every(v=>v===false)).toBe(true);});
   it.each(["schema","authority","rss","gap","channel","dtype","size","hash","extra"])("rejects %s contract drift",kind=>{const r=result();if(kind==="schema")r.calculation.schema="future";if(kind==="authority")r.calculation.acceptance.host_admitted=true as false;if(kind==="rss")r.resources.memory_kind="rss" as "windows_job_committed";if(kind==="gap")r.resources.max_sample_gap_ns=100000001;if(kind==="channel")r.calculation.channels[0].sample_rate_hz=NaN;if(kind==="dtype")r.calculation.array_descriptors[0].dtype="<i4";if(kind==="size")r.members[3].bytes++;if(kind==="hash")r.members[3].sha256=digest;if(kind==="extra")r.members.push({name:"raw.ms",bytes:1,sha256:digest});expect(()=>parseWaveformResult(r)).toThrow();});
   it("keeps waveform jobs/receipts out of MT and gravity unions using positive guards",()=>{expect(isWaveformJob({method_id:WAVEFORM_METHOD})).toBe(true);expect(isWaveformJob({method_id:"gravity.station-outlier-flags/v1"})).toBe(false);expect(isMtJob({method_id:WAVEFORM_METHOD} as never)).toBe(false);expect(isEdiReceipt({modality:"waveform_counts_response"} as never)).toBe(false);expect(isWaveformReceipt({modality:"waveform_counts_response"})).toBe(true);});

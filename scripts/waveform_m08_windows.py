@@ -21,7 +21,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data-pipeline"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from waveform_input import WaveformInputError
-from waveform_m08_files import validate_path, open_input
+from waveform_m08_files import validate_path, external_work_path, open_input
 import waveform_m08_files as files
 
 B = 60000000000
@@ -490,12 +490,13 @@ def validate_spec(spec):
         require(spec["schema"] == "caos.m08-windows-transaction.v1")
         for key, length in (("run_id", 32), ("source_revision", 40), ("closure_manifest_sha256", 64)):
             require(type(spec[key]) is str and re.fullmatch("[a-f0-9]{" + str(length) + "}", spec[key]) is not None)
-        paths = [validate_path(spec[key]) for key in ("mseed", "stationxml", "request", "out", "python")]
+        paths = [(validate_path if key == "python" else external_work_path)(spec[key])
+                 for key in ("mseed", "stationxml", "request", "out", "python")]
         if spec["evaluate_with"] is not None:
-            paths.append(validate_path(spec["evaluate_with"]))
+            paths.append(external_work_path(spec["evaluate_with"]))
         receipt = spec["private_parent_receipt"]
         require(type(receipt) is dict and set(receipt) == {"path", "sha256"})
-        paths.append(validate_path(receipt["path"]))
+        paths.append(external_work_path(receipt["path"]))
         require(type(receipt["sha256"]) is str and re.fullmatch("[a-f0-9]{64}", receipt["sha256"]) is not None)
         require(len(set(paths)) == len(paths))
         return spec

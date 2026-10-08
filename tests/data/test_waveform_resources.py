@@ -209,6 +209,15 @@ def test_spec_bound_unknown_flags_bool_and_receipt_identity(tmp_path):
         m.validate_spec(dict(spec, cpu_limit=100))
     with pytest.raises(m.ControlError):
         m.validate_spec(dict(spec, run_id="x" * 1000000))
+    # Device data/temp policy applies before any I/O or native launch. The
+    # selected interpreter is code and may remain in the permitted D venv.
+    for name in ("mseed", "stationxml", "request", "out", "evaluate_with"):
+        with pytest.raises(m.ControlError):
+            m.validate_spec(dict(spec, **{name: str(ROOT / "data" / "forbidden-working-file")}))
+    with pytest.raises(m.ControlError):
+        m.validate_spec(dict(spec, private_parent_receipt={
+            "path": str(ROOT / "data" / "forbidden-admission.json"), "sha256": "0" * 64,
+        }))
 
 
 def test_no_native_call_or_output_for_unmeasured_admission(tmp_path):

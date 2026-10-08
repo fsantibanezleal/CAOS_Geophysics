@@ -65,6 +65,23 @@ def test_invalid_literal_paths_fail_without_creation(name):
         files().validate_path(name)
 
 
+@pytest.mark.parametrize("role", ["mseed", "stationxml", "request", "out", "admission", "evaluate-with"])
+def test_cli_rejects_repository_working_paths_before_reads_or_native_calls(tmp_path, monkeypatch, role):
+    cli = importlib.import_module("process_waveform_m08")
+    args = fixtures(tmp_path)
+    forbidden = str(ROOT / "data/derived/waveform/new-working-file")
+    if role in ("admission", "evaluate-with"):
+        args += ["--" + role, forbidden]
+    else:
+        args[args.index("--" + role) + 1] = forbidden
+    monkeypatch.setattr(files(), "open_input", lambda *_args: pytest.fail("Rejected path must never be read"))
+    output = io.StringIO()
+    with redirect_stdout(output):
+        assert cli.main(args) == 3
+    assert json.loads(output.getvalue()) == {"status": "rejected", "reason": "path_contract"}
+    assert not (tmp_path / "new").exists()
+
+
 def test_only_new_output_beneath_exact_explicit_parent(tmp_path):
     module = files()
     with module.create_output(tmp_path / "new", trusted_parent=tmp_path) as directory:
