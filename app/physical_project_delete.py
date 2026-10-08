@@ -102,11 +102,12 @@ class PhysicalProjectDeletion:
 
 
 async def prepare_physical_project_deletion(app,settings,session,owner,project,archives):
-    from app.physical_successor import PREDECESSOR,REVISION
+    from app.physical_successor import PREDECESSOR
+    from app.physical_schema import DDL
     revision=(await session.execute(text('SELECT version_num FROM alembic_version'))).scalars().all()
     if revision==[PREDECESSOR]: return None,None
     participant=getattr(app.state,'physical_project_deletion',None)
-    if revision!=[REVISION] or not isinstance(participant,PhysicalProjectDeletion):
+    if len(revision)!=1 or revision[0] not in DDL or not isinstance(participant,PhysicalProjectDeletion):
         raise ApiError(409,'physical_deletion_unavailable','Physical project deletion requires its recognized native participant')
     try:
         return participant,await participant.prepare(settings,session,owner,project,archives)

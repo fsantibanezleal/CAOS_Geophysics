@@ -8,14 +8,16 @@ The caller holds both original-worker and all-writer exclusion throughout.
 from app.physical_contract import M, byte_sha, canonical, digest, integer, require, sha, uuid
 from app.physical_current_custody import validate_current_custody
 from app.physical_deleted_inventory import project_inventory, save_current_tombstone
-from app.physical_forest import SUCCESSOR_DDL
-from app.physical_successor import REVISION, ddl_sha256
 
 
 def _transaction(connection):
-    require(connection.in_transaction and connection.execute('PRAGMA foreign_keys').fetchone()==(1,)
-            and connection.execute('SELECT version_num FROM alembic_version').fetchall()==[(REVISION,)]
-            and ddl_sha256(connection)==SUCCESSOR_DDL,'project_delete_native_transaction')
+    from app.physical_schema import schema_tables
+    require(connection.in_transaction and connection.execute('PRAGMA foreign_keys').fetchone()==(1,),
+            'project_delete_native_transaction')
+    try:
+        schema_tables(connection)
+    except ValueError as error:
+        raise ValueError('project_delete_native_transaction') from error
 
 
 def original_slots(inventory):

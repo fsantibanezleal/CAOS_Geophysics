@@ -5,6 +5,7 @@ import json
 import sqlite3
 from uuid import uuid4
 
+from alembic import command
 from fastapi.testclient import TestClient
 from fastapi_users.password import PasswordHelper
 import pytest
@@ -17,11 +18,17 @@ from tests.api.test_physical_upload import metadata
 from tests.api.test_physical_roots import root_case as root_case
 from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey
+from tests.ops.physical_union_fixture import capsule
 
 
-@pytest.fixture
-def http_root(root_case, survey, monkeypatch):
+@pytest.fixture(params=['0005_physical_forest', '0006_joint_artifacts', '0007_magnetic_line_artifacts'])
+def http_root(root_case, survey, monkeypatch, request):
     case(root_case)
+    if request.param != '0005_physical_forest':
+        config, _ = capsule(root_case[0].parent/'literal-union')
+        monkeypatch.setenv('GEOPHYSICS_DB_PATH', str(root_case[0]))
+        monkeypatch.setenv('GEOPHYSICS_CANDIDATE_ROOT', str(root_case[0].parent))
+        command.upgrade(config, request.param)
     settings, physical = bound_fixture(root_case, monkeypatch)
     files = physical.leases.files
 
@@ -43,6 +50,8 @@ def http_root(root_case, survey, monkeypatch):
     password = 'exact route private fixture password'
     foreign = str(uuid4())
     with closing(sqlite3.connect(settings.database_path)) as connection:
+        assert connection.execute('SELECT version_num FROM alembic_version').fetchall() in (
+            [('0005_physical_forest',)], [('0006_joint_artifacts',)], [('0007_magnetic_line_artifacts',)])
         connection.execute('UPDATE user SET hashed_password=? WHERE id=?', (PasswordHelper().hash(password), owner))
         connection.execute('INSERT INTO user VALUES(?,?,?,1,0,1)', (foreign, foreign+'@example.org', PasswordHelper().hash(password)))
         connection.commit()

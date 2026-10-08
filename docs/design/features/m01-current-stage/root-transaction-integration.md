@@ -58,3 +58,20 @@ root transaction error. Fixed fixtures and boundary error, not the rejection.
 No native POSIX positive, scientific worker or populated union custody acceptance
 is inferred. The original project DELETE still has 0005-only seams to extend;
 the full union needs actual M11/M03 accounting and closed namespace readers.
+
+The original DELETE transaction seams now recognize the same exact allocated
+schema identities. Historical v2 deletion records retain their original 0005
+origin; new records save the actual observed 0005/0006/0007 origin. The unknown
+historical 0004-physical alias remains refused. No default head, route, original
+byte projection, staged-copy charge, exclusive lifetime or cleanup acknowledgement
+is changed. A recognized head does not grant missing method custody.
+The changed portable root/deletion/registry gate passed 57 cases, zero errors,
+failures or skips, 193.330s, JUnit SHA256
+`171f6ed9cf0baa6b9e50a1f6c848d9f32bf7514b6a07f6451f9b17d73cb17fd5`.
+The existing atomic receipt/debt assertion now runs on all three exact heads,
+both caller commit and rollback: 6 PASS, zero errors/failures/skips, 23.759s;
+`E:/_Temp/m01-union-delete-threeheads-r9-20261008.xml`, SHA256
+`bd7555c27741f46837de37230a7e2697a010b266c83e8acd96486f69671f1213`.
+These tests retain unknown/foreign/debt negatives. Nonempty joint/magnetic
+custody and actual Linux scientific dispatch remain unqualified implementation
+work; native POSIX root birth is separately measured by a fresh fixed drill.

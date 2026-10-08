@@ -5,6 +5,7 @@ import json
 from uuid import uuid4
 
 import pytest
+from alembic import command
 
 from app.physical_classifier import classify_snapshot
 from app.physical_contract import byte_sha, canonical
@@ -18,6 +19,7 @@ from tests.api.test_physical_forest import connect
 from tests.api.test_physical_roots import root_case as root_case
 from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey
+from tests.ops.physical_union_fixture import capsule
 
 
 def classified(db,files):
@@ -43,9 +45,14 @@ def test_classifier_initializes_relocation_before_any_declared_native_metadata(r
         db.rollback()
 
 
-def prepared(root_case):
+def prepared(root_case, revision=None, monkeypatch=None):
     case(root_case)
     path,files,values,*_=root_case
+    if revision is not None and revision != '0005_physical_forest':
+        config, _ = capsule(path.parent/'allocated-union')
+        monkeypatch.setenv('GEOPHYSICS_DB_PATH', str(path))
+        monkeypatch.setenv('GEOPHYSICS_CANDIDATE_ROOT', str(path.parent))
+        command.upgrade(config, revision)
     with connect(path) as db:
         db.execute('BEGIN IMMEDIATE')
         original=classified(db,files)
@@ -118,8 +125,9 @@ def test_precommit_unknown_partition_never_authorizes_restoration_or_uncharge(ro
 
 
 @pytest.mark.parametrize('commit',[False,True])
-def test_existing_native_receipt_row_removal_and_retained_debt_share_one_caller_commit(root_case,commit):
-    plan,charge=prepared(root_case)
+@pytest.mark.parametrize('revision', ['0005_physical_forest', '0006_joint_artifacts', '0007_magnetic_line_artifacts'])
+def test_existing_native_receipt_row_removal_and_retained_debt_share_one_caller_commit(root_case,commit,revision,monkeypatch):
+    plan,charge=prepared(root_case,revision,monkeypatch)
     move(root_case,True,True)
     values=root_case[2]; inventory=plan['inventory']; custody=plan['custody']
     raw=[dict(asset_id=r['asset_id'],sha256=r['sha256'],byte_count=r['bytes']) for r in inventory['raw_assets']]
@@ -138,6 +146,7 @@ def test_existing_native_receipt_row_removal_and_retained_debt_share_one_caller_
         db.execute('INSERT INTO deletion_receipts(id,owner_id,project_id,deleted_at,asset_hashes,asset_manifest,derived_manifest,backup_purge_status) VALUES(?,?,?,?,?,?,?,?)',
             (custody['deletion_receipt_id'],values['owner_id'],values['project_id'],'2026-10-08 13:00:00',*serialized,'not_attempted'))
         body=transfer_project_deletion(db,inventory=inventory,custody=custody,expected_source_policy_sha256=POLICY,approved_installations={})
+        assert json.loads(body)['origin_revision'] == revision
         assert [json.loads(body)['legacy_receipt'][k]['utf8'] for k in ('asset_hashes','asset_manifest','derived_manifest')]==serialized
         assert db.in_transaction and not db.execute('PRAGMA foreign_key_check').fetchall()
         if commit: db.commit()
