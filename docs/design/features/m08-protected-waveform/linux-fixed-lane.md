@@ -20,14 +20,59 @@ socket and supports external working roots without AF_UNIX inode support.
 Peer UID/PID, manager MainPID, membership, security properties,
 scope limits, namespace mount and tmpfs capacity are read back before ACK and
 readonly original descriptors are transferred. No engine imports or original
-reads precede ACK. A pidfd watcher exits on observer death; the manager kills the
-service control group. No DB or writer-lease descriptors are inherited.
+reads precede ACK. Numeric observer PID lookup after manager birth is NOT an
+identity binding and is not accepted for parent-death containment. The observer
+must acquire its own pidfd before any guardian fork or scientific submission.
+A root guardian holds that descriptor, signals readiness, and is enrolled by its
+held unreaped child pidfd through the installed systemd255 `PIDFDs`/`ah` interface
+in an independent exact scope. Science uses `BindsTo` and `After` on that scope.
+The guardian cannot remain in the API/worker caller's control group. Guardian
+death, caller death before bootstrap/ACK, interrupted or late manager acceptance
+and caller-service stop must all fail closed and drain the exact science group
+and retained accounting slice. No delayed numeric PID adoption, generic root
+signals or new native CPU broker is permitted. No DB or writer-lease descriptors
+are inherited. The manager transport library is installation-owned and pinned;
+passing an integer FD through busctl is not UNIX_FD transfer.
 
 The single process performs the unchanged genuine counts/complex-response/filter/
 Welch/classic calculation, independent sealed reopener, optional post-seal
 evaluation and verification of held originals. It does not run a second solver.
-TasksMax=2 admits that process and its watcher and is stricter than the original
+TasksMax=2 remains a strict science-task ceiling and is stricter than the original
 maximum two-process envelope. It is not a claim that threads equal processes.
+The independent root guardian's operational memory/task/wall allowance is
+recorded separately, never subtracted from or substituted for scientific CPU.
+
+## Fixed installation authority and API boundary
+
+The actual qualification lane uses a root observer and a nonroot scientific
+child. That is Linux mechanics evidence, NOT authority to run the production
+API or database worker as root. The protected Linux path must use a fixed
+installation-owned launcher, fixed root-owned bounded configuration and one
+canonical owned job UUID. The unprivileged API/worker may not choose interpreter,
+admission file, UID/GID, code/data/custody root, unit properties or manager commands
+from job JSON or arbitrary argv. No generic sudo/systemd authorization is added.
+
+Resolve the exact running immutable job, dataset, raw/source pair and original
+snapshots under the configured application identity, not by granting root read
+access to worker-controlled SQLite/WAL or uploaded paths. The privileged parent
+receives only bounded checked relations and snapshot bytes, installs them under
+held installation-owned external custody descriptors and constructs the native
+packet internally. Root-owned leaf files inside a worker-renamable parent are
+not sufficient custody. Pin the ordinary publication stage before launch;
+publication and successful exact post-transaction cleanup must use that identity.
+Uncertain termination, renamed parents, unknown entries or mismatched receipts
+retain debt. Native scientific result and original resource ceilings are unchanged.
+Missing fixed installation authority must make production Linux unavailable,
+not select the qualification root command or an uncontained fallback.
+
+## Qualification boundary
+
+Previous successful native/API/browser calculations retain their original
+receipts. They do not prove the pre-acquisition parent-death interval, paused or
+late manager acceptance, guardian extinction or a nonroot production API boundary.
+Actual controls for these intervals precede protected Linux activation. Existing
+adversarial, cold, runtime-closure and actual VPS qualification gates remain open;
+this correction adds no scientific method, numerical tolerance or CPU broker.
 
 The observer samples retained cpu.stat usage/user/system microseconds converted
 by checked multiplication to nanoseconds; counters include exited descendants.

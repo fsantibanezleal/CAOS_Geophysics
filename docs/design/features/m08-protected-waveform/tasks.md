@@ -17,6 +17,14 @@ scientific, resource or full-VPS qualification.
 
 Convergence is recorded only from actual named gates. This initial design claims none executed. Native/field/platform acceptance cannot be inferred from ordinary fixtures or source doubles.
 
+Current Linux guard correction: first close the pre-startup numeric observer-PID
+race using the descriptor-bound independent guardian in linux-fixed-lane.md,
+then qualify actual before-ACK/deferred-manager/caller-loss controls. Implement
+the fixed installation-only privileged launcher with an unprivileged owned-job
+reader and descriptor-held external custody; never run the production API/worker
+as root. Previous nice-case receipts remain historical scientific/lifecycle proof,
+not evidence that either safety gap is closed.
+
 ## Approved structured-controls order
 
 1. Persist R-M08S-09..12 and this design before structured UI code changes.
