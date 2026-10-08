@@ -1,12 +1,13 @@
 """Actual cancel/controller-crash gates for the fixed local magnetic worker.
 
-Uses supplied existing runtimes and fresh external roots. Independent retained
-Win32 process handle proves crash drain. No production controller activation.
+Uses supplied existing runtimes and fresh external roots. Independently held
+ancestor Job proves group extinction without a late numeric PID acquisition.
+No production controller activation.
 """
 
 import argparse
-import ctypes
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -29,16 +30,47 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--conditioned-core', action='store_true')
     mode.add_argument('--feasible-core', action='store_true')
+    mode.add_argument('--original-core', action='store_true')
+    parser.add_argument('--final-fit-qualification')
+    parser.add_argument('--qualification-sha256')
     args = parser.parse_args()
     sys.path.insert(0, str(Path(__file__).parents[1]/'data-pipeline'))
     sys.path.extend(args.dependencies)
     from magnetic_local_paths import external_path
     from magnetic_survey_json import canonical
-    from magnetic_line_survey_runtime import apis
-    import psutil
+    from magnetic_abort_observer import AbortObserver, verify_final_qualification
     data, scratch = external_path(args.data_root), external_path(args.temp_root)
     if not data.is_dir() or not scratch.is_dir() or list(data.iterdir()) or list(scratch.iterdir()):
         raise ValueError('Fresh empty explicit external roots required')
+    if args.original_core:
+        from run_magnetic_survey import source_inventory
+        from magnetic_original_adapter import binding_for_sources
+        from magnetic_survey_json import digest
+        from check_magnetic_original_workflow_allocation import workflow_allocation
+        sources = source_inventory(conditioned=True, original=True)
+        binding = binding_for_sources(sources, digest(sources))
+        fixture = Path(__file__).parents[1]/'tests/fixtures/magnetic_survey/full_request.py'
+        spec = importlib.util.spec_from_file_location('original_abort_input', fixture)
+        generator = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generator)
+        regime, quantity = args.case.split(':')
+        document, _, _ = generator.generate(regime, quantity, binding)
+        prerequisite = workflow_allocation(canonical(document))
+        with (data/'abort-prerequisite.json').open('xb') as stream:
+            stream.write(canonical(prerequisite)); stream.flush(); os.fsync(stream.fileno())
+        if prerequisite['status'] != 'within_original_envelope':
+            print('Original workflow allocation refused BEFORE controller birth')
+            return 2
+        if not args.final_fit_qualification or not args.qualification_sha256:
+            raise ValueError('Source-bound final648 fit/precision qualification required before science birth')
+        from run_magnetic_survey import read_bounded
+        qualifier_raw = read_bounded(external_path(args.final_fit_qualification), 1024**2)
+        if hashlib.sha256(qualifier_raw).hexdigest() != args.qualification_sha256:
+            raise ValueError('Exact external final-fit qualifier SHA refused')
+        a_document, a_original, _ = generator.generate('A', 'secondary_enu_nT', binding)
+        verify_final_qualification(json.loads(qualifier_raw), sources=sources,
+            request_sha256=hashlib.sha256(canonical(a_document)).hexdigest(),
+            original_sha256=hashlib.sha256(a_original).hexdigest())
     runner = Path(__file__).with_name('run_magnetic_frozen_matrix.py')
     boot = ('import sys,runpy;sys.path.insert(0,sys.argv.pop(1));'
             'target=sys.argv.pop(1);sys.argv[0]=target;runpy.run_path(target,run_name="__main__")')
@@ -50,17 +82,16 @@ def main():
         command += ['--conditioned-core']
     if args.feasible_core:
         command += ['--feasible-core']
+    if args.original_core:
+        command += ['--original-core']
     if args.mode == 'cancel':
         command += ['--cancel-after', str(args.cancel_after)]
-    api, _ = apis()
-    api.OpenProcess.argtypes = [ctypes.c_ulong, ctypes.c_int, ctypes.c_ulong]
-    api.OpenProcess.restype = ctypes.c_void_p
     started = time.monotonic()
-    child_handle = None
     with (scratch/'controller.stdout').open('xb') as stdout, (scratch/'controller.stderr').open('xb') as stderr:
-        controller = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
-            env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1'), creationflags=0x08000000)
+        observer = AbortObserver()
         try:
+            controller = observer.launch(command, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
+                env=dict(os.environ, PYTHONDONTWRITEBYTECODE='1'))
             case_name = args.case.replace(':', '-')
             born = scratch/case_name/'worker-born.json'
             while not born.exists():
@@ -79,24 +110,16 @@ def main():
                     raise AssertionError('No actual accepted scientific objective state before stop; no import-only PASS')
                 time.sleep(.05)
             if args.mode == 'controller-crash':
-                children = psutil.Process(controller.pid).children(recursive=False)
-                owned = [p for p in children if str(Path(__file__).parents[1]/'data-pipeline'/'magnetic_native_worker.py') in p.cmdline()
-                         and str(scratch/case_name/'plan.json') in p.cmdline()]
-                assert len(owned) == 1, 'Exact just-launched fixed-worker child identity required'
-                child_handle = api.OpenProcess(0x100000 | 0x1000, False, owned[0].pid)
-                assert child_handle, 'Retained independent child handle required BEFORE crash'
                 crashed = time.monotonic()
                 controller.kill()  # Only this exact controller, not a discovered outside process.
                 controller.wait(timeout=10.)
-                assert api.WaitForSingleObject(child_handle, 10000) == 0
+                group = observer.empty(crashed+10., expected_total=2)
                 drained = time.monotonic()-crashed
-                code = ctypes.c_ulong()
                 # Kill-on-last-Job-close can use exit 0. Only a published and
                 # fully verified generation establishes scientific completion.
-                assert api.GetExitCodeProcess(child_handle, ctypes.byref(code)) and code.value != 259
                 assert not (data/case_name/'generation'/'manifest.json').exists()
-                actual = dict(controller_exit=controller.returncode, retained_child_exit=int(code.value),
-                    independent_retained_child_wait='signalled', stop_drain_s=drained, orphan=False,
+                actual = dict(controller_exit=controller.returncode, **group,
+                    independent_retained_ancestor='fresh_empty', stop_drain_s=drained, orphan=False,
                     published_generation=False, exit_zero_is_not_scientific_success=True)
             else:
                 # Scientific birth can precede the configured cancellation by
@@ -110,8 +133,9 @@ def main():
                 assert lifetime['cause'] == 'cancelled' and lifetime['active_processes'] == 0
                 assert lifetime['total_processes'] == 1 and lifetime['exit_code'] != 0
                 assert lifetime['stop_drain_s'] <= 10.
+                group = observer.empty(observation_deadline, expected_total=2)
                 assert not (data/case_name/'generation'/'manifest.json').exists()
-                actual = lifetime
+                actual = dict(lifetime, ancestor_group=group)
             proof = dict(schema='magnetic-native-abort-proof-1', gate=args.mode, verdict='pass', actual=actual,
                 case=args.case, actual_scientific_objective_started=True,
                 conditioned_core=args.conditioned_core,
@@ -126,12 +150,9 @@ def main():
                 os.fsync(stream.fileno())
             print(args.mode+' actual drain pass')
         finally:
-            if controller.poll() is None:
-                controller.kill()
-                controller.wait(timeout=10.)
-            if child_handle:
-                api.CloseHandle(child_handle)
+            observer.cleanup()
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())
