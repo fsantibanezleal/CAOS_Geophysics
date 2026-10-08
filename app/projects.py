@@ -25,6 +25,8 @@ from app.models import (
     Project, RawAsset, SourceRecord, User, utcnow,
 )
 from app.processing_storage import account_derived_usage, exact_derived_project, purge_exact_derived
+from app.profile_archive_delete import prepare_archive_deletion
+from app.physical_project_delete import prepare_physical_project_deletion
 from app.schemas import ProjectCreate, ProjectUpdate, RawUploadInput
 from app.views import RawAssetListView, RawAssetView, asset_view, stored_utc
 
@@ -384,6 +386,9 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         jobs = (await session.execute(select(ProcessingJob).where(
             ProcessingJob.project_id == project_id, ProcessingJob.owner_id == user.id,
         ))).scalars().all()
+        archive_entries = await prepare_archive_deletion(
+            app, settings, session, str(user.id), project_id, jobs,
+        )
         from app.models import WaveformResultArtifact
         waveform_artifacts=(await session.execute(select(WaveformResultArtifact).where(
             WaveformResultArtifact.job_id.in_([job.id for job in jobs])))).scalars().all()
@@ -392,27 +397,50 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         manifest = [{"asset_id": item.id, "sha256": item.sha256, "byte_count": item.byte_count} for item in assets]
         used = sum(item.byte_count for item in assets)
         project_dir = await asyncio.to_thread(_exact_project_directory, settings, str(user.id), project_id, assets)
-        derived_dir, derived_manifest = await asyncio.to_thread(
-            exact_derived_project, settings, str(user.id), project_id, datasets, jobs, waveform_artifacts,
-        )
+        physical_delete,physical_plan=await prepare_physical_project_deletion(
+            app,settings,session,str(user.id),project_id,archive_entries)
+        if physical_plan is None:
+            derived_dir, derived_manifest = await asyncio.to_thread(
+                exact_derived_project, settings, str(user.id), project_id, datasets, jobs, waveform_artifacts,
+            )
+        else:
+            inventory=physical_plan['inventory']
+            derived_dir=settings.data_dir/'derived'/str(user.id)/project_id
+            derived_manifest=([dict(kind='dataset',id=r['dataset_id'],sha256=r['sha256'],byte_count=r['bytes'])
+                for r in inventory['datasets']]+[dict(kind='result',id=r['job_id'],sha256=r['result_sha256'],byte_count=r['result_bytes'])
+                for r in inventory['jobs'] if r['state']=='succeeded']+[dict(kind='waveform_artifact',id=r['job_id'],name=r['name'],
+                relative_path=f"waveforms/{r['job_id']}/{r['name']}",sha256=r['sha256'],byte_count=r['bytes'])
+                for r in inventory['waveform_artifacts']])
         _require_no_project_backup(settings, str(user.id), project_id)
         deleting_dir = settings.data_dir / ".deleting" / f"{user.id}--{project_id}"
         deleting_derived = settings.data_dir / ".deleting" / f"{user.id}--{project_id}--derived"
         if deleting_dir.parent.is_symlink():
             raise ApiError(409, "raw_state_unresolved", "Deletion recovery path requires operator review")
-        deleting_dir.parent.mkdir(parents=True, exist_ok=True)
+        if physical_plan is None: deleting_dir.parent.mkdir(parents=True, exist_ok=True)
         if any(path.exists() or path.is_symlink() for path in (deleting_dir, deleting_derived)):
             raise ApiError(409, "raw_state_unresolved", "Project deletion recovery directory already exists")
         renamed_raw = False
         renamed_derived = False
         commit_attempted = False
+        if physical_plan is not None:
+            # Exact declaration survives a subsequent move/crash; original rows
+            # still charge every file once. Same exclusive request owns both TXs.
+            await session.commit()
+            await session.execute(text('BEGIN IMMEDIATE'))
+            await physical_delete.recheck(settings,session,physical_plan)
         try:
             if project_dir.exists():
-                await asyncio.to_thread(project_dir.rename, deleting_dir)
+                if physical_plan is None: await asyncio.to_thread(project_dir.rename, deleting_dir)
+                else: await physical_delete.move(settings,physical_plan,'projects')
                 renamed_raw = True
             if derived_dir.exists():
-                await asyncio.to_thread(derived_dir.rename, deleting_derived)
+                if physical_plan is None: await asyncio.to_thread(derived_dir.rename, deleting_derived)
+                else: await physical_delete.move(settings,physical_plan,'derived')
                 renamed_derived = True
+            if physical_plan is not None:
+                await physical_delete.recheck(settings,session,physical_plan)
+                from app.physical_async_sql import run_native_transaction
+                await run_native_transaction(session,'retire_project_forest_relations',owner_id=str(user.id),project_id=project_id)
             from app.models import WaveformDatasetSource, WaveformResultArtifact
             await session.execute(delete(WaveformResultArtifact).where(
                 WaveformResultArtifact.job_id.in_([job.id for job in jobs])))
@@ -421,9 +449,17 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             await session.execute(delete(ProcessingJob).where(
                 ProcessingJob.project_id == project_id, ProcessingJob.owner_id == user.id,
             ))
-            await session.execute(delete(ObservationDataset).where(
-                ObservationDataset.project_id == project_id, ObservationDataset.owner_id == user.id,
-            ))
+            if physical_plan is None:
+                await session.execute(delete(ObservationDataset).where(
+                    ObservationDataset.project_id == project_id, ObservationDataset.owner_id == user.id,
+                ))
+            else:
+                # Immediate RESTRICT parent links require children before roots;
+                # ordinals are family identities, not list order or count.
+                for dataset in sorted(physical_plan['inventory']['datasets'],key=lambda r:r['version'],reverse=True):
+                    await session.execute(delete(ObservationDataset).where(ObservationDataset.id==dataset['dataset_id'],
+                        ObservationDataset.project_id==project_id,ObservationDataset.owner_id==user.id))
+                await run_native_transaction(session,'retire_project_forest_families',owner_id=str(user.id),project_id=project_id)
             await session.execute(delete(RawAsset).where(RawAsset.project_id == project_id, RawAsset.owner_id == user.id))
             await session.execute(delete(SourceRecord).where(SourceRecord.project_id == project_id, SourceRecord.owner_id == user.id))
             await session.execute(delete(Project).where(Project.id == project_id, Project.owner_id == user.id))
@@ -433,28 +469,37 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
                 if usage.raw_bytes < 0:
                     raise RuntimeError("account quota counter is inconsistent")
             receipt = DeletionReceipt(
-                id=str(uuid.uuid4()), project_id=project_id, owner_id=user.id,
+                id=physical_plan['custody']['deletion_receipt_id'] if physical_plan is not None else str(uuid.uuid4()), project_id=project_id, owner_id=user.id,
                 deleted_at=utcnow(), asset_hashes=hashes, asset_manifest=manifest,
-                derived_manifest=derived_manifest,
+                derived_manifest=derived_manifest + archive_entries,
                 backup_purge_status="not_attempted",
             )
             session.add(receipt)
+            if physical_plan is not None:
+                await session.flush()
+                await physical_delete.transfer(settings,session,physical_plan)
             commit_attempted = True
             await session.commit()
-        except Exception:
+        except BaseException:
             await session.rollback()
             if not commit_attempted:
                 if renamed_derived and not derived_dir.exists():
-                    deleting_derived.rename(derived_dir)
+                    if physical_plan is None: deleting_derived.rename(derived_dir)
+                    else: await physical_delete.move(settings,physical_plan,'derived',reverse=True)
                 if renamed_raw and not project_dir.exists():
-                    deleting_dir.rename(project_dir)
+                    if physical_plan is None: deleting_dir.rename(project_dir)
+                    else: await physical_delete.move(settings,physical_plan,'projects',reverse=True)
             raise
-        if renamed_raw:
-            await asyncio.to_thread(_purge_exact_deletion_directory, deleting_dir, assets)
-        if renamed_derived:
-            await asyncio.to_thread(purge_exact_derived, deleting_derived, derived_manifest)
+        if physical_plan is not None:
+            await physical_delete.cleanup(settings,session,physical_plan)
+        else:
+            if renamed_raw:
+                await asyncio.to_thread(_purge_exact_deletion_directory, deleting_dir, assets)
+            if renamed_derived:
+                await asyncio.to_thread(purge_exact_derived, deleting_derived, derived_manifest)
         return {
             "deleted": True, "project_id": project_id, "receipt_id": receipt.id,
+            "retained_profile_archives": len(archive_entries),
             "backup_erasure_status": "not_attempted",
             "external_backup_status": "not_configured" if settings.auth_mode == "local" else "pending_reconciliation",
         }
