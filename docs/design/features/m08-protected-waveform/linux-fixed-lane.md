@@ -103,6 +103,20 @@ deletion. Originals, requests and operational files live beneath the configured
 external custody root; `/run` is not application working storage. An operational
 lock can use manager runtime IPC without becoming a raw-copy destination.
 
+Configuration v3 also fixes a disjoint external scientific-work root. This
+root-owned non-writable traverse-only mount anchor contains empty per-run targets,
+not originals, plans, root receipts or host scratch copies. The manager mounts the
+unchanged private scientific tmpfs at one exact random run target before the
+scientific UID enters it. Root custody remains inaccessible to that UID; the
+scientific user does not acquire application/root groups merely to traverse
+private ancestry. The native observer retains the actual namespace descriptor,
+charges every scientific byte under the unchanged scratch envelope, verifies
+scope extinction and removes only its known empty target after handle closure.
+Unknown targets preserve debt and refuse admission. The mount anchor is configured
+from an external device temp/data root, never /run or system temp, and is absent
+from HTTP/job argv. Actual POSIX `200/CHDIR` failures cannot be counted as guard
+controls or hidden by permissive drvfs modes.
+
 The existing descriptor-bound guardian and fixed scientific supervisor execute
 inside internally constructed custody. Caller CANCEL/EOF is checked before ACK
 and during scientific wait; only exact owned scopes are stopped. A full bounded

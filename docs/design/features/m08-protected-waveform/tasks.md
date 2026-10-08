@@ -47,6 +47,12 @@ paused-observer caller-loss controls. Only the observer parses bytes; guardian
 polling may drain on pending control/EOF. Preserve the existing root guardian
 and scientific ceilings, and do not claim cancellation from unproved readback.
 
+POSIX role qualification additionally checks the fixed external scientific tmpfs
+anchor, separate from root-only original/plan custody. Preserve observed CHDIR
+failures; do not make raw custody traversable or add science to application/root
+groups as a workaround. Complete native source-bound originals and resource
+qualification against the actual configured anchor before activation.
+
 ## Approved structured-controls order
 
 1. Persist R-M08S-09..12 and this design before structured UI code changes.
