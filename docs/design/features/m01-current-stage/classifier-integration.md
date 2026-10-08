@@ -59,10 +59,12 @@ committed or rolled back by the seam. Source/VFS/WAL admission and actual writer
 exclusion remain caller responsibilities, not inferred from this transport.
 
 An unregistered .profile-incomplete namespace is refused by the original
-archive deletion seam before original moves, whether a successful-v2 participant
-is installed or not. It cannot inherit successful-v2 authority or silently lose
-its live ownership relations. Positive incomplete-descriptor dispatch remains a
-separate source-reviewed consumer, not an upgrade of older evidence.
+archive deletion seam before original moves. The distinct incomplete consumer
+delegates the recovery owner's exact validators and binds independent installation,
+eleven owned relations, native stage/member identities and both literal manifests.
+Only the registered, excluded whole-census participant can transfer its distinct
+descriptor into the existing deletion receipt. It cannot inherit successful-v2
+authority or silently lose live ownership relations; older evidence is not upgraded.
 
 The original owned DELETE now has an explicit0005 participant, with no second
 route and no default migration/runtime activation. Before the first move, the
@@ -91,7 +93,7 @@ trash and original ancestors remain metadata, not wildcard cleanup authority.
 This requires an explicit fixed operator installation after the already reviewed
 native runtime/source qualification, not a client flag. Without it0005 DELETE
 refuses; unchanged0004 routes retain their original behavior. Successful retained
-profile v2 grammar and the separate incomplete-custody refusal remain unchanged.
+profile v2 grammar remains unchanged; unregistered incomplete custody still refuses.
 The qualification driver reuses actual auth/security/project routes and a fresh
 WAL-aware classifier lifetime on an explicitly copied private candidate; it is
 not default server startup, a scientific solve or production runtime admission.

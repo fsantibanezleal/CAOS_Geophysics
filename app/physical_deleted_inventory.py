@@ -15,7 +15,7 @@ from app.physical_persistence import DATASET_REGISTRY
 from app.physical_successor import METHODS, REVISION, predecessor_payload, ddl_sha256
 from app.physical_forest import SUCCESSOR_DDL
 from app.physical_current_custody import parse_current_custody, validate_current_custody
-from app.profile_archive_custody import SCHEMA as ARCHIVE_SCHEMA, validate_saved_entry, validate_original_receipt_entry, _json
+from app.profile_archive_custody import ARCHIVE_SCHEMAS, archive_limits, validate_saved_entry, validate_original_receipt_entry, _json
 
 
 SCHEMA = 'geophysics.physical-deleted-inventory/v1'
@@ -136,7 +136,8 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
             relative_path=f"waveforms/{row['job_id']}/{row['name']}",sha256=row['sha256'],byte_count=row['bytes']))
     require(artifact_order==sorted(set(artifact_order)), 'current_deletion_waveform_artifact_duplicates')
 
-    require(type(value['profile_archives']) is list and len(value['profile_archives'])<=63, 'current_deletion_archive_cap')
+    require(type(value['profile_archives']) is list and len(value['profile_archives'])<=128, 'current_deletion_archive_cap')
+    archive_limits(value['profile_archives'])
     identifiers = []
     for entry in value['profile_archives']:
         relation = validate_saved_entry(entry,owner_id=receipt['owner_id'],project_id=receipt['project_id'],
@@ -160,7 +161,7 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
         fields(row,'asset_id sha256 byte_count'); uuid(row['asset_id']); sha(row['sha256']); integer(row['byte_count'],1,1024*M)
     for row in receipt['derived_manifest']:
         require(type(row) is dict,'current_deletion_receipt_type')
-        if row.get('schema') != ARCHIVE_SCHEMA: validate_original_receipt_entry(row)
+        if row.get('schema') not in ARCHIVE_SCHEMAS: validate_original_receipt_entry(row)
     require(sorted(canonical(r) for r in projected_raw)==sorted(canonical(r) for r in receipt['asset_manifest'])
             and sorted(canonical(r) for r in projected)==sorted(canonical(r) for r in receipt['derived_manifest']),
             'current_deletion_complete_projection')

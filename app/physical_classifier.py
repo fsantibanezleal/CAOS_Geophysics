@@ -26,7 +26,7 @@ from app.physical_publication import audit_correction_ancestry, audit_transform_
 from app.physical_producer import REQUEST_KEYS
 from app.physical_roots import _verified
 from app.physical_successor import FORMATS, METHODS, REVISION, ddl_sha256, predecessor_payload
-from app.profile_archive_custody import METHODS as PROFILE_METHODS, retained_inventory, _json
+from app.profile_archive_custody import METHODS as PROFILE_METHODS, INCOMPLETE_SCHEMA, archive_inventory, _json
 
 
 @dataclass(frozen=True)
@@ -626,15 +626,19 @@ class _Audit:
                 request_sha256=job['request_sha256'], method_id=job['method_id'], state=job['state']))
         receipts = [dict(row, derived_manifest=_json(row['derived_manifest'].encode(), 4*M)
                     if row['derived_manifest'] is not None else []) for row in self.rows['deletion_receipts']]
-        records = retained_inventory(self.files, relations, receipts, approved_installations=self.installations)
+        records = archive_inventory(self.files, relations, receipts, approved_installations=self.installations)
+        # This namespace has already passed its private/type/closed-pair reader;
+        # allowing its exact empty parent is not an arbitrary-file whitelist.
+        self.empty.add('.profile-incomplete')
         if records:
             self.empty.add('.profile-retained')
         for record in records:
             job = record['job_id']
-            prefix = '.profile-retained/' + job
+            namespace = '.profile-incomplete' if record['schema'] == INCOMPLETE_SCHEMA else '.profile-retained'
+            prefix = namespace + '/' + job
             self.empty.add(prefix)
             self.declare(prefix + '/manifest.json', cap=262144, bytes=record['manifest_bytes'], sha256=record['manifest_sha256'])
-            self.declare('.profile-retained/' + job + '.intent.json', cap=262144,
+            self.declare(namespace + '/' + job + '.intent.json', cap=262144,
                          bytes=record['manifest_bytes'], sha256=record['manifest_sha256'])
             for name, member in record['manifest']['members'].items():
                 self.declare(prefix + '/' + name, cap=64*M, bytes=member['bytes'], sha256=member['sha256'])

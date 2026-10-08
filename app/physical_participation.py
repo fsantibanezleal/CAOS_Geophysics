@@ -151,3 +151,13 @@ async def recover_profile_participating(settings, identifier, worker_exclusion):
     async with worker_exclusion.leases.acquire(exclusive=True):
         async with worker_exclusion.acquire():
             return await recover_job(settings, identifier)
+
+
+async def recover_incomplete_participating(settings, identifier, worker_exclusion):
+    """Distinct exact recovery under both lifetime locks, including helper drain."""
+    from app.profile_incomplete_recovery import recover_incomplete_job
+    require(isinstance(worker_exclusion, WorkerExclusion) and
+            Path(settings.data_dir) == worker_exclusion.leases.files.root_path, 'physical_recovery_root_binding')
+    async with worker_exclusion.leases.acquire(exclusive=True):
+        async with worker_exclusion.acquire():
+            return await recover_incomplete_job(settings, identifier)

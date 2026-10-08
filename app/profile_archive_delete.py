@@ -8,7 +8,21 @@ from sqlalchemy import func, select
 from app.errors import ApiError
 from app.models import DeletionReceipt, ObservationDataset, ProcessingJob, RawAsset, SourceRecord
 from app.physical_contract import canonical, require
-from app.profile_archive_custody import METHODS, deletion_entries, retained_inventory
+from app.profile_archive_custody import METHODS, deletion_entries, archive_inventory
+
+
+async def excluded_read(function, *args, **kwargs):
+    """Drain the held read thread before releasing either lifetime lock."""
+    pending=asyncio.create_task(asyncio.to_thread(function,*args,**kwargs))
+    try:
+        return await asyncio.shield(pending)
+    except asyncio.CancelledError:
+        while not pending.done():
+            try: await asyncio.shield(pending)
+            except asyncio.CancelledError: continue
+            except BaseException: break
+        if not pending.cancelled(): pending.exception()
+        raise
 
 
 async def archive_relations(session):
@@ -86,18 +100,29 @@ class ProfileArchiveDeletion:
         self.leases.require_held(exclusive=True)
         self.worker_exclusion.require_held()
 
+    def check_registration(self, settings):
+        from app.physical_leases import WriterLeases
+        from app.physical_participation import WorkerExclusion
+        require(isinstance(getattr(self,'leases',None),WriterLeases) and
+                isinstance(getattr(self,'worker_exclusion',None),WorkerExclusion) and
+                self.worker_exclusion.leases is self.leases and
+                type(getattr(self,'approval_bytes',None)) is bytes,
+                'profile_archive_unregistered_participant')
+        require(Path(settings.data_dir)==Path(self.leases.files.root_path),'profile_archive_root_binding')
+        self.check_exclusion()
+
     async def prepare(self, settings, session, owner_id, project_id, jobs):
         import json
-        self.check_exclusion()
+        self.check_registration(settings)
         require(session.in_transaction(),'profile_archive_delete_snapshot')
         require(Path(settings.data_dir)==Path(self.leases.files.root_path),'profile_archive_root_binding')
         require(not any(job.state in ('queued','running') for job in jobs),'profile_archive_active_project')
         relations,receipts=await archive_relations(session)
         approved=json.loads(self.approval_bytes)
         files=self.leases.files
-        records=await asyncio.to_thread(retained_inventory,files,relations,receipts,approved_installations=approved)
+        records=await excluded_read(archive_inventory,files,relations,receipts,approved_installations=approved)
         try:
-            stages=await asyncio.to_thread(files.names,'.job-staging',limit=100000)
+            stages=await excluded_read(files.names,'.job-staging',limit=100000)
         except FileNotFoundError:
             stages=[]
         require(not set(stages)&{job.id for job in jobs},'profile_archive_active_or_unrecovered_stage')
@@ -108,23 +133,18 @@ class ProfileArchiveDeletion:
 async def prepare_archive_deletion(app, settings, session, owner_id, project_id, jobs):
     """Called before the original route moves anything, under its transaction."""
     incomplete=Path(settings.data_dir)/'.profile-incomplete'
-    # Distinct incomplete custody is not successful execution-v2. Until its
-    # source-positive descriptor consumer is installed, do not silently discard
-    # the live SQL identities required by that future archive. Even an empty or
-    # malformed namespace remains unresolved; never sweep or adopt it here.
-    if incomplete.exists() or incomplete.is_symlink():
-        raise ApiError(409,'profile_archive_custody_unresolved','Incomplete profile custody requires its recognized deletion participant')
     participant=getattr(app.state,'profile_archive_deletion',None)
     path=Path(settings.data_dir)/'.profile-retained'
     if participant is None:
         # A nonparticipating legacy binary cannot erase the identity needed to
         # recover a global retained archive, even if the UUID looks unrelated.
-        if path.exists() or path.is_symlink():
+        if path.exists() or path.is_symlink() or incomplete.exists() or incomplete.is_symlink():
             raise ApiError(409,'profile_archive_custody_unresolved','Retained profile custody requires the installed deletion participant')
         return []
     if not isinstance(participant,ProfileArchiveDeletion):
         raise ApiError(409,'profile_archive_custody_unresolved','Retained profile deletion participant is not recognized')
     try:
+        participant.check_registration(settings)
         return await participant.prepare(settings,session,owner_id,project_id,jobs)
     except (ValueError,OSError):
         raise ApiError(409,'profile_archive_custody_unresolved','Retained profile custody is unresolved; original bytes and rows are preserved') from None

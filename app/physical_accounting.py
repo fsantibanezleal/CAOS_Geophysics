@@ -63,7 +63,7 @@ def _profile_charge(connection, owner_id, records, approved):
     """
     import json
     from app.physical_contract import canonical
-    from app.profile_archive_custody import SCHEMA, validate_saved_entry, validate_original_receipt_entry, _json
+    from app.profile_archive_custody import ARCHIVE_SCHEMAS, archive_limits, validate_saved_entry, validate_original_receipt_entry, _json
     saved={}
     cursor=connection.execute('SELECT owner_id,project_id,derived_manifest FROM deletion_receipts')
     count=0; byte_count=0
@@ -77,7 +77,7 @@ def _profile_charge(connection, owner_id, records, approved):
         require(type(entries) is list and len(entries)<=4096,'physical_profile_receipt_cap')
         for entry in entries:
             require(type(entry) is dict,'physical_profile_receipt_type')
-            if entry.get('schema')==SCHEMA:
+            if entry.get('schema') in ARCHIVE_SCHEMAS:
                 identifier=entry.get('job_id')
                 require(identifier not in saved,'physical_profile_duplicate_charge')
                 saved[identifier]=(owner,project,entry)
@@ -86,7 +86,8 @@ def _profile_charge(connection, owner_id, records, approved):
     if records is None:
         require(not saved,'physical_profile_census_required')
         return 0
-    require(type(records) is list and len(records)<=63 and type(approved) is dict,'physical_profile_charge_census')
+    require(type(records) is list and len(records)<=128 and type(approved) is dict,'physical_profile_charge_census')
+    archive_limits(records)
     seen=set(); total_charge=0
     for record in records:
         require(type(record) is dict,'physical_profile_charge_record')

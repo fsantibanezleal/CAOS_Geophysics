@@ -17,6 +17,8 @@ ARCHIVE_CAP = 256*M
 STAGE_CAP = 64*M
 MANIFEST_CAP = 262144
 SCHEMA = 'geophysics.profile-retained-custody/v1'
+INCOMPLETE_SCHEMA = 'geophysics.profile-incomplete-custody/v1'
+ARCHIVE_SCHEMAS = frozenset((SCHEMA, INCOMPLETE_SCHEMA))
 METHODS = frozenset(('ert.topographic-profile/v1','traveltime.first-arrival-profile/v1'))
 SOURCE_FILES = (
     'app/profile_linux_exec.py','scripts/profile_linux_supervisor.py','scripts/profile_linux_child.py',
@@ -38,6 +40,15 @@ EXECUTION = ('schema job_id request_sha256 dataset_sha256 raw_sha256 environment
 RECORD = ('schema job_id '+IDENTITY+' method_id terminal_state request_sha256 installation_sha256 '
           'manifest manifest_bytes manifest_sha256 charged_bytes')
 MEMBERS = {'linux-execution.json':65536,'result.json':8*M,'linux-stderr.txt':32*M}
+
+
+def archive_limits(records):
+    """New distinct custody never enlarges the original successful allowance."""
+    require(type(records) is list and len(records) <= 128,'profile_archive_count')
+    require(all(type(r) is dict and r.get('schema') in ARCHIVE_SCHEMAS for r in records),
+            'profile_archive_schema')
+    require(sum(r['schema'] == SCHEMA for r in records) <= 63,'profile_archive_retained_count')
+    require(sum(integer(r['charged_bytes']) for r in records) <= ARCHIVE_CAP,'profile_archive_global_cap')
 
 
 def _json(body, cap):
@@ -169,6 +180,10 @@ def _record(manifest,relation,approved):
 
 
 def validate_saved_entry(value, *, owner_id, project_id, approved_installations):
+    if type(value) is dict and value.get('schema') == INCOMPLETE_SCHEMA:
+        from app.profile_incomplete_custody import validate_saved_entry as validate_incomplete
+        return validate_incomplete(value,owner_id=owner_id,project_id=project_id,
+                                   approved_installations=approved_installations)
     fields(value,RECORD)
     require(value['schema']==SCHEMA and value['owner_id']==owner_id and value['project_id']==project_id,
             'profile_archive_saved_owner')
@@ -224,6 +239,9 @@ def retained_inventory(files, relations, receipts, *, approved_installations):
                 identifier=relation['id']
                 require(identifier not in saved and identifier not in live,'profile_archive_duplicate_custody')
                 saved[identifier]=(relation,entry)
+            elif entry.get('schema') == INCOMPLETE_SCHEMA:
+                validate_saved_entry(entry,owner_id=receipt['owner_id'],project_id=receipt['project_id'],
+                                     approved_installations=approved_installations)
             else:
                 # Only the unchanged original derived receipt tuple is skipped;
                 # this bridge cannot silently skip a future custody extension.
@@ -273,6 +291,16 @@ def retained_inventory(files, relations, receipts, *, approved_installations):
     return records
 
 
+def archive_inventory(files, relations, receipts, *, approved_installations):
+    """Closed distinct readers and ONE combined literal-byte/count allowance."""
+    from app.profile_incomplete_custody import incomplete_inventory
+    records = retained_inventory(files,relations,receipts,approved_installations=approved_installations)
+    records += incomplete_inventory(files,relations,receipts,approved_installations=approved_installations)
+    archive_limits(records)
+    require(len({r['job_id'] for r in records}) == len(records),'profile_archive_duplicate_or_count')
+    return sorted(records,key=lambda r:r['job_id'])
+
+
 def deletion_entries(records, *, owner_id, project_id):
     uuid(owner_id); uuid(project_id)
     return deepcopy([record for record in records if (record['owner_id'],record['project_id'])==(owner_id,project_id)])
@@ -286,17 +314,17 @@ def attach_deletion_entries(connection, *, receipt_id, owner_id, project_id, ent
     """
     require(connection.in_transaction,'profile_archive_delete_transaction')
     for value in (receipt_id,owner_id,project_id): uuid(value)
-    require(type(entries) is list and len(entries)<=63,'profile_archive_delete_entries')
+    archive_limits(entries)
     for entry in entries:
         fields(entry,RECORD)
-        require(entry['schema']==SCHEMA and (entry['owner_id'],entry['project_id'])==(owner_id,project_id),
+        require(entry['schema'] in ARCHIVE_SCHEMAS and (entry['owner_id'],entry['project_id'])==(owner_id,project_id),
                 'profile_archive_delete_owner')
     row=connection.execute('SELECT derived_manifest FROM deletion_receipts WHERE id=? AND owner_id=? AND project_id=?',
                            (receipt_id,owner_id,project_id)).fetchone()
     require(row is not None,'profile_archive_delete_receipt')
     prior=[] if row[0] is None else _json(row[0].encode(),4*M)
     require(type(prior) is list and len(prior)+len(entries)<=4096,'profile_archive_delete_receipt_cap')
-    require(not any(item.get('schema')==SCHEMA for item in prior),'profile_archive_immutable_receipt')
+    require(not any(item.get('schema') in ARCHIVE_SCHEMAS for item in prior),'profile_archive_immutable_receipt')
     body=canonical(prior+entries)
     require(len(body)<=4*M,'profile_archive_delete_receipt_cap')
     connection.execute('UPDATE deletion_receipts SET derived_manifest=? WHERE id=? AND owner_id=? AND project_id=?',

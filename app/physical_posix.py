@@ -158,6 +158,50 @@ class PrivateFiles:
                 os.close(descriptor)
             os.close(parent)
 
+    def private_directory_identity(self, key):
+        """Retained custody requires owned private directories, not just type."""
+        parent, name = self._parent(key)
+        descriptor = None
+        try:
+            descriptor = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=parent)
+            info = os.fstat(descriptor)
+            require(info.st_dev == self.identity[0] and info.st_uid == os.geteuid()
+                    and not stat.S_IMODE(info.st_mode) & 0o077, 'physical_private_directory')
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(info),
+                    'physical_directory_replaced')
+            self.check_root()
+            return dict(device=info.st_dev, inode=info.st_ino)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
+    def private_member(self, key, *, cap, expected_bytes=None, expected_sha256=None):
+        """Held no-follow byte/identity/mode proof for literal archive members."""
+        parent, name = self._parent(key)
+        descriptor = None
+        try:
+            descriptor = self._open(parent, name)
+            before = os.fstat(descriptor)
+            require(before.st_uid == os.geteuid() and not stat.S_IMODE(before.st_mode) & 0o077,
+                    'physical_private_member')
+            body, digest, info = self._read(descriptor, cap)
+            after = os.fstat(descriptor)
+            require(before.st_mode == after.st_mode and before.st_uid == after.st_uid,
+                    'physical_file_changed')
+            if expected_bytes is not None:
+                require(len(body) == integer(expected_bytes, 0, cap), 'physical_file_bytes')
+            if expected_sha256 is not None:
+                require(digest == sha(expected_sha256), 'physical_file_hash')
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(info),
+                    'physical_file_replaced')
+            self.check_root()
+            return body, dict(device=info.st_dev, inode=info.st_ino, bytes=len(body), sha256=digest)
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
     def directory_identity(self, key):
         parent, name = self._parent(key)
         descriptor = None

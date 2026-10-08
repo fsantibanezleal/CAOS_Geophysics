@@ -66,3 +66,38 @@ saved archive must appear exactly once; omitted, altered, duplicate or unknown
 custody refuses. A missing census cannot turn saved custody into zero charge.
 Runtime admission must census the live namespace too: SQL alone cannot discover
 an unrecorded live archive, and no filename is adopted to fill that gap.
+
+## Distinct incomplete custody
+
+`profile_incomplete_custody` consumes only the recovery owner's closed
+`geophysics.profile-incomplete-stage/v1` and exact
+`geophysics.profile-incomplete-custody/v1` descriptor. It delegates manifest
+validation and descriptor construction to `profile_incomplete_recovery`, then
+independently binds approved installation and live or surviving-receipt ownership.
+No missing-execution-receipt stage becomes successful execution evidence.
+The exact eleven ownership fields remain mandatory; terminal state is failed or
+cancelled. Historical successful-v2 and incomplete grammars are not interchangeable.
+
+The `.profile-incomplete` reader requires private ordinary-owned, same-device,
+no-follow directories and single-link members, both canonical manifest copies,
+the retained stage identity and each declared member's exact device/inode/bytes/hash.
+Only the owner's bounded partial result/log names are allowed, including a declared
+zero-byte member. Empty partial stages remain valid; unknown files and interrupted
+pairs refuse. A complete read-only census precedes accounting or deletion.
+
+`profile_archive_custody.archive_inventory` dispatches the two distinct readers,
+refuses duplicate job custody across them and applies the single 256-MiB combined
+allowance with at most128 archives. The original successful-v2 reader's63-archive
+ceiling remains unchanged. Every saved descriptor and both literal manifest copies
+stay charged after the original project DELETE. Missing saved files are refusal,
+not cleanup or charge release. The complete classifier declares only these exact
+paths and consumes the same descriptors during a fresh consistent startup audit.
+
+Registered deletion checks the initialized same-task global and original-worker
+exclusion and fixed root/approval registry before preparation. An uninitialized
+participant, unknown namespace, cross-owner relation or configuration drift still
+refuses before any original move. Cancellation drains both inventory and staging
+read threads before locks unwind. `recover_incomplete_participating` delegates
+the original distinct recovery under both locks for its whole helper lifetime.
+There is no second project DELETE, archive purge, scientific job-state promotion,
+automatic adoption, schema mount or live activation in this extension.
