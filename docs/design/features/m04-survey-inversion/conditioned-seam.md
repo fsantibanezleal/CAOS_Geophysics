@@ -31,12 +31,14 @@ not their sum and not a reduced RSS observation. It must stay within805306368
 bytes before operator construction. Exact original864/432/528 vector counts
 retain the documented761838864-byte prospective maximum; this is not host proof.
 
-Optional linear terminal bounds use original unwhitened physical J,G-compatible
-rows, actual W from principal Cholesky triangular solves, observed values,
-reference, beta and original separate alpha/Wj/Dj operands. Never pre-round
-WJ or WjDj for an acceptance certificate. Prediction rows are the actual fit
-geometry only and explicitly labelled as such, not heldout or full-source proof.
-Nonlinear norm and true sparse objectives receive no global quadratic bound.
+The current optional quadratic terminal DTO expects an explicit original W.
+M04 instead binds SD division or the original principal Cholesky triangular
+solve chain. Constructing an inverse/rounded W would change those acceptance
+operands. Therefore this adapter does not request optional quadratic bounds or
+claim their equivalence. Extending that public DTO to these original whitening
+chains needs a separate reviewed amendment. The original directed magnetic
+certificate and independent physical error tests remain binding. Nonlinear norm
+and true sparse objectives receive no global quadratic bound.
 
 ## Original execution and stronger terminal predicates
 
