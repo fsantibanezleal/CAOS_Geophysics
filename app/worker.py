@@ -470,8 +470,11 @@ async def run_one(settings: Settings | WorkerSettings, *, poll_interval: float =
             await engine.dispose()
 
 
-async def run_forever(settings: Settings | WorkerSettings, *, poll_interval: float = 0.5) -> None:
+async def run_forever(settings: Settings | WorkerSettings, *, poll_interval: float = 0.5, physical=None) -> None:
     """Hold the singleton lock and audit once, then claim work without rescanning bytes."""
+    if physical is not None:
+        from app.physical_assembly import run_forever_participating
+        return await run_forever_participating(settings, physical, poll_interval=poll_interval)
     with _worker_lock(settings.data_dir):
         engine = make_engine(settings)
         sessions = async_sessionmaker(engine, expire_on_commit=False)

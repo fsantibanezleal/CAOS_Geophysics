@@ -19,14 +19,23 @@ from app.processing import install_processing_routes
 from app.security import install_security
 
 
-def create_app(settings: Settings, mail_sender: MailSender | None = None) -> FastAPI:
+def create_app(settings: Settings, mail_sender: MailSender | None = None, *, physical=None) -> FastAPI:
+    if physical is not None:
+        from app.physical_assembly import PhysicalAssembly
+        from app.physical_contract import require
+        require(isinstance(physical, PhysicalAssembly), 'physical_operator_assembly_required')
     engine = make_engine(settings)
+    if physical is not None:
+        physical.bind_engine(settings, engine)
 
     @asynccontextmanager
     async def lifespan(application: FastAPI):
         try:
-            await require_migration_head(engine)
-            await reconcile_private_files(settings, application.state.sessions)
+            if physical is None:
+                await require_migration_head(engine)
+                await reconcile_private_files(settings, application.state.sessions)
+            else:
+                await physical.startup(settings, application.state.sessions)
             yield
         finally:
             await engine.dispose()
@@ -48,4 +57,8 @@ def create_app(settings: Settings, mail_sender: MailSender | None = None) -> Fas
     install_security(app, settings)
     install_project_routes(app, settings, current_user, get_session)
     install_processing_routes(app, settings, current_user, get_session)
+    if physical is not None:
+        # Last-added ASGI middleware is outermost: before CSRF/rate/auth writes,
+        # in their same task, covering the final streamed response as well.
+        physical.install(app, settings)
     return app

@@ -65,7 +65,7 @@ async def _owned_asset(session: AsyncSession, project_id: str, asset_id: str, us
     return row
 
 
-def _parse_upload_header(raw: str | None) -> RawUploadInput:
+def _parse_upload_header(raw: str | None, *, physical_enabled=False) -> RawUploadInput:
     if raw is None or len(raw.encode("utf-8")) > 16384:
         raise ApiError(422, "metadata_invalid", "X-Asset-Metadata must be JSON under 16 KiB", ["X-Asset-Metadata"])
     try:
@@ -73,6 +73,11 @@ def _parse_upload_header(raw: str | None) -> RawUploadInput:
             raise ValueError("non-finite JSON number")
 
         value = json.loads(raw, parse_constant=nonfinite)
+        if type(value) is dict and value.get('format') == 'gravity_stations_json':
+            if not physical_enabled:
+                raise ApiError(409, 'physical_admission_closed', 'Physical originals require the installed private participant')
+            from app.physical_upload import parse_physical_upload_header
+            return parse_physical_upload_header(raw)
         return RawUploadInput.model_validate(value)
     except (ValueError, ValidationError) as exc:
         if isinstance(exc, ValidationError):
@@ -232,13 +237,18 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         project_id: str, request: Request, user: User = Depends(current_user), session: AsyncSession = Depends(get_session),
     ):
         await _owned_project(session, project_id, user)
-        meta = _parse_upload_header(request.headers.get("x-asset-metadata"))
-        validate_declared_metadata(meta)
+        from app.physical_assembly import PhysicalAssembly
+        physical = getattr(request.app.state, 'physical_assembly', None)
+        meta = _parse_upload_header(request.headers.get("x-asset-metadata"),
+            physical_enabled=isinstance(physical, PhysicalAssembly))
+        is_physical = meta.format == 'gravity_stations_json'
+        if not is_physical:
+            validate_declared_metadata(meta)
         if meta.source.rights_decision == "forbidden":
             raise ApiError(422, "rights_forbidden", "Forbidden sources cannot be stored", ["source.rights_decision"])
         if request.headers.get("content-type", "").split(";", 1)[0].strip() != meta.mime:
             raise ApiError(415, "mime_format_mismatch", "Content-Type and declared MIME must agree")
-        byte_limit = min(settings.max_upload_bytes, FORMAT_MAX_BYTES[meta.format])
+        byte_limit = min(settings.max_upload_bytes, 16*1024*1024 if is_physical else FORMAT_MAX_BYTES[meta.format])
         length = request.headers.get("content-length")
         if length and (not length.isdigit() or int(length) > byte_limit):
             raise ApiError(413, "upload_too_large", "Raw upload exceeds the byte limit")
@@ -266,7 +276,11 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             sha = digest.hexdigest()
             if meta.source.expected_sha256 is not None and sha != meta.source.expected_sha256.lower():
                 raise ApiError(422, "expected_sha256_mismatch", "Uploaded SHA-256 differs from the source declaration")
-            validate_file_envelope(stage, meta)
+            if is_physical:
+                from app.physical_upload import validate_physical_upload
+                validate_physical_upload(stage, meta)
+            else:
+                validate_file_envelope(stage, meta)
             await session.rollback()
             await session.execute(text("BEGIN IMMEDIATE"))
             await session.refresh(user)

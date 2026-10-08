@@ -19,6 +19,14 @@ LEGACY_SCRATCH = MappingProxyType({
 })
 
 
+def account_private_charge_transaction(connection, owner_id, *, profile_records, approved_installations):
+    """Closed WAL snapshot transport; no unregistered schema or missing census."""
+    from app.physical_roots import _ledger
+    with _ledger(connection, caller_owned=True):
+        return account_private_charge(connection, owner_id, profile_records=profile_records,
+                                      approved_installations=approved_installations)
+
+
 def account_private_charge(connection, owner_id, *, profile_records=None, approved_installations=None):
     uuid(owner_id)
     require(connection.in_transaction, "physical_accounting_requires_consistent_transaction")
