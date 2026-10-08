@@ -66,3 +66,26 @@ absolute `1e-12` test. Near cancellation, the actual native reduction and
 weight-construction error must be independently explained and bounded. A
 failed retained-state gradient prerequisite remains failed. This source does
 not enable recurrence, adopt a proposal, execute auxiliary CG or accept a fit.
+
+## Independent nested-gradient research
+
+The test-only `gravity_face_gradient_oracle.py` computes a rational exact
+gradient of the literal frozen stored-weight quadratic. It retains the
+native nesting `G -> W -> W.T -> G.T` and, for each regularizer,
+`D -> W -> W.T -> 2D.T`, then the actual alpha sum and beta product. It
+does not replace those actions with rounded `WG` or `WD` matrices. Every
+intermediate binary64 result is checked against an independently propagated
+componentwise bound: `abs(A)*input_error + gamma_(2n)*sum(abs(A*x_float))`
+plus an absolute subnormal term; scalar products and additions have their
+own one-operation bounds. Source, model, reference/mapping and deadline
+guards apply throughout. This arithmetic is not imported by product code.
+
+Separately, 80/120-digit evaluation compares the exact stored smallness
+weight with the ideal real canonical law. This distinguishes native nested
+reduction error from rounded LP-weight/square-root construction error.
+Near a cancelling gradient, neither term is controlled by a universal
+absolute `1e-12` comparison alone. The retained fold1/stage20 comparison
+is still FAIL; it is not relabeled by this decomposition or by passing
+small-original controls. A retained-state forward bound and the unchanged
+original scientific accuracy/stopping assertions remain required before
+the proposed recurrence is enabled.
