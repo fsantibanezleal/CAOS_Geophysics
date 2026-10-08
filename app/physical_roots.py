@@ -73,7 +73,8 @@ def _verified(connection, files, owner, project, raw_id, root):
     return raw, batch, body, envelope
 
 
-def prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_dataset_id, intent_id, created_us, failure_cut=None):
+def prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_dataset_id, intent_id, created_us,
+                 profile_records=None, approved_installations=None, failure_cut=None):
     for value in (owner_id, project_id, raw_asset_id, root_dataset_id, intent_id):
         uuid(value)
     integer(created_us)
@@ -81,7 +82,8 @@ def prepare_root(connection, files, *, owner_id, project_id, raw_asset_id, root_
     try:
         _, _, body, _ = _verified(connection, files, owner_id, project_id, raw_asset_id, root_dataset_id)
         from app.physical_accounting import account_private_charge
-        require(account_private_charge(connection, owner_id)["total"] + 16*M <= 1024*M, "physical_account_quota")
+        require(account_private_charge(connection, owner_id,profile_records=profile_records,
+                approved_installations=approved_installations)["total"] + 16*M <= 1024*M, "physical_account_quota")
         require(not connection.execute("SELECT 1 FROM physical_dataset_families WHERE raw_asset_id=? AND parser_version='gravity-stations-json/v1'", (raw_asset_id,)).fetchone(),
                 "physical_root_already_reserved")
         connection.execute("INSERT INTO physical_dataset_families(root_dataset_id,owner_id,project_id,raw_asset_id,parser_version,state,next_ordinal,published_count,reserved_count,created_us) VALUES(?,?,?,?,'gravity-stations-json/v1','pending',2,0,1,?)",

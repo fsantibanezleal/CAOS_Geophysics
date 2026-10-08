@@ -180,6 +180,21 @@ def validate_saved_entry(value, *, owner_id, project_id, approved_installations)
     return relation
 
 
+def validate_original_receipt_entry(entry):
+    """Positive existing tuple registry; unknown custody never falls through."""
+    if entry.get('kind')=='waveform_artifact':
+        from app.waveform_contract import MEMBER, SCRATCH
+        fields(entry,'kind id name relative_path sha256 byte_count')
+        uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],0,SCRATCH)
+        require(type(entry['name']) is str and MEMBER.fullmatch(entry['name']) is not None and
+                entry['relative_path']==f'waveforms/{entry["id"]}/{entry["name"]}',
+                'profile_archive_unknown_receipt_entry')
+    else:
+        require(set(entry)=={'kind','id','sha256','byte_count'} and entry['kind'] in ('dataset','result'),
+                'profile_archive_unknown_receipt_entry')
+        uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],0,128*M)
+
+
 def retained_inventory(files, relations, receipts, *, approved_installations):
     """Complete closed archive-only census, separate from the global forest census.
 
@@ -212,17 +227,7 @@ def retained_inventory(files, relations, receipts, *, approved_installations):
             else:
                 # Only the unchanged original derived receipt tuple is skipped;
                 # this bridge cannot silently skip a future custody extension.
-                if entry.get('kind')=='waveform_artifact':
-                    from app.waveform_contract import MEMBER, SCRATCH
-                    fields(entry,'kind id name relative_path sha256 byte_count')
-                    uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],0,SCRATCH)
-                    require(type(entry['name']) is str and MEMBER.fullmatch(entry['name']) is not None and
-                            entry['relative_path']==f'waveforms/{entry["id"]}/{entry["name"]}',
-                            'profile_archive_unknown_receipt_entry')
-                else:
-                    require(set(entry)=={'kind','id','sha256','byte_count'} and entry['kind'] in ('dataset','result'),
-                            'profile_archive_unknown_receipt_entry')
-                    uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],0,128*M)
+                validate_original_receipt_entry(entry)
     try:
         names=set(files.names('.profile-retained',limit=127))
     except FileNotFoundError:

@@ -54,3 +54,15 @@ configuration is not silently changed: the final integrated deployment must use
 the participating entry points and fresh global classifier before reopening.
 No native power-loss, full physical lifecycle or activation claim follows from
 portable ASGI order tests or a declared deletion-mechanics fixture.
+
+## Retained-account charge
+
+The physical ledger's `account_private_charge` accepts the fresh archive census
+and independently approved installation registry from the participating runtime.
+It adds every retained intent, manifest and member ordinary copy to the original
+owner's total, separate from AccountUsage.raw_bytes. Live SQL joins and surviving
+receipt descriptors are rechecked in the caller's consistent transaction. Every
+saved archive must appear exactly once; omitted, altered, duplicate or unknown
+custody refuses. A missing census cannot turn saved custody into zero charge.
+Runtime admission must census the live namespace too: SQL alone cannot discover
+an unrecorded live archive, and no filename is adopted to fill that gap.

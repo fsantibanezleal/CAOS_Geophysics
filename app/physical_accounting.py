@@ -19,7 +19,7 @@ LEGACY_SCRATCH = MappingProxyType({
 })
 
 
-def account_private_charge(connection, owner_id):
+def account_private_charge(connection, owner_id, *, profile_records=None, approved_installations=None):
     uuid(owner_id)
     require(connection.in_transaction, "physical_accounting_requires_consistent_transaction")
     require(connection.execute("SELECT 1 FROM user WHERE id=?", (owner_id,)).fetchone() is not None, "physical_account_owner")
@@ -48,6 +48,76 @@ def account_private_charge(connection, owner_id):
             require(method in LEGACY_SCRATCH, "physical_unknown_active_method")
             active += LEGACY_SCRATCH[method]
     result = dict(raw=raw, datasets=datasets, results=results, controls=controls,
-                  permanent=permanent, custody=custody, legacy_active=active)
+                  permanent=permanent, custody=custody, legacy_active=active,
+                  profile_retained=_profile_charge(connection,owner_id,profile_records,approved_installations))
     result["total"] = integer(sum(result.values()))
     return MappingProxyType(result)
+
+
+def _profile_charge(connection, owner_id, records, approved):
+    """Fresh closed archive census supplied by the participating runtime.
+
+    No filesystem discovery or archive authority is inferred from SQL. Missing
+    saved custody is a refusal, not zero charge. The runtime must also census
+    the live archive namespace in this transaction, before invoking admission.
+    """
+    import json
+    from app.physical_contract import canonical
+    from app.profile_archive_custody import SCHEMA, validate_saved_entry, validate_original_receipt_entry, _json
+    saved={}
+    cursor=connection.execute('SELECT owner_id,project_id,derived_manifest FROM deletion_receipts')
+    count=0; byte_count=0
+    for owner,project,body in cursor:
+        count+=1; require(count<=100000,'physical_profile_receipt_cap')
+        if body is None: continue
+        require(type(body) is str,'physical_profile_receipt_type')
+        encoded=body.encode('utf-8'); byte_count+=len(encoded)
+        require(byte_count<=16*M,'physical_profile_receipt_cap')
+        entries=_json(encoded,4*M)
+        require(type(entries) is list and len(entries)<=4096,'physical_profile_receipt_cap')
+        for entry in entries:
+            require(type(entry) is dict,'physical_profile_receipt_type')
+            if entry.get('schema')==SCHEMA:
+                identifier=entry.get('job_id')
+                require(identifier not in saved,'physical_profile_duplicate_charge')
+                saved[identifier]=(owner,project,entry)
+            else:
+                validate_original_receipt_entry(entry)
+    if records is None:
+        require(not saved,'physical_profile_census_required')
+        return 0
+    require(type(records) is list and len(records)<=63 and type(approved) is dict,'physical_profile_charge_census')
+    seen=set(); total_charge=0
+    for record in records:
+        require(type(record) is dict,'physical_profile_charge_record')
+        relation=validate_saved_entry(record,owner_id=record.get('owner_id'),project_id=record.get('project_id'),
+            approved_installations=approved)
+        identifier=relation['id']
+        require(identifier not in seen,'physical_profile_duplicate_charge'); seen.add(identifier)
+        if identifier in saved:
+            owner,project,entry=saved[identifier]
+            require((owner,project)==(relation['owner_id'],relation['project_id']) and
+                    canonical(entry)==canonical(record),'physical_profile_saved_charge_binding')
+            require(connection.execute('SELECT 1 FROM processing_jobs WHERE id=?',(identifier,)).fetchone() is None,
+                    'physical_profile_duplicate_charge')
+        else:
+            row=connection.execute('''SELECT j.owner_id,j.project_id,j.dataset_id,j.dataset_sha256,j.request_sha256,
+                j.method_id,j.state,j.request_json,d.raw_asset_id,d.sha256,d.raw_sha256,r.source_id,r.sha256,s.sha256,
+                d.owner_id,d.project_id,r.owner_id,r.project_id,s.owner_id,s.project_id
+                FROM processing_jobs j LEFT JOIN observation_datasets d ON d.id=j.dataset_id
+                LEFT JOIN raw_assets r ON r.id=d.raw_asset_id LEFT JOIN source_records s ON s.id=r.source_id
+                WHERE j.id=?''',(identifier,)).fetchone()
+            require(row is not None,'physical_profile_live_charge_binding')
+            owner,project,dataset,dataset_sha,request_sha,method,state,request,raw,actual_dataset_sha,dataset_raw_sha,source,raw_sha,source_sha,*joins=row
+            require((owner,project,dataset,dataset_sha,request_sha,method,state,raw,source,raw_sha)==
+                tuple(relation[k] for k in ('owner_id','project_id','dataset_id','dataset_sha256','request_sha256',
+                    'method_id','state','raw_asset_id','source_id','raw_sha256')) and
+                dataset_sha==actual_dataset_sha and dataset_raw_sha==raw_sha==source_sha and
+                joins==[owner,project,owner,project,owner,project], 'physical_profile_live_charge_binding')
+            request=json.loads(request)
+            require(type(request) is dict and request.get('raw_asset_id')==raw and request.get('raw_sha256')==raw_sha,
+                    'physical_profile_live_charge_binding')
+        if relation['owner_id']==owner_id:
+            total_charge+=integer(record['charged_bytes'])
+    require(set(saved)<=seen,'physical_profile_missing_custody_charge')
+    return integer(total_charge)
