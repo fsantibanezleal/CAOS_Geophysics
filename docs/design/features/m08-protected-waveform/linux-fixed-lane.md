@@ -360,3 +360,64 @@ Ordinary packet/counter tests are not OS proof. Actual original, nominal/upper,
 cancel/observer-loss, exited-CPU, memory/scratch/gap/process controls and API/
 restart/delete/export/browser qualification are separate gates. WSL mechanics
 cannot establish the single ML VPS gate. No public activation follows here.
+
+### Pending caller frame and exact failed-service retirement
+
+An independent guardian may drain a live scientific child while the observer
+is still checking launch/namespace membership. On a refused native operation,
+the observer checks its original held caller pipe before classifying the
+terminal. Only the complete unchanged CANCEL frame or actual pipe EOF sets
+the caller reason and timestamp; malformed/partial frames do not invent cancel.
+Cleanup still requires retained zero-task counters and original quiescence.
+A killed constructor-owned service can remain failed after successful stop.
+Reset only that exact generated service after the held accounting descriptor
+reports zero tasks and manager readback proves MainPID0, ControlPID0 and an
+empty ControlGroup. Then require the original strict inactive/not-found
+readback. Failed state, good RSS or missing readback is never extinction proof;
+no unknown unit, numeric root signal or counter reset is authorized. Gate:
+closed frame/failed-service controls, then fresh installed original CANCEL/EOF
+under unchanged limits. The first failed installed cancellation remains retained.
+
+When the original caller pipe becomes pending while its descriptor-bound root
+observer remains alive, the independent guardian stops scientific execution
+immediately but retains the accounting slice during its existing bounded
+15-second late-submission sweep. The observer can then capture zero-task lifetime
+counters and quiescence before its separate guardian reap. Original parent-pidfd
+death, observer-control EOF or sweep expiry also removes accounting. A paused
+observer cannot keep science alive; it cannot retain accounting beyond the
+existing sweep. The original two-second scientific quiescence bound is never
+replaced by guardian-reap time. No final counter is invented when readback fails.
+Gates: exact guardian stop-set/empty-group controls, actual paused caller controls
+and fresh full installed CANCEL/EOF. Prior lost-accounting failures stay failed.
+
+### Primary failure precedence and caller termination
+
+The original primary science/resource/source/contract failure is absorbing. A
+complete caller frame or EOF discovered while handling that failure is recorded
+separately in lifecycle.caller, never substituted for its terminal reason.
+Failure lifecycle records may carry a closed primary_failure (reason/checkpoint)
+even when later extinction readback requires termination_unresolved. Historical
+records without this diagnostic remain valid; measured success forbids it.
+Only an exception raised by the held caller parser is caller termination.
+An available nonempty science packet and an already retained monitor failure
+precede caller checks. Empty transport following a guardian-first stop may use
+the original held caller parser after checking the monitor; malformed/nonempty
+packets never take this path. Gates: explicit primary-versus-late-control tests,
+closed failure receipt controls and actual installed CANCEL/EOF, with all original
+caps and failed receipts preserved.
+
+Ordinary SQL classification applies the same precedence: a requested cancellation
+requires a proved terminal whose status and reason are cancelled and whose caller
+reason is cancelled, without a primary_failure. A primary error with late caller
+control is waveform_processing_failed, not user_cancelled/job_timeout. Native
+extinction uncertainty still yields waveform_execution_unproved. The worker does
+not infer native cancellation from the DB request bit alone.
+
+Before ACK, a timed-out accept rechecks retained monitor failures and the original
+caller parser before deriving a child_failed reason from manager inactivity.
+The guardian may have stopped science during that wait. Available connections
+and nonempty hello/error packets are read first, as in the scientific receive
+loop; complete caller control may govern an empty transport, never overwrite a
+nonempty invalid/native packet. The retained first birth-EOF child_crash receipt
+remains a failure, with separate caller_lost and proved126ms extinction. Gates:
+accept/hello precedence controls then a fresh changed-source installed EOF run.

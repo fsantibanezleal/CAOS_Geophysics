@@ -63,7 +63,14 @@ def validate_terminal(receipt, job, stage=None, installation=None, *, payload=No
     require(type(life) is dict and life.get("extinction_proved") is True)
     base = {"extinction_proved","science_quiescent_ns","caller","final_counters","guardian"}
     running = {"run_id","admission_sha256","units"}
-    require(set(life) in (base,base|running,base|running|{"cancel_to_quiescence_ns"},base|{"cancel_to_quiescence_ns"}))
+    diagnostic = life.get("primary_failure")
+    if "primary_failure" in life:
+        fields(diagnostic,{"reason","checkpoint"})
+        require(type(diagnostic["reason"]) is str and
+                re.fullmatch("[a-z_]{1,64}",diagnostic["reason"]))
+        require(diagnostic["checkpoint"] in {"admission","guardian","slice","launch","hello",
+                "membership","ack","drain","reopen","release"})
+    require(set(life)-{"primary_failure"} in (base,base|running,base|running|{"cancel_to_quiescence_ns"},base|{"cancel_to_quiescence_ns"}))
     require(type(life["science_quiescent_ns"]) is int and 0 < life["science_quiescent_ns"] < 2**64)
     caller = life["caller"]
     fields(caller,{"reason","started_ns"})
@@ -97,6 +104,7 @@ def validate_terminal(receipt, job, stage=None, installation=None, *, payload=No
     outcome = receipt["outcome"]
     require(type(outcome) is dict and outcome.get("runtime_authorized") is False)
     if outcome.get("reason") == "measured":
+        require("primary_failure" not in life)
         fields(outcome,{"status","reason","run_id","receipt_sha256","release_sha256","runtime_authorized"})
         require(outcome["status"] in ("computed","qc_only") and caller["reason"] is None and
                 outcome["run_id"] == life["run_id"] and counters is not None and guardian is not None)
@@ -133,5 +141,7 @@ def validate_terminal(receipt, job, stage=None, installation=None, *, payload=No
         fields(outcome,{"status","reason","runtime_authorized"})
         require(receipt["native"] is None and receipt["calculation_sha256"] is None and receipt["members"] == [])
         require(outcome["status"] in ("failed","cancelled","timed_out","resource_exceeded","rejected","engine_unavailable"))
+        if "primary_failure" in life:
+            require(outcome["status"] != "cancelled")
         require(payload is None)
     return receipt

@@ -107,3 +107,157 @@ def test_final_seal_refuses_late_failure_or_changed_held_scope(monkeypatch,chang
         monkeypatch.setattr(monitor,"counters",lambda:tuple(values))
     with pytest.raises(ControlError):
         monitor.seal_final()
+
+
+def test_failed_owned_service_reset_requires_retained_kernel_and_manager_zero(monkeypatch):
+    import waveform_m08_linux as lane
+    unit = 'm08-'+'a'*32+'.service'
+    commands = []
+    monkeypatch.setattr(lane,'_read_at',lambda fd,key:b'0\n')
+    monkeypatch.setattr(lane,'_show',lambda unit,key:{'ActiveState':'failed','MainPID':'0',
+        'ControlPID':'0','ControlGroup':''}[key])
+    monkeypatch.setattr(lane,'_command',lambda argv:commands.append(argv))
+    monkeypatch.setattr(lane,'_released_unit',lambda unit:commands.append(('released',unit)))
+    lane.retire_failed_service(17,unit)
+    assert commands == [[lane.TOOLS['ctl'],'reset-failed',unit],('released',unit)]
+
+
+@pytest.mark.parametrize('changed',['tasks','MainPID','ControlPID','ControlGroup','name'])
+def test_failed_owned_service_no_reset_with_live_unbound_or_missing_evidence(monkeypatch,changed):
+    import waveform_m08_linux as lane
+    unit = 'm08-'+'a'*32+'.service'
+    values = {'ActiveState':'failed','MainPID':'0','ControlPID':'0','ControlGroup':''}
+    if changed in values:
+        values[changed] = '/retained-group' if changed == 'ControlGroup' else '8'
+    monkeypatch.setattr(lane,'_read_at',lambda fd,key:b'1\n' if changed == 'tasks' else b'0\n')
+    monkeypatch.setattr(lane,'_show',lambda unit,key:values[key])
+    monkeypatch.setattr(lane,'_command',lambda argv:pytest.fail('unproved reset'))
+    monkeypatch.setattr(lane,'_released_unit',lambda unit:pytest.fail('unproved release'))
+    with pytest.raises(ControlError):
+        lane.retire_failed_service(17,'other.service' if changed == 'name' else unit)
+
+
+@pytest.mark.parametrize('part,reason',[(b'CANCEL\n','cancelled'),(b'','caller_lost'),
+    (b'CANC',None),(b'INVALID\n',None)])
+def test_pending_caller_frame_on_refused_native_operation_never_invents_cancel(monkeypatch,part,reason):
+    import waveform_m08_linux as lane
+    caller = object.__new__(lane.LinuxCallerControl)
+    caller.fd,caller.buffer,caller.reason,caller.started_ns = 17,b'',None,None
+    monkeypatch.setattr(lane.select,'select',lambda *args:([17],[],[]))
+    monkeypatch.setattr(lane.os,'read',lambda fd,cap:part)
+    assert lane.refused_caller_reason(caller) == reason
+    assert caller.reason == reason
+    assert (caller.started_ns is not None) == (reason is not None)
+
+
+@pytest.mark.parametrize('primary',['closure_mismatch','resource_stop','sample_gap',
+    'counter_invalid','scientific_rejected','wire_invalid','export_invalid','child_failed'])
+@pytest.mark.parametrize('part',[b'CANCEL\n',b''])
+def test_primary_failure_absorbs_late_cancel_and_eof(monkeypatch,primary,part):
+    import waveform_m08_linux as lane
+    caller = object.__new__(lane.LinuxCallerControl)
+    caller.fd,caller.buffer,caller.reason,caller.started_ns = 17,b'',None,None
+    monkeypatch.setattr(lane.select,'select',lambda *args:([17],[],[]))
+    monkeypatch.setattr(lane.os,'read',lambda fd,cap:part)
+    life = {}
+    assert lane.failed_outcome(ControlError(primary),'drain',caller,life) == lane.terminal(primary)
+    assert life['primary_failure'] == {'reason':primary,'checkpoint':'drain'}
+    assert caller.reason == ('cancelled' if part else 'caller_lost')
+
+
+@pytest.mark.parametrize('part,reason',[(b'CANCEL\n','cancelled'),(b'','caller_lost')])
+def test_only_original_parser_exception_is_caller_termination(monkeypatch,part,reason):
+    import waveform_m08_linux as lane
+    caller = object.__new__(lane.LinuxCallerControl)
+    caller.fd,caller.buffer,caller.reason,caller.started_ns = 17,b'',None,None
+    monkeypatch.setattr(lane.select,'select',lambda *args:([17],[],[]))
+    monkeypatch.setattr(lane.os,'read',lambda fd,cap:part)
+    with pytest.raises(lane.CallerTermination) as caught:
+        caller.check()
+    life = {}
+    result = lane.failed_outcome(caught.value,'ack',caller,life)
+    assert result == {'status':'cancelled','reason':reason,'runtime_authorized':False}
+    assert life == {}
+
+
+def test_native_cancel_literal_is_not_original_caller_exception():
+    import waveform_m08_linux as lane
+    life = {}
+    result = lane.failed_outcome(ControlError('cancelled'),'drain',None,life)
+    assert result['status'] != 'cancelled'
+    assert life['primary_failure'] == {'reason':'cancelled','checkpoint':'drain'}
+
+
+@pytest.mark.parametrize('packet',[b'science-error',b'malformed'])
+def test_available_nonempty_packet_precedes_pending_caller(monkeypatch,packet):
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    fail = lambda:pytest.fail('caller must not mask a buffered packet')
+    connection = SimpleNamespace(recv=lambda cap:packet)
+    assert lane.receive_science(connection,fail,SimpleNamespace(check=fail),
+        SimpleNamespace(check=lambda:None),lane.time.monotonic_ns()) == packet
+
+
+def test_retained_resource_failure_precedes_empty_transport_and_caller():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def failure():
+        raise ControlError('resource_stop')
+    fail = lambda:pytest.fail('caller must not mask retained resource failure')
+    with pytest.raises(ControlError,match='resource_stop'):
+        lane.receive_science(SimpleNamespace(recv=fail),fail,SimpleNamespace(check=fail),
+            SimpleNamespace(check=failure),lane.time.monotonic_ns())
+
+
+def test_guardian_first_empty_transport_uses_original_caller_exception():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def cancelled():
+        raise lane.CallerTermination('cancelled')
+    with pytest.raises(lane.CallerTermination):
+        lane.receive_science(SimpleNamespace(recv=lambda cap:b''),cancelled,
+            SimpleNamespace(check=lambda:None),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())
+
+
+def test_guardian_first_accept_timeout_parses_original_caller_before_derived_child_failure(monkeypatch):
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def timeout():
+        raise TimeoutError()
+    def caller():
+        raise lane.CallerTermination('cancelled')
+    monkeypatch.setattr(lane,'_show',lambda *args:pytest.fail('late manager absence is not primary'))
+    with pytest.raises(lane.CallerTermination):
+        lane.accept_science(SimpleNamespace(accept=timeout),'owned',caller,
+            SimpleNamespace(check=lambda:None),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())
+
+
+def test_available_hello_connection_is_received_before_pending_caller():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    fail = lambda:pytest.fail('pending control cannot replace an available native packet')
+    connection = object()
+    assert lane.accept_science(SimpleNamespace(accept=lambda:(connection,None)),'owned',fail,
+        SimpleNamespace(check=fail),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns()) is connection
+
+
+def test_original_accept_native_error_is_not_rewritten_as_caller_loss():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def native():
+        raise OSError('original transport refusal')
+    fail = lambda:pytest.fail('native refusal remains primary')
+    with pytest.raises(OSError,match='original transport refusal'):
+        lane.accept_science(SimpleNamespace(accept=native),'owned',fail,
+            SimpleNamespace(check=fail),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())
+
+
+def test_accept_retained_resource_failure_precedes_pending_caller():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def stopped():
+        raise ControlError('sample_gap')
+    fail = lambda:pytest.fail('retained resource failure wins')
+    with pytest.raises(ControlError,match='sample_gap'):
+        lane.accept_science(SimpleNamespace(accept=fail),'owned',fail,
+            SimpleNamespace(check=fail),SimpleNamespace(check=stopped),lane.time.monotonic_ns())
