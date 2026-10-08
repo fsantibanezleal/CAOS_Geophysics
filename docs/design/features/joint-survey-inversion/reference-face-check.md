@@ -53,3 +53,18 @@ were made to conceal it. This near-stationary cross-library gradient comparison
 cannot substitute for the full inverse gate's model/prediction/objective/KKT tests
 or be called complete M11 acceptance. Original and supplementary red receipts
 remain separate; neither is rewritten as a passing historical execution.
+
+## Actual fitted-baseline supplementary control
+
+`scripts/validate_joint_precision.py` consumes the completed frozen24-case matrix
+and strict source-bound actual calibration ledgers. It leaves every raw-BVLS
+record and original precision failure unchanged. For each actual baseline it
+also compares the production return with the already specified independent
+exact-face reference. The reference independently verifies feasible bounds and
+the ORIGINAL exact-bound normalized KKT1e-5 before comparison; no production
+optimizer or fitted model is changed. Relative F1e-8, normalized model1e-5,
+physical prediction1e-8 and production exact-KKT1e-5 remain separate predicates.
+References that fail their independent KKT are unresolved, not usable optima.
+The separate external receipt binds original matrix/calibration manifest hashes
+and actual candidate statuses. Its failures remain failures, not a new tolerance,
+parent acceptance, field proof or a rewrite of raw-return scientific verdicts.
