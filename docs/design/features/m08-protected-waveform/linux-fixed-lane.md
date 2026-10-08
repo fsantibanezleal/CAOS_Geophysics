@@ -257,8 +257,6 @@ Actual ordinary child/lock controls verify creation cancellation, repeated cance
 oversized streams and retained descendant writers. Full root/native queue remains
 a separate qualification gate.
 
-### Complete interpreted runtime closure
-
 ### Exact terminal evidence recovery
 
 Explicit operator recovery continues the existing R-M08S-15 retention contract;
@@ -300,6 +298,8 @@ inode/link/hash/unknown and intent-replay controls; then actual fixed nonroot
 cancel/EOF/restart, exact operator recovery and a second genuine queue/export/
 COMMIT-CLEAN/reconcile. Portable authored relation records are not native proof.
 No SQL migration, scientific resource/tolerance or public authority change.
+
+### Complete interpreted runtime closure
 
 The inventory includes exact names and file/directory/link identities, owners,
 modes, sizes and hashes across every admitted stdlib, dynamic-module and selected

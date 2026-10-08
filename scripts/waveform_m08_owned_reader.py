@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+from copy import deepcopy
 import importlib.util
 import json
 import os
@@ -15,7 +16,7 @@ from uuid import UUID
 
 from waveform_m08_installation import (
     canonical, decode, digest, directory_fd, fields, file_identity,
-    regular_at, require, sha, uuid, validate_configuration,
+    regular_at, require, sha, uuid, validate_configuration, validate_recorded_binding,
 )
 
 METHOD = "seismic.waveform-qc-classical/v1"
@@ -166,6 +167,50 @@ def read_key(root, key, cap):
         return regular_at(parent,parts[-1],cap)
     finally:
         os.close(parent)
+
+
+def checked_terminal_relations(config, identifier, record, payload, plan, receipt):
+    """Pure historical relation barrier, NOT native proof or cleanup authority.
+
+    Only the operator's later root-owned plan/receipt path may call this. Normal
+    query/dispatch never selects it. Full terminal/namespace/archive validation
+    remains a distinct requirement before any retained copy can be retired.
+    """
+    validate_configuration(config)
+    uuid(identifier)
+    fields(record,{"job","project","dataset","dependencies","assets","sources"})
+    fields(record["job"],JOB_KEYS)
+    job = record["job"]
+    require(job["id"] == identifier and job["state"] in ("failed","cancelled","succeeded") and
+            type(job["cancel_requested"]) is bool)
+    fields(plan,{"schema","job_id","request_sha256","input_bytes","stage","installation","record_sha256"})
+    require(plan["schema"] == "geophysics.waveform-custody-plan/v1" and plan["job_id"] == identifier and
+            plan["request_sha256"] == job["request_sha256"])
+    validate_recorded_binding(plan["installation"])
+    digest(plan["record_sha256"])
+    fields(receipt,set("schema job sources installation stage root_custody outcome lifecycle native calculation_sha256 members".split()))
+    require(len(canonical(receipt)) <= 65536 and receipt["schema"] == "geophysics.waveform-linux-execution/v1")
+    expected = {**{key:job[key] for key in ("id","owner_id","project_id","dataset_id","dataset_sha256","request_sha256","method_id")},
+                **{key:job["request_json"][key] for key in ("implementation_sha256","scientific_request_sha256")}}
+    require(receipt["job"] == expected and receipt["sources"] == job["request_json"]["waveform_sources"] and
+            receipt["installation"] == plan["installation"] and receipt["stage"] == plan["stage"])
+    fields(plan["stage"],{"device","inode"})
+    integer(plan["stage"]["device"],0,2**64-1)
+    integer(plan["stage"]["inode"],1,2**64-1)
+    fields(receipt["root_custody"],{"device","inode","plan_sha256"})
+    integer(receipt["root_custody"]["device"],0,2**64-1)
+    integer(receipt["root_custody"]["inode"],1,2**64-1)
+    require(receipt["root_custody"]["plan_sha256"] == sha(canonical(plan)) and
+            type(receipt["lifecycle"]) is dict and receipt["lifecycle"].get("extinction_proved") is True)
+    normalized = deepcopy(record)
+    normalized["job"].update(state="running",cancel_requested=False)
+    require(sha(product_bytes(normalized)) == plan["record_sha256"])
+    historical = {**config,"source_hashes":dict(plan["installation"]["source_hashes"])}
+    keys = checked_relations(historical,identifier,normalized,payload)
+    expected_bytes = sum(binding["raw_bytes"] for binding in job["request_json"]["waveform_sources"].values())
+    expected_bytes += len(canonical(job["request_json"]["scientific_request"]))
+    require(type(plan["input_bytes"]) is int and plan["input_bytes"] == expected_bytes)
+    return keys
 
 
 def query(config, identifier):
