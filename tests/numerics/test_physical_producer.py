@@ -3,6 +3,7 @@
 from copy import deepcopy
 from hashlib import sha256
 from pathlib import Path
+import json
 from uuid import uuid4
 
 import pytest
@@ -62,7 +63,7 @@ def packet_from_science(original, scientific):
     child_body = canonical(envelope)
     # Literal fixture telemetry exercises bindings only; not claimed measured.
     measured = dict(wall_ms=20, cpu_ms=10, peak_rss_bytes=1048576, scratch_peak_bytes=4096,
-                    child_output_bytes=len(canonical(computed)), environment=runtime,
+                    child_output_bytes=len(canonical(computed,scientific=True)), environment=runtime,
                     environment_sha256=digest(runtime), admission_receipt_sha256=req['admission_receipt_sha256'])
     result = dict(schema='geophysics.physical-result/v2', job_id=job_id, owner_id=owner, project_id=project,
                   dataset_id=root, dataset_sha256=byte_sha(input_body), output_dataset_id=child,
@@ -154,5 +155,21 @@ def test_actual_source_and_runtime_manifest_needs_registration(packet):
 
 def test_saved_adapter_receipt_cannot_be_inner_or_app_hash(packet):
     packet['production']['adapter_receipt_bytes'] = canonical(packet['snapshot']['adapter_receipt']['acceptance'])
+    with pytest.raises(ContractError):
+        verify(packet)
+
+
+@pytest.mark.parametrize('damage',['environment','output_length'])
+def test_rehashed_resource_container_cannot_change_runtime_or_scientific_byte_length(packet,damage):
+    result=json.loads(packet['result_bytes'])
+    if damage=='environment':
+        result['receipt']['environment']['packages']['boule']='unregistered'
+        result['receipt']['environment_sha256']=digest(result['receipt']['environment'])
+    else:
+        result['receipt']['child_output_bytes']+=1
+    packet['result_bytes']=canonical(result)
+    for name in ('snapshot','job','production'):
+        packet[name]['result_sha256']=byte_sha(packet['result_bytes'])
+        packet[name]['result_bytes']=len(packet['result_bytes'])
     with pytest.raises(ContractError):
         verify(packet)

@@ -128,6 +128,28 @@ uncertainty reconstruction and source file access are forbidden in this parent.
 Each earlier edge requires its own complete audit; a nested snapshot alone is
 not a verified ancestry or a new runtime/host approval.
 
+`physical_publication.audit_correction_ancestry` reads the exact owned original
+root and every earlier correction's child, input, saved request/result and SQL
+receipts. It binds the full earlier snapshot rather than trusting nested hashes,
+retains native SQL request values, and rejects transform parents. Registration
+is supplied independently. It performs no numerical replay or normalization.
+
+Correction publication re-reads the complete sealed stage, fixed completion,
+original scientific bytes and both independently installed target copies. The
+trusted supervisor's aggregate metrics must equal the saved resource receipt,
+whose environment and output byte length must match the registered runtime and
+actual scientific serialization. Cancellation before the write-locked terminal
+decision prevents publication. Child, edge, producer, succeeded job, retained
+stage cleanup debt, zero permanent reservation, intent retirement and allocator
+counts co-commit. All four precommit cuts roll back every public row while
+retaining both installed files and reservations. This is an explicit ordinary
+publication, never automatic adoption of an uncertain prepared outcome.
+
+The complete global fresh classifier, transform terminal publication, logical
+deletion and integrated queue/API/export/client remain separate mechanisms;
+this correction transaction does not manufacture their approval or native WAL
+admission. Default startup and migration registries remain unchanged.
+
 `physical_posix` retains no-follow directory descriptors and ancestry identity,
 rejects links/device changes/root replacement, reads exact ordinary-file
 identities and hashes, and installs independent exclusive copies. Installation

@@ -242,6 +242,8 @@ def verify_correction_producer(snapshot, *, input_bytes, child_bytes, request_by
         integer(measured[key], 0 if key in ("wall_ms", "cpu_ms", "scratch_peak_bytes") else 1, ceiling)
     require(measured["admission_receipt_sha256"] == req["admission_receipt_sha256"] and
             digest(measured["environment"]) == sha(measured["environment_sha256"]), "producer_resource_receipt")
+    _same(measured["environment"], snapshot["module_manifest"]["runtime_manifest"])
+    require(measured["child_output_bytes"] == len(canonical(payload, scientific=True)), "producer_child_output_bytes")
     for key, resource_key in (("wall_ms", "wall_ms"), ("physical_cpu_ms", "cpu_ms"),
                               ("peak_rss_bytes", "peak_rss_bytes"), ("scratch_bytes", "scratch_peak_bytes")):
         require(job[key] == measured[resource_key], "producer_job_resource")
