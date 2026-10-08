@@ -51,6 +51,17 @@ computed after that fit, within the same retained Job and original deadline.
 Actual capped/failed fits keep full history and null selected model, never
 partial candidate averages or a relaxed mesh/buffer/noise/certificate.
 
+`run_magnetic_frozen_matrix.py --conditioned-core` executes all unchanged
+authored acquisitions under a separate explicit public conditioned source
+receipt. Its per-case verdict binds the complete external optimizer audit's
+hash and byte count, including failed fits, alongside the actual native
+lifetime. No historical negative is removed or replaced. The corresponding
+`check_magnetic_native_abort.py --conditioned-core` uses the same full nonzero
+acquisition and waits for an actually accepted native objective state before
+cancel/controller-crash intervention. Import-only birth is not that gate.
+Null tiny-mesh CLI tests verify plumbing and complete supplied rows, not the
+original528-cell S2 predictive threshold or a field recovery.
+
 ## Espanol
 
 Los limites134217728bytes/2048filas no equivalen a procesamiento completo de

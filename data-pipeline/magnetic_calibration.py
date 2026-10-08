@@ -92,13 +92,18 @@ def recorded_objective_terms(obj, trace, inner, *, nonlinear):
 
 
 def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, binding,
-                  deadline, admitted_bytes, allocation_sha256, source_inventory_sha256):
+                  deadline, admitted_bytes, allocation_sha256, source_inventory_sha256,
+                  source_components=None, optimizer_audit=None):
     """Complete fixed-beta L2 and optionally eight-stage true-p1 continuation."""
     import physical_optimizer as core
     nonlinear = operator.quantity == 'exact_total_anomaly_nT'
     if nonlinear:
         import physical_nonlinear_optimizer as core
         from magnetic_nonlinear_adapter import MagneticNonlinearObjective, solve_nonlinear
+    conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
+    if conditioned:
+        import physical_conditioned_optimizer as conditioned_core
+        from magnetic_conditioned_adapter import MagneticConditionedObjective, solve_conditioned
     kkt_gradient = nonlinear_projected_gradient if nonlinear else projected_gradient
     reference = np.array(prior['reference_si']['data'], dtype=np.float64)/.01
     lower = np.array(prior['lower_si']['data'], dtype=np.float64)/.01
@@ -112,7 +117,8 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
         reg = MagneticRegularizer(mesh, reference, lengths, 'sparse_smallness' if sparse else 'l2', epsilon, q)
         obj = MagneticObjective(operator, reg, observed, noise, lower, upper, float(beta),
                                 source_inventory_sha256, allocation_sha256, stage)
-        return MagneticNonlinearObjective(obj, q) if nonlinear else obj
+        physical = MagneticNonlinearObjective(obj, q) if nonlinear else obj
+        return MagneticConditionedObjective(physical, source_components) if conditioned else physical
 
     def append_trace(obj, solved, phase, outer, epsilon):
         for inner, q in enumerate(solved['trace']['models_q']):
@@ -128,9 +134,12 @@ def fit_partition(operator, mesh, prior, observed, noise, beta, penalty, *, bind
 
     def solve(obj, q):
         nonlocal steps
-        budget_type = core.NonlinearBudget if nonlinear else core.OptimizerBudget
+        budget_type = conditioned_core.ConditionedBudget if conditioned else core.NonlinearBudget if nonlinear else core.OptimizerBudget
         budget = budget_type(deadline, 200-steps, 805306368, admitted_bytes, allocation_sha256)
-        result = (solve_nonlinear if nonlinear else solve_linear)(obj, lower, upper, q, budget=budget, binding=binding)
+        solver = solve_conditioned if conditioned else solve_nonlinear if nonlinear else solve_linear
+        result = solver(obj, lower, upper, q, budget=budget, binding=binding)
+        if conditioned and optimizer_audit is not None:
+            optimizer_audit(result)
         steps += result['iterations']
         return result
 
@@ -203,12 +212,12 @@ def select_candidate(candidates):
     return best
 
 
-def calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receipt=None):
+def calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receipt=None, optimizer_audit=None):
     """Complete result or explicit retained numerical failure, never fallback."""
     state = {}
     try:
         return _calibrate(raw, binding=binding, source_inventory_sha256=source_inventory_sha256,
-                          deadline=deadline, freeze_receipt=freeze_receipt, state=state)
+                          deadline=deadline, freeze_receipt=freeze_receipt, state=state, optimizer_audit=optimizer_audit)
     except InputError as error:
         if not state or error.code not in ('resource', 'numerical', 'convergence'):
             raise
@@ -227,7 +236,7 @@ def calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receipt
                              resources=None), claims=state['plan']['claims'])
 
 
-def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receipt, state):
+def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receipt, state, optimizer_audit):
     """Use actual supplied bytes; development fits cannot read outer values."""
     import physical_optimizer as core
     from magnetic_optimizer_adapter import certificate_source
@@ -243,12 +252,22 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
     if nonlinear:
         import physical_nonlinear_optimizer as core
         binding_type = core.NonlinearBinding
+    conditioned = type(binding).__module__ == 'physical_conditioned_optimizer'
+    if conditioned:
+        import physical_conditioned_optimizer as core
+        import physical_owned_spd as spd
+        binding_type = core.ConditionedBinding
+    epoch = (core.NONLINEAR_EPOCH if nonlinear else core.LINEAR_EPOCH) if conditioned else core.RUNTIME_EPOCH
     if (type(binding) is not binding_type or requested != dict(accepted_source=binding.optimizer_source_sha256,
             accepted_export=binding.accepted_export, epoch=binding.runtime_epoch)
-            or binding.optimizer_source_sha256 != core.SOURCE_SHA256 or binding.runtime_epoch != core.RUNTIME_EPOCH
+            or binding.optimizer_source_sha256 != core.SOURCE_SHA256 or binding.runtime_epoch != epoch
             or binding.policy != core.POLICY or binding.source_inventory_sha256 != source_inventory_sha256
-            or (binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256 if nonlinear else
-                binding.certificate_source_sha256 != hashlib.sha256(Path(certificate_source()).read_bytes()).hexdigest())):
+            or (binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256 if nonlinear and not conditioned else
+                binding.certificate_source_sha256 != hashlib.sha256(Path(certificate_source()).read_bytes()).hexdigest())
+            or (conditioned and (binding.metric_source_sha256 != spd.SOURCE_SHA256
+                or binding.numeric_kernel_source_sha256 != spd.KERNEL_SHA256
+                or binding.vendor_source_sha256 != core.VENDOR_SOURCE_SHA256
+                or binding.accepted_export != 'physical_conditioned_optimizer.solve_bounded_'+('nonlinear' if nonlinear else 'linear')))):
         fail('dependency', '$/policy/optimizer_binding', 'Reviewed loaded binding required before kernel construction')
     if meta['policy']['resource_profile'] != 'local_bounded':
         fail('dependency', '$/policy/resource_profile', 'Online source/native admission is separate and closed')
@@ -256,10 +275,23 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         fail('resource', '$/deadline', 'Explicit finite bounded whole-calibration deadline required')
     reader.validate_noise()
     mesh = mesh_from_metadata(meta)
-    allocation = digest(plan['preflight'])
+    allocation_plan = plan['preflight']
+    admitted_bytes = plan['preflight']['conservative_bytes']
+    source_components = 3*plan['preflight']['rows']
+    if conditioned:
+        from magnetic_conditioned_adapter import allocation as phase_allocation
+        fit_sizes = [len(f['fit_rows']['data']) for f in plan['partition']['folds']]+[len(plan['final_refit_rows']['data'])]
+        try:
+            phases = [phase_allocation(source_components, n*plan['preflight']['components'],
+                plan['preflight']['active_cells'], meta['noise']['kind'] == 'full_covariance', admitted_bytes) for n in fit_sizes]
+        except ValueError as error:
+            fail('resource', '$/preflight', str(error))
+        allocation_plan = dict(original_preflight=plan['preflight'], fit_refit_metric_phases=phases)
+        admitted_bytes = max(p['admitted_bytes'] for p in phases)
+    allocation = digest(allocation_plan)
     operators = {}
     history, candidates = [], []
-    identity = dict(plan['identity'], engine_epoch=core.RUNTIME_EPOCH, optimizer_source=binding.optimizer_source_sha256)
+    identity = dict(plan['identity'], engine_epoch=epoch, optimizer_source=binding.optimizer_source_sha256)
     for index, beta in enumerate(meta['policy']['betas']):
         for penalty in meta['policy']['penalties']:
             folds = [dict(fold=fold, status='failed', reason='not_run',
@@ -285,8 +317,9 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         state.update(active_candidate=cid, active_fold=-1 if fold is None else fold, active_reason=None)
         observed, noise = reader.read(rows, role=role, fold=fold)
         result = fit_partition(op(rows), mesh, meta['prior'], observed, noise, beta, penalty, binding=binding,
-            deadline=deadline, admitted_bytes=plan['preflight']['conservative_bytes'], allocation_sha256=allocation,
-            source_inventory_sha256=source_inventory_sha256)
+            deadline=deadline, admitted_bytes=admitted_bytes, allocation_sha256=allocation,
+            source_inventory_sha256=source_inventory_sha256, source_components=source_components,
+            optimizer_audit=(lambda solved: optimizer_audit(cid, fold, solved)) if optimizer_audit is not None else None)
         state['active_reason'] = result['reason']
         for record in result['history']:
             if len(history) >= 4096:

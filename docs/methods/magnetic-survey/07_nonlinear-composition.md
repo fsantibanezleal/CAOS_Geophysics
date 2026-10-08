@@ -44,6 +44,36 @@ The original per-fit120s/200-step and independent1e-7 projected-gradient gates
 remain. Native1e-5 success alone cannot waive M04's stricter gate. Sparse still
 requires every positive epsilon and true fixed-objective stationarity.
 
+## Separate public conditioned composition
+
+The separate public conditioned composition uses
+`physical_conditioned_optimizer.solve_bounded_linear` or `solve_bounded_nonlinear`
+with explicit new Joseph epochs. It supplies only a closed original-physics DTO:
+the same-q principal-whitened Jacobian and beta-weighted fixed vendor first-order
+CSR Hessian. The public dependency owns natural IC0, Joseph factors and actual
+native CG; M04 supplies no copied CG, private metric, jitter or retry. Source
+storage still counts all3N magnetic components, even for a scalar observation.
+Every fit/refit phase is checked before building G. The original768MiB,
+200 accepted steps across L2/IRLS and absolute120s fit remain; native linear
+CG200/20 trials and nonlinear CG512/30 trials remain their historical values.
+
+Same-run normalized KKT1e-7 is declared explicitly, not the weaker native1e-5
+exit. Complete conditioning attempts, true residuals, failed directions,
+line-search trials and terminal audits are written to a separately bounded
+exclusive/fsync external NDJSON audit before publishing any generation.
+The audit is at most16MiB per solve and64MiB overall; exhaustion refuses
+publication, never truncates proof. This new28-source inventory does not upgrade
+historical24-source receipts. Original directed nonlinear proofs and independent
+Choclo1e-6nT/1e-8 objective gates remain unchanged.
+
+Optional public quadratic error bounds require explicit original W. M04's
+SD division and principal Cholesky triangular solve chains are not an original
+explicit rounded W, so this adapter does not construct an inverse to obtain
+those bounds or claim their equivalence. Passing same-run KKT is not a global
+nonlinear, sparse or geological error theorem. Full original acquisition and
+adverse matrices, finite resource/cancel/crash controls and field eligibility
+must be measured separately under the new source inventory.
+
 ## Espanol
 
 La composicion usa el optimizador no lineal publico y la unidad SI explicita.

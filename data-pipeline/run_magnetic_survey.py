@@ -28,11 +28,15 @@ SOURCES = ('physical_optimizer', 'physical_nonlinear_optimizer', 'gravity_l2_pre
            'magnetic_line_contract', 'magnetic_line_survey_contract')
 
 
-def source_inventory():
+CONDITIONED_SOURCES = ('physical_conditioned_optimizer', 'physical_owned_spd', 'gravity_l2_metric',
+                       'magnetic_conditioned_adapter')
+
+
+def source_inventory(*, conditioned=False):
     # An operator receipt must include the actual transitive generic certificate
     # validator dependency. Do not hash a filename without loading that source.
     return {name: hashlib.sha256(Path(importlib.import_module(name).__file__).read_bytes()).hexdigest()
-            for name in SOURCES}
+            for name in SOURCES+(CONDITIONED_SOURCES if conditioned else ())}
 
 
 def read_bounded(path, limit):
@@ -72,14 +76,21 @@ def reviewed_binding(path, allow_candidate, quantity='secondary_enu_nT'):
     if (receipt['schema'] != 'magnetic-local-binding-1' or receipt['scope'] != 'local_candidate_only'
             or type(receipt['review_reference']) is not str or not 1 <= len(receipt['review_reference']) <= 512):
         fail('dependency', '$/binding', 'Explicit operator-reviewed local-candidate receipt required')
-    sources = source_inventory()
+    conditioned = receipt['runtime_epoch'] in ('physical-gncg-linear-joseph-candidate-2', 'physical-gncg-nonlinear-joseph-candidate-3')
+    sources = source_inventory(conditioned=conditioned)
     if receipt['sources'] != sources or receipt['source_inventory_sha256'] != digest(sources):
         fail('dependency', '$/binding', 'Complete reviewed loaded-source inventory mismatch')
     import physical_optimizer as core
     if quantity == 'exact_total_anomaly_nT':
         import physical_nonlinear_optimizer as core
-    if receipt['runtime_epoch'] != core.RUNTIME_EPOCH or receipt['policy'] != core.POLICY:
+    if conditioned:
+        import physical_conditioned_optimizer as core
+    epoch = (core.NONLINEAR_EPOCH if quantity == 'exact_total_anomaly_nT' else core.LINEAR_EPOCH) if conditioned else core.RUNTIME_EPOCH
+    if receipt['runtime_epoch'] != epoch or receipt['policy'] != core.POLICY:
         fail('dependency', '$/binding', 'Exact public dependency epoch/policy mismatch')
+    if conditioned:
+        from magnetic_conditioned_adapter import binding_for_sources
+        return binding_for_sources(sources, receipt['source_inventory_sha256'], nonlinear=quantity == 'exact_total_anomaly_nT')
     if quantity == 'exact_total_anomaly_nT':
         return core.NonlinearBinding('physical_nonlinear_optimizer.solve_bounded_nonlinear', core.SOURCE_SHA256,
             core.VENDOR_SOURCE_SHA256, receipt['source_inventory_sha256'], core.RUNTIME_EPOCH, core.POLICY)
@@ -156,10 +167,19 @@ def main(argv=None):
                 from magnetic_result_bundle import write_bundle, write_failure
                 # Keep vendor diagnostics out of the one-line JSON protocol;
                 # actual complete iteration trace is in the bounded result.
-                with redirect_stdout(sys.stderr):
-                    result = calibrate(raw, binding=binding, source_inventory_sha256=binding.source_inventory_sha256,
-                                       deadline=monotonic()+args.wall_seconds,
-                                       freeze_receipt=output.with_name(output.name+'.frozen.json'))
+                audit = None
+                if type(binding).__module__ == 'physical_conditioned_optimizer':
+                    from magnetic_conditioned_adapter import OptimizerAudit
+                    audit = OptimizerAudit(external_path(args.temp_root)/'optimizer-audit.jsonl', binding.source_inventory_sha256)
+                try:
+                    with redirect_stdout(sys.stderr):
+                        result = calibrate(raw, binding=binding, source_inventory_sha256=binding.source_inventory_sha256,
+                                           deadline=monotonic()+args.wall_seconds,
+                                           freeze_receipt=output.with_name(output.name+'.frozen.json'),
+                                           optimizer_audit=audit.append if audit is not None else None)
+                finally:
+                    if audit is not None:
+                        audit.close()
                 request = _Lexer(raw, defer=False).document()
                 if result['status'] != 'complete':
                     # A failure ledger is not a fitted bundle or success pointer.
