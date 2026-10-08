@@ -401,3 +401,40 @@ def test_actual_manifest_function_fsyncs_known_directories_before_record(monkeyp
     assert sum(event[0] == "fsync" for event in fs.events[:record]) == 3
     manifest = module.decode(fs.root.children[identifier+".custody.json"].body,65536)
     dto.validate_custody_manifest(manifest,authority)
+
+
+@pytest.mark.parametrize("suffix",["plan","receipt","recovery-intent","recovery","custody-intent","custody","incomplete-recovery-intent","incomplete-recovery"])
+def test_every_root_record_kind_counts_against_actual_creation_cap(monkeypatch,suffix):
+    module = supervisor_module()
+    fs = FakeFS()
+    identifier = fixture()[1]["id"]
+    for i in range(255):
+        prefix = fixture()[1]["id"]
+        fs.root.children[prefix+".receipt.json"] = Node(100+i,body=b"{}")
+    fs.root.children[identifier+"."+suffix+".json"] = Node(700,body=b"{}")
+    monkeypatch.setattr(module,"os",fs)
+    with pytest.raises(ValueError,match="custody_receipt_cap"):
+        module.custody_record_capacity(9000)
+    del fs.root.children[identifier+"."+suffix+".json"]
+    module.custody_record_capacity(9000)
+
+
+@pytest.mark.parametrize("debt",["unknown","linked","large","writable","directory-link"])
+def test_root_record_census_refuses_unknown_or_unsafe_debt(monkeypatch,debt):
+    module = supervisor_module()
+    fs = FakeFS()
+    identifier = fixture()[1]["id"]
+    name = "unknown" if debt == "unknown" else identifier+".plan.json"
+    node = Node(500,body=b"{}")
+    if debt == "linked":
+        node.info.st_nlink = 2
+    elif debt == "large":
+        node.info.st_size = 65537
+    elif debt == "writable":
+        node.info.st_mode |= 0o020
+    elif debt == "directory-link":
+        node.info.st_mode = stat.S_IFLNK|0o750
+    fs.root.children[name] = node
+    monkeypatch.setattr(module,"os",fs)
+    with pytest.raises(ValueError):
+        module.custody_record_capacity(9000)

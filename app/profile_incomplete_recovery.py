@@ -23,7 +23,7 @@ from app.profile_linux_recovery import (
     validate_ownership, write_exclusive,
 )
 from app.profile_linux_worker import (
-    bounded_stream, directory_fd, finish_streams, identity, installed_command,
+    STREAM_DRAIN_SECONDS, directory_fd, identity, installed_command,
     regular_at, relation, require,
 )
 
@@ -158,6 +158,69 @@ def same_recovery_authority(left,right):
             {k:v for k,v in right.items() if k != "terminal"})
 
 
+async def recovery_stream(stream,cap):
+    """Retain bounded bytes, but keep draining a refused writer until EOF."""
+    body = bytearray()
+    overflow = False
+    while True:
+        part = await stream.read(4096)
+        if not part:
+            require(not overflow)
+            return bytes(body)
+        if not overflow and len(body)+len(part) <= cap:
+            body.extend(part)
+        else:
+            overflow = True
+
+
+def start_readers(process,readers):
+    if not readers:
+        readers.extend((asyncio.create_task(recovery_stream(process.stdout,65536)),
+                        asyncio.create_task(recovery_stream(process.stderr,8192))))
+
+
+async def collect_readers(readers):
+    _,pending = await asyncio.wait(readers,timeout=STREAM_DRAIN_SECONDS)
+    if pending:
+        # Unlike wait_for(gather), do not cancel readers and strand a writer.
+        raise asyncio.TimeoutError("profile_recovery_stream_debt")
+    return [reader.result() for reader in readers]
+
+
+async def drain_owned_helper(spawn,readers):
+    try:
+        process = await spawn
+    except Exception:
+        # Failed stdlib creation did not return an owned Process. Caller still
+        # propagates its original refusal; this is not successful recovery.
+        return
+    start_readers(process,readers)
+    while True:
+        try:
+            await process.wait()
+        except Exception:
+            # Uncertain reap cannot release custody. Retry the exact handle,
+            # not a numeric PID and never a foreign process or original file.
+            await asyncio.sleep(0.05)
+            continue
+        if process.returncode is not None:
+            break
+        await asyncio.sleep(0.05)
+    await asyncio.gather(*readers,return_exceptions=True)
+
+
+async def mandatory_helper_drain(spawn,readers):
+    """Keep caller's locks/FDs alive even across repeated task cancellation."""
+    guard = asyncio.create_task(drain_owned_helper(spawn,readers))
+    cancelled = False
+    while True:
+        try:
+            await asyncio.shield(guard)
+            return cancelled
+        except asyncio.CancelledError:
+            cancelled = True
+
+
 async def recover_incomplete_job(settings,identifier):
     """Caller holds worker singleton; parent/M01 additionally owns common lease."""
     require(os.name == "posix" and os.geteuid() != 0)
@@ -165,7 +228,7 @@ async def recover_incomplete_job(settings,identifier):
     engine = make_engine(settings)
     sessions = async_sessionmaker(engine,expire_on_commit=False)
     fds,readers = [],[]
-    process = None
+    process = spawn = None
     try:
         await require_migration_head(engine)
         async with sessions() as session:
@@ -213,12 +276,15 @@ async def recover_incomplete_job(settings,identifier):
         else:
             members = inventory(stage_fd)
         expected = custody_authority(config,packet,held,recovery=True)
-        process = await asyncio.create_subprocess_exec(*command[:-1],"--recover-incomplete",identifier,
+        spawn = asyncio.create_task(asyncio.create_subprocess_exec(*command[:-1],"--recover-incomplete",identifier,
             stdin=asyncio.subprocess.DEVNULL,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE,
-            env={"PATH":"/usr/bin:/bin","PYTHONDONTWRITEBYTECODE":"1","PYTHONIOENCODING":"utf-8"})
-        readers = [asyncio.create_task(bounded_stream(process.stdout,65536)),asyncio.create_task(bounded_stream(process.stderr,8192))]
+            env={"PATH":"/usr/bin:/bin","PYTHONDONTWRITEBYTECODE":"1","PYTHONIOENCODING":"utf-8"}))
+        # Cancellation during asynchronous creation must not lose a child that
+        # already exists but whose Process has not reached the caller yet.
+        process = await asyncio.shield(spawn)
+        start_readers(process,readers)
         await asyncio.wait_for(process.wait(),45)
-        stdout,_ = await finish_streams(readers)
+        stdout,_ = await collect_readers(readers)
         require(process.returncode == 0)
         recovery = json.loads(stdout)
         validate_incomplete_recovery(recovery)
@@ -274,16 +340,9 @@ async def recover_incomplete_job(settings,identifier):
         require(identity(os.stat(identifier,dir_fd=archive_fd,follow_symlinks=False)) == (held["device"],held["inode"]))
         return manifest
     finally:
-        if process is not None and process.returncode is None:
-            try:
-                await asyncio.wait_for(process.wait(),45)
-            except asyncio.TimeoutError:
-                pass
-        for reader in readers:
-            if not reader.done():
-                reader.cancel()
-        if readers:
-            await asyncio.gather(*readers,return_exceptions=True)
+        deferred_cancel = await mandatory_helper_drain(spawn,readers) if spawn is not None else False
         for fd in reversed(fds):
             os.close(fd)
         await engine.dispose()
+        if deferred_cancel:
+            raise asyncio.CancelledError

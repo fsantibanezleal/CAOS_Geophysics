@@ -9,6 +9,7 @@ Status: implemented candidate; native/integration tasks remain open
 - [x] Implement separate read-only-extinction root recovery and resumable cleanup.
 - [x] Implement held-stage incomplete archive, CLI and bounded accounting.
 - [x] Run portable positive/negative and old grammar regression controls/Ruff.
-- [ ] Push exact validated pin and private handoff with honest native gates.
+- [x] Push validated implementation and lifecycle correction; pin private handoff.
+- [x] Confirm child reap/drain and singleton exclusion with actual bounded children.
 - [ ] Parent: actual privileged missing-receipt crash, archive/restart qualification.
 - [ ] Parent/M01: distinct descriptor, all-writer lease and deletion integration.

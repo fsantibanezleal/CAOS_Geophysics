@@ -2,6 +2,7 @@
 from copy import deepcopy
 import asyncio
 import stat
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -272,3 +273,101 @@ def test_interrupted_manifest_in_stage_is_charged_against_archive_cap(monkeypatc
     with pytest.raises(ApiError):
         asyncio.run(archive.recover_incomplete_job(settings,job.id))
     assert not any(item[0] == "rename" for item in fs.events)
+
+
+@pytest.mark.parametrize("cause",["timeout","cancel","repeat-cancel","cancel-during-create","timeout-repeat-cancel"])
+def test_actual_child_is_drained_before_singleton_and_descriptors_release(monkeypatch,tmp_path,cause):
+    """Actual ordinary OS child/lock; descriptors and privileged reply modeled."""
+    from app.worker import _worker_lock
+    real_create = asyncio.create_subprocess_exec
+    real_wait_for = asyncio.wait_for
+    settings,job,fs,_,_,_,_,_ = executor_model(monkeypatch,tmp_path,{})
+    children = []
+    closed_live = []
+    original_close = fs.close
+    def close(fd):
+        if children and children[0].returncode is None:
+            closed_live.append(fd)
+        original_close(fd)
+    fs.close = close
+    async def scenario():
+        started = asyncio.Event()
+        async def actual_child(*args,**kwargs):
+            process = await real_create(sys.executable,"-I","-B","-c",
+                "import time; time.sleep(0.35)",stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
+            children.append(process)
+            started.set()
+            if cause == "cancel-during-create":
+                await asyncio.sleep(0.12)
+            return process
+        async def short_deadline(awaitable,timeout):
+            return await real_wait_for(awaitable,0.01 if timeout == 45 else timeout)
+        monkeypatch.setattr(archive.asyncio,"create_subprocess_exec",actual_child)
+        monkeypatch.setattr(archive.asyncio,"wait_for",short_deadline)
+        async def run():
+            with _worker_lock(tmp_path):
+                return await archive.recover_incomplete_job(settings,job.id)
+        task = asyncio.create_task(run())
+        try:
+            await real_wait_for(started.wait(),5)
+            if cause in ("cancel","repeat-cancel","cancel-during-create"):
+                task.cancel()
+            await asyncio.sleep(0.06)
+            if cause in ("repeat-cancel","timeout-repeat-cancel"):
+                task.cancel()
+                await asyncio.sleep(0.03)
+                task.cancel()
+            assert children[0].returncode is None
+            assert not task.done(), "caller returned while owned child remained alive"
+            with pytest.raises(RuntimeError,match="owns the lock"):
+                with _worker_lock(tmp_path):
+                    pass
+            assert not closed_live
+            with pytest.raises(asyncio.TimeoutError if cause == "timeout" else asyncio.CancelledError):
+                await real_wait_for(asyncio.shield(task),5)
+            assert children[0].returncode == 0 and not closed_live
+            with _worker_lock(tmp_path):
+                pass
+            assert not any(item[0] in ("write","rename") for item in fs.events)
+        finally:
+            # Only this disposable ordinary test child, never root/science.
+            for child in children:
+                if child.returncode is None:
+                    child.kill()
+                await child.wait()
+            if not task.done():
+                task.cancel()
+            await asyncio.gather(task,return_exceptions=True)
+    asyncio.run(scenario())
+
+
+@pytest.mark.parametrize("which",["stdout","stderr"])
+def test_actual_overflow_writer_drains_without_receipt_or_cleanup(monkeypatch,tmp_path,which):
+    from app.worker import _worker_lock
+    real_create = asyncio.create_subprocess_exec
+    settings,job,fs,_,_,_,_,_ = executor_model(monkeypatch,tmp_path,{})
+    children = []
+    async def child(*args,**kwargs):
+        fd = 1 if which == "stdout" else 2
+        process = await real_create(sys.executable,"-I","-B","-c",
+            f"import os,time; os.write({fd}, b'x'*(2*1024**2)); time.sleep(0.1)",
+            stdin=asyncio.subprocess.DEVNULL,stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
+        children.append(process)
+        return process
+    monkeypatch.setattr(archive.asyncio,"create_subprocess_exec",child)
+    async def scenario():
+        try:
+            with _worker_lock(tmp_path):
+                with pytest.raises(ApiError):
+                    await archive.recover_incomplete_job(settings,job.id)
+            assert children[0].returncode == 0
+            assert not any(item[0] in ("write","rename") for item in fs.events)
+            with _worker_lock(tmp_path):
+                pass
+        finally:
+            for process in children:
+                if process.returncode is None:
+                    process.kill()
+                await process.wait()
+    asyncio.run(scenario())
