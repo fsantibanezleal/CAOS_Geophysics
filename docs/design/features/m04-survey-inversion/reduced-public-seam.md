@@ -54,3 +54,23 @@ The public reduced-space design cites actual inactive principal-Hessian methods;
 working-face refinement remains a project-specific inference verified here, not
 an imported theorem, perturbation or fallback policy. Exact native quantities
 and original adverse controls remain separately mandatory.
+
+## Existing-driver integration contract
+
+The existing calibration/CLI/native driver may opt into this distinct LINEAR
+export only by its exact reviewed source epoch and complete loaded inventory.
+No defaults change. All original fit/refit allocation dictionaries are checked
+before any kernel; each solve receives its own exact plan/digest/admitted bytes
+matching its actual principal likelihood and physical identity. The global
+preflight still checks the maximum across every original fold and final refit.
+The same original fit_partition continuation owns the shared200-state budget
+and absolute120-second clock; the public reduced solver does not reset them.
+
+Gate test_magnetic_reduced_cli.py exercises the actual original288-row null
+supplied-file calibration/import/reused evaluation/export with complete audits;
+it is labelled a null7cell control, not full528/nonzero acceptance. Preserve
+old CLI source signatures and their negative tests. Requalify both vector and
+linear-projection full firstfolds against final loaded driver inventory before
+running either dependent original complete matrix. Exact norm rejects the
+linear source before kernel birth. Native runner keeps original resource/Job
+constraints; no new live method registration or engine allow-list.
