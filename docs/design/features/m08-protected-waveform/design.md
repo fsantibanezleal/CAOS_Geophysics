@@ -28,6 +28,19 @@ Dataset/result JSON retains existing generated keys. Scientific export members l
 
 ## Execution/publication sequence
 
+Windows publication first checks UTF16 lengths of every exact live metadata/
+member destination, the same relative paths beneath the generated project
+deletion destination and the fixed-length UUID ZIP staging name. Every target
+must remain below260 units using the selected ordinary interpreter; no device
+prefix or global registry change is accepted. This pure lifecycle preflight
+precedes publication mkdir/copy/rename/SQL install. Parent's independent original
+DELETE preflight still protects already-existing data and remains untouched.
+The exact owner/project generated relation is required; unknown/unbound paths
+refuse with waveform_storage_unavailable and retain the scientific stage.
+POSIX does not inherit this Windows limit. Existing short-root positive and
+observed long-root negative receipts remain distinct. Gates: explicit-platform
+live/deletion/ZIP/UTF16/no-IO lifecycle controls and ordinary full publication.
+
 1. Claim and revalidate row, request, exact raw pair/source records and measured held inputs; create only a new exact job stage.
 2. Invoke the fixed waveform platform supervisor and explicit reviewed runtime/context. Controller plus child and exited descendants are in lifetime accounting. B60/S57 CPU, sample-gap stop, drain/final samples and release acknowledgment remain unchanged; unavailable native context fails closed. No psutil lifetime substitution.
 3. Calculate/seal without catalogue access. Verify complete local export, optional post-seal evaluation, unchanged source identities and native final/release. Scientific QC-only is retained visibly; malformed/crash/cancel/resource failure never becomes successful empty science.

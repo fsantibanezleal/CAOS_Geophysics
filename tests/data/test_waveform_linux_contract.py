@@ -69,3 +69,41 @@ def test_native_identity_and_clock_uint64_not_scientific_float_domain():
                 packet(run, 1, "ack", payload).replace(b"1780882222333444555", b"1e18")]:
         with pytest.raises(ControlError):
             read_packet(raw, run, 1, "ack")
+
+
+def final_monitor(monkeypatch):
+    from waveform_m08_linux import Monitor
+    monitor = Monitor(None)
+    life = monitor.life
+    life.sample(1000000000,10000,1000,9000,1,1234)
+    life.drained(1000000000)
+    life.sample(1000000000+POLL,15000,6000,9000,0,1234)
+    life.sample(1000000000+2*POLL,15000,6000,9000,0,1234)
+    monkeypatch.setattr(monitor,"close",lambda:None)  # Authored final-state control, not native proof.
+    monkeypatch.setattr(monitor,"counters",lambda:tuple(life.last[1:]))
+    return monitor
+
+
+def test_final_seal_keeps_exact_scientific_row_after_postexit_publication(monkeypatch):
+    monitor = final_monitor(monkeypatch)
+    row = monitor.seal_final()
+    assert row == monitor.life.last and row[4] == 0 and monitor.life.final_ready
+    # Post-exit observer publication does not invent a scientific sample timestamp.
+    monitor.confirm_final(row)
+    assert monitor.life.last == row and monitor.life.max_gap_ns == POLL
+
+
+@pytest.mark.parametrize("change",["late-gap","not-final","changed-cpu","new-task","changed-peak"])
+def test_final_seal_refuses_late_failure_or_changed_held_scope(monkeypatch,change):
+    monitor = final_monitor(monkeypatch)
+    row = tuple(monitor.life.last)
+    if change == "late-gap":
+        monitor.life.sample(row[0]+551294670,*row[1:])
+    elif change == "not-final":
+        monitor.life.final_ready = False
+    else:
+        values = list(row[1:])
+        values[{"changed-cpu":0,"new-task":3,"changed-peak":4}[change]] += 1
+        monkeypatch.setattr(monitor,"counters",lambda:tuple(values))
+    with pytest.raises(ControlError):
+        monitor.seal_final()

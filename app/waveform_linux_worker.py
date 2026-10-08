@@ -124,6 +124,18 @@ def failure_code(error, requested, terminal, proved):
     return "waveform_execution_unproved"
 
 
+def terminal_proved(terminal,job,stage_fd,installation):
+    """Resource ApiError is a refused receipt, never a running-job escape."""
+    from app.errors import ApiError
+    if terminal is None:
+        return False
+    try:
+        validate_terminal(terminal,job,identity(stage_fd),installation)
+    except (ApiError,ValueError,OSError,KeyError,TypeError):
+        return False
+    return True
+
+
 async def execute(settings,sessions,job,poll_interval):
     """No root PID signals. Only closed CANCEL/EOF and posttransaction COMMIT."""
     from app.errors import ApiError
@@ -206,12 +218,7 @@ async def execute(settings,sessions,job,poll_interval):
     except (ApiError,OSError,ValueError,KeyError,TypeError,asyncio.TimeoutError) as error:
         if process is not None and process.stdin is not None:
             process.stdin.close()  # Independent guardian owns caller-loss extinction.
-        proved = terminal is not None
-        if proved:
-            try:
-                validate_terminal(terminal,job,identity(stage_fd),installation)
-            except (ValueError,OSError,KeyError,TypeError):
-                proved = False
+        proved = terminal_proved(terminal,job,stage_fd,installation)
         async with sessions() as session:
             current = await session.get(ProcessingJob,job.id)
             if current.state != "running":

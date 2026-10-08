@@ -274,6 +274,29 @@ def preflight_publication_paths(target, directory, members, *, platform):
                        "Waveform publication destinations exceed supported storage paths") from None
 
 
+def preflight_lifecycle_paths(data_root,owner,project,target,directory,members,*,platform):
+    """Exact generated live/delete and fixed-length ZIP targets, before install."""
+    preflight_publication_paths(target,directory,members,platform=platform)
+    if platform != "nt":
+        return
+    try:
+        from uuid import UUID
+        if any(type(value) is not str or str(UUID(value)) != value for value in (owner,project)):
+            raise ValueError()
+        live = data_root/"derived"/owner/project
+        deleting = data_root/".deleting"/f"{owner}--{project}--derived"
+        deletion_target = deleting/target.relative_to(live)
+        deletion_directory = deleting/directory.relative_to(live)
+        preflight_publication_paths(deletion_target,deletion_directory,members,platform=platform)
+        # ZIP uses only a newly generated canonical UUID plus '.zip'. All UUID
+        # values have exactly this length; no original/user name becomes a path.
+        exports = data_root/".exports"
+        preflight_publication_paths(exports/"00000000-0000-4000-8000-000000000000.zip",exports,[],platform=platform)
+    except (ValueError,TypeError,AttributeError):
+        raise ApiError(503,"waveform_storage_unavailable",
+                       "Waveform lifecycle destinations exceed supported storage paths") from None
+
+
 async def publish_result(settings, sessions, job, export_path, receipt, release, *, linux_execution=None,
                          linux_installation=None, linux_stage_fd=None):
     """The installed lane adopts its held export; never makes a third copy."""
@@ -345,7 +368,7 @@ async def _publish_result(settings, sessions, job, export_path, receipt, release
     key = result_key(str(job.owner_id), job.project_id, job.id)
     target = checked_derived_path(settings, key)
     directory = artifact_path(settings, artifact_key(str(job.owner_id), job.project_id, job.id, "manifest.json")).parent
-    preflight_publication_paths(target, directory, members, platform=os.name)
+    preflight_lifecycle_paths(settings.data_dir,str(job.owner_id),job.project_id,target,directory,members,platform=os.name)
     async with sessions() as session:
         await session.execute(text("BEGIN IMMEDIATE"))
         current = (await session.execute(select(ProcessingJob).where(ProcessingJob.id == job.id))).scalar_one()
