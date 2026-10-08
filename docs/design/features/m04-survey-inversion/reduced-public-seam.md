@@ -74,3 +74,13 @@ linear-projection full firstfolds against final loaded driver inventory before
 running either dependent original complete matrix. Exact norm rejects the
 linear source before kernel birth. Native runner keeps original resource/Job
 constraints; no new live method registration or engine allow-list.
+
+Before dependent complete-matrix repetitions, run one original nonzero A/vector
+firstfold with the original sparse_smallness schedule through fit_partition.
+This is the SAME L2 plus eight-stage true-p1 continuation, not an alternative
+matrix, selected easier beta, cap extension or new scientific tolerance. Keep
+the original beta0,144fit rows/528cells,200combinedaccepted and absolute120s.
+Retain every actual solve audit and full history plus exact source/request/raw
+identities even when the fit fails. A sparse firstfit failure leaves dependent
+complete cases not_run on that same source; do not repeat them unchanged.
+This diagnostic prerequisite does not grant native Job/resource or field proof.
