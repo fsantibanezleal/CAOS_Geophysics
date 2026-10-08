@@ -146,7 +146,7 @@ async def execute(settings, sessions, job, poll_interval):
         stage_root = settings.data_dir / ".job-staging"
         if stage_root.is_symlink():
             raise ApiError(409, "waveform_context_unavailable", "Waveform staging parent is unsafe")
-        stage_root.mkdir(exist_ok=True)
+        stage_root.mkdir(mode=0o700,exist_ok=True)
         stage = stage_root / job.id
         stage.mkdir(mode=0o700)
         context = bind_job_context(context, stage_root, stage, job.id)

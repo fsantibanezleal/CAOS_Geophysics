@@ -245,9 +245,9 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
     stage_root = settings.data_dir / ".job-staging"
     if stage_root.is_symlink():
         raise RuntimeError("worker staging root requires operator recovery")
-    stage_root.mkdir(parents=True, exist_ok=True)
+    stage_root.mkdir(mode=0o700, parents=True, exist_ok=True)
     stage = stage_root / job.id
-    stage.mkdir()
+    stage.mkdir(mode=0o700)
     output = stage / "result.json"
     error_path = stage / "stderr.txt"
     input_key = dataset_key(str(job.owner_id), job.project_id, job.dataset_id)

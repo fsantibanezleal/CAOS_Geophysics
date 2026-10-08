@@ -60,11 +60,28 @@ def main():
         end = next(i for i,n in enumerate(statements) if isinstance(n,ast.Assign) and
             any(isinstance(t,ast.Name) and t.id == 'process' for t in n.targets))
         producer = compile(ast.Module(body=statements[begin:end],type_ignores=[]),str(source/'app/profile_linux_worker.py'),'exec')
-        for case in ('empty','partial','all-retained-members'):
+        for case in ('empty','partial','all-retained-members','generic-first','waveform-first'):
             data = root/case
             data.mkdir(mode=0o700)
             identifier = str(uuid.uuid4())
             stage = data/'.job-staging'/identifier
+            if case.endswith('-first'):
+                # Exact other-method producer bytes create the shared parent
+                # first. The profile constructor must accept that private inode.
+                module = 'worker.py' if case == 'generic-first' else 'waveform_worker.py'
+                other_tree = ast.parse((source/'app'/module).read_bytes())
+                function_name = '_execute' if module == 'worker.py' else 'execute'
+                other = next(n for n in other_tree.body if isinstance(n,ast.AsyncFunctionDef) and n.name == function_name)
+                statements = other.body if module == 'worker.py' else next(n for n in other.body if isinstance(n,ast.Try)).body
+                first = next(i for i,n in enumerate(statements) if isinstance(n,ast.Assign) and
+                    any(isinstance(t,ast.Name) and t.id == 'stage_root' for t in n.targets))
+                last = next(i for i,n in enumerate(statements[first:],first) if isinstance(n,ast.Expr) and
+                    isinstance(n.value,ast.Call) and isinstance(n.value.func,ast.Attribute) and
+                    isinstance(n.value.func.value,ast.Name) and n.value.func.value.id == 'stage' and n.value.func.attr == 'mkdir')
+                namespace.update(settings=SimpleNamespace(data_dir=data),job=SimpleNamespace(id=str(uuid.uuid4())))
+                exec(compile(ast.Module(body=statements[first:last+1],type_ignores=[]),str(source/'app'/module),'exec'),namespace)
+                assert stat.S_IMODE((data/'.job-staging').stat().st_mode) == 0o700
+                assert stat.S_IMODE(namespace['stage'].stat().st_mode) == 0o700
             namespace.update(settings=SimpleNamespace(data_dir=data),job=SimpleNamespace(id=identifier),stage=stage)
             exec(producer,namespace)
             parent_fd,stage_fd = namespace['stage_parent_fd'],namespace['stage_fd']
@@ -146,7 +163,8 @@ def main():
     result = dict(schema='profile-private-stage-posix-regression-1',tests=count,failures=0,
         uid=os.geteuid(),gid=os.getegid(),permissive_umask=0,actual_filesystem=True,
         source_hashes={name:hashlib.sha256((source/name).read_bytes()).hexdigest() for name in (
-            'app/profile_linux_worker.py','app/profile_incomplete_recovery.py','scripts/profile_linux_supervisor.py')},
+            'app/profile_linux_worker.py','app/profile_incomplete_recovery.py','scripts/profile_linux_supervisor.py',
+            'app/worker.py','app/waveform_worker.py')},
         privileged_crash_qualified=False)
     with (root/'receipt.json').open('xb') as stream:
         stream.write(json.dumps(result,sort_keys=True).encode()+b'\n')

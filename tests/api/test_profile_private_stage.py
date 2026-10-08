@@ -70,3 +70,15 @@ def test_execute_constructor_precedes_stage_and_privileged_birth_and_holds_paren
     assert body.index('private_stage_parent(') < body.index('os.mkdir(job.id') < body.index('asyncio.create_subprocess_exec')
     assert 'os.close(stage_parent_fd)' in ast.get_source_segment(source,execute.body[-1])
     assert 'chmod' not in body
+
+
+@pytest.mark.parametrize('module', ['worker.py','waveform_worker.py'])
+def test_other_shared_producers_request_private_new_parents_and_stages(module):
+    tree = ast.parse((Path(worker.__file__).parent/module).read_text())
+    calls = [node for node in ast.walk(tree) if isinstance(node,ast.Call) and
+        isinstance(node.func,ast.Attribute) and isinstance(node.func.value,ast.Name) and
+        node.func.value.id in ('stage_root','stage') and node.func.attr == 'mkdir']
+    assert len(calls) == 2
+    for call in calls:
+        assert any(arg.arg == 'mode' and isinstance(arg.value,ast.Constant) and arg.value.value == 0o700
+            for arg in call.keywords)
