@@ -27,6 +27,9 @@ def main(argv=None):
         phase = 'plan'
         plan_path = io.external_path(args.plan, directory=False)
         plan = base.strict_json(base.read_bounded(plan_path, 2097152))
+        if type(plan) is dict and plan.get('schema') == 'm03-global-control-plan/1':
+            from magnetic_line_survey_diagnostic import run_opened_s1
+            return run_opened_s1(plan,plan_path.parent,args.job_handle)
         if type(plan) is not dict or set(plan) != {'schema', 'mode', 'input_root', 'coordinates', 'sources', 'damping'} or \
            plan['schema'] != 'm03-native-probe-plan/1' or plan['mode'] not in ('zero', 'cancel'):
             raise core.SurveyError('invalid_contract', 'seal')

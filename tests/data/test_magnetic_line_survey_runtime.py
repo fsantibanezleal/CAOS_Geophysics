@@ -33,6 +33,18 @@ def test_owned_scratch_counts_actual_nested_bytes(tmp_path):
     assert runtime.owned_bytes(tmp_path) == 7
 
 
+def test_live_deleted_stage_member_is_not_a_terminal_accounting_substitute(tmp_path,monkeypatch):
+    monkeypatch.setattr(runtime.os,'walk',lambda *args,**kwargs:iter([(str(tmp_path),[],['removed-stage.bin'])]))
+    assert runtime.owned_bytes(tmp_path,allow_disappearing=True)==0
+    with pytest.raises(FileNotFoundError):
+        runtime.owned_bytes(tmp_path)
+    def denied(*args,**kwargs):
+        raise PermissionError('Counter scan unavailable')
+    monkeypatch.setattr(runtime,'external_path',denied)
+    with pytest.raises(PermissionError):
+        runtime.owned_bytes(tmp_path,allow_disappearing=True)
+
+
 def probe_plan(tmp_path, rows=8201, sources=66, mode='zero'):
     input_root = tmp_path/'input'
     input_root.mkdir()

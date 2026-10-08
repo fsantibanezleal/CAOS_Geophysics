@@ -100,13 +100,22 @@ def require_job(handle):
         raise SurveyError('resource_refused', 'fit')
 
 
-def owned_bytes(root):
+def owned_bytes(root, *, allow_disappearing=False):
     total = 0
     for directory, folders, files in os.walk(root, followlinks=False):
         for name in folders + files:
             item = Path(directory) / name
-            external_path(item, directory=name in folders)
-        total += sum((Path(directory)/name).stat().st_size for name in files)
+            try:
+                external_path(item, directory=name in folders)
+                if name in files:
+                    total += item.stat().st_size
+            except FileNotFoundError:
+                # Only the active producer may remove its completed stage
+                # members during a non-atomic monitor traversal. Terminal
+                # accounting after drain remains strict; no native counter
+                # failure, permission error or link error becomes zero.
+                if not allow_disappearing:
+                    raise
     return total
 
 
@@ -136,7 +145,8 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
     source_names = ('magnetic_line_contract.py', 'magnetic_line_survey.py', 'magnetic_line_survey_contract.py',
                     'magnetic_line_survey_io.py', 'magnetic_line_survey_runtime.py', 'magnetic_line_survey_worker.py',
                     'magnetic_line_survey_geometry.py', 'magnetic_line_survey_measurements.py',
-                    'magnetic_line_survey_crossovers.py', 'magnetic_line_survey_support.py', 'magnetic_line_survey_seal.py')
+                    'magnetic_line_survey_crossovers.py', 'magnetic_line_survey_support.py', 'magnetic_line_survey_seal.py',
+                    'magnetic_line_survey_fit.py', 'magnetic_line_survey_diagnostic.py')
     def source_identity():
         return {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}
     sources_before = source_identity()
@@ -196,7 +206,7 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                     break
                 disk_bad = False
                 if now >= next_disk:
-                    disk_bad = owned_bytes(scratch) > SCRATCH_LIMIT or shutil.disk_usage(scratch).free < 67108864
+                    disk_bad = owned_bytes(scratch,allow_disappearing=True) > SCRATCH_LIMIT or shutil.disk_usage(scratch).free < 67108864
                     next_disk = now + 1
                 if cancel_when_ready and ready_at is None and (scratch/'native-ready.json').is_file():
                     ready_at = now
