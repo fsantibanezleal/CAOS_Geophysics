@@ -41,6 +41,16 @@ the published FK and dataset co-commit. Fresh worker sessions SHALL not commit
 or roll back the authenticating caller's unrelated read/write transaction.
 Gate: dataset birth/duplicate/uncertain-target and caller-transaction controls.
 
+R-465 WHEN the existing excluded startup/delete owner dispatches M04 attempts,
+THE additive reader SHALL reject malformed/unknown discriminators, incomplete
+debt, forged lifetime, changed owned source and changed job request/preflight
+before granting its M04 subtotal. Recognized M03 rows SHALL remain explicitly
+unhandled for their separate owner, never silently admitted by this reader.
+Unknown or surviving custody namespace members SHALL refuse. Success requires
+the original selected project, immutable dataset and exact single-ZIP descriptor.
+Gate: excluded reader on genuine retained result bytes plus request/preflight,
+unknown sibling, foreign selection and unreleased-debt negatives.
+
 ## Design
 
 Use the existing magnetic preparation-attempt SQL model and literal migration
