@@ -211,6 +211,19 @@ Current shared physical_optimizer still refuses nonlinear_gauss_newton; its
 quadratic certificate and200/200/20 limits are not used as the M11 solver.
 
 This is a validated scientific implementation milestone, NOT complete inverse
-acceptance. JS09..JS15 production separately optimized baselines, coupled solves,
+acceptance. JS09..JS16 production separately optimized baselines, coupled solves,
 frozen selection/sealed evaluation, full result export/replay, measured complete
 resource envelope, field eligibility and deploy remain factual open gates.
+
+Oct8 external-read guard rerun:80PASS/2SKIP in491.55s for original development
+intake plus serialization. Both .git directory and worktree-file ancestor
+negatives reject before scandir/read/np.load. Existing symlink fixture skips
+remain explicit. Receipt storage-r2.xml SHA256:
+a9e408d7cf713487a2c83a843495ffad832e47f4348aa375f49a4da74d07c331.
+No MAIN source acquisition, ERT, traveltime or ingest CLI was changed.
+
+Owned six-chapter bilingual course:4 targeted tests and157 original-inclusive
+frontend tests pass;48 actual client interactions cover six questions x EN/ES x
+light/dark x390/1440px. Exact source/render/mount/type/runtime limitations are in
+course-unit.md. The explicit MAIN mount patch checks but is not applied; the
+course does not expose a solve or claim acceptance of the full supplied inverse.

@@ -306,3 +306,17 @@ def test_growing_file_hash_is_bounded(tmp_path,monkeypatch):
     # Actual fstat proves the mismatch before streaming, no hash-until-EOF.
     with pytest.raises(ValueError,match='drift'):
         intake._file_sha(path)
+
+
+@pytest.mark.parametrize('kind',['directory','worktree_file'])
+def test_repository_intake_rejected_before_read(tmp_path,kind,monkeypatch):
+    source=tmp_path/'source';source.mkdir();fixture(source)
+    marker=tmp_path/'.git'
+    if kind=='directory': marker.mkdir()
+    else: marker.write_text('gitdir: private-marker-not-followed',encoding='utf-8')
+    def prohibited(*args,**kwargs): pytest.fail('repository rejection must precede inventory/value work')
+    monkeypatch.setattr(intake.os,'scandir',prohibited)
+    monkeypatch.setattr(intake,'_read_bounded',prohibited)
+    monkeypatch.setattr(np,'load',prohibited)
+    with pytest.raises(ValueError,match='repository'):
+        intake.load_joint_development(str(source))

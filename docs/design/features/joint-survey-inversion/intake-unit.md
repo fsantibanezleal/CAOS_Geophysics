@@ -1,5 +1,13 @@
 # Exact proposed local serialized intake and source binding
 
+Oct8 governance amendment: input directories must also be outside repositories.
+During ordinary-ancestor admission, reject any ancestor containing a .git file
+or directory before directory inventory, JSON reads or array work. This admits
+explicit external data only, does not infer a path from sources.ROOT and does
+not modify MAIN acquisition/ERT/traveltime/ingest behavior. Paired test:
+test_repository_intake_rejected_before_read, for both ordinary and worktree Git
+markers. Existing caller path/type/reparse/resource/precision gates remain exact.
+
 Pre-code protocol for joint_survey_intake.py and its paired numerical tests.
 This is a local filesystem adapter, separate from the no-I/O planner/objective.
 It does not optimize, select candidates, publish data or infer field eligibility.

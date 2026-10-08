@@ -266,7 +266,10 @@ def load_joint_development(directory: str) -> dict:
     root=Path(directory)
     if not directory or not root.is_absolute(): raise ValueError('intake: absolute local directory required')
     # Check each component BEFORE resolve can erase evidence of a junction.
-    for parent in reversed((root,*root.parents)): _ordinary(parent,directory=True)
+    for parent in reversed((root,*root.parents)):
+        _ordinary(parent,directory=True)
+        if (parent/'.git').exists():
+            raise ValueError('intake: repository data directory forbidden')
     root=root.resolve(strict=True)
     allowed={'request.json'}|{i+'.npy' for i in _IDS}|{m+suffix for m in _MODALITIES for suffix in ('.raw','.corrections.json')}
     inventory={};total=0
