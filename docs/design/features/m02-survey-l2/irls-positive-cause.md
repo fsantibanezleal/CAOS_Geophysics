@@ -91,3 +91,10 @@ continues to fail. No same-policy optimizer fix is supported by the independent
 evidence. A different continuation/outer algorithm would be a separately
 reviewed scientific policy, not a permissible tolerance/budget/weight edit here.
 Non-null IRLS acceptance and full M02 scientific acceptance remain open.
+
+This interior-fixture conclusion does not explain every failed calibration fold.
+The original low-beta L2 initialization has a distinct
+[projected search-scale failure](armijo-scale-cause.md). Its actual20 rejections
+are independently consistent, and a tested feasible-horizon scaling proposal
+still hits the original200-step cap. Those failures remain separate from the
+prescribed outer IRLS recurrence and are not declared successful by this audit.

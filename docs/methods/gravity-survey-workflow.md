@@ -12,6 +12,19 @@ admission service, or a completed gravity product. The existing non-null IRLS
 positive convergence gate remains failed under the fixed log17/floor3 policy.
 Null workflow tests check orchestration; they are not a substitute for that gate.
 
+The [integration manifest](../data-contract/03_gravity-survey-native-integration.md)
+lists exact native exports and the proposed owner API/isolated UI mounting
+contract. Protected profiles, queued M08 and other methods remain in the existing
+controller registry. A solver export, handbook or replayable failure is not an
+implemented or accepted user-data UI. The graph/course contract needs review,
+actual native producer tests, owner isolation and rendered EN/ES/theme gates.
+
+The original positive's [finite outer-recurrence cause](../design/features/m02-survey-l2/irls-positive-cause.md)
+is distinct from the low-beta initialization's
+[actual projected Armijo search-scale cause](../design/features/m02-survey-l2/armijo-scale-cause.md).
+Their controls and literal failures remain unchanged; the feasible-scaling
+research proposal also fails at the original200-step cap.
+
 ## Other-data preparation
 
 The source/M01 controller must first establish original byte hashes, citation,
