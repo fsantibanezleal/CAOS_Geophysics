@@ -44,6 +44,18 @@ def main(argv=None):
         if type(plan) is dict and plan.get('schema')=='m03-resolution-fit-plan/1':
             from magnetic_line_survey_resolution_worker import run_resolution_plan
             return run_resolution_plan(plan,plan_path.parent,args.job_handle,package_root=args.packages)
+        if type(plan) is dict and plan.get('schema')=='m03-resolution-qr-fit-plan/1':
+            from magnetic_line_survey_worker_qr import run_qr_plan
+            return run_qr_plan(plan,plan_path.parent,args.job_handle,package_root=args.packages)
+        if type(plan) is dict and plan.get('schema')=='m03-local-qr-run-plan/1':
+            from magnetic_line_survey_local_worker_qr import run_local_qr_plan
+            return run_local_qr_plan(plan,plan_path.parent,args.job_handle,args.packages)
+        if type(plan) is dict and plan.get('schema')=='m03-qr-result-verification-plan/1':
+            core._closed(plan,'schema result_root','replay')
+            from magnetic_line_survey_result_qr import verify_result
+            checked=verify_result(plan['result_root'],temp_root=plan_path.parent,job_handle=args.job_handle)
+            core._write_member(plan_path.parent,'verification.json',base.canonical_bytes(checked))
+            return 0
         if type(plan) is dict and plan.get('schema')=='m03-local-run-plan/2':
             from magnetic_line_survey_local_worker import run_local_plan
             return run_local_plan(plan,plan_path.parent,args.job_handle,args.packages)
