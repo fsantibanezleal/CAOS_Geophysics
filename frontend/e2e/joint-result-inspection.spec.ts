@@ -8,6 +8,8 @@ const fixture = process.env.GEOPHYSICS_JOINT_OUTPUT_FIXTURE, url = process.env.G
 const evidence = process.env.GEOPHYSICS_BROWSER_EVIDENCE_ROOT;
 const maximum = process.env.GEOPHYSICS_JOINT_MAX_OUTPUT_FIXTURE, aborted = process.env.GEOPHYSICS_JOINT_ABORT_FIXTURE;
 const durableAbort = process.env.GEOPHYSICS_JOINT_DURABLE_ABORT_FIXTURE;
+const instrument = process.env.GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE;
+const maximumInstrument = process.env.GEOPHYSICS_JOINT_MAX_INSTRUMENT_FIXTURE;
 async function pointer(page: Page, target: Locator) {
   await target.evaluate(n => n.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
   const box = await target.boundingBox(); if (!box) throw new Error("No pointer target");
@@ -70,6 +72,82 @@ for (const lang of ["en", "es"] as const) for (const theme of ["light", "dark"] 
     expect(errors).toEqual([]); expect(external).toEqual([]); expect(writes).toEqual([]); await context.close();
   });
 }
+for (const lang of ["en", "es"] as const) for (const theme of ["light", "dark"] as const) for (const phone of [false, true]) {
+  test(`native accepted states ${lang} ${theme} ${phone ? "phone" : "desktop"}`, async ({ browser }) => {
+    test.skip(!instrument || !url || !evidence, "Actual full native state bundle and explicit private render target required"); test.setTimeout(120_000);
+    mkdirSync(evidence!, { recursive: true });
+    const context = await browser.newContext({ viewport: phone ? { width: 390, height: 844 } : { width: 1600, height: 900 }, acceptDownloads: true, reducedMotion: "reduce" }), page = await context.newPage();
+    const errors: string[] = [], external: string[] = [], writes: string[] = [];
+    page.on("pageerror", e => errors.push(e.message)); page.on("console", m => { if (m.type() === "error") errors.push(m.text()); });
+    page.on("request", r => { if (new URL(r.url()).origin !== new URL(url!).origin) external.push(r.url()); if (r.method() !== "GET") writes.push(r.url()); });
+    await page.goto(`${url}?lang=${lang}&theme=${theme}`); const tool = page.getByTestId("joint-result-workbench");
+    await tool.getByLabel(lang === "en" ? "Import local workflow output directory" : "Importar directorio local de resultados", { exact: true }).setInputFiles(instrument!);
+    await expect(tool.getByTestId("joint-response-readout")).toBeVisible({ timeout: 30_000 });
+    await tool.getByLabel(lang === "en" ? "Joint scientific view" : "Vista científica conjunta", { exact: true }).selectOption("native");
+    const native = tool.getByTestId("joint-native-state-instrument"), frames = native.getByLabel(lang === "en" ? "Native model frame" : "Marco de modelo nativo", { exact: true });
+    await expect(frames.locator("option")).toHaveCount(28); await expect(native.getByTestId("joint-native-coupling-readout")).toBeVisible();
+    const stem = `native-${lang}-${theme}-${phone ? "phone" : "desktop"}`;
+    // Admit every actual frame selector, including retained nonconverged fits.
+    for (const key of [...Array.from({ length: 26 }, (_, i) => `c${String(i).padStart(2, "0")}`), "baseline", "selected"]) {
+      await frames.selectOption(key); await expect(native.getByTestId("joint-native-frame-identity")).toContainText(key);
+      const states = native.getByLabel(lang === "en" ? "Native accepted state" : "Estado aceptado nativo", { exact: true });
+      await states.selectOption(String((await states.locator("option").count()) - 1));
+      await expect(native.getByTestId("joint-native-response-readout")).toBeVisible();
+    }
+    for (const key of ["c00", "c08", "c16", "c25", "baseline", "selected"]) {
+      await frames.selectOption(key); await expect(native.getByTestId("joint-native-frame-identity")).toContainText(key);
+      if (key.startsWith("c")) { const states = native.getByLabel(lang === "en" ? "Native accepted state" : "Estado aceptado nativo", { exact: true }); const options = await states.locator("option").count(); if (options > 1) await states.selectOption("1"); }
+      if (key === "c00" || key === "c08") { await expect(native.getByTestId("joint-native-coupling-readout")).toHaveCount(0); await expect(native.getByLabel(lang === "en" ? "Native state response" : "Respuesta de estado nativo", { exact: true }).locator("option")).toHaveCount(1); }
+      else { await expect(native.getByTestId("joint-native-coupling-readout")).toBeVisible();
+        await native.getByLabel(lang === "en" ? "Exact coupling weighting" : "Ponderación de acoplamiento exacto", { exact: true }).selectOption("weighted"); }
+      for (const partition of ["training", "validation", "sealed"]) { await native.getByLabel(lang === "en" ? "Post-freeze partition" : "Partición posterior a congelación", { exact: true }).selectOption(partition);
+        await expect(native.getByTestId("joint-native-response-readout")).toBeVisible(); }
+      for (const plane of ["xy", "xz", "yz"]) { await native.getByLabel(lang === "en" ? "Native section plane" : "Plano de sección nativa", { exact: true }).selectOption(plane); await pointer(page, native.locator("rect[data-cell]").first()); }
+      await native.getByLabel(lang === "en" ? "Native receiver row" : "Fila receptora nativa", { exact: true }).selectOption("1");
+      await native.getByLabel(lang === "en" ? "Native fixed slice" : "Corte fijo nativo", { exact: true }).selectOption("1");
+      await native.getByLabel(lang === "en" ? "Native active cell" : "Celda activa nativa", { exact: true }).selectOption("1");
+      await page.screenshot({ path: join(evidence!, `${stem}-${key}.png`) });
+    }
+    await frames.selectOption("c25"); await native.getByLabel(lang === "en" ? "Native accepted state" : "Estado aceptado nativo", { exact: true }).selectOption("1");
+    await native.getByLabel(lang === "en" ? "Native state response" : "Respuesta de estado nativo", { exact: true }).selectOption("magnetic");
+    const promise = page.waitForEvent("download"); await pointer(page, native.getByRole("button", { name: lang === "en" ? "Export this exact native frame JSON" : "Exportar este marco nativo exacto JSON", exact: true }));
+    const path = join(evidence!, `${stem}-frame.json`); await (await promise).saveAs(path); const exported = JSON.parse(readFileSync(path, "utf8"));
+    expect(exported.key).toBe("c25"); expect(exported.state).toBe(1); expect(exported.scientific_acceptance_verified).toBe(false); expect(exported.historical_sealed_use).toBe("post_freeze_diagnostic_only");
+    const original = JSON.parse(readFileSync(join(instrument!, "instrument/instrument.json"), "utf8"));
+    for (const [path, digest] of Object.entries(original.payload.original_file_sha256)) expect(exported.original_file_sha256[path]).toBe(digest);
+    expect(exported.responses.magnetic.sealed.residual[0]).toBe(exported.responses.magnetic.sealed.predicted[0] - exported.responses.magnetic.sealed.observed[0]);
+    expect(exported.coupling.face_contribution).toHaveLength(exported.model.active_full_indices.values.length);
+    await pointer(page, native.getByText(lang === "en" ? "Which exact quantity is shown?" : "¿Qué magnitud exacta se muestra?", { exact: true }));
+    await pointer(page, native.getByText(lang === "en" ? "Exact native source and frame manifest" : "Manifiesto exacto de fuente y marco nativo", { exact: true }));
+    await expect(native.locator("pre")).toContainText("exporter_source_inventory");
+    await page.screenshot({ path: join(evidence!, `${stem}-source-formula.png`) });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]); expect(external).toEqual([]); expect(writes).toEqual([]); await context.close();
+  });
+}
+
+for (const phone of [false, true]) test(`actual maximum native instrument ${phone ? "phone" : "desktop"}`, async ({ browser }) => {
+  test.skip(!maximumInstrument || !url || !evidence, "Explicit external actual maximum native supplement required"); test.setTimeout(120_000);
+  const context = await browser.newContext({ viewport: phone ? { width: 390, height: 844 } : { width: 1600, height: 900 }, acceptDownloads: true }), page = await context.newPage();
+  const errors: string[] = []; page.on("pageerror", e => errors.push(e.message));
+  await page.goto(`${url}?lang=en&theme=light`); const tool = page.getByTestId("joint-result-workbench");
+  const cdp = await context.newCDPSession(page); await cdp.send("Performance.enable"); const before = Date.now();
+  await tool.getByLabel("Import local workflow output directory", { exact: true }).setInputFiles(maximumInstrument!);
+  await expect(tool.getByTestId("joint-response-readout")).toBeVisible({ timeout: 30_000 });
+  await tool.getByLabel("Joint scientific view", { exact: true }).selectOption("native"); const native = tool.getByTestId("joint-native-state-instrument");
+  await native.getByLabel("Native model frame", { exact: true }).selectOption("c25");
+  await native.getByLabel("Native active cell", { exact: true }).selectOption("1931");
+  await expect(native.getByTestId("joint-native-coupling-readout")).toBeVisible();
+  await native.getByLabel("Native state response", { exact: true }).selectOption("magnetic");
+  await native.getByLabel("Post-freeze partition", { exact: true }).selectOption("training");
+  const actualResult = JSON.parse(readFileSync(join(maximumInstrument!, "result/result.json"), "utf8"));
+  await expect(native.getByLabel("Native receiver row", { exact: true }).locator("option")).toHaveCount(actualResult.arrays.magnetic_training_rows.shape[0]);
+  const metrics = await cdp.send("Performance.getMetrics");
+  await test.info().attach("actual-maximum-native-observation", { body: JSON.stringify({ import_milliseconds: Date.now() - before, cdp_metrics: metrics.metrics, maximum_history_qualified: false, whole_browser_rss_measured: false }), contentType: "application/json" });
+  await page.screenshot({ path: join(evidence!, `native-maximum-${phone ? "phone" : "desktop"}.png`) });
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]); await context.close();
+});
 test("actual maximum-count and abort browser boundaries", async ({ browser }) => {
   test.skip(!maximum || !aborted || !url || !evidence, "External actual maximum/abort workflow fixtures required; no inferred memory acceptance");
   test.setTimeout(120_000); const context = await browser.newContext({ viewport: { width: 1600, height: 900 } }), page = await context.newPage();

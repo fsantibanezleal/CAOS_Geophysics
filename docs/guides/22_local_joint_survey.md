@@ -109,6 +109,49 @@ ledger and its scientific replay. Field eligibility, verified rights/correction
 science, geological recovery and global optimum are never established by fitting.
 These exports include supplied observations and are private, not public bundles.
 
+## Export every actual accepted state for the local instrument
+
+The original output remains immutable. Use the supplemental exporter to create
+a **different new external bundle** containing byte-exact originals and native
+accepted-state arrays, then select that bundle in the browser:
+
+```powershell
+python scripts/run_joint_instrument.py export --data-root $JointDataRoot `
+  --development "$JointDataRoot/development" --sealed "$JointDataRoot/sealed" `
+  --original "$JointDataRoot/solution" --output "$JointDataRoot/instrument" `
+  --scratch-root $JointScratchRoot
+python scripts/run_joint_instrument.py validate --data-root $JointDataRoot `
+  --development "$JointDataRoot/development" --sealed "$JointDataRoot/sealed" `
+  --original "$JointDataRoot/solution" --output "$JointDataRoot/instrument" `
+  --scratch-root $JointScratchRoot
+```
+
+This replays and verifies the original completed workflow, not a refit. Sealed
+values are read only after its durable frozen selection and ledger verification.
+Actual predictions/residuals and principal-marginal statistics are exported for
+all accepted states, including nonconverged candidates. Historical sealed curves
+are post-selection diagnostics, not new unseen-test evidence. A single-property
+attempt contains only its own property and response; no second fitted property
+or coupling is invented. The independently optimized lambda0 pair is explicitly
+labelled a comparison, not an additional fit. Failed workflows still use their
+original retained-state instrument without a completed historical supplement.
+
+The native state view displays source-bound response/residual/holdout metrics,
+exact physical property sections and per-active-cell face-Gram contributions.
+It exports an exact state JSON with rows/units/models/metrics/coupling/source
+identities and preserves all original private bytes in the archive. The formula
+is documented in the [accepted-state design](../design/features/joint-state-instrument/design.md),
+with independent nonuniform/sparse/null/sign controls. It does not approximate
+the optimized scalar with an averaged-vector cross-product map.
+
+Projection charges **all** histories, headers, originals and JSON before state
+calculations or output creation. Over256MiB or over1100members reject, never
+truncate. Each supplemental export/replay has its own measured1800s/2GiB budget
+including original replay; it cannot retroactively upgrade an earlier failed
+solve. Keep the stdout JSON resource receipt externally alongside the bundle.
+Maximum shape and maximum history are separate, including explicit over-cap
+refusal. The original precision failures and scientific acceptance are unchanged.
+
 ## Reproduce the adverse and resource matrices
 
 `scripts/validate_joint_matrix.py` runs all24 fixed refined-source Choclo cases,

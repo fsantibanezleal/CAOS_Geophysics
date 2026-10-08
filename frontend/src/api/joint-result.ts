@@ -17,7 +17,7 @@ export type JointCandidate = {
 export type JointInspection = {
   schema: "joint-local-inspection-1"; outcome: "completed" | "failed"; mode: string;
   receipt: Obj; frozen: NativeRecord | null; result: NativeRecord | null;
-  model: NativeRecord | null; calibration: NativeRecord | null; aborted: NativeRecord | null;
+  model: NativeRecord | null; calibration: NativeRecord | null; aborted: NativeRecord | null; instrument: NativeRecord | null;
   candidates: JointCandidate[]; files: ReadonlyMap<string, Uint8Array>; hashes: ReadonlyMap<string, string>;
   importedBytes: number; limitations: typeof INSPECTION_FLAGS;
 };
@@ -39,6 +39,8 @@ const STEPS = ["relative_changes", "branches", "active_counts", "binding_counts"
   "cg_relative_residuals", "line_search_counts", "line_search_alphas", "projected_slopes", "armijo_margins", "cg_residuals_available"];
 const INTS = ["branches", "active_counts", "binding_counts", "cg_counts", "line_search_counts"];
 const TERM_NAMES = ["data_gravity", "data_magnetic", "regularization_gravity", "regularization_magnetic", "coupling"];
+const GRAM = ["gram_density", "gram_susceptibility", "gram_product", "face_contribution"];
+const EXPORTER_SOURCES = ["joint_survey_instrument.py", "joint_survey_calibration_io.py", "joint_survey_evaluation.py", "joint_survey_files.py", "joint_survey_intake.py", "joint_survey_model_export.py", "joint_survey_resources.py", "joint_survey_workflow.py"];
 const EPOCHS = { gravity: "simpeg-0.25.2-geoana-0.8.1-f64-ram", magnetic: "simpeg-0.25.2-geoana-0.8.1-f64-induced-ram" };
 const SOURCE_NAMES = ["BaseSimilarityMeasure", "CrossGradient", "DiffOperators", "RegularizationMesh", "RegularizationMesh.cell_gradient", "TensorMesh", "Wires", "gravity_forward.py", "magnetic_forward.py", "joint_survey_compiled.py", "joint_survey_objective.py", "joint_survey_optimizer.py", "joint_survey_plan.py", "joint_survey_structure.py", "physical_nonlinear_optimizer.py", "simpeg.optimization"];
 function requireThat(test: unknown, reason: string): asserts test { if (!test) throw new Error(`Joint import: ${reason}`); }
@@ -198,6 +200,25 @@ function specifications(directory: string, p: Obj, descriptors: Obj): Record<str
       const n = integer(a.active_cells, 1, 4096); requireThat(a.fits === 26 && a.maximum_cg_steps === 512 && a.maximum_ls_trials === 30 && a.trace_states_per_fit === 251, "allocation caps"); sha(a.allocation_plan_sha256);
       if (p.selection !== null) { requireThat(p.status === "selected" && candidates.length === 26, "selected schedule"); const selection = obj(p.selection); keys(selection, ["q", "weights", "stage", "baseline_validation_wrms", "validation_wrms", "refit", "lambda0_refitted"]); falseFlags(selection, ["refit", "lambda0_refitted"]); weights(selection.weights); ref(selection, "q", "selection_q", s, "<f8", [2 * n]); }
       else requireThat(p.status === "failed" && candidates.length === 16 && p.reason === "no_stationary_separate_baseline", "failed baseline selection"); }
+  } else if (directory === "instrument") {
+    keys(p, ["schema", "plan_sha256", "development_sha256", "frozen_sha256", "calibration_sha256", "original_file_sha256", "exporter_source_inventory", "physical_epochs", "entries", "coupling_method", "coupling_length_m", "coupling_factor", "metric_columns", "residual_convention", "historical_sealed_use", "refit", "scientific_acceptance_verified", "field_eligible", "recovery_verified", "global_optimum_verified", "public_activation", "public_redistribution", "archive_authenticated"]);
+    requireThat(p.schema === "joint-survey-state-instrument-1" && eq(p.physical_epochs, EPOCHS) && p.coupling_method === "active-face-averaged-squared-product-gram" && eq(p.metric_columns, ["rmse_physical", "wrms", "chi_square"]) && p.residual_convention === "predicted_minus_observed" && p.historical_sealed_use === "post_freeze_diagnostic_only", "accepted state instrument ABI");
+    for (const k of ["plan_sha256", "development_sha256", "frozen_sha256"]) sha(p[k]); if (p.calibration_sha256 !== null) sha(p.calibration_sha256);
+    falseFlags(p, ["refit", "scientific_acceptance_verified", "field_eligible", "recovery_verified", "global_optimum_verified", "public_activation", "public_redistribution", "archive_authenticated"]);
+    num(p.coupling_length_m, Number.MIN_VALUE); num(p.coupling_factor, Number.MIN_VALUE);
+    const inventory = obj(p.exporter_source_inventory); keys(inventory, EXPORTER_SOURCES); for (const v of Object.values(inventory)) sha(v);
+    const original = obj(p.original_file_sha256); requireThat(Object.keys(original).length > 0 && Object.keys(original).length <= 568, "original instrument inventory count"); for (const v of Object.values(original)) sha(v);
+    const n = integer(list(obj(descriptors.selected_face_contribution).shape)[1], 1, 4096), entries = list(p.entries); requireThat(entries.length === (p.calibration_sha256 === null ? 1 : 28), "instrument frame count");
+    for (let i = 0; i < entries.length; i++) { const e = obj(entries[i]); keys(e, ["key", "kind", "stage", "modality", "state_count", "weights"]); weights(e.weights);
+      const candidate = i < entries.length - 2 && entries.length === 28, key = candidate ? `c${String(i).padStart(2, "0")}` : i === entries.length - 1 ? "selected" : "baseline";
+      requireThat(e.key === key && e.kind === (candidate ? "candidate" : key === "selected" ? "frozen_selection" : "independently_optimized_pair") && e.stage === (candidate ? i : null) && e.modality === (candidate && i < 16 ? i < 8 ? "gravity" : "magnetic" : null), "ordered instrument state identity");
+      const count = integer(e.state_count, candidate ? 0 : 1, candidate ? 251 : 1);
+      for (const m of e.modality === null ? MODALITIES : [e.modality as Modality]) for (const part of PARTITIONS) {
+        const rows = integer(list(obj(descriptors[`selected_${m}_${part}_predicted`]).shape)[1], 1, 2048);
+        for (const name of ["predicted", "signed_residual", "whitened_residual", "metrics"]) spec(s, `${key}_${m}_${part}_${name}`, "<f8", [count, name === "metrics" ? 3 : rows]);
+      }
+      if (e.modality === null) for (const name of GRAM) spec(s, `${key}_${name}`, "<f8", [count, n]);
+    }
   } else throw new Error("Joint import: unsupported directory");
   keys(descriptors, Object.keys(s)); return s;
 }
@@ -206,7 +227,7 @@ function descriptor(d: Obj): Descriptor {
   const shape = list(d.shape).map(v => integer(v, 0, 8192)); requireThat(shape.length >= 1 && shape.length <= 2, "native rank");
   return { dtype, shape, file_bytes: integer(d.file_bytes, 11, JOINT_IMPORT_CAP), file_sha256: sha(d.file_sha256), data_sha256: sha(d.data_sha256) };
 }
-const MANIFESTS: Record<string, [string, string]> = { frozen: ["frozen.json", "joint-survey-frozen-model-file-1"], result: ["result.json", "joint-survey-result-file-1"], models: ["model.json", "joint-survey-physical-model-file-1"], calibration: ["calibration.json", "joint-survey-calibration-file-1"], aborted: ["aborted.json", "joint-survey-aborted-calibration-file-1"] };
+const MANIFESTS: Record<string, [string, string]> = { frozen: ["frozen.json", "joint-survey-frozen-model-file-1"], result: ["result.json", "joint-survey-result-file-1"], models: ["model.json", "joint-survey-physical-model-file-1"], calibration: ["calibration.json", "joint-survey-calibration-file-1"], aborted: ["aborted.json", "joint-survey-aborted-calibration-file-1"], instrument: ["instrument.json", "joint-survey-state-instrument-file-1"] };
 
 export async function importJointOutput(input: readonly JointFile[], signal?: AbortSignal): Promise<JointInspection> {
   const cancel = () => { if (signal?.aborted) throw new Error("Joint import: cancelled"); };
@@ -215,7 +236,7 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
   requireThat(top || /^[^./\\\x00-\x1f][^/\\\x00-\x1f]*\/$/.test(prefix), "ordinary selected directory prefix");
   const entries = new Map<string, JointFile>();
   for (const f of input) { requireThat(f.path.startsWith(prefix), "single selected output directory"); const path = f.path.slice(prefix.length);
-    requireThat(/^(?:workflow\.json|failure\.json|(?:frozen|result|models|calibration|aborted)\/[a-z0-9_]+\.(?:json|npy))$/.test(path) && !entries.has(path), "fixed unique output path");
+    requireThat(/^(?:workflow\.json|failure\.json|(?:frozen|result|models|calibration|aborted|instrument)\/[a-z0-9_]+\.(?:json|npy))$/.test(path) && !entries.has(path), "fixed unique output path");
     requireThat(Number.isSafeInteger(f.size) && f.size > 0 && f.size <= JOINT_IMPORT_CAP && (!path.endsWith(".json") || f.size <= JSON_CAP), "original file byte cap"); total += f.size; requireThat(total <= JOINT_IMPORT_CAP, "whole original byte cap"); entries.set(path, f); }
   cancel(); const files = new Map<string, Uint8Array>(), hashes = new Map<string, string>();
   async function read(path: string) { const file = entries.get(path); requireThat(file, "missing fixed file " + path); cancel(); const bytes = new Uint8Array(await file.read()); cancel(); requireThat(bytes.length === file.size, "original file size changed"); files.set(path, bytes); return bytes; }
@@ -227,7 +248,7 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
   if (failureMarker) { keys(receipt, ["schema", "mode", "status", "reason", "inverse_completed", "sealed_evaluation_completed", "public_activation", "accepted_attempts_retained", "resources"]); requireThat(receipt.schema === "joint-survey-workflow-failure-1" && mode === "solve" && receipt.accepted_attempts_retained === true, "abort workflow schema"); text(receipt.reason); }
   else if (failed) { keys(receipt, ["schema", "mode", "status", "reason", "calibration_sha256", "inverse_completed", "sealed_evaluation_completed", "public_activation", "resources"]); requireThat(receipt.reason === "no_stationary_separate_baseline" && mode === "solve", "failed workflow reason"); sha(receipt.calibration_sha256); }
   else { keys(receipt, ["schema", "mode", "status", "plan_sha256", "frozen_sha256", "calibration_sha256", "input_bindings", "source_diagnostics", "inverse_completed", "sealed_evaluation_completed", "field_eligible", "public_activation", "private_export_bytes_before_receipt", "resources"]);
-    const completedBytes = [...entries].reduce((sum, [path, f]) => sum + (path === "workflow.json" || path === "failure.json" || path.startsWith("aborted/") ? 0 : f.size), 0);
+    const completedBytes = [...entries].reduce((sum, [path, f]) => sum + (path === "workflow.json" || path === "failure.json" || path.startsWith("aborted/") || path.startsWith("instrument/") ? 0 : f.size), 0);
     sha(receipt.plan_sha256); sha(receipt.frozen_sha256); falseFlags(receipt, ["field_eligible"]); requireThat(receipt.private_export_bytes_before_receipt === completedBytes, "actual export byte receipt");
     const inputs = obj(receipt.input_bindings); keys(inputs, ["correction_sha256", "development_sha256", "directory_content_sha256", "raw_sha256", "request_file_sha256"]);
     for (const k of ["development_sha256", "directory_content_sha256", "request_file_sha256"]) sha(inputs[k]);
@@ -242,7 +263,7 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
   for (const [path, r] of Object.entries(receipts)) checkReceipt(r, path === "failure.json");
   const mode = text(receipt.mode);
   const dirs = [...new Set([...entries.keys()].filter(k => k.includes("/")).map(k => k.split("/")[0]))];
-  if (!failed) requireThat(eq(dirs.sort(), ["frozen", "models", "result", ...(mode === "solve" ? ["calibration"] : [])].sort()), "completed exact directory inventory");
+  if (!failed) requireThat(eq(dirs.sort(), ["frozen", "models", "result", ...(mode === "solve" ? ["calibration"] : []), ...(dirs.includes("instrument") ? ["instrument"] : [])].sort()), "completed exact directory inventory");
   else if (receipts["failure.json"]) {
     const durable = ["calibration", "frozen", "result", "models"], primary = dirs.filter(d => d !== "aborted");
     requireThat(dirs.includes("aborted") && eq(primary.slice().sort(), durable.slice(0, primary.length).sort()), "failed exact primary inventory");
@@ -260,10 +281,13 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
   for (const [dir, record] of Object.entries(admitted)) for (const [k, d] of Object.entries(record.descriptors)) { cancel(); const path = `${dir}/${k}.npy`; record.offsets[k] = header(await read(path), d); }
   const records: Record<string, NativeRecord> = Object.create(null);
   for (const [dir, record] of Object.entries(admitted)) { const arrays: Record<string, NativeArray> = Object.create(null);
-    for (const [k, d] of Object.entries(record.descriptors)) { cancel(); const path = `${dir}/${k}.npy`, bytes = files.get(path)!; requireThat(await jointSha(bytes) === d.file_sha256 && await jointSha(bytes.subarray(record.offsets[k])) === d.data_sha256, "original array digest mismatch"); arrays[k] = decode(bytes, d, record.offsets[k]); }
+    for (const [k, d] of Object.entries(record.descriptors)) { cancel(); const path = `${dir}/${k}.npy`, bytes = files.get(path)!, fileHash = await jointSha(bytes); requireThat(fileHash === d.file_sha256 && await jointSha(bytes.subarray(record.offsets[k])) === d.data_sha256, "original array digest mismatch"); hashes.set(path, fileHash); arrays[k] = decode(bytes, d, record.offsets[k]); }
     records[dir] = { payload: record.payload, arrays, manifestPath: record.manifestPath };
   }
-  for (const [path, bytes] of files) { cancel(); hashes.set(path, await jointSha(bytes)); }
+  // read() copies each original buffer and no array is exposed until return.
+  // Preserve the already computed actual file digest; never replace it with a
+  // descriptor declaration. Export independently rehashes again before use.
+  for (const [path, bytes] of files) { cancel(); if (!hashes.has(path)) hashes.set(path, await jointSha(bytes)); }
   const frozen = records.frozen ?? null, result = records.result ?? null, model = records.models ?? null, calibration = records.calibration ?? null, aborted = records.aborted ?? null;
   for (const record of [calibration, aborted]) if (record) {
     const p = record.payload, b = obj(p.optimizer_binding), digest = await jointSha(new TextEncoder().encode(stable(p.source_inventory)));
@@ -274,7 +298,7 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
       requireThat(id.allocation_plan_sha256 === a.allocation_plan_sha256 && id.parameter_count === num(a.active_cells) * (c.modality === null ? 2 : 1), "attempt/allocation binding"); }
   }
   const candidates = checkLedger(calibration, aborted);
-  if (!failed) checkCompleted(receipt, frozen!, result!, model!, calibration, candidates);
+  if (!failed) { checkCompleted(receipt, frozen!, result!, model!, calibration, candidates); if (records.instrument) checkInstrument(records.instrument, frozen!, result!, model!, calibration, candidates, hashes); }
   else if (aborted) {
     const p = aborted.payload; requireThat(p.reason === receipt.reason && p.frozen_selection_created === !!frozen && (!p.sealed_values_read_started || !!frozen), "abort phase/reason binding");
     for (const record of [calibration, frozen, result, model]) if (record) for (const k of ["plan_sha256", "development_sha256"]) requireThat(record.payload[k] === p[k], "retained failure identity binding");
@@ -282,7 +306,7 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
     if (frozen) for (const record of [result, model]) if (record) for (const k of ["frozen_sha256", "origin", "selection_sha256", "physical_epochs", ...(record === result ? ["weights"] : [])]) requireThat(eq(record.payload[k], frozen.payload[k]), "retained frozen identity binding");
   } else requireThat(calibration?.payload.reason === receipt.reason && calibration.payload.calibration_sha256 === receipt.calibration_sha256, "failed baseline receipt binding");
   cancel(); return { schema: "joint-local-inspection-1", outcome: failed ? "failed" : "completed", mode, receipt,
-    frozen: failed ? null : frozen, result: failed ? null : result, model: failed ? null : model, calibration, aborted,
+    frozen: failed ? null : frozen, result: failed ? null : result, model: failed ? null : model, calibration, aborted, instrument: records.instrument ?? null,
     candidates, files, hashes, importedBytes: total, limitations: INSPECTION_FLAGS };
 }
 
@@ -359,6 +383,66 @@ export function jointResponse(result: JointInspection, modality: Modality, parti
   return { rows: a[prefix + "rows"].values, observed: a[prefix + "observed"].values, predicted: a[prefix + "predicted"].values,
     residual: a[prefix + "signed_residual"].values, whitened: a[prefix + "whitened_residual"].values, unit: modality === "gravity" ? "mGal" : "nT" };
 }
+function checkInstrument(instrument: NativeRecord, frozen: NativeRecord, result: NativeRecord, model: NativeRecord,
+  calibration: NativeRecord | null, candidates: JointCandidate[], hashes: ReadonlyMap<string, string>) {
+  const p = instrument.payload, a = instrument.arrays, originals = obj(p.original_file_sha256);
+  const paths = [...hashes.keys()].filter(k => !k.startsWith("instrument/")); keys(originals, paths);
+  for (const path of paths) requireThat(originals[path] === hashes.get(path), "instrument original byte binding");
+  for (const key of ["plan_sha256", "development_sha256", "frozen_sha256", "physical_epochs"]) requireThat(eq(p[key], frozen.payload[key]), "instrument frozen identity binding");
+  requireThat(p.calibration_sha256 === (calibration?.payload.calibration_sha256 ?? null), "instrument calibration binding");
+  const n = model.arrays.density_kg_m3.shape[0], totalVolume = Array.from(model.arrays.active_cell_volumes_m3.values).reduce((x, y) => x + y, 0);
+  requireThat(close(num(p.coupling_factor), num(p.coupling_length_m) ** 4 / totalVolume), "instrument actual volume factor");
+  for (const value of list(p.entries)) { const e = obj(value), key = text(e.key), count = num(e.state_count), c = e.kind === "candidate" ? candidates[num(e.stage)] : null;
+    if (c) requireThat(count === c.trace.models_q.shape[0] && eq(e.weights, c.weights) && e.modality === c.modality, "instrument candidate/frame binding");
+    if (key === "selected") requireThat(eq(e.weights, frozen.payload.weights), "instrument selected strengths");
+    if (key === "baseline") { requireThat(calibration, "baseline calibration required"); const b = obj(calibration.payload.selected_baselines), w = obj(e.weights);
+      requireThat(w.coupling === 0 && w.beta_gravity === candidates[num(b.gravity)].weights.beta_gravity && w.beta_magnetic === candidates[num(b.magnetic)].weights.beta_magnetic, "instrument independent baseline strengths"); }
+    for (const m of e.modality === null ? MODALITIES : [e.modality as Modality]) for (const part of PARTITIONS) {
+      const prefix = `${key}_${m}_${part}_`, original = result.arrays[`${m}_${part}_observed`].values, rows = original.length;
+      requireThat(a[prefix + "predicted"].shape[1] === rows, "instrument original partition shape");
+      for (let i = 0; i < count; i++) { let r2 = 0, w2 = 0;
+        for (let j = 0; j < rows; j++) { const offset = i * rows + j, residual = a[prefix + "predicted"].values[offset] - original[j];
+          requireThat(residual === a[prefix + "signed_residual"].values[offset], "historical signed residual convention"); r2 += residual ** 2; w2 += a[prefix + "whitened_residual"].values[offset] ** 2;
+          if (key === "selected") for (const name of ["predicted", "signed_residual", "whitened_residual"]) requireThat(a[prefix + name].values[offset] === result.arrays[`${m}_${part}_${name}`].values[j], "historical selected response binding"); }
+        const metric = a[prefix + "metrics"].values;
+        requireThat(close(metric[i * 3], Math.sqrt(r2 / rows)) && close(metric[i * 3 + 1], Math.sqrt(w2 / rows)) && close(metric[i * 3 + 2], w2), "historical partition metric arithmetic");
+        if (c && part === "validation" && i === count - 1) requireThat(close(metric[i * 3 + 1], num(obj(c.metadata.validation_wrms)[m])), "historical terminal validation binding");
+      }
+    }
+    if (e.modality === null) { requireThat(a[key + "_face_contribution"].shape[1] === n, "historical native coupling cells");
+      for (let i = 0; i < count; i++) { let sum = 0;
+        for (let j = 0; j < n; j++) { const offset = i * n + j, density = a[key + "_gram_density"].values[offset], susceptibility = a[key + "_gram_susceptibility"].values[offset], product = a[key + "_gram_product"].values[offset], contribution = a[key + "_face_contribution"].values[offset];
+          requireThat(density >= 0 && susceptibility >= 0 && close(contribution, num(p.coupling_factor) * (density * susceptibility - product * product)), "historical exact face Gram arithmetic"); sum += contribution; }
+        if (c) requireThat(close(sum, c.terms!.values[i * 5 + 4]), "historical coupling/term binding");
+        if (key === "selected") requireThat(close(sum, num(obj(result.payload.terms).coupling)), "selected exact coupling binding");
+      }
+    }
+  }
+}
+
+/** Frames are offline-exported data, never browser kernel estimates. */
+export function jointInstrumentFrame(inspection: JointInspection, key: string, state: number) {
+  requireThat(inspection.outcome === "completed" && inspection.instrument && inspection.model && inspection.result, "native accepted-state supplement required");
+  const instrument = inspection.instrument, entry = list(instrument.payload.entries).map(obj).find(e => e.key === key);
+  requireThat(entry && Number.isInteger(state) && state >= 0 && state < num(entry.state_count), "exact instrument frame index");
+  const a = instrument.arrays, model = inspection.model, n = model.arrays.density_kg_m3.shape[0], candidate = entry.kind === "candidate" ? inspection.candidates[num(entry.stage)] : null;
+  const geometry = Object.fromEntries(Object.entries(model.arrays).filter(([k]) => !["density_kg_m3", "susceptibility_si"].includes(k)));
+  const properties: Record<string, NativeArray> = {};
+  if (key === "selected") for (const name of ["density_kg_m3", "susceptibility_si"]) properties[name] = model.arrays[name];
+  else if (key === "baseline") { const b = obj(inspection.calibration!.payload.selected_baselines);
+    for (const [m, name] of [["gravity", "density_kg_m3"], ["magnetic", "susceptibility_si"]] as const) { const c = inspection.candidates[num(b[m])]; properties[name] = { dtype: "<f8", shape: [n], values: c.physical!.values.slice(c.iterations * n, (c.iterations + 1) * n) }; } }
+  else if (candidate) { requireThat(candidate.physical, "actual physical trace required"); const values = candidate.physical.values, width = candidate.physical.shape[1];
+    if (candidate.modality !== "magnetic") properties.density_kg_m3 = { dtype: "<f8", shape: [n], values: values.slice(state * width, state * width + n) };
+    if (candidate.modality !== "gravity") { const offset = state * width + (candidate.modality === null ? n : 0); properties.susceptibility_si = { dtype: "<f8", shape: [n], values: values.slice(offset, offset + n) }; } }
+  const responses: Partial<Record<Modality, Record<Partition, ReturnType<typeof jointResponse> & { metrics: { rmse_physical: number; wrms: number; chi_square: number; count: number } }>>> = {};
+  for (const m of entry.modality === null ? MODALITIES : [entry.modality as Modality]) { responses[m] = {} as NonNullable<typeof responses[Modality]>;
+    for (const part of PARTITIONS) { const original = jointResponse(inspection, m, part), prefix = `${key}_${m}_${part}_`, rows = original.rows.length, metric = a[prefix + "metrics"].values;
+      responses[m]![part] = { ...original, predicted: a[prefix + "predicted"].values.subarray(state * rows, (state + 1) * rows), residual: a[prefix + "signed_residual"].values.subarray(state * rows, (state + 1) * rows), whitened: a[prefix + "whitened_residual"].values.subarray(state * rows, (state + 1) * rows),
+        metrics: { count: rows, rmse_physical: metric[state * 3], wrms: metric[state * 3 + 1], chi_square: metric[state * 3 + 2] } }; } }
+  const coupling = entry.modality === null ? Object.fromEntries(GRAM.map(name => [name, Array.from(a[key + "_" + name].values.subarray(state * n, (state + 1) * n))])) : null;
+  return { key, state, entry, model: { arrays: { ...geometry, ...properties } }, responses, coupling, candidate,
+    historical_sealed_use: "post_freeze_diagnostic_only", weights: entry.weights };
+}
 /** Display endpoints from actual values, with no constant-range padding. */
 export function jointPhysicalRange(values: Float64Array | Uint8Array, signed: boolean): [number, number] {
   requireThat(values.length > 0, "nonempty physical range"); let lo = Infinity, hi = -Infinity;
@@ -387,7 +471,22 @@ export function jointSidecar(inspection: JointInspection, modality: Modality, pa
     selected_cell: inspection.model ? { active_index: cell, full_index: inspection.model.arrays.active_full_indices.values[cell],
       density_kg_m3: inspection.model.arrays.density_kg_m3.values[cell], susceptibility_si: inspection.model.arrays.susceptibility_si.values[cell],
       centre_m: Array.from(inspection.model.arrays.active_cell_centres_m.values.slice(cell * 3, cell * 3 + 3)), bounds_m: Array.from(inspection.model.arrays.active_cell_bounds_m.values.slice(cell * 6, cell * 6 + 6)), volume_m3: inspection.model.arrays.active_cell_volumes_m3.values[cell] } : null,
-    selected_attempt_state: inspection.candidates[attemptIndex]?.trace.models_q.shape[0] ? jointState(inspection.candidates[attemptIndex], state) : null };
+    selected_attempt_state: inspection.candidates[attemptIndex]?.trace.models_q.shape[0] ? jointState(inspection.candidates[attemptIndex], state) : null,
+    selected_native_frame: inspection.instrument && (!inspection.candidates[attemptIndex] || inspection.candidates[attemptIndex].trace.models_q.shape[0] > 0) ? jointFrameSidecar(inspection, inspection.candidates[attemptIndex] ? `c${String(inspection.candidates[attemptIndex].stage).padStart(2, "0")}` : "selected", state) : null };
+}
+export function jointFrameSidecar(inspection: JointInspection, key: string, state: number) {
+  const frame = jointInstrumentFrame(inspection, key, state);
+  return { key, state, ...INSPECTION_FLAGS, original_file_sha256: Object.fromEntries(inspection.hashes), weights: frame.weights,
+    historical_sealed_use: frame.historical_sealed_use, entry: frame.entry,
+    original_frozen_context: inspection.frozen!.payload, original_selected_q: Array.from(inspection.frozen!.arrays.q.values),
+    candidate_state: frame.candidate ? jointState(frame.candidate, state) : null,
+    selection_context: inspection.calibration ? { reason: inspection.calibration.payload.reason, selected_baselines: inspection.calibration.payload.selected_baselines, selection: inspection.calibration.payload.selection, lambda0_refitted: false } : null,
+    frame_property_units: { density_kg_m3: "kg_m3", susceptibility_si: "si", active_cell_centres_m: "m", active_cell_bounds_m: "m", active_cell_volumes_m3: "m3", face_contribution: "dimensionless" },
+    original_geometry_context: inspection.model!.payload, exporter_source_inventory: inspection.instrument!.payload.exporter_source_inventory,
+    original_physical_and_optimizer_source_inventory: inspection.calibration?.payload.source_inventory ?? null,
+    model: Object.fromEntries(Object.entries(frame.model.arrays).map(([k, v]) => [k, { dtype: v.dtype, shape: v.shape, values: Array.from(v.values) }])),
+    responses: Object.fromEntries(Object.entries(frame.responses).map(([m, partitions]) => [m, Object.fromEntries(Object.entries(partitions!).map(([p, r]) => [p,
+      { ...r, rows: Array.from(r.rows), observed: Array.from(r.observed), predicted: Array.from(r.predicted), residual: Array.from(r.residual), whitened: Array.from(r.whitened) }]))])), coupling: frame.coupling };
 }
 export async function exportJointOriginals(inspection: JointInspection): Promise<Uint8Array> {
   const archive: Zippable = Object.create(null); for (const [path, bytes] of inspection.files) { requireThat(await jointSha(bytes) === inspection.hashes.get(path), "original changed before private export"); archive[path] = [bytes, { level: 0 }]; }

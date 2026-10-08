@@ -59,7 +59,7 @@ vector cross-gradient counterexample must remain unequal.
 
 Whole shape/count metadata and projected native bytes are charged before historic
 calculations or mkdir. Maximum26 attempts,251 states,4096 cells and2048 receivers
-per modality remain. Complete original568 plus supplemental at most481 files
+per modality remain. Complete original568 plus supplemental at most529 files
 fit the existing1100-file cap; late failures keep the old1090 bound without a
 supplement. All file occurrences charge the unchanged256MiB cap; logical arrays
 and JSON256KiB/depth8/NPY4096-byte headers remain bounded. No lossless history

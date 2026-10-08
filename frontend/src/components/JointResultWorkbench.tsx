@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useShellLang } from "@fasl-work/caos-app-shell";
-import { browserJointFiles, exportJointOriginals, importJointOutput, jointPhysicalRange, jointResponse, jointSidecar, jointState, obj,
+import { Cite, Equation, Refs, useShellLang } from "@fasl-work/caos-app-shell";
+import { browserJointFiles, exportJointOriginals, importJointOutput, jointFrameSidecar, jointInstrumentFrame, jointPhysicalRange, jointResponse, jointSidecar, jointState, obj,
   type JointInspection, type Modality, type NativeRecord, type Partition } from "../api/joint-result";
 import { color } from "../science";
 import { Legend, Plot } from "./ScientificPlots";
@@ -59,6 +59,7 @@ export function JointResultWorkbench({ initial }: { initial?: JointInspection })
     <div className="processing-status"><strong>{t("Offline scientific processing; local browser inspection", "Procesamiento científico fuera de línea; inspección local en navegador")}</strong></div>
     <details className="processing-provenance"><summary>{t("Inspection scope and private custody", "Alcance de inspección y custodia privada")}</summary>
       <p>{t("Import the complete output directory from a local gravity–magnetic workflow. This browser reads exported physical values and checks transport consistency; it does not fit, refit, run physical kernels or certify scientific acceptance. No files are uploaded or stored by this tool.", "Importe el directorio completo de salida de un flujo local gravedad–magnetismo. El navegador lee valores físicos exportados y comprueba consistencia de transporte; no ajusta, reajusta, ejecuta kernels físicos ni certifica aceptación científica. Esta herramienta no sube ni almacena archivos.")}</p></details>
+    <p className="plot-note"><a href="https://github.com/fsantibanezleal/CAOS_Geophysics/blob/task/geophysics-joint-survey-inversion/docs/guides/22_local_joint_survey.md" target="_blank" rel="noreferrer">{t("Wiki: executable local methodology", "Wiki: metodología local ejecutable")}</a>{" · "}<a href="https://github.com/fsantibanezleal/CAOS_Geophysics/blob/task/geophysics-joint-survey-inversion/docs/data-contract/04_joint-local-inspection.md" target="_blank" rel="noreferrer">{t("Wiki: exact input/output contract", "Wiki: contrato exacto de entrada/salida")}</a></p>
     <div className="processing-station-toolbar">
       <label className="select-control"><span>{t("Import local workflow output directory", "Importar directorio local de resultados")}</span>
         <input type="file" aria-label={t("Import local workflow output directory", "Importar directorio local de resultados")} multiple ref={el => { if (el) el.setAttribute("webkitdirectory", ""); }} onChange={e => { void load(e.target.files); e.target.value = ""; }}/></label>
@@ -74,7 +75,9 @@ export function JointResultWorkbench({ initial }: { initial?: JointInspection })
         <details className="processing-provenance"><summary>{t("Integrity is not scientific acceptance or a rights grant", "Integridad no es aceptación científica ni permiso")}</summary><p>{t("Archive hashes are integrity, not authenticity. Field eligibility, geological recovery, global optimality and redistribution rights are not established. Independent scientific replay still requires original inputs and the pinned offline runtime.", "Hashes son integridad, no autenticidad. No se establece elegibilidad de campo, recuperación geológica, óptimo global ni derechos de redistribución. Replay científico independiente requiere entradas originales y runtime fijado fuera de línea.")}</p></details></div>
       <div className="processing-station-toolbar">{select(t("Joint scientific view", "Vista científica conjunta"), view, setView,
         [...(inspection.outcome === "completed" ? [["response", t("Observed, predicted and residual response", "Respuesta observada, predicha y residual")], ["model", t("Native physical property sections", "Secciones nativas de propiedades físicas")]] as [string, string][] : []),
-          ...(inspection.candidates.length ? [["optimization", t("Constrained optimization states", "Estados de optimización restringida")], ["comparison", t("Independent baselines and validation selection", "Bases independientes y selección por validación")]] as [string, string][] : [])])}</div>
+          ...(inspection.candidates.length ? [["optimization", t("Constrained optimization states", "Estados de optimización restringida")], ["comparison", t("Independent baselines and validation selection", "Bases independientes y selección por validación")]] as [string, string][] : []),
+          ...(inspection.instrument ? [["native", t("Every native state: models, responses and exact coupling", "Cada estado nativo: modelos, respuestas y acoplamiento exacto")]] as [string, string][] : [])])}</div>
+      {view === "native" && inspection.instrument && <JointNativeStateInstrument inspection={inspection}/>}
       {view === "response" && response && responsePlot && <>
         <div className="processing-station-toolbar">
           {select(t("Survey response", "Respuesta de levantamiento"), modality, v => { setModality(v as Modality); setRow(0); }, [["gravity", t("Upward gravity [mGal]", "Gravedad hacia arriba [mGal]")], ["magnetic", t("Linear induced TMI [nT]", "TMI inducida lineal [nT]")]])}
@@ -132,22 +135,81 @@ export function JointResultWorkbench({ initial }: { initial?: JointInspection })
 
 /** Orthographic projection of exact prism bounds, not a coupling diagnostic. */
 function JointPhysicalSection({ model, property, axes, slice, cell, onCell, title }: {
-  model: NativeRecord; property: "density_kg_m3" | "susceptibility_si"; axes: number[]; slice: number; cell: number; onCell: (value: number) => void; title: string;
+  model: Pick<NativeRecord, "arrays">; property: "density_kg_m3" | "susceptibility_si" | "face_contribution"; axes: number[]; slice: number; cell: number; onCell: (value: number) => void; title: string;
 }) {
   const es = useShellLang() === "es", a = model.arrays, [u, v, fixed] = axes, values = a[property].values;
   const widths = [a.mesh_hx_m.values, a.mesh_hy_m.values, a.mesh_hz_m.values], origin = a.mesh_origin_m.values;
   const span = widths.map(w => Array.from(w).reduce((x, y) => x + y, 0)), end = Array.from(origin, (o, i) => o + span[i]);
-  const nx = widths[0].length, ny = widths[1].length, unit = property === "density_kg_m3" ? "kg/m³" : "SI";
-  const range = jointPhysicalRange(values, property === "density_kg_m3");
+  const nx = widths[0].length, ny = widths[1].length, unit = property === "density_kg_m3" ? "kg/m³" : property === "susceptibility_si" ? "SI" : "[1]";
+  const range = jointPhysicalRange(values, property === "density_kg_m3" || property === "face_contribution");
   const boxes = Array.from(a.active_full_indices.values).flatMap((id, i) => { const xyz = [id % nx, Math.floor(id / nx) % ny, Math.floor(id / (nx * ny))]; if (xyz[fixed] !== slice) return [];
     const b = a.active_cell_bounds_m.values, loU = b[6 * i + 2 * u], hiU = b[6 * i + 2 * u + 1], loV = b[6 * i + 2 * v], hiV = b[6 * i + 2 * v + 1];
     return [{ i, id, x: 72 + (loU - origin[u]) / span[u] * 530, y: 24 + (end[v] - hiV) / span[v] * 260, w: (hiU - loU) / span[u] * 530, h: (hiV - loV) / span[v] * 260 }]; });
   return <figure className="science-plot"><figcaption><span>{title}</span><output>{values[cell]} {unit}</output></figcaption>
     <svg viewBox="0 0 640 330" role="group" aria-label={title}>
-      {boxes.map(b => <rect key={b.id} x={b.x} y={b.y} width={b.w} height={b.h} fill={color(values[b.i], range, "field")} stroke={cell === b.i ? "var(--color-fg)" : "var(--color-border)"} strokeWidth={cell === b.i ? 3 : .6} role="button" tabIndex={0} aria-pressed={cell === b.i} aria-label={`${es ? "Celda" : "Cell"} ${b.id}: ${values[b.i]} ${unit}`} data-cell={b.id} data-value={values[b.i]} onPointerMove={() => onCell(b.i)} onClick={() => onCell(b.i)} onKeyDown={e => { if (["Enter", " "].includes(e.key)) { e.preventDefault(); onCell(b.i); } }}><title>{b.id}: {values[b.i]} {unit}</title></rect>)}
+      {boxes.map(b => <rect key={b.id} x={b.x} y={b.y} width={b.w} height={b.h} fill={color(values[b.i], range, "field")} stroke={cell === b.i ? "var(--color-fg)" : "var(--color-border)"} strokeWidth={cell === b.i ? 3 : .6} role="button" tabIndex={0} aria-pressed={cell === b.i} aria-label={`${es ? "Celda" : "Cell"} ${b.id}: ${values[b.i]} ${unit}`} data-cell={b.id} data-value={values[b.i]} onPointerMove={() => onCell(b.i)} onClick={() => onCell(b.i)} onKeyDown={e => { if (["Enter", " "].includes(e.key)) { e.preventDefault(); onCell(b.i); } }}><title>{`${b.id}: ${values[b.i]} ${unit}`}</title></rect>)}
       <text x="72" y="304" fill="var(--color-fg)">{origin[u]}</text><text x="602" y="304" textAnchor="end" fill="var(--color-fg)">{end[u]}</text><text x="335" y="324" textAnchor="middle" fill="var(--color-fg)">{["E", "N", "U"][u]} [m]</text>
       <text x="65" y="30" textAnchor="end" fill="var(--color-fg)">{end[v]}</text><text x="65" y="284" textAnchor="end" fill="var(--color-fg)">{origin[v]}</text><text x="30" y="160" textAnchor="middle" transform="rotate(-90 30 160)" fill="var(--color-fg)">{["E", "N", "U"][v]} [m]</text>
     </svg><Legend range={range} unit={unit} palette="field"/>
     {!boxes.length && <p>{es ? "No hay prismas activos en este corte; no se rellenan." : "No active prisms in this slice; none are filled in."}</p>}
   </figure>;
+}
+
+/** Complete post-freeze native state frames; no scientific calculations here. */
+export function JointNativeStateInstrument({ inspection }: { inspection: JointInspection }) {
+  const es = useShellLang() === "es", t = (en: string, sp: string) => es ? sp : en;
+  const [key, setKey] = useState("selected"), [state, setState] = useState(0), [modality, setModality] = useState<Modality>("gravity"), [partition, setPartition] = useState<Partition>("sealed");
+  const [plane, setPlane] = useState("xy"), [slice, setSlice] = useState(0), [cell, setCell] = useState(0), [row, setRow] = useState(0), [weighted, setWeighted] = useState(false);
+  const entries = (inspection.instrument!.payload.entries as import("../api/joint-result").Json[]).map(obj), stateCount = entries.find(e => e.key === key)!.state_count as number;
+  const frame = useMemo(() => stateCount ? jointInstrumentFrame(inspection, key, state) : null, [inspection, key, state, stateCount]);
+  if (!frame) return <section data-testid="joint-native-state-instrument"><label className="select-control"><span>{t("Native model frame", "Marco de modelo nativo")}</span><select className="select" aria-label={t("Native model frame", "Marco de modelo nativo")} value={key} onChange={e => { setKey(e.target.value); setState(0); }}>{entries.map(e => <option key={e.key as string} value={e.key as string}>{String(e.key)} · {String(e.state_count)}</option>)}</select></label><p>{t("This actual attempt has no accepted state; no model, coupling or response is manufactured.", "Este intento real no tiene estado aceptado; no se fabrica modelo, acoplamiento ni respuesta.")}</p></section>;
+  const model = frame.model;
+  const axes = plane === "xy" ? [0, 1, 2] : plane === "xz" ? [0, 2, 1] : [1, 2, 0], fixedCount = model.arrays[["mesh_hx_m", "mesh_hy_m", "mesh_hz_m"][axes[2]]].shape[0];
+  const actualModality = frame.responses[modality] ? modality : frame.entry.modality as Modality, response = frame.responses[actualModality]![partition];
+  const count = frame.entry.state_count as number, lambda = obj(frame.weights).coupling as number;
+  const coupling = frame.coupling ? new Float64Array(frame.coupling.face_contribution.map(v => weighted ? v * lambda : v)) : null;
+  const couplingModel = coupling ? { ...model, arrays: { ...model.arrays, face_contribution: { dtype: "<f8", shape: [coupling.length], values: coupling } } } : null;
+  function select(label: string, value: string | number, change: (v: string) => void, choices: [string | number, string][]) {
+    return <label className="select-control"><span>{label}</span><select className="select" aria-label={label} value={value} onChange={e => change(e.target.value)}>{choices.map(([id, text]) => <option key={id} value={id}>{text}</option>)}</select></label>;
+  }
+  function cellSlice(index: number, orientation = plane) { const full = model.arrays.active_full_indices.values[index], nx = model.arrays.mesh_hx_m.shape[0], ny = model.arrays.mesh_hy_m.shape[0]; return orientation === "xy" ? Math.floor(full / (nx * ny)) : orientation === "xz" ? Math.floor(full / nx) % ny : full % nx; }
+  function chooseCell(index: number) { setCell(index); setSlice(cellSlice(index)); }
+  return <section data-testid="joint-native-state-instrument">
+    <div className="processing-station-toolbar">
+      {select(t("Native model frame", "Marco de modelo nativo"), key, v => { setKey(v); setState(0); setRow(0); }, (inspection.instrument!.payload.entries as import("../api/joint-result").Json[]).map(value => { const e = obj(value); return [e.key as string, e.key === "selected" ? t("Actual frozen selection", "Selección congelada real") : e.key === "baseline" ? t("Independent optimized pair, lambda zero; no refit", "Pareja optimizada independiente, lambda cero; sin reajuste") : `${e.stage}: ${e.modality ?? t("joint", "conjunto")} · λ ${obj(e.weights).coupling} · ${inspection.candidates[e.stage as number].status}`]; }))}
+      {select(t("Native accepted state", "Estado aceptado nativo"), state, v => setState(Number(v)), Array.from({ length: count }, (_, i) => [i, String(i)]))}
+      {select(t("Native state response", "Respuesta de estado nativo"), actualModality, v => { setModality(v as Modality); setRow(0); }, Object.keys(frame.responses).map(m => [m, m === "gravity" ? "ρ / mGal" : "χ / nT"]))}
+      {select(t("Post-freeze partition", "Partición posterior a congelación"), partition, v => { setPartition(v as Partition); setRow(0); }, [["training", t("Training", "Entrenamiento")], ["validation", t("Validation", "Validación")], ["sealed", t("Sealed diagnostic only", "Reserva solo diagnóstica")]])}
+      <button className="btn" onClick={() => downloadInspection(jointFrameSidecar(inspection, key, state), "joint-native-state.json")}>{t("Export this exact native frame JSON", "Exportar este marco nativo exacto JSON")}</button>
+    </div>
+    <output className="processing-station-readout" data-testid="joint-native-frame-identity">{key} · {state}/{count - 1} · βρ {String(obj(frame.weights).beta_gravity)} · βχ {String(obj(frame.weights).beta_magnetic)} · λ {lambda}{frame.candidate && ` · ${frame.candidate.status}/${frame.candidate.reason}`}</output>
+    <p className="plot-note">{t("Every curve and Gram cell comes from an actual offline-exported state. Sealed values were opened after durable selection: these historical holdout curves are diagnostics, never fitting inputs or fresh unseen-test evidence. Single-property attempts contain no invented second property or joint coupling. No browser refit or scientific acceptance.", "Cada curva y celda Gram proviene de un estado real exportado fuera de línea. La reserva se abrió después de selección durable: curvas reservadas históricas son diagnósticas, nunca entradas de ajuste ni evidencia nueva de prueba no vista. Intentos de una propiedad no inventan segunda propiedad ni acoplamiento conjunto. Sin reajuste ni aceptación científica en navegador.")}</p>
+    <div className="processing-station-toolbar">{select(t("Native receiver row", "Fila receptora nativa"), row, v => setRow(Number(v)), Array.from(response.rows, (r, i) => [i, String(r)]))}</div>
+    <output className="processing-station-readout" data-testid="joint-native-response-readout">{response.rows[row]} · {response.observed[row]} / {response.predicted[row]} / {response.residual[row]} {response.unit} · {response.whitened[row]} [1] · RMSE {response.metrics.rmse_physical} {response.unit} · WRMS {response.metrics.wrms} · χ² {response.metrics.chi_square}</output>
+    <div className="mt-plot-grid">
+      <Plot interactive title={t("Actual state observed/predicted response", "Respuesta observada/predicha de estado real")} x={Array.from(response.rows)} series={[{ name: t("Observed", "Observado"), values: Array.from(response.observed), points: true }, { name: t("Predicted", "Predicho"), values: Array.from(response.predicted), points: true }]} selectedIndex={row} onSelect={setRow} xLabel={t("original receiver row [1]", "fila receptora original [1]")} yLabel={response.unit}/>
+      <Plot interactive title={t("Actual state signed residual", "Residuo con signo de estado real")} x={Array.from(response.rows)} series={[{ name: t("Prediction minus observation", "Predicción menos observación"), values: Array.from(response.residual), points: true }]} zeroCentered selectedIndex={row} onSelect={setRow} xLabel={t("original receiver row [1]", "fila receptora original [1]")} yLabel={response.unit}/>
+      <Plot interactive title={t("Actual state marginal-whitened residual", "Residuo blanqueado marginal de estado real")} x={Array.from(response.rows)} series={[{ name: t("Marginal coordinate", "Coordenada marginal"), values: Array.from(response.whitened), points: true }]} zeroCentered selectedIndex={row} onSelect={setRow} xLabel={t("original receiver row [1]", "fila receptora original [1]")} yLabel="[1]"/>
+    </div>
+    <div className="processing-station-table"><table className="cmp-table"><caption>{t("Actual state independent partition metrics", "Métricas independientes de partición del estado real")}</caption><thead><tr>{[t("Property / partition", "Propiedad / partición"), "N", "RMSE", "WRMS [1]", "χ² [1]"].map(h => <th key={h} scope="col">{h}</th>)}</tr></thead><tbody>{Object.entries(frame.responses).flatMap(([m, parts]) => Object.entries(parts!).map(([p, r]) => <tr key={m + p}><th scope="row">{m} / {p}</th><td>{r.metrics.count}</td><td>{r.metrics.rmse_physical} {r.unit}</td><td>{r.metrics.wrms}</td><td>{r.metrics.chi_square}</td></tr>))}</tbody></table></div>
+    <div className="processing-station-toolbar">
+      {select(t("Native section plane", "Plano de sección nativa"), plane, v => { setPlane(v); setSlice(cellSlice(cell, v)); }, [["xy", "E / N"], ["xz", "E / U"], ["yz", "N / U"]])}
+      {select(t("Native fixed slice", "Corte fijo nativo"), slice, v => { const selected = Number(v); setSlice(selected); const index = Array.from(model.arrays.active_full_indices.values).findIndex((_, i) => cellSlice(i) === selected); if (index >= 0) setCell(index); }, Array.from({ length: fixedCount }, (_, i) => [i, String(i)]))}
+      {select(t("Native active cell", "Celda activa nativa"), cell, v => chooseCell(Number(v)), Array.from(model.arrays.active_full_indices.values, (v, i) => [i, String(v)]))}
+      {coupling && select(t("Exact coupling weighting", "Ponderación de acoplamiento exacto"), weighted ? "weighted" : "unweighted", v => setWeighted(v === "weighted"), [["unweighted", t("Unweighted c_i [1]", "c_i sin ponderar [1]")], ["weighted", "λ c_i [1]"]])}
+    </div>
+    <div className="mt-plot-grid">
+      {model.arrays.density_kg_m3 && <JointPhysicalSection model={model} property="density_kg_m3" axes={axes} slice={slice} cell={cell} onCell={chooseCell} title={t("Actual state signed density contrast", "Contraste de densidad con signo del estado real")}/>}
+      {model.arrays.susceptibility_si && <JointPhysicalSection model={model} property="susceptibility_si" axes={axes} slice={slice} cell={cell} onCell={chooseCell} title={t("Actual state SI susceptibility", "Susceptibilidad SI del estado real")}/>}
+      {couplingModel && <JointPhysicalSection model={couplingModel} property="face_contribution" axes={axes} slice={slice} cell={cell} onCell={chooseCell} title={weighted ? t("Exact weighted face-Gram contribution λ c_i", "Contribución Gram de caras exacta ponderada λ c_i") : t("Exact unweighted face-Gram contribution c_i", "Contribución Gram de caras exacta sin ponderar c_i")}/>}
+    </div>
+    {frame.coupling && <output className="processing-station-readout" data-testid="joint-native-coupling-readout">{t("Native active cell", "Celda activa nativa")} {model.arrays.active_full_indices.values[cell]} · p {frame.coupling.gram_density[cell]} · t {frame.coupling.gram_susceptibility[cell]} · h {frame.coupling.gram_product[cell]} [m⁻¹ᐟ²] · c_i {frame.coupling.face_contribution[cell]} [1] · C {frame.coupling.face_contribution.reduce((a, b) => a + b, 0)} [1]</output>}
+    <p className="plot-note">{t("c_i = (Lc⁴/V)(p_i t_i − h_i²) is the signed discrete face-averaged contribution to the optimized scalar. It is not a vector-first cross-gradient magnitude, geological agreement or an independently observed field. Negative floating cancellation is retained. Lambda zero means zero weighted contribution, not necessarily zero unweighted structure.", "c_i = (Lc⁴/V)(p_i t_i − h_i²) es la contribución discreta con signo promediada por caras al escalar optimizado. No es magnitud de producto vectorial promediado primero, acuerdo geológico ni campo observado independientemente. Se retiene cancelación flotante negativa. Lambda cero indica contribución ponderada cero, no necesariamente estructura sin ponderar cero.")}</p>
+    <details className="processing-provenance"><summary>{t("Which exact quantity is shown?", "¿Qué magnitud exacta se muestra?")}</summary>
+      <p>{t("The installed operator averages squared face gradients and products before contraction.", "El operador instalado promedia gradientes de caras cuadrados y productos antes de contraer.")} <Cite id="m11source"/> <Cite id="m11cross"/></p>
+      <Equation tex={String.raw`B=\operatorname{diag}(\sqrt{v})A,\quad p=B(Gq_\rho)^2,\quad t=B(Gq_\chi)^2,\quad h=B[(Gq_\rho)\odot(Gq_\chi)],\qquad c_i=\frac{L_c^4}{V}(p_it_i-h_i^2),\quad C=\sum_i c_i`} caption={t("Exact exported discrete scalar contributions; not vector-first averaging", "Contribuciones escalares discretas exactas exportadas; no promedio vectorial previo")}/>
+      <Refs ids={["m11source", "m11cross"]} label={t("Inspected primary sources", "Fuentes primarias inspeccionadas")}/>
+    </details>
+    <details className="processing-provenance"><summary>{t("Exact native source and frame manifest", "Manifiesto exacto de fuente y marco nativo")}</summary><pre>{JSON.stringify(inspection.instrument!.payload, null, 2)}</pre></details>
+  </section>;
 }

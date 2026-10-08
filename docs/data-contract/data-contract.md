@@ -4,6 +4,12 @@ Start with [From a source file to a geophysical result](01_source-to-result.md) 
 
 ## Source ledger and immutable raw assets
 
+For supplied gravity/magnetic workflows, the [native joint instrument contract](04_joint-local-inspection.md)
+specifies strict original-byte directories and the additive complete accepted-state
+supplement, physical properties, exact face-Gram contributions, post-freeze
+holdout diagnostics and private exports. It is separate from cached replay and
+does not create an authenticated online processing job.
+
 `data/source-ledger.json` (`inverse-earth.sources/v2`) is the local reviewed source allowlist. Each acquirable external SourceRecord has a stable `source_id`, provider and exact provider/object link, acquisition mode, format, expected byte count, lowercase SHA-256, ignored storage key, rights decision and statement, citation and scientific use. `provider-link-only` is a rights verdict that forbids a product-hosted raw mirror; local retrieval for comparison can still be allowed by a separately reviewed `fetch` or `manual` acquisition mode. A distinct `provider-link` acquisition mode denotes catalogue metadata only: reported bytes/hash must be labelled unverified, no raw key exists and the acquisition command rejects it. `derivative-only` permits only the specifically attributed derivative selected for release. Generated original cases have no external raw asset.
 
 `data-pipeline/acquire.py --source-id <id>` selects a reviewed object; `--file <local-file>` imports a manually obtained one. It verifies byte count and hash before installation under ignored `data/downloads/` and refuses to overwrite an existing raw asset. The ignored `data/raw/acquisition/<id>.json` receipt (`inverse-earth.raw-asset/v1`) records `asset_id=sha256:<digest>`, local owner scope, source/provider, original filename, MIME/detected format, bytes, SHA-256, storage key, rights, acquisition method, retrieval time and `hash-verified` status. A changed source or receipt fails. The local owner scope is not an API user/project ownership claim; the authenticated service has a separate owner/project binding. See the [source acquisition guide](../guides/05_sources.md) for the eight entries and exact commands. The STEAD metadata index is only a provider link with user-reported bytes/hash, not a receipt or a waveform asset; the separately owned M13 phase must verify its own data and rights before processing or publication.

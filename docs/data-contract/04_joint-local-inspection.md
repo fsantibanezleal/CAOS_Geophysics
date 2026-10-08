@@ -59,7 +59,28 @@ Calibration inspection retains all16 independent fits and10 joint positive
 strength/two-start attempts. Accepted states, actual terminal reasons, physical
 blocks and exported five scalar terms bind their own stage/identity/weights.
 Earlier states do not inherit terminal validation metrics or nonexistent
-historical prediction arrays. The exported scalar coupling is not replaced by a
+historical prediction arrays when the original-only output is selected. The
+additive `instrument/` supplement exports actual offline-computed predictions,
+signed and principal-marginal whitened residuals and separate metrics for every
+accepted state. Its closed schema is `joint-survey-state-instrument-file-1`,
+payload `joint-survey-state-instrument-1`; original files, source bytes, frozen
+identities, ordered candidate keys/counts and fixed weights are bound. Final rows
+and observations are reused exactly. Single-property fits expose only their
+modality and property. Baseline and selected frames are separately labelled,
+without a lambda0 refit. Historical sealed data are post-freeze diagnostics only.
+
+For joint frames the four native `[state, active_cell]` arrays are
+`gram_density`, `gram_susceptibility`, `gram_product`, `face_contribution`.
+With public loaded face operators G and B=diag(sqrt(v))*A, these are
+p=B(Gqρ)², t=B(Gqχ)², h=B[(Gqρ)(Gqχ)] and c=(Lc⁴/V)(p*t−h²).
+Signed cancellation is retained; sum(c) equals the actual optimized scalar at
+the unchanged structural oracle bounds. There is no vector-first averaging or
+clipping. Browser arithmetic remains transport consistency, not kernel replay.
+Every response triplet uses `[state, original_partition_row]`; metrics use
+`[state, 3]` in RMSE/WRMS/chi-square order. A full solved bundle has at most1097
+members under the existing1100 cap. See [offline export and replay](../guides/22_local_joint_survey.md).
+
+The exported scalar coupling is not replaced by a
 CrossGradient vector-factor or approximate local coupling map. Failed workflows
 override any earlier durable result files; unreplayed last attempts remain
 explicitly unreplayed, and no sealed result is exposed as complete.
@@ -79,7 +100,8 @@ Actual fixtures are explicit external environment configuration:
 `GEOPHYSICS_JOINT_OUTPUT_FIXTURE`, `GEOPHYSICS_JOINT_EVALUATION_FIXTURE`,
 `GEOPHYSICS_JOINT_ABORT_FIXTURE`, `GEOPHYSICS_JOINT_DURABLE_ABORT_FIXTURE`,
 `GEOPHYSICS_JOINT_MATRIX_FIXTURE` and
-`GEOPHYSICS_JOINT_MAX_OUTPUT_FIXTURE`. Missing fixtures are explicit skips, not
+`GEOPHYSICS_JOINT_MAX_OUTPUT_FIXTURE`; the complete accepted-state bundle uses
+`GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE`. Missing fixtures are explicit skips, not
 browser acceptance. Browser gates additionally require the actual component URL
 `GEOPHYSICS_JOINT_INSPECTION_URL` and external `GEOPHYSICS_BROWSER_EVIDENCE_ROOT`.
 Run locally with an external test/cache/trace directory; no artifacts belong in

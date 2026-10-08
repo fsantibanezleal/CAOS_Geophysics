@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { unzipSync } from "fflate";
-import { importJointOutput, jointJson, jointPhysicalRange, jointResponse, jointSidecar, jointState, exportJointOriginals, type JointFile } from "../api/joint-result";
+import { importJointOutput, jointFrameSidecar, jointInstrumentFrame, jointJson, jointPhysicalRange, jointResponse, jointSidecar, jointState, exportJointOriginals, type JointFile } from "../api/joint-result";
 
 export function actualJointFiles(root: string): JointFile[] {
   const entries: JointFile[] = [];
@@ -16,6 +16,7 @@ const aborted = process.env.GEOPHYSICS_JOINT_ABORT_FIXTURE;
 const durableAbort = process.env.GEOPHYSICS_JOINT_DURABLE_ABORT_FIXTURE;
 const matrix = process.env.GEOPHYSICS_JOINT_MATRIX_FIXTURE;
 const maximum = process.env.GEOPHYSICS_JOINT_MAX_OUTPUT_FIXTURE;
+const instrument = process.env.GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE;
 const encode = (v: unknown) => new TextEncoder().encode(typeof v === "string" ? v : JSON.stringify(v));
 const mutateJson = async (files: JointFile[], path: string, mutate: (v: Record<string, unknown>) => void) => {
   const original = files.find(f => f.path === path)!, v = JSON.parse(new TextDecoder().decode(await original.read())); mutate(v);
@@ -29,6 +30,22 @@ const mutateJson = async (files: JointFile[], path: string, mutate: (v: Record<s
 };
 
 describe("native local joint output, not a browser inverse", () => {
+  it.skipIf(!instrument)("accepted state instrument", async () => {
+    const inspection = await importJointOutput(actualJointFiles(instrument!)); expect(inspection.instrument).not.toBeNull();
+    for (const e of inspection.instrument!.payload.entries as import("../api/joint-result").Json[]) { const entry = e as Record<string, import("../api/joint-result").Json>, key = entry.key as string;
+      for (let i = 0; i < (entry.state_count as number); i++) { const frame = jointInstrumentFrame(inspection, key, i);
+        if (entry.modality !== null) { expect(frame.coupling).toBeNull(); expect(Object.keys(frame.responses)).toEqual([entry.modality]); expect(Object.keys(frame.model.arrays).filter(k => ["density_kg_m3", "susceptibility_si"].includes(k))).toHaveLength(1); }
+        else expect(frame.coupling!.face_contribution).toHaveLength(inspection.model!.arrays.density_kg_m3.shape[0]);
+        for (const parts of Object.values(frame.responses)) for (const response of Object.values(parts!)) expect(response.residual.every((v, j) => v === response.predicted[j] - response.observed[j])).toBe(true);
+      }
+    }
+    const state = jointInstrumentFrame(inspection, "c00", 1); expect(state.candidate!.status).toBe("nonconverged");
+    expect(state.responses.gravity!.sealed.predicted).not.toEqual(jointResponse(inspection, "gravity", "sealed").predicted);
+    const sidecar = jointFrameSidecar(inspection, "c25", 0); expect(sidecar.coupling).not.toBeNull(); expect(sidecar.responses).toHaveProperty("magnetic.sealed.metrics"); expect(sidecar.scientific_acceptance_verified).toBe(false);
+    const baseline = jointInstrumentFrame(inspection, "baseline", 0); expect(baseline.entry.kind).toBe("independently_optimized_pair"); expect(baseline.entry.weights).toHaveProperty("coupling", 0);
+    const selected = jointInstrumentFrame(inspection, "selected", 0); expect(selected.responses.magnetic!.sealed.predicted).toEqual(jointResponse(inspection, "magnetic", "sealed").predicted);
+    await expect(importJointOutput(actualJointFiles(instrument!).map(f => f.path === "instrument/c25_face_contribution.npy" ? { ...f, read: async () => { const b = await f.read(); b[b.length - 1] ^= 1; return b; } } : f))).rejects.toThrow("digest mismatch");
+  });
   it("does not invent negative susceptibility or constant legend values", () => {
     expect(jointPhysicalRange(new Float64Array([0, 0]), false)).toEqual([0, 0]);
     expect(jointPhysicalRange(new Float64Array([.003, .003]), false)).toEqual([.003, .003]);
