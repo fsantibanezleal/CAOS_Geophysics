@@ -18,6 +18,22 @@ prove all-writer exclusion, source custody or production admission. Native
 qualification holds the actual initialized global/original-worker descriptors;
 that is measured fixture exclusion, not automatic installation in every entry.
 
+`physical_startup.audit_startup_participating` is the fixed reusable observation
+entry for an already operator-bound `PhysicalProjectDeletion` participant and
+its original async session factory. It checks the explicit database/root binding,
+takes global exclusive and original-worker locks before creating the session,
+verifies WAL/FULL/FK/trusted-schema configuration without changing it and performs
+the complete classifier in a fresh BEGIN IMMEDIATE snapshot. It makes no recovery,
+publication, mount or account change. Unknown/inconsistent state refuses; coherent
+and prepared observations remain distinct and explicitly runtime=False. A prepared
+observation is not permission to finalize an abandoned cut or resume any job.
+
+Cancellation drains the subordinate observation through the classifier/native
+thread, original rollback and session close before either lifetime guard unwinds.
+The returned observation is not a lasting admission token: every later writer
+still participates and rechecks its own transaction/inputs. Default startup and
+union schema adapters remain explicitly assembled by the integration owner.
+
 Portable controls use original complete196station/nine-candidate transform
 passed and height-precision non-pass outputs. Prior publication-only fixtures
 omitted root-stage history. The whole-classifier test explicitly adds literal
