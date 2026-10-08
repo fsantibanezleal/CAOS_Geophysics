@@ -38,6 +38,13 @@ original-input re-verification.
    ownership/installation/manifest/member charge from execution-v2. Unknown
    integration SHALL refuse before deleting originals. Gate: parent integration;
    not established by this leaf's portable tests.
+9. WHEN the ordinary recovery helper times out or its caller is cancelled, the
+   caller SHALL retain its singleton/common-lease lifetime and held descriptors
+   until the exact created helper is confirmed exited and both bounded streams
+   drained. Repeated cancellation SHALL NOT interrupt that barrier. Overflow
+   SHALL be discarded without unbounded retention while draining, then refused;
+   no receipt or successful cleanup is invented. Gate: actual bounded child,
+   singleton exclusion, timeout/repeated cancellation and overflow controls.
 
 Actual privileged observer-kill, both-group extinction, ordinary archive/restart
 and independent resource/cancel qualification remain separate native gates.

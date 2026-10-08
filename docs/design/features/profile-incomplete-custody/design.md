@@ -73,6 +73,21 @@ quantity precision or the existing ownership-v2 member grammar. Census requires
 every archived directory's matching exclusive intent and exact literal manifest.
 An interrupted manifest still in stage is charged in full before archive rename.
 
+## Recovery helper lifetime correction (pre-code refinement)
+
+Independent review of the initial candidate identified that a second timed wait
+in finally could return with the privileged recovery helper still alive, or be
+interrupted by cancellation. Replace it with a separately held, shielded reap
+and EOF-drain task. Catch repeated caller cancellation only while that barrier
+is incomplete, then propagate cancellation after cleanup. Do not release held
+descriptors or return through the caller's lease context while the created helper
+can still mutate custody. No signal or forced original cleanup is introduced.
+The wait is fail-closed, not a new successful recovery or scientific receipt.
+Use bounded retaining readers that continue discarding overflow until EOF;
+stream collection timeout must not cancel them and deadlock a writer. Actual
+ordinary Python subprocess controls test this async lifecycle and the original
+singleton, separately from still-pending privileged Linux guardian/queue proof.
+
 ## References and claim limits
 
 [Kernel cgroup v2](https://docs.kernel.org/admin-guide/cgroup-v2.html) defines
