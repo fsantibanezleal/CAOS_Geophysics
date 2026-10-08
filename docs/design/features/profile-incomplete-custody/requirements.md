@@ -1,6 +1,6 @@
 # Incomplete profile custody requirements
 
-Status: planned
+Status: implemented candidate; portable controls validated, native/integration gates open
 
 This additive repair does not change successful execution, cancellation, paired
 result validation or profile-retained-stage/v2. A missing execution receipt is
