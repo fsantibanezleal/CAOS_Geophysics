@@ -29,6 +29,26 @@ from tests.api.test_waveform_native_workflow import actual_metadata
 from tests.api.test_waveform_service import make_case
 
 
+def selected_fixture():
+    case = os.environ.get("M08_QA_CASE", "nominal1")
+    if case == "nominal1":
+        return make_case(case)
+    if case != "ridgecrest-original-aligned" or os.environ.get("CAOS_M08_ORIGINAL") != "1":
+        raise RuntimeError("Explicit supported private-original browser case required")
+    from app.waveform_contract import INPUT
+    from tests.data.test_waveform_ridgecrest import bounded_original, original_request
+    mseed, xml = bounded_original("miniseed.raw"), bounded_original("stationxml.raw")
+    request = original_request()
+    records = INPUT.scan_miniseed(mseed, request)
+    shift = (records[0]["start_us"] - INPUT.utc_us(request["conditioning_start_utc"])) % (1000000 // records[0]["sample_rate_hz"])
+    if shift != 8300:
+        raise RuntimeError("Original aligned browser selection differs")
+    for key in ("conditioning_start_utc", "conditioning_end_utc", "analysis_start_utc", "analysis_end_utc"):
+        request[key] = INPUT.format_utc(INPUT.utc_us(request[key]) + shift)
+    request = INPUT.validate_request(request)
+    return {"mseed": mseed, "stationxml": xml, "request": json.dumps(request).encode("ascii")}
+
+
 def main():
     if os.environ.get("GEOPHYSICS_WAVEFORM_QA") != "isolated-loopback-only":
         raise RuntimeError("Explicit isolated waveform QA opt-in required")
@@ -43,11 +63,26 @@ def main():
     os.environ.update(GEOPHYSICS_DATA_DIR=str(private), GEOPHYSICS_DB_PATH=str(db),
                      PYTHONDONTWRITEBYTECODE="1", TMP=str(private), TEMP=str(private), TMPDIR=str(private))
     command.upgrade(Config(str(ROOT / "app/alembic.ini")), "head")
-    revision = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
-    qualified = subprocess.run([os.environ["M08_TEST_SCIENCE_PYTHON"], "-B", str(ROOT / "scripts/qualify_waveform_m08.py"),
-        "--data-root", str(private), "--abi-executable", os.environ["M08_ABI_EXECUTABLE"],
-        "--abi-sha256", os.environ["M08_ABI_SHA256"], "--review", os.environ["M08_NATIVE_REVIEW"],
-        "--source-revision", revision], cwd=ROOT, capture_output=True, timeout=120)
+    revision = os.environ.get("M08_TEST_SOURCE_REVISION") or subprocess.check_output(
+        ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True).strip()
+    if sys.platform == "linux":
+        # Genuine same engine and fixed manager lane; no resource launch double.
+        inputs = external_storage_path(private.parent / (private.name + "-qualification-inputs"), "QA qualification inputs")
+        inputs.mkdir(mode=0o700)
+        selected = selected_fixture()
+        for name, key in (("input.ms", "mseed"), ("station.xml", "stationxml"), ("request.json", "request")):
+            (inputs / name).write_bytes(selected[key])
+        image = str(Path(os.environ["M08_TEST_SCIENCE_PYTHON"]).resolve())
+        argv = [image, "-I", "-B", str(ROOT / "scripts/qualify_waveform_m08_linux.py"),
+            "--data-root", str(private), "--python", image, "--site-packages", os.environ["M08_TEST_SCIENCE_SITE_PACKAGES"],
+            "--mseed", str(inputs / "input.ms"), "--stationxml", str(inputs / "station.xml"),
+            "--request", str(inputs / "request.json"), "--source-revision", revision, "--uid", "65534", "--gid", "65534"]
+    else:
+        argv = [os.environ["M08_TEST_SCIENCE_PYTHON"], "-B", str(ROOT / "scripts/qualify_waveform_m08.py"),
+            "--data-root", str(private), "--abi-executable", os.environ["M08_ABI_EXECUTABLE"],
+            "--abi-sha256", os.environ["M08_ABI_SHA256"], "--review", os.environ["M08_NATIVE_REVIEW"],
+            "--source-revision", revision]
+    qualified = subprocess.run(argv, cwd=ROOT, capture_output=True, timeout=150)
     if qualified.returncode:
         raise RuntimeError("Selected native context qualification failed")
     messages = []
@@ -80,9 +115,9 @@ def main():
 
     @app.get("/__qa/waveform")
     async def fixture():
-        selected = make_case("nominal1")
+        selected = selected_fixture()
         request = json.loads(selected["request"])
-        return {"harness": "actual-waveform-native-v1", "request": request,
+        return {"harness": "actual-waveform-native-v1", "case": os.environ.get("M08_QA_CASE", "nominal1"), "request": request,
                 "inputs": {role: {"base64": base64.b64encode(selected[key]).decode("ascii"),
                     "metadata": actual_metadata(selected[key], role, selected, request)}
                     for role, key in (("stationxml", "stationxml"), ("miniseed", "mseed"))}}

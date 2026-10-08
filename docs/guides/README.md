@@ -7,6 +7,7 @@
 - [Acquire reviewed sources and inspect rights](05_sources.md).
 - [Use authenticated raw assets](06_api.md).
 - [Run bounded private processing jobs](07_processing_jobs.md).
+- [Process owned MiniSEED/StationXML with explicit scientific controls](20_owned_waveform_processing.md): exact immutable source/request binding, real counts/complex-response/filter/PSD/classic arrays and sealed export/reopen; not P/S or host acceptance.
 - [Run private EDI tensor QC and bounded layered MT jobs](08_online_edi_mt.md).
 - [Use and reproduce the source-valid M05/M06 course](09_online-mt-course.md).
 - [Measure isolated actual-host admission](12_actual_host_admission.md): retained failed headroom measurements are not production activation.
