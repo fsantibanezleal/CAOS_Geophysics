@@ -21,7 +21,7 @@ import time
 import numpy as np
 from profile_mesh import parameter_mesh
 
-from sources import ROOT, SourceError, acquire_source, local_data_root
+from sources import SourceError, acquire_source, local_data_root
 
 SOURCE_ID = "pygimli-slagdump"
 COUNT_SENSOR = re.compile(r"^(\d+)# Number of sensors$")
