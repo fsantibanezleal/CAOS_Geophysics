@@ -219,16 +219,30 @@ def _cg(operator, diagonal, rhs, kind, budget, record):
 
 def solve_partition(problem, prior, policy, deadline):
     """One trusted native partition; explicit separate epoch, no caller hooks/I/O."""
+    return _solve_partition(problem, prior, policy, deadline)
+
+
+def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
+    """Shared approved orchestration; only the closed physical owner is allowed."""
+    if original_owner is not None:
+        import gravity_irls_original as prospective
+        if (type(original_owner) is not prospective.GravityIRLSPartition
+            or original_owner.problem is not problem
+            or plain.survey._digest(prior) != plain.survey._digest(original_owner.prior)):
+            raise ValueError('corrected IRLS: exact original physical owner required')
+        original_owner.check()
     started = monotonic()
     policy = plain._validate_policy(policy)
     budget = _Budget(deadline)
     lower, upper = prior['lower_kg_m3']/1000., prior['upper_kg_m3']/1000.
-    initialization = plain.l2._solve_partition(problem, prior, budget.deadline)
+    initialization = (plain.l2._solve_partition(problem, prior, budget.deadline)
+        if original_owner is None else original_owner.initialize())
     budget.steps = initialization['iterations']
     a = len(lower)
     models = [row/1000. for row in initialization['trace']['models_kg_m3']]
     kinds, labels = [0]*len(models), [-1]*len(models)
     attempts, stages, changes = [], [], []
+    native_evidence = []
     q = initialization['model_kg_m3']/1000. if initialization['model_kg_m3'] is not None else None
     initial = plain._initial_thresholds(problem, initialization, policy)
     previous_weights = None
@@ -237,6 +251,9 @@ def solve_partition(problem, prior, policy, deadline):
     admitted = 8*(8*n*a)+12*(8*n*n)+4096*(44*a+12*n)+576*1024**2
     allocation = plain.survey._digest(dict(n=n, a=a, bytes=admitted,
         rule='original_full_covariance_upper_plus_matrixfree_threepair_1'))
+    if original_owner is not None:
+        admitted = original_owner.allocation['admitted_bytes']
+        allocation = original_owner.allocation['allocation_plan_sha256']
     # Auxiliary retained vectors are output; temporary M actions are sparse/
     # vector-only inside the existing native/trace reserve, not a dense inverse.
     if admitted > 2*1024**3:
@@ -314,8 +331,16 @@ def solve_partition(problem, prior, policy, deadline):
                 native_budget = plain.optimizer.OptimizerBudget(budget.deadline, 200-budget.steps,
                     2*1024**3, admitted, allocation)
                 norm = max(1., float(np.linalg.norm(2*r, np.inf)))
-                inner = plain.optimizer.solve_bounded_physical(obj, lower, upper, q.copy(),
-                                                               budget=native_budget, binding=binding)
+                inner = (plain.optimizer.solve_bounded_physical(obj, lower, upper, q.copy(),
+                    budget=native_budget, binding=binding) if original_owner is None else
+                    original_owner.solve_stage(q.copy(), policy, index, initial, 200-budget.steps))
+                if original_owner is not None:
+                    # Lossless separately bounded books, not a deeper logical
+                    # tree or a relaxed original eight-container transport cap.
+                    import gravity_irls_pool as pool
+                    native_evidence.append(pool.encode(_freeze(inner)))
+                    inner = {k:inner[k] for k in ('status', 'reason', 'q', 'phi_d', 'phi_m',
+                        'phi_engine', 'kkt_normalized', 'iterations', 'trace', 'failed_trial')}
                 budget.steps += inner['iterations']
                 for value in inner['trace']['models_q'][1:]:
                     models.append(value.copy())
@@ -375,6 +400,14 @@ def solve_partition(problem, prior, policy, deadline):
         terminal=dict(status=status, reason=reason, weight_updates=max(0, len(stages)-1),
                       epsilon_saturated=bool(stages and stages[-1]['epsilon'] == policy['epsilon_floor']),
                       stage_changes=changes)))
+    if original_owner is not None:
+        result.update(schema='gravity-irls-original-partition-1',
+            runtime_epoch=prospective.RUNTIME_EPOCH, policy=prospective.POLICY,
+            source_inventory=original_owner.inventory,
+            initialization_evidence=pool.encode(_freeze(original_owner.initial_evidence)),
+            native_evidence=tuple(native_evidence),
+            allocation_plan=original_owner.allocation,
+            wall_seconds=float(monotonic()-original_owner.started))
     plain.l2._result_native_metadata(result)
     result['result_sha256'] = plain.survey._digest(result)
     plain.l2._result_native_metadata(result)

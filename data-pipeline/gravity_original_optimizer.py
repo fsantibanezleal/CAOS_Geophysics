@@ -230,7 +230,24 @@ def solve_bounded_linear(request, observations, noise, prior, rows, beta_candida
     positions = rows if observation_rows is None else np.searchsorted(observation_rows, rows)
     inventory = source_inventory()
     adapter = _Objective(problem, prior, noise, positions, inventory, allocation)
-    identity = adapter.identity()
+    result, binding, terminal = _solve_adapter(adapter, deadline, remaining_steps)
+    prediction = (None if result['q'] is None else
+        problem['simulation'].dpred(result['q'])+problem['background'])
+    if monotonic() > deadline and result['status'] == 'converged':
+        result.update(status='nonconverged', reason='wall_cap')
+    return dict(schema='gravity-original-partition-1', identity=adapter.identity(),
+        source_inventory=inventory, allocation_plan=allocation, optimizer_binding=asdict(binding),
+        terminal_policy=asdict(terminal), result=result, wall_seconds=monotonic()-started,
+        fit_rows=problem['rows'], beta_candidate=beta_candidate,
+        model_kg_m3=None if result['q'] is None else result['q']*1000.,
+        predicted_mgal=prediction,
+        source_authority_verified=False, host_accepted=False, full_M02_accepted=False,
+        public_activation=False)
+
+
+def _solve_adapter(adapter, deadline, remaining_steps):
+    """Closed source module composition, not an exported callback ABI."""
+    identity, allocation = adapter.identity(), adapter.allocation
     budget = ConditionedBudget(deadline, remaining_steps, 2*1024**3,
         allocation['admitted_bytes'], allocation['allocation_plan_sha256'])
     binding = reduced.ConditionedBinding('gravity_original_optimizer.solve_bounded_linear',
@@ -247,15 +264,4 @@ def solve_bounded_linear(request, observations, noise, prior, rows, beta_candida
         optimizer_class=_Linear, source_epoch=('gravity_original_optimizer', SOURCE_SHA256, POLICY, LINEAR_EPOCH))
     result['source_binding'].update(original_arithmetic=source.SOURCE_SHA256,
         original_terminal=accuracy.SOURCE_SHA256, reduced_dependency=reduced.SOURCE_SHA256)
-    prediction = (None if result['q'] is None else
-        problem['simulation'].dpred(result['q'])+problem['background'])
-    if monotonic() > deadline and result['status'] == 'converged':
-        result.update(status='nonconverged', reason='wall_cap')
-    return dict(schema='gravity-original-partition-1', identity=identity,
-        source_inventory=inventory, allocation_plan=allocation, optimizer_binding=asdict(binding),
-        terminal_policy=asdict(terminal), result=result, wall_seconds=monotonic()-started,
-        fit_rows=problem['rows'], beta_candidate=beta_candidate,
-        model_kg_m3=None if result['q'] is None else result['q']*1000.,
-        predicted_mgal=prediction,
-        source_authority_verified=False, host_accepted=False, full_M02_accepted=False,
-        public_activation=False)
+    return result, binding, terminal
