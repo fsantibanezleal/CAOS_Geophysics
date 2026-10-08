@@ -7,16 +7,19 @@ import { processingProblem } from "./ProjectProcessingWorkbench";
 import type { MethodEligibility } from "../api/processing-contracts";
 
 export function WaveformTrace({x,y,unit,title,cursor,onCursor,axis="t [s]"}:{x:number[];y:number[];unit:string;title:string;cursor:number;onCursor:(value:number)=>void;axis?:string}){
+  const svg=useRef<SVGSVGElement|null>(null),[size,setSize]=useState({width:650,height:310});
+  useEffect(()=>{const element=svg.current;if(!element)return;const measure=()=>{const box=element.getBoundingClientRect();const next={width:Math.max(280,box.width),height:Math.max(220,box.height)};setSize(old=>old.width===next.width&&old.height===next.height?old:next);};measure();const observer=new ResizeObserver(measure);observer.observe(element);return()=>observer.disconnect();},[x.length,y.length]);
   if(x.length!==y.length||!x.length)return <p>{title} · —</p>;
   let lo=Infinity,hi=-Infinity;for(const v of y){lo=Math.min(lo,v);hi=Math.max(hi,v);}const span=hi-lo||1,x0=x[0],dx=x[x.length-1]-x0||1;
+  const left=64,right=size.width-20,top=24,bottom=size.height-44,plotWidth=right-left,plotHeight=bottom-top;
   // Rendering extrema preserves narrow peaks; science and exported arrays are
   // never decimated or altered. Shared cursor is relative to the same time axis.
-  const points:string[]=[];const stride=Math.max(1,Math.ceil(y.length/550));
-  for(let i=0;i<y.length;i+=stride){let min=i,max=i;for(let j=i;j<Math.min(i+stride,y.length);j++){if(y[j]<y[min])min=j;if(y[j]>y[max])max=j;}for(const j of [...new Set([min,max])].sort((a,b)=>a-b))points.push(`${55+(x[j]-x0)/dx*575},${145-(y[j]-lo)/span*115}`);}
-  return <figure className="waveform-trace processing-plot"><figcaption>{title} · {unit}</figcaption><svg viewBox="0 0 650 180" role="img" aria-label={`${title}; ${axis}; ${unit}`} onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();onCursor(x0+Math.max(0,Math.min(1,((e.clientX-r.left)/r.width*650-55)/575))*dx);}}>
-    <path d="M55 25V145H630" fill="none" stroke="currentColor"/><polyline points={points.join(" ")} fill="none" stroke="var(--color-accent)" strokeWidth="1.2"/>
-    {cursor>=x0&&cursor<=x0+dx&&<path d={`M${55+(cursor-x0)/dx*575} 25V145`} stroke="currentColor" strokeDasharray="3 3"/>}
-    <text x="4" y="33" fontSize="11" fill="currentColor">{hi.toPrecision(3)}</text><text x="4" y="145" fontSize="11" fill="currentColor">{lo.toPrecision(3)}</text><text x="55" y="166" fontSize="11" fill="currentColor">{x0.toPrecision(3)}</text><text x="595" y="166" fontSize="11" fill="currentColor">{(x0+dx).toPrecision(3)}</text><text x="295" y="174" fontSize="12" fill="currentColor">{axis}</text>
+  const points:string[]=[];const stride=Math.max(1,Math.ceil(y.length/Math.floor(plotWidth)));
+  for(let i=0;i<y.length;i+=stride){let min=i,max=i;for(let j=i;j<Math.min(i+stride,y.length);j++){if(y[j]<y[min])min=j;if(y[j]>y[max])max=j;}for(const j of [...new Set([min,max])].sort((a,b)=>a-b))points.push(`${left+(x[j]-x0)/dx*plotWidth},${bottom-(y[j]-lo)/span*plotHeight}`);}
+  return <figure className="waveform-trace processing-plot"><figcaption>{title} · {unit}</figcaption><svg ref={svg} viewBox={`0 0 ${size.width} ${size.height}`} role="img" tabIndex={0} aria-label={`${title}; ${axis}; ${unit}`} onKeyDown={e=>{let next=cursor;const step=x.length>1?dx/(x.length-1):1;if(e.key==="ArrowLeft")next-=step;else if(e.key==="ArrowRight")next+=step;else if(e.key==="Home")next=x0;else if(e.key==="End")next=x0+dx;else return;e.preventDefault();onCursor(Math.max(x0,Math.min(x0+dx,next)));}} onPointerMove={e=>{const r=e.currentTarget.getBoundingClientRect();onCursor(x0+Math.max(0,Math.min(1,((e.clientX-r.left)/r.width*size.width-left)/plotWidth))*dx);}}>
+    <path d={`M${left} ${top}V${bottom}H${right}`} fill="none" stroke="currentColor"/><polyline points={points.join(" ")} fill="none" stroke="var(--color-accent)" strokeWidth="1.2"/>
+    {cursor>=x0&&cursor<=x0+dx&&<path d={`M${left+(cursor-x0)/dx*plotWidth} ${top}V${bottom}`} stroke="currentColor" strokeDasharray="3 3"/>}
+    <text x="4" y={top+9} fill="currentColor">{hi.toPrecision(3)}</text><text x="4" y={bottom} fill="currentColor">{lo.toPrecision(3)}</text><text x={left} y={bottom+20} fill="currentColor">{x0.toPrecision(3)}</text><text x={right} y={bottom+20} textAnchor="end" fill="currentColor">{(x0+dx).toPrecision(3)}</text><text x={(left+right)/2} y={size.height-5} textAnchor="middle" fill="currentColor">{axis}</text>
   </svg></figure>;
 }
 

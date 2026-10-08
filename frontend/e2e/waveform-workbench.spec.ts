@@ -67,6 +67,10 @@ test("index immutable originals, queued cancel, actual native calculation and al
   await plot.scrollIntoViewIfNeeded();const bounds=(await plot.boundingBox())!;
   await page.mouse.move(bounds.x+bounds.width*.6,bounds.y+bounds.height*.5);
   await expect(page.getByText(/Shared time cursor relative to conditioning start:/)).not.toContainText("0.000 s");
+  await plot.focus();await page.keyboard.press("Home");
+  await expect(page.getByText(/Shared time cursor relative to conditioning start:/)).toContainText("0.000 s");
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByText(/Shared time cursor relative to conditioning start:/)).not.toContainText("0.000 s");
   await page.getByRole("button",{name:"Reload project",exact:true}).click();
   await expect(page.getByRole("button",{name:"Verify, plot and export all arrays",exact:true})).toBeEnabled();
   await page.getByLabel("Reopen saved ZIP against this successful job",{exact:true}).setInputFiles(zip);
@@ -89,6 +93,10 @@ test("bilingual light/dark desktop/phone plots fit the existing shell and reopen
     const dimensions=await page.evaluate(()=>({w:document.documentElement.scrollWidth,h:document.documentElement.scrollHeight,iw:innerWidth,ih:innerHeight}));
     expect(dimensions.w).toBe(dimensions.iw);expect(dimensions.h).toBe(dimensions.ih);
     expect(await plot.locator("polyline").evaluate(n=>getComputedStyle(n).stroke)).not.toBe("none");
+    // Test rendered size, not just a CSS font declaration: the old fixed
+    // viewBox silently reduced 11px labels to about 5px on a phone.
+    const axis=await plot.locator("text").last().evaluate(n=>{const box=n.getBoundingClientRect(),svg=n.ownerSVGElement!;return {height:box.height,width:svg.viewBox.baseVal.width,actual:svg.getBoundingClientRect().width};});
+    expect(axis.height).toBeGreaterThanOrEqual(10);expect(Math.abs(axis.width-axis.actual)).toBeLessThan(1);
     await page.screenshot({path:resolve(evidence,`${lang}-${theme}-${width}.png`)});
   }
   expect(errors).toEqual([]);
