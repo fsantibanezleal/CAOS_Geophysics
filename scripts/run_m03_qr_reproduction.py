@@ -12,7 +12,9 @@ from hashlib import sha256
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
+import time
 
 PRODUCT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(PRODUCT/'data-pipeline'))
@@ -88,10 +90,46 @@ def process_readback(pid):
     finally:require(native.CloseHandle(handle))
 
 
+def native_startup_receipt(root):
+    """Require actual value-free contained refusal, never a posted host grant."""
+    from run_m03_native_context import IMAGE_SHA,PARENT_SHA
+    root=io.external_path(root)
+    receipt=base.strict_json(read(root/'native-context-result.json'))
+    drain=base.strict_json(read(root/'parent-context-drain.json'))
+    core._closed(receipt,'schema verdict native_parent_image parent_redirector_sha256 lifetime expected_worker_refusal '
+        'source_sha256 occupancy native_fit_count original_data_access magnetic_value_access host_admission','replay')
+    core._closed(drain,'schema bootstrap_exit bootstrap_wall_s receipt_sha256 scientific_job_active_processes '
+        'scientific_job_total_processes bootstrap_not_scientific_child host_admission','replay')
+    lifetime=receipt['lifetime']
+    require(type(receipt['native_fit_count']) is int and
+        all(type(lifetime[key]) is int for key in ('exit_code','active_processes','total_processes',
+            'peak_rss_bytes','peak_committed_bytes','scratch_bytes')) and
+        all(type(lifetime[key]) in (int,float) for key in ('cpu_s','wall_s','parent_cpu_s')))
+    require(receipt['schema']=='m03-native-parent-context/1' and receipt['verdict']=='component_pass' and
+        receipt['native_parent_image']['sha256']==IMAGE_SHA and receipt['parent_redirector_sha256']==PARENT_SHA and
+        receipt['source_sha256']==sha256(Path(__file__).with_name('run_m03_native_context.py').read_bytes()).hexdigest() and
+        receipt['native_fit_count']==0 and receipt['original_data_access']=='not_opened' and
+        receipt['magnetic_value_access']=='not_opened' and receipt['host_admission']=='not_established' and
+        receipt['expected_worker_refusal']==core.SurveyError('invalid_contract','seal').error and
+        lifetime['actual_executable_sha256']==IMAGE_SHA and lifetime['verdict']=='resource_refused' and
+        lifetime['exit_code']==2 and lifetime['active_processes']==0 and lifetime['total_processes']==1 and
+        lifetime['enforced_limits']==dict(memory_bytes=512*1024**2,scratch_bytes=16*1024**2,cpu_s=10,wall_s=30,parent_cpu_s=10) and
+        0<lifetime['cpu_s']<=10 and 0<lifetime['wall_s']<=30 and 0<=lifetime['parent_cpu_s']<=10 and
+        0<lifetime['peak_rss_bytes']<=512*1024**2 and 0<lifetime['peak_committed_bytes']<=512*1024**2 and
+        0<lifetime['scratch_bytes']<=16*1024**2 and lifetime['stop_cpu_s'] is None and lifetime['stop_wall_s'] is None and
+        drain['schema']=='m03-native-parent-context-drain/1' and drain['bootstrap_exit']==0 and
+        drain['receipt_sha256']==base.digest(receipt) and drain['scientific_job_active_processes']==0 and
+        drain['scientific_job_total_processes']==1 and drain['bootstrap_not_scientific_child'] is True)
+    pins=execution.source_identity()
+    require(all(lifetime['source_sha256'].get(name)==pin for name,pin in pins.items()))
+    return receipt
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    for name in ('retained-root','output','native-executable','packages','dispatcher-lock'):
+    for name in ('retained-root','output','native-executable','packages','dispatcher-lock','parent-executable','context-root'):
         parser.add_argument('--'+name,required=True)
+    parser.add_argument('--native-parent',action='store_true')
     args=parser.parse_args()
     retained=io.external_path(args.retained_root)
     output=Path(args.output)
@@ -101,6 +139,31 @@ def main():
     require(type(lock) is dict and set(lock)=={'pid','token'} and type(lock['pid']) is int and lock['pid']>0 and
         type(lock['token']) is str and len(lock['token'])==32)
     occupancy=dispatcher_ancestry(lock['pid'])
+    from run_m03_native_context import IMAGE_SHA,PARENT_SHA,image_identity
+    parent=Path(args.parent_executable).resolve(strict=True)
+    require(sha256(parent.read_bytes()).hexdigest()==PARENT_SHA)
+    startup=native_startup_receipt(args.context_root)
+    if not args.native_parent:
+        # The shared dispatcher still executes ordinary CP313; its rule against
+        # a Store venv node executable is unchanged. The already qualified
+        # bootstrap remains in that SAME outer Job, never outside containment.
+        require(sys.version_info[:2]==(3,13))
+        bootstrap=output.with_name(output.name+'-parent-context')
+        require(not bootstrap.exists());io.external_path(bootstrap.parent);bootstrap.mkdir()
+        command=[str(parent),'-B','-S',str(Path(__file__).resolve()),'--native-parent']
+        for name in ('retained-root','output','native-executable','packages','dispatcher-lock','parent-executable','context-root'):
+            command.extend(['--'+name,getattr(args,name.replace('-','_'))])
+        core._write_member(bootstrap,'seal.json',base.canonical_bytes(dict(schema='m03-qr-native-parent-seal/1',
+            argv=command,dispatcher_lock=lock,occupancy=occupancy,startup_receipt_sha256=base.digest(startup),
+            source_sha256=sha256(Path(__file__).read_bytes()).hexdigest(),native_image_sha256=IMAGE_SHA,
+            parent_redirector_sha256=PARENT_SHA,host_admission='not_established')))
+        started=time.perf_counter()
+        completed=subprocess.run(command,cwd=PRODUCT,check=False,timeout=1750)
+        core._write_member(bootstrap,'drain.json',base.canonical_bytes(dict(schema='m03-qr-native-parent-drain/1',
+            bootstrap_exit=completed.returncode,bootstrap_wall_s=time.perf_counter()-started,
+            bootstrap_not_scientific_child=True,host_admission='not_established')))
+        return completed.returncode
+    require(sys.version_info[:3]==(3,12,10) and image_identity()['sha256']==IMAGE_SHA)
     # The shared harness owns process containment and the lock. This script
     # records it, never acquires/deletes/adopts a separate lock or fresh cache.
     control_bytes=read(retained/'qualified-controls.json')
@@ -138,6 +201,7 @@ def main():
         source_sha256=execution.source_identity(),original_result_sha256=sha256(expected_bytes).hexdigest(),
         plan_sha256=sha256(plan_bytes).hexdigest(),controls_sha256=sha256(control_bytes).hexdigest(),
         dispatcher_lock=lock,occupancy=occupancy,parent_pid=os.getppid(),pid=os.getpid(),
+        startup_receipt_sha256=base.digest(startup),native_parent_image=image_identity(),
         epoch='augmented_direct_qr_v3',outer='reproduction_of_already_opened_authored_diagnostic',
         new_tuning='not_permitted',field8201='not_verified',host_admission='not_established')))
     core._write_member(worker,'plan.json',plan_bytes)

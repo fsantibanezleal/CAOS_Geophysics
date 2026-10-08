@@ -45,6 +45,29 @@ bytes, required 97 fits, earlier predictive failures and already-opened outer
 status remain unchanged. Successful launch proves neither original-field
 eligibility, scientific predictive validity, Linux hosting nor activation.
 
+## Closed reproduction bootstrap
+
+The dispatcher continues to execute ordinary CP313. Its existing refusal of a
+Store virtualenv as a node executable is preserved. The reproduction driver
+may invoke only the registered redirector as an internal native-parent
+bootstrap in the same inherited dispatcher Job. The scientific child is still
+the original explicit native image, suspended and assigned to its own unchanged
+single-process Job before resume. There is no breakaway or separate dispatcher.
+
+Before bootstrap, the driver validates the actual value-free startup receipt,
+expected refusal, complete drain, native and redirector identities and frozen
+scientific source pins. Before science, the native parent measures its own
+image and exact Python version. The bootstrap seal binds the fixed argv,
+receipt digest, actual shared-lock ancestry and wrapper source digest. Its
+terminal exit and wall time remain separate from both native fit and cold
+verification lifetimes. A 1750-second bootstrap deadline sits inside the
+unchanged 1800-second dispatcher ceiling; original native caps are unchanged.
+
+Reproduction requires all 97 original identities, exact complete Result byte
+equality and cold selected-model verification. It is explicitly reproduction
+of an already-opened authored diagnostic, never a new untouched outer test or
+an owner job created by rewriting that diagnostic's run ID.
+
 ## Espanol
 
 El contexto padre de un entorno virtual no es la identidad del ejecutable
