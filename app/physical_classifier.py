@@ -2,8 +2,8 @@
 
 The caller owns the consistent transaction and exclusion. This module grants
 no native lease, runtime admission, repair, scientific solve or file adoption.
-Every disconnected family is audited before any dispositions are returned.
-Unsupported deletion extensions remain preserved and closed, not omitted.
+Every disconnected family and deleted partition is audited before dispositions.
+Only source-bound current0005 deletion extensions are positively dispatched.
 """
 
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ from types import MappingProxyType, SimpleNamespace
 from app.physical_accounting import account_private_charge
 from app.physical_contract import (
     CORRECTION, TRANSFORM, M, byte_sha, canonical, custody_file, custody_header,
-    digest, fields, integer, parse_record, require, sha, validate_custody,
+    decode_source, digest, fields, integer, parse_record, require, sha, validate_custody,
 )
 from app.errors import ApiError
 from app.physical_debt import ERRORS
@@ -95,11 +95,13 @@ def _custody_key(header, slot):
     if slot['location'] == 'deleting_raw':
         return f".deleting/{header['owner_id']}--{header['project_id']}/{slot['leaf']}"
     require(slot['location'] == 'deleting_derived', 'physical_classifier_custody_location')
-    return f".deleting-derived/{header['owner_id']}--{header['project_id']}/{slot['leaf']}"
+    # The one original project DELETE moves this directory under .deleting.
+    # A similarly named alternate namespace is not custody/adoption authority.
+    return f".deleting/{header['owner_id']}--{header['project_id']}--derived/{slot['leaf']}"
 
 
 class _Audit:
-    def __init__(self, connection, files, rows, manifests, installations, metadata):
+    def __init__(self, connection, files, rows, manifests, installations, metadata, source_policy):
         self.connection, self.files, self.rows = connection, files, rows
         self.manifests, self.installations = manifests, installations
         self.expected, self.absent, self.empty, self.operations = {}, set(), set(), {}
@@ -118,6 +120,87 @@ class _Audit:
         self.jobs = {row['id']: row for row in rows['processing_jobs']}
         self.batches = {row['batch_id']: row for row in rows['physical_custody_batches']}
         self.controls = {row['job_id']: row for row in rows['physical_job_controls']}
+        self.source_policy = source_policy
+        self.deleted = {}
+
+    def deleted_projects(self):
+        from app.physical_deleted_inventory import observe_receipt, validate_current_tombstone
+        users = {r['id'] for r in self.rows['user']}
+        retired_ids = {name: set() for name in ('raw_assets', 'datasets', 'jobs', 'sources')}
+        for extension in self.rows['physical_deletion_extensions']:
+            body = extension['tombstone_bytes']
+            require(type(body) is bytes and byte_sha(body) == extension['tombstone_sha256']
+                    and extension['schema_tag'] == 'geophysics.physical-deletion/v2',
+                    'physical_classifier_deletion_hash')
+            # Closed current dispatch uses the unchanged strict native lexer;
+            # the historical schema validator deliberately refuses this origin.
+            value = decode_source([body], max_bytes=16*M, depth=16, nodes=200000)
+            require(canonical(value) == body, 'physical_classifier_deletion_encoding')
+            receipt = validate_current_tombstone(value, expected_source_policy_sha256=self.source_policy,
+                                                 approved_installations=self.installations)
+            require((extension['receipt_id'], extension['owner_id'], extension['project_id']) ==
+                    tuple(receipt[k] for k in ('id', 'owner_id', 'project_id'))
+                    and observe_receipt(self.connection, receipt['id']) == value['legacy_receipt'],
+                    'physical_classifier_native_receipt_binding')
+            project = receipt['project_id']
+            require(project not in self.projects and project not in self.deleted and receipt['owner_id'] in users,
+                    'physical_classifier_deleted_project')
+            owned = ('source_records', 'raw_assets', 'observation_datasets', 'processing_jobs',
+                     'physical_dataset_families', 'physical_dataset_edges', 'physical_dataset_productions',
+                     'physical_job_controls', 'physical_publication_intents')
+            require(not any(r['project_id'] == project for table in owned for r in self.rows[table]),
+                    'physical_classifier_deleted_live_rows')
+            inventory = value['physical_inventory']
+            mappings = {name: {r[key]: r for r in inventory[name]} for name, key in (
+                ('raw_assets', 'asset_id'), ('datasets', 'dataset_id'), ('jobs', 'job_id'), ('custody', 'batch_id'))}
+            actual = {r['batch_id']: r for r in self.batches.values() if r['project_id'] == project}
+            require(set(actual) == set(mappings['custody']), 'physical_classifier_deleted_complete_custody')
+            live_ids = dict(raw_assets=set(self.raw), datasets=set(self.datasets), jobs=set(self.jobs),
+                            sources={r['id'] for r in self.rows['source_records']})
+            closed_ids = dict(raw_assets=set(mappings['raw_assets']), datasets=set(mappings['datasets']),
+                              jobs=set(mappings['jobs']), sources={r['source_id'] for r in mappings['raw_assets'].values()})
+            for name, ids in closed_ids.items():
+                require(not ids & (live_ids[name] | retired_ids[name]), 'physical_classifier_deleted_identity_overlap')
+                retired_ids[name].update(ids)
+            for identifier, record in actual.items():
+                require((record['owner_id'], record['origin_kind'], record['origin_id']) ==
+                        (receipt['owner_id'], mappings['custody'][identifier]['origin_kind'],
+                         mappings['custody'][identifier]['origin_id']), 'physical_classifier_deleted_custody_binding')
+            self.deleted[project] = dict(receipt=receipt, inventory=inventory, **mappings)
+            self.operations[receipt['id']] = 'retain_deleted_projection'
+
+    def retired_custody(self, batch, inventory, charge):
+        deleted = self.deleted[batch['project_id']]
+        saved = deleted['custody'][batch['batch_id']]
+        require(charge['initial_inventory_sha256'] == saved['initial_inventory_sha256']
+                and batch['state'] in ('cleanup_pending', 'removed'), 'physical_classifier_deleted_custody_inventory')
+        if batch['origin_kind'] == 'project_deletion':
+            require(batch['origin_id'] == batch['project_id'] and batch['deletion_receipt_id'] == deleted['receipt']['id'],
+                    'physical_classifier_deletion_receipt_custody')
+            # Every originally moved copy is retained in the complete initial
+            # inventory, including ordinals already durably acknowledged removed.
+            projection = []
+            for slot in inventory['initial_files']:
+                projection.append((slot['role'], slot['artifact_id'], slot['actual_bytes'], slot['actual_sha256']))
+            expected = ([('raw_delete', r['asset_id'], r['bytes'], r['sha256']) for r in deleted['raw_assets'].values()] +
+                [('dataset_copy', r['dataset_id'], r['bytes'], r['sha256']) for r in deleted['datasets'].values()] +
+                [('result_copy', r['job_id'], r['result_bytes'], r['result_sha256']) for r in deleted['jobs'].values()
+                 if r['state'] == 'succeeded'])
+            require(sorted(projection) == sorted(expected) and not deleted['inventory']['waveform_artifacts'],
+                    'physical_classifier_deletion_complete_files')
+        else:
+            raw = deleted['raw_assets'].get(batch['raw_asset_id'])
+            require(raw is not None and (raw['sha256'], raw['bytes']) == (batch['raw_sha256'], batch['raw_bytes']),
+                    'physical_classifier_deleted_custody_raw')
+            if batch['origin_kind'] == 'root_stage':
+                dataset = deleted['datasets'].get(batch['origin_id'])
+                require(dataset is not None and dataset['kind'] == 'root' and dataset['raw_asset_id'] == batch['raw_asset_id']
+                        and dataset['parser_version'] == batch['parser_version'], 'physical_classifier_deleted_root_stage')
+            elif batch['origin_kind'] == 'job_stage':
+                job = deleted['jobs'].get(batch['origin_id'])
+                require(job is not None and job['method_id'] == batch['method_id']
+                        and deleted['datasets'][job['dataset_id']]['raw_asset_id'] == batch['raw_asset_id'],
+                        'physical_classifier_deleted_job_stage')
 
     def declare(self, key, *, cap, bytes, sha256, required=True):
         integer(cap, 1, 1024*M)
@@ -167,14 +250,15 @@ class _Audit:
             custody_header(header)
             slots = sorted(by_batch[batch['batch_id']], key=lambda row: row['ordinal'])
             require(batch['state'] != 'quarantined', 'physical_classifier_quarantined')
-            if batch['origin_kind'] != 'project_deletion':
+            retired = batch['project_id'] in self.deleted
+            if not retired and batch['origin_kind'] != 'project_deletion':
                 self.ownership(batch)
                 raw = self.raw.get(batch['raw_asset_id'])
                 require(raw is not None and (raw['owner_id'], raw['project_id'], raw['sha256'], raw['byte_count']) ==
                         tuple(batch[k] for k in ('owner_id', 'project_id', 'raw_sha256', 'raw_bytes')),
                         'physical_classifier_custody_raw')
-            else:
-                require(False, 'physical_classifier_deletion_extension_pending')
+            elif not retired:
+                require(False, 'physical_classifier_deletion_extension_required')
             if batch['state'] in ('reserved', 'active'):
                 require(batch['inventory_bytes'] is None and batch['inventory_sha256'] is None
                         and batch['sealed_us'] is None and batch['removed_us'] is None
@@ -196,6 +280,8 @@ class _Audit:
                 charge = validate_custody(inventory)
                 require(all(inventory[k] == v for k, v in header.items())
                         and charge['retained_bytes'] == batch['charged_bytes'], 'physical_classifier_custody_charge')
+                if retired:
+                    self.retired_custody(batch, inventory, charge)
                 entries, removed = [], []
                 for slot in slots:
                     require(slot['state'] in ('present', 'removed'), 'physical_classifier_measured_slot')
@@ -209,6 +295,11 @@ class _Audit:
                         'physical_classifier_custody_removal')
                 for slot in entries:
                     key = _custody_key(header, slot)
+                    if slot['location'] in ('deleting_raw', 'deleting_derived'):
+                        # Exact historically declared parents may be empty
+                        # after acknowledged cleanup; no wildcard trash adoption.
+                        parts = key.split('/')
+                        self.empty.update('/'.join(parts[:n]) for n in range(1, len(parts)))
                     if slot['ordinal'] in removed:
                         require(key not in self.expected, 'physical_classifier_removed_overlap')
                         self.absent.add(key)
@@ -448,7 +539,8 @@ class _Audit:
         return records
 
 
-def classify_snapshot(connection, files, *, approved_manifests, approved_installations, native_metadata):
+def classify_snapshot(connection, files, *, approved_manifests, approved_installations, native_metadata,
+                      expected_source_policy_sha256=None):
     """One disposition set only after complete SQL, body and namespace barriers.
 
     Pure/portable callers get runtime=False; runtime assembly must additionally
@@ -457,8 +549,9 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
     """
     try:
         rows, descriptors = _snapshot(connection)
-        audit = _Audit(connection, files, rows, approved_manifests, approved_installations, native_metadata)
-        require(not rows['physical_deletion_extensions'], 'physical_classifier_deletion_extension_pending')
+        audit = _Audit(connection, files, rows, approved_manifests, approved_installations, native_metadata,
+                       expected_source_policy_sha256)
+        audit.deleted_projects()
         audit.originals()
         audit.custody()
         audit.forest()

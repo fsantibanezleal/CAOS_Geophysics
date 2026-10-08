@@ -2,7 +2,7 @@
 
 The unchanged historical physical_recovery helper remains root-reservation-only.
 The new physical_classifier.classify_snapshot audits the exact measured0005
-successor (after0004 waveform), all native SQL types/representations, FK/integrity,
+successor (after0004 waveform), preserved native SQL representations, FK/integrity,
 disconnected families/ordinals, complete saved correction/terminal-transform
 producers, every earlier correction and exact original root. No numerical solve
 or mutation belongs in this classifier. Whole-file census precedes dispositions;
@@ -27,9 +27,24 @@ The failed scientific-input-domain comparison is preserved; the correction
 uses the existing producer's scientific dataset digest, not the envelope's byte
 digest. No scientific contract/tolerance/source is altered.
 
+Current0005 deletion extensions now use a separate positive dispatch through the
+unchanged strict native lexer. The caller supplies
+expected_source_policy_sha256 independently; embedded policy is never authority.
+The saved native original-receipt JSON TEXT must still equal live SQL byte for
+byte. All retired ownership/IDs/custody partitions and their initial inventories
+must match; live/resurrected rows, missing/extra debt, unknown/changed files and
+reappeared removed copies refuse without partial dispositions. Literal root/job
+stage debt remains charged after logical deletion. The one original DELETE's
+actual .deleting/OWNER--PROJECT--derived path is used, not a second trash path.
+Already acknowledged removal permits only exact recorded empty parents. The
+historical tombstone/custody validators remain unchanged; no old v1 upgrade or
+lost-science numerical revalidation is inferred from a compact projection.
+
 Remaining current-stage integration is active implementation, not an added
-release prerequisite: compact0005 deletion-extension/M08 extra-member custody
+release prerequisite: M08 extra-member deletion custody
 dispatch, original owned DELETE physical rows/debt, runtime startup/recovery
 assembly, actual bounded science/resources/cancel and physical HTTP/export/client
-gates. Current unsupported deletion extensions stay closed/preserved pending
-that implementation. Default migration/worker/config/live pointer are untouched.
+gates. Unsupported deletion origins/roles remain closed/preserved. Default
+migration/worker/config/live pointer are untouched. Native deleted-classifier
+qualification exercises fresh snapshot and verified cleanup, not another HTTP
+DELETE or automatic installation in every live writer.
