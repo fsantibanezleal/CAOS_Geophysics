@@ -60,6 +60,11 @@ describe("frontend route and shell foundation", () => {
     expect(metadata).toContain("license: {");
     expect(metadata).toContain('en: "Apache-2.0 code and CC-BY-4.0 content"');
     expect(metadata).toContain('es: "Código Apache-2.0 y contenido CC-BY-4.0"');
+    const waveformMount = read("./waveform-browser-entry.tsx");
+    expect(waveformMount).toContain('visibility: "public"');
+    expect(waveformMount).toContain("contain: true");
+    expect(waveformMount).toContain('en: "Apache-2.0 code and CC-BY-4.0 content"');
+    expect(waveformMount).toContain('es: "Código Apache-2.0 y contenido CC-BY-4.0"');
     expect(read("../../vite.config.ts")).toContain("dedupe: ['react', 'react-dom', 'react-router']");
     // This is an ABI/consumer guard, not a measured mobile instrument-area gate.
   });

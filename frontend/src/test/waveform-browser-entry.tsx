@@ -15,6 +15,12 @@ const config: ShellConfig = {
   routes: [{path:"/",en:"Waveform QA",es:"QA de ondas"}],
   links: { github:"https://github.com/fsantibanezleal/CAOS_Geophysics" },
   version:"0.04.001", architecture, fixedRoutes:["/"],
+  visibility: "public",
+  contain: true,
+  license: {
+    en: "Apache-2.0 code and CC-BY-4.0 content",
+    es: "Código Apache-2.0 y contenido CC-BY-4.0",
+  },
   footer: {disclaimer:{en:"Isolated loopback integration test; not a public activation.",es:"Prueba aislada local; no es activación pública."}},
 };
 function IntegrationMount(){
