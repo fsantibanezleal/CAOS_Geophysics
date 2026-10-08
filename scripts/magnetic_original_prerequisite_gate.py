@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -42,7 +43,7 @@ def inventory(scientific_root, public_root, line_root):
 
 
 def run_gate(*, scientific_root, public_root, line_root, python, output,
-             failed_receipt, failed_sha, execute=subprocess.run):
+             failed_receipt, failed_sha, public_qualification=None, qualification_sha=None, execute=subprocess.run):
     # Explicit external output. No files/engines or subprocess before refusal.
     sys.path.insert(0, str(scientific_root / "data-pipeline"))
     from magnetic_local_paths import external_path
@@ -58,7 +59,26 @@ def run_gate(*, scientific_root, public_root, line_root, python, output,
     snapshots = inventory(scientific_root, public_root, line_root)
     if all(snapshots["public/" + name + ".py"] == failed["sources"][name] for name in PUBLIC):
         return {"status": "blocked_unchanged_public_failure", "launched": [], "full_matrix_unlocked": False}
-    fingerprint = sha(canonical(dict(sources=snapshots, interpreter=str(python.resolve()), predecessor_sha256=failed_sha)))
+    if public_qualification is None or qualification_sha is None:
+        return {"status": "blocked_unqualified_nonzero_corrector", "launched": [], "full_matrix_unlocked": False}
+    qualified_raw = external_path(public_qualification).read_bytes()
+    if sha(qualified_raw) != qualification_sha:
+        raise ValueError("Changed public qualification SHA differs")
+    qualified = json.loads(qualified_raw)
+    expected = dict(schema="magnetic-public-original-nonzero-qualification-1", case="S2-A", quantity="secondary_enu_nT",
+        active_cells=528, source_components=864, fit_components=432, epsilon_stages=8,
+        caps=dict(wall_s=120, accepted=200, cg_per_direction=200, line_search=20, admitted_bytes=805306368),
+        sources={name: snapshots["public/"+name+".py"] for name in PUBLIC}, status="passed")
+    if set(qualified) != set(expected) | {"fit_wall_s", "independent_precision"} or any(qualified[k] != v for k,v in expected.items()):
+        raise ValueError("Applicable original nonzero complete-firstfit qualification required")
+    limits = dict(model_inf_q=1e-6, objective_relative=1e-8, prediction_rms_nT=1e-6, normalized_kkt_inf=1e-7)
+    precision = qualified["independent_precision"]
+    if (type(qualified["fit_wall_s"]) not in (int,float) or not 0 < qualified["fit_wall_s"] <= 120
+            or type(precision) is not dict or set(precision) != set(limits)
+            or any(type(precision[k]) not in (int,float) or not math.isfinite(precision[k]) or not 0 <= precision[k] <= limit for k,limit in limits.items())):
+        raise ValueError("Original independent precision or same-clock fit cap failed")
+    fingerprint = sha(canonical(dict(sources=snapshots, interpreter=str(python.resolve()),
+        predecessor_sha256=failed_sha, qualification_sha256=qualification_sha)))
     cache = output / fingerprint
     receipt_path = cache / "receipt.json"
     if cache.exists():
@@ -123,6 +143,8 @@ def main():
     for name in ("scientific-root", "public-root", "line-root", "python", "output", "failed-receipt"):
         parser.add_argument("--" + name, required=True, type=Path)
     parser.add_argument("--failed-sha", required=True)
+    parser.add_argument("--public-qualification", type=Path)
+    parser.add_argument("--qualification-sha")
     args = parser.parse_args()
     result = run_gate(**vars(args))
     print(canonical(result).decode())

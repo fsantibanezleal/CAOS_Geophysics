@@ -19,8 +19,40 @@ def setup(tmp_path, monkeypatch, changed=False):
     predecessor.write_bytes(raw)
     output = tmp_path / "cache"
     output.mkdir()
+    qualification = gate.canonical(dict(schema="magnetic-public-original-nonzero-qualification-1",
+        case="S2-A", quantity="secondary_enu_nT", active_cells=528, source_components=864, fit_components=432, epsilon_stages=8,
+        caps=dict(wall_s=120, accepted=200, cg_per_direction=200, line_search=20, admitted_bytes=805306368),
+        sources={name:"b"*64 for name in gate.PUBLIC}, status="passed", fit_wall_s=100.,
+        independent_precision=dict(model_inf_q=1e-7, objective_relative=1e-9,prediction_rms_nT=1e-7,normalized_kkt_inf=1e-8)))
+    qualified = tmp_path / "test-only-qualification.json"
+    qualified.write_bytes(qualification)
     return dict(scientific_root=Path(__file__).parents[2], public_root=tmp_path, line_root=tmp_path,
-        python=Path("python.exe").resolve(), output=output, failed_receipt=predecessor, failed_sha=gate.sha(raw))
+        python=Path("python.exe").resolve(), output=output, failed_receipt=predecessor, failed_sha=gate.sha(raw),
+        public_qualification=qualified, qualification_sha=gate.sha(qualification))
+
+
+def test_zero_only_changed_source_cannot_unlock_nonzero_jobs(tmp_path, monkeypatch):
+    args = setup(tmp_path, monkeypatch, changed=True)
+    args["public_qualification"] = None
+    result = gate.run_gate(**args, execute=lambda *a, **kw: pytest.fail("unqualified nonzero run"))
+    assert result["status"] == "blocked_unqualified_nonzero_corrector" and result["launched"] == []
+
+
+@pytest.mark.parametrize("attack", ["null", "count", "stages", "cap", "precision", "hash"])
+def test_unrelated_or_weakened_qualification_refuses(tmp_path, monkeypatch, attack):
+    import json
+    args = setup(tmp_path, monkeypatch, changed=True)
+    q = json.loads(args["public_qualification"].read_bytes())
+    if attack == "null": q["case"] = "S2-F"
+    if attack == "count": q["active_cells"] = 7
+    if attack == "stages": q["epsilon_stages"] = 1
+    if attack == "cap": q["caps"]["wall_s"] = 121
+    if attack == "precision": q["independent_precision"]["model_inf_q"] = 1e-5
+    raw = gate.canonical(q)
+    args["public_qualification"].write_bytes(raw)
+    if attack != "hash": args["qualification_sha"] = gate.sha(raw)
+    else: args["qualification_sha"] = "0"*64
+    with pytest.raises(ValueError): gate.run_gate(**args, execute=lambda *a, **kw: pytest.fail("unqualified launch"))
 
 
 def test_unchanged_public_failure_stops_before_launch(tmp_path, monkeypatch):
