@@ -79,6 +79,32 @@ def matrix_observation_gate(results, requested):
         full_method_accepted=False, field_source_verified=False, native_security_admitted=False)
 
 
+def frozen_result_observation(result, doc, evaluator, baseline, *, matched_a=None):
+    if baseline is None:
+        # This refusal must reach the COMMON dependency gate, not continue into
+        # a fresh downstream scientific birth merely because a ZIP exists.
+        return dict(result_status=result['status'], scientific_verdict='failed_no_complete_result',
+            reason='Actual contained zero-model baseline unavailable')
+    regime = evaluator['regime']
+    outer = result['metrics']['outer']
+    improvement = None if baseline['rms_nT'] == 0. else 1.-outer['rms_nT']/baseline['rms_nT']
+    passed = outer['normalized_rms'] <= 2. and improvement is not None and improvement >= .2
+    record = dict(result_status=result['status'], selected=result['selected'], outer=outer,
+        zero_baseline=baseline, raw_rms_improvement_fraction=improvement,
+        scientific_verdict='synthetic_predictive_pass' if passed and regime in 'ABC' else
+            'null_numerical_control' if regime == 'F' else 'synthetic_predictive_fail' if regime in 'ABC' else
+            'adverse_discrimination_requires_matched_A')
+    observed = observe_frozen_model(result, doc, evaluator, matched_a=matched_a)
+    record.update(observed)
+    if regime in 'DE':
+        record['scientific_verdict'] = observed['adverse_discrimination']['verdict']
+    if regime == 'F':
+        null = observed['null_control']
+        record['scientific_verdict'] = ('null_numerical_control' if all(null.values()) else
+            'failed_null_control' if null['linear_quantity'] else 'unresolved_nonlinear_null_baseline')
+    return record
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-root', required=True)
@@ -167,30 +193,9 @@ def main():
             result = read_bundle(output)['result']
             # Observe zero-model baseline ONLY AFTER already frozen one-time fit.
             baseline_path = scratch/'zero-baseline.json'
-            if not baseline_path.exists():
-                record.update(result_status=result['status'], reason='Actual contained zero-model baseline unavailable')
-                exclusive(data/'scientific-verdict.json', canonical(record))
-                results.append(record)
-                print('END '+label+' '+record['reason'], flush=True)
-                continue
-            baseline = json.loads(baseline_path.read_bytes())
-            outer = result['metrics']['outer']
-            improvement = None if baseline['rms_nT'] == 0. else 1.-outer['rms_nT']/baseline['rms_nT']
-            passed = outer['normalized_rms'] <= 2. and improvement is not None and improvement >= .2
-            record.update(result_status=result['status'], selected=result['selected'], outer=outer,
-                zero_baseline=baseline, raw_rms_improvement_fraction=improvement,
-                scientific_verdict='synthetic_predictive_pass' if passed and regime in 'ABC' else
-                    'null_numerical_control' if regime == 'F' else 'synthetic_predictive_fail' if regime in 'ABC' else
-                    'adverse_discrimination_requires_matched_A')
+            baseline = json.loads(baseline_path.read_bytes()) if baseline_path.exists() else None
             matched_a = next((item for item in results if item['case'] == 'A:'+quantity), None)
-            observed = observe_frozen_model(result, doc, evaluator, matched_a=matched_a)
-            record.update(observed)
-            if regime in 'DE':
-                record['scientific_verdict'] = observed['adverse_discrimination']['verdict']
-            if regime == 'F':
-                null = observed['null_control']
-                record['scientific_verdict'] = ('null_numerical_control' if all(null.values()) else
-                    'failed_null_control' if null['linear_quantity'] else 'unresolved_nonlinear_null_baseline')
+            record.update(frozen_result_observation(result, doc, evaluator, baseline, matched_a=matched_a))
         elif (output/'manifest.json').exists():
             record.update(scientific_verdict='failed_native_lifetime',
                           reason='Complete generation exists but actual native lifetime refused it')

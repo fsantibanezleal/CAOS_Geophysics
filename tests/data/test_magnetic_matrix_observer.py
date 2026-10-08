@@ -97,3 +97,21 @@ def test_complete_original_linear_coverage_is_separate_from_admission():
 def test_matrix_identity_preflight_before_numerical_birth(requested):
     with pytest.raises(ValueError):
         observer.matrix_observation_gate([dict(case=label, scientific_verdict='not_run') for label in requested], requested)
+
+
+def test_missing_actual_baseline_reaches_failfirst_without_model_observation(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError('A missing contained baseline cannot grant observation')
+    monkeypatch.setattr(observer, 'observe_frozen_model', forbidden)
+    result, doc, evaluator = analytical_record('A')
+    record = observer.frozen_result_observation(result, doc, evaluator, None)
+    assert observer.original_prerequisite_failed(record)
+    assert 'selected' not in record and 'outer' not in record
+
+
+def test_common_missing_baseline_path_has_no_continue_bypass():
+    import ast
+    # Source-layout guard supplements protocol controls; not native acceptance.
+    tree = ast.parse(Path(observer.__file__).read_text(encoding='utf-8'))
+    main = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'main')
+    assert not any(isinstance(node, ast.Continue) for node in ast.walk(main))
