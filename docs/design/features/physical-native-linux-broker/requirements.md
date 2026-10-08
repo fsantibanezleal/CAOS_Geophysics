@@ -1,6 +1,9 @@
 # App-specific native Linux launch broker requirements
 
-Status: SOURCE DESIGN FOR FULL REVIEW, not implemented or admitted. This is a
+Status: production broker not implemented or admitted. The independently
+reviewed literal client-input unit has source and measured controls in
+[the transport evidence](../../../validation/native-broker-input-20261008.md).
+It does not grant peer identity, native launch or production acceptance. This is a
 separate production seam for the [native CPU controller](../physical-native-cpu-controller/linux-systemd255.md).
 The existing controller is qualification-only; its resource classes and private
 protocol do not activate a method. No API/worker/unit/environment changes are in

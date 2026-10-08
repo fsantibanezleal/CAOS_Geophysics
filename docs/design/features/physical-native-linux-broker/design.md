@@ -250,3 +250,40 @@ controls before production admission. No dependency install/global toolchain,
 unbounded provider, Python accounting or facade substituted for actual operations.
 All named adversarials, raw resources and failures are retained at their executed
 source pin. This SDD and controller's local tests are not Linux broker evidence.
+
+## 8. Independently reviewed literal client-input unit
+
+The request codec and sealed input preparation can be tested independently of
+the unresolved production topology. This unit implements section4 exactly and
+does not open a socket, authenticate a peer, start a unit, parse scientific
+content, decide CPU accounting or release an attempt. Full production review
+and the B01..B14 gates remain required; no pure transport result accepts B04 or
+B05 end to end. LCX1 and existing controller/native operation sources remain
+unchanged. Only the named new client/test paths are used.
+
+The codec accepts only exact raw16-byte nonnil identities, raw32-byte hashes,
+and exact non-boolean integer lengths within the original5MiB/64KiB/16KiB
+ceilings. It constructs352 bytes only after validating all fields. Its decoder
+requires exact bytes, header, sequence, reserved zeros, fields and ceilings.
+Unknown fields and mutable byte buffers are rejected. Input hashes bind literal
+bytes, not JSON normalization. These transport ceilings do not admit the larger
+physical correction/transform request or imply a new method profile.
+
+On supported Linux, each input is written to one fresh CLOEXEC memfd in bounded
+64KiB writes, then sealed WRITE/GROW/SHRINK/SEAL. A read-only descriptor is opened
+through the fixed self-proc FD namespace while the original descriptor remains
+held. Device/inode/size/seals/read-only/CLOEXEC identity is checked before
+publication; the writable descriptor is closed. Partial preparation and context
+exit close only this operation's owned descriptors. There is no pathname-input,
+ordinary-file fallback, mutable shared-memory fallback or debug-name identity
+claim. Unsupported platforms fail before any descriptor allocation. Original
+input bodies are neither transformed nor written to persistent storage.
+
+Named pure controls in tests/worker_accounting/native/test_linux_broker.py are
+test_exact_submit_offsets_and_roundtrip, test_ids_are_exact_non_nil_bytes,
+test_hashes_are_literal_32_bytes, test_size_admission_before_encoding,
+test_header_reserved_and_sequence_corruption, test_only_exact_bounded_packet_is_decoded,
+test_input_hashes_preserve_original_json_dialect_and_empty_is_rejected and
+test_exact_caps_roundtrip. Actual Linux sealing, mutation refusal, descriptor
+closure and partial-failure controls are measured by broker_memfd_drill.py;
+Windows pure tests do not assert those kernel operations.

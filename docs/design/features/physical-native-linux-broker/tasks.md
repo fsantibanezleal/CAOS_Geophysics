@@ -1,11 +1,21 @@
 # Broker tasks, exact gate ownership and review order
 
-Current: design packet only. No broker native build/launch/socket or app
+Current: production design packet plus independently implemented literal client
+input codec and sealed-memfd preparation. Its177 local transport/qualification-
+context/scope tests and actual Linux input-sealing controls are recorded in
+[transport evidence](../../../validation/native-broker-input-20261008.md).
+No broker native build/launch/socket or app
 integration executed. All B gates below NOT_RUN; native15/H01..H05 unchanged.
 Project-only account/unit setup is normal scoped deployment work. MAIN owns
 deploy/API/app/storage; native source owner owns the paths in design section7.
 
 ## Milestones
+
+- [x] C1 Implement and independently check literal352-byte client input,
+  corruption/cap/type/native-JSON-byte controls and owned descriptor preparation.
+  Actual Linux seals/read-only/9 mutation refusals/normal/partial/caller failure
+  closure pass. This is a section4 subunit, not B04/B05 end-to-end acceptance or
+  production D3/I1..I4 completion. All production identity/profile seams remain.
 
 - [x] D1 Read existing worker/MT contracts, native source, applicable ADRs and
   primary Linux6.8/systemd255 Unix socket/peer-PIDFD/nondumpability semantics.
