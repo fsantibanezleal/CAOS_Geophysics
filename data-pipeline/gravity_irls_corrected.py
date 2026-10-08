@@ -343,7 +343,7 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
                     # Lossless separately bounded books, not a deeper logical
                     # tree or a relaxed original eight-container transport cap.
                     import gravity_irls_pool as pool
-                    native_evidence.append(pool.encode(_freeze(inner)))
+                    native_evidence.append(pool.encode_compact(_freeze(inner)))
                     inner = {k:inner[k] for k in ('status', 'reason', 'q', 'phi_d', 'phi_m',
                         'phi_engine', 'kkt_normalized', 'iterations', 'trace', 'failed_trial')}
                 budget.steps += inner['iterations']
@@ -409,7 +409,7 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
         result.update(schema='gravity-irls-original-partition-1',
             runtime_epoch=prospective.RUNTIME_EPOCH, policy=prospective.POLICY,
             source_inventory=original_owner.inventory,
-            initialization_evidence=pool.encode(_freeze(original_owner.initial_evidence)),
+            initialization_evidence=pool.encode_compact(_freeze(original_owner.initial_evidence)),
             native_evidence=tuple(native_evidence),
             allocation_plan=original_owner.allocation,
             wall_seconds=float(monotonic()-original_owner.started))
