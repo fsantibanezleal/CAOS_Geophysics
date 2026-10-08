@@ -152,7 +152,7 @@ def _index_bundle(db, entry, number):
         _check(read(8) == b'M03AUX1\n', 'invalid_contract')
         count = struct.unpack('<I', read(4))[0]
         _check(1 <= count <= 1000000 and 12+44*count <= entry['bytes'], 'resource_refused')
-        prior_count = db.execute('SELECT COUNT(*) FROM members').fetchone()[0]
+        prior_count = db.execute('SELECT COUNT(*) FROM members').fetchone()[0] if db is not None else 0
         _check(prior_count+count <= 1000000, 'resource_refused')
         for _ in range(count):
             length = struct.unpack('<H', read(2))[0]
@@ -168,18 +168,19 @@ def _index_bundle(db, entry, number):
                 payload = read(min(remaining, 1048576))
                 remaining -= len(payload); payload_digest.update(payload)
             _check(payload_digest.hexdigest() == expected)
-            try:
-                db.execute('INSERT INTO members VALUES (?,?,?,?,?,?,?,0)',
-                    (name, name.casefold(), number, offset, size, expected, _stamp(before)[2]))
-            except sqlite3.IntegrityError:
-                raise core.SurveyError('custody_mismatch', 'ingest') from None
+            if db is not None:
+                try:
+                    db.execute('INSERT INTO members VALUES (?,?,?,?,?,?,?,0)',
+                        (name, name.casefold(), number, offset, size, expected, _stamp(before)[2]))
+                except sqlite3.IntegrityError:
+                    raise core.SurveyError('custody_mismatch', 'ingest') from None
             previous = name
         _check(total == entry['bytes'] and not stream.read(1) and digest.hexdigest() == entry['sha256'])
         _check(_stamp(before) == _stamp(os.fstat(stream.fileno())) and _stamp(path_before) == _stamp(path.stat()))
-    return _stamp(path_before)
+    return _stamp(path_before) if db is not None else (_stamp(path_before),count)
 
 
-def _prepare(plan, workspace):
+def _prepare(plan, workspace, *, capacity_override=None):
     """Internal finite data operation; production entry below always requires Job."""
     core._closed(plan, 'schema original metadata request bundles', 'ingest')
     _check(plan['schema'] == 'm03-owner-preparation-plan/1', 'invalid_contract')
@@ -196,7 +197,8 @@ def _prepare(plan, workspace):
     for entry in plan['bundles']:
         _entry(entry, MAX_AUX); auxiliary_bytes += entry['bytes']
     rows = _geometry_preflight(plan['original'])
-    capacity = preparation_capacity(rows, auxiliary_bytes)
+    capacity = preparation_capacity(rows, auxiliary_bytes) if capacity_override is None else capacity_override
+    _check(capacity['original_rows']==rows and capacity['auxiliary_bytes']==auxiliary_bytes)
     workspace = io.external_path(workspace)
     core._write_member(workspace, 'preparation-capacity.json', base.canonical_bytes(capacity))
     index = workspace/'bundle-index.sqlite3'
@@ -207,10 +209,12 @@ def _prepare(plan, workspace):
         db.execute('PRAGMA cache_size=-8192')
         db.execute('PRAGMA temp_store=FILE')
         db.execute("PRAGMA temp_store_directory='"+str(workspace).replace("'", "''")+"'")
-        db.execute('PRAGMA max_page_count=524288')
+        db.execute('PRAGMA max_page_count='+str(capacity['index_and_journal_bytes']//8192))
         db.execute('CREATE TABLE members(name TEXT PRIMARY KEY,folded TEXT UNIQUE,bundle INTEGER,offset INTEGER,size INTEGER,sha TEXT,bundle_size INTEGER,recognized INTEGER)')
         stamps = [_index_bundle(db, entry, number) for number, entry in enumerate(plan['bundles'])]
         db.commit()  # Complete envelope checks before the FIRST extracted file.
+        if capacity_override is not None:
+            _check(db.execute('SELECT COUNT(*) FROM members').fetchone()[0]==capacity['physical_members'])
         root = workspace/'auxiliary'
         root.mkdir()  # No adoption/overwrite, even after a retained failure.
         for number, entry in enumerate(plan['bundles']):

@@ -56,6 +56,39 @@ states reserved/running/drained/publication_uncertain/failed/published;
 positive reservation/nonnegative retained. Dataset ownership is composite too.
 Every retained custody table refuses downgrade before any change.
 
+## Two-stage finite preparation (prospective equations)
+
+Initial inspection workspace reserve is16MiB (plan, bounded2MiB documents/
+receipts, controller logs and roots); peak memory proof512MiB. It streams the
+whole original CSV and complete hashed bundle envelopes, with1MiB payload
+buffers and4096-byte CSV records, no member list/index/extraction or numerical
+measurement decoder. Native actual counts are independently checked against
+registered byte envelopes and fixed limits before advancing.
+
+For actual rows N and independently verified physical member count K, index
+ceiling I=4096*(16+ceil(2048*K/4096)), I<=2GiB. This reserves2048B per bounded
+64-byte-name record for data/two unique indexes/recognition and page slack;
+index+journal=2I. Geometry allowance=65536*N+64MiB. Preparation phase scratch
+bound=registered auxiliary bytes+2I+geometry+64MiB. Full dataset reservation is
+16MiB+that bound+2MiB descriptor allowance, committed before phase2 namespace.
+No4GiB empty index charge. All unknown/index/partial/native copies remain
+counted. Actual counters/inventory must fit these bounds too. Excess refuses
+before allocation without changing original rows/scientific resolution.
+
+The fixed initial plan `m03-owner-inspection-plan/1` uses the same five closed
+keys schema/original/metadata/request/bundles as preparation; receipt
+`m03-owner-inspection-receipt/1` contains schema, original, rows,
+metadata_sha256, request_sha256, bundle_sha256, bundle_members,
+auxiliary_bytes, next_phase, value_access. New phase2 plan
+`m03-owner-preparation-plan/2` adds exactly inspection (path/bytes/sha256).
+It verifies the inspection and rebuilds original count and envelope counts
+before index/extraction. Legacy preparation-plan/1 remains explicit and is
+not an alias for the staged epoch. Neither phase fits/scores/opens outer values.
+Actual controller limits may only tighten the existing hard ceilings and are
+included in terminal evidence. Parent's genuine fixed-installation assembly
+must supply/verify the expected installation binding; an ERT/TT configuration
+cannot grant the M03 method. No new posted host/configuration object is added.
+
 Gates: actual allocated DDL direct cross-owner/project/raw/member negatives;
 the original copied-chain M01 cross-owner assertion unchanged; real-cookie
 intake and joined source routes; default quota/staged deficit; original native
@@ -70,3 +103,19 @@ Los originales y toda deuda anterior siguen contados. Las claves compuestas
 impiden mezclar propietario/proyecto/original o intento/miembro; no se debilita
 la prueba negativa original ni el rechazo de downgrade con evidencia retenida.
 Publicar geometria no concede elegibilidad cientifica, campo ni despliegue.
+# Native two-phase component qualification (2026-10-08)
+
+`staged1.xml`: 3 tests, no failures/errors/skips, 110.670 seconds. The real
+Windows Job inspection retained all 363 original rows and inspected all 69
+physical bundle members without measurement decoding or a SQLite index:
+CPU 0.203125 s, peak RSS 46,899,200 B, scratch 6,792 B, one child, zero active
+after drain. The independently rebound preparation used an actual prospective
+158,504,595 B scratch limit (not the 32 GiB global ceiling): CPU 1.0625 s,
+peak RSS 46,665,728 B, scratch 188,955 B, one child, zero active after drain.
+Both phases enforced 512 MiB committed-memory limits. The prospective retained
+dataset reservation is less than 1 GiB for this exact original acquisition.
+
+This qualifies the native inspection/preparation components, not the SQL owner
+quota transaction, publication/recovery, authenticated dataset endpoint, full
+scientific fit, provider original, host admission or integration. The quota
+one-byte-deficit gate still requires the actual owner service transaction.

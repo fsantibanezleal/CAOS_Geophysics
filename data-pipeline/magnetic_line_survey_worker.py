@@ -26,6 +26,12 @@ def main(argv=None):
         phase = 'plan'
         plan_path = io.external_path(args.plan, directory=False)
         plan = base.strict_json(base.read_bounded(plan_path, 2097152))
+        if type(plan) is dict and plan.get('schema')=='m03-owner-inspection-plan/1':
+            from magnetic_line_survey_inspection import run_inspection_plan
+            return run_inspection_plan(plan,plan_path.parent,args.job_handle)
+        if type(plan) is dict and plan.get('schema')=='m03-owner-preparation-plan/2':
+            from magnetic_line_survey_inspection import run_staged_preparation_plan
+            return run_staged_preparation_plan(plan,plan_path.parent,args.job_handle)
         if type(plan) is dict and plan.get('schema')=='m03-owner-preparation-plan/1':
             from magnetic_line_survey_bundle import run_preparation_plan
             return run_preparation_plan(plan, plan_path.parent, args.job_handle)

@@ -202,13 +202,27 @@ def worker_cwd(scratch):
     return plain
 
 
-def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=None, cancel_when_ready=False):
+def checked_limits(value=None):
+    """Trusted internal stricter envelope; never exceeds frozen hard ceilings."""
+    maximum=dict(memory_bytes=RSS_LIMIT,scratch_bytes=SCRATCH_LIMIT,cpu_s=CPU_LIMIT,wall_s=WALL_LIMIT,parent_cpu_s=300)
+    if value is None:return maximum
+    if type(value) is not dict or set(value)!=set(maximum) or \
+       any(type(value[key]) is not int or not 1<=value[key]<=limit for key,limit in maximum.items()):
+        raise SurveyError('resource_refused','seal')
+    return dict(value)
+
+
+def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=None, cancel_when_ready=False, configured_limits=None):
     """Start suspended; assign before imports; retain counters through drain.
 
     Explicit real CPython executable and existing package root (not a virtualenv
     redirector). Worker source/executable/package byte provenance is retained by
     the caller's receipt. A provisional component pass is not full acceptance.
     """
+    envelope=checked_limits(configured_limits)
+    memory_limit,scratch_limit,cpu_limit,wall_limit,parent_limit=(envelope[key] for key in
+        ('memory_bytes','scratch_bytes','cpu_s','wall_s','parent_cpu_s'))
+    cpu_reserve=min(60,cpu_limit/10);wall_reserve=min(60,wall_limit/10)
     api, psapi = apis()
     executable = Path(executable).resolve(strict=True)
     packages = Path(package_root).resolve(strict=True)
@@ -231,13 +245,14 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                     'magnetic_line_survey_hp.py', 'magnetic_line_survey_capacity_hp.py',
                       'magnetic_line_survey_hp_prerequisite.py', 'magnetic_line_survey_bundle.py',
                       'magnetic_line_survey_qr.py', 'magnetic_line_survey_capacity_qr.py',
-                      'magnetic_line_survey_qr_controls.py', 'magnetic_line_survey_qr_prerequisite.py')
+                      'magnetic_line_survey_qr_controls.py', 'magnetic_line_survey_qr_prerequisite.py',
+                      'magnetic_line_survey_preparation_capacity.py','magnetic_line_survey_inspection.py')
     def source_identity():
         return {name: sha256(Path(__file__).with_name(name).read_bytes()).hexdigest() for name in source_names}
     sources_before = source_identity()
     executable_hash = sha256(executable.read_bytes()).hexdigest()
     if plan_path.parent != scratch or cancel_after is not None and \
-       (type(cancel_after) not in (int, float) or not 0 < cancel_after <= WALL_LIMIT-60):
+       (type(cancel_after) not in (int, float) or not 0 < cancel_after <= wall_limit-wall_reserve):
         raise SurveyError('invalid_contract', 'seal')
     if shutil.disk_usage(scratch).free < 268435456:
         raise SurveyError('resource_refused', 'seal')
@@ -255,8 +270,8 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
         limits = Limits()
         limits.basic.flags = REQUIRED_FLAGS
         limits.basic.active = 1
-        limits.basic.job_cpu = CPU_LIMIT*10000000
-        limits.job_memory = RSS_LIMIT
+        limits.basic.job_cpu = cpu_limit*10000000
+        limits.job_memory = memory_limit
         if not api.SetInformationJobObject(job, 9, c.byref(limits), c.sizeof(limits)):
             raise SurveyError('resource_refused', 'fit')
         startup = subprocess.STARTUPINFO()
@@ -292,16 +307,16 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                     break
                 disk_bad = False
                 if now >= next_disk:
-                    disk_bad = owned_bytes(scratch,allow_disappearing=True) > SCRATCH_LIMIT or shutil.disk_usage(scratch).free < 67108864
+                    disk_bad = owned_bytes(scratch,allow_disappearing=True) > scratch_limit or shutil.disk_usage(scratch).free < 67108864
                     next_disk = now + 1
                 if cancel_when_ready and ready_at is None and (scratch/'native-ready.json').is_file():
                     ready_at = now
                 cancel_start = ready_at if cancel_when_ready else start
                 cancelled = cancellation_requested(scratch) or \
                     cancel_after is not None and cancel_start is not None and now-cancel_start >= cancel_after
-                if stopped is None and (cancelled or disk_bad or sample['cpu_s'] >= CPU_LIMIT-60 or
-                    now-start >= WALL_LIMIT-60 or sample['peak_rss_bytes'] > RSS_LIMIT or
-                    sample['peak_committed_bytes'] > RSS_LIMIT or time.process_time()-parent_start > 300):
+                if stopped is None and (cancelled or disk_bad or sample['cpu_s'] >= cpu_limit-cpu_reserve or
+                    now-start >= wall_limit-wall_reserve or sample['peak_rss_bytes'] > memory_limit or
+                    sample['peak_committed_bytes'] > memory_limit or time.process_time()-parent_start > parent_limit):
                     cause = 'cancelled' if cancelled else 'resource_refused'
                     stopped = (now, sample['cpu_s'])
                     if not api.TerminateJobObject(job, 2):
@@ -320,14 +335,15 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                 raise SurveyError('custody_mismatch', 'export')
             passed = code.value == 0 and cause is None and sample['total_processes'] == 1 and sample['active_processes'] == 0 and \
                 sample['cpu_s'] > 0 and sample['peak_rss_bytes'] > 0 and sample['peak_committed_bytes'] > 0 and \
-                sample['peak_rss_bytes'] <= RSS_LIMIT and sample['peak_committed_bytes'] <= RSS_LIMIT and \
-                sample['cpu_s'] <= CPU_LIMIT and wall <= WALL_LIMIT and parent_cpu <= 300 and size <= SCRATCH_LIMIT
+                sample['peak_rss_bytes'] <= memory_limit and sample['peak_committed_bytes'] <= memory_limit and \
+                sample['cpu_s'] <= cpu_limit and wall <= wall_limit and parent_cpu <= parent_limit and size <= scratch_limit
             if stopped and (stop_cpu > 10 or stop_wall > 10):
                 cause = 'resource_refused'
             receipt = dict(schema='m03-local-lifetime/1', verdict='component_pass' if passed else cause or 'resource_refused',
                 exit_code=int(code.value), **sample, wall_s=wall, scratch_bytes=size,
                 parent_cpu_s=parent_cpu, stop_wall_s=stop_wall, stop_cpu_s=stop_cpu,
                 admission='not_established', source_sha256=sources_before, actual_executable_sha256=executable_hash)
+            if configured_limits is not None:receipt['enforced_limits']=envelope
             from magnetic_line_survey import _write_member
             from magnetic_line_contract import canonical_bytes
             # Count the terminal receipt itself in the owned scratch inventory.
@@ -340,7 +356,7 @@ def run_worker(executable, package_root, scratch, plan_path, *, cancel_after=Non
                 receipt['scratch_bytes'] = final_size
             else:
                 raise SurveyError('resource_refused', 'export')
-            if receipt['scratch_bytes'] > SCRATCH_LIMIT:
+            if receipt['scratch_bytes'] > scratch_limit:
                 raise SurveyError('resource_refused', 'export')
             write_cpu, write_wall = time.process_time(), time.perf_counter()
             _write_member(scratch, 'lifetime.json', canonical_bytes(receipt))
