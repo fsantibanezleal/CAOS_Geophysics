@@ -89,3 +89,14 @@ instrument aside, not a second page column. No new fonts/colors/CSS are needed.
 Actual platform adversarial/cold gates and configured single-VPS qualification
 remain separate from a successful calculation or rendered plot. No host, field
 or method acceptance follows from this user workflow alone.
+
+## Local validation storage
+
+For owned frontend tests select an absolute external `GEOPHYSICS_QA_CACHE`, then
+run `vitest run --config vitest.waveform-qa.config.ts --configLoader runner`.
+This merges the existing test configuration without repository-local results
+cache. The runner loader avoids the bundler's repository-local `.vite-temp`.
+Use the same `--configLoader runner` with `vite.waveform-qa.config.ts` for the
+isolated build, whose cache and dist roots must both be explicit and external.
+Keep browser evidence in explicit external `GEOPHYSICS_QA_EVIDENCE`. These are
+validation commands, not a production mount or an execution admission receipt.
