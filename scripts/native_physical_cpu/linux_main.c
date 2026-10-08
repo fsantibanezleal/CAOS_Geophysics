@@ -22,7 +22,7 @@ struct loop {
     size_t used;
     uint32_t error, queue_head, queue_size, samples, final_count;
     int started, born, go, stopping, available, finished, bound, acknowledged;
-    int input_eof, out_eof, err_eof, counter_lost;
+    int input_eof, out_eof, err_eof, counter_lost, trace_lost;
     uint64_t in_seq, out_seq, created_ns, heartbeat_ns, birth_ns;
     uint64_t stop_ns, kill_end_ns, drained_ns, last_final_ns, finished_ns;
     uint64_t max_gap_ns, max_query_ns, stdout_bytes, stderr_bytes;
@@ -89,7 +89,7 @@ static int input(struct loop *l, uint64_t now) {
             if (size || !l->started || l->finished) return LC_CONTROL;
             latch(l, LC_CANCEL);
         } else if (type == LC_BIND) {
-            if (size != 64 || !l->finished || l->bound ||
+            if (size != 64 || !l->finished || l->bound || l->trace_lost ||
                 memcmp(p + 64, l->digest, 32) || !nonzero(p + 96, 32)) return LC_CUSTODY;
             memcpy(l->receipt, p + 96, 32); l->bound = 1;
         } else if (type == LC_ACK) {
@@ -138,7 +138,9 @@ static int observe(struct loop *l) {
         s.populated,s.root_reaped,s.adopted_reaped,l->max_gap_ns,l->max_query_ns,l->error};
     unsigned char body[LC_SAMPLE_BYTES];
     for (size_t i = 0; i < 12; ++i) lc_put64(body + i*8, words[i]);
-    if (queue_frame(l, LC_SAMPLE, body, sizeof(body), 1)) return LC_OUTPUT;
+    if (queue_frame(l, LC_SAMPLE, body, sizeof(body), 1)) {
+        l->trace_lost = 1; return LC_OUTPUT;
+    }
     uint64_t stop = l->context.budget_class == 1 ? UINT64_C(57000000000) : UINT64_C(237000000000);
     uint64_t budget = stop + UINT64_C(3000000000);
     if (s.cpu_ns >= stop && !l->stopping) latch(l, LC_BUDGET);

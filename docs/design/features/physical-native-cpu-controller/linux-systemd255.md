@@ -597,3 +597,18 @@ sleep and20ms query intervals. The diagnostic maximum and fail-closed check use
 that complete interval; the query maximum remains separately retained. Q1ms in
 the margin design is aggregate counter rounding reserve, not query duration.
 Gate: test_linux_source.py::test_complete_observation_gap_includes_query_duration.
+
+## 17. Missing-trace and death-order custody
+
+Queue overflow latches trace_lost, stops science and forbids BIND/release even
+if kernel CPU final remains available. Lost observation frames cannot become a
+complete acknowledged transcript; first output failure remains sticky. EOF
+similarly retains its available failed final but cannot release through its
+closed ACK endpoint. The EOF gate now expressly requires no BIND/ACK/release,
+not impossible automatic ACK after EOF. No native/scientific tolerance changes.
+
+Manager crash backstop uses explicit KillSignal=SIGKILL with KillMode=control-group.
+Parent BindsTo stop kills the owned group immediately and the capturing relay
+retains its actual failed exit. No manager-success SIGTERM interpretation is
+used as a native successful completion. This remains separate from native250ms
+stop proof, and no parent/DB publication tail is inferred.

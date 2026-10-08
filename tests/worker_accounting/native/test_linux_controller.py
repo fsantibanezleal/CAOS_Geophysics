@@ -452,10 +452,18 @@ def test_exited_descendants_accounted(host_results):
 
 
 def test_cancel_and_root_exit_descendants(host_results):
-    for name, error in (("cancel", 12), ("eof", 13), ("heartbeat_loss", 14), ("grandchild", 16)):
+    for name, error in (("cancel", 12), ("heartbeat_loss", 14), ("grandchild", 16)):
         f = complete(host_results[name], error)
         assert f[14] >= f[13] > 0 and f[12] - f[13] <= 250_000_000
     assert host_results["grandchild"]["final"][8] >= 1
+    # EOF closes the only ACK endpoint. An available failed CPU final can be
+    # retained, but release is forbidden without ACK, not synthesized cleanup.
+    eof = host_results["eof"]
+    f = eof["final"]
+    assert f is not None and f[11] == 13 and f[15] == 1 and f[6] == 0 and f[7] == 1
+    assert f[14] >= f[13] > 0 and f[12] - f[13] <= 250_000_000
+    assert eof["returncode"] == 13 and eof["release"] is None and eof["group_extinct"] is True
+    assert all(packet[1] not in (4, 5) for packet in eof["sent"])
 
 
 def test_actual_budget_and_gap(host_results):

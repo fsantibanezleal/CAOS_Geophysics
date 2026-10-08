@@ -133,3 +133,11 @@ def test_complete_observation_gap_includes_query_duration():
     assert "gap = s.end_ns - previous_end, query = s.end_ns - s.start_ns" in loop
     assert "gap = s.start_ns - previous_end" not in loop
     assert "if (gap > LC_QUERY_NS || query > LC_QUERY_NS) latch(l, LC_GAP)" in loop
+
+
+def test_lost_sample_trace_cannot_bind_or_release_custody():
+    loop = (CORE / "linux_main.c").read_text("utf-8")
+    assert "if (queue_frame(l, LC_SAMPLE, body, sizeof(body), 1)) {" in loop
+    assert "l->trace_lost = 1; return LC_OUTPUT;" in loop
+    assert "!l->finished || l->bound || l->trace_lost ||" in loop
+    assert loop.count("trace_lost =") == 1  # sticky, no recovery/reset

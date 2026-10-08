@@ -102,6 +102,7 @@ def test_system_manager_recipe_is_attempt_specific_and_not_activation():
     assert "--property=Delegate=cpu memory pids" in command
     assert "--property=DelegateSubgroup=observer" in command
     assert "--property=KillMode=control-group" in command
+    assert "--property=KillSignal=SIGKILL" in command
     assert "--property=CapabilityBoundingSet=CAP_SETUID CAP_SETGID CAP_SETPCAP" in command
     # v255's redundant explicit root UID transition plus seccomp removes
     # CAP_SETUID before NNP exec. System-manager default root avoids that path;

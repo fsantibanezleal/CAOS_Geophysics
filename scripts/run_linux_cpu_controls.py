@@ -735,7 +735,7 @@ def run_control(manifest_path, expected_sha256):
                 receipt_bytes = (json.dumps(receipt, sort_keys=True, separators=(",", ":")) + "\n").encode("ascii")
                 exclusive(root / "transcript-receipt.json", receipt_bytes)
                 receipt_hash = hashlib.sha256(receipt_bytes).digest()
-                if trace.final[15] == 1 and case != "no_ack":
+                if trace.final[15] == 1 and case != "no_ack" and not process.stdin.closed:
                     send(4, trace.native_digest + receipt_hash)
                     send(5, (b"\0" * 32 if case == "bad_ack" else receipt_hash))
                 custody = True

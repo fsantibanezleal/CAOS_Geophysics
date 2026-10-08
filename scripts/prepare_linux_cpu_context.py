@@ -122,7 +122,7 @@ def unit_arguments(systemd_run, controller, context, attempt, parent, budget_cla
     # Fixed qualification recipe. Secure production launch is separately reviewed.
     properties = [
         "Type=exec", "ExitType=main", "Delegate=cpu memory pids",
-        "DelegateSubgroup=observer", "KillMode=control-group", "SendSIGKILL=yes",
+        "DelegateSubgroup=observer", "KillMode=control-group", "KillSignal=SIGKILL", "SendSIGKILL=yes",
         # System-manager default root; explicit User=root triggers v255's
         # seccomp UID setup path, dropping CAP_SETUID before NNP exec.
         # lc_prepare independently verifies the actual root IDs/three caps.
