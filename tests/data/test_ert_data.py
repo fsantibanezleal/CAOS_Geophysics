@@ -1,5 +1,6 @@
 """Slagdump source identity, strict physical parse and rights boundary."""
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -10,7 +11,8 @@ from ert import ERTError, Survey, parse_ohm, qc
 from sources import acquire_source, load_ledger
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/slagdump.ohm"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/slagdump.ohm"
 
 
 def _synthetic_ohm() -> str:

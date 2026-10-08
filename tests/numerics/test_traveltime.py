@@ -4,6 +4,7 @@ from copy import deepcopy
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -15,7 +16,8 @@ import traveltime as pipeline
 from traveltime import Survey, TraveltimeError, run, run_source, shot_splits
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/koenigsee.sgt"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/koenigsee.sgt"
 
 
 def test_homogeneous_forward_oracle():
@@ -102,7 +104,7 @@ def test_field_receipt_and_uncertainty_boundary(field_result):
         assert math.isfinite(sensitivity["heldout_rmse_s"])
         assert 0 < sensitivity["coverage_nonzero_cell_fraction"] <= 1
     target = Path(result["local_receipt_path"])
-    assert target.is_relative_to(ROOT / "data/raw/traveltime")
+    assert target.is_relative_to(DATA_ROOT / "data/raw/traveltime")
     assert target.exists()
     assert hashlib.sha256(target.read_bytes()).hexdigest() == Path(str(target) + ".sha256").read_text().strip()
     saved = json.loads(target.read_text(encoding="utf-8"))
@@ -118,9 +120,10 @@ def test_independent_process_fit_reproducibility():
 import json
 from pathlib import Path
 import sys
+import os
 sys.path.insert(0, 'data-pipeline')
 import traveltime as m
-path = Path('data/downloads/pygimli/koenigsee.sgt')
+path = Path(os.environ['GEOPHYSICS_LOCAL_DATA_ROOT']) / 'data/downloads/pygimli/koenigsee.sgt'
 survey = m.parse_sgt(path)
 tt, data = m._pygimli_data(path, survey)
 fit = m._invert_once(tt, data, survey, m.shot_splits(survey)['interleaved'],

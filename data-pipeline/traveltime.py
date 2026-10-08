@@ -21,7 +21,7 @@ import time
 import numpy as np
 from profile_mesh import parameter_mesh
 
-from sources import ROOT, SourceError, acquire_source
+from sources import ROOT, SourceError, acquire_source, local_data_root
 
 SOURCE_ID = "pygimli-koenigsee"
 MAX_INPUT_BYTES = 1_000_000
@@ -79,6 +79,21 @@ def parse_sgt(path: Path) -> Survey:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as error:
         raise TraveltimeError(f"{path}: cannot read UTF-8 .sgt: {error}") from error
+    return _parse_sgt_lines(lines)
+
+
+def parse_sgt_bytes(raw: bytes) -> Survey:
+    """Use the identical grammar on bounded immutable original bytes."""
+    if type(raw) is not bytes or len(raw) > MAX_INPUT_BYTES:
+        raise TraveltimeError(".sgt original exceeds byte boundary")
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeError as error:
+        raise TraveltimeError(".sgt original is not UTF-8") from error
+    return _parse_sgt_lines(lines)
+
+
+def _parse_sgt_lines(lines: list[str]) -> Survey:
     if len(lines) < 5:
         raise TraveltimeError("source header: truncated .sgt")
     count = _count(lines[0], SENSOR_COUNT, "sensor count", 2, 1024)
@@ -532,9 +547,9 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
     return report
 
 
-def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse") -> Path:
+def save_local_receipt(report: dict, *, root: Path | None = None, kind: str = "inverse") -> Path:
     """Install or verify a checksummed, immutable receipt inside ignored data/raw."""
-    root = Path(root).resolve()
+    root = local_data_root(root)
     folder = root / "data/raw/traveltime"
     if not folder.resolve().is_relative_to((root / "data/raw").resolve()):
         raise TraveltimeError("traveltime result path escapes ignored data/raw")
@@ -619,8 +634,9 @@ def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse"
     return output
 
 
-def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
+def run_source(*, root: Path | None = None, qc_only: bool = False) -> dict:
     """Reverify the ledger source, compute local evidence and retain its receipt."""
+    root = local_data_root(root)
     record, raw_path, receipt = acquire_source(SOURCE_ID, root=root)
     if receipt["validation_status"] != "hash-verified":
         raise TraveltimeError("Koenigsee acquisition receipt is not hash-verified")
@@ -635,9 +651,10 @@ def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--qc-only", action="store_true", help="Validate source geometry and picks without an inverse")
+    parser.add_argument("--data-root", type=Path, help="External working-data root; otherwise GEOPHYSICS_LOCAL_DATA_ROOT")
     args = parser.parse_args(argv)
     try:
-        result = run_source(qc_only=args.qc_only)
+        result = run_source(root=args.data_root, qc_only=args.qc_only)
     except (SourceError, TraveltimeError, OSError) as error:
         print(f"M09 Koenigsee failed: {error}", file=sys.stderr)
         return 2
