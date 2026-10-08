@@ -1,5 +1,7 @@
 """Portable retained-evidence controls, not privileged Linux qualification."""
 from copy import deepcopy
+import asyncio
+from types import SimpleNamespace
 
 import pytest
 
@@ -63,3 +65,27 @@ def test_changed_stage_bytes_do_not_become_archived_as_verified(monkeypatch):
     monkeypatch.setattr(recovery,"regular_at",lambda fd,name,cap:bodies[name])
     with pytest.raises((ValueError,ApiError)):
         recovery.stage_inventory(1,receipt)
+
+
+def test_recovery_resolves_real_terminal_owned_sql_relations_before_privileged_command(make_harness,monkeypatch):
+    from test_profile_jobs import owned_dataset, profile_harness
+    harness = profile_harness(make_harness)
+    project,_,dataset,metadata = owned_dataset(harness)
+    path = f"/api/projects/{project['id']}/jobs"
+    response = harness.request("POST",path,json=dict(dataset_id=dataset["dataset_id"],method_id=metadata["method"],parameters={}))
+    assert response.status_code == 202
+    identifier = response.json()["job_id"]
+    assert harness.request("POST",path+"/"+identifier+"/cancel").json()["state"] == "cancelled"
+    class StopBeforePrivilege(RuntimeError):
+        pass
+    def checked_command(settings,job,**kwargs):
+        assert settings == harness.settings and job.id == identifier and job.state == "cancelled"
+        assert job.dataset_id == dataset["dataset_id"] and job.project_id == project["id"]
+        assert kwargs == {"with_configuration":True}
+        raise StopBeforePrivilege()
+    monkeypatch.setattr(recovery,"os",SimpleNamespace(name="posix",geteuid=lambda:61901))
+    monkeypatch.setattr(recovery,"installed_command",checked_command)
+    with pytest.raises(StopBeforePrivilege):
+        asyncio.run(recovery.recover_job(harness.settings,identifier))
+    assert not (harness.settings.data_dir/".profile-retained").exists()
+    assert harness.client.get(path+"/"+identifier).json()["state"] == "cancelled"

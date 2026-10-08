@@ -9,6 +9,7 @@ import re
 import stat
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.database import make_engine, require_migration_head
 from app.models import ObservationDataset, ProcessingJob, RawAsset, SourceRecord
@@ -129,7 +130,8 @@ async def recover_job(settings,identifier):
     """Caller must hold the existing worker lock; job state is never changed."""
     require(os.name == "posix" and os.geteuid() != 0)
     uuid(identifier)
-    engine,sessions = make_engine(settings)
+    engine = make_engine(settings)
+    sessions = async_sessionmaker(engine,expire_on_commit=False)
     fds = []
     process = None
     readers = []
