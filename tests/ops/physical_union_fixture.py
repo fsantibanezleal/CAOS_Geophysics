@@ -16,7 +16,7 @@ from alembic.script import ScriptDirectory
 ROOT = Path(__file__).resolve().parents[2]
 M01 = 'd22238737aab4645ba75d18a74251c3bb840fd64'
 M11 = 'b9cd9a196f912a2134805b89db1e94d5bbda5546'
-M03 = '6909634906584f8512a3acf73b385d1bdd63cbc0'
+M03 = 'd24b53ce26c96511255e7d9a913720a6b5e945ef'
 PINS = {
     (M01,'app/migrations/versions/0001_api_foundation.py'):'f595ce71642f8555c9a7e3e615aeccf1f642eaf2a1be09f8864b25a8797e52ae',
     (M01,'app/migrations/versions/0002_private_storage_permission.py'):'572a55739d70b0fc54f6bfdc3fa19ed3ab514fac2136feb817a3c8c89f2551ca',
@@ -29,7 +29,7 @@ PINS = {
     (M11,'app/migrations/candidates/0006_joint_artifacts.py'):'1543352aa96da92c56741f246ee12e484f0c27ea15a9c373b43d28362736274c',
     (M11,'app/joint_models.py'):'345a1e4d2fe767b196482a8ef4acdba66d6ba1a436e24646062dbe751055db3f',
     (M11,'app/joint_successor.py'):'a2b410c4e0f60b5e66e6935f49af3172a51711b7b7db1b734be8842a64c7fa1f',
-    (M03,'app/magnetic_line_survey_migrations/0007_magnetic_line_artifacts.py'):'c598c9e67406ea7259068d5a02b7d6eef6ee5747b0be311ed664a249f5fb934a',
+    (M03,'app/magnetic_line_survey_migrations/0007_magnetic_line_artifacts.py'):'2dab0560829031967ecb53a3ebfd5fce07c4f5da59ee54ab9f865fd428e84b09',
 }
 
 
@@ -52,7 +52,7 @@ def mount_packet(output):
     document=dict(schema='geophysics.union-migration-mount-packet/v1',records=records,
         patch_sha256=hashlib.sha256(patch).hexdigest(),default_mounted=False,
         m01_downgrade='0005-to-0004 always refused by literal source',
-        m03_composite_sql_ownership='not established: separate FKs accept cross-owner intake')
+        m03_composite_sql_ownership='literal composite owner/project/raw and attempt/member constraints; actual gate required')
     output.mkdir(parents=True,exist_ok=False)
     with (output/'migration-mount.patch').open('xb') as f: f.write(patch)
     with (output/'manifest.json').open('x',encoding='utf-8',newline='\n') as f:

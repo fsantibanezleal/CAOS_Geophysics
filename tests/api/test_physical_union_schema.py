@@ -89,7 +89,7 @@ def test_literal_one_head_up_retained_rows_empty_down_and_m01_refusal(union):
     assert snapshot(path)==saved
 
 
-@pytest.mark.parametrize('table',['magnetic_survey_intakes','magnetic_survey_admissions',
+@pytest.mark.parametrize('table',['magnetic_survey_intakes','magnetic_survey_dataset_attempts','magnetic_survey_admissions',
     'magnetic_survey_attempts','magnetic_survey_members','magnetic_survey_exports'])
 def test_every_m03_retained_custody_table_refuses_before_any_drop(table,union):
     config,path,ids,_=union;command.upgrade(config,R7)
@@ -100,6 +100,9 @@ def test_every_m03_retained_custody_table_refuses_before_any_drop(table,union):
         if table=='magnetic_survey_intakes':
             db.execute('INSERT INTO magnetic_survey_intakes VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
                 (intake,owner,project,'original','{}','failed',32,7,'[]',None,raw,'2026-10-08'))
+        elif table=='magnetic_survey_dataset_attempts':
+            db.execute('INSERT INTO magnetic_survey_dataset_attempts VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                (intake,owner,project,'{}','{}','a'*64,32,'failed',7,'[]',None,None,None,'2026-10-08',None))
         elif table=='magnetic_survey_admissions':
             db.execute('INSERT INTO magnetic_survey_admissions VALUES (?,?,?,?,?)',(job,'{}','[]','a'*64,32))
         else:
