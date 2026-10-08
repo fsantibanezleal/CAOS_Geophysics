@@ -74,7 +74,9 @@ describe("actual local magnetic custody client, not nonzero scientific acceptanc
     expect(mapping.online_admitted).toBe(false);
   });
   it.each([['"rights_decision":"mirror"', '"rights_decision":"unknown"'],
-           ['"active_cells":7', '"active_cells":8']])("refuses exact raw-body mutation %s with unchanged IDs/request hash",async (before,after)=>{
+           ['"active_cells":7', '"active_cells":8'],
+           [`"configuration_sha256":"${input.payload.geometry_plan.identity.configuration_sha256}"`,
+            `"configuration_sha256":"${"f".repeat(64)}"`]])("refuses exact raw-body mutation %s with unchanged IDs/request hash",async (before,after)=>{
     const raw=new TextDecoder().decode(datasetBytes), changed=raw.replace(before,after);
     expect(changed).not.toBe(raw);
     const decoded=JSON.parse(changed);
