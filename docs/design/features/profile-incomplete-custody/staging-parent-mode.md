@@ -27,6 +27,16 @@ there is no successful execution, cancellation or custody schema amendment.
 No changes to root helper/config/installed closure, shared controller, quotas,
 originals, job owner, live flags or MAIN checkout.
 
+## Reviewed mixed-writer amendment (before follow-up code)
+
+Parent review identified generic-first app/worker.py and waveform-first
+app/waveform_worker.py creation of the SAME `.job-staging` namespace with a
+default0755 mode. Change only their NEW parent/UUID mkdir mode to0700, preserving
+existing no-link checks, lifecycle and Windows API behavior. No chmod or legacy
+parent adoption. Add actual POSIX tests executing these producer statements
+before the profile allocation/recovery private predicates under umask000.
+The protected constructor still refuses existing unsafe parents.
+
 ## Tasks / gates
 
 1. Commit pre-code before repair.
