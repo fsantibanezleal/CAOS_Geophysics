@@ -131,4 +131,14 @@ export class ApiClient {
       throw new Error("API returned JSON instead of downloadable bytes");
     return response.blob();
   }
+
+  /** Dedicated ordinary native input; never generic metadata or an archive. */
+  async requestNativeMember<T>(path: string, file: Blob, metadata: string, parse: (value: unknown) => T, csrfToken: string, signal?: AbortSignal): Promise<T> {
+    if (new TextEncoder().encode(metadata).length > 16384) throw new Error("Native metadata exceeds 16 KiB");
+    const response = await this.send(path, { method: "POST", body: file, csrfToken, signal,
+      headers: { "Content-Type": "application/octet-stream", "X-Joint-Member-Metadata": metadata } });
+    if (!/\bapplication\/(?:[\w.-]+\+)?json\b/i.test(response.headers.get("content-type") ?? ""))
+      throw new Error("API returned a non-JSON native receipt");
+    return parse(await response.json());
+  }
 }

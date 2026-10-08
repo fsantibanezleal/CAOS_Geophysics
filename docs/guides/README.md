@@ -14,6 +14,7 @@
 - [Validate original compiled joint baseline conditioning](23_conditioned_joint_baselines.md): exact public source/factor/error-unit contract, real native384-fit comparison, unchanged caps and explicit retained failures; not coupled or online acceptance.
 - [Execute the fixed private joint child](24_private_joint_execution.md): original26 fits, strict replay, native instrument, source/context custody and one lower job resource deadline; not scientific precision or host acceptance.
 - [Validate the allocated joint schema](25_joint_schema_successor.md): literal0006 after M01's0005, exact root-family registration, restrictive owner-bound artifact model and rollback/downgrade controls; not canonical lifecycle or scientific acceptance.
+- [Supply private original joint inputs](26_private_joint_original_inputs.md): actual ordinary-member custody, rights, opaque source verification, explicit partial transfer/indexing and private state clearing; not a browser inverse or canonical worker admission.
 - [Measure isolated actual-host admission](12_actual_host_admission.md): retained failed headroom measurements are not production activation.
 - [Run the ordinary physical station adapter](13_local_station_adapter.md): exact parent/configuration identities, real correction and safe-error boundary; authenticated online children remain separate.
 - [Calculate local prism gravity](14_local_gravity_forward.md): exact declared geometry, density units, upward response and Jacobian; not a measured-data inverse or host job.
