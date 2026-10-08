@@ -33,8 +33,8 @@ def write(path, body):
     path.chmod(0o600)
 
 
-async def live_audit(private, approved):
-    """Read-only consistent SQL/file audit, not all-writer exclusion admission."""
+async def snapshot_audit(private, database, approved):
+    """Copied SQL snapshot + original retained files; not live exclusion proof."""
     from app.physical_posix import PrivateFiles
     from app.config import Settings
     from app.profile_archive_delete import archive_relations
@@ -43,7 +43,7 @@ async def live_audit(private, approved):
         public_origin='http://testserver',cookie_secure=False)
     # Explicit SQLite read-only URL; no authentication, rate or migration writes.
     from sqlalchemy.ext.asyncio import create_async_engine
-    engine=create_async_engine('sqlite+aiosqlite:///file:'+str(settings.database_path)+'?mode=ro&uri=true')
+    engine=create_async_engine('sqlite+aiosqlite:///file:'+str(database)+'?mode=ro&uri=true')
     try:
         async with async_sessionmaker(engine)() as session:
             from sqlalchemy import text
@@ -112,6 +112,7 @@ def main():
     parser.add_argument('--original',required=True)
     parser.add_argument('--actual-private',required=True)
     parser.add_argument('--actual-receipt',required=True)
+    parser.add_argument('--actual-database',required=True)
     args=parser.parse_args()
     root=Path(args.root)
     assert os.name=='posix' and os.geteuid()==61901 and root.is_absolute() and not any(root.iterdir())
@@ -132,7 +133,7 @@ def main():
     manifest=actual['cancellation']['archive']
     assert actual['source_commit']=='320f0afd2cb7934a2501e3c2ccae4f3fbdf2a085'
     approved={manifest['job_id']:manifest['installation']}
-    actual_records=asyncio.run(live_audit(Path(args.actual_private),approved))
+    actual_records=asyncio.run(snapshot_audit(Path(args.actual_private),Path(args.actual_database),approved))
     assert len(actual_records)==1 and actual_records[0]['manifest']==manifest
     os.environ['GEOPHYSICS_DB_PATH']=str(root/'api.sqlite3')
     source=Path(__file__).resolve().parents[2]
@@ -220,6 +221,7 @@ def main():
         assert not messages
         print(json.dumps(dict(schema='geophysics.private-native-profile-delete/v1',uid=os.geteuid(),kernel=kernel,
             sqlite_version=native_identity[0],sqlite_source_id=native_identity[1],
+            actual_q10_sql_evidence='copied-normal-SQLite-snapshot-not-live-exclusion',
             actual_q10_readonly_record_sha256=digest(canonical(actual_records[0])),actual_q10_charged_bytes=actual_records[0]['charged_bytes'],
             original_input_sha256=digest(original),fixture_job=job,fixture_archive_sha256=digest(canonical(fixture_manifest)),
             retained_bytes=saved[0]['charged_bytes'],foreign_delete_refused=True,unknown_member_preserved=True,
