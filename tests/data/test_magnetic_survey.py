@@ -1,8 +1,7 @@
 """Deterministic geometry membership is independent of signal and uncertainty."""
 
-import copy
 import pytest
-from magnetic_survey_support import descriptor, digest, encode, request, rehash
+from magnetic_survey_support import digest, encode, request, rehash
 from magnetic_survey_json import InputError, parse_request
 from magnetic_survey import plan_geometry
 

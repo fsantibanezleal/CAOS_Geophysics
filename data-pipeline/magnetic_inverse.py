@@ -81,6 +81,11 @@ class MagneticQuantity:
         return (owned(self.__ab), owned(self.__b0), owned(self.__direction),
                 self.__f, self.__quantity)
 
+    @property
+    def quantity(self):
+        """Read-only scalar metadata, without copying the retained kernel."""
+        return self.__quantity
+
     def evaluate(self, q):
         native_array(q, (self.parameters,), 'q')
         if not np.isfinite(q).all() or np.any(q < 0.) or np.any(q > 10.):

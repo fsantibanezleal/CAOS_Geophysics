@@ -8,10 +8,13 @@ success or field acceptance.
 executable tiny kernel/covariance/active-face/sparse-weight controls and the
 pinned vendor covariance-Hessian limitation, not a completed inverse fit.
 
-The ordinary local **geometry foundation is executable**. L2, sparse IRLS,
-quantity-specific fitting, held-out prediction, fitted-result bundles and linked
-views remain the complete [continuation contract](../../design/features/m04-survey-inversion/research.md),
-not results produced by this validator. The unchanged [physical forward unit](../magnetic-forward.md)
+The ordinary local **geometry foundation is executable**. The separate
+[actual local calibration tools](06_local-calibration.md) now implement linear
+L2/IRLS, nested selection, sealed evaluation and fitted bundles through the
+explicitly reviewed local **candidate** core. They do not close accepted-source,
+nonlinear, nontrivial S2/field, linked-view, native or online gates in the complete
+[continuation contract](../../design/features/m04-survey-inversion/research.md).
+The geometry validator below still performs no fitting. The unchanged [physical forward unit](../magnetic-forward.md)
 explains SimPEG/Geoana, Choclo, units and independent numerical controls.
 There is no provider download, IGRF evaluator, correction, magnetic kernel or
 optimizer invocation in the input/planner/export modules.
@@ -132,10 +135,12 @@ not geometry seal or partitions.
 From the checkout root, using the already approved isolated Python environment:
 
 ```text
-python -B data-pipeline/magnetic_survey.py validate --request survey.json --export new-geometry.json
+python -B data-pipeline/magnetic_survey.py validate --request ABS_REQUEST_JSON --export EXTERNAL_ABS_NEW_GEOMETRY_JSON
 ```
 
-Both flags are mandatory; output must not exist. Exit0 is complete geometry
+Both flags are mandatory; use caller-owned absolute external paths, not repository
+raw/model/temp storage. Optional --data-root or GEOPHYSICS_LOCAL_DATA_ROOT additionally
+restricts the export to that explicit external root. Output must not exist. Exit0 is complete geometry
 validation/export,2 invalid input/partition,5 local file/durability failure.
 `calibrate`, invented flags and provider URLs as file inputs are not commands.
 Stdout contains identities/eligibility/false claims, not observations or traces.
@@ -153,8 +158,8 @@ from magnetic_survey_bundle import write_geometry, read_geometry
 # caller_raw is bounded local UTF8 bytes, not a provider URL.
 handle = parse_request(caller_raw)
 plan = plan_geometry(handle)
-write_geometry("new-geometry.json", handle)  # exclusive new-file creation
-assert read_geometry("new-geometry.json") == plan
+write_geometry(external_absolute_new_path, handle)  # exclusive new-file creation
+assert read_geometry(external_absolute_new_path) == plan
 ```
 
 Set `PYTHONPATH=data-pipeline` when composing outside the module directory.

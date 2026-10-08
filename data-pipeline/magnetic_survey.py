@@ -205,6 +205,7 @@ def main(argv=None):
     parser.add_argument("operation", choices=["validate"])
     parser.add_argument("--request", required=True)
     parser.add_argument("--export", required=True)
+    parser.add_argument("--data-root")
     args = parser.parse_args(argv)
     path = Path(args.request)
     try:
@@ -219,7 +220,9 @@ def main(argv=None):
             raw = stream.read(MAX_BYTES+1)
         handle = parse_request(raw)
         plan = plan_geometry(handle)
-        write_geometry(args.export, handle)
+        from magnetic_local_paths import data_output, external_path
+        output = data_output(args.export, args.data_root) if args.data_root or os.environ.get('GEOPHYSICS_LOCAL_DATA_ROOT') else external_path(args.export)
+        write_geometry(output, handle)
         # No user values or full inventory in stdout; output path is caller-owned.
         print(json.dumps(dict(schema=plan["schema"], identity=plan["identity"],
                               eligibility=plan["eligibility"], claims=plan["claims"]), sort_keys=True))

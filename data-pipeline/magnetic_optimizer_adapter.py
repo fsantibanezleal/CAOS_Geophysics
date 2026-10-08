@@ -161,7 +161,7 @@ class MagneticObjective:
 
     def identity(self):
         import physical_optimizer
-        return dict(mode='nonlinear_gauss_newton' if self.operator.components == 1 and self.operator.operand_snapshot()[-1] == 'exact_total_anomaly_nT' else 'fixed_linear_quadratic',
+        return dict(mode='nonlinear_gauss_newton' if self.operator.quantity == 'exact_total_anomaly_nT' else 'fixed_linear_quadratic',
             runtime_epoch=physical_optimizer.RUNTIME_EPOCH, objective_sha256=self.sha256,
             source_inventory_sha256=self.inventory, q_unit='chi_over_0.01', physical_unit='SI', physical_scale=.01,
             parameter_count=self.operator.parameters, observation_rows=self.operator.rows,
