@@ -46,7 +46,13 @@ const config: ShellConfig = {
   routes: PRODUCT_ROUTES.map(({ path, en, es }) => ({ path, en, es })),
   links: { github: "https://github.com/fsantibanezleal/CAOS_Geophysics" },
   version: "0.04.001",
+  visibility: "public",
+  license: {
+    en: "Apache-2.0 code and CC-BY-4.0 content",
+    es: "Código Apache-2.0 y contenido CC-BY-4.0",
+  },
   architecture,
+  contain: true,
   fixedRoutes: ["/"],
   footer: {
     attribution: {

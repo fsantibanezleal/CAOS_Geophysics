@@ -189,8 +189,8 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt, onP
     <aside className={`instrument-sidebar processing-sidebar ${controlsOpen ? "expanded" : ""}`}>
       {methodNavigation}
       <div className="instrument-brand"><span className="small-caps">{t("PRIVATE PROJECT · PROCESSING", "PROYECTO PRIVADO · PROCESAMIENTO")}</span><h1>{project?.name ?? t("Project processing", "Procesamiento de proyecto")}</h1></div>
-      <div className="processing-actions"><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>
-      <button className="btn" onClick={onProfiles}>{t("ERT / first-arrival profiles", "Perfiles ERT / primeras llegadas")}</button>
+      <div className="processing-actions">{!methodNavigation && <button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button>}<button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>
+      {!methodNavigation && <button className="btn" onClick={onProfiles}>{t("ERT / first-arrival profiles", "Perfiles ERT / primeras llegadas")}</button>}
       <button className="btn mobile-controls-toggle" aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}>{t("Processing controls", "Controles de procesamiento")}</button>
       {session === "ready" && <div className="processing-controls">
         <label className="select-control"><span>{t("Control section", "Sección de controles")}</span><select className="select" value={section} onChange={event => setSection(event.target.value)}>
