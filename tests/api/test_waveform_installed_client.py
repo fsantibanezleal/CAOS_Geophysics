@@ -8,6 +8,16 @@ from app.errors import ApiError
 from app.waveform_linux_worker import _capture, failure_code
 
 
+@pytest.mark.parametrize('reason',['cpu_stop','resource_unavailable','supervisor_unavailable',
+    'waveform_contract','child_protocol','export_validation'])
+@pytest.mark.parametrize('requested',['user_cancelled','job_timeout'])
+def test_primary_terminal_cannot_be_sql_cancelled_by_late_control(reason,requested):
+    terminal = {'outcome':{'status':'failed','reason':reason},'lifecycle':{
+        'caller':{'reason':'cancelled'},'primary_failure':{'reason':'resource_stop','checkpoint':'drain'}}}
+    assert failure_code(ApiError(409,'waveform_processing_failed','authored'),requested,terminal,True) == 'waveform_processing_failed'
+    assert failure_code(ValueError(),requested,terminal,False) == 'waveform_execution_unproved'
+
+
 @pytest.mark.parametrize("reason",["user_cancelled","account_quota_exceeded","waveform_storage_unavailable"])
 def test_proved_measured_publication_failure_retains_exact_typed_reason(reason):
     terminal = {"outcome":{"reason":"measured"},"lifecycle":{"caller":{"reason":None}}}
@@ -16,7 +26,7 @@ def test_proved_measured_publication_failure_retains_exact_typed_reason(reason):
 
 
 def test_cancel_needs_proved_matching_terminal_not_requested_flag_alone():
-    terminal = {"outcome":{"reason":"cancelled"},"lifecycle":{"caller":{"reason":"cancelled"}}}
+    terminal = {"outcome":{"status":"cancelled","reason":"cancelled"},"lifecycle":{"caller":{"reason":"cancelled"}}}
     assert failure_code(ValueError(),"user_cancelled",terminal,True) == "user_cancelled"
     assert failure_code(ValueError(),"user_cancelled",terminal,False) == "waveform_execution_unproved"
     other = deepcopy(terminal)

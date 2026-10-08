@@ -405,3 +405,10 @@ the original held caller parser after checking the monitor; malformed/nonempty
 packets never take this path. Gates: explicit primary-versus-late-control tests,
 closed failure receipt controls and actual installed CANCEL/EOF, with all original
 caps and failed receipts preserved.
+
+Ordinary SQL classification applies the same precedence: a requested cancellation
+requires a proved terminal whose status and reason are cancelled and whose caller
+reason is cancelled, without a primary_failure. A primary error with late caller
+control is waveform_processing_failed, not user_cancelled/job_timeout. Native
+extinction uncertainty still yields waveform_execution_unproved. The worker does
+not infer native cancellation from the DB request bit alone.

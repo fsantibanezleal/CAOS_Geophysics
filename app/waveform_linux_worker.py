@@ -107,12 +107,19 @@ async def finish_streams(readers):
 from app.waveform_stage import cleanup_stage, verify_stage
 
 
+def caller_cancelled(terminal):
+    return (terminal['outcome'].get('status') == 'cancelled' and
+            terminal['outcome'].get('reason') == 'cancelled' and
+            terminal['lifecycle']['caller']['reason'] == 'cancelled' and
+            'primary_failure' not in terminal['lifecycle'])
+
+
 def failure_code(error, requested, terminal, proved):
     """Only already validated terminals authorize a known stopped classification."""
     from app.errors import ApiError
     if not proved:
         return "waveform_execution_unproved"
-    if requested and terminal["lifecycle"]["caller"]["reason"] == "cancelled":
+    if requested and caller_cancelled(terminal):
         return requested
     if isinstance(error,ApiError):
         if terminal["outcome"].get("reason") == "measured":
@@ -192,7 +199,7 @@ async def execute(settings,sessions,job,poll_interval):
         validate_terminal(terminal,job,held,installation)
         require(identity(stage_fd) == held)
         if terminal["outcome"].get("reason") != "measured":
-            reason = requested if requested and terminal["lifecycle"]["caller"]["reason"] == "cancelled" else "waveform_processing_failed"
+            reason = requested if requested and caller_cancelled(terminal) else "waveform_processing_failed"
             raise ApiError(409,reason,"Waveform stopped with proved source-bound terminal extinction")
         verify_stage(stage_fd,held,terminal)
         fresh = installed_snapshot(settings)
