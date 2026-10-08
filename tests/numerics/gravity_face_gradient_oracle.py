@@ -39,7 +39,7 @@ def _literal(value):
     return _enclose(actual, list(map(lambda x: F(float(x)), actual)), [F(0)]*len(actual))
 
 
-def _mat(matrix, value, check):
+def _mat(matrix, value, check, clock=None):
     check()
     if sp.issparse(matrix):
         matrix = matrix.tocsr()
@@ -58,7 +58,10 @@ def _mat(matrix, value, check):
         raise ValueError('bounded literal research source shape')
     exact, bounds = [], []
     for i in range(matrix.shape[0]):
-        check()
+        # Fraction row arithmetic reads only the already retained literal
+        # matrix. Check the deadline on EVERY row; full source/state seals
+        # bracket the actual native operation, not every rational multiply.
+        (check if clock is None else clock)()
         terms = [(int(j), F(float(a))) for j, a in row(i)]
         exact.append(sum((a*target[j] for j, a in terms), F(0)))
         propagated = sum((abs(a)*error[j] for j, a in terms), F(0))
@@ -105,6 +108,10 @@ def gradient_evidence(owner, derivative):
     if derivative.owner is not owner or not derivative.face['derivative_supported']:
         raise ValueError('same original derivative owner and supported face')
     deadline = min(owner.deadline, monotonic()+30.)
+    def clock():
+        if monotonic() > deadline:
+            derivative.close()
+            raise TimeoutError('bounded gradient arithmetic research30s')
     def check():
         # The derivative performs owner.check inside its disposal boundary.
         # A direct preliminary owner expiry must not bypass that boundary.
@@ -112,27 +119,28 @@ def gradient_evidence(owner, derivative):
         if hashlib.sha256(Path(__file__).read_bytes()).hexdigest() != SOURCE_SHA256:
             derivative.close()
             raise ValueError('test gradient arithmetic loaded source drift')
-        if monotonic() > deadline:
-            raise TimeoutError('bounded gradient arithmetic research30s')
+        clock()
     check()
     problem, stage, q = owner.problem, derivative._stage, derivative.q
     G, W = problem['simulation'].G, problem['misfit'].W
     if G.shape[1] > 64 or G.shape[0] > 256:
         raise ValueError('small original research shape64/256, not matrix authorization')
+    def matrix_action(matrix, value):
+        return _mat(matrix, value, check, clock)
     # Native literal nesting, no A=W@G substitution or squared rounded W.
     displacement = _add(_literal(q), _scale(-1., _literal(problem['reference_q'])))
-    residual = _add(_mat(G, _literal(q), check), _scale(-1., _literal(problem['misfit'].data.dobs)))
-    data = _scale(2., _mat(G.T, _mat(W.T, _mat(W, residual, check), check), check))
+    residual = _add(matrix_action(G, _literal(q)), _scale(-1., _literal(problem['misfit'].data.dobs)))
+    data = _scale(2., matrix_action(G.T, matrix_action(W.T, matrix_action(W, residual))))
     terms = []
     for alpha, child in zip(stage['problem']['regularization'].multipliers,
             stage['problem']['regularization'].objfcts):
         D = child.f_m_deriv(q)
-        fm = _mat(D, displacement, check)
+        fm = matrix_action(D, displacement)
         # SparseSmallness's identity mapping and each original smoothness
         # reference flag are verified by literal native f_m, not assumed.
         if not np.array_equal(fm[0], child.f_m(q)):
             raise ValueError('original source reference/mapping nesting mismatch')
-        term = _mat(2.*D.T, _mat(child.W.T, _mat(child.W, fm, check), check), check)
+        term = matrix_action(2.*D.T, matrix_action(child.W.T, matrix_action(child.W, fm)))
         terms.append(_scale(alpha, term))
     regularizer = _literal(np.zeros(len(q)))
     for term in terms:
