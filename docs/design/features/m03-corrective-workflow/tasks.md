@@ -1,6 +1,7 @@
 # Corrective workflow execution sequence
 
-Status: planned. All work remains owned/disjoint; no completion from this packet.
+Status: reviewed prospective contract. All work remains owned/disjoint; no
+completion or executed scientific PASS follows from design approval.
 
 1. R-C01/C02: review/persist exact corrective basis/units/constant definition;
    run original training-only forensics in actual containment; keep original
@@ -24,6 +25,9 @@ Status: planned. All work remains owned/disjoint; no completion from this packet
 8. Converge each gate against exact commit, persist/push pathmanifest and factual
    field/host/predictive gates. MAIN integrates/activates; no public action here.
 
-Independent review status: pending; no review receipt or author is fabricated.
-Existing approved v1 implementation and acquisition investigation may continue
-without opening the proposed v2 policy. No SMTP/backup/Pages prerequisite added.
+The separate v2 96/97/98 fit matrix and typed axis/transfer corrections are
+approved. Resolve independent technical findings, complete exact geometry-only
+capacity/preallocation and actual proposed-shape containment/cancellation proof
+before new value access. Existing approved v1 implementation and original-source
+acquisition investigation continue independently. No SMTP/backup/Pages
+prerequisite or activation authority is introduced.

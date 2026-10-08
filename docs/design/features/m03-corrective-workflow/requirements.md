@@ -1,9 +1,11 @@
 # M03 corrective workflow requirements
 
-Status: planned. Pre-code review packet, 2026-10-08. Product baseline
-`a5cbe702cc9c9fb851d64355d38f6b8bd1d0c303`; no independent review is asserted.
-Existing approved streamed-v1 implementation continues independently. Changes
-to candidate selection/profile-v2 await review of this exact packet.
+Status: reviewed prospective contract, 2026-10-08; gates remain prospective.
+Product baseline `a5cbe702cc9c9fb851d64355d38f6b8bd1d0c303`. Approved separate v2
+96-candidate/97-mandatory/98-maximum fits and typed grid-axis/microlevel-transfer
+corrections do not change the original v1 policy or retained controls. Existing
+v1 completion continues independently. Technical review findings must be closed
+before new value access; approval does not establish a test or scientific PASS.
 
 R-C01 THE diagnosis SHALL independently test metric distance, units, translation
 and homogeneous rescaling on the retained ORIGINAL training geometry without

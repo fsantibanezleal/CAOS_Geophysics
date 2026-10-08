@@ -1,7 +1,11 @@
 # Corrective basis, navigation, reference and owner-workflow review
 
-Date: 2026-10-08. Status: proposed before new corrective code; independent review
-pending. This supplements, does not silently replace, the existing M03 SDD.
+Date: 2026-10-08. Status: reviewed prospective contract; not an implementation
+or scientific-pass claim. This supplements, does not silently replace, the
+existing M03 SDD. The separate v2 96-candidate/97-mandatory/98-maximum policy and
+typed axis/transfer corrections are approved; all other resource ceilings and
+the original v1 policy/controls remain unchanged. Independent technical findings
+must be resolved without weakening these approved limits before new value access.
 
 ## Evidence and hypotheses
 
@@ -140,6 +144,17 @@ shape only under explicit bound. Exported/clipped arrays remain within TOTAL
 P<=1048576. Never reuse nT/grid_mask/source_scale roles for a dimensionless
 transfer. This is a proposed typed role correction, not weakened filter physics;
 geological_preservation_claim remains false and diagnostic_only promotion.
+
+Grid-axis representation defect (found during original physical-grid assembly):
+the v1 GridReceipt explicitly requires separate float64 east[nx]/north[ny] metre
+axes, but its role enum has no axis role. `grid_coordinate` is explicitly
+float64[P,3], and row-indexed `easting`/`northing` refer to original N acquisition
+rows. Neither may be mislabelled to bypass validation. Add proposed v2
+`grid_axis` float64[L]/m, L=nx or ny, each axis strictly increasing with actual
+declared spacing at the unchanged64*epsilon geometric tolerance. Bind east and
+north ordered identities separately. No source/data row count changes, no grid
+resolution reduction and no cap increase. This needs the same independent
+representation review; it is not implemented by relabelling an existing role.
 
 ## Full result, CLI, owner wire and instrument
 
