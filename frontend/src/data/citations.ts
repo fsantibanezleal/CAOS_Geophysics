@@ -1,8 +1,10 @@
 import type { Citation } from "@fasl-work/caos-app-shell";
 import { M01_COURSE_CITATIONS } from "./m01-scientific-course";
+import { M11_COURSE_CITATIONS } from "./m11-scientific-course";
 
 export const CITATIONS: Citation[] = [
   ...M01_COURSE_CITATIONS,
+  ...M11_COURSE_CITATIONS,
   { id: "processingcontract", label: "Owned processing contract", citation: "Implemented authenticated owner CSV flag-processing workflow: immutable originals, dataset/job/result identity, private worker, export verification and explicit capability boundary. Develop baseline afac8ab.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/afac8ab/docs/guides/07_processing_jobs.md" },
   { id: "mtcode", label: "MT scientific implementation", citation: "Reviewed strict EDI and electromagnetic implementation: original source, complex forward recurrence, objective, local sensitivity and conditional bootstrap. Scientific baseline 7b69404.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/tree/7b69404/data-pipeline" },
   { id: "mtonline", label: "Bounded MT worker", citation: "Reviewed online M05/M06 implementation: exact-source screen binding, frozen frequency partition, training-only multistart and sensitivity controls. Compute baseline 7b69404.", url: "https://github.com/fsantibanezleal/CAOS_Geophysics/blob/7b69404/app/mt_compute.py" },
@@ -153,18 +155,6 @@ export const CITATIONS: Citation[] = [
     citation:
       "Wu, Y. and Lin, Y. (2019). InversionNet: An efficient and accurate data-driven full waveform inversion framework.",
     doi: "10.1109/TCI.2019.2956866",
-  },
-  {
-    id: "m11source",
-    label: "SimPEG 0.25.2 CrossGradient",
-    citation: "SimPEG 0.25.2. CrossGradient: discrete cross-gradient regularization and its derivatives.",
-    url: "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.CrossGradient.html",
-  },
-  {
-    id: "m11cross",
-    label: "Gallardo and Meju 2004",
-    citation: "Gallardo, L. A. and Meju, M. A. (2004). Joint two-dimensional DC resistivity and seismic travel time inversion with cross-gradients constraints. Journal of Geophysical Research: Solid Earth, 109, B03311.",
-    doi: "10.1029/2003JB002716",
   },
   {
     id: "pinnreview",

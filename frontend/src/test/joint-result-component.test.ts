@@ -30,8 +30,8 @@ function renderRegistered(element: ReactElement): string {
 describe("joint scientific output instrument", () => {
   it("resolves both scientific citations through the actual application registry and provider", () => {
     for (const [id, href] of [
-      ["m11source", "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.CrossGradient.html"],
-      ["m11cross", "https://doi.org/10.1029/2003JB002716"],
+      ["m11source", "https://github.com/simpeg/simpeg/blob/v0.25.2/simpeg/regularization/cross_gradient.py"],
+      ["m11cross", "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.CrossGradient.html"],
     ]) {
       expect(CITATIONS.filter(citation => citation.id === id)).toHaveLength(1);
       expect(renderRegistered(createElement(Cite, { id }))).toContain(`href="${href}"`);
@@ -42,7 +42,7 @@ describe("joint scientific output instrument", () => {
     for (const lang of ["en", "es"] as const) { useLangStore.setState({ lang });
       const parent = renderRegistered(createElement(JointResultWorkbench, { initial })); expect(parent).toContain("docs/guides/22_local_joint_survey.md"); expect(parent).toContain("docs/data-contract/04_joint-local-inspection.md");
       const html = renderRegistered(createElement(JointNativeStateInstrument, { inspection: initial }));
-      expect(html).toContain('href="https://doi.org/10.1029/2003JB002716"');
+      expect(html).toContain('href="https://github.com/simpeg/simpeg/blob/v0.25.2/simpeg/regularization/cross_gradient.py"');
       expect(html).toContain('href="https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.CrossGradient.html"');
       expect(html).toContain('data-testid="joint-native-coupling-readout"'); expect(html).toContain(lang === "en" ? "Export this exact native frame JSON" : "Exportar este marco nativo exacto JSON");
       expect(html).toContain(lang === "en" ? 'aria-label="Native model frame"' : 'aria-label="Marco de modelo nativo"'); expect(html).toContain("nonconverged");
