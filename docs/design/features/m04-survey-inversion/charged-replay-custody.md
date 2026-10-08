@@ -73,6 +73,11 @@ an implicit empty namespace. Known M03 records remain delegated to that owner;
 this reader does not adopt or rewrite them.
 Gate: actual SQLite malformed prior-record negatives, preserved original row,
 no new attempt/stage and no accounting callback invocation.
+The existing-attempt reader SHALL repopulate cached ORM identities from that
+writer transaction's actual SQL snapshot. A previously loaded valid published
+object is not authority for a now malformed/debt row. Gate: independent SQLite
+mutation of a cached published row; refusal before accounting and new birth,
+with the changed prior record preserved rather than repaired.
 
 Use the existing magnetic preparation-attempt SQL model and literal migration
 unchanged, not a new table or general reservation framework. A local replay
