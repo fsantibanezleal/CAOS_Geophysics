@@ -88,6 +88,17 @@ custody. After privilege transition and checked bootstrap, only the root helper
 enters the fixed custody directory. Both working directories are installation
 behavior, never a caller-selected path or permission workaround.
 
+The ordinary installation snapshot must not attempt directory entries inside
+root-only custody. It checks the fixed custody leaf with no-follow lstat as a
+root-owned directory with exact0700 mode and checks every readable ancestor for
+repository markers. Root bootstrap separately checks the interior repository
+marker and complete closure before any owned reader or native launch. All other
+working roots retain their interior and ancestor repository checks. A missing,
+linked, nonroot-owned or differently permissioned custody leaf refuses the
+ordinary snapshot. No PermissionError fallback, readable custody, chmod repair
+or successful native claim is introduced. Pure role controls and actual nonroot
+installed snapshot precede the whole native queue qualification.
+
 The closed installation configuration v2 also pins the isolated distro launch
 interpreter separately from the scientific interpreter. The prelaunch operational
 binding has exactly five fields: configuration, scientific interpreter,

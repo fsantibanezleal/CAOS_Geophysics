@@ -3,6 +3,8 @@ from copy import deepcopy
 import importlib.util
 from pathlib import Path
 from uuid import uuid4
+import stat
+from types import SimpleNamespace
 
 import pytest
 
@@ -126,3 +128,40 @@ def test_custody_budget_refuses_unknown_or_excess_debt_without_adoption():
     for plans,receipts,extra in (([1]*4,[],1),([21*1024**2]*4,[],0),([],[1]*257,0),([],[1]*256,1),([-1],[],0)):
         with pytest.raises(ValueError):
             value.custody_budget(plans,receipts,extra)
+
+
+def test_nonroot_snapshot_does_not_open_root_only_custody_interior(monkeypatch):
+    value = module()
+    config = configuration(value)
+    custody = Path(config['custody_root'])
+    inspected = []
+    monkeypatch.setattr(value.os,'geteuid',lambda:61901,raising=False)
+    monkeypatch.setattr(Path,'lstat',lambda _:SimpleNamespace(st_mode=stat.S_IFDIR|0o700,st_uid=0))
+    def exists(path):
+        assert path != custody/'.git', 'nonroot must not inspect root-only entries'
+        inspected.append(path)
+        return False
+    monkeypatch.setattr(Path,'exists',exists)
+    value.verify_working_roots(config)
+    assert custody.parent/'.git' in inspected
+    assert Path(config['data_root'])/'.git' in inspected
+    assert Path(config['science_work_root'])/'.git' in inspected
+
+
+@pytest.mark.parametrize('mode,uid',[(stat.S_IFLNK|0o700,0),(stat.S_IFDIR|0o755,0),(stat.S_IFDIR|0o700,61901)])
+def test_nonroot_snapshot_refuses_untrusted_custody_boundary(monkeypatch,mode,uid):
+    value = module()
+    monkeypatch.setattr(value.os,'geteuid',lambda:61901,raising=False)
+    monkeypatch.setattr(Path,'lstat',lambda _:SimpleNamespace(st_mode=mode,st_uid=uid))
+    monkeypatch.setattr(Path,'exists',lambda _:False)
+    with pytest.raises(ValueError):
+        value.verify_working_roots(configuration(value))
+
+
+def test_root_bootstrap_still_checks_custody_interior(monkeypatch):
+    value = module()
+    config = configuration(value)
+    monkeypatch.setattr(value.os,'geteuid',lambda:0,raising=False)
+    monkeypatch.setattr(Path,'exists',lambda p:p == Path(config['custody_root'])/'.git')
+    with pytest.raises(ValueError):
+        value.verify_working_roots(config)

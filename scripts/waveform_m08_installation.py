@@ -449,6 +449,19 @@ def verify_import_closure(config):
     return closure
 
 
+def verify_working_roots(config):
+    for name in ("data_root","custody_root","science_work_root"):
+        p = Path(config[name])
+        inspected = (p,*p.parents)
+        if name == "custody_root" and os.geteuid() != 0:
+            # The fixed caller cannot read entries in root-only custody. Verify
+            # its no-follow boundary; root bootstrap checks the interior too.
+            info = p.lstat()
+            require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and stat.S_IMODE(info.st_mode) == 0o700)
+            inspected = p.parents
+        require(not any((parent/".git").exists() for parent in inspected))
+
+
 def read_installation(*, complete=True):
     raw = root_regular(CONFIG,65536)
     config = validate_configuration(decode(raw,65536))
@@ -461,9 +474,7 @@ def read_installation(*, complete=True):
     require(launcher.parent == Path("/usr/bin"))
     require(sha(root_regular(launcher,256*1024**2,image=True)) == config["launch_python_sha256"])
     require(sha(root_regular(config["admission_path"],65536)) == config["admission_sha256"])
-    for name in ("data_root","custody_root","science_work_root"):
-        p = Path(config[name])
-        require(not any((parent/".git").exists() for parent in (p,*p.parents)))
+    verify_working_roots(config)
     if complete:
         verify_import_closure(config)
     return config
