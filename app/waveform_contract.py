@@ -13,6 +13,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.errors import ApiError
+from scripts.waveform_m08_installation import SOURCE_FILES
 
 # Path-owned stdlib scanner, not a package or a configurable provider.
 _spec = importlib.util.spec_from_file_location(
@@ -27,15 +28,7 @@ PARSER = "m08-counts-response/v1"
 SCRATCH = 52690944
 MEMORY = 1073741824  # Experimental committed-memory/charge limit, NOT RSS admission.
 WALL = 120
-IMPLEMENTATION_FILES = (
-    "scripts/waveform_m08_windows.py", "scripts/waveform_m08_files.py", "scripts/waveform_m08_export.py",
-    "scripts/waveform_m08_child.py", "scripts/process_waveform_m08.py", "data-pipeline/waveform_input.py",
-    "data-pipeline/waveform_processing.py", "data-pipeline/waveform_evaluation.py", "app/waveform_contract.py",
-    "app/waveform_processing.py", "app/waveform_worker.py", "app/waveform_result.py",
-    "scripts/waveform_m08_linux.py", "scripts/waveform_m08_guardian.py",
-    "scripts/qualify_waveform_m08_linux.py", "app/waveform_linux_exec.py",
-    "scripts/waveform_m08_linux.py", "app/waveform_linux_exec.py", "scripts/qualify_waveform_m08_linux.py",
-)
+IMPLEMENTATION_FILES = SOURCE_FILES
 
 
 def implementation_sha256():
@@ -251,6 +244,13 @@ def context_path(settings):
 
 
 def context_available(settings):
+    if __import__("sys").platform == "linux":
+        try:
+            from app.waveform_linux_worker import installed_snapshot
+            installed_snapshot(settings)
+            return True
+        except (OSError,ValueError,TypeError,KeyError):
+            return False
     path = context_path(settings)
     if not path.is_file() or path.is_symlink() or path.parent.is_symlink() or not 0 < path.stat().st_size <= 65536:
         return False
@@ -259,8 +259,7 @@ def context_available(settings):
         return (
             set(context) == {"schema", "platform", "python", "python_sha256", "admission_path", "admission_sha256"}
             and context["schema"] == "geophysics.waveform-worker-context/v1"
-            and ((os.name == "nt" and context["platform"] == "windows")
-                 or (__import__("sys").platform == "linux" and context["platform"] == "linux"))
+            and os.name == "nt" and context["platform"] == "windows"
             and all(
                 type(context[k]) is str and re.fullmatch("[a-f0-9]{64}", context[k])
                 for k in ("python_sha256", "admission_sha256")

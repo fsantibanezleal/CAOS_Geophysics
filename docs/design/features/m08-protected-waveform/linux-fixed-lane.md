@@ -64,6 +64,13 @@ Uncertain termination, renamed parents, unknown entries or mismatched receipts
 retain debt. Native scientific result and original resource ceilings are unchanged.
 Missing fixed installation authority must make production Linux unavailable,
 not select the qualification root command or an uncontained fallback.
+The ordinary waveform source fingerprint is the complete installation source
+map. Linux availability checks the fixed snapshot as the nonroot application
+identity; the waveform dispatcher delegates to the installed client before any
+legacy context file, generic CLI argv or observer PID signal is used. Windows
+continues to use its selected Windows context and existing copy publication.
+Historical root qualification commands remain scientific mechanics tools, not
+an alternative production queue path.
 
 ### Closed installation and retention protocol
 
@@ -76,6 +83,10 @@ the installed waveform supervisor plus ONE canonical job UUID. No installation
 parameter is accepted through HTTP, stdin or request JSON. A checked installation
 snapshot is kept through receipt verification, including cancellation, rather
 than discarded after constructing argv. Windows remains its separate lane.
+The unprivileged fixed launcher starts at `/`, not inside inaccessible root-only
+custody. After privilege transition and checked bootstrap, only the root helper
+enters the fixed custody directory. Both working directories are installation
+behavior, never a caller-selected path or permission workaround.
 
 The closed installation configuration v2 also pins the isolated distro launch
 interpreter separately from the scientific interpreter. The prelaunch operational
@@ -128,6 +139,12 @@ bytes and source-bound custody, then uses existing scientific verification and
 transactional publication. Successful exact cleanup follows the commit only;
 failed/uncertain stages and root debt remain recoverable. No fourth SQL artifact
 or numerical-method change is required.
+Postcommit root cleanup compares every relative directory/member name, byte
+count and digest against the internally constructed input/admission/native and
+sealed export inventories before the first unlink. Unknown nested entries are
+not retrospectively adopted as cleanup authority. Startup debt traversal is
+finite, closed by generated run names and existing export-member grammar, and
+rejects unsafe links, owners, modes or unresolved scientific mount contents.
 
 The outer result may include `linux_execution` and `linux_installation` only as
 a complete pair. The first is a closed65536-byte native terminal graph, the
@@ -142,6 +159,38 @@ Native uint64 monotonic stamps remain separately bounded; scientific metadata
 keeps its existing JS-safe integer grammar. Historical reads never inspect or
 adopt the current installation. Original Windows results without the pair keep
 their existing result grammar and make no installed-Linux claim.
+
+### Held-stage publication without a third copy
+
+For the installed lane, root custody and the verified ordinary export are the
+two retained copies. Publication adopts the ordinary export with Linux
+`renameat2(RENAME_NOREPLACE)`, never another member copy or overwrite. The worker
+retains stage and export descriptors; the transaction checks source/cancel/quota
+and all exact destination paths before the rename. Source entry, held export and
+generated target-parent descriptors must agree on identity and filesystem.
+Reopen the same held export before and after installation using the existing
+bounded scientific reopener. Rebind the generated destination through no-follow
+ancestor descriptors and compare it to the held export immediately before
+metadata installation and again before SQL success; independently reopen the
+installed metadata against its exact digest. A changed source/destination, unsupported atomic
+operation, existing target or uncertain commit retains every remaining byte and
+cannot publish success. There is no cross-device copy fallback.
+
+The root receives COMMIT only after the ordinary transaction has committed.
+After its exact CLEAN acknowledgement, validate persisted result/member rows
+again. Then remove only the verified receipt-only stage; adopted published
+members are not stage cleanup targets. Failed/unknown stage names, replaced
+identities or acknowledgement failure retain debt for exact recovery. These
+storage operations add no numerical solver, scientific resource allowance,
+SQL artifact, public installation parameter or privileged API access.
+
+The genuine-science held-publication component gate uses actual calculation,
+SQLite, member downloads, ZIP reopening, reconciliation and deletion but authored
+root/resource records. Its inode-preservation checks prove no third member copy,
+not installed authority or native resource containment. Actual nonroot filesystem
+controls cover existing targets, replacement identities, unavailable atomic
+operations, uncertain acknowledgement and receipt-only stage cleanup. An
+unsupported filesystem is retained as failure, never replaced by copy fallback.
 
 In the installed nonroot caller model, the independent guardian also holds the
 inherited read end of the worker's anonymous stdin pipe before native submission.

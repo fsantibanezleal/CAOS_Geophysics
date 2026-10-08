@@ -305,7 +305,7 @@ class Monitor:
 
 
 class LinuxHeldDirectory(OwnedDirectory):
-    """Readonly openat lease from a verified live tmpfs mount, not a proc path."""
+    """Readonly openat lease from a verified held output, never a proc path."""
     def __init__(self, fd):
         super().__init__(Path("/"), [os.dup(fd)], readonly=True)
 

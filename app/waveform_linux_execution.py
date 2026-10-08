@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import re
 
-from waveform_m08_installation import (
+from scripts.waveform_m08_installation import (
     canonical, digest, fields, require, sha, uuid,
     validate_installation_binding, validate_recorded_binding,
 )

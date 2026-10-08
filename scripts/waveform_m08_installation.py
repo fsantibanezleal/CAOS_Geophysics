@@ -23,6 +23,8 @@ SOURCE_FILES = (
     "scripts/waveform_m08_owned_reader.py", "scripts/waveform_m08_supervisor.py",
     "app/waveform_linux_worker.py",
     "app/waveform_linux_execution.py",
+    "app/waveform_publication.py",
+    "app/waveform_stage.py",
 )
 CONFIG_KEYS = set("schema source_root source_revision data_root custody_root science_work_root uid gid science_uid science_gid python python_sha256 launch_python_sha256 site_packages admission_path admission_sha256 import_closure_path import_closure_sha256 source_hashes".split())
 
@@ -107,13 +109,20 @@ def installed_environment(config):
             "TMP":config["custody_root"],"TEMP":config["custody_root"]}
 
 
+def installed_cwd(config):
+    validate_configuration(config)
+    # The unprivileged caller must not traverse root-only raw custody. The fixed
+    # root helper enters that directory only after its checked bootstrap.
+    return "/"
+
+
 def installation_binding(config, identifier):
     validate_configuration(config)
     return {"configuration_sha256":sha(canonical(config)),"python_sha256":config["python_sha256"],
             "environment_sha256":sha(canonical({key:config[key] for key in
                 ("site_packages","admission_sha256","import_closure_sha256")})),
             "invocation_sha256":sha(canonical({"argv":installed_argv(config,identifier),
-                "launcher_sha256":config["launch_python_sha256"],"cwd":config["custody_root"],
+                "launcher_sha256":config["launch_python_sha256"],"cwd":installed_cwd(config),
                 "environment":installed_environment(config)})),"source_hashes":dict(config["source_hashes"])}
 
 
@@ -362,6 +371,6 @@ def read_installation(*, complete=True):
 
 def custody_budget(plans, receipts, extra):
     require(type(plans) is list and type(receipts) is list and type(extra) is int and 0 <= extra <= 20*1024**2)
-    require(len(plans)+(1 if extra else 0) <= 4 and len(receipts) <= 256)
+    require(len(plans)+(1 if extra else 0) <= 4 and len(receipts)+(1 if extra else 0) <= 256)
     require(all(type(v) is int and 0 < v <= 20*1024**2 for v in plans) and sum(plans)+extra <= 80*1024**2)
     require(all(type(v) is int and 0 < v <= 65536 for v in receipts))

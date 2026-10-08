@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 
 from sqlalchemy import select
@@ -21,6 +22,8 @@ from app.waveform_result import publish_result
 
 
 def read_context(settings):
+    if sys.platform == "linux":
+        raise ApiError(409,"waveform_context_unavailable","Linux waveform requires its fixed nonroot installation")
     if not context_available(settings):
         raise ApiError(409, "waveform_context_unavailable", "Waveform native context is absent or invalid")
     value = INPUT.bounded_json(context_path(settings).read_bytes(), 65536)
@@ -90,6 +93,8 @@ def bind_job_context(context, stage_root, stage, job_id):
 
 
 def command(context, paths):
+    if context.get("platform") != "windows":
+        raise ApiError(409,"waveform_context_unavailable","Generic waveform observer dispatch is Windows-only")
     script = Path(__file__).resolve().parents[1] / "scripts" / "process_waveform_m08.py"
     return [
         context["python"],
@@ -112,6 +117,9 @@ def command(context, paths):
 
 async def execute(settings, sessions, job, poll_interval):
     """Real fixed CLI/supervisor only. Preserved stages demand exact recovery."""
+    if sys.platform == "linux":
+        from app.waveform_linux_worker import execute as installed_execute
+        return await installed_execute(settings,sessions,job,poll_interval)
     from app.worker import _cancel_requested, _finish_failure
 
     start = time.monotonic()

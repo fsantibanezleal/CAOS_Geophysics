@@ -37,6 +37,16 @@ def test_fixed_authority_accepts_no_request_selected_paths_or_commands():
     assert config == configuration(value)
 
 
+def test_unprivileged_launch_cwd_is_fixed_outside_root_only_custody():
+    value = module()
+    config = configuration(value)
+    identifier = str(uuid4())
+    assert value.installed_cwd(config) == "/"
+    invocation = dict(argv=value.installed_argv(config,identifier),
+        launcher_sha256=config["launch_python_sha256"],cwd="/",environment=value.installed_environment(config))
+    assert value.installation_binding(config,identifier)["invocation_sha256"] == value.sha(value.canonical(invocation))
+
+
 @pytest.mark.parametrize("mutate",[
     lambda c:c.update(command="/bin/sh"),lambda c:c.update(uid=0),lambda c:c.update(science_uid=0),
     lambda c:c.update(custody_root="/run/waveform"),lambda c:c.update(custody_root="/tmp/waveform"),
@@ -112,6 +122,7 @@ def test_uuid_change_cannot_reuse_an_installation_invocation():
 def test_custody_budget_refuses_unknown_or_excess_debt_without_adoption():
     value = module()
     value.custody_budget([18*1024**2]*4,[65536]*256,0)
-    for plans,receipts,extra in (([1]*4,[],1),([21*1024**2]*4,[],0),([],[1]*257,0),([-1],[],0)):
+    value.custody_budget([],[65536]*255,1)
+    for plans,receipts,extra in (([1]*4,[],1),([21*1024**2]*4,[],0),([],[1]*257,0),([],[1]*256,1),([-1],[],0)):
         with pytest.raises(ValueError):
             value.custody_budget(plans,receipts,extra)

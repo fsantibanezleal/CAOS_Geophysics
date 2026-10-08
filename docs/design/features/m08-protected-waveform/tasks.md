@@ -46,8 +46,25 @@ for closed job/source/prelaunch installation/stage/native/member bindings,
 uint64 clocks, bounded failures and cancel/caller-loss. These authored contract
 tests do not execute a root helper or prove a nonroot protected queue. The full
 installation source map includes the historical validator; the ordinary worker
-source cutover and complete installed runtime qualification remain required
-before fixed-helper dispatch is enabled.
+source cutover delegates Linux to the fixed nonroot client. Complete installed
+runtime qualification remains required; missing fixed authority refuses rather
+than using the historical root qualification context as a production fallback.
+
+Held-stage publication continuation: first actual POSIX no-replace/inode and
+retention controls in `tests/api/test_waveform_publication.py`; then integrate
+the finite descriptor-held adoption into the existing transaction, with the
+ordinary Windows copy path unchanged. Installed queue/uncertain-commit/root
+cleanup and original native qualification remain separate actual gates.
+The companion `tests/api/test_waveform_held_publication.py` executes the original
+scientific calculation and full ordinary API/ZIP/reconcile/delete path with
+authored root records. It must remain explicitly separate from installed queue
+and native resource proof. Destination identity and metadata digest are checked
+before SQL success; receipt-only cleanup never removes adopted member files.
+Installed client framing/classification controls are authored contracts, not
+native queue proof. Actual root-owned cleanup controls compare known inventories
+before the first unlink and preserve unknown nested debt. Neither gate replaces
+full fixed-helper runtime census, held source acquisition, native extinction or
+actual nonroot whole-queue qualification on the private ML VPS.
 
 Installed caller continuation: document the guardian's pre-submission held
 anonymous worker-pipe observer, then failing fixed-frame/descriptor and actual
