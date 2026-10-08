@@ -39,7 +39,7 @@ async def snapshot_audit(private, database, approved):
     from app.config import Settings
     from app.profile_archive_delete import archive_relations
     from sqlalchemy.ext.asyncio import async_sessionmaker
-    settings=Settings(data_dir=private,auth_secret='independent-read-only-audit-20261008-123456',
+    Settings(data_dir=private,auth_secret='independent-read-only-audit-20261008-123456',
         public_origin='http://testserver',cookie_secure=False)
     # Explicit SQLite read-only URL; no authentication, rate or migration writes.
     from sqlalchemy.ext.asyncio import create_async_engine
