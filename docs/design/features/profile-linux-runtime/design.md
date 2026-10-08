@@ -102,6 +102,24 @@ there is no recursive adoption, sweeping delete, backup or external service.
 
 ## Review and qualification boundary
 
+The configuration also pins a root-owned import-closure inventory by SHA-256.
+Before native execution, compare complete runtime and environment name sets,
+entry kinds, ownership, modes, device/inode identities and file hashes with that
+inventory; verify pinned links and native dependencies. Checking only the
+previously listed files is insufficient: an added startup hook or importable
+file must refuse execution. The independently qualified source/cache/startup
+proof remains necessary when this inventory is installed, and changing the
+runtime requires requalification rather than regenerating an accepted digest.
+The product source closure includes the engines' imported `sources.py` and
+`data/source-ledger.json`, with only the declared files and ancestor directories
+allowed in the separate sealed source root. The older qualification's source
+inventory is not authority for a different product source installation.
+The unactivated configuration advances to `geophysics.profile-linux-config/v2`
+with explicit `import_closure` and `import_closure_sha256` fields. The imported
+inventory is scientific-runtime authority only; it cannot alter commands, IDs,
+paths, properties or privileges. Actual final-source import and queue execution
+remain host acceptance gates.
+
 First implement failing closed-packet/constructor/source and relation tests,
 then the fixed supervisor and additive worker adaptation. Preserve M08's pending
 shared worker changes by integrating its pinned version before the union patch.
