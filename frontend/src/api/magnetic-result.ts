@@ -95,6 +95,21 @@ export function magneticCells(view: MagneticView) {
   });
 }
 
+/** Orthographic camera, one physical metres-to-pixels scale, full mesh edges. */
+export function magneticProjection(view: MagneticView, angleDegrees: number) {
+  if (!Number.isFinite(angleDegrees)) fail("camera angle");
+  const origin=view.mesh.origin_m.data as number[], widths=[view.mesh.widths_x_m,view.mesh.widths_y_m,view.mesh.widths_z_m].map(a=>(a.data as number[]).reduce((s,w)=>s+w,0));
+  if (widths.some((w,i)=>!Number.isFinite(w) || !Number.isFinite(origin[i]+w) || w<=0)) fail("physical mesh extent");
+  const a=angleDegrees*Math.PI/180, co=Math.cos(a), si=Math.sin(a);
+  const camera=(xyz:number[])=>{const x=xyz[0]-origin[0]-widths[0]/2,y=xyz[1]-origin[1]-widths[1]/2,z=xyz[2]-origin[2]-widths[2]/2;return [co*x-si*y,.5*(si*x+co*y)-Math.sqrt(3)/2*z];};
+  const corners=Array.from({length:8},(_,i)=>camera(origin.map((x,k)=>x+((i>>k)&1?widths[k]:0))));
+  const spans=[0,1].map(k=>Math.max(...corners.map(p=>p[k]))-Math.min(...corners.map(p=>p[k])));
+  const scale=Math.min(610/spans[0],350/spans[1]), sliceScale=Math.min(610/widths[0],350/widths[1]);
+  const project=(xyz:number[])=>{const p=camera(xyz);return [350+scale*p[0],220+scale*p[1]];};
+  const slice=(xyz:number[])=>[350+sliceScale*(xyz[0]-origin[0]-widths[0]/2),220-sliceScale*(xyz[1]-origin[1]-widths[1]/2)];
+  return {project,slice,scale,sliceScale,origin_m:origin,widths_m:widths};
+}
+
 /** Recheck every little-endian native descriptor against its exported SHA256. */
 export async function verifyMagneticView(value: unknown, expected: MagneticBinding) {
   const parsed=parseMagneticView(value,expected), pending: unknown[]=[value]; let visited=0,total=0;

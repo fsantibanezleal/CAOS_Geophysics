@@ -18,8 +18,13 @@ in nT, not an absolute value, interpolation or arbitrary display normalization.
 Excluded data are not replaced with fabricated coordinates. The susceptibility
 volume uses actual nonuniform widths, ENU origins and active Fortran index
 `i+nx*(j+ny*k)`. Faces/depth slices occupy physical cell extents; susceptibility
-is dimensionless SI and cell volume is m³. A zero null-control model has visible
-cell boundaries, not an invented body. Rotation and slice controls alter replay
+is dimensionless SI and cell volume is m³.
+The orthographic camera uses one metres-to-pixels scale on all three physical
+axes, fits full mesh edges, and does not exaggerate vertical dimensions. Depth
+slices likewise preserve equal horizontal metre scales, not centre-only bounds.
+Its projection axes are orthonormal; screen foreshortening is camera geometry.
+A zero null-control model has visible cell boundaries, not an invented body.
+Rotation and slice controls alter replay
 only; edited field, geometry or likelihood inputs require a new owned job.
 
 Local point-spread is conditional linearized sensitivity/resolution around the
@@ -72,7 +77,10 @@ montaje no registra un método público ni habilita procesamiento online.
 Mapa, vuelo original y residuo firmado conservan IDs, coordenadas, grupos y orden
 de componentes completos. Residuo significa observado menos predicho, en nT.
 Volumen y cortes usan anchos no uniformes, origen ENU e índice Fortran real; la
-susceptibilidad es SI adimensional y el volumen de celda, m³. Rotar o cambiar
+susceptibilidad es SI adimensional y el volumen de celda, m³. La cámara ortográfica
+usa una escala común en metros para los tres ejes, ajusta las aristas completas
+y no exagera la vertical; los cortes conservan escalas horizontales iguales.
+Rotar o cambiar
 un corte sólo modifica la reproducción. Cambiar campo, geometría o verosimilitud
 exige un trabajo nuevo; no se fabrica un cuerpo para el control nulo.
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Tabs, SubTabs, useShellLang } from "@fasl-work/caos-app-shell";
-import { magneticCells, magneticSpectrum, type MagneticView } from "../api/magnetic-result";
+import { magneticCells, magneticProjection, magneticSpectrum, type MagneticView } from "../api/magnetic-result";
 import "./MagneticSurveyResult.css";
 
 /** Mounted only for a receipt-bound immutable result. This is a replay viewer. */
@@ -44,8 +44,7 @@ export function MagneticSurveyResult({ value, onExport }: { value: MagneticView;
       </g>)}
     </>)}</>;
   };
-  const rad=angle*Math.PI/180, [cxlo,cxhi]=limits(cells.map(c=>c.xyz_m[0])), [cylo,cyhi]=limits(cells.map(c=>c.xyz_m[1])), [czlo,czhi]=limits(cells.map(c=>c.xyz_m[2]));
-  const projected=(xyz:number[])=>{const x=(xyz[0]-cxlo)/(cxhi-cxlo)-.5,y=(xyz[1]-cylo)/(cyhi-cylo)-.5,z=(xyz[2]-czlo)/(czhi-czlo)-.5;return [350+240*(Math.cos(rad)*x-Math.sin(rad)*y),230+120*(Math.sin(rad)*x+Math.cos(rad)*y)-200*z];};
+  const camera=useMemo(()=>magneticProjection(value,angle),[value,angle]), projected=camera.project;
   const maxChi=Math.max(0,...cells.map(c=>c.chi_si));
   const cellReadout=<output className="magnetic-readout" data-cell-index={cell.index}>{t("Cell", "Celda")} {cell.index} · E {f(cell.xyz_m[0])} m · N {f(cell.xyz_m[1])} m · U {f(cell.xyz_m[2])} m · χ {f(cell.chi_si)} SI · {f(cell.volume_m3)} m³</output>;
   const model=(slice:boolean)=> <>
@@ -56,9 +55,9 @@ export function MagneticSurveyResult({ value, onExport }: { value: MagneticView;
       cells.filter(c=>!slice||c.layer===layer).map(c=>{const opacity=maxChi===0?.3:.15+.65*c.chi_si/maxChi;
         const corners=Array.from({length:8},(_,i)=>projected(c.xyz_m.map((x,axis)=>x+((i>>axis)&1?1:-1)*c.widths_m[axis]/2)));
         return <g key={c.index} opacity={opacity} className="magnetic-cell" tabIndex={0} role="button" aria-label={`${c.index}: ${f(c.chi_si)} SI`} onPointerEnter={()=>setCellIndex(c.k)} onClick={()=>setCellIndex(c.k)} onKeyDown={e=>{if(e.key==="Enter")setCellIndex(c.k);}}>
-          {slice?<rect x={45+610*(c.xyz_m[0]-c.widths_m[0]/2-cxlo)/(cxhi-cxlo)} y={395-350*(c.xyz_m[1]+c.widths_m[1]/2-cylo)/(cyhi-cylo)} width={610*c.widths_m[0]/(cxhi-cxlo)} height={350*c.widths_m[1]/(cyhi-cylo)} stroke="currentColor" strokeWidth={cellIndex===c.k?2:.3}/>: [[4,5,7,6],[0,1,5,4],[0,2,6,4]].map((face,i)=><polygon key={i} points={face.map(j=>corners[j].join(",")).join(" ")} stroke="currentColor" strokeWidth={cellIndex===c.k?2:.3}/>)}
+          {slice?<rect x={camera.slice([c.xyz_m[0]-c.widths_m[0]/2,c.xyz_m[1]+c.widths_m[1]/2,c.xyz_m[2]])[0]} y={camera.slice([c.xyz_m[0]-c.widths_m[0]/2,c.xyz_m[1]+c.widths_m[1]/2,c.xyz_m[2]])[1]} width={camera.sliceScale*c.widths_m[0]} height={camera.sliceScale*c.widths_m[1]} stroke="currentColor" strokeWidth={cellIndex===c.k?2:.3}/>: [[4,5,7,6],[0,1,5,4],[0,2,6,4]].map((face,i)=><polygon key={i} points={face.map(j=>corners[j].join(",")).join(" ")} stroke="currentColor" strokeWidth={cellIndex===c.k?2:.3}/>)}
         </g>;}))}
-    <p>{t("Opacity encodes susceptibility, not certainty. Physical cell faces retain the nonuniform mesh; no interpolated geology.", "La opacidad codifica susceptibilidad, no certeza. Las caras físicas conservan la malla no uniforme; no se interpola geología.")}</p>
+    <p>{t("Opacity encodes susceptibility, not certainty. Full cell edges use one physical camera scale, without vertical exaggeration or interpolated geology.", "La opacidad codifica susceptibilidad, no certeza. Las aristas completas usan una escala física común, sin exageración vertical ni geología interpolada.")}</p>
   </>;
   const resolution=<>{psf?<><label>{t("Point-spread source cell", "Celda fuente de dispersión puntual")}<select value={sourceIndex} onChange={e=>setSourceIndex(Number(e.target.value))}>{psf.selected_indices.data.map((i,k)=><option key={k} value={k}>{Number(i)}</option>)}</select></label>
     {frame(t("Local point spread", "Dispersión puntual local"),cells.map(c=>{const p=projected(c.xyz_m),n=Number(psf.point_spread.data[c.k*psf.selected_indices.data.length+sourceIndex]); return <circle key={c.index} cx={p[0]} cy={p[1]} r={cellIndex===c.k?7:4} className={n<0?"magnetic-outer":"magnetic-development"} onPointerEnter={()=>setCellIndex(c.k)}><title>{c.index}: {f(n)}</title></circle>;}))}

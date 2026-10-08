@@ -10,7 +10,7 @@ for (const p of [viewPath,output]) if (p.toLowerCase().startsWith(repo.toLowerCa
 const {build}=await import(pathToFileURL(join(packages,"esbuild/lib/main.js")).href);
 const compiled=join(dirname(output),"magnetic-contract-parity.mjs");
 await build({entryPoints:[join(repo,"frontend/src/api/magnetic-result.ts")],outfile:compiled,bundle:true,format:"esm",platform:"node"});
-const {verifyMagneticView,magneticCells,magneticSpectrum}=await import(pathToFileURL(compiled).href);
+const {verifyMagneticView,magneticCells,magneticProjection,magneticSpectrum}=await import(pathToFileURL(compiled).href);
 globalThis.crypto ??= webcrypto;
 const raw=await readFile(viewPath),value=JSON.parse(raw);
 const parsed=await verifyMagneticView(value,value.binding),cells=magneticCells(parsed);
@@ -23,5 +23,12 @@ for(const field of ["source_id","original_sha256","configuration_sha256","genera
 const tampered=structuredClone(value);tampered.model.chi_si.data[0]=.00001;
 try{await verifyMagneticView(tampered,value.binding);throw Error("Unexpected numeric tamper accepted");}catch(error){if(String(error).includes("Unexpected"))throw error;}
 const spectra=[...new Set(parsed.rows.map(r=>r.group_id))].map(group=>{const rows=parsed.rows.filter(r=>r.group_id===group);return {group,available:magneticSpectrum(rows,0)!==null};});
-const proof={schema:"magnetic-frontend-numeric-parity-1",generation_sha256:value.binding.generation_sha256,view_sha256:createHash("sha256").update(raw).digest("hex"),rows:parsed.rows.length,active_cells:cells.length,rejected_binding_fields:rejected,actual_numeric_tamper_rejected:true,native_descriptors_sha256_verified:true,spectra,api_owner_mounted:false,browser_verified:false,field_accepted:false};
+const cameraAngles=[0,35,90,180,270,360];
+for(const angle of cameraAngles){
+  const c=magneticProjection(parsed,angle), base=c.project(c.origin_m), a=angle*Math.PI/180;
+  const deltas=[[Math.cos(a),.5*Math.sin(a)],[-Math.sin(a),.5*Math.cos(a)],[0,-Math.sqrt(3)/2]];
+  for(let axis=0;axis<3;axis++){const p=c.project(c.origin_m.map((v,k)=>v+(axis===k?1:0)));for(let j=0;j<2;j++)if(Math.abs((p[j]-base[j])-c.scale*deltas[axis][j])>1e-10)throw Error("Physical orthographic camera unit scale differs");}
+  for(let i=0;i<8;i++){const xyz=c.origin_m.map((v,k)=>v+((i>>k)&1?c.widths_m[k]:0)),p=c.project(xyz),q=c.slice(xyz);if(p[0]<45-1e-10||p[0]>655+1e-10||p[1]<45-1e-10||p[1]>395+1e-10||q[0]<45-1e-10||q[0]>655+1e-10||q[1]<45-1e-10||q[1]>395+1e-10)throw Error("Complete physical mesh edges clipped");}
+}
+const proof={schema:"magnetic-frontend-numeric-parity-1",generation_sha256:value.binding.generation_sha256,view_sha256:createHash("sha256").update(raw).digest("hex"),rows:parsed.rows.length,active_cells:cells.length,rejected_binding_fields:rejected,actual_numeric_tamper_rejected:true,native_descriptors_sha256_verified:true,physical_orthographic_camera_unit_scale_verified:true,full_mesh_edge_angles_checked:cameraAngles,spectra,api_owner_mounted:false,browser_verified:false,field_accepted:false};
 await writeFile(output,JSON.stringify(proof),{flag:"wx"});console.log(JSON.stringify(proof));
