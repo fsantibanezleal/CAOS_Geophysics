@@ -198,7 +198,8 @@ def retire_failed_job(connection, *, owner_id, project_id, job_id, state, error_
         raise
 
 
-def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, removed_us, failure_cut=None):
+def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, removed_us, failure_cut=None,
+                         _caller_transaction=False):
     """Acknowledge only a verified unlink AND successful directory sync.
 
     Native uncertainty or a failed SQL commit leaves conservative charge. A
@@ -211,7 +212,12 @@ def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, remo
     uuid(batch_id)
     integer(ordinal, 1, 4096)
     integer(removed_us)
-    begin_ledger(connection)
+    if _caller_transaction:
+        require(connection.in_transaction and connection.execute('PRAGMA foreign_keys').fetchone()==(1,)
+                and connection.execute('SELECT version_num FROM alembic_version').fetchall()==[(REVISION,)]
+                and ddl_sha256(connection)==SUCCESSOR_DDL,'physical_cleanup_caller_transaction')
+    else:
+        begin_ledger(connection)
     try:
         batch = _row(connection, "SELECT * FROM physical_custody_batches WHERE batch_id=? AND owner_id=?", (batch_id, owner_id))
         require(batch["state"] == "cleanup_pending", "physical_cleanup_state")
@@ -265,7 +271,7 @@ def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, remo
                            (body, byte_sha(body), charge, "removed" if complete else "cleanup_pending", removed_us if complete else None, batch_id))
         if failure_cut:
             failure_cut("sql_acknowledgement")
-        connection.commit()
+        if not _caller_transaction: connection.commit()
     except BaseException:
-        connection.rollback()
+        if not _caller_transaction: connection.rollback()
         raise

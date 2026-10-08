@@ -322,6 +322,52 @@ class PrivateFiles:
                 os.close(descriptor)
             os.close(parent)
 
+    def move_project_directory(self, owner_id, project_id, lane, *, reverse=False):
+        """Original DELETE's fixed directory rename, no replace and both fsyncs.
+
+        Caller holds global exclusive and original worker exclusion. Linux's
+        loaded distro libc must export renameat2; no weaker overwrite fallback.
+        Failed barriers preserve the recorded original-or-trash partition.
+        """
+        import ctypes
+        from app.physical_contract import uuid
+        uuid(owner_id); uuid(project_id)
+        require(lane in ('projects','derived') and type(reverse) is bool,'physical_project_move')
+        original=f'{lane}/{owner_id}/{project_id}'
+        trash=f".deleting/{owner_id}--{project_id}"+('--derived' if lane=='derived' else '')
+        self.check_root()
+        try:
+            os.mkdir('.deleting',mode=0o700,dir_fd=self.fd)
+            os.fsync(self.fd)
+        except FileExistsError:
+            pass
+        source,target=(trash,original) if reverse else (original,trash)
+        source_parent,source_name=self._parent(source)
+        target_parent=None; descriptor=None
+        try:
+            target_parent,target_name=self._parent(target)
+            descriptor=os.open(source_name,os.O_RDONLY|os.O_DIRECTORY|os.O_CLOEXEC|os.O_NOFOLLOW,dir_fd=source_parent)
+            info=os.fstat(descriptor)
+            require(info.st_dev==self.identity[0] and stat.S_ISDIR(info.st_mode),'physical_project_move_identity')
+            library=ctypes.CDLL(None,use_errno=True)
+            rename=getattr(library,'renameat2',None)
+            require(rename is not None,'physical_project_noreplace_unavailable')
+            rename.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
+            rename.restype=ctypes.c_int
+            require(self._identity(os.stat(source_name,dir_fd=source_parent,follow_symlinks=False))==self._identity(info),
+                    'physical_project_move_replaced')
+            if rename(source_parent,os.fsencode(source_name),target_parent,os.fsencode(target_name),1)!=0:
+                error=ctypes.get_errno()
+                raise OSError(error,os.strerror(error))
+            require(self._identity(os.stat(target_name,dir_fd=target_parent,follow_symlinks=False))==self._identity(info),
+                    'physical_project_move_replaced')
+            os.fsync(source_parent); os.fsync(target_parent)
+            self.check_root()
+        finally:
+            if descriptor is not None: os.close(descriptor)
+            if target_parent is not None: os.close(target_parent)
+            os.close(source_parent)
+
     def remove(self, key, *, cap, expected_bytes, expected_sha256, failure_cut=None):
         """Delete exactly one verified ordinary file and sync its directory.
 

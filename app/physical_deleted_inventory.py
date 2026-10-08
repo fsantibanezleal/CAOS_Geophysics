@@ -203,10 +203,11 @@ def project_inventory(connection, *, owner_id, project_id, source_policy_sha256,
             physical_control_sha256=digest(_native_control(controls[r['id']])) if r['id'] in controls else None,scientific_verdict=verdicts.get(r['id'])) for r in jobs],
         custody=[],waveform_sources=[],waveform_artifacts=[],profile_archives=[])
     for batch in rows('physical_custody_batches'):
-        require(batch['state'] in ('cleanup_pending','removed') and type(batch['inventory_bytes']) is bytes
+        preparing=batch['origin_kind']=='project_deletion' and batch['state']=='sealed' and batch['charged_bytes']==0
+        require((batch['state'] in ('cleanup_pending','removed') or preparing) and type(batch['inventory_bytes']) is bytes
                 and byte_sha(batch['inventory_bytes'])==batch['inventory_sha256'],'current_deletion_custody_unresolved')
         inv=parse_current_custody([batch['inventory_bytes']]); measured=validate_current_custody(inv)
-        require(measured['retained_bytes']==batch['charged_bytes'],'current_deletion_custody_charge')
+        require(preparing or measured['retained_bytes']==batch['charged_bytes'],'current_deletion_custody_charge')
         value['custody'].append(dict(batch_id=batch['batch_id'],origin_kind=batch['origin_kind'],origin_id=batch['origin_id'],
                                     initial_inventory_sha256=measured['initial_inventory_sha256']))
     for row in rows('waveform_dataset_sources','dataset_id IN (SELECT id FROM observation_datasets WHERE owner_id=? AND project_id=?)'):

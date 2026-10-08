@@ -101,6 +101,26 @@ def _custody_key(header, slot):
     return f".deleting/{header['owner_id']}--{header['project_id']}--derived/{slot['leaf']}"
 
 
+class _PreparedOriginals:
+    """Read-only exact relocation map, never arbitrary missing-file fallback.
+
+    The closed final census independently requires XOR existence for every pair.
+    A changed original, link, duplicate or unregistered path never falls through.
+    """
+    def __init__(self, original, pairs):
+        self.original,self.pairs=original,pairs
+
+    def __getattr__(self,name):
+        return getattr(self.original,name)
+
+    def read(self,key,**arguments):
+        try:
+            return self.original.read(key,**arguments)
+        except FileNotFoundError:
+            require(key in self.pairs,'physical_classifier_unregistered_missing_original')
+            return self.original.read(self.pairs[key],**arguments)
+
+
 class _Audit:
     def __init__(self, connection, files, rows, manifests, installations, metadata, source_policy):
         self.connection, self.files, self.rows = connection, files, rows
@@ -123,6 +143,8 @@ class _Audit:
         self.controls = {row['job_id']: row for row in rows['physical_job_controls']}
         self.source_policy = source_policy
         self.deleted = {}
+        self.relocations = {}
+        self.predeletion = set()
 
     def deleted_projects(self):
         from app.physical_deleted_inventory import observe_receipt, validate_current_tombstone
@@ -168,7 +190,60 @@ class _Audit:
                         (receipt['owner_id'], mappings['custody'][identifier]['origin_kind'],
                          mappings['custody'][identifier]['origin_id']), 'physical_classifier_deleted_custody_binding')
             self.deleted[project] = dict(receipt=receipt, inventory=inventory, **mappings)
+            # The original route leaves these known empty ancestors after its
+            # directory rename. No deleted project subtree/file is admitted.
+            for lane in ('projects','derived'):
+                self.empty.update((lane,f"{lane}/{receipt['owner_id']}"))
             self.operations[receipt['id']] = 'retain_deleted_projection'
+
+    def prepared_deletions(self):
+        from app.physical_project_deletion import original_slots
+        for batch in self.batches.values():
+            if batch['origin_kind']!='project_deletion' or batch['project_id'] in self.deleted:
+                continue
+            self.ownership(batch)
+            require(batch['origin_id']==batch['project_id'] and batch['state']=='sealed'
+                    and batch['charged_bytes']==0 and batch['removed_us'] is None,
+                    'physical_classifier_predeletion_state')
+            require(not any(r['project_id']==batch['project_id'] for r in self.rows['deletion_receipts'])
+                    and not any(r['project_id']==batch['project_id'] for r in self.rows['physical_publication_intents'])
+                    and not any(r['project_id']==batch['project_id'] and r['state'] in ('queued','running')
+                                for r in self.jobs.values()),'physical_classifier_predeletion_operation')
+            body=batch['inventory_bytes']
+            require(type(body) is bytes and byte_sha(body)==batch['inventory_sha256'],
+                    'physical_classifier_predeletion_hash')
+            inventory=parse_current_custody([body]); validate_current_custody(inventory)
+            require(canonical(inventory)==body and not inventory['removed_ordinals'] and
+                    all(batch[k]==v for k,v in inventory.items() if k not in ('schema','initial_files','removed_ordinals')),
+                    'physical_classifier_predeletion_header')
+            owner,project=batch['owner_id'],batch['project_id']
+            self.empty.add('.deleting')
+            projected=dict(raw_assets=[dict(asset_id=r['id'],bytes=r['byte_count'],sha256=r['sha256'])
+                for r in sorted(self.raw.values(),key=lambda r:r['id']) if r['project_id']==project],
+                datasets=[dict(dataset_id=r['id'],bytes=r['byte_count'],sha256=r['sha256'])
+                for r in sorted(self.datasets.values(),key=lambda r:r['id']) if r['project_id']==project],
+                jobs=[dict(job_id=r['id'],state=r['state'],result_bytes=r['result_bytes'],result_sha256=r['result_sha256'])
+                for r in sorted(self.jobs.values(),key=lambda r:r['id']) if r['project_id']==project],
+                waveform_artifacts=[dict(job_id=r['job_id'],name=r['name'],bytes=r['byte_count'],sha256=r['sha256'])
+                for r in sorted(self.rows['waveform_result_artifacts'],key=lambda r:(r['job_id'],r['name']))
+                if self.jobs[r['job_id']]['project_id']==project])
+            require(inventory['initial_files']==original_slots(projected),'physical_classifier_predeletion_complete_files')
+            sqlslots=sorted([r for r in self.rows['physical_custody_files'] if r['batch_id']==batch['batch_id']],key=lambda r:r['ordinal'])
+            require(all(r['state']=='present' for r in sqlslots) and
+                    [{k:v for k,v in r.items() if k not in ('state','batch_id')} for r in sqlslots]==inventory['initial_files'],
+                    'physical_classifier_predeletion_slots')
+            for slot in inventory['initial_files']:
+                lane='projects' if slot['location']=='deleting_raw' else 'derived'
+                key=f"{lane}/{owner}/{project}/{slot['leaf']}"
+                require(key not in self.relocations,'physical_classifier_predeletion_overlap')
+                self.relocations[key]=_custody_key(inventory,slot)
+                for name in (key,self.relocations[key]):
+                    parts=name.split('/')
+                    self.empty.update('/'.join(parts[:n]) for n in range(1,len(parts)))
+            self.predeletion.add(batch['batch_id'])
+            self.operations[batch['batch_id']]='abandon_only'
+        if self.relocations:
+            self.files=_PreparedOriginals(self.files,self.relocations)
 
     def retired_custody(self, batch, inventory, charge):
         deleted = self.deleted[batch['project_id']]
@@ -213,6 +288,17 @@ class _Audit:
             integer(bytes, 0, cap)
         if sha256 is not None:
             sha(sha256)
+        if key in self.relocations:
+            # Both exact locations are optional individually, never both absent
+            # or both present. No same-hash dedup or alternate directory exists.
+            moved=self.relocations[key]
+            value=dict(cap=cap,bytes=bytes,sha256=sha256,required=False)
+            for destination in (key,moved):
+                require(destination not in self.absent,'physical_classifier_removed_file')
+                require(destination not in self.expected or self.expected[destination]==value,
+                        'physical_classifier_file_overlap')
+                self.expected[destination]=value
+            return
         value = dict(cap=cap, bytes=bytes, sha256=sha256, required=required)
         require(key not in self.absent, 'physical_classifier_removed_file')
         if key in self.expected:
@@ -248,6 +334,10 @@ class _Audit:
         for slot in self.rows['physical_custody_files']:
             by_batch[slot['batch_id']].append(slot)
         for batch in self.batches.values():
+            if batch['batch_id'] in self.predeletion:
+                # Full header/slot/native/body/charge/row projection was checked
+                # before every scientific file read; final census closes XOR.
+                continue
             header = {key: batch[key] for key in ('batch_id owner_id project_id origin_kind origin_id stage_id '
                 'deletion_receipt_id raw_asset_id raw_sha256 raw_bytes parser_version method_id capacity_bytes').split()}
             header['schema'] = 'geophysics.physical-custody/v1'
@@ -564,6 +654,7 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
         audit = _Audit(connection, files, rows, approved_manifests, approved_installations, native_metadata,
                        expected_source_policy_sha256)
         audit.deleted_projects()
+        audit.prepared_deletions()
         audit.originals()
         audit.custody()
         audit.forest()
@@ -572,6 +663,8 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
         audit.extra_members()
         records = audit.profile_archives()
         measured = files.census(audit.expected, empty_directories=audit.empty)
+        require(all((original in measured)!=(moved in measured) for original,moved in audit.relocations.items()),
+                'physical_classifier_predeletion_partition')
         require(not audit.absent & set(measured), 'physical_classifier_removed_reappeared')
         charges = {row['id']: MappingProxyType(dict(account_private_charge(connection, row['id'],
             profile_records=records, approved_installations=approved_installations))) for row in rows['user']}

@@ -13,7 +13,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.physical_contract import require
 
 _BUSY = 'physical_native_operation_running'
-_NAMES = frozenset(('classify_snapshot','project_inventory','observe_receipt','save_current_tombstone'))
+_NAMES = frozenset(('classify_snapshot','project_inventory','observe_receipt','save_current_tombstone',
+    'prepare_project_deletion','retire_project_forest_relations','retire_project_forest_families','transfer_project_deletion',
+    'cleanup_project_deletion_file'))
 
 
 def _operation(name):
@@ -21,6 +23,10 @@ def _operation(name):
     if name=='classify_snapshot':
         from app.physical_classifier import classify_snapshot
         return classify_snapshot
+    if name in ('prepare_project_deletion','retire_project_forest_relations','retire_project_forest_families','transfer_project_deletion',
+                'cleanup_project_deletion_file'):
+        from app import physical_project_deletion
+        return getattr(physical_project_deletion,name)
     from app import physical_deleted_inventory
     return getattr(physical_deleted_inventory,name)
 

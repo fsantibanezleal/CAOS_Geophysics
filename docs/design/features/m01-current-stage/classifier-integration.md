@@ -50,8 +50,9 @@ dispatch; successful retained-profile/v2 ownership grammar is not altered.
 
 The closed physical_async_sql operation dispatcher uses the original API
 AsyncSession's aiosqlite worker thread and already active native transaction.
-Only classifier, project inventory, native receipt observation and same-commit
-tombstone insertion are accepted. Unflushed ORM, arbitrary callbacks, missing
+Only classifier, project inventory, native receipt observation, same-commit
+tombstone insertion and the fixed original project-deletion hooks are accepted.
+Unflushed ORM, arbitrary callbacks, missing
 native transaction and session reentry refuse. Cancellation drains queued native
 work before caller lifetime guards can unwind. No connection is opened, closed,
 committed or rolled back by the seam. Source/VFS/WAL admission and actual writer
@@ -63,8 +64,40 @@ is installed or not. It cannot inherit successful-v2 authority or silently lose
 its live ownership relations. Positive incomplete-descriptor dispatch remains a
 separate source-reviewed consumer, not an upgrade of older evidence.
 
+The original owned DELETE now has an explicit0005 participant, with no second
+route and no default migration/runtime activation. Before the first move, the
+caller commits the complete sealed deletion declaration with charge0 while
+original SQL rows retain every committed file charge. The whole classifier
+requires exactly one original-or-trash location for every declared file, binds
+the complete current row projection, refuses duplicates/missing/changed/unknown
+bytes, and returns prepared_uncommitted/abandon_only. It never finalizes a cut.
+Only registered relocation pairs feed saved-producer reads; arbitrary missing
+files do not fall back. The complete final namespace census closes the XOR
+barrier independently of those reads. All historical validators stay frozen.
+
+The fixed participant checks both actual same-task leases and source-owned
+registry/root binding. Native moves use held directory descriptors and Linux
+renameat2 NOREPLACE with both parent-directory fsyncs, no overwrite fallback.
+Cancellation drains an in-flight native move before the request releases its
+guards. In the original final transaction, production/edge/control rows precede
+jobs; datasets are removed child-first by family ordinal; families precede raw.
+The existing receipt is flushed through its original ORM serializer, then its
+native JSON TEXT is observed and co-committed with the exact extension and full
+retained deletion-file liability. No hash-based dedup or original-stage purge.
+Each postcommit unlink/directory fsync/removal acknowledgement has its own caller
+transaction; failed/uncertain cuts retain conservative debt. Recognized empty
+trash and original ancestors remain metadata, not wildcard cleanup authority.
+
+This requires an explicit fixed operator installation after the already reviewed
+native runtime/source qualification, not a client flag. Without it0005 DELETE
+refuses; unchanged0004 routes retain their original behavior. Successful retained
+profile v2 grammar and the separate incomplete-custody refusal remain unchanged.
+The qualification driver reuses actual auth/security/project routes and a fresh
+WAL-aware classifier lifetime on an explicitly copied private candidate; it is
+not default server startup, a scientific solve or production runtime admission.
+
 Remaining current-stage integration is active implementation, not an added
-release prerequisite: original owned DELETE physical rows/debt, runtime startup/recovery
+release prerequisite: full branched/native HTTP cut matrix, runtime startup/recovery
 assembly, actual bounded science/resources/cancel and physical HTTP/export/client
 gates. Unsupported deletion origins/roles remain closed/preserved. Default
 migration/worker/config/live pointer are untouched. Native deleted-classifier
