@@ -125,6 +125,33 @@ export class ApiClient {
     return parse(await response.json());
   }
 
+  /** Bound native custody downloads before assembling the complete buffer. */
+  async requestBoundedBytes(path: string, maximum: number, request: Pick<ApiRequest, "signal" | "query"> = {}): Promise<Uint8Array> {
+    if (!Number.isSafeInteger(maximum) || maximum < 1 || maximum > 268435456) throw new Error("Native transport cap");
+    request.signal?.throwIfAborted();
+    const response = await this.send(path, request), declared = response.headers.get("content-length");
+    if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > maximum)) {
+      await response.body?.cancel(); throw new Error("Native transport declared byte cap");
+    }
+    if (!response.body) throw new Error("Native transport body missing");
+    const reader = response.body.getReader(), chunks: Uint8Array[] = []; let bytes = 0;
+    try {
+      for (;;) {
+        request.signal?.throwIfAborted();
+        const part = await reader.read(); if (part.done) break;
+        bytes += part.value.length;
+        if (bytes > maximum) throw new Error("Native transport byte cap");
+        chunks.push(part.value);
+      }
+    } catch (error) { await reader.cancel().catch(() => undefined); throw error; }
+    finally { reader.releaseLock(); }
+    request.signal?.throwIfAborted();
+    if (declared !== null && Number(declared) !== bytes) throw new Error("Native transport size drift");
+    const result = new Uint8Array(bytes); let offset = 0;
+    for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
+    return result;
+  }
+
   async requestBlob(path: string, request: Pick<ApiRequest, "signal" | "query"> = {}): Promise<Blob> {
     const response = await this.send(path, request);
     if (/\bapplication\/(?:[\w.-]+\+)?json\b/i.test(response.headers.get("content-type") ?? ""))
