@@ -2,14 +2,20 @@
 from dataclasses import replace
 from decimal import localcontext
 from fractions import Fraction
+import json
+import os
+from pathlib import Path
 from time import monotonic
 
+import choclo
 import numpy as np
 import pytest
+from scipy.linalg import solve_triangular
 from scipy.optimize import lsq_linear
 
 import gravity_original_optimizer as public
-from test_gravity_l2 import six_cell_control, tiny, noise
+from test_gravity_l2 import six_cell_control, tiny, noise, independent_r
+from test_gravity_l2_selection import locked_request
 
 
 def check_native(result):
@@ -123,3 +129,63 @@ def test_original_lowbeta_nonzero_initialization_prerequisite(record_property):
         np.arange(4, dtype=np.int64), .0001, deadline=monotonic()+120.)
     record_property('result', repr(result['result']))
     check_native(result)
+
+
+def serial(value):
+    if type(value) is np.ndarray:
+        return value.tolist()
+    if type(value) is dict:
+        return {k: serial(v) for k, v in value.items()}
+    if type(value) in (tuple, list):
+        return [serial(v) for v in value]
+    return value
+
+
+def test_original_locked_firstfold_accuracy():
+    """ONE changed-source actual48-cell original24 prerequisite, no dependent retry."""
+    request, _, _ = locked_request(0, 0)
+    plan, prior = request['plan'], request['prior']
+    rows, development = plan['folds'][0]['fit_rows'], plan['development_rows']
+    observed = request['observations']['gz_up_mgal']
+    spec = {k: request['noise'][k] for k in ('kind', 'values')}
+    output = Path(os.environ['GEOPHYSICS_M02_GRAVITY_FIRSTFOLD_RECEIPT']).resolve()
+    if output.exists() or any((p/'.git').exists() for p in output.parents):
+        raise ValueError('new external immutable gravity firstfold receipt required')
+    receipt = dict(schema='gravity-original48-firstfold-accuracy-1', accepted=False,
+        input_sha256=public.physics.survey._digest(request), result=None, errors=None,
+        original_family=0, original_condition=0, original_seed=700001, original_beta=.0001)
+    try:
+        result = public.solve_bounded_linear(plan['request'], observed, spec, prior, rows, .0001,
+            observation_rows=development, deadline=monotonic()+120.)
+        receipt['result'] = result
+        check_native(result)
+        assert len(result['result']['q']) == 48
+        bounds = plan['geometry']['active_cell_bounds_m']
+        points = plan['request']['stations']['receivers_m'][rows]
+        j = np.array([[choclo.prism.gravity_u(*p, *b, 1.)*1e5 for b in bounds] for p in points])
+        r = independent_r(bounds, prior['lengths_m'], prior['density_scale_kg_m3']/1000.)
+        positions = np.searchsorted(development, rows)
+        covariance = (spec['values'][np.ix_(positions, positions)] if spec['kind'] == 'full_covariance'
+            else np.diag(spec['values'][positions]**2))
+        l = np.linalg.cholesky(covariance)
+        factor = np.vstack([solve_triangular(l, j*1000., lower=True), np.sqrt(len(rows)*.0001)*r])
+        rhs = np.r_[solve_triangular(l, observed[positions]-plan['request']['background_mgal'][rows], lower=True),
+            np.sqrt(len(rows)*.0001)*r@(prior['reference_kg_m3']/1000.)]
+        oracle = lsq_linear(factor, rhs, bounds=(prior['lower_kg_m3']/1000., prior['upper_kg_m3']/1000.),
+            method='bvls', lsq_solver='exact', tol=1e-12, max_iter=1000)
+        assert oracle.success
+        q = result['result']['q']
+        error = q-oracle.x
+        errors = dict(model_relative=float(np.linalg.norm(error)/max(1., np.linalg.norm(oracle.x))),
+            model_physical_relative=float(np.max(abs(error*1000.))/max(1., np.max(abs(oracle.x*1000.)))),
+            objective_relative=float(abs(np.linalg.norm(factor@q-rhs)**2-2*oracle.cost)/max(1., 2*oracle.cost)),
+            physical_prediction_absolute=float(np.max(abs(j@(1000.*error)))))
+        receipt['errors'] = errors
+        assert errors['model_relative'] <= 1e-3
+        assert errors['model_physical_relative'] <= 1e-5
+        assert errors['objective_relative'] <= 1e-6
+        assert errors['physical_prediction_absolute'] <= 1e-6
+        receipt['accepted'] = True
+    finally:
+        with output.open('x', encoding='utf-8') as handle:
+            json.dump(serial(receipt), handle, sort_keys=True, allow_nan=False)
