@@ -68,6 +68,14 @@ class WorkerExclusion:
                 'physical_worker_exclusion_required')
         self._check(held[2])
 
+    def require_processing_held(self):
+        """Same-task singleton proof under SH, never DELETE/EX authority."""
+        self.leases.require_held()
+        held = _worker_held.get()
+        require(held is not None and held[0] is asyncio.current_task() and held[1] is self,
+                'physical_processing_exclusion_required')
+        self._check(held[2])
+
     @asynccontextmanager
     async def acquire_processing(self):
         """Original singleton identity under claim-to-clean shared participation.

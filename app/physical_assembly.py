@@ -126,16 +126,23 @@ async def run_forever_participating(settings, physical, *, poll_interval=0.5):
     try:
         await physical.startup(settings, sessions)
         while True:
-            async with physical.leases.acquire():
-                physical.leases.require_held()
-                async with physical.worker.acquire_processing():
-                    async def cycle():
+            async def cycle():
+                # ContextVar inheritance does not transfer the parent's
+                # same-task authority. The drained task owns both descriptors
+                # itself, from claim through the final executor/EOF cleanup.
+                async with physical.leases.acquire():
+                    physical.leases.require_held()
+                    async with physical.worker.acquire_processing():
+                        physical.worker.require_processing_held()
                         job = await original._claim(sessions, identifier)
                         if job is not None:
                             await original._execute(settings, sessions, job, min(poll_interval, 0.1))
-                        return job
-                    job = await _drain(asyncio.create_task(cycle()))
-                physical.leases.require_held()
+                        physical.worker.require_processing_held()
+                    physical.leases.require_held()
+                    return job
+            # Parent cancellation shields/drains outside the lifetime guards;
+            # it cannot release guards owned by the executing cycle task.
+            job = await _drain(asyncio.create_task(cycle()))
             if job is None:
                 await asyncio.sleep(poll_interval)
     finally:

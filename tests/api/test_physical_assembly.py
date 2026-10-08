@@ -44,11 +44,16 @@ def bound_fixture(root_case, monkeypatch):
             self.leases.require_held(exclusive=True)
             assert self.held
 
+        def require_processing_held(self):
+            self.leases.require_held()
+            assert self.held and self.task is asyncio.current_task()
+
         @asynccontextmanager
         async def acquire_processing(self):
             self.leases.require_held()
             assert not self.held
             self.held = True
+            self.task = asyncio.current_task()
             try:
                 yield
             finally:
@@ -148,16 +153,19 @@ def test_forever_worker_keeps_claim_cleanup_guard_through_repeated_stop(root_cas
         trace = []
 
         async def claim(sessions, identifier):
-            assert physical.leases.held and physical.worker.held
+            physical.leases.require_held()
+            physical.worker.require_processing_held()
             trace.append('original-claim')
             return SimpleNamespace(id='fixture-lifetime-only')
 
         async def execute(settings, sessions, job, interval):
-            assert physical.leases.held and physical.worker.held
+            physical.leases.require_held()
+            physical.worker.require_processing_held()
             trace.append('bounded-executor')
             entered.set()
             await release.wait()
-            assert physical.leases.held and physical.worker.held
+            physical.leases.require_held()
+            physical.worker.require_processing_held()
             trace.append('final-publication-cleanup')
 
         monkeypatch.setattr('app.worker._claim', claim)

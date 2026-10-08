@@ -21,6 +21,12 @@ Idle workers hold neither lock. Repeated cancellation drains execution before
 either lifetime guard is released. This transport does not itself qualify the
 physical scientific dispatcher or its Linux resource containment.
 
+The shielded cycle task acquires both guards itself. Its parent awaits/drains
+outside the guards. An inherited ContextVar is not lease authority:
+`require_held` checks the acquiring task identity. Processing has its own
+`require_processing_held` predicate under SH; original DELETE/recovery EX checks
+remain unchanged. Accounting within the executing cycle uses that same task.
+
 ## Private lock initialization
 
 `scripts/ops_physical_bootstrap.py --data-root <absolute-external-private-root>`
