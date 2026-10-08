@@ -66,7 +66,7 @@ Seal-v2 replaces four source_counts with `source_counts_by_geometry` four arrays
 of four integers(final/A/B/C), binding all sixteen source maps before values.
 CandidateFit-v2 adds `source_geometry_index:Int(0,3)`; candidate table cap96
 (4x2x4x3). FitReceipt-v2 adds `selected_source_geometry_index:Int(0,3)`;
-fit_count1..98, with97 mandatory fits and at most one separately named geometric
+completed fit_count97..98, with97 mandatory fits and at most one separately named geometric
 comparator. v1 remains24 candidates/25 mandatory/26 maximum fits. No winner
 selected from final/outer/truth, no per-line/tile independent fits or thinning.
 
@@ -89,6 +89,82 @@ labelled diagnostic evidence. Do not generate a new source physics body merely
 to chase a passed result. Keep the unchanged original positive control in the
 regression suite, even when it fails. The requested genuine8201field file retains
 all original rows; no presumed8201-to-Charleston identity.
+
+### Closed nested graph and pre-value bound (technical-review correction)
+
+The representation epoch is separate from scientific selection. New result
+literal `magnetic-line-survey-result/2` adds the required closed tag
+`policy_epoch:fixed_basis_v1|resolution_v2`. The fixed-basis branch retains the
+original Request/1, GeometrySeal/1, SolverPolicy/1, CandidateFit/1 (24 inner
+records) and FitReceipt/1 (25 mandatory/26 maximum) bytes/identities. It does not
+rewrite those originals into Request/2 or claim resolution selection. Only its
+newly produced grids/spectrum/output member representation uses typed axes and
+dimensionless transfer. Result/1 historical parsers/receipts stay unchanged.
+The resolution branch requires Request/2, GeometrySeal/2, CapacityRecord/2,
+CandidateFit/2 and FitReceipt/2. No mixed scientific branch is admitted.
+
+Array/table manifests for new roles use explicit `/2` schema literals. A fixed
+finite reader dispatch verifies `/1` existing members or `/2` newly produced
+members, never infers an epoch from a filename or silently broadens a `/1` role.
+ArrayRef/2 retains every existing descriptor key, adds only the reviewed typed
+roles, and uses explicit manifest epoch for semantic decoding. Grid/spectrum/
+inventory/channel/input/partition reference fields in Result/2 use this finite
+representation union. Grid-axis ordered hashes are separately bound east/north;
+source/reference/acquisition roles keep original row/source identities.
+
+Complete resolution replacements, all unmentioned v1 fields unchanged:
+SurveySources/2 replaces source_geometry with the four source_geometries;
+SurveySplit/2 and SurveySources/2 both require the same literal candidate order
+width_descending_then_depth_then_damping_ascending and the reviewed tie order;
+CapacityRecord/2.profile is exactly m03-offline-stream/2. SurveyRequest/2 points
+at these closed types. GeometrySeal/2 contains source_counts_by_geometry and
+source_maps:List(FoldSourceMap,16,16). FoldSourceMap exact fields:
+source_geometry_index:Int(0,3), fold_id:ID, training:ArrayRef, sources:ArrayRef,
+source_members:ArrayRef. Sources bind all training-only centroids; membership
+uint64[N_f,2] binds original row index/source index. Exactly one map exists for
+each geometry/final-or-inner fold, matching that fold's sealed training index.
+
+Do not retain sixteen redundant source-block tables: they would exceed the
+unchanged16-dictionary bound once line/sensor/crossovers are added. V2 reconstructs
+signed half-open block coordinates from admitted original/aligned geometry and
+the explicit geometry index, and independently reconstructs sorted-ID fsum
+centroids from each membership map. Retain the sixteen source/membership arrays
+and their closed map descriptors instead. Original v1 source-block tables and
+arithmetic remain unchanged. Arrays<=128, dictionaries<=16 and logical members
+<=192 include every retained map/receipt. Temporary SQL indexes are measured
+scratch, not uncounted permanent dictionaries.
+
+CandidateFit/2 has every CandidateFit/1 field plus source_geometry_index;
+row_schema literal candidate_fit_v2 maps only to that type under TableManifest/2.
+Exactly96 unique records cover four geometries/two depths/four lambdas/three
+folds. No missing/duplicate/mismatched-map candidate may select. FitReceipt/2
+retains all FitReceipt/1 fields plus selected_source_geometry_index, fit_count
+97..98 for a completed selected result. Failure records retain the actual
+completed count separately and never create a fictitious completed FitReceipt.
+The optional98th fit requires its independently named comparator receipt.
+
+Before values the final winner is unknown. The sealed work bound is the SUM
+over all96 exact inner (N_f,M_gf) shapes of N_f*M_gf*(4+2*2000), PLUS the MAX
+final-fit cost over all four geometry maps, PLUS worst selected-model outer/grid
+prediction and independent verification costs. The optional comparator cost is
+separate and counted if requested. All terms together must remain<=10^15.
+After selection retain actual chosen map/iterations/forward/adjoint counts,
+without replacing this conservative pre-value bound by echoed25-fit planning.
+Per-phase byte bounds use maximum simultaneously live shapes; retained maps,
+channels, originals, indexes and artifacts enter exact scratch planning before
+allocation. Every proposed geometry receives cold zero-target and native-workload
+cancel proof, including import/decoding/export/fsync/drain; no measurement access
+or successful capacity record is manufactured from these arithmetic estimates.
+
+NAV/2 uses role-specific cell limits: at most16m auxiliary rows and three metric
+coordinates per NAV row, not an accidental16m flattened-cell limit. Combined
+auxiliary rows<=16m and originals<=4GiB, chunk/page bounds and real allocation
+limits still independently apply. Existing NAV/1 receipts remain historical.
+Transform padding is frozen to the unchanged ordinary formula2*pad<=axis length,
+not the inconsistent earlier full-schema prose pad<=2*axis. The FFT4m cell limit
+and complete-plane/no-fill rules apply independently. Correct the new full
+representation validator/prose together; never weaken the original transform
+negative control or use wider padding to manufacture a passed comparison.
 
 ## Navigation, auxiliary and reference identities
 

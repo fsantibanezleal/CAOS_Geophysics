@@ -18,7 +18,9 @@ Gate: tests/data/test_magnetic_line_survey_forensics.py::test_no_predictive_upgr
 
 R-C03 WHERE reviewed representation selection is enabled, THE pipeline SHALL
 seal the complete width/depth/damping matrix before values, select using three
-inner folds only, and evaluate the original whole-line outer partition once.
+inner folds only, and evaluate a fresh unopened acquisition's whole-line outer
+partition once. Already opened originals are labelled diagnostic attempts and
+never become an untouched predictive holdout by rerunning a new basis.
 Gate: tests/data/test_magnetic_line_survey_resolution.py::test_training_only_selection_and_all_candidates
 
 R-C04 WHEN physical corrections are requested, THE pipeline SHALL bind exact
