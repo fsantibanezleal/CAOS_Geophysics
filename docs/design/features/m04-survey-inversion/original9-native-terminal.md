@@ -19,6 +19,16 @@ Gate: exact fail-first record wiring and no downstream child birth.
 
 ## Design
 
+R-469 BEFORE a downstream full-workflow launch, THE original-source allocation
+gate SHALL evaluate every distinct geometry-only inner/final fit size through
+the unchanged production allocation seam. It SHALL bind the actual loaded
+public source hashes and request identity, preserve refusals, and emit a
+non-success exit if any phase is refused. It SHALL not fit a model, copy noise
+to a surrogate, launch a child or claim source/field/native acceptance.
+Gate: the retained original full request's actual648-component final-refit
+refusal and closed no-fit protocol controls. A changed public source must clear
+this prerequisite before the original120s final-fit/precision gate and matrix.
+
 Reuse the existing public M03 counters and retained process/Job handles. Process
 signalling is not itself whole-Job accounting convergence. Sample through the
 same10s reserve, keep the original3600CPU/7200wall/768MiB RSS and committed caps,
