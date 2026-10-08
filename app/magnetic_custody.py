@@ -130,16 +130,17 @@ async def _owned(session, user, dataset_id, project_id):
     owner = user.id
     dataset = (await session.execute(select(ObservationDataset).where(
         ObservationDataset.id == dataset_id, ObservationDataset.owner_id == owner,
-        ObservationDataset.project_id == project_id))).scalar_one_or_none()
+        ObservationDataset.project_id == project_id).execution_options(populate_existing=True))).scalar_one_or_none()
     if dataset is None:
         _bad("not_found", 404)
-    project = (await session.execute(select(Project).where(Project.id == dataset.project_id, Project.owner_id == owner))).scalar_one_or_none()
+    project = (await session.execute(select(Project).where(Project.id == dataset.project_id, Project.owner_id == owner)
+        .execution_options(populate_existing=True))).scalar_one_or_none()
     asset = (await session.execute(select(RawAsset).where(RawAsset.id == dataset.raw_asset_id,
-        RawAsset.owner_id == owner, RawAsset.project_id == dataset.project_id))).scalar_one_or_none()
+        RawAsset.owner_id == owner, RawAsset.project_id == dataset.project_id).execution_options(populate_existing=True))).scalar_one_or_none()
     if project is None or asset is None:
         _bad("not_found", 404)
     source = (await session.execute(select(SourceRecord).where(SourceRecord.id == asset.source_id,
-        SourceRecord.owner_id == owner, SourceRecord.project_id == dataset.project_id))).scalar_one_or_none()
+        SourceRecord.owner_id == owner, SourceRecord.project_id == dataset.project_id).execution_options(populate_existing=True))).scalar_one_or_none()
     if source is None:
         _bad("not_found", 404)
     _source(asset, source, str(owner), dataset.project_id)
@@ -178,13 +179,13 @@ def _dataset(settings, dataset, asset, source):
 async def _owned_asset(session, user, asset_id, project_id):
     _uuid(project_id)
     asset = (await session.execute(select(RawAsset).where(RawAsset.id == asset_id,
-        RawAsset.owner_id == user.id, RawAsset.project_id == project_id))).scalar_one_or_none()
+        RawAsset.owner_id == user.id, RawAsset.project_id == project_id).execution_options(populate_existing=True))).scalar_one_or_none()
     if asset is None:
         _bad("not_found", 404)
     project = (await session.execute(select(Project).where(Project.id == project_id,
-        Project.owner_id == user.id))).scalar_one_or_none()
+        Project.owner_id == user.id).execution_options(populate_existing=True))).scalar_one_or_none()
     source = (await session.execute(select(SourceRecord).where(SourceRecord.id == asset.source_id,
-        SourceRecord.project_id == project_id, SourceRecord.owner_id == user.id))).scalar_one_or_none()
+        SourceRecord.project_id == project_id, SourceRecord.owner_id == user.id).execution_options(populate_existing=True))).scalar_one_or_none()
     if source is None or project is None:
         _bad("not_found", 404)
     _source(asset, source, str(user.id), project_id)
@@ -559,10 +560,14 @@ async def _read_charged_replay(session, settings, user, job_id, *, project_id, o
         fresh, current_asset, current_source = await _owned(session, user, dataset.id, project_id)
         if _sources(fresh, current_asset, current_source) != snapshot:
             _bad("magnetic_custody_debt")
-        current_job = await session.get(ProcessingJob, job.id)
-        if (current_job.state, current_job.result_sha256, current_job.result_bytes, current_job.request_sha256,
-                current_job.cancel_requested, current_job.preflight) != (
-                job.state, job.result_sha256, job.result_bytes, job.request_sha256, job.cancel_requested, job.preflight):
+        current_job = await session.get(ProcessingJob, job.id, populate_existing=True)
+        if current_job is None:
+            _bad("magnetic_custody_debt")
+        _replay_record(current_job, fresh, current_source, payload)
+        fence = ("owner_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "state",
+                 "result_key", "result_sha256", "result_bytes", "request_json", "request_sha256",
+                 "cancel_requested", "preflight")
+        if tuple(getattr(current_job, key) for key in fence) != tuple(getattr(job, key) for key in fence):
             _bad("magnetic_custody_debt")
         row = await session.get(SurveyDatasetAttempt, identifier)
         row.state = "published"
