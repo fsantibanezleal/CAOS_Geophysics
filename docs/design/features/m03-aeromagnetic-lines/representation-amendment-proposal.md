@@ -8,9 +8,9 @@ and the retained original S1 predictive failure.
 ## What is established
 
 Independent augmented QR reproduces the original selected model predictions.
-The exact final training-column-space projection lower bound is
+The numerical final training-column-space projection RMSE is
 3.5608746056014646nT; its selected damped fit training RMSE is
-3.5608761126551283nT. Thus the exact66-source basis has substantial irreducible
+3.5608761126551283nT. Thus the selected66-source basis has substantial numerical
 training representation error even without a damping penalty. This is not a
 proof that every equivalent-source basis is inadequate, nor that arbitrary
 outer predictions are mathematically impossible. No outer observation selects
@@ -96,3 +96,14 @@ New geometry/truth generation and source-cap code changes require review of
 this exact definition before execution. Independently evaluated IGRF,
 rights/physical metadata and genuine complete offline field evidence remain
 required; a successful synthetic study would not close full M03.
+
+## 2026-10-08 claim correction and continuation
+
+The predecessor wording "exact ... lower bound" was too strong for an ordinary
+floating-point SVD with a numerical rank cutoff. It is corrected transparently:
+this is not an interval-certified lower bound, an outer-error bound or proof of
+universal1/r inadequacy. Historical predictive failures and receipts are unchanged.
+The [corrective workflow packet](../m03-corrective-workflow/design.md) proposes
+independent unit/distance/source/constant diagnosis, legitimate train-only
+resolution selection and the still-required real owner scientific workflow.
+That packet is a proposal, not a claim of review, implementation or new PASS.
