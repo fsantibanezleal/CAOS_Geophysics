@@ -28,6 +28,10 @@ actual native q, and checks its exact physical conversion for accepted stages.
 Native accepted metrics concatenate initialization and
 accepted stage states; each stage's true initial metrics live in its book.
 Relative changes are within each fixed stage, never across a weight change.
+Fit-level terminal metrics are the last stage's actual final metrics (or L2
+initialization if no stage ran), not necessarily the last accepted trace row:
+a genuine zero-step stage can change the objective/normalization at the same q.
+No stage observation is inserted as an accepted step to make these equal.
 Complete fits live in the top-level `fits` tuple; each fold's `solve` and
 `final_solve` are integer references (3*candidate+fold and 24). A real first
 complete null workflow exposed depth9 in nested terminal.stage_changes records;
@@ -100,7 +104,14 @@ Commands are `calibrate`, `verify`, and `evaluate`; `--input`/`--output` are
 flat archive names below the explicit data root. Calibration archives retain
 the complete original native calibration request and every actual fit/result,
 including failures. Evaluation inputs carry a complete frozen calibration,
-the separate outer observation/noise and (for IRLS) the calibration request.
+the separate outer observation/noise and the complete calibration request.
+The local L2 adapter's evaluation-request-2 adds that original request, replays
+every fit and only then constructs the unchanged native L2 evaluation-request-1.
+Evaluation output losslessly flattens the original request into top-level
+frozen_calibration/calibration_request/observations/noise/evaluation_schema plus
+result/schema; another request wrapper would exceed the unchanged depth8 cap
+for legacy L2 traces. `verify` independently recomputes the marginal score as
+well as replaying every fit, without invoking an optimizer.
 CLI success confirms transport/replay, not scientific convergence; calibration
 returns exit 2 for an unsuccessful selection after publishing its failure
 record. `verify` replays every fit without optimization. No archive can choose
@@ -110,3 +121,65 @@ FW07 THE L2 replay SHALL independently reconstruct each native objective,
 trace/KKT, physical prediction, marginal score, fixed selection and diagnostics
 against the complete original calibration request, including retained failures.
 Gate: tests/numerics/test_gravity_workflow_io.py::test_l2_replay_rehashed_tamper
+
+## Optional conditional data-noise refits
+
+FW08 AFTER a fully converged selected calibration is frozen, THE worker SHALL
+run exactly32 actual development-only refits at the selected fixed beta, original
+start/reference/bounds/mesh/noise and (IRLS) the same log17 policy. Generator is
+NumPy2.2.6 PCG64 with seed20261008, fixed here before execution; draws are
+standard normals multiplied by the declared SD or original full covariance's
+Cholesky factor. Observed development values plus draws are the refit targets.
+There is no reselection, outer input, reuse of fitted model as start or fabricated
+refit. All failed/unstarted fits and all32 targets are retained. A shared1800s
+refit-job deadline and original120s/200-step fit limits remain literal.
+Gate: tests/numerics/test_gravity_noise_refits.py::test_actual_frozen_refits
+
+Refit result is a separate `gravity-noise-refits-result-1` native object with
+original calibration/request hashes, fixed seed/beta/rows,32xdevelopment data,
+fits and distinct stage books (IRLS only), explicit successful mask and elapsed
+time. It is a conditional noise-refit distribution only: no percentiles,
+posterior, geological interval, calibrated coverage or field truth is emitted.
+Frozen calibration stays in its own immutable archive; the refit archive uses
+hash references so it does not duplicate an already-maximal frozen wrapper.
+Verification requires both original objects and regenerates every draw, then
+replays every actual fit without invoking an optimizer. An unsuccessful frozen
+calibration refuses before any draw or fit. Missing covariance credibility and
+geometry/background/prior uncertainty remain separate scientific gates.
+
+The first actual32 IRLS refits exceeded256KiB metadata when combined with the
+original frozen calibration. Refit-only fit records losslessly encode terminal
+stage_changes as two-column float64 `values` and same-shaped bool `available`,
+columns=model_relative,weights_relative. Unavailable slots are literal0 with
+false mask, never fabricated observations. At most20rows, no change removed.
+Replay checks exact shapes/masks/nonnegative values and restores one actual fit
+at a time after the full compact wrapper guard. Calibration-result-3 is unchanged.
+Whole combined wrapper256MiB/256KiB/32768/depth8 limits are not raised or bypassed.
+Transition columns alone were insufficient: the frozen result consumes187684
+descriptor bytes and original request11090, leaving about63KiB for32 refits.
+The refit-only `records` book therefore stores a closed typed node/edge table,
+an interned exact string table and non-deduplicated float64/int64/bool pools.
+Every array/scalar numeric operand has its own sequential pool span, preserving
+all bits and logical duplicate storage. Node codes0..8 are None, bool, int,
+float, str, float-array, int-array, bool-array, dict; code9 is tuple. Nodes are
+five int64 columns (code,start,count,dimension1,dimension2), -1 dimension2
+means1D. Dict edges are ordered key/value pairs; tuple edges are child nodes.
+Edges/nodes are padded zero-filled4096-row blocks with exact lengths; numeric
+pools are zero-padded4096-column matrices with exact lengths. Decoder enforces
+single parent/no cycles, complete node/edge/string use, sequential numeric spans,
+canonical padding, exact type/shape and original decoded scalar/depth bounds.
+It restores containers and immutable numeric pool views only after the complete
+compact wrapper and full record structure have been verified. Replay then
+checks each actual fit/book pair; numeric operand buffers are not duplicated.
+No raw inputs, foreign
+callbacks or engine objects can use this refit-only closed record schema.
+
+FW09 THE IRLS science matrix SHALL use the literal original24 L2 source-disjoint
+controls, seeds700001+100*family+condition, priors/covariances and partitions.
+Only the method schema/epoch/name and frozen IRLS policy are substituted. Actual
+calibration, every-fit replay and complete failure-preserving archive are checked.
+Nominal off-axis/bipolar independent/correlated controls still REQUIRE selected
+convergence, outer WRMS<=2 and model/reference error ratio<1. A failure remains
+a positive scientific gate failure, never skip/xfail or a negative-control pass.
+Gate: tests/numerics/test_gravity_irls_matrix.py::test_original24_irls_science
+This ordinary24 matrix does not close parent48/96 topography/padding protocols.

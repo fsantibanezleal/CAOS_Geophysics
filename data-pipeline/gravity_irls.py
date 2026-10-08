@@ -600,7 +600,8 @@ def _workflow_fit(req,observed,noise,prior,rows,beta,observation_rows,policy,dea
         failed_trial=None if terminal['status']=='converged' else
             {'iteration':raw['iterations'],'reason':terminal['reason']})
     for key in ('phi_d','phi_m','phi_engine','kkt_normalized'):
-        result[key]=float(trace[key][-1]) if len(trace[key]) else None
+        name='kkt_final' if key=='kkt_normalized' else key+'_final'
+        result[key]=raw['stages'][-1]['metrics'][name] if raw['stages'] else initialization[key]
     result['wrms']=float(np.sqrt(result['phi_d']/len(rows))) if result['phi_d'] is not None else None
     prediction=None
     if result['model_kg_m3'] is not None and problem is not None:
@@ -705,12 +706,12 @@ _FIT_KEYS={'status','reason','model_kg_m3','beta_candidate','beta_engine','fit_r
 _TERMINAL_REASONS=l2._REASONS+('irls_fixed_point','irls_stationary_null','irls_iteration_cap','unsupported_sparse_empty_face')
 
 
-def _fit_metadata(fit,a,rows,beta):
+def _fit_metadata(fit,a,rows,beta,*,max_book_index=24):
     survey._keys(fit,_FIT_KEYS,'irls solve')
     l2._solve_metadata(fit['l2_initialization'],a,rows,beta)
     survey._enum(fit['status'],('converged','nonconverged','failed','unsupported'),'irls status')
     survey._enum(fit['reason'],_TERMINAL_REASONS,'irls reason')
-    l2._int(fit['stages'],24,'book reference')
+    l2._int(fit['stages'],max_book_index,'book reference')
     terminal=fit['irls_terminal']
     survey._keys(terminal,('status','reason','weight_updates','epsilon_saturated','stage_changes'),'irls terminal')
     survey._enum(terminal['status'],('converged','nonconverged','failed','unsupported'),'terminal status')
@@ -829,9 +830,11 @@ def _replay_fit(fit,book,admitted,rows,beta):
         or np.any(trace['cg_counts']<0) or np.any(trace['cg_counts']>200)):
         raise ValueError('irls: actual original trial/CG caps')
     for key in ('phi_d','phi_m','phi_engine','kkt_normalized'):
-        if np.any(trace[key]<0.) or fit[key]!=(float(trace[key][-1]) if k else None):
+        name='kkt_final' if key=='kkt_normalized' else key+'_final'
+        expected=stages[-1]['metrics'][name] if stages else init[key]
+        if np.any(trace[key]<0.) or fit[key]!=expected:
             raise ValueError('irls: actual terminal metric')
-    if fit['wrms']!=(float(np.sqrt(fit['phi_d']/len(rows))) if k else None): raise ValueError('irls: terminal WRMS')
+    if fit['wrms']!=(float(np.sqrt(fit['phi_d']/len(rows))) if fit['phi_d'] is not None else None): raise ValueError('irls: terminal WRMS')
     terminal=fit['irls_terminal']
     if (fit['status'],fit['reason'])!=(terminal['status'],terminal['reason']): raise ValueError('irls: terminal identity')
     success=fit['status']=='converged'
@@ -873,6 +876,19 @@ def _replay_fit(fit,book,admitted,rows,beta):
             or not np.array_equal(stage['weights'][0],row['smallness_weights'])):
             raise ValueError('irls: actual native stage weights/operator replay')
         objective=_StageObjective(stage,index,lower,upper,'0'*64)
+        unavailable=all(value is None for value in row['metrics'].values())
+        if unavailable:
+            if index!=len(stages)-1 or left!=right or row['status']=='converged':
+                raise ValueError('irls: unavailable metrics only on terminal unstarted failed stage')
+            if index:
+                change={'model_relative':None,
+                    'weights_relative':float(np.linalg.norm(stage['weights'][0]-last_weights,ord=np.inf)
+                        /max(1.,float(np.linalg.norm(last_weights,ord=np.inf))))}
+                if change!=terminal['stage_changes'][index-1]:
+                    raise ValueError('irls: actual unavailable terminal transition')
+            last_weights=stage['weights'][0]
+            saturated=stage['epsilon']==policy['irls']['epsilon_floor']
+            continue
         norm=max(1.,float(np.linalg.norm(objective.evaluate(qstart,True,False)[1],ord=np.inf)))
         previous_phi=None
         values=None

@@ -2,6 +2,8 @@
 from copy import deepcopy
 import importlib.util
 from pathlib import Path
+from dataclasses import replace
+from time import monotonic
 
 import pytest
 
@@ -118,3 +120,21 @@ def test_complete_guard_and_book_reference_negatives(native_result,fault):
     if fault == 'legacy': bad['schema'] = 'gravity-survey-l2-calibration-result-1'
     bad['result_sha256'] = survey._digest({k:v for k,v in bad.items() if k!='result_sha256'})
     with pytest.raises((ValueError,TypeError)): irls.validate_gravity_irls(bad,req)
+
+
+def test_native_unstarted_terminal_stage_has_no_fabricated_metrics(monkeypatch):
+    req=request();admitted=irls._admit_request(req)
+    native=irls.optimizer.solve_bounded_physical
+    def expired(*args,**kwargs):
+        kwargs['budget']=replace(kwargs['budget'],deadline=monotonic()-1.)
+        return native(*args,**kwargs)
+    monkeypatch.setattr(irls.optimizer,'solve_bounded_physical',expired)
+    rows=admitted['plan']['development_rows']
+    fit,book=irls._workflow_fit(admitted['plan']['request'],admitted['observations']['gz_up_mgal'],
+        {k:admitted['noise'][k] for k in ('kind','values')},admitted['prior'],rows,1000.,rows,
+        admitted['policy']['irls'],monotonic()+60.,0)
+    assert fit['status']=='nonconverged' and fit['reason']=='wall_cap'
+    assert fit['model_kg_m3'] is not None and fit['phi_d'] is fit['kkt_normalized'] is None
+    assert fit['iterations']==0 and book['count']==1
+    irls._fit_metadata(fit,len(admitted['prior']['start_kg_m3']),rows,1000.)
+    irls._replay_fit(fit,book,admitted,rows,1000.)
