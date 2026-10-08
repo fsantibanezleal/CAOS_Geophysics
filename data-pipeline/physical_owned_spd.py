@@ -283,7 +283,7 @@ def quadratic_bounds(o, identity, q, lower, upper, deadline, source_components):
             lo, hi = min(lo, zero), min(hi, zero)
         elif q[i] == upper[i]:
             lo, hi = max(lo, zero), max(hi, zero)
-        absolute = max(abs(lo), abs(hi))
+        absolute = max(lo.copy_abs(), hi.copy_abs())
         inf = max(inf, absolute)
         squared = arithmetic.hi.add(squared, arithmetic.hi.multiply(absolute, absolute))
     # Decimal sqrt uses nearest rounding even in directed contexts; explicitly

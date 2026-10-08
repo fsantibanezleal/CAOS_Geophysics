@@ -388,3 +388,28 @@ def test_public_nested_delta_independent_decimal_oracle():
         actual = objective(qt)-objective(q)
     lo, hi = map(Decimal, proof['delta_interval'])
     assert lo <= actual <= hi and proof['decision'] == 'certified_accept'
+
+
+@pytest.mark.parametrize('ambient_digits', [6, 28, 80])
+def test_source_error_bounds_enclose_exact_fraction_under_ambient_context(ambient_digits):
+    from decimal import localcontext
+    from fractions import Fraction
+    # Exact scientific positive smallness F(q)=q^2, optimum0 in the original
+    # feasible box. The actual distance/gap are rational, not a rounded oracle.
+    q = np.array([np.nextafter(1., 2.)])
+    identity = dict(mode='fixed_linear_quadratic', runtime_epoch=core.LINEAR_EPOCH,
+        objective_sha256='a'*64, source_inventory_sha256='b'*64,
+        allocation_plan_sha256='c'*64, q_unit='test-native', physical_unit='test-physical',
+        physical_scale=1., parameter_count=1, observation_rows=1,
+        observation_components=1, beta_engine=1., stage_index=0)
+    operands = owned.QuadraticOperands(owned.binding_for(identity, q), np.zeros((1, 1)),
+        sp.eye(1, format='csr'), np.zeros(1), np.zeros(1), 1., 1.,
+        (owned.QuadraticTerm(1., sp.eye(1, format='csr'), sp.eye(1, format='csr')),), np.ones((1, 1)))
+    with localcontext() as context:
+        context.prec = ambient_digits
+        bounds = owned.quadratic_bounds(operands, identity, q, np.array([-2.]),
+            np.array([2.]), monotonic()+120., 1)
+    exact_distance = Fraction(float(q[0]))
+    assert Fraction(Decimal(bounds['model_error_upper'])) >= exact_distance
+    assert Fraction(Decimal(bounds['objective_gap_upper'])) >= exact_distance**2
+    assert Fraction(Decimal(bounds['physical_prediction_error_upper'])) >= exact_distance
