@@ -82,6 +82,25 @@ Owned, C-order write-protected snapshots are not tamperproof: an owner can
 reenable writes on its returned array. New evaluations never reuse that returned
 storage; durable immutability requires persisted hashes and validated contracts.
 
+## English: bounded equivalent scalar reuse
+
+Within one frozen fixed-surrogate certificate, a completed scalar objective
+enclosure may be reused at the bit-identical native model and the same explicit
+34/50/80-digit precision. The model key is an owned readonly vector; signed
+zero bits remain distinct. At most two model keys and twelve scalar Decimal
+endpoints survive, never a Decimal kernel/matrix or cross-surrogate cache.
+The conservative16*a+24576byte charge is included before snapshots, without
+increasing the original768MiB limit or subtracting presumed execution savings.
+
+The same explicit-context computation at unchanged operands/model/precision
+encloses the same real objective. Reuse changes neither endpoint nor decision.
+Slope, actual projected chord, margin, native diagnostics and all strict sign
+predicates are computed fresh. Hits check the original deadline; expired or
+partial construction is not published. Cached intervals are not accepted steps
+or convergence evidence. Independent uncached-record and Decimal160 physical
+objective controls remain required; full original matrix and native lifetime
+gates must be measured again for the changed source inventory.
+
 ## Espanol: cantidades y campo nativo
 
 El operador inducido escalar real de SimPEG/Geoana produce Gchi, en nT por
@@ -126,6 +145,18 @@ Un paso certificado no demuestra convergencia KKT, estacionariedad final IRLS,
 geologia unica, validez de campo ni admision en linea. Las matrices devueltas
 son copias propias con escritura desactivada, no memoria inviolable; hashes y
 contratos persistidos son necesarios para reproducibilidad durable.
+
+## Espanol: reutilizacion escalar acotada
+
+Un certificado con operandos fijos puede reutilizar solo los extremos escalares
+completos del mismo modelo binario y precision explicita. Dos copias propias
+del modelo y como maximo doce extremos Decimal quedan retenidos; no hay matriz
+Decimal ni memoria compartida entre sustitutos IRLS. Los bits de cero positivo
+y negativo son claves distintas. El coste16*a+24576bytes se admite antes de
+las copias sin aumentar el limite768MiB. El plazo original se verifica tambien
+al reutilizar. Una construccion parcial o vencida no se publica. Pendiente,
+desplazamiento proyectado y margen se calculan de nuevo; un intervalo reutilizado
+no demuestra convergencia ni admision de campo o del servicio.
 
 ## Sources and executable reading
 

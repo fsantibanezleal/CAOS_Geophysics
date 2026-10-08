@@ -25,6 +25,11 @@ class _Clock(ArithmeticError):
     pass
 
 
+def _reuse_charge(parameters):
+    """Two model keys plus twelve bounded scalar endpoints and containers."""
+    return 16*parameters+24576
+
+
 class _Arithmetic:
     """Each operation uses its own explicit context, never caller getcontext."""
 
@@ -172,7 +177,8 @@ class MagneticCertificate:
             nnz += len(term['derivative'].data)
         # Count native copies/workspace and conservative live Decimal/vector
         # storage before any scans/snapshots. Not a native allocator peak proof.
-        budget = 8*(6*d*a+6*d*d+8*a*a+16*(d+a+ks)+4*nnz)+2048*(6*d+4*a+2*ks)+32768
+        budget = (8*(6*d*a+6*d*d+8*a*a+16*(d+a+ks)+4*nnz)
+                  +2048*(6*d+4*a+2*ks)+32768+_reuse_charge(a))
         if budget > 805306368:
             raise ValueError('certificate: conservative live operand/vector budget')
         self.__d, self.__ref = owned(observed).ravel(), owned(reference_q)
@@ -208,6 +214,7 @@ class MagneticCertificate:
                 value.flags.writeable = False
             self.__terms.append((term['alpha'], weights, matrix))
         self.__beta, self.__n, self.__a = beta, n, a
+        self.__enclosures = []
         self.arithmetic_domain = ('fixed_native_operand_magnetic_norm' if
             self.__quantity == 'exact_total_anomaly_nT' else 'fixed_native_operand_quadratic')
 
@@ -261,6 +268,32 @@ class MagneticCertificate:
         ar.check()
         return phi
 
+    def _enclosed_objective(self, model, ar):
+        """Same frozen operands/model bits/precision, never cached acceptance."""
+        ar.check()
+        digits = ar.lo.prec
+        if digits not in (34, 50, 80) or ar.hi.prec != digits:
+            raise ValueError('certificate: original explicit precision ladder')
+        slot = None
+        for index, (stored, values) in enumerate(self.__enclosures):
+            if np.array_equal(stored.view(np.uint64), model.view(np.uint64)):
+                slot = self.__enclosures.pop(index)
+                self.__enclosures.append(slot)
+                if digits in values:
+                    ar.check()
+                    return values[digits]
+                break
+        value = self._objective(model, ar)
+        ar.strings(value)  # Bounded finite ordered scalar endpoints only.
+        ar.check()  # Expired/partial construction is never published.
+        if slot is None:
+            if len(self.__enclosures) == 2:
+                self.__enclosures.pop(0)
+            slot = (owned(model), {})
+            self.__enclosures.append(slot)
+        slot[1][digits] = value
+        return value
+
     def certify(self, q, qt, native_gradient, native_phi, native_phi_trial, iteration, trial, deadline):
         for name, value in (('q', q), ('qt', qt), ('native_gradient', native_gradient)):
             native_array(value, (self.__a,), name)
@@ -289,7 +322,7 @@ class MagneticCertificate:
                 ar = _Arithmetic(digits, deadline)
                 chord = [ar.sub(ar.exact(y), ar.exact(x)) for x, y in zip(q, qt)]
                 slope = ar.dot(native_gradient, chord)
-                delta = ar.sub(self._objective(qt, ar), self._objective(q, ar))
+                delta = ar.sub(self._enclosed_objective(qt, ar), self._enclosed_objective(q, ar))
                 margin = ar.sub(delta, ar.mul(ar.exact(1e-4), slope))
                 ar.check()
                 record.update(precision_digits=digits, passes=count,
