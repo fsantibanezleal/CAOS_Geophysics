@@ -132,8 +132,16 @@ class MagneticCustodyOwner:
             previous = (await session.execute(select(SurveyDatasetAttempt).where(
                 SurveyDatasetAttempt.owner_id == user.id))).scalars().all()
             # Failed/uncertain attempts are never silently adopted or zero charged.
-            if any(row.input_json.get("schema") == SCHEMA and row.state != "published" for row in previous):
-                refuse()
+            for row in previous:
+                if type(row.input_json) is not dict:
+                    refuse()
+                schema = row.input_json.get("schema")
+                if schema == SCHEMA:
+                    validate_attempt(row)
+                    if row.state != "published":
+                        refuse()
+                elif schema != "m03-owner-dataset-request/1":
+                    refuse()
             charge = await self.base_charge(session, user.id)
             device = await self.device_charge(session)
             if type(charge) is not int or charge < 0 or type(device) is not int or device < 0:
