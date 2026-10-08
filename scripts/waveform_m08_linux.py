@@ -66,7 +66,7 @@ def parse_cpu(raw):
     result = {}
     for line in raw.splitlines():
         parts = line.split()
-        require(len(parts) == 2 and re.fullmatch(rb"[a-z_]+", parts[0]) and
+        require(len(parts) == 2 and (re.fullmatch(rb"[a-z_]+", parts[0]) or parts[0] == b"core_sched.force_idle_usec") and
                 re.fullmatch(rb"[0-9]{1,20}", parts[1]) and parts[0] not in result, "counter_invalid")
         result[parts[0]] = int(parts[1])
     require({b"usage_usec", b"user_usec", b"system_usec"} <= set(result), "counter_invalid")

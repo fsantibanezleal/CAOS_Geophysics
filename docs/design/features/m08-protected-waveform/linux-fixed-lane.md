@@ -302,6 +302,12 @@ this correction adds no scientific method, numerical tolerance or CPU broker.
 The observer samples retained cpu.stat usage/user/system microseconds converted
 by checked multiplication to nanoseconds; counters include exited descendants.
 No baseline subtraction, smoothing, live-PID sum or CPUQuota substitution.
+The installed kernel may also emit the exact cpu.stat field
+`core_sched.force_idle_usec`. Accept that bounded numeric kernel field without
+using or subtracting it from usage/user/system lifetime counters. Other dotted
+field names remain invalid; required names, duplicate/name/value checks,
+counter monotonicity and CPU ceilings remain unchanged. Capture actual kernel
+bytes and test this ABI case before repeating changed-source native queue.
 B=60000000000 and S=57000000000ns, memory charge1073741824, tmpfs52690944,
 child60s/transaction120s, poll50ms/maximum observed gap100ms, drain5s and
 cancel-to-quiescence2s remain unchanged. Missing/regressing/unreadable counters,
