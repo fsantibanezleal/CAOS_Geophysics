@@ -32,3 +32,24 @@ the independent face reference using the unchanged F/g/prediction tolerances.
 This is additional mathematical/oracle evidence, not a production optimizer,
 native stop/direction change, reference mask imported into production, source
 prism change, threshold relaxation or whole inverse/selection acceptance.
+
+## Supplementary execution and retained precision negative
+
+The Oct8 raw reproduction again produced32PASS/24FAIL. After implementation of
+the independent exact-face reference, all192 case/beta pairs were evaluated
+without stopping at the first raw vendor failure. Raw vendor face landing varies
+at individual coordinates with floating-point evaluation; retain each actual
+model/status/KKT verdict rather than asserting an immutable vendor failure count.
+Case0 remains a separate reproducible exact-KKT adverse witness.
+
+The supplementary probe measured maximum objective disagreement4.7273e-11,
+magnetic prediction disagreement2.6178e-10nT and normalized-coordinate gradient
+disagreement1.1136e-9. Nineteen of192 near-optimum gradient comparisons fail
+the unchanged atol1e-10/rtol1e-9 predicate. These remain failed PRECISION verdicts,
+not JS08 acceptance. The tiny original derivative controls still exercise their
+original gates. A new separate case14/beta0.0001 test requires the precision
+negative to remain observable. No producer kernel, weighting or tolerance changes
+were made to conceal it. This near-stationary cross-library gradient comparison
+cannot substitute for the full inverse gate's model/prediction/objective/KKT tests
+or be called complete M11 acceptance. Original and supplementary red receipts
+remain separate; neither is rewritten as a passing historical execution.
