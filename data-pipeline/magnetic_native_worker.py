@@ -14,7 +14,11 @@ def main():
     parser.add_argument('--job-handle', required=True, type=int)
     parser.add_argument('--plan', required=True)
     args = parser.parse_args()
-    sys.path.extend([str(Path(args.packages).resolve(strict=True)), *args.dependencies])
+    # Embedded ._pth may already name historical product roots. Appending the
+    # frozen roots would silently prefer that older worker/optimizer source.
+    # All explicit roots are fixed operator arguments, never survey JSON.
+    sys.path[:0] = [*(str(Path(root).resolve(strict=True)) for root in args.dependencies),
+                   str(Path(args.packages).resolve(strict=True))]
     from magnetic_line_survey_runtime import require_job, apis
     require_job(args.job_handle)
     api, _ = apis()
