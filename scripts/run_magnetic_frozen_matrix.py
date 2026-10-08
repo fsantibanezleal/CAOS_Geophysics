@@ -30,9 +30,19 @@ def original_prerequisite_failed(record):
 
 
 def refused_native_observation(error):
-    if type(error) is not InputError:
+    from magnetic_line_survey import SurveyError
+    if type(error) is InputError:
+        reason = error.envelope()
+    elif type(error) is SurveyError:
+        reason = dict(InputError('resource', '$/native', 'Public observation reader refused').envelope(),
+                      observation_error=error.error)
+    elif isinstance(error, OSError):
+        # Do not expose arbitrary OS messages or promote missing files to zero.
+        reason = dict(InputError('resource', '$/native', 'Native file/process operation refused').envelope(),
+                      os_errno=error.errno)
+    else:
         raise TypeError('Exact native refusal required')
-    return dict(native=None, scientific_verdict='failed_native_observation', reason=error.envelope())
+    return dict(native=None, scientific_verdict='failed_native_observation', reason=reason)
 
 
 def observe_frozen_model(result, doc, evaluator, *, matched_a=None):
@@ -137,6 +147,7 @@ def main():
     import physical_nonlinear_optimizer as nonlinear
     from run_magnetic_survey import source_inventory
     from magnetic_native_runtime import run_local_survey
+    from magnetic_line_survey import SurveyError
     conditioned = args.conditioned_core or args.feasible_core or args.reduced_core or args.original_core
     if (args.feasible_core or args.reduced_core or args.original_core) and any(label.endswith(':exact_total_anomaly_nT') for label in args.cases):
         raise ValueError('Public contact/reduced source is LINEAR-only')
@@ -188,7 +199,7 @@ def main():
         try:
             lifetime = run_local_survey(args.executable, args.packages, tuple(args.dependencies), scratch/'plan.json',
                                        cancel_after=args.cancel_after)
-        except InputError as error:
+        except (InputError, SurveyError, OSError) as error:
             # A refused observer supplies NO resource/lifetime receipt. Preserve
             # this exact non-success and reach the common dependency gate.
             lifetime = None

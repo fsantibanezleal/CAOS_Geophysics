@@ -26,6 +26,20 @@ def test_refused_native_observation_has_no_lifetime_and_blocks_dependencies():
         observer.refused_native_observation(RuntimeError('Not a completed/native counter'))
 
 
+@pytest.mark.parametrize('kind', ['public_counter', 'os_reader'])
+def test_known_reader_failure_reaches_common_gate_without_a_zero_receipt(kind):
+    from magnetic_line_survey import SurveyError
+    error = SurveyError('resource_refused', 'fit') if kind == 'public_counter' else OSError(13, 'private path must not leak')
+    record = observer.refused_native_observation(error)
+    assert record['native'] is None and observer.original_prerequisite_failed(record)
+    assert record['reason']['code'] == 'resource'
+    assert 'private path' not in str(record)
+    if kind == 'public_counter':
+        assert record['reason']['observation_error'] == error.error
+    else:
+        assert record['reason']['os_errno'] == 13
+
+
 def analytical_record(regime, quantity='secondary_enu_nT'):
     doc = dict(source=dict(original_bytes=10, original_sha256='a'*64), processing=dict(quantity=quantity),
         geometry=dict(mesh=dict(origin_m=dict(data=[0., 0., 0.]), widths_x_m=dict(data=[1.]),
