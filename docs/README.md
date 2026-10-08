@@ -37,6 +37,7 @@ The [approved replacement SDD](design/SDD.md), [current plan review](design/plan
 - [Fixed private joint execution](guides/24_private_joint_execution.md): actual solve/replay/instrument child, original-byte/source bindings and independently enforced lower job resources; not scientific or host acceptance.
 - [Allocated joint schema successor](guides/25_joint_schema_successor.md): literal0006 after0005, original-family registration, restrictive native artifact identity and exact rollback controls; combined canonical mount and scientific corrective gates remain distinct.
 - [Private original joint inputs](guides/26_private_joint_original_inputs.md): exact source directories, ordinary authenticated member receipts, explicit rights/partial transfer/indexing and privacy boundaries; scientific execution remains separate.
+- [Durable native result custody](guides/27_durable_joint_results.md): exact owner/source/member index, original-byte archives, all-state quota and deletion/recovery hooks; not scientific completion or canonical activation.
 - [Manuscript](../manuscripts/geophysics-identifiability/README.md): research framing and evidence plan.
 - [0.04.001 scientific and browser validation](validation/scientific-ui-0.04.001.md): candidate/canonical hashes, numerical gates, rendered inspection and remaining limits. Public deployment is recorded separately.
 - [0.04.001 public deployment](validation/deployment-0.04.001.md): corrected main/CI/Pages and VPS release identifiers, exact-byte TLS receipts and production browser checks.

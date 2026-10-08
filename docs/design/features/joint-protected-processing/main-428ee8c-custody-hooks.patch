@@ -1,0 +1,71 @@
+diff --git a/app/processing_storage.py b/app/processing_storage.py
+--- a/app/processing_storage.py
++++ b/app/processing_storage.py
+@@ -44,3 +44,13 @@
++# Preserve this exact M08/MT baseline, then add native accounting once.
++joint_base_derived_usage = account_derived_usage
++
++
++async def account_derived_usage(session: AsyncSession, owner_id) -> int:
++    from app.joint_result import accounting_delta
++    return await joint_base_derived_usage(session, owner_id) + await accounting_delta(
++        session, owner_id, generic_reservation=METHOD_SCRATCH_BYTES)
++
++
+ def exact_derived_project(
+     settings: Settings, owner_id: str, project_id: str,
+     datasets: list[ObservationDataset], jobs: list[ProcessingJob], artifacts: list[WaveformResultArtifact] | None = None,
+diff --git a/app/processing_contract.py b/app/processing_contract.py
+--- a/app/processing_contract.py
++++ b/app/processing_contract.py
+@@ -147,4 +147,8 @@
+ def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> None:
++    if dataset.modality == "joint_gravity_magnetic_native":
++        from app.joint_datasets import validate_dataset
++        validate_dataset(payload, dataset)
++        return
+     if dataset.modality in {"ert_profile", "traveltime_profile"}:
+         from app.profile_contract import validate_profile_dataset
+         validate_profile_dataset(payload, dataset)
+@@ -195,4 +199,8 @@
+ def validate_result_identity(payload: dict, job: ProcessingJob) -> None:
++    if job.method_id == "joint.gravity-magnetic-native/v1":
++        from app.joint_result import validate_index
++        validate_index(payload, job)
++        return
+     from app.profile_contract import PROFILE_METHODS
+     if job.method_id in PROFILE_METHODS:
+         from app.profile_contract import validate_profile_result
+diff --git a/app/database.py b/app/database.py
+--- a/app/database.py
++++ b/app/database.py
+@@ -102,4 +102,13 @@
+         for job in jobs:
++            if job.method_id == 'joint.gravity-magnetic-native/v1':
++                if job.result_key is not None:
++                    from app.joint_result import read_result
++                    _, native_rows = await read_result(settings, session, job)
++                    derived_keys.add(job.result_key)
++                    derived_keys.update(row.storage_key for row in native_rows)
++                elif job.state == 'succeeded' or job.result_sha256 is not None or job.result_bytes is not None:
++                    raise RuntimeError('private_recovery_required: incomplete native result receipt')
++                continue
+             if job.state == "succeeded":
+                 key = result_key(str(job.owner_id), job.project_id, job.id)
+                 if job.result_key != key or not job.result_sha256 or job.result_bytes is None:
+@@ -128,4 +137,6 @@
+         from app.models import WaveformResultArtifact, WaveformDatasetSource
++        from app.joint_result import audit_results
++        await audit_results(settings, session)
+         all_artifacts=(await session.execute(select(WaveformResultArtifact))).scalars().all()
+         if any(row.storage_key not in derived_keys for row in all_artifacts):
+             raise RuntimeError('private_recovery_required: orphan waveform artifact row')
+diff --git a/app/server.py b/app/server.py
+--- a/app/server.py
++++ b/app/server.py
+@@ -49,3 +49,5 @@
+     install_project_routes(app, settings, current_user, get_session)
+     install_processing_routes(app, settings, current_user, get_session)
++    from app.joint_result import install_joint_result_routes
++    install_joint_result_routes(app, settings, current_user, get_session)
+     return app

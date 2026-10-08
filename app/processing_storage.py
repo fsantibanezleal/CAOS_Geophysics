@@ -33,6 +33,11 @@ async def account_derived_usage(session: AsyncSession, owner_id) -> int:
     )
 
 
+# Immutable baseline alias for additive native accounting. Parent preserves its
+# M08/profile implementation here and adds joint accounting exactly once above.
+joint_base_derived_usage = account_derived_usage
+
+
 def exact_derived_project(
     settings: Settings, owner_id: str, project_id: str,
     datasets: list[ObservationDataset], jobs: list[ProcessingJob],

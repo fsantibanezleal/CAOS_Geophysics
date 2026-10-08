@@ -60,3 +60,24 @@ identity/paths, retained-state/unknown/active/head refusals, all DDL/revision cu
 and actual36-member family/root publication/rollback/source negatives execute.
 Historical0004 evidence is unchanged. Default registry, canonical mount, full
 file custody/result lifecycle and scientific acceptance are not inferred.
+
+Independent durable custody now executes21PASS0FAIL0ERROR0SKIP against actual
+allocated0006 and local-account provisioning, with no SMTP flow. Complete real
+native member/index copy, owner-only exact Python ZIP, browser client admission,
+all-state byte accounting, source/claim/request/quota/cap negatives, both uncertain
+commit outcomes, unknown/missing/changed/extra-directory audit refusal, restrictive
+row deletion rollback, original-tree purge refusal and exact isolated renamed
+purge execute. Cancelled/repeatedly-cancelled writers drain before guard release.
+Actual original failure/aborted ledgers remain byte-exact. The archived historical
+output fixture explicitly records no new scientific execution; these controls
+do not fabricate a completed corrective inverse or a current full26 PASS.
+
+Current client235PASS0SKIP plus the independent four-slot straggler regression,
+and strict whole TypeScript PASS, retain all624 attempts from original24 outputs
+under the unchanged30s gate. Earlier timeout receipts remain failures; no timeout
+or mathematical predicate was changed. Literal additive frontend and custody
+hook proposals target immutable MAIN428ee8c and preserve its other methods.
+Parent still owns exact migration registry/M01 assembly, root-family/source/
+incomplete-stage/tombstone authority, whole-project deletion/export unions and
+actual mounted rendered UI. Compiled M02, corrective original24/384 precision,
+nonzero maximum-state resources, promotion and actual deploy remain separate.
