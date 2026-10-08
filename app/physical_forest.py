@@ -6,6 +6,7 @@ complete source/producer/scientific/native verification for those transitions.
 """
 
 import sqlite3
+from contextlib import contextmanager
 
 from app.physical_contract import byte_sha, fields, integer, parse_record, require, sha, uuid, validate_custody
 from app.physical_persistence import CORRECTION, TRANSFORM, J, M
@@ -95,27 +96,42 @@ def _targets(connection, control, values, child, job, owner, project):
     require(total <= control["permanent_reservation_bytes"], "forest_target_capacity")
 
 
-def reserve_child_intent(connection, *, owner_id, project_id, parent_dataset_id,
-                         parent_dataset_sha256, job_id, stage_id, child_dataset_id,
-                         intent_id, created_us, targets, failure_cut=None):
-    """Allocate one monotonic ordinal and durable preparation, never publish.
-
-    Own transaction only, rollback-journal candidate only. No file/CPU/native
-    proof is manufactured by SQL metadata or this return value.
-    """
-    if not isinstance(connection, sqlite3.Connection) or connection.in_transaction:
-        raise ValueError("forest_requires_outside_transaction")
-    for value in (owner_id, project_id, parent_dataset_id, job_id, stage_id, child_dataset_id, intent_id):
-        uuid(value)
-    sha(parent_dataset_sha256)
-    integer(created_us)
-    require(stage_id == job_id, "forest_stage_job_identity")
+@contextmanager
+def _intent_transaction(connection, *, caller_owned):
+    if caller_owned:
+        from app.physical_roots import _ledger
+        with _ledger(connection, caller_owned=True):
+            yield
+        return
     require(connection.execute("PRAGMA foreign_keys").fetchone() == (1,), "forest_foreign_keys_required")
     require(connection.execute("PRAGMA journal_mode").fetchone()[0] in ("delete", "memory"), "forest_native_wal_not_admitted")
     connection.execute("BEGIN IMMEDIATE")
     try:
         require(connection.execute("SELECT version_num FROM alembic_version").fetchone() == (REVISION,)
                 and ddl_sha256(connection) == SUCCESSOR_DDL, "forest_schema_binding")
+        yield
+        connection.commit()
+    except BaseException:
+        connection.rollback()
+        raise
+
+
+def _reserve_child_intent(connection, *, owner_id, project_id, parent_dataset_id,
+                         parent_dataset_sha256, job_id, stage_id, child_dataset_id,
+                         intent_id, created_us, targets, failure_cut=None, caller_owned):
+    """Allocate one monotonic ordinal and durable preparation, never publish.
+
+    Own transaction only, rollback-journal candidate only. No file/CPU/native
+    proof is manufactured by SQL metadata or this return value.
+    """
+    if not caller_owned and (not isinstance(connection, sqlite3.Connection) or connection.in_transaction):
+        raise ValueError("forest_requires_outside_transaction")
+    for value in (owner_id, project_id, parent_dataset_id, job_id, stage_id, child_dataset_id, intent_id):
+        uuid(value)
+    sha(parent_dataset_sha256)
+    integer(created_us)
+    require(stage_id == job_id, "forest_stage_job_identity")
+    with _intent_transaction(connection, caller_owned=caller_owned):
         parent = _row(connection, "SELECT * FROM observation_datasets WHERE id=? AND owner_id=? AND project_id=?", (parent_dataset_id, owner_id, project_id))
         require(parent["sha256"] == parent_dataset_sha256, "forest_stale_parent")
         _parent_chain(connection, parent, owner_id, project_id)
@@ -149,8 +165,26 @@ def reserve_child_intent(connection, *, owner_id, project_id, parent_dataset_id,
         for target in targets:
             connection.execute("INSERT INTO physical_publication_targets(intent_id,kind,artifact_id,storage_key,bytes,sha256) VALUES (?,?,?,?,?,?)",
                                (intent_id, target["kind"], target["artifact_id"], target["storage_key"], target["bytes"], target["sha256"]))
-        connection.commit()
         return ordinal
-    except BaseException:
-        connection.rollback()
-        raise
+
+
+def reserve_child_intent(connection, *, owner_id, project_id, parent_dataset_id,
+                         parent_dataset_sha256, job_id, stage_id, child_dataset_id,
+                         intent_id, created_us, targets, failure_cut=None):
+    """Original isolated candidate transaction; no live WAL admission."""
+    return _reserve_child_intent(connection, owner_id=owner_id, project_id=project_id,
+        parent_dataset_id=parent_dataset_id, parent_dataset_sha256=parent_dataset_sha256,
+        job_id=job_id, stage_id=stage_id, child_dataset_id=child_dataset_id,
+        intent_id=intent_id, created_us=created_us, targets=targets,
+        failure_cut=failure_cut, caller_owned=False)
+
+
+def reserve_child_intent_transaction(connection, *, owner_id, project_id, parent_dataset_id,
+                                    parent_dataset_sha256, job_id, stage_id, child_dataset_id,
+                                    intent_id, created_us, targets, failure_cut=None):
+    """Same dual-target preparation inside caller WAL; no commit or child run."""
+    return _reserve_child_intent(connection, owner_id=owner_id, project_id=project_id,
+        parent_dataset_id=parent_dataset_id, parent_dataset_sha256=parent_dataset_sha256,
+        job_id=job_id, stage_id=stage_id, child_dataset_id=child_dataset_id,
+        intent_id=intent_id, created_us=created_us, targets=targets,
+        failure_cut=failure_cut, caller_owned=True)

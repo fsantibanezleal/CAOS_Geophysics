@@ -17,7 +17,8 @@ _NAMES = frozenset(('classify_snapshot','project_inventory','observe_receipt','s
     'prepare_project_deletion','retire_project_forest_relations','retire_project_forest_families','transfer_project_deletion',
     'cleanup_project_deletion_file','prepare_root_transaction','publish_root_transaction',
     'classify_startup_snapshot','account_private_charge_transaction',
-    'reserve_root_transaction','seal_root_transaction','read_dataset_transaction'))
+    'reserve_root_transaction','seal_root_transaction','read_dataset_transaction',
+    'reserve_child_intent_transaction','publish_correction_transaction','publish_transform_transaction'))
 
 
 def _operation(name):
@@ -37,6 +38,12 @@ def _operation(name):
     if name == 'read_dataset_transaction':
         from app.physical_read import read_dataset_transaction
         return read_dataset_transaction
+    if name == 'reserve_child_intent_transaction':
+        from app.physical_forest import reserve_child_intent_transaction
+        return reserve_child_intent_transaction
+    if name in ('publish_correction_transaction','publish_transform_transaction'):
+        from app import physical_publication
+        return getattr(physical_publication,name)
     if name in ('prepare_project_deletion','retire_project_forest_relations','retire_project_forest_families','transfer_project_deletion',
                 'cleanup_project_deletion_file'):
         from app import physical_project_deletion
