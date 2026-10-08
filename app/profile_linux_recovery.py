@@ -15,13 +15,46 @@ from app.database import make_engine, require_migration_head
 from app.models import ObservationDataset, ProcessingJob, RawAsset, SourceRecord
 from app.processing_contract import canonical_bytes, checked_derived_path, result_key, sha256
 from app.profile_execution import KEYS, closed, validate_installation
-from app.profile_linux_exec import JOB_KEYS, DATA_KEYS, RAW_KEYS, ORIGIN_KEYS, recorded_installation_binding, uuid
+from app.profile_linux_exec import JOB_KEYS, DATA_KEYS, RAW_KEYS, ORIGIN_KEYS, METHODS, recorded_installation_binding, uuid, sha
 from app.profile_linux_worker import directory_fd, identity, installed_command, regular_at, relation, require, bounded_stream, finish_streams
 
 ARCHIVE_CAP = 256*1024**2
 STAGE_CAP = 64*1024**2
 RECOVERY_KEYS = set("schema job_id receipt_sha256 intent_sha256 installation retained_stage_identity terminal known_root_copies_removed".split())
-MANIFEST_KEYS = set("schema job_id request_sha256 installation stage_identity members recovery uncommitted_duplicate".split())
+MANIFEST_KEYS = set("schema job_id request_sha256 ownership installation stage_identity members recovery uncommitted_duplicate".split())
+OWNERSHIP_KEYS = set("owner_id project_id job_id dataset_id raw_asset_id source_id method_id terminal_state dataset_sha256 raw_sha256 request_sha256".split())
+
+
+def validate_ownership(value):
+    """Surviving explicit authority, never infer ownership from an archive name."""
+    closed(value,OWNERSHIP_KEYS)
+    for key in ("owner_id","project_id","job_id","dataset_id","raw_asset_id","source_id"):
+        uuid(value[key])
+    for key in ("dataset_sha256","raw_sha256","request_sha256"):
+        sha(value[key])
+    require(type(value["method_id"]) is str and value["method_id"] in METHODS and
+        type(value["terminal_state"]) is str and value["terminal_state"] in ("failed","cancelled","succeeded"))
+    return value
+
+
+def retained_ownership(job,dataset,raw,origin):
+    """Freeze the owned live relation before root recovery or any archive write."""
+    require(all(item.owner_id == job.owner_id and item.project_id == job.project_id for item in (dataset,raw,origin)) and
+        job.dataset_id == dataset.id and dataset.raw_asset_id == raw.id and raw.source_id == origin.id and
+        job.dataset_sha256 == dataset.sha256 and dataset.raw_sha256 == raw.sha256 == origin.sha256 and
+        job.request_json["raw_asset_id"] == raw.id and job.request_json["raw_sha256"] == raw.sha256)
+    return validate_ownership(dict(owner_id=str(job.owner_id),project_id=job.project_id,job_id=job.id,
+        dataset_id=dataset.id,raw_asset_id=raw.id,source_id=origin.id,method_id=job.method_id,
+        terminal_state=job.state,dataset_sha256=dataset.sha256,raw_sha256=raw.sha256,request_sha256=job.request_sha256))
+
+
+def validate_manifest_ownership(manifest,expected=None):
+    closed(manifest,MANIFEST_KEYS)
+    ownership = validate_ownership(manifest["ownership"])
+    require(manifest["schema"] == "geophysics.profile-retained-stage/v2" and
+        manifest["job_id"] == ownership["job_id"] and manifest["request_sha256"] == ownership["request_sha256"])
+    if expected is not None:
+        require(ownership == expected)
 
 
 def rename_exclusive(source_fd,name,target_fd):
@@ -85,7 +118,7 @@ def stage_inventory(fd,receipt):
 
 
 def reverify_archive(fd,manifest):
-    closed(manifest,MANIFEST_KEYS)
+    validate_manifest_ownership(manifest)
     require(type(manifest["members"]) is dict and "linux-execution.json" in manifest["members"] and
             set(manifest["members"]) <= {"result.json","linux-stderr.txt","linux-execution.json"})
     require(set(os.listdir(fd)) == set(manifest["members"]) | {"manifest.json"})
@@ -146,6 +179,7 @@ async def recover_job(settings,identifier):
                 RawAsset.owner_id == job.owner_id,RawAsset.project_id == job.project_id))).scalar_one()
             origin = (await session.execute(select(SourceRecord).where(SourceRecord.id == raw.source_id,
                 SourceRecord.owner_id == job.owner_id,SourceRecord.project_id == job.project_id))).scalar_one()
+        ownership = retained_ownership(job,dataset,raw,origin)
         command,config = installed_command(settings,job,with_configuration=True)
         installation = recorded_installation_binding(config,relation(job,JOB_KEYS),relation(dataset,DATA_KEYS),
             relation(raw,RAW_KEYS),relation(origin,ORIGIN_KEYS))
@@ -160,8 +194,8 @@ async def recover_job(settings,identifier):
         intent_exists = intent_name in os.listdir(archive_fd)
         if intent_exists:
             manifest = json.loads(regular_at(archive_fd,intent_name,262144))
-            closed(manifest,MANIFEST_KEYS)
-            require(manifest["schema"] == "geophysics.profile-retained-stage/v1" and manifest["job_id"] == identifier and
+            validate_manifest_ownership(manifest,ownership)
+            require(manifest["job_id"] == identifier and
                     manifest["installation"] == installation and manifest["request_sha256"] == job.request_sha256)
         if identifier in os.listdir(stage_parent):
             stage_fd = os.open(identifier,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=stage_parent)
@@ -216,8 +250,8 @@ async def recover_job(settings,identifier):
         if not intent_exists:
             usage = archive_usage(archive_fd)
             require(usage+sum(record["bytes"] for record in inventory.values())+262144 <= ARCHIVE_CAP)
-            manifest = dict(schema="geophysics.profile-retained-stage/v1",job_id=identifier,request_sha256=job.request_sha256,
-                installation=installation,stage_identity=held,members=inventory,recovery=recovery,uncommitted_duplicate=duplicate)
+            manifest = dict(schema="geophysics.profile-retained-stage/v2",job_id=identifier,request_sha256=job.request_sha256,
+                ownership=ownership,installation=installation,stage_identity=held,members=inventory,recovery=recovery,uncommitted_duplicate=duplicate)
             write_exclusive(archive_fd,intent_name,canonical_bytes(manifest))
         else:
             require(manifest["recovery"] == recovery and manifest["uncommitted_duplicate"] == duplicate)

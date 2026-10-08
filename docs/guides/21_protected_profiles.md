@@ -153,6 +153,16 @@ records remain. The unprivileged stage is atomically archived under
 uncommitted duplicate is removed. Repeating a completed recovery verifies the
 same archive without replacing it. A published successful result is unchanged.
 
+New retained manifests use `geophysics.profile-retained-stage/v2`. Their closed
+`ownership` record preserves the owner, project, job, dataset, raw asset and
+source IDs, terminal state, method and original request/dataset/raw digests.
+The recovery operator checks this complete relation against owned database rows
+before privilege or archive writes and again on a repeated recovery. Historical
+v1 archives are not silently adopted, upgraded or rewritten. Project deletion
+must preserve independently verified custody ownership and charge, or exactly
+retire known copies, before removing the live relation; an unbound archive is
+not generic cache and must not be orphaned by a successful deletion response.
+
 Unknown bytes, changed identities, incomplete input sets or a different
 installation epoch refuse recovery unchanged. Archives are bounded to 256 MiB
 in total and 64 MiB per stage. This is terminal execution-evidence custody, not a
