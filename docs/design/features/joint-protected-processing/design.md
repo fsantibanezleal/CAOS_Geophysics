@@ -23,6 +23,19 @@ request JSON are bounded before decode. Strict NPY1 little-endian f8/i8/b1,
 C-order, exact file/data hashes and closed directory inventories retain the
 original intake limits. Raw and correction files remain original bytes.
 
+Exact endpoint: POST /api/projects/{project_id}/joint-members. It inherits the
+canonical same-origin/CSRF/authentication protections. The owned leaf admits
+at most80 native-member requests per authenticated owner/hour using existing
+persistent RateWindow rows, before body streaming. One complete role pair has
+at most40 members; a complete upload must not be blocked by the unrelated
+generic20-assets/hour rule. Generic upload limits are unchanged. Metadata is
+closed role/name/source/descriptor JSON under16KiB. Ordinary bytes and source
+attestation are required; no multipart archive, executable or remote fetch.
+NPY descriptor dimensions/byte caps precede streaming; original file/data
+digests and bounded literal header are checked without importing numerical code.
+Canonical raw download/export/deletion/startup accounting already includes these
+RawAsset rows. Dataset/job result members require the separate additive unions.
+
 Dataset creation binds an exact role/name -> asset/source/version/hash/bytes
 map with a unique development request member as primary raw asset. Validation
 compares held source bytes with descriptors and original schema using the
@@ -83,4 +96,3 @@ Jacobian/CSR graph and peak-allocation proof, not automatic first-order7a/4a
 admission. GN PSD is not a global curvature/model/prediction error certificate.
 Old384 oracle failures remain immutable; only a new full actual fit matrix can
 establish corrective acceptance with all original scientific predicates intact.
-

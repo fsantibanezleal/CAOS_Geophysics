@@ -32,4 +32,3 @@ Gate: frontend/e2e/joint-protected-processing.spec.ts.
 Original384 precision failures and scientific tolerances remain separate gates.
 The new M02 conditioning policy requires independently reviewed M11 operand,
 factor-graph/resource and exact-bound error-unit applicability before use.
-

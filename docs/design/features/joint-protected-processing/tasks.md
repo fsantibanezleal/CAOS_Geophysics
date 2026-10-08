@@ -14,4 +14,3 @@
    matrix; retain all historical failures, original tolerances and negative cases.
 7. Record actual commits/source pins/tests and remaining numerical/host/platform
    gates. No activation/deployment by this leaf, no SMTP/backup/Pages dependency.
-

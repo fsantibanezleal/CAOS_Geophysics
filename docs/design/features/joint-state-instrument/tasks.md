@@ -31,8 +31,11 @@
   and verifies within unchanged offline caps:85.047s, sampledRSS1057251328 bytes.
   This is zero-signal actual maximum shape, not maximum251-state nonzero history,
   OS reservation, whole-browser RSS, Linux/CUDA or host admission.
-- Complete source-frozen24-case supplement matrix remains a distinct in-progress
-  gate. Original624 attempts/568 convergence receipts do not override the retained
+- Complete source-frozen24-case supplement matrix exported and independently
+  replayed every case, with unchanged exporter sources and original matrix.
+  Maximum export213.563s/sampledRSS921669632bytes, maximum replay53.594s;
+  all original resource predicates passed. This is post-freeze instrumentation,
+  not a new inverse. Original624 attempts/568 convergence receipts do not override the retained
   independent384 comparison failures or establish corrected precision.
 
 Retained preliminary failures include two unchanged30s frontend import timeouts
