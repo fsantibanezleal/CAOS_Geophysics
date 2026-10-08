@@ -1,5 +1,10 @@
 # Magnetic survey input and geometry seal / Entrada y sello geométrico magnético
 
+[Owned surveyed-input processing and custody / Entrada medida y custodia privada](09_owned-surveyed-input.md)
+defines literal original-column correspondence, immutable full-request versions,
+source-backed method mapping and actual local replay installation/read/export.
+Protected parent assembly and online scientific admission remain separate gates.
+
 [Exact nonlinear composition](07_nonlinear-composition.md) documents the reviewed
 public single-SI seam, independent exact/PSD Hessians and unchanged norm proof.
 

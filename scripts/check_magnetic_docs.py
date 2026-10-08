@@ -8,8 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def check(root=ROOT):
     docs = sorted((root/'docs/methods/magnetic-survey').glob('*.md'))
-    if len(docs) != 10:
-        raise ValueError('Complete ten-unit method wiki required')
+    if len(docs) != 11:
+        raise ValueError('Complete eleven-unit method wiki required')
     links = 0
     for path in docs:
         text = path.read_text(encoding='utf-8')

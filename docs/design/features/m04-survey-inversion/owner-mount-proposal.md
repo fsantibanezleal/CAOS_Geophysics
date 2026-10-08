@@ -1,14 +1,82 @@
 # M04 owned leaf and owner mount proposal
 
-This proposal supplies executable numeric projection and scientific views. It
-does not edit or activate the existing API, database, worker or frontend root.
+This contract supplies executable numeric projection, surveyed-input custody
+and scientific views. It does not activate shared API routes, worker or frontend root.
 No new authentication, server, default field metadata or persistence authority.
 The API owner integrates against its CURRENT branch, not this older foundation.
 `app.magnetic_results.validate_owned_magnetic_result` is an executable ownership,
 state and durable-receipt guard for the proposed local method ID. It is NOT
 registered in the service method allow-list or routes. Existing result byte
-verification must run first; method/dataset request-schema review remains owned
-by the API parent. Its focused negative tests are not a mounted auth claim.
+verification must run first. Actual dataset/import/read/export functions are now
+`app.magnetic_contract` and `app.magnetic_custody`; the shared dispatcher must
+bind them to its existing auth/project/CSRF/storage lifecycle. Focused portable
+negative tests are not a mounted two-account HTTP or native-host claim.
+
+## Executable protected owner ABI
+
+The canonical parser version is `mag-survey/v1:<full lexical request SHA256>`.
+The dataset create union accepts an exact `magnetic_request_utf8` string for an
+owned `magnetic_csv` asset, not a JSON object rebuilt from JavaScript numbers.
+The method ID is `magnetic.survey-l2-irls-local/v1`. Every public custody function
+requires the URL's selected `project_id`, even for another project of one owner.
+
+```python
+from app.magnetic_contract import magnetic_dataset_receipt, refuse_online_submission
+from app.magnetic_custody import (
+    install_dataset, install_replay, read_dataset, read_method, read_replay,
+    exact_zip_inventory,
+)
+
+# Existing verified authenticated user and CSRF middleware are unchanged.
+# Authentication may already hold a read transaction. Writers use an existing
+# fresh session from the application's session factory, not BEGIN inside it.
+async with app.state.sessions() as owned_session:
+    dataset = await install_dataset(
+        owned_session, settings, user, asset_id, request_utf8.encode("utf-8"),
+        project_id=project_id,
+    )
+    receipt = magnetic_dataset_receipt(dataset)
+
+# This is a local replay import, NEVER an online queued inverse. The owner
+# resolves checked_private_generation through its own staging boundary;
+# a browser-supplied filesystem path is not accepted authority.
+async with app.state.sessions() as owned_session:
+    job = await install_replay(
+        owned_session, settings, user, dataset_id, checked_private_generation,
+        project_id=project_id, temp_root=configured_external_scratch,
+    )
+
+# Existing read session, after current authenticated owner resolution.
+payload = await read_dataset(session, settings, user, dataset_id, project_id=project_id)
+mapping = await read_method(session, settings, user, dataset_id, project_id=project_id)
+view = await read_replay(session, settings, user, job_id,
+                         project_id=project_id, temp_root=configured_external_scratch)
+zip_bytes = await read_replay(session, settings, user, job_id,
+                              project_id=project_id, temp_root=configured_external_scratch,
+                              export=True)
+# Only after that full owned validation, the existing restart/delete dispatcher
+# may use the exact single ZIP descriptor. It must still retain its own held-path
+# checks, transaction/lease and original-preserving cleanup protocol.
+descriptor = exact_zip_inventory(settings, job)
+
+# An attempted online method submission refuses; it does not queue a replay.
+refuse_online_submission()
+```
+
+Existing `/datasets/<id>` returns the revalidated lexical dataset; `/methods`
+returns the closed magnetic-owned-method-1 mapping for this modality. Existing
+job views retain `_job_view` shape and successful result URL. `/result` returns
+the newly verified projection; `/export` returns the exact ZIP with no-store and
+a numeric-ZIP download media type. The browser `MagneticProcessingApi` uses those
+same-origin routes and authenticates selected receipt bindings before display.
+It does not invent an import endpoint or an online method allow-list.
+
+Before mounting, the owner assembly must add magnetic parser/receipt dispatch
+for list/read/create, explicit local import, request/preflight/job validation,
+single-ZIP quota/result handling, startup reconciliation, export and deletion.
+The ordinary gravity JSON result validator is NOT a magnetic ZIP validator.
+Controller union changes and actual two-account HTTP/restart/delete/native
+queue gates remain distinct from these portable implementation controls.
 
 ## Required existing-owner sequence
 
@@ -28,9 +96,9 @@ by the API parent. Its focused negative tests are not a mounted auth claim.
    actual residual signs and frozen final history before projection. Dataset
    content SHA and API job-request SHA remain their OWN types: neither is
    substituted with the magnetic configuration or generation hash.
-5. Persist a projection byte hash in existing durable result storage if the API
-   returns that JSON. Recheck dataset-input mapping and owner identity on every
-   read/export; database method state is not upgraded by a bundle alone.
+5. Retain the exact numeric ZIP, whose SHA/count cover all result bytes in the
+   existing job receipt. Derive the projection on read after fresh reimport;
+   do not persist a projection-only pointer with unaccounted numeric siblings.
 6. Frontend receives the expected selected-job receipt from authenticated job
    state, calls `verifyMagneticView(response, expected)` and then renders
    `MagneticSurveyResult`. Changing selection clears obsolete views and aborts
@@ -42,24 +110,21 @@ by the API parent. Its focused negative tests are not a mounted auth claim.
 
 ## Explicit mount patch outline for MAIN review
 
-The accompanying [unapplied dispatcher patch](owner-result-mount.patch) applies
-against this branch's existing result dispatcher (verified with `git apply
---check`, never applied). It reuses authenticated owned lookups, checked private
-result bytes and a durable `preflight.magnetic_binding` proposed for the local
-import transaction. Missing owner context rejects. The API owner must review
-that durable receipt and dataset parser ABI on its current branch; this patch
-does not add a submission allow-list, dataset parser, import transaction,
-worker command or ZIP export route. Existing nonmagnetic calls are unchanged.
+The retained [unapplied projection-only patch](owner-result-mount.patch) describes
+the earlier JSON-result proposal, NOT the single-ZIP custody ABI above. Do not
+apply it to a ZIP job. It never supplied input parsing, import transactions,
+startup/delete dispatch or native execution and is not evidence that those routes
+exist. Use the actual public custody functions above in the owner's explicit
+method union; existing nonmagnetic calls are unchanged.
 
 This is a branch-specific integration proposal, NOT a secretly applied patch:
 
 ```python
-# Existing owner result dispatcher, AFTER owned-job/dataset lookup and storage
-# resolution. Retain the owner's exact response/error/request lifecycle.
-if job.method_id == MAGNETIC_METHOD_VERSION:
-    receipt = durable_magnetic_receipt(job, dataset, source, native_manifest)
-    # Resolver must also prove immutable dataset -> physical request mapping.
-    return project_result(checked_generation_path, receipt)
+# Existing owner result dispatcher, retaining auth/project/error lifecycle.
+if job.method_id == "magnetic.survey-l2-irls-local/v1":
+    return await read_replay(session, settings, user, job.id,
+                             project_id=project_id,
+                             temp_root=configured_external_scratch)
 ```
 
 ```tsx
@@ -69,9 +134,9 @@ const verified = await verifyMagneticView(response, expected);
 return <MagneticSurveyResult value={verified} onExport={ownedBundleExport} />;
 ```
 
-`MAGNETIC_METHOD_VERSION`, durable request/dataset mapping and native profile
-admission need the API owner's reviewed versioned schema. They are intentionally
-not invented in this module or added to the existing gravity/MT union by force.
+The durable request/dataset mapping is executable in the closed magnetic
+custody schema. Native profile admission and shared union remain owner assembly
+gates, not inferred from those schema names or forced into gravity/MT dispatch.
 No request parameters are executable callbacks. Field direction, covariance,
 mesh/prior and beta edits submit a NEW immutable physical configuration through
 the accepted method job; they cannot repaint an old result as a new fit.
