@@ -138,17 +138,31 @@ def inventory(paths):
             count += 1
         else:
             members, byte_count = {}, 0
+            directories = {base: base.lstat()}
             for path in base.rglob("*"):
                 count += 1
                 require(count <= MAX_FILES, "complete inventory exceeds bound")
-                absolute(str(path))
+                info = path.lstat()
+                require(not stat.S_ISLNK(info.st_mode) and
+                        not getattr(info, "st_file_attributes", 0) & 0x400, f"linked path: {path}")
                 name = path.relative_to(base).as_posix()
-                if path.is_dir():
+                if stat.S_ISDIR(info.st_mode):
+                    directories[path] = info
                     members[name] = None
                 else:
                     row = file_record(path)
                     members[name] = {k: row[k] for k in ("bytes", "sha256")}
                     byte_count += row["bytes"]
+            # The root and all ancestors were checked once by absolute(base).
+            # Every interior entry is checked above; recheck held directory
+            # identity/membership metadata instead of resolving every file's
+            # full ancestor chain repeatedly on Windows.
+            for directory, before in directories.items():
+                after = directory.lstat()
+                state = lambda s: (s.st_dev, s.st_ino, s.st_mode, s.st_mtime_ns, s.st_ctime_ns)
+                require(state(before) == state(after) and
+                        not getattr(after, "st_file_attributes", 0) & 0x400,
+                        f"directory changed during hash: {directory}")
             # Hash EVERY exact member name/type/byte count/content hash, including
             # empty directories. Only representation is compacted, never inputs.
             records[str(base)] = {"inventory_sha256": digest(canonical(members)),
