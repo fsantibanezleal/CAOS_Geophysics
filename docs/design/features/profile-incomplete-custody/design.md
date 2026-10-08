@@ -1,6 +1,6 @@
 # Missing-receipt custody design
 
-Status: planned
+Status: implemented candidate; portable controls validated, native/integration gates open
 
 ## Authority and boundaries
 
@@ -65,6 +65,13 @@ ownership and charged_bytes = two manifest copies + actual member bytes. Do not
 encode it as gravity job_stage or successful execution-v2. Parent owns descriptor
 admission, shared all-writer lease and original deletion transaction. This leaf
 does not edit those files or claim restart/deletion integration before that gate.
+
+The public incomplete_descriptor constructor exposes precisely that separate
+geophysics.profile-incomplete-custody/v1 boundary. Incomplete member records bind
+native unsigned-64 device/inode plus bytes/hash; this does not change scientific
+quantity precision or the existing ownership-v2 member grammar. Census requires
+every archived directory's matching exclusive intent and exact literal manifest.
+An interrupted manifest still in stage is charged in full before archive rename.
 
 ## References and claim limits
 

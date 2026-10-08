@@ -218,3 +218,116 @@ def recorded_installation_binding(config, job, dataset, raw, origin):
     return dict(configuration_sha256=digest(canonical(config)),python_sha256=config["python_sha256"],
                 environment_sha256=config["environment_sha256"],invocation_sha256=digest(canonical(launch)),
                 source_hashes=json.loads(canonical(config["source_hashes"])))
+
+
+# Cleanup authority is deliberately separate from the scientific receipt DTO.
+INSTALLATION_FIELDS = set("configuration_sha256 python_sha256 environment_sha256 invocation_sha256 source_hashes".split())
+AUTHORITY_FIELDS = set("schema job_id relation installation stage_identity plan_sha256".split())
+CUSTODY_FIELDS = set("schema job_id authority_sha256 directories members".split())
+INCOMPLETE_FIELDS = set("schema job_id authority_sha256 custody_sha256 intent_sha256 installation retained_stage_identity terminal execution_receipt known_root_copies_removed".split())
+CUSTODY_RELATION_FIELDS = set("owner_id project_id job_id dataset_id raw_asset_id source_id method_id dataset_sha256 raw_sha256 request_sha256".split())
+
+
+def file_identity(value, *, member=False):
+    fields(value, {"device", "inode", "bytes", "sha256"} if member else {"device", "inode"})
+    integer(value["device"], 0, 2**64-1)
+    integer(value["inode"], 1, 2**64-1)
+    if member:
+        integer(value["bytes"], 1, 2*1024**2)
+        sha(value["sha256"])
+
+
+def validate_installation(value):
+    fields(value, INSTALLATION_FIELDS)
+    fields(value["source_hashes"], set(SOURCE_FILES))
+    for name in INSTALLATION_FIELDS - {"source_hashes"}:
+        sha(value[name])
+    for item in value["source_hashes"].values():
+        sha(item)
+
+
+def custody_relation(packet):
+    job, dataset, raw = packet["job"], packet["dataset"], packet["raw"]
+    return dict(owner_id=job["owner_id"], project_id=job["project_id"], job_id=job["id"],
+                dataset_id=dataset["id"], raw_asset_id=raw["id"], source_id=packet["origin"]["id"],
+                method_id=job["method_id"], dataset_sha256=dataset["sha256"],
+                raw_sha256=raw["sha256"], request_sha256=job["request_sha256"])
+
+
+def custody_authority(config,packet,stage_identity,*,recovery=False):
+    constructor = construct_recorded_launch if recovery else construct_launch
+    binder = recorded_installation_binding if recovery else installation_binding
+    args = (config,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
+    launch = constructor(*args)
+    plan = dict(schema="geophysics.profile-linux-custody-plan/v1",job_id=packet["job"]["id"],
+                held_bytes=packet["raw"]["byte_count"]+packet["dataset"]["byte_count"],
+                request_sha256=packet["job"]["request_sha256"],raw_sha256=packet["raw"]["sha256"],
+                dataset_sha256=packet["dataset"]["sha256"],invocation_sha256=digest(canonical(launch)))
+    result = dict(schema="geophysics.profile-custody-intent/v1",job_id=packet["job"]["id"],
+                  relation=custody_relation(packet),installation=binder(*args),
+                  stage_identity=stage_identity,plan_sha256=digest(canonical(plan)))
+    validate_custody_authority(result)
+    return result
+
+
+def validate_custody_authority(value):
+    fields(value, AUTHORITY_FIELDS)
+    require(value["schema"] == "geophysics.profile-custody-intent/v1", "custody_authority_schema")
+    uuid(value["job_id"])
+    sha(value["plan_sha256"])
+    file_identity(value["stage_identity"])
+    validate_installation(value["installation"])
+    fields(value["relation"], CUSTODY_RELATION_FIELDS)
+    for key in ("owner_id", "project_id", "job_id", "dataset_id", "raw_asset_id", "source_id"):
+        uuid(value["relation"][key])
+    require(value["relation"]["job_id"] == value["job_id"] and value["relation"]["method_id"] in METHODS,
+            "custody_relation")
+    for key in ("dataset_sha256", "raw_sha256", "request_sha256"):
+        sha(value["relation"][key])
+
+
+def validate_custody_manifest(value, authority):
+    validate_custody_authority(authority)
+    fields(value, CUSTODY_FIELDS)
+    require(value["schema"] == "geophysics.profile-custody/v1" and
+            value["job_id"] == authority["job_id"] and
+            value["authority_sha256"] == digest(canonical(authority)), "custody_manifest_identity")
+    fields(value["directories"], {"custody", "inputs", "scratch"})
+    fields(value["members"], {"original", "dataset.json", "launch.json"})
+    for record in value["directories"].values():
+        file_identity(record)
+    for name, record in value["members"].items():
+        file_identity(record, member=True)
+        integer(record["bytes"], 1, {"original":1000000, "dataset.json":2*1024**2, "launch.json":65536}[name])
+    require(value["members"]["original"]["sha256"] == authority["relation"]["raw_sha256"] and
+            value["members"]["dataset.json"]["sha256"] == authority["relation"]["dataset_sha256"], "custody_member_hash")
+
+
+def validate_incomplete_terminal(value, identifier):
+    units = ("geophysics-profile-"+uuid(identifier)+".service", "geophysics-profile-guardian-"+identifier+".scope")
+    fields(value, set(units))
+    for unit in units:
+        fields(value[unit], {"manager", "kernel"})
+        state, kernel = value[unit]["manager"], value[unit]["kernel"]
+        expected = {"MainPID", "ActiveState", "SubState", "ControlGroup"}
+        require(type(state) is dict and (set(state) == expected or
+                unit.endswith(".scope") and set(state) == expected - {"MainPID"}), "incomplete_manager_fields")
+        require(state.get("MainPID", "0") == "0" and state["ActiveState"] in ("inactive", "failed") and
+                state["SubState"] in ("dead", "failed", "exited") and
+                state["ControlGroup"] in ("", "/system.slice/"+unit), "incomplete_live_unit")
+        fields(kernel, {"path", "state"})
+        require(kernel["path"] == "/sys/fs/cgroup/system.slice/"+unit and
+                kernel["state"] in ("absent", "unpopulated_no_processes"), "incomplete_kernel")
+
+
+def validate_incomplete_recovery(value):
+    fields(value, INCOMPLETE_FIELDS)
+    require(value["schema"] == "geophysics.profile-incomplete-recovery/v1" and
+            value["execution_receipt"] == "absent" and value["known_root_copies_removed"] is True,
+            "incomplete_recovery_schema")
+    uuid(value["job_id"])
+    for key in ("authority_sha256", "custody_sha256", "intent_sha256"):
+        sha(value[key])
+    validate_installation(value["installation"])
+    file_identity(value["retained_stage_identity"])
+    validate_incomplete_terminal(value["terminal"], value["job_id"])

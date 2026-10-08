@@ -734,7 +734,7 @@ def prepare_custody_plan(root_fd,module,packet,launch):
     names = set(os.listdir(root_fd))
     planned,receipts,directories = {},[],set()
     for name in names:
-        match = re.fullmatch(r"([a-f0-9-]{36})(\.plan\.json|\.receipt\.json|\.recovery-intent\.json|\.recovery\.json)?",name)
+        match = re.fullmatch(r"([a-f0-9-]{36})(\.plan\.json|\.receipt\.json|\.recovery-intent\.json|\.recovery\.json|\.custody-intent\.json|\.custody\.json|\.incomplete-recovery-intent\.json|\.incomplete-recovery\.json)?",name)
         require(match is not None,"custody_unknown_name")
         identifier = module.uuid(match[1])
         info = os.stat(name,dir_fd=root_fd,follow_symlinks=False)
@@ -755,13 +755,28 @@ def prepare_custody_plan(root_fd,module,packet,launch):
             elif match[2] == ".receipt.json":
                 require(record["schema"] == "geophysics.profile-linux-execution/v1","custody_receipt_schema")
                 receipts.append(info.st_size)
-            else:
+            elif match[2] in (".recovery-intent.json", ".recovery.json"):
                 expected_schema = "geophysics.profile-linux-recovery-intent/v1" if match[2] == ".recovery-intent.json" else "geophysics.profile-linux-recovery/v1"
                 require(record["schema"] == expected_schema,"custody_recovery_schema")
+                receipts.append(info.st_size)
+            else:
+                require(not info.st_mode & 0o222, "custody_mutable_authority")
+                if match[2] == ".custody-intent.json":
+                    module.validate_custody_authority(record)
+                elif match[2] == ".custody.json":
+                    authority = decode(capture(root_fd,identifier+".custody-intent.json",65536),65536)
+                    module.validate_custody_manifest(record,authority)
+                elif match[2] == ".incomplete-recovery.json":
+                    module.validate_incomplete_recovery(record)
+                else:
+                    validate_incomplete_intent(module,record,identifier)
                 receipts.append(info.st_size)
     require(directories <= set(planned),"custody_unplanned_directory")
     new_bytes = packet["raw"]["byte_count"]+packet["dataset"]["byte_count"]
     custody_budget(list(planned.values()),receipts,new_bytes)
+    # Reserve prelaunch authority/manifest, execution receipt and both recovery
+    # records within the unchanged record ceiling, before creating anything.
+    require(len(receipts)+5 <= 256, "custody_receipt_cap")
     plan = dict(schema="geophysics.profile-linux-custody-plan/v1",job_id=packet["job"]["id"],
                 held_bytes=new_bytes,request_sha256=packet["job"]["request_sha256"],
                 raw_sha256=packet["raw"]["sha256"],dataset_sha256=packet["dataset"]["sha256"],
@@ -853,6 +868,10 @@ def execute(configuration,module,identifier):
     require(os.fstat(stage_fd).st_uid == uid,"stage_owner")
     custody_root = custody_directory(configuration)
     plan = prepare_custody_plan(custody_root,module,packet,launch)
+    stage_info = os.fstat(stage_fd)
+    authority = module.custody_authority(configuration,packet,dict(device=stage_info.st_dev,inode=stage_info.st_ino))
+    require(authority["plan_sha256"] == sha(module.canonical(plan)),"custody_plan_changed")
+    custody_record(custody_root,identifier+".custody-intent.json",module.canonical(authority),gid)
     os.mkdir(identifier,0o750,dir_fd=custody_root)
     custody_fd = os.open(identifier,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_root)
     os.fchown(custody_fd,0,gid)
@@ -896,6 +915,7 @@ def execute(configuration,module,identifier):
                        inputs=held_identities)
         held_bodies["launch.json"] = module.canonical(wrapper)
         exclusive(inputs_fd,"launch.json",held_bodies["launch.json"],0,gid,0o440)
+        persist_custody(custody_root,custody_fd,inputs_fd,module,authority,gid)
         unit = launch["unit"]
         absent = subprocess.run(["/usr/bin/systemctl","show",unit,"--property=LoadState","--value"],capture_output=True,timeout=3,check=True)
         require(absent.stdout.strip() == b"not-found","unit_already_present")
@@ -1237,14 +1257,223 @@ def recover(configuration,module,identifier):
                 os.close(fd)
 
 
+def custody_record(fd,name,body,gid):
+    """Separate immutable cleanup authority; never an execution receipt."""
+    require(re.fullmatch(r"[a-f0-9-]{36}\.(custody-intent|custody|incomplete-recovery-intent|incomplete-recovery)\.json",name)
+            and 0 < len(body) <= 65536,"custody_authority_record")
+    member = os.open(name,os.O_CREAT|os.O_EXCL|os.O_WRONLY|os.O_NOFOLLOW,0o440,dir_fd=fd)
+    try:
+        os.fchown(member,0,gid)
+        with os.fdopen(os.dup(member),"wb") as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+    finally:
+        os.close(member)
+    os.fsync(fd)
+
+
+def held_directory(fd,expected=None):
+    info = os.fstat(fd)
+    require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and not info.st_mode & 0o022,"incomplete_directory_owner")
+    observed = dict(device=info.st_dev,inode=info.st_ino)
+    require(expected is None or observed == expected,"incomplete_directory_changed")
+    return observed
+
+
+def persist_custody(root_fd,custody_fd,inputs_fd,module,authority,gid):
+    scratch_fd = os.open("scratch",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_fd)
+    try:
+        require(not os.listdir(scratch_fd),"incomplete_scratch_debt")
+        members = {}
+        for name,cap in (("original",1000000),("dataset.json",2*1024**2),("launch.json",65536)):
+            _,members[name] = root_member(inputs_fd,name,cap)
+        require(set(os.listdir(inputs_fd)) == set(members),"incomplete_unknown_member")
+        manifest = dict(schema="geophysics.profile-custody/v1",job_id=authority["job_id"],
+            authority_sha256=sha(module.canonical(authority)),
+            directories=dict(custody=held_directory(custody_fd),inputs=held_directory(inputs_fd),scratch=held_directory(scratch_fd)),
+            members=members)
+        module.validate_custody_manifest(manifest,authority)
+        # Persist copied files and child directory entries before the authority
+        # that declares their identities durable, then before science can start.
+        os.fsync(inputs_fd)
+        os.fsync(scratch_fd)
+        os.fsync(custody_fd)
+        custody_record(root_fd,authority["job_id"]+".custody.json",module.canonical(manifest),gid)
+    finally:
+        os.close(scratch_fd)
+
+
+def incomplete_extinction(module,identifier):
+    # First retain the existing independently checked manager/kernel barrier;
+    # then sample both deterministic kernel paths again for explicit evidence.
+    states = recovery_extinction(identifier)
+    result = {}
+    for unit,state in states.items():
+        path = Path("/sys/fs/cgroup/system.slice/"+unit)
+        try:
+            path.lstat()
+        except FileNotFoundError:
+            kernel = "absent"
+        else:
+            fd = tree_fd(path)
+            try:
+                events = native(fd,"cgroup.events").decode("ascii").splitlines()
+                require([line for line in events if line.startswith("populated ")] == ["populated 0"] and
+                        not native(fd,"cgroup.procs").strip(),"incomplete_populated_group")
+                kernel = "unpopulated_no_processes"
+            finally:
+                os.close(fd)
+        result[unit] = dict(manager=state,kernel=dict(path=str(path),state=kernel))
+    module.validate_incomplete_terminal(result,identifier)
+    return result
+
+
+def validate_incomplete_intent(module,value,identifier):
+    module.fields(value,{"schema","job_id","authority_sha256","custody_sha256"})
+    require(value["schema"] == "geophysics.profile-incomplete-recovery-intent/v1" and value["job_id"] == identifier,"incomplete_intent_identity")
+    module.uuid(identifier)
+    module.sha(value["authority_sha256"])
+    module.sha(value["custody_sha256"])
+
+
+def incomplete_authority(configuration,module,packet,authority,manifest):
+    module.validate_custody_manifest(manifest,authority)
+    require(packet["job"]["state"] in ("failed","cancelled") and
+            authority["job_id"] == packet["job"]["id"] and
+            authority["relation"] == module.custody_relation(packet),"incomplete_owned_relation")
+    installation = module.recorded_installation_binding(configuration,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
+    require(authority["installation"] == installation,"incomplete_installation")
+    require(authority == module.custody_authority(configuration,packet,authority["stage_identity"],recovery=True),"incomplete_authority_changed")
+    for name,record in (("original",packet["raw"]),("dataset.json",packet["dataset"])):
+        require(manifest["members"][name]["bytes"] == record["byte_count"],"incomplete_input_size")
+    launch = module.construct_recorded_launch(configuration,packet["job"],packet["dataset"],packet["raw"],packet["origin"])
+    wrapper = dict(command=launch["command"],environment=launch["environment"],stderr=launch["stage"]+"/stderr.txt",
+        inputs={name:manifest["members"][name] for name in ("original","dataset.json")})
+    wrapper_body = module.canonical(wrapper)
+    require(manifest["members"]["launch.json"]["sha256"] == sha(wrapper_body) and
+            manifest["members"]["launch.json"]["bytes"] == len(wrapper_body),"incomplete_wrapper")
+    return installation
+
+
+def recover_incomplete(configuration,module,identifier):
+    """Missing-receipt cleanup only, using surviving prelaunch authority."""
+    lock = supervisor_lock()
+    root_fd = custody_fd = inputs_fd = scratch_fd = None
+    try:
+        packet = nonroot_query(configuration,identifier,module,recovery=True)
+        incomplete_extinction(module,identifier)
+        root_fd = custody_directory(configuration)
+        names = set(os.listdir(root_fd))
+        require(identifier+".receipt.json" not in names,"incomplete_execution_receipt_present")
+        authority_body,_ = root_member(root_fd,identifier+".custody-intent.json",65536)
+        custody_body,_ = root_member(root_fd,identifier+".custody.json",65536)
+        authority,manifest = decode(authority_body,65536),decode(custody_body,65536)
+        require(authority_body == module.canonical(authority) and custody_body == module.canonical(manifest),"incomplete_noncanonical")
+        installation = incomplete_authority(configuration,module,packet,authority,manifest)
+        intent_name,final_name = identifier+".incomplete-recovery-intent.json",identifier+".incomplete-recovery.json"
+        intent = dict(schema="geophysics.profile-incomplete-recovery-intent/v1",job_id=identifier,
+            authority_sha256=sha(authority_body),custody_sha256=sha(custody_body))
+        if intent_name in names:
+            old,_ = root_member(root_fd,intent_name,65536)
+            require(old == module.canonical(intent),"incomplete_intent_changed")
+        else:
+            # A complete immutable manifest must still have its UUID and original
+            # plan; absence before journalling is not cleanup authority.
+            require(identifier in names and identifier+".plan.json" in names,"incomplete_unjournalled_absence")
+        plan_name = identifier+".plan.json"
+        if plan_name in names:
+            plan_body = capture(root_fd,plan_name,65536)
+            require(sha(plan_body) == authority["plan_sha256"],"incomplete_plan_changed")
+        if final_name in names:
+            final_body,_ = root_member(root_fd,final_name,65536)
+            final = decode(final_body,65536)
+            module.validate_incomplete_recovery(final)
+            require(final_body == module.canonical(final) and identifier not in names and plan_name not in names and
+                    final["job_id"] == identifier and final["authority_sha256"] == sha(authority_body) and
+                    final["custody_sha256"] == sha(custody_body) and final["intent_sha256"] == sha(module.canonical(intent)) and
+                    final["installation"] == installation and final["retained_stage_identity"] == authority["stage_identity"],"incomplete_final_changed")
+            # Final bytes stay immutable; return a fresh separate terminal sample.
+            final["terminal"] = incomplete_extinction(module,identifier)
+            print(module.canonical(final).decode(),flush=True)
+            return 0
+        if identifier in names:
+            custody_fd = os.open(identifier,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=root_fd)
+            held_directory(custody_fd,manifest["directories"]["custody"])
+            children = set(os.listdir(custody_fd))
+            require(children <= {"inputs","scratch"},"incomplete_unknown_member")
+            if "inputs" in children:
+                inputs_fd = os.open("inputs",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_fd)
+                held_directory(inputs_fd,manifest["directories"]["inputs"])
+                current = set(os.listdir(inputs_fd))
+                require(current <= set(manifest["members"]),"incomplete_unknown_member")
+                for name in current:
+                    _,observed = root_member(inputs_fd,name,manifest["members"][name]["bytes"])
+                    require(observed == manifest["members"][name],"incomplete_member_changed")
+            if "scratch" in children:
+                scratch_fd = os.open("scratch",os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW,dir_fd=custody_fd)
+                held_directory(scratch_fd,manifest["directories"]["scratch"])
+                require(not os.listdir(scratch_fd),"incomplete_scratch_debt")
+            elif intent_name not in names:
+                require(False,"incomplete_scratch_missing")
+        if intent_name not in names:
+            custody_record(root_fd,intent_name,module.canonical(intent),configuration["gid"])
+        incomplete_extinction(module,identifier)
+        if custody_fd is not None:
+            require(held_directory(custody_fd) == manifest["directories"]["custody"] and
+                    os.stat(identifier,dir_fd=root_fd,follow_symlinks=False).st_dev == os.fstat(custody_fd).st_dev and
+                    os.stat(identifier,dir_fd=root_fd,follow_symlinks=False).st_ino == os.fstat(custody_fd).st_ino,"incomplete_directory_changed")
+            # Recheck every member and anchored subdirectory immediately before
+            # deletion; the immutable root parent and singleton exclude writers.
+            for label,fd in (("inputs",inputs_fd),("scratch",scratch_fd)):
+                if fd is not None:
+                    info = os.stat(label,dir_fd=custody_fd,follow_symlinks=False)
+                    require(dict(device=info.st_dev,inode=info.st_ino) == manifest["directories"][label],"incomplete_directory_changed")
+            if inputs_fd is not None:
+                current = set(os.listdir(inputs_fd))
+                require(current <= set(manifest["members"]),"incomplete_unknown_member")
+                for name in current:
+                    _,observed = root_member(inputs_fd,name,manifest["members"][name]["bytes"])
+                    require(observed == manifest["members"][name],"incomplete_member_changed")
+                for name in current:
+                    os.unlink(name,dir_fd=inputs_fd)
+                os.fsync(inputs_fd)
+                os.rmdir("inputs",dir_fd=custody_fd)
+            if scratch_fd is not None:
+                require(not os.listdir(scratch_fd),"incomplete_scratch_debt")
+                os.rmdir("scratch",dir_fd=custody_fd)
+            require(not os.listdir(custody_fd),"incomplete_unknown_member")
+            os.fsync(custody_fd)
+            os.rmdir(identifier,dir_fd=root_fd)
+            os.fsync(root_fd)
+        if plan_name in names:
+            require(sha(capture(root_fd,plan_name,65536)) == authority["plan_sha256"],"incomplete_plan_changed")
+            os.unlink(plan_name,dir_fd=root_fd)
+            os.fsync(root_fd)
+        final = dict(schema="geophysics.profile-incomplete-recovery/v1",job_id=identifier,
+            authority_sha256=sha(authority_body),custody_sha256=sha(custody_body),intent_sha256=sha(module.canonical(intent)),
+            installation=installation,retained_stage_identity=authority["stage_identity"],
+            terminal=incomplete_extinction(module,identifier),execution_receipt="absent",known_root_copies_removed=True)
+        module.validate_incomplete_recovery(final)
+        custody_record(root_fd,final_name,module.canonical(final),configuration["gid"])
+        print(module.canonical(final).decode(),flush=True)
+        return 0
+    finally:
+        for fd in (scratch_fd,inputs_fd,custody_fd,root_fd,lock):
+            if fd is not None:
+                os.close(fd)
+
+
 def main():
     require(os.name == "posix" and os.geteuid() == 0 and
-            (len(sys.argv) == 2 or len(sys.argv) == 3 and sys.argv[1] == "--recover"),"supervisor_authority")
+            (len(sys.argv) == 2 or len(sys.argv) == 3 and sys.argv[1] in ("--recover","--recover-incomplete")),"supervisor_authority")
     configuration,module = installation()
     identifier = module.uuid(sys.argv[-1])
     caller = os.environ.get("SUDO_UID")
     require(caller is None or caller == str(configuration["uid"]),"caller_identity")
-    return recover(configuration,module,identifier) if len(sys.argv) == 3 else execute(configuration,module,identifier)
+    if len(sys.argv) == 3:
+        return recover_incomplete(configuration,module,identifier) if sys.argv[1] == "--recover-incomplete" else recover(configuration,module,identifier)
+    return execute(configuration,module,identifier)
 
 
 if __name__ == "__main__":
