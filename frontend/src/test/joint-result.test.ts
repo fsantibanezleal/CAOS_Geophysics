@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { unzipSync } from "fflate";
 import { importJointOutput, jointFrameSidecar, jointInstrumentFrame, jointJson, jointPhysicalRange, jointResponse, jointSidecar, jointState, exportJointOriginals, type JointFile } from "../api/joint-result";
@@ -7,7 +8,7 @@ import { importJointOutput, jointFrameSidecar, jointInstrumentFrame, jointJson, 
 export function actualJointFiles(root: string): JointFile[] {
   const entries: JointFile[] = [];
   function visit(dir: string) { for (const name of readdirSync(dir)) { const path = join(dir, name), info = statSync(path); if (info.isDirectory()) visit(path);
-    else entries.push({ path: relative(root, path).replaceAll("\\", "/"), size: info.size, read: async () => new Uint8Array(readFileSync(path)) }); } }
+    else entries.push({ path: relative(root, path).replaceAll("\\", "/"), size: info.size, read: async () => new Uint8Array(await readFile(path)) }); } }
   visit(root); return entries;
 }
 const root = process.env.GEOPHYSICS_JOINT_OUTPUT_FIXTURE;

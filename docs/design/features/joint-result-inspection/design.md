@@ -89,3 +89,29 @@ tests use in-memory mutation, never a modified scientific result on disk. Browse
 gates import the same actual outputs and exercise both languages/themes/mobile and
 desktop, selectors and downloaded exports. Integrated mount/render is separately
 qualified in the actual application.
+
+## Bounded asynchronous native reads and immutable digests
+
+After whole metadata admission, the importer reads at most four small original
+NPY members (each at most256KiB) concurrently, with a complete drain on error
+or cancellation. Large members are read alone. Every original header must pass
+before any array hash or value decoding. This retains the original256MiB whole
+transport/logical limits; it does not preload or reuse a previously passed input.
+
+The next phase uses the same small-file/large-alone schedule. Each task verifies
+the actual whole-file SHA256, then the exact data-view SHA256, then decodes.
+At most four <=256KiB digest input snapshots exist concurrently. Any batch's
+rejection or cancellation drains all its submitted work before propagating;
+no partially checked inspection escapes. Returned hashes are computed actual
+digests, not descriptor declarations. Export still independently rehashes every
+original and refuses altered bytes.
+
+[WebCrypto digest's normative input snapshot](https://www.w3.org/TR/webcrypto/#SubtleCrypto-method-digest)
+copies the exact BufferSource bytes before returning its Promise. Nonshared
+views therefore need no additional full JS slice; shared/other buffers take an
+owned copy. Immediate caller mutation and exact subarray offset/length are
+tested. This does not establish whole-browser memory, cold-device timing,
+hard-realtime interruption, authenticity, physical replay or scientific accuracy.
+The actual native-output tests use asynchronous original-file readers matching
+the browser contract, with unchanged corruption/array/export assertions,
+all24 outputs and their original5s/30s test deadlines.

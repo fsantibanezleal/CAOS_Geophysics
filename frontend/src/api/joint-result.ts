@@ -32,6 +32,7 @@ export const INSPECTION_FLAGS = Object.freeze({ offline_scientific_replay_perfor
 export const JOINT_IMPORT_CAP = 268435456;
 // Late failures retain both genuine ledgers: at most1090 fixed native members.
 const JSON_CAP = 262144, MAX_FILES = 1100, MAX_HEADER = 4096;
+const SMALL_HASH_FILE = 262144, HASH_BATCH = 4;
 const MODALITIES = ["gravity", "magnetic"] as const, PARTITIONS = ["training", "validation", "sealed"] as const;
 const BETAS = [.0001, .001, .01, .1, 1, 10, 100, 1000], LAMBDAS = [.001, .01, .1, 1, 10];
 const STATES = ["models_q", "phi_d", "phi_m", "phi_engine", "kkt_normalized"];
@@ -55,7 +56,11 @@ function eq(a: Json, b: Json) { return stable(a) === stable(b); }
 function stable(v: Json): string { return v !== null && typeof v === "object" ? Array.isArray(v) ? `[${v.map(stable).join(",")}]` : `{${Object.keys(v).sort().map(k => `${JSON.stringify(k)}:${stable(v[k])}`).join(",")}}` : JSON.stringify(v); }
 function close(a: number, b: number) { return Math.abs(a - b) <= 1e-12 * Math.max(1, Math.abs(a), Math.abs(b)); }
 export async function jointSha(bytes: Uint8Array) {
-  const digest = await crypto.subtle.digest("SHA-256", bytes.slice().buffer);
+  // WebCrypto snapshots this exact view synchronously before returning its
+  // Promise. Avoid a redundant full JS copy; shared buffers still need one.
+  const input: Uint8Array<ArrayBuffer> = bytes.buffer instanceof ArrayBuffer
+    ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength) : new Uint8Array(bytes);
+  const digest = await crypto.subtle.digest("SHA-256", input);
   return Array.from(new Uint8Array(digest), x => x.toString(16).padStart(2, "0")).join("");
 }
 
@@ -277,12 +282,40 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
     for (const [k, s] of Object.entries(specs)) { const d = descriptor(obj(descriptors[k])); requireThat(d.dtype === s.dtype && eq(d.shape, s.shape) && entries.get(`${directory}/${k}.npy`)?.size === d.file_bytes, "exact array descriptor"); logical += d.shape.reduce((a, b) => a * b, 1) * (d.dtype === "|b1" ? 1 : 8); requireThat(logical <= JOINT_IMPORT_CAP, "whole logical array cap"); ds[k] = d; }
     admitted[directory] = { payload, descriptors: ds, offsets: Object.create(null), manifestPath: path };
   }
+  const members = Object.entries(admitted).flatMap(([dir, record]) => Object.entries(record.descriptors).map(([key, descriptor]) => ({ dir, record, key, descriptor })));
+  function* batches() {
+    for (let at = 0; at < members.length;) {
+      const start = at++;
+      // Large files run alone in BOTH phases. Small-file native hash snapshots
+      // and temporary reader inputs total at most4*256KiB in either phase.
+      if (members[start].descriptor.file_bytes <= SMALL_HASH_FILE) while (at < members.length && at - start < HASH_BATCH && members[at].descriptor.file_bytes <= SMALL_HASH_FILE) at++;
+      yield members.slice(start, at);
+    }
+  }
   // Whole metadata admission, then ALL original headers, then hashes/values.
-  for (const [dir, record] of Object.entries(admitted)) for (const [k, d] of Object.entries(record.descriptors)) { cancel(); const path = `${dir}/${k}.npy`; record.offsets[k] = header(await read(path), d); }
+  // Draining each bounded read batch preserves that barrier on error/cancel.
+  for (const batch of batches()) {
+    cancel(); const results = await Promise.allSettled(batch.map(async ({ dir, record, key, descriptor: d }) => {
+      const offset = header(await read(`${dir}/${key}.npy`), d); cancel(); return { record, key, offset };
+    }));
+    for (const result of results) if (result.status === "rejected") throw result.reason;
+    cancel(); for (const result of results) if (result.status === "fulfilled") { const { record, key, offset } = result.value; record.offsets[key] = offset; }
+  }
   const records: Record<string, NativeRecord> = Object.create(null);
-  for (const [dir, record] of Object.entries(admitted)) { const arrays: Record<string, NativeArray> = Object.create(null);
-    for (const [k, d] of Object.entries(record.descriptors)) { cancel(); const path = `${dir}/${k}.npy`, bytes = files.get(path)!, fileHash = await jointSha(bytes); requireThat(fileHash === d.file_sha256 && await jointSha(bytes.subarray(record.offsets[k])) === d.data_sha256, "original array digest mismatch"); hashes.set(path, fileHash); arrays[k] = decode(bytes, d, record.offsets[k]); }
-    records[dir] = { payload: record.payload, arrays, manifestPath: record.manifestPath };
+  for (const [dir, record] of Object.entries(admitted)) records[dir] = { payload: record.payload, arrays: Object.create(null), manifestPath: record.manifestPath };
+  for (const batch of batches()) {
+    cancel(); const results = await Promise.allSettled(batch.map(async ({ dir, record, key, descriptor: d }) => {
+      cancel(); const path = `${dir}/${key}.npy`, bytes = files.get(path)!, fileHash = await jointSha(bytes);
+      cancel(); requireThat(fileHash === d.file_sha256, "original array digest mismatch");
+      const dataHash = await jointSha(bytes.subarray(record.offsets[key]));
+      cancel(); requireThat(dataHash === d.data_sha256, "original array digest mismatch");
+      return { dir, key, path, fileHash, array: decode(bytes, d, record.offsets[key]) };
+    }));
+    // Even a failed/cancelled task cannot leave pending work after rejection.
+    for (const result of results) if (result.status === "rejected") throw result.reason;
+    cancel(); for (const result of results) if (result.status === "fulfilled") {
+      const { dir, key, path, fileHash, array } = result.value; hashes.set(path, fileHash); records[dir].arrays[key] = array;
+    }
   }
   // read() copies each original buffer and no array is exposed until return.
   // Preserve the already computed actual file digest; never replace it with a
