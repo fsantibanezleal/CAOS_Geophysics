@@ -31,6 +31,34 @@ def test_fragmented_completion_is_not_eof_or_implicit_success():
             completion_frame(b"", bad)
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="anonymous Linux caller descriptor contract")
+def test_caller_guard_accepts_only_held_anonymous_pipe_read_end(tmp_path):
+    from waveform_m08_guardian import caller_pipe
+    import socket
+    reader,writer = os.pipe()
+    try:
+        caller_pipe(reader)
+        with pytest.raises(ValueError):
+            caller_pipe(writer)
+        with open(tmp_path/"regular","xb") as regular:
+            with pytest.raises(ValueError):
+                caller_pipe(regular.fileno())
+        with socket.socket(socket.AF_UNIX) as sock:
+            with pytest.raises(ValueError):
+                caller_pipe(sock.fileno())
+        fifo = tmp_path/"named-fifo"
+        os.mkfifo(fifo)
+        fd = os.open(fifo,os.O_RDONLY|os.O_NONBLOCK)
+        try:
+            with pytest.raises(ValueError):
+                caller_pipe(fd)
+        finally:
+            os.close(fd)
+    finally:
+        os.close(reader)
+        os.close(writer)
+
+
 @pytest.mark.skipif(sys.platform != "linux" or os.environ.get("M08_RUN_LINUX_NATIVE") != "1",
     reason="Actual installed manager/guardian controls require explicit opt-in")
 @pytest.mark.parametrize("checkpoint", ["before_submit", "before_ack", "paused_before_ack"])
@@ -45,6 +73,10 @@ def test_actual_parent_death_before_bootstrap_or_ack(tmp_path, checkpoint):
     from waveform_m08_windows import ControlError
     from waveform_m08_files import external_work_path
     external_work_path(tmp_path)
+    # Own fresh POSIX qualification ancestry must permit the science UID's
+    # CHDIR. No original/plan custody exists in these lifecycle negatives.
+    tmp_path.chmod(0o755)
+    tmp_path.parent.chmod(0o755)
     run = os.urandom(16).hex()
     service, accounting, scope = guardian_names(run)
     work = tmp_path / "work"
@@ -56,6 +88,7 @@ def test_actual_parent_death_before_bootstrap_or_ack(tmp_path, checkpoint):
     observer = os.fork()
     if observer == 0:
         os.close(ready_read)
+
         try:
             guardian = Guardian(run, library_record)
             if checkpoint != "before_submit":
@@ -127,3 +160,87 @@ def test_actual_parent_death_before_bootstrap_or_ack(tmp_path, checkpoint):
         if science_fd is not None:
             os.close(science_fd)
         os.close(ready_read)
+
+@pytest.mark.skipif(sys.platform != "linux" or os.environ.get("M08_RUN_LINUX_NATIVE") != "1",
+                    reason="actual independent manager guardian / paused observer control")
+@pytest.mark.parametrize("control",["eof","pending_cancel"])
+def test_actual_worker_pipe_loss_drains_even_with_root_observer_paused(tmp_path,control):
+    from waveform_m08_guardian import Guardian,manager
+    from waveform_m08_linux import _slice,_launch,image_sha
+    tmp_path.chmod(0o755)
+    tmp_path.parent.chmod(0o755)
+    run = os.urandom(16).hex()
+    service,accounting,scope = guardian_names(run)
+    work = tmp_path/"work"
+    work.mkdir()
+    library = Path("/usr/lib/x86_64-linux-gnu/libsystemd.so.0").resolve(strict=True)
+    library_record = dict(path=str(library),sha256=image_sha(library))
+    admission = dict(uid=65534,gid=65534,python=str(Path(sys._base_executable).resolve()))
+    caller,writer = os.pipe()
+    ready,notify = os.pipe()
+    observer = os.fork()
+    if observer == 0:
+        os.close(writer)
+        os.close(ready)
+        try:
+            guardian = Guardian(run,library_record,caller_fd=caller)
+            _slice(accounting)
+            _launch(admission,service,accounting,work,run,scope)
+            manager(["/usr/bin/systemctl","kill","--signal=SIGSTOP","--kill-whom=all",service])
+            os.write(notify,json.dumps(guardian.receipt).encode()+b"\n")
+            while True:
+                time.sleep(1)
+        except BaseException:
+            os._exit(4)
+    os.close(caller)
+    os.close(notify)
+    observer_fd = os.pidfd_open(observer)
+    science_fd = None
+    try:
+        assert select.select([ready,observer_fd],[],[],15)[0] == [ready]
+        receipt = json.loads(os.read(ready,4096))
+        assert receipt["identity_transport"] == "PIDFDs/ah"
+        pid = int(manager(["/usr/bin/systemctl","show",service,"--property=MainPID","--value"]))
+        science_fd = os.pidfd_open(pid)
+        assert not select.select([science_fd],[],[],0)[0]
+        assert re.search(r"^State:\s+T",Path(f"/proc/{pid}/status").read_text(),re.M)
+        signal.pidfd_send_signal(observer_fd,signal.SIGSTOP)
+        deadline = time.monotonic()+2
+        while not re.search(r"^State:\s+T",Path(f"/proc/{observer}/status").read_text(),re.M):
+            assert time.monotonic() < deadline
+            time.sleep(.005)
+        began = time.monotonic_ns()
+        if control == "eof":
+            os.close(writer)
+            writer = None
+        else:
+            assert os.write(writer,b"CANCEL\n") == 7
+        group = Path("/sys/fs/cgroup")/accounting
+        deadline = began+2000000000
+        while group.exists() and b"populated 1" in (group/"cgroup.events").read_bytes().splitlines():
+            assert time.monotonic_ns() <= deadline
+            time.sleep(.005)
+        quiescent = time.monotonic_ns()
+        assert quiescent-began <= 2000000000 and select.select([science_fd],[],[],0)[0]
+        # The observer is STILL stopped/alive: it could not parse or kill science.
+        assert not select.select([observer_fd],[],[],0)[0]
+        assert re.search(r"^State:\s+T",Path(f"/proc/{observer}/status").read_text(),re.M)
+        guard_group = Path("/sys/fs/cgroup/system.slice")/scope
+        deadline = time.monotonic()+22
+        while guard_group.exists():
+            assert time.monotonic() < deadline
+            time.sleep(.05)
+        assert not group.exists() and not (work/"final").exists()
+        (tmp_path/"actual-caller-guard.json").write_text(json.dumps(dict(run_id=run,control=control,
+            held_anonymous_pipe=True,observer_stopped=True,observer_alive_at_quiescence=True,
+            guardian=receipt,quiescence_ns=quiescent-began,science_scope_removed=True,
+            guardian_scope_removed=True,scientific_ack=False,production_api_proved=False)))
+    finally:
+        if writer is not None:
+            os.close(writer)
+        signal.pidfd_send_signal(observer_fd,signal.SIGKILL)
+        os.waitpid(observer,0)
+        os.close(observer_fd)
+        if science_fd is not None:
+            os.close(science_fd)
+        os.close(ready)

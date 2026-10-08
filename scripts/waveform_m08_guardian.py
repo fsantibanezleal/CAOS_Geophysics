@@ -171,10 +171,18 @@ def drain(run):
         time.sleep(.01)
 
 
-def _child(run, parent_fd, control, ready):
+def caller_pipe(fd):
+    """Descriptor-bound anonymous read end; no caller PID/path adoption."""
+    import fcntl
+    require(type(fd) is int and fd >= 0 and stat.S_ISFIFO(os.fstat(fd).st_mode))
+    require(fcntl.fcntl(fd,fcntl.F_GETFL) & os.O_ACCMODE == os.O_RDONLY)
+    require(re.fullmatch(r"pipe:\[[0-9]{1,20}\]",os.readlink(f"/proc/self/fd/{fd}")))
+
+
+def _child(run, parent_fd, control, ready, caller=None):
     for name in os.listdir("/proc/self/fd"):
         fd = int(name)
-        if fd not in (parent_fd, control, ready):
+        if fd not in (parent_fd, control, ready, caller):
             try:
                 os.close(fd)
             except OSError:
@@ -184,8 +192,19 @@ def _child(run, parent_fd, control, ready):
         os.write(ready, b"READY\n")
         os.close(ready)
         buffer = b""
+        poller = select.poll()
+        poller.register(parent_fd,select.POLLIN|select.POLLHUP|select.POLLERR)
+        poller.register(control,select.POLLIN|select.POLLHUP|select.POLLERR)
+        if caller is not None:
+            caller_pipe(caller)
+            poller.register(caller,select.POLLIN|select.POLLHUP|select.POLLERR)
         while True:
-            readable, _, _ = select.select([parent_fd, control], [], [], 1)
+            events = dict(poller.poll(1000))
+            readable = set(events)
+            # Never consume worker bytes: the observer is the sole frame parser.
+            # Any pending control/EOF drains even when that observer is paused.
+            if caller is not None and caller in readable:
+                break
             if parent_fd in readable:
                 break
             if control in readable:
@@ -213,12 +232,16 @@ def _child(run, parent_fd, control, ready):
 
 class Guardian:
     """Held pre-fork parent identity and own unreaped guardian, outside caller."""
-    def __init__(self, run, library):
+    def __init__(self, run, library, *, caller_fd=None):
         require(os.geteuid() == 0)
         self.run, self.pid, self.pidfd, self.control = run, None, None, None
         _service, _accounting, self.scope = guardian_names(run)
         descriptors = {}
         try:
+            if caller_fd is not None:
+                caller_pipe(caller_fd)
+                descriptors["caller"] = os.dup(caller_fd)
+                caller_pipe(descriptors["caller"])
             # Capture our live kernel identity BEFORE fork and manager submission.
             descriptors["parent"] = os.pidfd_open(os.getpid())
             descriptors["read"], descriptors["write"] = os.pipe()
@@ -226,11 +249,12 @@ class Guardian:
             self.pid = os.fork()
             if self.pid == 0:
                 try:
-                    _child(run, descriptors["parent"], descriptors["read"], descriptors["notify"])
+                    _child(run, descriptors["parent"], descriptors["read"], descriptors["notify"],descriptors.get("caller"))
                 finally:
                     os._exit(2)
-            for name in ("parent", "read", "notify"):
-                os.close(descriptors.pop(name))
+            for name in ("parent", "read", "notify", "caller"):
+                if name in descriptors:
+                    os.close(descriptors.pop(name))
             descriptors["child"] = os.pidfd_open(self.pid)  # Own child remains unreaped.
             readable, _, _ = select.select([descriptors["ready"], descriptors["child"]], [], [], 3)
             require(descriptors["ready"] in readable and descriptors["child"] not in readable and

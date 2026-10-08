@@ -23,7 +23,7 @@ SOURCE_FILES = (
     "scripts/waveform_m08_owned_reader.py", "scripts/waveform_m08_supervisor.py",
     "app/waveform_linux_worker.py",
 )
-CONFIG_KEYS = set("schema source_root source_revision data_root custody_root uid gid science_uid science_gid python python_sha256 launch_python_sha256 site_packages admission_path admission_sha256 import_closure_path import_closure_sha256 source_hashes".split())
+CONFIG_KEYS = set("schema source_root source_revision data_root custody_root science_work_root uid gid science_uid science_gid python python_sha256 launch_python_sha256 site_packages admission_path admission_sha256 import_closure_path import_closure_sha256 source_hashes".split())
 
 
 def require(value, code="waveform_installation_invalid"):
@@ -69,10 +69,13 @@ def external(value):
 
 def validate_configuration(config):
     fields(config,CONFIG_KEYS)
-    require(config["schema"] == "geophysics.waveform-linux-installation/v2")
+    require(config["schema"] == "geophysics.waveform-linux-installation/v3")
     source, data, custody = path(config["source_root"]), external(config["data_root"]), external(config["custody_root"])
     for a,b in ((source,data),(source,custody),(data,custody)):
         require(not a.is_relative_to(b) and not b.is_relative_to(a))
+    work = external(config["science_work_root"])
+    for boundary in (source,data,custody,path(config["site_packages"]),path(config["import_closure_path"]).parent):
+        require(not work.is_relative_to(boundary) and not boundary.is_relative_to(work))
     for key in ("python","site_packages","import_closure_path"):
         p = path(config[key])
         require(not p.is_relative_to(data) and not p.is_relative_to(custody))
@@ -348,7 +351,7 @@ def read_installation(*, complete=True):
     require(launcher.parent == Path("/usr/bin"))
     require(sha(root_regular(launcher,256*1024**2,image=True)) == config["launch_python_sha256"])
     require(sha(root_regular(config["admission_path"],65536)) == config["admission_sha256"])
-    for name in ("data_root","custody_root"):
+    for name in ("data_root","custody_root","science_work_root"):
         p = Path(config[name])
         require(not any((parent/".git").exists() for parent in (p,*p.parents)))
     if complete:

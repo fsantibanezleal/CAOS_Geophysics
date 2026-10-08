@@ -17,8 +17,9 @@ def module():
 
 
 def configuration(value):
-    return dict(schema="geophysics.waveform-linux-installation/v2",source_root="/opt/fasl/waveform-source",
+    return dict(schema="geophysics.waveform-linux-installation/v3",source_root="/opt/fasl/waveform-source",
         source_revision="a"*40,data_root="/var/lib/fasl-private/waveform",custody_root="/srv/device-data/waveform-custody",
+        science_work_root="/srv/device-temp/waveform-science",
         uid=61901,gid=61901,science_uid=65534,science_gid=65534,python="/usr/bin/python3.12",python_sha256="b"*64,
         site_packages="/opt/fasl/waveform-runtime/site-packages",admission_path="/srv/device-data/waveform-policy/admission.json",
         admission_sha256="c"*64,import_closure_path="/opt/fasl/waveform-policy/imports.json",import_closure_sha256="d"*64,
@@ -43,6 +44,9 @@ def test_fixed_authority_accepts_no_request_selected_paths_or_commands():
     lambda c:c.update(data_root=c["source_root"]+"/raw"),lambda c:c.update(python="../python"),
     lambda c:c.update(source_revision="0"*39),lambda c:c["source_hashes"].update(extra="e"*64),
     lambda c:c.update(import_closure_sha256="X"*64),lambda c:c.update(custody_root="/srv/device-data/../other"),
+    lambda c:c.update(science_work_root="/run/waveform"),
+    lambda c:c.update(science_work_root=c["custody_root"]+"/science"),
+    lambda c:c.update(science_work_root=c["site_packages"]+"/science"),
 ])
 def test_changed_or_unsafe_installation_refuses(mutate):
     value = module()
@@ -66,7 +70,7 @@ def test_receipt_must_match_checked_installation_snapshot():
             value.validate_installation_binding(changed,config,identifier)
 
 
-@pytest.mark.parametrize("field",["custody_root","launch_python_sha256","python_sha256","admission_sha256",
+@pytest.mark.parametrize("field",["custody_root","science_work_root","launch_python_sha256","python_sha256","admission_sha256",
                                   "import_closure_sha256","site_packages","source_revision","source_hashes"])
 def test_valid_but_changed_configuration_is_not_the_prelaunch_snapshot(field):
     value = module()

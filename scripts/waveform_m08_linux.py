@@ -8,6 +8,7 @@ import hashlib
 import os
 from pathlib import Path
 import re
+import select
 import socket
 import stat
 import struct
@@ -442,29 +443,80 @@ def _launch(admission, service, scope, work, run, guardian_scope):
         " TMP=" + str(work / "environment") + " TEMP=" + str(work / "environment") +
         " MPLCONFIGDIR=" + str(work / "environment/matplotlib") + " XDG_CACHE_HOME=" + str(work / "environment/cache")]
     _command([TOOLS["run"], "--quiet", "--unit=" + service, *["--property=" + item for item in properties],
-              "--", admission["python"], "-I", "-B", str(Path(__file__).resolve()), "--science",
+              "--", admission["python"], "-I", "-S", "-B", str(Path(__file__).resolve()), "--science",
               "caos-m08-" + run, run], timeout=10)
 
 
-def run_cli(paths, reference, admission_path):
+def caller_frame(buffer, part):
+    """One fixed CANCEL frame, bounded fragmentation; EOF is caller loss."""
+    require(type(buffer) is bytes and type(part) is bytes, "wire_invalid")
+    if not part:
+        return buffer, "caller_lost"
+    buffer += part
+    require(len(buffer) <= 7 and b"CANCEL\n".startswith(buffer), "wire_invalid")
+    return buffer, "cancelled" if buffer == b"CANCEL\n" else None
+
+
+class LinuxCallerControl:
+    """Installed helper's held stdin only, never a job-selected descriptor."""
+    def __init__(self, fd):
+        require(type(fd) is int and fd >= 0, "wire_invalid")
+        from waveform_m08_guardian import caller_pipe
+        caller_pipe(fd)
+        self.fd, self.buffer = fd, b""
+        self.reason = self.started_ns = None
+
+    def check(self):
+        if self.reason is None and select.select([self.fd], [], [], 0)[0]:
+            self.buffer, self.reason = caller_frame(self.buffer, os.read(self.fd, 8))
+            if self.reason is not None:
+                self.started_ns = time.monotonic_ns()
+        if self.reason is not None:
+            raise ControlError("cancelled")
+
+
+def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, work_root=None):
     """Actual scope+sealed science, not a fixture or unit-test launch adapter."""
     stage = None
     fd = work_fd = None
     monitor = None
     guardian = None
     service = scope = None
+    anchor_fd = None
+    final_counters = None
     began = time.monotonic_ns()
     checkpoint = "admission"
+    require(caller is None or type(caller) is LinuxCallerControl, "wire_invalid")
+    require(lifecycle is None or type(lifecycle) is dict and not lifecycle, "wire_invalid")
+    def caller_check():
+        if caller is not None:
+            caller.check()
     try:
+        caller_check()
         admission, admission_sha = read_admission(admission_path, paths["python"])
         parent = external_work_path(admission["parent"]["path"])
         require(paths["out"].parent == parent and not paths["out"].exists(), "parent_mismatch")
         run = os.urandom(16).hex()
+        if lifecycle is not None:
+            lifecycle.update(run_id=run, admission_sha256=admission_sha, extinction_proved=False)
         service, scope = "m08-" + run + ".service", "m08" + run + ".slice"
+        if lifecycle is not None:
+            from waveform_m08_guardian import guardian_names
+            lifecycle["units"] = dict(zip(("service","accounting","guardian"),guardian_names(run),strict=True))
         stage = parent / (paths["out"].name + ".a4-" + run)
         stage.mkdir(mode=0o700)
-        work = stage / "work"
-        work.mkdir(mode=0o700)
+        if work_root is None:
+            work = stage / "work"  # Retained historical qualification CLI layout.
+            work.mkdir(mode=0o700)
+        else:
+            # Fixed installed helper only; no CLI/HTTP option exposes this path.
+            from waveform_m08_installation import directory_fd
+            work_root = external_work_path(work_root)
+            require(not work_root.is_relative_to(parent) and not parent.is_relative_to(work_root), "parent_mismatch")
+            anchor_fd = directory_fd(work_root,root_owned=True)
+            require(os.fstat(anchor_fd).st_uid == 0 and stat.S_IMODE(os.fstat(anchor_fd).st_mode) == 0o711, "parent_mismatch")
+            os.mkdir(run,0o700,dir_fd=anchor_fd)
+            work = work_root/run
         with ExitStack() as stack:
             inputs = [stack.enter_context(open_input(external_work_path(paths[name]), cap))
                       for name, cap in (("mseed", 16777216), ("stationxml", 2097152), ("request", 65536))]
@@ -472,9 +524,10 @@ def run_cli(paths, reference, admission_path):
                 inputs.append(stack.enter_context(open_input(external_work_path(reference), 1048576)))
             from waveform_m08_guardian import Guardian
             checkpoint = "guardian"
+            caller_check()
             # Must precede manager submission AND observer threads: parent pidfd
             # is held before fork, guardian child unreaped before FD enrollment.
-            guardian = Guardian(run, admission["guardian_library"])
+            guardian = Guardian(run, admission["guardian_library"],caller_fd=caller.fd if caller is not None else None)
             checkpoint = "slice"
             _slice(scope)
             group = _cgroup_path(scope)
@@ -487,6 +540,7 @@ def run_cli(paths, reference, admission_path):
             monitor.sample()
             monitor.thread.start()
             checkpoint = "launch"
+            caller_check()
             guardian.check()
             _launch(admission, service, scope, work, run, guardian.scope)
             pid = _decimal(_show(service, "MainPID").encode())
@@ -500,6 +554,7 @@ def run_cli(paths, reference, admission_path):
             stack.callback(os.close, pidfd)
             stack.enter_context(listener)
             while True:
+                caller_check()
                 guardian.check()
                 monitor.check()
                 require(time.monotonic_ns() - began < 120000000000, "timeout")
@@ -536,9 +591,11 @@ def run_cli(paths, reference, admission_path):
                 control = {"site_packages": admission["site_packages"], "runtime": admission["runtime"], "code": admission["code"],
                            "inputs": [{"initial": [list(item.initial[0]), *item.initial[1:]], "cap": item.cap} for item in inputs]}
                 checkpoint = "ack"
+                caller_check()
                 rights = array.array("i", [item.fd for item in inputs])
                 require(connection.sendmsg([packet(run, 1, "ack", control)], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, rights)]) > 0, "wire_invalid")
                 while True:
+                    caller_check()
                     guardian.check()
                     monitor.check()
                     require(time.monotonic_ns() - began < 120000000000, "timeout")
@@ -560,6 +617,7 @@ def run_cli(paths, reference, admission_path):
                     monitor.life.drained(drained["stamp"])
                 until = time.monotonic_ns() + 5000000000
                 while not monitor.life.final_ready:
+                    caller_check()
                     guardian.check()
                     monitor.check()
                     require(time.monotonic_ns() < until, "timeout")
@@ -570,6 +628,7 @@ def run_cli(paths, reference, admission_path):
                 with open_input(item.path, item.cap) as fresh:
                     require(fresh.initial == item.initial, "closure_mismatch")
             checkpoint = "reopen"
+            caller_check()
             final_fd = os.open("final", os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=work_fd)
             from waveform_m08_export import verify_export, CHUNK
             stack.callback(os.close, final_fd)
@@ -592,6 +651,8 @@ def run_cli(paths, reference, admission_path):
                     require(verify_export(target).calculation_sha256 == sealed.calculation_sha256, "export_invalid")
             monitor.close()
             life = monitor.life
+            final_counters = dict(cpu_ns=life.last[1],user_cpu_ns=life.last[2],system_cpu_ns=life.last[3],
+                                  active_tasks=life.last[4],peak_charge_bytes=life.last[5])
             receipt = {"schema": RESOURCE, "run_id": run, "status": "measured", "cpu_ns": life.final_cpu_ns,
                 "user_cpu_ns": life.last[2], "system_cpu_ns": life.last[3], "budget_ns": B, "stop_ns": S,
                 "sample_count": life.samples, "max_sample_gap_ns": life.max_gap_ns,
@@ -627,12 +688,19 @@ def run_cli(paths, reference, admission_path):
         return terminal(error.reason if type(error) is ControlError else "native_contract")
     finally:
         cleanup_failed = False
+        quiescent_ns = None
         if fd is not None:
             try:
                 if group.exists():
                     _kill(fd, service)
+                    require(_decimal(_read_at(fd, "pids.current")) == 0, "termination_unresolved")
+                    quiescent_ns = time.monotonic_ns()
+                    usage,user,system = parse_cpu(_read_at(fd,"cpu.stat"))
+                    final_counters = dict(cpu_ns=usage,user_cpu_ns=user,system_cpu_ns=system,active_tasks=0,
+                                          peak_charge_bytes=_decimal(_read_at(fd,"memory.peak")))
                 else:
                     _released_unit(service)
+                    quiescent_ns = time.monotonic_ns()
             except (ControlError, OSError):
                 cleanup_failed = True
             finally:
@@ -652,6 +720,34 @@ def run_cli(paths, reference, admission_path):
                 guardian.close(False)
             except (OSError, ValueError, subprocess.SubprocessError):
                 cleanup_failed = True
+        if lifecycle is not None:
+            # Independent final manager/kernel readback also governs failures;
+            # a cancelled-looking outcome is never sufficient extinction proof.
+            try:
+                if service is not None:
+                    _released_unit(service)
+                    _released_unit(scope)
+                    require(not Path("/sys/fs/cgroup" + "/" + scope).exists(), "termination_unresolved")
+                if guardian is not None:
+                    _released_unit(guardian.scope)
+                    require(not Path("/sys/fs/cgroup" + guardian.receipt["group"]).exists(), "termination_unresolved")
+                require(not cleanup_failed, "termination_unresolved")
+                lifecycle["extinction_proved"] = True
+                lifecycle["science_quiescent_ns"] = quiescent_ns or time.monotonic_ns()
+            except (ControlError, OSError, ValueError, KeyError):
+                cleanup_failed = True
+                lifecycle["extinction_proved"] = False
+            lifecycle["caller"] = {"reason":caller.reason,"started_ns":caller.started_ns} if caller is not None else None
+            lifecycle["final_counters"] = final_counters
+            lifecycle["guardian"] = None if guardian is None else dict(guardian.receipt,
+                scope_removed=not Path("/sys/fs/cgroup"+guardian.receipt["group"]).exists())
+            if caller is not None and caller.started_ns is not None:
+                lifecycle["cancel_to_quiescence_ns"] = lifecycle.get("science_quiescent_ns",time.monotonic_ns())-caller.started_ns
+                if lifecycle["cancel_to_quiescence_ns"] > 2000000000:
+                    cleanup_failed = True
+                    lifecycle["extinction_proved"] = False
+        if anchor_fd is not None:
+            os.close(anchor_fd)
         if cleanup_failed:
             return terminal("termination_unresolved")
 
