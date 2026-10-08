@@ -1,9 +1,10 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
 import { mkdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { courseQaPaths } from "./m01-course-output";
 
 const run = process.env.M01_COURSE_QA_RUN ?? "run-01";
-if (!/^[a-z0-9-]+$/.test(run)) throw new Error("Invalid owned QA run name");
-const evidence = `node_modules/.m01-course-qa/${run}/evidence`;
+const { evidence } = courseQaPaths(process.env.M01_COURSE_QA_OUTPUT, run, fileURLToPath(new URL("../../", import.meta.url)));
 mkdirSync(evidence, { recursive: true });
 
 async function pointer(page: Page, locator: Locator) {
