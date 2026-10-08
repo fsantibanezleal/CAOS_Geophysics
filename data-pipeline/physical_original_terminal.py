@@ -97,7 +97,7 @@ class OwnedOriginalTerminal:
         if (metric_operands.binding != original.binding
             or metric_operands.source_components != original.source_components
             or metric_operands.likelihood_scale != original.likelihood_scale
-            or metric_operands.covariance != (original.whitening.kind == 'stored_lower_cholesky')):
+            or metric_operands.covariance != (original.whitening.kind != 'diagonal_sd')):
             raise ValueError('original terminal: same original source/model/noise normalization')
         # Count before index allocation. Exact bound equalities, never a supplied
         # working mask or proximity threshold, define this terminal face.

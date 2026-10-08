@@ -11,6 +11,7 @@ from sys import getsizeof
 from time import monotonic
 
 import numpy as np
+import scipy.linalg as la
 import scipy.sparse as sp
 
 import physical_owned_spd as owned
@@ -134,9 +135,10 @@ def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
         or type(o.terms) is not tuple or not 1 <= len(o.terms) <= 7):
         raise ValueError('original quadratic: literal original physical factors')
     noise = o.whitening
-    if type(noise.kind) is not str or noise.kind not in ('diagonal_sd', 'stored_lower_cholesky'):
+    if type(noise.kind) is not str or noise.kind not in (
+        'diagonal_sd', 'stored_lower_cholesky', 'stored_symmetric_precision_root'):
         raise ValueError('original quadratic: no inferred whitening')
-    covariance = noise.kind == 'stored_lower_cholesky'
+    covariance = noise.kind != 'diagonal_sd'
     if covariance:
         if m > 512 or not owned._matrix(noise.values, m, m) or not owned._matrix(noise.covariance, m, m):
             raise ValueError('original quadratic: original storedL/covariance cap')
@@ -198,15 +200,30 @@ def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
         raise ValueError('original quadratic: unchanged positive diagonal smallness')
     if covariance:
         if (not np.isfinite(noise.covariance).all()
-            or not np.array_equal(noise.covariance, noise.covariance.T)
-            or np.any(np.triu(noise.values, 1) != 0.) or np.any(np.diag(noise.values) <= 0.)):
-            raise ValueError('original quadratic: exact original covariance/lower storage')
+            or not np.array_equal(noise.covariance, noise.covariance.T)):
+            raise ValueError('original quadratic: exact original covariance storage')
         owned.kernel._workspace_closure()
         condition = float(np.linalg.cond(noise.covariance, 2))
         if not np.isfinite(condition) or condition > 1e8:
             raise ValueError('original quadratic: original covariance condition2<=1e8')
-        if not np.array_equal(np.linalg.cholesky(noise.covariance), noise.values):
-            raise ValueError('original quadratic: stored native original Cholesky mismatch')
+        if noise.kind == 'stored_lower_cholesky':
+            if (np.any(np.triu(noise.values, 1) != 0.) or np.any(np.diag(noise.values) <= 0.)
+                or not np.array_equal(np.linalg.cholesky(noise.covariance), noise.values)):
+                raise ValueError('original quadratic: stored native original Cholesky mismatch')
+        else:
+            # The original gravity producer stores this symmetric root, NOT L.
+            # Its rounded stored W is the unchanged native source authority.
+            # Reproduce the fixed native recipe exactly; no arbitrary caller W,
+            # inferred noise, covariance symmetrization, jitter or tolerance.
+            la.cholesky(noise.covariance, lower=True, check_finite=True)
+            eigenvalues, vectors = la.eigh(noise.covariance, driver='evd', check_finite=True)
+            if np.any(eigenvalues <= 0.) or eigenvalues[-1]/eigenvalues[0] > 1e8:
+                raise ValueError('original quadratic: original gravity positive eigenvalues')
+            with np.errstate(over='raise', invalid='raise', divide='raise'):
+                expected = (vectors*(1./np.sqrt(eigenvalues)))@vectors.T
+                expected = (expected+expected.T)*.5
+            if not np.array_equal(expected, noise.values):
+                raise ValueError('original quadratic: stored native symmetric precision root mismatch')
     elif np.any(noise.values <= 0.):
         raise ValueError('original quadratic: strictly positive original SD')
     if monotonic() > deadline:
@@ -226,6 +243,8 @@ def _divide(ar, pair, positive):
 def _whiten(ar, noise, vector, transpose=False):
     if noise.kind == 'diagonal_sd':
         return [_divide(ar, v, s) for v, s in zip(vector, noise.values)]
+    if noise.kind == 'stored_symmetric_precision_root':
+        return ar.matrix(noise.values.T if transpose else noise.values, vector)
     lower = noise.values
     result = [None]*len(vector)
     order = range(len(vector)-1, -1, -1) if transpose else range(len(vector))
