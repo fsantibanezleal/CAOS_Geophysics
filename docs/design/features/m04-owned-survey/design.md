@@ -7,6 +7,14 @@ bounded physical-request UTF8. No inferred CSV columns, datum, uncertainty,
 field direction, licence or correction is introduced. It preserves lexical
 request bytes in the dataset and recomputes the original geometry seal on read.
 Hash verification is not proof that a source's declared correction is physical.
+For the direct station CSV path, physical.geometry explicitly declares row ID,
+line ID, E/N/U coordinate columns, measurement quantity and scalar value column
+or ordered ENU component columns. Recorded times require their actual column.
+Headers are closed to the declared columns, duplicate/missing fields refuse and
+all original rows must match request IDs, groups, coordinates and observations
+exactly after the same binary64 conversion. No transform, mean removal, anomaly
+subtraction or uncertainty estimation is performed. Non-original correction
+recipes still require the separate upstream validator; a new string is not one.
 
 Method mapping names executable existing functions: parse_request, plan_geometry,
 magnetic_calibration.calibrate, frozen evaluation in run_magnetic_survey,

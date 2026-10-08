@@ -10,6 +10,13 @@ verify their exact owned asset/source relationship, full source hash/count and
 explicit ENU datum/units/quantity before creating a geometry-only dataset.
 Gate: tests/api/test_magnetic_owned_survey.py::test_owned_original_dataset.
 
+R-452 WHEN the owned original is a magnetic station CSV, THE adapter SHALL
+compare every declared original row/group/ENU coordinate and quantity-specific
+observed component to the actual original columns before sealing a dataset.
+IF only hashes match but observations or geometry do not, THEN THE adapter SHALL
+refuse without manufacturing observations or discarding original rows.
+Gate: tests/api/test_magnetic_owned_survey.py::test_original_columns_are_actual_observations.
+
 R-442 IF source, physical metadata, request bytes or ownership drift, THEN THE
 adapter SHALL refuse without native inversion or a successful result reference.
 Gate: tests/api/test_magnetic_owned_survey.py::test_input_drift_refused.
