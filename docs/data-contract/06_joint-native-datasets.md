@@ -28,9 +28,10 @@ false; `qc_verdict` is `structural_native_members_only`. Its source-observation
 dimension is the true scalar sum of both modality receiver counts, not an extra
 factor of two. A duplicate primary development request/parser rejects.
 
-Every member has a `joint_dataset_sources` row. This additive table follows
-the actual `0004_waveform_artifacts` migration; the owned schema body refuses
-older/unknown predecessors before creating anything. The parent owns the real
+Every member has a `joint_dataset_sources` row. This additive table belongs to
+allocated `0006_joint_artifacts`, directly after `0005_physical_forest`; the
+successor body refuses older/unknown predecessors before creating anything.
+Legacy `joint_schema.py` is not this successor and must not be mounted. The parent owns the real
 Alembic revision/head and canonical validator/reconciliation/route unions. Existing
 M08 tables and source rows are preserved, not copied into this leaf or overwritten.
 

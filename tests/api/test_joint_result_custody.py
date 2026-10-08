@@ -21,8 +21,8 @@ from app import joint_result as result
 from app.errors import ApiError
 from app.joint_models import JointResultArtifact
 from app.models import ProcessingJob
-from test_joint_successor import successor, allocated_harness
-from test_joint_protected import joint_harness
+from test_joint_successor import successor as successor, allocated_harness as allocated_harness
+from test_joint_protected import joint_harness as joint_harness
 from test_joint_datasets import upload_pair, create_dataset
 
 
@@ -99,6 +99,7 @@ def test_actual_full_native_publication_index_download_export_accounting(custody
     response = harness.request('GET', base)
     assert response.status_code == 200, response.text
     assert response.json() == payload and response.headers['cache-control'] == 'no-store'
+    assert response.headers['vary'] == 'Cookie'
     assert response.headers['x-content-sha256'] == ex.digest(ex.canonical(payload))
     assert len(before) > 500
     sample_array = next(name for name in before if name.startswith('models/') and name.endswith('.npy'))
@@ -107,10 +108,14 @@ def test_actual_full_native_publication_index_download_export_accounting(custody
         assert received.status_code == 200, received.text
         assert received.content == (output / name).read_bytes()
         assert received.headers['x-content-sha256'] == before[name]['sha256']
+        assert received.headers['vary'] == 'Cookie'
     archive = harness.request('GET', base + '/export')
     assert archive.status_code == 200, archive.text
+    assert archive.headers['vary'] == 'Cookie'
+    assert len(archive.content) == int(archive.headers['content-length']) == result.archive_byte_count(payload)
     history = harness.request('GET', f'/api/projects/{project}/joint-results')
     assert history.status_code == 200, history.text
+    assert history.headers['cache-control'] == 'no-store' and history.headers['vary'] == 'Cookie'
     assert history.json()['jobs'][0]['state'] == 'failed'
     for name, body in (('actual-export.zip', archive.content), ('actual-index.json', response.content),
                        ('actual-history.json', history.content)):
@@ -121,7 +126,8 @@ def test_actual_full_native_publication_index_download_export_accounting(custody
             body = zipped.read(name)
             assert len(body) == member['byte_count'] and hashlib.sha256(body).hexdigest() == member['sha256']
         assert zipped.read('private-custody-index.json') == ex.canonical(payload)
-    assert not list((harness.settings.data_dir / '.exports').iterdir())
+    export_root = harness.settings.data_dir / '.exports'
+    assert not export_root.exists() and not export_root.is_symlink()
     async def audit():
         async with harness.app.state.sessions() as session:
             charged = await result.accounting_delta(session, UUID(owner), generic_reservation=8 * 1024**2)
@@ -137,6 +143,45 @@ def test_actual_full_native_publication_index_download_export_accounting(custody
         assert harness.request('GET', path, params={'name': 'workflow.json'}).status_code == 404
 
 
+@pytest.mark.parametrize('change', ['member', 'directory'])
+def test_real_archive_mid_write_drift_withholds_end_record_and_drains(custody, monkeypatch, change):
+    from app.joint_archive import ArchivePipe
+    harness, _, _, job_id, output = custody
+    originals = result.inventory(output); payload = retained(custody)
+    async def context():
+        async with harness.app.state.sessions() as session:
+            job = await session.get(ProcessingJob, job_id)
+            _, rows = await result.read_result(harness.settings, session, job)
+            return job, rows
+    job, rows = asyncio.run(context())
+    target = result.artifact_path(harness.settings, next(row.storage_key for row in rows if row.name.endswith('.npy')))
+    actual_write = ArchivePipe.write; changed = False
+    def drift(pipe, body):
+        nonlocal changed
+        written = actual_write(pipe, body)
+        if not changed and bytes(body).startswith(b'\x93NUMPY'):
+            changed = True
+            if change == 'member':
+                with target.open('ab') as stream: stream.write(b'actual mid-write custody drift')
+            else: (target.parent / 'unknown-empty').mkdir()
+        return written
+    monkeypatch.setattr(ArchivePipe, 'write', drift)
+    response = result.archive_response(harness.settings, job, payload, rows); transferred = bytearray()
+    async def execute():
+        async def send(message):
+            if message['type'] == 'http.response.body': transferred.extend(message.get('body', b''))
+        async def receive(): await asyncio.Event().wait()
+        with pytest.raises(ApiError):
+            await response({'type': 'http', 'asgi': {'spec_version': '2.4'}}, receive, send)
+    asyncio.run(execute())
+    assert changed and not response.pipe.thread.is_alive()
+    assert b'PK\x05\x06' not in transferred
+    with pytest.raises(zipfile.BadZipFile): zipfile.ZipFile(io.BytesIO(transferred))
+    export_root = harness.settings.data_dir / '.exports'
+    assert not export_root.exists() and not export_root.is_symlink()
+    assert result.inventory(output) == originals  # Only this test's retained copy changed.
+
+
 @pytest.mark.parametrize('failure', ['quota', 'undercharge', 'successful_without_execution', 'request', 'source'])
 def test_refusals_before_first_durable_write(custody, failure):
     harness, _, _, job_id, output = custody
@@ -149,7 +194,7 @@ def test_refusals_before_first_durable_write(custody, failure):
             if failure == 'source':
                 from app.models import RawAsset
                 rows = (await session.execute(select(RawAsset).where(RawAsset.project_id == job.project_id))).scalars().all()
-                path = harness.settings.data_dir / rows[0].storage_key
+                path = result._io(harness.settings.data_dir / rows[0].storage_key)
                 with path.open('ab') as stream: stream.write(b'changed')
             with pytest.raises((ApiError, ValueError)):
                 await result.retain_terminal_output(harness.settings, session, job, output,
@@ -157,13 +202,13 @@ def test_refusals_before_first_durable_write(custody, failure):
                     retained_bytes=0 if failure == 'undercharge' else ex.CAP)
             await session.rollback()
     asyncio.run(execute())
-    assert not list((harness.settings.data_dir / 'derived').glob('*/*/joint'))
+    assert not list(result._io(harness.settings.data_dir / 'derived').glob('*/*/joint'))
 
 
 def test_uncertain_rollback_keeps_actual_bytes_and_audit_refuses(custody):
     harness, owner, project, job_id, _ = custody
     payload = retained(custody, commit=False)
-    root = harness.settings.data_dir / 'derived' / owner / project / 'joint' / job_id
+    root = result._io(harness.settings.data_dir / 'derived' / owner / project / 'joint' / job_id)
     assert result.inventory(root) == payload['members']
     async def inspect():
         async with harness.app.state.sessions() as session:
@@ -213,7 +258,7 @@ def test_genuine_original_failed_ledgers_remain_byte_exact(tmp_path):
 def test_storage_drift_blocks_download_export_and_purge_preserving_bytes(custody, change):
     harness, owner, project, job_id, _ = custody
     payload = retained(custody)
-    root = harness.settings.data_dir / 'derived' / owner / project / 'joint' / job_id
+    root = result._io(harness.settings.data_dir / 'derived' / owner / project / 'joint' / job_id)
     name = next(iter(payload['members']))
     if change == 'unknown':
         with (root / 'foreign.bin').open('xb') as stream: stream.write(b'original unknown bytes')
@@ -244,11 +289,11 @@ def test_artifact_delete_rollback_and_exact_isolated_purge(custody, tmp_path):
     # Destruction only of this explicitly copied isolated fixture, not originals.
     isolated = tmp_path / '.deleting' / f'{owner}--{project}--derived' / 'joint' / job_id
     source = harness.settings.data_dir / 'derived' / owner / project / 'joint' / job_id
-    shutil.copytree(source, isolated)
     assert isolated.resolve().is_relative_to(tmp_path.resolve()) and isolated != source
+    shutil.copytree(result._io(source), result._io(isolated))
     with pytest.raises(ApiError, match='Native result custody'): result.purge_exact_job(source, payload['members'])
     result.purge_exact_job(isolated, payload['members'])
-    assert not isolated.exists() and result.inventory(source) == payload['members']
+    assert not result._io(isolated).exists() and result.inventory(source) == payload['members']
 
 
 @pytest.mark.parametrize('change', ['traversal', 'emptydir', 'filecap', 'bytescap'])

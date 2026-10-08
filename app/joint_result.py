@@ -13,7 +13,6 @@ from pathlib import Path
 import re
 import stat
 import zipfile
-from uuid import uuid4
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -444,17 +443,59 @@ def purge_exact_job(directory, members):
 def write_archive(settings, job, payload, rows, target):
     verified_artifacts(settings, job, payload, rows)
     with Path(target).open('xb') as output, zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_STORED) as archive:
-        for row in sorted(rows, key=lambda row: row.name):
-            # verified_artifacts closed every literal key/tree before this loop;
-            # no repeated quadratic ancestry walk and no cached byte identity.
-            path = _io(settings.data_dir / row.storage_key)
-            hashed = hashlib.sha256(); count = 0
-            with path.open('rb') as stream, archive.open(row.name, 'w', force_zip64=True) as member:
-                while chunk := stream.read(1024 * 1024):
-                    hashed.update(chunk); count += len(chunk); member.write(chunk)
-            _require(count == row.byte_count and hashed.hexdigest() == row.sha256)
-        archive.writestr('private-custody-index.json', ex.canonical(payload))
+        _archive_members(archive, settings, job, payload, rows)
     verified_artifacts(settings, job, payload, rows)
+
+
+def _archive_members(archive, settings, job, payload, rows):
+    for row in sorted(rows, key=lambda row: row.name):
+        # Complete tree/key admission precedes this loop. Each opened original
+        # is still checked while held and against its named identity afterward.
+        path = _file(settings.data_dir / row.storage_key)
+        before = _stat(path.stat()); hashed = hashlib.sha256(); count = 0
+        with path.open('rb') as stream, archive.open(row.name, 'w', force_zip64=True) as member:
+            held = _stat(os.fstat(stream.fileno()))
+            # Windows named/CRT held ctime namespaces differ; compare identity
+            # across namespaces, then each ctime only against its own snapshot.
+            _require(held[:4] == before[:4])
+            while chunk := stream.read(1024 * 1024):
+                count += len(chunk); _require(count <= row.byte_count)
+                hashed.update(chunk); member.write(chunk)
+            _require(_stat(os.fstat(stream.fileno())) == held)
+        _require(count == row.byte_count and hashed.hexdigest() == row.sha256
+                 and _stat(path.stat()) == before)
+    archive.writestr('private-custody-index.json', ex.canonical(payload))
+    # Must close BEFORE ZipFile emits its central directory/end record. A
+    # failed final inventory can never be a complete accepted streamed archive.
+    verified_artifacts(settings, job, payload, rows)
+
+
+def archive_byte_count(payload):
+    """Exact ASCII ZIP_STORED/forced-member ZIP64 + descriptors + plain index.
+
+    All counts/offsets are below the original256MiB and1100-member limits, so
+    central-directory ZIP64 extensions/end records are not needed. Native local
+    headers have a20-byte ZIP64 extra and24-byte streaming descriptor; the
+    plain index has a16-byte descriptor. No comments or incidental extra fields.
+    """
+    index = ex.canonical(payload)
+    _require(len(index) <= INDEX_CAP)
+    total = 22 + len(index) + 92 + 2 * len('private-custody-index.json')
+    for name, member in payload['members'].items():
+        total += member['byte_count'] + 120 + 2 * len(_name(name).encode('ascii'))
+    _require(total <= ex.CAP, 'joint_export_whole_cap')
+    return total
+
+
+def archive_response(settings, job, payload, rows):
+    from app.joint_archive import ArchivePipe, JointArchiveResponse
+    validate_index(payload, job)
+    count = archive_byte_count(payload)
+    def produce(output):
+        verified_artifacts(settings, job, payload, rows)
+        with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_STORED) as archive:
+            _archive_members(archive, settings, job, payload, rows)
+    return JointArchiveResponse(ArchivePipe(produce, byte_count=count, cap=ex.CAP), job_id=job.id)
 
 
 def install_joint_result_routes(app, settings: Settings, current_user, get_session):
@@ -477,18 +518,20 @@ def install_joint_result_routes(app, settings: Settings, current_user, get_sessi
             ProcessingJob.owner_id == user.id, ProcessingJob.method_id == METHOD).order_by(
                 ProcessingJob.created_at.desc()).limit(201))).scalars().all()
         _require(len(jobs) <= 200, 'joint_history_page_required')
-        return {'schema': 'geophysics.joint-custody-history/v1', 'owner_id': str(user.id),
+        payload = {'schema': 'geophysics.joint-custody-history/v1', 'owner_id': str(user.id),
                 'project_id': project_id, 'jobs': [{**_binding(job), 'state': job.state,
                     'cancel_requested': job.cancel_requested, 'error_code': job.error_code,
                     'index_available': job.result_key is not None,
                     'result_sha256': job.result_sha256, 'result_bytes': job.result_bytes} for job in jobs]}
+        from fastapi.responses import JSONResponse
+        return JSONResponse(payload, headers={'Cache-Control': 'no-store', 'Vary': 'Cookie'})
 
     @router.get('/{job_id}')
     async def index(project_id: str, job_id: str, user: User = Depends(current_user), session=Depends(get_session)):
         job = await owned(session, project_id, job_id, user)
         payload, _ = await read_result(settings, session, job)
         from fastapi.responses import JSONResponse
-        return JSONResponse(payload, headers={'Cache-Control': 'no-store', 'X-Content-SHA256': job.result_sha256})
+        return JSONResponse(payload, headers={'Cache-Control': 'no-store', 'Vary': 'Cookie', 'X-Content-SHA256': job.result_sha256})
 
     @router.get('/{job_id}/members')
     async def member(project_id: str, job_id: str, name: str, user: User = Depends(current_user), session=Depends(get_session)):
@@ -510,23 +553,15 @@ def install_joint_result_routes(app, settings: Settings, current_user, get_sessi
                 _require(_stat(os.fstat(stream.fileno())) == _stat(before))
             finally: stream.close()
         return StreamingResponse(chunks(), media_type='application/octet-stream', headers={
-            'Cache-Control': 'no-store', 'X-Content-SHA256': row.sha256,
+            'Cache-Control': 'no-store', 'Vary': 'Cookie', 'X-Content-SHA256': row.sha256,
             'Content-Length': str(row.byte_count), 'X-Content-Type-Options': 'nosniff'})
 
     @router.get('/{job_id}/export')
     async def export(project_id: str, job_id: str, user: User = Depends(current_user), session=Depends(get_session)):
         job = await owned(session, project_id, job_id, user)
         payload, rows = await read_result(settings, session, job)
-        root = settings.data_dir / '.exports'; root.mkdir(exist_ok=True)
-        ex.ordinary(root, directory=True, external=True)
-        target = root / f'{uuid4()}.zip'
-        await _drained_io(write_archive, settings, job, payload, rows, target)
-        async def chunks():
-            try:
-                with target.open('rb') as stream:
-                    while chunk := await asyncio.to_thread(stream.read, 1024 * 1024): yield chunk
-            finally: target.unlink()
-        return StreamingResponse(chunks(), media_type='application/zip', headers={
-            'Cache-Control': 'no-store', 'Content-Disposition': f'attachment; filename="joint-{job.id}.zip"'})
+        # No persistent temporary ZIP, including exception/disconnect paths.
+        # The ASGI response owns and drains its bounded producer before return.
+        return archive_response(settings, job, payload, rows)
 
     app.include_router(router)

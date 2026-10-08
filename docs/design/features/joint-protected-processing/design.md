@@ -238,3 +238,85 @@ Jacobian/CSR graph and peak-allocation proof, not automatic first-order7a/4a
 admission. GN PSD is not a global curvature/model/prediction error certificate.
 Old384 oracle failures remain immutable; only a new full actual fit matrix can
 establish corrective acceptance with all original scientific predicates intact.
+
+### Selected-project custody browser qualification
+
+The bounded browser gate uses the real allocated local-account ASGI application,
+original uploaded source pairs and an explicitly failed archival job. It holds
+that application's already-audited lifespan open while serving its actual routes;
+it does not skip a failed restart audit or claim canonical MAIN startup admission.
+The shared AppShell/CitationsProvider compose the unchanged selected-project leaf.
+Eight language/theme/viewport cells exercise actual cookie discovery, owned project
+selection, literal history, verified native index/archive and original exports.
+An additional privacy cell changes the selected owned project during an actual
+read, clears private views and expires the real cookie through original CSRF.
+No mocked network response, scientific submission, synthetic successful receipt,
+SMTP, new schema authority, parent mount or host admission is used. Source hashes,
+SQL state and original artifact bytes remain fixed throughout the browser gate.
+Literal history is explicitly no-store and varies on the private cookie, just as
+index/member/archive reads forbid response storage. Explicit parent forget uses
+a separate input-panel revision. Child mount/reset callbacks never increment
+that revision, preventing reset/remount recursion; ordinary project/session
+changes retain their existing abort/clear paths. Remounting an explicitly
+forgotten input panel drains reads/uploads and clears its declarations, rights,
+file selections and local receipts without removing server-owned originals.
+
+### Citation and shared I/O qualification
+
+SSR must use the same actual CITATIONS registry and CitationsProvider as the
+browser shell. Both m11source (version-pinned SimPEG CrossGradient) and m11cross
+(Gallardo/Meju DOI) must resolve to their real links, not fallback identifiers.
+Tests observe warnings/errors without suppressing them and reject unresolved
+citations. Registration uses two inspected additive entries, never a replacement
+provider or broad registry merge.
+
+Timeout FAIL receipts remain retained. Four read slots are the fixed bound.
+Each admitted original is read once, each NPY header parsed once;
+both whole-file and payload hashes are required and consume captured bytes.
+No cross-import trust cache or weakened source/hash barrier is introduced.
+A regression counts every original read and proves a second import rereads it.
+Any performance requalification requires a changed prerequisite: competing
+waveform work has terminated and the shared-resource gate is serial. Aggregate
+read time exceeds wall time under four slots; neither alone proves contention.
+Original 5s profile and 30s matrix deadlines are unchanged.
+
+### Native ZIP response without persistent duplicate debt
+
+The private export response uses Python ZIP_STORED/ZIP64 through a bounded
+non-seekable pipe, not .exports staging. Exact ASCII member names and original
+lengths close the complete serialized ZIP byte count before starting a producer;
+the archive, including headers/descriptors/index, must fit the original256MiB.
+There is no disk temporary copy, new reservation table or success adoption.
+Existing unknown .exports bytes remain untouched and recovery-blocking under
+the canonical audit; eliminating new writes never forgives historical debt.
+
+The pipe has one queued chunk and one withheld final write, each at most1MiB,
+with producer backpressure,
+an exact total-byte counter and cancellation stop. Only one producer is active
+per response. Disconnect, producer exception, repeated cancellation and response
+failure must drain the actual producer/reader before request dependencies or
+caller guards may be released. The producer starts only when ASGI executes the
+response, not while constructing it. Every original is SHA/stat checked while
+held, and complete stored inventory is reverified before the end-of-archive
+record can escape. The final write stays private until every producer predicate
+succeeds, including failures during ZipFile context cleanup. Four1MiB transport
+chunks conservatively bound the held tail, queue, consumer and producer buffers;
+ZIP's bounded member metadata is additional, not a numerical memory grant.
+Partial transport is not an accepted archive or scientific
+result. Complete Python and browser archives must match every original member.
+History/index/member/archive replies are no-store and vary on Cookie.
+
+### Display precision, native resolution and exact export
+
+Visible numeric readouts, physical coordinates, units, state scalars and SVG
+accessible labels use the existing shared science.format function, exactly as
+ScientificPlots does. This is display precision only: original Float64 arrays,
+native cell geometry, data-value attributes, scalar objectives, source manifests
+and all JSON/binary/archive exports remain unchanged. Tables name displayed
+values rather than claiming rounded text is exact. Counts and original row/cell
+identities remain integer identities. No interpolation or invented resolution
+is used. Actual low-dimensional custody fixtures prove transport/ownership only;
+the genuine original624-attempt matrix (24 cases,26 attempts per case) remains separate
+instrument/resource evidence, never a scientific solver admission.
+Regression checks compare visible text to the shared formatter while preserving
+exact cell attributes and sidecar values from the same immutable original input.

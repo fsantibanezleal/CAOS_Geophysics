@@ -68,17 +68,68 @@ The additive routes are:
   members plus `private-custody-index.json`, with no recomputed physical arrays.
 
 Every read revalidates source and complete member/index custody, uses the existing
-authentication and returns no-store. Cross-owner/project requests are404.
+authentication and returns no-store. Literal history also varies on the private
+cookie, as do index/member/archive responses. Cross-owner/project requests are404.
 The browser binds all seven job fields, literal terminal state, original index
 SHA/size, unique stored ZIP member declarations, original member hashes and the
 whole native envelope before the existing native inspector accepts values.
 Integrity is not authenticity, scientific acceptance or redistribution permission.
+
+The download is a bounded non-seekable Python stored ZIP stream, including
+forced ZIP64 native members and the exact private index. Its complete serialized
+length is admitted under256MiB before the producer starts. A single queued1MiB
+chunk applies backpressure. Original SHA and held/named stat checks plus a final
+whole inventory check precede the archive end record. Response completion,
+disconnect or repeated cancellation drains the actual producer before request
+dependencies can close. The route creates no disk export copy, so an interrupted
+download leaves no uncharged duplicate ZIP. Previously uncertain `.exports`
+bytes are never removed or adopted by this route and remain recovery-blocking
+under the canonical startup audit. Native originals and their charges persist.
 
 The project wrapper has one parent method rail and original input sections,
 literal stored history and explicit offline scientific guidance. Clearing views,
 changing owner/project or session expiry aborts reads and forgets private browser
 state, not server bytes. No automatic scientific submission or destructive retry
 occurs. The parent owns the actual canonical mount and rendered interaction gates.
+
+To forget input declarations while remaining in the same owned project, use
+**Clear private views, not server bytes**. This clears the original provider,
+attribution, rights statement and consent, selected files, indexing receipts,
+stored history and imported physical instrument state. It aborts and drains
+active reads/uploads; it does not delete original inputs or durable artifacts.
+Changing input sections alone is not this explicit forget operation. Session
+expiry or a changed owned project removes the old private instrument, and a
+late response from an aborted operation cannot repopulate it.
+
+On a narrow viewport, close **Processing controls** before using the main
+scientific instrument; reopen it for history or clear actions. Frame/state,
+receiver, partition, plane and coupling selectors operate on actual exported
+arrays. Separate-property frames have no invented joint coupling. Native frame
+JSON remains a post-freeze diagnostic export, not a scientific acceptance flag.
+
+Visible readouts use the shared scientific plot formatter and retain units.
+These compact labels are display precision, not a new numerical result. Original
+binary arrays, exact JSON exports, manifests and cell-value attributes retain
+their original values. Native prism geometry is unchanged, with no interpolated
+or invented cells. A four-cell slice of a small custody control is not
+high-resolution application coverage; the original24-case matrix has624 actual
+attempts, not624 spatial cells. Maximum-count transport fixtures and corrective
+scientific acceptance remain separate evidence.
+
+## Native inspection cost and source integrity
+
+Admission reads each original file once. Every NPY header must pass before any
+array hash or value decode. At most four small reads or hashes are active, and a
+large member is isolated. Original buffers are owned snapshots; required file
+and payload hashes reuse those snapshots. Export independently rehashes before
+use. A second import rereads every original rather than trusting a previous
+import, a declared digest or an unchanged path.
+
+Native profiling reports both wall time and summed read/hash durations. With
+concurrent slots, summed durations are not wall time. Qualify resource-sensitive
+gates serially after competing gates have terminated, recording source/fixture
+identity and that changed scheduling prerequisite. Retain timeout failures; do
+not change scientific predicates, source barriers or deadlines to obtain a pass.
 
 ## Delete and recovery are not orphan cleanup
 
