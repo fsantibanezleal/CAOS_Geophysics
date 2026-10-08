@@ -11,7 +11,9 @@ if(!artifacts||!isAbsolute(artifacts))throw new Error("Declare exact external re
 const owned=JSON.parse(readFileSync(resolve(artifacts,"owned-job.json"),"utf8"));
 mkdirSync(evidence,{recursive:true});
 
-test("retained actual arrays: shared rail sections and all controls are reachable in eight contexts",async({browser})=>{
+for(const lang of ["en","es"])for(const theme of ["light","dark"])for(const [width,height] of [[1440,900],[390,844]]){
+const key=`${lang}-${theme}-${width}`;
+test(`retained actual arrays: all shared rail controls reachable ${key}`,async({browser})=>{
   const context=await browser.newContext(),page=await context.newPage();
   const errors:string[]=[],walked:Record<string,unknown>[]=[];
   page.on("pageerror",e=>errors.push(e.message));
@@ -48,8 +50,7 @@ test("retained actual arrays: shared rail sections and all controls are reachabl
     const actual=await context.request.get(origin+`/api/projects/${owned.project_id}/jobs/${owned.job_id}/result`);
     expect(actual.ok()).toBe(true);
     expect(await actual.body()).toEqual(readFileSync(resolve(artifacts,"exact-native-result-receipt.json")));
-    for(const lang of ["en","es"])for(const theme of ["light","dark"])for(const [width,height] of [[1440,900],[390,844]]){
-      const es=lang==="es",key=`${lang}-${theme}-${width}`;
+      const es=lang==="es";
       await page.setViewportSize({width,height});await page.goto(origin+`/?project=${owned.project_id}`);
       await page.evaluate(({lang,theme})=>{localStorage.setItem("caos.lang",lang);localStorage.setItem("caos.theme",theme);},{lang,theme});await page.reload();
       const tab=(name:string)=>page.getByRole("tab",{name,exact:true});
@@ -65,11 +66,11 @@ test("retained actual arrays: shared rail sections and all controls are reachabl
         const current=tab(name);await reach(current);await current.click();
         if(name===(es?"Solicitud científica":"Scientific request")){
           const section=page.getByRole("combobox",{name:es?"Sección de solicitud":"Request section",exact:true});
-          await reach(section);await section.focus();await page.keyboard.press("Home");await page.keyboard.press("Enter");
+          await reach(section);await section.focus();await page.keyboard.press("Home");await page.keyboard.press("Escape");
           const groups=["utc","nslc","source","response","filter","trigger","psd","advanced"];
           for(let groupIndex=0;groupIndex<groups.length;groupIndex++){
             const group=groups[groupIndex];
-            if(groupIndex){await reach(section);await section.focus();await page.keyboard.press("ArrowDown");await page.keyboard.press("Enter");}
+            if(groupIndex){await reach(section);await section.focus();await page.keyboard.press("ArrowDown");await page.keyboard.press("Escape");}
             await expect(section).toHaveValue(group);
             walked.push({context:key,section:group,controls:await walk(page.locator("[data-rail]"))});
             if(group==="advanced")expect(JSON.parse(await page.getByLabel(es?"Solicitud científica JSON":"Scientific request JSON",{exact:true}).inputValue())).toEqual(owned.request.scientific_request);
@@ -86,7 +87,7 @@ test("retained actual arrays: shared rail sections and all controls are reachabl
       const dimensions=await page.evaluate(()=>({width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight,innerWidth,innerHeight}));
       expect(dimensions.width).toBe(dimensions.innerWidth);if(width>=1280)expect(dimensions.height).toBe(dimensions.innerHeight);
       walked.push({context:key,dimensions});
-    }
-    expect(errors).toEqual([]);writeFileSync(resolve(evidence,"control-walk.json"),JSON.stringify({schema:1,scientificMutation:false,job:owned.job_id,walked}),{flag:"wx"});
+    expect(errors).toEqual([]);writeFileSync(resolve(evidence,`${key}-control-walk.json`),JSON.stringify({schema:1,scientificMutation:false,job:owned.job_id,walked}),{flag:"wx"});
   }finally{await context.close();}
 });
+}
