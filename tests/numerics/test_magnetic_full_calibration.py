@@ -123,8 +123,60 @@ def test_whole_calibration_timeout_retains_failed_original_inventory():
     assert 'wall/CPU cap' in result['diagnostics']['reason']
     assert len(result['inventory']['row_ids']) == 288 and len(result['candidates']) == 16
     assert all(candidate['score'] is None for candidate in result['candidates'])
-    assert all(fold['reason'] == 'not_run' for candidate in result['candidates'] for fold in candidate['folds'])
+    assert result['candidates'][0]['folds'][0]['reason'] == 'resource'
+    assert all(fold['reason'] == 'not_run' for candidate in result['candidates'][1:] for fold in candidate['folds'])
     assert not any(result['claims'].values())
+
+
+def test_closed_failure_ledger_readback_never_success_bundle(tmp_path):
+    doc, binding = small_request()
+    result = calibration.calibrate(encode(doc), binding=binding, source_inventory_sha256='a'*64,
+                                   deadline=monotonic()-1.)
+    root = tmp_path/'failed'
+    identity = bundle.write_failure(root, result, doc)
+    assert hashlib.sha256((root/'failure.json').read_bytes()).hexdigest() == identity
+    assert json.loads((root/'failure.json').read_bytes()) == result
+    assert not (root/'manifest.json').exists()
+    with pytest.raises(InputError, match='complete fitted'):
+        bundle.write_bundle(tmp_path/'not_success', result, doc)
+    with pytest.raises(InputError, match='Fresh'):
+        bundle.write_failure(root, result, doc)
+    malformed = copy.deepcopy(result)
+    malformed['selected'] = 'b00-l2'
+    with pytest.raises(InputError, match='fallback'):
+        bundle.write_failure(tmp_path/'bad', malformed, doc)
+    assert not (tmp_path/'bad').exists()
+
+
+def test_nonzero_nested_supplied_data_offgrid_generation_and_failed_sparse_retention(tmp_path):
+    doc, binding = small_request()
+    location = Path(__file__).parents[1]/'fixtures'/'magnetic_survey'/'local_nonzero_control.py'
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('offgrid_local_control', location)
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+    original, evaluator = generator.populate(doc)
+    assert hashlib.sha256(original).hexdigest() == doc['source']['original_sha256']
+    assert evaluator['scope'] == 'separate_authored_tiny_evaluator_only'
+    assert 'bounds_m' not in doc and 'truth' not in doc
+    freeze = tmp_path/'model.frozen.json'
+    result = calibration.calibrate(encode(doc), binding=binding, source_inventory_sha256='a'*64,
+                                   deadline=monotonic()+300., freeze_receipt=freeze)
+    assert result['status'] == 'complete', result['diagnostics']['reason']
+    assert np.any(np.array(result['model']['chi_si']['data']) > 0.)
+    assert len(result['candidates']) == 16 and 0 < len(result['history']) <= 4096
+    selected = next(candidate for candidate in result['candidates'] if candidate['id'] == result['selected'])
+    assert selected['status'] == 'complete'
+    for candidate in result['candidates']:
+        if any(fold['status'] == 'failed' for fold in candidate['folds']):
+            assert candidate['status'] == 'failed' and candidate['score'] is None
+            assert all(fold['reason'] is not None for fold in candidate['folds'] if fold['status'] == 'failed')
+    assert result['metrics']['outer']['normalized_rms'] <= 2.
+    assert not any(result['claims'].values())
+    stored = json.loads(freeze.read_bytes())
+    assert stored['model_sha256'] == result['model']['sha256'] and stored['candidate'] == result['selected']
+    identity = bundle.write_bundle(tmp_path/'nonzero', result, doc)
+    assert bundle.read_bundle(tmp_path/'nonzero')['generation_sha256'] == identity
 
 
 @pytest.mark.parametrize('attack', ['traversal', 'dtype', 'shape_bomb', 'unit', 'extra', 'duplicate_reference', 'history', 'claims', 'metric', 'beta'])

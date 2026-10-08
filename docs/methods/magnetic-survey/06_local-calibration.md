@@ -137,6 +137,9 @@ flush/fsync, same-directory manifest replacement and complete readback. Existing
 successful generations never overwrite. A numerical failure produces a separate
 `failure.json` ledger with typed reason, actual candidate/fold outcomes and
 unexecuted folds marked `not_run`; selection/model/prediction/metrics are null.
+Started interrupted fits retain their actual failure reason, not `not_run`.
+The separate `write_failure` operation validates the same closed identities,
+candidate metrics and literal history, fsyncs and verifies a bounded readback.
 There is **no success manifest** in that generation. A frozen receipt may remain
 after later failure, intentionally preserving evidence without claiming success.
 Injected disk-full/publication failures protect the previous generation and clean
@@ -164,6 +167,15 @@ the S2 528-cell inverse or its off-grid truth. Nonzero IRLS tests retain the
 independent nonuniform seven-cell Choclo/physical-face control, including all eight
 thresholds and independent true gradient. These are not substitutes for S2-A..F,
 quantity/remanence/wrong-field negatives, full-cap execution or field acceptance.
+
+The separate `local_nonzero_control.py` supplies clean Choclo observations from
+one off-grid prism with no remanence, declared .012 SI and fixed .5 nT conditional
+SD (no added noise realization). Its original includes all 288 rows; evaluator
+bounds/chi remain separate from the modelling request. Actual nested fitting,
+frozen-model receipt and fitted generation readback are exercised, with failed
+sparse candidates retained rather than partially averaged. This tests real
+nonzero supplied-data mechanics; neither its small mesh nor its outer score
+closes the frozen S2 528-cell predictive/negative-control or field gates.
 
 ## Español: alcance, separación y uso
 

@@ -168,6 +168,14 @@ def calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receipt
     except InputError as error:
         if not state or error.code not in ('resource', 'numerical', 'convergence'):
             raise
+        active_fold = state.get('active_fold')
+        if active_fold is not None and active_fold >= 0:
+            # A started but interrupted fit is not an unexecuted fold. Retain
+            # its actual trace and failure reason; validation metrics unavailable.
+            candidate = next(c for c in state['candidates'] if c['id'] == state['active_candidate'])
+            metric = candidate['folds'][active_fold]
+            if metric['reason'] == 'not_run':
+                metric['reason'] = state.get('active_reason') or error.code
         return dict(schema='magnetic-survey-result-1', status='failed', identity=state['identity'],
             inventory=state['plan']['inventory'], partition=state['plan']['partition'], candidates=state['candidates'],
             selected=None, model=None, prediction=None, metrics=None, history=state['history'],
@@ -226,10 +234,12 @@ def _calibrate(raw, *, binding, source_inventory_sha256, deadline, freeze_receip
         return operators[rows]
 
     def fit(rows, role, fold, beta, penalty, cid):
+        state.update(active_candidate=cid, active_fold=-1 if fold is None else fold, active_reason=None)
         observed, noise = reader.read(rows, role=role, fold=fold)
         result = fit_partition(op(rows), mesh, meta['prior'], observed, noise, beta, penalty, binding=binding,
             deadline=deadline, admitted_bytes=plan['preflight']['conservative_bytes'], allocation_sha256=allocation,
             source_inventory_sha256=source_inventory_sha256)
+        state['active_reason'] = result['reason']
         for record in result['history']:
             if len(history) >= 4096:
                 fail('resource', '$/history', 'Whole result history cap; no truncation')

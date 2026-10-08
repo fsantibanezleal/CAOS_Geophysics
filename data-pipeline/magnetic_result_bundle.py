@@ -131,12 +131,34 @@ def _decode_history(value):
     return out
 
 
+def _validate_history(history, candidates, *, allow_empty):
+    if type(history) is not list or not (0 if allow_empty else 1) <= len(history) <= 4096:
+        fail('count', '$/history', 'Complete bounded actual history required')
+    from magnetic_optimizer_adapter import EPSILONS
+    for record in history:
+        keys(record, 'candidate fold phase outer_iteration inner_iteration beta epsilon_q phi_d phi_regularizer objective kkt_inf model_sha256 status', '$/history')
+        if record['candidate'] not in _CANDIDATES or record['phase'] not in _PHASES or record['status'] not in _STATES:
+            fail('enum', '$/history', 'Literal history enums required')
+        for field, lower, upper in (('fold', -1, 2), ('outer_iteration', 0, 19), ('inner_iteration', 0, 200)):
+            if type(record[field]) is not int or not lower <= record[field] <= upper:
+                fail('count', '$/history', 'Bounded actual history counters required')
+        candidate = candidates[_CANDIDATES.index(record['candidate'])]
+        for field in ('beta', 'epsilon_q', 'phi_d', 'phi_regularizer', 'objective', 'kkt_inf'):
+            _real(record[field], '$/history')
+        if (record['beta'] != candidate['beta'] or record['epsilon_q'] not in ((0.,) if record['phase'] == 'l2' else EPSILONS)
+                or (record['phase'] != 'l2' and candidate['penalty'] != 'sparse_smallness')):
+            fail('enum', '$/history', 'Frozen beta/epsilon/phase association required')
+        if record['objective'] != record['phi_d']+record['beta']*record['phi_regularizer']:
+            fail('numerical', '$/history', 'Actual objective terms mismatch')
+        _hash(record['model_sha256'], '$/history')
+
+
 def validate_result(result, request):
     """Replay supplied schema, geometry, identities and actual residual sign."""
     import numpy as np
     keys(result, 'schema status identity inventory partition candidates selected model prediction metrics history diagnostics claims', '$/result')
-    if result['schema'] != 'magnetic-survey-result-1' or result['status'] != 'complete':
-        fail('convergence', '$/result', 'Only a complete fitted generation can be published')
+    if result['schema'] != 'magnetic-survey-result-1' or result['status'] not in ('complete', 'failed'):
+        fail('convergence', '$/result', 'Literal complete/failed local result required')
     raw = canonical(request)
     plan = plan_geometry(parse_request(raw))
     from magnetic_likelihood import SealedLikelihood
@@ -189,6 +211,17 @@ def validate_result(result, request):
             score = sum(f['phi_d'] for f in candidate['folds'])/sum(f['n_components'] for f in candidate['folds'])
             if candidate['score'] != score:
                 fail('numerical', '$/candidates', 'Actual pooled component score mismatch')
+    _validate_history(result['history'], candidates, allow_empty=result['status'] == 'failed')
+    if result['status'] == 'failed':
+        if any(result[k] is not None for k in ('selected', 'model', 'prediction', 'metrics')):
+            fail('convergence', '$/result', 'Failure has no fallback selection/model/prediction/metrics')
+        diagnostic = result['diagnostics']
+        keys(diagnostic, 'reason resolution_kind resolution_arrays resources', '$/diagnostics')
+        if (type(diagnostic['reason']) is not str or not 1 <= len(diagnostic['reason']) <= 512
+                or diagnostic['resolution_kind'] != 'none' or diagnostic['resolution_arrays'] is not None
+                or diagnostic['resources'] is not None):
+            fail('convergence', '$/diagnostics', 'Typed actual failure reason and unavailable diagnostics required')
+        return result
     from magnetic_calibration import select_candidate
     if select_candidate(candidates)['id'] != result['selected']:
         fail('numerical', '$/selected', 'Frozen candidate selection mismatch')
@@ -240,26 +273,6 @@ def validate_result(result, request):
     if (measures['l2_baseline'] != selected['id'][:3]+'-l2' or
             measures['sparse_comparison'] != (selected['id'] if selected['penalty'] == 'sparse_smallness' else None)):
         fail('enum', '$/metrics', 'Literal selected-beta comparison identities required')
-    history = result['history']
-    if type(history) is not list or not 1 <= len(history) <= 4096:
-        fail('count', '$/history', 'Complete bounded actual history required')
-    from magnetic_optimizer_adapter import EPSILONS
-    for record in history:
-        keys(record, 'candidate fold phase outer_iteration inner_iteration beta epsilon_q phi_d phi_regularizer objective kkt_inf model_sha256 status', '$/history')
-        if record['candidate'] not in _CANDIDATES or record['phase'] not in _PHASES or record['status'] not in _STATES:
-            fail('enum', '$/history', 'Literal history enums required')
-        for field, lower, upper in (('fold', -1, 2), ('outer_iteration', 0, 19), ('inner_iteration', 0, 200)):
-            if type(record[field]) is not int or not lower <= record[field] <= upper:
-                fail('count', '$/history', 'Bounded actual history counters required')
-        candidate = candidates[_CANDIDATES.index(record['candidate'])]
-        for field in ('beta', 'epsilon_q', 'phi_d', 'phi_regularizer', 'objective', 'kkt_inf'):
-            _real(record[field], '$/history')
-        if (record['beta'] != candidate['beta'] or record['epsilon_q'] not in ((0.,) if record['phase'] == 'l2' else EPSILONS)
-                or (record['phase'] != 'l2' and candidate['penalty'] != 'sparse_smallness')):
-            fail('enum', '$/history', 'Frozen beta/epsilon/phase association required')
-        if record['objective'] != record['phi_d']+record['beta']*record['phi_regularizer']:
-            fail('numerical', '$/history', 'Actual objective terms mismatch')
-        _hash(record['model_sha256'], '$/history')
     diagnostics = result['diagnostics']
     keys(diagnostics, 'reason resolution_kind resolution_arrays resources', '$/diagnostics')
     if diagnostics['reason'] is not None and (type(diagnostics['reason']) is not str or len(diagnostics['reason']) > 512):
@@ -314,6 +327,8 @@ def write_bundle(path, result, request):
     import numpy as np
     from magnetic_local_paths import external_path
     validate_result(result, request)
+    if result['status'] != 'complete':
+        fail('convergence', '$/result', 'Only a complete fitted generation can be published')
     root = external_path(path)
     if root.is_symlink() or root.exists():
         fail('durability', '$/output', 'Fresh explicit generation directory required')
@@ -380,6 +395,37 @@ def write_bundle(path, result, request):
         root.rmdir()
         raise
     return manifest['generation_sha256']
+
+
+def write_failure(path, result, request):
+    """Retain a closed failed result, never a success manifest or fallback."""
+    from magnetic_local_paths import external_path
+    validate_result(result, request)
+    if result['status'] != 'failed':
+        fail('convergence', '$/result', 'Only a failed ledger belongs in failure.json')
+    root = external_path(path)
+    if root.exists():
+        fail('durability', '$/output', 'Fresh external failure generation required')
+    body = canonical(result)
+    if len(body) > 8388608:
+        fail('resource', '$/output', 'Complete failure ledger exceeds bounded capacity')
+    root.mkdir()
+    created = root/'failure.json'
+    try:
+        with created.open('xb') as stream:
+            stream.write(body)
+            stream.flush()
+            os.fsync(stream.fileno())
+        raw = _read_regular(created, 8388608)
+        imported = _Lexer(raw, max_strings=8388608, defer=False).document()
+        validate_result(imported, request)
+        if raw != body:
+            fail('durability', '$/output', 'Failure ledger readback mismatch')
+    except BaseException:
+        created.unlink(missing_ok=True)
+        root.rmdir()
+        raise
+    return hashlib.sha256(body).hexdigest()
 
 
 def _read_regular(path, maximum):
@@ -479,4 +525,6 @@ def read_bundle(path):
     if manifest['original'] != original or manifest['original']['included'] is not False:
         fail('hash', '$/original', 'Original identity/rights/fullness mismatch; raw not bundled')
     validate_result(result, request)
+    if result['status'] != 'complete':
+        fail('convergence', '$/result', 'A failed ledger cannot be a success bundle')
     return dict(result=result, request=request, generation_sha256=identity)

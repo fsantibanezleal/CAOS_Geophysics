@@ -143,39 +143,21 @@ def main(argv=None):
                     fail('resource', '$/wall-seconds', 'Finite whole local wall cap in (0,7200] required')
                 binding = reviewed_binding(args.binding_receipt, args.allow_candidate_core)
                 from magnetic_calibration import calibrate
-                from magnetic_result_bundle import write_bundle
+                from magnetic_result_bundle import write_bundle, write_failure
                 # Keep vendor diagnostics out of the one-line JSON protocol;
                 # actual complete iteration trace is in the bounded result.
                 with redirect_stdout(sys.stderr):
                     result = calibrate(raw, binding=binding, source_inventory_sha256=binding.source_inventory_sha256,
                                        deadline=monotonic()+args.wall_seconds,
                                        freeze_receipt=output.with_name(output.name+'.frozen.json'))
+                request = _Lexer(raw, defer=False).document()
                 if result['status'] != 'complete':
                     # A failure ledger is not a fitted bundle or success pointer.
                     # Keep actual candidate/trace evidence, including not_run.
-                    import os
-                    if output.exists():
-                        fail('durability', '$/output', 'Fresh external failure generation required')
-                    body = canonical(result)
-                    if len(body) > MAX_BYTES:
-                        fail('resource', '$/output', 'Complete failure ledger exceeds bounded capacity')
-                    output.mkdir()
-                    created = output/'failure.json'
-                    try:
-                        with created.open('xb') as stream:
-                            stream.write(body)
-                            stream.flush()
-                            os.fsync(stream.fileno())
-                        if created.read_bytes() != body:
-                            fail('durability', '$/output', 'Failure ledger readback mismatch')
-                    except BaseException:
-                        created.unlink(missing_ok=True)
-                        output.rmdir()
-                        raise
+                    write_failure(output, result, request)
                     print(canonical(dict(schema=result['schema'], status='failed', identity=result['identity'],
                         reason=result['diagnostics']['reason'], claims=result['claims'])).decode())
                     return 3
-                request = _Lexer(raw, defer=False).document()
                 generation = write_bundle(output, result, request)
                 summary = dict(schema=result['schema'], status=result['status'], identity=result['identity'],
                     selected=result['selected'], generation_sha256=generation, original_bytes_verified=True,
