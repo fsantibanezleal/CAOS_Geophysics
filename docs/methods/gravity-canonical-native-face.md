@@ -89,3 +89,44 @@ is still FAIL; it is not relabeled by this decomposition or by passing
 small-original controls. A retained-state forward bound and the unchanged
 original scientific accuracy/stopping assertions remain required before
 the proposed recurrence is enabled.
+
+## Prospective actual native direction and strict trial replay
+
+`gravity_irls_face_direction.py` implements a separate research epoch. It is
+not selected by the original cpu1/cpu2/cpu3 calibration or archive reader.
+Only a literal `GravityIRLSPartition` and its uninterrupted original budget
+may construct the direction. A binding maximum uses one actual library CG
+on `M_FF`; a unique free maximum uses two CG calls and the restricted
+Sherman--Morrison update. Each actual CG has `maxiter=200`, `rtol=1e-6`,
+`atol=0`, and its true original source-action residual is checked before use.
+The rank-one denominator remains positive, with the original conditioning
+ratio at least `sqrt(eps64)`. No dense production solve or fallback is used.
+
+Merit is `0.5*||r_F||^2`, with its actual derivative `r_F.T J_FF p_F`.
+Binding coordinates are embedded as exact zero direction entries. All
+trials must preserve the actual native binding signs, literal box and
+maximizing branch. The initial alpha is the exact stored-real first box
+contact, bounded by one and rounded downward only if nearest binary64 would
+exceed that rational contact. No projection or tolerance fudge is applied.
+A zero outward contact refuses the proposal. At most the original 20
+halvings are permitted and strict native free-merit Armijo descent is
+required. All actual trial models, gradients, binding signs, canonical stage
+seals, epsilon values and margins are retained, including rejected trials.
+Each temporary canonical objective is released in a `finally` block.
+
+The same budget counts at most three proposals per stage, 126 actual
+auxiliary CG calls and 63 anchors, inside the original combined 200 accepted
+moves/201 states/120-second partition and 1800-second calibration limits.
+A direction or candidate is not an accepted move: production adoption must
+be recorded within that same combined budget. A failed constructed CG or
+line search remains failed, not a disabled branch or permission to fall back.
+
+Independent replay rebuilds the source-owned metric operand, native free
+face, true residual, denominator and direction without another CG. It then
+recomputes every trial's actual source gradient, sign/branch and strict merit
+margin. Altered hashes, supplied masks, truncated or added trials, modified
+gradients, candidates, epsilon, stage seals or disposal claims cannot approve
+a candidate. Actual retained-state proof and direction/trial positives are
+prerequisites to enabling a new outer epoch, followed by unchanged complete
+21-stage fixed-point assertions and original24/noise/refits. The historical
+plain/interior-only failures remain unchanged.

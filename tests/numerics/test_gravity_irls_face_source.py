@@ -19,10 +19,19 @@ def owner_and_model(branch, offset=0.):
             ('start_kg_m3', 0.), ('reference_kg_m3', offset*1000.)):
         prior[key] = np.full(12, value)
     q = offset+np.linspace(-.2, .4, 12)
-    if branch == 'binding_plateau':
+    if branch in ('binding_plateau', 'binding_unique'):
         q[:2] = -1.5
+        if branch == 'binding_unique':
+            q[1] = -1.4
         # Control source only: force literal lower signs through actual data
         # misfit, not an injected gradient or chosen free mask. No fit is run.
+        observed = request['background_mgal']+np.full(4, 1000.)
+    elif branch == 'free_unique_with_binding':
+        # An actual binding coordinate whose reference displacement is NOT
+        # the max. The native gradient is produced by the original data,
+        # never a caller mask. The free unique max retains the rank-one term.
+        q[0] = -1.5
+        prior['reference_kg_m3'][0] = -1450.
         observed = request['background_mgal']+np.full(4, 1000.)
     elif branch == 'free_tie':
         q[:2] = [offset-.6, offset+.6]
@@ -31,7 +40,7 @@ def owner_and_model(branch, offset=0.):
     return owner, q
 
 
-@pytest.mark.parametrize('branch', ['binding_plateau', 'free_unique'])
+@pytest.mark.parametrize('branch', ['binding_plateau', 'binding_unique', 'free_unique', 'free_unique_with_binding'])
 @pytest.mark.parametrize('offset', [0., .137])
 def test_actual_original_closed_free_principal_derivative(branch, offset):
     owner, q = owner_and_model(branch, offset)
@@ -39,7 +48,7 @@ def test_actual_original_closed_free_principal_derivative(branch, offset):
     try:
         derivative = face._CanonicalFaceLinearization(owner, q, policy(), 17, policy()['epsilon_floor'])
         assert derivative.face['branch'] == ('native_binding_max_constant_scale'
-            if branch == 'binding_plateau' else 'native_free_unique_max_rank_one')
+            if branch in ('binding_plateau', 'binding_unique') else 'native_free_unique_max_rank_one')
         free = derivative.face['free']
         problem = owner.problem
         stage = derivative._stage
