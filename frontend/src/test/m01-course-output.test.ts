@@ -8,6 +8,11 @@ describe("course QA external evidence custody", () => {
   it("requires explicit absolute output before any test creates evidence", () => {
     for (const output of [undefined, "", "relative-output"]) expect(() => courseQaPaths(output, "run-01", repo)).toThrow();
   });
+  it("identifies the caller's required output variable without relaxing custody", () => {
+    expect(() => courseQaPaths(undefined, "run-01", repo, "GEOPHYSICS_VELOCITY_QA_OUTPUT"))
+      .toThrow("Supply absolute GEOPHYSICS_VELOCITY_QA_OUTPUT outside the repository");
+    expect(() => courseQaPaths(repo, "run-01", repo, "GEOPHYSICS_VELOCITY_QA_OUTPUT")).toThrow();
+  });
   it("rejects repository, dependency and filesystem-root output", () => {
     for (const output of [repo, join(repo, "..evidence"), join(repo, "frontend", "node_modules", "qa"), parse(repo).root])
       expect(() => courseQaPaths(output, "run-01", repo)).toThrow();
