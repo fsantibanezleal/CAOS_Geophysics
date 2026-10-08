@@ -30,6 +30,22 @@ unknown job states/methods/parameters, changed engine/environment and concurrent
 launches. No command or path is accepted from request JSON. The ordinary API
 still controls authentication, CSRF, ownership and admission.
 
+The database reader first forks and irrevocably drops groups/GID/UID to the
+configured application identity. Only that nonroot reader opens SQLite, its WAL
+or uploaded input paths; the privileged parent receives bounded plain JSON and
+byte snapshots over anonymous pipes. This avoids granting root file access to
+worker-controlled SQLite sidecars or path races. Parent file installation and
+retention use held directory descriptors with no-follow/exclusive leaf opens.
+Held originals and the mount target use installation-owned custody beneath
+`/run/fasl-geophysics-profile-jobs/<UUID>`, not worker-renamable stage parents.
+The worker's ordinary private stage is only a separately pinned retention target.
+The child checks the mounted input file device/inode/size/hash identities before
+engine execution. These copies are separately counted from writable tmpfs
+scratch. Remove only those declared copies
+after exact extinction and verified original identities; otherwise retain debt.
+The earlier in-worker-stage proposal is rejected by independent peer review:
+root-owned contents do not prevent an owner from replacing their parent path.
+
 ## Child and custody
 
 The system manager creates a fresh exact `geophysics-profile-<UUID>.service`
@@ -49,6 +65,17 @@ terminal receipt and validated retained bytes before its existing publication
 transaction. A launcher failure, uncertain termination, unknown stage entry or
 receipt mismatch preserves the stage and never produces successful science.
 The ordinary worker startup inventory handles retained debt conservatively.
+
+Independent review rejected the same-UID in-unit watcher: its death was not
+fail-closed, and later acquisition of a numeric launcher PID permitted reuse.
+Use a root-owned guardian forked before manager submission instead. Acquire the
+launcher's pidfd before fork, transfer no privileges/handles to science, require
+a ready handshake, and hold the guardian's pidfd as an unreaped owned child.
+Unexpected guardian exit stops the exact unit; launcher death makes the guardian
+stop/drain that exact unit. A bounded completion frame is sent only after fresh
+extinction. Record guardian outcome separately; no port, shell or arbitrary
+signal target is exposed. Actual crash/death/interrupted-submission controls are
+required before enabling the path. No same-UID watcher is retained.
 
 ## Review and qualification boundary
 
