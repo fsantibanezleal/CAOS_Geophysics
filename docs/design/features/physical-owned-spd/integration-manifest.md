@@ -22,6 +22,18 @@ QuadraticOperands,TerminalPolicy,binding_for}`. Source-bound adapter provides:
   or evaluate/five-components/binding_diagonal/exact_hessian/release_state
   (nonlinear). Native H/g and actual certificate still physical authority.
 
+For half-normalized uncoupled linear objectives use PUBLIC
+`physical_owned_spd.certify_quadratic_chord(operands,identity,q,qt,native_gradient,
+native_phi,native_phi_trial,iteration,trial,deadline,source_components=...,
+covariance=...,resource_limit_bytes=...)`. Closed ORIGINAL QuadraticOperands,
+literal c=.5or1 and original nested factors, no private helper/rounded WG/WD
+in physical delta arithmetic. Bind certificate_source_sha256 to the ACTUAL
+physical_owned_spd SOURCE_SHA256. The optimizer owns actual box projection;
+this helper certifies the recorded physical chord, not a missing caller box.
+Whole resource metadata before arithmetic; unchanged34/50/80 strict negative
+slope/margin, explicit non-descent/zero/expiry/unresolved/refusal. No native/H/g
+or original independent precision gate change. Precode20540c0.
+
 `ConditionedBinding` binds accepted export, loaded optimizer, metric, numeric
 kernel, vendor, original certificate, inventory, new epoch and policy.
 `ConditionedBudget` keeps original lower remaining/deadline/resource limit and

@@ -332,3 +332,87 @@ def terminal_check(policy, q, gradient, lower, upper, initial_norm, *, identity,
             if limit is not None:
                 record['passed'] = record['passed'] and Decimal(record['bounds'][name]) <= Decimal.from_float(limit)
     return record
+
+
+def certify_quadratic_chord(operands, identity, q, qt, native_gradient, native_phi,
+        native_phi_trial, iteration, trial, deadline, *, source_components,
+        covariance, resource_limit_bytes):
+    """PUBLIC strict actual-chord proof from closed ORIGINAL nested operands.
+
+Original literal c=.5or1, no prepared rounded WG/WD/delta, supplied decision,
+private adapter helper or optimizer. Numerical source/native admission separate.
+"""
+    a = identity['parameter_count']
+    m = identity['observation_rows']*identity['observation_components']
+    allocation = kernel.allocation(source_components, m, a, covariance)
+    if (type(resource_limit_bytes) is not int or not 0 < resource_limit_bytes <= 2*1024**3
+        or allocation['maximum'] > resource_limit_bytes):
+        raise ValueError('SPD certificate: ORIGINAL complete resource dictionary')
+    _quadratic_metadata(operands, identity, q, source_components)
+    if identity['mode'] != 'fixed_linear_quadratic' or operands.likelihood_scale not in (.5, 1.):
+        raise ValueError('SPD certificate: ORIGINAL linear normalization/mode')
+    if (type(iteration) is not int or not 0 <= iteration <= 199 or type(trial) is not int or not 0 <= trial <= 19
+        or type(deadline) is not float or not np.isfinite(deadline)
+        or not _vector(qt, a) or not _vector(native_gradient, a)
+        or type(native_phi) is not float or type(native_phi_trial) is not float):
+        raise ValueError('SPD certificate: exact actual native chord/count/clock metadata')
+    record = intervals._record(iteration, trial, native_phi, native_phi_trial)
+    if (not np.isfinite(q).all() or not np.isfinite(qt).all() or not np.isfinite(native_gradient).all()
+        or record['native_phi_current'] is None or record['native_phi_trial'] is None):
+        return intervals._validate_record(record)
+    # Bounds belong to the actual optimizer; source-bound q was already checked
+    # by its evaluate/projection. This public arithmetic API proves the recorded
+    # literal chord, not an independent caller's unprovided box feasibility.
+    try:
+        record['displacement_inf_q'] = float(np.max(np.abs(qt-q)))
+    except ArithmeticError:
+        return intervals._validate_record(record)
+    if not np.any(qt != q):
+        record['cause'] = 'zero_displacement'
+        return intervals._validate_record(record)
+    if monotonic() > deadline:
+        record['cause'] = 'wall_cap'
+        return intervals._validate_record(record)
+    for passes, digits, native_rows in ((1, 34, True), (1, 34, False), (2, 50, False), (3, 80, False)):
+        arithmetic = intervals._Intervals(digits, deadline)
+        arithmetic._use_native_rows = native_rows
+        try:
+            arithmetic.check()
+            qv = [arithmetic.exact(v) for v in q]
+            dq = [arithmetic.sub(arithmetic.exact(v), before) for v, before in zip(qt, qv)]
+            slope = arithmetic.dot(native_gradient, dq)
+            if slope[0] >= 0:
+                record.update(passes=passes, precision_digits=digits, slope_interval=tuple(map(str, slope)),
+                              decision='certified_reject', cause='non_descent')
+                return intervals._validate_record(record)
+            residual = [arithmetic.sub(value, arithmetic.exact(d))
+                        for value, d in zip(arithmetic.matrix(operands.g, qv), operands.dobs)]
+            residual = arithmetic.matrix(operands.w, residual)
+            dy = arithmetic.matrix(operands.w, arithmetic.matrix(operands.g, dq))
+            change = arithmetic.scalar(operands.likelihood_scale, arithmetic.change(residual, dy))
+            delta = [arithmetic.sub(value, arithmetic.exact(ref)) for value, ref in zip(qv, operands.reference)]
+            for term in operands.terms:
+                arithmetic.check()
+                r = arithmetic.matrix(term.weights, arithmetic.matrix(term.derivative, delta))
+                dr = arithmetic.matrix(term.weights, arithmetic.matrix(term.derivative, dq))
+                change = arithmetic.add(change, arithmetic.scalar(operands.beta,
+                    arithmetic.scalar(term.alpha, arithmetic.change(r, dr))))
+            margin = arithmetic.sub(change, arithmetic.scalar(1e-4, slope))
+            record.update(passes=passes, precision_digits=digits, slope_interval=tuple(map(str, slope)),
+                delta_interval=tuple(map(str, change)), armijo_margin_interval=tuple(map(str, margin)))
+            if slope[1] < 0 and margin[1] < 0:
+                record.update(decision='certified_accept', cause='armijo')
+                return intervals._validate_record(record)
+            if margin[0] > 0:
+                record.update(decision='certified_reject', cause='armijo')
+                return intervals._validate_record(record)
+        except intervals._Expired:
+            record = intervals._record(iteration, trial, native_phi, native_phi_trial)
+            record['cause'] = 'wall_cap'
+            return intervals._validate_record(record)
+        except (ArithmeticError, ValueError):
+            record = intervals._record(iteration, trial, native_phi, native_phi_trial)
+            record['cause'] = 'range_unsupported'
+            return intervals._validate_record(record)
+    record.update(decision='unresolved', cause='precision_limit')
+    return intervals._validate_record(record)

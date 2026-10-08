@@ -278,3 +278,113 @@ def test_actual_quartic_graph_not_automatically_admitted():
     dto = replace(obj.metric_operands(q), regularizer=combined)
     with pytest.raises(ValueError):
         owned.validate_operands(dto, obj.identity(), q, 2*1024**3)
+
+
+class HalfPhysical(Physical):
+    """Literal original half-normalized data AND prior; same native optimum."""
+    def components(self, q):
+        return {k: .5*v for k, v in super().components(q).items()}
+
+    def evaluate(self, q, return_g=False, return_H=False):
+        problem = self.problem
+        pd, pm = float(problem['misfit'](q)), float(problem['regularization'](q))
+        result = [float(.5*pd+.5*self.beta*pm)]
+        if return_g:
+            result.append(.5*(problem['misfit'].deriv(q)+self.beta*problem['regularization'].deriv(q)))
+        if return_H:
+            result.append(sp.linalg.LinearOperator((5, 5), dtype=np.float64,
+                matvec=lambda v: .5*(problem['misfit'].deriv2(q, v)+self.beta*problem['regularization'].deriv2(q, v))))
+        return tuple(result) if return_g or return_H else result[0]
+
+    def binding_diagonal(self, q):
+        return .5*self.diagonal
+
+    def metric_operands(self, q):
+        original = super().metric_operands(q)
+        return replace(original, regularizer=(original.regularizer*.5).tocsr(), likelihood_scale=.5)
+
+    def quadratic_operands(self, q):
+        original = super().quadratic_operands(q)
+        return replace(original, likelihood_scale=.5,
+                       terms=tuple(replace(t, alpha=.5*t.alpha) for t in original.terms))
+
+    def certify(self, q, qt, gradient, phi, phit, iteration, trial, deadline):
+        proof = owned.certify_quadratic_chord(self.quadratic_operands(q), self.identity(), q, qt, gradient,
+            phi, phit, iteration, trial, deadline, source_components=4, covariance=True, resource_limit_bytes=2*1024**3)
+        self.certificates.append(proof)
+        return proof
+
+
+@pytest.mark.parametrize('bounded', [False, True])
+def test_public_half_certificate_fit(bounded):
+    obj = HalfPhysical(bounded=bounded)
+    args = arguments(obj, bounds=True)
+    args['binding'] = replace(args['binding'], certificate_source_sha256=owned.SOURCE_SHA256)
+    result = core.solve_bounded_linear(obj, obj.lower, obj.upper, obj.start, **args)
+    assert result['status'] == 'converged', result['reason']
+    assert result['terminal_audits'][-1]['check']['passed']
+    assert sum(p['decision'] == 'certified_accept' for p in obj.certificates) == result['iterations']
+    assert all(p['decision'] != 'certified_accept' or (Decimal(p['slope_interval'][1]) < 0
+        and Decimal(p['armijo_margin_interval'][1]) < 0) for p in obj.certificates)
+    g, w = obj.problem['simulation'].G, obj.problem['misfit'].W.toarray()
+    matrix = np.vstack((w@g, np.sqrt(obj.beta)*obj.r))
+    rhs = np.r_[w@obj.problem['misfit'].data.dobs, np.sqrt(obj.beta)*obj.r@obj.problem['reference_q']]
+    oracle = lsq_linear(matrix, rhs, bounds=(obj.lower, obj.upper), method='bvls', tol=1e-13)
+    assert oracle.success
+    np.testing.assert_allclose(result['q'], oracle.x, rtol=1e-7, atol=1e-8)
+    np.testing.assert_allclose(g@result['q'], g@oracle.x, rtol=1e-7, atol=1e-9)
+
+
+@pytest.mark.parametrize('fault', ['zero', 'non_descent', 'clock', 'memory'])
+def test_public_certificate_negatives(fault):
+    obj = HalfPhysical()
+    q = obj.start.copy()
+    phi, gradient = obj.evaluate(q, True)
+    qt = q-1e-4*gradient
+    deadline = monotonic()+120.
+    limit = 2*1024**3
+    if fault == 'zero':
+        qt = q.copy()
+    if fault == 'non_descent':
+        qt = q+1e-4*gradient
+    if fault == 'clock':
+        deadline = monotonic()-1.
+    if fault == 'memory':
+        limit = 1
+    args = (obj.quadratic_operands(q), obj.identity(), q, qt, gradient, phi, obj.evaluate(qt), 0, 0, deadline)
+    if fault == 'memory':
+        with pytest.raises(ValueError):
+            owned.certify_quadratic_chord(*args, source_components=4, covariance=True, resource_limit_bytes=limit)
+    else:
+        proof = owned.certify_quadratic_chord(*args, source_components=4, covariance=True, resource_limit_bytes=limit)
+        assert proof['decision'] != 'certified_accept'
+        assert proof['cause'] == {'zero': 'zero_displacement', 'non_descent': 'non_descent', 'clock': 'wall_cap'}[fault]
+
+
+def test_public_nested_delta_independent_decimal_oracle():
+    from decimal import localcontext
+    obj = HalfPhysical()
+    q = obj.start.copy()
+    phi, gradient = obj.evaluate(q, True)
+    qt = q-1e-4*gradient
+    operands = obj.quadratic_operands(q)
+    proof = obj.certify(q, qt, gradient, phi, obj.evaluate(qt), 0, 0, monotonic()+120.)
+    # Independent direct80-digit FULL nested objective, not production's delta
+    # identity or interval arithmetic. No production solver uses this oracle.
+    def matvec(matrix, vector):
+        return [sum(Decimal.from_float(float(coef))*v for coef, v in zip(row, vector)) for row in matrix]
+    def objective(value):
+        vector = [Decimal.from_float(float(v)) for v in value]
+        pred = matvec(operands.g, vector)
+        wr = matvec(operands.w.toarray(), [v-Decimal.from_float(float(d)) for v, d in zip(pred, operands.dobs)])
+        result = Decimal.from_float(operands.likelihood_scale)*sum(v*v for v in wr)
+        delta = [v-Decimal.from_float(float(ref)) for v, ref in zip(vector, operands.reference)]
+        for term in operands.terms:
+            r = matvec(term.weights.toarray(), matvec(term.derivative.toarray(), delta))
+            result += Decimal.from_float(operands.beta)*Decimal.from_float(term.alpha)*sum(v*v for v in r)
+        return result
+    with localcontext() as context:
+        context.prec = 80
+        actual = objective(qt)-objective(q)
+    lo, hi = map(Decimal, proof['delta_interval'])
+    assert lo <= actual <= hi and proof['decision'] == 'certified_accept'
