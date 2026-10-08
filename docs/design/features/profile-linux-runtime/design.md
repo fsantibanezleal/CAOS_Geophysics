@@ -87,6 +87,19 @@ by the manager as well as the launcher. Names and properties are constructor-
 owned, never browser input. Give the guardian a separately recorded bounded
 operator memory/task/wall allowance; it is not scientific RSS/CPU admission.
 Test caller-service stop, guardian kill and launcher loss independently.
+Enrollment passes the already-held guardian pidfd through systemd255's
+`PIDFDs` property, not a numeric `PIDs` array. An uncertain/late manager request
+must retain the kernel process identity after the launcher reaps its child.
+`busctl call` cannot marshal UNIX_FD arguments; inheriting a descriptor does not
+change that limitation. Use the installed, root-owned, hash-pinned `libsystemd`
+sd-bus interface through stdlib ctypes for this one closed method call, with
+fixed scope properties and a five-second reply deadline. No generic D-Bus API
+is exposed to users. The configuration pins `systemd_library` and its SHA-256.
+Read back memory, task and wall properties and actual membership. Qualify
+descriptor transfer, failed/late acceptance and caller death on the installed
+manager before activation. Primary implementation:
+[systemd255 PIDFDs](https://raw.githubusercontent.com/systemd/systemd/v255/src/core/dbus-scope.c)
+and [sd-bus basic arguments](https://raw.githubusercontent.com/systemd/systemd/v255/man/sd_bus_message_append_basic.xml).
 Primary interfaces: [systemd255 unit dependencies](https://raw.githubusercontent.com/systemd/systemd/v255/man/systemd.unit.xml)
 and [scope lifecycle](https://raw.githubusercontent.com/systemd/systemd/v255/man/systemd.scope.xml).
 
