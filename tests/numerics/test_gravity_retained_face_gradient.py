@@ -28,11 +28,18 @@ ARCHIVE_SHA256 = 'de66a98317374ede83dfa2d32e13ee29afe3841130906933ff0724b1411d87
 def test_changed_original_retained_canonical_gradient(fold):
     archive_name = os.environ.get('GEOPHYSICS_M02_FACE_RESEARCH_ARCHIVE')
     output_name = os.environ.get('GEOPHYSICS_M02_FACE_RESEARCH_OUTPUT')
-    if not archive_name or not output_name:
-        pytest.skip('explicit private retained training archive and external receipt required')
+    data_root_name = os.environ.get('GEOPHYSICS_M02_FACE_RESEARCH_DATA_ROOT')
+    temp_root_name = os.environ.get('GEOPHYSICS_M02_FACE_RESEARCH_TEMP_ROOT')
+    if not all((archive_name, output_name, data_root_name, temp_root_name)):
+        pytest.skip('explicit private archive, receipt and external device roots required')
     archive, output = Path(archive_name).resolve(), Path(output_name).resolve()
-    device_data = Path('E:/_Datos').resolve()
-    device_temp = Path('E:/_Temp').resolve()
+    assert Path(data_root_name).is_absolute() and Path(temp_root_name).is_absolute()
+    device_data = Path(data_root_name).resolve()
+    device_temp = Path(temp_root_name).resolve()
+    repository = Path(__file__).resolve().parents[2]
+    assert device_data.is_dir() and device_temp.is_dir()
+    assert not device_data.is_relative_to(repository) and not device_temp.is_relative_to(repository)
+    assert not repository.is_relative_to(device_data) and not repository.is_relative_to(device_temp)
     assert archive.is_relative_to(device_data) and archive != device_data
     assert output.is_relative_to(device_temp) and output != device_temp
     assert archive.is_file() and archive.stat().st_size < 64*1024**2
