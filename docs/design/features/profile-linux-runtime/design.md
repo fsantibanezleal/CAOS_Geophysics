@@ -115,6 +115,17 @@ there is no recursive adoption, sweeping delete, backup or external service.
 
 ## Review and qualification boundary
 
+Actual private queue q03 exposed a normal-completion integration defect: the
+parent already stopped/collected its exact service before the independent
+guardian handled DONE. A second strict systemctl stop refused the absent
+service. Make this stop idempotent ONLY when bounded manager readback says
+LoadState=not-found and the exact deterministic kernel group is absent; other
+errors and a remaining group still refuse. Do not equate a nonzero stop result
+or an empty manager property with extinction. Pin the executing supervisor's
+own path and bytes to configuration, not merely a different installed copy.
+Installation custody parent must remain root-owned/non-writable and traversable
+by the configured scientific group. Preserve q02/q03 original failure receipts.
+
 ### Owned API/worker adaptation
 
 Keep the Windows path-invoked profile lane and its actual tests unchanged. Add
