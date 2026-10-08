@@ -51,8 +51,11 @@ class ActualObjective:
         residual=self.A@q-self.d
         delta=q-self.reference
         data=float(.5*(residual@residual))
-        penalty=float(.5*self.beta*(delta@delta)+self.weight*self.cross(q))
-        return {'phi_d':data,'phi_m':penalty,'phi_engine':data+penalty}
+        regularization=float(.5*self.beta*(delta@delta))
+        coupling=float(self.weight*self.cross(q))
+        penalty=regularization+coupling
+        return {'phi_d':data,'phi_m':penalty,'phi_engine':data+regularization+coupling,
+                'engine_terms':(data,0.,regularization,0.,coupling)}
 
     def hessian(self,q,exact):
         state=q.copy()
@@ -212,7 +215,7 @@ def test_rounded_zero_objective_change_is_not_accepted():
         value=original(q,return_g,return_H)
         return (1.,*value[1:]) if isinstance(value,tuple) else 1.
     obj.evaluate=plateau
-    obj.components=lambda q:{'phi_d':1.,'phi_m':0.,'phi_engine':1.}
+    obj.components=lambda q:{'phi_d':1.,'phi_m':0.,'phi_engine':1.,'engine_terms':(1.,0.,0.,0.,0.)}
     result=run(obj)
     assert result['status']=='nonconverged' and result['reason']=='line_search_failed'
     assert result['iterations']==0
@@ -230,3 +233,15 @@ def test_exact_stationary_bound_stops_without_direction():
     result=run(obj,start=np.zeros(len(obj.start)))
     assert result['status']=='converged' and result['iterations']==0
     assert result['kkt_normalized']==0.
+
+
+def test_five_operand_order_preserved_without_regrouping_tolerance():
+    obj=ActualObjective()
+    native=solver._NativeRecorded(obj,obj.identity(),np.zeros(len(obj.start)),np.ones(len(obj.start)),budget())
+    terms=(1e16,0.,1.,1.,1.)
+    actual=(((terms[0]+terms[1])+terms[2])+terms[3])+terms[4]
+    obj.components=lambda q:{'phi_d':1e16,'phi_m':3.,'phi_engine':actual,'engine_terms':terms}
+    assert 1e16+3.!=actual
+    assert native.components(obj.start,actual)['engine_terms']==terms
+    obj.components=lambda q:{'phi_d':1e16,'phi_m':3.,'phi_engine':1e16+3.,'engine_terms':terms}
+    with pytest.raises(RuntimeError): native.components(obj.start,1e16+3.)

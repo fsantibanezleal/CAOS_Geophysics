@@ -7,7 +7,7 @@ CrossGradient quartic is nonconvex: no quadratic convergence theorem, global
 minimum, exact-real acceptance or interval certificate is claimed.
 
 Public export: `physical_nonlinear_optimizer.solve_bounded_nonlinear`.
-Epoch: `physical-gncg-nonlinear-candidate-1`. Policy:
+Epoch: `physical-gncg-nonlinear-candidate-2`. Policy:
 `exact-bound-native-gncg-actual-armijo-1`. Candidate means that an adapter must
 independently review the source inventory and validate its entire pipeline.
 
@@ -28,9 +28,16 @@ the same thirteen conceptual fields as the linear seam, but mode is
 one/two-element tuple, `beta_engine` is exactly float 1.0, `stage_index` 0..25,
 and components are one/two observation modalities. `physical_unit` explicitly
 names `kg_m3`, `si`, or `kg_m3_and_si`; `q_unit` names normalized coordinates.
-Components have exactly `phi_d`, `phi_m`, `phi_engine`: the first sums training
+Components have exactly `phi_d`, `phi_m`, `phi_engine`, `engine_terms`: the first sums training
 data terms and the second sums the weighted physical regularizers and coupling.
-Their sum must equal actual F. M11 separately retains all five unweighted terms.
+`engine_terms` is the five-element tuple of actual weighted operands in frozen
+order: data gravity, data magnetic, weighted gravity regularization, weighted
+magnetic regularization, weighted coupling. Actual F is their literal left-fold
+sum; data subtotal is the first two, penalty subtotal is the last three. The
+regrouped data+penalty sum is NOT required to equal F bitwise: real compiled
+physical integration exposed that rounding difference. No numerical tolerance,
+actual objective ordering, or accepted-step predicate is changed. M11 separately
+retains all five unweighted terms. Baseline inactive operands are exactly zero.
 
 `evaluate(q, return_g, return_H)` returns actual F, optionally its exact
 normalized gradient and refreshed PSD search `LinearOperator` (float64 n by n).

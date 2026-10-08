@@ -14,7 +14,7 @@ import numpy as np
 from scipy.sparse.linalg import LinearOperator
 from simpeg import optimization
 
-RUNTIME_EPOCH = 'physical-gncg-nonlinear-candidate-1'
+RUNTIME_EPOCH = 'physical-gncg-nonlinear-candidate-2'
 POLICY = 'exact-bound-native-gncg-actual-armijo-1'
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 VENDOR_SOURCE_SHA256 = hashlib.sha256(Path(optimization.__file__).read_bytes()).hexdigest()
@@ -231,10 +231,14 @@ class _NativeRecorded(optimization.ProjectedGNCG):
         self.check()
         values=self.objective.components(_owned(q))
         self.check()
-        if type(values) is not dict or set(values)!={'phi_d','phi_m','phi_engine'}:
+        if type(values) is not dict or set(values)!={'phi_d','phi_m','phi_engine','engine_terms'}:
             self.fail('state_mismatch')
-        if any(not _finite(v) or v<0. for v in values.values()): self.fail('nonfinite')
-        if values['phi_engine']!=phi or values['phi_d']+values['phi_m']!=phi:
+        terms=values['engine_terms']
+        if type(terms) is not tuple or len(terms)!=5: self.fail('state_mismatch')
+        if any(not _finite(v) or v<0. for v in (*terms,*(values[k] for k in ('phi_d','phi_m','phi_engine')))):
+            self.fail('nonfinite')
+        if (values['phi_engine']!=phi or (((terms[0]+terms[1])+terms[2])+terms[3])+terms[4]!=phi
+            or values['phi_d']!=terms[0]+terms[1] or values['phi_m']!=(terms[2]+terms[3])+terms[4]):
             self.fail('state_mismatch')
         return values
 
