@@ -87,3 +87,49 @@ References: [Python3.12 Decimal fused multiply-add and explicit Context](https:/
 [original physical algorithms](../../design/features/m04-survey-inversion/algorithms.md),
 [native norm certificate](04_native-norm-certificate.md), and
 [composition design](../../design/features/m04-survey-inversion/contact-and-enclosure.md).
+
+## Separate reduced-native linear composition
+
+`magnetic_reduced_adapter` consumes only the public
+`physical_reduced_optimizer.solve_bounded_linear`. The original current
+physical gradient and exact bounds define the initial native free face. The
+public owner disables the vendor active-gradient add-on, solves the actual
+principal physical Hessian with native CG and the closed Joseph metric, and
+freezes outward-at-exact-bound coordinates only after a successful original
+true-residual check. The actual CG count is summed across these phases, never
+reset to grant another200 iterations. Original20 Armijo trials,200 combined
+accepted states,120seconds and768MiB remain binding. Outside the direction
+construction, original full physical KKT and same-run terminal remain authority.
+The magnetic wrapper does not provide masks, factors, CG or failed-solve retries.
+
+Before a full kernel, its new source-bound allocation dictionary reserves
+the complete bounded phase history and public8MiB workspace. At most512 phases
+charge8*a+8192 each; at most200 directions charge16*a model/gradient and8*a
+total frozen indices each, plus one prospective8*a delta. This conservative
+reserve is added to the larger original source/metric envelope and must fit
+the unchanged768MiB cap. Old allocation hashes cannot acquire this reserve
+retroactively. The dictionary is not proof of native RSS, Linux custody or
+scientific validity.
+
+The [prerequisite design](../../design/features/m04-survey-inversion/reduced-public-seam.md)
+requires original independent Choclo/BVLS model/objective/prediction precision,
+then one original full firstfold before any dependent complete matrix. Exact
+total magnitude has no reduced-linear admission. Sparse continuation, heldout
+evaluation, actual lifetime/resource controls, field lineage and mounted owner
+integration remain their separate original requirements.
+
+### Espanol: composicion lineal de espacio activo reducido
+
+El adaptador magnetico consume solamente el export publico lineal. El nucleo
+publico construye las caras libres desde el gradiente fisico y los limites
+exactos; no recibe una mascara ni un factor elegido por el cliente. Despues
+de cada CG nativo exitoso se comprueba el residuo verdadero y se congelan
+solo coordenadas que apuntan hacia afuera en un limite exacto. Los200 pasos
+CG se comparten entre fases; no son200 adicionales por fase. Se conservan
+20 ensayos Armijo,200 estados aceptados,120segundos y768MiB originales.
+
+La admision previa al kernel reserva el historial completo acotado, no una
+estimacion optimista de fases. El nuevo diccionario y su hash enlazan fuente,
+conteos y reserva; no actualizan recibos antiguos. La convergencia de una
+particion y el oraculo independiente son prerrequisitos, no aceptacion de
+campo, magnitud no lineal, API autenticada o matriz completa.
