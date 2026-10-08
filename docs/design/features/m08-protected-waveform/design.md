@@ -42,4 +42,47 @@ WaveformProjectWorkbench uses the existing authenticated ApiClient/CSRF, uploads
 
 ## Proof and nonclaims
 
+## Structured scientific controls amendment
+
+The approved grouped-controls extension is a view/editor of the existing exact
+caos.local-waveform-request.v1 contract, not a second method or request schema.
+The editor uses the same explicit JSON draft as advanced import/export. Blank
+drafts have no numerical defaults. Groups cover UTC conditioning/analysis and
+one-to-three explicit NSLC rows; source citation, rights and processing statement;
+response output native, optional water level and four prefilter corners;
+offline-zero-phase bandpass/order/taper/edge guard; STA/LTA windows, on/off
+thresholds/refractory; Welch segment samples. Existing source/ADC-rail evidence
+survives edits unchanged unless explicitly edited through advanced JSON. Native
+output is fixed by the method and its unit comes from the actual StationXML
+calculation, not a velocity/acceleration selector. Invalid or incomplete fields
+remain visible and block indexing; no blank-to-zero, silent coercion or fallback
+defaults are admitted. Backend validation remains authoritative.
+
+Raw source identity and its declared companion are displayed from owned asset
+metadata. Source fields are never inferred from a filename or catalogue. An
+original-selection change clears the review binding; the user explicitly reviews
+the draft against the new pair before indexing. Each index creates/selects its
+own immutable request identity. Earlier jobs/results stay bound to their earlier
+dataset. Advanced JSON import/export remains available, including explicit ADC
+rails; unknown or invalid schema fields are not silently discarded.
+
+Verified ZIP arrays alone feed plots. The two response displays derive amplitude
+with Math.hypot(response_real, response_imag) and principal phase with
+Math.atan2(response_imag, response_real); x is response_frequency_hz. They are
+labelled display transforms of exact complex response, not new solver artifacts.
+Amplitude keeps the descriptor's response unit and phase is rad (no undocumented
+unwrap). PSD uses psd_frequency_hz. Time plots alone share the conditioning-relative
+cursor. Actual edge_valid/time_taper arrays, UTC analysis/conditioning boundaries,
+native physical units and exact candidate intervals are visible; triggers remain
+unlabelled and filtering explicitly offline/acausal. Raw QC-only results do not
+fabricate missing response, PSD or triggers.
+
+The parent shell keeps one instrument root. Optional ReactNode methodNavigation
+is inserted inside the owned instrument aside, never as a sibling workbench column.
+Use existing select-control/select/input/btn and processing plot styles; introduce
+no fonts, colors or CSS. Test-first structured roundtrip and display-transform
+tests precede implementation; real API/ZIP browser proof follows fixed Linux
+execution proof and preserves original negative controls. These are UX gates,
+not native adversarial, cold-start or actual ML VPS acceptance.
+
 Test-first pure/real API controls use temporary migrated SQLite and fresh private fixture directories, original bytes and native engine comparisons. Ordinary science tests can use a separate read-only scientific interpreter; API imports never install or decode. Tests of authored supervisor doubles are dispatch/validation proof only. Actual Windows/Linux safety, cold nominal/upper/original controls and selected runtime/context are separate measured gates. Missing evidence remains NOT_RUN/FAIL, not xfail/skip-as-PASS, host admission or public activation. No altered thresholds, resampling, alternate channels, provider rewriting or imaginary runtime provider closes a gate.
