@@ -137,9 +137,21 @@ def _decode_records(book):
 def _frozen(request, frozen):
     workflow.verify_calibration({'schema':'gravity-calibration-archive-1','request':request,'result':frozen})
     if frozen['selection_status']!='selected': raise ValueError('refits: unsuccessful frozen calibration')
-    sparse = frozen['schema']=='gravity-survey-irls-calibration-result-3'
-    admitted = irls._admit_request(request) if sparse else l2._admit_calibration(request)
+    sparse = frozen['schema'] in ('gravity-survey-irls-calibration-result-3',
+        'gravity-survey-irls-corrected-calibration-result-1', 'gravity-survey-irls-original-calibration-result-1')
+    engine = _corrected_engine(frozen)
+    admitted = engine.admit(request) if engine else irls._admit_request(request) if sparse else l2._admit_calibration(request)
     return sparse, admitted, l2.BETA_CANDIDATES[frozen['selected_index']]
+
+
+def _corrected_engine(frozen):
+    if frozen['schema'] == 'gravity-survey-irls-corrected-calibration-result-1':
+        from gravity_irls_corrected_workflow import _Workflow
+        return _Workflow('cpu2')
+    if frozen['schema'] == 'gravity-survey-irls-original-calibration-result-1':
+        from gravity_irls_corrected_workflow import _Workflow
+        return _Workflow('cpu3')
+    return None
 
 
 def _targets(admitted):
@@ -199,24 +211,34 @@ def refit_gravity_noise(request, frozen):
     fits,books = [],[]
     noise = {k:admitted['noise'][k] for k in ('kind','values')}
     deadline = started+1800.
+    engine = _corrected_engine(frozen)
     for index,values in enumerate(targets):
-        if sparse:
+        if engine:
+            fit = engine._fit(_perturbed(admitted, values), rows, beta, deadline)
+        elif sparse:
             fit,book = irls._workflow_fit(plan['request'],values,noise,prior,rows,beta,rows,
                 admitted['policy']['irls'],deadline,index)
             books.append(book)
         else: fit = l2._run_fit(plan['request'],values,noise,prior,rows,beta,rows,deadline)
-        fits.append(_pack_fit(fit) if sparse else fit)
+        fits.append(_pack_fit(fit) if sparse and not engine else fit)
     result = {'schema':'gravity-noise-refits-result-1','calibration_sha256':frozen['result_sha256'],
         'request_sha256':survey._digest(request),'method':'irls' if sparse else 'l2',
         'seed':SEED,'generator':'numpy-2.2.6-PCG64','count':COUNT,'beta_candidate':beta,
         'rows':survey._readonly(rows),'targets_mgal':survey._readonly(targets),
         'records':_records(tuple(fits),tuple(books)),
-        'successful':survey._readonly(np.array([f['status']=='converged' for f in fits],dtype=bool)),
+        'successful':survey._readonly(np.array([
+            engine._summary(engine_pool_decode(f))[0]=='converged' if engine else f['status']=='converged'
+            for f in fits],dtype=bool)),
         'wall_seconds':monotonic()-started,'conditioning':'declared_gaussian_data_noise_fixed_recipe',
         'posterior':False,'coverage_calibrated':False,'field_truth':None,'field_eligible':False,'full_M02_accepted':False}
     l2._result_native_metadata(result)
     result['result_sha256']=survey._digest(result)
     return result
+
+
+def engine_pool_decode(value):
+    from gravity_irls_pool import decode
+    return decode(value)
 
 
 def validate_noise_refits(result, request, frozen):
@@ -249,14 +271,34 @@ def validate_noise_refits(result, request, frozen):
         raise ValueError('refits: exact regenerated development-only targets')
     records=_decode_records(result['records'])
     fits,books = records['fits'],records['stage_books']
-    if type(fits) is not tuple or len(fits)!=COUNT or type(books) is not tuple or len(books)!=(COUNT if sparse else 0):
+    engine = _corrected_engine(frozen)
+    if type(fits) is not tuple or len(fits)!=COUNT or type(books) is not tuple or len(books)!=(COUNT if sparse and not engine else 0):
         raise ValueError('refits: every actual fit/book retained')
     if survey._digest({k:v for k,v in result.items() if k!='result_sha256'})!=result['result_sha256']:
         raise ValueError('refits: complete result hash')
     a = len(admitted['prior']['start_kg_m3'])
     for index,fit in enumerate(fits):
         current = _perturbed(admitted,result['targets_mgal'][index])
-        if sparse:
+        if engine:
+            raw = engine_pool_decode(fit)
+            status = engine._summary(raw)[0]
+            if raw['schema'] == 'gravity-corrected-unstarted-1':
+                survey._keys(raw, ('schema','status','reason','fit_rows','beta_candidate','iterations','model_kg_m3'), 'unstarted refit')
+                if (raw['iterations'] != 0 or raw['model_kg_m3'] is not None
+                    or raw['reason'] not in ('wall_cap','engine_error','nonfinite')
+                    or raw['status'] not in ('nonconverged','failed') or raw['beta_candidate'] != beta
+                    or not np.array_equal(raw['fit_rows'], rows)):
+                    raise ValueError('refits: unavailable corrected state')
+            elif engine.recipe == 'cpu3':
+                engine.engine.validate_partition(raw, current['plan']['request'], result['targets_mgal'][index],
+                    {k:current['noise'][k] for k in ('kind','values')}, current['prior'], rows, beta,
+                    policy=current['policy']['irls'], observation_rows=rows)
+            else:
+                problem = l2._build_problem(current['plan']['request'], result['targets_mgal'][index],
+                    {k:current['noise'][k] for k in ('kind','values')}, current['prior'], rows, beta,
+                    observation_rows=rows)
+                engine.engine.validate_partition(raw, problem, current['prior'], current['policy']['irls'])
+        elif sparse:
             fit=_unpack_fit(fit)
             irls._fit_metadata(fit,a,rows,beta,max_book_index=31)
             if fit['stages']!=index: raise ValueError('refits: distinct ordered book')
@@ -264,5 +306,7 @@ def validate_noise_refits(result, request, frozen):
         else:
             l2._solve_metadata(fit,a,rows,beta)
             workflow.replay_l2_fit(fit,current,rows,beta)
-        if bool(result['successful'][index])!=(fit['status']=='converged'): raise ValueError('refits: actual success mask')
+        if not engine:
+            status = fit['status']
+        if bool(result['successful'][index])!=(status=='converged'): raise ValueError('refits: actual success mask')
     return result

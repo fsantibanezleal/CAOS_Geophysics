@@ -6,11 +6,14 @@ from time import monotonic
 
 import numpy as np
 import pytest
+import choclo
+from scipy.optimize import lsq_linear
 
 import gravity_irls_original as public
 import gravity_irls_pool as pool
+import gravity_workflow_io as transport
 from test_gravity_irls import policy
-from test_gravity_l2 import tiny, noise
+from test_gravity_l2 import tiny, noise, independent_r
 from test_gravity_l2_selection import locked_request
 
 
@@ -66,16 +69,18 @@ def test_original_positive_and_null(null, record_property):
     if not null:
         # The original positive regression's absolute assertion remains literal.
         assert result['stages'][-1]['canonical_absolute_kkt'] <= 1e-12
+    public.validate_partition(result, req, observed, noise(), prior, np.arange(4, dtype=np.int64), .01,
+        policy=policy())
 
 
-def test_locked_original48_firstfold(record_property):
+def test_locked_original48_firstfold(record_property, tmp_path):
     req, _, _ = locked_request(0, 0)
     plan = req['plan']
     result = public.solve_partition(plan['request'], req['observations']['gz_up_mgal'],
         {k:req['noise'][k] for k in ('kind', 'values')}, req['prior'],
         plan['folds'][0]['fit_rows'], .0001, policy=policy(),
         observation_rows=plan['development_rows'], deadline=monotonic()+120.)
-    outcome = dict(schema='original-irls-firstfold-1', source_pin=public.SOURCE_SHA256,
+    outcome = dict(schema='original-irls-firstfold-1', accepted=False, source_pin=public.SOURCE_SHA256,
         runtime_epoch=public.RUNTIME_EPOCH, request_sha256=public.original.physics.survey._digest(req),
         terminal=result['terminal'], iterations=result['iterations'],
         calls=result['auxiliary_calls'], wall_seconds=result['wall_seconds'],
@@ -83,11 +88,55 @@ def test_locked_original48_firstfold(record_property):
         stage_statuses=[dict(index=s['index'], status=s['inner']['status'], reason=s['inner']['reason'],
             steps=s['inner']['iterations'], kkt=s['canonical_normalized_kkt'],
             weight_mismatch=s['canonical_weight_mismatch']) for s in result['stages']])
-    record_property('original_firstfold_actual', json.dumps(outcome, allow_nan=False))
     receipt = Path(os.environ['GEOPHYSICS_M02_IRLS_FIRSTFOLD_RECEIPT'])
-    with receipt.open('x', encoding='utf8') as f:
-        json.dump(outcome, f, sort_keys=True, allow_nan=False)
-    checks(result)
+    try:
+        # Preserve ALL actual states/failed trials before science/replay can fail.
+        saved = transport.publish_archive(tmp_path/'data', tmp_path/'temp', 'original48.gza',
+            dict(schema='gravity-original-partition-archive-1', request=req,
+                policy=policy(), partition=pool.encode_compact(result)))
+        outcome['native_archive'] = str(saved)
+        outcome['native_archive_sha256'] = public.hashlib.sha256(saved.read_bytes()).hexdigest()
+        checks(result)
+        public.validate_partition(result, plan['request'], req['observations']['gz_up_mgal'],
+            {k:req['noise'][k] for k in ('kind', 'values')}, req['prior'], plan['folds'][0]['fit_rows'],
+            .0001, policy=policy(), observation_rows=plan['development_rows'])
+        rows, prior = plan['folds'][0]['fit_rows'], req['prior']
+        bounds = plan['geometry']['active_cell_bounds_m']
+        j = np.array([[choclo.prism.gravity_u(*p, *b, 1.)*1e5 for b in bounds]
+                      for p in plan['request']['stations']['receivers_m'][rows]])
+        r = independent_r(bounds, prior['lengths_m'], prior['density_scale_kg_m3']/1000.)
+        positions = np.searchsorted(plan['development_rows'], rows)
+        sd = req['noise']['values'][positions]
+        whitened = j*1000./sd[:, None]
+        data = (req['observations']['gz_up_mgal'][positions]-plan['request']['background_mgal'][rows])/sd
+        reference = prior['reference_kg_m3']/1000.
+        errors = []
+        for stage in result['stages']:
+            adopted = result['models_q'][stage['adopted_row']]
+            x, epsilon = adopted-reference, stage['epsilon'][0]
+            weights = np.sqrt(float(np.max(abs(x)))**2+epsilon**2)/np.sqrt(x*x+epsilon**2)
+            np.testing.assert_allclose(weights, stage['adopted_weights'], rtol=1e-14, atol=0.)
+            factor_r = r.copy()
+            factor_r[:len(reference)] *= np.sqrt(weights)[:, None]
+            factor = np.vstack([whitened, np.sqrt(len(rows)*.0001)*factor_r])
+            rhs = np.r_[data, np.sqrt(len(rows)*.0001)*factor_r@reference]
+            oracle = lsq_linear(factor, rhs, bounds=(prior['lower_kg_m3']/1000., prior['upper_kg_m3']/1000.),
+                method='bvls', lsq_solver='exact', tol=1e-12, max_iter=1000)
+            assert oracle.success
+            q = stage['inner']['q']
+            error = q-oracle.x
+            e = dict(model_relative=float(np.linalg.norm(error)/max(1., np.linalg.norm(oracle.x))),
+                physical_model_relative=float(np.max(abs(error*1000.))/max(1., np.max(abs(oracle.x*1000.)))),
+                objective_relative=float(abs(np.linalg.norm(factor@q-rhs)**2-2*oracle.cost)/max(1., 2*oracle.cost)),
+                physical_prediction_absolute=float(np.max(abs(j@(1000.*error)))))
+            errors.append(e)
+            assert e['model_relative'] <= 1e-3 and e['physical_model_relative'] <= 1e-5
+            assert e['objective_relative'] <= 1e-6 and e['physical_prediction_absolute'] <= 1e-6
+        outcome.update(accepted=True, independent_stage_errors=errors)
+    finally:
+        record_property('original_firstfold_actual', json.dumps(outcome, allow_nan=False))
+        with receipt.open('x', encoding='utf8') as f:
+            json.dump(outcome, f, sort_keys=True, allow_nan=False)
 
 
 def test_closed_no_callback_or_post_disposal_action():
@@ -98,5 +147,6 @@ def test_closed_no_callback_or_post_disposal_action():
     owner = public.GravityIRLSPartition(req, obs, noise(), prior, np.arange(4, dtype=np.int64), .01,
         deadline=monotonic()+120.)
     owner.close()
+    assert owner.problem is owner.prior is owner.noise is owner.positions is None
     with pytest.raises(ValueError, match='disposed'):
         owner.initialize()

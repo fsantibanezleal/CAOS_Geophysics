@@ -245,6 +245,11 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
     native_evidence = []
     q = initialization['model_kg_m3']/1000. if initialization['model_kg_m3'] is not None else None
     initial = plain._initial_thresholds(problem, initialization, policy)
+    if original_owner is not None:
+        native_initial = original_owner.initial_evidence
+        models = [row.copy() for row in native_initial['trace']['models_q']]
+        q = None if native_initial['q'] is None else native_initial['q'].copy()
+        initial = None if native_initial['status'] != 'converged' else original_owner.thresholds(policy, q)
     previous_weights = None
     status, reason = initialization['status'], initialization['reason']
     n = problem['simulation'].G.shape[0]
@@ -416,14 +421,27 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
 
 def validate_partition(result, problem, prior, policy):
     """Reconstruct physics/actions without CG/optimization; reject rehashed lies."""
+    return _validate_partition(result, problem, prior, policy)
+
+
+def _validate_partition(result, problem, prior, policy, *, original_owner=None):
     plain.l2._result_native_metadata(dict(result=result, prior=prior, policy=policy))
-    plain.survey._keys(result, ('schema', 'runtime_epoch', 'policy', 'source_inventory', 'problem_sha256',
+    keys = ('schema', 'runtime_epoch', 'policy', 'source_inventory', 'problem_sha256',
         'initialization', 'initial_epsilon', 'stages', 'attempts', 'models_q', 'event_kinds', 'event_stages',
         'iterations', 'auxiliary_calls', 'residual_evaluations', 'model_kg_m3', 'wall_seconds', 'terminal',
-        'result_sha256'), 'corrected partition')
+        'result_sha256')
+    expected = ('gravity-irls-corrected-partition-1', RUNTIME_EPOCH, POLICY, _SOURCES)
+    if original_owner is not None:
+        import gravity_irls_original as prospective
+        if type(original_owner) is not prospective.GravityIRLSPartition or original_owner.problem is not problem:
+            raise ValueError('corrected replay: exact closed physical owner')
+        original_owner.check()
+        keys += ('initialization_evidence', 'native_evidence', 'allocation_plan')
+        expected = ('gravity-irls-original-partition-1', prospective.RUNTIME_EPOCH,
+                    prospective.POLICY, original_owner.inventory)
+    plain.survey._keys(result, keys, 'corrected partition')
     policy = plain._validate_policy(policy)
-    if (result['schema'] != 'gravity-irls-corrected-partition-1' or result['runtime_epoch'] != RUNTIME_EPOCH
-        or result['policy'] != POLICY or result['source_inventory'] != _SOURCES
+    if ((result['schema'], result['runtime_epoch'], result['policy'], result['source_inventory']) != expected
         or result['problem_sha256'] != _problem_hash(problem, prior, policy)
         or result['result_sha256'] != plain.survey._digest({k:v for k,v in result.items() if k != 'result_sha256'})):
         raise ValueError('corrected replay: exact source/epoch/input/result binding')
@@ -440,12 +458,27 @@ def validate_partition(result, problem, prior, policy):
     init = result['initialization']
     plain.l2._validate_solve_state(init, init['fit_rows'])
     prefix = init['trace']['models_kg_m3']/1000.
+    if original_owner is not None:
+        import gravity_irls_pool as pool
+        evidence = pool.decode(result['initialization_evidence'])
+        prefix = evidence['trace']['models_q']
     if not np.array_equal(models[:len(prefix)], prefix):
         raise ValueError('corrected replay: actual native initialization prefix')
-    if result['initial_epsilon'] != plain._initial_thresholds(problem, init, policy):
+    thresholds = (plain._initial_thresholds(problem, init, policy) if original_owner is None else
+        None if evidence['status'] != 'converged' else original_owner.thresholds(policy, evidence['q']))
+    if result['initial_epsilon'] != thresholds:
         raise ValueError('corrected replay: original thresholds')
     deadline = monotonic()+1800.
-    _replay_native(init, problem, lower, upper, deadline, physical_initialization=True)
+    if original_owner is None:
+        _replay_native(init, problem, lower, upper, deadline, physical_initialization=True)
+    else:
+        import gravity_irls_pool as pool
+        evidence = pool.decode(result['initialization_evidence'])
+        if (type(result['native_evidence']) is not tuple or len(result['native_evidence']) != len(stages)
+            or result['allocation_plan'] != original_owner.allocation or result['wall_seconds'] > 120.):
+            raise ValueError('original replay: original allocation/time/phase ledger')
+        original_owner.replay_native(evidence, problem, prior['start_kg_m3']/1000., 0,
+                                     None, init, physical=True)
     if len(models):
         if result['model_kg_m3'] is None or not np.array_equal(result['model_kg_m3'], models[-1]*1000.):
             raise ValueError('corrected replay: actual physical terminal')
@@ -590,7 +623,11 @@ def validate_partition(result, problem, prior, policy):
         if not np.array_equal(segment, inner['trace']['models_q']) and not (
             not len(inner['trace']['models_q']) and inner['status'] != 'converged' and inner['iterations'] == 0):
             raise ValueError('corrected replay: native versus auxiliary model lineage')
-        _replay_native(inner, stage['problem'], lower, upper, deadline)
+        if original_owner is None:
+            _replay_native(inner, stage['problem'], lower, upper, deadline)
+        else:
+            original_owner.replay_native(pool.decode(result['native_evidence'][index]),
+                stage['problem'], q, index, stage, inner)
         native_initial = stage['problem']['misfit'].deriv(q)+problem['beta_engine']*stage['problem']['regularization'].deriv(q)
         if row['initial_gradient_norm'] != max(1., float(np.linalg.norm(native_initial, np.inf))):
             raise ValueError('corrected replay: native gradient normalization')

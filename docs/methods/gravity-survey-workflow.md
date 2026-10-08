@@ -23,6 +23,12 @@ This corrected workflow uses the same calibrate/verify/evaluate commands below;
 its evaluation request is `gravity-survey-irls-corrected-evaluation-request-1`.
 Corrected refit command and online/UI acceptance remain separate gates.
 
+The separately source-owned [original-noise reduced quadratic and IRLS contract](gravity-survey-original-quadratic.md)
+defines cpu3 initialization, fixed-stage native solves, stronger active/free
+accuracy bounds, exact source replay and whole-IRLS resource ownership. Its
+schemas are distinct from plain/cpu2 archives. It neither changes the historical
+failure nor grants full-matrix, field, host or API acceptance by analogy.
+
 The [integration manifest](../data-contract/03_gravity-survey-native-integration.md)
 lists exact native exports and the proposed owner API/isolated UI mounting
 contract. Protected profiles, queued M08 and other methods remain in the existing

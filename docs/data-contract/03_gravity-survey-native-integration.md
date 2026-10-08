@@ -10,6 +10,9 @@ files over the controller's current dispatcher.
 | Geometry plan | `gravity_survey_l2.plan_gravity_l2` | `gravity-survey-l2-plan-request-1`; no measurements |
 | L2 calibration | `gravity_l2.calibrate_gravity_l2` | `gravity-survey-l2-calibration-request-1`; epoch `m02-survey-l2-cpu-5` |
 | IRLS calibration | `gravity_irls.calibrate_gravity_irls` | `gravity-survey-irls-calibration-request-1`; epoch `m02-survey-irls-cpu-1` |
+| Original-noise corrected IRLS | `gravity_irls_original.calibrate`, `validate` | Original-calibration-request/result-1; epoch `m02-survey-irls-cpu-3`, distinct from old archives |
+| Original-noise fixed partition | `gravity_irls_original.solve_partition`, `validate_partition` | Original physical request/observations/noise/prior/rows/beta/policy; no supplied operator or callback |
+| Original-noise frozen outer | `gravity_irls_original.evaluate` | Original-evaluation-request/result-1, complete frozen request/result; no optimization |
 | Calibration replay | `gravity_workflow_io.verify_calibration` | `gravity-calibration-archive-1`, complete original request/result |
 | Frozen outer evaluation | `gravity_workflow_io.evaluate` | L2 evaluation-request-2 or IRLS evaluation-request-3, including original calibration request |
 | Outer replay | `gravity_workflow_io.verify_evaluation` | `gravity-evaluation-archive-1`; no optimizer |
@@ -23,6 +26,13 @@ CLI: `scripts/run_gravity_survey.py`. Verifier:
 and [calibration contract](../design/features/m02-survey-l2/contract.md) define
 units, correction/source provenance, geometry, rows, noise, prior and policy.
 No caller-supplied engine, simulation, default CRS or guessed errors are allowed.
+
+The exact original-noise schemas, physical factor nesting, native cap accounting
+and source-original terminal proof are specified in the
+[closed quadratic/IRLS handbook](../methods/gravity-survey-original-quadratic.md).
+This source contract is not permission to consume a new source, native binary,
+online host, M11 compiled model or nonlinear objective. Runtime-source identities
+are not interchangeable across these exports or their historical receipts.
 
 ## Controller mounting requirements
 

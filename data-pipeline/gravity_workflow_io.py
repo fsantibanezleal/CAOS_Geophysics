@@ -319,6 +319,9 @@ def verify_calibration(value):
     elif schema == 'gravity-survey-irls-corrected-calibration-result-1':
         from gravity_irls_corrected_workflow import validate
         validate(value['result'], value['request'])
+    elif schema == 'gravity-survey-irls-original-calibration-result-1':
+        from gravity_irls_original import validate
+        validate(value['result'], value['request'])
     else: raise ValueError('archive: unsupported calibration method')
     return value
 
@@ -335,6 +338,9 @@ def evaluate(value):
     if schema == 'gravity-survey-irls-corrected-evaluation-request-1':
         from gravity_irls_corrected_workflow import evaluate as corrected_evaluate
         return corrected_evaluate(value)
+    if schema == 'gravity-survey-irls-original-evaluation-request-1':
+        from gravity_irls_original import evaluate as original_evaluate
+        return original_evaluate(value)
     raise ValueError('archive: complete original calibration request required for evaluation')
 
 
@@ -388,6 +394,9 @@ def main(argv=None):
         elif schema == 'gravity-survey-irls-calibration-request-1': result = irls.calibrate_gravity_irls(value)
         elif schema == 'gravity-survey-irls-corrected-calibration-request-1':
             from gravity_irls_corrected_workflow import calibrate
+            result = calibrate(value)
+        elif schema == 'gravity-survey-irls-original-calibration-request-1':
+            from gravity_irls_original import calibrate
             result = calibrate(value)
         else: raise ValueError('archive: unsupported calibration request')
         output = {'schema':'gravity-calibration-archive-1','request':value,'result':result}
