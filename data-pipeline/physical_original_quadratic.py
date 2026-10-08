@@ -23,6 +23,7 @@ SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 RESERVE_BYTES = 8*1024**2
 ENDPOINT_PAIR_BYTES = 2048
 ALLOCATION_EPOCH = 'original-source-disjoint-native-factory-certificate-1'
+SOURCE_PHASE_NATIVE_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-10'
 
 
 def _owned_source_allocation(n, m, a, covariance, payload, arithmetic):
@@ -73,6 +74,15 @@ class OriginalQuadraticOperands:
     terms: tuple
     prediction_sensitivity: np.ndarray
     prediction_projection: np.ndarray | None
+
+
+@dataclass(frozen=True)
+class SourcePhaseQuadraticOperands(OriginalQuadraticOperands):
+    """Separate source10 DTO, same physical operands and no caller phase flag.
+
+    OriginalQuadraticOperands keeps its exact historical conservative formula.
+    This closed literal DTO qualifies only the owned original-source phases.
+    """
 
 
 def _map_metadata(matrix, projection, rows, a, source):
@@ -133,7 +143,8 @@ def _csr_metadata(v, rows, cols, maximum):
 def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
     """Dimensions/storage/accounting BEFORE scans, factor checks or arithmetic."""
     a, m = _identity_metadata(identity)
-    if (type(o) is not OriginalQuadraticOperands or type(o.binding) is not owned.OperandBinding
+    if (type(o) not in (OriginalQuadraticOperands, SourcePhaseQuadraticOperands)
+        or type(o.binding) is not owned.OperandBinding
         or type(o.whitening) is not OriginalWhitening
         or identity['mode'] != 'fixed_linear_quadratic'
         or type(o.source_components) is not int or not m <= o.source_components <= 2048
@@ -142,6 +153,8 @@ def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
         or type(resource_limit_bytes) is not int or not 0 < resource_limit_bytes <= 2*1024**3
         or type(admitted_bytes) is not int or not 0 < admitted_bytes <= resource_limit_bytes):
         raise ValueError('original quadratic: closed source/count/mode/budget')
+    if type(o) is SourcePhaseQuadraticOperands and identity['runtime_epoch'] != SOURCE_PHASE_NATIVE_EPOCH:
+        raise ValueError('original quadratic: literal source10 original phase DTO epoch')
     _map_metadata(o.sensitivity, o.projection, m, a, o.source_components)
     if o.projection is not None and identity['observation_components'] != 1:
         raise ValueError('original quadratic: grouped3 projection produces scalar observations')
@@ -195,9 +208,15 @@ def validate(o, identity, q, *, deadline, resource_limit_bytes, admitted_bytes):
         endpoint_bytes=ENDPOINT_PAIR_BYTES*(6*a+6*o.source_components+4*maximum_term_rows),
         native_row_scratch_bytes=8*16*(a+o.source_components+maximum_term_rows), metadata_bytes=32768)
     arithmetic_phase_bytes = sum(phase.values())
-    owned_phases = _owned_source_allocation(o.source_components, m, a,
-        covariance, payload, phase)
-    maximum = owned_phases['maximum']
+    owned_phases = None
+    if type(o) is SourcePhaseQuadraticOperands:
+        owned_phases = _owned_source_allocation(o.source_components, m, a,
+            covariance, payload, phase)
+        maximum = owned_phases['maximum']
+    else:
+        # Keep the source9/old DTO maximum and refusal assertions literally
+        # unchanged. No historical resource/test result is relabeled source10.
+        maximum = allocation['maximum']+max(RESERVE_BYTES, arithmetic_phase_bytes)
     if payload > RESERVE_BYTES or maximum > admitted_bytes:
         raise ValueError('original quadratic: source-bound original phases plus operand reserve')
     if monotonic() > deadline:

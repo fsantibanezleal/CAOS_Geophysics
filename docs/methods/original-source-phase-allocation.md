@@ -1,5 +1,13 @@
 # Original-source factory and certificate allocation
 
+The literal `SourcePhaseQuadraticOperands` DTO identifies this prospective
+source10 path. It has the same frozen physical fields as the historical
+`OriginalQuadraticOperands`, with no phase flag, caller byte claim or callback.
+Its canonical native runtime epoch is checked before arithmetic. The original
+DTO keeps its exact conservative maximum and one-byte-short refusal, so
+historical resource assertions and receipts are not reinterpreted. The public
+magnetic owner constructs the new DTO from its actual unchanged native source.
+
 This versioned fixed-quadratic numerical path retains the complete original
 native source reserve and the numeric kernel's setup/action dictionaries. It
 does not reduce a scientific or host memory limit from an observed RSS value.

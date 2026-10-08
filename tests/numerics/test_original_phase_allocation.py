@@ -1,12 +1,21 @@
 """No-fit source-owned phase controls; not RSS, native or method acceptance."""
-from dataclasses import replace
+from dataclasses import replace, fields
 from time import monotonic
 
 import pytest
 
 import magnetic_original_optimizer as magnetic
 import physical_original_quadratic as source
-from test_physical_original_quadratic import operands
+from test_physical_original_quadratic import operands as historical_operands
+
+
+def operands():
+    old, identity, q = historical_operands()
+    identity = dict(identity, runtime_epoch=source.SOURCE_PHASE_NATIVE_EPOCH)
+    value = source.SourcePhaseQuadraticOperands(**{field.name: getattr(old, field.name)
+        for field in fields(old)})
+    value = replace(value, binding=source.owned.binding_for(identity, q))
+    return value, identity, q
 
 
 @pytest.mark.parametrize('components,fit', [(3, 432), (3, 648), (1, 144), (1, 216)])
@@ -112,3 +121,55 @@ def test_actual_endpoint_capacity_and_new_allocation_identity_not_self_approval(
     with pytest.raises(ValueError, match='source/model binding'):
         source.validate(changed, identity, q, deadline=monotonic()+120.,
             resource_limit_bytes=805306368, admitted_bytes=805306368)
+
+
+def test_explicit_source10_dto_does_not_upgrade_original_dto_or_wrong_epoch():
+    historical, identity, q = historical_operands()
+    kwargs = dict(deadline=monotonic()+120., resource_limit_bytes=805306368, admitted_bytes=805306368)
+    old = source.validate(historical, identity, q, **kwargs)
+    assert old['owned_source_phases'] is None
+    assert old['maximum'] == old['original']['maximum']+max(8*1024**2, sum(old['arithmetic_phase'].values()))
+    prospective, current, point = operands()
+    new = source.validate(prospective, current, point, **kwargs)
+    assert new['maximum'] == new['owned_source_phases']['maximum']
+    assert new['owned_source_phases']['epoch'] == source.ALLOCATION_EPOCH
+    changed = replace(prospective, binding=source.owned.binding_for(identity, q))
+    with pytest.raises(ValueError, match='literal source10 original phase DTO epoch'):
+        source.validate(changed, identity, q, **kwargs)
+    class Foreign(source.SourcePhaseQuadraticOperands):
+        pass
+    wrong = Foreign(**{field.name: getattr(prospective, field.name) for field in fields(prospective)})
+    with pytest.raises(ValueError, match='closed source/count'):
+        source.validate(wrong, current, point, **kwargs)
+
+
+def test_source10_native_residual_epoch_owns_proof_without_old_fallback(monkeypatch):
+    # New prospective epoch contract. The historical source9 contract/assertion
+    # remains unmodified and belongs to its independently pinned source9 node.
+    import numpy as np
+    import physical_original_optimizer as optimizer
+    from test_physical_original_optimizer import native_control, binding_for, assert_caps
+    control = native_control()
+    objective, *_ = control.make(control.physical.__wrapped__(), 'secondary_enu_nT', False)
+    def forbidden(*args, **kwargs):
+        pytest.fail('source10 residual production cannot select old Neumann terminal')
+    monkeypatch.setattr(optimizer.accuracy, 'OwnedOriginalTerminal', forbidden)
+    started = monotonic()
+    try:
+        result = magnetic.solve_magnetic_original(objective, np.zeros(7), source_components=90,
+            budget=optimizer.ConditionedBudget(started+120., 200, 805306368, 805306368, objective.allocation),
+            binding=binding_for(objective), terminal=source.owned.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6))
+        assert result['status'] == 'converged', result['reason']
+        assert_caps(result, monotonic()-started)
+        assert result['runtime_epoch'] == source.SOURCE_PHASE_NATIVE_EPOCH
+        assert result['policy'] == 'closed-original-noise-reduced-joseph-free-face-residual-owned-phases-3'
+        assert result['source_binding']['original_residual_terminal'] == optimizer.RESIDUAL_TERMINAL_SHA256
+        for row in result['terminal_audits']:
+            if row['check'] is not None:
+                check = row['check']
+                assert check['proof_basis'] == 'original_physical_residual_strong_convexity'
+                assert check['actions'] == (1 if check['free_indices'] else 0) and check['disposed']
+                original = check['allocation']['original']
+                assert original['owned_source_phases']['epoch'] == source.ALLOCATION_EPOCH
+    finally:
+        objective.release_state()

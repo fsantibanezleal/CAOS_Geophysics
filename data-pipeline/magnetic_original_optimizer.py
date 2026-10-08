@@ -106,7 +106,7 @@ class _MagneticDTO:
             if o.factor is not None else original.OriginalWhitening('diagonal_sd', o.noise['values'].ravel()))
         terms = tuple(owned.QuadraticTerm(t['alpha'], sp.diags(t['weights'], format='csr'),
             t['derivative']) for t in o.regularizer.terms())
-        return original.OriginalQuadraticOperands(owned.binding_for(self.identity(), q),
+        return original.SourcePhaseQuadraticOperands(owned.binding_for(self.identity(), q),
             self.source_components, g, projection, whitening, o.observed.ravel(),
             o.regularizer.reference, o.lower, o.upper, 1., o.beta, terms, g, projection)
 
