@@ -55,17 +55,29 @@ def main():
             dispatcher_lock=lock,occupancy=occupancy,argv=command,magnetic_value_access='not_opened',
             original_data_access='not_opened',native_fit_count=0,host_admission='not_established')))
         started=time.perf_counter()
-        completed=subprocess.run(command,cwd=Path(__file__).resolve().parents[1],check=False,timeout=45)
+        # Store activation can expand an absent SystemDrive literally. Its
+        # platform cache must then land in the external counted bootstrap, not
+        # the source checkout, before the script itself starts.
+        completed=subprocess.run(command,cwd=output,check=False,timeout=45)
         if completed.returncode:return completed.returncode
         receipt=base.strict_json(read(output/'native-context-result.json'))
         require(receipt['verdict']=='component_pass' and receipt['native_fit_count']==0 and
                 receipt['original_data_access']=='not_opened' and receipt['native_parent_image']['sha256']==IMAGE_SHA)
-        core._write_member(output,'parent-context-drain.json',base.canonical_bytes(dict(
-            schema='m03-native-parent-context-drain/1',bootstrap_exit=completed.returncode,
+        drain=dict(
+            schema='m03-native-parent-context-drain/2',bootstrap_exit=completed.returncode,
             bootstrap_wall_s=time.perf_counter()-started,receipt_sha256=base.digest(receipt),
             scientific_job_active_processes=receipt['lifetime']['active_processes'],
             scientific_job_total_processes=receipt['lifetime']['total_processes'],
-            bootstrap_not_scientific_child=True,host_admission='not_established')))
+            bootstrap_not_scientific_child=True,host_admission='not_established',bootstrap_owned_bytes=0)
+        size=runtime.owned_bytes(output)
+        for _ in range(8):
+            exact=size+len(base.canonical_bytes(drain))
+            if drain['bootstrap_owned_bytes']==exact:break
+            drain['bootstrap_owned_bytes']=exact
+        else:require(False)
+        require(drain['bootstrap_owned_bytes']<=16*1024**2)
+        core._write_member(output,'parent-context-drain.json',base.canonical_bytes(drain))
+        require(runtime.owned_bytes(output)==drain['bootstrap_owned_bytes'])
         print(json.dumps(receipt,sort_keys=True),flush=True)
         return 0
     require(sys.version_info[:3]==(3,12,10) and output.is_dir())

@@ -35,6 +35,14 @@ That expected refusal is a component prerequisite, not scientific success.
 The bootstrap has a separate 45-second deadline. Its wall time, exit and
 receipt digest are retained separately; it is not subtracted from a later
 native lifetime or counted as the scientific Job's child. The prerequisite
+launches the Store parent from its external owned output directory before
+interpreter initialization. Platform activation caches therefore cannot land
+in the source checkout. The version-2 bootstrap drain separately inventories
+all bytes in that directory, including its own serialized receipt and any
+platform cache. An exact serialization fixed point and an independent final
+inventory must agree within the existing 16 MiB prerequisite ceiling.
+This outer inventory is not substituted for scientific-child scratch.
+The prerequisite
 opens no CSV, array, magnetic value or outer partition. Missing executable,
 failed process creation, incorrect refusal, unknown drain or counter failure
 cannot become a PASS. No zero lifetime is invented for an uncreated process.
@@ -76,3 +84,7 @@ la pertenencia al Job antes de rechazar el plan vacio. El rechazo esperado
 prueba solamente el inicio contenido. No abre datos ni modifica los 97
 ajustes, tolerancias o fallos predictivos anteriores. Los contadores ausentes
 nunca se inventan y el despliegue sigue siendo una validacion independiente.
+El padre se inicia desde su directorio externo antes de activar el interprete.
+El recibo version 2 cuenta todos los bytes del inicio, incluidas las caches
+de plataforma y el propio recibo, con el mismo limite de 16 MiB. Este conteo
+no reemplaza los contadores independientes del trabajador cientifico.

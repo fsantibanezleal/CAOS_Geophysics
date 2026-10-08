@@ -99,7 +99,7 @@ def native_startup_receipt(root):
     core._closed(receipt,'schema verdict native_parent_image parent_redirector_sha256 lifetime expected_worker_refusal '
         'source_sha256 occupancy native_fit_count original_data_access magnetic_value_access host_admission','replay')
     core._closed(drain,'schema bootstrap_exit bootstrap_wall_s receipt_sha256 scientific_job_active_processes '
-        'scientific_job_total_processes bootstrap_not_scientific_child host_admission','replay')
+        'scientific_job_total_processes bootstrap_not_scientific_child host_admission bootstrap_owned_bytes','replay')
     lifetime=receipt['lifetime']
     require(type(receipt['native_fit_count']) is int and
         all(type(lifetime[key]) is int for key in ('exit_code','active_processes','total_processes',
@@ -117,9 +117,11 @@ def native_startup_receipt(root):
         0<lifetime['cpu_s']<=10 and 0<lifetime['wall_s']<=30 and 0<=lifetime['parent_cpu_s']<=10 and
         0<lifetime['peak_rss_bytes']<=512*1024**2 and 0<lifetime['peak_committed_bytes']<=512*1024**2 and
         0<lifetime['scratch_bytes']<=16*1024**2 and lifetime['stop_cpu_s'] is None and lifetime['stop_wall_s'] is None and
-        drain['schema']=='m03-native-parent-context-drain/1' and drain['bootstrap_exit']==0 and
+        drain['schema']=='m03-native-parent-context-drain/2' and drain['bootstrap_exit']==0 and
         drain['receipt_sha256']==base.digest(receipt) and drain['scientific_job_active_processes']==0 and
-        drain['scientific_job_total_processes']==1 and drain['bootstrap_not_scientific_child'] is True)
+        drain['scientific_job_total_processes']==1 and drain['bootstrap_not_scientific_child'] is True and
+        type(drain['bootstrap_owned_bytes']) is int and
+        0<drain['bootstrap_owned_bytes']<=16*1024**2 and runtime.owned_bytes(root)==drain['bootstrap_owned_bytes'])
     pins=execution.source_identity()
     require(all(lifetime['source_sha256'].get(name)==pin for name,pin in pins.items()))
     return receipt
@@ -158,7 +160,7 @@ def main():
             source_sha256=sha256(Path(__file__).read_bytes()).hexdigest(),native_image_sha256=IMAGE_SHA,
             parent_redirector_sha256=PARENT_SHA,host_admission='not_established')))
         started=time.perf_counter()
-        completed=subprocess.run(command,cwd=PRODUCT,check=False,timeout=1750)
+        completed=subprocess.run(command,cwd=bootstrap,check=False,timeout=1750)
         core._write_member(bootstrap,'drain.json',base.canonical_bytes(dict(schema='m03-qr-native-parent-drain/1',
             bootstrap_exit=completed.returncode,bootstrap_wall_s=time.perf_counter()-started,
             bootstrap_not_scientific_child=True,host_admission='not_established')))
