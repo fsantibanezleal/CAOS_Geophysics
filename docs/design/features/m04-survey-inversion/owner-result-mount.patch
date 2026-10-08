@@ -1,0 +1,33 @@
+diff --git a/app/processing.py b/app/processing.py
+--- a/app/processing.py
++++ b/app/processing.py
+@@ -115,9 +115,14 @@
+-def _result_payload(settings: Settings, job: ProcessingJob) -> dict:
++def _result_payload(settings: Settings, job: ProcessingJob, *, magnetic_context: dict | None = None) -> dict:
+     if job.state != "succeeded" or not job.result_key or not job.result_sha256 or job.result_bytes is None:
+         raise ApiError(409, "result_not_ready", "Processing result is not available")
+     expected_key = result_key(str(job.owner_id), job.project_id, job.id)
+     if job.result_key != expected_key:
+         raise ApiError(409, "derived_integrity_failed", "Result storage identity differs from its receipt")
+     payload = verified_json(settings, expected_key, job.result_sha256, job.result_bytes)
++    from app.magnetic_results import LOCAL_MAGNETIC_METHOD_ID, validate_owned_magnetic_result
++    if job.method_id == LOCAL_MAGNETIC_METHOD_ID:
++        if magnetic_context is None:
++            raise ApiError(409, "magnetic_result_unavailable", "Reviewed durable magnetic owner context required")
++        return validate_owned_magnetic_result(payload, **magnetic_context)
+     validate_result_identity(payload, job)
+     return payload
+@@ -400,4 +405,11 @@
+         job = await _owned_job(session, project_id, job_id, user)
+-        return JSONResponse(_result_payload(settings, job), headers={"Cache-Control": "no-store"})
++        from app.magnetic_results import LOCAL_MAGNETIC_METHOD_ID
++        context = None
++        if job.method_id == LOCAL_MAGNETIC_METHOD_ID:
++            dataset = await _owned_dataset(session, project_id, job.dataset_id, user)
++            _dataset_payload(settings, dataset)
++            binding = job.preflight.get("magnetic_binding")
++            context = dict(user=user, job=job, dataset=dataset, expected_binding=binding)
++        return JSONResponse(_result_payload(settings, job, magnetic_context=context), headers={"Cache-Control": "no-store"})
+-
++
+     @router.get("/jobs/{job_id}/export")

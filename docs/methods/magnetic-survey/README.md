@@ -3,6 +3,12 @@
 [Exact nonlinear composition](07_nonlinear-composition.md) documents the reviewed
 public single-SI seam, independent exact/PSD Hessians and unchanged norm proof.
 
+[Complete field and native gates](08_complete-field-and-native-gates.md) retains
+full-input finite-cap failures and actual resource/cancellation claim boundaries.
+[Verified result views and numeric export / Vistas y exportación verificadas](09_result-views-and-export.md)
+describes the owned local replay, physical voxels, spectrum, complete numeric ZIP
+and the unapplied authenticated-parent mount proposal, not live integration.
+
 [Recorded independent acquisition controls / Controles independientes](02_acquisition-controls.md)
 describe the executable authored Choclo/Decimal/PCG64 inputs, not fitted inverse
 success or field acceptance.
