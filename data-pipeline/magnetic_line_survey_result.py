@@ -154,9 +154,11 @@ def assemble_fixed_result(workspace,sealed,measurements,corrected,fitted,grids,m
     from magnetic_line_survey_runtime import require_job
     require_job(job_handle)
     workspace=io.external_path(workspace)
-    metadata=v1.validate('SurveyInput',metadata)
-    request=v1.validate('SurveyRequest',request)
-    _check(fitted['evaluation_count']==1 and fitted['fit']['fit_count']==25 and
+    resolution=request.get('schema')=='magnetic-line-survey-request/2'
+    contract=schema if resolution else v1
+    metadata=contract.validate('SurveyInput',metadata)
+    request=contract.validate('SurveyRequest',request)
+    _check(fitted['evaluation_count']==1 and fitted['fit']['fit_count']==(97 if resolution else 25) and
         grids['geometry_sha256']==base.digest(sealed['geometry']) and
         grids['fit_sha256']==base.digest(fitted) and grids['request_sha256']==base.digest(request))
     _check([edge['operation'] for edge in corrected['edges']]==[op['operation'] for op in request['operations']])
@@ -180,6 +182,10 @@ def assemble_fixed_result(workspace,sealed,measurements,corrected,fitted,grids,m
     inventory=dict(original_rows=n,retained=counts[0],invalid=counts[1],excluded=counts[2],
         disposition=dispositions.finish(identity),reasons=flag_ref,flags=flag_ref)
     parts=sealed['partitions']['partitions']
+    if resolution:
+        selected_geometry=fitted['fit']['selected_source_geometry_index']
+        parts=[dict(part,source_members=sealed['geometry']['source_maps'][selected_geometry*4+fold]['source_members'])
+            for fold,part in enumerate(parts)]
     partitions=dict(seal_sha256=base.digest(sealed['geometry']),final_training=parts[0]['training'],
         outer_validation=parts[0]['validation'],exclusions=parts[0]['exclusions'],
         inner=[dict(fold_id=part['fold_id'],**{key:part[key] for key in ('training','validation','exclusions','source_members')})
@@ -189,10 +195,12 @@ def assemble_fixed_result(workspace,sealed,measurements,corrected,fitted,grids,m
         numerical_success=True,reasons=['Convergence is not predictive or field acceptance'])
     # The original S1 quality rule is unchanged and is not reused as a field
     # uncertainty or as a new acceptance target for other controls.
-    if metadata['authored_control'] is not None and metadata['authored_control']['regime']=='S1':
+    if not resolution and metadata['authored_control'] is not None and metadata['authored_control']['regime']=='S1':
         verdict='pass' if fitted['rmse_nT']<=max(1e-6,.05*fitted['signal_rms_nT']) else 'fail'
         predictive['overall']=predictive['gates'][0]['verdict']=verdict
         predictive['gates'][0]['reason']='Original S1 5-percent signal RMS criterion; opened diagnostic acquisition'
+    if resolution:
+        predictive['gates'][0]['reason']='Opened authored v2 diagnostic; no independent prospective predictive acceptance'
     evaluation=dict(observed=fitted['outer_arrays'][0],predicted=fitted['outer_arrays'][1],residual=fitted['outer_arrays'][2],
         **{key:fitted[key] for key in ('scored','excluded','coverage','signal_rms_nT','rmse_nT','per_line')},
         comparison=None,verdict=predictive)
@@ -210,7 +218,7 @@ def assemble_fixed_result(workspace,sealed,measurements,corrected,fitted,grids,m
     # Geometric crossing pairs remain identified as geometry, without inventing
     # corrected differences or training offsets where none was requested.
     crossovers=sealed['crossovers']['table']
-    result=dict(schema='magnetic-line-survey-result/2',policy_epoch='fixed_basis_v1',run_id=run_id,
+    result=dict(schema='magnetic-line-survey-result/2',policy_epoch='resolution_v2' if resolution else 'fixed_basis_v1',run_id=run_id,
         lane='local_synthetic' if metadata['source_kind']=='original_synthetic_acquisition' else 'local_user',
         input=dict(dataset_sha256=request['dataset_version_sha256'],original=original,metadata=metadata_file,
             arrays=metadata['arrays']+measurements['arrays'],auxiliary_identities=aux),request=request_file,
@@ -235,6 +243,10 @@ def assemble_fixed_result(workspace,sealed,measurements,corrected,fitted,grids,m
             _pack(root,[ref],output)
     # Retain reference definition originals as explicit actual source members.
     extra=[]
+    if resolution:
+        proof=sealed['capacity_proof']
+        payload=core._verified_member(workspace/'sealed',proof,set(),4194304)
+        extra.append(core._write_member(output,proof['name'],payload))
     for operation,definition in reference_definitions.items():
         payload=core._verified_member(io.external_path(auxiliary_roots[operation]),definition,set(),4194304)
         name=operation+'-source.json'
@@ -274,11 +286,11 @@ def verify_result(root,result=None,*,temp_root,allow_uncommitted=False,job_handl
     if result is not None:
         _check(stored==result)
     result=schema.validate('SurveyResult',stored)
-    if result['policy_epoch']!='fixed_basis_v1':
-        raise core.SurveyError('unsupported_operation','replay')
+    resolution=result['policy_epoch']=='resolution_v2'
+    contract=schema if resolution else v1
     reader=representation.Reader(root)
-    metadata=v1.validate('SurveyInput',base.strict_json(reader.member(result['input']['metadata'])))
-    request=v1.validate('SurveyRequest',base.strict_json(reader.member(result['request'])))
+    metadata=contract.validate('SurveyInput',base.strict_json(reader.member(result['input']['metadata'])))
+    request=contract.validate('SurveyRequest',base.strict_json(reader.member(result['request'])))
     _check(result['input']['original']==metadata['original']==result['geometry']['original'])
     _check(result['input']['dataset_sha256']==request['dataset_version_sha256']==base.dataset_identity(
         metadata['original']['csv_sha256'],base.digest(metadata)))
@@ -380,18 +392,26 @@ def verify_result(root,result=None,*,temp_root,allow_uncommitted=False,job_handl
                     'WHERE (i.sensor=? AND p.pos IS NULL) OR (i.sensor!=? AND p.pos IS NOT NULL) LIMIT 1',
                     (f,selected[0],selected[0])).fetchone())
             db.commit()
+            if resolution:
+                from magnetic_line_survey_resolution_geometry import verify_result_maps
+                verify_result_maps(reader,result,metadata,request,db)
         except sqlite3.IntegrityError:
             raise core.SurveyError('custody_mismatch','replay') from None
         finally:
             db.close()
     fit=result['fit']
-    _check(fit['solver']==request['solver'] and fit['fit_count']==25 and fit['candidates']['row_schema']=='candidate_fit')
+    _check(fit['solver']==request['solver'] and fit['fit_count']==(97 if resolution else 25) and
+        fit['candidates']['row_schema']==('candidate_fit_v2' if resolution else 'candidate_fit'))
     candidates=list(reader.table(fit['candidates']))
     expected=list(itertools.product(request['equivalent_sources']['depth_candidates_m'],
         request['equivalent_sources']['damping_candidates'],[fold['fold_id'] for fold in folds[1:]]))
-    _check(len(candidates)==24 and [(row['depth_m'],row['damping'],row['fold_id']) for row in candidates]==expected)
+    if resolution:
+        expected=[(g,*identity) for g in range(4) for identity in expected]
+    _check(len(candidates)==(96 if resolution else 24) and
+        [(row['source_geometry_index'],row['depth_m'],row['damping'],row['fold_id']) if resolution else
+         (row['depth_m'],row['damping'],row['fold_id']) for row in candidates]==expected)
     scores=[]
-    for index in range(0,24,3):
+    for index in range(0,len(candidates),3):
         group=candidates[index:index+3]
         for row,fold in zip(group,folds[1:],strict=True):
             _check(row['scored']>0 and row['scored']+row['excluded']==fold['validation']['shape'][0] and
@@ -399,10 +419,18 @@ def verify_result(root,result=None,*,temp_root,allow_uncommitted=False,job_handl
             _check(row['verdict']['gates']==[dict(gate_id='solve',verdict='pass',evidence_sha256=base.digest(row['solve']),reason=None)])
         scores.append(dict(depth_m=group[0]['depth_m'],damping=group[0]['damping'],
                            mean_rmse_nT=math.fsum(row['rmse_nT'] for row in group)/3))
-    selected=select_candidate(scores)
+        if resolution:
+            scores[-1]['source_geometry_index']=group[0]['source_geometry_index']
+    if resolution:
+        from magnetic_line_survey_physical_fit import select_resolution_candidate
+        selected=select_resolution_candidate(scores)
+        _check(fit['selected_source_geometry_index']==selected['source_geometry_index'])
+    else:
+        selected=select_candidate(scores)
     _check((fit['selected_depth_m'],fit['selected_damping'])==(selected['depth_m'],selected['damping']))
     m=fit['sources']['shape'][0]
-    _check(m==result['geometry']['source_counts'][0] and fit['solve']['verdict']=='pass')
+    expected_sources=result['geometry']['source_counts_by_geometry'][selected['source_geometry_index']][0] if resolution else result['geometry']['source_counts'][0]
+    _check(m==expected_sources and fit['solve']['verdict']=='pass')
     _role(fit['sources'],'source_position','float64','m',[m,3])
     for key,role,unit in (('column_scales','source_scale','1_per_m'),('coefficients','coefficient','nT*m')):
         _role(fit[key],role,'float64',unit,[m],fit['sources']['ordered_ids_sha256'])
@@ -431,7 +459,7 @@ def verify_result(root,result=None,*,temp_root,allow_uncommitted=False,job_handl
         gates['field_source']['verdict']=='unresolved' and gates['host_admission']['verdict']=='unresolved' and
         result['verdict']['numerical_success'] is True)
     expected_predictive='unresolved'
-    if metadata['authored_control']['regime']=='S1':
+    if not resolution and metadata['authored_control']['regime']=='S1':
         expected_predictive='pass' if ev['rmse_nT']<=max(1e-6,.05*ev['signal_rms_nT']) else 'fail'
     _check(gates['predictive']['verdict']==ev['verdict']['overall']==expected_predictive and
         result['verdict']['overall']==('fail' if expected_predictive=='fail' else 'unresolved'))
@@ -525,7 +553,7 @@ def verify_selected_model(reader,result,metadata,request,*,temp_root,job_handle)
         flags={ref['array_id']:ref for ref in _refs([result,request]) if 'array_id' in ref}
         qc=mapper(reader,flags[result['channels'][-1]['data']['mask_array_id']],scratch/'qc.bin',np)
         _check(not np.any(qc[train]))
-        config=request['equivalent_sources']['source_geometry']
+        config=request['equivalent_sources']['source_geometries'][fit['selected_source_geometry_index']] if result['policy_epoch']=='resolution_v2' else request['equivalent_sources']['source_geometry']
         # Training-only centroids, original signed floor/half-open convention
         # and sorted source IDs are reconstructed in disk storage independently.
         db=sqlite3.connect(scratch/'centroids.sqlite')

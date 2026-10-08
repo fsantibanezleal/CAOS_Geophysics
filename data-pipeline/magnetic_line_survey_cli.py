@@ -104,7 +104,7 @@ def replay_local(bundle,output,*,data_root,temp_root):
         if 'array_id' in ref:
             if ref!=other or any(a!=b for a,b in zip(first.cells(ref),second.cells(other),strict=True)):
                 raise core.SurveyError('custody_mismatch','replay')
-        elif ref['row_schema']=='candidate_fit':
+        elif ref['row_schema'] in ('candidate_fit','candidate_fit_v2'):
             for first_row,second_row in zip(first.table(ref),second.table(other),strict=True):
                 # Only measured resource clocks/counters may differ. Every
                 # candidate, score, numerical diagnostic and gate is replayed.

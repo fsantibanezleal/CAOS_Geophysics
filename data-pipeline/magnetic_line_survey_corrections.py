@@ -157,8 +157,11 @@ def correct_instrument(seal_root, sealed, geometry_root, inspection, measurement
     it is internal owner assembly, not a user JSON mapping/path dereference.
     Original measurement identity and current seal are independently rechecked.
     """
-    metadata, request = schema.validate('SurveyInput', metadata), schema.validate('SurveyRequest', request)
-    seal = schema.validate('GeometrySeal', sealed['geometry'])
+    import magnetic_line_survey_contract_v2 as v2
+    import magnetic_line_survey_representation as representation
+    contract=v2 if request.get('schema')=='magnetic-line-survey-request/2' else schema
+    metadata, request = contract.validate('SurveyInput', metadata), contract.validate('SurveyRequest', request)
+    seal = contract.validate('GeometrySeal', sealed['geometry'])
     output = io.external_path(output)
     operations = [operation['operation'] for operation in request['operations']]
     if output.exists():
@@ -176,11 +179,13 @@ def correct_instrument(seal_root, sealed, geometry_root, inspection, measurement
     if metadata['original'] != inspection['original'] or metadata['arrays'] != inspection['arrays'] or \
        seal['original'] != metadata['original'] or sealed['partitions']['request_sha256'] != base.digest(request):
         raise core.SurveyError('custody_mismatch', 'correction')
-    sr = io.Reader(seal_root)
+    sr = representation.Reader(seal_root)
     if base.strict_json(base.read_bounded(core._plain_path(sr.root/'geometry-seal.json'), 2097152)) != seal:
         raise core.SurveyError('custody_mismatch', 'correction')
     for ref in seal['arrays']+seal['dictionaries']:
         sr.verify(ref)
+    if contract is v2:
+        sr.member(sealed['capacity_proof'])
     sr.reject_unknown(extra=('geometry-seal.json',))
     mr = io.Reader(measurement_root)
     core._closed(measurements, 'schema original rows geometry_sha256 arrays numerical_admission', 'correction')
@@ -288,7 +293,7 @@ def correct_instrument(seal_root, sealed, geometry_root, inspection, measurement
                     raise core.SurveyError('metadata_ineligible', 'correction')
                 reference = parameters['evaluated_reference']
                 reference_verification = validate_authored_reference(auxiliary_roots[name], reference, metadata, seal,
-                    seal_root, definition=reference_definitions[name])
+                    seal_root, definition=reference_definitions[name],capacity_proof=sealed.get('capacity_proof'))
                 rr = io.Reader(auxiliary_roots[name])
                 for pos, field in enumerate(rr.cells(reference['scalar_F_nT'])):
                     db.execute('UPDATE rows SET value=value-? WHERE pos=? AND value IS NOT NULL', (field, pos))

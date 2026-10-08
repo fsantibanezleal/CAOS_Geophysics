@@ -19,17 +19,19 @@ def predict_grids(seal_root, sealed, fit_root, fitted, metadata, request, output
     """Keep sealed holes; never silently omit a requested ineligible transform."""
     from magnetic_line_survey_runtime import require_job
     require_job(job_handle)
-    metadata, request = schema.validate('SurveyInput',metadata), schema.validate('SurveyRequest',request)
+    resolution=request.get('schema')=='magnetic-line-survey-request/2'
+    contract=representation_schema if resolution else schema
+    metadata, request = contract.validate('SurveyInput',metadata), contract.validate('SurveyRequest',request)
     representation_schema.validate('SurveyGrid',request['grid'])
-    seal = schema.validate('GeometrySeal',sealed['geometry'])
-    fit = schema.validate('FitReceipt',fitted['fit'])
+    seal = contract.validate('GeometrySeal',sealed['geometry'])
+    fit = contract.validate('FitReceipt',fitted['fit'])
     output = io.external_path(output)
     if output.exists():
         raise core.SurveyError('custody_mismatch','predict')
-    reader, fr = io.Reader(seal_root), io.Reader(fit_root)
+    reader, fr = representation.Reader(seal_root), representation.Reader(fit_root)
     if base.strict_json(base.read_bounded(core._plain_path(reader.root/'geometry-seal.json'),2097152)) != seal or \
        base.strict_json(base.read_bounded(core._plain_path(fr.root/'physical-fit.json'),2097152)) != fitted or \
-       fitted['schema'] != 'm03-global-physical-fit/1' or fitted['original'] != metadata['original'] or \
+       fitted['schema'] != ('m03-global-physical-fit/2' if resolution else 'm03-global-physical-fit/1') or fitted['original'] != metadata['original'] or \
        seal['original'] != metadata['original'] or fitted['geometry_sha256'] != base.digest(seal) or \
        fitted['request_sha256'] != base.digest(request) or fitted['evaluation_count'] != 1:
         raise core.SurveyError('custody_mismatch','predict')
@@ -38,6 +40,8 @@ def predict_grids(seal_root, sealed, fit_root, fitted, metadata, request, output
         raise core.SurveyError('metadata_ineligible','predict')
     for ref in seal['arrays']+seal['dictionaries']:
         reader.verify(ref)
+    if resolution:
+        reader.member(sealed['capacity_proof'])
     reader.reject_unknown(extra=('geometry-seal.json',))
     for ref in [fit[key] for key in ('sources','column_scales','coefficients','candidates')] + \
                fitted['outer_arrays']+[fitted['outer_positions'],fitted['per_line']]:

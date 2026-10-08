@@ -111,6 +111,26 @@ the small Result JSON or silently use the gravity default reservation. Parent
 startup/deletion must consume the exact registry/inventory and preserve unknown
 bytes. Stale member/export access after project tombstone/deletion is404.
 
+The additive storage service returns the M03 subtotal only: the parent MUST
+exclude M03 jobs from generic result/default-reservation accounting before
+adding it. Queued no-attempt jobs reserve the admitted bytes; cancelled queued
+jobs with no attempt charge no native bytes. Claimed/running/uncertain attempts
+retain max(reservation,recorded retained bytes); drained terminal or published
+attempts charge exact retained bytes after actual drain validation. Every old
+attempt remains charged once, including failed evidence. Missing admission or
+counter integrity refuses, never returns a permissive zero. Export copies must
+be incorporated before that export service is mounted.
+
+Read-only project reconciliation rebinds admission/source receipts, requires
+factual complete drain, verifies every retained file/size/hash and all published
+member/job/result references, then exhausts the exact project namespace. Unknown
+jobs, attempts, empty directories, changed/missing members and unverified old
+attempts refuse. It does not kill processes, erase bytes, reset jobs or infer
+zero counters from missing heartbeats. Its deletion-preparation hook additionally
+refuses queued/running jobs and returns the exact verified relative manifest
+for the parent's transactional tombstone protocol. Preparation itself never
+deletes anything and is not the final deletion/purge or backup-erasure gate.
+
 ## Acceptance and claim boundary
 
 Real SQLite transitions and actual-byte negative gates establish this leaf,

@@ -24,8 +24,9 @@ def run_local_plan(plan,workspace,job_handle,package_root):
     workspace=io.external_path(workspace)
     source=io.external_path(plan['csv_path'],directory=False)
     auxiliary=io.external_path(plan['auxiliary_root'])
-    metadata_bytes,metadata=schema.read_document(io.external_path(plan['metadata_path'],directory=False),'SurveyInput')
-    request_bytes,request=schema.read_document(io.external_path(plan['request_path'],directory=False),'SurveyRequest')
+    metadata_bytes=base.read_bounded(core._plain_path(io.external_path(plan['metadata_path'],directory=False)),2097152)
+    request_bytes=base.read_bounded(core._plain_path(io.external_path(plan['request_path'],directory=False)),2097152)
+    metadata,request=decode_documents(metadata_bytes,request_bytes)
     base._type(plan['run_id'],'ID','run_id',0)
     if metadata['rights']['decision']!='allowed' or metadata['rights']['private_processing']!='allowed':
         raise core.SurveyError('metadata_ineligible','ingest')
@@ -69,6 +70,26 @@ def run_local_plan(plan,workspace,job_handle,package_root):
         inspection=inspection,metadata=metadata,request=request,request_root=str(request_root),
         navigation_root=str(navigation) if navigation is not None else None,
         auxiliary_roots=roots,reference_definitions=definitions,run_id=plan['run_id'])
+    if request['schema']=='magnetic-line-survey-request/2':
+        full['schema']='m03-resolution-fit-plan/1'
+        from magnetic_line_survey_resolution_worker import run_resolution_plan
+        return run_resolution_plan(full,workspace,job_handle,package_root=package_root,
+            original_documents=dict(metadata=metadata_bytes,request=request_bytes))
     from magnetic_line_survey_corrections import run_instrument_worker
     return run_instrument_worker(full,workspace,job_handle,package_root=package_root,
         original_documents=dict(metadata=metadata_bytes,request=request_bytes))
+
+
+def decode_documents(metadata_bytes,request_bytes):
+    """Explicit closed epoch pair; no inferred or mixed scientific policy."""
+    metadata,request=base.strict_json(metadata_bytes),base.strict_json(request_bytes)
+    if type(metadata) is not dict or type(request) is not dict:
+        raise core.SurveyError('invalid_contract','ingest')
+    epochs=(metadata.get('schema'),request.get('schema'))
+    if epochs==('magnetic-line-survey-input/1','magnetic-line-survey-request/1'):
+        contract=schema
+    elif epochs==('magnetic-line-survey-input/2','magnetic-line-survey-request/2'):
+        import magnetic_line_survey_contract_v2 as contract
+    else:
+        raise core.SurveyError('invalid_contract','ingest')
+    return contract.validate('SurveyInput',metadata),contract.validate('SurveyRequest',request)

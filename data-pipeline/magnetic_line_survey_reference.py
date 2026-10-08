@@ -27,7 +27,7 @@ def _json_list_hash(values):
     return identity.hexdigest()
 
 
-def validate_authored_reference(root, reference, metadata, seal, original_root, *, definition):
+def validate_authored_reference(root, reference, metadata, seal, original_root, *, definition,capacity_proof=None):
     """Reconstruct an explicit constant definition, dates and metric geometry.
 
     Definition is a verified FileIdentity of original authored F/D/I JSON, not a
@@ -35,9 +35,12 @@ def validate_authored_reference(root, reference, metadata, seal, original_root, 
     This rejects field/IGRF before reading arrays. Returning a receipt does not
     authorize the full method or assert predictive validity.
     """
-    reference = schema.validate('SurveyReference', reference)
-    metadata = schema.validate('SurveyInput', metadata)
-    seal = schema.validate('GeometrySeal', seal)
+    import magnetic_line_survey_contract_v2 as v2
+    import magnetic_line_survey_representation as representation
+    contract=v2 if metadata.get('schema')=='magnetic-line-survey-input/2' else schema
+    reference = contract.validate('SurveyReference', reference)
+    metadata = contract.validate('SurveyInput', metadata)
+    seal = contract.validate('GeometrySeal', seal)
     definition = schema.validate('FileIdentity', definition)
     evaluator = reference['evaluator']
     if metadata['source_kind'] != 'original_synthetic_acquisition' or reference['kind'] != 'authored_constant' or \
@@ -69,13 +72,19 @@ def validate_authored_reference(root, reference, metadata, seal, original_root, 
     utc_ref = next(r for r in original_refs if r['role'] == 'utc')
     missing_ref = next(r for r in original_refs if r['role'] == 'missing_mask')
     row_hash, rows = row_ref['ordered_ids_sha256'], seal['rows']
-    original_reader = io.Reader(original_root)
-    stored = schema.validate('GeometrySeal', base.strict_json(base.read_bounded(
+    original_reader = representation.Reader(original_root)
+    stored = contract.validate('GeometrySeal', base.strict_json(base.read_bounded(
         core._plain_path(original_reader.root/'geometry-seal.json'), 2097152)))
     if stored != seal or row_ref['shape'] != [rows]:
         raise core.SurveyError('custody_mismatch', 'correction')
     for ref in seal['arrays']+seal['dictionaries']:
         original_reader.verify(ref)
+    if contract is v2:
+        if capacity_proof is None:
+            raise core.SurveyError('custody_mismatch','correction')
+        original_reader.member(capacity_proof)
+    elif capacity_proof is not None:
+        raise core.SurveyError('custody_mismatch','correction')
     original_reader.reject_unknown(extra=('geometry-seal.json',))
     by_id = {ref['array_id']: ref for ref in seal['arrays']}
     if 'aligned-xyz' in by_id:

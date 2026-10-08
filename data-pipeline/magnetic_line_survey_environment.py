@@ -23,7 +23,8 @@ SOURCES=('magnetic_line_contract','magnetic_lines','magnetic_line_validation',
     'magnetic_line_survey_reference','magnetic_line_survey_corrections','magnetic_line_survey_physical_fit',
     'magnetic_line_survey_fit','magnetic_line_survey_grid','magnetic_line_survey_transforms',
     'magnetic_line_survey_environment','magnetic_line_survey_result','magnetic_line_survey_export',
-    'magnetic_line_survey_cli','magnetic_line_survey_local_worker')
+    'magnetic_line_survey_cli','magnetic_line_survey_local_worker',
+    'magnetic_line_survey_resolution_geometry','magnetic_line_survey_resolution_worker')
 NATIVES=('numpy._core._multiarray_umath','numpy.linalg._umath_linalg','scipy.linalg._fblas',
     'scipy.linalg._flapack','scipy.spatial._qhull','sklearn.utils._cython_blas','numba._dispatcher')
 

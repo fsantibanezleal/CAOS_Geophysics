@@ -135,7 +135,15 @@ def _solve(xyz,sources,values,sigma,damping,job,workspace):
     before = counters(api,psapi,job,api.GetCurrentProcess())
     started = time.perf_counter()
     operator = core.GlobalOperator(xyz,sources,sigma,job_handle=job)
-    solved = core.solve_global(operator,values,damping)
+    try:
+        solved = core.solve_global(operator,values,damping)
+    except core.SurveyError as error:
+        # Actual partial recurrence/calls are evidence only, never a successful
+        # SolverReceipt or permission to continue an incomplete candidate matrix.
+        error.partial_solve=dict(operator_forward_calls=operator.forward_calls,
+            operator_adjoint_calls=operator.adjoint_calls,
+            recurrence_estimates=getattr(operator,'solver_estimates',None))
+        raise
     after = counters(api,psapi,job,api.GetCurrentProcess())
     timing = dict(cpu_s=after['cpu_s']-before['cpu_s'],wall_s=time.perf_counter()-started,
         peak_rss_bytes=after['peak_rss_bytes'],peak_committed_bytes=after['peak_committed_bytes'],
