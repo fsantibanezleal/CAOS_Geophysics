@@ -487,6 +487,10 @@ def caller_frame(buffer, part):
     return buffer, "cancelled" if buffer == b"CANCEL\n" else None
 
 
+class CallerTermination(ControlError):
+    """Only the held original caller parser may produce this exception."""
+
+
 class LinuxCallerControl:
     """Installed helper's held stdin only, never a job-selected descriptor."""
     def __init__(self, fd):
@@ -502,7 +506,7 @@ class LinuxCallerControl:
             if self.reason is not None:
                 self.started_ns = time.monotonic_ns()
         if self.reason is not None:
-            raise ControlError("cancelled")
+            raise CallerTermination("cancelled")
 
 
 def refused_caller_reason(caller):
@@ -514,6 +518,34 @@ def refused_caller_reason(caller):
     except (ControlError,OSError):
         pass
     return caller.reason if caller.reason in ("cancelled","caller_lost") else None
+
+
+def failed_outcome(error, checkpoint, caller, lifecycle):
+    """Keep primary failure even if the guardian noticed caller control first."""
+    caller_reason = refused_caller_reason(caller)
+    if type(error) is CallerTermination and caller_reason is not None:
+        return dict(terminal("cancelled"),reason=caller_reason)
+    reason = error.reason if type(error) is ControlError else "native_contract"
+    if lifecycle is not None:
+        lifecycle["primary_failure"] = dict(reason=reason,checkpoint=checkpoint)
+    # A child error packet cannot acquire the caller parser's cancellation type.
+    return terminal("wire_invalid" if reason == "cancelled" else reason)
+
+
+def receive_science(connection, caller_check, guardian, monitor, began):
+    while True:
+        monitor.check()  # A retained scientific/resource failure is absorbing.
+        require(time.monotonic_ns() - began < 120000000000, "timeout")
+        try:
+            raw = connection.recv(65537)
+        except TimeoutError:
+            caller_check()
+            guardian.check()
+            continue
+        if raw:
+            return raw  # Explicit errors/malformed packets precede caller control.
+        caller_check()  # Guardian-first EOF, not a nonempty scientific failure.
+        raise ControlError("child_failed")
 
 
 def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, work_root=None):
@@ -635,16 +667,7 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
                 caller_check()
                 rights = array.array("i", [item.fd for item in inputs])
                 require(connection.sendmsg([packet(run, 1, "ack", control)], [(socket.SOL_SOCKET, socket.SCM_RIGHTS, rights)]) > 0, "wire_invalid")
-                while True:
-                    caller_check()
-                    guardian.check()
-                    monitor.check()
-                    require(time.monotonic_ns() - began < 120000000000, "timeout")
-                    try:
-                        raw = connection.recv(65537)
-                        break
-                    except TimeoutError:
-                        pass
+                raw = receive_science(connection,caller_check,guardian,monitor,began)
                 checkpoint = "drain"
                 value = decode_control(raw)
                 if value.get("phase") == "error":
@@ -725,14 +748,9 @@ def run_cli(paths, reference, admission_path, *, caller=None, lifecycle=None, wo
         return {"status": drained["status"], "reason": "measured", "run_id": run,
                 "receipt_sha256": sha(canonical(receipt)), "release_sha256": sha(canonical(release)), "runtime_authorized": False}
     except (ControlError, WaveformInputError, OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
-        caller_reason = refused_caller_reason(caller)
         print("M08_LINUX_BOOTSTRAP:" + checkpoint + ":" + (error.reason if type(error) is ControlError else type(error).__name__) +
               (":" + str(error.errno) if type(error) is OSError else ""), file=sys.stderr, flush=True)
-        result = terminal("cancelled" if caller_reason else
-                          (error.reason if type(error) is ControlError else "native_contract"))
-        if caller_reason == "caller_lost":
-            result["reason"] = "caller_lost"
-        return result
+        return failed_outcome(error,checkpoint,caller,lifecycle)
     finally:
         cleanup_failed = False
         quiescent_ns = None

@@ -389,3 +389,19 @@ existing sweep. The original two-second scientific quiescence bound is never
 replaced by guardian-reap time. No final counter is invented when readback fails.
 Gates: exact guardian stop-set/empty-group controls, actual paused caller controls
 and fresh full installed CANCEL/EOF. Prior lost-accounting failures stay failed.
+
+### Primary failure precedence and caller termination
+
+The original primary science/resource/source/contract failure is absorbing. A
+complete caller frame or EOF discovered while handling that failure is recorded
+separately in lifecycle.caller, never substituted for its terminal reason.
+Failure lifecycle records may carry a closed primary_failure (reason/checkpoint)
+even when later extinction readback requires termination_unresolved. Historical
+records without this diagnostic remain valid; measured success forbids it.
+Only an exception raised by the held caller parser is caller termination.
+An available nonempty science packet and an already retained monitor failure
+precede caller checks. Empty transport following a guardian-first stop may use
+the original held caller parser after checking the monitor; malformed/nonempty
+packets never take this path. Gates: explicit primary-versus-late-control tests,
+closed failure receipt controls and actual installed CANCEL/EOF, with all original
+caps and failed receipts preserved.

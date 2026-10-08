@@ -148,3 +148,72 @@ def test_pending_caller_frame_on_refused_native_operation_never_invents_cancel(m
     assert lane.refused_caller_reason(caller) == reason
     assert caller.reason == reason
     assert (caller.started_ns is not None) == (reason is not None)
+
+
+@pytest.mark.parametrize('primary',['closure_mismatch','resource_stop','sample_gap',
+    'counter_invalid','scientific_rejected','wire_invalid','export_invalid','child_failed'])
+@pytest.mark.parametrize('part',[b'CANCEL\n',b''])
+def test_primary_failure_absorbs_late_cancel_and_eof(monkeypatch,primary,part):
+    import waveform_m08_linux as lane
+    caller = object.__new__(lane.LinuxCallerControl)
+    caller.fd,caller.buffer,caller.reason,caller.started_ns = 17,b'',None,None
+    monkeypatch.setattr(lane.select,'select',lambda *args:([17],[],[]))
+    monkeypatch.setattr(lane.os,'read',lambda fd,cap:part)
+    life = {}
+    assert lane.failed_outcome(ControlError(primary),'drain',caller,life) == lane.terminal(primary)
+    assert life['primary_failure'] == {'reason':primary,'checkpoint':'drain'}
+    assert caller.reason == ('cancelled' if part else 'caller_lost')
+
+
+@pytest.mark.parametrize('part,reason',[(b'CANCEL\n','cancelled'),(b'','caller_lost')])
+def test_only_original_parser_exception_is_caller_termination(monkeypatch,part,reason):
+    import waveform_m08_linux as lane
+    caller = object.__new__(lane.LinuxCallerControl)
+    caller.fd,caller.buffer,caller.reason,caller.started_ns = 17,b'',None,None
+    monkeypatch.setattr(lane.select,'select',lambda *args:([17],[],[]))
+    monkeypatch.setattr(lane.os,'read',lambda fd,cap:part)
+    with pytest.raises(lane.CallerTermination) as caught:
+        caller.check()
+    life = {}
+    result = lane.failed_outcome(caught.value,'ack',caller,life)
+    assert result == {'status':'cancelled','reason':reason,'runtime_authorized':False}
+    assert life == {}
+
+
+def test_native_cancel_literal_is_not_original_caller_exception():
+    import waveform_m08_linux as lane
+    life = {}
+    result = lane.failed_outcome(ControlError('cancelled'),'drain',None,life)
+    assert result['status'] != 'cancelled'
+    assert life['primary_failure'] == {'reason':'cancelled','checkpoint':'drain'}
+
+
+@pytest.mark.parametrize('packet',[b'science-error',b'malformed'])
+def test_available_nonempty_packet_precedes_pending_caller(monkeypatch,packet):
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    fail = lambda:pytest.fail('caller must not mask a buffered packet')
+    connection = SimpleNamespace(recv=lambda cap:packet)
+    assert lane.receive_science(connection,fail,SimpleNamespace(check=fail),
+        SimpleNamespace(check=lambda:None),lane.time.monotonic_ns()) == packet
+
+
+def test_retained_resource_failure_precedes_empty_transport_and_caller():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def failure():
+        raise ControlError('resource_stop')
+    fail = lambda:pytest.fail('caller must not mask retained resource failure')
+    with pytest.raises(ControlError,match='resource_stop'):
+        lane.receive_science(SimpleNamespace(recv=fail),fail,SimpleNamespace(check=fail),
+            SimpleNamespace(check=failure),lane.time.monotonic_ns())
+
+
+def test_guardian_first_empty_transport_uses_original_caller_exception():
+    import waveform_m08_linux as lane
+    from types import SimpleNamespace
+    def cancelled():
+        raise lane.CallerTermination('cancelled')
+    with pytest.raises(lane.CallerTermination):
+        lane.receive_science(SimpleNamespace(recv=lambda cap:b''),cancelled,
+            SimpleNamespace(check=lambda:None),SimpleNamespace(check=lambda:None),lane.time.monotonic_ns())

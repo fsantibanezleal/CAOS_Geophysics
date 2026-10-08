@@ -117,3 +117,39 @@ def test_quiescence_cannot_precede_native_final_seal():
     terminal["lifecycle"]["science_quiescent_ns"] = 1
     with pytest.raises(ValueError):
         validate_terminal(terminal,job,payload=payload)
+
+
+@pytest.mark.parametrize('caller_reason',['cancelled','caller_lost'])
+@pytest.mark.parametrize('reason',['resource_stop','closure_mismatch','scientific_rejected'])
+def test_primary_failure_and_late_caller_are_separate_historical_fields(caller_reason,reason):
+    from waveform_m08_windows import terminal as outcome
+    job,record,_ = packet()
+    record.update(outcome=outcome(reason),native=None,calculation_sha256=None,members=[])
+    life = record['lifecycle']
+    life.update(primary_failure=dict(reason=reason,checkpoint='drain'),
+                caller=dict(reason=caller_reason,started_ns=life['science_quiescent_ns']-1),
+                cancel_to_quiescence_ns=1)
+    assert validate_terminal(record,job) == record
+    record['outcome'] = outcome('termination_unresolved')
+    assert validate_terminal(record,job)['lifecycle']['primary_failure']['reason'] == reason
+    record['outcome'] = dict(outcome('cancelled'),reason=caller_reason)
+    with pytest.raises(ValueError):
+        validate_terminal(record,job)
+
+
+@pytest.mark.parametrize('diagnostic',[None,{},dict(reason='x',checkpoint='unknown'),
+    dict(reason='x',checkpoint='drain',extra=True),dict(reason='../x',checkpoint='drain')])
+def test_closed_primary_failure_diagnostic_refuses_drift(diagnostic):
+    job,record,_ = packet()
+    record.update(outcome=dict(status='failed',reason='native_contract',runtime_authorized=False),
+                  native=None,calculation_sha256=None,members=[])
+    record['lifecycle']['primary_failure'] = diagnostic
+    with pytest.raises(ValueError):
+        validate_terminal(record,job)
+
+
+def test_measured_success_cannot_carry_primary_failure():
+    job,record,payload = packet()
+    record['lifecycle']['primary_failure'] = dict(reason='resource_stop',checkpoint='drain')
+    with pytest.raises(ValueError):
+        validate_terminal(record,job,payload=payload)
