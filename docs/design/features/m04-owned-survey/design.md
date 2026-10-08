@@ -12,9 +12,12 @@ Method mapping names executable existing functions: parse_request, plan_geometry
 magnetic_calibration.calibrate, frozen evaluation in run_magnetic_survey,
 magnetic_result_bundle.read_bundle and magnetic_result_export.export_zip.
 Online remains ineligible for this version, independent of caller strings.
-Changed configuration produces a new immutable dataset; existing database parser
-uniqueness by raw asset/version requires the owner union to version that parser
-or the raw acquisition, never overwrite an existing dataset.
+Changed configuration produces a new immutable dataset. The parser receipt is
+mag-survey/v1:<full request SHA256>, within the existing80-character field,
+so raw-asset/parser uniqueness is exact-request idempotence without rewriting
+original acquisitions. The scientific source ID remains its declared acquisition
+ID; source_record_id separately binds the actual owned API source UUID. Both
+identities are preserved, never silently renamed to one another.
 
 A local replay imports a genuinely complete, already fitted NPY generation.
 Full read_bundle validation runs before identity matching. The request recovered

@@ -14,6 +14,11 @@ R-442 IF source, physical metadata, request bytes or ownership drift, THEN THE
 adapter SHALL refuse without native inversion or a successful result reference.
 Gate: tests/api/test_magnetic_owned_survey.py::test_input_drift_refused.
 
+R-448 WHEN the physical request changes for one original acquisition, THE owned
+dataset installer SHALL retain a new full-request-hash parser version without
+overwriting the original dataset; exact repeats SHALL return the checked receipt.
+Gate: tests/api/test_magnetic_owned_custody.py::test_changed_physical_request_versions_dataset_without_overwrite.
+
 R-443 WHILE online admission is unaccepted, THE method registry SHALL map the
 actual parser, calibration, evaluation and export functions to a closed online
 lane and an explicit local replay lane, without queuing an inverse.
