@@ -18,6 +18,7 @@ export function JointProjectWorkbench({projectId, es, onManage, onCurated, metho
   const [dataset, setDataset] = useState<JointDatasetReceipt | null>(null), [jobs, setJobs] = useState<JointCustodyJob[]>([]), [jobId, setJobId] = useState("");
   const [inspection, setInspection] = useState<JointInspection | null>(null), [busy, setBusy] = useState(false), [problem, setProblem] = useState("");
   const [controlsOpen, setControlsOpen] = useState(false), [instrumentRevision, setInstrumentRevision] = useState(0);
+  const [inputRevision, setInputRevision] = useState(0);
   const lifetime = useRef<AbortController | null>(null), generation = useRef(0);
   const operationControl = useRef<AbortController | null>(null), operationGeneration = useRef(0);
   const clear = () => {operationControl.current?.abort(); operationGeneration.current++; setBusy(false); setDataset(null); setJobs([]); setJobId(""); setInspection(null); setInstrumentRevision(n => n + 1);};
@@ -61,7 +62,7 @@ export function JointProjectWorkbench({projectId, es, onManage, onCurated, metho
       {session === "ready" && <div className="processing-controls">
         <label className="select-control"><span>{t("Joint control section", "Sección de controles conjuntos")}</span><select className="select" aria-label={t("Joint control section", "Sección de controles conjuntos")} value={section} onChange={e => setSection(e.target.value)}>
           <option value="originals">{t("Original inputs", "Entradas originales")}</option><option value="run">{t("Scientific execution", "Ejecución científica")}</option><option value="history">{t("Stored native results", "Resultados nativos almacenados")}</option></select></label>
-        {section === "originals" && <JointNativeInputPanel projectId={projectId} ownerId={owner} api={clients.api} onIndexed={setDataset} onCleared={clear} onSessionExpired={() => fail(new ApiHttpError(401, "session_expired", "Session expired"))}/>}
+        {section === "originals" && <JointNativeInputPanel key={`${projectId}:${owner}:${inputRevision}`} projectId={projectId} ownerId={owner} api={clients.api} onIndexed={setDataset} onCleared={clear} onSessionExpired={() => fail(new ApiHttpError(401, "session_expired", "Session expired"))}/>}
         {section === "run" && <>
           <p className="processing-scope">{t("Structural indexing does not authorize a scientific run. The online method remains unavailable pending the applicable source-bound M02 bridge and canonical worker admission. No scientific job is submitted by this custody instrument.", "Indexar estructura no autoriza ejecutar ciencia. El método en línea sigue sin disponibilidad hasta admitir el puente M02 ligado a fuentes y el worker canónico. Este instrumento de custodia no envía trabajos científicos.")}</p>
           {dataset && <p className="processing-provenance"><code>{dataset.dataset_id}</code> · <code>{dataset.sha256}</code></p>}
@@ -74,7 +75,7 @@ export function JointProjectWorkbench({projectId, es, onManage, onCurated, metho
           <button className="btn" disabled={busy || !job?.index_available} onClick={() => void action(async signal => {if (!job) return; const value = await clients.custody.inspect(job, signal); if (!signal.aborted) {setInspection(value); setInstrumentRevision(n => n + 1);}})}>{t("Verify and inspect exact stored native originals", "Verificar e inspeccionar originales nativos almacenados exactos")}</button>
         </>}
         {busy && <p role="status">{t("Reading private custody; no scientific execution", "Leyendo custodia privada; sin ejecución científica")}</p>}
-        <button className="btn" onClick={clear}>{t("Clear private views, not server bytes", "Borrar vistas privadas, no bytes del servidor")}</button>
+        <button className="btn" onClick={() => {clear(); setInputRevision(n => n + 1);}}>{t("Clear private views, not server bytes", "Borrar vistas privadas, no bytes del servidor")}</button>
       </div>}
     </aside>
     <section className="instrument-main processing-main" aria-label={t("Joint native inspection", "Inspección nativa conjunta")}>

@@ -155,6 +155,18 @@ export const CITATIONS: Citation[] = [
     doi: "10.1109/TCI.2019.2956866",
   },
   {
+    id: "m11source",
+    label: "SimPEG 0.25.2 CrossGradient",
+    citation: "SimPEG 0.25.2. CrossGradient: discrete cross-gradient regularization and its derivatives.",
+    url: "https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.CrossGradient.html",
+  },
+  {
+    id: "m11cross",
+    label: "Gallardo and Meju 2004",
+    citation: "Gallardo, L. A. and Meju, M. A. (2004). Joint two-dimensional DC resistivity and seismic travel time inversion with cross-gradients constraints. Journal of Geophysical Research: Solid Earth, 109, B03311.",
+    doi: "10.1029/2003JB002716",
+  },
+  {
     id: "pinnreview",
     label: "Physics-informed inversion review",
     citation:

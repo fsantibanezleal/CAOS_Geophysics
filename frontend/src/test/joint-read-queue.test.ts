@@ -17,3 +17,16 @@ it("starts the fifth real small header before a delayed first read, with only fo
   try {const actual=await importJointOutput(files);expect(actual.candidates).toHaveLength(26);expect(peak).toBeLessThanOrEqual(4);expect(started).toBe(files.filter(f=>f.path.endsWith(".npy")).length);}
   finally {release();}
 });
+
+it("reads each authentic original once per import, without a cross-import trust cache",async()=>{
+  const root=process.env.GEOPHYSICS_JOINT_OUTPUT_FIXTURE;if(!root)throw new Error("Actual external original output required");
+  const reads=new Map<string,number>(),files:JointFile[]=[];
+  function visit(dir:string){for(const name of readdirSync(dir)){const path=join(dir,name),info=statSync(path);if(info.isDirectory())visit(path);else{
+    const key=relative(root!,path).replaceAll("\\","/");reads.set(key,0);
+    files.push({path:key,size:info.size,read:async()=>{reads.set(key,reads.get(key)!+1);return new Uint8Array(readFileSync(path));}});
+  }}}visit(root);
+  const first=await importJointOutput(files);expect([...reads.values()]).toEqual(files.map(()=>1));
+  const second=await importJointOutput(files);expect([...reads.values()]).toEqual(files.map(()=>2));
+  expect(second.files).not.toBe(first.files);
+  expect(second.candidates).toHaveLength(26);expect(first.candidates).toHaveLength(26);
+});
