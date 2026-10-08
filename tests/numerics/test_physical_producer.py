@@ -17,11 +17,16 @@ from tests.numerics.test_gravity_station_adapter import request as scientific_re
 
 @pytest.fixture
 def packet():
-    owner, project, raw, root, child, job_id = [str(uuid4()) for _ in range(6)]
     original = survey()
     original['metadata']['source_citation'] += ' \u00e1'
     original['stations'][0].update(original_value=980000, value_mgal=980000)
     scientific = scientific_request(original)
+    return packet_from_science(original, scientific)
+
+
+def packet_from_science(original, scientific):
+    """Saved transport fixture; caller supplies real unchanged science input."""
+    owner, project, raw, root, child, job_id = [str(uuid4()) for _ in range(6)]
     computed = adapter.run_station_corrections(scientific)
     receipt = computed['receipt']
     runtime = dict(python=receipt['python'], python_implementation='CPython', packages=receipt['engines'])
