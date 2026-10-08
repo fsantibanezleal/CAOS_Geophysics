@@ -14,3 +14,5 @@
 6. R-453..454: require selected-project authority in the public custody ABI and
    expose fully reverified dataset/method readers; retain actual other-project,
    source-drift and before-file-I/O negatives.
+7. R-455: isolated existing-cookie/CSRF API assembly on genuine retained bytes,
+   without production route/controller edits or an invented successful fixture.

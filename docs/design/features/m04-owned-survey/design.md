@@ -62,3 +62,13 @@ magnetic ZIP dispatch before mounting; this unit supplies exact inventory and
 cleanup functions, not edits to the shared controller. No deployment activation.
 The client uses the existing same-origin ApiClient and selected job binding.
 Online submit remains unavailable, not a replay silently called computation.
+
+The isolated API assembly regression mounts only these public ABI calls in a
+test fixture and reuses the actual install_auth/install_security dependencies,
+cookie strategy, verified users and durable SQLite access tokens. It does not
+replace current_user with an owner-ID header or mock a successful result.
+The genuine external generation is installed once, then selected input/method/
+projection/ZIP are obtained through authenticated routes. A second verified
+account, a same-owner different project and missing CSRF cannot obtain or
+publish that custody. Test-fixture route composition is not evidence that the
+shared product dispatcher/startup/delete union is integrated or deployed.
