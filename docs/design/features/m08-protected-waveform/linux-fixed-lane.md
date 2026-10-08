@@ -115,6 +115,19 @@ transactional publication. Successful exact cleanup follows the commit only;
 failed/uncertain stages and root debt remain recoverable. No fourth SQL artifact
 or numerical-method change is required.
 
+In the installed nonroot caller model, the independent guardian also holds the
+inherited read end of the worker's anonymous stdin pipe before native submission.
+It polls readable/HUP/error without consuming bytes, so the root observer remains
+the single closed-frame parser. Caller loss or pending control drains the exact
+scientific units even if the root observer is paused. Partial/invalid control may
+fail closed but is never labelled a successful cancellation without the complete
+frame, independently matched installation and terminal extinction receipt.
+The descriptor must be a read-only anonymous pipe, never a request-selected path,
+numeric caller PID, root SQLite/lease or socket. The already reviewed root guardian
+operational limits and scientific B60/S57/2s quiescence bounds are unchanged.
+Successful science closes that guardian before the separate postcommit COMMIT
+frame; COMMIT is not admitted while scientific execution can still be live.
+
 ### Complete interpreted runtime closure
 
 The inventory includes exact names and file/directory/link identities, owners,

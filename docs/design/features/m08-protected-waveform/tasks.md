@@ -41,6 +41,12 @@ census, native CANCEL/EOF terminal extinction, receipt persistence and actual VP
 queue remain the following implementation gates; existing root WSL science
 receipts cannot substitute for them.
 
+Installed caller continuation: document the guardian's pre-submission held
+anonymous worker-pipe observer, then failing fixed-frame/descriptor and actual
+paused-observer caller-loss controls. Only the observer parses bytes; guardian
+polling may drain on pending control/EOF. Preserve the existing root guardian
+and scientific ceilings, and do not claim cancellation from unproved readback.
+
 ## Approved structured-controls order
 
 1. Persist R-M08S-09..12 and this design before structured UI code changes.
