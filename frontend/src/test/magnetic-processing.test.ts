@@ -23,6 +23,42 @@ function client(replies: unknown[]) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("actual local magnetic custody client, not nonzero scientific acceptance", () => {
+  function streamed(kind: "ZIP" | "dataset", stream: ReadableStream<Uint8Array>, headers: Record<string,string> = {}, signal?: AbortSignal) {
+    const transport = vi.fn(async () => new Response(stream, {headers}));
+    const api = new MagneticProcessingApi(new ApiClient(origin, transport as typeof fetch));
+    const r = parseMagneticDatasetReceipt(input.receipt);
+    return kind === "ZIP" ? api.export(job.project_id, receipt, job, signal) : api.dataset(r.project_id, r, signal);
+  }
+  it.each(["ZIP", "dataset"] as const)("bounds %s before Blob/JSON allocation for bad declared lengths", async kind => {
+    for (const length of ["bad", "-1", String((kind === "ZIP" ? 128 : 8)*1024**2+1)]) {
+      const cancel = vi.fn();
+      const stream = new ReadableStream<Uint8Array>({cancel}, {highWaterMark:0});
+      await expect(streamed(kind, stream, {"Content-Length":length})).rejects.toThrow("declared byte cap");
+      expect(cancel).toHaveBeenCalledOnce();
+    }
+  });
+  it.each(["ZIP", "dataset"] as const)("cancels %s streamed overflow before aggregate allocation", async kind => {
+    // Reuse one bounded chunk; no oversized source buffer/Blob is allocated.
+    const chunk = new Uint8Array(1024**2), cancel = vi.fn(); let pulls = 0;
+    const maximumMiB = kind === "ZIP" ? 128 : 8;
+    const stream = new ReadableStream<Uint8Array>({pull(controller) {pulls++; controller.enqueue(chunk);}, cancel}, {highWaterMark:0});
+    await expect(streamed(kind, stream)).rejects.toThrow("byte cap");
+    expect(pulls).toBe(maximumMiB+1); expect(cancel).toHaveBeenCalledOnce();
+  });
+  it.each(["ZIP", "dataset"] as const)("refuses %s declared size drift before decoding or hashing", async kind => {
+    const stream = new ReadableStream<Uint8Array>({start(controller) {controller.enqueue(new Uint8Array([0])); controller.close();}});
+    await expect(streamed(kind, stream, {"Content-Length":"2"})).rejects.toThrow("size drift");
+  });
+  it.each(["ZIP", "dataset"] as const)("cancels a mid-stream %s read", async kind => {
+    const abort = new AbortController(), cancel = vi.fn();
+    const stream = new ReadableStream<Uint8Array>({pull(controller) {controller.enqueue(new Uint8Array([0])); abort.abort();}, cancel}, {highWaterMark:0});
+    await expect(streamed(kind, stream, {}, abort.signal)).rejects.toMatchObject({name:"AbortError"});
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+  it("refuses malformed dataset UTF8 before JSON parsing", async () => {
+    const stream = new ReadableStream<Uint8Array>({start(controller) {controller.enqueue(new Uint8Array([0xff])); controller.close();}});
+    await expect(streamed("dataset", stream)).rejects.toThrow();
+  });
   it("consumes the actual lexical input and executable closed-online mapping", async () => {
     const {api}=client([input.payload,input.mapping]);
     const inputReceipt=parseMagneticDatasetReceipt(input.receipt);

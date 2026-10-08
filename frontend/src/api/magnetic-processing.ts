@@ -121,7 +121,9 @@ export class MagneticProcessingApi {
   async dataset(project: string, receipt: MagneticDatasetReceipt, signal?: AbortSignal) {
     checkAbort(signal);
     parseMagneticDatasetReceipt(receipt); equal(project, receipt.project_id, "project");
-    const payload = await this.api.requestJson(`${root(project)}/datasets/${processingId(receipt.dataset_id)}`, object, {signal});
+    const datasetBytes = await this.api.requestBoundedBytes(`${root(project)}/datasets/${processingId(receipt.dataset_id)}`, 8388608, {signal});
+    checkAbort(signal);
+    const payload = object(JSON.parse(new TextDecoder("utf-8", {fatal:true}).decode(datasetBytes)));
     keys(payload, "schema dataset_id version owner_id project_id raw_asset_id parent_raw_sha256 parent_raw_bytes parser_version modality dimensions axis_order request_utf8 request_sha256 geometry_plan source_record_id survey_source_id rights_decision private_storage_permission qc_verdict".split(" "), "magnetic physical dataset");
     equal(payload.schema, receipt.schema, "dataset schema"); equal(payload.modality, receipt.modality, "modality");
     equal(payload.dataset_id, receipt.dataset_id, "dataset"); equal(payload.project_id, project, "dataset project");
@@ -186,7 +188,9 @@ export class MagneticProcessingApi {
     await verifyJob(job); bindJob(project, receipt, job);
     const expectedSha = job.result_sha256;
     if (job.state !== "succeeded" || expectedSha === null) return refuse("non-success export");
-    const blob = await this.api.requestBlob(`${jobPath(project, job.job_id)}/export`, {signal});
+    const bytes = await this.api.requestBoundedBytes(`${jobPath(project, job.job_id)}/export`, 128*1024**2, {signal});
+    checkAbort(signal);
+    const blob = new Blob([bytes as Uint8Array<ArrayBuffer>], {type:"application/zip"});
     const verified = await verifyMagneticDownload(blob, expectedSha);
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
     return verified;
