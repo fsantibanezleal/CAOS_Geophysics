@@ -2,6 +2,7 @@
 import { ApiClient } from '../../api/client';
 import { object,parseStart,parseJob,parseResult,uuid,hash, type SurveyStart,type SurveyJob,type FileIdentity } from './contract';
 import { parseRegistry,registryReader } from './registry';
+import {parseAssetHeader,parseAssetReceipt,parseDatasetRequest,parseDatasetReceipt,type AssetHeader,type DatasetRequest} from './intakeContract';
 
 const path = (project: string) => `/api/projects/${uuid(project)}/magnetic-line-surveys/jobs`;
 const same = (left: string,right: string) => { if (left !== right) throw new Error('Survey identity mismatch'); };
@@ -16,6 +17,20 @@ export class MagneticLineSurveyApi {
     same(job.project_id,project);
     if (id) same(job.job_id,id);
     return job;
+  }
+  async upload(project:string,file:File,header:AssetHeader) {
+    const declared=parseAssetHeader(header);
+    if(file.size!==declared.source.expected_bytes||file.name!==declared.filename)throw new Error('Selected original identity mismatch');
+    // Shared upload does not promise cancellation. Await actual custody receipt.
+    const receipt=await this.transport.requestUpload(`/api/projects/${uuid(project)}/magnetic-line-surveys/assets`,
+      file,declared.mime,JSON.stringify(declared),parseAssetReceipt,await this.csrf());
+    same(receipt.role,declared.role);same(receipt.sha256,declared.source.expected_sha256);
+    if(receipt.bytes!==file.size)throw new Error('Original upload byte mismatch');
+    return receipt;
+  }
+  async createDataset(project:string,request:DatasetRequest,signal?:AbortSignal) {
+    return this.transport.requestJson(`/api/projects/${uuid(project)}/magnetic-line-surveys/datasets`,parseDatasetReceipt,
+      {method:'POST',csrfToken:await this.csrf(signal),body:parseDatasetRequest(request),signal});
   }
   async start(project: string,request: SurveyStart,signal?: AbortSignal) {
     const body = parseStart(request);

@@ -5,6 +5,7 @@ import { uuid,type SurveyJob,type SurveyResult,type SurveyStart,type CrossoverRo
 import { MagneticLineSurveyApi } from './api';
 import {profileOrdinal,sameDisplayWindow,type DisplayWindowBinding} from './display';
 import { readArrayWindow,readCrossoverWindow,resolveChannelMask,type MemberReader,type ArrayWindow } from './members';
+import {SurveyActionGate,type SurveyActionLease} from './actionCustody';
 import './instrument.css';
 
 export interface SurveySourceChoice {
@@ -24,11 +25,14 @@ function bounds(values: number[]): [number,number] {
   const pad=Math.max((high-low)*.05,Math.max(Math.abs(low),Math.abs(high),1)*1e-9);
   return [low-pad,high+pad];
 }
-export function SurveyInstrument({api,projectId,sources,readMember:suppliedReader}: {
+export function SurveyInstrument({api,projectId,sources,readMember:suppliedReader,onActivityChange,actionsDisabled=false,claimAction}: {
   api: MagneticLineSurveyApi; projectId: string; sources: SurveySourceChoice[];
   // An actual persisted owner/job/member UUID binding supplied by the parent,
   // not a filename-to-URL fallback or direct provider request.
   readMember?: (job: SurveyJob) => MemberReader;
+  onActivityChange?: (active:boolean)=>void;
+  actionsDisabled?:boolean;
+  claimAction?:()=>SurveyActionLease|null;
 }) {
   const readMember=useMemo(()=>suppliedReader??((job:SurveyJob)=>api.reader(projectId,job)),[suppliedReader,api,projectId]);
   const es=useShellLang()==='es',format=useFormat(),t=(en:string,sp:string)=>es?sp:en;
@@ -52,6 +56,7 @@ export function SurveyInstrument({api,projectId,sources,readMember:suppliedReade
   const [crossovers,setCrossovers]=useState<CrossoverRow[]>([]),[crossFirst,setCrossFirst]=useState(0),[crossSelected,setCrossSelected]=useState(0);
   const [busy,setBusy]=useState(false),[error,setError]=useState(false),[exported,setExported]=useState(false);
   const action=useRef<AbortController|null>(null),generation=useRef(0);
+  const localGate=useRef(new SurveyActionGate());
   useEffect(()=>()=>action.current?.abort(),[]);
   useEffect(()=>{
     generation.current++;action.current?.abort();setJob(null);setResult(null);setRows(null);setTile(null);
@@ -121,10 +126,12 @@ export function SurveyInstrument({api,projectId,sources,readMember:suppliedReade
     return ()=>abort.abort();
   },[result,job,readMember,view,first,channel,plane,gridRow]);
   const perform=async(work:(signal:AbortSignal)=>Promise<void>)=>{
+    if(actionsDisabled||busy)return;
+    const lease=claimAction?claimAction():localGate.current.claim(projectId);if(!lease)return;
     action.current?.abort();const abort=new AbortController();action.current=abort;
     const epoch=generation.current;setBusy(true);setError(false);
     try {await work(abort.signal);} catch {if(!abort.signal.aborted && epoch===generation.current)setError(true);}
-    finally {if(epoch===generation.current)setBusy(false);}
+    finally {lease.release();if(epoch===generation.current)setBusy(false);}
   };
   const series=useMemo(()=>rows?numbers(rows.values).map((value,i)=>rows.flags&&Number(rows.flags.cells[i])?null:value):[],[rows]);
   const [low,high]=bounds(series.filter((v):v is number=>v!==null));
@@ -133,6 +140,10 @@ export function SurveyInstrument({api,projectId,sources,readMember:suppliedReade
   const x=(index:number)=>55+index/Math.max(series.length-1,1)*560;
   const selectedValue=rows&&selected<rows.values.rows && (!rows.flags || rows.flags.cells[selected]===0) ? Number(rows.values.cells[selected]) : null;
   const active=job && ['queued','running'].includes(job.state);
+  useEffect(()=>{onActivityChange?.(busy||!!active);},[busy,active,onActivityChange]);
+  useEffect(()=>{
+    if(!active&&!busy&&!sources.some(v=>v.id===sourceId))setSourceId(sources[0]?.id??'');
+  },[active,busy,sources,sourceId]);
   const total=view==='validation'?result?.evaluation.observed.shape[0]:result?.geometry.rows;
   return <section className="m03-instrument" aria-label={t('Aeromagnetic survey instrument','Instrumento de levantamiento aeromagnético')}>
     <form className="m03-saved-open" onSubmit={event=>{event.preventDefault();void perform(async signal=>{
@@ -142,25 +153,33 @@ export function SurveyInstrument({api,projectId,sources,readMember:suppliedReade
     });}}>
       <label className="select-control" htmlFor="m03-saved-job"><span>{t('Saved owner job UUID','UUID de trabajo guardado del propietario')}</span>
         <input className="select" id="m03-saved-job" value={savedJobId} maxLength={36} autoComplete="off" spellCheck={false}
-          disabled={busy||!!active} onChange={event=>setSavedJobId(event.target.value)}/></label>
-      <button className="btn" type="submit" disabled={!savedJobId||busy||!!active}>{t('Open saved evidence','Abrir evidencia guardada')}</button>
+          disabled={actionsDisabled||busy||!!active} onChange={event=>setSavedJobId(event.target.value)}/></label>
+      <button className="btn" type="submit" disabled={actionsDisabled||!savedJobId||busy||!!active}>{t('Open saved evidence','Abrir evidencia guardada')}</button>
     </form>
     <label className="select-control"><span>{t('Owner-bound original source','Fuente original vinculada al propietario')}</span>
-      <select className="select" value={sourceId} disabled={sources.length===0||!!active} onChange={event=>{setJob(null);setResult(null);setSourceId(event.target.value);}}>
+      <select className="select" value={sourceId} disabled={actionsDisabled||busy||sources.length===0||!!active} onChange={event=>{setJob(null);setResult(null);setSourceId(event.target.value);}}>
         {sources.map(item=><option key={item.id} value={item.id}>{es?item.title.es:item.title.en}</option>)}
       </select></label>
     {source&&<p>{es?source.review.es:source.review.en} · {format(source.original_rows)} {t('original rows; never substituted','filas originales; nunca sustituidas')}. {source.source_kind==='authored'?t('Authored control, not field data.','Control autorado, no datos de campo.'):t('Source authentication and field acceptance are separate.','Autenticación de fuente y aceptación de campo son distintas.')}</p>}
     <div className="m03-actions">
-      <button className="btn" disabled={!source||busy||!!active} onClick={()=>perform(async signal=>{setJob(null);setResult(null);setExported(false);const started=await api.start(projectId,source!.start,signal);if(!signal.aborted)setJob(started);})}>{t('Run complete survey','Procesar levantamiento completo')}</button>
-      <button className="btn" disabled={!active||busy} onClick={()=>perform(async signal=>{const cancelled=await api.cancel(projectId,job!.job_id,signal);if(!signal.aborted)setJob(cancelled);})}>{t('Cancel and drain','Cancelar y drenar')}</button>
-      <button className="btn" disabled={!result||busy} onClick={()=>perform(async signal=>{await api.export(projectId,job!.job_id,'private',signal);if(!signal.aborted)setExported(true);})}>{t('Create private export','Crear exportación privada')}</button>
-      <button className="btn" disabled={!result||busy} onClick={()=>perform(async signal=>{await api.export(projectId,job!.job_id,'public',signal);if(!signal.aborted)setExported(true);})}>{t('Request rights-checked public export','Solicitar exportación pública con permisos')}</button>
+      <button className="btn" disabled={actionsDisabled||!source||busy||!!active} onClick={()=>perform(async signal=>{setJob(null);setResult(null);setExported(false);const started=await api.start(projectId,source!.start,signal);if(!signal.aborted)setJob(started);})}>{t('Run complete survey','Procesar levantamiento completo')}</button>
+      <button className="btn" disabled={actionsDisabled||!active||busy} onClick={()=>perform(async signal=>{const cancelled=await api.cancel(projectId,job!.job_id,signal);if(!signal.aborted)setJob(cancelled);})}>{t('Cancel and drain','Cancelar y drenar')}</button>
+      <button className="btn" disabled={actionsDisabled||!result||busy} onClick={()=>perform(async signal=>{await api.export(projectId,job!.job_id,'private',signal);if(!signal.aborted)setExported(true);})}>{t('Create private export','Crear exportación privada')}</button>
+      <button className="btn" disabled={actionsDisabled||!result||busy} onClick={()=>perform(async signal=>{await api.export(projectId,job!.job_id,'public',signal);if(!signal.aborted)setExported(true);})}>{t('Request rights-checked public export','Solicitar exportación pública con permisos')}</button>
     </div>
     {job&&<p role="status">{t('Execution state','Estado de ejecución')}: {job.state} {job.cancel_requested?t('drain requested, not yet proved','drenaje solicitado, aún no comprobado'):''}</p>}
     {error&&<p role="alert">{t('The owner request or verified member could not be completed. No missing value was filled.','No se pudo completar la solicitud del propietario o miembro verificado. No se rellenó ningún valor ausente.')}</p>}
     {exported&&<p role="status">{t('Export response received. Replay availability and actual execution remain distinct.','Respuesta de exportación recibida. Disponibilidad y ejecución real de reproducción son distintas.')}</p>}
     {result&&<>
       <p>{t('Scientific verdict','Veredicto científico')}: {result.verdict.overall} · {format(result.fit.fit_count)} {t('actual global fits','ajustes globales reales')} · {format(result.fit.selected_depth_m)} m · λ {format(result.fit.selected_damping)}.</p>
+      {result.policy_epoch==='augmented_direct_qr_v3'&&result.fit.solve&&<>
+        <p>{t('Separate augmented direct QR epoch, not an LSMR convergence status.','Época QR directa aumentada separada, no un estado de convergencia LSMR.')}</p>
+        <Readout lane="replay" provenance={result.lane==='local_synthetic'?'synthetic':'real'} title={{en:'Original-coordinate numerical diagnostics',es:'Diagnósticos numéricos en coordenadas originales'}} items={[
+          {label:{en:'Relative original gradient',es:'Gradiente relativo original'},value:result.fit.solve.original_diagnostics.stationarity_relative,unitless:true},
+          {label:{en:'Augmented B condition upper bound',es:'Cota superior de condición de B aumentada'},value:result.fit.solve.condition_upper_bound,unitless:true},
+        ]}/>
+        <p>{result.fit.solve.condition_domain}</p>
+      </>}
       <ul>{result.verdict.gates.map(gate=><li key={gate.gate_id}>{gate.gate_id}: {gate.verdict}</li>)}</ul>
       <label className="select-control"><span>{t('Scientific view','Vista científica')}</span><select className="select" value={view} onChange={event=>{setView(event.target.value as typeof view);setFirst(0);setSelected(0);}}>
         <option value="lines">{t('Original-row corrections','Correcciones en filas originales')}</option><option value="validation">{t('Retained outer residuals','Residuos externos conservados')}</option><option value="grid">{t('Global fitted planes','Planos ajustados globales')}</option></select></label>

@@ -127,6 +127,63 @@ themes, desktop/phone, cross-owner failures and keyboard selection. Unit tests,
 strict TypeScript and parsing an actual retained Result are not that browser gate.
 No synthetic HTTP service or mocked lifecycle may substitute for it.
 
+## Additive QR and intake/dataset representations
+
+Result/3 is read as the separate augmented_direct_qr_v3 epoch. Its additive
+schema_qr.json is a mechanical transcription of the frozen Python descriptors,
+not a modification of Result/2, metadata/request/2 or the97-fit qualification
+sources. The client validates exact original-coordinate diagnostic equations,
+unmodified1e-9 relative-gradient and strict1e8 augmented-B condition boundaries,
+the dense integer capacity equation and engine DLL identities. These checks are
+representation integrity, not a replacement for scientific recomputation.
+The instrument labels QR distinctly from LSMR and reports the B domain explicitly.
+
+The owned intake/dataset leaf uses the existing same-origin ApiClient upload
+transport. Only an actual selected File/Blob is transmitted, preserving all
+original bytes; no URL, local device path or embedded example is accepted. The
+user supplies provider, attribution, actual SHA256 and the exact rights statement,
+decision and private-storage attestation. Size is taken from File.size. It is not
+inferred that a provider, rights assertion or filename has been verified. No
+whole4GiB browser buffer is allocated to compute a hash; the server independently
+streams and verifies the declared digest. JSON sidecars remain immutable files.
+
+Asset receipt has8 exact keys; dataset request has9 and the dataset receipt has8.
+Actual UUID/SHA receipts must agree with the submitted role/hash/size. Exactly one
+original, metadata and request reference and all actual chosen auxiliary receipt
+pairs form the request; no nonexistent Dataset UUID is fabricated before creation.
+Only a201 published dataset receipt supplies the Dataset UUID/SHA/row count for
+the existing11-key start DTO. Dataset birth does not start science automatically.
+Every receipt says provider not_verified and field not_established. A project
+change discards stale local references. Clearing a reference never claims deletion
+of durable bytes. Shared upload has no AbortSignal; the leaf waits for the actual
+receipt and rejects stale generations, never claims upload cancellation/drain.
+Mount/navigation, trusted fixed preparation installation, all-writer quota,
+canonical schema union and actual current-shell browser workflow remain parent
+integration gates. There is no mock API, no CLOSED completion or default enable.
+
+### Sibling action custody
+
+The composed intake and instrument share one synchronous in-view action lease.
+It is claimed before sending an HTTP operation, so a sibling or repeated
+submission cannot enter before React activity effects update. Source selection,
+start and exports are disabled during the pending operation. A stale finalizer
+cannot release another lease. Project changes do not clear an outstanding lease;
+dataset publication is awaited and stale receipts are discarded for display.
+Client abort is not used as evidence of dataset rollback or native drain.
+
+This lease is only UI request coordination. HTTP settlement can still leave
+uncertain server custody after network failure; server reconciliation, quota,
+actual native drain and fixed installation remain mandatory. It is not device
+scheduling or permission to delete retained bytes. Four deterministic lease
+controls supplement the original29 contracts (18 source/registry,6 intake,
+5 QR), giving33 actual required cases,
+with no skipped cases. Current-shell pointer/keyboard/browser gates are separate.
+
+ES: Ambos componentes comparten una reserva síncrona de acción de interfaz.
+Cambiar de proyecto no libera una solicitud pendiente; un finalizador antiguo
+no libera otra acción. La respuesta HTTP no prueba rollback, drenaje nativo ni
+ausencia de deuda. Los controles del servidor y la recuperación siguen vigentes.
+
 ## Español: instrumento y límites verificables
 
 El componente aislado usa el shell0.8 y se compone en el CaseWorkbench existente.

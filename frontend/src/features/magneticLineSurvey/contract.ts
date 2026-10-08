@@ -1,5 +1,6 @@
 /** Closed wire/representation validation. Scientific acceptance stays server-side. */
 import descriptor from './schema.json';
+import qrDescriptor from './schema_qr.json';
 
 type ObjectValue = Record<string, unknown>;
 type Spec = string | unknown[];
@@ -59,7 +60,7 @@ function typed(value: unknown, spec: Spec, registry: Registry, parent?: ObjectVa
       return typed(value,name,registry,undefined,depth+1);
     }
     if (tag === 'policy_geometry' || tag === 'policy_fit') {
-      const target = parent?.policy_epoch === 'fixed_basis_v1' ? descriptor.v1 : descriptor.v2;
+      const target = parent?.policy_epoch === 'fixed_basis_v1' ? descriptor.v1 : parent?.policy_epoch === 'augmented_direct_qr_v3' ? qrDescriptor : descriptor.v2;
       return typed(value,tag === 'policy_geometry' ? 'GeometrySeal' : 'FitReceipt',target as Registry,undefined,depth+1);
     }
     fail();
@@ -69,6 +70,7 @@ function typed(value: unknown, spec: Spec, registry: Registry, parent?: ObjectVa
   if (table) {
     const item = closed(value,Object.keys(table));
     for (const [key,child] of Object.entries(table)) typed(item[key],child,registry,item,depth+1);
+    if (registry === (qrDescriptor as unknown as Registry)) qrConditions(spec,item);
     return item;
   }
   if (spec === 'Bool') { if (typeof value !== 'boolean') fail(); return value; }
@@ -89,8 +91,47 @@ function typed(value: unknown, spec: Spec, registry: Registry, parent?: ObjectVa
   else if (spec !== 'ID' && spec !== 'Text') fail();
   return value;
 }
-export function parseRepresentation(name: string,value: unknown,epoch: 1|2): ObjectValue {
-  return typed(value,name,(epoch === 1 ? descriptor.v1 : descriptor.v2) as Registry) as ObjectValue;
+export function parseRepresentation(name: string,value: unknown,epoch: 1|2|3): ObjectValue {
+  return typed(value,name,(epoch === 1 ? descriptor.v1 : epoch === 3 ? qrDescriptor : descriptor.v2) as Registry) as ObjectValue;
+}
+
+/** Exact QR representation invariants, never a browser scientific recomputation. */
+function qrConditions(name:string,v:ObjectValue) {
+  if(name==='DenseCapacity') {
+    const n=Number(v.rows),m=Number(v.sources),r=n+m,work=Number(v.lwork);
+    if(m>n||work<2*m||v.augmented_rows!==r||v.augmented_matrix_bytes!==8*r*m||v.triangular_matrix_bytes!==8*m*m||
+      v.extra_peak_bytes!==8*(4*r*m+4*m*m+8*r+16*m+work)+33554432||
+      v.factorization_work_bound!==8*r*m*m+8*m*m*m)fail();
+  } else if(name==='OriginalDiagnostics') {
+    const denominator=Number(v.gradient_denominator),gradient=Number(v.stationarity_inf);
+    if(v.objective!==Number(v.data_term)+Number(v.regularization_term)||
+      denominator===0&&gradient!==0||v.stationarity_relative!==(denominator?gradient/denominator:0)||Number(v.stationarity_relative)>1e-9)fail();
+  } else if(name==='EngineIdentity') {
+    const pools=v.blas as ObjectValue[];
+    if(pools[0].library!=='numpy.libs'||pools[1].library!=='scipy.libs'||
+      pools[0].sha256!=='6547e9fb966e9773caee2755e91a8bf4d6f3a2f0eebf9646b0158f8675ea4ab5'||
+      pools[1].sha256!=='6b2103f2ae4d8547998b5d188e9801fba6cb12404ae8e4bfff319e8cc1949000')fail();
+  } else if(name==='QRSolve') {
+    const capacity=object(v.dense_capacity);
+    if(v.augmented_rows!==Number(v.rows)+Number(v.sources)||Number(v.condition_upper_bound)>=1e8||
+      Number(v.triangular_diagonal_min_abs)>Number(v.triangular_diagonal_max_abs)||
+      ['rows','sources','augmented_rows','lwork'].some(key=>v[key]!==capacity[key]))fail();
+  } else if(name==='CandidateFit'||name==='SolveIdentity') {
+    if(v.damping!==object(v.solve).damping)fail();
+    if(name==='CandidateFit') {
+      const verdict=object(v.verdict),gates=verdict.gates as ObjectValue[];
+      if(v.rmse_nT===null||Number(v.scored)<1||verdict.overall!=='pass'||verdict.numerical_success!==true||
+        (verdict.reasons as unknown[]).length!==0||gates.length!==1||gates[0].gate_id!=='solve'||gates[0].verdict!=='pass'||
+        gates[0].reason!==null||typeof gates[0].evidence_sha256!=='string')fail();
+    }
+  } else if((name==='TableRef'||name==='TableManifest')&&['candidate_fit_qr_v3','qr_solve_identity'].includes(String(v.row_schema))) {
+    if(v.rows!==(v.row_schema==='candidate_fit_qr_v3'?96:97)||String(v.table_id).length>32||
+      name==='TableRef'&&object(v.manifest).name!==`table-${v.table_id}.json`)fail();
+  } else if(name==='FitReceipt') {
+    if(object(v.candidates).row_schema!=='candidate_fit_qr_v3'||object(v.solve_identities).row_schema!=='qr_solve_identity'||
+      v.selected_damping!==object(v.solve).damping||
+      (object(v.sources).shape as number[])[0]!==object(v.solve).sources)fail();
+  }
 }
 
 export interface SurveyStart {
@@ -152,12 +193,14 @@ export interface ArrayRef {
 export interface SurveyVerdict { overall: 'pass'|'fail'|'unresolved'; numerical_success: boolean; reasons: string[];
   gates: { gate_id: string; verdict: string; evidence_sha256: string|null; reason: string|null }[] }
 export interface SurveyResult {
-  schema: 'magnetic-line-survey-result/2'; policy_epoch: 'fixed_basis_v1'|'resolution_v2'; run_id: string; lane: string;
+  schema: 'magnetic-line-survey-result/2'|'magnetic-line-survey-result/3'; policy_epoch: 'fixed_basis_v1'|'resolution_v2'|'augmented_direct_qr_v3'; run_id: string; lane: string;
+  execution?:FileIdentity;
   input: { dataset_sha256: string; original: {csv_sha256:string;csv_bytes:number}; metadata: FileIdentity; arrays: ArrayRef[] };
   request: FileIdentity; geometry: { rows:number;arrays:ArrayRef[];capacity:{profile:string;scratch_bound_bytes:number;kernel_pair_bound:number} };
   inventory: {original_rows:number;retained:number;invalid:number;excluded:number;flags:ArrayRef};
   channels: {channel_id:string;kind:string;role:string;data:ArrayRef;state:ObjectValue[]}[];
-  fit: {fit_count:number;selected_depth_m:number;selected_damping:number;selected_source_geometry_index?:number};
+  fit: {fit_count:number;selected_depth_m:number;selected_damping:number;selected_source_geometry_index?:number;
+    solve?:{condition_domain:string;condition_upper_bound:number;original_diagnostics:{stationarity_relative:number}}};
   grid: {role:string;values:ArrayRef;support_mask:ArrayRef;easting_axis:ArrayRef;northing_axis:ArrayRef;
     config:{nx:number;ny:number;origin_e_m:number;origin_n_m:number;spacing_e_m:number;spacing_n_m:number;plane_upward_m:number;datum:string}}[];
   evaluation: {rmse_nT:number;signal_rms_nT:number;coverage:number;observed:ArrayRef;predicted:ArrayRef;residual:ArrayRef;verdict:SurveyVerdict};
@@ -166,10 +209,12 @@ export interface SurveyResult {
   verdict: SurveyVerdict;
 }
 export function parseResult(value: unknown): SurveyResult {
-  typed(value,'SurveyResult',descriptor.v2 as Registry);
+  const isQr=object(value).schema==='magnetic-line-survey-result/3';
+  typed(value,'SurveyResult',(isQr?qrDescriptor:descriptor.v2) as Registry);
   const result = value as SurveyResult;
   if (result.inventory.original_rows !== result.geometry.rows || result.inventory.retained + result.inventory.invalid + result.inventory.excluded !== result.geometry.rows ||
       result.fit.fit_count !== (result.policy_epoch === 'fixed_basis_v1' ? 25 : 97) && !(result.policy_epoch === 'resolution_v2' && result.fit.fit_count === 98)) fail();
+  if(isQr&&(!result.execution||result.policy_epoch!=='augmented_direct_qr_v3'||result.fit.fit_count!==97))fail();
   const inspect = (item: unknown): void => {
     if (Array.isArray(item)) { item.forEach(inspect); return; }
     if (!item || typeof item !== 'object') return;

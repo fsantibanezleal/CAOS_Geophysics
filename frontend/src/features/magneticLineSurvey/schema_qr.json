@@ -1,0 +1,2799 @@
+{
+  "Acquisition": {
+    "declared_precision_s": "?Pos",
+    "height_consistency_tolerance_m": "?Nonneg",
+    "line_dictionary": [
+      "list",
+      "LineDefinition",
+      1,
+      32
+    ],
+    "max_segment_gap_m": "Pos",
+    "max_time_gap_s": "?Pos",
+    "sensor_dictionary": [
+      "list",
+      "SensorDefinition",
+      1,
+      4
+    ],
+    "timestamp_basis": [
+      "enum",
+      [
+        "UTC",
+        "absent",
+        "unknown"
+      ]
+    ]
+  },
+  "ArrayManifest": {
+    "array_id": "ID",
+    "content_sha256": "Hash",
+    "dtype": [
+      "enum",
+      [
+        "float64",
+        "uint8",
+        "uint32",
+        "uint64",
+        "int64",
+        "ascii64",
+        "ascii30"
+      ]
+    ],
+    "pages": [
+      "list",
+      "PageIdentity",
+      0,
+      512
+    ],
+    "schema": [
+      "literal",
+      "magnetic-line-array-manifest/2"
+    ],
+    "shape": [
+      "list",
+      [
+        "int",
+        0,
+        16000000
+      ],
+      1,
+      2
+    ],
+    "unit": [
+      "enum",
+      [
+        "m",
+        "nT",
+        "nT^2",
+        "nT*m",
+        "nT^-2",
+        "1_per_m",
+        "s",
+        "degree",
+        "decimal_year",
+        "dimensionless",
+        "identity",
+        "UTC",
+        "cycles_per_m",
+        "rad_per_m"
+      ]
+    ]
+  },
+  "ArrayRef": {
+    "array_id": "ID",
+    "chunk_rows": [
+      "int",
+      1,
+      4096
+    ],
+    "dtype": [
+      "enum",
+      [
+        "float64",
+        "uint8",
+        "uint32",
+        "uint64",
+        "int64",
+        "ascii64",
+        "ascii30"
+      ]
+    ],
+    "manifest": "FileIdentity",
+    "mask_array_id": "?ID",
+    "ordered_ids_sha256": "Hash",
+    "role": [
+      "enum",
+      [
+        "row_id",
+        "line_index",
+        "sensor_index",
+        "ordinal",
+        "utc",
+        "easting",
+        "northing",
+        "upward",
+        "terrain_upward",
+        "clearance",
+        "magnetic",
+        "uncertainty",
+        "heading",
+        "missing_mask",
+        "qc_mask",
+        "partition_index",
+        "source_position",
+        "source_block_member",
+        "source_scale",
+        "coefficient",
+        "predicted",
+        "residual",
+        "reference_east",
+        "reference_north",
+        "reference_up",
+        "reference_F",
+        "reference_date",
+        "navigation",
+        "base",
+        "crossover",
+        "offset",
+        "grid_coordinate",
+        "grid_value",
+        "grid_mask",
+        "spectrum_axis",
+        "spectrum_power",
+        "microlevel_removed",
+        "microlevel_retained",
+        "grid_axis",
+        "microlevel_transfer"
+      ]
+    ],
+    "shape": [
+      "list",
+      [
+        "int",
+        0,
+        16000000
+      ],
+      1,
+      2
+    ],
+    "unit": [
+      "enum",
+      [
+        "m",
+        "nT",
+        "nT^2",
+        "nT*m",
+        "nT^-2",
+        "1_per_m",
+        "s",
+        "degree",
+        "decimal_year",
+        "dimensionless",
+        "identity",
+        "UTC",
+        "cycles_per_m",
+        "rad_per_m"
+      ]
+    ]
+  },
+  "AuthoredControl": {
+    "authored_clock_and_datum": "Text",
+    "generator_revision": "ID",
+    "notice": [
+      "literal",
+      "synthetic, not field"
+    ],
+    "regime": [
+      "enum",
+      [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "S6",
+        "plane",
+        "null",
+        "periodic",
+        "geometry"
+      ]
+    ],
+    "seed": [
+      "int",
+      0,
+      2147483647
+    ],
+    "truth_definition": "Text"
+  },
+  "AuxIdentity": {
+    "canonical_records_sha256": "Hash",
+    "rights": "Rights",
+    "source_receipt_sha256": "?Hash",
+    "source_sha256": "?Hash",
+    "source_verification": [
+      "enum",
+      [
+        "reviewed_original",
+        "user_claimed",
+        "authored"
+      ]
+    ]
+  },
+  "BLASIdentity": {
+    "library": [
+      "enum",
+      [
+        "numpy.libs",
+        "scipy.libs"
+      ]
+    ],
+    "prefix": [
+      "literal",
+      "libscipy_openblas"
+    ],
+    "sha256": "Hash",
+    "threads": [
+      "literal",
+      1
+    ]
+  },
+  "BaseRecord": {
+    "intensity_nT": "F64",
+    "utc": "UTC"
+  },
+  "BaseSeries": {
+    "clock": "Clock",
+    "identity": "AuxIdentity",
+    "quantity": [
+      "literal",
+      "scalar_total_intensity"
+    ],
+    "records": [
+      "list",
+      "BaseRecord",
+      2,
+      4096
+    ],
+    "schema": [
+      "literal",
+      "magnetic-base/1"
+    ],
+    "station_id": "ID",
+    "unit": [
+      "literal",
+      "nT"
+    ]
+  },
+  "BoundaryPolicy": {
+    "crop": [
+      "literal",
+      "original_extent"
+    ],
+    "detrend": [
+      "enum",
+      [
+        "none",
+        "remove_mean"
+      ]
+    ],
+    "mode": [
+      "enum",
+      [
+        "periodic",
+        "zero_pad",
+        "reflect_pad"
+      ]
+    ],
+    "pad_e_cells": [
+      "int",
+      0,
+      16384
+    ],
+    "pad_n_cells": [
+      "int",
+      0,
+      16384
+    ],
+    "taper": [
+      "enum",
+      [
+        "none",
+        "hann"
+      ]
+    ]
+  },
+  "CalibrationIdentity": {
+    "calibration_row_ids": [
+      "list",
+      "ID",
+      0,
+      400
+    ],
+    "coefficient_receipt_sha256": "Hash",
+    "identity": "AuxIdentity",
+    "partition": [
+      "literal",
+      "independent_calibration"
+    ]
+  },
+  "CandidateFit": {
+    "damping": "Pos",
+    "depth_m": "Pos",
+    "excluded": [
+      "int",
+      0,
+      8000000
+    ],
+    "fold_id": "ID",
+    "rmse_nT": "?Nonneg",
+    "scored": [
+      "int",
+      0,
+      8000000
+    ],
+    "solve": "QRSolve",
+    "source_geometry_index": [
+      "int",
+      0,
+      3
+    ],
+    "verdict": "SurveyVerdict"
+  },
+  "CapacityRecord": {
+    "auxiliary_bytes": [
+      "int",
+      0,
+      4294967296
+    ],
+    "auxiliary_rows": [
+      "int",
+      0,
+      16000000
+    ],
+    "crossover_candidates": [
+      "int",
+      0,
+      8000000
+    ],
+    "exported_cells": [
+      "int",
+      0,
+      1048576
+    ],
+    "fft_cells": [
+      "int",
+      0,
+      4194304
+    ],
+    "fit_buffer_bytes": [
+      "int",
+      0,
+      4294967296
+    ],
+    "geometry_buffer_bytes": [
+      "int",
+      0,
+      4294967296
+    ],
+    "kernel_pair_bound": [
+      "int",
+      0,
+      1000000000000000
+    ],
+    "profile": [
+      "literal",
+      "m03-offline-stream/2"
+    ],
+    "raw_bytes": [
+      "int",
+      1,
+      4294967296
+    ],
+    "resource_state": [
+      "enum",
+      [
+        "unmeasured",
+        "measured_pass",
+        "refused"
+      ]
+    ],
+    "rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "scratch_bound_bytes": [
+      "int",
+      0,
+      34359738368
+    ],
+    "sources": [
+      "int",
+      1,
+      65536
+    ],
+    "transform_buffer_bytes": [
+      "int",
+      0,
+      4294967296
+    ]
+  },
+  "ChannelReceipt": {
+    "channel_id": "ID",
+    "data": "ArrayRef",
+    "kind": [
+      "enum",
+      [
+        "scalar_total_intensity",
+        "scalar_total_field_anomaly"
+      ]
+    ],
+    "parent_sha256": "?Hash",
+    "reference_receipt_sha256": "?Hash",
+    "role": [
+      "enum",
+      [
+        "original",
+        "derived",
+        "diagnostic_removed",
+        "diagnostic_retained"
+      ]
+    ],
+    "state": [
+      "list",
+      "SurveyState",
+      0,
+      64
+    ]
+  },
+  "ChunkIdentity": {
+    "bytes": [
+      "int",
+      1,
+      8388608
+    ],
+    "first_row": [
+      "int",
+      0,
+      15999999
+    ],
+    "name": "ID",
+    "rows": [
+      "int",
+      1,
+      4096
+    ],
+    "sequence": [
+      "int",
+      0,
+      32767
+    ],
+    "sha256": "Hash"
+  },
+  "Clock": {
+    "basis": [
+      "literal",
+      "UTC"
+    ],
+    "precision_s": "Pos",
+    "synchronization_error_s": "?Nonneg",
+    "synchronization_evidence_sha256": "Hash"
+  },
+  "ComparisonReceipt": {
+    "coordinates": "Coordinates",
+    "provider_identity": "AuxIdentity",
+    "quantity": "Quantity",
+    "residual": "ArrayRef",
+    "rmse_nT": "?Nonneg",
+    "values": "ArrayRef",
+    "verdict": "SurveyVerdict"
+  },
+  "Coordinates": {
+    "axis_order": [
+      "literal",
+      "easting_northing"
+    ],
+    "datum_transform": "?DatumTransform",
+    "geometry_accuracy_m": "?Nonneg",
+    "horizontal_crs": "Text",
+    "vertical_axis": [
+      "literal",
+      "upward"
+    ],
+    "vertical_datum": "?Text",
+    "xy_unit": [
+      "literal",
+      "m"
+    ],
+    "z_unit": [
+      "literal",
+      "m"
+    ]
+  },
+  "CrossoverGeometry": {
+    "a": "?F64",
+    "b": "?F64",
+    "constraint_representative": "?ID",
+    "crossover_id": "ID",
+    "disposition": [
+      "enum",
+      [
+        "admitted",
+        "rejected"
+      ]
+    ],
+    "easting_m": "?F64",
+    "flight_segment_id": "ID",
+    "height_difference_m": "?F64",
+    "northing_m": "?F64",
+    "reasons": [
+      "list",
+      "CrossoverReason",
+      0,
+      16
+    ],
+    "shared_endpoint_group_id": "?ID",
+    "tie_segment_id": "ID",
+    "time_separation_s": "?Nonneg",
+    "tolerance": "IntersectionTolerance"
+  },
+  "CrossoverPolicy": {
+    "channel_policy": [
+      "literal",
+      "same_channel_state"
+    ],
+    "collinear_policy": [
+      "literal",
+      "reject_overlap"
+    ],
+    "max_height_separation_m": "Nonneg",
+    "max_time_separation_s": "?Nonneg",
+    "min_crossing_sine": "Pos",
+    "sensor_policy": [
+      "literal",
+      "same_sensor"
+    ],
+    "shared_endpoint_policy": [
+      "literal",
+      "retain_pairs_one_physical_constraint"
+    ],
+    "uncertainty_policy": [
+      "enum",
+      [
+        "unweighted",
+        "documented_independent_rows"
+      ]
+    ]
+  },
+  "CrossoverValue": {
+    "a": "?F64",
+    "b": "?F64",
+    "constraint_representative": "?ID",
+    "crossover_id": "ID",
+    "difference_variance_nT2": "?Nonneg",
+    "disposition": [
+      "enum",
+      [
+        "admitted",
+        "rejected"
+      ]
+    ],
+    "easting_m": "?F64",
+    "flight_minus_tie_nT": "?F64",
+    "flight_segment_id": "ID",
+    "height_difference_m": "?F64",
+    "northing_m": "?F64",
+    "reasons": [
+      "list",
+      "CrossoverReason",
+      0,
+      16
+    ],
+    "shared_endpoint_group_id": "?ID",
+    "tie_segment_id": "ID",
+    "time_separation_s": "?Nonneg",
+    "tolerance": "IntersectionTolerance"
+  },
+  "DatumTransform": {
+    "evidence_sha256": "Hash",
+    "method": "Text",
+    "source_crs": "Text",
+    "target_crs": "Text",
+    "transformed_coordinates_sha256": "Hash",
+    "vertical_source": "Text",
+    "vertical_target": "Text"
+  },
+  "DenseCapacity": {
+    "augmented_buffer_slots": [
+      "literal",
+      4
+    ],
+    "augmented_matrix_bytes": [
+      "int",
+      1,
+      4294967296
+    ],
+    "augmented_rows": [
+      "int",
+      2,
+      8065536
+    ],
+    "extra_peak_bytes": [
+      "int",
+      1,
+      4294967296
+    ],
+    "factorization_work_bound": [
+      "int",
+      1,
+      1000000000000
+    ],
+    "lwork": [
+      "int",
+      1,
+      2147483647
+    ],
+    "rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "sources": [
+      "int",
+      1,
+      65536
+    ],
+    "triangular_buffer_slots": [
+      "literal",
+      4
+    ],
+    "triangular_matrix_bytes": [
+      "int",
+      1,
+      4294967296
+    ]
+  },
+  "DirectionSector": {
+    "azimuth_end_deg": "F64",
+    "azimuth_start_deg": "F64",
+    "sector_id": "ID"
+  },
+  "DiurnalParameters": {
+    "base": "SurveyBase",
+    "base_reference_nT": "F64",
+    "interpolation": [
+      "literal",
+      "linear_no_extrapolation"
+    ],
+    "max_bracket_gap_s": "Pos",
+    "sign": [
+      "literal",
+      "subtract_base_minus_reference"
+    ],
+    "valid_intervals": [
+      "list",
+      "TimeInterval",
+      1,
+      32
+    ]
+  },
+  "EngineIdentity": {
+    "blas": [
+      "list",
+      "BLASIdentity",
+      2,
+      2
+    ],
+    "flapack_sha256": [
+      "literal",
+      "000d0bf5b84cee94ead7022b9e6a55d1bdcb4b4e9fe4b7f218921cd35f06e2fa"
+    ],
+    "numpy": [
+      "literal",
+      "2.2.6"
+    ],
+    "scipy": [
+      "literal",
+      "1.15.2"
+    ],
+    "threads": [
+      "literal",
+      1
+    ]
+  },
+  "EquivalentSourcesConfig": {
+    "candidate_order": [
+      "literal",
+      "depth_then_damping_ascending"
+    ],
+    "column_scaling": [
+      "literal",
+      "unweighted_population_std_no_mean"
+    ],
+    "damping_candidates": [
+      "list",
+      "Pos",
+      4,
+      4
+    ],
+    "damping_unit": [
+      "enum",
+      [
+        "dimensionless",
+        "nT^-2"
+      ]
+    ],
+    "depth_candidates_m": [
+      "list",
+      "Pos",
+      2,
+      2
+    ],
+    "dtype": [
+      "literal",
+      "float64"
+    ],
+    "fit_intercept": [
+      "literal",
+      false
+    ],
+    "parallel": [
+      "literal",
+      false
+    ],
+    "source_geometry": "SourceGeometry",
+    "tie_break": [
+      "literal",
+      "larger_damping_then_depth"
+    ],
+    "weight_multiplier": "Pos",
+    "weights_policy": [
+      "enum",
+      [
+        "unweighted",
+        "admitted_inverse_variance"
+      ]
+    ]
+  },
+  "EvaluationReceipt": {
+    "comparison": "?ComparisonReceipt",
+    "coverage": "Nonneg",
+    "excluded": [
+      "int",
+      0,
+      8000000
+    ],
+    "observed": "ArrayRef",
+    "per_line": "TableRef",
+    "predicted": "ArrayRef",
+    "residual": "ArrayRef",
+    "rmse_nT": "?Nonneg",
+    "scored": [
+      "int",
+      0,
+      8000000
+    ],
+    "signal_rms_nT": "?Nonneg",
+    "verdict": "SurveyVerdict"
+  },
+  "Evaluator": {
+    "calculation": [
+      "literal",
+      "main_field"
+    ],
+    "input_coordinates_sha256": "Hash",
+    "name": "Text",
+    "revision": "Text",
+    "rounding_tolerance_nT": "Nonneg",
+    "source_rights_evidence_sha256": "Hash",
+    "source_sha256": "Hash",
+    "valid_end_decimal_year": "F64",
+    "valid_start_decimal_year": "F64"
+  },
+  "ExportPolicy": {
+    "derivative_requested": [
+      "enum",
+      [
+        "private",
+        "public"
+      ]
+    ],
+    "destination_policy": [
+      "literal",
+      "new_directory_only"
+    ],
+    "include_replay_inputs": [
+      "literal",
+      true
+    ],
+    "network_during_replay": [
+      "literal",
+      false
+    ],
+    "raw_requested": [
+      "enum",
+      [
+        "include",
+        "exclude"
+      ]
+    ],
+    "redaction_policy": [
+      "literal",
+      "deny_members_keep_reason"
+    ]
+  },
+  "FileIdentity": {
+    "bytes": [
+      "int",
+      1,
+      4194304
+    ],
+    "name": "ID",
+    "sha256": "Hash"
+  },
+  "FitReceipt": {
+    "candidates": "TableRef",
+    "coefficients": "ArrayRef",
+    "column_scales": "ArrayRef",
+    "fit_count": [
+      "literal",
+      97
+    ],
+    "legacy_request_solver": "SolverPolicy",
+    "scaled_coefficients": "FileIdentity",
+    "selected_damping": "Pos",
+    "selected_depth_m": "Pos",
+    "selected_source_geometry_index": [
+      "int",
+      0,
+      3
+    ],
+    "solve": "QRSolve",
+    "solve_identities": "TableRef",
+    "solver": "QRPolicy",
+    "sources": "ArrayRef"
+  },
+  "FoldReceipt": {
+    "exclusions": "ArrayRef",
+    "fold_id": "ID",
+    "source_members": "ArrayRef",
+    "training": "ArrayRef",
+    "validation": "ArrayRef"
+  },
+  "FoldSourceMap": {
+    "fold_id": "ID",
+    "source_geometry_index": [
+      "int",
+      0,
+      3
+    ],
+    "source_members": "ArrayRef",
+    "sources": "ArrayRef",
+    "training": "ArrayRef"
+  },
+  "GeometryPolicy": {
+    "crossover": "CrossoverPolicy",
+    "direction_tolerance_deg": "Pos",
+    "gap_policy": [
+      "literal",
+      "break_and_mask"
+    ],
+    "max_segment_gap_m": "Pos",
+    "max_time_gap_s": "?Pos",
+    "minimum_resolved_wavelength_m": "?Pos",
+    "numerical_tolerances": "NumericalTolerancePolicy",
+    "same_plane_height_tolerance_m": "?Nonneg",
+    "support_policy": [
+      "literal",
+      "closed_hull_and_nearest_training"
+    ],
+    "version": [
+      "literal",
+      "lines-geometry/1"
+    ]
+  },
+  "GeometrySeal": {
+    "acquisition_sha256": "Hash",
+    "arrays": [
+      "list",
+      "ArrayRef",
+      1,
+      128
+    ],
+    "capacity": "CapacityRecord",
+    "coordinates_sha256": "Hash",
+    "crossover_candidates": [
+      "int",
+      0,
+      8000000
+    ],
+    "dictionaries": [
+      "list",
+      "TableRef",
+      1,
+      16
+    ],
+    "lines": [
+      "int",
+      1,
+      65536
+    ],
+    "original": "SurveyOriginal",
+    "request_geometry_sha256": "Hash",
+    "rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "schema": [
+      "literal",
+      "magnetic-line-survey-geometry/2"
+    ],
+    "segments": [
+      "int",
+      0,
+      7999999
+    ],
+    "sensors": [
+      "int",
+      1,
+      4
+    ],
+    "source_counts_by_geometry": [
+      "list",
+      [
+        "list",
+        [
+          "int",
+          1,
+          65536
+        ],
+        4,
+        4
+      ],
+      4,
+      4
+    ],
+    "source_maps": [
+      "list",
+      "FoldSourceMap",
+      16,
+      16
+    ],
+    "value_access": [
+      "literal",
+      "not_opened"
+    ]
+  },
+  "GridConfig": {
+    "boundary_policy": "BoundaryPolicy",
+    "continuation_delta_m": "?Pos",
+    "datum": "Text",
+    "nx": [
+      "int",
+      2,
+      16384
+    ],
+    "ny": [
+      "int",
+      2,
+      16384
+    ],
+    "origin_e_m": "F64",
+    "origin_n_m": "F64",
+    "plane_upward_m": "F64",
+    "spacing_e_m": "Pos",
+    "spacing_n_m": "Pos",
+    "support_radius_m": "Pos"
+  },
+  "GridRectangle": {
+    "e_start": [
+      "int",
+      0,
+      16383
+    ],
+    "n_start": [
+      "int",
+      0,
+      16383
+    ],
+    "nx": [
+      "int",
+      2,
+      16384
+    ],
+    "ny": [
+      "int",
+      2,
+      16384
+    ]
+  },
+  "HeadingParameters": {
+    "a0_nT": "F64",
+    "ac_nT": "F64",
+    "as_nT": "F64",
+    "calibration": "SurveyCalibration",
+    "convention": [
+      "literal",
+      "clockwise_from_north_degrees"
+    ],
+    "sign": [
+      "literal",
+      "subtract_model"
+    ]
+  },
+  "IndependentOffsets": {
+    "calibration": "CalibrationIdentity",
+    "reference_gauge_id": "ID",
+    "values": [
+      "list",
+      "OffsetValue",
+      1,
+      32
+    ]
+  },
+  "InnerFold": {
+    "fold_id": "ID",
+    "validation_blocks": [
+      "list",
+      "SpatialBlock",
+      1,
+      32
+    ],
+    "validation_line_ids": [
+      "list",
+      "ID",
+      1,
+      32
+    ]
+  },
+  "InputReceipt": {
+    "arrays": [
+      "list",
+      "ArrayRef",
+      1,
+      128
+    ],
+    "auxiliary_identities": [
+      "list",
+      "AuxIdentity",
+      0,
+      16
+    ],
+    "dataset_sha256": "Hash",
+    "metadata": "FileIdentity",
+    "original": "SurveyOriginal"
+  },
+  "IntersectionTolerance": {
+    "coordinate_m": "Pos",
+    "determinant_m2": "?Pos",
+    "matrix_residual_m": "?Nonneg",
+    "parameter_dimensionless": "?Pos",
+    "sine_dimensionless": "?Pos"
+  },
+  "InventoryReceipt": {
+    "disposition": "ArrayRef",
+    "excluded": [
+      "int",
+      0,
+      8000000
+    ],
+    "flags": "ArrayRef",
+    "invalid": [
+      "int",
+      0,
+      8000000
+    ],
+    "original_rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "reasons": "ArrayRef",
+    "retained": [
+      "int",
+      0,
+      8000000
+    ]
+  },
+  "LagParameters": {
+    "definition": [
+      "literal",
+      "position_time = measurement_time + tau_s"
+    ],
+    "interpolation": [
+      "literal",
+      "linear_no_extrapolation"
+    ],
+    "max_bracket_gap_s": "Pos",
+    "navigation": "SurveyNavigation",
+    "tau_s": "F64"
+  },
+  "LevelComponent": {
+    "absolute_datum": [
+      "literal",
+      false
+    ],
+    "component_id": "ID",
+    "condition": "?Pos",
+    "gauge_line_id": "ID",
+    "line_ids": "ArrayRef",
+    "rank": [
+      "int",
+      0,
+      65536
+    ],
+    "rank_method": [
+      "literal",
+      "incidence_connected_component"
+    ],
+    "rank_receipt_sha256": "Hash",
+    "singular_values": "?ArrayRef"
+  },
+  "LevelingParameters": {
+    "crossover_policy": "CrossoverPolicy",
+    "gauge_policy": [
+      "literal",
+      "lexicographic_first_tie_per_component"
+    ],
+    "heldout_calibration": "?SurveyOffsets",
+    "scope": [
+      "literal",
+      "training_only"
+    ],
+    "weights_policy": [
+      "enum",
+      [
+        "unweighted",
+        "admitted_inverse_variance"
+      ]
+    ]
+  },
+  "LineDefinition": {
+    "description": "Text",
+    "kind": [
+      "enum",
+      [
+        "flight",
+        "tie",
+        "reflight"
+      ]
+    ],
+    "line_id": "ID",
+    "provider_code": "?Text"
+  },
+  "LineEvaluation": {
+    "excluded": [
+      "int",
+      0,
+      8000000
+    ],
+    "line_id": "ID",
+    "rmse_nT": "?Nonneg",
+    "scored": [
+      "int",
+      0,
+      8000000
+    ],
+    "signal_rms_nT": "?Nonneg"
+  },
+  "MainFieldParameters": {
+    "evaluated_reference": "SurveyReference",
+    "sign": [
+      "literal",
+      "subtract_F"
+    ]
+  },
+  "ManifestPage": {
+    "entries": [
+      "list",
+      "ChunkIdentity",
+      1,
+      2048
+    ],
+    "owner_id": "ID",
+    "schema": [
+      "literal",
+      "magnetic-line-manifest-page/1"
+    ],
+    "sequence": [
+      "int",
+      0,
+      511
+    ]
+  },
+  "MicrolevelParameters": {
+    "amplitude_cap_nT": "?Pos",
+    "flight_azimuth_deg": "F64",
+    "ka_rad_per_m": "Pos",
+    "kc_rad_per_m": "Pos",
+    "max_azimuth_spread_deg": "Pos",
+    "promotion": [
+      "literal",
+      "diagnostic_only"
+    ],
+    "spectrum_policy": "SurveySpectrum"
+  },
+  "NavigationRecord": {
+    "easting_m": "F64",
+    "line_id": "ID",
+    "northing_m": "F64",
+    "upward_m": "F64",
+    "utc": "UTC"
+  },
+  "NavigationSeries": {
+    "clock": "Clock",
+    "coordinates": "Coordinates",
+    "identity": "AuxIdentity",
+    "records": [
+      "list",
+      "NavigationRecord",
+      2,
+      4096
+    ],
+    "schema": [
+      "literal",
+      "magnetic-navigation/1"
+    ]
+  },
+  "NumericalTolerancePolicy": {
+    "epsilon": [
+      "literal",
+      2.220446049250313e-16
+    ],
+    "max_parameter_tolerance": [
+      "literal",
+      1e-06
+    ],
+    "multiplier": [
+      "literal",
+      64
+    ],
+    "version": [
+      "literal",
+      "float64-scaled-intersection/1"
+    ]
+  },
+  "OffsetValue": {
+    "line_id": "ID",
+    "offset_nT": "F64",
+    "uncertainty_nT": "?Pos"
+  },
+  "OperationRequest": {
+    "input_channel_sha256": "Hash",
+    "operation": [
+      "enum",
+      [
+        "lag",
+        "diurnal",
+        "heading",
+        "main_field",
+        "rereference",
+        "leveling",
+        "microlevel"
+      ]
+    ],
+    "parameters": [
+      "parameters",
+      false
+    ]
+  },
+  "Original": {
+    "csv_bytes": [
+      "int",
+      1,
+      16777216
+    ],
+    "csv_sha256": "Hash",
+    "provider_identifier": "?Text",
+    "retrieval_utc": "?UTC",
+    "source_url": "?Text"
+  },
+  "OriginalDiagnostics": {
+    "coefficient_error_bound_nT": "Nonneg",
+    "data_term": "Nonneg",
+    "gradient_denominator": "Nonneg",
+    "objective": "Nonneg",
+    "regularization_term": "Nonneg",
+    "stationarity_inf": "Nonneg",
+    "stationarity_relative": "Nonneg"
+  },
+  "PageIdentity": {
+    "file": "FileIdentity",
+    "first_row": [
+      "int",
+      0,
+      15999999
+    ],
+    "rows": [
+      "int",
+      1,
+      16000000
+    ],
+    "sequence": [
+      "int",
+      0,
+      511
+    ]
+  },
+  "PartitionReceipt": {
+    "evaluation_count": [
+      "int",
+      0,
+      1
+    ],
+    "exclusions": "ArrayRef",
+    "final_training": "ArrayRef",
+    "inner": [
+      "list",
+      "FoldReceipt",
+      3,
+      3
+    ],
+    "outer_validation": "ArrayRef",
+    "seal_sha256": "Hash"
+  },
+  "QRPolicy": {
+    "condition_upper_bound_max": [
+      "literal",
+      100000000.0
+    ],
+    "engine": [
+      "literal",
+      "DGELS_DTRTRI"
+    ],
+    "epoch": [
+      "literal",
+      "m03-augmented-direct-qr/1"
+    ],
+    "mandatory_fit_count": [
+      "literal",
+      97
+    ],
+    "maximum_fit_count": [
+      "literal",
+      98
+    ],
+    "objective": [
+      "literal",
+      "original_weighted_Tikhonov_no_intercept"
+    ],
+    "schema": [
+      "literal",
+      "m03-qr-policy/1"
+    ],
+    "stationarity_relative_max": [
+      "literal",
+      1e-09
+    ],
+    "thread_limit": [
+      "literal",
+      1
+    ]
+  },
+  "QRSolve": {
+    "augmented_rows": [
+      "int",
+      2,
+      8065536
+    ],
+    "coefficients_sha256": "Hash",
+    "column_scales_sha256": "Hash",
+    "condition_domain": [
+      "literal",
+      "cond2(B) <= Frobenius(R)*Frobenius(inverse(R)); B=[A;sqrt(lambda)I]P"
+    ],
+    "condition_upper_bound": "Pos",
+    "damping": "Pos",
+    "dense_capacity": "DenseCapacity",
+    "engine_identity": "EngineIdentity",
+    "epoch": [
+      "literal",
+      "m03-augmented-direct-qr/1"
+    ],
+    "lapack_info": [
+      "literal",
+      0
+    ],
+    "lwork": [
+      "int",
+      1,
+      2147483647
+    ],
+    "numerical_verdict": [
+      "literal",
+      "component_pass"
+    ],
+    "original_diagnostics": "OriginalDiagnostics",
+    "preconditioner_sha256": "Hash",
+    "rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "scaled_coefficients_sha256": "Hash",
+    "schema": [
+      "literal",
+      "m03-qr-solve/1"
+    ],
+    "sources": [
+      "int",
+      1,
+      65536
+    ],
+    "triangular_diagonal_max_abs": "Pos",
+    "triangular_diagonal_min_abs": "Pos",
+    "triangular_inverse_info": [
+      "literal",
+      0
+    ]
+  },
+  "Quantity": {
+    "channel_name": "ID",
+    "kind": [
+      "enum",
+      [
+        "scalar_total_intensity",
+        "scalar_total_field_anomaly"
+      ]
+    ],
+    "sign_definition": [
+      "enum",
+      [
+        "measured_total_intensity",
+        "total_minus_reference",
+        "authored_weak_projection"
+      ]
+    ],
+    "unit": [
+      "literal",
+      "nT"
+    ]
+  },
+  "Reference": {
+    "coefficients_sha256": "?Hash",
+    "coordinates_sha256": "Hash",
+    "datum_transform_evidence_sha256": "?Hash",
+    "direction_tolerance_deg": "Pos",
+    "epoch": "ReferenceEpoch",
+    "evaluator": "Evaluator",
+    "input_height_definition": "Text",
+    "input_height_unit": [
+      "enum",
+      [
+        "m",
+        "km"
+      ]
+    ],
+    "kind": [
+      "enum",
+      [
+        "igrf_evaluated",
+        "authored_constant"
+      ]
+    ],
+    "model_generation": "Text",
+    "original_basis": [
+      "enum",
+      [
+        "NED",
+        "ENU"
+      ]
+    ],
+    "output_basis": [
+      "literal",
+      "ENU"
+    ],
+    "receipt_sha256": "Hash",
+    "scalar_F_nT": [
+      "rows",
+      "Pos"
+    ],
+    "vector_east_nT": [
+      "rows",
+      "F64"
+    ],
+    "vector_north_nT": [
+      "rows",
+      "F64"
+    ],
+    "vector_up_nT": [
+      "rows",
+      "F64"
+    ]
+  },
+  "ReferenceEpoch": {
+    "date_decimal_year": "?F64",
+    "date_mode": [
+      "enum",
+      [
+        "survey_reference",
+        "row_utc"
+      ]
+    ],
+    "row_date_decimal_year": [
+      "nullable",
+      [
+        "rows",
+        "F64"
+      ]
+    ],
+    "row_utc_sha256": "?Hash",
+    "survey_epoch_evidence_sha256": "?Hash"
+  },
+  "Request": {
+    "channel_sha256": "Hash",
+    "dataset_version_sha256": "Hash",
+    "equivalent_sources": "EquivalentSourcesConfig",
+    "export_policy": "ExportPolicy",
+    "geometry_policy": "GeometryPolicy",
+    "grid": "GridConfig",
+    "operations": [
+      "list",
+      "OperationRequest",
+      0,
+      6
+    ],
+    "schema": [
+      "literal",
+      "magnetic-request/1"
+    ],
+    "sensor_id": "ID",
+    "spectrum": "?SpectrumConfig",
+    "split": "SplitConfig"
+  },
+  "RereferenceParameters": {
+    "input_reference_receipt_sha256": "Hash",
+    "new_reference": "SurveyReference",
+    "old_applied_state_evidence_sha256": "Hash",
+    "old_reference": "SurveyReference",
+    "sign": [
+      "literal",
+      "add_old_F_subtract_new_F"
+    ]
+  },
+  "Rights": {
+    "attribution": [
+      "list",
+      "Text",
+      0,
+      32
+    ],
+    "decision": [
+      "enum",
+      [
+        "allowed",
+        "denied",
+        "unresolved"
+      ]
+    ],
+    "derivative_publication": [
+      "enum",
+      [
+        "allowed",
+        "denied",
+        "unresolved"
+      ]
+    ],
+    "evidence_sha256": "?Hash",
+    "evidence_uri": "?Text",
+    "private_processing": [
+      "enum",
+      [
+        "allowed",
+        "denied",
+        "unresolved"
+      ]
+    ],
+    "raw_mirroring": [
+      "enum",
+      [
+        "allowed",
+        "denied",
+        "unresolved"
+      ]
+    ]
+  },
+  "SectorPower": {
+    "bin_count": [
+      "int",
+      0,
+      4194304
+    ],
+    "power_nT2": "Nonneg",
+    "sector_id": "ID"
+  },
+  "SensorDefinition": {
+    "description": "Text",
+    "provider_column": "?Text",
+    "sensor_id": "ID",
+    "unit": [
+      "literal",
+      "nT"
+    ]
+  },
+  "Sidecar": {
+    "acquisition": "Acquisition",
+    "authored_control": "?AuthoredControl",
+    "channel_state": [
+      "list",
+      "StateRecord",
+      0,
+      64
+    ],
+    "coordinates": "Coordinates",
+    "dataset_id": "ID",
+    "original": "Original",
+    "quantity": "Quantity",
+    "reference": "?Reference",
+    "revision": "ID",
+    "rights": "Rights",
+    "schema": [
+      "literal",
+      "magnetic-lines/1"
+    ],
+    "source_kind": [
+      "enum",
+      [
+        "field_acquisition",
+        "original_synthetic_acquisition",
+        "provider_grid",
+        "provider_image"
+      ]
+    ],
+    "subset": "?Subset",
+    "uncertainty": "?Uncertainty"
+  },
+  "SolveIdentity": {
+    "damping": "Pos",
+    "depth_m": "Pos",
+    "fold_id": "ID",
+    "sequence": [
+      "int",
+      0,
+      96
+    ],
+    "solve": "QRSolve",
+    "source_geometry_index": [
+      "int",
+      0,
+      3
+    ]
+  },
+  "SolverPolicy": {
+    "atol": [
+      "literal",
+      1e-12
+    ],
+    "btol": [
+      "literal",
+      1e-12
+    ],
+    "chunk_rows": [
+      "literal",
+      4096
+    ],
+    "chunk_sources": [
+      "literal",
+      128
+    ],
+    "conlim": [
+      "literal",
+      100000000
+    ],
+    "damping_map": [
+      "literal",
+      "sqrt_lambda"
+    ],
+    "initial_guess": [
+      "literal",
+      "zero"
+    ],
+    "maxiter": [
+      "literal",
+      2000
+    ],
+    "schema": [
+      "literal",
+      "m03-lsmr-policy/1"
+    ],
+    "stationarity_relative": [
+      "literal",
+      1e-09
+    ],
+    "stop_policy": [
+      "literal",
+      "code_and_independent_gradient"
+    ],
+    "threads": [
+      "literal",
+      1
+    ]
+  },
+  "SolverReceipt": {
+    "coefficient_error_bound_nT": "Nonneg",
+    "conda_estimate": "Nonneg",
+    "data_term": "Nonneg",
+    "gradient_denominator": "Nonneg",
+    "istop": [
+      "int",
+      0,
+      7
+    ],
+    "iterations": [
+      "int",
+      0,
+      2000
+    ],
+    "norma_estimate": "Nonneg",
+    "normar_estimate": "Nonneg",
+    "normr_estimate": "Nonneg",
+    "normx_estimate": "Nonneg",
+    "objective": "Nonneg",
+    "objective_unit": [
+      "enum",
+      [
+        "nT^2",
+        "dimensionless"
+      ]
+    ],
+    "operator_adjoint_calls": [
+      "int",
+      0,
+      10000
+    ],
+    "operator_forward_calls": [
+      "int",
+      0,
+      10000
+    ],
+    "regularization_term": "Nonneg",
+    "stationarity_inf": "Nonneg",
+    "stationarity_relative": "Nonneg",
+    "timing": "TimingRecord",
+    "verdict": [
+      "enum",
+      [
+        "pass",
+        "nonconverged",
+        "resource_refused",
+        "cancelled"
+      ]
+    ]
+  },
+  "SourceBlock": {
+    "block_e": [
+      "int",
+      -2147483648,
+      2147483647
+    ],
+    "block_n": [
+      "int",
+      -2147483648,
+      2147483647
+    ],
+    "row_index": [
+      "int",
+      0,
+      7999999
+    ],
+    "source_index": [
+      "int",
+      0,
+      65535
+    ]
+  },
+  "SourceGeometry": {
+    "block_e_m": "Pos",
+    "block_n_m": "Pos",
+    "edge_policy": [
+      "literal",
+      "floor_half_open_positive_side"
+    ],
+    "max_sources": [
+      "int",
+      1,
+      256
+    ],
+    "origin_e_m": "F64",
+    "origin_n_m": "F64",
+    "representative": [
+      "literal",
+      "unweighted_xy_mean_fsum_sorted_row_ids"
+    ],
+    "version": [
+      "literal",
+      "half_open_training_blocks/1"
+    ],
+    "vertical_policy": [
+      "literal",
+      "minimum_training_upward_minus_depth"
+    ]
+  },
+  "SpatialBlock": {
+    "block_id": "ID",
+    "boundary": [
+      "literal",
+      "closed"
+    ],
+    "e_max_m": "F64",
+    "e_min_m": "F64",
+    "n_max_m": "F64",
+    "n_min_m": "F64"
+  },
+  "SpectrumConfig": {
+    "axis_unit": [
+      "enum",
+      [
+        "cycles_per_m",
+        "rad_per_m"
+      ]
+    ],
+    "direction_sectors": [
+      "list",
+      "DirectionSector",
+      0,
+      16
+    ],
+    "mean_policy": [
+      "literal",
+      "subtract_arithmetic_mean"
+    ],
+    "normalization": [
+      "literal",
+      "full_two_sided_bin_power"
+    ],
+    "rectangle": "GridRectangle",
+    "window": [
+      "enum",
+      [
+        "rectangular",
+        "hann"
+      ]
+    ]
+  },
+  "SplitConfig": {
+    "anchor_line_ids": [
+      "list",
+      "ID",
+      0,
+      32
+    ],
+    "buffer_m": "Nonneg",
+    "geometry_manifest_sha256": "Hash",
+    "heldout_blocks": [
+      "list",
+      "SpatialBlock",
+      1,
+      32
+    ],
+    "inner_folds": [
+      "list",
+      "InnerFold",
+      3,
+      3
+    ],
+    "maximum_outer_evaluations": [
+      "literal",
+      1
+    ],
+    "minimum_supported_fraction": "Pos",
+    "outer_line_ids": [
+      "list",
+      "ID",
+      1,
+      32
+    ],
+    "sealed_values_sha256": "Hash",
+    "tuning_candidate_order": [
+      "literal",
+      "depth_then_damping_ascending"
+    ],
+    "version": [
+      "literal",
+      "full_lines_buffered_ties/1"
+    ]
+  },
+  "StateRecord": {
+    "applied_by": [
+      "enum",
+      [
+        "provider",
+        "user",
+        "processor",
+        "unknown"
+      ]
+    ],
+    "evidence_sha256": "?Hash",
+    "operation": [
+      "enum",
+      [
+        "lag",
+        "diurnal",
+        "heading",
+        "main_field",
+        "rereference",
+        "leveling",
+        "microlevel"
+      ]
+    ],
+    "output_channel_sha256": "?Hash",
+    "parameters": [
+      "parameters",
+      true
+    ],
+    "parent_channel_sha256": "?Hash",
+    "sign": [
+      "enum",
+      [
+        "position_time_plus_tau",
+        "subtract_base_perturbation",
+        "subtract_heading_model",
+        "subtract_reference_F",
+        "add_old_subtract_new_F",
+        "subtract_line_offset",
+        "diagnostic_removed_plus_retained",
+        "unknown"
+      ]
+    ],
+    "status": [
+      "enum",
+      [
+        "not_applied",
+        "applied",
+        "unknown"
+      ]
+    ],
+    "units": [
+      "nullable",
+      [
+        "enum",
+        [
+          "m",
+          "nT"
+        ]
+      ]
+    ]
+  },
+  "Subset": {
+    "coverage_limitations": "Text",
+    "parent_raw_sha256": "Hash",
+    "parent_row_count": [
+      "int",
+      1,
+      2147483647
+    ],
+    "reason": "Text",
+    "selected_ids": [
+      "list",
+      "ID",
+      1,
+      400
+    ],
+    "selection_policy_sha256": "Hash"
+  },
+  "SurveyAcquisition": {
+    "declared_precision_s": "?Pos",
+    "height_consistency_tolerance_m": "?Nonneg",
+    "line_dictionary": "TableRef",
+    "max_segment_gap_m": "Pos",
+    "max_time_gap_s": "?Pos",
+    "sensor_dictionary": "TableRef",
+    "timestamp_basis": [
+      "enum",
+      [
+        "UTC",
+        "absent",
+        "unknown"
+      ]
+    ]
+  },
+  "SurveyAux": {
+    "aux_id": "ID",
+    "identity": "AuxIdentity",
+    "kind": [
+      "enum",
+      [
+        "navigation",
+        "base",
+        "calibration",
+        "independent_offsets",
+        "reference"
+      ]
+    ],
+    "payload": [
+      "aux_payload"
+    ]
+  },
+  "SurveyBase": {
+    "clock": "Clock",
+    "identity": "AuxIdentity",
+    "intensity": "ArrayRef",
+    "quantity": [
+      "literal",
+      "scalar_total_intensity"
+    ],
+    "schema": [
+      "literal",
+      "magnetic-line-base-stream/1"
+    ],
+    "station_id": "ID",
+    "unit": [
+      "literal",
+      "nT"
+    ],
+    "utc": "ArrayRef"
+  },
+  "SurveyBoundary": {
+    "crop": [
+      "literal",
+      "original_extent"
+    ],
+    "detrend": [
+      "enum",
+      [
+        "none",
+        "remove_mean"
+      ]
+    ],
+    "mode": [
+      "enum",
+      [
+        "periodic",
+        "zero_pad",
+        "reflect_pad"
+      ]
+    ],
+    "pad_e_cells": [
+      "int",
+      0,
+      1048576
+    ],
+    "pad_n_cells": [
+      "int",
+      0,
+      1048576
+    ],
+    "taper": [
+      "enum",
+      [
+        "none",
+        "hann"
+      ]
+    ]
+  },
+  "SurveyCalibration": {
+    "calibration_row_ids": "ArrayRef",
+    "coefficient_receipt_sha256": "Hash",
+    "identity": "AuxIdentity",
+    "partition": [
+      "literal",
+      "independent_calibration"
+    ]
+  },
+  "SurveyEpoch": {
+    "date_decimal_year": "?F64",
+    "date_mode": [
+      "enum",
+      [
+        "survey_reference",
+        "row_utc"
+      ]
+    ],
+    "row_date_decimal_year": "?ArrayRef",
+    "row_utc_sha256": "?Hash",
+    "survey_epoch_evidence_sha256": "?Hash"
+  },
+  "SurveyFold": {
+    "fold_id": "ID",
+    "validation_blocks": "TableRef",
+    "validation_line_ids": "ArrayRef"
+  },
+  "SurveyGate": {
+    "evidence_sha256": "?Hash",
+    "gate_id": "ID",
+    "reason": "?Text",
+    "verdict": [
+      "enum",
+      [
+        "pass",
+        "fail",
+        "unresolved",
+        "ineligible",
+        "nonconverged",
+        "cancelled",
+        "resource_refused"
+      ]
+    ]
+  },
+  "SurveyGrid": {
+    "boundary_policy": "SurveyBoundary",
+    "continuation_delta_m": "?Pos",
+    "datum": "Text",
+    "nx": [
+      "int",
+      2,
+      1048576
+    ],
+    "ny": [
+      "int",
+      2,
+      1048576
+    ],
+    "origin_e_m": "F64",
+    "origin_n_m": "F64",
+    "plane_upward_m": "F64",
+    "spacing_e_m": "Pos",
+    "spacing_n_m": "Pos",
+    "support_radius_m": "Pos"
+  },
+  "SurveyGridReceipt": {
+    "config": "SurveyGrid",
+    "easting_axis": "ArrayRef",
+    "grid_id": "ID",
+    "northing_axis": "ArrayRef",
+    "quantity": [
+      "literal",
+      "scalar_total_field_anomaly"
+    ],
+    "role": [
+      "enum",
+      [
+        "fitted_plane",
+        "continued_plane",
+        "microlevel_diagnostic"
+      ]
+    ],
+    "support_mask": "ArrayRef",
+    "values": "ArrayRef"
+  },
+  "SurveyInput": {
+    "acquisition": "SurveyAcquisition",
+    "arrays": [
+      "list",
+      "ArrayRef",
+      1,
+      128
+    ],
+    "authored_control": "?AuthoredControl",
+    "auxiliaries": [
+      "list",
+      "SurveyAux",
+      0,
+      16
+    ],
+    "channel_state": [
+      "list",
+      "SurveyState",
+      0,
+      64
+    ],
+    "coordinates": "Coordinates",
+    "dataset_id": "ID",
+    "original": "SurveyOriginal",
+    "quantity": "Quantity",
+    "reference": "?SurveyReference",
+    "revision": "ID",
+    "rights": "Rights",
+    "schema": [
+      "literal",
+      "magnetic-line-survey-input/2"
+    ],
+    "source_kind": [
+      "enum",
+      [
+        "field_acquisition",
+        "original_synthetic_acquisition",
+        "provider_grid",
+        "provider_image"
+      ]
+    ],
+    "subset": "?SurveySubset",
+    "uncertainty": "?Uncertainty"
+  },
+  "SurveyLevelingReceipt": {
+    "after_residuals": "ArrayRef",
+    "before_residuals": "ArrayRef",
+    "components": "TableRef",
+    "gauge_policy": [
+      "literal",
+      "lexicographic_first_tie_per_component"
+    ],
+    "offsets": "TableRef",
+    "scope": [
+      "literal",
+      "training_only"
+    ],
+    "uncalibrated_line_ids": "ArrayRef"
+  },
+  "SurveyMember": {
+    "bytes": [
+      "int",
+      0,
+      34359738368
+    ],
+    "disposition": [
+      "enum",
+      [
+        "included",
+        "denied",
+        "unresolved"
+      ]
+    ],
+    "name": "ID",
+    "permission": [
+      "enum",
+      [
+        "allowed",
+        "denied",
+        "unresolved"
+      ]
+    ],
+    "reason": "Text",
+    "role": "ID",
+    "sha256": "?Hash"
+  },
+  "SurveyMicrolevelReceipt": {
+    "clipped_removed": "?ArrayRef",
+    "geological_preservation_claim": [
+      "literal",
+      false
+    ],
+    "parameters": "MicrolevelParameters",
+    "removed": "ArrayRef",
+    "removed_power_nT2": "Nonneg",
+    "retained": "ArrayRef",
+    "retained_power_nT2": "Nonneg",
+    "transfer": "ArrayRef"
+  },
+  "SurveyNavigation": {
+    "clock": "Clock",
+    "coordinates": "Coordinates",
+    "identity": "AuxIdentity",
+    "line_index": "ArrayRef",
+    "row_ids": "ArrayRef",
+    "schema": [
+      "literal",
+      "magnetic-line-navigation-stream/1"
+    ],
+    "utc": "ArrayRef",
+    "xyz": "ArrayRef"
+  },
+  "SurveyOffsets": {
+    "calibration": "SurveyCalibration",
+    "reference_gauge_id": "ID",
+    "values": "TableRef"
+  },
+  "SurveyOperationRequest": {
+    "input_channel_sha256": "Hash",
+    "operation": [
+      "enum",
+      [
+        "lag",
+        "diurnal",
+        "heading",
+        "main_field",
+        "rereference",
+        "leveling",
+        "microlevel"
+      ]
+    ],
+    "parameters": [
+      "parameters",
+      false
+    ]
+  },
+  "SurveyOriginal": {
+    "csv_bytes": [
+      "int",
+      1,
+      4294967296
+    ],
+    "csv_sha256": "Hash",
+    "provider_identifier": "?Text",
+    "retrieval_utc": "?UTC",
+    "source_url": "?Text"
+  },
+  "SurveyRectangle": {
+    "e_start": [
+      "int",
+      0,
+      1048575
+    ],
+    "n_start": [
+      "int",
+      0,
+      1048575
+    ],
+    "nx": [
+      "int",
+      2,
+      1048576
+    ],
+    "ny": [
+      "int",
+      2,
+      1048576
+    ]
+  },
+  "SurveyReference": {
+    "coefficients_sha256": "?Hash",
+    "coordinates_sha256": "Hash",
+    "datum_transform_evidence_sha256": "?Hash",
+    "direction_tolerance_deg": "Pos",
+    "epoch": "SurveyEpoch",
+    "evaluator": "Evaluator",
+    "input_height_definition": "Text",
+    "input_height_unit": [
+      "enum",
+      [
+        "m",
+        "km"
+      ]
+    ],
+    "kind": [
+      "enum",
+      [
+        "igrf_evaluated",
+        "authored_constant"
+      ]
+    ],
+    "model_generation": "Text",
+    "original_basis": [
+      "enum",
+      [
+        "NED",
+        "ENU"
+      ]
+    ],
+    "output_basis": [
+      "literal",
+      "ENU"
+    ],
+    "receipt_sha256": "Hash",
+    "scalar_F_nT": "ArrayRef",
+    "vector_east_nT": "ArrayRef",
+    "vector_north_nT": "ArrayRef",
+    "vector_up_nT": "ArrayRef"
+  },
+  "SurveyRequest": {
+    "channel_sha256": "Hash",
+    "dataset_version_sha256": "Hash",
+    "equivalent_sources": "SurveySources",
+    "export_policy": "ExportPolicy",
+    "geometry_policy": "GeometryPolicy",
+    "grid": "SurveyGrid",
+    "operations": [
+      "list",
+      "SurveyOperationRequest",
+      0,
+      6
+    ],
+    "profile": [
+      "literal",
+      "m03-offline-stream/2"
+    ],
+    "schema": [
+      "literal",
+      "magnetic-line-survey-request/2"
+    ],
+    "sensor_id": "ID",
+    "solver": "SolverPolicy",
+    "spectrum": "?SurveySpectrum",
+    "split": "SurveySplit"
+  },
+  "SurveyResult": {
+    "artifacts": [
+      "list",
+      "SurveyMember",
+      0,
+      192
+    ],
+    "channels": [
+      "list",
+      "ChannelReceipt",
+      1,
+      8
+    ],
+    "crossovers": "?TableRef",
+    "environment": "Environment",
+    "evaluation": "EvaluationReceipt",
+    "execution": "FileIdentity",
+    "fit": "FitReceipt",
+    "geometry": "GeometrySeal",
+    "grid": [
+      "list",
+      "SurveyGridReceipt",
+      1,
+      3
+    ],
+    "input": "InputReceipt",
+    "inventory": "InventoryReceipt",
+    "lane": [
+      "enum",
+      [
+        "local_synthetic",
+        "local_user",
+        "field_provider_product"
+      ]
+    ],
+    "leveling": "?SurveyLevelingReceipt",
+    "partitions": "PartitionReceipt",
+    "policy_epoch": [
+      "literal",
+      "augmented_direct_qr_v3"
+    ],
+    "request": "FileIdentity",
+    "rights": "Rights",
+    "run_id": "ID",
+    "schema": [
+      "literal",
+      "magnetic-line-survey-result/3"
+    ],
+    "spectrum": "?SurveySpectrumReceipt",
+    "verdict": "SurveyVerdict"
+  },
+  "SurveySourceGeometry": {
+    "block_e_m": "Pos",
+    "block_n_m": "Pos",
+    "edge_policy": [
+      "literal",
+      "floor_half_open_positive_side"
+    ],
+    "max_sources": [
+      "int",
+      1,
+      65536
+    ],
+    "origin_e_m": "F64",
+    "origin_n_m": "F64",
+    "representative": [
+      "literal",
+      "unweighted_xy_mean_fsum_sorted_row_ids"
+    ],
+    "version": [
+      "literal",
+      "half_open_training_blocks_stream/1"
+    ],
+    "vertical_policy": [
+      "literal",
+      "minimum_training_upward_minus_depth"
+    ]
+  },
+  "SurveySources": {
+    "candidate_order": [
+      "literal",
+      "width_descending_then_depth_then_damping_ascending"
+    ],
+    "column_scaling": [
+      "literal",
+      "unweighted_population_std_no_mean"
+    ],
+    "damping_candidates": [
+      "list",
+      "Pos",
+      4,
+      4
+    ],
+    "damping_unit": [
+      "enum",
+      [
+        "dimensionless",
+        "nT^-2"
+      ]
+    ],
+    "depth_candidates_m": [
+      "list",
+      "Pos",
+      2,
+      2
+    ],
+    "dtype": [
+      "literal",
+      "float64"
+    ],
+    "fit_intercept": [
+      "literal",
+      false
+    ],
+    "parallel": [
+      "literal",
+      false
+    ],
+    "source_geometries": [
+      "list",
+      "SurveySourceGeometry",
+      4,
+      4
+    ],
+    "tie_break": [
+      "literal",
+      "larger_damping_then_depth_then_block_width"
+    ],
+    "weight_multiplier": [
+      "literal",
+      1
+    ],
+    "weights_policy": [
+      "enum",
+      [
+        "unweighted",
+        "admitted_inverse_variance"
+      ]
+    ]
+  },
+  "SurveySpectrum": {
+    "axis_unit": [
+      "enum",
+      [
+        "cycles_per_m",
+        "rad_per_m"
+      ]
+    ],
+    "direction_sectors": [
+      "list",
+      "DirectionSector",
+      0,
+      16
+    ],
+    "mean_policy": [
+      "literal",
+      "subtract_arithmetic_mean"
+    ],
+    "normalization": [
+      "literal",
+      "full_two_sided_bin_power"
+    ],
+    "rectangle": "SurveyRectangle",
+    "window": [
+      "enum",
+      [
+        "rectangular",
+        "hann"
+      ]
+    ]
+  },
+  "SurveySpectrumReceipt": {
+    "config": "SurveySpectrum",
+    "east_axis": "ArrayRef",
+    "mean_removed_nT": "F64",
+    "microlevel": "?SurveyMicrolevelReceipt",
+    "north_axis": "ArrayRef",
+    "parseval_sum_nT2": "Nonneg",
+    "power": "ArrayRef",
+    "sectors": "?TableRef",
+    "window_mean_square": "Pos"
+  },
+  "SurveySplit": {
+    "anchor_line_ids": "?ArrayRef",
+    "buffer_m": "Nonneg",
+    "geometry_manifest_sha256": "Hash",
+    "heldout_blocks": "TableRef",
+    "inner_folds": [
+      "list",
+      "SurveyFold",
+      3,
+      3
+    ],
+    "maximum_outer_evaluations": [
+      "literal",
+      1
+    ],
+    "minimum_supported_fraction": "Pos",
+    "outer_line_ids": "ArrayRef",
+    "sealed_values_sha256": "Hash",
+    "tuning_candidate_order": [
+      "literal",
+      "width_descending_then_depth_then_damping_ascending"
+    ],
+    "version": [
+      "literal",
+      "full_lines_buffered_ties_stream/1"
+    ]
+  },
+  "SurveyState": {
+    "applied_by": [
+      "enum",
+      [
+        "provider",
+        "user",
+        "processor",
+        "unknown"
+      ]
+    ],
+    "evidence_sha256": "?Hash",
+    "operation": [
+      "enum",
+      [
+        "lag",
+        "diurnal",
+        "heading",
+        "main_field",
+        "rereference",
+        "leveling",
+        "microlevel"
+      ]
+    ],
+    "output_channel_sha256": "?Hash",
+    "parameters": [
+      "parameters",
+      true
+    ],
+    "parent_channel_sha256": "?Hash",
+    "sign": [
+      "enum",
+      [
+        "position_time_plus_tau",
+        "subtract_base_perturbation",
+        "subtract_heading_model",
+        "subtract_reference_F",
+        "add_old_subtract_new_F",
+        "subtract_line_offset",
+        "diagnostic_removed_plus_retained",
+        "unknown"
+      ]
+    ],
+    "status": [
+      "enum",
+      [
+        "not_applied",
+        "applied",
+        "unknown"
+      ]
+    ],
+    "units": [
+      "nullable",
+      [
+        "enum",
+        [
+          "m",
+          "nT"
+        ]
+      ]
+    ]
+  },
+  "SurveySubset": {
+    "coverage_limitations": "Text",
+    "parent_raw_sha256": "Hash",
+    "parent_row_count": [
+      "int",
+      1,
+      8000000
+    ],
+    "reason": "Text",
+    "selected_ids": "ArrayRef",
+    "selection_policy_sha256": "Hash"
+  },
+  "SurveyVerdict": {
+    "gates": [
+      "list",
+      "SurveyGate",
+      1,
+      64
+    ],
+    "numerical_success": "Bool",
+    "overall": [
+      "enum",
+      [
+        "pass",
+        "fail",
+        "unresolved",
+        "ineligible",
+        "nonconverged",
+        "cancelled",
+        "resource_refused"
+      ]
+    ],
+    "reasons": [
+      "list",
+      "Text",
+      0,
+      64
+    ]
+  },
+  "TableManifest": {
+    "content_sha256": "Hash",
+    "pages": [
+      "list",
+      "PageIdentity",
+      1,
+      512
+    ],
+    "row_schema": [
+      "enum",
+      [
+        "candidate_fit_qr_v3",
+        "qr_solve_identity"
+      ]
+    ],
+    "rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "schema": [
+      "literal",
+      "magnetic-line-table-manifest/3"
+    ],
+    "table_id": "ID"
+  },
+  "TableRef": {
+    "manifest": "FileIdentity",
+    "row_schema": [
+      "enum",
+      [
+        "line_definition",
+        "sensor_definition",
+        "aux_identity",
+        "operation_state",
+        "offset_value",
+        "spatial_block",
+        "crossover_geometry",
+        "crossover_value",
+        "source_block",
+        "candidate_fit",
+        "line_evaluation",
+        "level_component",
+        "sector_power",
+        "candidate_fit_v2",
+        "candidate_fit_qr_v3",
+        "qr_solve_identity"
+      ]
+    ],
+    "rows": [
+      "int",
+      1,
+      8000000
+    ],
+    "table_id": "ID"
+  },
+  "TimeInterval": {
+    "end": "UTC",
+    "start": "UTC"
+  },
+  "TimingRecord": {
+    "cpu_s": "Nonneg",
+    "peak_committed_bytes": [
+      "int",
+      0,
+      9223372036854775807
+    ],
+    "peak_rss_bytes": [
+      "int",
+      0,
+      9223372036854775807
+    ],
+    "scratch_bytes": [
+      "int",
+      0,
+      9223372036854775807
+    ],
+    "stop_cpu_s": "?Nonneg",
+    "stop_wall_s": "?Nonneg",
+    "wall_s": "Nonneg"
+  },
+  "Uncertainty": {
+    "independence_assumption": [
+      "enum",
+      [
+        "row_independent",
+        "correlated",
+        "unknown"
+      ]
+    ],
+    "meaning": [
+      "enum",
+      [
+        "independent_one_sigma",
+        "correlated_one_sigma",
+        "other_documented"
+      ]
+    ],
+    "source_evidence": "Text",
+    "unit": [
+      "literal",
+      "nT"
+    ]
+  }
+}

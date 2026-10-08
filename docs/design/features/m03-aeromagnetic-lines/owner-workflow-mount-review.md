@@ -164,6 +164,40 @@ must be reviewed before their mount; none is fabricated by this leaf.
 
 ## Verification and remaining verdict
 
+### Additive QR publication candidate (not a mounted complete workflow)
+
+The owned publication fence now accepts only the literal separate pairing
+`magnetic-line-survey-result/3` / `augmented_direct_qr_v3`, physical-fit/3,
+97 actual fits and `m03-qr-fit-ready/1`. It binds the original CSV, complete
+physical-fit document hash, one outer evaluation, all rows, actual result
+bytes and both identical execution-file copies. Execution must retain its
+prevalue status and bind geometry, original metadata/request byte receipts,
+QR policy and every owned source to the fixed native runtime source inventory.
+Dotted third-party module pins remain environment/package/native evidence;
+they are not falsely renamed local source files. Native complete semantic
+verification is mandatory before this additional publication fence.
+
+Saved serving adds Result/3 without changing the older Result/2 epochs. The
+actual result run_id must equal the existing owner job UUID and its measured
+stored result SHA/size. The opened authored diagnostic is NOT rewritten into
+an owner job. Receipt controls use that retained diagnostic solely to qualify
+custody acceptance/refusals, not to demonstrate POST start or online success.
+
+The original 22 accounting/receipt/schema controls are retained. The changed
+candidate queue adds six actual running-thread cancellation/drain controls
+(28 required in total), then two actual native dataset-birth controls, fail-first with zero
+skips. Source-only checks do not replace these executable gates. The exact
+0007 bytes remain unchanged pending the owning integrator's combined-chain
+gate. Full start/fresh scientific capacity, installed M03 authority, durable
+export-attempt reservation and restart/deletion integration remain distinct
+required implementation/assembly work; this saved serving leaf is not CLOSED
+and is not advertised as the complete online implementation.
+
+ES: La publicación QR conserva un epoch y esquema separados, los 97 ajustes
+reales y el veredicto predictivo no resuelto. El diagnóstico ya abierto no se
+convierte en un trabajo de usuario. La admisión, reserva previa a la exportación
+y recuperación integrada siguen siendo requisitos reales, no permisos ficticios.
+
 ### Executing leaf contract, before implementation
 
 The fixed native controller additionally observes exactly `cancel.request`
