@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 
 
-M03_HEAD = 'dfe738c055e3bba6a7e1924b94091a746f6476d5'
+M03_HEAD = '72c10d2521ccf11e281c6c398d2e7d1cfb4b76a0'
 DEPENDENCY_SOURCES = {
     'magnetic_line_contract': '33720f8510a273292c45b7554010b90886b707a086168ff5c001ec6ca2e78645',
     'magnetic_line_survey': 'f59c8fde2a3094bf0cb9c06b0bbcff5392a54dbda08a208f986a35365f19f6a0',

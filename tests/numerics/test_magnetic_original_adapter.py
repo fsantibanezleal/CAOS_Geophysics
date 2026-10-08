@@ -84,7 +84,7 @@ def test_literal_allocation_counts(bad):
 
 def test_source_quota_bound_precedes_kernel():
     plan = adapter.allocation(864, 432, 528, False, 100000000, 3)
-    assert plan['minimum_phase_bytes'] == 799493296 < adapter.LIMIT
+    assert plan['minimum_phase_bytes'] == 690057120 < adapter.LIMIT
     assert plan['admitted_bytes'] == adapter.LIMIT
     assert plan['source_binding'] == adapter.source_binding()
     with pytest.raises(ValueError):

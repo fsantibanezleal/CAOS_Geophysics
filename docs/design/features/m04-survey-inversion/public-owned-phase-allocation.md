@@ -62,3 +62,19 @@ coupled, field, Linux host, API mount or release eligibility is introduced.
    lane are qualified, execute the original complete final fit and independent
    precision prerequisite. Only its pass permits a new frozen full matrix.
    Source-only controls are not that numerical or native proof.
+
+## Consumer qualification boundary
+
+The closed consumer protocol has 79 passing, zero-skipped controls, including
+the complete retained frozen geometry's 144-row inner folds and 216-row final
+refit, source/plan drift and historical-epoch refusal. Five additional literal
+quota controls pass without building a kernel. The actual CLI planner returns
+690057120 bytes for 432 likelihood components and 723407520 for 648, with the
+same full native reserve 633176064 and admitted ceiling 805306368.
+
+The prospective request changes only `policy.optimizer_binding`; the old
+request and every datum remain unchanged. Original-byte verification, fitting,
+independent precision, native process containment, field science, complete
+matrix and mounted protected result acceptance are not established by this
+geometry-only receipt. Independent original source arithmetic and actual final
+fit gates remain mandatory before downstream execution.

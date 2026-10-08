@@ -22,7 +22,7 @@ spec.loader.exec_module(gate)
 def test_actual_current_seven_module_binding_without_any_fit():
     report = gate.qualify(ROOT/'data-pipeline')
     assert report['status'] == 'source_protocol_pass'
-    assert report['epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-9'
+    assert report['epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-10'
     assert report['dependency_sources'] == gate.DEPENDENCY_SOURCES
     assert len(report['observation_sources']) == 7
     assert not any(report[k] for k in ('m03_run_worker_invoked', 'fit_started',

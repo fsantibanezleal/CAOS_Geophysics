@@ -33,47 +33,57 @@ def source_binding():
 
 def allocation(source_components, fit_components, parameters, covariance,
                original_bytes, observation_components):
-    """Pre-G original source bound; actual face/audits checked by PUBLIC owner.
-
-    Four M04 terms have <=a rows, diagonal weights and <=2a derivative nnz.
-    The native source validator independently checks the actual stored operands.
-    Reserving the original quota is not claiming measured peak/RSS containment.
-    """
-    import gravity_l2_metric as kernel
-    import physical_original_quadratic as source
+    """Consume the PUBLIC original source plan; do not reproduce its formula."""
+    import magnetic_original_optimizer as bridge
     import physical_original_optimizer as core
-    if (type(original_bytes) is not int or not 0 < original_bytes <= LIMIT
-        or type(observation_components) is not int or observation_components not in (1, 3)
-        or type(source_components) is not int or source_components % 3
-        or type(fit_components) is not int or fit_components % observation_components
-        or type(parameters) is not int or type(covariance) is not bool):
-        raise ValueError('original magnetic: literal source/count/noise metadata')
-    native = kernel.allocation(source_components, fit_components, parameters, covariance)
-    raw_rows = 3*(fit_components//observation_components)
-    if raw_rows > source_components or (covariance and fit_components > 512):
-        raise ValueError('original magnetic: whole source or original covariance cap')
-    if source.RESERVE_BYTES != 8*1024**2 or source.ENDPOINT_PAIR_BYTES != 2048:
-        raise ValueError('original magnetic: reviewed source arithmetic constants')
-    # Both sensitivity/prediction occurrences are charged, even when aliased.
-    payload = (16*raw_rows*parameters + 16*fit_components + 24*parameters + 48
-        + 4*(44*parameters+8))
-    if covariance:
-        payload += 16*fit_components*fit_components
-    arithmetic = dict(operand_and_sparse_copy_bytes=2*payload,
-        endpoint_bytes=2048*(10*parameters+6*source_components),
-        native_row_scratch_bytes=128*(2*parameters+source_components), metadata_bytes=32768)
-    minimum = max(original_bytes, native['maximum'])+max(source.RESERVE_BYTES, sum(arithmetic.values()))
-    minimum += source.RESERVE_BYTES+32768
-    if payload > source.RESERVE_BYTES or minimum > LIMIT:
-        raise ValueError('original magnetic: original source arithmetic quota exceeded')
-    return dict(schema='magnetic-original-allocation-1', source_components=source_components,
-        fit_components=fit_components, parameters=parameters, covariance=covariance,
-        observation_components=observation_components, original_bytes=original_bytes,
-        native_phases=native, source_payload_upper_bytes=payload,
-        source_arithmetic_upper=arithmetic, minimum_phase_bytes=minimum,
-        actual_terminal_phase_gate='public-owned-source-face-audit-before-allocation',
-        admitted_bytes=LIMIT, source_binding=source_binding(), epoch=core.LINEAR_EPOCH,
-        policy=core.POLICY)
+    import physical_original_quadratic as source
+    loaded = source_binding()
+    if (LIMIT != 805306368
+            or core.LINEAR_EPOCH != 'physical-gncg-original-noise-reduced-joseph-candidate-10'
+            or core.POLICY != 'closed-original-noise-reduced-joseph-free-face-residual-owned-phases-3'
+            or not callable(getattr(bridge, 'allocation_plan', None))):
+        raise ValueError('original magnetic: reviewed public allocation source epoch required')
+    actual = bridge.allocation_plan(source_components, fit_components, parameters,
+        covariance, original_bytes, observation_components)
+    fields = set(('schema source_components fit_components parameters covariance '
+        'observation_components original_bytes native_phases owned_source_phases '
+        'source_payload_upper_bytes source_arithmetic_upper minimum_phase_bytes '
+        'actual_terminal_phase_gate admitted_bytes source_binding epoch policy').split())
+    identity = dict(source_components=source_components, fit_components=fit_components,
+        parameters=parameters, covariance=covariance, original_bytes=original_bytes,
+        observation_components=observation_components)
+    if (type(actual) is not dict or set(actual) != fields
+            or actual['schema'] != 'magnetic-original-allocation-2'
+            or any(type(actual[k]) is not type(v) or actual[k] != v for k, v in identity.items())
+            or type(actual['admitted_bytes']) is not int or actual['admitted_bytes'] != LIMIT
+            or LIMIT != 805306368
+            or actual['source_binding'] != loaded or source_binding() != loaded
+            or actual['epoch'] != core.LINEAR_EPOCH or actual['policy'] != core.POLICY
+            or actual['actual_terminal_phase_gate'] != 'public-owned-source-face-audit-before-allocation'):
+        raise ValueError('original magnetic: closed public allocation identity/source contract')
+    phase = actual['owned_source_phases']
+    native = actual['native_phases']
+    arithmetic = actual['source_arithmetic_upper']
+    if (type(native) is not dict or set(native) != {
+            'native', 'interval', 'setup', 'action', 'line_search', 'maximum', 'ceiling'}
+            or any(type(v) is not int or v <= 0 for v in native.values())
+            or type(phase) is not dict or set(phase) != {'epoch', 'original_native_phases',
+            'factory_bytes', 'original_certificate_bytes', 'original_arithmetic_bytes', 'maximum'}
+            or phase['epoch'] != source.ALLOCATION_EPOCH
+            or phase['original_native_phases'] != actual['native_phases']
+            or any(type(phase[k]) is not int or phase[k] <= 0 for k in (
+                'factory_bytes', 'original_certificate_bytes', 'original_arithmetic_bytes', 'maximum'))
+            or type(arithmetic) is not dict or set(arithmetic) != {
+                'operand_and_sparse_copy_bytes', 'endpoint_bytes', 'native_row_scratch_bytes', 'metadata_bytes'}
+            or any(type(v) is not int or v <= 0 for v in arithmetic.values())
+            or type(actual['source_payload_upper_bytes']) is not int
+            or not 0 < actual['source_payload_upper_bytes'] <= source.RESERVE_BYTES
+            or type(actual['minimum_phase_bytes']) is not int
+            or not phase['maximum'] <= actual['minimum_phase_bytes'] <= LIMIT):
+        raise ValueError('original magnetic: closed public allocation phase contract')
+    # Return the owner's complete dictionary unchanged. The actual public DTO
+    # and terminal independently recompute source/backing/free-face storage.
+    return actual
 
 
 def binding_for_sources(sources, inventory_sha256):

@@ -86,7 +86,7 @@ def reviewed_binding(path, allow_candidate, quantity='secondary_enu_nT'):
         fail('dependency', '$/binding', 'Explicit operator-reviewed local-candidate receipt required')
     feasible = receipt['runtime_epoch'] == 'physical-gncg-linear-joseph-contact-candidate-4'
     reduced = receipt['runtime_epoch'] == 'physical-gncg-linear-reduced-joseph-candidate-5'
-    original = receipt['runtime_epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-9'
+    original = receipt['runtime_epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-10'
     conditioned = feasible or reduced or original or receipt['runtime_epoch'] in ('physical-gncg-linear-joseph-candidate-2', 'physical-gncg-nonlinear-joseph-candidate-3')
     sources = source_inventory(conditioned=conditioned, feasible=feasible, reduced=reduced, original=original)
     if receipt['sources'] != sources or receipt['source_inventory_sha256'] != digest(sources):

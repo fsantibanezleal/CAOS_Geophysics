@@ -4,7 +4,9 @@
 
 R-474 THE M04 consumer SHALL use the current M03 owner capsule, without replacing
 its shared module paths with a historical replay reference. The exact dependency
-is the seven observation/import modules from public dfe738c055e3bba6a7e1924b94091a746f6476d5.
+is the seven observation/import modules from public 72c10d2521ccf11e281c6c398d2e7d1cfb4b76a0.
+Their seven exact byte hashes are unchanged from the qualified dfe738c055e3bba6a7e1924b94091a746f6476d5
+closure. The newer owner API/QR modules are not imported or replaced by this consumer.
 Historical results retain their actual old-source bindings; no numerical,
 resource or field claim transfers to the current capsule. Gate: exact current
 source hash/path closure, unchanged consumed ABI and protocol controls.
