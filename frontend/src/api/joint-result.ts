@@ -283,40 +283,42 @@ export async function importJointOutput(input: readonly JointFile[], signal?: Ab
     admitted[directory] = { payload, descriptors: ds, offsets: Object.create(null), manifestPath: path };
   }
   const members = Object.entries(admitted).flatMap(([dir, record]) => Object.entries(record.descriptors).map(([key, descriptor]) => ({ dir, record, key, descriptor })));
-  function* batches() {
-    for (let at = 0; at < members.length;) {
-      const start = at++;
-      // Large files run alone in BOTH phases. Small-file native hash snapshots
-      // and temporary reader inputs total at most4*256KiB in either phase.
-      if (members[start].descriptor.file_bytes <= SMALL_HASH_FILE) while (at < members.length && at - start < HASH_BATCH && members[at].descriptor.file_bytes <= SMALL_HASH_FILE) at++;
-      yield members.slice(start, at);
-    }
+  async function phase(action: (member: typeof members[number]) => Promise<void>) {
+    type Completed = {index: number; failed: false} | {index: number; failed: true; error: unknown};
+    const pending = new Map<number, Promise<Completed>>();
+    async function one() {const result = await Promise.race(pending.values()); pending.delete(result.index);
+      if (result.failed) throw result.error; cancel();}
+    try {
+      for (let index = 0; index < members.length; index++) {
+        cancel(); const member = members[index];
+        // Large files remain isolated. Four small slots, never an unbounded
+        // prefetch or read/hash before the whole metadata/header barriers.
+        if (member.descriptor.file_bytes > SMALL_HASH_FILE) {
+          while (pending.size) await one(); await action(member); cancel();
+        } else {
+          if (pending.size === HASH_BATCH) await one();
+          const task = Promise.resolve().then(() => action(member)).then<Completed, Completed>(
+            () => ({index, failed: false}), error => ({index, failed: true, error}));
+          pending.set(index, task);
+        }
+      }
+      while (pending.size) await one();
+    } catch (error) {await Promise.allSettled(pending.values()); throw error;}
   }
   // Whole metadata admission, then ALL original headers, then hashes/values.
-  // Draining each bounded read batch preserves that barrier on error/cancel.
-  for (const batch of batches()) {
-    cancel(); const results = await Promise.allSettled(batch.map(async ({ dir, record, key, descriptor: d }) => {
-      const offset = header(await read(`${dir}/${key}.npy`), d); cancel(); return { record, key, offset };
-    }));
-    for (const result of results) if (result.status === "rejected") throw result.reason;
-    cancel(); for (const result of results) if (result.status === "fulfilled") { const { record, key, offset } = result.value; record.offsets[key] = offset; }
-  }
+  // Drain every bounded slot before crossing that barrier, also on failure.
+  await phase(async ({dir, record, key, descriptor: d}) => {
+    record.offsets[key] = header(await read(`${dir}/${key}.npy`), d); cancel();
+  });
   const records: Record<string, NativeRecord> = Object.create(null);
   for (const [dir, record] of Object.entries(admitted)) records[dir] = { payload: record.payload, arrays: Object.create(null), manifestPath: record.manifestPath };
-  for (const batch of batches()) {
-    cancel(); const results = await Promise.allSettled(batch.map(async ({ dir, record, key, descriptor: d }) => {
+  await phase(async ({ dir, record, key, descriptor: d }) => {
       cancel(); const path = `${dir}/${key}.npy`, bytes = files.get(path)!, fileHash = await jointSha(bytes);
       cancel(); requireThat(fileHash === d.file_sha256, "original array digest mismatch");
       const dataHash = await jointSha(bytes.subarray(record.offsets[key]));
       cancel(); requireThat(dataHash === d.data_sha256, "original array digest mismatch");
-      return { dir, key, path, fileHash, array: decode(bytes, d, record.offsets[key]) };
-    }));
-    // Even a failed/cancelled task cannot leave pending work after rejection.
-    for (const result of results) if (result.status === "rejected") throw result.reason;
-    cancel(); for (const result of results) if (result.status === "fulfilled") {
-      const { dir, key, path, fileHash, array } = result.value; hashes.set(path, fileHash); records[dir].arrays[key] = array;
-    }
-  }
+      hashes.set(path, fileHash); records[dir].arrays[key] = decode(bytes, d, record.offsets[key]);
+  });
   // read() copies each original buffer and no array is exposed until return.
   // Preserve the already computed actual file digest; never replace it with a
   // descriptor declaration. Export independently rehashes again before use.

@@ -158,6 +158,61 @@ bytes. No successful return after expiry or hard-real-time IO guarantee.
 
 ## Conditioning applicability
 
+## Independent durable custody API
+
+The owned result service is independent of optimizer compilation. It inventories
+ordinary native output members under a closed workflow/failure/calibration/
+frozen/models/result/instrument/aborted grammar, with whole256MiB and1100-file
+caps before hashing. Both genuine failure ledgers remain exact retained bytes.
+It can retain failed or cancelled terminal-job output without changing that job
+state or claiming a completed inverse. Successful-job publication additionally
+requires the actual current-source fixed-child/supervisor admission. Structural
+custody tests never synthesize that successful scientific receipt.
+
+Inventory closes the ordinary root/ancestor and all immediate native directory
+identities before hashing. Every leaf is independently lstat-checked as a regular
+non-reparse file and held/named stat-checked across hashing. The directory and
+root identities are checked again afterward, including unchanged ctime within
+their own namespace. This per-scan closure avoids repeatedly traversing the same
+ancestors for each leaf; it never caches byte hashes across scans or permits a
+changed/reparse directory. Native long-path IO preserves literal portable keys.
+At most four fixed non-numerical IO workers hash/copy already-admitted members;
+each holds at most one1MiB buffer. Every worker is drained before the caller's
+guard can unwind, including cancellation and file failure. The complete original
+inventory, byte caps and final directory/file checks remain unchanged. No native
+optimizer parallelism, cached hashes or numerical resource exemption follows.
+Browser original transport uses a four-slot queue rather than waiting for every
+small file in a fixed batch. A freed slot may start the next small original;
+large files still run alone after every active task drains. All metadata closes
+before reads, all native headers pass before any value/hash phase, and every
+task drains after failure/cancellation. No cap, original precision predicate,
+array/selection value, browser-import or full24 test timeout changes.
+
+Publication requires the caller's active write transaction and fully bound
+job/dataset/request identities and source dependencies. Exclusive copies and
+canonical index are fsynced and reverified before artifact rows are flushed.
+The service never commits, rolls back, unlinks stage bytes, rewrites originals or
+retries an uncertain commit. Caller cancellation or rollback after any file write
+leaves unreferenced retained bytes; startup audit refuses them. Recovery explicitly
+reports ledger-exact, missing, changed and unknown members, and never repairs or
+deletes them automatically. Parent retains canonical writer/worker guards and
+the M01 same-connection transaction/tombstone authority across every await.
+
+Artifact bytes are charged for all job states. Terminal failed/cancelled index
+bytes supplement canonical success-only accounting; active joint reservations
+replace, not add to, the generic8MiB fallback. External retained-stage charges
+remain the parent's closed incomplete-custody descriptors, not a guessed stage
+directory or a released charge. Publication counts both retained source-tree
+bytes and prospective durable copies against actual quota before first write.
+
+Owner-bound index/member/archive routes revalidate dataset source rows and all
+index/artifact bytes. Archives stream exact originals with a canonical custody
+index, not an uploaded ZIP or recomputed scientific values. Deletion contributes
+literal relative paths/hashes/bytes to the parent's existing whole-project
+manifest. The owned purge primitive accepts only an isolated renamed joint job
+directory and revalidates the complete tree before first unlink. No public HTTP
+delete endpoint or second project-deletion transaction is introduced.
+
 The separate reduced LINEAR baseline adapter binds the actual public working-
 face source epoch and every loaded dependency; the original conditional source
 guard is not relaxed or patched. It reuses only source-verified original M11

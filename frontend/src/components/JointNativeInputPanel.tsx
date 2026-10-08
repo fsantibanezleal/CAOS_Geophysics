@@ -6,8 +6,8 @@ import { browserJointInputs, inspectJointInputs, JointInputApi, type JointDatase
 import type { JointFile } from "../api/joint-result";
 
 /** Parent supplies the selected owned project and mounts this in its ONE rail. */
-export function JointNativeInputPanel({ projectId, ownerId, api, onIndexed, onCleared }: {
-  projectId: string; ownerId: string; api: ApiClient; onIndexed: (receipt: JointDatasetReceipt) => void; onCleared?: () => void;
+export function JointNativeInputPanel({ projectId, ownerId, api, onIndexed, onCleared, onSessionExpired }: {
+  projectId: string; ownerId: string; api: ApiClient; onIndexed: (receipt: JointDatasetReceipt) => void; onCleared?: () => void; onSessionExpired?: () => void;
 }) {
   const es=useShellLang()==="es",t=(en: string,sp: string)=>es?sp:en,client=useMemo(()=>new JointInputApi(api),[api]);
   const [section,setSection]=useState("originals"),[development,setDevelopment]=useState<JointFile[]>([]),[sealed,setSealed]=useState<JointFile[]>([]);
@@ -21,7 +21,7 @@ export function JointNativeInputPanel({ projectId, ownerId, api, onIndexed, onCl
     setProvider("");setCitation("");setDoi("");setAttribution("");setRights("provider-link-only");setStatement("");setConsent(false);setReceiptKey("");onCleared?.(); };
   useEffect(()=> { reset();return ()=> {control.current?.abort();generation.current++;}; },[projectId,ownerId,client]);
   function fail(error: unknown) {
-    if(error instanceof ApiHttpError&&error.status===401){reset();setProblem(t("Session expired; private receipts cleared. Sign in again.","Sesión expirada; recibos privados borrados de la vista. Inicie sesión de nuevo."));return;}
+    if(error instanceof ApiHttpError&&error.status===401){reset();setProblem(t("Session expired; private receipts cleared. Sign in again.","Sesión expirada; recibos privados borrados de la vista. Inicie sesión de nuevo."));onSessionExpired?.();return;}
     setProblem(error instanceof ApiHttpError?error.code:error instanceof Error?error.message:t("Original request failed","Falló la solicitud de originales"));
   }
   async function inspect() {
