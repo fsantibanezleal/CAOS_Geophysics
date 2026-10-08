@@ -22,6 +22,7 @@ import physical_optimizer as optimizer
 
 
 POLICY='ordinary-irls-fixed-beta-log17-stage-1'
+RUNTIME_EPOCH='m02-survey-irls-cpu-1'
 _KEYS={'norms','gradient_type','irls_scaled','epsilon_floor','epsilon_units',
     'epsilon_initialization','epsilon_continuation','beta_transition','max_weight_updates',
     'overall_stop_policy'}
@@ -417,13 +418,15 @@ def _fixed_point(index,saturated,changes):
         for c in changes[-3:])
 
 
-def _solve_partition(problem,prior,policy,deadline):
+def _solve_partition(problem,prior,policy,deadline,*,_stage_solutions=None):
     """Real L2 initialization and0..20 immutable fixed Sparse stages.
 
     Private six-key unit result; NOT a public L2/IRLS calibration result or bundle.
     Shared accepted model rows, stage-specific Phi only (no global monotone Phi).
     """
     policy=_validate_policy(policy)
+    if _stage_solutions is not None and type(_stage_solutions) is not list:
+        raise TypeError('irls: private exact stage ledger')
     if type(deadline) is not float or not np.isfinite(deadline): raise ValueError('irls: finite native deadline')
     deadline=min(deadline,monotonic()+120.)
     initialization=l2._solve_partition(problem,prior,deadline)
@@ -475,6 +478,7 @@ def _solve_partition(problem,prior,policy,deadline):
                     optimizer.RUNTIME_EPOCH,optimizer.POLICY)
                 budget=optimizer.OptimizerBudget(deadline,200-steps,2*1024**3,admitted,allocation_hash)
                 solved=optimizer.solve_bounded_physical(objective,lower,upper,q,budget=budget,binding=binding)
+                if _stage_solutions is not None: _stage_solutions.append(solved)
                 start_row=max(0,len(models)-1)
                 accepted_start=steps
                 steps+=solved['iterations']
@@ -526,3 +530,495 @@ def _solve_partition(problem,prior,policy,deadline):
         'model_kg_m3':model,'iterations':steps,
         'trace':{'models_kg_m3':survey._readonly(np.array(models,dtype=np.float64).reshape(-1,a)),
                  'stage_indices':survey._readonly(np.array(labels,dtype=np.int64))}}
+
+
+def _admit_request(request):
+    """Complete native admission before conversion into the existing L2 input."""
+    survey._native_metadata(request)
+    survey._keys(request,('schema','plan','observations','noise','prior','policy','runtime_epoch'),'irls request')
+    survey._enum(request['schema'],'gravity-survey-irls-calibration-request-1','irls schema')
+    survey._enum(request['runtime_epoch'],RUNTIME_EPOCH,'irls epoch')
+    policy=request['policy']
+    survey._keys(policy,('name','beta_candidates','optimizer','training','irls'),'irls policy')
+    survey._enum(policy['name'],POLICY,'irls policy name')
+    _validate_policy(policy['irls'])
+    # Reuse the real strict source/geometry/observation/noise/prior admission.
+    # This private projection is never accepted as an IRLS result by L2.
+    linear=dict(request,schema='gravity-survey-l2-calibration-request-1',runtime_epoch=l2.RUNTIME_EPOCH,
+        policy={k:v for k,v in policy.items() if k!='irls'})
+    linear['policy']['name']='ordinary-l2-beta-grid-1'
+    l2._preflight_calibration(linear)
+    admitted=l2._admit_calibration(linear)
+    admitted.update(schema=request['schema'],runtime_epoch=RUNTIME_EPOCH,policy=survey._snapshot(policy))
+    return admitted
+
+
+def _initial_thresholds(problem,initialization,policy):
+    if initialization['status']!='converged': return None
+    kernels=[c.f_m(initialization['model_kg_m3']/1000.) for alpha,c in
+        zip(problem['regularization'].multipliers,problem['regularization'].objfcts) if alpha>0.]
+    if len(kernels)!=4 or any(k.size==0 for k in kernels): return None
+    return tuple(max(f,float(np.max(np.abs(k)))) for f,k in zip(policy['epsilon_floor'],kernels))
+
+
+def _workflow_fit(req,observed,noise,prior,rows,beta,observation_rows,policy,deadline,book_index):
+    started=monotonic()
+    parts=[]
+    problem=None
+    initial=None
+    try:
+        if started>deadline: raise l2._SolveFailure('wall_cap')
+        problem=l2._build_problem(req,observed,noise,prior,rows,beta,observation_rows=observation_rows)
+        raw=_solve_partition(problem,prior,policy,deadline,_stage_solutions=parts)
+        initialization=raw['l2_initialization']
+        initial=_initial_thresholds(problem,initialization,policy)
+    except (ArithmeticError,ValueError,RuntimeError) as error:
+        reason='wall_cap' if isinstance(error,l2._SolveFailure) else 'nonfinite' if isinstance(error,ArithmeticError) else 'engine_error'
+        initialization=l2._unstarted_solve(rows,prior,beta,reason)
+        raw={'l2_initialization':initialization,'stages':(),
+            'irls_terminal':{'status':initialization['status'],'reason':reason,'weight_updates':0,
+                'epsilon_saturated':False,'stage_changes':()},'model_kg_m3':None,'iterations':0,
+            'trace':{'models_kg_m3':initialization['trace']['models_kg_m3'],
+                'stage_indices':survey._readonly(np.empty(0,dtype=np.int64))}}
+    shared=raw['trace']
+    book=encode_stage_book(raw['stages'],shared,parameter_count=len(prior['start_kg_m3']),
+        beta_engine=float(len(rows)*beta),initial_epsilon=initial,policy=policy)
+    trace=dict(shared)
+    trace['models_q']=survey._readonly(np.concatenate([initialization['trace']['models_kg_m3']/1000.]+
+        [s['trace']['models_q'][1:] for s in parts]))
+    for key in ('phi_d','phi_m','phi_engine','kkt_normalized'):
+        trace[key]=survey._readonly(np.concatenate([initialization['trace'][key]]+
+            [s['trace'][key][1:] for s in parts]))
+    for key in ('relative_changes','line_search_counts','cg_counts'):
+        trace[key]=survey._readonly(np.concatenate([initialization['trace'][key]]+
+            [s['trace'][key] for s in parts]))
+    terminal=raw['irls_terminal']
+    result=dict(initialization,status=terminal['status'],reason=terminal['reason'],
+        model_kg_m3=raw['model_kg_m3'],trace=trace,iterations=raw['iterations'],
+        wall_seconds=float(monotonic()-started),l2_initialization=initialization,
+        stages=book_index,irls_terminal=terminal,initial_epsilon=initial,
+        failed_trial=None if terminal['status']=='converged' else
+            {'iteration':raw['iterations'],'reason':terminal['reason']})
+    for key in ('phi_d','phi_m','phi_engine','kkt_normalized'):
+        result[key]=float(trace[key][-1]) if len(trace[key]) else None
+    result['wrms']=float(np.sqrt(result['phi_d']/len(rows))) if result['phi_d'] is not None else None
+    prediction=None
+    if result['model_kg_m3'] is not None and problem is not None:
+        prediction=problem['simulation'].dpred(result['model_kg_m3']/1000.)+problem['background']
+        if not np.isfinite(prediction).all(): raise ArithmeticError('irls: nonfinite fit prediction')
+    result['predicted_mgal']=survey._readonly(prediction) if prediction is not None else None
+    positions=np.searchsorted(observation_rows,rows)
+    result['residual_observed_minus_predicted_mgal']=survey._readonly(observed[positions]-prediction) if prediction is not None else None
+    if monotonic()>deadline and result['status']=='converged':
+        terminal.update(status='nonconverged',reason='wall_cap')
+        result.update(status='nonconverged',reason='wall_cap',failed_trial={'iteration':result['iterations'],'reason':'wall_cap'})
+    l2._result_native_metadata({'solve':result,'book':book})
+    return result,book
+
+
+def calibrate_gravity_irls(request):
+    """All actual 8x3 stage workflows and one selected development refit.
+
+    Every incomplete fold is retained and ineligible. No numerical retry,
+    partial-fold score, L2 substitution or outer observation enters this call.
+    """
+    started=monotonic()
+    admitted=_admit_request(request)
+    plan,prior,policy=(admitted[k] for k in ('plan','prior','policy'))
+    req,rows=plan['request'],plan['development_rows']
+    observed=admitted['observations']['gz_up_mgal']
+    noise={k:admitted['noise'][k] for k in ('kind','values')}
+    l2._weights(noise,np.arange(len(rows),dtype=np.int64))
+    diagnostics=l2._fit_diagnostics(req,noise,observed,prior,plan)
+    warnings=list(diagnostics['warnings'])
+    if admitted['noise']['basis']=='explicit_conditional_gaussian': warnings.append('error_assumed_conditional')
+    warnings.append('geometry_uncertainty_not_propagated')
+    if admitted['noise']['cross_partition_dependence']=='possible_not_removed': warnings.append('cross_partition_dependence')
+    diagnostics['warnings']=tuple(warnings)
+    deadline=started+1800.
+    candidates,books=[],[]
+    for i,beta in enumerate(l2.BETA_CANDIDATES):
+        folds=[]
+        for fold in plan['folds']:
+            solved,book=_workflow_fit(req,observed,noise,prior,fold['fit_rows'],beta,rows,
+                policy['irls'],deadline,len(books))
+            books.append(book)
+            metrics=(None,None,None)
+            if solved['status']=='converged' and monotonic()<=deadline:
+                try:
+                    prediction=l2._bounded_prediction(req,solved['model_kg_m3'],deadline)
+                    positions=np.searchsorted(rows,fold['validation_rows'])
+                    measured=l2._marginal_metrics(prediction[fold['validation_rows']],observed[positions],noise,positions)
+                    if monotonic()<=deadline: metrics=measured[:3]
+                except (ArithmeticError,ValueError,RuntimeError): pass
+            folds.append({'fold':fold['fold'],'solve':solved,'validation_rows':survey._readonly(fold['validation_rows']),
+                'validation_phi_d':metrics[0],'validation_wrms':metrics[1],'validation_rmse_mgal':metrics[2]})
+        valid=all(f['solve']['status']=='converged' for f in folds)
+        scored=valid and all(f['validation_phi_d'] is not None for f in folds)
+        score=float(sum(f['validation_phi_d'] for f in folds)/sum(len(f['validation_rows']) for f in folds)) if scored else None
+        if score is not None and not np.isfinite(score): scored,score=False,None
+        candidates.append({'index':i,'beta_candidate':beta,'eligible':bool(scored),'folds':tuple(folds),
+            'score_q':score,'reason':'eligible' if scored else 'invalid_score' if valid else 'fold_failure'})
+    selected=l2._selected_index(candidates)
+    final,prediction,status=None,None,'insufficient_candidates'
+    if selected is not None:
+        final,book=_workflow_fit(req,observed,noise,prior,rows,l2.BETA_CANDIDATES[selected],rows,
+            policy['irls'],deadline,len(books))
+        books.append(book)
+        status='selected' if final['status']=='converged' else 'final_nonconverged'
+        if final['model_kg_m3'] is not None:
+            try: prediction=l2._bounded_prediction(req,final['model_kg_m3'],deadline)
+            except (ArithmeticError,ValueError,RuntimeError) as error:
+                reason='wall_cap' if isinstance(error,l2._SolveFailure) else 'nonfinite' if isinstance(error,ArithmeticError) else 'engine_error'
+                if final['status']=='converged':
+                    final['irls_terminal'].update(status='nonconverged' if reason=='wall_cap' else 'failed',reason=reason)
+                    final.update(status=final['irls_terminal']['status'],reason=reason,
+                        failed_trial={'iteration':final['iterations'],'reason':reason})
+                    status='final_nonconverged'
+    fits=tuple(f['solve'] for c in candidates for f in c['folds'])+((final,) if final is not None else ())
+    for candidate in candidates:
+        for fold in candidate['folds']: fold['solve']=fold['solve']['stages']
+    result={'schema':'gravity-survey-irls-calibration-result-3','plan':plan,
+        'provenance':{'source':survey._snapshot(req['source']),'plan_sha256':plan['plan_sha256'],
+            'normalized_values_sha256':admitted['observations']['values_sha256'],
+            'noise_sha256':admitted['noise']['values_sha256'],'prior_sha256':survey._digest(prior),
+            'policy_sha256':survey._digest(policy),'forward_source_sha256':l2.FORWARD_SOURCE,
+            'runtime_epoch':RUNTIME_EPOCH,'runtime_versions':l2.forward._runtime(),
+            'source_verification':'external_required_not_performed_by_solver'},
+        'candidates':tuple(candidates),'selected_index':selected,'selection_status':status,
+        'final_solve':24 if final is not None else None,'fits':fits,
+        'predictions':{'rows':survey._readonly(np.arange(len(req['background_mgal']),dtype=np.int64)),
+            'gz_up_mgal':survey._readonly(prediction) if prediction is not None else None},
+        'diagnostics':diagnostics,'scope':{'training':'not_applicable_classical','inverse':'weighted_bounded_irls',
+            'field_eligible':False,'full_M02_accepted':False,'API_accepted':False,'GPU_accepted':False,
+            'host_accepted':False,'geometry_error':'not_propagated'},
+        'irls_policy_sha256':survey._digest(policy['irls']),'stage_books':tuple(books)}
+    l2._result_native_metadata(result)
+    result['result_sha256']=survey._digest(result)
+    l2._result_native_metadata(result)
+    return result
+
+
+_FIT_KEYS={'status','reason','model_kg_m3','beta_candidate','beta_engine','fit_rows','predicted_mgal',
+    'residual_observed_minus_predicted_mgal','phi_d','phi_m','phi_engine','wrms','kkt_normalized','trace',
+    'iterations','wall_seconds','failed_trial','l2_initialization','stages','irls_terminal','initial_epsilon'}
+_TERMINAL_REASONS=l2._REASONS+('irls_fixed_point','irls_stationary_null','irls_iteration_cap','unsupported_sparse_empty_face')
+
+
+def _fit_metadata(fit,a,rows,beta):
+    survey._keys(fit,_FIT_KEYS,'irls solve')
+    l2._solve_metadata(fit['l2_initialization'],a,rows,beta)
+    survey._enum(fit['status'],('converged','nonconverged','failed','unsupported'),'irls status')
+    survey._enum(fit['reason'],_TERMINAL_REASONS,'irls reason')
+    l2._int(fit['stages'],24,'book reference')
+    terminal=fit['irls_terminal']
+    survey._keys(terminal,('status','reason','weight_updates','epsilon_saturated','stage_changes'),'irls terminal')
+    survey._enum(terminal['status'],('converged','nonconverged','failed','unsupported'),'terminal status')
+    survey._enum(terminal['reason'],_TERMINAL_REASONS,'terminal reason')
+    l2._int(terminal['weight_updates'],20,'weight updates')
+    if type(terminal['epsilon_saturated']) is not bool: raise TypeError('irls: exact saturation bool')
+    if type(terminal['stage_changes']) is not tuple or len(terminal['stage_changes'])>20:
+        raise ValueError('irls: bounded transition ledger')
+    for change in terminal['stage_changes']:
+        survey._keys(change,('model_relative','weights_relative'),'stage change')
+        for v in change.values():
+            if v is not None:
+                survey._float(v,'stage change')
+                if v<0.: raise ValueError('irls: negative change')
+    initial=fit['initial_epsilon']
+    if initial is not None and (type(initial) is not tuple or len(initial)!=4
+        or any(type(v) is not float or not np.isfinite(v) or v<=0. for v in initial)):
+        raise ValueError('irls: four actual initial thresholds or None')
+    trace=fit['trace']
+    survey._keys(trace,('models_kg_m3','models_q','stage_indices','phi_d','phi_m','phi_engine','kkt_normalized',
+        'relative_changes','line_search_counts','cg_counts'),'irls trace')
+    survey._array(trace['models_kg_m3'],(None,a),'physical trace')
+    survey._array(trace['models_q'],trace['models_kg_m3'].shape,'native q trace')
+    survey._array(trace['stage_indices'],(len(trace['models_q']),),'stage labels',np.int64)
+    # Common exact native shapes/metrics/counts without calling the L2 result
+    # dispatcher on a foreign discriminator or promoting an IRLS terminal.
+    view={k:v for k,v in fit.items() if k in _FIT_KEYS-{'l2_initialization','stages','irls_terminal','initial_epsilon'}}
+    view['trace']={k:v for k,v in trace.items() if k not in ('models_q','stage_indices')}
+    view.update(status='nonconverged',reason='wall_cap',failed_trial={'iteration':fit['iterations'],'reason':'wall_cap'})
+    l2._solve_metadata(view,a,rows,beta)
+    failed=fit['failed_trial']
+    if failed is not None:
+        survey._keys(failed,('iteration','reason'),'irls failed trial')
+        l2._int(failed['iteration'],200,'failed iteration')
+        survey._enum(failed['reason'],_TERMINAL_REASONS,'failed reason')
+
+
+def _full_metadata(result):
+    survey._keys(result,('schema','plan','provenance','candidates','selected_index','selection_status','final_solve',
+        'fits','predictions','diagnostics','scope','result_sha256','irls_policy_sha256','stage_books'),'irls result')
+    survey._enum(result['schema'],'gravity-survey-irls-calibration-result-3','irls result schema')
+    survey._sha(result['irls_policy_sha256'],'irls policy hash')
+    fits,books=result['fits'],result['stage_books']
+    count=24 if result['final_solve'] is None else 25
+    if type(fits) is not tuple or type(books) is not tuple or len(fits)!=count or len(books)!=count:
+        raise ValueError('irls: complete distinct fit/book pools')
+    if result['final_solve'] is not None and (type(result['final_solve']) is not int or result['final_solve']!=24):
+        raise ValueError('irls: once-only final fit reference')
+    candidates=result['candidates']
+    if type(candidates) is not tuple or len(candidates)!=8: raise ValueError('irls: exact eight candidates')
+    plan=result['plan']
+    survey._plan_result_metadata(plan)
+    a=len(plan['geometry']['active_cell_indices'])
+    view=dict(result)
+    for key in ('fits','stage_books','irls_policy_sha256'): del view[key]
+    view['schema']='gravity-survey-l2-calibration-result-1'
+    survey._keys(result['provenance'],('source','plan_sha256','normalized_values_sha256','noise_sha256',
+        'prior_sha256','policy_sha256','forward_source_sha256','runtime_epoch','runtime_versions','source_verification'),'provenance')
+    survey._enum(result['provenance']['runtime_epoch'],RUNTIME_EPOCH,'irls provenance epoch')
+    view['provenance']=dict(result['provenance'],runtime_epoch=l2.RUNTIME_EPOCH)
+    survey._enum(result['scope']['inverse'],'weighted_bounded_irls','irls scope')
+    view['scope']=dict(result['scope'],inverse='weighted_bounded_l2')
+    linear_candidates=[]
+    for i,candidate in enumerate(candidates):
+        survey._keys(candidate,('index','beta_candidate','eligible','folds','score_q','reason'),'candidate')
+        if type(candidate['folds']) is not tuple or len(candidate['folds'])!=3: raise ValueError('irls: exact three folds')
+        folds=[]
+        for j,fold in enumerate(candidate['folds']):
+            survey._keys(fold,('fold','solve','validation_rows','validation_phi_d','validation_wrms','validation_rmse_mgal'),'fold')
+            if type(fold['solve']) is not int or fold['solve']!=3*i+j: raise ValueError('irls: exact ordered fit reference')
+            _fit_metadata(fits[3*i+j],a,plan['folds'][j]['fit_rows'],l2.BETA_CANDIDATES[i])
+            if fits[3*i+j]['stages']!=3*i+j: raise ValueError('irls: exact ordered book reference')
+            folds.append(dict(fold,solve=fits[3*i+j]['l2_initialization']))
+        linear_candidates.append(dict(candidate,folds=tuple(folds)))
+    view['candidates']=tuple(linear_candidates)
+    if count==25:
+        selected=result['selected_index']
+        l2._int(selected,7,'selected index')
+        _fit_metadata(fits[24],a,plan['development_rows'],l2.BETA_CANDIDATES[selected])
+        if fits[24]['stages']!=24: raise ValueError('irls: final book identity')
+        view['final_solve']=fits[24]['l2_initialization']
+    l2._calibration_result_metadata(view)
+
+
+def _close(actual,expected,field):
+    if not np.allclose(actual,expected,rtol=1e-10,atol=1e-12):
+        raise ValueError('irls replay: '+field)
+
+
+def _replay_fit(fit,book,admitted,rows,beta):
+    plan,prior,policy=(admitted[k] for k in ('plan','prior','policy'))
+    req=plan['request']
+    observed=admitted['observations']['gz_up_mgal']
+    noise={k:admitted['noise'][k] for k in ('kind','values')}
+    trace=fit['trace']
+    shared={k:trace[k] for k in ('models_kg_m3','stage_indices')}
+    stages=decode_stage_book(book,shared,parameter_count=len(prior['start_kg_m3']),
+        beta_engine=float(len(rows)*beta),initial_epsilon=fit['initial_epsilon'],policy=policy['irls'])
+    init=fit['l2_initialization']
+    l2._validate_solve_state(init,rows)
+    if not np.array_equal(fit['fit_rows'],rows): raise ValueError('irls: fit row binding')
+    k=len(trace['models_q'])
+    if fit['iterations']!=max(0,k-1): raise ValueError('irls: accepted count')
+    initial_rows=len(init['trace']['models_kg_m3'])
+    for key,value in init['trace'].items():
+        if not np.array_equal(trace[key][:len(value)],value): raise ValueError('irls: full initialization prefix')
+    if not np.array_equal(trace['models_q'][:initial_rows],init['trace']['models_kg_m3']/1000.):
+        raise ValueError('irls: native initialization coordinates')
+    if k and (fit['model_kg_m3'] is None or not np.array_equal(fit['model_kg_m3'],trace['models_kg_m3'][-1])):
+        raise ValueError('irls: actual terminal model')
+    if np.any(trace['models_q']<prior['lower_kg_m3']/1000.) or np.any(trace['models_q']>prior['upper_kg_m3']/1000.):
+        raise ValueError('irls: native trace box')
+    if initial_rows<k and not np.array_equal(trace['models_kg_m3'][initial_rows:],trace['models_q'][initial_rows:]*1000.):
+        raise ValueError('irls: physical native model conversion')
+    if (np.any(trace['line_search_counts']<1) or np.any(trace['line_search_counts']>20)
+        or np.any(trace['cg_counts']<0) or np.any(trace['cg_counts']>200)):
+        raise ValueError('irls: actual original trial/CG caps')
+    for key in ('phi_d','phi_m','phi_engine','kkt_normalized'):
+        if np.any(trace[key]<0.) or fit[key]!=(float(trace[key][-1]) if k else None):
+            raise ValueError('irls: actual terminal metric')
+    if fit['wrms']!=(float(np.sqrt(fit['phi_d']/len(rows))) if k else None): raise ValueError('irls: terminal WRMS')
+    terminal=fit['irls_terminal']
+    if (fit['status'],fit['reason'])!=(terminal['status'],terminal['reason']): raise ValueError('irls: terminal identity')
+    success=fit['status']=='converged'
+    expected_status=('converged' if fit['reason'] in ('irls_fixed_point','irls_stationary_null') else
+        'unsupported' if fit['reason']=='unsupported_sparse_empty_face' else
+        'failed' if fit['reason'] in ('engine_error','state_mismatch','nonfinite') else 'nonconverged')
+    if fit['status']!=expected_status or (fit['failed_trial'] is None)!=success:
+        raise ValueError('irls: exact status/failure pairing')
+    if not success and (fit['failed_trial']['reason']!=fit['reason'] or fit['failed_trial']['iteration']!=fit['iterations']):
+        raise ValueError('irls: failure ledger')
+    if terminal['weight_updates']!=max(0,len(stages)-1) or len(terminal['stage_changes'])!=max(0,len(stages)-1):
+        raise ValueError('irls: actual applied update count')
+    if not stages and init['status']!='converged' and fit['initial_epsilon'] is not None:
+        raise ValueError('irls: thresholds after failed initialization')
+    if not k:
+        if stages or fit['model_kg_m3'] is not None or fit['predicted_mgal'] is not None:
+            raise ValueError('irls: unstarted unavailable state')
+        return
+    problem=l2._build_problem(req,observed,noise,prior,rows,beta,observation_rows=plan['development_rows'])
+    if fit['initial_epsilon']!=_initial_thresholds(problem,init,policy['irls']):
+        raise ValueError('irls: actual initialization thresholds')
+    lower,upper=prior['lower_kg_m3']/1000.,prior['upper_kg_m3']/1000.
+    # Replay original initial L2 metrics without optimizing or changing beta.
+    q0=trace['models_q'][0]
+    norm0=max(1.,float(np.linalg.norm(problem['misfit'].deriv(q0)+problem['beta_engine']*problem['regularization'].deriv(q0),ord=np.inf)))
+    for i in range(initial_rows):
+        q=trace['models_q'][i]
+        pd,pm=float(problem['misfit'](q)),float(problem['regularization'](q))
+        _close([pd,pm,pd+problem['beta_engine']*pm],[trace[x][i] for x in ('phi_d','phi_m','phi_engine')],'L2 metrics')
+        g=problem['misfit'].deriv(q)+problem['beta_engine']*problem['regularization'].deriv(q)
+        _close(float(np.linalg.norm(l2._kkt_gradient(q,g,lower,upper),ord=np.inf))/norm0,trace['kkt_normalized'][i],'L2 KKT')
+    last_weights=None
+    saturated=False
+    for index,row in enumerate(stages):
+        left,right=row['model_row_start'],row['model_row_stop']
+        qstart=trace['models_q'][left]
+        stage=_build_stage(problem,qstart,policy['irls'],index,fit['initial_epsilon'])
+        if (stage['weight_sha256']!=row['weight_sha256'] or stage['operator_sha256']!=row['operator_sha256']
+            or not np.array_equal(stage['weights'][0],row['smallness_weights'])):
+            raise ValueError('irls: actual native stage weights/operator replay')
+        objective=_StageObjective(stage,index,lower,upper,'0'*64)
+        norm=max(1.,float(np.linalg.norm(objective.evaluate(qstart,True,False)[1],ord=np.inf)))
+        previous_phi=None
+        values=None
+        for i in range(left,right+1):
+            q=trace['models_q'][i]
+            components=objective.components(q)
+            gradient=objective.evaluate(q,True,False)[1]
+            absolute=float(np.linalg.norm(l2._kkt_gradient(q,gradient,lower,upper),ord=np.inf))
+            values=(components['phi_d'],components['phi_m'],components['phi_engine'],absolute/norm)
+            if i==left:
+                _close(values,[row['metrics'][name] for name in _BOOK_METRICS[:4]],'stage initial metrics')
+            else:
+                _close(values,[trace[name][i] for name in ('phi_d','phi_m','phi_engine','kkt_normalized')],'stage accepted metrics')
+                _close(abs(values[2]-previous_phi)/max(1.,abs(previous_phi)),trace['relative_changes'][i-1],'within-stage change')
+            previous_phi=values[2]
+        _close(values,[row['metrics'][name] for name in _BOOK_METRICS[4:]],'stage final metrics')
+        if row['status']=='converged':
+            if row['reason']=='absolute_stationary' and absolute>1e-12: raise ValueError('irls: absolute native stage stop')
+            if row['reason']=='kkt_stable' and (right-left<3 or values[3]>1e-5 or np.any(trace['relative_changes'][right-3:right]>1e-6)):
+                raise ValueError('irls: native stage three-change stop')
+        if index:
+            change={'model_relative':float(np.linalg.norm(trace['models_q'][right]-qstart,ord=np.inf)/max(1.,float(np.linalg.norm(qstart,ord=np.inf)))),
+                'weights_relative':float(np.linalg.norm(stage['weights'][0]-last_weights,ord=np.inf)/max(1.,float(np.linalg.norm(last_weights,ord=np.inf))))}
+            if change!=terminal['stage_changes'][index-1]: raise ValueError('irls: actual fixed-point transition')
+        last_weights=stage['weights'][0]
+        saturated=stage['epsilon']==policy['irls']['epsilon_floor']
+    if terminal['epsilon_saturated']!=saturated: raise ValueError('irls: actual saturation')
+    if success and (len(stages)!=21 or not all(s['status']=='converged' for s in stages)
+        or not _fixed_point(20,saturated,terminal['stage_changes'])):
+        raise ValueError('irls: unchanged overall fixed-point criterion')
+    if success and fit['reason']=='irls_stationary_null' and (np.any(trace['models_q'][-1]-problem['reference_q']) or np.any(gradient)):
+        raise ValueError('irls: exact native null')
+    prediction=problem['simulation'].dpred(trace['models_q'][-1])+problem['background']
+    if fit['predicted_mgal'] is None or fit['residual_observed_minus_predicted_mgal'] is None:
+        raise ValueError('irls: missing finite physical state')
+    _close(prediction,fit['predicted_mgal'],'physical fit prediction')
+    if not np.array_equal(fit['residual_observed_minus_predicted_mgal'],problem['observations']-fit['predicted_mgal']):
+        raise ValueError('irls: literal residual')
+
+
+def validate_gravity_irls(result,calibration_request):
+    """Complete typed and native physics replay; no optimizer or partial return."""
+    l2._result_native_metadata({'result':result,'request':calibration_request})
+    _full_metadata(result)
+    admitted=_admit_request(calibration_request)
+    survey._finite(result)
+    if survey._digest({k:v for k,v in result.items() if k!='result_sha256'})!=result['result_sha256']:
+        raise ValueError('irls: complete result hash')
+    plan,provenance=result['plan'],result['provenance']
+    if survey._digest(plan)!=survey._digest(admitted['plan']): raise ValueError('irls: original plan')
+    expected={'source':plan['request']['source'],'plan_sha256':plan['plan_sha256'],
+        'normalized_values_sha256':admitted['observations']['values_sha256'],'noise_sha256':admitted['noise']['values_sha256'],
+        'prior_sha256':survey._digest(admitted['prior']),'policy_sha256':survey._digest(admitted['policy']),
+        'forward_source_sha256':l2.FORWARD_SOURCE,'runtime_epoch':RUNTIME_EPOCH,'runtime_versions':l2.forward._runtime(),
+        'source_verification':'external_required_not_performed_by_solver'}
+    if provenance!=expected or result['irls_policy_sha256']!=survey._digest(admitted['policy']['irls']):
+        raise ValueError('irls: complete request/source/policy binding')
+    noise={k:admitted['noise'][k] for k in ('kind','values')}
+    for i,candidate in enumerate(result['candidates']):
+        for j,fold in enumerate(candidate['folds']):
+            rows=plan['folds'][j]['fit_rows']
+            fit=result['fits'][3*i+j]
+            _replay_fit(fit,result['stage_books'][3*i+j],admitted,rows,l2.BETA_CANDIDATES[i])
+            if not np.array_equal(fold['validation_rows'],plan['folds'][j]['validation_rows']): raise ValueError('irls: validation rows')
+            metrics=[fold[k] for k in ('validation_phi_d','validation_wrms','validation_rmse_mgal')]
+            if any(v is not None for v in metrics):
+                if fit['status']!='converged' or any(v is None for v in metrics): raise ValueError('irls: no partial score')
+                prediction=l2._physical_prediction(plan['request'],fit['model_kg_m3'])
+                positions=np.searchsorted(plan['development_rows'],fold['validation_rows'])
+                actual=l2._marginal_metrics(prediction[fold['validation_rows']],admitted['observations']['gz_up_mgal'][positions],noise,positions)
+                _close(actual[:3],metrics,'validation marginal score')
+        valid=all(result['fits'][f['solve']]['status']=='converged' for f in candidate['folds'])
+        eligible=valid and all(f['validation_phi_d'] is not None for f in candidate['folds'])
+        score=float(sum(f['validation_phi_d'] for f in candidate['folds'])/sum(len(f['validation_rows']) for f in candidate['folds'])) if eligible else None
+        reason='eligible' if eligible else 'invalid_score' if valid else 'fold_failure'
+        if (candidate['eligible'],candidate['score_q'],candidate['reason'])!=(eligible,score,reason): raise ValueError('irls: complete eligibility/score')
+    selected=l2._selected_index(result['candidates'])
+    if result['selected_index']!=selected: raise ValueError('irls: fixed selection/tie')
+    if selected is None:
+        if result['final_solve'] is not None or result['selection_status']!='insufficient_candidates': raise ValueError('irls: unselected refit')
+        if result['predictions']['gz_up_mgal'] is not None: raise ValueError('irls: unselected prediction')
+    else:
+        if result['final_solve']!=24: raise ValueError('irls: missing selected refit')
+        final=result['fits'][24]
+        _replay_fit(final,result['stage_books'][24],admitted,plan['development_rows'],l2.BETA_CANDIDATES[selected])
+        status='selected' if final['status']=='converged' else 'final_nonconverged'
+        if result['selection_status']!=status: raise ValueError('irls: selected refit status')
+        if result['predictions']['gz_up_mgal'] is not None:
+            _close(l2._physical_prediction(plan['request'],final['model_kg_m3']),result['predictions']['gz_up_mgal'],'full prediction')
+        elif status=='selected': raise ValueError('irls: unavailable selected prediction')
+    if not np.array_equal(result['predictions']['rows'],np.arange(len(plan['request']['background_mgal']),dtype=np.int64)):
+        raise ValueError('irls: complete original prediction rows')
+    expected_diagnostics=l2._fit_diagnostics(plan['request'],noise,admitted['observations']['gz_up_mgal'],admitted['prior'],plan)
+    warnings=list(expected_diagnostics['warnings'])
+    if admitted['noise']['basis']=='explicit_conditional_gaussian': warnings.append('error_assumed_conditional')
+    warnings.append('geometry_uncertainty_not_propagated')
+    if admitted['noise']['cross_partition_dependence']=='possible_not_removed': warnings.append('cross_partition_dependence')
+    expected_diagnostics['warnings']=tuple(warnings)
+    for key in expected_diagnostics:
+        if type(expected_diagnostics[key]) is np.ndarray: _close(expected_diagnostics[key],result['diagnostics'][key],'fit diagnostics')
+        elif expected_diagnostics[key]!=result['diagnostics'][key]: raise ValueError('irls: diagnostic identity')
+    return result
+
+
+def evaluate_gravity_irls(request):
+    """Separate frozen outer marginal evaluation, with complete native replay."""
+    l2._result_native_metadata(request)
+    survey._keys(request,('schema','frozen_calibration','calibration_request','observations','noise'),'irls evaluation')
+    survey._enum(request['schema'],'gravity-survey-irls-evaluation-request-3','irls evaluation schema')
+    frozen=validate_gravity_irls(request['frozen_calibration'],request['calibration_request'])
+    if frozen['selection_status']!='selected': raise ValueError('irls: unsuccessful frozen calibration')
+    # Reuse strict normalized observation/noise validators with an outer-only
+    # shape receipt, never invoking the optimizer or passing IRLS to L2 dispatch.
+    rows=frozen['plan']['outer_rows']
+    observed,noise=request['observations'],request['noise']
+    survey._keys(observed,('rows','gz_up_mgal','values_sha256','acceleration_unit','vertical_positive'),'outer observations')
+    survey._array(observed['rows'],rows.shape,'outer rows',np.int64)
+    survey._array(observed['gz_up_mgal'],rows.shape,'outer values')
+    survey._enum(observed['acceleration_unit'],'mGal','outer unit')
+    survey._enum(observed['vertical_positive'],'up','outer sign')
+    survey._sha(observed['values_sha256'],'outer value hash')
+    survey._keys(noise,('kind','values','unit','basis','citation','values_sha256','cross_partition_dependence'),'outer noise')
+    survey._enum(noise['kind'],('diagonal_sd','full_covariance'),'outer noise kind')
+    covariance=noise['kind']=='full_covariance'
+    survey._array(noise['values'],(len(rows),len(rows)) if covariance else rows.shape,'outer noise values')
+    survey._enum(noise['unit'],'mGal^2' if covariance else 'mGal','outer noise unit')
+    survey._enum(noise['basis'],('measured_gaussian','propagated_independent_gaussian','explicit_conditional_gaussian'),'outer basis')
+    survey._enum(noise['cross_partition_dependence'],('declared_absent','possible_not_removed'),'outer dependence')
+    survey._text(noise['citation'],'outer noise citation')
+    survey._sha(noise['values_sha256'],'outer noise hash')
+    survey._finite({'observations':observed,'noise':noise})
+    if not np.array_equal(rows,observed['rows']): raise ValueError('irls: outer row identity')
+    if survey._digest({k:v for k,v in observed.items() if k!='values_sha256'})!=observed['values_sha256']:
+        raise ValueError('irls: outer observation hash')
+    if survey._digest({k:noise[k] for k in ('kind','unit','values')}|{'rows':rows})!=noise['values_sha256']:
+        raise ValueError('irls: outer noise hash')
+    prediction=survey._readonly(frozen['predictions']['gz_up_mgal'][rows])
+    phi,wrms,rmse,residual,whitened=l2._marginal_metrics(prediction,observed['gz_up_mgal'],
+        {k:noise[k] for k in ('kind','values')},np.arange(len(rows),dtype=np.int64))
+    result={'schema':'gravity-survey-irls-evaluation-result-3','calibration_sha256':frozen['result_sha256'],
+        'observations':survey._snapshot(observed),'noise_sha256':noise['values_sha256'],'rows':survey._readonly(rows),
+        'predicted_mgal':prediction,'residual_observed_minus_predicted_mgal':survey._readonly(residual),
+        'whitened_residual':survey._readonly(whitened),'phi_d':phi,'wrms':wrms,'rmse_mgal':rmse,
+        'prediction_quality':'within_declared_noise' if wrms<=2. else 'poor_under_declared_noise',
+        'dependence':noise['cross_partition_dependence'],'geometry_conditioning':'fixed_not_propagated',
+        'field_truth':None,'model_accuracy':None,'field_eligible':False,'full_M02_accepted':False}
+    result['result_sha256']=survey._digest(result)
+    l2._result_native_metadata({'evaluation':result,'frozen':frozen})
+    return result
