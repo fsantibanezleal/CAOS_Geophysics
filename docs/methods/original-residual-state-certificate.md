@@ -1,7 +1,8 @@
 # Original convex residual state certificate
 
-This separate state-only certificate does not change the native fitting
-policy or accept a historical failed fit. It applies to the validated fixed
+The separate state-proof entrypoint cannot accept a historical failed fit.
+Production candidate9 uses the same owned certificate inside the uninterrupted
+native fixed-linear solve, with a distinct residual-accuracy policy2. It applies to the validated fixed
 original physical convex quadratic, not nonlinear GN, quartic or compiled
 joint objectives. Source, scientific weights, original G/noise/R nesting,
 H/g, bounds and all KKT/model/objective/prediction limits remain authoritative.
@@ -40,8 +41,11 @@ exact face, gradient, Joseph construction/action, residual and disposal.
 It accepts no caller witness, inverse, mask, gradient or success callback.
 Absolute-unit state KKT is stricter than fit normalization and never replaces
 the original fitting predicate. Results explicitly deny native fit, full
-method and host acceptance. Separate production fitting retains its existing
-certificate until independently reviewed and qualified with original caps.
+method and host acceptance. A certificate's witness does not move a native
+model or grant fit/host authority. Production uses the native fit-start
+normalization, unchanged native stopping predicates and original stronger
+limits, with construction/proof time charged to that same solve. No fallback
+to the older Neumann certificate occurs. Earlier epochs remain historical.
 
 Reserve128*parameter_count native witness/center/mask/index bytes before
 constructing the owned factory, in addition to the unchanged source phase,

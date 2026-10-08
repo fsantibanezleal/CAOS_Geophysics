@@ -161,6 +161,43 @@ def test_residual_state_literal_source_drift_is_refused(monkeypatch):
     assert obj._cache is None
 
 
+def test_production_residual_epoch_owns_proof_without_neumann_fallback(monkeypatch):
+    control = native_control()
+    obj, *_ = control.make(control.physical.__wrapped__(), 'secondary_enu_nT', False)
+    def forbidden(*args, **kwargs):
+        pytest.fail('residual production epoch cannot fall back to Neumann')
+    monkeypatch.setattr(optimizer.accuracy, 'OwnedOriginalTerminal', forbidden)
+    started = monotonic()
+    result = bridge.solve_magnetic_original(obj, np.zeros(7), source_components=90,
+        budget=optimizer.ConditionedBudget(started+120., 200, 805306368, 805306368, obj.allocation),
+        binding=binding_for(obj), terminal=owned.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6))
+    assert result['status'] == 'converged'
+    assert_caps(result, monotonic()-started)
+    assert result['runtime_epoch'] == 'physical-gncg-original-noise-reduced-joseph-candidate-9'
+    assert result['policy'] == 'closed-original-noise-reduced-joseph-free-face-residual-accuracy-2'
+    assert result['source_binding']['original_residual_terminal'] == optimizer.RESIDUAL_TERMINAL_SHA256
+    for row in result['terminal_audits']:
+        if row['check'] is not None:
+            check = row['check']
+            assert check['proof_basis'] == 'original_physical_residual_strong_convexity'
+            assert check['actions'] == (1 if check['free_indices'] else 0)
+            assert check['disposed']
+
+
+def test_production_residual_source_drift_before_native_evaluation(monkeypatch):
+    control = native_control()
+    obj, *_ = control.make(control.physical.__wrapped__(), 'secondary_enu_nT', False)
+    def forbidden(*args, **kwargs):
+        pytest.fail('drifted residual source cannot reach physical evaluation')
+    monkeypatch.setattr(obj, 'evaluate', forbidden)
+    monkeypatch.setattr(optimizer.residual_accuracy, 'SOURCE_SHA256', 'f'*64)
+    with pytest.raises(ValueError, match='closed residual certificate source drift'):
+        bridge.solve_magnetic_original(obj, np.zeros(7), source_components=90,
+            budget=optimizer.ConditionedBudget(monotonic()+120., 200, 805306368, 805306368, obj.allocation),
+            binding=binding_for(obj), terminal=owned.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6))
+    assert obj._cache is None
+
+
 def test_actual_original_full528_firstfold_strong_accuracy():
     """Exactly one new source epoch/prerequisite; dependent matrix is external."""
     from magnetic_likelihood import SealedLikelihood
