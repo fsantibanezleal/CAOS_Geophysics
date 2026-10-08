@@ -18,6 +18,7 @@ whitened physical objective is prohibited. Runtime whitening is identity;
 compilation SD/Cholesky custody belongs to the original retained problem.
 Scientific beta must belong to the original eight-value grid. Stored `R`
 contains positive diagonal smallness followed by signed mesh-neighbor rows.
+The full mesh retains the original compiled admission cap of 4096 cells.
 The owner checks actual active full-cell indices and mesh adjacency, splits
 the exact signed rows into axis groups, and verifies exact reconstruction.
 No arbitrary factor, graph, mask, inverse or terminal callback is accepted.

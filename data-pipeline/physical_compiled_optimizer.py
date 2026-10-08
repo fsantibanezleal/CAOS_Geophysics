@@ -95,7 +95,7 @@ def _metadata(o, identity, q):
         or not source._vector(o.observations, m)
         or type(o.mesh_shape) is not tuple or len(o.mesh_shape) != 3
         or any(type(v) is not int or not 1 <= v <= 4096 for v in o.mesh_shape)
-        or np.prod(o.mesh_shape, dtype=np.int64) > 2**24
+        or np.prod(o.mesh_shape, dtype=np.int64) > 4096
         or type(o.active_full_indices) is not np.ndarray or o.active_full_indices.dtype != np.int64
         or o.active_full_indices.shape != (a,) or not o.active_full_indices.flags.c_contiguous
         or type(o.prior) is not sp.csr_matrix or o.prior.shape[1] != a

@@ -109,7 +109,7 @@ def test_original_retained_and_every_mapping_charge_sum_not_max():
     assert plan['terminal']['witness_bytes'] == 128*len(q)
 
 
-@pytest.mark.parametrize('kind', ['beta', 'scale', 'binding', 'wrap', 'smallness', 'foreign_backing', 'full_problem'])
+@pytest.mark.parametrize('kind', ['beta', 'scale', 'binding', 'wrap', 'full_mesh', 'smallness', 'foreign_backing', 'full_problem'])
 def test_closed_source_metadata_and_no_arbitrary_graph_or_storage(kind):
     o, identity, q, retained, _ = fixture()
     if kind == 'beta':
@@ -120,6 +120,8 @@ def test_closed_source_metadata_and_no_arbitrary_graph_or_storage(kind):
         o = replace(o, binding=replace(o.binding, model_sha256='f'*64))
     elif kind == 'wrap':
         o = replace(o, mesh_shape=(1, 1, 3), active_full_indices=np.array([0, 1, 3], dtype=np.int64))
+    elif kind == 'full_mesh':
+        o = replace(o, mesh_shape=(4096, 2, 1))
     elif kind == 'smallness':
         R = o.prior.copy(); R.data[0] = 0.; o = replace(o, prior=R)
     elif kind == 'foreign_backing':
