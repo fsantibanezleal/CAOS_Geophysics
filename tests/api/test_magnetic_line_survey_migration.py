@@ -7,7 +7,7 @@ from alembic.operations import Operations
 import pytest
 import sqlalchemy as sa
 
-from app.magnetic_line_survey_models import SurveyAdmission, SurveyAttempt, SurveyExportRecord, SurveyMember
+from app.magnetic_line_survey_models import SurveyAdmission, SurveyAttempt, SurveyExportRecord, SurveyMember, SurveyIntake
 from app.models import Base
 
 
@@ -29,7 +29,7 @@ def test_allocated_predecessor_is_literal_not_a_competing_head():
 def test_real_ddl_roundtrip_constraints_and_refused_custody_loss(tmp_path):
     version=capsule()
     engine=sa.create_engine('sqlite:///'+(tmp_path/'owned-migration.sqlite3').as_posix())
-    owned=(SurveyAdmission,SurveyAttempt,SurveyMember,SurveyExportRecord)
+    owned=(SurveyAdmission,SurveyAttempt,SurveyMember,SurveyExportRecord,SurveyIntake)
     names={model.__tablename__ for model in owned}
     with engine.begin() as connection:
         connection.execute(sa.text('PRAGMA foreign_keys=ON'))

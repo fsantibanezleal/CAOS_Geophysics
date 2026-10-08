@@ -7,6 +7,28 @@ from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, JSON, Str
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models import Base, utcnow
+from fastapi_users_db_sqlalchemy import GUID
+from uuid import UUID
+
+
+class SurveyIntake(Base):
+    """Committed quota/debt BEFORE any owned upload allocation."""
+    __tablename__ = 'magnetic_survey_intakes'
+    __table_args__ = (CheckConstraint('reservation_bytes > 0'), CheckConstraint('retained_bytes >= 0'),
+        CheckConstraint("state IN ('reserved','receiving','publication_uncertain','failed','published')"))
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    owner_id: Mapped[UUID] = mapped_column(GUID(), ForeignKey('user.id'), index=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey('projects.id'), index=True)
+    role: Mapped[str] = mapped_column(String(32))
+    header_json: Mapped[dict] = mapped_column(JSON)
+    state: Mapped[str] = mapped_column(String(24))
+    reservation_bytes: Mapped[int] = mapped_column(Integer)
+    retained_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    inventory: Mapped[list] = mapped_column(JSON, default=list)
+    error_code: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    asset_id: Mapped[str | None] = mapped_column(String(36), ForeignKey('raw_assets.id'), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class SurveyAdmission(Base):
