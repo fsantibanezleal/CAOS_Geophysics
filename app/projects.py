@@ -25,6 +25,7 @@ from app.models import (
     Project, RawAsset, SourceRecord, User, utcnow,
 )
 from app.processing_storage import account_derived_usage, exact_derived_project, purge_exact_derived
+from app.profile_archive_delete import prepare_archive_deletion
 from app.schemas import ProjectCreate, ProjectUpdate, RawUploadInput
 from app.views import RawAssetListView, RawAssetView, asset_view, stored_utc
 
@@ -384,6 +385,9 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         jobs = (await session.execute(select(ProcessingJob).where(
             ProcessingJob.project_id == project_id, ProcessingJob.owner_id == user.id,
         ))).scalars().all()
+        archive_entries = await prepare_archive_deletion(
+            app, settings, session, str(user.id), project_id, jobs,
+        )
         assets.sort(key=lambda item: item.id)
         hashes = [item.sha256 for item in assets]
         manifest = [{"asset_id": item.id, "sha256": item.sha256, "byte_count": item.byte_count} for item in assets]
@@ -427,7 +431,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             receipt = DeletionReceipt(
                 id=str(uuid.uuid4()), project_id=project_id, owner_id=user.id,
                 deleted_at=utcnow(), asset_hashes=hashes, asset_manifest=manifest,
-                derived_manifest=derived_manifest,
+                derived_manifest=derived_manifest + archive_entries,
                 backup_purge_status="not_attempted",
             )
             session.add(receipt)
@@ -447,6 +451,7 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
             await asyncio.to_thread(purge_exact_derived, deleting_derived, derived_manifest)
         return {
             "deleted": True, "project_id": project_id, "receipt_id": receipt.id,
+            "retained_profile_archives": len(archive_entries),
             "backup_erasure_status": "not_attempted", "external_backup_status": "pending_reconciliation",
         }
 

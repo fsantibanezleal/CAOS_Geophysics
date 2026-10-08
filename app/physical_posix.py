@@ -18,6 +18,7 @@ class PrivateFiles:
     def __init__(self, root):
         require(os.name == "posix" and hasattr(os, "O_NOFOLLOW"), "physical_posix_required")
         path = Path(root)
+        self.root_path = path
         require(path.is_absolute() and path != Path(path.anchor), "physical_external_root_required")
         # Walk from the filesystem root without following any directory link.
         descriptor = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC)
@@ -130,6 +131,44 @@ class PrivateFiles:
             require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(info),
                     "physical_file_replaced")
             return body
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
+    def names(self, key, *, limit):
+        """Bounded no-follow names for an independently declared control directory."""
+        integer(limit, 1, 100000)
+        parent, name = self._parent(key)
+        descriptor = None
+        try:
+            descriptor = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=parent)
+            require(os.fstat(descriptor).st_dev == self.identity[0], "physical_cross_device")
+            result = []
+            with os.scandir(descriptor) as entries:
+                for entry in entries:
+                    require(len(result) < limit, "physical_directory_count")
+                    result.append(entry.name)
+            self.check_root()
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) ==
+                    self._identity(os.fstat(descriptor)), "physical_directory_replaced")
+            return result
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
+    def directory_identity(self, key):
+        parent, name = self._parent(key)
+        descriptor = None
+        try:
+            descriptor = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=parent)
+            info = os.fstat(descriptor)
+            require(info.st_dev == self.identity[0], "physical_cross_device")
+            self.check_root()
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) ==
+                    self._identity(info), "physical_directory_replaced")
+            return dict(device=info.st_dev, inode=info.st_ino)
         finally:
             if descriptor is not None:
                 os.close(descriptor)

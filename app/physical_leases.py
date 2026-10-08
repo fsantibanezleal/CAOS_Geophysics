@@ -86,3 +86,11 @@ class WriterLeases:
     def close(self):
         require(_held.get() is None or _held.get()[1] is not self, "physical_lease_still_held")
         self.files.close()
+
+    def require_held(self, *, exclusive=False):
+        """Verify this task's retained descriptor; no caller Boolean is a lease."""
+        held = _held.get()
+        require(held is not None and held[0] is asyncio.current_task() and held[1] is self
+                and os.getpid() == self.pid and (not exclusive or held[3]),
+                "physical_writer_lease_required")
+        self._check(held[2])
