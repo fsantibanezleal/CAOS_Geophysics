@@ -105,7 +105,8 @@ def test_real_generation_owned_roundtrip(tmp_path, actual_generation):
                     zip_path=str(tmp_path / job.result_key))))
                 payload = json.loads((tmp_path / dataset.storage_key).read_bytes())
                 (tmp_path / "browser-input-control.json").write_bytes(canonical_bytes(dict(
-                    receipt=magnetic_dataset_receipt(dataset), payload=payload, mapping=method_mapping(payload,dataset))))
+                    receipt=magnetic_dataset_receipt(dataset), payload=payload, mapping=method_mapping(payload,dataset),
+                    dataset_bytes_path=str(tmp_path / dataset.storage_key))))
             # Reopen a distinct connection: this is a durable SQL/file receipt,
             # not an in-memory SimpleNamespace pretending to be an API job.
             async with sessions() as session:
