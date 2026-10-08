@@ -575,6 +575,69 @@ def owned_pidfd(unit, attempt):
     return handle
 
 
+def resource_decimal(raw):
+    """Exact kernel decimal, not a supplied RSS or CPU accounting value."""
+    if type(raw) is not bytes or not re.fullmatch(rb"(?:0|[1-9][0-9]{0,19})\n", raw):
+        reject()
+    value = int(raw[:-1])
+    if value > 2**64 - 1:
+        reject()
+    return value
+
+
+class ResourceCapture:
+    """Independent retained cgroup memory peak/readback, never RSS/CPU/quota."""
+    def __init__(self, unit):
+        self.path = Path("/sys/fs/cgroup/system.slice") / unit / "science"
+        self.fd = None
+        self.identity = self.latest = None
+        self.reads = 0
+        self.unavailable = False
+
+    def sample(self):
+        if self.unavailable:
+            return
+        if self.fd is None:
+            try:
+                fd = os.open(self.path, os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW)
+            except FileNotFoundError:
+                return  # pre-birth, never synthesize measured zero
+            info = os.fstat(fd)
+            if info.st_uid != 0:
+                os.close(fd)
+                reject()
+            self.fd = fd
+            self.identity = dict(device=info.st_dev, inode=info.st_ino)
+        values = {}
+        try:
+            for name in ("memory.max", "memory.swap.max", "memory.peak"):
+                fd = os.open(name, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=self.fd)
+                try:
+                    values[name] = resource_decimal(os.pread(fd, 64, 0))
+                finally:
+                    os.close(fd)
+        except OSError:
+            self.unavailable = True
+            return  # object teardown does not turn missing peak into zero
+        if self.latest and values["memory.peak"] < self.latest["memory.peak"]:
+            reject()
+        self.latest = values
+        self.reads += 1
+
+    def record(self, manifest_hash, context_hash, phase):
+        return dict(schema="linux-cpu-resources-1", manifest_sha256=manifest_hash,
+                    context_sha256=context_hash, phase=phase, group=self.identity,
+                    reads=self.reads, memory=self.latest,
+                    available=self.latest is not None and not self.unavailable,
+                    measurement="kernel_memcg_peak_not_rss", rss=None, scratch_quota=None,
+                    scientific_admission=False, runtime_admission=False)
+
+    def close(self):
+        if self.fd is not None:
+            os.close(self.fd)
+            self.fd = None
+
+
 def run_control(manifest_path, expected_sha256):
     if os.name != "posix" or os.geteuid() != 0:
         reject()
@@ -624,6 +687,7 @@ def run_control(manifest_path, expected_sha256):
     raw_fd = os.open(raw_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     process = subprocess.Popen(command, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, bufsize=0, close_fds=True)
+    resources = ResourceCapture(unit)
     for stream in (process.stdin, process.stdout, process.stderr):
         os.set_blocking(stream.fileno(), False)
     selector = selectors.DefaultSelector()
@@ -659,6 +723,8 @@ def run_control(manifest_path, expected_sha256):
     try:
         while True:
             now = time.monotonic_ns()
+            if not custody:
+                resources.sample()
             elapsed = now - begun
             if elapsed > (310 if cls == 2 else 130) * 10**9:
                 raise ControlError("linux_qualification_timeout")
@@ -726,6 +792,12 @@ def run_control(manifest_path, expected_sha256):
                     trace.feed(packet)
             if trace.native_digest is not None and not custody:
                 os.fsync(raw_fd)
+                # Read and seal while the exact science object is still held,
+                # before ACK can release it. Not a hard scratch/RSS proof.
+                resources.sample()
+                resource_record = resources.record(manifest_hash, hashlib.sha256(context).hexdigest(), "pre_ack")
+                exclusive(root / "resources.json", (json.dumps(resource_record, sort_keys=True,
+                          separators=(",", ":")) + "\n").encode("ascii"))
                 # Exact transcript receipt sealed before BIND; no DB durability claim.
                 receipt = dict(schema="linux-cpu-transcript-1", manifest_sha256=manifest_hash,
                                source_commit_claim=m["source_commit"], controller_sha256=m["controller_sha256"],
@@ -753,6 +825,11 @@ def run_control(manifest_path, expected_sha256):
             process.kill()
             process.wait(timeout=4)
     finally:
+        if not (root / "resources.json").exists():
+            resource_record = resources.record(manifest_hash, hashlib.sha256(context).hexdigest(), "no_ack")
+            exclusive(root / "resources.json", (json.dumps(resource_record, sort_keys=True,
+                      separators=(",", ":")) + "\n").encode("ascii"))
+        resources.close()
         os.fsync(raw_fd)
         os.close(raw_fd)
         selector.close()

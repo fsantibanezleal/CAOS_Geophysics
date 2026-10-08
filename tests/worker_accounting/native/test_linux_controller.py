@@ -19,6 +19,37 @@ ATTEMPT = "01" * 16
 OBJECT = "02" * 16
 
 
+@pytest.mark.parametrize("raw,value", [(b"0\n", 0), (b"805306368\n", 805306368),
+                                     (b"18446744073709551615\n", 2**64 - 1)])
+def test_transport_resource_exact_kernel_decimal(raw, value):
+    assert runner.resource_decimal(raw) == value
+
+
+@pytest.mark.parametrize("raw", [b"", b"00\n", b"+1\n", b"1", b"1.0\n", b"max\n",
+                                  b"18446744073709551616\n", b"1\nextra", True])
+def test_transport_resource_invalid_is_not_zero(raw):
+    with pytest.raises(ControlError):
+        runner.resource_decimal(raw)
+
+
+def test_transport_resource_absent_is_unavailable_not_rss_or_quota(tmp_path, monkeypatch):
+    capture = runner.ResourceCapture("geophysics-cpu-qual-" + ATTEMPT + ".service")
+    capture.path = tmp_path / "not_created"
+    # Source-backed missing-directory operation, not Windows pretending cgroup
+    # constants/operations are available or a native Linux resource PASS.
+    for flag in ("O_DIRECTORY", "O_CLOEXEC", "O_NOFOLLOW"):
+        monkeypatch.setattr(runner.os, flag, 0, raising=False)
+    def missing(*args, **kwargs):
+        raise FileNotFoundError
+    monkeypatch.setattr(runner.os, "open", missing)
+    capture.sample()
+    record = capture.record("aa" * 32, "bb" * 32, "no_ack")
+    assert record["available"] is False and record["memory"] is None and record["reads"] == 0
+    assert record["rss"] is None and record["scratch_quota"] is None
+    assert record["measurement"] == "kernel_memcg_peak_not_rss"
+    capture.close()
+
+
 def test_transport_no_heartbeat_after_custody_bind():
     import inspect
     source = inspect.getsource(runner.run_control)
@@ -101,7 +132,7 @@ def test_transport_unavailable_digest_and_terminal_order_still_strict():
 def test_transport_unavailable_custody_cannot_send_bind_or_ack():
     import inspect
     source = inspect.getsource(runner.run_control)
-    assert 'if trace.final[15] == 1 and case != "no_ack":' in source
+    assert 'if trace.final[15] == 1 and case != "no_ack" and not process.stdin.closed:' in source
 
 
 @pytest.mark.parametrize("offset", [0, 4, 6, 8, 12, 16, 32, 48, 64 + 40])

@@ -612,3 +612,18 @@ Parent BindsTo stop kills the owned group immediately and the capturing relay
 retains its actual failed exit. No manager-success SIGTERM interpretation is
 used as a native successful completion. This remains separate from native250ms
 stop proof, and no parent/DB publication tail is inferred.
+
+## 18. Reusable private memory artifact, not whole-method admission
+
+The root qualification bridge retains the exact science directory FD and reads
+only memory.max, memory.swap.max and memory.peak as strict native U64 decimals.
+memory.peak is lifetime kernel memcg peak for that fresh group, not summed live
+PID RSS. Seal resources.json with manifest/context hashes and group device/inode
+before ACK can release the object. Pre-birth absence or teardown is unavailable,
+never a fabricated zero; regression/invalid decimal rejects. No CPU charge comes
+from this independent resource capture and native sampling remains independent.
+
+The artifact expressly leaves rss and scratch_quota null. Directory sampling,
+RLIMIT_FSIZE or memcg peak cannot stand in for a hard aggregate scratch quota,
+physical RSS, full parent/publication CPU or method scientific acceptance. All
+method profiles still need their exact independent resources/integration gates.
