@@ -185,3 +185,35 @@ def test_epoch_separation():
     result['result_sha256'] = plain.survey._digest({k:v for k,v in result.items() if k != 'result_sha256'})
     with pytest.raises(ValueError):
         corrected.validate_partition(result, problem, prior, policy())
+
+
+@pytest.mark.parametrize('tail', ['native_audit', 'auxiliary_anchors'])
+def test_actual_expired_tail_is_retained_and_replayed(monkeypatch, tail):
+    problem, prior = native_problem(null=tail == 'native_audit')
+    canonical = corrected._canonical
+    calls = []
+    initial_steps = []
+    def expire(*args):
+        budget = args[-1]
+        calls.append(1)
+        if not initial_steps:
+            initial_steps.append(budget.steps)
+        if (tail == 'native_audit' and len(calls) == 2) or (
+            tail == 'auxiliary_anchors' and budget.steps > initial_steps[0] and budget.calls >= 2):
+            budget.deadline = monotonic()-1.
+        return canonical(*args)
+    monkeypatch.setattr(corrected, '_canonical', expire)
+    result = corrected.solve_partition(problem, prior, policy(), monotonic()+120.)
+    assert result['terminal']['status'] == 'nonconverged' and result['terminal']['reason'] == 'wall_cap'
+    if tail == 'native_audit':
+        assert len(result['stages']) == 1 and result['stages'][0]['inner']['status'] == 'converged'
+        assert result['stages'][0]['canonical_gradient'] is None
+    else:
+        assert any(a['outcome'] == 'adopted' for a in result['attempts'])
+        assert len(result['models_q']) > len(result['initialization']['trace']['models_kg_m3'])
+    corrected.validate_partition(result, problem, prior, policy())
+    changed = deepcopy(result)
+    changed['event_kinds'][-1] = 9
+    changed['result_sha256'] = plain.survey._digest({k:v for k,v in changed.items() if k != 'result_sha256'})
+    with pytest.raises(ValueError, match='phase ledger'):
+        corrected.validate_partition(changed, problem, prior, policy())

@@ -9,14 +9,15 @@ Separately initialized LINEAR ray API: `physical_feasible_optimizer.solve_bounde
 precode e59e460, implementation ba59ea7. Same closed DTO/ConditionedBinding/
 ConditionedBudget/TerminalPolicy, but accepted_export names that module,
 optimizer_source_sha256 binds its loaded source, runtime_epoch is
-`physical-gncg-linear-joseph-feasible-candidate-3`, policy is
-`closed-firstorder-joseph-feasible-native-true-residual-terminal-1`.
+`physical-gncg-linear-joseph-contact-candidate-4`, policy is
+`closed-firstorder-joseph-contact-native-true-residual-terminal-1`.
 Original conditioned dependency SHA is also retained in result source_binding.
 See [exact policy and accounting](feasible-ray.md). Original200CG/200accepted/
 20LS/120seconds/lower remaining unchanged. No nonlinear variant or rescue.
 Native PG is unchanged; successful free-CG ray is initialized once BEFORE LS.
-Actual44guard/owned-native/independent precision controls PASS; original full528
-and full matrix remain separate actual gates, never inferred from these tests.
+Actual48guard/owned-native/independent precision controls PASS. Candidate3-down
+full528 remains FAIL wall_cap14accepted; candidate4 first-contact full528 remains
+FAIL wall_cap26accepted. No full-fit or matrix acceptance from these tests.
 
 Import `physical_owned_spd.{OperandBinding,MetricOperands,QuadraticTerm,
 QuadraticOperands,TerminalPolicy,binding_for}`. Source-bound adapter provides:

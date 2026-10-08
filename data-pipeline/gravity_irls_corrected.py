@@ -422,6 +422,11 @@ def validate_partition(result, problem, prior, policy):
     calls = anchors = native_steps = 0
     previous_weights = None
     changes = []
+    terminal = result['terminal']
+    plain.survey._keys(terminal, ('status', 'reason', 'weight_updates', 'epsilon_saturated', 'stage_changes'), 'actual corrected terminal')
+    failed = terminal['status'] in ('failed', 'nonconverged')
+    if terminal['status'] not in ('failed', 'nonconverged', 'converged'):
+        raise ValueError('corrected replay: literal terminal status')
     for attempt in attempts:
         base = {'stage', 'correction', 'model_row', 'branch', 'maximum_index', 'outcome', 'cg', 'trials'}
         optional = {'canonical_gradient', 'denominator', 'conditioning_ratio', 'direction', 'merit_slope',
@@ -445,6 +450,12 @@ def validate_partition(result, problem, prior, policy):
         stage = _stage(problem, q, policy, attempt['stage'], result['initial_epsilon'])
         obj = _Objective(stage, attempt['stage'], lower, upper, 'b'*64)
         r = obj.evaluate(q, True, False)[1]/2.
+        if 'canonical_gradient' not in attempt:
+            if (not failed or terminal['reason'] != 'wall_cap' or attempt is not attempts[-1]
+                or attempt['cg'] or attempt['trials'] or 'direction' in attempt
+                or attempt['outcome'] != 'wall_cap'):
+                raise ValueError('corrected replay: unavailable failed canonical action')
+            continue
         if not np.array_equal(attempt['canonical_gradient'], 2*r):
             raise ValueError('corrected replay: canonical residual')
         if attempt['outcome'] == 'canonical_absolute_stationary':
@@ -484,11 +495,16 @@ def validate_partition(result, problem, prior, policy):
         p = aa-cc*aa[j]/delta
         jp = m@p+u*p[j]
         slope = float(np.inner(r, jp))
-        if (delta != attempt['denominator'] or ratio != attempt['conditioning_ratio'] or slope >= 0.
+        if (delta != attempt['denominator'] or ratio != attempt['conditioning_ratio']
             or slope != attempt['merit_slope'] or not np.array_equal(p, attempt['direction'])
             or float(np.linalg.norm(jp+r)) != attempt['root_linear_residual']
             or float(np.linalg.norm(jp+r)/np.linalg.norm(r)) != attempt['root_relative_residual']):
             raise ValueError('corrected replay: rank-one/descent/linear residual')
+        if slope >= 0. or not np.any(p):
+            if (not failed or attempt['outcome'] != 'merit_non_descent' or attempt['trials']
+                or terminal['reason'] != 'merit_non_descent' or attempt is not attempts[-1]):
+                raise ValueError('corrected replay: failed actual merit descent')
+            continue
         if attempt['outcome'] == 'adopted' and not attempt['trials']:
             raise ValueError('corrected replay: original trial cap')
         for index, trial in enumerate(attempt['trials']):
@@ -546,6 +562,15 @@ def validate_partition(result, problem, prior, policy):
         if row['initial_gradient_norm'] != max(1., float(np.linalg.norm(native_initial, np.inf))):
             raise ValueError('corrected replay: native gradient normalization')
         final_q = segment[-1]
+        audit_fields = ('canonical_gradient', 'canonical_absolute_kkt', 'canonical_normalized_kkt', 'canonical_weight_mismatch')
+        if any(row[k] is None for k in audit_fields):
+            if (not failed or index != len(stages)-1
+                or terminal['reason'] not in ('wall_cap', 'nonfinite', 'engine_error')
+                or not all(row[k] is None for k in audit_fields)):
+                raise ValueError('corrected replay: unavailable last failed canonical audit')
+            # Actual native inner/weights/state were replayed above. Do not
+            # fabricate an audit or transition absent from the expired run.
+            continue
         canonical = _stage(problem, final_q, policy, index, result['initial_epsilon'])
         obj = _Objective(canonical, index, lower, upper, 'b'*64)
         gradient = obj.evaluate(final_q, True, False)[1]
@@ -565,8 +590,17 @@ def validate_partition(result, problem, prior, policy):
         previous_weights = stage['weights'][0]
     if calls > 126 or anchors > 63 or steps != init['iterations']+native_steps+anchors or result['auxiliary_calls'] != calls:
         raise ValueError('corrected replay: actual combined/method caps')
-    terminal = result['terminal']
-    plain.survey._keys(terminal, ('status', 'reason', 'weight_updates', 'epsilon_saturated', 'stage_changes'), 'actual corrected terminal')
+    # A failed proposal phase may retain genuine auxiliary anchors before the
+    # next official native stage exists. Replay this tail, not invented stages.
+    for attempt in attempts:
+        if attempt['outcome'] == 'adopted' and attempt['model_row'] >= len(expected_kinds)-1:
+            if attempt['model_row'] != len(expected_kinds)-1 or not failed:
+                raise ValueError('corrected replay: unavailable native-stage tail')
+            expected_kinds.append(1)
+            expected_labels.append(attempt['stage'])
+    if (not np.array_equal(result['event_kinds'], np.array(expected_kinds, dtype=np.int64))
+        or not np.array_equal(result['event_stages'], np.array(expected_labels, dtype=np.int64))):
+        raise ValueError('corrected replay: exact failed/success phase ledger')
     if terminal['stage_changes'] != tuple(changes) or terminal['weight_updates'] != max(0, len(stages)-1):
         raise ValueError('corrected replay: actual transition/adoption ledger')
     if terminal['status'] == 'converged':

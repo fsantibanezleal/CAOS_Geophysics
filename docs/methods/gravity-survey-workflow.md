@@ -12,6 +12,17 @@ admission service, or a completed gravity product. The existing non-null IRLS
 positive convergence gate remains failed under the fixed log17/floor3 policy.
 Null workflow tests check orchestration; they are not a substitute for that gate.
 
+The separately reviewed [source-action safeguarded IRLS policy](../design/features/m02-irls-corrected/design.md)
+has its own request `gravity-survey-irls-corrected-calibration-request-1`, runtime
+`m02-survey-irls-cpu-2` and policy
+`safeguarded-irls-interior-threepair-log17-stage-1`. The same original nonnull
+positive fixture now meets all21inner/final-three1e-6/canonical assertions under
+that separate algorithm, without upgrading the historical plain result. It
+does not establish the original full24 matrix or low-beta initialization gates.
+This corrected workflow uses the same calibrate/verify/evaluate commands below;
+its evaluation request is `gravity-survey-irls-corrected-evaluation-request-1`.
+Corrected refit command and online/UI acceptance remain separate gates.
+
 The [integration manifest](../data-contract/03_gravity-survey-native-integration.md)
 lists exact native exports and the proposed owner API/isolated UI mounting
 contract. Protected profiles, queued M08 and other methods remain in the existing
@@ -93,6 +104,15 @@ schema. The outer arrays must exactly match frozen outer rows and have their
 own value/noise digests. Verification never invokes an optimizer. Do not add
 outer values to the calibration request or use the evaluation to choose a mesh,
 prior, beta, iteration or method.
+
+Corrected results retain the full actual partition ledger in closed shallow
+typed pools, including native models, auxiliary library CG solutions/true
+residuals, epsilon/weights, strict merit trials and scheduled zero-step stages.
+The decoder checks original logical expansion and whole encoded limits before
+views, then complete numerical replay reconstructs the original physics. Pool
+hashes alone prove neither scientific convergence nor source/native admission.
+Expired last audits remain unavailable, never fabricated zero KKT; genuine
+anchors before an unfinished native stage remain actual failed-tail states.
 
 Unsuccessful calibration is still exported with complete literal failures;
 `calibrate` returns exit2. `verify` can pass structural/native replay of that

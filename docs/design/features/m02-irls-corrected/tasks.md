@@ -11,6 +11,10 @@ API/UI/course acceptance is NOT established by these tests.
    implement source-action correction and combined native/auxiliary ledger.
 2. CIR06..07: implement strict typed source/epoch/replay,portable export/import,
    CLI and actual full eight-beta/threefold/refit/evaluation adapter.
+   Actual43focused controls PASS: lossless nonnull69move ledger and real
+   25partition48cell null calibration, actual CLI/export/frozen evaluation,
+   no solver during replay, expired native/auxiliary tails and rehashed typed
+   counter/scope/factor/cycle/size refusals. Full24positive gate remains open.
 3. CIR08: run all original24 science cases and controls,noise/refits and20repeat
    nominal/cap resources with immutable receipts; retain initialization failures.
 4. Inspection SDD: implement additive actual DTO/API/worker/UI/course/graphs and
