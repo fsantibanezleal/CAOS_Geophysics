@@ -126,6 +126,8 @@ class _Audit:
         self.connection, self.files, self.rows = connection, files, rows
         self.manifests, self.installations = manifests, installations
         self.expected, self.absent, self.empty, self.operations = {}, set(), set(), {}
+        self.relocations = {}
+        self.predeletion = set()
         require(type(manifests) is dict and type(installations) is dict and type(metadata) is dict,
                 'physical_classifier_registration')
         # Exact operator-declared native files only; never wildcard DB suffixes.
@@ -143,8 +145,6 @@ class _Audit:
         self.controls = {row['job_id']: row for row in rows['physical_job_controls']}
         self.source_policy = source_policy
         self.deleted = {}
-        self.relocations = {}
-        self.predeletion = set()
 
     def deleted_projects(self):
         from app.physical_deleted_inventory import observe_receipt, validate_current_tombstone

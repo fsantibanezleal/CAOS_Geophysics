@@ -28,6 +28,21 @@ def classified(db,files):
     return result
 
 
+def test_classifier_initializes_relocation_before_any_declared_native_metadata(root_case):
+    case(root_case)
+    files=root_case[1]
+    name='.physical-writers.lock'
+    (files.root/name).write_bytes(b'\0')
+    rule={name:dict(cap=1,bytes=1,sha256=byte_sha(b'\0'),required=True)}
+    with connect(root_case[0]) as db:
+        db.execute('BEGIN IMMEDIATE')
+        result=classify_snapshot(db,CensusFiles(files),approved_manifests={},approved_installations={},
+            native_metadata=rule,expected_source_policy_sha256=POLICY)
+        assert result.classification=='coherent_committed',result.reason
+        assert result.runtime is False
+        db.rollback()
+
+
 def prepared(root_case):
     case(root_case)
     path,files,values,*_=root_case
