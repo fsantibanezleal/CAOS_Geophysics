@@ -124,9 +124,9 @@ def _abandon_targets(connection, control, intent, installed, batch_id, now_us):
         connection.execute(f"INSERT INTO physical_custody_files({','.join(slot)}) VALUES ({','.join('?' for _ in slot)})", tuple(slot.values()))
 
 
-def retire_failed_job(connection, *, owner_id, project_id, job_id, state, error_code,
+def _retire_failed_job(connection, *, owner_id, project_id, job_id, state, error_code,
                       metrics, finished_at, finished_us, installed_targets,
-                      abandon_batch_id=None, failure_cut=None):
+                      abandon_batch_id=None, failure_cut=None, caller_owned):
     """Co-commit nonsuccess, retained copies and reservation/intent retirement.
 
     ``installed_targets`` is the complete measured installed subset, not an
@@ -143,8 +143,8 @@ def retire_failed_job(connection, *, owner_id, project_id, job_id, state, error_
     integer(finished_us)
     from app.physical_contract import instant
     instant(finished_at, legacy=True)
-    begin_ledger(connection)
-    try:
+    from app.physical_roots import _ledger
+    with _ledger(connection, caller_owned=caller_owned):
         job = _row(connection, "SELECT * FROM processing_jobs WHERE id=? AND owner_id=? AND project_id=?", (job_id, owner_id, project_id))
         require(job["state"] == "running" and job["result_sha256"] is None and job["result_key"] is None
                 and job["result_bytes"] is None,
@@ -192,10 +192,29 @@ def retire_failed_job(connection, *, owner_id, project_id, job_id, state, error_
         if failure_cut:
             failure_cut("terminal")
         require(not connection.execute("PRAGMA foreign_key_check").fetchall(), "physical_foreign_key_check")
-        connection.commit()
-    except BaseException:
-        connection.rollback()
-        raise
+
+
+def retire_failed_job(connection, *, owner_id, project_id, job_id, state, error_code,
+                      metrics, finished_at, finished_us, installed_targets,
+                      abandon_batch_id=None, failure_cut=None):
+    """Original isolated retirement; never gains live WAL admission."""
+    return _retire_failed_job(connection, owner_id=owner_id, project_id=project_id,
+        job_id=job_id, state=state, error_code=error_code, metrics=metrics,
+        finished_at=finished_at, finished_us=finished_us,
+        installed_targets=installed_targets, abandon_batch_id=abandon_batch_id,
+        failure_cut=failure_cut, caller_owned=False)
+
+
+def retire_failed_job_transaction(connection, *, owner_id, project_id, job_id,
+                                  state, error_code, metrics, finished_at,
+                                  finished_us, installed_targets,
+                                  abandon_batch_id=None, failure_cut=None):
+    """Retire exact failed custody inside caller WAL, without committing it."""
+    return _retire_failed_job(connection, owner_id=owner_id, project_id=project_id,
+        job_id=job_id, state=state, error_code=error_code, metrics=metrics,
+        finished_at=finished_at, finished_us=finished_us,
+        installed_targets=installed_targets, abandon_batch_id=abandon_batch_id,
+        failure_cut=failure_cut, caller_owned=True)
 
 
 def cleanup_custody_file(connection, files, *, owner_id, batch_id, ordinal, removed_us, failure_cut=None,
