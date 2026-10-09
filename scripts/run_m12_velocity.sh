@@ -16,4 +16,4 @@ if [[ "$device" != cpu && "$device" != cuda ]]; then
   echo "Device must be cpu or cuda" >&2
   exit 2
 fi
-"$python_bin" scripts/run_m12_velocity.py --device "$device" "$@"
+"$python_bin" scripts/run_m12_velocity.py --device "$device" --protocol "${M12_PROTOCOL:-historical-v1}" "$@"

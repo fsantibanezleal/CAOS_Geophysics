@@ -1,5 +1,6 @@
 param(
     [ValidateSet('cpu', 'cuda')][string]$Device = 'cpu',
+    [ValidateSet('historical-v1', 'physics-v2')][string]$Protocol = 'historical-v1',
     [string]$Output,
     [ValidateRange(1, 10000)][int]$Epochs = 40,
     [switch]$Verify,
@@ -19,7 +20,7 @@ if (-not $Python) {
 if (-not $Python) { throw 'Create an ignored local Python environment with NumPy, SciPy and PyTorch, or pass -Python.' }
 Push-Location $root
 try {
-    $arguments = @('scripts/run_m12_velocity.py', '--output', $Output)
+    $arguments = @('scripts/run_m12_velocity.py', '--output', $Output, '--protocol', $Protocol)
     if ($Verify) { $arguments += '--verify' }
     else {
         $arguments += @('--device', $Device, '--epochs', $Epochs)

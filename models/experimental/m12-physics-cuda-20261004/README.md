@@ -31,12 +31,22 @@ joint cases are flagged, but13/160 ID controls are flagged too. It is not a
 field-calibrated novelty probability. Fresh realization seeds do not make the
 already known family definitions an independent geological discovery.
 
-Reproduce from a new explicit output directory:
+Set M12_OUTPUT to a new absolute directory outside all repositories under the
+device's model/data root. Use the ignored environment containing the pinned
+scientific dependencies. TMP, TEMP and TMPDIR must point to external scratch.
+Reproduce through the guarded launcher; the scientific source remains frozen:
 
 ```text
-python data-pipeline/velocity_physics_refinement.py --device cuda --output data/experiments/m12-physics-new
-python data-pipeline/velocity_physics_refinement.py --verify --output models/experimental/m12-physics-cuda-20261004
+python scripts/run_m12_velocity.py --protocol physics-v2 --device cuda --output "$M12_OUTPUT"
+python scripts/run_m12_velocity.py --protocol physics-v2 --verify --output "$M12_OUTPUT"
 ```
+
+The above commands use POSIX variable syntax. On Windows use
+`./scripts/run_m12_velocity.ps1 -Protocol physics-v2 -Device cuda -Output $env:M12_OUTPUT`
+and `-Protocol physics-v2 -Verify -Output $env:M12_OUTPUT`. Verification needs
+the original receipt and checkpoint together in that external directory, not
+only the committed receipt. Launchers do not download missing weights or replace
+an old receipt. They do not change the failed held-out comparator outcome.
 
 User-data inference uses `scripts/process_velocity.py` with explicit
 `--checkpoint-protocol physics-v2`, checkpoint path and the above SHA256.
