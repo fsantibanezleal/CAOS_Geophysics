@@ -19,6 +19,7 @@ import gravity_l2_precision as intervals
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 KERNEL_SHA256 = kernel.SOURCE_SHA256
 POLICY = 'closed-firstorder-joseph-native-true-residual-terminal-1'
+COMPLETE_POLICY = 'closed-firstorder-complete-prior-joseph-native-residual-1'
 
 
 def digest(value):
@@ -139,6 +140,16 @@ class OwnedMetric:
         self.action_seconds = 0.
         self.allocation = validate_operands(operands, identity, q, limit)
         a = operands.parameters
+        if type(self) is _COMPLETE_OWNER:
+            additional = kernel.complete_prior_workspace(a)
+            self.allocation = dict(self.allocation,
+                complete_prior_workspace_bytes=additional,
+                maximum=self.allocation['maximum']+additional)
+            if self.allocation['maximum'] > limit:
+                raise ValueError('SPD complete prior: unchanged original live-phase limit')
+            kernel._time(deadline)
+        elif type(self) is not _IC0_OWNER:
+            raise TypeError('SPD: exact owned class, no numeric factor callback')
         if (type(free) is not np.ndarray or free.dtype != np.int64 or free.ndim != 1
             or not 1 <= len(free) <= a or np.any(free < 0) or np.any(free >= a)
             or np.any(np.diff(free) <= 0)):
@@ -148,7 +159,13 @@ class OwnedMetric:
         self.face_sha256 = digest(free)
         # K is ALREADY whitened by original physical adapter; original literal
         # likelihood normalization only. No noise inference or dense K rescale.
-        self._numeric = kernel.JosephMetric(operands.regularizer, operands.whitened_jacobian,
+        if type(self) is _IC0_OWNER:
+            numeric_type = kernel.JosephMetric
+        elif type(self) is _COMPLETE_OWNER:
+            numeric_type = kernel.CompleteFirstOrderJosephMetric
+        else:
+            raise TypeError('SPD: exact owned class, no numeric factor callback')
+        self._numeric = numeric_type(operands.regularizer, operands.whitened_jacobian,
             sp.diags(np.full(operands.fit_components, np.sqrt(operands.likelihood_scale)), format='csr'), free, deadline,
             profile=(operands.source_components, operands.fit_components, a, operands.covariance))
         self.setup_seconds = self._numeric.setup_seconds
@@ -171,6 +188,14 @@ class OwnedMetric:
         if self._numeric is not None:
             self._numeric.close()
         self._numeric = None
+
+
+class OwnedCompletePriorMetric(OwnedMetric):
+    """Separate complete original first-order prior; no caller SPD factor."""
+
+
+_IC0_OWNER = OwnedMetric
+_COMPLETE_OWNER = OwnedCompletePriorMetric
 
 
 @dataclass(frozen=True)

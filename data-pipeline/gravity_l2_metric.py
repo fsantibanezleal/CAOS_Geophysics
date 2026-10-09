@@ -21,6 +21,7 @@ from scipy.linalg import _flapack
 
 
 POLICY='projected-gncg-binding-release-joseph-ic0-certified-delta-1'
+COMPLETE_POLICY='source-firstorder-complete-natural-ldlt-joseph-1'
 SOURCE_SHA256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 CEILING=2*1024**3
 # Read only already-loaded dependency source/binaries ONCE at import. No file
@@ -167,6 +168,60 @@ def _finite_array(value):
     return value
 
 
+def complete_prior_workspace(a):
+    """Closed sparse-fill dictionary, additional to all existing reserves."""
+    if type(a) is not int or not 1 <= a <= 4096:
+        raise ValueError('metric complete prior: literal original parameter cap')
+    return 128*a*a+128*a+65536
+
+
+def _factor_complete(matrix, deadline):
+    """Complete natural sparse LDLT of the source first-order prior ONLY.
+
+    No dense physical H, dropping threshold, pivot shift, retry or caller
+    factor. Sparse fill is kept, with prospective workspace reserved first.
+    """
+    _time(deadline); _stencil(matrix)
+    n = len(matrix.indptr)-1
+    # A complete row of Python int/float/dict slots plus copies/CSR/list reach
+    # is bounded by the additional128*n*n dictionary, not observed RSS.
+    if (sys.getsizeof({i: float(i) for i in range(n)})
+            +n*(sys.getsizeof(n)+sys.getsizeof(1.)+8) > 128*n+1024):
+        raise ValueError('metric complete prior: loaded row storage unsupported')
+    rows, ptr, columns, values = [], [0], [], []
+    pivots = np.empty(n, dtype=np.float64)
+    for i in range(n):
+        _time(deadline)
+        begin, end = matrix.indptr[i:i+2]
+        original = dict(zip(map(int, matrix.indices[begin:end]), map(float, matrix.data[begin:end])))
+        row = {}
+        for j in range(i):
+            _time(deadline)
+            total = 0.
+            for k in sorted(row.keys() & rows[j].keys()):
+                product = _number(row[k]*float(pivots[k]))
+                total = _number(total+_number(product*rows[j][k]))
+            numerator = _number(original.get(j, 0.)-total)
+            if numerator != 0.:
+                row[j] = _number(numerator/float(pivots[j]))
+        diagonal = original[i]
+        for k in sorted(row):
+            product = _number(_number(row[k]*row[k])*float(pivots[k]))
+            diagonal = _number(diagonal-product)
+        if diagonal <= 0.:
+            raise ValueError('metric complete prior: nonpositive natural pivot, no shift/retry')
+        pivots[i] = diagonal
+        rows.append(row)
+        for j in sorted(row):
+            columns.append(j); values.append(row[j])
+        columns.append(i); values.append(1.)
+        ptr.append(len(columns))
+    lower = sp.csr_matrix((np.array(values, dtype=np.float64),
+        np.array(columns, dtype=np.int32), np.array(ptr, dtype=np.int32)), shape=matrix.shape)
+    _time(deadline)
+    return lower, pivots
+
+
 def _paired(lower,pivots,v,deadline):
     _time(deadline)
     x=_finite_array(spsolve_triangular(lower,v,lower=True,unit_diagonal=True))
@@ -214,6 +269,15 @@ class JosephMetric:
             or type(profile[1]) is not int or profile[1]<g.shape[0]):
             raise ValueError('metric: exact trusted full operand profile')
         self.allocation=allocation(*profile)
+        if type(self) is _COMPLETE_OWNER:
+            additional = complete_prior_workspace(self.a)
+            self.allocation = dict(self.allocation,
+                complete_prior_workspace_bytes=additional,
+                maximum=self.allocation['maximum']+additional)
+            if self.allocation['maximum'] > CEILING:
+                raise ValueError('metric complete prior: unchanged2GiB live phases')
+        elif type(self) is not _IC0_OWNER:
+            raise TypeError('metric: exact closed numeric class, no factor callback')
         if (type(g) is not np.ndarray or g.dtype!=np.float64 or g.ndim!=2
             or not 1<=g.shape[0]<=2048 or not 1<=g.shape[1]<=4096 or not np.isfinite(g).all()
             or type(weights) is not sp.csr_matrix or weights.dtype!=np.float64
@@ -226,7 +290,8 @@ class JosephMetric:
         principal=t=s=chol=None
         try:
             principal=regularizer[free][:,free].tocsr()
-            self.lower,self.pivots=_factor(principal,deadline)
+            self.lower,self.pivots=(_factor_complete(principal,deadline)
+                if type(self) is _COMPLETE_OWNER else _factor(principal,deadline))
             principal=None
             _time(deadline)
             with np.errstate(over='raise',invalid='raise'):
@@ -290,3 +355,13 @@ class JosephMetric:
 
     def close(self):
         self.lower=self.pivots=self.b=self.f=self.free=None
+
+
+class CompleteFirstOrderJosephMetric(JosephMetric):
+    """Separate prospective complete source-prior epoch; default IC0 unchanged."""
+
+
+# Preserve literal class identity if a diagnostic wraps the public constructor.
+# A subclass still cannot choose a different numeric factor in this closed ABI.
+_IC0_OWNER = JosephMetric
+_COMPLETE_OWNER = CompleteFirstOrderJosephMetric
