@@ -516,3 +516,16 @@ and normal completion. Gate: tests/data/test_waveform_owned_reader_diagnostic.py
 for fixed grammar/privacy/bounds/status and actual Linux fork/drop/descriptor/
 failure transport, then fresh fixed-source native qualification. Authored fork
 controls are reader mechanics, not scientific or production/native acceptance.
+
+The fixed child class set also includes the stdlib SQLite error classes and
+the installed structural-input module's WaveformInputError, registered from
+that exact loaded source rather than a request-selected class name. A token may
+add the innermost line in the registered owned-reader source and a SQLite integer
+error code (0..2147483647), never its message or SQL. Traverse at most64 traceback
+links without formatting/source reads; unknown source frames stay omitted. The
+parent reconstructs that relative source/hash binding from its already checked
+source map. The complete wire token remains at most64bytes. Historical phase/
+class-only tokens remain readable. Invalid extra/number/class tokens yield no
+diagnosis, not an inferred failure. Gate: the same named reader diagnostic file,
+with exact SQLite/domain/source-line/opaque/privacy controls before another
+changed-source diagnostic epoch; no resource or scientific criterion changes.
