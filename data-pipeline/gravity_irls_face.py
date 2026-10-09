@@ -14,7 +14,7 @@ import gravity_irls_corrected as interior
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-RESEARCH_EPOCH = 'm02-canonical-native-free-face-guards-1'
+RESEARCH_EPOCH = 'm02-canonical-native-free-face-complete-prior-2'
 VENDOR_SHA256 = '0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4'
 
 
@@ -93,6 +93,7 @@ def _derivative_allocation(original):
         derivative_source_likelihood_workspace_bytes=256*m,
         derivative_source_metadata_bytes=65536,
         derivative_sparse_bytes=16*7*a+4*(a+1), metadata_bytes=65536)
+    value['complete_source_prior_workspace_bytes'] = physical.original.owned.kernel.complete_prior_workspace(a)
     value['maximum'] = sum(value.values())
     if value['maximum'] > 2*1024**3:
         raise ValueError('canonical face: simultaneous original partition/derivative metric2GiB')
@@ -240,7 +241,7 @@ class _CanonicalFaceLinearization:
         # M is the half native gradient's derivative: physical data H/2.
         # Factory coefficient .5 corresponds to A.T A in the shared ABI.
         try:
-            self._metric = owned.OwnedMetric(operands, identity, self.q,
+            self._metric = owned.OwnedCompletePriorMetric(operands, identity, self.q,
                 self.face['free'], self.owner.deadline, 2*1024**3)
             self._regularizer, self._jacobian = prior, jacobian
             self.record.update(metric_constructed=True, metric_source_sha256=owned.SOURCE_SHA256,

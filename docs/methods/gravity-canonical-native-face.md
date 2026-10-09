@@ -142,3 +142,40 @@ The research tests can retain complete failed and successful direction/trial
 records under explicitly configured external temporary custody, before any
 assertion, using exclusive files and exact float/array bits. This transport
 does not approve a candidate or upgrade an earlier failed receipt.
+
+## Separate complete source-prior direction epoch
+
+The prospective complete-prior epoch preserves the literal source derivative,
+native free face and all preceding scientific tests. It replaces only the
+incomplete natural prior factor with complete natural sparse unit-lower LDLT.
+Every computed nonzero fill entry is retained, with no dropping threshold,
+permutation, pivot shift, retry or failed-CG fallback. It factors the actual
+positive first-order regularization prior, not a dense physical Hessian.
+The public default IC0 constructor and its historical epochs are unchanged.
+
+In exact arithmetic, let `R=L D L.T` be that prior, `B` the literal original
+whitened sensitivity at its existing likelihood scale, and
+`F=R^-1 B.T (I+B R^-1 B.T)^-1`. The stored Joseph action is
+
+    P = (I-F B) R^-1 (I-B.T F.T) + F F.T.
+
+For any finite stored `F`, positive stored pivots and nonsingular stored
+unit-lower `L`, this is positive definite in real arithmetic: if both terms
+vanish for a nonzero `v`, `F.T v=0` and `(I-B.T F.T)v=0` imply `v=0`, a
+contradiction. With exact `F` it equals `(R+B.T B)^-1`. Neither theorem promises
+rounded forward direction accuracy. Every actual native CG must still pass
+the true original action residual and the unchanged independent direction
+assertion. A passing residual alone cannot qualify a direction under poor
+physical conditioning.
+
+The added worst-fill dictionary is `128*a*a+128*a+65536` bytes, in addition to
+all original simultaneous source/factory/action/retained-book reserves. It
+charges Python row entries, fill/reach sets and lists, factor and transpose
+copies. Construction checks loaded Python object sizes and the unchanged
+original limit before any complete factor allocation; the public owned class
+checks its own literal limit too. Full48 SD/covariance sums are respectively
+2140343720 and 2147421608 bytes, both below the original 2147483648-byte cap.
+Larger closed requests can refuse; no claimed unused memory is deducted.
+Allocation proof, actual native action, independent accuracy, strict trials,
+complete 21-stage convergence and whole original24/noise/refits remain distinct.
+This epoch is not a compiled nonlinear, quartic or global GN theorem.

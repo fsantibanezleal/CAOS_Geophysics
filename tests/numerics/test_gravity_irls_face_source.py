@@ -174,7 +174,12 @@ def test_original_full48_coexisting_derivative_phase_dictionary(covariance):
     assert value['derivative_kernel_bytes'] == physical.original.owned.kernel.allocation(288, 192, 48, covariance)['maximum']
     assert value['derivative_source_jacobian_bytes'] == 16*192*48
     assert value['maximum'] <= 2*1024**3
-    assert value['maximum'] == (2147055016 if covariance else 2139977128)
+    # The immutable first-epoch dictionary remains the same exact value.
+    # The prospective complete-prior epoch adds its full reserve, no deduction.
+    first_epoch = value['maximum']-value['complete_source_prior_workspace_bytes']
+    assert first_epoch == (2147055016 if covariance else 2139977128)
+    assert value['complete_source_prior_workspace_bytes'] == 366592
+    assert value['maximum'] == (2147421608 if covariance else 2140343720)
     bad = dict(original, admitted_bytes=original['admitted_bytes']-1)
     with pytest.raises(ValueError, match='exact original retained partition dictionary'):
         face._derivative_allocation(bad)

@@ -16,9 +16,9 @@ from scipy.sparse.linalg import LinearOperator, cg
 import gravity_irls_face as face
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-FACE_SOURCE_SHA256 = '2df98013d7291abe9f8d96a3274f62b4716b3c463cefb9ad9279eeb6f5762399'
+FACE_SOURCE_SHA256 = '892b1831f429fa073bce69f4217f00d186235b297288da3c16d345d13a536c49'
 CG_SOURCE_SHA256 = face.interior._SOURCES['scipy.cg']
-RESEARCH_EPOCH = 'm02-canonical-native-free-face-direction-1'
+RESEARCH_EPOCH = 'm02-canonical-native-free-face-complete-prior-direction-2'
 
 
 def _source_check():
