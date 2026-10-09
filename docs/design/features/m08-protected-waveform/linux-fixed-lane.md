@@ -490,3 +490,29 @@ replace the helper or instrument the scientific process. Old failures remain
 unchanged. Gate: tests/data/test_waveform_supervisor_diagnostic.py for exact
 bounded/source-frame/privacy/opaque/unbound and actual main refusal controls,
 then fresh fixed-source native qualification under all original limits.
+
+### Bounded owned-reader child refusal diagnosis
+
+The same failure-retention contract covers an owned reader's nonzero exit after
+its irreversible ordinary identity drop. Keep its original256MiB address-space,
+5sCPU, 8swall and28MiB packet bounds. A separate anonymous diagnostic pipe may
+retain only one fixed phase (setup/query/serialize/write) and one exact builtin
+exception-class token; it carries no exception argument, traceback/source text,
+SQL, original, path or environment. The child closes every other inherited
+descriptor, including the root's diagnostic read end. Diagnostic tokens fit64
+bytes and cannot block the data pipe; formatting failure uses a fixed opaque
+token. Scientific packet parsing and all relation/original checks are unchanged.
+
+Only after reaping that exact unreaped owned child, the parent may emit one
+bounded private ASCII stderr diagnostic (maximum2048bytes) with actual exit code,
+validated optional child tokens, canonical job UUID and prechecked installation/
+source-map/revision hashes. Unknown/truncated/extra tokens become unavailable,
+not inferred causes. Negative exit codes remain actual signal deaths, not child
+exception claims. The original typed reader refusal remains primary regardless
+of diagnostic failure. No new terminal member, HTTP response, scientific/native
+claim, root-selected path, numeric PID adoption or cleanup authority is added.
+Success emits no diagnostic. Each pipe is closed on fork error, parent refusal
+and normal completion. Gate: tests/data/test_waveform_owned_reader_diagnostic.py
+for fixed grammar/privacy/bounds/status and actual Linux fork/drop/descriptor/
+failure transport, then fresh fixed-source native qualification. Authored fork
+controls are reader mechanics, not scientific or production/native acceptance.
