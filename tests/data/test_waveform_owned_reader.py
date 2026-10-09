@@ -127,9 +127,7 @@ def test_consistently_rehashed_but_changed_request_cannot_adopt_original_index(c
         value.checked_relations(config,record["job"]["id"],record,payload)
 
 
-@pytest.mark.skipif(sys.platform != "linux" or os.environ.get("M08_RUN_LINUX_NATIVE") != "1",
-                    reason="explicit Linux root fork/UID qualification only; not production or science proof")
-def test_actual_reader_opens_sqlite_and_both_originals_only_after_irrevocable_drop(tmp_path,monkeypatch):
+def ordinary_database(tmp_path):
     import sqlite3
     import stat
     value = module()
@@ -161,14 +159,20 @@ def test_actual_reader_opens_sqlite_and_both_originals_only_after_irrevocable_dr
                        for key,v in item.items()}
                 db.execute("INSERT INTO "+table+" ("+",".join(keys)+") VALUES ("+",".join("?" for _ in keys)+")",
                            tuple(sql[key] for key in keys))
-    # Only this test's fresh ancestors are made readable; no device-root chmod.
-    for path in (tmp_path,*tmp_path.parents):
-        if path.parent.name == "_Temp":
-            path.chmod(0o755)
-            break
+    # Only the fresh pytest leaf/basetemp, never its existing external ancestors.
+    for path in (tmp_path,tmp_path.parent):
         path.chmod(0o755)
     for path in (private,*private.rglob("*")):
         path.chmod(0o755 if path.is_dir() else 0o644)
+    return value,config,record,database
+
+
+@pytest.mark.skipif(sys.platform != "linux" or os.environ.get("M08_RUN_LINUX_NATIVE") != "1",
+                    reason="explicit Linux root fork/UID qualification only; not production or science proof")
+def test_actual_reader_opens_sqlite_and_both_originals_only_after_irrevocable_drop(tmp_path,monkeypatch):
+    import sqlite3
+    import stat
+    value,config,record,database = ordinary_database(tmp_path)
     secret = tmp_path/"root-only-sentinel"
     secret.write_bytes(b"root-reader-descriptor-must-not-survive")
     secret.chmod(0o600)
@@ -198,3 +202,102 @@ def test_actual_reader_opens_sqlite_and_both_originals_only_after_irrevocable_dr
             value.nonroot_query(config,record["job"]["id"])
     finally:
         os.close(sentinel)
+
+
+def live_wal(database):
+    """Separate ordinary writer: observer must not inherit an already-mapped WAL."""
+    from contextlib import contextmanager
+    import select
+    import sqlite3
+    @contextmanager
+    def held():
+        os.chown(database,65534,65534)
+        os.chown(database.parent,65534,65534)
+        ready_read,ready_write = os.pipe()
+        stop_read,stop_write = os.pipe()
+        pid = os.fork()
+        if pid == 0:
+            try:
+                os.close(ready_read)
+                os.close(stop_write)
+                os.setgroups([])
+                os.setgid(65534)
+                os.setuid(65534)
+                with sqlite3.connect(database) as connection:
+                    assert connection.execute('PRAGMA journal_mode=WAL').fetchone() == ('wal',)
+                    connection.execute('CREATE TABLE reader_mechanism (value)')
+                    connection.execute('INSERT INTO reader_mechanism VALUES (1)')
+                    connection.commit()
+                    os.write(ready_write,b'R')
+                    assert os.read(stop_read,1) == b'S'
+                os._exit(0)
+            except BaseException:
+                os._exit(2)
+        os.close(ready_write)
+        os.close(stop_read)
+        try:
+            assert select.select([ready_read],[],[],5)[0]
+            assert os.read(ready_read,1) == b'R'
+            assert Path(str(database)+'-wal').is_file()
+            assert Path(str(database)+'-shm').is_file()
+            yield
+        finally:
+            try:
+                os.write(stop_write,b'S')
+            except BrokenPipeError:
+                pass
+            os.close(stop_write)
+            os.close(ready_read)
+            assert os.waitstatus_to_exitcode(os.waitpid(pid,0)[1]) == 0
+    return held()
+
+
+@pytest.mark.skipif(sys.platform != "linux" or os.environ.get("M08_RUN_LINUX_NATIVE") != "1",
+                    reason="actual live-WAL mechanics under original limits, not science proof")
+def test_actual_legacy_inherited_wal_mapping_refuses_under_original_limit(tmp_path):
+    import mmap
+    import resource
+    import select
+    import sqlite3
+    _,_,_,database = ordinary_database(tmp_path)
+    with live_wal(database),mmap.mmap(-1,320*1024**2) as reservation:
+        assert len(reservation) == 320*1024**2  # Virtual reservation, never written.
+        read,write = os.pipe()
+        pid = os.fork()
+        if pid == 0:
+            try:
+                os.close(read)
+                os.setgroups([])
+                os.setgid(65534)
+                os.setuid(65534)
+                resource.setrlimit(resource.RLIMIT_AS,(256*1024**2,256*1024**2))
+                resource.setrlimit(resource.RLIMIT_CPU,(5,5))
+                try:
+                    with sqlite3.connect('file:'+str(database)+'?mode=ro',uri=True) as db:
+                        db.execute('SELECT value FROM reader_mechanism').fetchone()
+                except sqlite3.OperationalError as error:
+                    os.write(write,str(error.sqlite_errorcode).encode('ascii'))
+                    os._exit(0)
+                os._exit(3)
+            except BaseException:
+                os._exit(2)
+        os.close(write)
+        try:
+            assert select.select([read],[],[],8)[0]
+            assert os.read(read,64) == b'5386'
+        finally:
+            os.close(read)
+            assert os.waitstatus_to_exitcode(os.waitpid(pid,0)[1]) == 0
+
+
+@pytest.mark.skipif(sys.platform != "linux" or os.environ.get("M08_RUN_LINUX_NATIVE") != "1",
+                    reason="actual live-WAL fresh image under original limits, not science proof")
+def test_actual_fresh_reader_reopens_live_wal_under_original_limit(tmp_path):
+    import mmap
+    value,config,record,database = ordinary_database(tmp_path)
+    config['source_root'] = str(ROOT)
+    with live_wal(database),mmap.mmap(-1,320*1024**2) as reservation:
+        assert len(reservation) == 320*1024**2
+        packet = value.nonroot_query(config,record['job']['id'])
+        assert packet['record'] == record
+        assert packet['reader'] == dict(uid=65534,gid=65534,groups=[])
