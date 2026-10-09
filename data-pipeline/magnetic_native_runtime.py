@@ -115,7 +115,7 @@ def run_local_survey(executable, package_root, dependency_roots, plan_path, *, c
                    '--job-handle', str(int(job)), '--plan', str(plan_path), '--dependencies', *map(str, roots)]
         with (scratch/'native.stdout').open('xb') as stdout, (scratch/'native.stderr').open('xb') as stderr:
             process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
-                env=env, cwd=scratch, startupinfo=startup, close_fds=True, creationflags=0x4|0x08000000)
+                env=env, cwd=scratch, startupinfo=startup, close_fds=True, creationflags=0x4|0x8)
             if not api.AssignProcessToJobObject(job, int(process._handle)):
                 fail('resource', '$/native', 'Suspended child assignment failed; no running fallback')
             assigned = True
