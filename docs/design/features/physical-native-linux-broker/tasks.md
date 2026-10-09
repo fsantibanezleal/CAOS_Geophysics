@@ -17,6 +17,13 @@ deploy/API/app/storage; native source owner owns the paths in design section7.
   closure pass. This is a section4 subunit, not B04/B05 end-to-end acceptance or
   production D3/I1..I4 completion. All production identity/profile seams remain.
 
+- [x] C2 Implement the native input receiver subunit with exact packet, sender,
+  sealed-byte hashing and owned FD disposal. Actual Linux controls pass39,
+  then46 after added seal/hash/offset/maximum-size negatives. See
+  [receiver evidence](../../../validation/native-broker-receiver-20261009.md).
+  This does not close socket/unit/PIDFD authorization, production profiles,
+  native launch, durability or the full B04/B05 end-to-end gates.
+
 - [x] D1 Read existing worker/MT contracts, native source, applicable ADRs and
   primary Linux6.8/systemd255 Unix socket/peer-PIDFD/nondumpability semantics.
   Retain actual bounded retrieval timestamps/bytes/hashes privately, no runtime
