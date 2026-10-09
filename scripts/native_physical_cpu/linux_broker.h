@@ -10,7 +10,8 @@
 
 enum lbr_error {
     LBR_OK = 0, LBR_AGAIN = 1, LBR_PROTOCOL = 2, LBR_PEER = 3,
-    LBR_UNSEALED = 4, LBR_BOUNDS = 5, LBR_HASH = 6, LBR_CLOCK = 7
+    LBR_UNSEALED = 4, LBR_BOUNDS = 5, LBR_HASH = 6, LBR_CLOCK = 7,
+    LBR_KERNEL = 8
 };
 
 struct lbr_input {
@@ -18,10 +19,19 @@ struct lbr_input {
     int fd[3];
 };
 
+struct lbr_peer {
+    struct ucred credentials;
+    int pidfd;
+};
+
 /* The enclosing broker owns PIDFD/unit authorization. This is input custody
  * only: exactly one pending packet, no listener, launch or caller-path access. */
 int lbr_decode(const unsigned char *, size_t);
 int lbr_receive(int, const struct ucred *, struct lbr_input *);
 void lbr_dispose(struct lbr_input *);
+int lbr_peer_open(int, struct lbr_peer *);
+int lbr_peer_live(const struct lbr_peer *);
+void lbr_peer_dispose(struct lbr_peer *);
+int lbr_receive_peer(int, const struct lbr_peer *, struct lbr_input *);
 
 #endif

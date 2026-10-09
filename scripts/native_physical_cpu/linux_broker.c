@@ -4,10 +4,15 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <linux/magic.h>
+#include <poll.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/vfs.h>
 #include <unistd.h>
+
+#ifndef SO_PEERPIDFD
+#error "Linux SO_PEERPIDFD headers are required; no numeric-PID fallback"
+#endif
 
 static int nonnil(const unsigned char *p, size_t n) {
     unsigned char bits = 0;
@@ -38,6 +43,48 @@ void lbr_dispose(struct lbr_input *in) {
         in->fd[i] = -1;
     }
     memset(in->packet, 0, sizeof(in->packet));
+}
+
+void lbr_peer_dispose(struct lbr_peer *peer) {
+    if (!peer) return;
+    if (peer->pidfd >= 0) close(peer->pidfd);
+    memset(&peer->credentials, 0, sizeof(peer->credentials));
+    peer->pidfd = -1;
+}
+
+int lbr_peer_live(const struct lbr_peer *peer) {
+    if (!peer || peer->pidfd < 0 || peer->credentials.pid <= 0) return LBR_PEER;
+    struct pollfd handle = {.fd=peer->pidfd, .events=POLLIN};
+    int ready = poll(&handle, 1, 0);
+    return ready == 0 && !handle.revents ? LBR_OK : LBR_PEER;
+}
+
+int lbr_peer_open(int socket_fd, struct lbr_peer *out) {
+    struct lbr_peer peer = {.pidfd=-1};
+    int domain = 0, type = 0;
+    socklen_t length = sizeof(domain);
+    if (!out || out->pidfd != -1 || out->credentials.pid ||
+        out->credentials.uid || out->credentials.gid) return LBR_PROTOCOL;
+    if (getsockopt(socket_fd, SOL_SOCKET, SO_DOMAIN, &domain, &length) ||
+        length != sizeof(domain) || domain != AF_UNIX) return LBR_PROTOCOL;
+    length = sizeof(type);
+    if (getsockopt(socket_fd, SOL_SOCKET, SO_TYPE, &type, &length) ||
+        length != sizeof(type) || type != SOCK_SEQPACKET) return LBR_PROTOCOL;
+    length = sizeof(peer.credentials);
+    if (getsockopt(socket_fd, SOL_SOCKET, SO_PEERCRED, &peer.credentials, &length) ||
+        length != sizeof(peer.credentials) || peer.credentials.pid <= 0) return LBR_PEER;
+    length = sizeof(peer.pidfd);
+    if (getsockopt(socket_fd, SOL_SOCKET, SO_PEERPIDFD, &peer.pidfd, &length)) {
+        return errno == ENOPROTOOPT || errno == EINVAL || errno == ENOSYS ? LBR_KERNEL : LBR_PEER;
+    }
+    int flags = peer.pidfd >= 0 ? fcntl(peer.pidfd, F_GETFD) : -1;
+    if (length != sizeof(peer.pidfd) || flags < 0 ||
+        fcntl(peer.pidfd, F_SETFD, flags | FD_CLOEXEC) || lbr_peer_live(&peer)) {
+        lbr_peer_dispose(&peer);
+        return LBR_PEER;
+    }
+    *out = peer;
+    return LBR_OK;
 }
 
 static int sealed(int fd, uint64_t bytes) {
@@ -133,4 +180,14 @@ int lbr_receive(int socket_fd, const struct ucred *expected, struct lbr_input *o
     if (error) { lbr_dispose(&in); return error; }
     *out = in;
     return LBR_OK;
+}
+
+int lbr_receive_peer(int socket_fd, const struct lbr_peer *peer, struct lbr_input *out) {
+    if (lbr_peer_live(peer)) return LBR_PEER;
+    int result = lbr_receive(socket_fd, &peer->credentials, out);
+    if (!result && lbr_peer_live(peer)) {
+        lbr_dispose(out);
+        return LBR_PEER;
+    }
+    return result;
 }

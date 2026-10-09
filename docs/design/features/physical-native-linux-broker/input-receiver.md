@@ -6,6 +6,17 @@ must supply a connected filesystem SOCK_SEQPACKET socket already authenticated
 against the retained live peer PIDFD and immutable worker-unit identity. This
 unit does not substitute supplied credentials for that authorization.
 
+The next kernel-peer subunit obtains SO_PEERCRED and SO_PEERPIDFD directly
+from the same AF_UNIX/SOCK_SEQPACKET connection, retains a CLOEXEC PIDFD,
+and checks its liveness before/after input receipt. Unsupported headers/kernel
+option reject; there is no pidfd_open(numeric PID), name or UID-only fallback.
+This still does not authenticate the manager unit, executable or registry.
+Actual controls must distinguish inherited/passed socket sender credentials
+from its original connector, reject stream/datagram sockets, retain a dead-peer
+PIDFD rather than reopen a PID, and preserve the descriptor census.
+The reviewed Linux 6.8 implementation retains the socket's peer struct pid:
+[kernel getsockopt implementation](https://raw.githubusercontent.com/torvalds/linux/v6.8/net/core/sock.c).
+
 The receiver uses exactly one nonblocking recvmsg with MSG_CMSG_CLOEXEC, a
 352-byte payload and fixed ancillary buffer. It requires one three-descriptor
 SCM_RIGHTS and one exact native SCM_CREDENTIALS matching the authenticated

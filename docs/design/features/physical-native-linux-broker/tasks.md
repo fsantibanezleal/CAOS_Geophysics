@@ -24,6 +24,12 @@ deploy/API/app/storage; native source owner owns the paths in design section7.
   This does not close socket/unit/PIDFD authorization, production profiles,
   native launch, durability or the full B04/B05 end-to-end gates.
 
+- [x] C3 Kernel peer subunit implements native credential/PIDFD acquisition,
+  before/after receipt liveness, type refusals and explicit closure. Six actual
+  peer cases and46 receiver regressions pass under fresh source/library pins;
+  [evidence](../../../validation/native-broker-peer-20261009.md). This is not
+  MainPID/cgroup/runtime authorization, B02/B03 or production launch acceptance.
+
 - [x] D1 Read existing worker/MT contracts, native source, applicable ADRs and
   primary Linux6.8/systemd255 Unix socket/peer-PIDFD/nondumpability semantics.
   Retain actual bounded retrieval timestamps/bytes/hashes privately, no runtime
