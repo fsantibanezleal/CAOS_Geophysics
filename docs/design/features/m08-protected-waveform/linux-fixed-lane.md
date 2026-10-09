@@ -463,3 +463,28 @@ loop; complete caller control may govern an empty transport, never overwrite a
 nonempty invalid/native packet. The retained first birth-EOF child_crash receipt
 remains a failure, with separate caller_lost and proved126ms extinction. Gates:
 accept/hello precedence controls then a fresh changed-source installed EOF run.
+
+### Bounded preterminal refusal diagnosis
+
+The existing R-M08S-15 failure-retention requirement also covers an unexpected
+exception before a full root terminal can be installed. A generic refusal remains
+unproved failure, not scientific rejection, cancellation or extinction evidence.
+For operator diagnosis only, root's already bounded private stderr may carry one
+closed ASCII diagnostic (maximum8192bytes) identifying a fixed exception class,
+canonical job UUID when checked, configuration/source-map hashes and at most eight
+registered source frames (relative source name, pinned hash, integer line).
+It excludes exception messages, source text, absolute paths, SQL, originals,
+environment and scientific values. Unknown exceptions use a fixed opaque class.
+No traceback formatting or linecache/source reads are performed. Invalid or
+unavailable binding omits that binding; formatting failure retains the original
+fixed refusal line. Success stderr stays empty and existing UUID-only argv,
+typed API failure, scientific bounds and full terminal grammar do not change.
+
+This diagnostic always states native_proof=false. It cannot supply a missing
+receipt/counter, classify caller cancellation, authorize publication, remove
+debt or grant recovery. Qualification may retain the validated private stderr
+beside its own external checkpoints after the real helper's EOF; it does not
+replace the helper or instrument the scientific process. Old failures remain
+unchanged. Gate: tests/data/test_waveform_supervisor_diagnostic.py for exact
+bounded/source-frame/privacy/opaque/unbound and actual main refusal controls,
+then fresh fixed-source native qualification under all original limits.
