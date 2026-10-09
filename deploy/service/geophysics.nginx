@@ -1,0 +1,50 @@
+server {
+    listen 80;
+    server_name geophysics.ml.fasl-work.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name geophysics.ml.fasl-work.com;
+    root /var/www/geophysics.ml.fasl-work.com/current/web;
+    ssl_certificate /etc/letsencrypt/live/geophysics.ml.fasl-work.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/geophysics.ml.fasl-work.com/privkey.pem;
+    client_max_body_size 201m;
+    client_body_timeout 60s;
+
+    location = /api { return 404; }
+    location ^~ /api/ {
+        proxy_pass http://unix:/run/geophysics-api/api.sock:;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Connection "";
+        proxy_cache off;
+        proxy_intercept_errors off;
+        proxy_request_buffering off;
+        proxy_buffering off;
+        proxy_next_upstream off;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+        proxy_send_timeout 60s;
+        add_header Cache-Control "no-store" always;
+    }
+    location = /index.html {
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+    location /data/ {
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+    location / { try_files $uri $uri/ /index.html; }
+    gzip on;
+    gzip_types application/javascript application/json image/svg+xml text/css text/plain;
+}

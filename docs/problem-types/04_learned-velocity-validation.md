@@ -49,16 +49,19 @@ The joint cohort's family breakdown matters: 80 fault maps average 494.93 m/s le
 
 ## Reproduction, interpretation and exercise
 
-Create an ignored local Python environment with NumPy 2.2.6, SciPy 1.15.2 and Torch 2.14.0. On Windows, from the repository root run:
+Create an ignored local Python environment with NumPy 2.2.6, SciPy 1.15.2 and Torch 2.14.0. Configure `M12_OUTPUT` as a new absolute directory under the device's external model/data root, and `GEOPHYSICS_TEMP_ROOT` as an existing external scratch directory. The launchers refuse missing, relative, repository, filesystem-root and system-temporary output paths before scientific execution. On Windows, from the repository root run:
 
 ```powershell
-./scripts/run_m12_velocity.ps1 -Device cpu -Output data/experiments/m12-velocity-new
-./scripts/run_m12_velocity.ps1 -Verify -Output data/experiments/m12-velocity-new
-$env:M12_VELOCITY_RECEIPT = 'data/experiments/m12-velocity-new'
-.\.venv-m12\Scripts\python.exe -m pytest -o addopts= tests/learning/test_velocity_inversion.py tests/learning/test_split_and_benchmark.py
+$env:TMP = $env:GEOPHYSICS_TEMP_ROOT
+$env:TEMP = $env:GEOPHYSICS_TEMP_ROOT
+$env:TMPDIR = $env:GEOPHYSICS_TEMP_ROOT
+./scripts/run_m12_velocity.ps1 -Device cpu -Output $env:M12_OUTPUT
+./scripts/run_m12_velocity.ps1 -Verify -Output $env:M12_OUTPUT
+$env:M12_VELOCITY_RECEIPT = $env:M12_OUTPUT
+.\.venv-m12\Scripts\python.exe -B -m pytest -o addopts= tests/learning/test_velocity_inversion.py tests/learning/test_split_and_benchmark.py -p no:cacheprovider --basetemp "$env:GEOPHYSICS_TEMP_ROOT/m12-verification"
 ```
 
-The verification command reloads the checkpoint, checks its hash and source hash, regenerates the locked cohorts, and recomputes both estimators' metrics. It also accepts `-Output models/experimental/m12-velocity-cpu-20260928` to verify the retained experimental pair. Use a **new** output path when training: the command refuses to overwrite an earlier receipt. `-Fixture` produces a small mechanical check explicitly labelled fixture-only; it is ineligible as scientific evidence. CUDA must be scheduled away from the M13 training worktree; the current receipt proves CPU training only.
+The verification command reloads the checkpoint, checks its hash and source hash, regenerates the locked cohorts, and recomputes both estimators' metrics. The historical scientific module remains byte-identical so old source-bound receipts do not become unverifiable. Its direct `--verify --output` interface can read the already retained historical experimental pair; do not use its legacy default for new training. New runs use the guarded launchers with an explicit external path. Use a **new** output path when training: the command refuses to overwrite an earlier receipt. `-Fixture` produces a small mechanical check explicitly labelled fixture-only; it is ineligible as scientific evidence. CUDA must be scheduled away from the M13 training worktree; the current receipt proves CPU training only.
 
 Interpretation exercise: using the receipt's per-family and per-acquisition tables, compare fault versus salt failures, then compare those with acquisition-only C. Calculate the joint OOD flag sensitivity `43/160` and identify the 117 missed cases. Explain why the classical inverse's 2.34 ms oracle residual on joint OOD does not validate bent-ray field physics. A correct answer distinguishes a numerical forward check from independent field observations and does not infer a unique subsurface velocity from this synthetic grid.
 

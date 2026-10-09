@@ -627,17 +627,22 @@ def replay_grid(result, grid_index):
 
 def export_bundle(request, result, output):
     """Stage a complete immutable local bundle; never canonical or overwriting."""
-    output = Path(output).absolute()
+    output = Path(output)
+    if not output.is_absolute():
+        raise GravityContractError("output: require explicit absolute external storage")
+    output = output.absolute()
     if result["provenance"]["request_sha256"] != digest(request):
         raise GravityContractError("export: result does not belong to this request")
     if output.exists() or output.is_symlink():
         raise GravityContractError("output: already exists; overwrite forbidden")
-    for parent in output.parents:
+    for parent in (output, *output.parents):
         if parent.is_symlink() or (hasattr(parent, "is_junction") and parent.is_junction()):
             raise GravityContractError("output: symlink/junction parent rejected")
+        if (parent / ".git").exists() or (parent / ".git").is_symlink():
+            raise GravityContractError("output: require external storage outside every repository")
     output = output.resolve()
-    if output.is_relative_to(ROOT) and not output.is_relative_to(ROOT / "data/raw/gravity-m01-transforms"):
-        raise GravityContractError("output: inside repo use ignored data/raw/gravity-m01-transforms only")
+    if output.is_relative_to(ROOT):
+        raise GravityContractError("output: require external storage outside repository")
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".m01-transform-", dir=output.parent) as temporary:
         staging = Path(temporary)

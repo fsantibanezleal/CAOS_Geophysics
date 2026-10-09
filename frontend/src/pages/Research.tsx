@@ -18,6 +18,8 @@ import { phasePickers } from "../data/phase-picking";
 import { PhasePickingContent } from "../components/PhasePickingContent";
 import { PhasePickerPanel } from "../components/PhasePickerPanel";
 import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
+import { M01ScientificCourse } from "../components/M01ScientificCourse";
+import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
 import {
@@ -380,7 +382,11 @@ export function Methodology() {
     {
       id: "fields",
       label: t("Fields", "Campo"),
-      content: <SubTabs orientation="vertical" ariaLabel={t("Field and MT methods", "Métodos de campos y MT")} tabs={released(["potential", "mt", "joint"])} />,
+      content: <SubTabs orientation="vertical" ariaLabel={t("Field and MT methods", "Métodos de campos y MT")} tabs={[
+        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },
+        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse /> },
+        ...released(["potential", "mt", "joint"]),
+      ]} />,
     },
     {
       id: "waves",
@@ -539,8 +545,8 @@ function ValidationSection() {
       </pre>
       <p>
         {t(
-          "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",
-          "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. Pages y VPS sirven archivos estáticos. Sólo la calculadora directa MT recalcula respuesta física en navegador.",
+          "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. The current live 0.04.001 deployment uses only the ML VPS; Pages publication has been withdrawn. The replacement keeps courses, curated replay and validated browser computations public, including layered MT forward calculation and locally implemented M13 phase-picking inference. Server project persistence, uploads and VPS jobs require login; implementation and local validation do not mean new VPS jobs are deployed.",
+          "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. El despliegue live 0.04.001 actual usa sólo ML VPS; la publicación en Pages fue retirada. El reemplazo mantiene públicos los cursos, la reproducción curada y los cálculos validados en navegador, incluido MT directo por capas y la inferencia M13 de fases implementada localmente. La persistencia de proyectos, las cargas y las tareas VPS requieren inicio de sesión; la implementación y validación local no significan que se hayan desplegado nuevas tareas VPS.",
         )}
       </p>
       <Callout
@@ -568,7 +574,10 @@ export function Implementation() {
     {
       id: "fields",
       label: t("Fields", "Campo"),
-      content: <SubTabs orientation="vertical" ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={chapters
+      content: <SubTabs orientation="vertical" ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={[
+        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },
+        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse implementation /> },
+        ...chapters
         .filter((chapter) => ["potential", "mt", "joint"].includes(chapter.id))
         .map((chapter) => ({
           id: chapter.id,
@@ -576,7 +585,8 @@ export function Implementation() {
           content: chapter.id === "mt"
             ? <OnlineMTCourse view="implementation" replay={<SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />} />
             : <SubTabs ariaLabel={t("Numerical algorithms", "Algoritmos numéricos")} tabs={algorithmsFor(chapter)} />,
-        }))} />,
+        })),
+      ]} />,
     },
     {
       id: "waves",

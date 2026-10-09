@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" role="img" aria-labelledby="title desc">
+<title id="title">Heights and reference surfaces / Alturas y superficies</title><desc id="desc">Schematic positive geoid separation, receiver above surface, h equals H plus N. / Separación geoidal positiva esquemática, receptor sobre superficie, h igual H más N.</desc>
+<style>
+:root{--bg:#f6f8fa;--surface:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--blue:#0969da;--cyan:#0a7c8a;--pink:#bf3989;--warn:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--surface:#161b22;--fg:#c9d1d9;--muted:#9aa6b2;--border:#30363d;--blue:#58a6ff;--cyan:#3fb1c8;--pink:#f778ba;--warn:#d29922}}
+text{fill:var(--fg);font:24px ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.small{font-size:22px;fill:var(--muted)}.head{font-size:26px;font-weight:600}.line{fill:none;stroke:var(--fg);stroke-width:2.5}.ref{fill:none;stroke:var(--blue);stroke-width:3}.geo{fill:none;stroke:var(--cyan);stroke-width:3;stroke-dasharray:8 5}.mass{fill:var(--cyan);fill-opacity:.13;stroke:var(--cyan);stroke-width:2.5}.layer{fill:none;stroke:var(--pink);stroke-width:3;stroke-dasharray:7 5}.box{fill:var(--surface);stroke:var(--border);stroke-width:2}.warn{fill:var(--warn)}.blue{fill:var(--blue)}.pink{fill:var(--pink)}.cyan{fill:var(--cyan)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="600" height="720" rx="12" fill="var(--bg)"/>
+
+<text class="head" x="30" y="48">Reference heights / Alturas</text>
+<text class="small" x="30" y="84">Schematic / Esquema · m, upward / arriba</text>
+<path class="line" d="M55 570V140" marker-end="url(#arrow)"/><text x="25" y="120">z</text>
+<path class="ref" d="M85 510H555"/><text class="blue" x="105" y="550">Ellipsoid / Elipsoide</text>
+<path class="geo" d="M85 457H555"/><text class="cyan" x="105" y="429">Geoid / Geoide</text>
+<path class="mass" d="M85 332L140 305L200 335L260 318L320 335L380 310L420 330L555 315V510H85Z"/>
+<text x="95" y="286">Surface / Superficie</text>
+<circle cx="230" cy="195" r="8" fill="var(--fg)"/><text x="90" y="165">Receiver / Receptor</text>
+<path class="line" d="M230 207V260" marker-end="url(#arrow)"/><text x="250" y="246">g ↓</text>
+<path class="line" d="M490 510V195" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text x="510" y="352">h</text>
+<path class="geo" d="M440 457V195" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text x="450" y="220">H</text>
+<path class="geo" d="M440 510V457" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text x="450" y="494">N</text>
+<path class="line" d="M365 510V319" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text x="380" y="395">hₛ</text>
+<text x="35" y="610">h = H + N</text>
+<text class="small" x="35" y="653">Compatible datum / Datum compatible</text>
+<text class="small" x="35" y="687">Not sea-level relocation / No traslado</text>
+</svg>

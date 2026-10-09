@@ -23,6 +23,8 @@ from app.database import make_engine, reconcile_private_files, require_migration
 from app.errors import ApiError
 from app.models import ObservationDataset, ProcessingJob, RawAsset, utcnow
 from app.mt_contract import M05_ID, M06_ID
+from app.profile_contract import PROFILE_METHODS, profile_child_hash, profile_code_hashes
+from app.profile_compute import profile_command
 from app.projects import _verified_file
 from app.processing_contract import (
     METHOD_ID, canonical_bytes, checked_derived_path, dataset_key, result_key,
@@ -151,23 +153,46 @@ def _rss_tree(pid: int) -> int:
         return 0
 
 
+def _profile_config_entries(stage: Path) -> tuple[list[Path], list[Path]]:
+    """Admit only the pinned library's config file and empty nested directory."""
+    root = stage / ".pygimli-config"
+    if not root.exists() and not root.is_symlink():
+        return [], []
+    dirs = [root, root / "pygimli", root / "pygimli" / "pygimli"]
+    files = [root / "pygimli" / "config.json"]
+    for directory in dirs:
+        if directory.is_symlink() or (hasattr(directory, "is_junction") and directory.is_junction()):
+            raise RuntimeError("linked native config requires operator recovery")
+        if directory.exists() and (not directory.is_dir() or any(item not in dirs + files for item in directory.iterdir())):
+            raise RuntimeError("unknown native config requires operator recovery")
+    existing = []
+    for item in files:
+        if item.is_symlink() or (item.exists() and not item.is_file()):
+            raise RuntimeError("unknown native config requires operator recovery")
+        if item.exists():
+            existing.append(item)
+    return existing, [directory for directory in reversed(dirs) if directory.exists()]
+
+
 def _stage_bytes(stage: Path) -> int:
     entries = set(stage.iterdir())
     cache = stage / ".matplotlib"
-    if any(item.is_symlink() or (not item.is_file() and item != cache) for item in entries):
+    native_files, _ = _profile_config_entries(stage)
+    if any(item.is_symlink() or (not item.is_file() and item not in (cache, stage / ".pygimli-config")) for item in entries):
         raise RuntimeError("unknown worker staging entry requires operator recovery")
     cached = set(cache.iterdir()) if cache in entries and cache.is_dir() else set()
     if cache in entries and not cache.is_dir() or any(item.is_symlink() or not item.is_file() for item in cached):
         raise RuntimeError("unknown worker cache entry requires operator recovery")
-    return sum(item.stat().st_size for item in entries if item.is_file()) + sum(item.stat().st_size for item in cached)
+    return sum(item.stat().st_size for item in entries if item.is_file()) + sum(item.stat().st_size for item in cached | set(native_files))
 
 
 def _clear_known_stage(stage: Path) -> None:
     expected = {stage / "result.json", stage / "stderr.txt"}
     snapshot = stage / "source.edi"
     cache = stage / ".matplotlib"
+    native_files, native_dirs = _profile_config_entries(stage)
     entries = set(stage.iterdir())
-    if (not expected <= entries or not entries <= expected | {cache, snapshot}
+    if (not expected <= entries or not entries <= expected | {cache, snapshot, stage / ".pygimli-config"}
             or any(item.is_symlink() or not item.is_file() for item in expected | (entries & {snapshot}))):
         raise RuntimeError("unknown worker staging entry requires operator recovery")
     if cache in entries:
@@ -178,6 +203,10 @@ def _clear_known_stage(stage: Path) -> None:
         for item in cache.iterdir():
             item.unlink()
         cache.rmdir()
+    for item in native_files:
+        item.unlink()
+    for directory in native_dirs:
+        directory.rmdir()
     for item in expected:
         item.unlink()
     if snapshot in entries:
@@ -187,7 +216,7 @@ def _clear_known_stage(stage: Path) -> None:
 
 async def _finish_failure(
     sessions: async_sessionmaker, job_id: str, code: str, message: str,
-    *, wall_ms: int, peak_rss: int, scratch_bytes: int,
+    *, wall_ms: int, peak_rss: int | None, scratch_bytes: int | None,
 ) -> None:
     async with sessions() as session:
         await session.execute(text("BEGIN IMMEDIATE"))
@@ -205,12 +234,20 @@ async def _finish_failure(
 
 
 async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionmaker, job: ProcessingJob, poll_interval: float) -> None:
+    if job.method_id in PROFILE_METHODS and os.name == "posix" and settings.profile_linux_supervisor is not None:
+        from app.profile_linux_worker import execute
+        await execute(settings,sessions,job,poll_interval)
+        return
+    if job.method_id == 'seismic.waveform-qc-classical/v1':
+        from app.waveform_worker import execute
+        await execute(settings,sessions,job,poll_interval)
+        return
     stage_root = settings.data_dir / ".job-staging"
     if stage_root.is_symlink():
         raise RuntimeError("worker staging root requires operator recovery")
-    stage_root.mkdir(parents=True, exist_ok=True)
+    stage_root.mkdir(mode=0o700, parents=True, exist_ok=True)
     stage = stage_root / job.id
-    stage.mkdir()
+    stage.mkdir(mode=0o700)
     output = stage / "result.json"
     error_path = stage / "stderr.txt"
     input_key = dataset_key(str(job.owner_id), job.project_id, job.dataset_id)
@@ -224,13 +261,15 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
     try:
         if job.method_id in (M05_ID, M06_ID) and not settings.mt_online_enabled:
             raise ApiError(409, "host_admission_pending", "MT worker admission is closed")
+        if job.method_id in PROFILE_METHODS and not settings.profile_online_enabled:
+            raise ApiError(409, "host_admission_pending", "Profile worker admission is closed")
         async with sessions() as session:
             dataset = (await session.execute(select(ObservationDataset).where(
                 ObservationDataset.id == job.dataset_id, ObservationDataset.owner_id == job.owner_id,
                 ObservationDataset.project_id == job.project_id,
             ))).scalar_one()
             asset = None
-            if job.method_id in (M05_ID, M06_ID):
+            if job.method_id in (M05_ID, M06_ID, *PROFILE_METHODS):
                 asset = (await session.execute(select(RawAsset).where(
                     RawAsset.id == dataset.raw_asset_id, RawAsset.owner_id == job.owner_id,
                     RawAsset.project_id == job.project_id,
@@ -239,14 +278,18 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             raise ApiError(409, "dataset_changed", "Admitted dataset identity changed")
         payload = verified_json(settings, input_key, dataset.sha256, dataset.byte_count)
         validate_dataset_identity(payload, dataset)
-        if sha256(canonical_bytes(job.request_json)) != job.request_sha256 or job.method_id not in (METHOD_ID, M05_ID, M06_ID):
+        if sha256(canonical_bytes(job.request_json)) != job.request_sha256 or job.method_id not in (METHOD_ID, M05_ID, M06_ID, *PROFILE_METHODS):
             raise ApiError(409, "request_changed", "Admitted request identity changed")
         raw_path = None
-        if job.method_id in (M05_ID, M06_ID):
+        if job.method_id in PROFILE_METHODS and (
+                job.request_json.get("profile_child_sha256") != profile_child_hash()
+                or job.request_json.get("profile_code_hashes") != profile_code_hashes(job.method_id)):
+            raise ApiError(409, "engine_changed", "Admitted profile producer code differs from the worker release")
+        if job.method_id in (M05_ID, M06_ID, *PROFILE_METHODS):
             if (asset is None or asset.id != job.request_json.get("raw_asset_id")
                     or asset.sha256 != job.request_json.get("raw_sha256")
                     or asset.sha256 != dataset.raw_sha256):
-                raise ApiError(409, "raw_integrity_failed", "Admitted EDI original identity changed")
+                raise ApiError(409, "raw_integrity_failed", "Admitted scientific original identity changed")
             raw_path = _verified_file(settings, asset)
         limits = job.preflight
         repo_root = Path(__file__).resolve().parents[1]
@@ -265,13 +308,22 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             environment["HOME"] = str(stage)
             environment["USERPROFILE"] = str(stage)
             environment["MPLCONFIGDIR"] = str(stage / ".matplotlib")
+            # pyGIMLi reads its platform config directory during import, before
+            # noCache can be applied. Never inherit the operator's config path.
+            environment["APPDATA"] = str(stage / ".pygimli-config")
+            environment["LOCALAPPDATA"] = str(stage / ".pygimli-config")
+            environment["XDG_CONFIG_HOME"] = str(stage / ".pygimli-config")
+            environment["NUMBER_OF_PROCESSORS"] = "1"
             for variable in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS",
                              "NUMEXPR_NUM_THREADS", "BLIS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
                 environment[variable] = "1"
         with error_path.open("xb") as errors:
+            command = (profile_command(job, input_path, raw_path, output, settings.profile_python)
+                       if job.method_id in PROFILE_METHODS else
+                       _command(job, input_path, output) if raw_path is None else
+                       _mt_command(job, input_path, raw_path, output, asset.byte_count))
             process = subprocess.Popen(
-                _command(job, input_path, output) if raw_path is None else
-                _mt_command(job, input_path, raw_path, output, asset.byte_count),
+                command,
                 cwd=stage, env=environment,
                 stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=errors,
                 shell=False, start_new_session=(os.name == "posix"),
@@ -306,7 +358,8 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
         if code is None and process.returncode != 0:
             detail = error_path.read_text(encoding="utf-8", errors="replace")[:300]
             code = "degenerate_mad_scale" if "degenerate_mad_scale" in detail else "processing_failed"
-            message = detail or "Processing child exited without a result"
+            message = ("Profile processing failed; original and job identities remain available"
+                       if job.method_id in PROFILE_METHODS else detail or "Processing child exited without a result")
         if code is None and (not output.is_file() or output.is_symlink()):
             code, message = "result_missing", "Processing child produced no result"
         if code is None:
@@ -316,11 +369,15 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             else:
                 result = verified_json_from_bytes(result_bytes)
                 validate_result_identity(result, job)
-                if job.method_id == METHOD_ID:
+                if job.method_id in PROFILE_METHODS:
+                    # The fixed path-invoked profile child carries its own code
+                    # and numerical-module hashes, checked by its contract.
+                    compute = None
+                elif job.method_id == METHOD_ID:
                     import app.compute as compute
                 else:
                     import app.mt_compute as compute
-                if result.get("engine_sha256") != hashlib.sha256(Path(compute.__file__).read_bytes()).hexdigest():
+                if compute is not None and result.get("engine_sha256") != hashlib.sha256(Path(compute.__file__).read_bytes()).hexdigest():
                     raise ApiError(409, "engine_changed", "Processing engine digest differs from executed code")
                 try:
                     build_bundle(payload, result, dataset.sha256, sha256(result_bytes))
@@ -413,8 +470,11 @@ async def run_one(settings: Settings | WorkerSettings, *, poll_interval: float =
             await engine.dispose()
 
 
-async def run_forever(settings: Settings | WorkerSettings, *, poll_interval: float = 0.5) -> None:
+async def run_forever(settings: Settings | WorkerSettings, *, poll_interval: float = 0.5, physical=None) -> None:
     """Hold the singleton lock and audit once, then claim work without rescanning bytes."""
+    if physical is not None:
+        from app.physical_assembly import run_forever_participating
+        return await run_forever_participating(settings, physical, poll_interval=poll_interval)
     with _worker_lock(settings.data_dir):
         engine = make_engine(settings)
         sessions = async_sessionmaker(engine, expire_on_commit=False)

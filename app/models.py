@@ -134,6 +134,28 @@ class AccountUsage(Base):
     raw_bytes: Mapped[int] = mapped_column(Integer, default=0)
 
 
+class WaveformDatasetSource(Base):
+    """Exact original pair; application also checks owner/project joins."""
+    __tablename__ = "waveform_dataset_sources"
+    dataset_id: Mapped[str] = mapped_column(String(36), ForeignKey("observation_datasets.id"), primary_key=True)
+    role: Mapped[str] = mapped_column(String(16), primary_key=True)
+    asset_id: Mapped[str] = mapped_column(String(36), ForeignKey("raw_assets.id"))
+    source_id: Mapped[str] = mapped_column(String(36), ForeignKey("source_records.id"))
+    raw_sha256: Mapped[str] = mapped_column(String(64))
+    raw_bytes: Mapped[int] = mapped_column(Integer)
+    source_version: Mapped[int] = mapped_column(Integer)
+
+
+class WaveformResultArtifact(Base):
+    """Every immutable scientific export member is charged and inventoried."""
+    __tablename__ = "waveform_result_artifacts"
+    job_id: Mapped[str] = mapped_column(String(36), ForeignKey("processing_jobs.id"), primary_key=True)
+    name: Mapped[str] = mapped_column(String(80), primary_key=True)
+    storage_key: Mapped[str] = mapped_column(String(260), unique=True)
+    byte_count: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64))
+
+
 class RateWindow(Base):
     __tablename__ = "rate_windows"
     __table_args__ = (UniqueConstraint("scope", "client_key", "window_start"),)

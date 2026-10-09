@@ -19,8 +19,9 @@ import tempfile
 import time
 
 import numpy as np
+from profile_mesh import parameter_mesh
 
-from sources import ROOT, SourceError, acquire_source
+from sources import SourceError, acquire_source, local_data_root
 
 SOURCE_ID = "pygimli-koenigsee"
 MAX_INPUT_BYTES = 1_000_000
@@ -78,6 +79,21 @@ def parse_sgt(path: Path) -> Survey:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as error:
         raise TraveltimeError(f"{path}: cannot read UTF-8 .sgt: {error}") from error
+    return _parse_sgt_lines(lines)
+
+
+def parse_sgt_bytes(raw: bytes) -> Survey:
+    """Use the identical grammar on bounded immutable original bytes."""
+    if type(raw) is not bytes or len(raw) > MAX_INPUT_BYTES:
+        raise TraveltimeError(".sgt original exceeds byte boundary")
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeError as error:
+        raise TraveltimeError(".sgt original is not UTF-8") from error
+    return _parse_sgt_lines(lines)
+
+
+def _parse_sgt_lines(lines: list[str]) -> Survey:
     if len(lines) < 5:
         raise TraveltimeError("source header: truncated .sgt")
     count = _count(lines[0], SENSOR_COUNT, "sensor count", 2, 1024)
@@ -184,17 +200,30 @@ def qc(survey: Survey) -> dict:
     }
 
 
-def shot_splits(survey: Survey) -> dict[str, dict[str, np.ndarray]]:
+def shot_splits(survey: Survey, *, policy: str = "pinned-15/v1") -> dict[str, dict[str, np.ndarray]]:
     """Freeze two whole-shot tests without looking at picked times."""
     shots = np.unique(survey.shot_geophone[:, 0])
-    if len(shots) != 15:
-        raise TraveltimeError(f"whole-shot validation requires the pinned 15 shots; found {len(shots)}")
-    held_groups = {"interleaved": shots[4::5], "central_block": shots[6:9]}
+    if policy == "pinned-15/v1":
+        if len(shots) != 15:
+            raise TraveltimeError(f"whole-shot validation requires the pinned 15 shots; found {len(shots)}")
+        held_groups = {"interleaved": shots[4::5], "central_block": shots[6:9]}
+        held_count = 3
+    elif policy == "supplied-whole-shot/v1":
+        n = len(shots)
+        if n < 10:
+            raise TraveltimeError("supplied whole-shot validation requires at least ten shots")
+        held_count = (n + 4) // 5
+        interleaved = np.asarray([((j + 1) * n) // held_count - 1 for j in range(held_count)])
+        start = (n - held_count) // 2
+        held_groups = {"interleaved": shots[interleaved],
+                       "central_block": shots[start:start + held_count]}
+    else:
+        raise TraveltimeError("unsupported whole-shot validation policy")
     result = {}
     for name, held_shots in held_groups.items():
         held = np.flatnonzero(np.isin(survey.shot_geophone[:, 0], held_shots))
         training = np.flatnonzero(~np.isin(survey.shot_geophone[:, 0], held_shots))
-        if len(held_shots) != 3 or len(training) < 100 or len(held) < 30:
+        if len(held_shots) != held_count or len(training) < 100 or len(held) < 30:
             raise TraveltimeError(f"{name}: insufficient whole-shot training or held-out picks")
         result[name] = {"held_shots": held_shots, "held_rows": held, "training_rows": training}
     return result
@@ -290,7 +319,7 @@ def _rmse_s(predicted: np.ndarray, observed: np.ndarray) -> float:
     return float(np.sqrt(np.mean((predicted - observed) ** 2)))
 
 
-def _split_record(name: str, parts: dict[str, np.ndarray]) -> dict:
+def _split_record(name: str, parts: dict[str, np.ndarray], *, policy: str = "pinned-15/v1") -> dict:
     record = {"rule": "every fifth shot in x order, starting at index 4" if name == "interleaved"
               else "three central shots by survey x order",
               "held_shots_zero_based": parts["held_shots"].tolist(),
@@ -298,6 +327,15 @@ def _split_record(name: str, parts: dict[str, np.ndarray]) -> dict:
               "heldout_rows": parts["held_rows"].tolist(),
               "training_count": len(parts["training_rows"]),
               "heldout_count": len(parts["held_rows"])}
+    if policy == "supplied-whole-shot/v1":
+        record["policy"] = policy
+        record["rule"] = (
+            "K=ceil(N/5) whole shots; ordered shot indices floor((j+1)*N/K)-1 for j=0..K-1"
+            if name == "interleaved" else
+            "K=ceil(N/5) central whole shots; ordered shot indices floor((N-K)/2)..floor((N-K)/2)+K-1"
+        )
+    elif policy != "pinned-15/v1":
+        raise TraveltimeError("unsupported whole-shot validation policy")
     record["sha256"] = hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest()
     return record
 
@@ -406,6 +444,7 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     }
     if retain_arrays:
         result.update({"model_velocity_m_s": velocity.tolist(), "model_cell_center_xy_m": centers,
+                       "parameter_mesh": parameter_mesh(manager.mesh),
                        "raypath_coverage_m_per_cell": coverage.tolist(),
                        "predicted_t_s": predicted.tolist(),
                        "signed_residual_t_s": (predicted - observed).tolist(),
@@ -413,18 +452,19 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     return result
 
 
-def _field_verdict(results: dict[str, dict]) -> tuple[str, str | None]:
+def _field_verdict(results: dict[str, dict], *, minimum_improved_shots: int = 2) -> tuple[str, str | None]:
     for name in ("interleaved", "central_block"):
         result = results[name]
         if not result["engine_stopped_before_limit"]:
             return "not-converged", f"{name} inverse reached its iteration ceiling"
         if (not math.isfinite(result["heldout_improvement"]) or result["heldout_improvement"] < 0.10
-                or result["improved_held_shot_count"] < 2):
+                or result["improved_held_shot_count"] < minimum_improved_shots):
             return "not-converged", f"{name} whole-shot prediction failed the frozen improvement gate"
     return "passed", None
 
 
-def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
+def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
+        validation_policy: str = "pinned-15/v1") -> dict:
     """Preserve source QC, then attempt only the predeclared conditional inverse."""
     survey = parse_sgt(path)
     report: dict = {
@@ -439,7 +479,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         return report
     started = time.perf_counter()
     try:
-        splits = shot_splits(survey)
+        splits = shot_splits(survey, policy=validation_policy)
     except TraveltimeError as error:
         report.update(inverse_status="ineligible", inverse_reason=str(error))
         report["wall_seconds"] = round(time.perf_counter() - started, 3)
@@ -466,14 +506,20 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
     report["environment_versions_sha256"] = hashlib.sha256(json.dumps(
         {key: value for key, value in report["engine"].items() if key != "options"},
         sort_keys=True).encode()).hexdigest()
-    report["split"] = {name: _split_record(name, parts) for name, parts in splits.items()}
-    report["configuration_sha256"] = hashlib.sha256(json.dumps(
-        {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
+    report["split"] = {name: _split_record(name, parts, policy=validation_policy) for name, parts in splits.items()}
+    configuration = {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
          "finer_mesh": FINER_MESH_OPTIONS, "cgls_max_iterations": CGLS_MAX_ITER,
          "cgls_residual_squared_tolerance": CGLS_TOLERANCE,
          "weight_rule": report["weighting"]["sigma_t_s"],
-         "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}},
-        sort_keys=True).encode()).hexdigest()
+         "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}}
+    minimum_improved = 2
+    if validation_policy != "pinned-15/v1":
+        held_count = len(splits["interleaved"]["held_shots"])
+        minimum_improved = (2 * held_count + 2) // 3
+        report["validation_policy"] = {"name": validation_policy, "held_shot_count": held_count,
+                                        "minimum_improved_shots": minimum_improved}
+        configuration["validation_policy"] = report["validation_policy"]
+    report["configuration_sha256"] = hashlib.sha256(json.dumps(configuration, sort_keys=True).encode()).hexdigest()
     report["observations"] = {"sensor_xy_m": survey.sensor_xy_m.tolist(),
                               "shot_geophone_zero_based": survey.shot_geophone.tolist(),
                               "picked_t_s": survey.time_s.tolist(),
@@ -492,7 +538,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
                                                     FINER_MESH_OPTIONS, retain_arrays=False)},
             "meaning": "diagnostic perturbations only; never select primary model on held-out picks",
         }
-        report["inverse_status"], reason = _field_verdict(report["inverse"])
+        report["inverse_status"], reason = _field_verdict(report["inverse"], minimum_improved_shots=minimum_improved)
         if reason is not None:
             report["inverse_reason"] = reason
     except (TraveltimeError, RuntimeError, ValueError, TypeError, AssertionError, IndexError) as error:
@@ -501,9 +547,9 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
     return report
 
 
-def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse") -> Path:
+def save_local_receipt(report: dict, *, root: Path | None = None, kind: str = "inverse") -> Path:
     """Install or verify a checksummed, immutable receipt inside ignored data/raw."""
-    root = Path(root).resolve()
+    root = local_data_root(root)
     folder = root / "data/raw/traveltime"
     if not folder.resolve().is_relative_to((root / "data/raw").resolve()):
         raise TraveltimeError("traveltime result path escapes ignored data/raw")
@@ -588,8 +634,9 @@ def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse"
     return output
 
 
-def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
+def run_source(*, root: Path | None = None, qc_only: bool = False) -> dict:
     """Reverify the ledger source, compute local evidence and retain its receipt."""
+    root = local_data_root(root)
     record, raw_path, receipt = acquire_source(SOURCE_ID, root=root)
     if receipt["validation_status"] != "hash-verified":
         raise TraveltimeError("Koenigsee acquisition receipt is not hash-verified")
@@ -604,9 +651,10 @@ def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--qc-only", action="store_true", help="Validate source geometry and picks without an inverse")
+    parser.add_argument("--data-root", type=Path, help="External working-data root; otherwise GEOPHYSICS_LOCAL_DATA_ROOT")
     args = parser.parse_args(argv)
     try:
-        result = run_source(qc_only=args.qc_only)
+        result = run_source(root=args.data_root, qc_only=args.qc_only)
     except (SourceError, TraveltimeError, OSError) as error:
         print(f"M09 Koenigsee failed: {error}", file=sys.stderr)
         return 2

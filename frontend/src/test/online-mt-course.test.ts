@@ -76,6 +76,31 @@ describe("online MT course", () => {
     expected = expected.replace('"La inversión geofísica estima propiedades del subsuelo a partir de respuestas físicas medidas. Esta aplicación compara densidad, susceptibilidad, resistividad y velocidad acústica en experimentos sintéticos controlados. La relación "', '"La investigación geofísica separa observaciones inmutables, procesamiento derivado e inversión condicional del subsuelo. La plataforma combina lecciones sintéticas auditadas, flags de CSV propio y QC/inversión EDI acotados revisados; admisión por método no implica host público activo. La relación "');
     expected = expected.replace("      <section>", "      <OnlineMTIntroduction />\n      <section>");
     expected = expected.replace('"4. Experimental calculation and interpretation"', '"4. Synthetic experimental calculation and interpretation"').replace('"4. Cálculo e interpretación experimental"', '"4. Cálculo e interpretación experimental sintética"');
+    // Only MAIN's explicitly approved M01 seams extend this full-file guard.
+    expected = expected.replace('import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";', 'import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";\nimport { M01ScientificCourse } from "../components/M01ScientificCourse";');
+    expected = expected.replace('tabs={released(["potential", "mt", "joint"])}', 'tabs={[\n        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },\n        ...released(["potential", "mt", "joint"]),\n      ]}');
+    expected = expected.replace('ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={chapters', 'ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={[\n        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },\n        ...chapters');
+    expected = expected.replace('        }))} />,\n    },\n    {\n      id: "waves",', '        })),\n      ]} />,\n    },\n    {\n      id: "waves",');
+    // The reviewed pure-theory mount changes only these three exact seams;
+    // keep full-file equality for every existing MT equation and algorithm.
+    expected = expected.replace('import { M01ScientificCourse } from "../components/M01ScientificCourse";',
+      'import { M01ScientificCourse } from "../components/M01ScientificCourse";\nimport { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";');
+    expected = expected.replace('        ...released(["potential", "mt", "joint"]),',
+      '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse /> },\n        ...released(["potential", "mt", "joint"]),');
+    expected = expected.replace('        ...chapters\n',
+      '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse implementation /> },\n        ...chapters\n');
+    // Exactly two deployment prose exceptions; retain whole-file science checks.
+    const deploymentCopy = [
+      ["The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",
+        "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. The current live 0.04.001 deployment uses only the ML VPS; Pages publication has been withdrawn. The replacement keeps courses, curated replay and validated browser computations public, including layered MT forward calculation and locally implemented M13 phase-picking inference. Server project persistence, uploads and VPS jobs require login; implementation and local validation do not mean new VPS jobs are deployed."],
+      ["El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. Pages y VPS sirven archivos estáticos. Sólo la calculadora directa MT recalcula respuesta física en navegador.",
+        "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. El despliegue live 0.04.001 actual usa sólo ML VPS; la publicación en Pages fue retirada. El reemplazo mantiene públicos los cursos, la reproducción curada y los cálculos validados en navegador, incluido MT directo por capas y la inferencia M13 de fases implementada localmente. La persistencia de proyectos, las cargas y las tareas VPS requieren inicio de sesión; la implementación y validación local no significan que se hayan desplegado nuevas tareas VPS."],
+    ];
+    for (const [oldCopy, newCopy] of deploymentCopy) {
+      expect(expected.split(oldCopy)).toHaveLength(2);
+      expect(current.split(newCopy)).toHaveLength(2);
+      expected = expected.replace(oldCopy, newCopy);
+    }
     expect(current.replaceAll("\r\n", "\n")).toBe(expected.replaceAll("\r\n", "\n"));
     const diagram = source("components/OnlineMTDiagram.tsx"), css = source("components/OnlineMTCourse.module.css");
     expect(diagram).toContain("useShellLang");

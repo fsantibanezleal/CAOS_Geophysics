@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" role="img" aria-labelledby="title desc">
+<title id="title">Blocked validation and support / Validación y soporte</title><desc id="desc">Plan-view schematic with outer holdout column, training hull and a gap outside radius, masked original row. / Planta con columna reservada, envolvente y hueco fuera de radio, fila original enmascarada.</desc>
+<style>
+:root{--bg:#f6f8fa;--surface:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--blue:#0969da;--cyan:#0a7c8a;--pink:#bf3989;--warn:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--surface:#161b22;--fg:#c9d1d9;--muted:#9aa6b2;--border:#30363d;--blue:#58a6ff;--cyan:#3fb1c8;--pink:#f778ba;--warn:#d29922}}
+text{fill:var(--fg);font:24px ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.small{font-size:22px;fill:var(--muted)}.head{font-size:26px;font-weight:600}.line{fill:none;stroke:var(--fg);stroke-width:2.5}.ref{fill:none;stroke:var(--blue);stroke-width:3}.geo{fill:none;stroke:var(--cyan);stroke-width:3;stroke-dasharray:8 5}.mass{fill:var(--cyan);fill-opacity:.13;stroke:var(--cyan);stroke-width:2.5}.layer{fill:none;stroke:var(--pink);stroke-width:3;stroke-dasharray:7 5}.box{fill:var(--surface);stroke:var(--border);stroke-width:2}.warn{fill:var(--warn)}.blue{fill:var(--blue)}.pink{fill:var(--pink)}.cyan{fill:var(--cyan)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="600" height="720" rx="12" fill="var(--bg)"/>
+
+<text class="head" x="30" y="48">Blocks and support / Bloques</text>
+<text class="small" x="30" y="84">Schematic / Esquema · easting,northing (m)</text>
+<path class="line" d="M70 560V135" marker-end="url(#arrow)"/><path class="line" d="M70 560H555" marker-end="url(#arrow)"/><text x="35" y="137">N</text><text x="557" y="595">E</text>
+<rect x="90" y="155" width="450" height="380" fill="var(--surface)" stroke="var(--border)" stroke-width="2"/>
+<rect x="390" y="155" width="150" height="380" fill="var(--warn)" fill-opacity=".10"/>
+<path d="M240 155V535M390 155V535M90 281H540M90 408H540" fill="none" stroke="var(--border)" stroke-width="2" stroke-dasharray="6 4"/>
+<path d="M115 190L330 182L365 470L120 495Z" fill="var(--blue)" fill-opacity=".08" stroke="var(--blue)" stroke-width="2.5"/>
+<g fill="var(--blue)"><circle cx="115" cy="190" r="7"/><circle cx="180" cy="220" r="7"/><circle cx="330" cy="182" r="7"/><circle cx="310" cy="245" r="7"/><circle cx="145" cy="380" r="7"/><circle cx="345" cy="390" r="7"/><circle cx="120" cy="495" r="7"/><circle cx="225" cy="455" r="7"/><circle cx="365" cy="470" r="7"/></g>
+<g fill="none" stroke="var(--warn)" stroke-width="3"><path d="M430 202l-9 16h18zM475 337l-9 16h18zM450 467l-9 16h18z"/></g>
+<ellipse cx="250" cy="335" rx="65" ry="42" fill="var(--surface)" stroke="var(--cyan)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<text x="218" y="343">null</text>
+<text class="small" x="200" y="272">F1</text><text class="small" x="200" y="400">F2</text><text class="small" x="270" y="527">F3</text>
+<path d="M323 440l20 20m0-20l-20 20" stroke="var(--pink)" stroke-width="3"/>
+<circle cx="40" cy="618" r="7" fill="var(--blue)"/><text x="60" y="625">Training / Entrenamiento</text>
+<path d="M40 645l-9 16h18z" fill="none" stroke="var(--warn)" stroke-width="3"/><text x="60" y="664">Holdout / Reserva externa</text>
+<path d="M30 686l16 16m0-16l-16 16" stroke="var(--pink)" stroke-width="3"/><text x="60" y="703">Masked / Enmascarada</text>
+</svg>
