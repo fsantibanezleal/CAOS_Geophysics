@@ -20,10 +20,11 @@ if (-not $Python) {
 if (-not $Python) { throw 'Create an ignored local Python environment with NumPy, SciPy and PyTorch, or pass -Python.' }
 Push-Location $root
 try {
-    $arguments = @('scripts/run_m12_velocity.py', '--output', $Output, '--protocol', $Protocol)
+    $arguments = @('scripts/run_m12_velocity.py', '--output', $Output, '--protocol', $Protocol,
+                   '--epochs', $Epochs)
     if ($Verify) { $arguments += '--verify' }
     else {
-        $arguments += @('--device', $Device, '--epochs', $Epochs)
+        $arguments += @('--device', $Device)
         if ($Fixture) { $arguments += '--fixture' }
     }
     & $Python @arguments

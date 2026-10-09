@@ -131,3 +131,16 @@ def test_bash_unknown_protocol_is_not_ignored(tmp_path):
                            env=env, capture_output=True, text=True, timeout=20)
     assert child.returncode == 2 and "invalid choice" in child.stderr and "unknown-protocol" in child.stderr
     assert not (tmp_path / "not-created").exists()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Actual PowerShell frozen-protocol control")
+def test_powershell_verify_does_not_silently_ignore_physics_epochs(tmp_path):
+    image = Path(os.environ["SystemRoot"]) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
+    output = tmp_path / "not-created"
+    child = subprocess.run([str(image), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                            "-File", str(ROOT / "scripts" / "run_m12_velocity.ps1"),
+                            "-Protocol", "physics-v2", "-Verify", "-Epochs", "41",
+                            "-Python", sys.executable, "-Output", str(output)],
+                           capture_output=True, text=True, timeout=20)
+    assert child.returncode != 0 and "frozen forty-epoch" in child.stderr
+    assert not output.exists()
