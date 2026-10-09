@@ -1,0 +1,297 @@
+{
+  "schema": "native-i01-measured-evidence-1",
+  "evidence_class": "sdk_layout_and_compiled_pure_only",
+  "source_commit": "4ad93de7e2a4ea2454b891c0d16949798b502fd5",
+  "build_recipe": "C17 x64 /MT I01-only; exact reviewed four-stage recipe",
+  "build_receipt_sha256": "a5522b5b899f8229d4f16211db233eee552d33d0725ef945628f4b9eb05c25cf",
+  "artifacts": {
+    "core.dll": {
+      "bytes": 118272,
+      "sha256": "1acb1ccefb12e33d3df17a73f3dc64bad33dc1a3fb4e3aa3b73d0544c0e94412"
+    },
+    "abi.exe": {
+      "bytes": 141824,
+      "sha256": "06f058944e656823062f1899b48fac0ee2e4ed0204ec404b82c314d50dec5d58"
+    }
+  },
+  "sources": {
+    "scripts/native_physical_cpu/controller.h": "f6ed0337b98c98470db4b1e6f57bdc5d81426e4f5534a0e726018a56ad40492f",
+    "scripts/native_physical_cpu/controller.c": "801dad97ae188f99a7b672eec2aee0fc673be065ac04d0a0ce46d2535be92d7a",
+    "scripts/native_physical_cpu/abi_probe.c": "d002f82464a234c1ce8f3bd39152df21d230624201d7d6a56d5459c6718a88d1",
+    "tests/worker_accounting/native/test_contract.py": "6c00b976243bccda4b110de9132fcf84a79a134ae39f6e8bb3424b80adfb9667",
+    "tests/worker_accounting/native/test_bounds.py": "d39d2b76158d77c214e35f25f528707b9ec0d7890055e87f5d63d1cce2d9eb0a",
+    "tests/worker_accounting/native/test_scope.py": "9b0ebf81115449a99739d2fc0e04202a13bc8f9702ef30ac74e8313ca8d1fd74"
+  },
+  "sdk": "Windows SDK 10.0.22621.0",
+  "abi": {
+    "returncode": 0,
+    "checks": 47,
+    "matching": 47,
+    "stdout_bytes": 2684,
+    "stdout_sha256": "26142c0d8c7ef573842ac6fb4dd3d38bb0aa4dba60992ad31b96f3ea3e779cf0",
+    "stderr_bytes": 0,
+    "capture_wall_ms": 49.26620001788251,
+    "rows": [
+      {
+        "name": "sizeof.void *",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "sizeof.HANDLE",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "sizeof.SIZE_T",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "sizeof.ULONG_PTR",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "sizeof.DWORD",
+        "actual": 4,
+        "expected": 4
+      },
+      {
+        "name": "sizeof.BOOL",
+        "actual": 4,
+        "expected": 4
+      },
+      {
+        "name": "sizeof.LARGE_INTEGER",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "sizeof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION",
+        "actual": 48,
+        "expected": 48
+      },
+      {
+        "name": "sizeof.JOBOBJECT_BASIC_LIMIT_INFORMATION",
+        "actual": 64,
+        "expected": 64
+      },
+      {
+        "name": "sizeof.JOBOBJECT_EXTENDED_LIMIT_INFORMATION",
+        "actual": 144,
+        "expected": 144
+      },
+      {
+        "name": "sizeof.STARTUPINFOW",
+        "actual": 104,
+        "expected": 104
+      },
+      {
+        "name": "sizeof.STARTUPINFOEXW",
+        "actual": 112,
+        "expected": 112
+      },
+      {
+        "name": "sizeof.PROCESS_INFORMATION",
+        "actual": 24,
+        "expected": 24
+      },
+      {
+        "name": "alignof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "alignof.JOBOBJECT_BASIC_LIMIT_INFORMATION",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "alignof.JOBOBJECT_EXTENDED_LIMIT_INFORMATION",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "alignof.STARTUPINFOW",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "alignof.STARTUPINFOEXW",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "alignof.PROCESS_INFORMATION",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION.TotalUserTime",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION.TotalKernelTime",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION.TotalPageFaultCount",
+        "actual": 32,
+        "expected": 32
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION.TotalProcesses",
+        "actual": 36,
+        "expected": 36
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION.ActiveProcesses",
+        "actual": 40,
+        "expected": 40
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION.TotalTerminatedProcesses",
+        "actual": 44,
+        "expected": 44
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.PerProcessUserTimeLimit",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.PerJobUserTimeLimit",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.LimitFlags",
+        "actual": 16,
+        "expected": 16
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.MinimumWorkingSetSize",
+        "actual": 24,
+        "expected": 24
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.MaximumWorkingSetSize",
+        "actual": 32,
+        "expected": 32
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.ActiveProcessLimit",
+        "actual": 40,
+        "expected": 40
+      },
+      {
+        "name": "offsetof.JOBOBJECT_BASIC_LIMIT_INFORMATION.Affinity",
+        "actual": 48,
+        "expected": 48
+      },
+      {
+        "name": "offsetof.JOBOBJECT_EXTENDED_LIMIT_INFORMATION.BasicLimitInformation",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "offsetof.JOBOBJECT_EXTENDED_LIMIT_INFORMATION.IoInfo",
+        "actual": 64,
+        "expected": 64
+      },
+      {
+        "name": "offsetof.JOBOBJECT_EXTENDED_LIMIT_INFORMATION.ProcessMemoryLimit",
+        "actual": 112,
+        "expected": 112
+      },
+      {
+        "name": "offsetof.JOBOBJECT_EXTENDED_LIMIT_INFORMATION.JobMemoryLimit",
+        "actual": 120,
+        "expected": 120
+      },
+      {
+        "name": "offsetof.STARTUPINFOW.cb",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "offsetof.STARTUPINFOW.dwFlags",
+        "actual": 60,
+        "expected": 60
+      },
+      {
+        "name": "offsetof.STARTUPINFOW.hStdInput",
+        "actual": 80,
+        "expected": 80
+      },
+      {
+        "name": "offsetof.STARTUPINFOW.hStdOutput",
+        "actual": 88,
+        "expected": 88
+      },
+      {
+        "name": "offsetof.STARTUPINFOW.hStdError",
+        "actual": 96,
+        "expected": 96
+      },
+      {
+        "name": "offsetof.STARTUPINFOEXW.StartupInfo",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "offsetof.STARTUPINFOEXW.lpAttributeList",
+        "actual": 104,
+        "expected": 104
+      },
+      {
+        "name": "offsetof.PROCESS_INFORMATION.hProcess",
+        "actual": 0,
+        "expected": 0
+      },
+      {
+        "name": "offsetof.PROCESS_INFORMATION.hThread",
+        "actual": 8,
+        "expected": 8
+      },
+      {
+        "name": "offsetof.PROCESS_INFORMATION.dwProcessId",
+        "actual": 16,
+        "expected": 16
+      },
+      {
+        "name": "offsetof.PROCESS_INFORMATION.dwThreadId",
+        "actual": 20,
+        "expected": 20
+      }
+    ]
+  },
+  "compiled_pure": {
+    "returncode": 0,
+    "tests": 179,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "pytest_xml_time": "0.758",
+    "pytest_xml_timestamp": "2026-10-04T04:38:46.184617-03:00",
+    "xml_bytes": 48268,
+    "xml_sha256": "c64bdbaacf1b1a6e727fa47300e2625abb7967364c610ea352fcbdb555b3ca26",
+    "capture_wall_ms": 1260.7987000083085,
+    "stdout_bytes": 243,
+    "stderr_bytes": 0
+  },
+  "execution_receipt_sha256": "69e11d6e9b49315522ef96da3486057a436d8d5760eb6082724fef5e67c65533",
+  "artifact_rebuilt_or_changed": false,
+  "root_only_capture_not_containment": true,
+  "os_containment_proven": false,
+  "resource_admission": false,
+  "windows_profile": "UNSET/CLOSED",
+  "linux_profile": "UNSET/CLOSED",
+  "actual_os_controls": "NOT_RUN",
+  "parent_tail_and_durable_release": "NOT_RUN",
+  "host_measurement_or_deployment": false,
+  "hash_semantics": "Stream, XML, build and execution digests refer to original retained bytes, not this public summary's serialization."
+}
