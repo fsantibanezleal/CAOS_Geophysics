@@ -42,6 +42,20 @@ READER_ERRORS = {kind:kind.__name__ for kind in
 SQLITE_ERRORS = {kind.__name__ for kind in READER_ERRORS if issubclass(kind,sqlite3.Error)}
 READER_ERROR_NAMES = {*READER_ERRORS.values(),"WaveformInputError","OtherError"}
 OPAQUE_READER_TOKEN = b"unknown:OtherError\n"
+MAX_CONFIGURATION = 65536
+READER_BOOTSTRAP = """import os,sys
+try:
+    sys.path.insert(0,sys.argv[1])
+    from waveform_m08_owned_reader import reader_main
+    result = reader_main(sys.argv[2])
+except BaseException:
+    try:
+        os.write(2,b'setup:OtherError\\n')
+    except BaseException:
+        pass
+    result = 2
+raise SystemExit(result)
+"""
 
 
 def child_refusal_token(error, phase):
@@ -346,76 +360,132 @@ def query(config, identifier):
         os.close(parent)
 
 
-def nonroot_query(config, identifier):
-    """Anonymous bounded packet; only the owned unreaped fork may be signalled."""
-    import resource
+def reader_argv(config, identifier):
+    """Installation-internal argv, never a public command/config/path selector."""
     validate_configuration(config)
     uuid(identifier)
+    return ["/usr/bin/python3","-I","-S","-B","-c",READER_BOOTSTRAP,
+            config["source_root"]+"/scripts",identifier]
+
+
+def reader_main(identifier):
+    """Fresh ordinary image: bounded anonymous snapshot, unchanged owned query."""
+    phase = "setup"
+    try:
+        uuid(identifier)
+        snapshot = bytearray()
+        while True:
+            part = os.read(0,min(65536,MAX_CONFIGURATION+1-len(snapshot)))
+            if not part:
+                break
+            require(len(snapshot)+len(part) <= MAX_CONFIGURATION)
+            snapshot.extend(part)
+        config = decode(bytes(snapshot),MAX_CONFIGURATION)
+        require(canonical(config) == bytes(snapshot))
+        validate_configuration(config)
+        require(Path(__file__).parent == Path(config["source_root"])/"scripts")
+        phase = "query"
+        value = query(config,identifier)
+        phase = "serialize"
+        packet = canonical(value)
+        require(len(packet) <= MAX_PACKET)
+        phase = "write"
+        offset = 0
+        while offset < len(packet):
+            count = os.write(1,packet[offset:offset+65536])
+            require(count > 0)
+            offset += count
+        return 0
+    except BaseException as error:
+        try:
+            os.write(2,child_refusal_token(error,phase))
+        except BaseException:
+            pass
+        return 2
+
+
+def nonroot_query(config, identifier):
+    """Fresh fixed bounded image; only the owned unreaped child may be signalled."""
+    import resource
+    argv = reader_argv(config,identifier)
+    snapshot = canonical(config)
+    require(len(snapshot) <= MAX_CONFIGURATION)
     require(os.geteuid() == 0)
-    reader,writer = os.pipe2(os.O_CLOEXEC)
+    ends = []
     try:
+        reader,writer = os.pipe2(os.O_CLOEXEC)
+        ends.extend((reader,writer))
         diagnostic_reader,diagnostic_writer = os.pipe2(os.O_CLOEXEC|os.O_NONBLOCK)
-    except BaseException:
-        os.close(reader)
-        os.close(writer)
-        raise
-    try:
+        ends.extend((diagnostic_reader,diagnostic_writer))
+        configuration_reader,configuration_writer = os.pipe2(os.O_CLOEXEC|os.O_NONBLOCK)
+        ends.extend((configuration_reader,configuration_writer))
+        require(min(ends) >= 3)
+        deadline = time.monotonic()+8
         pid = os.fork()
     except BaseException:
-        os.close(reader)
-        os.close(writer)
-        os.close(diagnostic_reader)
-        os.close(diagnostic_writer)
+        for fd in ends:
+            os.close(fd)
         raise
     if pid == 0:
         phase = "setup"
+        diagnostic_fd = diagnostic_writer
         try:
+            os.dup2(configuration_reader,0,inheritable=True)
+            os.dup2(writer,1,inheritable=True)
+            os.dup2(diagnostic_writer,2,inheritable=True)
+            diagnostic_fd = 2
+            os.set_blocking(0,True)
             for name in os.listdir("/proc/self/fd"):
                 fd = int(name)
-                if fd not in (writer,diagnostic_writer):
+                if fd not in (0,1,2):
                     try:
                         os.close(fd)
                     except OSError:
                         pass
+            os.chdir("/")
             os.setgroups([])
             os.setgid(config["gid"])
             os.setuid(config["uid"])
-            os.environ.clear()
             resource.setrlimit(resource.RLIMIT_AS,(256*1024**2,256*1024**2))
             resource.setrlimit(resource.RLIMIT_CPU,(5,5))
-            phase = "query"
-            value = query(config,identifier)
-            phase = "serialize"
-            packet = canonical(value)
-            require(len(packet) <= MAX_PACKET)
-            phase = "write"
-            with os.fdopen(writer,"wb") as stream:
-                stream.write(packet)
-            os._exit(0)
+            os.execve(argv[0],argv,{})
+            os._exit(2)
         except BaseException as error:
             try:
-                os.write(diagnostic_writer,child_refusal_token(error,phase))
+                os.write(diagnostic_fd,child_refusal_token(error,phase))
             except BaseException:
                 pass
             os._exit(2)
     os.close(writer)
     os.close(diagnostic_writer)
+    os.close(configuration_reader)
     reaped = False
     chunks = bytearray()
-    deadline = time.monotonic()+8
+    sent = 0
+    reader_open = True
     try:
-        while True:
+        while reader_open or not reaped:
             require(time.monotonic() < deadline,"waveform_owned_reader_timeout")
-            ready,_,_ = select.select([reader],[],[],min(.1,max(0,deadline-time.monotonic())))
-            if not ready:
-                continue
-            part = os.read(reader,65536)
-            if not part:
-                break
-            require(len(chunks)+len(part) <= MAX_PACKET)
-            chunks.extend(part)
-        _,status = os.waitpid(pid,0)
-        reaped = True
+            ready,writable,_ = select.select([reader] if reader_open else [],
+                [configuration_writer] if configuration_writer is not None else [],[],
+                min(.1,max(0,deadline-time.monotonic())))
+            if writable:
+                try:
+                    sent += os.write(configuration_writer,snapshot[sent:sent+4096])
+                except BrokenPipeError:
+                    os.close(configuration_writer)
+                    configuration_writer = None
+                if configuration_writer is not None and sent == len(snapshot):
+                    os.close(configuration_writer)
+                    configuration_writer = None
+            if ready:
+                part = os.read(reader,65536)
+                reader_open = bool(part)
+                require(len(chunks)+len(part) <= MAX_PACKET)
+                chunks.extend(part)
+            if not reaped:
+                found,status = os.waitpid(pid,os.WNOHANG)
+                reaped = found == pid
         exit_code = os.waitstatus_to_exitcode(status)
         if exit_code != 0:
             try:
@@ -425,6 +495,7 @@ def nonroot_query(config, identifier):
                 # Diagnosis never replaces the primary typed refusal.
                 pass
         require(exit_code == 0,"waveform_owned_reader_refused")
+        require(sent == len(snapshot))
         packet = decode(bytes(chunks),MAX_PACKET)
         fields(packet,{"record","bodies","reader"})
         require(packet["reader"] == dict(uid=config["uid"],gid=config["gid"],groups=[]))
@@ -453,3 +524,5 @@ def nonroot_query(config, identifier):
     finally:
         os.close(reader)
         os.close(diagnostic_reader)
+        if configuration_writer is not None:
+            os.close(configuration_writer)

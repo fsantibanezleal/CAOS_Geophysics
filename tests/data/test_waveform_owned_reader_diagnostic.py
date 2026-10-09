@@ -97,6 +97,50 @@ def test_nonfailure_or_unbounded_status_refuses(code):
         parsed(status=code)
 
 
+def test_fresh_reader_argv_is_internal_fixed_image_and_source_namespace():
+    config = configuration(authority)
+    argv = reader.reader_argv(config,JOB)
+    assert argv == ['/usr/bin/python3','-I','-S','-B','-c',reader.READER_BOOTSTRAP,
+                    config['source_root']+'/scripts',JOB]
+    assert config == configuration(authority)
+    with pytest.raises(ValueError):
+        reader.reader_argv(config,'../../private')
+    changed = {**config,'command':'/bin/sh'}
+    with pytest.raises(ValueError):
+        reader.reader_argv(changed,JOB)
+
+
+@pytest.mark.parametrize('raw',[b'x'*65537,b'{}',b'{}\n',b'{"uid":1,"uid":2}'])
+def test_fresh_reader_config_snapshot_refuses_overflow_noncanonical_and_foreign(raw,monkeypatch,capsys):
+    chunks = iter([raw,b''])
+    monkeypatch.setattr(reader.os,'read',lambda fd,size: next(chunks))
+    monkeypatch.setattr(reader.os,'write',lambda fd,body: len(body))
+    monkeypatch.setattr(reader,'query',lambda *args: pytest.fail('query before checked snapshot'))
+    assert reader.reader_main(JOB) == 2
+    assert capsys.readouterr().out == ''
+
+
+@pytest.mark.parametrize('failure',[1,2,3,4])
+def test_fresh_reader_closes_every_created_pipe_on_constructor_or_fork_error(failure,monkeypatch):
+    created,closed = [],[]
+    def pipe(flags):
+        call = len(created)//2+1
+        if call == failure:
+            raise OSError('authored pipe refusal')
+        ends = (10+2*call,11+2*call)
+        created.extend(ends)
+        return ends
+    monkeypatch.setattr(reader.os,'geteuid',lambda:0)
+    monkeypatch.setattr(reader.os,'pipe2',pipe,raising=False)
+    monkeypatch.setattr(reader.os,'close',closed.append)
+    def fork():
+        raise OSError('authored fork refusal')
+    monkeypatch.setattr(reader.os,'fork',fork,raising=False)
+    with pytest.raises(OSError):
+        reader.nonroot_query(configuration(authority),JOB)
+    assert sorted(closed) == sorted(created) and len(closed) == len(set(closed))
+
+
 @pytest.mark.skipif(sys.platform != 'linux' or os.environ.get('M08_RUN_LINUX_NATIVE') != '1',
     reason='explicit root fork/irreversible-drop mechanics only, never scientific proof')
 @pytest.mark.parametrize('kind',[MemoryError,ValueError])
@@ -105,9 +149,10 @@ def test_actual_owned_child_drop_bounds_closed_descriptors_and_diagnostic(kind,m
     config = configuration(authority)
     assert os.geteuid() == 0
     sentinel_reader,sentinel_writer = os.pipe()
-    def refused(config,identifier):
+    def refused(path,argv,environment):
         assert os.getuid() == os.geteuid() == os.getgid() == os.getegid() == 61901
-        assert os.getgroups() == [] and identifier == JOB
+        assert os.getgroups() == [] and argv[-1] == JOB
+        assert path == '/usr/bin/python3' and environment == {} and os.getcwd() == '/'
         assert resource.getrlimit(resource.RLIMIT_AS) == (256*1024**2,256*1024**2)
         assert resource.getrlimit(resource.RLIMIT_CPU) == (5,5)
         for fd in (sentinel_reader,sentinel_writer):
@@ -116,13 +161,13 @@ def test_actual_owned_child_drop_bounds_closed_descriptors_and_diagnostic(kind,m
         with pytest.raises(PermissionError):
             os.setuid(0)
         raise kind(PRIVATE)
-    monkeypatch.setattr(reader,'query',refused)
+    monkeypatch.setattr(reader.os,'execve',refused)
     try:
         with pytest.raises(ValueError,match='waveform_owned_reader_refused'):
             reader.nonroot_query(config,JOB)
         raw = capsys.readouterr().err.encode()
         value = json.loads(raw.split(b':',1)[1])
-        assert value['exit_code'] == 2 and value['child']['phase'] == 'query'
+        assert value['exit_code'] == 2 and value['child']['phase'] == 'setup'
         assert value['child']['error_kind'] == kind.__name__
         assert value['child']['reader_frame']['source'] == 'scripts/waveform_m08_owned_reader.py'
         assert value['child']['reader_frame']['line'] > 0

@@ -129,7 +129,6 @@ def test_consistently_rehashed_but_changed_request_cannot_adopt_original_index(c
 
 def ordinary_database(tmp_path):
     import sqlite3
-    import stat
     value = module()
     config,record,payload = records(value)
     config.update(uid=65534,gid=65534,science_uid=61901,science_gid=61901,data_root=str(tmp_path/"private"))
@@ -173,12 +172,13 @@ def test_actual_reader_opens_sqlite_and_both_originals_only_after_irrevocable_dr
     import sqlite3
     import stat
     value,config,record,database = ordinary_database(tmp_path)
+    config['source_root'] = str(ROOT)
     secret = tmp_path/"root-only-sentinel"
     secret.write_bytes(b"root-reader-descriptor-must-not-survive")
     secret.chmod(0o600)
     sentinel = os.open(secret,os.O_RDONLY)
-    original = value.query
-    def inspected(config,identifier):
+    original = value.os.execve
+    def inspected(path,argv,environment):
         assert os.getuid() == os.geteuid() == 65534
         assert os.getgid() == os.getegid() == 65534 and os.getgroups() == []
         with pytest.raises(OSError):
@@ -187,8 +187,10 @@ def test_actual_reader_opens_sqlite_and_both_originals_only_after_irrevocable_dr
             os.open(secret,os.O_RDONLY)
         with pytest.raises(PermissionError):
             os.setuid(0)
-        return original(config,identifier)
-    monkeypatch.setattr(value,"query",inspected)
+        assert path == '/usr/bin/python3' and environment == {} and os.getcwd() == '/'
+        assert argv == value.reader_argv(config,record['job']['id'])
+        return original(path,argv,environment)
+    monkeypatch.setattr(value.os,"execve",inspected)
     try:
         packet = value.nonroot_query(config,record["job"]["id"])
         assert packet["record"] == record
