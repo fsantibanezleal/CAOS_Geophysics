@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import sqlite3
 
 import pytest
 
@@ -51,6 +52,33 @@ def test_parent_binds_only_checked_closed_child_tokens():
     assert value['child'] == dict(phase='query',error_kind='MemoryError') and value['exit_code'] == 2
 
 
+def test_actual_sqlite_error_and_registered_reader_line_have_no_message():
+    code = compile('import sqlite3\nconnection=sqlite3.connect(":memory:")\nconnection.execute("SELECT missing_private_column")',reader.__file__,'exec')
+    try:
+        exec(code,{})
+    except sqlite3.OperationalError as error:
+        raw = reader.child_refusal_token(error,'query')
+    assert raw == b'query:OperationalError:3:1\n'
+    child = parsed(raw)['child']
+    assert child['error_kind'] == 'OperationalError' and child['sqlite_errorcode'] == sqlite3.SQLITE_ERROR
+    assert child['reader_frame'] == dict(source='scripts/waveform_m08_owned_reader.py',sha256='e'*64,line=3)
+    assert b'missing_private_column' not in raw
+
+
+def test_fixed_installed_domain_error_is_registered_not_inferred_from_class_name():
+    module = reader.structural_input()
+    assert reader.child_refusal_token(module.WaveformInputError('waveform_contract'),'query') == b'query:WaveformInputError\n'
+    spoof = type('WaveformInputError',(Exception,),{})
+    assert reader.child_refusal_token(spoof(PRIVATE),'query') == b'query:OtherError\n'
+
+
+@pytest.mark.parametrize('raw',[b'query:OperationalError:0:1\n',b'query:OperationalError:03:1\n',
+    b'query:OperationalError:2147483648:1\n',b'query:OperationalError:3:2147483648\n',
+    b'query:MemoryError:3:1\n',b'query:OperationalError:3:-1\n',b'query:OperationalError:3:1:1\n'])
+def test_extra_child_fields_are_closed_and_bounded(raw):
+    assert parsed(raw)['child'] is None
+
+
 @pytest.mark.parametrize('raw',[b'',b'query:MemoryError',b'query:MemoryError\nextra',
     b'private:MemoryError\n',b'query:CustomError\n',b'query:MemoryError\r\n',b'x'*65,b'\xff\n'])
 def test_malformed_child_tokens_never_invent_cause(raw):
@@ -94,7 +122,10 @@ def test_actual_owned_child_drop_bounds_closed_descriptors_and_diagnostic(kind,m
             reader.nonroot_query(config,JOB)
         raw = capsys.readouterr().err.encode()
         value = json.loads(raw.split(b':',1)[1])
-        assert value['exit_code'] == 2 and value['child'] == dict(phase='query',error_kind=kind.__name__)
+        assert value['exit_code'] == 2 and value['child']['phase'] == 'query'
+        assert value['child']['error_kind'] == kind.__name__
+        assert value['child']['reader_frame']['source'] == 'scripts/waveform_m08_owned_reader.py'
+        assert value['child']['reader_frame']['line'] > 0
         assert PRIVATE.encode() not in raw and value['native_proof'] is False
         # Parent ownership is unchanged, and no unowned descriptor is closed.
         assert os.geteuid() == 0

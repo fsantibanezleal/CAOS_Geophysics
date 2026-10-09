@@ -34,7 +34,13 @@ SOURCE_BINDING_KEYS = set("asset_id source_id source_version raw_sha256 raw_byte
 ROLE_CAPS = {"miniseed":16777216,"stationxml":2097152}
 READER_PHASES = ("setup","query","serialize","write","unknown")
 READER_ERRORS = {kind:kind.__name__ for kind in
-                 (MemoryError,ValueError,TypeError,KeyError,OSError,EOFError,RuntimeError,AssertionError)}
+                 (MemoryError,ValueError,TypeError,KeyError,OSError,EOFError,RuntimeError,AssertionError,
+                  AttributeError,IndexError,OverflowError,BufferError,FileNotFoundError,PermissionError,
+                  sqlite3.Error,sqlite3.InterfaceError,sqlite3.DatabaseError,sqlite3.DataError,
+                  sqlite3.OperationalError,sqlite3.IntegrityError,sqlite3.InternalError,
+                  sqlite3.ProgrammingError,sqlite3.NotSupportedError)}
+SQLITE_ERRORS = {kind.__name__ for kind in READER_ERRORS if issubclass(kind,sqlite3.Error)}
+READER_ERROR_NAMES = {*READER_ERRORS.values(),"WaveformInputError","OtherError"}
 OPAQUE_READER_TOKEN = b"unknown:OtherError\n"
 
 
@@ -43,7 +49,21 @@ def child_refusal_token(error, phase):
     try:
         if phase not in READER_PHASES:
             return OPAQUE_READER_TOKEN
-        return (phase+":"+READER_ERRORS.get(type(error),"OtherError")+"\n").encode("ascii")
+        kind = READER_ERRORS.get(type(error),"OtherError")
+        line = None
+        trace = error.__traceback__
+        for _ in range(64):
+            if trace is None:
+                break
+            if trace.tb_frame.f_code.co_filename == __file__ and 0 < trace.tb_lineno <= 2147483647:
+                line = trace.tb_lineno
+            trace = trace.tb_next
+        code = getattr(error,"sqlite_errorcode",None) if kind in SQLITE_ERRORS else None
+        if type(code) is not int or not 0 <= code <= 2147483647:
+            code = None
+        suffix = "" if line is None and code is None else ":"+str(line or "-")+":"+str(code if code is not None else "-")
+        raw = (phase+":"+kind+suffix+"\n").encode("ascii")
+        return raw if len(raw) <= 64 else OPAQUE_READER_TOKEN
     except BaseException:
         return OPAQUE_READER_TOKEN
 
@@ -55,10 +75,19 @@ def reader_refusal_diagnostic(raw, exit_code, config, identifier):
     require(type(exit_code) is int and -255 <= exit_code <= 255 and exit_code != 0)
     child = None
     if type(raw) is bytes and len(raw) <= 64 and exit_code == 2:
-        for phase in READER_PHASES:
-            for kind in (*READER_ERRORS.values(),"OtherError"):
-                if raw == (phase+":"+kind+"\n").encode("ascii"):
+        match = re.fullmatch(rb"([a-z]+):([A-Za-z]+)(?::(-|[1-9][0-9]{0,9}):(-|0|[1-9][0-9]{0,9}))?\n",raw)
+        if match is not None:
+            phase,kind = (part.decode("ascii") for part in match.group(1,2))
+            if phase in READER_PHASES and kind in READER_ERROR_NAMES:
+                line,code = (None if part in (None,b"-") else int(part) for part in match.group(3,4))
+                if ((line is None or line <= 2147483647) and (code is None or
+                        (kind in SQLITE_ERRORS and code <= 2147483647))):
                     child = dict(phase=phase,error_kind=kind)
+                    if line is not None:
+                        source = "scripts/waveform_m08_owned_reader.py"
+                        child["reader_frame"] = dict(source=source,sha256=config["source_hashes"][source],line=line)
+                    if code is not None:
+                        child["sqlite_errorcode"] = code
     value = dict(schema="geophysics.waveform-private-reader-refusal/v1",exit_code=exit_code,
                  child=child,job_id=identifier,configuration_sha256=sha(canonical(config)),
                  source_revision=config["source_revision"],source_map_sha256=sha(canonical(config["source_hashes"])),
@@ -78,6 +107,8 @@ def structural_input():
     spec = importlib.util.spec_from_file_location("_m08_owned_structural_input",name)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    # Only the exact installed structural module's fixed error type is registered.
+    READER_ERRORS[module.WaveformInputError] = "WaveformInputError"
     return module
 
 
