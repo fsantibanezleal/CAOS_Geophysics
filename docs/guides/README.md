@@ -19,5 +19,6 @@
 - [Run protected ERT and first-arrival jobs](21_protected_profiles.md): immutable original/physical declarations, separate native runtime, scientific refusal evidence, resource accounting and verified export; host qualification remains explicit.
 - [Run supplied acoustic shot-gather FWI locally](22_local_acoustic_fwi.md): actual CPU/CUDA matched inverses, independent initial velocity, immutable full-sample arrays, explicit acoustic acquisition and local verified inspection; no VPS FWI substitution.
 - [Build paired selected-source bundles](../operations/03_paired_source_bundle.md): exact Git objects and deterministic archive provenance, not production trust or an actual-host restore.
+- [Browse owned physical receipts and selected ancestry](24_physical_catalog.md): bounded metadata, fixed birth cutoff, literal UTC navigation keys and separate original-byte/scientific identities; no worker activation.
 - [Compute explicit local gravity station corrections](../methods/gravity-processing/01_station-corrections.md): actual Python/PowerShell/Bash commands, mathematical conventions and negative admission controls.
 - [Acquire and profile pinned potential-field source members](11_potential_source_intake.md): immutable bytes and QC-only profiles, not an inferred field model.
