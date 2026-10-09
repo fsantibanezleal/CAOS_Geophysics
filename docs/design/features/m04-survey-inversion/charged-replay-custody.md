@@ -38,8 +38,10 @@ existing result ledger once. Exact ZIP inventory remains `magnetic_result` at
 Gate: exact attempt charge/inventory and incomplete/stale/foreign/unknown refusal.
 
 R-463 BEFORE installing a new immutable magnetic dataset, THE same existing
-preparation-attempt lifecycle SHALL reserve32MiB (bounded16MiB structural body
-and independent target) with a planned dataset UUID and null unpublished FK.
+preparation-attempt lifecycle SHALL retain its conservative32MiB reservation
+with a planned dataset UUID and null unpublished FK. Publication SHALL bound
+the complete serialized body to8MiB before an attempt or target is created;
+the historical16MiB member bound SHALL remain debt-accounting authority only.
 Actual source/physical-metadata receipts SHALL be rechecked before publication;
 the published FK and dataset co-commit. Fresh worker sessions SHALL not commit
 or roll back the authenticating caller's unrelated read/write transaction.
@@ -99,9 +101,13 @@ bounded work before releasing owner guards; absence of a result is not drain.
 No retry, fit, cap increase, provider truth or public activation is introduced.
 Dataset creation has its own closed `dataset` operation, not a fabricated
 processing job or M03 preparation receipt. Its publication intent is retained
-before exclusive target writing just like a replay ZIP. The structural body's
-existing16MiB storage bound is unchanged; the browser's8MiB wire bound is a
-separate refusal boundary. No temporary dataset copy is written off-ledger.
+before exclusive target writing just like a replay ZIP. Publication, normal
+retained reads and browser transport share the complete serialized body's8MiB
+bound. The historical16MiB known-member inventory and32MiB conservative
+reservation remain unchanged for debt: they do not authorize oversized
+publication or normal reads. No temporary dataset copy is written off-ledger.
+Complete-byte identity and capacity gates are documented in
+[exact dataset custody](../../../methods/magnetic-survey/10_exact-dataset-byte-custody.md).
 
 ## Tasks
 

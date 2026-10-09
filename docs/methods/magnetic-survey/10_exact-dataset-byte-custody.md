@@ -56,3 +56,27 @@ GEOPHYSICS_MAGNETIC_BROWSER_INPUT_CONTROL and the control's dataset_bytes_path
 (or GEOPHYSICS_MAGNETIC_BROWSER_DATASET_BYTES for the older retained fixture).
 Original adverse failures remain evidence; none is relabelled as scientific
 convergence, native admission, authenticated mounted UI or release acceptance.
+
+## Español: identidad completa y límites de publicación
+
+El cliente verifica el SHA256 de todos los bytes UTF8 recibidos antes de
+decodificar o analizar JSON. El recibo autenticado del conjunto seleccionado
+es la autoridad; conservar IDs y request_utf8 no autoriza metadatos distintos.
+El cuerpo nominal retenido de Python tiene74311 bytes y el mismo hash que su
+recibo. El adverso de72583 bytes es otra respuesta: rechazarlo no demuestra
+por sí solo compatibilidad nominal. No se reconstruye el cuerpo con
+JSON.stringify y se vuelve a comprobar cancelación después del hash asíncrono.
+
+Publicación, escritura nueva, lectura ordinaria y transporte comparten8MiB
+para el cuerpo serializado completo, no sólo para la solicitud interior.
+Una solicitud válida de8MiB puede exceder ese límite al incluir escapes y
+geometría; el productor debe rechazarla antes de crear intento, scratch o
+destino. Un cuerpo retenido demasiado grande se rechaza antes de analizarlo,
+sin modificarlo. El inventario histórico de deuda conserva16MiB por miembro
+y la reserva32MiB: contabiliza bytes conocidos, pero no autoriza publicar ni
+leer cuerpos mayores de8MiB. No se amplían límites ZIP, físicos o nativos,
+ni se adoptan o eliminan archivos parciales desconocidos.
+
+Los controles nominales y adversos prueban custodia e identidad de transporte
+local. No convierten fallos anteriores en convergencia, ni prueban datos de
+campo, montaje autenticado, admisión del host o despliegue.

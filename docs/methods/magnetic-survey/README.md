@@ -17,6 +17,12 @@ shared-shell equations and a worked readout from the same verified generation.
 `scripts/check_magnetic_docs.py` checks actual source symbols and local wiki
 links; it is a structural gate, not science, browser or parent-mount acceptance.
 
+[Exact authenticated dataset bytes](10_exact-dataset-byte-custody.md) defines
+the shared8MiB complete-body publication/read/transport limit and distinct
+historical debt bounds. [Authenticated generation replay](11_authenticated-generation-replay.md)
+binds the retained numerical generation to its own durable owner job/dataset
+and exact HTTP response bytes, without manufacturing nonzero fitted evidence.
+
 [Recorded independent acquisition controls / Controles independientes](02_acquisition-controls.md)
 describe the executable authored Choclo/Decimal/PCG64 inputs, not fitted inverse
 success or field acceptance.

@@ -4,12 +4,23 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
+WIKI_FILES = frozenset({
+    'README.md', '02_acquisition-controls.md', '03_physical-objective.md',
+    '04_native-norm-certificate.md', '05_optimizer-composition.md',
+    '06_local-calibration.md', '07_nonlinear-composition.md',
+    '08_complete-field-and-native-gates.md', '09_result-views-and-export.md',
+    '10_contact-and-directed-enclosure.md', '10_exact-dataset-byte-custody.md',
+    'original10-final648-prerequisite.md', '11_authenticated-generation-replay.md',
+})
 
 
 def check(root=ROOT):
     docs = sorted((root/'docs/methods/magnetic-survey').glob('*.md'))
-    if len(docs) != 10:
-        raise ValueError('Complete ten-unit method wiki required')
+    actual = {path.name for path in docs}
+    if actual != WIKI_FILES:
+        raise ValueError('Closed thirteen-unit method wiki required; missing='
+                         +repr(sorted(WIKI_FILES-actual))+'; unknown='
+                         +repr(sorted(actual-WIKI_FILES)))
     links = 0
     for path in docs:
         text = path.read_text(encoding='utf-8')
