@@ -11,6 +11,7 @@ import re
 import select
 import sqlite3
 import stat
+import sys
 import time
 from uuid import UUID
 
@@ -31,6 +32,40 @@ INDEX_KEYS = set("schema dataset_id version owner_id project_id raw_asset_id par
 LIMIT_KEYS = set("estimated_memory_bytes memory_limit_bytes scratch_limit_bytes wall_limit_seconds estimated_scratch_bytes memory_kind cpu_budget_ns cpu_stop_ns".split())
 SOURCE_BINDING_KEYS = set("asset_id source_id source_version raw_sha256 raw_bytes rights_decision private_storage_permission".split())
 ROLE_CAPS = {"miniseed":16777216,"stationxml":2097152}
+READER_PHASES = ("setup","query","serialize","write","unknown")
+READER_ERRORS = {kind:kind.__name__ for kind in
+                 (MemoryError,ValueError,TypeError,KeyError,OSError,EOFError,RuntimeError,AssertionError)}
+OPAQUE_READER_TOKEN = b"unknown:OtherError\n"
+
+
+def child_refusal_token(error, phase):
+    """Fixed tiny wire token, safe even when the reader exhausted its AS bound."""
+    try:
+        if phase not in READER_PHASES:
+            return OPAQUE_READER_TOKEN
+        return (phase+":"+READER_ERRORS.get(type(error),"OtherError")+"\n").encode("ascii")
+    except BaseException:
+        return OPAQUE_READER_TOKEN
+
+
+def reader_refusal_diagnostic(raw, exit_code, config, identifier):
+    """Private parent-side binding; child data is never native proof."""
+    validate_configuration(config)
+    uuid(identifier)
+    require(type(exit_code) is int and -255 <= exit_code <= 255 and exit_code != 0)
+    child = None
+    if type(raw) is bytes and len(raw) <= 64 and exit_code == 2:
+        for phase in READER_PHASES:
+            for kind in (*READER_ERRORS.values(),"OtherError"):
+                if raw == (phase+":"+kind+"\n").encode("ascii"):
+                    child = dict(phase=phase,error_kind=kind)
+    value = dict(schema="geophysics.waveform-private-reader-refusal/v1",exit_code=exit_code,
+                 child=child,job_id=identifier,configuration_sha256=sha(canonical(config)),
+                 source_revision=config["source_revision"],source_map_sha256=sha(canonical(config["source_hashes"])),
+                 native_proof=False)
+    body = b"M08_OWNED_READER_DIAGNOSTIC:"+canonical(value)+b"\n"
+    require(len(body) <= 2048)
+    return body
 
 
 def product_bytes(value):
@@ -288,16 +323,25 @@ def nonroot_query(config, identifier):
     require(os.geteuid() == 0)
     reader,writer = os.pipe2(os.O_CLOEXEC)
     try:
-        pid = os.fork()
+        diagnostic_reader,diagnostic_writer = os.pipe2(os.O_CLOEXEC|os.O_NONBLOCK)
     except BaseException:
         os.close(reader)
         os.close(writer)
         raise
+    try:
+        pid = os.fork()
+    except BaseException:
+        os.close(reader)
+        os.close(writer)
+        os.close(diagnostic_reader)
+        os.close(diagnostic_writer)
+        raise
     if pid == 0:
+        phase = "setup"
         try:
             for name in os.listdir("/proc/self/fd"):
                 fd = int(name)
-                if fd != writer:
+                if fd not in (writer,diagnostic_writer):
                     try:
                         os.close(fd)
                     except OSError:
@@ -308,14 +352,23 @@ def nonroot_query(config, identifier):
             os.environ.clear()
             resource.setrlimit(resource.RLIMIT_AS,(256*1024**2,256*1024**2))
             resource.setrlimit(resource.RLIMIT_CPU,(5,5))
-            packet = canonical(query(config,identifier))
+            phase = "query"
+            value = query(config,identifier)
+            phase = "serialize"
+            packet = canonical(value)
             require(len(packet) <= MAX_PACKET)
+            phase = "write"
             with os.fdopen(writer,"wb") as stream:
                 stream.write(packet)
             os._exit(0)
-        except BaseException:
+        except BaseException as error:
+            try:
+                os.write(diagnostic_writer,child_refusal_token(error,phase))
+            except BaseException:
+                pass
             os._exit(2)
     os.close(writer)
+    os.close(diagnostic_writer)
     reaped = False
     chunks = bytearray()
     deadline = time.monotonic()+8
@@ -332,7 +385,15 @@ def nonroot_query(config, identifier):
             chunks.extend(part)
         _,status = os.waitpid(pid,0)
         reaped = True
-        require(os.waitstatus_to_exitcode(status) == 0,"waveform_owned_reader_refused")
+        exit_code = os.waitstatus_to_exitcode(status)
+        if exit_code != 0:
+            try:
+                raw = os.read(diagnostic_reader,65)
+                sys.stderr.write(reader_refusal_diagnostic(raw,exit_code,config,identifier).decode("ascii"))
+            except BaseException:
+                # Diagnosis never replaces the primary typed refusal.
+                pass
+        require(exit_code == 0,"waveform_owned_reader_refused")
         packet = decode(bytes(chunks),MAX_PACKET)
         fields(packet,{"record","bodies","reader"})
         require(packet["reader"] == dict(uid=config["uid"],gid=config["gid"],groups=[]))
@@ -360,3 +421,4 @@ def nonroot_query(config, identifier):
         raise
     finally:
         os.close(reader)
+        os.close(diagnostic_reader)
