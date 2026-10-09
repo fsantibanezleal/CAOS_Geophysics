@@ -411,15 +411,62 @@ def supervise(authority, config, identifier):
         return 0
 
 
+def refusal_diagnostic(error, identifier=None, config=None, authority=None):
+    """Private bounded source location only; never a native terminal or proof."""
+    from uuid import UUID
+    classes = {kind:kind.__name__ for kind in
+               (MemoryError,ValueError,TypeError,KeyError,OSError,EOFError,RuntimeError,AssertionError)}
+    job = None
+    try:
+        if type(identifier) is str and str(UUID(identifier)) == identifier:
+            job = identifier
+    except (ValueError,TypeError,AttributeError):
+        pass
+    value = dict(schema="geophysics.waveform-private-refusal/v1",reason="supervision_refused",
+                 error_kind=classes.get(type(error),"OtherError"),job_id=job,
+                 configuration_sha256=None,source_revision=None,source_map_sha256=None,
+                 frames=[],native_proof=False)
+    try:
+        authority.validate_configuration(config)
+        raw = authority.canonical(config)
+        _require(len(raw) <= 65536)
+        registered = {str(Path(config["source_root"])/name):name for name in authority.SOURCE_FILES}
+        frames = []
+        trace = error.__traceback__
+        # Never extract/format a traceback: those helpers may read private source.
+        for _ in range(64):
+            if trace is None:
+                break
+            source = registered.get(trace.tb_frame.f_code.co_filename)
+            line = trace.tb_lineno
+            if source is not None and type(line) is int and 0 < line <= 2147483647:
+                frames.append(dict(source=source,sha256=config["source_hashes"][source],line=line))
+                frames = frames[-8:]
+            trace = trace.tb_next
+        value.update(configuration_sha256=authority.sha(raw),source_revision=config["source_revision"],
+                     source_map_sha256=authority.sha(authority.canonical(config["source_hashes"])),frames=frames)
+    except (AttributeError,ValueError,TypeError,KeyError):
+        # An unavailable binding is not reconstructed from paths or current files.
+        pass
+    body = b"M08_SUPERVISION_DIAGNOSTIC:"+json.dumps(value,sort_keys=True,separators=(",",":"),
+                                                     ensure_ascii=True,allow_nan=False).encode("ascii")+b"\n"
+    _require(len(body) <= 8192)
+    return body
+
+
 def main():
+    authority = config = identifier = None
     try:
         authority,config = bootstrap()
         authority.require(len(sys.argv) == 2)
         identifier = authority.uuid(sys.argv[1])
         return supervise(authority,config,identifier)
-    except BaseException:
-        # No path/original/SQL or privileged exception data goes to HTTP logs.
-        sys.stderr.write("waveform_supervision_refused\n")
+    except BaseException as error:
+        # The caller retains this bounded private pipe, never serves it over HTTP.
+        try:
+            sys.stderr.write(refusal_diagnostic(error,identifier,config,authority).decode("ascii"))
+        except BaseException:
+            sys.stderr.write("waveform_supervision_refused\n")
         return 5
 
 
