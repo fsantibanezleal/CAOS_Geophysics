@@ -529,3 +529,37 @@ class-only tokens remain readable. Invalid extra/number/class tokens yield no
 diagnosis, not an inferred failure. Gate: the same named reader diagnostic file,
 with exact SQLite/domain/source-line/opaque/privacy controls before another
 changed-source diagnostic epoch; no resource or scientific criterion changes.
+
+### Fresh fixed ordinary reader image within the existing bounds
+
+The operational reader's256MiB address-space ceiling is not applied to a useful
+fresh image when a post-science fork inherits the observer's larger mappings.
+The first SQLite WAL read can fail before any original is opened. A focused
+authored live-WAL/inherited-virtual-map gate must reproduce this selector before
+claiming that mechanism. Never disable WAL, skip current relations, raise the
+ceiling or make root open the database to obtain a success.
+
+The fixed helper constructs an internal isolated no-site/no-bytecode distro
+reader argv using only its installation source directory and checked UUID.
+The child closes all inherited root/stage/lease/caller descriptors, changes cwd
+to the fixed root directory, irrevocably drops groups/GID/UID, applies the SAME
+256MiB address-space/5sCPU bounds and then execs the fixed pinned launch image
+with an empty environment. Only three anonymous pipes become its stdin/stdout/
+private diagnostic descriptors. The ordinary reader consumes at most65536bytes
+of the parent's already checked canonical configuration snapshot; no filesystem
+config selection or HTTP/CLI option is added. Its query and complete exact
+relations/original snapshots are unchanged. Root still never opens SQLite/WAL
+or uploaded originals. Early bootstrap failure emits only an opaque fixed token.
+
+The parent writes configuration through a nonblocking pipe while draining the
+same bounded packet, under the original single8second deadline including exec.
+It closes all pipe ends on setup/refusal/reap. Signals target only its original
+unreaped child; no numeric PID adoption, process broker or privileged generic
+command is introduced. Private diagnostics remain nonproof and success is silent.
+Current installation's image/source/closure checks still precede launch and
+every classification. Gates: tests/data/test_waveform_owned_reader.py actual
+irreversible role/descriptor/real-query control, live-WAL inherited-map failure
+and same-limit fresh-image success; tests/data/test_waveform_owned_reader_diagnostic.py
+for fixed internal argv, config cap and private refusal semantics, followed only
+then by a fresh installed original full-bound case. Authored WAL/virtual-map
+controls prove a reader mechanism, not scientific/native/production acceptance.
