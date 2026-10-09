@@ -482,7 +482,9 @@ typed API failure, scientific bounds and full terminal grammar do not change.
 
 This diagnostic always states native_proof=false. It cannot supply a missing
 receipt/counter, classify caller cancellation, authorize publication, remove
-debt or grant recovery. Qualification may retain the validated private stderr
+debt or grant recovery. Its reason is supervision_refused, not a claim about
+whether a terminal had already been emitted before a later cleanup failure.
+Qualification may retain the validated private stderr
 beside its own external checkpoints after the real helper's EOF; it does not
 replace the helper or instrument the scientific process. Old failures remain
 unchanged. Gate: tests/data/test_waveform_supervisor_diagnostic.py for exact
