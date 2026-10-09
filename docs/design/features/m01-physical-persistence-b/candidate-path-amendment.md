@@ -1,0 +1,11 @@
+# MAIN approved candidate isolation amendment before code,2026-10-03
+
+Status: APPROVED_LOCAL_CANDIDATE_ONLY. This record and the [candidate path policy](candidate-source-policy.md) are persisted BEFORE test or implementation code. Historical A/B design,original source policy and receipts remain unchanged.
+
+MAIN reports FULL read of both approval/preflight docs at8e69480a078ff1e26b7c51065854fb3b7224eb43 and confirms the default Alembic head conflict. MAIN explicitly APPROVES NEW app/migrations/candidates/0004_physical_persistence.py INSTEAD OF app/migrations/versions/0004_physical_persistence.py for this local-only B-SCHEMA unit. The real functional Alembic revision/down_revision stay0004_physical_persistence/0003_processing_jobs,branch_labels/depends_on NULL; no dummy/no-op/stamp.
+
+Only disposable NEW private test directories/config/registries may copy unchanged0001..0003 and candidate0004. Candidate SQLite is rollback-journal or memory ONLY. Default app/alembic.ini/default versions/env/models/MIGRATION_HEAD and existing test files stay unchanged. Actual unchanged legacy head/command.check regressions must PASS; candidate tests cannot silently replace those gates or rewrite runtime admission. Future production path activation/policy requires separate reviewed authorization.
+
+Remaining seven approved new paths from candidate-approval.md are unchanged: three pure unused app modules,two test modules,two pure bounded scripts; no CLI/file/native/provider operations in scripts. Own feature/evidence docs allowed. No additional implementation path is authorized. Tests FIRST,exact A+B constraints/contracts,complete validation before exposure,actual validated source/DDL hashes and scoped commit/push/independent review.
+
+The separate candidate path policy is explicitly CANDIDATE_ONLY,UNREGISTERED,runtime=false. It changes ONLY the migration path in the existing47 runtime path set; ops8 unchanged. Missing future native/runtime files stay missing, not substituted, and the candidate map cannot grant runtime admission. All17 whole-feature gates/native patch registry remain CLOSED/NOT_RUN; pure fixture results will be reported by exact test name without claiming native/CPU/provider/host/browser or production PASS. No probes/installs/upgrade/live DB/service/merge/deploy.

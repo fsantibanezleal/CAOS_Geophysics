@@ -10,6 +10,8 @@ Magnetic vector inversion estimates three components using SimPEG's vector opera
 
 ## Magnetotellurics
 
+The [source-valid M05/M06 course](05_online-mt-course.md) adds the reviewed uploaded-EDI full tensor screen and bounded fixed-thickness TRF protocol, exact finite differences and conditional uncertainty, independently replayed wrong-thickness controls and cl061 exclusion. This is distinct from the published synthetic comparators below; it does not assert host activation or a complete field inverse.
+
 For angular frequency ω, permeability μ and resistivity ρ, the half-space impedance is sqrt(iωμρ). Each finite layer uses propagation constant sqrt(iωμ/ρ), characteristic impedance sqrt(iωμρ), thickness h and the standard complex tanh recursion. Apparent resistivity is |Z|²/(μω); phase is atan2(Im Z, Re Z).
 
 Three solvers fit complex observations: bounded log-resistivity least squares, Adam on log resistivity, and a tanh neural parameterization differentiated through the same recursion. The layer thicknesses are known. A first-difference log-resistivity penalty controls roughness. The neural solution is optimized per sounding and is not a pretrained general inverse. Objective evaluations are labelled as such; they are not necessarily accepted least-squares iterations.

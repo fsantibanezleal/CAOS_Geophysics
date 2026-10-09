@@ -63,7 +63,7 @@ def main() -> None:
         async def capture(_address: str, _subject: str, body: str) -> None:
             messages.append(body)
 
-        app = create_app(Settings(data_dir=private, db_path=db,
+        app = create_app(Settings(data_dir=private, db_path=db, auth_mode="email",
             auth_secret="qa-only-processing-not-deployment-secret-123456789",
             public_origin=origin, cookie_secure=False), capture)
         original_lifespan = app.router.lifespan_context

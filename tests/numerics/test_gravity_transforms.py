@@ -512,10 +512,10 @@ def test_export_and_paired_scripts(controls, results, tmp_path):
             assert (output / f"{kind}-{theme}.png").stat().st_size > 100000
     with pytest.raises(GravityContractError, match="already exists"):
         export_bundle(request, result, output)
-    with pytest.raises(GravityContractError, match="inside repo"):
+    with pytest.raises(GravityContractError, match="external"):
         export_bundle(request, result, ROOT / "data/processed/not-authorized")
     alias = ROOT.parent / "not-created" / ".." / ROOT.name / "data/derived/not-authorized"
-    with pytest.raises(GravityContractError, match="inside repo"):
+    with pytest.raises(GravityContractError, match="external"):
         export_bundle(request, result, alias)
     unrelated = deepcopy(request)
     unrelated["config"]["seed"] += 1

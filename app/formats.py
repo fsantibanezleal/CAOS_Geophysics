@@ -20,8 +20,11 @@ EXTENSIONS = {
     "gravity_csv": ".csv", "magnetic_csv": ".csv", "traveltime_csv": ".csv", "ert_csv": ".csv",
     "geotiff": (".tif", ".tiff"), "edi": ".edi", "miniseed": (".mseed", ".msd"),
     "stationxml": ".xml", "segy": (".sgy", ".segy"), "mth5": ".h5",
+    "ert_ohm": ".ohm", "traveltime_sgt": ".sgt",
 }
 MIMES = {
+    "ert_ohm": {"text/plain", "application/octet-stream"},
+    "traveltime_sgt": {"text/plain", "application/octet-stream"},
     "gravity_csv": {"text/csv"}, "magnetic_csv": {"text/csv"},
     "traveltime_csv": {"text/csv"}, "ert_csv": {"text/csv"},
     "geotiff": {"image/tiff", "application/geotiff"},
@@ -32,12 +35,15 @@ MIMES = {
     "mth5": {"application/x-hdf5", "application/octet-stream"},
 }
 UNITS = {
+    "ert_ohm": {"ohm"}, "traveltime_sgt": {"s"},
     "gravity_csv": {"mGal", "m/s2"}, "magnetic_csv": {"nT"}, "geotiff": {"nT", "mGal"},
     "edi": {"ohm", "mV/km/nT"}, "ert_csv": {"ohm", "V", "ohm.m"},
     "miniseed": {"counts", "m/s", "m/s2"}, "stationxml": {"counts", "m/s", "m/s2"},
     "traveltime_csv": {"s", "ms"}, "segy": {"counts", "Pa", "m/s"}, "mth5": {"counts", "mV/km", "nT"},
 }
 GEOMETRY_FIELDS = {
+    "ert_ohm": ("electrode_count", "measurement_count"),
+    "traveltime_sgt": ("sensor_count", "measurement_count"),
     "gravity_csv": ("station_id_column", "x_column", "y_column", "z_column", "value_column"),
     "magnetic_csv": ("line_id_column", "x_column", "y_column", "z_column", "value_column"),
     "traveltime_csv": ("source_x_column", "source_y_column", "receiver_x_column", "receiver_y_column", "time_column"),
@@ -50,19 +56,22 @@ GEOMETRY_FIELDS = {
     "mth5": ("survey_id", "station_id", "run_id", "channels", "start_utc", "end_utc"),
 }
 POSITIVE_FIELDS = {
+    "sensor_count", "measurement_count",
     "electrode_count", "rows", "columns", "pixel_width", "pixel_height", "frequency_count", "sample_rate_hz",
     "source_count", "receiver_count", "sample_interval_us", "samples_per_trace",
 }
-INTEGER_FIELDS = {"electrode_count", "rows", "columns", "frequency_count", "source_count", "receiver_count", "sample_interval_us", "samples_per_trace"}
+INTEGER_FIELDS = {"electrode_count", "sensor_count", "measurement_count", "rows", "columns", "frequency_count", "source_count", "receiver_count", "sample_interval_us", "samples_per_trace"}
 LIST_FIELDS = {"tensor_components", "channels"}
 CSV_FORMATS = {"gravity_csv", "magnetic_csv", "traveltime_csv", "ert_csv"}
 MIB = 1024 * 1024
 FORMAT_MAX_BYTES = {
+    "ert_ohm": 1_000_000, "traveltime_sgt": 1_000_000,
     "gravity_csv": 50 * MIB, "magnetic_csv": 50 * MIB, "traveltime_csv": 50 * MIB,
     "ert_csv": 50 * MIB, "geotiff": 200 * MIB, "edi": 5 * MIB,
     "miniseed": 200 * MIB, "stationxml": 20 * MIB, "segy": 200 * MIB, "mth5": 200 * MIB,
 }
 COMPONENT_FRAMES = {
+    "ert_ohm": {"ABMN"}, "traveltime_sgt": {"source-receiver"},
     "gravity_csv": {"local vertical down", "local vertical up"},
     "magnetic_csv": {"total field", "ENU", "NED"},
     "geotiff": {"total field", "local vertical down", "local vertical up"},
@@ -130,6 +139,12 @@ def validate_declared_metadata(meta: RawUploadInput) -> None:
         fields.append("physical.measurement_unit")
     if physical.component_frame not in COMPONENT_FRAMES[meta.format]:
         fields.append("physical.component_frame")
+    if meta.format in {"ert_ohm", "traveltime_sgt"}:
+        for name, expected in (("coordinate_reference", "local"), ("axis_order", "xy"),
+                               ("horizontal_unit", "m"), ("vertical_unit", "m"),
+                               ("vertical_positive", "up")):
+            if getattr(physical, name) != expected:
+                fields.append("physical."+name)
     geometry = physical.geometry
     for key in GEOMETRY_FIELDS[meta.format]:
         value = geometry.get(key)
@@ -239,6 +254,30 @@ def validate_file_envelope(path: Path, meta: RawUploadInput) -> None:
     if head.startswith((b"PK\x03\x04", b"\x1f\x8b", b"7z\xbc\xaf\x27\x1c", b"Rar!")) or head[257:262] == b"ustar":
         raise ApiError(415, "archive_forbidden", "Archive uploads are not accepted")
     format_name = meta.format
+    if format_name in {"ert_ohm", "traveltime_sgt"}:
+        if path.stat().st_size > FORMAT_MAX_BYTES[format_name]:
+            raise ApiError(413, "upload_too_large", "Original profile exceeds its parser limit")
+        # Only the bounded original grammar is parsed here. Native inversion is
+        # never imported during an authenticated upload/admission transaction.
+        from app.profile_contract import _workflow
+        _workflow()
+        try:
+            if format_name == "ert_ohm":
+                from ert import parse_ohm_bytes
+                survey = parse_ohm_bytes(path.read_bytes())
+                count, rows = len(survey.sensors_xz_m), len(survey.abmn)
+                sensor_key = "electrode_count"
+            else:
+                from traveltime import parse_sgt_bytes
+                survey = parse_sgt_bytes(path.read_bytes())
+                count, rows = len(survey.sensor_xy_m), len(survey.shot_geophone)
+                sensor_key = "sensor_count"
+            geometry = meta.physical.geometry
+            if geometry[sensor_key] != count or geometry["measurement_count"] != rows:
+                raise ValueError("declared profile counts differ")
+        except (ValueError, RuntimeError, KeyError, TypeError):
+            raise ApiError(415, "format_invalid", "Original profile grammar or declared counts are invalid")
+        return
     if format_name in CSV_FORMATS:
         columns = _csv_header(path)
         missing = []

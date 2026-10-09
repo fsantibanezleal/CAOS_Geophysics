@@ -50,7 +50,8 @@ def smtp_sender(settings: Settings) -> MailSender:
 
 
 def install_auth(app: FastAPI, settings: Settings, sender: MailSender | None = None):
-    mail = sender or smtp_sender(settings)
+    email_mode = settings.auth_mode == "email"
+    mail = (sender or smtp_sender(settings)) if email_mode else None
 
     async def get_session(request: Request):
         async with request.app.state.sessions() as session:
@@ -64,15 +65,19 @@ def install_auth(app: FastAPI, settings: Settings, sender: MailSender | None = N
         verification_token_secret = settings.auth_secret
 
         async def validate_password(self, password: str, user: UserCreate | User) -> None:
-            if len(password) < 12:
-                raise InvalidPasswordException(reason="Password must contain at least 12 characters")
+            minimum = 12 if email_mode else 8
+            if len(password) < minimum:
+                raise InvalidPasswordException(reason=f"Password must contain at least {minimum} characters")
             if user.email.lower() in password.lower():
                 raise InvalidPasswordException(reason="Password must not contain the account email")
 
         async def on_after_register(self, user: User, request: Request | None = None) -> None:
-            await self.request_verify(user, request)
+            if email_mode:
+                await self.request_verify(user, request)
 
         async def on_after_request_verify(self, user: User, token: str, request: Request | None = None) -> None:
+            if mail is None:
+                raise RuntimeError("Email flows are disabled for local accounts")
             await mail(
                 user.email,
                 "Verify your geophysics account",
@@ -80,6 +85,8 @@ def install_auth(app: FastAPI, settings: Settings, sender: MailSender | None = N
             )
 
         async def on_after_forgot_password(self, user: User, token: str, request: Request | None = None) -> None:
+            if mail is None:
+                raise RuntimeError("Email flows are disabled for local accounts")
             await mail(
                 user.email,
                 "Reset your geophysics password",
@@ -110,12 +117,17 @@ def install_auth(app: FastAPI, settings: Settings, sender: MailSender | None = N
     )
     backend = AuthenticationBackend(name="cookie", transport=transport, get_strategy=get_strategy)
     users = FastAPIUsers[User, UUID](get_user_manager, [backend])
-    app.include_router(users.get_auth_router(backend, requires_verification=True), prefix="/api/auth/cookie")
-    app.include_router(users.get_register_router(UserRead, UserCreate), prefix="/api/auth")
-    app.include_router(users.get_verify_router(UserRead), prefix="/api/auth/verify")
-    app.include_router(users.get_reset_password_router(), prefix="/api/auth/reset-password")
+    app.include_router(users.get_auth_router(backend, requires_verification=email_mode), prefix="/api/auth/cookie")
+    if email_mode:
+        app.include_router(users.get_register_router(UserRead, UserCreate), prefix="/api/auth")
+        app.include_router(users.get_verify_router(UserRead), prefix="/api/auth/verify")
+        app.include_router(users.get_reset_password_router(), prefix="/api/auth/reset-password")
 
-    current_user = users.current_user(active=True, verified=True)
+    current_user = users.current_user(active=True, verified=email_mode)
+
+    @app.get("/api/auth/config")
+    async def config():
+        return {"mode": settings.auth_mode, "registration_enabled": email_mode, "mail_flows_enabled": email_mode}
 
     @app.get("/api/auth/me", response_model=UserRead)
     async def me(user: User = Depends(current_user)):

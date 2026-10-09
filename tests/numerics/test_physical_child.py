@@ -1,0 +1,154 @@
+"""Actual fixed scientific child; not production containment or queue proof."""
+
+from copy import deepcopy
+from hashlib import sha256
+import json
+from pathlib import Path
+import platform
+import subprocess
+import sys
+from uuid import uuid4
+
+import pytest
+
+from app.physical_contract import canonical, digest
+from tests.numerics.test_physical_producer import packet as packet, packet_from_science
+from tests.numerics.test_gravity_station_adapter import request as correction_request
+from gravity_transform_controls import control_request
+from gravity_transforms import transform_survey
+from scripts.process_physical_job import PINS, TRANSFORM_PINS, PARSER_SHA, CORE_SHA, ADAPTER_SHA, TRANSFORM_SHA
+
+
+ROOT=Path(__file__).resolve().parents[2]
+SCRIPT=ROOT/'scripts/process_physical_job.py'
+
+
+def child_case(packet, tmp_path):
+    req=json.loads(packet['request_bytes'])
+    stage=tmp_path/req['job_id']
+    stage.mkdir()
+    manifest=dict(schema='geophysics.physical-modules/v1',parser_sha256=PARSER_SHA,
+                  wrapper_sha256=sha256(SCRIPT.read_bytes()).hexdigest(),adapter_sha256=ADAPTER_SHA,
+                  core_sha256=CORE_SHA,transform_sha256=None,
+                  runtime_manifest=dict(python=platform.python_version(),python_implementation='CPython',packages=PINS))
+    req.update(module_manifest=manifest,module_manifest_sha256=digest(manifest))
+    (stage/'input.json').write_bytes(packet['input_bytes'])
+    (stage/'request.json').write_bytes(canonical(req))
+    return stage,req
+
+
+def execute(stage):
+    return subprocess.run([sys.executable,'-I','-B',str(SCRIPT),str(stage)],
+                          cwd=stage,capture_output=True,timeout=120)
+
+
+def test_actual_fixed_child_preserves_exact_adapter_result(packet, tmp_path):
+    stage,req=child_case(packet,tmp_path)
+    before={name:(stage/name).read_bytes() for name in ('input.json','request.json')}
+    actual=execute(stage)
+    assert actual.returncode==0 and actual.stdout==actual.stderr==b''
+    output=(stage/'scientific.json').read_bytes()
+    expected=json.loads(packet['child_bytes'])['payload']
+    assert output==canonical(expected,scientific=True)
+    complete=json.loads((stage/'complete.json').read_bytes())
+    assert complete==dict(schema='geophysics.physical-child-completion/v1',job_id=req['job_id'],method_id=req['method_id'],
+                          scientific_request_sha256=req['scientific_request_sha256'],scientific_result_sha256=digest(expected,scientific=True),
+                          output_bytes=len(output),output_sha256=sha256(output).hexdigest(),scientific_verdict='passed')
+    assert {name:(stage/name).read_bytes() for name in before}==before
+    assert {p.name for p in stage.iterdir()}=={'input.json','request.json','scientific.json','complete.json'}
+    assert json.loads(output)['receipt']['acceptance']==dict(host_approved=False,full_method_accepted=False,field_source_verified=False)
+
+
+@pytest.mark.parametrize('damage',['foreign_parent','stale_input','wrapper_source','core_source','runtime','method','private_contract','duplicate','trailing','existing_output'])
+def test_actual_fixed_child_negative_no_success_marker(packet,tmp_path,damage):
+    stage,req=child_case(packet,tmp_path)
+    if damage=='foreign_parent':
+        req['owner_id']=str(uuid4())
+    elif damage=='stale_input':
+        req['dataset_sha256']='0'*64
+    elif damage in ('wrapper_source','core_source'):
+        req['module_manifest']['wrapper_sha256' if damage=='wrapper_source' else 'core_sha256']='0'*64
+        req['module_manifest_sha256']=digest(req['module_manifest'])
+    elif damage=='runtime':
+        req['module_manifest']['runtime_manifest']['packages']['boule']='wrong'
+        req['module_manifest_sha256']=digest(req['module_manifest'])
+    elif damage=='method':
+        req['method_id']='gravity.station-outlier-flags/v1'
+    elif damage=='private_contract':
+        req['scientific_request']['dataset']=deepcopy(req['scientific_request']['dataset'])
+        req['scientific_request']['dataset']['metadata']['height_datum']='PRIVATE_SOURCE_D:/not-a-real-path'
+        req['scientific_request']['input_dataset_sha256']=digest(req['scientific_request']['dataset'],scientific=True)
+        req['scientific_request_sha256']=digest(req['scientific_request'],scientific=True)
+    elif damage=='existing_output':
+        (stage/'scientific.json').write_bytes(b'preserved prior bytes')
+    body=canonical(req)
+    if damage=='duplicate':
+        body=body[:-1]+b',"method_id":"gravity.station-corrections/v1"}'
+    elif damage=='trailing':
+        body+=b' {}'
+    (stage/'request.json').write_bytes(body)
+    original=(stage/'input.json').read_bytes()
+    actual=execute(stage)
+    assert actual.returncode==2 and actual.stdout==b''
+    assert actual.stderr==b'{"code":"physical_child_failed","retryable":false}\r\n' or actual.stderr==b'{"code":"physical_child_failed","retryable":false}\n'
+    assert not (stage/'complete.json').exists()
+    assert (stage/'input.json').read_bytes()==original
+    assert (stage/'request.json').read_bytes()==body
+    if damage=='existing_output':
+        assert (stage/'scientific.json').read_bytes()==b'preserved prior bytes'
+    else:
+        assert not (stage/'scientific.json').exists()
+
+
+@pytest.mark.parametrize('non_pass', [False, True])
+def test_actual_fixed_transform_child_original_volume_and_precision_failure(tmp_path, non_pass):
+    # Original 196-station integral control, all nine candidates and all grids.
+    # Reconstruct only its authored original, as the original numerical suite
+    # does; never normalize supplied data or weaken a precision condition.
+    science, _ = control_request(0)
+    original = deepcopy(science['correction_result']['dataset'])
+    original.update(state='observed_absolute', history=[])
+    for row in original['stations']:
+        row['value_mgal'] = row['original_value']
+    saved = packet_from_science(original, correction_request(original,science['correction_result']['processing']['config']))
+    parent = json.loads(saved['child_bytes'])
+    assert canonical(parent['payload']['correction_result'],scientific=True) == canonical(science['correction_result'],scientific=True)
+    req = json.loads(saved['request_bytes'])
+    req.update(job_id=str(uuid4()),dataset_id=parent['dataset_id'],dataset_sha256=sha256(saved['child_bytes']).hexdigest(),
+               method_id='gravity.equivalent-source-transform/v1',parent_production=saved['snapshot'])
+    if non_pass:
+        # Exact existing unmet-height-precision scientific negative, not a
+        # resource shortcut or a silently relaxed tolerance.
+        science['config']['max_transfer_sigma_mgal'] = 1e-6
+    req.update(scientific_request=science,scientific_request_sha256=digest(science,scientific=True),
+               parameters={key:deepcopy(science[key]) for key in ('geometry','config')})
+    req['submitted_parameters_sha256'] = digest(req['parameters'])
+    manifest = dict(schema='geophysics.physical-modules/v1',parser_sha256=PARSER_SHA,
+                    wrapper_sha256=sha256(SCRIPT.read_bytes()).hexdigest(),adapter_sha256=None,
+                    core_sha256=CORE_SHA,transform_sha256=TRANSFORM_SHA,
+                    runtime_manifest=dict(python=platform.python_version(),python_implementation='CPython',packages=TRANSFORM_PINS))
+    req.update(module_manifest=manifest,module_manifest_sha256=digest(manifest))
+    stage = tmp_path/req['job_id']
+    stage.mkdir()
+    (stage/'input.json').write_bytes(saved['child_bytes'])
+    (stage/'request.json').write_bytes(canonical(req))
+    before = {name:(stage/name).read_bytes() for name in ('input.json','request.json')}
+    expected = transform_survey(science)
+    actual = execute(stage)
+    assert actual.returncode == 0 and actual.stdout == actual.stderr == b''
+    output = (stage/'scientific.json').read_bytes()
+    assert output == canonical(expected,scientific=True)
+    complete = json.loads((stage/'complete.json').read_bytes())
+    assert complete == dict(schema='geophysics.physical-child-completion/v1',job_id=req['job_id'],method_id=req['method_id'],
+                            scientific_request_sha256=req['scientific_request_sha256'],scientific_result_sha256=digest(expected,scientific=True),
+                            output_bytes=len(output),output_sha256=sha256(output).hexdigest(),
+                            scientific_verdict='non_pass' if non_pass else 'passed')
+    if non_pass:
+        assert expected['selection']['status'] == 'unmet_height_precision'
+        assert expected['selection']['height_m'] is None
+        assert all(not grid['height_precision_passed'] for grid in expected['grids'])
+    else:
+        assert expected['selection']['status'] == 'passed'
+    assert {name:(stage/name).read_bytes() for name in before} == before
+    assert {p.name for p in stage.iterdir()} == {'input.json','request.json','scientific.json','complete.json'}
+    assert expected['provenance']['full_method_accepted'] is False

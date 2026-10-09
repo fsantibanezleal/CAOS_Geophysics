@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ApiClient, ApiHttpError } from "../api/client";
 import { LifecycleApi, type ProjectView } from "../api/lifecycle";
 import type { RawAsset } from "../api/contracts";
 import { ProcessingApi } from "../api/processing";
-import { FLAG_METHOD, M05_METHOD, isFlagJob, isGravityReceipt, type ProjectDatasetReceipt, type ProjectProcessingJob, type FlagResult, type GravityDataset, type MethodEligibility, type ProcessingState } from "../api/processing-contracts";
+import { FLAG_METHOD, M05_METHOD, isFlagJob, isGravityReceipt, isEdiReceipt, isMtJob, type ProjectDatasetReceipt, type ProjectProcessingJob, type FlagResult, type GravityDataset, type MethodEligibility, type ProcessingState } from "../api/processing-contracts";
 import { GravityStationInstrument } from "./GravityStationInstrument";
 import { MtProjectWorkbench } from "./MtProjectWorkbench";
+import { ProfileProjectWorkbench } from "./ProfileProjectWorkbench";
+import { WaveformProjectWorkbench } from "./WaveformProjectWorkbench";
+import { ResultBundleInput } from "./ResultBundleInput";
+import { readSavedResult } from "./result-view-data";
 
 export function processingProblem(error: unknown, es: boolean): string {
   const t = (en: string, sp: string) => es ? sp : en;
@@ -47,12 +51,22 @@ function save(blob: Blob, name: string) {
 export function ProjectProcessingWorkbench({ projectId, es, onManage, onCurated }: {
   projectId: string; es: boolean; onManage: () => void; onCurated: () => void;
 }) {
-  const [mt, setMt] = useState(() => new URLSearchParams(window.location.search).get("instrument") === "mt");
-  const select = (value: boolean) => { const url = new URL(window.location.href); if (value) url.searchParams.set("instrument", "mt"); else url.searchParams.delete("instrument"); window.history.replaceState(null, "", url); setMt(value); };
-  return mt ? <MtProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onGravity={() => select(false)} /> : <GravityProjectWorkbench key={projectId} projectId={projectId} es={es} onManage={onManage} onCurated={onCurated} onMt={() => select(true)} />;
+  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).get("instrument") ?? "gravity");
+  const select = (value: string) => { const url = new URL(window.location.href); if (value !== "gravity") url.searchParams.set("instrument", value); else url.searchParams.delete("instrument"); window.history.replaceState(null, "", url); setMode(value); };
+  const methodNavigation = <nav className="processing-actions" aria-label={es?"Método del proyecto":"Project method"}><label className="select-control"><span>{es?"Método del proyecto":"Project method"}</span><select className="select" aria-label={es?"Método del proyecto":"Project method"} value={mode} onChange={event=>select(event.target.value)}>{[
+    {value:"gravity",label:es?"Estaciones gravimétricas":"Gravity stations"},
+    {value:"mt",label:es?"Magnetotelúrica":"Magnetotellurics"},
+    {value:"profiles",label:es?"ERT / primeras llegadas":"ERT / first arrivals"},
+    {value:"waveform",label:es?"Ondas / respuesta instrumental":"Waveforms / instrument response"},
+  ].map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label></nav>;
+  const shared = {projectId,es,onManage,onCurated,methodNavigation};
+  return mode === "waveform" ? <WaveformProjectWorkbench key={projectId} {...shared}/>
+    : mode === "profiles" ? <ProfileProjectWorkbench key={projectId} {...shared} onGravity={() => select("gravity")} onMt={() => select("mt")} />
+    : mode === "mt" ? <MtProjectWorkbench key={projectId} {...shared} onGravity={() => select("gravity")} onProfiles={() => select("profiles")} />
+    : <GravityProjectWorkbench key={projectId} {...shared} onMt={() => select("mt")} onProfiles={() => select("profiles")} />;
 }
-function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
-  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onMt: () => void;
+function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt, onProfiles, methodNavigation }: {
+  projectId: string; es: boolean; onManage: () => void; onCurated: () => void; onMt: () => void; onProfiles: () => void; methodNavigation?: ReactNode;
 }) {
   const t = (en: string, sp: string) => es ? sp : en;
   const clients = useMemo(() => { const client = new ApiClient(window.location.origin); return { lifecycle: new LifecycleApi(client), processing: new ProcessingApi(client) }; }, []);
@@ -173,13 +187,15 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
   const rawGuidance = !selectedAsset ? t("Select a stored original.", "Seleccione un original almacenado.") : selectedAsset.detected_format !== "gravity_csv" ? t("This adapter accepts gravity station CSV; this original remains available in Projects.", "Este adaptador admite CSV gravimétrico; este original sigue disponible en Proyectos.") : !selectedAsset.physical_metadata.geometry.sigma_column ? t("No sigma column declared. Re-upload with explicit per-station uncertainty to use this adapter.", "No se declaró columna sigma. Cargue de nuevo con incertidumbre por estación para usar este adaptador.") : t("The API checks every row, geometry, units and positive sigma. A raw receipt alone is not eligible.", "La API revisa cada fila, geometría, unidades y sigma positiva. El recibo original por sí solo no es elegible.");
   return <div className="page-body wide workbench processing-workbench">
     <aside className={`instrument-sidebar processing-sidebar ${controlsOpen ? "expanded" : ""}`}>
+      {methodNavigation}
       <div className="instrument-brand"><span className="small-caps">{t("PRIVATE PROJECT · PROCESSING", "PROYECTO PRIVADO · PROCESAMIENTO")}</span><h1>{project?.name ?? t("Project processing", "Procesamiento de proyecto")}</h1></div>
       <div className="processing-actions"><button className="btn" onClick={onMt}>{t("MT transfer functions", "Funciones de transferencia MT")}</button><button className="btn" onClick={onCurated}>{t("Curated cases", "Casos curados")}</button><button className="btn" onClick={onManage}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>
+      <button className="btn" onClick={onProfiles}>{t("ERT / first-arrival profiles", "Perfiles ERT / primeras llegadas")}</button>
       <button className="btn mobile-controls-toggle" aria-expanded={controlsOpen} onClick={() => setControlsOpen(!controlsOpen)}>{t("Processing controls", "Controles de procesamiento")}</button>
       {session === "ready" && <div className="processing-controls">
         <label className="select-control"><span>{t("Control section", "Sección de controles")}</span><select className="select" value={section} onChange={event => setSection(event.target.value)}>
-          <option value="data">{t("Data validation", "Validación de datos")}</option><option value="run">{t("Flag QC parameters", "Parámetros de QC de marcas")}</option><option value="history">{t("Job history", "Historial de trabajos")}</option></select></label>
-        <label className="select-control"><span>{t("Validated dataset", "Conjunto validado")}</span><select className="select" disabled={busy || !gravityDatasets.length} value={datasetId} onChange={event => { setResult(null); setDataset(null); setDatasetId(event.target.value); setNotice(null); }}>
+          <option value="data">{t("Data validation", "Validación de datos")}</option><option value="run">{t("Flag QC parameters", "Parámetros de QC de marcas")}</option><option value="history">{t("Job history", "Historial de trabajos")}</option><option value="open">{t("Open saved result", "Abrir resultado guardado")}</option></select></label>
+        <label className="select-control"><span>{t("Validated dataset", "Conjunto validado")}</span><select className="select" disabled={busy || !gravityDatasets.length} value={datasetId} onChange={event => { if (event.target.value !== datasetId) { setResult(null); setDataset(null); setDatasetId(event.target.value); setNotice(null); } }}>
           {!gravityDatasets.length && <option value="">{t("No gravity dataset yet", "Aún sin conjunto gravimétrico")}</option>}{gravityDatasets.map((item, i) => <option key={item.dataset_id} value={item.dataset_id}>{i + 1} · {assets.find(asset => asset.asset_id === item.raw_asset_id)?.original_filename ?? item.dataset_id} · {item.row_count} {t("stations", "estaciones")}</option>)}</select></label>
         {section === "data" && <>
           <label className="select-control"><span>{t("Stored original", "Original almacenado")}</span><select className="select" value={assetId} disabled={busy || !assets.length} onChange={event => setAssetId(event.target.value)}>
@@ -187,7 +203,7 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
           <p className="project-note">{rawGuidance}</p>
           <button className="btn primary" disabled={busy || !selectedAsset || selectedAsset.detected_format !== "gravity_csv" || datasets.some(item => item.raw_asset_id === assetId)} onClick={validate}>{t("Validate station table", "Validar tabla de estaciones")}</button>
           <p className="project-note">{t("4–4096 stations · six explicit columns · projected xy metres · mGal with positive σ · ≤2 MiB. Original values are retained.", "4–4096 estaciones · seis columnas explícitas · xy proyectadas en metros · mGal con σ positiva · ≤2 MiB. Se conservan valores originales.")}</p>
-          {datasets.filter(item => !isGravityReceipt(item)).map(item => <p className="project-note" key={item.dataset_id}>{assets.find(asset => asset.asset_id === item.raw_asset_id)?.original_filename ?? item.dataset_id} · {item.row_count} {t("declared frequencies", "frecuencias declaradas")} · awaiting_full_tensor_qc. {t("Immutable EDI envelope, not parsed gravity or an inverse. MT execution/result/export require a separate reviewed frontend adapter and host admission.", "Envoltura EDI inmutable, no gravedad analizada ni inversión. Ejecución/resultado/exportación MT requieren otro adaptador revisado y admisión del servidor.")}</p>)}
+          {datasets.filter(isEdiReceipt).map(item => <p className="project-note" key={item.dataset_id}>{assets.find(asset => asset.asset_id === item.raw_asset_id)?.original_filename ?? item.dataset_id} · {item.row_count} {t("declared frequencies", "frecuencias declaradas")} · awaiting_full_tensor_qc. {t("Immutable EDI envelope, not parsed gravity or an inverse. MT execution/result/export require a separate reviewed frontend adapter and host admission.", "Envoltura EDI inmutable, no gravedad analizada ni inversión. Ejecución/resultado/exportación MT requieren otro adaptador revisado y admisión del servidor.")}</p>)}
           <button className="btn" disabled={busy} onClick={() => setRevision(n => n + 1)}>{t("Refresh project data", "Actualizar datos del proyecto")}</button>
         </>}
         {section === "run" && <form className="processing-run-form" onSubmit={submit}>
@@ -203,15 +219,17 @@ function GravityProjectWorkbench({ projectId, es, onManage, onCurated, onMt }: {
           <p className="project-note">{t("The API checks resource admission on submission; one active job per account. Its receipt records actual limits.", "La API comprueba recursos al enviar; un trabajo activo por cuenta. El recibo registra los límites reales.")}</p>
         </form>}
         {section === "history" && <>
-          {jobs.filter(item => !isFlagJob(item)).map(item => <div className="project-note" key={item.job_id}><p>{item.method_id} · {labels[item.state]} · {item.job_id}. {item.method_id === M05_METHOD ? t("M05 success is full-tensor QC only; not an inverse.", "M05 exitoso es solo QC tensorial; no inversión.") : t("M06 candidate is conditional on imposed thickness; not geological truth.", "El candidato M06 depende del espesor impuesto; no es verdad geológica.")} {t("This gravity view does not interpret or export that result.", "Esta vista gravimétrica no interpreta ni exporta ese resultado.")}</p>{item.error && <p role="alert">{item.error.code}: {item.error.message}</p>}{active(item) && <button className="btn" disabled={busy || item.cancel_requested} onClick={() => void act(async signal => { const updated = await clients.processing.cancel(projectId,item.job_id,signal); if (!signal.aborted) setJobs(rows => rows.map(row => row.job_id === updated.job_id ? updated : row)); })}>{item.cancel_requested ? t("Cancellation requested", "Cancelación solicitada") : t("Cancel job", "Cancelar trabajo")} · {item.method_id}</button>}</div>)}
-          <label className="select-control"><span>{t("Processing job", "Trabajo de procesamiento")}</span><select className="select" value={jobId} disabled={busy || !history.length} onChange={event => { setResult(null); setJobId(event.target.value); }}>
+          {jobs.filter(isMtJob).map(item => <div className="project-note" key={item.job_id}><p>{item.method_id} · {labels[item.state]} · {item.job_id}. {item.method_id === M05_METHOD ? t("M05 success is full-tensor QC only; not an inverse.", "M05 exitoso es solo QC tensorial; no inversión.") : t("M06 candidate is conditional on imposed thickness; not geological truth.", "El candidato M06 depende del espesor impuesto; no es verdad geológica.")} {t("This gravity view does not interpret or export that result.", "Esta vista gravimétrica no interpreta ni exporta ese resultado.")}</p>{item.error && <p role="alert">{item.error.code}: {item.error.message}</p>}{active(item) && <button className="btn" disabled={busy || item.cancel_requested} onClick={() => void act(async signal => { const updated = await clients.processing.cancel(projectId,item.job_id,signal); if (!signal.aborted) setJobs(rows => rows.map(row => row.job_id === updated.job_id ? updated : row)); })}>{item.cancel_requested ? t("Cancellation requested", "Cancelación solicitada") : t("Cancel job", "Cancelar trabajo")} · {item.method_id}</button>}</div>)}
+          <label className="select-control"><span>{t("Processing job", "Trabajo de procesamiento")}</span><select className="select" value={jobId} disabled={busy || !history.length} onChange={event => { if (event.target.value !== jobId) { setResult(null); setJobId(event.target.value); } }}>
             {!history.length && <option value="">{t("No job yet", "Aún sin trabajo")}</option>}{history.map((item, i) => <option key={item.job_id} value={item.job_id}>{i + 1} · {labels[item.state]} · {t("threshold", "umbral")} {item.request.parameters.threshold}</option>)}</select></label>
           {job && <><p className="project-note">{t("Submitted threshold", "Umbral enviado")}: {job.request.parameters.threshold} [1]</p>
             <button className="btn" disabled={busy || !active(job) || job.cancel_requested} onClick={cancel}>{job.cancel_requested ? t("Cancellation requested", "Cancelación solicitada") : t("Cancel job", "Cancelar trabajo")}</button>
             <dl className="processing-limits"><dt>{t("Estimated memory / limit", "Memoria estimada / límite")}</dt><dd>{(job.preflight.estimated_memory_bytes / 1048576).toFixed(1)} / {(job.preflight.memory_limit_bytes / 1048576).toFixed(1)} MiB</dd><dt>{t("Scratch / wall limits", "Límites temporales / duración")}</dt><dd>{(job.preflight.scratch_limit_bytes / 1048576).toFixed(1)} MiB / {job.preflight.wall_limit_seconds} s</dd><dt>{t("Measured wall / peak RSS", "Duración / RSS máximo medidos")}</dt><dd>{job.wall_ms === null ? t("not measured", "sin medición") : `${job.wall_ms} ms`} / {job.peak_rss_bytes === null ? t("not measured", "sin medición") : `${(job.peak_rss_bytes / 1048576).toFixed(1)} MiB`}</dd><dt>{t("Measured scratch", "Temporales medidos")}</dt><dd>{job.scratch_bytes === null ? t("not measured", "sin medición") : `${job.scratch_bytes} bytes`}</dd></dl>
-            <button className="btn" disabled={busy || job.state !== "succeeded" || !result} onClick={download}>{t("Verify & export processing ZIP", "Verificar y exportar ZIP de procesamiento")}</button></>}
+            <button className="btn" disabled={busy || job.state !== "succeeded" || !result} onClick={download}>{t("Verify & export processing ZIP", "Verificar y exportar ZIP de procesamiento")}</button>
+            </>}
           <button className="btn" disabled={busy} onClick={() => setRevision(n => n + 1)}>{t("Refresh history", "Actualizar historial")}</button>
         </>}
+        {section === "open" && (job?.state === "succeeded" && dataset ? <><p className="project-note">{t("Selected job", "Trabajo seleccionado")}: {job.job_id} · {t("Select another job in History before opening its ZIP.", "Seleccione otro trabajo en Historial antes de abrir su ZIP.")}</p><ResultBundleInput key={`${dataset.dataset_id}:${job.job_id}:${job.result_sha256}`} es={es} verify={file => readSavedResult(file, { kind: "gravity", job, dataset })} onOpened={setResult}/></> : <p className="project-note">{t("Select a successful job in History first. Saved files do not admit or execute jobs.", "Seleccione primero un trabajo exitoso en Historial. Los archivos no admiten ni ejecutan trabajos.")}</p>)}
       </div>}
     </aside>
     <section className="instrument-main processing-main" aria-label={t("Selected project processing", "Procesamiento del proyecto seleccionado")}>

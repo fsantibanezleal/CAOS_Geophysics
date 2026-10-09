@@ -479,7 +479,7 @@ def test_cli_roundtrip(tmp_path):
     assert not (tmp_path / "invalid").exists()
     args[-1] = str(ROOT / "data/derived/M01-test-forbidden")
     forbidden = subprocess.run(args, capture_output=True, text=True, timeout=60)
-    assert forbidden.returncode == 2 and "ignored" in forbidden.stderr
+    assert forbidden.returncode == 2 and "external" in forbidden.stderr
 
 
 def test_wiki_contract():

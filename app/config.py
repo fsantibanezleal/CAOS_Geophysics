@@ -3,12 +3,38 @@
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
 
 
 MIB = 1024 * 1024
+
+
+def external_storage_path(value: Path, label: str) -> Path:
+    """Private data and runtime files must never be stored in a checkout."""
+    if not value.is_absolute():
+        raise ValueError(f"{label} must be absolute")
+    resolved = value.resolve()
+    product = Path(__file__).resolve().parents[1]
+    if resolved.is_relative_to(product) or any((parent / ".git").exists() for parent in (resolved, *resolved.parents)):
+        raise ValueError(f"{label} must be outside repository checkouts")
+    return resolved
+
+
+def configured_data_path() -> Path:
+    value = os.environ.get("GEOPHYSICS_DATA_DIR")
+    if not value:
+        raise ValueError("GEOPHYSICS_DATA_DIR must explicitly select external private storage")
+    return external_storage_path(Path(value), "GEOPHYSICS_DATA_DIR")
+
+
+def configured_profile_supervisor() -> Path | None:
+    value = os.environ.get("GEOPHYSICS_PROFILE_LINUX_SUPERVISOR")
+    if sys.platform == "linux" and os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1" and not value:
+        raise ValueError("Enabled Linux profiles require GEOPHYSICS_PROFILE_LINUX_SUPERVISOR")
+    return Path(value) if value else None
 
 
 @dataclass(frozen=True)
@@ -32,8 +58,20 @@ class Settings:
     worker_scratch_bytes: int = 1024 * MIB
     worker_wall_seconds: int = 600
     mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
+    profile_online_enabled: bool = False
+    profile_python: Path | None = None
+    profile_linux_supervisor: Path | None = None
+    auth_mode: str = "local"
 
     def __post_init__(self) -> None:
+        if self.profile_linux_supervisor is not None and (not self.profile_linux_supervisor.is_absolute()
+                or not self.profile_linux_supervisor.is_file()):
+            raise ValueError("Linux profiles require an explicit installed supervisor")
+        if self.profile_online_enabled and (self.profile_python is None
+                or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
+            raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
+        if self.auth_mode not in {"local", "email"}:
+            raise ValueError("GEOPHYSICS_AUTH_MODE must be local or email")
         if len(self.auth_secret) < 32:
             raise ValueError("GEOPHYSICS_AUTH_SECRET must be at least 32 characters")
         parsed = urlsplit(self.public_origin)
@@ -55,6 +93,9 @@ class Settings:
             raise ValueError("data_dir must be absolute")
         if self.db_path is not None and not self.db_path.is_absolute():
             raise ValueError("db_path must be absolute")
+        external_storage_path(self.data_dir, "data_dir")
+        if self.db_path is not None:
+            external_storage_path(self.db_path, "db_path")
 
     @property
     def database_path(self) -> Path:
@@ -66,19 +107,23 @@ class Settings:
 
     @classmethod
     def from_env(cls) -> "Settings":
-        data = Path(os.environ.get("GEOPHYSICS_DATA_DIR", "data/raw/api")).resolve()
+        data = configured_data_path()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(
             data_dir=data,
-            db_path=Path(db).resolve() if db else None,
+            db_path=Path(db) if db else None,
             auth_secret=os.environ["GEOPHYSICS_AUTH_SECRET"],
             public_origin=os.environ["GEOPHYSICS_PUBLIC_ORIGIN"].rstrip("/"),
-            smtp_host=os.environ["GEOPHYSICS_SMTP_HOST"],
+            smtp_host=os.environ.get("GEOPHYSICS_SMTP_HOST", ""),
             smtp_port=int(os.environ.get("GEOPHYSICS_SMTP_PORT", "587")),
-            smtp_username=os.environ["GEOPHYSICS_SMTP_USERNAME"],
-            smtp_password=os.environ["GEOPHYSICS_SMTP_PASSWORD"],
-            smtp_from=os.environ["GEOPHYSICS_SMTP_FROM"],
+            smtp_username=os.environ.get("GEOPHYSICS_SMTP_USERNAME", ""),
+            smtp_password=os.environ.get("GEOPHYSICS_SMTP_PASSWORD", ""),
+            smtp_from=os.environ.get("GEOPHYSICS_SMTP_FROM", ""),
             mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+            profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
+            profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
+            profile_linux_supervisor=configured_profile_supervisor(),
+            auth_mode=os.environ.get("GEOPHYSICS_AUTH_MODE", "local"),
         )
 
 
@@ -89,10 +134,22 @@ class WorkerSettings:
     data_dir: Path
     db_path: Path | None = None
     mt_online_enabled: bool = False
+    profile_online_enabled: bool = False
+    profile_python: Path | None = None
+    profile_linux_supervisor: Path | None = None
 
     def __post_init__(self) -> None:
+        if self.profile_linux_supervisor is not None and (not self.profile_linux_supervisor.is_absolute()
+                or not self.profile_linux_supervisor.is_file()):
+            raise ValueError("Linux profiles require an explicit installed supervisor")
+        if self.profile_online_enabled and (self.profile_python is None
+                or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
+            raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
         if not self.data_dir.is_absolute() or (self.db_path is not None and not self.db_path.is_absolute()):
             raise ValueError("worker data and database paths must be absolute")
+        external_storage_path(self.data_dir, "worker data_dir")
+        if self.db_path is not None:
+            external_storage_path(self.db_path, "worker db_path")
 
     @property
     def database_path(self) -> Path:
@@ -104,7 +161,10 @@ class WorkerSettings:
 
     @classmethod
     def from_env(cls) -> "WorkerSettings":
-        data = Path(os.environ.get("GEOPHYSICS_DATA_DIR", "data/raw/api")).resolve()
+        data = configured_data_path()
         db = os.environ.get("GEOPHYSICS_DB_PATH")
-        return cls(data_dir=data, db_path=Path(db).resolve() if db else None,
-                   mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1")
+        return cls(data_dir=data, db_path=Path(db) if db else None,
+                   mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+                   profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
+                   profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
+                   profile_linux_supervisor=configured_profile_supervisor())

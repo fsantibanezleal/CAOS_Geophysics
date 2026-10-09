@@ -10,7 +10,7 @@ import tarfile
 import tempfile
 import numpy as np
 
-from sources import LEDGER, ROOT, SourceError, acquire_source, load_ledger
+from sources import LEDGER, ROOT, SourceError, acquire_source, load_ledger, local_data_root
 
 
 class IngestError(ValueError):
@@ -182,8 +182,9 @@ def _process_edi(record: dict, raw_path: Path) -> dict:
     }
 
 
-def ingest_source(source_id: str, *, local_file: Path | None = None, root: Path = ROOT,
+def ingest_source(source_id: str, *, local_file: Path | None = None, root: Path | None = None,
                   ledger_path: Path = LEDGER) -> dict:
+    root = local_data_root(root)
     record, raw_path, receipt = acquire_source(source_id, local_file=local_file,
                                                root=root, ledger_path=ledger_path)
     if record["format"] == "simpeg-obs-tar-gz":
@@ -197,7 +198,7 @@ def ingest_source(source_id: str, *, local_file: Path | None = None, root: Path 
     return result
 
 
-def external(*, root: Path = ROOT, ledger_path: Path = LEDGER) -> list[dict]:
+def external(*, root: Path | None = None, ledger_path: Path = LEDGER) -> list[dict]:
     """Legacy batch spelling, restricted to reviewed automatic tutorial archives."""
     records = load_ledger(ledger_path)
     ids = [record["source_id"] for record in records.values()
@@ -243,16 +244,21 @@ if __name__=='__main__':
     selector.add_argument('--csv',type=Path,help='Invert a user-supplied five-column gravity/magnetic CSV')
     parser.add_argument('--file',type=Path,help='Pinned local raw file for --source-id')
     parser.add_argument('--family',choices=['gravity','magnetics'],default='gravity')
-    parser.add_argument('--output',default='data/raw/user-inversion.json')
+    parser.add_argument('--output',type=Path,help='Explicit external result path for --csv')
+    parser.add_argument('--data-root',type=Path,help='External working-data root; otherwise GEOPHYSICS_LOCAL_DATA_ROOT')
     args=parser.parse_args()
     if args.file and not args.source_id:
         parser.error('--file requires --source-id')
+    if args.csv and args.output is None:
+        parser.error('--csv requires --output outside the repository')
     try:
         if args.external:
-            print(json.dumps(external(),indent=2))
+            print(json.dumps(external(root=args.data_root),indent=2))
         elif args.source_id:
-            print(json.dumps(ingest_source(args.source_id,local_file=args.file),indent=2))
+            print(json.dumps(ingest_source(args.source_id,local_file=args.file,root=args.data_root),indent=2))
         else:
+            if args.output.resolve().is_relative_to(ROOT):
+                raise IngestError('Working results must be outside the repository')
             Path(args.output).parent.mkdir(parents=True,exist_ok=True)
             invert_csv(args.csv,args.family,args.output)
     except (SourceError,IngestError,ValueError) as error:

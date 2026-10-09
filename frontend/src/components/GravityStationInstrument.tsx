@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import type { FlagResult, GravityDataset } from "../api/processing-contracts";
+import { downloadInspection, gravityInspection } from "./result-view-data";
 
 type Bounds = { x0: number; x1: number; y0: number; y1: number };
 type Kind = "plan" | "observations" | "scores";
@@ -165,6 +166,7 @@ export function GravityStationInstrument({ dataset, result, es }: { dataset: Gra
       <label className="select-control"><span>{t("Measurement view", "Vista de medición")}</span><select className="select" value={showScores && result ? "scores" : "observations"} onChange={event => setShowScores(event.target.value === "scores")}>
         <option value="observations">{t("Observed gravity ± σ", "Gravedad observada ± σ")}</option><option value="scores" disabled={!result}>{t("Returned robust scores", "Puntajes robustos recibidos")}</option></select></label>
       <button className="btn" aria-pressed={table} onClick={() => setTable(!table)}>{table ? t("Show plots", "Mostrar gráficos") : t("Station table", "Tabla de estaciones")}</button>
+      <button className="btn" onClick={() => downloadInspection(gravityInspection(dataset, result, selected), `gravity-inspection-${dataset.dataset_id}.json`)}>{t("Export exact inspection JSON", "Exportar inspección exacta JSON")}</button>
     </div>
     <output className="processing-station-readout" aria-live="polite" data-testid="station-readout">
       {dataset.station_ids[selected]} · XYZ {dataset.xyz_m[selected].map(String).join(", ")} m · g {String(dataset.observed_mgal[selected])} ± {String(dataset.sigma_mgal[selected])} mGal

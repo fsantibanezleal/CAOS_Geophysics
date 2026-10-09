@@ -106,6 +106,30 @@ export class ApiClient {
     return parse(await response.json());
   }
 
+  async requestJsonBytes(path: string, maxBytes: number, signal?: AbortSignal): Promise<Uint8Array> {
+    signal?.throwIfAborted();
+    if (!Number.isSafeInteger(maxBytes) || maxBytes < 1) throw new Error("Invalid JSON byte bound");
+    const response = await this.send(path, {signal});
+    if (!/\bapplication\/(?:[\w.-]+\+)?json\b/i.test(response.headers.get("content-type") ?? ""))
+      throw new Error("API returned non-JSON result bytes");
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("API result stream unavailable");
+    const chunks: Uint8Array[] = []; let size = 0;
+    try {
+      for (;;) {
+        signal?.throwIfAborted();
+        const {done,value} = await reader.read(); if (done) break;
+        size += value.byteLength;
+        if (size > maxBytes) throw new Error("API result exceeds byte bound");
+        chunks.push(value);
+      }
+    } catch (error) { await reader.cancel(); throw error; }
+    finally { reader.releaseLock(); }
+    const bytes = new Uint8Array(size); let offset = 0;
+    for (const chunk of chunks) {bytes.set(chunk,offset);offset+=chunk.byteLength;}
+    return bytes;
+  }
+
   async requestEmpty(path: string, request: WireRequest): Promise<void> {
     await this.send(path, request);
   }

@@ -43,6 +43,7 @@ export function Heatmap({
   markers = [],
   boundaries,
   cursorY,
+  aspectRatio,
 }: {
   data: number[][];
   title: string;
@@ -59,6 +60,7 @@ export function Heatmap({
   markers?: { x: number; y: number; label: string }[];
   boundaries?: number[][];
   cursorY?: number;
+  aspectRatio?: number;
 }) {
   const es = useShellLang() === "es";
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -74,8 +76,10 @@ export function Heatmap({
     source.width = cols;
     source.height = rows;
     const pixels = source.getContext("2d")!;
-    c.width = cols * 8;
-    c.height = rows * 8;
+    // One native raster pixel per exported sample. CSS, not an enormous
+    // 8-fold allocation, fits the view; linked readouts retain every sample.
+    c.width = cols;
+    c.height = rows;
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         pixels.fillStyle = color(data[y][x], bounds, palette);
@@ -108,6 +112,7 @@ export function Heatmap({
         <span className="axis-y">{yLabel}</span>
         <div
           className="heatmap-area"
+          style={aspectRatio ? { aspectRatio } : undefined}
           onPointerMove={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
             setHover({
@@ -132,7 +137,7 @@ export function Heatmap({
             if (hover) onPick?.(hover.x, hover.y);
           }}
         >
-          <canvas ref={canvas} aria-label={title} />
+          <canvas ref={canvas} aria-label={title} style={{ position: "absolute", inset: 0, imageRendering: "pixelated" }} />
           {boundaries && (
             <svg
               className="geology-overlay"

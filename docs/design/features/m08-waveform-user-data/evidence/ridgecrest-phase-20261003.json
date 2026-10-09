@@ -1,0 +1,41 @@
+{
+  "schema": "caos.m08-private-phase-acquisition.v1",
+  "requested_url": "https://scedc-pds.s3.us-west-2.amazonaws.com/event_phases/2019/2019_187/38457511.phase",
+  "final_url": "https://scedc-pds.s3.us-west-2.amazonaws.com/event_phases/2019/2019_187/38457511.phase",
+  "started_utc": "2026-10-04T01:44:04.255706+00:00",
+  "finished_utc": "2026-10-04T01:44:05.029942+00:00",
+  "http_status": 200,
+  "headers": {
+    "Content-Encoding": null,
+    "Content-Length": "7208",
+    "Content-Type": "binary/octet-stream",
+    "ETag": "\"9f65e9f7bfcd5ef0522d548db95d2662\"",
+    "Last-Modified": "Mon, 18 May 2020 22:07:56 GMT",
+    "Location": null
+  },
+  "cap_bytes": 1048576,
+  "received_bytes": 7208,
+  "raw_sha256": "f16a0f2994f12590aae981e08758118672e962d1a9665bf133634c8e2add3b89",
+  "status": "received",
+  "terminal_seal_commit": "9a9bc3cb1f947da0e1afce4b150f72a277d6de70",
+  "terminal_seal_sha256": "6e340817230a8096c5f9eefda4b138e8fb985e7b9982dfb50a93535bacb1af2d",
+  "phase_accessed_after_committed_original_terminal": true,
+  "selection_changed": false,
+  "original_publication_approved": false,
+  "actual_converter_outcome": {
+    "status": "reference_unsupported",
+    "code": "waveform_format",
+    "field": "document",
+    "message": "Waveform encoding is unsupported or malformed",
+    "cause": "Original header has ten tokens (event type eq and separate local-domain l); the fixed admitted STP subset requires nine tokens with le/ts. No header repair, column guessing or source substitution."
+  },
+  "reference_evaluation": "not_evaluable",
+  "signed_residual_s": null,
+  "calculation_status": "input_rejected",
+  "selected_cases": 1,
+  "rejected_cases": 1,
+  "reference_unsupported_cases": 1,
+  "field_truth": null,
+  "method_accepted": false,
+  "host_admitted": false
+}
