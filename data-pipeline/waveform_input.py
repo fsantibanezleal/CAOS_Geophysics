@@ -610,6 +610,145 @@ def scan_miniseed(raw, request):
     return rows
 
 
+RECORD_LEDGER_SCHEMA = "caos.waveform-record-ledger/v1"
+RECORD_LEDGER_FIELDS = tuple(
+    "byte_offset byte_length header_order sample_word_order encoding data_offset "
+    "npts sample_rate_hz start_us end_exclusive_us activity_flags io_clock_flags "
+    "data_quality_flags header_correction_100us correction_already_applied "
+    "microsecond_offset timing_quality steim_frame_count channel_index nslc sequence "
+    "quality sample_interval steim_x0 steim_xn packed_difference_capacity".split()
+)
+_RECORD_BASE = frozenset(RECORD_LEDGER_FIELDS[:-3])
+_RECORD_STEIM = frozenset(RECORD_LEDGER_FIELDS[-3:])
+
+
+def _checked_record_row(row):
+    """Closed scanner-output transport, not decoding or field authentication."""
+    native_precount(row, 8192, max_nodes=128, max_depth=6)
+    if type(row) is not dict or type(row.get("encoding")) is not int or row["encoding"] not in (1, 3, 10, 11):
+        fail("waveform_contract")
+    steim = row["encoding"] in (10, 11)
+    if set(row) != _RECORD_BASE | (_RECORD_STEIM if steim else frozenset()):
+        fail("waveform_contract")
+    for name, lo, hi in (
+        ("byte_offset", 0, 16777215), ("byte_length", 256, 4096),
+        ("data_offset", 56, 4095), ("npts", 1, 60000),
+        ("activity_flags", 0, 127), ("io_clock_flags", 0, 63),
+        ("data_quality_flags", 0, 255), ("header_correction_100us", -2147483648, 2147483647),
+        ("microsecond_offset", -128, 127), ("channel_index", 0, 2),
+        ("start_us", -9007199254740991, 9007199254740991),
+        ("end_exclusive_us", -9007199254740991, 9007199254740991),
+    ):
+        if type(row[name]) is not int or not lo <= row[name] <= hi:
+            fail("waveform_contract")
+    length, data, count, rate = row["byte_length"], row["data_offset"], row["npts"], row["sample_rate_hz"]
+    if (
+        length & (length - 1) or data >= length or row["byte_offset"] + length > 16777216
+        or type(rate) is not int or rate not in (20, 40, 50, 100, 200)
+        or row["end_exclusive_us"] != row["start_us"] + count * (1000000 // rate)
+        or type(row["correction_already_applied"]) is not bool
+        or row["correction_already_applied"] != bool(row["activity_flags"] & 2)
+        or any(type(row[k]) is not str or row[k] not in ("<", ">") for k in ("header_order", "sample_word_order"))
+        or type(row["sequence"]) is not str or not re.fullmatch(r"[0-9]{6}", row["sequence"])
+        or type(row["quality"]) is not str or row["quality"] not in ("D", "R", "Q", "M")
+        or type(row["nslc"]) is not list or len(row["nslc"]) != 4
+    ):
+        fail("waveform_contract")
+    nslc(dict(zip(("network", "station", "location", "channel"), row["nslc"])))
+    timing, frames = row["timing_quality"], row["steim_frame_count"]
+    if (
+        (timing is None) != (frames is None)
+        or timing is not None and (type(timing) is not int or not 0 <= timing <= 100)
+        or frames is not None and (type(frames) is not int or not 0 <= frames <= (length - data) // 64)
+    ):
+        fail("waveform_contract")
+    keys(row["sample_interval"], "start stop")
+    begin, end = row["sample_interval"]["start"], row["sample_interval"]["stop"]
+    if type(begin) is not int or type(end) is not int or not 0 <= begin < end <= 60000 or end - begin != count:
+        fail("waveform_contract")
+    if steim:
+        if data % 64 or (length - data) % 64:
+            fail("waveform_contract")
+        for key in ("steim_x0", "steim_xn"):
+            if type(row[key]) is not int or not -2147483648 <= row[key] <= 2147483647:
+                fail("waveform_contract")
+        capacity = row["packed_difference_capacity"]
+        if type(capacity) is not int or not count <= capacity <= (length - data) // 64 * 105:
+            fail("waveform_contract")
+    elif count * (2 if row["encoding"] == 1 else 4) > length - data or frames not in (None, 0):
+        fail("waveform_contract")
+    return row
+
+
+def _record_sequence(rows):
+    """Validate one channel incrementally; retain no expanded record collection."""
+    cursor, identity = 0, None
+    for row in rows:
+        _checked_record_row(row)
+        current = row["channel_index"], tuple(row["nslc"])
+        if identity is None:
+            identity = current
+        if current != identity or row["sample_interval"]["start"] != cursor:
+            fail("waveform_contract")
+        cursor += row["npts"]
+        if cursor > 60000:
+            fail("waveform_limit")
+        yield row
+
+
+def pack_record_ledger(rows):
+    """Lossless positional JSON after decoding; caps precede retained copies."""
+    if type(rows) is not list:
+        fail("waveform_type")
+    if len(rows) > 4096:
+        fail("waveform_limit")
+    # First pass validates every source row before creating the returned matrix.
+    # Per-row bounded pointer lists are not a repeated-key full metadata clone.
+    projected = 2
+    for i, row in enumerate(_record_sequence(rows)):
+        projected += int(i > 0) + native_precount(
+            [row.get(name) for name in RECORD_LEDGER_FIELDS], 8192, max_nodes=128, max_depth=6
+        )
+        if projected > 2097152 - 1024:
+            fail("waveform_limit")
+    packed = {
+        "schema": RECORD_LEDGER_SCHEMA,
+        "fields": list(RECORD_LEDGER_FIELDS),
+        "rows": [[clone_native(row.get(name)) for name in RECORD_LEDGER_FIELDS] for row in rows],
+    }
+    native_precount(packed, 2097152, max_nodes=2097152, max_depth=16)
+    return packed
+
+
+def iter_record_ledger(packed):
+    """Bounded exact reconstruction of new transport; historical lists untouched."""
+    keys(packed, "schema fields rows")
+    if (
+        packed["schema"] != RECORD_LEDGER_SCHEMA or type(packed["fields"]) is not list
+        or packed["fields"] != list(RECORD_LEDGER_FIELDS) or type(packed["rows"]) is not list
+    ):
+        fail("waveform_contract")
+    if len(packed["rows"]) > 4096:
+        fail("waveform_limit")
+    native_precount(packed, 2097152, max_nodes=2097152, max_depth=16)
+    def expanded():
+        for cells in packed["rows"]:
+            if type(cells) is not list or len(cells) != len(RECORD_LEDGER_FIELDS):
+                fail("waveform_contract")
+            native_precount(cells, 8192, max_nodes=128, max_depth=6)
+            row = dict(zip(RECORD_LEDGER_FIELDS, cells))
+            if type(row["encoding"]) is not int:
+                fail("waveform_contract")
+            if row["encoding"] in (1, 3):
+                if any(row[name] is not None for name in _RECORD_STEIM):
+                    fail("waveform_contract")
+                for name in _RECORD_STEIM:
+                    del row[name]
+            yield row
+    for row in _record_sequence(expanded()):
+        yield clone_native(row)
+
+
 def _xml_num(text, integer=False):
     text = text.strip()
     if len(text) > 128:

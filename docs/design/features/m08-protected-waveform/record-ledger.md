@@ -61,7 +61,7 @@ Outer result/request/export/API/resource schemas remain unchanged. Historical
 never rewritten merely by reading. Only the explicit versioned new envelope
 enters the new strict grammar.
 Gate: tests/data/test_waveform_record_ledger.py::test_closed_ledger_rejects_mutation
-Gate: tests/data/test_waveform_record_ledger.py::test_historical_list_seal_is_not_rewritten
+Gate: tests/data/test_waveform_record_ledger_science.py::test_historical_list_seal_is_not_rewritten
 
 R-M08L-04: THE pipeline SHALL pack after all existing per-record decoding/checks/interval assignment
 but before final metadata pre-count. Neither decode order nor engine operations
@@ -72,7 +72,7 @@ changed source; old native grants cannot qualify these new bytes. Client/API
 consumers continue to receive source-bound metadata and all arrays unchanged.
 The current UI displays retained metadata rather than assuming records is a
 list; no UI/CSS/SQL/shared worker or installation policy change is required.
-Gate: tests/data/test_waveform_record_ledger.py::test_actual_calculation_seal_and_export_reopen
+Gate: tests/data/test_waveform_record_ledger_science.py::test_actual_calculation_seal_and_export_reopen
 
 ## Verification order and review boundaries
 

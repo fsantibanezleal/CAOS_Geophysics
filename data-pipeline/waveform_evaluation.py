@@ -26,6 +26,7 @@ from waveform_input import (
     finite_number,
     validate_request,
     scientific_identity,
+    iter_record_ledger,
 )
 from waveform_processing import WaveformResult
 
@@ -164,6 +165,7 @@ def _sealed_metadata(m):
     ):
         fail("waveform_contract")
     identities = set()
+    record_count, record_samples = 0, 0
     for i, c in enumerate(m["channels"]):
         if (
             type(c) is not dict
@@ -175,6 +177,16 @@ def _sealed_metadata(m):
             fail("waveform_contract")
         identity = nslc(dict(zip(("network", "station", "location", "channel"), c["nslc"])))
         if identity != nslc(submitted["channels"][i]):
+            fail("waveform_contract")
+        if type(c.get("records")) is dict:
+            for row in iter_record_ledger(c["records"]):
+                if row["channel_index"] != i or tuple(row["nslc"]) != identity:
+                    fail("waveform_contract")
+                record_count += 1
+                record_samples += row["npts"]
+                if record_count > 4096 or record_samples > 180000:
+                    fail("waveform_limit")
+        elif "records" in c and type(c["records"]) is not list:
             fail("waveform_contract")
         _unit_ledger(c)
         identities.add(i)

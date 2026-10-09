@@ -25,6 +25,7 @@ from waveform_input import (
     response_work,
     clone_native,
     native_precount,
+    pack_record_ledger,
     fail,
 )
 
@@ -353,6 +354,10 @@ def _base(raw, xml, request):
 
 def _descriptors(metadata, arrays, units):
     np, _, _ = _engine_modules()
+    # Decode/scientific loops have finished. Preserve every record field while
+    # avoiding repeated JSON keys at the already admitted4096-record ceiling.
+    for channel in metadata["channels"]:
+        channel["records"] = pack_record_ledger(channel["records"])
     total = 0
     for (ci, name), array in sorted(arrays.items()):
         kind = "<i4" if name == "counts" else "|b1" if name == "edge_valid" else "<f8"
