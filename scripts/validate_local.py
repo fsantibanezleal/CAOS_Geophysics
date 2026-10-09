@@ -64,11 +64,23 @@ def regular(path):
 
 def file_record(path):
     before = regular(path)
-    sha = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            sha.update(chunk)
-        held = os.fstat(stream.fileno())
+    try:
+        sha = hashlib.sha256()
+        buffer = bytearray(65536)
+        view = memoryview(buffer)
+        total = 0
+        with path.open("rb") as stream:
+            while True:
+                count = stream.readinto(buffer)
+                require(type(count) is int and 0 <= count <= len(buffer), "invalid hashing read count")
+                if not count:
+                    break
+                sha.update(view[:count])
+                total += count
+            held = os.fstat(stream.fileno())
+        require(total == held.st_size, "hashing byte count differs from held size")
+    except MemoryError:
+        raise Refusal("input hashing allocation unavailable") from None
     after = regular(path)
     # Windows Python path stat exposes birth time as ctime, while CRT fstat can
     # expose modification time there. Compare like-for-like held identity.
@@ -700,6 +712,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         summary = run(args.config, args.device_root, args.cache_root, args.report_root)
+    except MemoryError:
+        print("REFUSED: validation allocation unavailable", file=sys.stderr)
+        return 2
     except (Refusal, OSError, ValueError) as error:
         print(f"REFUSED: {error}", file=sys.stderr)
         return 2
