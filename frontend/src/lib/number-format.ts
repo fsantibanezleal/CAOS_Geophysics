@@ -8,9 +8,13 @@ export function formatNumber(
   options: Intl.NumberFormatOptions = {},
 ): string {
   if (!Number.isFinite(value)) return String(value);
+  const precision: Intl.NumberFormatOptions =
+    "maximumFractionDigits" in options || "maximumSignificantDigits" in options
+      ? {}
+      : { maximumSignificantDigits: 8 };
   return new Intl.NumberFormat(locale, {
-    maximumSignificantDigits: 8,
     useGrouping: false,
+    ...precision,
     ...options,
   }).format(value);
 }

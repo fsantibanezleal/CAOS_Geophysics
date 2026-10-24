@@ -1,4 +1,5 @@
 import { artifactBase, deploymentMode } from './lib/deployment';
+import { formatForCurrentLocale } from "./lib/number-format";
 
 export type Family =
   | "gravity"
@@ -219,10 +220,8 @@ export function format(v: number): string {
   return !Number.isFinite(v)
     ? "Unavailable"
     : Math.abs(v) < 0.001 && v !== 0
-      ? v.toExponential(2)
-      : v.toLocaleString("en", {
-          maximumFractionDigits: Math.abs(v) < 1 ? 4 : 2,
-        });
+      ? formatForCurrentLocale(v, { notation: "scientific", maximumSignificantDigits: 3 })
+      : formatForCurrentLocale(v, { maximumFractionDigits: Math.abs(v) < 1 ? 4 : 2 });
 }
 export function flatten(v: number[] | number[][]): number[] {
   return v.flat();

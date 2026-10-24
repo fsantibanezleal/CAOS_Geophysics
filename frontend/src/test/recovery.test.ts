@@ -205,7 +205,9 @@ describe("evidence contracts", () => {
     expect(html).toContain("missed every tested OOD case");
     expect(html).toContain("High specificity does not compensate");
     const calibration = renderToStaticMarkup(createElement(PotentialCalibration));
-    expect(calibration).toContain("9.88%");
+    // The default shell locale is Spanish in the test harness; keep the
+    // assertion valid for both correctly grouped decimal separators.
+    expect(calibration).toMatch(/9[.,]88%/);
     expect(calibration).toContain("16");
     expect(calibration).toContain("nominal 95%");
     expect(calibration).toContain("negative evidence");

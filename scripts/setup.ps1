@@ -1,4 +1,4 @@
-param([switch]$Gpu, [switch]$Notebooks)
+param([switch]$Gpu, [switch]$Notebooks, [switch]$M08)
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $py = if (Get-Command py -ErrorAction SilentlyContinue) { 'py -3.12' } else { 'python' }
@@ -12,6 +12,16 @@ if ($Notebooks) {
   & $notebookPython -m pip install --upgrade pip -q
   & $notebookPython -m pip install -r notebooks/requirements.txt -q
   Write-Host '[setup] notebook environment ready. Run .\.venv-notebooks\Scripts\python.exe scripts/run_notebooks.py --check --tmp <device-temp-root>.'
+  exit 0
+}
+if ($M08) {
+  Write-Host '[setup] creating isolated .venv-m08'
+  if (-not (Test-Path '.venv-m08')) { Invoke-Expression "$py -m venv .venv-m08" }
+  $m08Python = VenvPy '.venv-m08'
+  & $m08Python -m pip install --upgrade pip -q
+  & $m08Python -m pip install -r data-pipeline/requirements-m08.txt -q
+  & $m08Python -m pip check
+  Write-Host '[setup] M08 environment ready. Set M08_TEST_SCIENCE_PYTHON to .venv-m08/Scripts/python.exe for local validation.'
   exit 0
 }
 Write-Host '[setup] creating root .venv and offline .venv-pipeline'

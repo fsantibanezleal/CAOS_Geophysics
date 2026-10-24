@@ -6,11 +6,13 @@ mkvenv() { [ -d "$1" ] || "$PY" -m venv "$1"; }
 venvpy() { local p="$1/bin/python"; [ -x "$p" ] || p="$1/Scripts/python.exe"; echo "$p"; }
 GPU=0
 NOTEBOOKS=0
+M08=0
 for arg in "$@"; do
   case "$arg" in
     --gpu) GPU=1 ;;
     --notebooks) NOTEBOOKS=1 ;;
-    *) echo "setup: unknown option $arg (use --gpu or --notebooks)"; exit 2 ;;
+    --m08) M08=1 ;;
+    *) echo "setup: unknown option $arg (use --gpu, --notebooks, or --m08)"; exit 2 ;;
   esac
 done
 if [ "$NOTEBOOKS" -eq 1 ]; then
@@ -19,6 +21,15 @@ if [ "$NOTEBOOKS" -eq 1 ]; then
   "$VN" -m pip install --upgrade pip -q
   "$VN" -m pip install -r notebooks/requirements.txt -q
   echo "[setup] notebook environment ready. Run python scripts/run_notebooks.py --check --tmp <device-temp-root>."
+  exit 0
+fi
+if [ "$M08" -eq 1 ]; then
+  mkvenv .venv-m08
+  VM08="$(venvpy .venv-m08)"
+  "$VM08" -m pip install --upgrade pip -q
+  "$VM08" -m pip install -r data-pipeline/requirements-m08.txt -q
+  "$VM08" -m pip check
+  echo "[setup] M08 environment ready. Set M08_TEST_SCIENCE_PYTHON to .venv-m08/bin/python for local validation."
   exit 0
 fi
 mkvenv .venv; mkvenv .venv-pipeline

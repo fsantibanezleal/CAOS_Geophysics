@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -115,7 +117,12 @@ def make_harness(tmp_path: Path, monkeypatch):
                worker_wall_seconds: int = 600, max_queued_jobs: int = 32,
                mt_online_enabled: bool = False, auth_mode: str = "email",
                profile_online_enabled: bool = False, profile_python: Path | None = None):
-        root = tmp_path / f"case-{len(clients)}"
+        # Keep app-owned paths short on Windows. Production correctly rejects
+        # paths beyond MAX_PATH; pytest's nested node-id directory can exceed
+        # that limit before an API test reaches the application logic.
+        scratch = os.environ.get("GEOPHYSICS_TEST_SCRATCH")
+        root = (Path(tempfile.mkdtemp(prefix="g-", dir=scratch)) if scratch
+                else tmp_path / f"case-{len(clients)}")
         private = root / "private"
         private.mkdir(parents=True)
         db = private / "api.sqlite3"

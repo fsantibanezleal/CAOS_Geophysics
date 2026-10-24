@@ -14,7 +14,7 @@ export type ExplanationId = "E01" | "E02" | "E03" | "E04";
 export const scenarioIds = ["prism-case-0", "prism-case-1", "prism-case-2"] as const;
 export type ScenarioId = typeof scenarioIds[number];
 export const M01_COURSE_CITATIONS: Citation[] = [
-  { id: "m01boule", label: "Boule 0.5", citation: "Boule 0.5.0: rotating normal potential, geodetic latitude and closed-form normal gravity at height.", url: "https://www.fatiando.org/boule/v0.5.0/user_guide/normal_gravity.html" },
+  { id: "m01boule", label: "Boule normal gravity", citation: "Boule 0.5.0: rotating normal potential, geodetic latitude and closed-form normal gravity at height.", url: "https://www.fatiando.org/boule/v0.5.0/user_guide/normal_gravity.html" },
   { id: "m01ellipsoid", label: "Boule height API", citation: "Boule 0.5.0 Ellipsoid: normal gravity evaluated at geodetic latitude and ellipsoidal height, not a surface-only formula.", url: "https://www.fatiando.org/boule/v0.5.0/api/generated/boule.Ellipsoid.html" },
   { id: "m01li", label: "Li and Götze 2001", citation: "Li, X. and Götze, H.-J. Ellipsoid, geoid, gravity, geodesy, and geophysics. Geophysics 66(6), 1660-1668 (2001). Reference-surface distinction; not a new reproduction of its numerical appendix.", doi: "10.1190/1.1487109" },
   { id: "m01geoid", label: "NOAA GEOID18", citation: "NOAA GEOID18 technical details: the stated NAD83(2011)/NAVD88 relationship, not a universal conversion or Bartlett datum resolution.", url: "https://www.ngs.noaa.gov/GEOID/GEOID18/geoid18_tech_details.shtml" },

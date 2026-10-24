@@ -201,7 +201,7 @@ export function EdiFixtures() {
         <div className="table-scroll"><table className="cmp-table"><thead><tr><th>{t("Calibration", "Calibración")}</th><th>{t("Realizations", "Realizaciones")}</th><th>{t("Layer coverage", "Cobertura por capa")}</th><th>{t("Failures", "Fallos")}</th><th>{t("Record", "Registro")}</th></tr></thead><tbody>{bundle.calibration.map(c => <tr key={c.id}><td>{c.id === "halfspace" ? t("Half-space", "Semiespacio") : t("Layered calibration", "Calibración estratificada")}</td><td>{c.realizations}</td><td>{c.coverage_per_layer.map(v => format(v * 100) + "%").join(" · ")}</td><td>{c.failures}</td><td><a download href={appBase + "data/v2/" + ediPath(c.artifact)}>{t("Download", "Descargar")}</a></td></tr>)}</tbody></table></div>
         {bundle.calibration.map(c => <details key={c.id}><summary>{c.id === "halfspace" ? t("Half-space calibration intervals", "Intervalos de calibración del semiespacio") : t("Layered calibration intervals", "Intervalos de calibración estratificada")}</summary><EdiCalibrationView filename={c.artifact} /></details>)}
       </section>}
-      <p className="plot-note">{t("Fixture license", "Licencia de archivos")}: {bundle.license}. {t("Parser dependency", "Dependencia del lector")}: {bundle.parser_dependency}.</p>
+      <p className="plot-note">{t("Fixture license", "Licencia de archivos")}: <code translate="no">{bundle.license}</code>. {t("Parser dependency", "Dependencia del lector")}: {bundle.parser_dependency}.</p>
     </>}
     <Refs ids={["mtpy", "heagy2017", "scipytrf"]} label={t("References", "Referencias")} />
   </section>;

@@ -33,4 +33,4 @@ runtime, owner-scoped queue, terminal/export/restart/deletion/cancellation gates
 browser receipt interpretation and the single-ML-VPS release check.
 
 The original numerical thresholds and native resource limits are unchanged.
-No GitHub Pages deployment or secondary application origin is introduced.
+The frontend, API and protected job endpoints use the single canonical ML VPS origin.

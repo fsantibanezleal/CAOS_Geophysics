@@ -8,11 +8,11 @@ The browser path is `catalogue → selected artifact → family-specific rendere
 
 Six shared-shell routes separate the instrument, introduction, methods, implementation, experiments and benchmark. EN/ES and light/dark states use shared-shell stores. Browser failures are visible. An aborted artifact request cannot overwrite a newer selection. No secret or service credential is in the frontend.
 
-Both GitHub Pages and the ML VPS host a static build. Local CUDA and CPU compute are explicitly separated from public inspection. VPS releases use timestamped directories and an atomic current symlink. The prior release remains available for rollback. Pages produces direct route entrypoints and correct project-base artifact paths.
+The sole application origin is `https://geophysics.ml.fasl-work.com/` on the ML VPS. The validated frontend and API share that origin; no second public application is published. Local CUDA and CPU compute remain separate from public browsing. VPS releases use timestamped directories and an atomic `current` symlink, retaining the current release and two rollback releases. GitHub Actions validates code and artifacts but does not publish the application.
 
 ## Authenticated project and raw-source API foundation (unreleased)
 
-The approved replacement design activates `app/` as a FastAPI service on the future single ML VPS origin. This branch contains account, project and private original-byte operations only. It is not connected to the currently released static frontend and it runs no solver or background calculation. No `/jobs` route exists. The current Pages and VPS static release described above remains the public application until the integrated release gates pass.
+The approved replacement uses `app/` as a FastAPI service on the sole ML VPS origin. Public educational content and browser calculations remain open; protected project, upload and server-compute routes require the internal account database. This release is not complete until the scientific, security, UI and host acceptance gates pass.
 
 FastAPI Users owns password hashing, registration, verification, reset and database-backed cookie tokens. Reset revokes all existing account tokens. The service adds origin and CSRF checks plus SQLite-backed rate windows before unsafe requests reach library or project routes. SQLite metadata is changed only through committed Alembic migrations. All project and asset queries include the authenticated owner ID, with foreign IDs returning the same 404 as missing IDs.
 

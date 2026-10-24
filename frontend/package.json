@@ -12,7 +12,7 @@
     "gate": "node scripts/gate.mjs"
   },
   "dependencies": {
-    "@fasl-work/caos-app-shell": "0.19.0",
+    "@fasl-work/caos-app-shell": "0.19.1",
     "fflate": "0.8.3",
     "katex": "^0.19.1",
     "lucide-react": "^0.577.0",

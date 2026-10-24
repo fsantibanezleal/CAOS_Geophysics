@@ -80,7 +80,7 @@ export function EarthScene({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, -0.45, 0);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.12;
+    controls.dampingFactor = 0.5;
     controls.minDistance = 1.8;
     controls.maxDistance = 9;
     controls.maxPolarAngle = Math.PI * 0.78;
@@ -330,13 +330,16 @@ export function EarthScene({
       attributeFilter: ["data-theme"],
     });
     const resize = new ResizeObserver(() => {
-      const { width, height } = container.getBoundingClientRect();
+      // Fractional layout jitter must not continuously resize the WebGL canvas.
+      const rect = container.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
       const nextPixelRatio = Math.min(devicePixelRatio, 2);
       if (
         width > 0 &&
         height > 0 &&
-        (width !== viewportWidth ||
-          height !== viewportHeight ||
+        (Math.abs(width - viewportWidth) > 1 ||
+          Math.abs(height - viewportHeight) > 1 ||
           nextPixelRatio !== pixelRatio)
       ) {
         viewportWidth = width;
@@ -347,7 +350,7 @@ export function EarthScene({
         }
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
-        camera.zoom = Math.min(1, camera.aspect / 1.25);
+        camera.zoom = Math.min(1.35, camera.aspect / 1.25);
         camera.updateProjectionMatrix();
         invalidate();
       }

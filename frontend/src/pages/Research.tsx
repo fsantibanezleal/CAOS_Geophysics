@@ -755,7 +755,7 @@ export function Experiments() {
                       </tr>
                       <tr>
                         <td>MT</td>
-                        <td>36 · 0.01–100 Hz</td>
+                        <td>{t("36 · 0.01–100 Hz", "36 · 0,01–100 Hz")}</td>
                         <td>18</td>
                         <td>
                           {t("Active / withheld real components separately; legacy complex WRMS over all frequencies", "Componentes reales activas / omitidas por separado; WRMS complejo legado en todas las frecuencias")}
@@ -905,7 +905,7 @@ export function Experiments() {
                             "Matriz de casos y particiones",
                           )}
                         </td>
-                        <td>CC-BY-4.0</td>
+                        <td><code translate="no">CC-BY-4.0</code></td>
                       </tr>
                       <tr>
                         <td>
@@ -1115,7 +1115,7 @@ export function Benchmark() {
                   <tr>
                     <th>{t("Case", "Caso")}</th>
                     {cases[0].variants.map((v) => (
-                      <th key={v.id}>{es ? v.name_es : v.name}</th>
+                      <th key={v.id}>{es ? v.name_es.replace(/(\d)\.(\d)/g, "$1,$2") : v.name}</th>
                     ))}
                   </tr>
                 </thead>

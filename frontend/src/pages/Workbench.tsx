@@ -999,6 +999,7 @@ export default function Workbench() {
           <span className="small-caps">{entry && familyLabels[entry.family][lang]} / {String((catalog?.cases.findIndex((c) => c.id === selected) ?? 0) + 1).padStart(2, "0")}</span>
           <h1>{es ? entry?.name_es : entry?.name}</h1>
         </div>
+        {deploymentMode === "single-origin" && <button ref={projectLauncher} className="btn" onClick={() => setProjectsOpen(true)}>{t("Projects & raw data", "Proyectos y datos originales")}</button>}
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "velocity-local"); return next; }, {replace:true})}>{t("Open local velocity result", "Abrir resultado local de velocidad")}</button>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "profile-local"); return next; }, {replace:true})}>{t("Open local ERT / traveltime result", "Abrir resultado local ERT / tiempo de viaje")}</button>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "fwi-local"); return next; }, {replace:true})}>{t("Open local acoustic FWI result", "Abrir resultado local FWI acústico")}</button>
@@ -1055,8 +1056,18 @@ export default function Workbench() {
             }}
           >
             {Object.entries(run?.methods ?? {}).map(([id, m]) => (
-              <option key={id} value={id}>
-                {methodName(id, es, es ? m.name_es : m.name)}
+              <option
+                key={id}
+                value={id}
+                title={methodName(id, es, es ? m.name_es : m.name)}
+              >
+                {id === "mt-lm"
+                  ? t("TRF · bounded LS", "Mínimos cuadrados TRF")
+                  : id === "fwi-multiscale"
+                    ? t("Acoustic FWI · FC", "FWI acústica · FC")
+                    : id === "joint"
+                      ? t("Cross-gradient inversion", "Gradiente cruzado")
+                      : methodName(id, es, es ? m.name_es : m.name)}
               </option>
             ))}
           </select>
@@ -1216,7 +1227,6 @@ export default function Workbench() {
         label: { en: "Case analysis", es: "Análisis del caso" },
         content: <>
       <section className="instrument-main" aria-label={es ? entry?.name_es : entry?.name}>
-        {deploymentMode === "single-origin" && <div className="project-launch"><span className="project-launch-context">{t("Curated case view · private originals are separate", "Caso curado · los originales privados son independientes")}</span><button ref={projectLauncher} className="btn" onClick={() => setProjectsOpen(true)}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>}
         {error ? (
           <div role="alert" className="load-state">
             {error}
@@ -1263,13 +1273,17 @@ export default function Workbench() {
                 {
                   id: "recovery",
                   label: t("Inversion", "Inversión"),
-                  content: <div className="evidence-layout"><TargetEvidence run={run} methodId={methodId} />{recovery}<UncertaintyView run={run} method={method} section={section} /></div>,
+                  content: <div className="evidence-layout">{recovery}<TargetEvidence run={run} methodId={methodId} /><UncertaintyView run={run} method={method} section={section} /></div>,
                 },
                 {
                   id: "question",
                   label: t("Case analysis", "Análisis del caso"),
                   content: (
                     <div className="context-view">
+                      <section className="case-evidence" aria-label={t("Observed and modelled evidence", "Evidencia observada y modelada")}>
+                        <h3>{t("Observed data and selected-model response", "Datos observados y respuesta del modelo seleccionado")}</h3>
+                        {measurements}
+                      </section>
                       <span className="small-caps">
                         {t(
                           "Experimental conditions",

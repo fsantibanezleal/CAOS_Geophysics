@@ -1,8 +1,8 @@
 # Vendored CAOS shell gate
 
-This directory vendors the measured gate shipped by `@fasl-work/caos-app-shell@0.19.0`, the exact shell version pinned in `frontend/package.json`. The UI and shell components continue to come from that npm package. The product runs this owned copy so its route and artifact requirements are explicit, reviewable, and independent of edits to `node_modules`.
+This directory vendors the measured gate shipped by `@fasl-work/caos-app-shell@0.19.1`, the exact shell version pinned in `frontend/package.json`. The UI and shell components continue to come from that npm package. The product runs this owned copy so its route and artifact requirements are explicit, reviewable, and independent of edits to `node_modules`.
 
-Upstream npm package integrity: `sha512-ExhDigujqbcw95a50ASx80EuCZRoni4/3iVI0enzgiegkZH/gxEdsVMvnpHQnKVyjnc9d83RQ1Nfesxrk2ntNA==`.
+Upstream npm package integrity: `sha512-Sh3AiWPgFsm96cMNOOv8cZ8LTDsXe5X8ZbNQXt8rE71Gf51YDY6wMhb1J7Wzsm/w+CQzd0GfzMry8iEr4eqAqw==`.
 
 The five gate modules below are otherwise copied from the package. Their upstream SHA-256 values are recorded here so the vendored baseline can be reconciled on a shell upgrade:
 
@@ -22,6 +22,8 @@ The five gate modules below are otherwise copied from the package. Their upstrea
 4. JSON response bodies are measured with real HTTP GETs to the gate's configured origin. For every fetched JSON path, the gate checks HTTP 200, `application/json`, reads the complete response body, checks `Content-Length` when supplied, parses JSON, and records byte length and SHA-256. It additionally requires the browser workbench to fetch all four FWI reference files and checks each response's `inverse-earth/v2` schema and case id.
 
 The artifact verification does not read files from `dist` directly. In the default local run, the HTTP origin is the shell gate's static server over `frontend/dist`, so the measured bytes are the bytes the server actually returns. With `--url`, the same checks run against the supplied origin.
+
+The five upstream gate modules have the same SHA-256 values in shell 0.19.1 as in 0.19.0; `gate/run.mjs` retains the documented product-specific adaptations above. Shell 0.19.1 also fixes narrow-screen flowing PlotCard content and localizes UPlot date labels; see the upstream changelog for the release details.
 
 When upgrading the shell pin, replace this baseline from the matching published npm package, reconcile the product changes above, update the hashes and rerun the full product gate. Do not patch the installed package at runtime.
 

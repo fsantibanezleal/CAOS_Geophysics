@@ -50,8 +50,8 @@ const config: ShellConfig = {
   visibility: "public",
   contain: true,
   license: {
-    en: "Apache-2.0 code and CC-BY-4.0 content",
-    es: "Código Apache-2.0 y contenido CC-BY-4.0",
+    en: "Apache code license · CC BY content license",
+    es: "Licencia Apache para código · licencia CC BY para contenido",
   },
   architecture,
   fixedRoutes: ["/"],
@@ -60,17 +60,9 @@ const config: ShellConfig = {
       en: "Developed by Felipe Santibáñez-Leal",
       es: "Desarrollado por Felipe Santibáñez-Leal",
     },
-    provenance: {
-      en: "Geophysical observations and method evidence.",
-      es: "Observaciones geofísicas y evidencia de métodos.",
-    },
     license: {
-      en: "Apache-2.0 code and CC-BY-4.0 content",
-      es: "Código Apache-2.0 y contenido CC-BY-4.0",
-    },
-    disclaimer: {
-      en: "Inspect source, units and method-specific limitations.",
-      es: "Revise fuente, unidades y límites específicos del método.",
+      en: "Apache code license · CC BY content license",
+      es: "Licencia Apache para código · licencia CC BY para contenido",
     },
   },
 };

@@ -1,6 +1,6 @@
 # Actual ML-host MT admission observations
 
-This is measured backend admission evidence, not a product release. The public site, nginx configuration, DNS, GitHub Pages and production private state are unchanged. Online MT activation remains closed.
+This is measured backend admission evidence, not a product release. The existing ML VPS release, Nginx configuration, DNS and production private state are unchanged. Online MT activation remains closed.
 
 ## Immutable execution and restrictions
 

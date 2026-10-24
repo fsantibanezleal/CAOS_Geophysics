@@ -101,6 +101,9 @@ describe("online MT course", () => {
       expect(current.split(newCopy)).toHaveLength(2);
       expected = expected.replace(oldCopy, newCopy);
     }
+    expected = expected.replace("<td>CC-BY-4.0</td>", '<td><code translate="no">CC-BY-4.0</code></td>');
+    expected = expected.replace("<td>36 · 0.01–100 Hz</td>", '<td>{t("36 · 0.01–100 Hz", "36 · 0,01–100 Hz")}</td>');
+    expected = expected.replace('{es ? v.name_es : v.name}', '{es ? v.name_es.replace(/(\\d)\\.(\\d)/g, "$1,$2") : v.name}');
     expect(current.replaceAll("\r\n", "\n")).toBe(expected.replaceAll("\r\n", "\n"));
     const diagram = source("components/OnlineMTDiagram.tsx"), css = source("components/OnlineMTCourse.module.css");
     expect(diagram).toContain("useShellLang");
