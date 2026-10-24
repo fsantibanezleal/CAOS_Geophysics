@@ -11,6 +11,7 @@ import {
 } from "@fasl-work/caos-app-shell";
 import { Activity } from "lucide-react";
 import "@fasl-work/caos-app-shell/styles.css";
+import "@fasl-work/caos-app-shell/chart.css";
 import "./styles.css";
 import { CITATIONS } from "./data/citations";
 import { architecture } from "./architecture";

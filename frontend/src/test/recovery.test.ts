@@ -161,7 +161,7 @@ describe("evidence contracts", () => {
     const m = method({ model: [100, 200], uncertainty: ensemble() });
     const r = run({ family: "mt", truth: [100, 240], methods: { "mt-lm": m } });
     const html = renderToStaticMarkup(createElement(UncertaintyView, { run: r, method: m, section: 0 }));
-    expect(html).toContain("not posterior"); expect(html).toContain("50%"); expect(html).toContain("empirical quantiles"); expect(html).toContain("fill-opacity");
+    expect(html).toContain("not posterior"); expect(html).toContain("50%"); expect(html).toContain("empirical quantiles"); expect(html).toContain("empirical quantiles lower"); expect(html).toContain("empirical quantiles upper");
     expect(renderToStaticMarkup(createElement(UncertaintyView, { run: r, method: method(), section: 0 }))).toBe("");
   });
   it("renders PGI secondary property and independent prior data", () => {

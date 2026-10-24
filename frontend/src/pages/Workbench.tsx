@@ -8,7 +8,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
-import { Tabs, useShellLang } from "@fasl-work/caos-app-shell";
+import { CaseWorkbench, Tabs, useShellLang, type CaseDef } from "@fasl-work/caos-app-shell";
 import { M11ScientificCourse } from "../components/M11ScientificCourse";
 import { EarthScene } from "../components/EarthScene";
 import {
@@ -78,6 +78,7 @@ function Range({
         aria-label={label}
         type="range"
         className="range"
+        data-control={label}
         min={min}
         max={max}
         step={step}
@@ -343,7 +344,7 @@ export default function Workbench() {
               </button>
             </div>
             <label>
-              <input
+                <input
                 type="checkbox"
                 checked={survey}
                 onChange={(e) => setSurvey(e.target.checked)}
@@ -409,6 +410,7 @@ export default function Workbench() {
                 <span>{t("Representation", "Representación")}</span>
                 <select
                   className="select"
+                  data-control="representation"
                   aria-label={t("Representation", "Representación")}
                   value={representation}
                   onChange={(e) =>
@@ -799,6 +801,7 @@ export default function Workbench() {
             {t("Source position", "Posición de fuente")}
             <select
               className="select"
+              data-control="source-position"
               value={shot}
               onChange={(e) => setShot(+e.target.value)}
             >
@@ -975,34 +978,26 @@ export default function Workbench() {
     <ProjectProcessingWorkbench key={processingProjectId} projectId={processingProjectId} es={es} onManage={() => setProjectsOpen(true)} onCurated={() => selectProcessingProject("")} />
     {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOwnerCleared={() => selectProcessingProject("")} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
   </>;
+  const shellCases: CaseDef[] = (catalog?.cases ?? []).map((c) => ({
+    id: c.id,
+    name: es ? c.name_es : c.name,
+    category: familyLabels[c.family][lang],
+    kind: "synthetic",
+    anchor: `${c.geometry} · seed ${c.seed}`,
+  }));
   return (
-    <div className="page-body wide workbench">
+    <CaseWorkbench
+      caseId={selected}
+      cases={shellCases.length ? { cases: shellCases, selectedId: selected, onSelect: select, layout: "select", deepLink: true, lang: es ? "es" : "en" } : undefined}
+      source={run?.provenance.synthetic ? "synthetic" : "real"}
+      controls={{ variant, methodId, mode, section, cut, representation, threshold, opacity, survey, angle, angleStep, speed, orbit, frame, modelState, playing, blend, shot, gain, playbackKind }}
+      railLabel={t("Geophysical experiment controls", "Controles del experimento geofísico")}
+      rail={
       <aside className={`instrument-sidebar ${controlsOpen ? "expanded" : ""}`}>
         <div className="instrument-brand">
           <span className="small-caps">{entry && familyLabels[entry.family][lang]} / {String((catalog?.cases.findIndex((c) => c.id === selected) ?? 0) + 1).padStart(2, "0")}</span>
           <h1>{es ? entry?.name_es : entry?.name}</h1>
         </div>
-        <label className="select-control">
-          <span>01 / {t("Geological case", "Caso geológico")}</span>
-          <select
-            className="select"
-            aria-label={t("Geological case", "Caso geológico")}
-            value={selected}
-            onChange={(e) => select(e.target.value)}
-          >
-            {Object.entries(familyLabels).map(([family, labels]) => (
-              <optgroup key={family} label={labels[lang]}>
-                {catalog?.cases
-                  .filter((c) => c.family === family)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {es ? c.name_es : c.name}
-                    </option>
-                  ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "velocity-local"); return next; }, {replace:true})}>{t("Open local velocity result", "Abrir resultado local de velocidad")}</button>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "profile-local"); return next; }, {replace:true})}>{t("Open local ERT / traveltime result", "Abrir resultado local ERT / tiempo de viaje")}</button>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "fwi-local"); return next; }, {replace:true})}>{t("Open local acoustic FWI result", "Abrir resultado local FWI acústico")}</button>
@@ -1031,6 +1026,7 @@ export default function Workbench() {
           <span>02 / {t("Experiment", "Experimento")}</span>
           <select
             className="select"
+            data-control="experiment"
             aria-label={t("Experiment", "Experimento")}
             value={variant}
             onChange={(e) => setVariant(e.target.value)}
@@ -1046,6 +1042,7 @@ export default function Workbench() {
           <span>03 / {t("Inverse method", "Método inverso")}</span>
           <select
             className="select"
+            data-control="inverse-method"
             aria-label={t("Inverse method", "Método inverso")}
             value={methodId}
             onChange={(e) => {
@@ -1074,6 +1071,7 @@ export default function Workbench() {
                 <span>{t("Recorded process", "Proceso registrado")}</span>
                 <select
                   className="select"
+                  data-control="recorded-process"
                   aria-label={t("Animation process", "Proceso animado")}
                   value={playbackKind}
                   onChange={(e) => {
@@ -1134,6 +1132,7 @@ export default function Workbench() {
               aria-label={t("Replay frame", "Cuadro de reproducción")}
               type="range"
               className="range"
+              data-control="replay-frame"
               min={0}
               max={Math.max(0, count - 1)}
               value={Math.min(frame, Math.max(0, count - 1))}
@@ -1210,7 +1209,11 @@ export default function Workbench() {
           {method && <EvaluationStatus method={method} methodId={methodId} variant={run?.variant} />}
         </div>
         </>}
-      </aside>
+      </aside>}
+      groups={[{
+        id: "analysis",
+        label: { en: "Case analysis", es: "Análisis del caso" },
+        content: <>
       <section className="instrument-main" aria-label={es ? entry?.name_es : entry?.name}>
         {deploymentMode === "single-origin" && <div className="project-launch"><span className="project-launch-context">{t("Curated case view · private originals are separate", "Caso curado · los originales privados son independientes")}</span><button ref={projectLauncher} className="btn" onClick={() => setProjectsOpen(true)}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>}
         {error ? (
@@ -1232,16 +1235,25 @@ export default function Workbench() {
               key={selected}
               ariaLabel={t("Scientific views", "Vistas científicas")}
               tabs={[
-                ...(run.family === "joint" ? [{
-                  id: "supplied-joint-method",
-                  label: t("Supplied-survey theory", "Teoría para levantamientos"),
-                  content: <M11ScientificCourse />,
-                }] : []),
                 {
                   id: "earth",
                   label: t("Model", "Modelo"),
                   content: <>{run.family !== "learned" && !physical && <p className="plot-note" role="status">{playbackKind === "wave" && run.family === "seismic" ? t("Synthetic-target wavefield; not propagation in the recovered model.", "Campo de ondas del objetivo sintético; no propagación en el modelo recuperado.") : displayedState}. {t("Data predictions and evaluation remain at the selected final model.", "Las predicciones y evaluación corresponden al modelo final seleccionado.")}</p>}{earth}</>,
                 },
+                ...(run.family === "joint" ? [{
+                  id: "supplied-joint-method",
+                  label: t("Supplied-survey theory", "Teoría para levantamientos"),
+                  content: <>
+                    {run.survey?.observed && Array.isArray(method.predicted) && typeof method.predicted[0] === "number" && <Plot
+                      title={t("Supplied gravity observations and selected-model response", "Observaciones gravimétricas suministradas y respuesta del modelo seleccionado")}
+                      x={indices(run.survey.observed.length)}
+                      series={[{ name: t("Observed", "Observado"), values: run.survey.observed, points: true }, { name: t("Selected-model prediction", "Predicción del modelo seleccionado"), values: method.predicted as number[] }]}
+                      xLabel={t("Original gravity station index [1]", "Índice original de estación gravimétrica [1]")}
+                      yLabel={run.data_units}
+                    />}
+                    <M11ScientificCourse />
+                  </>,
+                }] : []),
                 {
                   id: "observations",
                   label: t("Data", "Datos"),
@@ -1362,6 +1374,17 @@ export default function Workbench() {
         )}
       </section>
       {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
-    </div>
+      </>,
+      }]}
+      context={{
+        label: { en: "Scientific interpretation", es: "Interpretación científica" },
+        content: <div className="context-view">
+          <h2>{lesson.question[lang]}</h2>
+          <p>{lesson.read[lang]}</p>
+          <p>{lesson.limit[lang]}</p>
+        </div>,
+      }}
+      focus
+    />
   );
 }

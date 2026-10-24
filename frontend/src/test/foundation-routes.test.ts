@@ -70,8 +70,11 @@ describe("frontend route and shell foundation", () => {
     expect(gate).toContain("'--require-focus'");
     expect(gate).toContain("'--workbench', appRoute");
     expect(gate).toContain("'--spa-fallback'");
-    expect(gate).toContain("['G18', 'G20']");
-    expect(gate).toContain("an unmeasured requirement, not a pass");
+    expect(gate).toContain("failure counts only");
+    expect(gate).toContain("report.states < 1");
+    expect(read("../pages/Workbench.tsx")).toContain("<CaseWorkbench");
+    expect(read("../pages/Workbench.tsx")).toContain('data-control="inverse-method"');
+    expect(read("../main.tsx")).toContain('@fasl-work/caos-app-shell/chart.css');
     const manifestJson = JSON.parse(read("../../../product.json"));
     expect(manifestJson.name).toBe("Inverse Earth Studio");
     expect(manifestJson.workbench_route).toBe("/");

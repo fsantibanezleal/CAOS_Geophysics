@@ -633,6 +633,19 @@
 .evidence-layout code {
   overflow-wrap: anywhere;
 }
+.science-plot-shell {
+  width: 100%;
+  min-width: 0;
+}
+.science-plot-shell .caos-chart-table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+}
+.science-plot-shell .caos-chart-table th,
+.science-plot-shell .caos-chart-table td {
+  overflow-wrap: anywhere;
+}
 .evaluation-status {
   padding: 0.4rem 0.6rem;
   border-left: 2px solid var(--color-border);
@@ -776,6 +789,15 @@
 .context-view p,
 .context-view li {
   max-width: 70ch;
+}
+.context-view,
+.context-view > *,
+.parameter-ledger > * {
+  min-width: 0;
+}
+.context-view code,
+.parameter-ledger dd {
+  overflow-wrap: anywhere;
 }
 .investigation {
   display: flex;

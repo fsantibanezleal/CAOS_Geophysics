@@ -1,5 +1,8 @@
 // Run the published CAOS shell gate against this product's built single-origin app.
 // Keep the six-route manifest authoritative and require Focus on the real App route.
+// Shell 0.19.0 reports `checks` as failure counts only; a missing G18/G20 key means
+// no failure was recorded, not that a measurement was skipped. The gate runs G18
+// for every configured workbench route and G20 during every measured route state.
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -59,11 +62,9 @@ const reportPath = join(root, 'frontend', 'gate-output', 'gate-report.json');
 if (existsSync(reportPath)) {
   try {
     const report = JSON.parse(readFileSync(reportPath, 'utf8'));
-    for (const id of ['G18', 'G20']) {
-      if (!Number.isInteger(report.checks?.[id]) || report.checks[id] < 1) {
-        console.error(`gate: ${id} recorded no measurements; this is an unmeasured requirement, not a pass`);
-        exitCode = 1;
-      }
+    if (!Number.isInteger(report.states) || report.states < 1) {
+      console.error('gate: the published shell gate reported no measured route states');
+      exitCode = 1;
     }
   } catch (error) {
     console.error(`gate: could not read the published shell report at ${reportPath}: ${error.message}`);
