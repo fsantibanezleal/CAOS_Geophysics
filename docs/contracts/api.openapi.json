@@ -2,87 +2,1321 @@
   "openapi": "3.1.0",
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "info": {
-    "title": "Geophysics private-state API",
+    "title": "CAOS Geophysics private-state API",
     "version": "1.0.0",
-    "summary": "Authenticated project, source asset and bounded processing-job API.",
-    "description": "Contract index for existing routes. Exact request and response validation remains in the executable Python models and TypeScript clients. This file does not claim complete generated OpenAPI parity."
+    "summary": "OpenAPI description of the implemented authenticated API routes.",
+    "description": "Static contract for app/server.py. Email account routes are registered only when auth_mode=email. The physical participant adds no routes; it participates in existing DELETE/upload/dataset paths. Public pages and browser-local calculations are outside this API. This contract describes the current implementation; it does not change runtime behavior."
   },
   "servers": [
-    { "url": "https://geophysics.ml.fasl-work.com" }
+    {
+      "url": "https://geophysics.ml.fasl-work.com",
+      "description": "Configured ML VPS origin; deployment availability is not implied."
+    }
+  ],
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Cookie session, CSRF and configuration."
+    },
+    {
+      "name": "projects",
+      "description": "Owner-scoped projects and original source assets."
+    },
+    {
+      "name": "processing",
+      "description": "Immutable datasets and bounded jobs/results."
+    }
+  ],
+  "security": [
+    {
+      "apiSession": []
+    }
   ],
   "paths": {
     "/api/auth/config": {
       "get": {
+        "tags": [
+          "auth"
+        ],
         "operationId": "getAuthConfig",
-        "responses": { "200": { "description": "Configured local authentication mode." } }
+        "responses": {
+          "200": {
+            "description": "Configured auth mode and enabled email flows.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/AuthConfig"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/api/auth/csrf": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "getCsrfToken",
+        "responses": {
+          "200": {
+            "description": "CSRF token; also sets the HttpOnly CSRF cookie.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/CsrfToken"
+                }
+              }
+            },
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              }
+            }
+          }
+        },
+        "security": []
       }
     },
     "/api/auth/me": {
       "get": {
+        "tags": [
+          "auth"
+        ],
         "operationId": "getCurrentUser",
-        "responses": { "200": { "description": "Current authenticated account." }, "401": { "description": "Authentication required." } }
+        "responses": {
+          "200": {
+            "description": "Current active account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/auth/cookie/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "loginCookie",
+        "responses": {
+          "204": {
+            "description": "Authenticated; sets session cookie.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/cookie/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "logoutCookie",
+        "responses": {
+          "204": {
+            "description": "Session cookie cleared."
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "registerAccount",
+        "responses": {
+          "201": {
+            "description": "Created account; verification email is requested.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/UserCreate"
+              }
+            }
+          }
+        },
+        "x-registered-when": "auth_mode=email"
+      }
+    },
+    "/api/auth/verify/request": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "requestVerification",
+        "responses": {
+          "202": {
+            "description": "Verification request accepted."
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/EmailRequest"
+              }
+            }
+          }
+        },
+        "x-registered-when": "auth_mode=email"
+      }
+    },
+    "/api/auth/verify/verify": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "verifyAccount",
+        "responses": {
+          "200": {
+            "description": "Verified account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/TokenRequest"
+              }
+            }
+          }
+        },
+        "x-registered-when": "auth_mode=email"
+      }
+    },
+    "/api/auth/reset-password/forgot-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "requestPasswordReset",
+        "responses": {
+          "202": {
+            "description": "Reset request accepted."
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/EmailRequest"
+              }
+            }
+          }
+        },
+        "x-registered-when": "auth_mode=email"
+      }
+    },
+    "/api/auth/reset-password/reset-password": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "operationId": "resetPassword",
+        "responses": {
+          "200": {
+            "description": "Password reset completed."
+          },
+          "400": {
+            "$ref": "#/components/responses/AuthError"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/PasswordReset"
+              }
+            }
+          }
+        },
+        "x-registered-when": "auth_mode=email"
       }
     },
     "/api/projects": {
       "get": {
+        "tags": [
+          "projects"
+        ],
         "operationId": "listProjects",
-        "responses": { "200": { "description": "Projects visible to the authenticated owner." } }
+        "responses": {
+          "200": {
+            "description": "Projects owned by the authenticated account.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/ProjectList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       },
       "post": {
+        "tags": [
+          "projects"
+        ],
         "operationId": "createProject",
-        "responses": { "201": { "description": "Created owner-scoped project." } }
+        "responses": {
+          "201": {
+            "description": "Created project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/ProjectCreate"
+              }
+            }
+          }
+        }
       }
     },
     "/api/projects/{project_id}": {
       "parameters": [
-        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        {
+          "$ref": "#/components/parameters/project_id"
+        }
       ],
       "get": {
+        "tags": [
+          "projects"
+        ],
         "operationId": "getProject",
-        "responses": { "200": { "description": "Owner-scoped project." }, "404": { "description": "Project not found." } }
+        "responses": {
+          "200": {
+            "description": "Owner-scoped project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Project"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       },
       "patch": {
+        "tags": [
+          "projects"
+        ],
         "operationId": "updateProject",
-        "responses": { "200": { "description": "Updated project." } }
+        "responses": {
+          "200": {
+            "description": "Updated project.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Project"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/ProjectUpdate"
+              }
+            }
+          }
+        }
       },
       "delete": {
+        "tags": [
+          "projects"
+        ],
         "operationId": "deleteProject",
-        "responses": { "204": { "description": "Project and owned state deleted." } }
+        "responses": {
+          "204": {
+            "description": "Deleted project and its owned private state."
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ]
       }
     },
     "/api/projects/{project_id}/assets": {
       "parameters": [
-        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        {
+          "$ref": "#/components/parameters/project_id"
+        }
       ],
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "operationId": "listProjectAssets",
+        "responses": {
+          "200": {
+            "description": "Raw asset receipts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/AssetList"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
+        "tags": [
+          "projects"
+        ],
         "operationId": "uploadProjectAsset",
-        "responses": { "201": { "description": "Immutable uploaded asset receipt." }, "413": { "description": "Upload exceeds configured limit." } }
+        "responses": {
+          "201": {
+            "description": "Immutable raw asset receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/RawAsset"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error"
+          },
+          "415": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/csv": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "image/tiff": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/geotiff": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/vnd.fdsn.mseed": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/x-segy": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/x-hdf5": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "type": "string",
+                "contentEncoding": "binary"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/assetMetadata"
+          }
+        ],
+        "description": "Upload bytes in the request body. X-Asset-Metadata contains the JSON metadata envelope."
+      }
+    },
+    "/api/projects/{project_id}/assets/{asset_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/asset_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "operationId": "getProjectAsset",
+        "responses": {
+          "200": {
+            "description": "Raw asset receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/RawAsset"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/assets/{asset_id}/download": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/asset_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "operationId": "downloadProjectAsset",
+        "responses": {
+          "200": {
+            "description": "Verified original file bytes; Content-Type is the uploaded asset MIME.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "image/tiff": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/geotiff": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/vnd.fdsn.mseed": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/x-segy": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/x-hdf5": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Content-SHA256": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Sha256"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/export": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "operationId": "exportProjectOriginals",
+        "responses": {
+          "200": {
+            "description": "ZIP of project record, manifest and verified original assets.",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       }
     },
     "/api/projects/{project_id}/datasets": {
       "parameters": [
-        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        {
+          "$ref": "#/components/parameters/project_id"
+        }
       ],
       "get": {
-        "operationId": "listDatasets",
-        "responses": { "200": { "description": "Validated project datasets." } }
+        "tags": [
+          "processing"
+        ],
+        "operationId": "listProjectDatasets",
+        "responses": {
+          "200": {
+            "description": "Immutable processed dataset receipts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/DatasetReceiptList"
+                }
+              }
+            }
+          }
+        }
       },
       "post": {
-        "operationId": "createDataset",
-        "responses": { "201": { "description": "Validated observation dataset." }, "422": { "description": "Dataset contract rejected." } }
+        "tags": [
+          "processing"
+        ],
+        "operationId": "createProjectDataset",
+        "responses": {
+          "201": {
+            "description": "Immutable observation dataset receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/DatasetReceipt"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/DatasetCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/datasets/{dataset_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/dataset_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "getProjectDataset",
+        "responses": {
+          "200": {
+            "description": "Verified modality-specific scientific observation envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/DatasetPayload"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/datasets/{dataset_id}/methods": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/dataset_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "getProjectDatasetMethods",
+        "responses": {
+          "200": {
+            "description": "Available and unavailable methods for this exact dataset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Methods"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       }
     },
     "/api/projects/{project_id}/jobs": {
       "parameters": [
-        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        {
+          "$ref": "#/components/parameters/project_id"
+        }
       ],
       "get": {
-        "operationId": "listJobs",
-        "responses": { "200": { "description": "Owner-scoped processing jobs." } }
+        "tags": [
+          "processing"
+        ],
+        "operationId": "listProjectJobs",
+        "responses": {
+          "200": {
+            "description": "Owner-scoped job records.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/JobList"
+                }
+              }
+            }
+          }
+        }
       },
       "post": {
-        "operationId": "createJob",
-        "responses": { "202": { "description": "Admitted bounded processing job." }, "409": { "description": "Method or resource admission refused." } }
+        "tags": [
+          "processing"
+        ],
+        "operationId": "createProjectJob",
+        "responses": {
+          "202": {
+            "description": "Accepted queued job record; execution is asynchronous.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Job"
+                }
+              }
+            }
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error"
+          },
+          "422": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "schemas/api-payloads.schema.json#/$defs/JobCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/jobs/{job_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/job_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "getProjectJob",
+        "responses": {
+          "200": {
+            "description": "Current job state and result receipt.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Job"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/jobs/{job_id}/cancel": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/job_id"
+        }
+      ],
+      "post": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "cancelProjectJob",
+        "responses": {
+          "200": {
+            "description": "Updated job cancellation state.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/Job"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        },
+        "security": [
+          {
+            "apiSession": [],
+            "csrfToken": [],
+            "csrfCookie": []
+          }
+        ]
+      }
+    },
+    "/api/projects/{project_id}/jobs/{job_id}/result": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/job_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "getProjectJobResult",
+        "responses": {
+          "200": {
+            "description": "Verified method-specific scientific result payload.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "schemas/api-payloads.schema.json#/$defs/ProcessingResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/jobs/{job_id}/export": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/job_id"
+        }
+      ],
+      "get": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "exportProjectJob",
+        "responses": {
+          "200": {
+            "description": "ZIP containing verified dataset, result and manifest; waveform jobs may carry extra members.",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/projects/{project_id}/jobs/{job_id}/artifacts/{name}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/project_id"
+        },
+        {
+          "$ref": "#/components/parameters/job_id"
+        },
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "processing"
+        ],
+        "operationId": "getWaveformJobArtifact",
+        "responses": {
+          "200": {
+            "description": "Named integrity-checked waveform member; JSON members use application/json and arrays use application/octet-stream.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              },
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "contentEncoding": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "geophysics_session",
+        "description": "Cookie name is __Host-geophysics_session when cookie_secure=true."
+      },
+      "csrfToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "State-changing calls also require the matching CSRF cookie."
+      },
+      "csrfCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "geophysics_csrf",
+        "description": "Cookie name is __Host-geophysics_csrf when cookie_secure=true."
+      }
+    },
+    "parameters": {
+      "project_id": {
+        "name": "project_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "asset_id": {
+        "name": "asset_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "dataset_id": {
+        "name": "dataset_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "job_id": {
+        "name": "job_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "assetMetadata": {
+        "name": "X-Asset-Metadata",
+        "in": "header",
+        "required": true,
+        "description": "JSON AssetMetadata envelope capped at 16 KiB. Request body contains raw file bytes, and Content-Type must match metadata.mime.",
+        "schema": {
+          "type": "string",
+          "contentMediaType": "application/json",
+          "contentSchema": {
+            "$ref": "schemas/api-payloads.schema.json#/$defs/UploadMetadata"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "Structured project/API error; validation errors may include field paths.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/api-payloads.schema.json#/$defs/Error"
+            }
+          }
+        }
+      },
+      "AuthError": {
+        "description": "FastAPI-Users error response.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "schemas/api-payloads.schema.json#/$defs/FrameworkError"
+            }
+          }
+        }
       }
     }
   }

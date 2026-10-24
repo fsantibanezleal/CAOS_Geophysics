@@ -10,8 +10,13 @@
     "sha256": "3298efb184bc65563b571deaa59c083ff097526e25d105ddddf53d7e16d247ce"
   },
   "private-api": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "schema": "docs/contracts/api.openapi.json",
-    "sha256": "0b6e941a67dba10c725dce2849764f9b8201c318858b6a77257b56aaba72c5a4"
+    "sha256": "b6eb000fb9163088f2d7d2af6aa9dcc55ff3d7093f5e9a7d88d801e63facfd32"
+  },
+  "api-payloads": {
+    "version": "1.0.0",
+    "schema": "docs/contracts/schemas/api-payloads.schema.json",
+    "sha256": "65f3622aa96bf468de7cb12ba6a07a7c4a2cb2f2b3ea96756dd4a272e2c60b55"
   }
 }

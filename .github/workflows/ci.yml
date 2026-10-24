@@ -20,10 +20,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install lightweight linter only
-        run: pip install ruff==0.15.18
+      - name: Install lightweight contract and lint checkers
+        run: pip install ruff==0.15.18 jsonschema==4.25.1
       - name: Lint
-        run: ruff check data-pipeline tests
+        run: ruff check data-pipeline tests scripts/build_api_contracts.py scripts/check_api_contracts.py
       - name: CONTRACT 2, manifests <-> artifacts consistent (no drift)
         run: python scripts/check_artifacts.py
       - name: M13 committed browser-asset integrity (no training)
@@ -34,6 +34,10 @@ jobs:
         run: python scripts/check_deploy_place.py
       - name: Contract catalog paths and required fields
         run: python scripts/check_contracts.py docs/contracts/catalog.md --repo-root .
+      - name: API route coverage, OpenAPI export and JSON Schema payload checks
+        run: |
+          python scripts/build_api_contracts.py --check
+          python scripts/check_api_contracts.py
       - name: Contract schema versions and lock
         env:
           BEFORE: ${{ github.event.before }}
