@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { color, extent, format } from "../science";
+import { color, extent } from "../science";
+import { formatForCurrentLocale as format } from "../lib/number-format";
 import type { ProfileModel } from "../api/profile-local-contracts";
 import { Legend } from "./ScientificPlots";
 import { PlotCard, Stage, type Provenance } from "@fasl-work/caos-app-shell";

@@ -8,10 +8,11 @@ import {
   type PhaseScores, type PhaseTrace,
 } from "../phase-picker";
 import { createPhaseSession, type PhaseSession } from "../phase-runtime";
+import { formatCount, formatNumber } from "../lib/number-format";
 
 const ASSET_BASE = `${appBase}data/phase/stead/`;
 const COLORS = ["var(--color-accent)", "var(--color-accent-2)", "var(--color-magenta)"];
-const formatTime = (sample: number) => `${(sample / PHASE_RATE_HZ).toFixed(2)} s`;
+const formatTime = (sample: number, es: boolean) => `${formatNumber(sample / PHASE_RATE_HZ, es ? "es-CL" : "en-US", { maximumFractionDigits: 2 })} s`;
 
 function envelope(values: Float32Array, start: number, end: number, plotWidth: number,
                   top: number, height: number, low: number, high: number): string {
@@ -74,7 +75,7 @@ function PhasePlot({ kind, trace, scores, start, duration, cursor, onCursor, rec
     <figcaption>
       <strong>{kind === "waveform" ? (es ? "Forma de onda E/N/Z" : "E/N/Z waveform") : (es ? "Puntajes N/P/S" : "N/P/S scores")}</strong>
       <output>{cursor !== null && values
-        ? `${formatTime(cursor)} · ${names.map((name, i) => `${name} ${values[i][cursor].toFixed(3)}`).join(" · ")}`
+        ? `${formatTime(cursor, es)} · ${names.map((name, i) => `${name} ${formatNumber(values[i][cursor], es ? "es-CL" : "en-US", { maximumFractionDigits: 3 })}`).join(" · ")}`
         : kind === "waveform" ? (es ? "Amplitud normalizada, sin dimensión" : "Normalized amplitude, dimensionless")
           : (es ? "Puntaje softmax, sin calibrar" : "Softmax score, uncalibrated")}</output>
     </figcaption>
@@ -91,7 +92,7 @@ function PhasePlot({ kind, trace, scores, start, duration, cursor, onCursor, rec
       }) : <>
         {[0, 0.5, 0.8, 1].map(level => <g key={level}>
           <line x1={left} x2={right} y1={215 - level * 185} y2={215 - level * 185} className="chart-grid" />
-          <text x={left - 6} y={219 - level * 185} textAnchor="end">{level.toFixed(1)}</text>
+          <text x={left - 6} y={219 - level * 185} textAnchor="end">{formatNumber(level, es ? "es-CL" : "en-US", { maximumFractionDigits: 1 })}</text>
         </g>)}
         <line x1={left} x2={right} y1={215 - PHASE_THRESHOLD * 185} y2={215 - PHASE_THRESHOLD * 185} className="phase-threshold" />
         {values?.map((series, i) => <path key={names[i]}
@@ -104,7 +105,7 @@ function PhasePlot({ kind, trace, scores, start, duration, cursor, onCursor, rec
       </>}
       {[0, 0.5, 1].map(fraction => <text key={fraction} x={left + fraction * inner} y={height - 6}
         textAnchor={fraction === 0 ? "start" : fraction === 1 ? "end" : "middle"}>
-        {(start + fraction * duration).toFixed(1)} s
+        {formatNumber(start + fraction * duration, es ? "es-CL" : "en-US", { maximumFractionDigits: 1 })} s
       </text>)}
       {visible(cursor) && <line x1={x(cursor!)} x2={x(cursor!)} y1="15" y2={height - 27} className="cursor-line" />}
     </svg>
@@ -232,7 +233,7 @@ export function PhasePickerPanel() {
     ? scores.reasons[phase] === "ps-separation"
       ? t("abstained: S−P < 0.4 s", "abstención: S−P < 0,4 s")
       : t("abstained: peak < 0.8", "abstención: máximo < 0,8")
-    : scores ? `${formatTime(scores.picks[phase]!)} · ${scores.peaks[phase].toFixed(4)}` : t("not computed", "sin cálculo");
+    : scores ? `${formatTime(scores.picks[phase]!, es)} · ${formatNumber(scores.peaks[phase], es ? "es-CL" : "en-US", { maximumFractionDigits: 4 })}` : t("not computed", "sin cálculo");
 
   return <section id="phase-picker" className="phase-picker" aria-label={t("M13 browser phase picker", "Detector de fases M13 en navegador")}>
     <div className="phase-heading">
@@ -277,12 +278,12 @@ export function PhasePickerPanel() {
       <div className="phase-arrivals">
         <div><span>P · {t("candidate", "candidata")}</span><strong>{labelPick("P")}</strong></div>
         <div><span>S · {t("candidate", "candidata")}</span><strong>{labelPick("S")}</strong></div>
-        <div><span>{t("Browser inference", "Inferencia web")}</span><strong>{elapsedMs?.toFixed(0)} ms</strong></div>
+        <div><span>{t("Browser inference", "Inferencia web")}</span><strong>{elapsedMs == null ? "" : formatNumber(elapsedMs, es ? "es-CL" : "en-US", { maximumFractionDigits: 0 })} ms</strong></div>
       </div>
       <div className="phase-window-controls">
         <label className="select-control"><span>{t("Display span", "Duración visible")}</span><select className="select" value={windowSeconds} onChange={e => { setWindowSeconds(Number(e.target.value)); setWindowStart(0); }}>
           {[60, 20, 10, 5].map(seconds => <option key={seconds} value={seconds}>{seconds} s</option>)}</select></label>
-        <label className="select-control"><span>{t("Display start", "Inicio visible")} · {windowStart.toFixed(1)} s</span>
+        <label className="select-control"><span>{t("Display start", "Inicio visible")} · {formatNumber(windowStart, es ? "es-CL" : "en-US", { maximumFractionDigits: 1 })} s</span>
           <input type="range" min="0" max={60 - windowSeconds} step="0.1" value={windowStart} disabled={windowSeconds === 60} onChange={e => setWindowStart(Number(e.target.value))} /></label>
       </div>
       <div className="phase-plots">
@@ -291,12 +292,12 @@ export function PhasePickerPanel() {
       </div>
       <p className="plot-note">{t("Arrival selection used all 6,000 raw ONNX output samples before display reduction. Solid markers are accepted model picks; dashed markers are STEAD analyst references, not ground truth. A missing marker is an abstention or a missing reference.",
         "Las llegadas se eligieron con las 6.000 muestras originales de ONNX antes de reducir la visualización. Marcas continuas: predicciones aceptadas; discontinuas: referencias de analista STEAD, no verdad física. Marca ausente: abstención o referencia inexistente.")}</p>
-      {record && <p className="plot-note">{t("STEAD analyst reference", "Referencia de analista STEAD")}: P {record.analyst_p_s == null ? t("not recorded", "sin registro") : `${record.analyst_p_s.toFixed(2)} s`} · S {record.analyst_s_s == null ? t("not recorded", "sin registro") : `${record.analyst_s_s.toFixed(2)} s`}.</p>}
+      {record && <p className="plot-note">{t("STEAD analyst reference", "Referencia de analista STEAD")}: P {record.analyst_p_s == null ? t("not recorded", "sin registro") : `${formatNumber(record.analyst_p_s, es ? "es-CL" : "en-US", { maximumFractionDigits: 2 })} s`} · S {record.analyst_s_s == null ? t("not recorded", "sin registro") : `${formatNumber(record.analyst_s_s, es ? "es-CL" : "en-US", { maximumFractionDigits: 2 })} s`}.</p>}
     </>}
     {benchmark && modelSource === "curated" && <div className="phase-benchmark">
       <h3>{t("Offline held-out P/S benchmark", "Benchmark P/S reservado offline")}</h3>
-      <p>{t(`All ${benchmark.selected.toLocaleString("en-US")} selected STEAD test traces, including ${benchmark.qc_rejected} QC rejections counted as unpicked; ${benchmark.valid} QC-valid. F1 uses ±0.5 s agreement with manual picks. This is not the 24-trace browser display or a browser accuracy score.`,
-        `Las ${benchmark.selected.toLocaleString("es-CL")} trazas de prueba STEAD, incluidas ${benchmark.qc_rejected} rechazadas por QC contadas sin marca; ${benchmark.valid} válidas. F1 usa acuerdo ±0,5 s con marcas manuales. No es la vista web de 24 ni una cifra de precisión web.`)}</p>
+      <p>{t(`All ${formatCount(benchmark.selected, "en-US")} selected STEAD test traces, including ${formatCount(benchmark.qc_rejected, "en-US")} QC rejections counted as unpicked; ${formatCount(benchmark.valid, "en-US")} QC-valid. F1 uses ±0.5 s agreement with manual picks. This is not the 24-trace browser display or a browser accuracy score.`,
+        `Las ${formatCount(benchmark.selected, "es-CL")} trazas de prueba STEAD, incluidas ${formatCount(benchmark.qc_rejected, "es-CL")} rechazadas por QC contadas sin marca; ${formatCount(benchmark.valid, "es-CL")} válidas. F1 usa acuerdo ±${formatNumber(0.5, "es-CL")} s con marcas manuales. No es la vista web de 24 ni una cifra de precisión web.`)}</p>
       <div className="table-scroll"><table className="cmp-table"><thead><tr>
         <th>{t("Method", "Método")}</th><th>{t("Phase", "Fase")}</th><th>F1 @ ±0.5 s</th>
         <th>{t("Within tolerance / reference", "Dentro de tolerancia / referencia")}</th>
@@ -305,8 +306,8 @@ export function PhasePickerPanel() {
         {(["M08", "M13"] as const).flatMap(method => (["P", "S"] as const).map(phase => {
           const row = benchmark.nominal[method][phase];
           return <tr key={`${method}-${phase}`}><td>{method}</td><td>{phase}</td>
-            <td>{row.f1_at_0p5s.toFixed(4)}</td><td>{row.correct_within_0p5s} / {row.reference_count}</td>
-            <td>{row.timing_absolute_median_s === null ? t("not available", "no disponible") : `${row.timing_absolute_median_s.toFixed(2)} s`}</td></tr>;
+            <td>{formatNumber(row.f1_at_0p5s, es ? "es-CL" : "en-US", { maximumFractionDigits: 4 })}</td><td>{formatCount(row.correct_within_0p5s, es ? "es-CL" : "en-US")} / {formatCount(row.reference_count, es ? "es-CL" : "en-US")}</td>
+            <td>{row.timing_absolute_median_s === null ? t("not available", "no disponible") : `${formatNumber(row.timing_absolute_median_s, es ? "es-CL" : "en-US", { maximumFractionDigits: 2 })} s`}</td></tr>;
         }))}
       </tbody></table></div>
     </div>}

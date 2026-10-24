@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FWI_METHODS, readFwiFiles, type FwiAdmission, type FwiMethod } from "../api/fwi-local-contracts";
 import { Heatmap, Plot } from "./ScientificPlots";
 import { downloadInspection } from "./result-view-data";
-import { format } from "../science";
+import { formatForCurrentLocale as format } from "../lib/number-format";
 
 function matrix(values:Float32Array, rows:number, cols:number, offset=0){
   return Array.from({length:rows},(_,row)=>Array.from(values.subarray(offset+row*cols,offset+(row+1)*cols)));

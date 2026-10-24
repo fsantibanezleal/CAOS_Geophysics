@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Callout, Cite, Refs, useShellLang } from "@fasl-work/caos-app-shell";
-import { appBase, extent, format, loadArtifact, type Curves } from "../science";
+import { appBase, extent, loadArtifact, type Curves } from "../science";
+import { formatForCurrentLocale as format } from "../lib/number-format";
 import { calibrationSeries, ediInterval, ediPath, validateEdiFieldScreen, validateEdiRun, type EdiBundle, type EdiCalibration, type EdiFieldScreen, type EdiFieldScreenEntry, type EdiFixture, type EdiRun } from "../edi";
 import { metricInfo, methodName } from "../data/metrics";
 import { mtForward } from "../mt";
@@ -46,7 +47,7 @@ export function EdiResult({ run, fixture }: { run: EdiRun; fixture: EdiFixture }
     {run.tensor && <details><summary>{t("Parsed tensor and 1D compatibility", "Tensor leído y compatibilidad 1D")}</summary>
       <p>{t("Converted impedance E/H in Ω; σ is per real/imaginary component. Tensor rows retain the supplied common frame. A passed screen is necessary, not sufficient, for 1D geology.", "Impedancia E/H convertida en Ω; σ por componente real/imaginaria. Se conserva el marco común declarado. Pasar este control es necesario, no suficiente, para geología 1D.")}</p>
       <dl className="parameter-ledger"><div><dt>WRMS Zxx</dt><dd>{format(run.compatibility.xx_component_wrms)}</dd></div><div><dt>WRMS Zyy</dt><dd>{format(run.compatibility.yy_component_wrms)}</dd></div><div><dt>{t("Conservative antisymmetry WRMS", "WRMS conservador de antisimetría")}</dt><dd>{format(run.compatibility.antisymmetry_conservative_wrms)}</dd></div><div><dt>{t("Acceptance threshold", "Umbral de aceptación")}</dt><dd>{run.compatibility.threshold}</dd></div></dl>
-      <div className="table-scroll"><table className="cmp-table"><thead><tr><th>Hz</th>{["xx", "xy", "yx", "yy"].map(k => <th key={k}>Z{k}: Re / Im / σ · Ω</th>)}</tr></thead><tbody>{run.frequencies.map((f, i) => <tr key={i}><th scope="row">{format(f)}</th>{[[0, 0], [0, 1], [1, 0], [1, 1]].map(([a, b]) => <td key={`${a}${b}`}>{[run.tensor!.real[i][a][b], run.tensor!.imag[i][a][b], run.tensor!.sigma[i][a][b]].map(format).join(" / ")}</td>)}</tr>)}</tbody></table></div>
+      <div className="table-scroll"><table className="cmp-table"><thead><tr><th>Hz</th>{["xx", "xy", "yx", "yy"].map(k => <th key={k}>Z{k}: Re / Im / σ · Ω</th>)}</tr></thead><tbody>{run.frequencies.map((f, i) => <tr key={i}><th scope="row">{format(f)}</th>{[[0, 0], [0, 1], [1, 0], [1, 1]].map(([a, b]) => <td key={`${a}${b}`}>{[run.tensor!.real[i][a][b], run.tensor!.imag[i][a][b], run.tensor!.sigma[i][a][b]].map(v => format(v)).join(" / ")}</td>)}</tr>)}</tbody></table></div>
     </details>}
     <div className="table-scroll"><table className="cmp-table"><caption>{t("Final-model data evidence", "Evidencia de datos del modelo final")}</caption><thead><tr><th>{t("Metric", "Métrica")}</th><th>{t("Value", "Valor")}</th><th>{t("Meaning", "Significado")}</th></tr></thead><tbody>{Object.entries(method.metrics).map(([key, value]) => { const info = metricInfo(key, "mt", methodId, es); return <tr key={key}><th scope="row">{info.label}</th><td>{typeof value === "number" ? format(value) : value === null ? t("Unavailable", "No disponible") : value ? t("Yes", "Sí") : "No"} {info.unit}</td><td>{info.description}</td></tr>; })}</tbody></table></div>
     {intervals && intervals.lower.length === method.model.length && <>

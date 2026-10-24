@@ -7,6 +7,7 @@ import layer from "../../../docs/methods/gravity-processing/scientific-course/as
 import blocks from "../../../docs/methods/gravity-processing/scientific-course/assets/blocked-support.svg?raw";
 import continuation from "../../../docs/methods/gravity-processing/scientific-course/assets/continuation-spectrum.svg?raw";
 import type { CourseResult } from "../data/m01-scientific-course";
+import { formatNumber, type NumberFormatLocale } from "../lib/number-format";
 
 const diagrams = [reference, plate, errors, layer, blocks, continuation];
 const diagramLabels = [
@@ -49,11 +50,12 @@ export function mapEncoding(field: MapField, value: number) {
   return { colour: field !== "sigma" && value < 0 ? "var(--color-magenta)" : "var(--color-accent)",
     opacity: Math.min(1, Math.abs(value) / (value < 0 ? -low : high)) };
 }
-export const mapLabel = (value: number) => String(Number(value.toPrecision(6)));
+export const mapLabel = (value: number, locale: NumberFormatLocale = "en-US") => formatNumber(value, locale, { maximumSignificantDigits: 6 });
 export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field = "field", coverage = true }: {
   chapter?: number; result?: CourseResult; heightIndex?: number; field?: MapField; coverage?: boolean;
 }) {
   const es = useShellLang() === "es", dark = useThemeStore(s => s.theme) === "dark", id = useId();
+  const locale = es ? "es-CL" : "en-US";
   const [point, setPoint] = useState(0);
   const t = (en: string, sp: string) => es ? sp : en;
   if (!result) return <Figure caption={t(
@@ -86,7 +88,7 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
   return <Figure caption={t(
     "Actual recorded arrays, mGal; equal-aspect metric axes. Rectangles depict sampled grid nodes, not extra interpolation or geological resolution. Shared fixed colour limits across all three scenarios/heights; saturated colour does not clip the value.",
     "Arrays realmente registrados, mGal; ejes métricos con igual escala. Rectángulos representan nodos muestreados, no interpolación adicional ni resolución geológica. Límites de color fijos entre tres escenarios/alturas; saturación no recorta valores.")}>
-    <p data-testid="m01-map-extents">{t("Northing (m), bottom to top", "Norte (m), de abajo hacia arriba")}: {mapLabel(ymin)} → {mapLabel(ymax)}.</p>
+    <p data-testid="m01-map-extents">{t("Northing (m), bottom to top", "Norte (m), de abajo hacia arriba")}: {mapLabel(ymin, locale)} → {mapLabel(ymax, locale)}.</p>
     <svg className="method-diagram" viewBox={"65 35 510 " + plotHeight} role="img" aria-labelledby={id+"-title"}>
       <title id={id+"-title"}>{label + " (mGal)"}</title>
       <rect x="65" y="35" width="510" height={plotHeight} fill="var(--color-surface)" stroke="var(--color-border)" />
@@ -97,7 +99,7 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
       </rect> : null : <rect key={i} x={px(x[i % x.length]) - dx*scale/2}
         y={py(y[Math.floor(i/x.length)]) - dy*scale/2} width={dx*scale} height={dy*scale}
         fill={color(v)} fillOpacity={opacity(v)} onPointerEnter={() => setPoint(i)}>
-        <title>{x[i%x.length].toFixed(2) + ", " + y[Math.floor(i/x.length)].toFixed(2) + " m: " + v.toPrecision(7) + " mGal"}</title>
+        <title>{`${formatNumber(x[i%x.length], locale, { maximumFractionDigits: 2 })}, ${formatNumber(y[Math.floor(i/x.length)], locale, { maximumFractionDigits: 2 })} m: ${formatNumber(v, locale, { maximumSignificantDigits: 7 })} mGal`}</title>
       </rect>)}
       {result.geometry.easting_m.map((east, i) => {
         const north = result.geometry.northing_m[i], masked = result.geometry.mask[i];
@@ -109,7 +111,7 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
         </path>;
         if (field === "residual" && residual !== null) return <circle key={i} cx={cx} cy={cy} r="3.8"
           fill={color(residual)} fillOpacity={opacity(residual)} onPointerEnter={() => setPoint(i)}>
-          <title>{residual.toPrecision(7) + " mGal; " + result.split.partition[i]}</title>
+          <title>{formatNumber(residual, locale, { maximumSignificantDigits: 7 }) + " mGal; " + result.split.partition[i]}</title>
         </circle>;
         return coverage ? <circle key={i} cx={cx} cy={cy} r={result.split.partition[i] === "holdout" ? 3.5 : 1.8}
           fill="none" stroke="var(--color-fg)" strokeWidth=".8">
@@ -119,11 +121,11 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
       <circle cx={px(selectedX)} cy={py(selectedY)} r="5" fill="none" stroke="var(--color-fg)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" pointerEvents="none" />
     </svg>
     <div data-testid="m01-map-axis" style={{ display: "flex", justifyContent: "space-between", gap: ".5rem", flexWrap: "wrap" }}>
-      <span>{mapLabel(xmin)} m</span><span>{t("Easting (m)", "Este (m)")}</span><span>{mapLabel(xmax)} m</span>
+      <span>{mapLabel(xmin, locale)} m</span><span>{t("Easting (m)", "Este (m)")}</span><span>{mapLabel(xmax, locale)} m</span>
     </div>
     <p>{label} (mGal)</p>
     <svg className="method-diagram" viewBox="0 0 510 12" role="img" aria-labelledby={id+"-scale"}>
-      <title id={id+"-scale"}>{label + ": " + low + " to " + high + " mGal"}</title>
+      <title id={id+"-scale"}>{`${label}: ${mapLabel(low, locale)} a ${mapLabel(high, locale)} mGal`}</title>
       <rect width="510" height="12" fill="var(--color-surface)" />
       {Array.from({length: 40}, (_, i) => {
         const v = low + (high-low) * i/39;
@@ -131,15 +133,15 @@ export function M01CourseDiagram({ chapter = 1, result, heightIndex = 0, field =
       })}
     </svg>
     <div data-testid="m01-map-legend" style={{ display: "grid", gridTemplateColumns: `${(mid-low)/(high-low)}fr ${(high-mid)/(high-low)}fr`, minWidth: 0 }}>
-      <span>{mapLabel(low)}</span>
-      <span style={{ textAlign: "right", gridColumn: 2, gridRow: 1 }}>{mapLabel(high)}</span>
-      <span style={{ gridColumn: 2, gridRow: 1 }}>{mapLabel(mid)}</span>
+      <span>{mapLabel(low, locale)}</span>
+      <span style={{ textAlign: "right", gridColumn: 2, gridRow: 1 }}>{mapLabel(high, locale)}</span>
+      <span style={{ gridColumn: 2, gridRow: 1 }}>{mapLabel(mid, locale)}</span>
     </div>
     <p>{t("X = masked/unsupported; outlined empty cell = null. Selected ring = inspected sample. Colours saturate at the fixed limits; the readout retains the actual value.", "X = máscara/sin soporte; celda vacía delineada = null. Anillo = muestra inspeccionada. Colores se saturan en los límites fijos; lectura conserva el valor real.")}</p>
     <label htmlFor={id+"-node"}>{t("Inspect sample (keyboard arrows or pointer)", "Inspeccionar muestra (flechas o puntero)")}</label>
     <input className="select" id={id+"-node"} type="number" min="0" max={maxIndex} value={selected}
       onChange={e => { const v = Number(e.target.value); if (Number.isInteger(v) && v >= 0 && v <= maxIndex) setPoint(v); }} />
-    <output aria-live="polite" data-testid="m01-map-value"> {selectedX.toFixed(2)}, {selectedY.toFixed(2)} m:
-      {selectedValue === null ? " null (" + reason + ")" : " " + selectedValue.toPrecision(8) + " mGal"}</output>
+    <output aria-live="polite" data-testid="m01-map-value"> {formatNumber(selectedX, locale, { maximumFractionDigits: 2 })}, {formatNumber(selectedY, locale, { maximumFractionDigits: 2 })} m:
+      {selectedValue === null ? " null (" + reason + ")" : " " + formatNumber(selectedValue, locale) + " mGal"}</output>
   </Figure>;
 }

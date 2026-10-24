@@ -110,7 +110,7 @@ function RecordedControl() {
           : <p>{t("Recorded failed candidate", "Candidato fallido registrado")}: {a.reason}</p>;
       })()}
       <details><summary>{t("All inner candidate outcomes and frozen parameters", "Resultados de candidatos internos y parámetros fijos")}</summary>
-        <ul>{result.selection.candidates.map((a, i) => <li key={i}>{String(a.depth_m)} m · λ={String(a.damping)} mGal⁻² · {String(a.status)} · {t("inner normalized RMSE", "RMSE interno normalizado")} {typeof a.cv_normalized_rmse === "number" ? format(a.cv_normalized_rmse) : "null"}{a.reason ? " · " + String(a.reason) : ""}</li>)}</ul>
+        <ul>{result.selection.candidates.map((a, i) => <li key={i}>{typeof a.depth_m === "number" ? format(a.depth_m) : String(a.depth_m)} m · λ={typeof a.damping === "number" ? format(a.damping) : String(a.damping)} mGal⁻² · {String(a.status)} · {t("inner normalized RMSE", "RMSE interno normalizado")} {typeof a.cv_normalized_rmse === "number" ? format(a.cv_normalized_rmse) : "null"}{a.reason ? " · " + String(a.reason) : ""}</li>)}</ul>
         <ul>{Object.entries(result.config).map(([k,v]) => <li key={k}><code>{k}</code>: {Array.isArray(v) ? v.join(", ") : String(v)}</li>)}</ul>
       </details>
       <p style={{ overflowWrap: "anywhere" }}>{t("Exact request / result identities", "Identidades exactas de petición / resultado")}: <code>{record.index.request_sha256}</code> / <code>{record.index.result_sha256}</code>.</p>

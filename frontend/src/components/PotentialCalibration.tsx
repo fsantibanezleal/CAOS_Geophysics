@@ -1,6 +1,6 @@
 import { useShellLang } from "@fasl-work/caos-app-shell";
 import calibrationJson from "../../../docs/validation/spatial-calibration.json?raw";
-import { format } from "../science";
+import { formatForCurrentLocale as format } from "../lib/number-format";
 
 // Read the independent numerical report at build time; no frontend-fitted constants.
 const report = JSON.parse(calibrationJson) as {
