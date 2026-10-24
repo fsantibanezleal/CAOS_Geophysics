@@ -10,7 +10,7 @@ import pytest
 from app import profile_incomplete_recovery as archive
 from app import profile_linux_exec as dto
 from app.errors import ApiError
-from test_profile_incomplete_custody import FakeFS, Node, records, terminal
+from tests.ops.test_profile_incomplete_custody_controls import FakeFS, Node, records, terminal
 
 
 def manifest_fixture():
