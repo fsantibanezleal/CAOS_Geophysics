@@ -37,7 +37,13 @@ A geophysics investigation workbench with 20 distinct geological cases, six cond
 ./scripts/rebuild-release.ps1
 $env:INVERSE_EARTH_DATA = 'data/experiments/release-0.04.001'
 $env:FWI_RECOVERY_ARTIFACTS = $env:INVERSE_EARTH_DATA
-./.venv-pipeline/Scripts/python.exe tests/run_validation.py
+$env:GEOPHYSICS_LOCAL_DATA_ROOT = 'D:\\geophysics-data' # choose an existing external directory
+$env:M01_RETAINED_CORRECTION_PACKET = '<absolute path to the retained original correction packet>'
+$env:M01_RETAINED_TRANSFORM_PACKET = '<absolute path to the retained original transform packet>'
+$env:GEOPHYSICS_PROFILE_INCOMPLETE_RECEIPT = '<absolute path to the retained original q13 receipt>'
+./.venv-pipeline/Scripts/python.exe tests/run_validation.py `
+  --data-root $env:GEOPHYSICS_LOCAL_DATA_ROOT `
+  --output-root "$env:GEOPHYSICS_LOCAL_DATA_ROOT/validation"
 ./.venv-pipeline/Scripts/python.exe data-pipeline/ingest.py --external
 cd frontend
 npm ci

@@ -6,9 +6,11 @@ function VenvPy($dir) { $p = Join-Path $dir 'Scripts/python.exe'; if (-not (Test
 if ($Notebooks) {
   Write-Host '[setup] creating isolated .venv-notebooks'
   if (-not (Test-Path '.venv-notebooks')) { Invoke-Expression "$py -m venv .venv-notebooks" }
-  $notebooks = VenvPy '.venv-notebooks'
-  & $notebooks -m pip install --upgrade pip -q
-  & $notebooks -m pip install -r notebooks/requirements.txt -q
+  # PowerShell variables are case-insensitive: `$notebooks` aliases the
+  # `[switch]$Notebooks` parameter and attempts to assign a path to a switch.
+  $notebookPython = VenvPy '.venv-notebooks'
+  & $notebookPython -m pip install --upgrade pip -q
+  & $notebookPython -m pip install -r notebooks/requirements.txt -q
   Write-Host '[setup] notebook environment ready. Run .\.venv-notebooks\Scripts\python.exe scripts/run_notebooks.py --check --tmp <device-temp-root>.'
   exit 0
 }
