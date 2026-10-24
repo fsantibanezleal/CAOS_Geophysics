@@ -42,6 +42,7 @@ export function EarthScene({
   const es = useShellLang() === "es";
   const host = useRef<HTMLDivElement>(null);
   const animate = useRef({ playing, speed });
+  const renderRef = useRef<() => void>(() => {});
   animate.current = { playing, speed };
   const [readout, setReadout] = useState("");
   const [error, setError] = useState("");
@@ -296,7 +297,28 @@ export function EarthScene({
       });
     };
     theme();
-    const themeObserver = new MutationObserver(theme);
+    let frame = 0;
+    let previous = performance.now();
+    const render = (time: number) => {
+      frame = 0;
+      const dt = Math.min((time - previous) / 1000, 0.05);
+      previous = time;
+      controls.autoRotate = animate.current.playing;
+      controls.autoRotateSpeed = animate.current.speed / 6;
+      controls.update(dt);
+      renderer.render(scene, camera);
+      if (animate.current.playing) invalidate();
+    };
+    const invalidate = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(render);
+    };
+    renderRef.current = invalidate;
+    const onTheme = () => {
+      theme();
+      invalidate();
+    };
+    const themeObserver = new MutationObserver(onTheme);
     themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["data-theme"],
@@ -308,9 +330,14 @@ export function EarthScene({
         camera.aspect = width / height;
         camera.zoom = Math.min(1, camera.aspect / 1.25);
         camera.updateProjectionMatrix();
+        invalidate();
       }
     });
     resize.observe(container);
+    controls.addEventListener("start", invalidate);
+    controls.addEventListener("change", invalidate);
+    for (const event of ["pointermove", "wheel", "touchmove", "keydown"])
+      renderer.domElement.addEventListener(event, invalidate, { passive: true });
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let picked: number | undefined;
@@ -354,24 +381,18 @@ export function EarthScene({
     };
     renderer.domElement.addEventListener("pointermove", move);
     renderer.domElement.addEventListener("click", click);
-    let frame = 0;
-    let previous = performance.now();
-    const render = (time: number) => {
-      const dt = Math.min((time - previous) / 1000, 0.05);
-      previous = time;
-      controls.autoRotate = animate.current.playing;
-      controls.autoRotateSpeed = animate.current.speed / 6;
-      controls.update(dt);
-      renderer.render(scene, camera);
-      frame = requestAnimationFrame(render);
-    };
-    frame = requestAnimationFrame(render);
+    invalidate();
     return () => {
+      renderRef.current = () => {};
       pose.current = {
         position: camera.position.clone(),
         target: controls.target.clone(),
       };
       cancelAnimationFrame(frame);
+      controls.removeEventListener("start", invalidate);
+      controls.removeEventListener("change", invalidate);
+      for (const event of ["pointermove", "wheel", "touchmove", "keydown"])
+        renderer.domElement.removeEventListener(event, invalidate);
       resize.disconnect();
       themeObserver.disconnect();
       controls.dispose();
@@ -410,6 +431,9 @@ export function EarthScene({
     range[0],
     range[1],
   ]);
+  useEffect(() => {
+    renderRef.current();
+  }, [playing, speed]);
   return (
     <div
       className="earth-scene"
