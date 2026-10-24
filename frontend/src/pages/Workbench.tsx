@@ -39,6 +39,7 @@ import { ProjectProcessingWorkbench } from "../components/ProjectProcessingWorkb
 import { VelocityLocalWorkbench } from "../components/VelocityLocalWorkbench";
 import { ProfileLocalWorkbench } from "../components/ProfileLocalWorkbench";
 import { FwiLocalWorkbench } from "../components/FwiLocalWorkbench";
+import styles from "./Workbench.module.css";
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -398,7 +399,7 @@ export default function Workbench() {
               {survey && entry?.survey_max_abs ? ` ${t("Survey colours", "Colores del levantamiento")} ±${format(entry.survey_max_abs)} ${run.data_units}.` : ""}
             </span>
           </div>
-          <details className="scene-settings">
+          <details className={`scene-settings ${styles.sceneSettings}`}>
             <summary>
               {t(
                 "View controls: threshold, cut and rotation",
@@ -1038,7 +1039,7 @@ export default function Workbench() {
             ))}
           </select>
         </label>
-        <label className="select-control">
+        <label className={`select-control ${styles.methodControl}`}>
           <span>03 / {t("Inverse method", "Método inverso")}</span>
           <select
             className="select"

@@ -1,0 +1,22 @@
+/* Page-local exceptions for the full-screen App workbench. */
+
+@media (min-width: 1101px) and (max-width: 1400px) {
+  :global(.page-body.wide.caos-wb):has(.methodControl),
+  :global(.caos-focus-shell):has(.methodControl) {
+    --rail-w: 340px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .sceneSettings {
+    position: static;
+    align-self: stretch;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  .sceneSettings[open] {
+    width: auto;
+  }
+}
