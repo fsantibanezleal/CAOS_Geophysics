@@ -1,25 +1,26 @@
-// Run the published CAOS shell gate against this product's built single-origin app.
-// Keep the six-route manifest authoritative and require Focus on the real App route.
-// Shell 0.19.0 reports `checks` as failure counts only; a missing G18/G20 key means
-// no failure was recorded, not that a measurement was skipped. The gate runs G18
-// for every configured workbench route and G20 during every measured route state.
-import { spawnSync } from 'node:child_process';
+// Product-owned CAOS shell gate, based on the exact shell version pinned by this product.
+// See scripts/vendor/caos-app-shell-gate-0.19.0/UPSTREAM.md for provenance and the product-specific adaptations.
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runGate } from './vendor/caos-app-shell-gate-0.19.0/gate/run.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
+const frontend = join(root, 'frontend');
 const product = JSON.parse(readFileSync(join(root, 'product.json'), 'utf8'));
-const routes = JSON.parse(readFileSync(join(root, 'frontend', 'src', 'lib', 'routes.json'), 'utf8'));
-const appRoute = product.workbench_route ?? '/app';
-const extras = process.argv.slice(2);
-const value = (flag) => {
-  const index = extras.indexOf(flag);
-  return index < 0 ? null : (extras[index + 1] ?? '');
-};
+const routes = JSON.parse(readFileSync(join(frontend, 'src', 'lib', 'routes.json'), 'utf8'));
+const appRoute = product.workbench_route ?? '/';
+const expectedShellVersion = '0.19.0';
+const require = createRequire(import.meta.url);
+const shellPackagePath = require.resolve('@fasl-work/caos-app-shell/package.json');
+const shellPackage = JSON.parse(readFileSync(shellPackagePath, 'utf8'));
 
+if (shellPackage.version !== expectedShellVersion) {
+  console.error(`gate: product-owned gate is based on shell ${expectedShellVersion}, but the installed shell is ${shellPackage.version}`);
+  process.exit(1);
+}
 if (product.app !== 'workbench' || typeof product.name !== 'string' || !product.name.trim()) {
   console.error('gate: product.json must name this workbench App before the shell gate can run');
   process.exit(1);
@@ -28,50 +29,94 @@ if (!routes.some((route) => route.path === appRoute)) {
   console.error(`gate: configured workbench route ${appRoute} is not in frontend/src/lib/routes.json`);
   process.exit(1);
 }
-const reserved = ['--workbench', '--expect-brand', '--serve', '--spa-fallback', '--out', '--no-require-focus'];
-const overridden = reserved.find((flag) => extras.includes(flag));
-if (overridden) {
-  console.error(`gate: ${overridden} is fixed by the product adapter and cannot be overridden`);
-  process.exit(1);
+
+const values = new Map([
+  ['url', 'url'],
+  ['base-path', 'basePath'],
+  ['routes', 'routes'],
+  ['sizes', 'sizes'],
+  ['themes', 'themes'],
+  ['langs', 'langs'],
+  ['case-sample', 'caseSample'],
+  ['idle-ms', 'idleMs'],
+  ['settle-ms', 'settleMs'],
+  ['text-floor', 'textFloor'],
+  ['instrument-min', 'instrumentMin'],
+  ['stage-fill-min', 'stageFillMin'],
+  ['stage-floor', 'stageFloor'],
+  ['wide-font-sizes', 'wideFontSizes'],
+]);
+const extra = {};
+const argv = process.argv.slice(2);
+for (let i = 0; i < argv.length; i += 1) {
+  const flag = argv[i];
+  if (!flag.startsWith('--')) {
+    console.error(`gate: unexpected argument ${flag}`);
+    process.exit(2);
+  }
+  const key = flag.slice(2);
+  if (key === 'no-wide-font') {
+    extra.wideFont = false;
+  } else if (key === 'single-case') {
+    extra.singleCase = true;
+  } else if (key === 'require-focus' || key === 'spa-fallback') {
+    console.error(`gate: ${flag} is fixed by the product adapter`);
+    process.exit(2);
+  } else if (['workbench', 'app-route', 'expect-brand', 'serve', 'out', 'no-require-focus'].includes(key)) {
+    console.error(`gate: ${flag} is fixed by the product adapter`);
+    process.exit(2);
+  } else if (values.has(key)) {
+    const value = argv[i + 1];
+    if (value === undefined || value.startsWith('--')) {
+      console.error(`gate: ${flag} requires a value`);
+      process.exit(2);
+    }
+    i += 1;
+    const property = values.get(key);
+    extra[property] = ['idleMs', 'settleMs', 'textFloor', 'instrumentMin', 'stageFillMin', 'stageFloor'].includes(property)
+      ? Number(value)
+      : value;
+    if (typeof extra[property] === 'number' && !Number.isFinite(extra[property])) {
+      console.error(`gate: ${flag} requires a finite number`);
+      process.exit(2);
+    }
+  } else {
+    console.error(`gate: unsupported option ${flag}`);
+    process.exit(2);
+  }
 }
-const routesArg = value('--routes');
-if (routesArg !== null && !routesArg.split(',').map((route) => route.trim().replace(/(.)\/+$/, '$1')).includes(appRoute)) {
+
+const routesArg = extra.routes;
+if (routesArg !== undefined && !routesArg.split(',').map((route) => route.trim().replace(/(.)\/+$/, '$1')).includes(appRoute)) {
   console.error(`gate: --routes omits the App route ${appRoute}; G18 would measure nothing`);
   process.exit(1);
 }
 
-const require = createRequire(import.meta.url);
-const shellPackage = require.resolve('@fasl-work/caos-app-shell/package.json');
-const bin = join(dirname(shellPackage), 'bin', 'caos-shell-gate.mjs');
-if (!existsSync(bin)) {
-  console.error(`gate: published shell gate is missing at ${bin}`);
+const options = {
+  ...extra,
+  ...(extra.url ? {} : { serve: join(frontend, 'dist'), spaFallback: true }),
+  expectBrand: product.name,
+  workbench: appRoute,
+  requireFocus: true,
+  out: join(frontend, 'gate-output'),
+};
+if (!options.url && !existsSync(join(frontend, 'dist', 'index.html'))) {
+  console.error('gate: frontend/dist/index.html is missing; run npm run build first');
   process.exit(1);
 }
-const serving = !extras.includes('--url');
-const args = [
-  ...(serving ? ['--serve', join(root, 'frontend', 'dist'), '--spa-fallback'] : []),
-  '--expect-brand', product.name,
-  '--workbench', appRoute,
-  '--require-focus',
-  '--out', join(root, 'frontend', 'gate-output'),
-  ...extras,
-];
-const result = spawnSync(process.execPath, [bin, ...args], { cwd: root, stdio: 'inherit' });
-let exitCode = result.status ?? 1;
-const reportPath = join(root, 'frontend', 'gate-output', 'gate-report.json');
-if (existsSync(reportPath)) {
-  try {
-    const report = JSON.parse(readFileSync(reportPath, 'utf8'));
-    if (!Number.isInteger(report.states) || report.states < 1) {
-      console.error('gate: the published shell gate reported no measured route states');
-      exitCode = 1;
-    }
-  } catch (error) {
-    console.error(`gate: could not read the published shell report at ${reportPath}: ${error.message}`);
-    exitCode = 1;
+
+try {
+  const report = await runGate(options);
+  for (const failure of report.failures.slice(0, 80)) {
+    console.error(`FAIL [${failure.check}] ${failure.route} ${failure.mode}${failure.trail ? ` (${failure.trail})` : ''}: ${failure.message}`);
   }
-} else {
-  console.error(`gate: the published shell gate did not write ${reportPath}`);
-  exitCode = 1;
+  if (report.failures.length > 80) console.error(`... ${report.failures.length - 80} additional findings are recorded in frontend/gate-output/gate-report.json`);
+  for (const artifact of report.artifactMeasurements ?? []) {
+    console.log(`served artifact verified: ${artifact.path}, HTTP ${artifact.status}, ${artifact.contentType}, ${artifact.bytes} bytes, sha256 ${artifact.sha256}`);
+  }
+  console.log(report.ok ? `caos-shell-product-gate: OK, ${report.states} measured states` : `caos-shell-product-gate: ${report.failures.length} failure(s) in ${report.states} measured states`);
+  process.exitCode = report.ok ? 0 : 1;
+} catch (error) {
+  console.error(`gate: ${error.stack ?? error.message}`);
+  process.exitCode = 1;
 }
-process.exit(exitCode);
