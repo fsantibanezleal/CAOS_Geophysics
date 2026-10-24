@@ -1,0 +1,89 @@
+{
+  "openapi": "3.1.0",
+  "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+  "info": {
+    "title": "Geophysics private-state API",
+    "version": "1.0.0",
+    "summary": "Authenticated project, source asset and bounded processing-job API.",
+    "description": "Contract index for existing routes. Exact request and response validation remains in the executable Python models and TypeScript clients. This file does not claim complete generated OpenAPI parity."
+  },
+  "servers": [
+    { "url": "https://geophysics.ml.fasl-work.com" }
+  ],
+  "paths": {
+    "/api/auth/config": {
+      "get": {
+        "operationId": "getAuthConfig",
+        "responses": { "200": { "description": "Configured local authentication mode." } }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "responses": { "200": { "description": "Current authenticated account." }, "401": { "description": "Authentication required." } }
+      }
+    },
+    "/api/projects": {
+      "get": {
+        "operationId": "listProjects",
+        "responses": { "200": { "description": "Projects visible to the authenticated owner." } }
+      },
+      "post": {
+        "operationId": "createProject",
+        "responses": { "201": { "description": "Created owner-scoped project." } }
+      }
+    },
+    "/api/projects/{project_id}": {
+      "parameters": [
+        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "getProject",
+        "responses": { "200": { "description": "Owner-scoped project." }, "404": { "description": "Project not found." } }
+      },
+      "patch": {
+        "operationId": "updateProject",
+        "responses": { "200": { "description": "Updated project." } }
+      },
+      "delete": {
+        "operationId": "deleteProject",
+        "responses": { "204": { "description": "Project and owned state deleted." } }
+      }
+    },
+    "/api/projects/{project_id}/assets": {
+      "parameters": [
+        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "post": {
+        "operationId": "uploadProjectAsset",
+        "responses": { "201": { "description": "Immutable uploaded asset receipt." }, "413": { "description": "Upload exceeds configured limit." } }
+      }
+    },
+    "/api/projects/{project_id}/datasets": {
+      "parameters": [
+        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "listDatasets",
+        "responses": { "200": { "description": "Validated project datasets." } }
+      },
+      "post": {
+        "operationId": "createDataset",
+        "responses": { "201": { "description": "Validated observation dataset." }, "422": { "description": "Dataset contract rejected." } }
+      }
+    },
+    "/api/projects/{project_id}/jobs": {
+      "parameters": [
+        { "name": "project_id", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+      ],
+      "get": {
+        "operationId": "listJobs",
+        "responses": { "200": { "description": "Owner-scoped processing jobs." } }
+      },
+      "post": {
+        "operationId": "createJob",
+        "responses": { "202": { "description": "Admitted bounded processing job." }, "409": { "description": "Method or resource admission refused." } }
+      }
+    }
+  }
+}

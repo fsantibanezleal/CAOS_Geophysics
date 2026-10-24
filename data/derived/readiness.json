@@ -1,0 +1,1 @@
+{"schema":"inverse-earth.readiness/v1","product_version":"0.04.001","catalog":{"schema":"inverse-earth.catalog/v2","version":"0.04.002","sha256":"81248370d6ded868cdc71cace05bc343b275e2814f7a96ce96f426f37315a8cf","complete":true},"counts":{"cases":20,"variants":120,"method_results":348},"artifacts":{"present":120,"missing":[],"declared_bytes":797249883},"state":"available"}

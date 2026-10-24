@@ -6,6 +6,21 @@ The ML VPS is the only application host. The previous secondary publication was 
 
 A geophysics investigation workbench with 20 distinct geological cases, six conditions per case, and 348 computed inverse-method results. The release uses original synthetic geology and arrays calculated by SimPEG, SciPy, PyTorch and Deepwave. The catalogue records each method's target, units, final state and recovery verdict.
 
+## Areas
+
+| Area | Folder | Status | What it holds |
+| --- | --- | --- | --- |
+| Web | [frontend/](frontend/) | active | Six-page bilingual scientific workbench and replay visualizations. |
+| API | [app/](app/) | active | Authenticated accounts, projects, datasets, jobs, and artifact routes. |
+| Core pipelines | [data-pipeline/](data-pipeline/) | active | Acquisition, preprocessing, forward models, inversion, evaluation, and export. |
+| Packages | [SimPEG](https://pypi.org/project/simpeg/) | active | Uses published scientific dependencies; this repository declares no package. |
+| Notebooks | [notebooks/](notebooks/) | dormant: lesson notebooks are not authored | Pinned bilingual notebook tooling and explicit science curriculum outline. |
+| Data | [data/](data/) | active | Versioned synthetic experiments, derived results, source records, and readiness. |
+| Contracts | [docs/contracts/](docs/contracts/) | active | Catalogue schemas, API index, version lock, and deterministic readiness record. |
+| Documentation | [docs/](docs/) | active | Research, methods, assumptions, limitations, operations, and scientific evidence. |
+| Tests and gates | [tests/](tests/) and [scripts/](scripts/) | active | Numerical, API, integrity, source, and release verification tools. |
+| Deploy | [deploy/](deploy/) | active | Single ML VPS target, service configuration, and release procedures. |
+
 ## Investigate
 
 - Gravity and magnetics: 3D geological volumes, survey fields, spatially regularized, noise-weighted scalar/vector inverses and conditional data-noise ensembles.

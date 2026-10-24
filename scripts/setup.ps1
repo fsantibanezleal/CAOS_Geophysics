@@ -1,8 +1,17 @@
-param([switch]$Gpu)
+param([switch]$Gpu, [switch]$Notebooks)
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $py = if (Get-Command py -ErrorAction SilentlyContinue) { 'py -3.12' } else { 'python' }
 function VenvPy($dir) { $p = Join-Path $dir 'Scripts/python.exe'; if (-not (Test-Path $p)) { $p = Join-Path $dir 'bin/python' }; return $p }
+if ($Notebooks) {
+  Write-Host '[setup] creating isolated .venv-notebooks'
+  if (-not (Test-Path '.venv-notebooks')) { Invoke-Expression "$py -m venv .venv-notebooks" }
+  $notebooks = VenvPy '.venv-notebooks'
+  & $notebooks -m pip install --upgrade pip -q
+  & $notebooks -m pip install -r notebooks/requirements.txt -q
+  Write-Host '[setup] notebook environment ready. Run .\.venv-notebooks\Scripts\python.exe scripts/run_notebooks.py --check --tmp <device-temp-root>.'
+  exit 0
+}
 Write-Host '[setup] creating root .venv and offline .venv-pipeline'
 if (-not (Test-Path '.venv')) { Invoke-Expression "$py -m venv .venv" }
 if (-not (Test-Path '.venv-pipeline')) { Invoke-Expression "$py -m venv .venv-pipeline" }

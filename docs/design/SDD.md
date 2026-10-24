@@ -187,6 +187,10 @@ Felipe explicitly approved the product SDD on 2026-09-27 in response to its revi
 
 Felipe separately approved including the Clear Lake cl061 QC-only finding and the requirement for parity-checked M13 inference on real held-out traces in the browser before this SDD was promoted.
 
+## Beyond the state of the art
+
+None claimed. This product assembles established geophysical methods into a reproducible investigation workbench and exposes their assumptions, comparisons and failure cases. No new inverse algorithm, learned-method superiority, field-geology validation or general scientific result is claimed by the current software design.
+
 ## Research basis
 
 The dated management research dossiers 02-05 and validated replacement plan are the source of this design. Public primary references include [SimPEG](https://doi.org/10.1016/j.cageo.2015.09.015), [USGS gravity procedures](https://pubs.usgs.gov/tm/02/d04/tm2d4.pdf), [Harmonica](https://www.fatiando.org/harmonica/latest/api/index.html), [Verde blocked splitting](https://www.fatiando.org/verde/latest/api/generated/verde.train_test_split.html), [MTH5](https://mth5.readthedocs.io/en/latest/source/mth5_format.html), [MTpy](https://github.com/MTgeophysics/mtpy-v2), [pyGIMLi inversion](https://www.pygimli.org/user-guide/inversion/), [ObsPy](https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html), [Deepwave FWI](https://www.ausargeo.com/deepwave/example_fwi), [Devito FWI](https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html), [SimPEG joint inversion](https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html), [PhaseNet](https://doi.org/10.1093/gji/ggy423), [OpenFWI](https://github.com/lanl/OpenFWI), [W3C PROV-O](https://www.w3.org/TR/prov-o/) and [CF conventions](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.13/cf-conventions.html). Source-specific rights and exact attachment hashes remain acquisition gates, not inferred from these citations.

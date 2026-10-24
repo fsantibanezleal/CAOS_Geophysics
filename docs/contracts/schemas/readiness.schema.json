@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geophysics.ml.fasl-work.com/contracts/readiness.schema.json",
+  "title": "Inverse Earth data readiness",
+  "description": "Integrity and coverage summary of the committed inverse-earth.catalog/v2 bake. It does not assert scientific validity, field eligibility, API availability, or deployment readiness.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "product_version", "catalog", "counts", "artifacts", "state"],
+  "properties": {
+    "schema": { "const": "inverse-earth.readiness/v1" },
+    "product_version": { "type": "string", "pattern": "^\\d+\\.\\d{2}\\.\\d{3}$" },
+    "catalog": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "version", "sha256", "complete"],
+      "properties": {
+        "schema": { "const": "inverse-earth.catalog/v2" },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d{2}\\.\\d{3}$" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "complete": { "type": "boolean" }
+      }
+    },
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cases", "variants", "method_results"],
+      "properties": {
+        "cases": { "type": "integer", "minimum": 0 },
+        "variants": { "type": "integer", "minimum": 0 },
+        "method_results": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "artifacts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["present", "missing", "declared_bytes"],
+      "properties": {
+        "present": { "type": "integer", "minimum": 0 },
+        "missing": { "type": "array", "items": { "type": "string" } },
+        "declared_bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "state": { "enum": ["available", "partial", "missing"] }
+  },
+  "allOf": [
+    { "if": { "properties": { "state": { "const": "available" } } }, "then": { "properties": { "catalog": { "properties": { "complete": { "const": true } } }, "artifacts": { "properties": { "missing": { "maxItems": 0 }, "present": { "minimum": 1 } } } } } },
+    { "if": { "properties": { "state": { "const": "missing" } } }, "then": { "properties": { "artifacts": { "properties": { "present": { "const": 0 } } } } } }
+  ]
+}

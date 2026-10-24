@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -28,6 +30,23 @@ jobs:
         run: python scripts/check_phase_assets.py
       - name: Product requirement ledger integrity (not release acceptance)
         run: python scripts/check_sdd_convergence.py
+      - name: One deploy place
+        run: python scripts/check_deploy_place.py
+      - name: Contract catalog paths and required fields
+        run: python scripts/check_contracts.py docs/contracts/catalog.md --repo-root .
+      - name: Contract schema versions and lock
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base="$BEFORE"
+          if [ -z "${base//0/}" ]; then base=origin/develop; fi
+          python scripts/check_contract_versions.py --base "$base"
+      - name: Committed catalogue readiness record
+        run: python scripts/check_readiness.py
+      - name: Notebook structure and bilingual static guard; no notebook execution
+        run: python scripts/check_notebooks.py
+      - name: Repository area index
+        run: python scripts/check_readme_areas.py
 
   guards:
     runs-on: ubuntu-latest

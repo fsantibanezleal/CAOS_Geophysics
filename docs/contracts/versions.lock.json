@@ -1,0 +1,17 @@
+{
+  "experiment-catalog": {
+    "version": "2.0.0",
+    "schema": "docs/contracts/schemas/catalog.schema.json",
+    "sha256": "85dde966500341fefdb3cc7cfc05c9eead17d4ccaa6a3a8bd9f02e5a7786d2fb"
+  },
+  "data-readiness": {
+    "version": "1.0.0",
+    "schema": "docs/contracts/schemas/readiness.schema.json",
+    "sha256": "3298efb184bc65563b571deaa59c083ff097526e25d105ddddf53d7e16d247ce"
+  },
+  "private-api": {
+    "version": "1.0.0",
+    "schema": "docs/contracts/api.openapi.json",
+    "sha256": "0b6e941a67dba10c725dce2849764f9b8201c318858b6a77257b56aaba72c5a4"
+  }
+}
