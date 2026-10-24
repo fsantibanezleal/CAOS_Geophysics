@@ -317,8 +317,13 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  min-height: 420px;
-  height: 100%;
+  min-height: clamp(420px, 72vh, 570px);
+  height: auto;
+}
+.earth-view > .earth-scene {
+  height: clamp(420px, 72vh, 570px);
+  min-height: clamp(420px, 72vh, 570px);
+  flex: 0 0 auto;
 }
 .scene-toolbar {
   position: absolute;
@@ -677,7 +682,7 @@
   gap: 1rem;
 }
 .three-plots {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .plot-note {
   font-size: 0.84rem;
@@ -716,10 +721,36 @@
   grid-template-columns: minmax(170px, 0.6fr) minmax(0, 2fr);
   gap: 1.25rem;
 }
+.mt-curves {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
 .layer-stack {
-  height: 360px;
+  height: clamp(400px, 60vh, 480px);
   display: flex;
   flex-direction: column;
+}
+.layer-stack-svg {
+  display: block;
+  width: 100%;
+  flex: none;
+}
+.layer-stack-svg text {
+  fill: var(--color-fg);
+  font-family: var(--font-mono);
+}
+.layer-stack-svg .layer-label-plate {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.layer-stack-svg .layer-depth-label { font-size: 13px; }
+.layer-stack-svg .layer-value-label { font-size: 15px; font-weight: 700; }
+.layer-stack-svg [role="button"] { cursor: pointer; }
+.layer-stack-svg [role="button"]:focus-visible rect:first-child {
+  stroke: var(--color-fg);
+  stroke-width: 4px;
 }
 .earth-layer {
   min-height: 40px;
@@ -1062,7 +1093,7 @@
   .earth-view .scene-compass {
     top: 0.75rem;
   }
-  .earth-scene {
+  .earth-view > .earth-scene {
     height: 220px;
     min-height: 220px;
     flex: none;
@@ -1071,6 +1102,9 @@
   .three-plots,
   .two-columns,
   .mt-view {
+    grid-template-columns: 1fr;
+  }
+  .mt-curves {
     grid-template-columns: 1fr;
   }
   .scene-bottom {

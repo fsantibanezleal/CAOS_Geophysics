@@ -346,6 +346,7 @@ export function LayerColumn({
   selectedLayer?: number;
   onSelect?: (layer: number) => void;
 }) {
+  const es = useShellLang() === "es";
   const full = [
       ...thickness,
       Math.max(400, thickness.reduce((a, b) => a + b, 0) * 0.45),
@@ -358,33 +359,62 @@ export function LayerColumn({
         {title}
         <output>Ω m</output>
       </figcaption>
-      <div className="layer-stack">
+      <svg
+        className="layer-stack layer-stack-svg"
+        viewBox="0 0 250 600"
+        preserveAspectRatio="none"
+        role="group"
+        aria-label={title}
+        data-plot="Layered resistivity model"
+      >
         {rho.map((v, i) => {
           const top = z;
           z += full[i];
+          const y = (top / total) * 600;
+          const height = (full[i] / total) * 600;
+          const end = i < thickness.length ? `${Math.round(top + full[i])} m` : "∞";
+          const label = `${i + 1}: ${format(v)} Ω m; ${Math.round(top)} m to ${end}`;
+          const selected = onSelect && selectedLayer === i;
           return (
-            <div
+            <g
               key={i}
-              className="earth-layer"
               role={onSelect ? "button" : undefined}
               tabIndex={onSelect ? 0 : undefined}
               aria-pressed={onSelect ? selectedLayer === i : undefined}
-              aria-label={`${i + 1}: ${v} Ω m; ${top} m to ${i < thickness.length ? top + full[i] : "∞"} m`}
+              aria-label={label}
               onClick={() => onSelect?.(i)}
-              onKeyDown={e => { if (onSelect && ["Enter", " "].includes(e.key)) { e.preventDefault(); onSelect(i); } }}
-              style={{
-                flexGrow: full[i] / total,
-                background: color(Math.log10(v), range, "velocity"),
+              onKeyDown={e => {
+                if (onSelect && ["Enter", " "].includes(e.key)) {
+                  e.preventDefault();
+                  onSelect(i);
+                }
               }}
             >
-              <span>{Math.round(top)} m</span>
-              <strong>{format(v)} Ω m</strong>
-              {comparison && <small>{format(comparison[i])} Ω m</small>}
-            </div>
+              <rect
+                x="0"
+                y={y}
+                width="250"
+                height={Math.max(1, height)}
+                fill={color(Math.log10(v), range, "velocity")}
+                stroke="var(--color-surface)"
+                strokeWidth="3"
+                vectorEffect="non-scaling-stroke"
+              />
+              {selected && <rect x="2" y={y + 2} width="246" height={Math.max(1, height - 4)} fill="none" stroke="var(--color-fg)" strokeWidth="3" vectorEffect="non-scaling-stroke" />}
+              {height >= 48 ? <>
+                <rect x="6" y={y + height / 2 - 19} width="238" height="19" rx="3" className="layer-label-plate" />
+                <text x="12" y={y + height / 2 - 5} className="layer-depth-label">{Math.round(top)} m – {end}</text>
+                <rect x="6" y={y + height / 2 + 3} width="238" height="20" rx="3" className="layer-label-plate" />
+                <text x="12" y={y + height / 2 + 18} className="layer-value-label">{format(v)} Ω m{comparison ? ` · ${format(comparison[i])} Ω m` : ""}</text>
+              </> : height >= 30 ? <>
+                <rect x="6" y={y + height / 2 - 11} width="238" height="20" rx="3" className="layer-label-plate" />
+                <text x="12" y={y + height / 2 + 4} className="layer-value-label">{Math.round(top)} m · {format(v)} Ω m</text>
+              </> : null}
+            </g>
           );
         })}
-      </div>
-      <div className="layer-base">∞</div>
+      </svg>
+      <div className="layer-base">∞ · {es ? "semiespacio" : "half-space"}</div>
     </figure>
   );
 }
