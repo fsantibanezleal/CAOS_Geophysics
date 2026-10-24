@@ -73,6 +73,9 @@ export function EarthScene({
     renderer.localClippingEnabled = true;
     container.appendChild(renderer.domElement);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 50);
+    let viewportWidth = 0;
+    let viewportHeight = 0;
+    let pixelRatio = Math.min(devicePixelRatio, 2);
     camera.position.set(2.65, 1.65, 2.9);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, -0.45, 0);
@@ -305,9 +308,12 @@ export function EarthScene({
       previous = time;
       controls.autoRotate = animate.current.playing;
       controls.autoRotateSpeed = animate.current.speed / 6;
-      controls.update(dt);
+      const controlsChanged = controls.update(dt);
       renderer.render(scene, camera);
-      if (animate.current.playing) invalidate();
+      // OrbitControls reports whether damping or auto-rotation still changed the
+      // camera. Continue only while a visible change remains, or while the
+      // explicitly enabled orbit animation is playing.
+      if (animate.current.playing || controlsChanged) invalidate();
     };
     const invalidate = () => {
       if (frame) return;
@@ -325,7 +331,20 @@ export function EarthScene({
     });
     const resize = new ResizeObserver(() => {
       const { width, height } = container.getBoundingClientRect();
-      if (width && height) {
+      const nextPixelRatio = Math.min(devicePixelRatio, 2);
+      if (
+        width > 0 &&
+        height > 0 &&
+        (width !== viewportWidth ||
+          height !== viewportHeight ||
+          nextPixelRatio !== pixelRatio)
+      ) {
+        viewportWidth = width;
+        viewportHeight = height;
+        if (nextPixelRatio !== pixelRatio) {
+          pixelRatio = nextPixelRatio;
+          renderer.setPixelRatio(pixelRatio);
+        }
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
         camera.zoom = Math.min(1, camera.aspect / 1.25);
