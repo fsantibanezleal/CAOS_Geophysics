@@ -1,0 +1,92 @@
+.plotShell {
+  width: 100%;
+  min-width: 0;
+}
+
+/* PlotCard's fill mode needs a definite block size when it is used inside a
+   content-sized scientific panel. Without that height chain its flex body can
+   collapse while the chart still mounts, leaving a canvas only a few pixels
+   tall. Keep the measured drawing stage large enough for axes and readouts. */
+.plotShell :global(.caos-plot.fill) {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 100%;
+  height: clamp(390px, 50vh, 500px);
+  min-height: 390px;
+}
+
+.plotShell :global(.caos-plot.fill > .caos-plot-body) {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.plotShell :global(.caos-chart.fill) {
+  min-height: 280px;
+}
+
+.plotShell :global(.caos-chart-plot) {
+  min-height: 240px;
+}
+
+/* Preserve the shell chart's full accessible data table without letting the
+   app's table-width rule turn its screen-reader copy into a visible G6 surface. */
+.plotShell :global(.caos-chart-table) {
+  position: absolute;
+  transform: scale(0);
+  transform-origin: top left;
+  width: 1px !important;
+  max-width: 1px !important;
+  height: 1px !important;
+  max-height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%);
+  white-space: nowrap !important;
+}
+
+.heatmap {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.heatmapAxes {
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.heatmapArea {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+}
+
+.heatmap :global(.axis-y) {
+  flex: 0 0 1.4rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.heatmap :global(.axis-x) {
+  align-items: baseline;
+  gap: 0.45rem;
+  min-height: 1.6rem;
+  padding-left: 1.8rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.heatmap :global(.scale-legend) {
+  min-height: 1.2rem;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 760px) {
+  .plotShell :global(.caos-plot.fill) {
+    height: 420px;
+    min-height: 420px;
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { PlotCard, useShellLang, useWorkbenchState } from "@fasl-work/caos-app-shell";
 import { UPlotChart } from "@fasl-work/caos-app-shell/chart";
 import { color, extent, format, type Palette } from "../science";
+import plotStyles from "./ScientificPlots.module.css";
 
 export function Legend({
   range,
@@ -78,10 +79,14 @@ export function Heatmap({
     source.width = cols;
     source.height = rows;
     const pixels = source.getContext("2d")!;
-    // One native raster pixel per exported sample. CSS, not an enormous
-    // 8-fold allocation, fits the view; linked readouts retain every sample.
-    c.width = cols;
-    c.height = rows;
+    // Nearest-neighbour backing pixels keep coarse grids crisp without
+    // inventing intermediate values. Bound the allocation for user arrays.
+    const rasterScale = Math.max(
+      1,
+      Math.min(8, Math.floor(Math.sqrt(1_500_000 / (rows * cols)))),
+    );
+    c.width = cols * rasterScale;
+    c.height = rows * rasterScale;
     for (let y = 0; y < rows; y++)
       for (let x = 0; x < cols; x++) {
         pixels.fillStyle = color(data[y][x], bounds, palette);
@@ -91,6 +96,29 @@ export function Heatmap({
     ctx.imageSmoothingEnabled = false;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(source, 0, 0, c.width, c.height);
+    // A restrained quarter grid is a spatial reference overlay, not extra
+    // samples. It keeps near-background and uniform sections spatially
+    // locatable without altering any raster values.
+    if (rows > 4 && cols > 4) {
+      const area = c.parentElement;
+      const pixelScale = c.width / Math.max(1, area?.clientWidth ?? c.width);
+      const lineWidth = Math.max(1, pixelScale * 0.8);
+      ctx.save();
+      ctx.strokeStyle = getComputedStyle(c).getPropertyValue("--color-fg-subtle").trim() || "#59616b";
+      ctx.globalAlpha = 0.32;
+      ctx.lineWidth = lineWidth;
+      for (let i = 1; i < 5; i++) {
+        const x = Math.round((i * cols * rasterScale) / 5) + 0.5;
+        const y = Math.round((i * rows * rasterScale) / 5) + 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, rows * rasterScale);
+        ctx.moveTo(0, y);
+        ctx.lineTo(cols * rasterScale, y);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
   }, [data, palette, bounds[0], bounds[1], rows, cols]);
   const xv = hover
     ? (xCoordinates?.[hover.x] ??
@@ -103,17 +131,17 @@ export function Heatmap({
         ((hover.y + 0.5) / rows) * ((yRange?.[1] ?? rows) - (yRange?.[0] ?? 0)))
     : 0;
   return (
-    <figure className="science-plot heatmap">
+    <figure className={`${plotStyles.heatmap} science-plot heatmap`}>
       <figcaption>
         <span>{title}</span>
         <output>
           {hover ? `${format(data[hover.y]?.[hover.x])} ${unit}` : unit}
         </output>
       </figcaption>
-      <div className="heatmap-axes">
+      <div className={`${plotStyles.heatmapAxes} heatmap-axes`}>
         <span className="axis-y">{yLabel}</span>
         <div
-          className="heatmap-area"
+          className={`${plotStyles.heatmapArea} heatmap-area`}
           style={aspectRatio ? { aspectRatio } : undefined}
           onPointerMove={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
@@ -288,7 +316,7 @@ export function Plot({
     x={{ label: xLabel, values: x, log: logX, range: activeViewport ?? undefined }}
     y={{ label: yLabel, log: logY, range: yRange }}
     series={[...chartSeries, ...bandSeries]}
-    height={300}
+    height="fill"
     onPick={interactive ? choose : undefined}
     readout={index => `${pointLabels?.[index] ?? `sample ${index + 1}`} · ${series.map(s => `${s.name}: ${Number.isFinite(s.values[index]) ? format(s.values[index]) : "not available"}${s.errors ? ` ± ${format(s.errors[index])}` : ""}`).join(" · ")}${band ? ` · ${band.name}: ${format(band.lower[index])}–${format(band.upper[index])}` : ""}`}
     hint={pick === null ? `${yLabel} by ${xLabel}` : `${pointLabels?.[pick] ?? `sample ${pick + 1}`} · ${format(x[pick])} ${xLabel}`}
@@ -298,7 +326,7 @@ export function Plot({
     provenance={workbench.source === "real" ? "real" : "synthetic"}
     dataKey={workbench.stateKey} fill
   >{chart}</PlotCard> : chart;
-  return <div className="science-plot-shell">{content}</div>;
+  return <div className={`${plotStyles.plotShell} science-plot-shell`}>{content}</div>;
 }
 
 export function LayerColumn({
