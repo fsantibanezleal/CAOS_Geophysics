@@ -1,4 +1,4 @@
-import { ApiClient } from "./client";
+import { ApiClient, ApiHttpError } from "./client";
 import { parseRawAsset, type RawAsset } from "./contracts";
 
 export interface AccountView {
@@ -7,6 +7,27 @@ export interface AccountView {
   is_active: boolean;
   is_verified: boolean;
   is_superuser: boolean;
+}
+
+export type AuthConfig = Readonly<{
+  mode: "local" | "email";
+  registration_enabled: boolean;
+  mail_flows_enabled: boolean;
+}>;
+
+export function parseAuthConfig(value: unknown): AuthConfig {
+  const config = record(value, "auth config");
+  const keys = ["mode", "registration_enabled", "mail_flows_enabled"];
+  if (Object.keys(config).length !== keys.length || keys.some(key => !Object.hasOwn(config, key)) ||
+      (config.mode !== "local" && config.mode !== "email") ||
+      typeof config.registration_enabled !== "boolean" || typeof config.mail_flows_enabled !== "boolean" ||
+      (config.mode === "local" && (config.registration_enabled || config.mail_flows_enabled)) ||
+      (config.registration_enabled && !config.mail_flows_enabled)) throw new Error("Invalid auth config");
+  return Object.freeze({ mode: config.mode, registration_enabled: config.registration_enabled, mail_flows_enabled: config.mail_flows_enabled });
+}
+
+export function accountCanUseServer(config: AuthConfig, account: AccountView): boolean {
+  return account.is_active && (config.mode === "local" || account.is_verified);
 }
 
 export interface ProjectView {
@@ -22,7 +43,7 @@ export interface DeletionView {
   project_id: string;
   receipt_id: string;
   backup_erasure_status: "not_attempted";
-  external_backup_status: "pending_reconciliation";
+  external_backup_status: "not_configured" | "pending_reconciliation";
 }
 
 export interface RawUploadDeclaration {
@@ -114,7 +135,7 @@ function parseDeletion(value: unknown): DeletionView {
   if (deletion.deleted !== true) throw new Error("deletion: not confirmed");
   uuid(deletion.project_id, "deletion.project_id");
   uuid(deletion.receipt_id, "deletion.receipt_id");
-  if (deletion.backup_erasure_status !== "not_attempted" || deletion.external_backup_status !== "pending_reconciliation")
+  if (deletion.backup_erasure_status !== "not_attempted" || (deletion.external_backup_status !== "pending_reconciliation" && deletion.external_backup_status !== "not_configured"))
     throw new Error("deletion: unrecognized backup state");
   return value as unknown as DeletionView;
 }
@@ -135,33 +156,57 @@ export class LifecycleApi {
     return text(response.csrf_token, "csrf token");
   }
 
-  /** Also serves as an availability probe before showing authentication controls. */
-  async probe(signal?: AbortSignal): Promise<AccountView | null> {
+  config(signal?: AbortSignal): Promise<AuthConfig> { return this.api.requestJson("/api/auth/config", parseAuthConfig, { signal }); }
+
+  /** Paired profile/account snapshot; discovery failure never becomes guest access. */
+  async session(signal?: AbortSignal): Promise<{ config: AuthConfig; account: AccountView | null }> {
+    const config = await this.config(signal);
     await this.csrf(signal);
-    try { return await this.me(signal); }
+    try {
+      const account = await this.me(signal);
+      return { config, account: accountCanUseServer(config, account) ? account : null };
+    }
     catch (error) {
-      if (error instanceof Error && "status" in error && error.status === 401) return null;
+      if (error instanceof ApiHttpError && error.status === 401) return { config, account: null };
       throw error;
     }
+  }
+
+  async probe(signal?: AbortSignal): Promise<AccountView | null> { return (await this.session(signal)).account; }
+
+  private async requireMail(registration = false): Promise<void> {
+    const config = await this.config();
+    if (config.mode !== "email" || !config.mail_flows_enabled || (registration && !config.registration_enabled))
+      throw new Error("This account action is disabled by the server profile");
   }
 
   me(signal?: AbortSignal): Promise<AccountView> { return this.api.requestJson("/api/auth/me", parseAccount, { signal }); }
 
   async register(email: string, password: string): Promise<AccountView> {
+    await this.requireMail(true);
     return this.api.requestJson("/api/auth/register", parseAccount, { method: "POST", csrfToken: await this.csrf(), body: { email, password } });
   }
 
   async requestVerification(email: string): Promise<void> {
+    await this.requireMail();
     await this.api.requestEmpty("/api/auth/verify/request-token", { method: "POST", csrfToken: await this.csrf(), body: JSON.stringify({ email }), headers: { "Content-Type": "application/json" } });
   }
 
   async verify(token: string): Promise<AccountView> {
+    await this.requireMail();
     return this.api.requestJson("/api/auth/verify/verify", parseAccount, { method: "POST", csrfToken: await this.csrf(), body: { token } });
   }
 
   async login(email: string, password: string): Promise<AccountView> {
+    return (await this.loginSession(email, password)).account;
+  }
+
+  async loginSession(email: string, password: string): Promise<{ config: AuthConfig; account: AccountView }> {
+    const config = await this.config();
     await this.api.requestForm("/api/auth/cookie/login", new URLSearchParams({ username: email, password }), await this.csrf());
-    return this.me();
+    const account = await this.me();
+    if (!accountCanUseServer(config, account)) throw new ApiHttpError(401, "account_ineligible", "This account cannot access server projects");
+    return { config, account };
   }
 
   async logout(): Promise<void> {
@@ -169,10 +214,12 @@ export class LifecycleApi {
   }
 
   async forgotPassword(email: string): Promise<void> {
+    await this.requireMail();
     await this.api.requestEmpty("/api/auth/reset-password/forgot-password", { method: "POST", csrfToken: await this.csrf(), body: JSON.stringify({ email }), headers: { "Content-Type": "application/json" } });
   }
 
   async resetPassword(token: string, password: string): Promise<void> {
+    await this.requireMail();
     await this.api.requestEmpty("/api/auth/reset-password/reset-password", { method: "POST", csrfToken: await this.csrf(), body: JSON.stringify({ token, password }), headers: { "Content-Type": "application/json" } });
   }
 
