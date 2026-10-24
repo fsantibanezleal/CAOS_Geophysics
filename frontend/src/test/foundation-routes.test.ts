@@ -49,10 +49,10 @@ describe("frontend route and shell foundation", () => {
     const manifest = JSON.parse(read("../../package.json"));
     const lock = JSON.parse(read("../../package-lock.json"));
     const installed = JSON.parse(read("../../node_modules/@fasl-work/caos-app-shell/package.json"));
-    expect(manifest.dependencies["@fasl-work/caos-app-shell"]).toBe("0.8.1");
-    expect(lock.packages[""].dependencies["@fasl-work/caos-app-shell"]).toBe("0.8.1");
-    expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.8.1");
-    expect(installed.version).toBe("0.8.1");
+    expect(manifest.dependencies["@fasl-work/caos-app-shell"]).toBe("0.19.0");
+    expect(lock.packages[""].dependencies["@fasl-work/caos-app-shell"]).toBe("0.19.0");
+    expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.19.0");
+    expect(installed.version).toBe("0.19.0");
     const entry = read("../main.tsx");
     const metadata = entry.slice(entry.indexOf('version: "0.04.001"'), entry.indexOf("  architecture,"));
     expect(metadata).toContain('visibility: "public"');
@@ -66,6 +66,15 @@ describe("frontend route and shell foundation", () => {
     expect(waveformMount).toContain('en: "Apache-2.0 code and CC-BY-4.0 content"');
     expect(waveformMount).toContain('es: "Código Apache-2.0 y contenido CC-BY-4.0"');
     expect(read("../../vite.config.ts")).toContain("dedupe: ['react', 'react-dom', 'react-router']");
+    const gate = read("../../scripts/gate.mjs");
+    expect(gate).toContain("'--require-focus'");
+    expect(gate).toContain("'--workbench', appRoute");
+    expect(gate).toContain("'--spa-fallback'");
+    expect(gate).toContain("['G18', 'G20']");
+    expect(gate).toContain("an unmeasured requirement, not a pass");
+    const manifestJson = JSON.parse(read("../../../product.json"));
+    expect(manifestJson.name).toBe("Inverse Earth Studio");
+    expect(manifestJson.workbench_route).toBe("/");
     // This is an ABI/consumer guard, not a measured mobile instrument-area gate.
   });
 

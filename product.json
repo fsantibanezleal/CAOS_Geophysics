@@ -11,6 +11,7 @@
   "holder": "Felipe Santibáñez-Leal",
   "year": 2026,
   "app": "workbench",
+  "workbench_route": "/",
   "method_packages": [],
   "pages": [
     { "id": "app", "path": "/", "en": "App", "es": "App" },
