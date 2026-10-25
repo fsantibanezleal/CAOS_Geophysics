@@ -1,8 +1,10 @@
 # L2 sub-SDD ownership and dependency backlog
 
-Status: planned. This task authorizes ONLY new feature docs plus primary research.
-MAIN complete review and explicit code/test authority still pending; no numerical
-gate executed. Base `1b112bb258520a5679a865335cec30b6a97a1a0d`.
+Status: local implementation gates executed 2026-10-25. The scoped supporting suite
+passed 213 tests without skips; all 24 locked external-control conditions passed.
+See [validation](validation.md) and the immutable [execution receipt](evidence/local-matrix-execution-20261025.json).
+Independent pinned review and broader product/field acceptance remain pending.
+Base `1b112bb258520a5679a865335cec30b6a97a1a0d`.
 
 Parent references: [product SDD M02](../../SDD.md), [unchanged PR120 tasks](../m02-survey-inversion/tasks.md),
 [accepted PR122 forward](../m02-prism-operator/tasks.md),
@@ -20,38 +22,39 @@ are NOT activated or closed by this native-array sub-SDD. No shared-owner edits.
   [source inspection receipt](../../../research/m02-survey-l2-evidence-2026-10-03.json).
 - [x] Freeze separately reviewable exact native [contract](contract.md),
   [objective/optimizer/results/ownership](design.md), [16 EARS requirements](requirements.md)
-  and [prospective control/tolerance/seed matrix](validation.md). These are authored
-  documents, NOT approved numerical policy or executed gates.
-- [ ] MAIN fully reads ALL packet files and exact diff; approves source/frame/
-  error declaration boundary, covariance symmetric-root policy, normalization,
-  split minima/algorithm, beta grid/seeds, KKT/native stop mapping, caps/outputs.
-- [ ] MAIN explicitly authorizes exact prospective code/test paths and independent
-  acceptance responsibilities. No code/test starts before this separate authority.
+  and [control/tolerance/seed matrix](validation.md). The thresholds remain frozen;
+  execution evidence is recorded separately from policy.
+- [x] The owner explicitly instructed implementation and validation of all pending
+  approved product work on 2026-10-25. This authorizes work within the product
+  scope; it does not waive any frozen scientific gate or independent review.
+- [ ] Independent reviewer verifies the exact packet/source diff, source/frame/
+  error declarations, covariance, split, candidate grid, stopping policy and
+  output contract against the fresh receipts before this unit is accepted.
 
-## Prospective bounded implementation paths, unapproved
+## Implemented local ordinary-L2 paths and boundaries
 
 | Owner | Proposed new paths | Boundary |
 | --- | --- | --- |
-| M02 sidecar | data-pipeline/gravity_survey_l2.py; tests/data/test_gravity_survey_l2.py | Exact native admission/hash/geometry-only split, no JSON/upload/I/O/provider corrections |
-| M02 sidecar | data-pipeline/gravity_l2.py; tests/numerics/test_gravity_l2.py; tests/numerics/test_gravity_l2_selection.py | Official fixed L2/calibration/evaluation, private recorded stop mapping; no IRLS/API/hook/export |
-| M02 sidecar | This feature docs and later own dated evidence | Preserve parent/accepted forward/receipts, no ledger/version/canonical mutation |
-| MAIN/M01/source owners | Future source/M01 normalized-survey proof, sealing custody, upload/JSON/storage/API/UI/replay integration | Separate explicit design/authority; not supplied by this module |
-| MAIN independent review | Exact-source engine/objective/KKT/covariance/leakage/control/resource replay | Authored controls/self-review not independent acceptance |
+| Local M02 ordinary-L2 | data-pipeline/gravity_survey_l2.py; tests/data/test_gravity_survey_l2.py | Exact native admission/hash/geometry-only split; excludes JSON/upload/I/O/provider corrections |
+| Local M02 ordinary-L2 | data-pipeline/gravity_l2.py; tests/numerics/test_gravity_l2.py; tests/numerics/test_gravity_l2_selection.py | Official fixed L2/calibration/evaluation and private recorded stop mapping; excludes IRLS/API/hooks/export |
+| Evidence | This feature's dated execution receipt | Source/input/outcome/JUnit/log identities; no canonical artifact or release mutation |
+| Remaining product scope | Source/M01 normalized-survey proof, sealing custody, upload/JSON/storage/API/UI/replay | Outside this local numerical unit; must be implemented and separately accepted |
+| Independent review | Exact-source engine/objective/KKT/covariance/leakage/control/resource replay | Still pending; local authored tests are not independent acceptance |
 
 All legacy sources, gravity_forward.py/tests, environments, requirements and
-historical three forward receipts are protected. No broad scientific source or
-app edits, runtime package installs or implicit builder scripts are authorized.
+historical three forward receipts remain protected. This local unit does not edit
+those sources, install runtimes or invoke implicit artifact builders.
 
 ## Future task order and requirements
 
 | Task | Depends on | Requirements | Actual gate status |
 | --- | --- | --- | --- |
-| L2-A, MAIN full read / exact authority | Packet persisted/pinned | All16 | Awaiting review, no numerical PASS |
-| L2-B, Native admission and geometry-only plan | L2-A | L2-01..04,08,13,15 | NOT RUN; no new code/tests |
-| L2-C, Official objective, symmetric covariance, independent tiny R/J oracle | L2-B | L2-04..07,12 | NOT RUN |
-| L2-D, Exact recorded stop/terminal/null/cap mapping | L2-C | L2-07,11,14,15 | NOT RUN |
-| L2-E, All candidate folds and immutable separate outer evaluation | L2-D | L2-08..10,13 | NOT RUN |
-| L2-F, Complete locked24L2 and resource/control receipts | L2-E | L2-12,14,16 | NOT RUN; negatives retained |
+| L2-A, MAIN full read / owner authority | Packet persisted/pinned | All16 | Owner authorized the scoped work; independent review remains pending |
+| L2-B, Native admission and geometry-only plan | L2-A | L2-01..04,08,13,15 | Local named controls passed in the 213-test receipt |
+| L2-C, Official objective, symmetric covariance, independent tiny R/J oracle | L2-B | L2-04..07,12 | Local named controls passed in the 213-test receipt |
+| L2-D, Exact recorded stop/terminal/null/cap mapping | L2-C | L2-07,11,14,15 | Local named controls passed in the 213-test receipt; operational p95 not established |
+| L2-E, All candidate folds and immutable separate outer evaluation | L2-D | L2-08..10,13 | Local named controls passed in the 213-test receipt |
+| L2-F, Complete locked24L2 and resource/control receipts | L2-E | L2-12,14,16 | 24/24 local synthetic outcomes passed; per-case outcomes and hashes retained; no field claim |
 | L2-G, MAIN pinned independent replay/full diff | L2-F | All16 | NOT RUN; required before code merge |
 
 Finish each approved unit's code/tests/theory/evidence together; no partial-engine
@@ -61,8 +64,8 @@ seed edits to hide it. Measured operational cap must not be inferred from G byte
 
 ## Explicit remaining broad M02 backlog
 
-The following parent work remains incomplete and unapproved by this narrowed
-unit; none is silently removed from PR120's accepted plan:
+The following broader parent work remains incomplete outside this local ordinary
+L2 unit; none is silently removed from PR120's accepted plan:
 
 - Actual original-byte uploaded data decoding/normalized derivative binding,
   provider/M01 correction/CRS/vertical/geometry-uncertainty adjudication; robust
@@ -78,5 +81,5 @@ unit; none is silently removed from PR120's accepted plan:
 - Shared API/jobs/auth/storage/UI/course/wiki, GPU/local-extension and actual-host
   admission; full product convergence, main/release/canonical/version/deploy.
 
-No issue is closed by docs/static success. MAIN decides plan readiness and later
-authority after complete read; this agent does not merge/deploy.
+No parent issue or product requirement is closed by this local pass. Independent
+review and remaining product gates are required before release or deployment.

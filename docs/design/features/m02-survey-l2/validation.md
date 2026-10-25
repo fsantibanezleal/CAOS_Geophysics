@@ -1,13 +1,13 @@
-# Prospective L2 gates, controls and evidence policy
+# M02 L2 gates, controls and evidence policy
 
-Status: planned. New numerical gates executed: **0**. No code/test authorization.
-MAIN must fully read [contract](contract.md), [design](design.md),
-[requirements](requirements.md), [research](../../../research/m02-survey-l2-2026-10-03.md),
-[source receipt](../../../research/m02-survey-l2-evidence-2026-10-03.json) and
-[tasks](tasks.md) before authorizing prospective paths. Never label these gates
-PASS from a source read, plan merge or documentation check.
+Status: numerical gates executed locally on 2026-10-25; this section records
+the frozen prospective policy and the scoped run receipt below. Product, field,
+deployment and independent-review gates remain separate.
+The owner authorized completion of approved product work on 2026-10-25. The
+independent review of the exact source and controls remains pending. Never label
+a gate PASS from a source read, plan merge or documentation check alone.
 
-## Frozen proposed tolerances and meanings
+## Frozen tolerances and meanings
 
 Existing accepted forward policy stays unchanged: Geoana versus Choclo rtol1e-7 /
 atol1e-10 mGal; prediction/Jrho/state/units rtol1e-10 / atol1e-12 mGal; adjoint
@@ -43,7 +43,16 @@ wall caps. No success on returned vector, low WRMS, early line-search failure,
 retuned beta, zero-jitter start or stale terminal model. Deadlines are cooperative,
 not a hard preemption guarantee. Native source defaults are not our stop policy.
 
-## Requirement-to-gate matrix, all NOT RUN
+## Requirement-to-gate matrix
+
+The named L2-01 through L2-15 controls ran as part of the 213-test supporting
+suite with zero failures, errors or skips. L2-16 ran all 24 locked cases with one
+test per isolated worker and zero failures, errors or skips. Exact source, input,
+candidate, fold, metric, JUnit/log hashes and scope limits are in the
+[2026-10-25 execution receipt](evidence/local-matrix-execution-20261025.json).
+These are local synthetic/contract controls, not independent review, custody
+proof, field eligibility, the parent's broader 48/96 survey study, API/UI, GPU,
+host or release acceptance.
 
 | Requirement | Named prospective control | Positive, negative and independent proof |
 | --- | --- | --- |
@@ -64,12 +73,27 @@ not a hard preemption guarantee. Native source defaults are not our stop policy.
 | L2-15 | test_no_io_hooks_runtime_or_legacy_mutation | File/network/subprocess writes denied after imports; no user callbacks/importpaths; loaded official version checks; external eight+existing20 hashes; accepted legacy/artifact bytes unchanged |
 | L2-16 | test_complete_locked_l2_control_matrix | All 24 prospective source-disjoint ordinary controls including poor/null/model-sensitive outcomes; no erased errors/replaced seeds; prospective synthetic positives separate from field |
 
-Full file paths are in requirements. These names do NOT exist yet. Small private
-partition-solve unit tests may use tiny official objects without pretending that
-they meet public calibration split minima or are eligible submitted surveys.
-No testing-only public engine injection/bypass is proposed.
+Full file paths are in requirements. Small private partition-solve unit tests
+use tiny official objects without pretending that they meet public calibration
+split minima or are eligible submitted surveys. No testing-only public engine
+injection/bypass is used.
 
-## Frozen small and ordinary authored control specifications
+### Executed 2026-10-25
+
+| Run | Result | Evidence |
+|---|---|---|
+| `tests/data/test_gravity_survey_l2.py`, `tests/numerics/test_gravity_l2.py`, and `tests/numerics/test_gravity_l2_selection.py` excluding the 24-case matrix | 213 passed, 0 failed, 0 skipped | External JUnit SHA-256 and exact source hashes in the execution receipt |
+| `test_complete_locked_l2_control_matrix` | 24/24 passed, 0 failed, 0 skipped; one process per family/condition, required native thread pools capped at one | Per-condition JUnit, log, outcomes and SHA-256 in the execution receipt |
+| Lower-reference, 1500 kg/m3-bound, diagonal-SD case | Passed under the frozen one-thread runtime. A direct invocation without those required caps had returned an environment error and is not counted as a solver failure. | Included in the full supporting-suite receipt and matrix evidence |
+
+SimPEG emitted its existing NumPy scalar-conversion deprecation warning in the
+supporting suite; no numerical assertion failed. The first matrix batch also
+emitted pytest's xunit2/`record_property` warning while still persisting the
+property in each JUnit file; the committed runner now selects xunit1 for future
+runs. Per-case runtimes were below the frozen 1800-second calibration ceiling,
+but this is not the 20-repeat p95 resource qualification or a server benchmark.
+
+## Frozen small and ordinary control specifications
 
 Tiny objective/bounds controls: nonuniform hx=(40,70), hy=(30,50,90), hz=(60,110),
 origin(-140,-180,-260), sparse active full indices(0,2,3,7,11), rho

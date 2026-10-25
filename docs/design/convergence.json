@@ -140,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. Actual user-data first-arrival tools now compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish these scoped implementations, not learned superiority or field validity. M02 full-cap CG and full M01-M13/user-data/host/visual acceptance remain failed or pending.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -169,6 +169,10 @@
         {
           "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
           "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
+        },
+        {
+          "path": "docs/design/features/m02-survey-l2/evidence/local-matrix-execution-20261025.json",
+          "sha256": "c5628dbcca4b017754b7c27e923f4fb8542278520e826eb7e4c2884377e82802"
         },
         {
           "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
