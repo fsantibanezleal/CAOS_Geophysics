@@ -45,8 +45,10 @@ _NATIVE_VENDOR_PINS = (
     (original.RegularizationMesh, '942ac3fffded92f48c7a5294575082713ebde716918d0e8fbe117c084607ff8f'),
     (original.BaseSimilarityMeasure, 'aae7dbd3cb4887246f38c8ceba4fe8fbeeb5592110341635e06fdb70246a92b5'),
     (original.maps.Wires, '6bdd7455d17467ed547091526735df560a35c9b204ab2f4105dfab096ed6c90e'),
-    (original.TensorMesh, '2e8a97a5449f490dbf4128c8696833a8770c896d260f5ecf087e2f622b3be65d'),
-    (original.DiffOperators, 'f3c7ca3c54a50232202d08bf9768411273fcee7ce95eb5b110a79de6c42db70a'),
+    (original.TensorMesh, ('6b978f50690a23f853c33bf4f1f1810a63275f837d11e1d946239f58a447a2a5'
+        if planner.sys.platform == 'linux' else '2e8a97a5449f490dbf4128c8696833a8770c896d260f5ecf087e2f622b3be65d')),
+    (original.DiffOperators, ('ed265f2931c945327a7de7ae04aa21d075ff8d34bfeb3f0497cd372c12ea89d8'
+        if planner.sys.platform == 'linux' else 'f3c7ca3c54a50232202d08bf9768411273fcee7ce95eb5b110a79de6c42db70a')),
 )
 
 

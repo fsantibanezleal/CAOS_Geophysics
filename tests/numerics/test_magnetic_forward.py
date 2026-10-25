@@ -9,6 +9,7 @@ import json
 import math
 from pathlib import Path
 import re
+import sys
 
 import choclo
 from choclo.constants import VACUUM_MAGNETIC_PERMEABILITY as MU0
@@ -454,7 +455,8 @@ def test_external_pins_and_acceptance_boundary():
     research = (ROOT/"docs/design/features/m04-induced-prism/research.md").read_text(encoding="utf-8")
     magnetic_pins = dict(re.findall(r"\| ([a-z_/]+\.py) \| ([a-f0-9]{64}) \|", research))
     assert len(magnetic_pins) == 4
-    shared = json.loads((ROOT/"docs/design/features/m02-prism-operator/runtime-pins.json").read_text())
+    pin_file = ("runtime-pins-linux-cp312.json" if sys.platform == "linux" else "runtime-pins.json")
+    shared = json.loads((ROOT/"docs/design/features/m02-prism-operator"/pin_file).read_text())
     used_pins = {p: h for p, h in shared["targeted_source_sha256"].items()
                  if not p.startswith("simpeg/potential_fields/gravity/") and not p.endswith("_gravity.py")}
     for relative, expected in {**used_pins, **magnetic_pins}.items():
@@ -470,7 +472,7 @@ def test_external_pins_and_acceptance_boundary():
             assert node.func.id not in {"open", "eval", "exec", "__import__"}
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             assert node.func.attr not in {"save", "savetxt", "load", "write", "write_bytes", "write_text"}
-    assert imports <= {"sys", "numpy", "scipy", "simpeg", "geoana", "discretize"}
+    assert imports <= {"platform", "sys", "numpy", "scipy", "simpeg", "geoana", "discretize"}
     assert "gravity_forward" not in imports
 
 
@@ -588,13 +590,21 @@ def test_every_loaded_package_epoch(package, monkeypatch):
     with pytest.raises(RuntimeError, match="runtime"): op.forward_magnetic(request())
 
 
-@pytest.mark.parametrize("kind", ["python", "platform", "bits"])
+@pytest.mark.parametrize("kind", ["python", "platform", "architecture", "bits"])
 def test_python_platform_epoch(kind, monkeypatch):
     with monkeypatch.context() as patch:
         if kind == "python": patch.setattr(op.sys, "version_info", (3, 12, 9))
-        elif kind == "platform": patch.setattr(op.sys, "platform", "linux")
+        elif kind == "platform": patch.setattr(op.sys, "platform", "darwin")
+        elif kind == "architecture": patch.setattr(op.platform, "machine", lambda: "aarch64")
         else: patch.setattr(op.sys, "maxsize", 2**31-1)
         with pytest.raises(RuntimeError, match="runtime"): op.forward_magnetic(request())
+
+
+def test_linux_x86_64_runtime_epoch(monkeypatch):
+    with monkeypatch.context() as patch:
+        patch.setattr(op.sys, "platform", "linux")
+        patch.setattr(op.platform, "machine", lambda: "x86_64")
+        assert op._runtime() is None
 
 
 def test_bad_actual_tensor_geometry(monkeypatch):

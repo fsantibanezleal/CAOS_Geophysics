@@ -5,6 +5,7 @@ external. Returned arrays are independently owned and write-protected at return,
 not tamperproof; no returned storage is retained as trusted future state.
 """
 
+import platform
 import sys
 
 import discretize
@@ -70,7 +71,10 @@ def _runtime():
     loaded = {"simpeg": simpeg, "geoana": geoana, "discretize": discretize, "numpy": np, "scipy": scipy}
     if {key: module.__version__ for key, module in loaded.items()} != VERSIONS:
         raise RuntimeError("runtime: required loaded package versions differ")
-    if (sys.version_info[:3] != (3, 12, 10) or sys.platform != "win32"
+    supported_platform = (sys.platform == "win32" and platform.machine().lower() in {"amd64", "x86_64"}) or (
+        sys.platform == "linux" and platform.machine().lower() == "x86_64"
+    )
+    if (sys.version_info[:3] != (3, 12, 10) or not supported_platform
             or sys.implementation.name != "cpython" or sys.maxsize != 2**63-1):
         raise RuntimeError("runtime: unreviewed Python/platform source epoch")
 

@@ -1,6 +1,7 @@
 """Independent M11 structure assembly/autograd and physical forward oracles."""
 
 import math
+import sys
 
 import choclo
 from choclo.constants import VACUUM_MAGNETIC_PERMEABILITY as MU0
@@ -206,8 +207,8 @@ def test_disjoint_sources_not_a_coupling_certificate():
     ('RegularizationMesh','942ac3fffded92f48c7a5294575082713ebde716918d0e8fbe117c084607ff8f'),
     ('BaseSimilarityMeasure','aae7dbd3cb4887246f38c8ceba4fe8fbeeb5592110341635e06fdb70246a92b5'),
     ('Wires','6bdd7455d17467ed547091526735df560a35c9b204ab2f4105dfab096ed6c90e'),
-    ('TensorMesh','2e8a97a5449f490dbf4128c8696833a8770c896d260f5ecf087e2f622b3be65d'),
-    ('DiffOperators','f3c7ca3c54a50232202d08bf9768411273fcee7ce95eb5b110a79de6c42db70a')])
+    ('TensorMesh', 'platform'),
+    ('DiffOperators', 'platform')])
 def test_trusted_loaded_structural_source_pins(name,expected):
     import hashlib
     import inspect
@@ -221,4 +222,10 @@ def test_trusted_loaded_structural_source_pins(name,expected):
             'TensorMesh':TensorMesh,'DiffOperators':DiffOperators}[name]
     # External trusted harness reads the already loaded official class source,
     # not a user-supplied path. No callable/file-I/O/source-installation change.
+    if expected == 'platform':
+        expected = ({'TensorMesh':'6b978f50690a23f853c33bf4f1f1810a63275f837d11e1d946239f58a447a2a5',
+                     'DiffOperators':'ed265f2931c945327a7de7ae04aa21d075ff8d34bfeb3f0497cd372c12ea89d8'}
+                    if sys.platform == 'linux' else
+                    {'TensorMesh':'2e8a97a5449f490dbf4128c8696833a8770c896d260f5ecf087e2f622b3be65d',
+                     'DiffOperators':'f3c7ca3c54a50232202d08bf9768411273fcee7ce95eb5b110a79de6c42db70a'})[name]
     assert hashlib.sha256(Path(inspect.getsourcefile(target)).read_bytes()).hexdigest()==expected

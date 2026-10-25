@@ -66,11 +66,18 @@ validate_joint_resources.py. Reviewed candidate composition uses the separate
 public physical_nonlinear_optimizer export and its typed epoch2 binding, not the
 linear gravity certificate. Parent scientific acceptance remains separate.
 
-Initial scientific epoch: CPython3.12.10 Windows64; NumPy2.2.6, SciPy1.15.2,
-SimPEG0.25.2, Geoana0.8.1, discretize0.12.0. Independent test oracles use
-Choclo0.3.2 and Torch2.14.0+cu126. Actual loaded versions and externally verified
-installed-source bytes are required, never inferred from distribution metadata.
-No runtime installation or source modification belongs to this feature.
+The original scientific epoch is CPython3.12.10 Windows64; NumPy2.2.6,
+SciPy1.15.2, SimPEG0.25.2, Geoana0.8.1 and discretize0.12.0. An additional
+CPython3.12.10 Linux x86_64 CPU epoch is now admitted for local numerical work
+with separate installed-source pins in
+[`runtime-linux-cp312.json`](runtime-linux-cp312.json); its inherited potential
+field engine pins are in
+[`runtime-pins-linux-cp312.json`](../m02-prism-operator/runtime-pins-linux-cp312.json).
+Independent test oracles use Choclo0.3.2 and Torch2.14.0. The CPU Torch wheel
+is test-only; it is not a production solver dependency. Actual loaded versions
+and installed-source bytes are pinned per platform, never inferred from
+distribution metadata. This local Linux qualification does not establish ML
+VPS admission or deployment.
 
 The first executable lane is CPU float64, one process. Prospective admission:
 4096 full/active cells, 2..64 cells per axis, 3..2048 rows per modality,

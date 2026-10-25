@@ -247,6 +247,12 @@ def test_loaded_runtime_version_types(version,monkeypatch):
     with pytest.raises(RuntimeError): js.plan_joint_survey(request())
 
 
+def test_linux_x86_64_runtime_epoch(monkeypatch):
+    monkeypatch.setattr(js.sys,'platform','linux')
+    monkeypatch.setattr(js.platform,'machine',lambda:'x86_64')
+    js._runtime()
+
+
 @pytest.mark.parametrize('bad',['node_nan','node_shift','centre_bias','bad_volume','bad_bounds','nonfinite_centre'])
 def test_actual_tensor_geometry_fail_closed(bad,monkeypatch):
     from types import SimpleNamespace

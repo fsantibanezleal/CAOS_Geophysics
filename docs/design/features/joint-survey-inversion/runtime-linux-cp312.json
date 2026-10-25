@@ -1,0 +1,51 @@
+{
+  "schema": "geophysics.m11-linux-runtime-pins/v1",
+  "source_epoch": "m11-linux-cpu-1",
+  "date": "2026-10-25",
+  "status": "Local numerical regression passed; full Linux matrix and ML VPS admission remain open",
+  "platform": "Ubuntu 24.04 WSL2; Linux x86_64",
+  "python": "CPython 3.12.10",
+  "engine_versions": {
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0"
+  },
+  "independent_oracle_versions": {
+    "choclo": "0.3.2",
+    "torch": "2.14.0+cpu"
+  },
+  "inherited_potential_engine_manifest": {
+    "path": "../m02-prism-operator/runtime-pins-linux-cp312.json",
+    "sha256": "44ae16e4279975c713df1e43c12f62a6a8f3788542f2d0b0d06e5043b8187fcd"
+  },
+  "m11_and_magnetic_source_sha256": {
+    "simpeg/optimization.py": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+    "simpeg/regularization/cross_gradient.py": "85ff1c1e39ec9e8973707a7debd83706db23027b13832298c4e468b052e3298c",
+    "simpeg/regularization/__init__.py": "942ac3fffded92f48c7a5294575082713ebde716918d0e8fbe117c084607ff8f",
+    "simpeg/regularization/base.py": "aae7dbd3cb4887246f38c8ceba4fe8fbeeb5592110341635e06fdb70246a92b5",
+    "simpeg/regularization/regularization_mesh.py": "5283b4f854906aeb05c216ff1c83174c99a7c53fe6a3ce8227b8ea483e785f44",
+    "simpeg/maps/_base.py": "6bdd7455d17467ed547091526735df560a35c9b204ab2f4105dfab096ed6c90e",
+    "discretize/tensor_mesh.py": "6b978f50690a23f853c33bf4f1f1810a63275f837d11e1d946239f58a447a2a5",
+    "discretize/operators/differential_operators.py": "ed265f2931c945327a7de7ae04aa21d075ff8d34bfeb3f0497cd372c12ea89d8",
+    "simpeg/potential_fields/magnetics/simulation.py": "3895dfdd3295c71a29df841b59d8967ddc7b5eeb0608ddd092707e333a9a339e",
+    "simpeg/potential_fields/magnetics/sources.py": "72e040648eaf7e3b86cbee3c9e61ff478dc5b386cef1adb6842536bd341ed0d2",
+    "simpeg/potential_fields/magnetics/receivers.py": "04a99ac0d1771438f3bd7b25e23d62da2674e4ae6bc8843a19abc53b5e843139",
+    "geoana/kernels/potential_field_prism.py": "2a5e51fc749c1580525e907a4636bf21c64de0d42b8ee5a1ba2783c063bcf4d4",
+    "scipy/optimize/_lsq/bvls.py": "eeee41f0b7d46efdd9459f030192ae0d348d45f0c40664ec9f6e5566d30cb0a9",
+    "scipy/optimize/_lsq/lsq_linear.py": "25684663618999e4288bb654d1d83e4c5491206bdd34080784868f2bd18d3940"
+  },
+  "execution": {
+    "command_scope": "tests/numerics/test_magnetic_forward.py and tests/numerics/test_joint_survey_*.py",
+    "passed": 488,
+    "skipped": 3,
+    "failed": 0,
+    "errors": 0,
+    "full_24_case_matrix": false,
+    "maximum_count_resource_workflow": false,
+    "full_precision_receipt": false,
+    "ml_vps_host_admitted": false,
+    "public_activation": false
+  }
+}

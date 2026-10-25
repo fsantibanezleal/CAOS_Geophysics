@@ -25,6 +25,7 @@ Its numerical artifacts were generated outside the repository at
 | Independent exact-face comparison | 343 converged candidates passed all four predicates; 41 nonconverged retained; 0 reference-stationarity failures |
 | Maximum-count resource gate | 4,096 full cells, 1,932 active, 2,048 receivers per modality and full covariance; active-count plus one rejected |
 | Maximum-count replay | Validated; peak sampled RSS 464,322,560 bytes during replay; no scratch growth observed |
+| Linux CPU regression | 488 passed, 3 skipped across the M11 numerical suite and M04 magnetic forward controls on CPython 3.12.10 x86_64; platform-specific SimPEG, discretize and SciPy source pins recorded in [`runtime-linux-cp312.json`](runtime-linux-cp312.json) |
 
 The matrix tests co-structural, disjoint, flat/null and wrong-field regimes at
 dense, sparse-blocked and shifted geometries, including diagonal and full
@@ -34,6 +35,12 @@ nonconverged candidates and truth diagnostics remain separately available.
 All outputs remain synthetic controls. `field_eligible`,
 `scientific_precision_accepted` for the overall matrix, and `public_activation`
 remain false by design.
+
+The Linux run verifies the named regression suite against the Linux CPU source
+epoch. It does not yet rerun the full 24-case sealed workflow matrix, the
+maximum-count resource workflow, or the independent precision receipt on Linux.
+The RTX 4070 exists on the Windows development host; M11 remains a measured CPU
+lane and makes no GPU performance or VPS-capability claim.
 
 The browser importer is now pinned to the exact current
 `physical_nonlinear_optimizer.py` source bytes. `frontend/scripts/verify-joint-pins.mjs`

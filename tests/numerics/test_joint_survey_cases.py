@@ -180,6 +180,11 @@ def test_near_optimum_gradient_precision_negative_is_retained():
 
 def test_actual_reference_defining_source_pins():
     from scipy.optimize._lsq.bvls import bvls
-    for target,digest in ((bvls,'87d6d88776acb4846f32d306821b441a91b97c3b21ef848c45b9a01771cdf183'),
-        (lsq_linear,'866a691914b304f8788214ff34441d325ed3294c15367fbd2cd45ad60944fa15')):
+    import sys
+    expected = (('eeee41f0b7d46efdd9459f030192ae0d348d45f0c40664ec9f6e5566d30cb0a9',
+                 '25684663618999e4288bb654d1d83e4c5491206bdd34080784868f2bd18d3940')
+                if sys.platform == 'linux' else
+                ('87d6d88776acb4846f32d306821b441a91b97c3b21ef848c45b9a01771cdf183',
+                 '866a691914b304f8788214ff34441d325ed3294c15367fbd2cd45ad60944fa15'))
+    for target,digest in zip((bvls, lsq_linear), expected):
         assert hashlib.sha256(Path(inspect.getsourcefile(target)).read_bytes()).hexdigest()==digest
