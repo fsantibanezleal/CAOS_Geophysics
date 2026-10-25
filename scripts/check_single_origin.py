@@ -63,7 +63,9 @@ def check(root: Path, *, built: bool = False, build_dir: Path | None = None) -> 
         errors.append("runtime deployment must be unconditional single-origin without project fallback")
     try:
         scripts = json.loads(read("frontend/package.json"))["scripts"]
-        if scripts.get("build") != "tsc --noEmit && node copy-data.mjs && vite build":
+        if scripts.get("build") != (
+            "node scripts/verify-joint-pins.mjs && tsc --noEmit && node copy-data.mjs && vite build"
+        ):
             errors.append("default build must use the sole root-only build pipeline")
         if scripts.get("build:single-origin") != "npm run build":
             errors.append("single-origin compatibility command must alias the default build")
