@@ -54,7 +54,7 @@ These are local synthetic/contract controls, not independent review, custody
 proof, field eligibility, the parent's broader 48/96 survey study, API/UI, GPU,
 host or release acceptance.
 
-| Requirement | Named prospective control | Positive, negative and independent proof |
+| Requirement | Executed named control | Positive, negative and independent proof |
 | --- | --- | --- |
 | L2-01 | test_metadata_first_exact_contract | Real 5000-cell/2049-row arrays and oversized covariance reject with finite scans/copies/digests/count/engine denied; exact ndarray/native keys/scalar hooks reject before equality |
 | L2-02 | test_source_frame_sign_and_processing | Upward-mGal/metre/kg/m3 accepted; wrong sign/unit, absent datum/correction and raw-absolute input reject; external raw declaration not false byte verification |
@@ -71,7 +71,7 @@ host or release acceptance.
 | L2-13 | test_native_result_identity_and_tamper | Exact keys/dtypes/None/private immutable arrays; source/model/units/masks/candidates/row/hash/trace tamper rejects; residual identity against independent validated stored prediction |
 | L2-14 | test_preflight_caps_and_measured_local_envelope | Above-cap/projection rejects before allocation; serial CPU/thread/covariance/history limits; actual measured workflow plus wall failure retained, no host/GPU claim |
 | L2-15 | test_no_io_hooks_runtime_or_legacy_mutation | File/network/subprocess writes denied after imports; no user callbacks/importpaths; loaded official version checks; external eight+existing20 hashes; accepted legacy/artifact bytes unchanged |
-| L2-16 | test_complete_locked_l2_control_matrix | All 24 prospective source-disjoint ordinary controls including poor/null/model-sensitive outcomes; no erased errors/replaced seeds; prospective synthetic positives separate from field |
+| L2-16 | test_complete_locked_l2_control_matrix | All 24 locked source-disjoint ordinary controls including poor/null/model-sensitive outcomes; no erased errors/replaced seeds; synthetic positives remain separate from field |
 
 Full file paths are in requirements. Small private partition-solve unit tests
 use tiny official objects without pretending that they meet public calibration
@@ -222,5 +222,10 @@ The eight previously retrieved official files remain byte-bound to their recorde
 installed counterparts. This final source audit rechecks 20 inherited plus eight
 new installed pins, not a new remote retrieval or a full environment certificate.
 The complete packet and actual check counts are pinned by the handoff commit;
-prospective source/test hashes remain null. MAIN's full read/explicit authority
-and every new numerical gate remain pending.
+prospective source/test hashes were null in that historical pre-implementation
+source audit. The later run receipt binds the numerical source/test hashes and
+outcomes. The runner source used to launch the matrix was edited after launch;
+its exact pre-edit bytes are not retained, so the orchestration script hash is
+not independently reproducible from this packet. This limits procedural replay,
+but the individual JUnit/log receipts and numerical source hashes were verified.
+Independent review and parent product gates remain pending.

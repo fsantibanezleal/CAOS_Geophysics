@@ -1,7 +1,8 @@
 # Ordinary submitted-survey L2 requirements
 
-Status: planned. MAIN complete sub-SDD read and explicit code/test authority
-pending. All gates below are prospective and NOT RUN; no new named test exists.
+Status: implemented as a local native-array numerical unit; the 213-test
+supporting suite and 24 locked matrix controls ran on 2026-10-25. Independent
+review remains pending. This status does not admit uploads or accept full M02.
 This does not close the [parent's 19 requirements](../m02-survey-inversion/requirements.md).
 [Typed protocol](contract.md), [design](design.md), [controls](validation.md).
 
@@ -85,6 +86,7 @@ complete predeclared control matrix, all negative/noise/geometry/model outcomes
 and untouched sealed scores, never relax thresholds or treat synthetic truth as field.
 Gate: tests/numerics/test_gravity_l2_selection.py::test_complete_locked_l2_control_matrix
 
-Each requirement's numerical or data gate is named in validation but absent.
+The named local gates and their bounded results are listed in validation and
+the dated execution receipt. Parent product requirements remain open.
 Documentation/source inspection checks establish reviewability, NOT numerical
 implementation, field admission, IRLS, API, GPU, host or full-M02 acceptance.

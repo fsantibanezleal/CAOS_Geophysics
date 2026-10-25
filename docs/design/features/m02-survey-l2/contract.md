@@ -1,7 +1,9 @@
 # Exact ordinary submitted-survey L2 protocol
 
-Status: planned. No code/test authority; MAIN must read the complete sub-SDD.
-Base `1b112bb258520a5679a865335cec30b6a97a1a0d`. Numerical gates NOT RUN.
+Status: implemented local native-array contract; supporting tests and locked
+controls ran on 2026-10-25. Independent review and upload/API integration remain
+pending; this contract does not itself admit or process uploaded data.
+Base `1b112bb258520a5679a865335cec30b6a97a1a0d`.
 [Design](design.md), [requirements](requirements.md), [controls](validation.md).
 This is a native in-memory scientific contract, NOT JSON/upload/API admission.
 

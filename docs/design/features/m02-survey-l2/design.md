@@ -1,7 +1,8 @@
 # Ordinary local submitted-survey weighted L2 design
 
-Status: planned, 2026-10-03. MAIN full read and explicit implementation approval
-are REQUIRED before code/tests. Numerical gates: NOT RUN. Base develop
+Status: implemented local numerical unit, 2026-10-25; independent review and
+broader product integration remain pending. Local controls ran; this is not full
+M02 acceptance. Base develop
 `1b112bb258520a5679a865335cec30b6a97a1a0d`; branch
 `task/geophysics-m02-survey-l2-sdd`. [Research](../../../research/m02-survey-l2-2026-10-03.md)
 was persisted first; [typed protocol](contract.md), [gates](validation.md),
@@ -326,7 +327,9 @@ rounded arithmetic. Portable bundle publication/import is not implemented here.
 
 ## Review boundary
 
-All equations, exact types, caps, seeds/candidates/stopping/thresholds and prospective
-path ownership must receive MAIN full-read approval BEFORE code. Prospective
-numerical/quality controls are not PASS. No changes to PR120/PR122, native sources,
+All equations, exact types, caps, seeds/candidates/stopping/thresholds and original
+path ownership were frozen before implementation. The owner authorized the
+scoped work on 2026-10-25. The local controls are recorded as passed within
+their synthetic/native scope; independent and product-level acceptance remain
+open. No changes to PR120/PR122, native sources,
 environments, historical failures, canonical data, main or production.
