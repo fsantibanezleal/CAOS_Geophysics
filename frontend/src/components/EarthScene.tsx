@@ -350,7 +350,7 @@ export function EarthScene({
         }
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
-        camera.zoom = Math.min(1.35, camera.aspect / 1.25);
+        camera.zoom = Math.min(2, camera.aspect / 1.25);
         camera.updateProjectionMatrix();
         invalidate();
       }

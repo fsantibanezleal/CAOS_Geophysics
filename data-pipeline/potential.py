@@ -5,14 +5,17 @@ import numpy as np
 from simpeg import maps
 from simpeg.potential_fields import gravity, magnetics
 
-from geology import properties, volume_grid, VOLUME_SHAPE, VOLUME_SPACING
+from geology import properties, volume_grid, VOLUME_SHAPE, VOLUME_SPACING, SURVEY_SHAPE
 from spatial_inverse import solve, conditional_ensemble
 from evaluation import evaluate
 
 
-def operators(height=60.0, inclination=60.0):
+def operators(height=60.0, inclination=60.0, samples=SURVEY_SHAPE):
     mesh=volume_grid()
-    xx,yy=np.meshgrid(np.linspace(-1050,1050,16),np.linspace(-900,900,16))
+    sample_shape=tuple(samples)
+    if len(sample_shape)!=2 or any(not isinstance(n,(int,np.integer)) or n<2 for n in sample_shape):
+        raise ValueError(f"Survey sample shape must contain two integers >= 2; got {sample_shape!r}")
+    xx,yy=np.meshgrid(np.linspace(-1050,1050,sample_shape[1]),np.linspace(-900,900,sample_shape[0]))
     receivers=np.c_[xx.ravel(),yy.ravel(),np.full(xx.size,height)]
     gs=gravity.Survey(gravity.sources.SourceField([gravity.receivers.Point(receivers,components="gz")]))
     gsim=gravity.simulation.Simulation3DIntegral(mesh,survey=gs,rhoMap=maps.IdentityMap(nP=mesh.nC),engine="geoana")
@@ -108,5 +111,5 @@ def solve_case(case,variant,cache):
     return dict(schema="inverse-earth/v2",**case,variant=variant,engine="SimPEG 0.25.2 3D integral / SciPy",lane="computed replay",
                 grid=dict(shape=list(VOLUME_SHAPE),origin=[-1120,-960,-1120],spacing=list(VOLUME_SPACING),centers=mesh.cell_centers.tolist()),
                 truth=truth.tolist(),secondary_truth=chi.tolist(),units=unit,data_units=data_unit,
-                survey=dict(shape=[16,16],locations=receivers.tolist(),observed=observed.tolist(),clean=clean.tolist(),sigma=sigma,active=mask.tolist(),height=height,inclination=60,declination=12),methods=methods,
+                survey=dict(shape=list(SURVEY_SHAPE),locations=receivers.tolist(),observed=observed.tolist(),clean=clean.tolist(),sigma=sigma,active=mask.tolist(),height=height,inclination=60,declination=12),methods=methods,
                 parameters=dict(contrast=contrast,noise_sigma=sigma,height_m=height,regularization=beta,receivers=int(mask.sum())))

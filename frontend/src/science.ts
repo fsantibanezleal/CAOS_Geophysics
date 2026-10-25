@@ -240,6 +240,37 @@ export function sliceVolume(
     ),
   );
 }
+
+/** Choose the cross-line section that best exposes the modeled structure.
+ * The section index is still user-controlled; this only avoids opening a 3-D
+ * case on an arbitrary plane that misses its body entirely. */
+export function preferredSection(values: number[], shape: number[], activeFraction = 0.1): number {
+  if (shape.length !== 3 || shape.some((n) => !Number.isInteger(n) || n < 1)
+      || values.length !== shape.reduce((a, b) => a * b, 1)
+      || !values.every(Number.isFinite)) return 0;
+  const maximum = Math.max(...values.map(Math.abs));
+  if (!(maximum > 0)) return Math.floor(shape[1] / 2);
+  const threshold = maximum * Math.max(0, Math.min(1, activeFraction));
+  let best = Math.floor(shape[1] / 2), bestArea = -1;
+  for (let section = 0; section < shape[1]; section++) {
+    const image = sliceVolume(values, shape, section);
+    const active: [number, number][] = [];
+    image.forEach((row, depth) => row.forEach((v, east) => {
+      if (Math.abs(v) > threshold) active.push([east, depth]);
+    }));
+    if (!active.length) continue;
+    const east = active.map(([x]) => x), depth = active.map(([, z]) => z);
+    const area = (Math.max(...east) - Math.min(...east) + 1)
+      * (Math.max(...depth) - Math.min(...depth) + 1);
+    const distance = Math.abs(section - (shape[1] - 1) / 2);
+    const bestDistance = Math.abs(best - (shape[1] - 1) / 2);
+    if (area > bestArea || (area === bestArea && distance < bestDistance)) {
+      best = section;
+      bestArea = area;
+    }
+  }
+  return best;
+}
 export type Palette = "earth" | "field" | "velocity" | "error";
 const palettes: Record<Palette, string[]> = {
   earth: ["#edf0e9", "#d8c5a4", "#b88c60", "#865638", "#4c3027"],

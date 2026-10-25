@@ -20,6 +20,26 @@ describe("frontend route and shell foundation", () => {
     expect(read("../main.tsx")).toContain("PRODUCT_ROUTES.map");
   });
 
+  it("six_pages_are_deferred_without_changing_the_route_manifest", () => {
+    const entry = read("../main.tsx");
+    for (const page of ["Workbench", "Research"]) {
+      expect(entry).toContain(`lazy(() => import("./pages/${page}")`);
+    }
+    for (const page of ["Introduction", "Methodology", "Implementation", "Experiments", "Benchmark"]) {
+      expect(entry).toContain(`module.${page}`);
+    }
+    expect(entry).toContain("<Suspense fallback={<RouteLoading />}>");
+    expect(entry).not.toContain('from "./pages"');
+    expect(PRODUCT_ROUTES.map(({ id, path }) => [id, path])).toEqual([
+      ["app", "/"],
+      ["introduction", "/introduction"],
+      ["methodology", "/methodology"],
+      ["implementation", "/implementation"],
+      ["experiments", "/experiments"],
+      ["benchmark", "/benchmark"],
+    ]);
+  });
+
   it("all_builds_use_one_root_origin_without_route_asset_copies", () => {
     expect(deploymentMode).toBe("single-origin");
     for (const path of ["/", "/benchmark/", "/CAOS_Geophysics/benchmark/", "/CAOS_Geophysics-copy/benchmark"]) {
@@ -54,7 +74,8 @@ describe("frontend route and shell foundation", () => {
     expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.19.1");
     expect(installed.version).toBe("0.19.1");
     const entry = read("../main.tsx");
-    const metadata = entry.slice(entry.indexOf('version: "0.04.001"'), entry.indexOf("  architecture,"));
+    const releaseVersion = read("../../../VERSION").trim();
+    const metadata = entry.slice(entry.indexOf(`version: "${releaseVersion}"`), entry.indexOf("  architecture,"));
     expect(metadata).toContain('visibility: "public"');
     expect(metadata).toContain("contain: true");
     expect(metadata).toContain("license: {");

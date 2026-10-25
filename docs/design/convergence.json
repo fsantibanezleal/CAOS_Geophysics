@@ -1,9 +1,9 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "6cc226eb0de1f4765d04bfa76dfe1eaa5e1740910cc431b0f704b9b09e4a40dd",
-  "assessed_revision": "c82b07ebec19bc14cd8f7c95fdc9b235b57a3385",
-  "assessed_at": "2026-10-04T08:04:57Z",
+  "sdd_sha256": "fb688f2fe84f8bbeb4507142465c4e05ff1e6b358ce0409f6d096f71b3e2923c",
+  "assessed_revision": "e65a563d2877ee83b63ac5381e432c1561b32163",
+  "assessed_at": "2026-10-24T23:00:02Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -115,7 +115,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Separately merged pure accounting and its independent review passed419 unit tests and43 supplied-record checks; these are not OS measurements, runtime authority remains false and all15 native gates remain closed. Local API/recovery/source-bundle controls do not establish public-service or complete product admission.",
+      "note": "Historical MT admission measured 29.42% free disk under the superseded 30% threshold; this is not a current release blocker. The owner-tested SDD instead requires measured capacity for the active release plus two rollbacks, existing project data, configured job scratch and worker memory. Current-product host resource, timeout, cancellation and concurrency acceptance remains unresolved; no current capacity pass is claimed.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -123,7 +123,7 @@
         },
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
-          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+          "sha256": "18c18a1ea532c51a189f3485c45a48f082afb0cd60003494bc4023501abdf119"
         },
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
@@ -320,7 +320,7 @@
       "evidence": [
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
-          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+          "sha256": "18c18a1ea532c51a189f3485c45a48f082afb0cd60003494bc4023501abdf119"
         },
         {
           "path": "docs/validation/ops-fixture-independent-review-2026-10-03.md",

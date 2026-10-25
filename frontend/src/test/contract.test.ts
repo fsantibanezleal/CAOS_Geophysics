@@ -1,10 +1,17 @@
 import {describe,expect,it,vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {mtForward} from '../mt';
-import {extent,sliceVolume,loadArtifact} from '../science';
+import {extent,sliceVolume,preferredSection,loadArtifact} from '../science';
 const read=(p:string)=>JSON.parse(readFileSync(new URL(`../../../data/derived/v2/${p}`,import.meta.url),'utf8'));
 describe('scientific rendering contracts',()=>{
  it('preserves x-fast mesh and downward depth in sections',()=>{expect(sliceVolume([0,1,2,3,4,5,6,7],[2,2,2],0)).toEqual([[4,5],[0,1]]);});
+ it('opens a volume at the plane with the broadest resolvable body, with a deterministic empty-volume fallback',()=>{
+  const volume=Array(4*5*6).fill(0);
+  for(let z=1;z<4;z++)for(let x=1;x<5;x++)volume[(4-1-z)*5*6+3*6+x]=2;
+  expect(preferredSection(volume,[4,5,6])).toBe(3);
+  expect(preferredSection(Array(120).fill(0),[4,5,6])).toBe(2);
+  expect(preferredSection([1,2],[4,5,6])).toBe(0);
+ });
  it('handles empty and constant plot scales',()=>{expect(extent([])).toEqual([0,1]);expect(extent([3,3])).toEqual([2,4]);});
  it('matches halfspace apparent resistivity and phase',()=>{const c=mtForward([100],[],[.001,1,1000]);c.apparent.forEach(v=>expect(v).toBeCloseTo(100,10));c.phase.forEach(v=>expect(v).toBeCloseTo(45,10));});
  it('matches offline layered impedance for every MT case and variant',()=>{const cat=read('catalog.json');for(const c of cat.cases.filter((x:{family:string})=>x.family==='mt'))for(const v of c.variants){const r=read(v.path);const actual=mtForward(r.truth,r.thickness,r.frequencies);actual.apparent.forEach((x,i)=>expect(Math.abs(x-r.clean.apparent[i])/x).toBeLessThan(2e-6));actual.phase.forEach((x,i)=>expect(Math.abs(x-r.clean.phase[i])).toBeLessThan(2e-5));}});

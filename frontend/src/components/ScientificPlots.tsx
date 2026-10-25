@@ -45,6 +45,9 @@ export function Heatmap({
   boundaries,
   cursorY,
   aspectRatio,
+  interpolation = false,
+  showSampleNodes = false,
+  showMesh = false,
 }: {
   data: number[][];
   title: string;
@@ -62,10 +65,17 @@ export function Heatmap({
   boundaries?: number[][];
   cursorY?: number;
   aspectRatio?: number;
+  /** Display-only interpolation between exported samples; never changes sampled values. */
+  interpolation?: boolean;
+  /** Mark the center of each exported raster sample (for coarse survey grids). */
+  showSampleNodes?: boolean;
+  /** Draw the declared model-cell boundaries over a section without changing its samples. */
+  showMesh?: boolean;
 }) {
   const es = useShellLang() === "es";
   const canvas = useRef<HTMLCanvasElement>(null);
   const [hover, setHover] = useState<{ x: number; y: number } | null>(null);
+  const [interpolated, setInterpolated] = useState(interpolation);
   const rows = data.length,
     cols = data[0]?.length ?? 0;
   const isResidual = /residual|residuo/i.test(title);
@@ -79,8 +89,8 @@ export function Heatmap({
     source.width = cols;
     source.height = rows;
     const pixels = source.getContext("2d")!;
-    // Nearest-neighbour backing pixels keep coarse grids crisp without
-    // inventing intermediate values. Bound the allocation for user arrays.
+    // Keep a bounded raster backing store. Optional smoothing is display-only;
+    // hover values and exports continue to use the exact source sample.
     const rasterScale = Math.max(
       1,
       Math.min(8, Math.floor(Math.sqrt(1_500_000 / (rows * cols)))),
@@ -92,34 +102,10 @@ export function Heatmap({
         pixels.fillStyle = color(data[y][x], bounds, palette);
         pixels.fillRect(x, y, 1, 1);
       }
-    // Each raster pixel is an exported sample; do not interpolate fake resolution.
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = interpolated;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(source, 0, 0, c.width, c.height);
-    // A restrained quarter grid is a spatial reference overlay, not extra
-    // samples. It keeps near-background and uniform sections spatially
-    // locatable without altering any raster values.
-    if (rows > 4 && cols > 4) {
-      const area = c.parentElement;
-      const pixelScale = c.width / Math.max(1, area?.clientWidth ?? c.width);
-      const lineWidth = Math.max(1, pixelScale * 0.8);
-      ctx.save();
-      ctx.strokeStyle = getComputedStyle(c).getPropertyValue("--color-fg-subtle").trim() || "#59616b";
-      ctx.globalAlpha = 0.32;
-      ctx.lineWidth = lineWidth;
-      for (let i = 1; i < 5; i++) {
-        const x = Math.round((i * cols * rasterScale) / 5) + 0.5;
-        const y = Math.round((i * rows * rasterScale) / 5) + 0.5;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, rows * rasterScale);
-        ctx.moveTo(0, y);
-        ctx.lineTo(cols * rasterScale, y);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-  }, [data, palette, bounds[0], bounds[1], rows, cols]);
+  }, [data, palette, bounds[0], bounds[1], rows, cols, interpolated]);
   const xv = hover
     ? (xCoordinates?.[hover.x] ??
       (xRange?.[0] ?? 0) +
@@ -137,6 +123,15 @@ export function Heatmap({
         <output>
           {hover ? `${format(data[hover.y]?.[hover.x])} ${unit}` : unit}
         </output>
+        {showSampleNodes && <select
+          className="select"
+          aria-label={es ? "Interpolación de visualización entre muestras" : "Display interpolation between samples"}
+          value={interpolated ? "bilinear" : "cells"}
+          onChange={(event) => setInterpolated(event.target.value === "bilinear")}
+        >
+          <option value="bilinear">{es ? `Bilineal · ${cols}×${rows} muestras` : `Bilinear · ${cols}×${rows} samples`}</option>
+          <option value="cells">{es ? `Celdas · ${cols}×${rows} muestras` : `Cells · ${cols}×${rows} samples`}</option>
+        </select>}
       </figcaption>
       <div className={`${plotStyles.heatmapAxes} heatmap-axes`}>
         <span className="axis-y">{yLabel}</span>
@@ -167,7 +162,38 @@ export function Heatmap({
             if (hover) onPick?.(hover.x, hover.y);
           }}
         >
-          <canvas ref={canvas} aria-label={title} style={{ position: "absolute", inset: 0, imageRendering: "pixelated" }} />
+          <canvas ref={canvas} aria-label={title} style={{ position: "absolute", inset: 0, imageRendering: interpolated ? "auto" : "pixelated" }} />
+          {showSampleNodes && rows <= 64 && cols <= 64 && <svg
+            viewBox={`0 0 ${cols} ${rows}`}
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={es ? `Ubicaciones de las ${cols * rows} muestras medidas` : `Locations of the ${cols * rows} measured samples`}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }}
+          >
+            {Array.from({ length: rows * cols }, (_, i) => <circle
+              key={i}
+              cx={(i % cols) + 0.5}
+              cy={Math.floor(i / cols) + 0.5}
+              r="0.07"
+              fill="var(--color-surface)"
+              fillOpacity="0.64"
+              stroke="var(--color-fg)"
+              strokeOpacity="0.72"
+              strokeWidth="0.045"
+            />)}
+          </svg>}
+          {showMesh && rows <= 64 && cols <= 64 && <svg
+            className={plotStyles.meshOverlay}
+            viewBox={`0 0 ${cols} ${rows}`}
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={es ? `Malla del modelo: ${cols} × ${rows} celdas` : `Model mesh: ${cols} × ${rows} cells`}
+          >
+            <path d={[
+              ...Array.from({ length: rows + 1 }, (_, y) => `M0 ${y}H${cols}`),
+              ...Array.from({ length: cols + 1 }, (_, x) => `M${x} 0V${rows}`),
+            ].join("")} />
+          </svg>}
           {boundaries && (
             <svg
               className="geology-overlay"

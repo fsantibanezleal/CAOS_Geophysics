@@ -7,11 +7,13 @@ from pathlib import Path
 import re
 
 REPO = Path(__file__).resolve().parents[1]
-CONTAINER_VERSION = '0.04.002'
+CONTAINER_VERSION = '0.04.003'
+MIGRATION_VERSION = '0.04.002'
 RUN_VERSIONS = {
     '0.04.000': frozenset({'0.04.000'}),
     '0.04.001': frozenset({'0.04.000', '0.04.001'}),
-    CONTAINER_VERSION: frozenset({'0.04.000', '0.04.001', CONTAINER_VERSION}),
+    MIGRATION_VERSION: frozenset({'0.04.000', '0.04.001', MIGRATION_VERSION}),
+    CONTAINER_VERSION: frozenset({'0.04.000', '0.04.001', MIGRATION_VERSION, CONTAINER_VERSION}),
 }
 SCIENTIFIC_FILES = tuple('data-pipeline/'+n for n in (
     'geology.py', 'potential.py', 'spatial_inverse.py', 'evaluation.py', 'joint.py',
@@ -49,17 +51,17 @@ def header_bytes(raw, previous, following):
 
 
 def validate_migration(root, catalog, release):
-    if catalog['version'] != CONTAINER_VERSION:
+    if catalog['version'] != MIGRATION_VERSION:
         return
     path = root/'migration.json'
     assert digest(path) == release['container_migration_sha256'], 'Migration manifest hash mismatch'
     migration = json.loads(path.read_text(encoding='utf-8'))
     assert migration['schema'] == 'inverse-earth/byte-preserving-container-migration/v1'
-    assert (migration['from_version'], migration['to_version']) == ('0.04.001', CONTAINER_VERSION)
+    assert (migration['from_version'], migration['to_version']) == ('0.04.001', MIGRATION_VERSION)
     assert migration['reused_producer_versions'] == ['0.04.000', '0.04.001']
     raw = (root/'catalog.json').read_bytes()
     assert hashlib.sha256(raw).hexdigest() == migration['catalog_sha256']
-    assert hashlib.sha256(header_bytes(raw, CONTAINER_VERSION, '0.04.001')).hexdigest() == migration['source_catalog_sha256']
+    assert hashlib.sha256(header_bytes(raw, MIGRATION_VERSION, '0.04.001')).hexdigest() == migration['source_catalog_sha256']
     entries = migration['preserved_files']
     actual = {v['path'] for c in catalog['cases'] for v in c['variants']}
     actual |= {p.relative_to(root).as_posix() for folder in ('models', 'edi')
@@ -100,6 +102,6 @@ def validate_migration(root, catalog, release):
     assert digest(root/'validation.json') == release['container_validation_sha256'], 'Validation descriptor hash mismatch'
     validation = json.loads((root/'validation.json').read_text(encoding='utf-8'))
     assert validation['schema'] == 'inverse-earth/container-validation/v1'
-    assert validation['container_version'] == CONTAINER_VERSION and validation['plan_sha256'] == migration['plan_sha256']
+    assert validation['container_version'] == MIGRATION_VERSION and validation['plan_sha256'] == migration['plan_sha256']
     assert validation['source_artifact_matrix'] == mt['artifact_gate'] == dict(cases=20, runs=120, method_results=348)
     assert validation['independent_receipts'] == migration['independent_receipts']

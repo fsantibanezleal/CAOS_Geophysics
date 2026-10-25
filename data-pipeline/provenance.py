@@ -4,7 +4,7 @@ import hashlib
 import json
 
 
-def generator_fingerprint(family,iterations=28,epochs=180,version='0.04.001'):
+def generator_fingerprint(family,iterations=28,epochs=180,version='0.04.003'):
     modules=['geology.py']
     if family=='seismic':modules+=['seismic.py']
     elif family=='mt':modules+=['electromagnetics.py']

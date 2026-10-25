@@ -6,7 +6,7 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 |---|---:|---|---|
 | `01-foundations` | 1 | [Problemas inversos: evidencia y falta de unicidad](01-foundations/01-inverse-problem-and-evidence.ipynb) | [01-inverse-problem-and-evidence](../../en/01-foundations/01-inverse-problem-and-evidence.ipynb) |
 | `01-foundations` | 2 | [Residuales, incertidumbre e identificabilidad](01-foundations/02-residuals-and-identifiability.ipynb) | [02-residuals-and-identifiability](../../en/01-foundations/02-residuals-and-identifiability.ipynb) |
-| `01-foundations` | — | Sin nivel 3: la orientación e identificabilidad fundamentales se desarrollan en dos lecciones; luego siguen casos avanzados. | — |
+| `01-foundations` | No aplica | Sin nivel 3: la orientación e identificabilidad fundamentales se desarrollan en dos lecciones; luego siguen casos avanzados. | No aplica |
 | `02-gravity` | 1 | [Observaciones gravimétricas: referencia y signo](02-gravity/01-gravity-reference-and-units.ipynb) | [01-gravity-reference-and-units](../../en/02-gravity/01-gravity-reference-and-units.ipynb) |
 | `02-gravity` | 2 | [Correcciones de estaciones gravimétricas](02-gravity/02-m01-station-corrections.ipynb) | [02-m01-station-corrections](../../en/02-gravity/02-m01-station-corrections.ipynb) |
 | `02-gravity` | 3 | [Prismas gravimétricos y límite de aceptación inversa](02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb) | [03-m02-prism-forward-and-inverse-limits](../../en/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb) |

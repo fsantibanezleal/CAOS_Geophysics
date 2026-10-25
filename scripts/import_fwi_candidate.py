@@ -13,7 +13,7 @@ import sys
 
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO/'data-pipeline'))
-from artifact_versions import CONTAINER_VERSION, REPLAY_SOURCE_FILES, SCIENTIFIC_FILES, digest, header_bytes  # noqa: E402
+from artifact_versions import MIGRATION_VERSION as CONTAINER_VERSION, REPLAY_SOURCE_FILES, SCIENTIFIC_FILES, digest, header_bytes  # noqa: E402
 
 CANONICAL = REPO/'data/derived/v2'
 EXPERIMENTS = REPO/'data/experiments'

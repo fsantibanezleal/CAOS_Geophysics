@@ -1,8 +1,18 @@
-param([switch]$Gpu, [switch]$Notebooks, [switch]$M08)
+param([switch]$Gpu, [switch]$Notebooks, [switch]$M08, [switch]$Api)
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $py = if (Get-Command py -ErrorAction SilentlyContinue) { 'py -3.12' } else { 'python' }
 function VenvPy($dir) { $p = Join-Path $dir 'Scripts/python.exe'; if (-not (Test-Path $p)) { $p = Join-Path $dir 'bin/python' }; return $p }
+if ($Api) {
+  Write-Host '[setup] creating isolated .venv-api'
+  if (-not (Test-Path '.venv-api')) { Invoke-Expression "$py -m venv .venv-api" }
+  $apiPython = VenvPy '.venv-api'
+  & $apiPython -m pip install --upgrade pip -q
+  & $apiPython -m pip install -r requirements-api.txt -r requirements-dev.txt -q
+  & $apiPython -m pip check
+  Write-Host '[setup] API environment ready. Run .\.venv-api\Scripts\python.exe -m pytest tests\api -q.'
+  exit 0
+}
 if ($Notebooks) {
   Write-Host '[setup] creating isolated .venv-notebooks'
   if (-not (Test-Path '.venv-notebooks')) { Invoke-Expression "$py -m venv .venv-notebooks" }

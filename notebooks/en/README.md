@@ -6,7 +6,7 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 |---|---:|---|---|
 | `01-foundations` | 1 | [Inverse problems: evidence and non-uniqueness](01-foundations/01-inverse-problem-and-evidence.ipynb) | [01-inverse-problem-and-evidence](../../es/01-foundations/01-inverse-problem-and-evidence.ipynb) |
 | `01-foundations` | 2 | [Residuals, uncertainty and identifiability](01-foundations/02-residuals-and-identifiability.ipynb) | [02-residuals-and-identifiability](../../es/01-foundations/02-residuals-and-identifiability.ipynb) |
-| `01-foundations` | — | No level 3: foundational orientation and identifiability are developed in two lessons; higher-level cases follow. | — |
+| `01-foundations` | Not applicable | No level 3: foundational orientation and identifiability are developed in two lessons; higher-level cases follow. | Not applicable |
 | `02-gravity` | 1 | [Gravity observations, reference and sign](02-gravity/01-gravity-reference-and-units.ipynb) | [01-gravity-reference-and-units](../../es/02-gravity/01-gravity-reference-and-units.ipynb) |
 | `02-gravity` | 2 | [Gravity station corrections](02-gravity/02-m01-station-corrections.ipynb) | [02-m01-station-corrections](../../es/02-gravity/02-m01-station-corrections.ipynb) |
 | `02-gravity` | 3 | [Gravity prisms and inverse acceptance boundary](02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb) | [03-m02-prism-forward-and-inverse-limits](../../es/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb) |

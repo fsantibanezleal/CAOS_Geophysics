@@ -64,6 +64,22 @@
   flex: 1 1 auto;
 }
 
+.meshOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.meshOverlay path {
+  fill: none;
+  stroke: var(--color-fg-subtle);
+  stroke-opacity: 0.38;
+  stroke-width: 0.04;
+}
+
 .heatmap :global(.axis-y) {
   flex: 0 0 1.4rem;
   font-size: 0.8rem;

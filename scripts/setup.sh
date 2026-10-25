@@ -7,12 +7,14 @@ venvpy() { local p="$1/bin/python"; [ -x "$p" ] || p="$1/Scripts/python.exe"; ec
 GPU=0
 NOTEBOOKS=0
 M08=0
+API=0
 for arg in "$@"; do
   case "$arg" in
     --gpu) GPU=1 ;;
     --notebooks) NOTEBOOKS=1 ;;
     --m08) M08=1 ;;
-    *) echo "setup: unknown option $arg (use --gpu, --notebooks, or --m08)"; exit 2 ;;
+    --api) API=1 ;;
+    *) echo "setup: unknown option $arg (use --gpu, --api, --notebooks, or --m08)"; exit 2 ;;
   esac
 done
 if [ "$NOTEBOOKS" -eq 1 ]; then
@@ -21,6 +23,15 @@ if [ "$NOTEBOOKS" -eq 1 ]; then
   "$VN" -m pip install --upgrade pip -q
   "$VN" -m pip install -r notebooks/requirements.txt -q
   echo "[setup] notebook environment ready. Run python scripts/run_notebooks.py --check --tmp <device-temp-root>."
+  exit 0
+fi
+if [ "$API" -eq 1 ]; then
+  mkvenv .venv-api
+  VAPI="$(venvpy .venv-api)"
+  "$VAPI" -m pip install --upgrade pip -q
+  "$VAPI" -m pip install -r requirements-api.txt -r requirements-dev.txt -q
+  "$VAPI" -m pip check
+  echo "[setup] API environment ready. Run .venv-api/bin/python -m pytest tests/api -q."
   exit 0
 fi
 if [ "$M08" -eq 1 ]; then

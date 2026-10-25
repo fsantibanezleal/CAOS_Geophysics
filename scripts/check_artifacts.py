@@ -130,7 +130,8 @@ def validate():
                 if method['frames']:assert method['frames'][-1]==method['model'],'Last replay state differs from final model'
                 if key=='autoencoder':
                     assert method['evaluation']==dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
-                    assert len(method['network_input'])==len(method['predicted'])==len(method['residual'])==256
+                    sample_count=math.prod(run['survey']['shape'])
+                    assert len(method['network_input'])==len(method['predicted'])==len(method['residual'])==sample_count
                 if case['family']=='seismic':
                     metrics=method['metrics'];status=method['evaluation']['status']
                     if case['geometry']=='salt':assert status=='negative-control'
