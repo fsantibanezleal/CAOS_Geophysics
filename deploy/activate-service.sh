@@ -14,8 +14,9 @@ release="$root/releases/$release_id"
 site=/etc/nginx/sites-available/geophysics.ml.fasl-work.com
 state="/var/lib/geophysics-deploy/$release_id"
 python="$release/.venv/bin/python"
+gravity_python="$release/.venv-gravity/bin/python"
 [[ "$admission" == /* && -f "$admission" && ! -L "$admission" ]]
-[[ -d "$release" && ! -L "$release" && -x "$python" ]]
+[[ -d "$release" && ! -L "$release" && -x "$python" && -x "$gravity_python" ]]
 [[ $(realpath -e "$release") == "$release" ]]
 [[ -d /var/lib/geophysics && ! -L /var/lib/geophysics ]]
 [[ $(stat -c '%U:%a' /var/lib/geophysics) == geophysics:700 ]]
@@ -92,7 +93,8 @@ for name in ('api', 'worker'):
         if key in values:
             raise ValueError('duplicate service environment key')
         values[key] = value
-    common = {'GEOPHYSICS_DATA_DIR', 'GEOPHYSICS_DB_PATH', 'GEOPHYSICS_MT_ONLINE_ENABLED'}
+    common = {'GEOPHYSICS_DATA_DIR', 'GEOPHYSICS_DB_PATH', 'GEOPHYSICS_MT_ONLINE_ENABLED',
+              'GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED', 'GEOPHYSICS_GRAVITY_L2_PYTHON'}
     if name == 'worker' and not set(values) <= common:
         raise ValueError('worker environment is not storage-only')
     if values.get('GEOPHYSICS_DATA_DIR') != '/var/lib/geophysics':

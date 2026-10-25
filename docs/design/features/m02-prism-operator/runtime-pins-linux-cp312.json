@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-25",
+  "evidence": {
+    "field_eligibility": false,
+    "full_M02_accepted": false,
+    "metric_workspace_closure": "passed",
+    "ml_vps_host_admitted": false,
+    "scalar_bound_regression": "passed",
+    "uploaded_prism_calibration_and_sealed_evaluation": "passed"
+  },
+  "machine": "x86_64",
+  "metric_binary_sha256": {
+    "scipy_flapack": "0e20d023fd23064cc73d610ebf248652dca1d6db5232fb058a0ed503824c23e1",
+    "scipy_linsolve": "17e29fa532a795497e657a033e743fda363d366b200720220ec31a3c79c74458",
+    "scipy_superlu": "110fa0117a967f64ea347166a21e51123eedf283515fdc86f7adac92497a5bef"
+  },
+  "oracle_runtime_versions_observed": {
+    "choclo": "0.3.2",
+    "llvmlite": "0.49.0",
+    "numba": "0.67.0"
+  },
+  "platform": "Linux x86_64; Ubuntu 24.04 WSL2 candidate",
+  "python": "3.12.10",
+  "required_engine_runtime_versions": {
+    "discretize": "0.12.0",
+    "geoana": "0.8.1",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2"
+  },
+  "requirements": "requirements-gravity-runtime.txt",
+  "requirements_sha256": "e162783d2d0e205416b5446b532e9f816042b27cc6c242e1e6a4c3540d554b8a",
+  "schema": "geophysics.prism-linux-runtime-pins/v1",
+  "source_epoch": "m02-prism-linux-cpu-1",
+  "status": "Local Linux numerical profile; ML VPS and release remain unadmitted",
+  "targeted_source_sha256": {
+    "choclo/constants.py": "81eda92d7a631ad9544ba318319561be115906e32dc6de23bcd48ca1ea458494",
+    "choclo/prism/_gravity.py": "b50aa392db4b18124f439f8ec4b9d3214bd74dba7fb43f559ac19e3e33e8b94a",
+    "choclo/prism/_kernels.py": "27c14a03c0d5d39bcbd46304687f6b7c559d7ac498039e2cd0874fd2e8afb2c2",
+    "discretize/_extensions/interputils_cython.cpython-312-x86_64-linux-gnu.so": "db7bb5f7bdf9834d510169d76b5167bfeb757e319632008624441640588c141a",
+    "discretize/_extensions/simplex_helpers.cpython-312-x86_64-linux-gnu.so": "0bdf31fe4dd729e15ec4fb7f22ed1ff07a87ee10fbfa85112b653f8826b1ca55",
+    "discretize/_extensions/tree_ext.cpython-312-x86_64-linux-gnu.so": "bb7a9c0c14856fabfd931a526a1b267df46ee3489adf6fd05325093a358ddec8",
+    "discretize/base/base_mesh.py": "a2653f7d397db8ae50d61eae2c8f17f23970f3cf70a574105416a25f7e816a0c",
+    "discretize/base/base_tensor_mesh.py": "7bf97f3a515b9441db547b4b101b83b4e8f3fd6eb59e648c8856ba0b5f9b9258",
+    "discretize/operators/differential_operators.py": "ed265f2931c945327a7de7ae04aa21d075ff8d34bfeb3f0497cd372c12ea89d8",
+    "discretize/tensor_mesh.py": "6b978f50690a23f853c33bf4f1f1810a63275f837d11e1d946239f58a447a2a5",
+    "geoana/kernels/__init__.py": "552f99f6761b6ace4f34a3cba230954e99cdcde902b8557a6a963eebae4ac4a8",
+    "geoana/kernels/_extensions/potential_field_prism.cpython-312-x86_64-linux-gnu.so": "e56b438da2590023031763cf9de493230f396397b8b53d4c035a25d00732e794",
+    "geoana/kernels/potential_field_prism.py": "2a5e51fc749c1580525e907a4636bf21c64de0d42b8ee5a1ba2783c063bcf4d4",
+    "scipy/constants/_codata.py": "7c885919630218b192c0edeb9cd983122b00375ac62f090d6d29707590e9a304",
+    "simpeg/maps/_base.py": "6bdd7455d17467ed547091526735df560a35c9b204ab2f4105dfab096ed6c90e",
+    "simpeg/potential_fields/base.py": "becc3582946a820ad87581853ccb4821eba995fd106e9b5ebaad09c36cdd4a27",
+    "simpeg/potential_fields/gravity/receivers.py": "0b72c8948e6bc6cd3b4077aa9109245f63719ed186fba47f030bacaa99709229",
+    "simpeg/potential_fields/gravity/simulation.py": "1dad16969ce8db878f02350f1ce90bf16ededace3e85f117c2cc76447eda160f",
+    "simpeg/potential_fields/gravity/sources.py": "d5653055db0b6faf474a647a2e38a6ceb198ad4d92347d572aac8390697267ba",
+    "simpeg/potential_fields/gravity/survey.py": "3e3f35e74a6c2423a25c51e106b7b38027602cf7e486309cf98117b508344938"
+  },
+  "versions": {
+    "SQLAlchemy": "2.0.54",
+    "aiosqlite": "0.22.1",
+    "choclo": "0.3.2",
+    "discretize": "0.12.0",
+    "fastapi": "0.141.1",
+    "fastapi-users": "15.0.5",
+    "fastapi-users-db-sqlalchemy": "7.0.0",
+    "geoana": "0.8.1",
+    "llvmlite": "0.49.0",
+    "mt-metadata": "1.0.10",
+    "numba": "0.67.0",
+    "numpy": "2.2.6",
+    "pandas": "2.2.3",
+    "pydantic": "2.13.5",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2"
+  }
+}

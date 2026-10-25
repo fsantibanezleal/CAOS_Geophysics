@@ -165,7 +165,8 @@ class Installer:
         env = {'PATH': '/usr/bin:/bin', 'LANG': 'C.UTF-8', 'PYTHONDONTWRITEBYTECODE': '1',
                'PYTHONNOUSERSITE': '1', 'TMPDIR': str(self.evidence / 'tmp'),
                'PIP_DISABLE_PIP_VERSION_CHECK': '1', 'PIP_NO_INPUT': '1',
-               'OPENBLAS_NUM_THREADS': '1', 'OMP_NUM_THREADS': '1'}
+               'OPENBLAS_NUM_THREADS': '1', 'OMP_NUM_THREADS': '1',
+               'MKL_NUM_THREADS': '1', 'NUMEXPR_NUM_THREADS': '1'}
         process = None
         success = False
         record = {'step': label, 'argv': argv, 'outcome': 'failed'}
@@ -220,7 +221,8 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
         raise ValueError('explicit manifest SHA-256 required')
     no_links(release)
     no_links(evidence)
-    if evidence.exists() or (release / '.venv').exists() or (release / '.venv').is_symlink():
+    if (evidence.exists() or any((release / name).exists() or (release / name).is_symlink()
+                                 for name in ('.venv', '.venv-gravity'))):
         raise ValueError('existing runtime/evidence retained; choose a fresh candidate')
     if file_digest(release / 'release.json')['sha256'] != expected_digest:
         raise ValueError('supplied bundle digest differs')
@@ -228,14 +230,16 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
     if check_ownership:
         root_owned_tree(release)
     requirement_hash = requirements(release / 'source/requirements-api.txt')
+    gravity_requirement_hash = requirements(release / 'source/requirements-gravity-runtime.txt')
     if shutil.disk_usage(release).free < INSTALL_RESERVE or shutil.disk_usage(evidence.parent).free < MAX_RECEIPT + MAX_LOG:
         raise ValueError('runtime staging capacity insufficient')
     evidence.mkdir(mode=0o700)
     (evidence / 'tmp').mkdir(mode=0o700)
     runner = installer_factory(evidence)
     runner.deadline = min(runner.deadline, deadline)
-    receipt = {'schema': 'geophysics.service-runtime/v1', 'source_revision': manifest['source_revision'],
+    receipt = {'schema': 'geophysics.service-runtime/v2', 'source_revision': manifest['source_revision'],
                'bundle_sha256': expected_digest, 'requirements_sha256': requirement_hash,
+               'gravity_requirements_sha256': gravity_requirement_hash,
                'created_at': datetime.now(timezone.utc).isoformat(), 'runtime_installed': False,
                'host_admitted': False, 'full_release_accepted': False}
     try:
@@ -246,10 +250,30 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
                               '-r', str(release / 'source/requirements-api.txt')], release)
         runner.run('check', [python, '-I', '-B', '-m', 'pip', '--isolated', 'check'], release)
         freeze = runner.run('freeze', [python, '-I', '-B', '-m', 'pip', '--isolated', 'freeze', '--all'], release)
-        if verify_bundle(release) != manifest:
-            raise ValueError('bundle changed during runtime installation')
         receipt['runtime'] = runtime_inventory(release / '.venv', interpreter, deadline=runner.deadline)
         receipt['resolved_dependencies'] = file_digest(freeze)
+        runner.run('gravity-venv', [str(interpreter), '-I', '-B', '-m', 'venv',
+                                   str(release / '.venv-gravity')], release)
+        gravity_python = str(release / '.venv-gravity/bin/python')
+        runner.run('gravity-install', [gravity_python, '-I', '-B', '-m', 'pip', '--isolated', 'install',
+                                      '--no-cache-dir', '--only-binary=:all:', '--index-url',
+                                      'https://pypi.org/simple', '-r',
+                                      str(release / 'source/requirements-gravity-runtime.txt')], release)
+        runner.run('gravity-check', [gravity_python, '-I', '-B', '-m', 'pip', '--isolated', 'check'], release)
+        gravity_freeze = runner.run('gravity-freeze', [gravity_python, '-I', '-B', '-m', 'pip',
+                                                       '--isolated', 'freeze', '--all'], release)
+        probe = ('import sys, pathlib; sys.path.insert(0, str(pathlib.Path.cwd())); '
+                 'from gravity_forward import _runtime; '
+                 'from gravity_l2_metric import _workspace_closure; '
+                 'assert _runtime(); assert _workspace_closure()')
+        runner.run('gravity-probe', [gravity_python, '-I', '-B', '-c', probe],
+                   release / 'source/data-pipeline')
+        receipt['gravity_runtime'] = runtime_inventory(release / '.venv-gravity', interpreter,
+                                                       deadline=runner.deadline)
+        receipt['gravity_resolved_dependencies'] = file_digest(gravity_freeze)
+        receipt['gravity_runtime_installed'] = True
+        if verify_bundle(release) != manifest:
+            raise ValueError('bundle changed during runtime installation')
         if time.monotonic() >= runner.deadline:
             raise ValueError('runtime transaction wall limit exceeded')
         receipt['runtime_installed'] = True
@@ -290,7 +314,7 @@ def main(argv=None) -> int:
     except Exception:
         print('Runtime staging failed; inspect retained private evidence. No activation performed.', file=sys.stderr)
         return 1
-    print('API-only runtime installed and measured; not activated, host-admitted or fully accepted.')
+    print('API and gravity runtimes installed and measured; not activated, host-admitted or fully accepted.')
     return 0
 
 

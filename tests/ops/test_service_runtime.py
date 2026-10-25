@@ -22,11 +22,12 @@ def candidate(tmp_path):
     source = tmp_path / 'source'
     source.mkdir()
     (source / 'requirements-api.txt').write_text('numpy==2.2.6\n', encoding='ascii')
+    (source / 'requirements-gravity-runtime.txt').write_text('numpy==2.2.6\n', encoding='ascii')
     web = tmp_path / 'web'
     web.mkdir()
     (web / 'index.html').write_bytes(b'<p>actual bytes</p>')
     release = tmp_path / 'release'
-    bundle.copy_bundle(source, web, release, ['requirements-api.txt'], 'a' * 40)
+    bundle.copy_bundle(source, web, release, ['requirements-api.txt', 'requirements-gravity-runtime.txt'], 'a' * 40)
     return release, tmp_path / 'evidence', bundle.file_digest(release / 'release.json')['sha256']
 
 
@@ -44,14 +45,14 @@ class FakeInstaller:
         self.records.append({'step': label, 'argv': argv})
         path = self.evidence / (label + '.log')
         path.write_bytes(b'fixture execution only\n')
-        if label == 'venv':
-            root = cwd / '.venv'
+        if label in {'venv', 'gravity-venv'}:
+            root = cwd / ('.venv-gravity' if label == 'gravity-venv' else '.venv')
             (root / 'bin').mkdir(parents=True)
             (root / 'bin/python').write_bytes(b'not an actual executable')
             (root / 'pyvenv.cfg').write_bytes(b'fixture only')
         if label == self.fail:
             raise ValueError('fixture failure')
-        if label == 'freeze' and self.mutate:
+        if label in {'freeze', 'gravity-freeze'} and self.mutate:
             (cwd / 'web/index.html').write_bytes(b'changed')
         return path
 
@@ -68,11 +69,13 @@ def test_success_is_runtime_only_and_installation_order(tmp_path, monkeypatch):
     release, evidence, result = exercise(tmp_path, monkeypatch)
     assert result['runtime_installed'] is True
     assert result['host_admitted'] is result['full_release_accepted'] is False
-    assert [s['step'] for s in result['steps']] == ['venv', 'install', 'check', 'freeze']
+    assert [s['step'] for s in result['steps']] == ['venv', 'install', 'check', 'freeze', 'gravity-venv', 'gravity-install', 'gravity-check', 'gravity-freeze', 'gravity-probe']
     install = result['steps'][1]['argv']
     assert '--isolated' in install and '--no-cache-dir' in install and '--only-binary=:all:' in install
     assert 'https://pypi.org/simple' in install
     assert result['runtime']['regular_bytes'] > 0
+    assert result['gravity_runtime_installed'] is True
+    assert result['gravity_runtime']['regular_bytes'] > 0
     assert json.loads((evidence / 'runtime.json').read_bytes()) == result
     assert bundle.verify_bundle(release)['source_revision'] == 'a' * 40
     assert not (release / 'current').exists()
@@ -94,7 +97,7 @@ def test_digest_before_mutation(tmp_path, digest):
     release, evidence, _ = candidate(tmp_path)
     with pytest.raises(ValueError):
         runtime.stage(release, evidence, digest, check_ownership=False)
-    assert not evidence.exists() and not (release / '.venv').exists()
+    assert not evidence.exists() and not (release / '.venv').exists() and not (release / '.venv-gravity').exists()
 
 
 @pytest.mark.parametrize('pin', ['numpy>=2', '-r other.txt', 'https://example.org/a.whl',
@@ -116,10 +119,10 @@ def test_capacity_before_any_creation(tmp_path, monkeypatch):
     monkeypatch.setattr(runtime.shutil, 'disk_usage', lambda _: SimpleNamespace(free=runtime.INSTALL_RESERVE - 1))
     with pytest.raises(ValueError, match='capacity'):
         runtime.stage(release, evidence, digest, check_ownership=False)
-    assert not evidence.exists() and not (release / '.venv').exists()
+    assert not evidence.exists() and not (release / '.venv').exists() and not (release / '.venv-gravity').exists()
 
 
-@pytest.mark.parametrize('step', ['venv', 'install', 'check', 'freeze'])
+@pytest.mark.parametrize('step', ['venv', 'install', 'check', 'freeze', 'gravity-venv', 'gravity-install', 'gravity-check', 'gravity-freeze', 'gravity-probe'])
 def test_failure_retains_evidence_and_unaccepted_runtime(tmp_path, monkeypatch, step):
     class Failed(FakeInstaller):
         fail = step

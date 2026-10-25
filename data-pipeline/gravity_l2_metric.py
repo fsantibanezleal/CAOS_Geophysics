@@ -7,6 +7,7 @@ admission. This candidate is not native/host/scientific acceptance authority.
 import hashlib
 import math
 import os
+import platform
 from pathlib import Path
 import sys
 from time import monotonic
@@ -28,6 +29,10 @@ _CLOSURE_EXPECTED=(
     '616ab442a96cccea5b09ba1ed70a0f118c2d771a5b721531e7b9e59696700ccf',
     '4b8eaea83fb58bcae42504d36500211375c69be9e15f189225a0ee86b0f9c10e',
     '000d0bf5b84cee94ead7022b9e6a55d1bdcb4b4e9fe4b7f218921cd35f06e2fa')
+_LINUX_X86_64_CLOSURE_EXPECTED=(
+    '17e29fa532a795497e657a033e743fda363d366b200720220ec31a3c79c74458',
+    '110fa0117a967f64ea347166a21e51123eedf283515fdc86f7adac92497a5bef',
+    '0e20d023fd23064cc73d610ebf248652dca1d6db5232fb058a0ed503824c23e1')
 _LOADED_PINS=tuple(hashlib.sha256(Path(p).read_bytes()).hexdigest()
                    for p in (linsolve.__file__,_superlu.__file__,_flapack.__file__))
 
@@ -61,12 +66,17 @@ def allocation(n,m,a,covariance):
 
 
 def _workspace_closure():
-    # One actual examined installed candidate tuple, not generic version>=,
-    # URLs-as-binary-proof or an invented native workspace fallback. Extension
-    # to another native build requires independently reviewed source closure.
-    if sys.version_info[:3]!=(3,12,10) or sys.platform!='win32':
+    # Exact measured installed tuples only; no generic version>=, URLs-as-
+    # binary-proof or unmeasured native-workspace fallback.
+    if sys.version_info[:3]!=(3,12,10):
         raise ValueError('metric: native workspace candidate tuple not registered')
-    if _LOADED_PINS!=_CLOSURE_EXPECTED:
+    if sys.platform=='win32':
+        expected=_CLOSURE_EXPECTED
+    elif sys.platform=='linux' and platform.machine()=='x86_64':
+        expected=_LINUX_X86_64_CLOSURE_EXPECTED
+    else:
+        raise ValueError('metric: native workspace candidate tuple not registered')
+    if _LOADED_PINS!=expected:
         raise ValueError('metric: native workspace source/build identity mismatch')
     if any(os.environ.get(k)!='1' for k in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS')):
         raise ValueError('metric: reviewed single-thread native workspace required')

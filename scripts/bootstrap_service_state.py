@@ -133,7 +133,7 @@ def dedicated_identity():
 
 def private_environment(state: Path, secret: str | None) -> bytes:
     values = {'GEOPHYSICS_DATA_DIR': state.as_posix(), 'GEOPHYSICS_DB_PATH': (state / 'api.sqlite3').as_posix(),
-              'GEOPHYSICS_MT_ONLINE_ENABLED': '0'}
+              'GEOPHYSICS_MT_ONLINE_ENABLED': '0', 'GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED': '0'}
     if secret is not None:
         if not re.fullmatch(r'[0-9a-f]{64}', secret):
             raise ValueError('invalid generated authentication secret')

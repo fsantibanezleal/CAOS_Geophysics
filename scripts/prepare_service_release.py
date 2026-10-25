@@ -204,7 +204,7 @@ def verify_bundle(root: Path) -> dict:
         actual = inventory(root / name)
         if actual != receipt[name]:
             raise ValueError("bundle inventory/integrity mismatch")
-    if {p.name for p in root.iterdir()} - {"source", "web", "release.json", ".venv"}:
+    if {p.name for p in root.iterdir()} - {"source", "web", "release.json", ".venv", ".venv-gravity"}:
         raise ValueError("unexpected release root inventory")
     if len(receipt["source"]) + len(receipt["web"]) > MAX_FILES:
         raise ValueError("combined inventory bound exceeded")
@@ -308,7 +308,8 @@ def prepare(source: Path, output: Path, *, build: Path | None = None) -> dict:
     tracked = set(git("ls-files", "-z").decode("utf-8").split("\0")) - {""}
     paths = {p for p in tracked if p.startswith(("app/", "deploy/")) or
              p.startswith(("scripts/", "data-pipeline/")) and p.endswith(".py")}
-    paths.update({"requirements-api.txt", "docs/design/SDD.md", "docs/design/convergence.json"})
+    paths.update({"requirements-api.txt", "requirements-gravity-runtime.txt",
+                  "docs/design/SDD.md", "docs/design/convergence.json"})
     for gates in method_declarations(source / "docs/design/SDD.md").values():
         paths.update(GATE.fullmatch(gate)["file"] for gate in gates if GATE.fullmatch(gate)["file"] in tracked)
     for record in ledger["requirements"]:

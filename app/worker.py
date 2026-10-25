@@ -130,9 +130,11 @@ def _mt_command(job: ProcessingJob, input_path: Path, raw_path: Path, output_pat
 
 
 def _gravity_l2_command(job: ProcessingJob, input_path: Path, raw_path: Path, output_path: Path,
-                        asset: RawAsset) -> list[str]:
+                        asset: RawAsset, python: Path | None) -> list[str]:
+    if python is None or not python.is_absolute() or not python.is_file():
+        raise ApiError(503, "gravity_runtime_unavailable", "Pinned gravity L2 child runtime is unavailable")
     return [
-        sys.executable, "-m", "app.gravity_l2_compute", "--input", str(input_path),
+        str(python), "-m", "app.gravity_l2_compute", "--input", str(input_path),
         "--raw", str(raw_path), "--output", str(output_path), "--job-id", job.id,
         "--dataset-sha256", job.dataset_sha256, "--request-sha256", job.request_sha256,
         "--raw-sha256", job.request_json["raw_sha256"], "--raw-bytes", str(asset.byte_count),
@@ -359,7 +361,9 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             command = (profile_command(job, input_path, raw_path, output, settings.profile_python)
                        if job.method_id in PROFILE_METHODS else
                        _command(job, input_path, output) if raw_path is None else
-                       _gravity_l2_command(job, input_path, raw_path, output, asset) if job.method_id == GRAVITY_L2_ID else
+                       _gravity_l2_command(job, input_path, raw_path, output, asset,
+                                           getattr(settings, "gravity_l2_python", None))
+                       if job.method_id == GRAVITY_L2_ID else
                        _mt_command(job, input_path, raw_path, output, asset.byte_count))
             process = subprocess.Popen(
                 command,

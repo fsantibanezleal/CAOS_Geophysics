@@ -55,3 +55,13 @@ def test_qualifier_collapses_only_hash_equal_case_equivalent_runtime_paths(monke
     monkeypatch.setattr(qualifier, "binary_sha", lambda _path: "a" * 64)
     with pytest.raises(ValueError, match="closure bound"):
         qualifier.runtime_rows({f"C:/runtime/image{i}.dll" for i in range(257)})
+
+
+def test_online_gravity_worker_requires_release_pinned_child_runtime(tmp_path):
+    with pytest.raises(ValueError, match="explicit pinned child interpreter"):
+        WorkerSettings(data_dir=tmp_path / "private", gravity_l2_online_enabled=True)
+    interpreter = tmp_path / "gravity-python"
+    interpreter.write_text("fixture executable target", encoding="ascii")
+    settings = WorkerSettings(data_dir=tmp_path / "private", gravity_l2_online_enabled=True,
+                              gravity_l2_python=interpreter.resolve())
+    assert settings.gravity_l2_python == interpreter.resolve()

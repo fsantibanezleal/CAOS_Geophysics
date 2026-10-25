@@ -37,6 +37,18 @@ def configured_profile_supervisor() -> Path | None:
     return Path(value) if value else None
 
 
+def configured_gravity_worker_python(enabled: bool) -> Path | None:
+    value = os.environ.get("GEOPHYSICS_GRAVITY_L2_PYTHON")
+    if not value:
+        if enabled:
+            raise ValueError("Enabled gravity L2 workers require GEOPHYSICS_GRAVITY_L2_PYTHON")
+        return None
+    path = Path(value)
+    if not path.is_absolute() or not path.is_file():
+        raise ValueError("GEOPHYSICS_GRAVITY_L2_PYTHON must identify an installed child interpreter")
+    return path
+
+
 @dataclass(frozen=True)
 class Settings:
     data_dir: Path
@@ -137,6 +149,7 @@ class WorkerSettings:
     db_path: Path | None = None
     mt_online_enabled: bool = False
     gravity_l2_online_enabled: bool = False
+    gravity_l2_python: Path | None = None
     profile_online_enabled: bool = False
     profile_python: Path | None = None
     profile_linux_supervisor: Path | None = None
@@ -148,6 +161,9 @@ class WorkerSettings:
         if self.profile_online_enabled and (self.profile_python is None
                 or not self.profile_python.is_absolute() or not self.profile_python.is_file()):
             raise ValueError("Enabled profiles require an explicit pinned profile interpreter")
+        if self.gravity_l2_online_enabled and (self.gravity_l2_python is None
+                or not self.gravity_l2_python.is_absolute() or not self.gravity_l2_python.is_file()):
+            raise ValueError("Enabled gravity L2 workers require an explicit pinned child interpreter")
         if not self.data_dir.is_absolute() or (self.db_path is not None and not self.db_path.is_absolute()):
             raise ValueError("worker data and database paths must be absolute")
         external_storage_path(self.data_dir, "worker data_dir")
@@ -169,6 +185,8 @@ class WorkerSettings:
         return cls(data_dir=data, db_path=Path(db) if db else None,
                    mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
                    gravity_l2_online_enabled=os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1",
+                   gravity_l2_python=configured_gravity_worker_python(
+                       os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1"),
                    profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
                    profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
                    profile_linux_supervisor=configured_profile_supervisor())

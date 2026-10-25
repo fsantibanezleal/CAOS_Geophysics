@@ -7,9 +7,11 @@ import hashlib
 import importlib.metadata
 import json
 import os
+import platform
 from pathlib import Path
 import socket
 import subprocess
+import sys
 
 import choclo
 import numpy as np
@@ -21,7 +23,12 @@ import gravity_forward as op
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins.json"
+if sys.platform == "win32":
+    PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins.json"
+elif sys.platform == "linux" and platform.machine().lower() == "x86_64":
+    PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json"
+else:
+    PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins-unsupported.json"
 
 
 def request(nonuniform=False):

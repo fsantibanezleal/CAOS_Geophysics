@@ -4,6 +4,7 @@ Errors/cause chains are private caller diagnostics, not safe HTTP responses.
 Installed source-byte verification belongs to the trusted external harness.
 """
 
+import platform
 import sys
 
 import discretize
@@ -100,7 +101,10 @@ def _runtime():
     observed = {name: module.__version__ for name, module in modules.items()}
     if any(type(v) is not str for v in observed.values()) or observed != VERSIONS:
         raise RuntimeError("runtime: required loaded package versions differ")
-    if (sys.version_info[:3] != (3, 12, 10) or sys.platform != "win32"
+    supported_platform = (sys.platform == "win32" and platform.machine().lower() in {"amd64", "x86_64"}) or (
+        sys.platform == "linux" and platform.machine().lower() == "x86_64"
+    )
+    if (sys.version_info[:3] != (3, 12, 10) or not supported_platform
             or sys.implementation.name != "cpython" or sys.maxsize != 2**63 - 1):
         raise RuntimeError("runtime: unreviewed Python/platform source epoch")
     return observed
