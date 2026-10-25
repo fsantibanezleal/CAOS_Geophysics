@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 VERDICTS = {"pass", "fail", "unresolved", "ineligible"}
 REQUIREMENT = re.compile(r"^(R-\d{3})\s+THE\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
 ALTERNATE = re.compile(r"^(R-\d{3})\s+(?:WHEN|IF)\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
-GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
+GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|mjs|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
 SHA = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -159,7 +159,7 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
         gate_matches = list(GATE.finditer(declared[key]))
         if key == "R-008":
             gate_matches.extend(GATE.fullmatch(name) for names in method_declarations(sdd).values() for name in names)
-        required = {m.group() for m in gate_matches if Path(m["file"]).suffix in {".py", ".ts"}}
+        required = {m.group() for m in gate_matches if Path(m["file"]).suffix in {".py", ".ts", ".mjs"}}
         # A document is a required artifact, not an executable invocation. The
         # ledger validates itself structurally; hashing its own receipt inside
         # itself would require an impossible cryptographic fixed point.

@@ -25,6 +25,10 @@ test("M13 runs a hash-verified held-out STEAD trace in-browser and exports valid
   await expect(selector.locator("option")).toHaveCount(manifest.records.length);
   await expect(page.getByText(new RegExp(`SHA-256 ${modelHash}`))).toBeVisible();
   await expect(page.getByText(new RegExp(`${record.trace_id}.*qc-valid`))).toBeVisible();
+  const benchmark = page.locator(".phase-benchmark table");
+  await expect(benchmark).toContainText("M08");
+  await expect(benchmark).toContainText("M13");
+  await expect(page.getByText(/6,000 selected STEAD test traces/)).toBeVisible();
 
   // The retained QC failure is inspectable but cannot be sent to the model.
   const rejectedIndex = manifest.records.findIndex((item: { status: string }) => item.status === "qc-rejected");

@@ -171,7 +171,7 @@ R-017 THE one-site release SHALL keep the old VPS release available for rollback
 
 R-018 THE scientific release SHALL record a per-requirement convergence verdict with pass, fail, unresolved or ineligible and the exact gate receipt. Gate: scripts/check_sdd_convergence.py::main and docs/design/convergence.json.
 
-R-019 WHEN the Benchmark runs learned M13 inference on real held-out traces in the browser, THE app SHALL show its phase probabilities and compare it with classical M08 on identical inputs without replacing the canonical checkpoint. Gate: frontend/e2e/phase-picker-live.spec.ts::real_trace_parity_and_matched_baseline plus tests/learning/test_live_export.py::test_onnx_offline_parity.
+R-019 WHEN the Benchmark runs learned M13 inference on real held-out traces in the browser, THE app SHALL show its phase probabilities and compare it with classical M08 on identical inputs without replacing the canonical checkpoint. Gate: frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.
 
 ## 10. Risks, kill criteria and review decisions
 

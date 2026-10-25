@@ -127,6 +127,12 @@ class TestConvergence(unittest.TestCase):
             with self.assertRaises(CHECK.LedgerError, msg=path):
                 CHECK.checked_path(self.root, path)
 
+    def test_javascript_module_is_a_measured_executable_gate(self):
+        path = self.root / "frontend/scripts/verify.mjs"
+        path.parent.mkdir(parents=True)
+        path.write_text("process.exitCode = 0;\n", encoding="utf-8")
+        self.assertEqual(CHECK.executable_gate(self.root, "frontend/scripts/verify.mjs"), path)
+
     def test_receipt_tampering_and_measured_output_tampering(self):
         self.measured()
         path = self.root / "docs/R-001-output.txt"
