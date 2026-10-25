@@ -1,0 +1,53 @@
+# M11 supplied-survey integration status — 2026-10-25
+
+## Implemented and validated locally
+
+The current product branch contains the closed native input contract, geometry
+and mask planner, public gravity and magnetic forward operators, weighted
+joint objective, exact cross-gradient and Hessian paths, separately optimized
+uncoupled references, conditioned public baselines, sealed selection and
+evaluation, private serialization/replay, bounded CLI workflows, and the
+frozen 24-case control matrix. Reproduction entry points are
+`scripts/run_joint_survey.py`, `scripts/validate_joint_matrix.py`,
+`scripts/validate_joint_precision.py`, and
+`scripts/validate_joint_resources.py`.
+
+The executable receipt is
+[`m11-final-precision-20261025.json`](evidence/m11-final-precision-20261025.json).
+Its numerical artifacts were generated outside the repository at
+`E:\_worktrees\_runs\CAOS_Geophysics-M11-integrated-20261025`.
+
+| Gate | Observed result |
+| --- | --- |
+| Focused numerical regression | 451 tests; 446 passed, 5 skipped, 0 failed, 0 errors |
+| Actual workflow matrix | 24 of 24 complete; all 24 sealed replays validated |
+| Candidate status | 524 converged, 100 nonconverged, 0 engine failures; nonconvergence retained |
+| Independent exact-face comparison | 343 converged candidates passed all four predicates; 41 nonconverged retained; 0 reference-stationarity failures |
+| Maximum-count resource gate | 4,096 full cells, 1,932 active, 2,048 receivers per modality and full covariance; active-count plus one rejected |
+| Maximum-count replay | Validated; peak sampled RSS 464,322,560 bytes during replay; no scratch growth observed |
+
+The matrix tests co-structural, disjoint, flat/null and wrong-field regimes at
+dense, sparse-blocked and shifted geometries, including diagonal and full
+covariance. A positive coupling was selected in each case, but this is not a
+claim that joint inversion improves every regime: the held-out selection,
+nonconverged candidates and truth diagnostics remain separately available.
+All outputs remain synthetic controls. `field_eligible`,
+`scientific_precision_accepted` for the overall matrix, and `public_activation`
+remain false by design.
+
+## Product integration still open
+
+The local solver and CLI do not yet complete the online workflow. The current
+FastAPI assembly does not register the M11 joint-member, dataset, job,
+cancellation, custody-history, or result-export routes expected by the
+frontend's `JointProjectWorkbench` and `JointCustodyApi`. The frontend's
+actual-Python custody tests therefore correctly fail closed when no real API
+receipt is supplied. Do not call uploaded-survey M11 available online until
+those routes are integrated with the current account/project ownership,
+bounded worker, migration, storage and result-custody paths and pass the real
+Python API/browser contract tests.
+
+This work does not change the whole-product SDD convergence ledger. It does not
+close field-data rights/validity, broader M01–M13 submitted-data coverage,
+complete browser visual acceptance, current VPS resource admission, or the
+single-origin replacement cutover. No deployment was performed.
