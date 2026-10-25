@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.m13-browser-ui-result/v1",
-  "source_revision": "f4d716d2089bf39731ca2dc517a3beb046184cc1",
-  "measured_at": "2026-10-25T06:49:32.078Z",
+  "source_revision": "4723af581ba8ed4136ec53ae2c9417b8642bf46a",
+  "measured_at": "2026-10-25T07:24:05.031Z",
   "command": [
     "npx",
     "playwright",
@@ -12,14 +12,15 @@
   "browser_gate": {
     "status": "passed",
     "test": "M13 runs a hash-verified held-out STEAD trace in-browser and exports valid model scores",
-    "duration_ms": 86756,
+    "duration_ms": 65196,
     "browser_version": null
   },
   "application": {
     "delivery": "local Vite preview of the production build",
-    "index_sha256": "9da1f169822c8ca9357d4bfe50f453656c1c483f75603d437ad2eb19cbae9acc",
+    "index_sha256": "1cc3f99360feae5152b5fd0aeb947b6fd0db18793a2665b44fdb1a71a5121c9c",
     "model_sha256": "4e5962ed0a9037e545991c218ae770ae7aff2c01f1e6a919c338705780ce5f4c",
-    "manifest_sha256": "d4d2b5b1a98d3a7a2077baab7750c8a96e4b5152b6930e4a09ae4bdc97db8394"
+    "manifest_sha256": "d4d2b5b1a98d3a7a2077baab7750c8a96e4b5152b6930e4a09ae4bdc97db8394",
+    "benchmark_sha256": "9e9f22f50b789fa8b85d2249321472ad0678ba01ceb0e97b1f32f3abcf3c7b96"
   },
   "heldout_selection": {
     "selected": 24,
@@ -49,5 +50,5 @@
     "per_sample_class_sum_tolerance": 0.001,
     "api_requests": 0
   },
-  "scope": "One QC-valid held-out browser display trace and the sealed offline M08/M13 6000-trace table; not a fresh 23-trace parity run, VPS run, or release acceptance."
+  "scope": "One QC-valid held-out browser inference trace, the QC-rejected trace behavior, and the sealed offline M08/M13 6000-trace table; not a fresh full 23-trace private-oracle parity run, VPS run, or release acceptance."
 }

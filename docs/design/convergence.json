@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "fd95349ecb92701ff27e6d90f8088bd5283367e8a0ef561b2b71f8091aea59a6",
-  "assessed_revision": "f4d716d2089bf39731ca2dc517a3beb046184cc1",
-  "assessed_at": "2026-10-25T06:49:32Z",
+  "assessed_revision": "4723af581ba8ed4136ec53ae2c9417b8642bf46a",
+  "assessed_at": "2026-10-25T07:24:05Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -299,19 +299,35 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "Source/M08/M13/M01 correction/transform wiki units and source-bound M05/M06 course are merged. Independent original course 75 numeric/89 frontend/32 browser controls remain separately pinned; final integration adds exact source-compatibility proof, 77 numeric and 101 frontend passes. Full deep M01-M13 bilingual wiki remains incomplete.",
+      "note": "The repository wiki now contains bilingual M01-M13 chapters. The CI docs-matrix check passes for method coverage, implementation/test links, equations, assumptions, limits, reproduction commands, references, local links and English/Spanish token parity. Complete in-app course coverage and whole-product content acceptance remain unresolved.",
       "evidence": [
         {
-          "path": "docs/data-contract/01_source-to-result.md",
-          "sha256": "60b59df62d4c72572ccd2d95b11406a1065cc99b8bbcee902277c866902aba29"
+          "path": "docs/validation/source-to-content-review.md",
+          "sha256": "bbe95d3e157c025c4fb18f8319e3ac8fcf3fbda8b76ac9d1cc99942f9f6cc9b6"
         },
         {
-          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
-          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+          "path": "docs/wiki/README.md",
+          "sha256": "462e5d90f1dfe519a1e7954597151dd51237c1bd3e3577eacf3ca82ea673d02a"
         },
         {
-          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
-          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
+          "path": "docs/wiki/methods/m01-m06.md",
+          "sha256": "a22ed398a2e1f8755291426743e93a168d303880f4d8c283bab4f244b4b54831"
+        },
+        {
+          "path": "docs/wiki/methods/m07-m13.md",
+          "sha256": "0f4a1183a824f8f3b0c8c91265b7dbdedd0eeca8a0dcaeb1a8769c68ce76b452"
+        },
+        {
+          "path": "docs/wiki/methods/m01-m06.es.md",
+          "sha256": "fde2576b5d92bcc67454384b9cab3bfffe23eeee722442f6a0cc19da7134246e"
+        },
+        {
+          "path": "docs/wiki/methods/m07-m13.es.md",
+          "sha256": "7e1ebe69d431924ca1ab52edffec83f46a8af0c0b4fcdea10a9a75bea11e5b74"
+        },
+        {
+          "path": "scripts/check_docs_matrix.py",
+          "sha256": "f8c1576986aa321f0ff674d134e1236dcf106bf389070a27a5ce22a23af539ec"
         }
       ],
       "receipts": []
@@ -349,7 +365,7 @@
       "id": "R-019",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
-      "note": "A fresh local production-build browser check passed for one of 23 QC-valid display traces, verified the manifest-linked model hash, retained the QC-rejected record, exported normalized N/P/S probabilities without API traffic, and displayed the offline same-population M08/M13 table for all 6000 selected traces. The recorded full 23-trace private-oracle parity is historical to this exact browser run; re-execution on the candidate release and all product/VPS gates remain unresolved.",
+      "note": "Fresh local production-build browser evidence on the assessed candidate passes inference for one of 23 QC-valid display traces, verifies the manifest-linked model hash, retains QC rejection, exports normalized N/P/S scores without API traffic, and shows the sealed offline same-population M08/M13 table for all 6000 selected traces. This is not a fresh full 23-trace private-oracle parity run; parity and product/VPS release acceptance remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
@@ -357,13 +373,13 @@
         },
         {
           "path": "docs/validation/m13-browser-e2e-20261025.json",
-          "sha256": "57993c524b21e64123e92471e3cb2d2d5f3731350f90cc2e6d9e5ba5e42f5f2a"
+          "sha256": "a2516269963302a545cbc9c62959a87352b35f0884fc3938082f600c9864018c"
         }
       ],
       "receipts": [
         {
           "path": "docs/validation/receipts/r019-m13-browser-e2e-20261025.json",
-          "sha256": "4ef3cc031f35806cc49896c89bfbdd4d9065961e94bf8c2572d19bb9097df827"
+          "sha256": "dbbef67d5cd234b8bb5050e74a6c0a3e2a15bd91f0abfe76ad755d18afbcc251"
         }
       ]
     }
