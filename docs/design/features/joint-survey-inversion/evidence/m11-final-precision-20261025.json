@@ -1,0 +1,117 @@
+{
+  "assessed_branch": "task/geophysics-m11-precision-fix",
+  "base_feature_revision": "861f252ea5c20ad326ed1aeb4fd6f0125e9c5dfe",
+  "created_utc": "2026-10-25",
+  "exact_face_precision": {
+    "accepted_candidate_predicate_failures": {
+      "model_gate": 0,
+      "objective_gate": 0,
+      "prediction_gate": 0,
+      "stationarity_gate": 0
+    },
+    "all_scientific_predicates_pass": true,
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-24case-final-20261025\\data\\exact-face-validation\\face-inverse-controls.json",
+    "baseline_controls": 384,
+    "candidate_status_counts": {
+      "converged": 343,
+      "nonconverged": 41
+    },
+    "nonconverged_candidate_count": 41,
+    "reference_stationarity_failures": 0,
+    "selected_baseline_count": 48,
+    "selected_baseline_failures": 0,
+    "sha256": "74132b1fb2f314ae8b738871f203c9ea17aeee7d58c1ae7cb56ad597601dc81e"
+  },
+  "matrix": {
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-24case-final-20261025\\data\\matrix.json",
+    "candidate_fits": {
+      "converged": 524,
+      "eligible_positive": 181,
+      "failed": 0,
+      "nonconverged": 100
+    },
+    "cases": 24,
+    "complete_cli_workflows": 24,
+    "max_observed_sampled_rss_bytes": 772640768,
+    "max_observed_sampled_scratch_bytes": 0,
+    "max_observed_workflow_elapsed_seconds": 96.82800000000861,
+    "positive_coupling_selected_cases": 24,
+    "sha256": "a871d20ae53f15b818851a4925662a331dc9afff1a110e2f6ea1da133ca5ca3f",
+    "summary": {
+      "cells_attempted": 24,
+      "complete_cli_workflows": 24,
+      "field_eligible": false,
+      "public_activation": false,
+      "scientific_precision_accepted": false
+    },
+    "validated_replays": 24
+  },
+  "maximum_count_resource_gate": {
+    "active_cells": 1932,
+    "active_count_plus_one_rejected": true,
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-resource-final-20261025\\data\\resource-gate.json",
+    "field_eligible": false,
+    "full_cells": 4096,
+    "full_covariance": true,
+    "inverse_completed": true,
+    "private_export_bytes": 2386008,
+    "projected_kernel_bytes": 126615552,
+    "public_activation": false,
+    "receivers_per_modality": 2048,
+    "replay_validated": true,
+    "sha256": "809f8b1a5ba15112048a73229e88937942192a1a382aca7a43232a15922f5fab",
+    "verification_elapsed_seconds": 8.264999999999418,
+    "verification_peak_sampled_rss_bytes": 466726912,
+    "workflow_elapsed_seconds": 8.797000000005937,
+    "workflow_peak_sampled_rss_bytes": 461463552,
+    "workflow_peak_sampled_scratch_bytes": 0,
+    "workflow_status": "completed"
+  },
+  "method_scope": {
+    "field_eligible": false,
+    "full_m11_release_accepted": false,
+    "full_parent_sdd_release_gates_closed": false,
+    "maximum_count_resource_gate_run": true,
+    "public_activation": false
+  },
+  "notes": [
+    "Nonconverged optimizer candidates remain in the ledger and are not treated as accepted model fits.",
+    "The solver-accuracy change tightens joint-fit stationarity only; the conditioned comparator retains its declared separate tolerance.",
+    "Maximum-count resource qualification, field validation, complete M01-M13 product release gates, and VPS deployment remain open."
+  ],
+  "restored_pinned_dependency_closure": {
+    "data-pipeline/gravity_l2_metric.py": "d09a2b4630258d2c26a1a82ea92a3cd79b42143695d3e630d5252df5ba8dfe8b",
+    "data-pipeline/gravity_l2_precision.py": "57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a",
+    "data-pipeline/physical_compiled_optimizer.py": "1554320f49012062b523e7a2d6d02baf0cf54ca18ec5c47efaee48c39194e7ab",
+    "data-pipeline/physical_conditioned_optimizer.py": "1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c",
+    "data-pipeline/physical_optimizer.py": "4745d41ff8afb908260611601861db8303ce7bd612ff0ea614cceb201a20bc86",
+    "data-pipeline/physical_original_quadratic.py": "07c67519110d59758614516a3f3d98ed49713a969affcefb4711430b604186ce",
+    "data-pipeline/physical_original_residual_terminal.py": "a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7",
+    "data-pipeline/physical_original_rows.py": "8a18a0ae04bfd09336480e06d2e9526aecab79a232033e9ca5d0040b16e9f399",
+    "data-pipeline/physical_original_terminal.py": "dd4b07defa6921a173d3e4d75dad28697fa36743a5dccef6f5db815ae6a73991",
+    "data-pipeline/physical_owned_spd.py": "8924508c3328b70bb9e08ac11a81e107bcdd713402812ba64afec838892d36c2",
+    "data-pipeline/physical_reduced_optimizer.py": "22bf04a7e260b5f93c2e54430f54c3d3464150b3ce78d861c8236bc3d6b21aad"
+  },
+  "schema": "caos-geophysics.m11-final-precision-receipt/v1",
+  "solver_policy": {
+    "cg_relative_residual_tolerance": 1e-06,
+    "conditioned_comparator_normalized_projected_kkt_tolerance": 1e-05,
+    "joint_fit_normalized_projected_kkt_tolerance": 1e-08,
+    "selection_rule_changed": false
+  },
+  "source_sha256": {
+    "data-pipeline/joint_survey_compiled_baseline.py": "b1dc23ec65e5de4f39eb4c059518f43efe12e19f2b838d38b2b97af8048169ee",
+    "data-pipeline/joint_survey_conditioned.py": "8664e755694d588feee4d062a088d5ae46435248d1dd7ee8d99704e94f5b1771",
+    "data-pipeline/joint_survey_optimizer.py": "ce953419ba668d2c0edd1ea13025b8fda88292479f3332c9743dd540c0868c15",
+    "data-pipeline/physical_nonlinear_optimizer.py": "b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919",
+    "scripts/validate_joint_precision.py": "392e76992e3f36b016d7d28808e3a723d8ce066bb81007d88190e83d746ecd45"
+  },
+  "targeted_numerical_regression": {
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-24case-final-20261025\\targeted-numerical-regression.xml",
+    "errors": 0,
+    "failures": 0,
+    "sha256": "07f63cdcdff7b74a09c01c6f973d8b9f0d1744975e48b6c53170788ecb6873a0",
+    "skipped": 6,
+    "tests": 872
+  }
+}

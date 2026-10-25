@@ -20,7 +20,7 @@ import physical_owned_spd as spd
 
 PUBLIC_COMMIT='c184e3cadcd94a94f46b129009bfc7b6810d115b'
 PINS={
-    'physical_conditioned_optimizer.py':'3da9709208dd440e62f9d83960ca2d267b1b8a5cb390bec49b9edf09e4cc82a8',
+    'physical_conditioned_optimizer.py':'1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c',
     'physical_owned_spd.py':'8924508c3328b70bb9e08ac11a81e107bcdd713402812ba64afec838892d36c2',
     'gravity_l2_metric.py':'d09a2b4630258d2c26a1a82ea92a3cd79b42143695d3e630d5252df5ba8dfe8b',
     'gravity_l2_precision.py':'57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a',
@@ -86,6 +86,8 @@ def original_terms(problem):
 
 class JointQuadraticObjective(original.JointOptimizerObjective):
     """Trusted compiled single-property adapter, original native potential/H/g."""
+    # Preserve the standalone conditioned-analysis convergence contract.
+    _solver_kkt_tolerance=1e-5
     def __init__(self,problem,modality,beta,stage,inventory,allocation,budget):
         planner._enum(modality,('gravity','magnetic'),'conditioned.modality')
         if type(beta) is not float or beta not in original.objective.BETAS:

@@ -16,6 +16,7 @@ from simpeg import optimization
 
 RUNTIME_EPOCH = 'physical-gncg-nonlinear-candidate-2'
 POLICY = 'exact-bound-native-gncg-actual-armijo-1'
+KKT_TOLERANCE = 1e-8
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 VENDOR_SOURCE_SHA256 = hashlib.sha256(Path(optimization.__file__).read_bytes()).hexdigest()
 _DIGEST = re.compile('[0-9a-f]{64}\\Z', re.ASCII)
@@ -176,6 +177,9 @@ class _NativeRecorded(optimization.ProjectedGNCG):
             LSreduction=1e-4,LSshorten=.5,use_WolfeCurvature=False,
             require_decrease=True,maxStep=np.inf)
         self.objective,self.identity_value,self.budget=objective,identity,budget
+        tolerance=getattr(objective,'_solver_kkt_tolerance',KKT_TOLERANCE)
+        if type(tolerance) is not float or not 0.<tolerance<=1e-5: raise ValueError('nonlinear: trusted normalized KKT tolerance required')
+        self.kkt_tolerance=tolerance
         self.states,self.steps=[],[]
         self.reason,self.initial_norm,self.diagonal=None,None,None
         self.pending_state,self.pending_step=None,None
@@ -278,7 +282,7 @@ class _NativeRecorded(optimization.ProjectedGNCG):
             self.states.append(state)
         elif (len(self.states)!=self.iter+1 or not np.array_equal(state[0],self.states[-1][0])
               or state[1:]!=self.states[-1][1:]): self.fail('state_mismatch')
-        if state[4]<=1e-5:
+        if state[4]<=self.kkt_tolerance:
             self.reason='kkt'
             return True
         if self.iter>=self.budget.remaining_steps:

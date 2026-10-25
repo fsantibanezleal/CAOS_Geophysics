@@ -19,7 +19,7 @@ import joint_survey_resources as resources
 import physical_nonlinear_optimizer as solver
 
 
-SOLVER_SHA='772c4de0b7747bbc9075b6fbf1357b04de752bfd900f88c9a5ddead2a91931fd'
+SOLVER_SHA='b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919'
 VENDOR_SHA='0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4'
 _VENDOR_PINS=((CrossGradient,'85ff1c1e39ec9e8973707a7debd83706db23027b13832298c4e468b052e3298c'),
     (RegularizationMesh,'942ac3fffded92f48c7a5294575082713ebde716918d0e8fbe117c084607ff8f'),
@@ -76,6 +76,7 @@ def allocation_plan(problem):
 
 class JointOptimizerObjective:
     """Native trusted adapter, never accepted from uploaded Python objects."""
+    _solver_kkt_tolerance=solver.KKT_TOLERANCE
     def __init__(self,problem,weights,start,stage,inventory,allocation,budget,modality=None):
         if type(problem) is not compiled.JointDevelopmentProblem: raise TypeError('M11: trusted compiled problem required')
         if modality is not None: planner._enum(modality,evaluation.MODALITIES,'modality')
@@ -87,7 +88,7 @@ class JointOptimizerObjective:
         physical=(problem.plan['prior']['density']['scale'],problem.plan['prior']['susceptibility']['scale'])
         self._identity={'mode':'nonlinear_gauss_newton','runtime_epoch':solver.RUNTIME_EPOCH,
             'objective_sha256':planner._digest({'development_sha256':problem.development_sha256,'weights':self.weights,
-                                               'modality':modality,'start':self.start}),
+                                               'modality':modality,'start':self.start,'kkt_tolerance':self._solver_kkt_tolerance}),
             'source_inventory_sha256':planner._digest(inventory),'q_unit':'normalized_two_property_blocks' if not modality else 'normalized_property_block',
             'physical_unit':'kg_m3' if modality=='gravity' else 'si' if modality=='magnetic' else 'kg_m3_and_si',
             'physical_scale':physical if not modality else (physical[0 if modality=='gravity' else 1],),
@@ -194,7 +195,7 @@ def _candidate_impl(problem,weights,start,stage,start_kind,inventory,allocation,
             raise RuntimeError('M11: actual optimizer trace replay mismatch')
         terms.append(tuple(adapter.terms(q)[key] for key in ('data_gravity','data_magnetic','regularization_gravity','regularization_magnetic','coupling')))
         verified.append(actual)
-    stationary=result['status']=='converged' and bool(verified) and verified[-1]<=1e-5
+    stationary=result['status']=='converged' and bool(verified) and verified[-1]<=adapter._solver_kkt_tolerance
     fullq=None;wrms={}
     if result['q'] is not None:
         fullq=problem.start.copy();fullq[sl]=result['q']

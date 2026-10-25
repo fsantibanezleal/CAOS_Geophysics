@@ -118,7 +118,7 @@ def test_actual_native_nonlinear_solve(at_lower):
     start=np.zeros(len(obj.start)) if at_lower else obj.start.copy()
     result=run(obj,start=start)
     assert result['status']=='converged',result['reason']
-    assert result['kkt_normalized']<=1e-5
+    assert result['kkt_normalized']<=solver.KKT_TOLERANCE
     assert 0<result['iterations']<=250 and obj.released
     trace=result['trace']
     assert np.all(np.diff(trace['phi_engine'])<0.)

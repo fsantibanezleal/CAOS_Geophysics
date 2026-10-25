@@ -50,6 +50,26 @@ def compare_baselines(case,ledger):
     return tuple(result)
 
 
+def summarize_precision(comparisons):
+    """Score accepted fits; retain nonconverged trials without treating them as models."""
+    from collections import Counter
+    statuses=Counter(item['production_status'] for item in comparisons)
+    predicates=('objective_gate','model_gate','prediction_gate','stationarity_gate')
+    accepted=[item for item in comparisons if item['production_status']=='converged']
+    failures={key:sum(item['actual'] is None or not item['actual'][key] for item in accepted)
+        for key in predicates}
+    reference_failures=sum(not item['reference_stationarity_gate'] for item in comparisons)
+    unexpected_statuses=sum(status not in ('converged','nonconverged') for status in statuses)
+    result={'candidate_status_counts':dict(sorted(statuses.items())),
+        'accepted_candidate_count':len(accepted),
+        'retained_nonconverged_candidate_count':statuses['nonconverged'],
+        'unexpected_candidate_status_count':unexpected_statuses,
+        'reference_stationarity_failures':reference_failures,
+        'accepted_candidate_predicate_failures':failures,
+        'all_scientific_predicates_pass':len(comparisons)==384 and bool(accepted)
+            and not any(failures.values()) and reference_failures==0 and unexpected_statuses==0}
+    return result
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__,allow_abbrev=False)
     parser.add_argument('--data-root',required=True);parser.add_argument('--scratch-root',required=True)
@@ -94,19 +114,17 @@ def main():
             'supplement_sha256':hashlib.sha256(encoded).hexdigest(),'baseline_controls':len(comparisons)})
         all_comparisons.extend(comparisons)
         print(case['case_id'],'exact-face predicates recorded; original failures retained',flush=True)
-    predicates=('objective_gate','model_gate','prediction_gate','stationarity_gate')
     comparisons=all_comparisons
-    failures={key:sum(v['actual'] is None or not v['actual'][key] for v in comparisons) for key in predicates}
+    summary=summarize_precision(comparisons)
     result={'schema':'joint-survey-face-inverse-controls-1','matrix_sha256':hashlib.sha256(matrix_bytes).hexdigest(),
-        'records':tuple(records),'baseline_controls':len(comparisons),'predicate_failures':failures,
-        'all_scientific_predicates_pass':len(comparisons)==384 and not any(failures.values()),
+        'records':tuple(records),'baseline_controls':len(comparisons),**summary,
         'original_records_unchanged':True,'original_precision_failures_retained':True,'field_eligible':False,
         'public_activation':False,'harness_sha256':hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     for path,digest in original_hashes.items():
         if intake._file_sha(path)!=digest: raise ValueError('precision: original records changed during supplemental evaluation')
     files.metadata_budget(result)
     with destination.open('xb') as stream: stream.write(files._content(result))
-    print('exact-face predicate failures:',failures,flush=True)
+    print('exact-face precision summary:',summary,flush=True)
     return 0 if result['all_scientific_predicates_pass'] else 1
 
 

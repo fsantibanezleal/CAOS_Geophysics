@@ -304,3 +304,50 @@ See [the independent reference derivation](reference-face-check.md). Neither
 648unit passes nor24completed workflows turns these scientific failures into
 acceptance. Native counts and byte/RSS gates likewise do not qualify maximum
 nonzero history cost, Linux/GPU, field science, host/API or public activation.
+
+
+## 2026-10-25 final source-bound baseline precision run
+
+The production joint-fit stopping threshold is now normalized feasible projected
+KKT <=1e-8; the existing face-restricted CG residual remains1e-6. This tighter
+stationarity criterion is bound into each candidate objective identity. The
+separate conditioned comparator retains its declared1e-5 criterion. The
+validation-only baseline selection rule and all physical tolerances are unchanged.
+
+On the final source revision, all24 frozen nonzero cases completed the actual
+26-fit solve, exclusive export, sealed evaluation and physical replay. All24
+selected a positive coupling under the unchanged validation rule. Across624
+attempts,524 converged,100 remained nonconverged and0 had engine-failed status;
+all candidate records remain present. The maximum observed per-case runtime was
+96.828s and sampled RSS was772640768 bytes. This is the frozen small-case matrix,
+not the separate maximum-count resource qualification.
+
+The 384 independent baseline comparisons contain343 converged fits and41
+nonconverged fits. Every converged fit passes all four original predicates:
+relative objective<=1e-8, normalized model<=1e-5, physical prediction<=1e-8,
+and exact-bound normalized KKT<=1e-5. All384 independent exact-face references
+pass their own original stationarity check. All48 validation-selected modality
+baselines pass the four predicates. The41 nonconverged fits remain explicitly
+unaccepted and unchanged in the candidate ledger; they are not scored as valid
+model results. No engine failures or unexpected statuses occurred. The original
+failed precision packets from earlier solver revisions remain preserved.
+
+The source-bound targeted regression ran872 tests:866 passed,6 explicitly
+skipped,0 failures and0 errors, under the declared single-thread native policy.
+This included all joint numerics, nonlinear optimizer, gravity forward/processing/
+station adapter/transforms, and magnetic forward controls. Exact run hashes and
+pinned dependency closure are recorded in
+[evidence/m11-final-precision-20261025.json](evidence/m11-final-precision-20261025.json).
+
+This closes the scoped converged-baseline precision check for the final M11
+source. Nonconverged candidates are still retained, and no field eligibility,
+full M01-M13 product acceptance, host acceptance or deployment is claimed.
+
+
+The separate maximum-count resource gate also passes on the final source:
+4096 full cells,1932 active cells,2048 receivers per modality and full covariance;
+active-count+1 is rejected before the solve. The actual solve and export/replay
+complete in8.797s, with sampled peak RSS461463552 bytes, zero observed scratch
+bytes and a2386008-byte private export. The independent replay completes in8.265s
+at466726912 bytes sampled RSS. The gate remains local/synthetic; it does not
+qualify field inputs, the VPS, GPU acceleration or full product release.

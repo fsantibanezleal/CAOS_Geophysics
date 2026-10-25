@@ -100,7 +100,7 @@ Gauss-Newton with a binding-aware projected-gradient chord, NOT unmodified
 SimPEG native GNCG. Exact active/binding signs use the CURRENT total gradient.
 At each state evaluate finite F,g and constrained KKT infinity norm: lower-bound
 components min(g,0), upper-bound max(g,0), interior g. Stationary iff
-||g_KKT||inf/max(1,||g_initial||inf)<=1e-5 with exact feasible bounds.
+||g_KKT||inf/max(1,||g_initial||inf)<=1e-8 with exact feasible bounds.
 No small CG residual, fit, step or objective-change alone declares convergence.
 
 If any exactly active entry is nonbinding, use
