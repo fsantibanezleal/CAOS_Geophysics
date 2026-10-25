@@ -1,9 +1,9 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "fb688f2fe84f8bbeb4507142465c4e05ff1e6b358ce0409f6d096f71b3e2923c",
-  "assessed_revision": "e65a563d2877ee83b63ac5381e432c1561b32163",
-  "assessed_at": "2026-10-24T23:00:02Z",
+  "sdd_sha256": "fd95349ecb92701ff27e6d90f8088bd5283367e8a0ef561b2b71f8091aea59a6",
+  "assessed_revision": "f4d716d2089bf39731ca2dc517a3beb046184cc1",
+  "assessed_at": "2026-10-25T06:49:32Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -348,15 +348,24 @@
     {
       "id": "R-019",
       "verdict": "unresolved",
-      "declared_gate": "frontend/e2e/phase-picker-live.spec.ts::real_trace_parity_and_matched_baseline plus tests/learning/test_live_export.py::test_onnx_offline_parity.",
-      "note": "Local Chromium inference on 23 valid held-out STEAD records passed parity; one flat record remains excluded. Full named release gates and deployment acceptance remain open.",
+      "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
+      "note": "A fresh local production-build browser check passed for one of 23 QC-valid display traces, verified the manifest-linked model hash, retained the QC-rejected record, exported normalized N/P/S probabilities without API traffic, and displayed the offline same-population M08/M13 table for all 6000 selected traces. The recorded full 23-trace private-oracle parity is historical to this exact browser run; re-execution on the candidate release and all product/VPS gates remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
           "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+        },
+        {
+          "path": "docs/validation/m13-browser-e2e-20261025.json",
+          "sha256": "57993c524b21e64123e92471e3cb2d2d5f3731350f90cc2e6d9e5ba5e42f5f2a"
         }
       ],
-      "receipts": []
+      "receipts": [
+        {
+          "path": "docs/validation/receipts/r019-m13-browser-e2e-20261025.json",
+          "sha256": "4ef3cc031f35806cc49896c89bfbdd4d9065961e94bf8c2572d19bb9097df827"
+        }
+      ]
     }
   ]
 }
