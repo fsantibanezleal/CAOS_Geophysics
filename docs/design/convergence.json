@@ -282,15 +282,11 @@
       "id": "R-015",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "Independent scoped gravity/MT browser controls and original MAIN course 32-case matrix pass at their respective pins. The course producer reran 32 combined-style cases; final MAIN integration passed 77 numerical and 101 frontend tests plus build/content guards. Tiny ADR fix and fresh develop CI pass; complete visual/user acceptance remains open.",
+      "note": "A bounded CAOS shell browser gate now passes 548 states across all six routes, mobile/desktop sizes, both themes and languages, and one representative workbench case. The wider-font pass, multiple-case visual matrix and complete user acceptance remain open; this bounded pass does not establish full product release acceptance.",
       "evidence": [
         {
-          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
-          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
-        },
-        {
-          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
-          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
+          "path": "docs/validation/shell-gate-20261025.json",
+          "sha256": "1aa9130db551d99f42d8d47475a55562dcba497ceea0d3e7b71b6416a2d5aa72"
         }
       ],
       "receipts": []
