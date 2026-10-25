@@ -305,15 +305,20 @@ export default function Workbench() {
     const truth = flatten(physicalTarget(run, methodId));
     const h = historyInfo(methodId, es);
     const history = (
-      <div className="convergence-panel">
-        <Plot
+        <div className="convergence-panel">
+        {method.history.length > 1 ? <Plot
           title={h.label}
           x={method.history_indices ?? method.states?.map(s => s.step) ?? indices(method.history.length).map((i) => i * h.stride)}
           series={[{ name: h.label, values: method.history }]}
           xLabel={h.axis}
           yLabel={h.label + " · 1"}
           logY={method.history.every((v) => v > 0)}
-        />
+        /> : <div className="single-history-state" role="status">
+          <span>{t("Recorded solver states", "Estados guardados del solver")}</span>
+          <strong>{method.history.length}</strong>
+          <span>{t("One selected solution; no convergence curve was recorded.", "Una solución seleccionada; no se registró una curva de convergencia.")}</span>
+          <code>{h.label}: {format(method.history[0])} · {h.axis}: {method.history_indices?.[0] ?? method.states?.[0]?.step ?? 0}</code>
+        </div>}
         <div className="metric-grid">
           {Object.entries(method.metrics).map(([key, value]) => (
             <div
@@ -513,6 +518,26 @@ export default function Workbench() {
       );
       measurements = (
         <div className="evidence-layout">
+          <Plot
+            title={t(
+              "Central survey line · shared scale",
+              "Línea central · escala compartida",
+            )}
+            x={s.locations.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]).map((p) => p[0])}
+            series={[
+              {
+                name: t("Observed", "Observado"),
+                values: s.observed.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]),
+                points: true,
+              },
+              {
+                name: t("Predicted", "Predicho"),
+                values: predicted.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]),
+              },
+            ]}
+            xLabel={t("Easting · m", "Este · m")}
+            yLabel={run.data_units}
+          />
           <div className="three-plots">
             {[
               [s.observed, t("Observed field", "Campo observado")],
@@ -538,26 +563,6 @@ export default function Workbench() {
               />
             ))}
           </div>
-          <Plot
-            title={t(
-              "Central survey line · shared scale",
-              "Línea central · escala compartida",
-            )}
-            x={s.locations.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]).map((p) => p[0])}
-            series={[
-              {
-                name: t("Observed", "Observado"),
-                values: s.observed.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]),
-                points: true,
-              },
-              {
-                name: t("Predicted", "Predicho"),
-                values: predicted.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]),
-              },
-            ]}
-            xLabel={t("Easting · m", "Este · m")}
-            yLabel={run.data_units}
-          />
           <p className="plot-note">
             {t(
               "Survey markers identify active stations. Coverage experiments fit alternate stations; predictions at omitted stations remain visible.",
@@ -567,7 +572,7 @@ export default function Workbench() {
         </div>
       );
       recovery = (
-        <div className="evidence-layout">
+        <div className="evidence-layout section-recovery-layout">
           <Range
             label={t("Northing section", "Sección norte")}
             value={section}
@@ -594,8 +599,14 @@ export default function Workbench() {
               />
             ))}
           </div>
-          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} caseRange={entry?.display_scales?.secondary?.range} />}
-          {history}
+          {run.family === "joint" && <details className="joint-support-evidence">
+            <summary>{t("Show secondary property and petrophysical prior", "Mostrar propiedad secundaria y prior petrofísico")}</summary>
+            <PetrophysicalView run={run} methodId={methodId} section={section} caseRange={entry?.display_scales?.secondary?.range} />
+          </details>}
+          <details className="recovery-analysis">
+            <summary>{t("Solver history and evaluation", "Historial del solver y evaluación")}</summary>
+            {history}
+          </details>
         </div>
       );
     } else if (run.family === "mt") {
@@ -896,7 +907,7 @@ export default function Workbench() {
       earth = (
         <div className="learned-view">
           <ApplicabilityWarning method={method} />
-          <div className="three-plots learned-evidence-grid">
+          <div className="two-plots learned-primary-plots">
             <Heatmap
               data={observedField}
               title={t("Observed survey field supplied to the method", "Campo medido suministrado al método")}
@@ -917,6 +928,10 @@ export default function Workbench() {
               xRange={[-1120, 1120]}
               yRange={[-960, 960]}
             />
+          </div>
+          <details className="learned-support-plots">
+            <summary>{t("Show network input, target and error maps", "Mostrar entrada de red, objetivo y mapas de error")}</summary>
+            <div className="two-plots">
             <Heatmap
               data={cnn ? ref : networkField}
               title={cnn ? t("Known synthetic depth-integrated target", "Objetivo sintético conocido integrado en profundidad") : t("Network input after survey coverage handling", "Entrada de red tras tratar la cobertura del levantamiento")}
@@ -944,7 +959,8 @@ export default function Workbench() {
               yRange={[-960, 960]}
               palette={cnn ? "field" : "error"}
             />
-          </div>
+            </div>
+          </details>
           <div className="learning-contract">
             <span className="small-caps">
               {cnn ? "CNN · 800 / 160 / 160" : "AUTOENCODER · LATENT 12"}
@@ -983,7 +999,7 @@ export default function Workbench() {
       );
       measurements = earth;
       recovery = (
-        <div className="evidence-layout">
+        <div className="evidence-layout learned-recovery-layout">
           {history}
           <p className="plot-note">
             {t(

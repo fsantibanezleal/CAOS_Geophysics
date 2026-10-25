@@ -76,9 +76,10 @@ def test_case_score_is_input_consistent_and_not_a_geological_verdict(case,varian
 
 def test_frozen_bundle_rejects_tampered_checkpoint(tmp_path):
     import shutil
+    ledger = json.loads((DATA/'models'/'training.json').read_text(encoding='utf-8'))
     for name in ('training.json','cnn.json','autoencoder.json'):
         shutil.copyfile(DATA/'models'/name,tmp_path/name)
     with (tmp_path/'cnn.json').open('ab') as file:
         file.write(b' ')
     with pytest.raises(ValueError,match='Checkpoint hash mismatch: cnn'):
-        load_bundle(tmp_path,device='cpu',grid_shape=(16,16))
+        load_bundle(tmp_path,device='cpu',grid_shape=tuple(ledger['survey_shape']))

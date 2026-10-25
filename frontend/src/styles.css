@@ -724,7 +724,19 @@
   [data-instrument="inversion-view"] .two-plots > .science-plot,
   .learned-view .three-plots > .science-plot {
     box-sizing: border-box;
-    height: max(600px, min(75vh, 1080px));
+    height: max(600px, min(80vh, 1080px));
+  }
+  .context-view .case-evidence .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(560px, min(72vh, 900px));
+  }
+  .learned-view .learned-primary-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(600px, min(80vh, 1080px));
+  }
+  .learned-view .learned-support-plots .two-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(520px, min(66vh, 840px));
   }
 }
 .three-plots {
@@ -739,6 +751,79 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+/* Learned maps are coordinate-bearing survey rasters. Two large physical-scale
+   maps per row preserve their aspect ratio and keep both input and output legible. */
+@media (min-width: 1120px) {
+  .learned-view .three-plots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .learned-view .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(600px, min(80vh, 1080px));
+  }
+}
+@media (min-width: 1801px) {
+  .learned-view .three-plots {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .learned-view .three-plots > .science-plot {
+    height: clamp(440px, 50vh, 680px);
+  }
+  .context-view .case-evidence .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: clamp(720px, 72vh, 980px);
+  }
+  .mt-view .layer-stack {
+    height: clamp(680px, 78vh, 1040px);
+  }
+  .mt-view .mt-curves .science-plot-shell .caos-plot.fill,
+  [data-instrument="data-view"] .two-plots .science-plot-shell .caos-plot.fill {
+    box-sizing: border-box;
+    height: clamp(680px, 78vh, 1040px);
+  }
+  [data-instrument="inversion-view"] .learned-recovery-layout > .convergence-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  [data-instrument="inversion-view"] .learned-recovery-layout .science-plot-shell .caos-plot.fill {
+    box-sizing: border-box;
+    height: clamp(720px, 78vh, 1040px);
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout .convergence-panel .science-plot-shell .caos-plot.fill {
+    box-sizing: border-box;
+    height: clamp(440px, 34vh, 500px);
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "section-control" "section-maps" "section-detail" "section-history";
+    align-items: start;
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout > .range-control { grid-area: section-control; }
+  [data-instrument="inversion-view"] .section-recovery-layout > .two-plots { grid-area: section-maps; }
+  [data-instrument="inversion-view"] .section-recovery-layout > .two-plots > .science-plot {
+    box-sizing: border-box;
+    height: clamp(640px, 66vh, 960px);
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout > .recovery-analysis {
+    grid-area: section-history;
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout > :not(.range-control, .two-plots, .recovery-analysis) {
+    grid-area: section-detail;
+  }
+}
+.recovery-analysis > summary,
+.learned-support-plots > summary,
+.joint-support-evidence > summary {
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 650;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card, 0.65rem);
+  background: var(--color-surface-2);
+}
+.recovery-analysis[open] > summary { margin-bottom: 0.8rem; }
+.learned-support-plots[open] > summary { margin-bottom: 0.8rem; }
+.joint-support-evidence[open] > summary { margin-bottom: 0.8rem; }
 .plot-note {
   font-size: 0.84rem;
   color: var(--color-fg-subtle);
@@ -752,6 +837,24 @@
 .convergence-panel > .plot-note {
   grid-column: 1/-1;
 }
+.single-history-state {
+  box-sizing: border-box;
+  min-height: 12rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card, 0.65rem);
+  background: var(--color-surface-2);
+  color: var(--color-fg-subtle);
+}
+.single-history-state strong {
+  color: var(--color-fg);
+  font: 2rem var(--font-mono);
+}
+.single-history-state code { color: var(--color-fg); }
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1245,17 +1348,20 @@
      the canvas collapses to its caption height. */
   [data-instrument="data-view"] .three-plots > .science-plot,
   [data-instrument="inversion-view"] .two-plots > .science-plot,
-  .learned-view .three-plots > .science-plot {
+  .learned-view .three-plots > .science-plot,
+  .learned-view .learned-primary-plots > .science-plot,
+  .learned-view .learned-support-plots .two-plots > .science-plot {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    height: clamp(340px, 104vw, 430px);
+    height: auto;
+    min-height: clamp(340px, 104vw, 430px);
   }
   [data-instrument="data-view"] .heatmap-axes,
   [data-instrument="inversion-view"] .heatmap-axes,
   .learned-view .heatmap-axes {
-    flex: 1 1 auto;
-    min-height: 0;
+    flex: 1 0 260px;
+    min-height: 260px;
   }
   [data-instrument="data-view"] .heatmap-area,
   [data-instrument="inversion-view"] .heatmap-area,

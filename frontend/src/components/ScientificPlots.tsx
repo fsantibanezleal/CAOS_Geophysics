@@ -28,6 +28,20 @@ export function Legend({
   );
 }
 
+export function heatmapAspectRatio(
+  aspectRatio: number | undefined,
+  xRange?: [number, number],
+  yRange?: [number, number],
+): number | undefined {
+  if (aspectRatio !== undefined) return aspectRatio;
+  if (!xRange || !yRange) return undefined;
+  const xSpan = Math.abs(xRange[1] - xRange[0]);
+  const ySpan = Math.abs(yRange[1] - yRange[0]);
+  return xSpan > 0 && ySpan > 0 && Number.isFinite(xSpan / ySpan)
+    ? xSpan / ySpan
+    : undefined;
+}
+
 export function Heatmap({
   data,
   title,
@@ -78,6 +92,7 @@ export function Heatmap({
   const [interpolated, setInterpolated] = useState(interpolation);
   const rows = data.length,
     cols = data[0]?.length ?? 0;
+  const resolvedAspectRatio = heatmapAspectRatio(aspectRatio, xRange, yRange);
   const isResidual = /residual|residuo/i.test(title);
   const residualLimit = Math.max(1e-20, ...data.flat().filter(Number.isFinite).map(Math.abs));
   const bounds = isResidual ? [-residualLimit, residualLimit] as [number, number] : range ?? extent(data.flat());
@@ -137,7 +152,7 @@ export function Heatmap({
         <span className="axis-y">{yLabel}</span>
         <div
           className={`${plotStyles.heatmapArea} heatmap-area`}
-          style={aspectRatio ? { aspectRatio } : undefined}
+          style={resolvedAspectRatio ? { aspectRatio: resolvedAspectRatio } : undefined}
           onPointerMove={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
             setHover({

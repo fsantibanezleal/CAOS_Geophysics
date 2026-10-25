@@ -299,7 +299,7 @@ export function historyInfo(method: string, es: boolean) {
         ? ["Relative waveform MSE", "MSE relativo de onda"]
         : ["Recorded loss", "Pérdida registrada"];
   const axis = ["l2", "irls", "vector"].includes(method)
-    ? ["Linear solve index", "Índice de solución lineal"]
+    ? ["Regularization selection / IRLS update", "Selección de regularización / actualización IRLS"]
     : learned
       ? ["Training epoch", "Época de entrenamiento"]
       : ["joint", "joint-uncoupled", "pgi"].includes(method)
