@@ -87,6 +87,14 @@ def test_tie_line_remains_qc_only_and_exact_collocation_is_reported():
     assert "Tie-line observations are retained" in result["limitations"][2]
 
 
+def test_grid_masks_points_outside_training_convex_hull():
+    data = request()
+    data["rows"] = [row for row in data["rows"] if not (row["E"] == 0 and row["N"] == 100)]
+    grid = process(data)["grid"]
+    assert grid["support_mask"][-1][0] is False
+    assert grid["values"][-1][0] == 0.0
+
+
 def test_exact_duplicate_training_coordinate_fails_instead_of_averaging():
     with pytest.raises(MagneticProcessingError, match="duplicate training coordinates"):
         process(request(duplicate=True))
