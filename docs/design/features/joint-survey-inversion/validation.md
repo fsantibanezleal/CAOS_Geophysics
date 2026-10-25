@@ -232,7 +232,7 @@ course does not expose a solve or claim acceptance of the full supplied inverse.
 
 The reviewed public candidate source is
 physical-gncg-nonlinear-candidate-2 / exact-bound-native-gncg-actual-armijo-1,
-optimizer SHA772c4de0b7747bbc9075b6fbf1357b04de752bfd900f88c9a5ddead2a91931fd
+optimizer SHA b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919
 and loaded vendor optimization SHA
 0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4.
 This is applicable candidate composition, not parent scientific acceptance.

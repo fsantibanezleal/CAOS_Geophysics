@@ -22,7 +22,7 @@ export type JointInspection = {
   importedBytes: number; limitations: typeof INSPECTION_FLAGS;
 };
 export const JOINT_CLIENT_PINS = Object.freeze({
-  optimizer_source_sha256: "772c4de0b7747bbc9075b6fbf1357b04de752bfd900f88c9a5ddead2a91931fd",
+  optimizer_source_sha256: "b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919",
   vendor_source_sha256: "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
   runtime_epoch: "physical-gncg-nonlinear-candidate-2", policy: "exact-bound-native-gncg-actual-armijo-1",
 });
