@@ -115,7 +115,8 @@ def make_harness(tmp_path: Path, monkeypatch):
     def create(*, max_upload_bytes: int = 200 * 1024 * 1024, account_quota_bytes: int = 1024 * 1024 * 1024,
                worker_memory_bytes: int = 2 * 1024 * 1024 * 1024, worker_scratch_bytes: int = 1024 * 1024 * 1024,
                worker_wall_seconds: int = 600, max_queued_jobs: int = 32,
-               mt_online_enabled: bool = False, auth_mode: str = "email",
+               mt_online_enabled: bool = False, gravity_l2_online_enabled: bool = False,
+               auth_mode: str = "email",
                profile_online_enabled: bool = False, profile_python: Path | None = None):
         # Keep app-owned paths short on Windows. Production correctly rejects
         # paths beyond MAX_PATH; pytest's nested node-id directory can exceed
@@ -136,6 +137,7 @@ def make_harness(tmp_path: Path, monkeypatch):
             worker_memory_bytes=worker_memory_bytes, worker_scratch_bytes=worker_scratch_bytes,
             worker_wall_seconds=worker_wall_seconds, max_queued_jobs=max_queued_jobs,
             mt_online_enabled=mt_online_enabled,
+            gravity_l2_online_enabled=gravity_l2_online_enabled,
             profile_online_enabled=profile_online_enabled, profile_python=profile_python,
             auth_mode=auth_mode,
         )

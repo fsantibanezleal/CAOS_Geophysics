@@ -32,6 +32,14 @@ def calibration_request():
     return module.calibration_request()
 
 
+def test_projected_kkt_accepts_scalar_native_bounds_for_one_cell():
+    # SimPEG exposes one-cell bounds as scalars; the physical model remains a
+    # one-element vector. Exercise interior and active-bound projections.
+    assert l2._kkt_gradient(np.array([0.]), np.array([2.]), -1., 1.).tolist() == [2.]
+    assert l2._kkt_gradient(np.array([-1.]), np.array([2.]), -1., 1.).tolist() == [0.]
+    assert l2._kkt_gradient(np.array([1.]), np.array([-2.]), -1., 1.).tolist() == [0.]
+
+
 def outer_request(result,values=None):
     rows = result['plan']['outer_rows']
     observed = {'rows':rows.copy(),'gz_up_mgal':np.zeros(len(rows)) if values is None else values,

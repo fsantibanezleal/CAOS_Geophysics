@@ -236,6 +236,13 @@ class _SolveFailure(RuntimeError):
 
 
 def _kkt_gradient(q, gradient, lower, upper):
+    # SimPEG normalizes a one-parameter bound to scalars, while model and
+    # gradient retain their one-element vector shape. Broadcast those exact
+    # physical bounds back to the model shape before constructing the KKT
+    # tolerance; otherwise a single-cell solve raises an inhomogeneous-array
+    # error before its first iteration.
+    lower = np.broadcast_to(np.asarray(lower, dtype=np.float64), np.shape(q))
+    upper = np.broadcast_to(np.asarray(upper, dtype=np.float64), np.shape(q))
     tolerance = 32*np.finfo(np.float64).eps*np.maximum.reduce(
         [np.ones_like(q), np.abs(q), np.abs(lower), np.abs(upper)])
     projected = gradient.copy()

@@ -16,6 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bundle import build_bundle
 from app.config import Settings
 from app.errors import ApiError
+from app.gravity_l2_contract import (
+    METHOD_ID as GRAVITY_L2_ID, METHOD_MEMORY_BYTES as GRAVITY_L2_MEMORY,
+    METHOD_SCRATCH_BYTES as GRAVITY_L2_SCRATCH, METHOD_WALL_SECONDS as GRAVITY_L2_WALL,
+    GravityL2Parameters, eligible_upload, implementation_hashes,
+)
 from app.models import AccountUsage, ObservationDataset, ProcessingJob, User, utcnow
 from app.mt_contract import (
     EDI_PARSER_VERSION, EDI_SOURCE_LIMIT, M05_ID, M06_ID, M05_MEMORY_BYTES,
@@ -60,7 +65,7 @@ class JobCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     dataset_id: uuid.UUID
     method_id: str = Field(min_length=1, max_length=80)
-    parameters: JobParameters | M05Parameters | M06Parameters | ProfileParameters | WaveformParameters
+    parameters: JobParameters | M05Parameters | M06Parameters | ProfileParameters | WaveformParameters | GravityL2Parameters
 
 
 def _date(value: datetime | None) -> str | None:
@@ -324,14 +329,26 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                     "method_id": M06_ID, "eligible": False, "lane": "ineligible",
                     "reason": "A passing M05 full-tensor screen and 12..64 frequencies are required"}],
             }
-        return {
-            "dataset_id": dataset.id,
-            "methods": [{"method_id": METHOD_ID, "eligible": True, "lane": "online_processing",
-                         "scope": "flag-only QC; no correction or inversion"}],
-            "unavailable": [{"method_id": f"M{number:02d}", "eligible": False, "lane": "not_activated",
-                             "reason": "No validated online adapter and host benchmark for this complete method"}
-                            for number in range(1, 14)],
-        }
+        methods = [{"method_id": METHOD_ID, "eligible": True, "lane": "online_processing",
+                    "scope": "flag-only QC; no correction or inversion"}]
+        unavailable = [{"method_id": f"M{number:02d}", "eligible": False, "lane": "not_activated",
+                        "reason": "No validated online adapter and host benchmark for this complete method"}
+                       for number in range(1, 14)]
+        if dataset.modality == "gravity_station":
+            asset, source = await _owned_asset(session, project_id, dataset.raw_asset_id, user)
+            source_eligible, reasons = eligible_upload(data, asset, source)
+            unavailable = [entry for entry in unavailable if entry["method_id"] != "M02"]
+            if not source_eligible:
+                unavailable.append({"method_id": GRAVITY_L2_ID, "eligible": False, "lane": "ineligible",
+                                   "source_eligible": False, "reasons": reasons})
+            elif not settings.gravity_l2_online_enabled:
+                unavailable.append({"method_id": GRAVITY_L2_ID, "eligible": False,
+                                   "lane": "pending_host_admission", "source_eligible": True,
+                                   "reason": "M02 ordinary-L2 has no measured ML VPS admission receipt"})
+            else:
+                methods.append({"method_id": GRAVITY_L2_ID, "eligible": True, "lane": "online_cpu",
+                                "scope": "Source-bound ordinary weighted L2; fixed-geometry conditional result; full M02/field acceptance remains false"})
+        return {"dataset_id": dataset.id, "methods": methods, "unavailable": unavailable}
 
     @router.post("/jobs", status_code=202)
     async def submit_job(
@@ -347,6 +364,7 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         mt = dataset.modality == "edi_transfer_function"
         profile = dataset.modality in {"ert_profile", "traveltime_profile"}
         waveform = dataset.modality == WAVEFORM_MODALITY
+        gravity_l2 = dataset.modality == "gravity_station" and request.method_id == GRAVITY_L2_ID
         if profile:
             if not settings.profile_online_enabled:
                 raise ApiError(409, "host_admission_pending", "Profile online jobs require actual ML VPS admission")
@@ -398,6 +416,28 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                 qc_screen_sha = sha256(canonical_bytes(eligible[1]["screen"]))
             else:
                 raise ApiError(422, "method_ineligible", "Method or parameters are not eligible for this EDI")
+        elif gravity_l2:
+            if not settings.gravity_l2_online_enabled:
+                raise ApiError(409, "host_admission_pending", "M02 ordinary-L2 jobs require an actual ML VPS admission receipt")
+            if not isinstance(request.parameters, GravityL2Parameters):
+                raise ApiError(422, "method_ineligible", "M02 ordinary-L2 parameters do not match the typed contract")
+            asset, source = await _owned_asset(session, project_id, dataset.raw_asset_id, user)
+            source_eligible, reasons = eligible_upload(payload, asset, source)
+            if not source_eligible:
+                raise ApiError(422, "dataset_physics_ineligible", "Uploaded gravity observations do not satisfy M02 source admission", reasons)
+            await asyncio.to_thread(_verified_file, settings, asset)
+            try:
+                from app.gravity_l2_compute import _native_modules
+                _forward, inverse, _survey = _native_modules()
+                estimated_memory = inverse.metric.allocation(
+                    dataset.row_count, dataset.row_count,
+                    sum(request.parameters.mesh.active), False,
+                )["maximum"]
+            except (ImportError, ValueError, RuntimeError) as exc:
+                raise ApiError(413, "job_resource_ineligible", "M02 native memory preflight rejected this mesh or runtime") from exc
+            method_memory, method_scratch, method_wall = GRAVITY_L2_MEMORY, GRAVITY_L2_SCRATCH, GRAVITY_L2_WALL
+            estimated_scratch = asset.byte_count + 16 * 1024 * 1024
+            qc_screen_sha = None
         elif dataset.modality == "gravity_station" and request.method_id == METHOD_ID and isinstance(request.parameters, JobParameters):
             method_memory, method_scratch, method_wall = METHOD_MEMORY_BYTES, METHOD_SCRATCH_BYTES, METHOD_WALL_SECONDS
             estimated_memory = 64 * 1024 * 1024 + 20 * dataset.byte_count
@@ -426,19 +466,22 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         if raw_usage + await account_derived_usage(session, user.id) + method_scratch > settings.account_quota_bytes:
             raise ApiError(507, "account_quota_exceeded", "Account private-byte quota exceeded")
         job_id = str(uuid.uuid4())
-        parameters = request.parameters.model_dump(mode="json")
+        parameters = request.parameters.model_dump(mode="json", by_alias=True)
         immutable = {
             "schema": "geophysics.processing-request/v1", "job_id": job_id,
             "project_id": project_id, "dataset_id": dataset.id, "dataset_sha256": dataset.sha256,
             "method_id": request.method_id, "parameters": parameters,
         }
-        if mt or profile:
+        if mt or profile or gravity_l2:
             immutable.update(raw_asset_id=dataset.raw_asset_id, raw_sha256=dataset.raw_sha256)
             if profile:
                 immutable.update(profile_child_sha256=profile_child_hash(),
                                  profile_code_hashes=profile_code_hashes(request.method_id))
             if qc_screen_sha is not None:
                 immutable["qc_screen_sha256"] = qc_screen_sha
+        if gravity_l2:
+            immutable.update(raw_bytes=asset.byte_count, source_id=source.id,
+                             implementation_sha256=implementation_hashes())
         if waveform:
             from app.waveform_contract import implementation_sha256
             immutable.update(waveform_sources=payload["sources"], scientific_request=payload["request"],
@@ -446,7 +489,7 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                              implementation_sha256=implementation_sha256())
         preflight = {"estimated_memory_bytes": estimated_memory, "memory_limit_bytes": memory,
                      "scratch_limit_bytes": scratch, "wall_limit_seconds": wall}
-        if mt or profile:
+        if mt or profile or gravity_l2:
             preflight["estimated_scratch_bytes"] = estimated_scratch
         if waveform:
             preflight.update(estimated_scratch_bytes=estimated_scratch,

@@ -58,6 +58,7 @@ class Settings:
     worker_scratch_bytes: int = 1024 * MIB
     worker_wall_seconds: int = 600
     mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
+    gravity_l2_online_enabled: bool = False  # Set only after an M02-specific actual-host receipt.
     profile_online_enabled: bool = False
     profile_python: Path | None = None
     profile_linux_supervisor: Path | None = None
@@ -120,6 +121,7 @@ class Settings:
             smtp_password=os.environ.get("GEOPHYSICS_SMTP_PASSWORD", ""),
             smtp_from=os.environ.get("GEOPHYSICS_SMTP_FROM", ""),
             mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+            gravity_l2_online_enabled=os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1",
             profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
             profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
             profile_linux_supervisor=configured_profile_supervisor(),
@@ -134,6 +136,7 @@ class WorkerSettings:
     data_dir: Path
     db_path: Path | None = None
     mt_online_enabled: bool = False
+    gravity_l2_online_enabled: bool = False
     profile_online_enabled: bool = False
     profile_python: Path | None = None
     profile_linux_supervisor: Path | None = None
@@ -165,6 +168,7 @@ class WorkerSettings:
         db = os.environ.get("GEOPHYSICS_DB_PATH")
         return cls(data_dir=data, db_path=Path(db) if db else None,
                    mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
+                   gravity_l2_online_enabled=os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1",
                    profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
                    profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
                    profile_linux_supervisor=configured_profile_supervisor())

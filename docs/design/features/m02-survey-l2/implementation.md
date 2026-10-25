@@ -271,3 +271,35 @@ No full16-gate, scientific whole-unit, field/API/IRLS/GPU/host, merge or deploym
 acceptance follows from the AS-B controls. MAIN must review and independently
 execute a stable pin. No algorithm, tolerance, bounds, cap, seed or beta changes
 beyond the explicitly approved narrow branch and source/policy epoch are made.
+## Authenticated user-upload adapter (host lane pending)
+
+`app.gravity_l2_contract` and `app.gravity_l2_compute` now connect an eligible,
+owned gravity-station CSV to the existing native planner, calibration and
+sealed outer evaluation. This is a source-bound adapter, not a second solver.
+The API validates the explicit local metric coordinate frame, anomaly sign and
+unit, correction state, positive uncertainty declaration, independent spatial
+groups, raw source hash, and finite mesh/prior/split parameters before queueing.
+The worker reparses and byte-verifies the immutable original, checks the
+implementation hashes captured in the job request, executes in a bounded child,
+and validates typed-array shape/dtype/content hashes before result installation.
+Outer rows are withheld from calibration and used only by the native frozen
+evaluation call. Field truth and model-accuracy scores remain null.
+
+The ordinary-L2 method is gated by
+`GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED`, default false. A local successful
+compute does not turn on the method: the current metric closure admits only the
+reviewed Windows CPython/NumPy/SciPy/SuperLU build. The Linux ML VPS requires a
+separate native dependency/source closure and measured job-resource receipt;
+until those exist, the API reports the method unavailable there. No server-side
+GPU claim is made.
+
+The upload integration control derives its observations from Choclo's analytic
+gravity of the declared 500 kg/m3 rectangular prism and verifies actual native
+calibration followed by independent outer evaluation. This exposed a
+single-active-cell bug: SimPEG represents one-cell bounds as scalars, whereas
+the KKT stopping check compared vector model/gradient arrays. The exact lower
+and upper bounds are now broadcast to the model shape before the unchanged KKT
+tolerance is computed. The new one-cell regression covers interior and both
+active bounds. The local API controls pass 13 tests, and the prism-backed native
+upload calculation passes; Linux host admission, public scientific review,
+whole-product browser acceptance and release acceptance remain open.
