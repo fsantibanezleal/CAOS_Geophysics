@@ -202,6 +202,13 @@ def accounting(connection, owner_id):
     """Additive M11 charge; base already counts successful result indexes."""
     uuid(owner_id)
     require(connection.in_transaction, 'physical_joint_account_snapshot')
+    from app.physical_schema import JOINT_TABLES, schema_tables
+    _, tables = schema_tables(connection)
+    if not JOINT_TABLES <= tables:
+        # 0005 is a supported predecessor. It has no M11 extension namespace,
+        # so it contributes zero M11 bytes; M11 rows on it are rejected by the
+        # snapshot reader below rather than queried through absent tables.
+        return dict(joint_members=0, joint_terminal_indices=0, joint_active=0)
     cursor = connection.execute('SELECT byte_count FROM joint_result_artifacts WHERE owner_id=?', (owner_id,))
     members = sum(integer(r[0], 1, native.MAX_BYTES) for r in cursor)
     indices = active = 0
@@ -221,6 +228,14 @@ def audit_snapshot(rows, files, *, connection=None):
     The enclosing classifier still must close its complete namespace census.
     This reader never grants a deletion or successful scientific disposition.
     """
+    if connection is not None:
+        from app.physical_schema import JOINT_TABLES, schema_tables
+        _, tables = schema_tables(connection)
+        if not JOINT_TABLES <= tables:
+            require(not any(r['detected_format'] == 'joint_native' for r in rows['raw_assets'])
+                    and not any(r['parser_version'] == native.PARSER for r in rows['observation_datasets'])
+                    and not any(r['method_id'] == METHOD for r in rows['processing_jobs']),
+                    'physical_joint_schema_required')
     datasets = {r['id']: r for r in rows['observation_datasets'] if r['parser_version'] == native.PARSER}
     jobs = {r['id']: r for r in rows['processing_jobs'] if r['method_id'] == METHOD}
     require(all(r['dataset_id'] in datasets for r in rows.get('joint_dataset_sources', ())),

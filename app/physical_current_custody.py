@@ -24,7 +24,7 @@ def validate_current_custody(value):
             'current_custody_dispatch')
     header = {key:value[key] for key in CUSTODY_HEADER.split()}
     # Reuse the closed unchanged original header predicates, not a fallback for
-    # new fields/origins. Only v2 project-deletion slots receive the new grammar.
+    # new fields/origins. V2 and v3 remain project-deletion-only dispatches.
     inherited = dict(header, schema='geophysics.physical-custody/v1')
     custody_header(inherited)
     entries = value['initial_files']
@@ -46,6 +46,14 @@ def validate_current_custody(value):
                     and (item['role'],item['location'])==('result_copy','deleting_derived'),
                     'current_custody_joint_member')
             integer(item['ordinal'],1,4096); integer(item['max_bytes'],1,MAX_BYTES)
+            integer(item['actual_bytes'],1,item['max_bytes']); sha(item['actual_sha256'])
+            require(len(canonical(item))<=1024,'current_custody_file_cap')
+        elif value['schema']==JOINT_SCHEMA and item['role']=='result_copy' and item['leaf'].startswith('results/') and item['max_bytes']==256*1024:
+            from app.physical_joint_native_contract import MAX_JSON
+            pieces=item['leaf'].split('/')
+            require(len(pieces)==2 and pieces[0]=='results' and pieces[1]==f"{uuid(item['artifact_id'])}.json"
+                    and item['location']=='deleting_derived','current_custody_joint_index')
+            integer(item['ordinal'],1,4096); integer(item['max_bytes'],1,MAX_JSON)
             integer(item['actual_bytes'],1,item['max_bytes']); sha(item['actual_sha256'])
             require(len(canonical(item))<=1024,'current_custody_file_cap')
         elif item['leaf'].startswith('waveforms/'):

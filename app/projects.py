@@ -142,7 +142,7 @@ def _require_supported_deletion_paths(raw_directory, derived_directory, assets, 
         return
     paths = [raw_directory, derived_directory, *(raw_directory / asset.id for asset in assets)]
     for item in manifest:
-        relative = (item["relative_path"] if item["kind"] == "waveform_artifact"
+        relative = (item["relative_path"] if item["kind"] in ("waveform_artifact", "joint_artifact")
                     else f"{item['kind']}s/{item['id']}.json")
         paths.append(derived_directory / relative)
     for path in paths:
@@ -437,9 +437,14 @@ def install_project_routes(app, settings: Settings, current_user, get_session) -
         else:
             inventory=physical_plan['inventory']
             derived_dir=settings.data_dir/'derived'/str(user.id)/project_id
+            joint_index_ids={r['job_id'] for r in inventory.get('joint_result_indexes',[])}
             derived_manifest=([dict(kind='dataset',id=r['dataset_id'],sha256=r['sha256'],byte_count=r['bytes'])
                 for r in inventory['datasets']]+[dict(kind='result',id=r['job_id'],sha256=r['result_sha256'],byte_count=r['result_bytes'])
-                for r in inventory['jobs'] if r['state']=='succeeded']+[dict(kind='waveform_artifact',id=r['job_id'],name=r['name'],
+                for r in inventory['jobs'] if r['state']=='succeeded' and r['job_id'] not in joint_index_ids]+
+                [dict(kind='result',id=r['job_id'],sha256=r['sha256'],byte_count=r['bytes'])
+                 for r in inventory.get('joint_result_indexes',[])]+[dict(kind='joint_artifact',id=r['job_id'],name=r['name'],
+                relative_path=f"joint/{r['job_id']}/{r['name']}",sha256=r['sha256'],byte_count=r['bytes'])
+                for r in inventory.get('joint_result_members',[])]+[dict(kind='waveform_artifact',id=r['job_id'],name=r['name'],
                 relative_path=f"waveforms/{r['job_id']}/{r['name']}",sha256=r['sha256'],byte_count=r['bytes'])
                 for r in inventory['waveform_artifacts']])
         _require_no_project_backup(settings, str(user.id), project_id)

@@ -1,4 +1,4 @@
-"""M11 live custody/accounting registration and deletion refusal boundary."""
+"""M11 live custody, accounting, and retained project-deletion projection."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ import joint_survey_evaluation as evaluation
 import joint_survey_plan as planner
 from app.physical_classifier import classify_snapshot
 from app.physical_contract import byte_sha, canonical
+from app.physical_deleted_inventory import validate_current_inventory
 from app.physical_joint_custody import scan_stream
 from app.physical_joint_native_contract import METHOD_ID, MODALITY, PARSER
 from app.physical_posix import PrivateFiles
@@ -49,7 +50,15 @@ class MemoryFiles:
         raise FileNotFoundError(key)
 
     def census(self, expected, *, empty_directories=()):
-        assert set(expected) == set(self.bodies)
+        if not set(self.bodies) <= set(expected):
+            raise ValueError("fixture_unknown_namespace")
+        if not all(not record.get("required", True) or key in self.bodies
+                   for key, record in expected.items()):
+            raise ValueError("fixture_missing_file")
+        if not all(len(self.bodies[key]) == record["bytes"]
+                   and byte_sha(self.bodies[key]) == record["sha256"]
+                   for key, record in expected.items() if key in self.bodies and record["bytes"] is not None):
+            raise ValueError("fixture_file_identity")
         return {key: dict(bytes=len(body), sha256=byte_sha(body)) for key, body in self.bodies.items()}
 
 
@@ -202,7 +211,7 @@ def joint_case(tmp_path, monkeypatch):
         source_policy="e"*64, ids=(str(uuid4()), str(uuid4())))
 
 
-def test_live_classifier_quota_and_deletion_refusal_for_populated_m11(joint_case):
+def test_live_classifier_quota_and_m11_deletion_projection(joint_case):
     connection, files, rows = joint_case["connection"], joint_case["files"], joint_case["rows"]
     owner, project = joint_case["owner"], joint_case["project"]
     connection.execute("BEGIN IMMEDIATE")
@@ -222,13 +231,134 @@ def test_live_classifier_quota_and_deletion_refusal_for_populated_m11(joint_case
         assert result.operations[rows["processing_jobs"][0]["id"]] == "retain_nonsuccess"
         assert result.inventory_sha256 and connection.total_changes == before
 
-        with pytest.raises(ValueError, match="current_deletion_joint_custody_unrepresentable"):
-            prepare_project_deletion(connection, files=files, owner_id=owner, project_id=project,
-                batch_id=joint_case["ids"][0], receipt_id=joint_case["ids"][1], created_us=1,
-                expected_source_policy_sha256=joint_case["source_policy"], approved_manifests={},
-                approved_installations={}, native_metadata={}, profile_records=[])
-        assert connection.total_changes == before
-        assert connection.execute("SELECT count(*) FROM physical_custody_batches").fetchone() == (0,)
+        # These exact paths are live M11 custody: all source copies, the
+        # dataset index, the failed terminal result index, and its member.
+        # Deletion must not silently omit any of them from the tombstone.
+        assert {r["storage_key"] for r in rows["raw_assets"]} <= set(files.bodies)
+        assert rows["observation_datasets"][0]["storage_key"] in files.bodies
+        assert rows["processing_jobs"][0]["result_key"] in files.bodies
+        assert rows["joint_result_artifacts"][0]["storage_key"] in files.bodies
+
+        plan = prepare_project_deletion(connection, files=files, owner_id=owner, project_id=project,
+            batch_id=joint_case["ids"][0], receipt_id=joint_case["ids"][1], created_us=1,
+            expected_source_policy_sha256=joint_case["source_policy"], approved_manifests={},
+            approved_installations={}, native_metadata={}, profile_records=[])
+        inventory, custody = plan["inventory"], plan["custody"]
+        assert inventory["schema"] == "geophysics.physical-deleted-inventory/v2"
+        assert {r["asset_id"] for r in inventory["joint_raw_assets"]} == {r["id"] for r in rows["raw_assets"]}
+        assert inventory["joint_sources"]
+        assert inventory["joint_result_indexes"][0]["state"] == "failed"
+        assert inventory["joint_result_members"][0]["storage_key"] == rows["joint_result_artifacts"][0]["storage_key"]
+        assert custody["schema"] == "geophysics.physical-custody/v3"
+        assert {s["leaf"] for s in custody["initial_files"]} >= {
+            f"results/{rows['processing_jobs'][0]['id']}.json",
+            f"joint/{rows['processing_jobs'][0]['id']}/{rows['joint_result_artifacts'][0]['name']}",
+        }
+        assert connection.total_changes > before
+        assert connection.execute("SELECT count(*) FROM physical_custody_batches").fetchone() == (1,)
+        receipt = dict(owner_id=owner, project_id=project,
+            asset_manifest=[dict(asset_id=r["asset_id"],sha256=r["sha256"],byte_count=r["bytes"])
+                            for r in inventory["raw_assets"]],
+            derived_manifest=(
+                [dict(kind="dataset",id=r["dataset_id"],sha256=r["sha256"],byte_count=r["bytes"])
+                 for r in inventory["datasets"]] +
+                [dict(kind="result",id=r["job_id"],sha256=r["sha256"],byte_count=r["bytes"])
+                 for r in inventory["joint_result_indexes"]] +
+                [dict(kind="joint_artifact",id=r["job_id"],name=r["name"],
+                    relative_path=f"joint/{r['job_id']}/{r['name']}",sha256=r["sha256"],byte_count=r["bytes"])
+                 for r in inventory["joint_result_members"]]))
+        assert validate_current_inventory(inventory,receipt,
+            expected_source_policy_sha256=joint_case["source_policy"],approved_installations={}) is None
+        corrupt = dict(inventory)
+        corrupt["joint_result_members"] = [dict(inventory["joint_result_members"][0],sha256="f"*64)]
+        with pytest.raises(ValueError,match="current_deletion_joint_index_member_projection"):
+            validate_current_inventory(corrupt,receipt,
+                expected_source_policy_sha256=joint_case["source_policy"],approved_installations={})
+    finally:
+        connection.rollback()
+        connection.close()
+
+
+def test_m11_project_deletion_transfers_all_indexes_and_members_for_restart(joint_case):
+    from app.physical_project_deletion import transfer_project_deletion
+    connection, files, rows = joint_case["connection"], joint_case["files"], joint_case["rows"]
+    owner, project = joint_case["owner"], joint_case["project"]
+    connection.execute("BEGIN IMMEDIATE")
+    try:
+        plan = prepare_project_deletion(connection, files=files, owner_id=owner, project_id=project,
+            batch_id=joint_case["ids"][0], receipt_id=joint_case["ids"][1], created_us=2,
+            expected_source_policy_sha256=joint_case["source_policy"], approved_manifests={},
+            approved_installations={}, native_metadata={}, profile_records=[])
+        connection.commit()
+        connection.execute("BEGIN IMMEDIATE")
+        assert classify_snapshot(connection,files,approved_manifests={},approved_installations={},
+            native_metadata={},expected_source_policy_sha256=joint_case["source_policy"]).classification == "prepared_uncommitted"
+
+        # Model the production directory rename as an exact key relocation.
+        moved = {}
+        for key, body in list(files.bodies.items()):
+            if key.startswith(f"projects/{owner}/{project}/"):
+                moved[f".deleting/{owner}--{project}/" + key.split(f"projects/{owner}/{project}/",1)[1]] = body
+            elif key.startswith(f"derived/{owner}/{project}/"):
+                moved[f".deleting/{owner}--{project}--derived/" + key.split(f"derived/{owner}/{project}/",1)[1]] = body
+            else:
+                moved[key] = body
+        files.bodies = moved
+
+        from app.physical_project_deletion import retire_project_forest_relations, retire_project_forest_families
+        retire_project_forest_relations(connection,owner_id=owner,project_id=project)
+        connection.execute("DELETE FROM processing_jobs WHERE owner_id=? AND project_id=?",(owner,project))
+        connection.execute("DELETE FROM observation_datasets WHERE owner_id=? AND project_id=?",(owner,project))
+        retire_project_forest_families(connection,owner_id=owner,project_id=project)
+        connection.execute("DELETE FROM raw_assets WHERE owner_id=? AND project_id=?",(owner,project))
+        connection.execute("DELETE FROM source_records WHERE owner_id=? AND project_id=?",(owner,project))
+        connection.execute("DELETE FROM projects WHERE owner_id=? AND id=?",(owner,project))
+        used_raw=sum(r["bytes"] for r in plan["inventory"]["raw_assets"])
+        connection.execute("UPDATE account_usage SET raw_bytes=raw_bytes-? WHERE user_id=?",(used_raw,owner))
+
+        inventory, custody = plan["inventory"], plan["custody"]
+        asset_manifest = [dict(asset_id=r["asset_id"],sha256=r["sha256"],byte_count=r["bytes"])
+                          for r in inventory["raw_assets"]]
+        derived_manifest = ([dict(kind="dataset",id=r["dataset_id"],sha256=r["sha256"],byte_count=r["bytes"])
+                             for r in inventory["datasets"]] +
+            [dict(kind="result",id=r["job_id"],sha256=r["sha256"],byte_count=r["bytes"])
+             for r in inventory["joint_result_indexes"]] +
+            [dict(kind="joint_artifact",id=r["job_id"],name=r["name"],
+                relative_path=f"joint/{r['job_id']}/{r['name']}",sha256=r["sha256"],byte_count=r["bytes"])
+             for r in inventory["joint_result_members"]])
+        _insert(connection,"deletion_receipts",dict(id=custody["deletion_receipt_id"],owner_id=owner,
+            project_id=project,deleted_at="2026-10-25 12:00:00",backup_purge_status="not_attempted",
+            asset_hashes=json.dumps([r["sha256"] for r in asset_manifest]),
+            asset_manifest=json.dumps(asset_manifest),derived_manifest=json.dumps(derived_manifest)))
+        transfer_project_deletion(connection,inventory=inventory,custody=custody,
+            expected_source_policy_sha256=joint_case["source_policy"],approved_installations={})
+        connection.commit()
+
+        connection.execute("BEGIN IMMEDIATE")
+        result = classify_snapshot(connection,files,approved_manifests={},approved_installations={},
+            native_metadata={},expected_source_policy_sha256=joint_case["source_policy"])
+        assert result.classification == "coherent_committed", result.reason
+        assert result.operations[custody["batch_id"]] == "retain_debt"
+        assert result.operations[custody["deletion_receipt_id"]] == "retain_deleted_projection"
+        connection.rollback()
+
+        original_bodies = files.bodies
+        bad_keys = [inventory["joint_result_members"][0]["storage_key"],
+            f"derived/{owner}/{project}/results/{inventory['joint_result_indexes'][0]['job_id']}.json",
+            f"projects/{owner}/{project}/{inventory['joint_raw_assets'][0]['asset_id']}"]
+        for source_key in bad_keys:
+            retired_key = source_key.replace(f"derived/{owner}/{project}/",f".deleting/{owner}--{project}--derived/")
+            retired_key = retired_key.replace(f"projects/{owner}/{project}/",f".deleting/{owner}--{project}/")
+            damaged = dict(original_bodies)
+            damaged[retired_key] = b"tampered M11 member"
+            files.bodies = damaged
+            connection.execute("BEGIN IMMEDIATE")
+            result = classify_snapshot(connection,files,approved_manifests={},approved_installations={},
+                native_metadata={},expected_source_policy_sha256=joint_case["source_policy"])
+            assert result.classification == "inconsistent"
+            assert not result.operations and not result.account_charges
+            connection.rollback()
+        files.bodies = original_bodies
     finally:
         connection.rollback()
         connection.close()

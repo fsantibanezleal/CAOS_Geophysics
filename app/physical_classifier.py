@@ -184,6 +184,12 @@ class _Audit:
                             sources={r['id'] for r in self.rows['source_records']})
             closed_ids = dict(raw_assets=set(mappings['raw_assets']), datasets=set(mappings['datasets']),
                               jobs=set(mappings['jobs']), sources={r['source_id'] for r in mappings['raw_assets'].values()})
+            if 'joint_dataset_sources' in self.rows:
+                require(not any(r['dataset_id'] in closed_ids['datasets'] for r in self.rows['joint_dataset_sources']),
+                        'physical_classifier_deleted_joint_sources_live')
+            if 'joint_result_artifacts' in self.rows:
+                require(not any(r['job_id'] in closed_ids['jobs'] for r in self.rows['joint_result_artifacts']),
+                        'physical_classifier_deleted_joint_members_live')
             for name, ids in closed_ids.items():
                 require(not ids & (live_ids[name] | retired_ids[name]), 'physical_classifier_deleted_identity_overlap')
                 retired_ids[name].update(ids)
@@ -229,6 +235,12 @@ class _Audit:
                 waveform_artifacts=[dict(job_id=r['job_id'],name=r['name'],bytes=r['byte_count'],sha256=r['sha256'])
                 for r in sorted(self.rows['waveform_result_artifacts'],key=lambda r:(r['job_id'],r['name']))
                 if self.jobs[r['job_id']]['project_id']==project])
+            from app.physical_deleted_inventory import joint_projection
+            projected.update(joint_projection(
+                [r for r in self.rows['raw_assets'] if r['project_id']==project],
+                [r for r in self.rows['observation_datasets'] if r['project_id']==project],
+                [r for r in self.rows['processing_jobs'] if r['project_id']==project],
+                self.rows.get('joint_dataset_sources',[]),self.rows.get('joint_result_artifacts',[])))
             require(inventory['initial_files']==original_slots(projected),'physical_classifier_predeletion_complete_files')
             sqlslots=sorted([r for r in self.rows['physical_custody_files'] if r['batch_id']==batch['batch_id']],key=lambda r:r['ordinal'])
             require(all(r['state']=='present' for r in sqlslots) and
@@ -264,7 +276,11 @@ class _Audit:
             expected = ([('raw_delete', r['asset_id'], r['asset_id'], r['bytes'], r['sha256']) for r in deleted['raw_assets'].values()] +
                 [('dataset_copy', r['dataset_id'], f"datasets/{r['dataset_id']}.json", r['bytes'], r['sha256']) for r in deleted['datasets'].values()] +
                 [('result_copy', r['job_id'], f"results/{r['job_id']}.json", r['result_bytes'], r['result_sha256']) for r in deleted['jobs'].values()
-                 if r['state'] == 'succeeded'] +
+                 if r['state'] == 'succeeded' and r['job_id'] not in {x['job_id'] for x in deleted['inventory'].get('joint_result_indexes',[])}] +
+                [('result_copy', r['job_id'], f"results/{r['job_id']}.json", r['bytes'], r['sha256'])
+                 for r in deleted['inventory'].get('joint_result_indexes',[])] +
+                [('result_copy', r['job_id'], f"joint/{r['job_id']}/{r['name']}", r['bytes'], r['sha256'])
+                 for r in deleted['inventory'].get('joint_result_members',[])] +
                 [('result_copy', r['job_id'], f"waveforms/{r['job_id']}/{r['name']}", r['bytes'], r['sha256'])
                  for r in deleted['inventory']['waveform_artifacts']])
             require(sorted(projection) == sorted(expected),
@@ -371,7 +387,7 @@ class _Audit:
                 header['schema'] = parse_current_custody([batch['inventory_bytes']])['schema']
             # Header v2 is narrowly inherited project-deletion grammar only.
             if header['schema'] != 'geophysics.physical-custody/v1':
-                require(header['schema'] == 'geophysics.physical-custody/v2' and
+                require(header['schema'] in ('geophysics.physical-custody/v2','geophysics.physical-custody/v3') and
                         header['origin_kind'] == 'project_deletion', 'physical_classifier_custody_dispatch')
                 custody_header(dict(header, schema='geophysics.physical-custody/v1'))
             else:

@@ -23,12 +23,19 @@ def _transaction(connection):
 def original_slots(inventory):
     """Exact original files, not retained stages or profile archives."""
     from app.waveform_contract import SCRATCH
+    from app.physical_joint_native_contract import MAX_BYTES, MAX_JSON
+    joint_indexes = inventory.get('joint_result_indexes', [])
+    joint_index_ids = {row['job_id'] for row in joint_indexes}
     records=([(r['asset_id'],'raw_delete','deleting_raw',r['asset_id'],1024*M,r['bytes'],r['sha256'])
               for r in inventory['raw_assets']] +
         [(r['dataset_id'],'dataset_copy','deleting_derived',f"datasets/{r['dataset_id']}.json",64*M,r['bytes'],r['sha256'])
          for r in inventory['datasets']] +
         [(r['job_id'],'result_copy','deleting_derived',f"results/{r['job_id']}.json",64*M,r['result_bytes'],r['result_sha256'])
-         for r in inventory['jobs'] if r['state']=='succeeded'] +
+         for r in inventory['jobs'] if r['state']=='succeeded' and r['job_id'] not in joint_index_ids] +
+        [(r['job_id'],'result_copy','deleting_derived',f"results/{r['job_id']}.json",MAX_JSON,r['bytes'],r['sha256'])
+         for r in joint_indexes] +
+        [(r['job_id'],'result_copy','deleting_derived',f"joint/{r['job_id']}/{r['name']}",MAX_BYTES,r['bytes'],r['sha256'])
+         for r in inventory.get('joint_result_members',[])] +
         [(r['job_id'],'result_copy','deleting_derived',f"waveforms/{r['job_id']}/{r['name']}",SCRATCH,r['bytes'],r['sha256'])
          for r in inventory['waveform_artifacts']])
     require(len(records)<=4096,'project_delete_file_cap')
@@ -57,7 +64,8 @@ def prepare_project_deletion(connection, *, files, owner_id, project_id, batch_i
     inventory=project_inventory(connection,owner_id=owner_id,project_id=project_id,
         source_policy_sha256=expected_source_policy_sha256,profile_records=profile_records)
     slots=original_slots(inventory)
-    custody=dict(schema='geophysics.physical-custody/v2',batch_id=batch_id,owner_id=owner_id,project_id=project_id,
+    custody=dict(schema=('geophysics.physical-custody/v3' if inventory['schema']=='geophysics.physical-deleted-inventory/v2'
+                         else 'geophysics.physical-custody/v2'),batch_id=batch_id,owner_id=owner_id,project_id=project_id,
         origin_kind='project_deletion',origin_id=project_id,stage_id=None,deletion_receipt_id=receipt_id,
         raw_asset_id=None,raw_sha256=None,raw_bytes=None,parser_version=None,method_id=None,
         capacity_bytes=max(1,sum(s['actual_bytes'] for s in slots)),initial_files=slots,removed_ordinals=[])
@@ -88,6 +96,15 @@ def retire_project_forest_relations(connection, *, owner_id, project_id):
                                   (owner_id,project_id)).fetchone(),'project_delete_active_intent')
     for table in ('physical_dataset_productions','physical_dataset_edges','physical_job_controls'):
         connection.execute(f'DELETE FROM {table} WHERE owner_id=? AND project_id=?',(owner_id,project_id))
+    from app.physical_schema import JOINT_TABLES, schema_tables
+    _, registered = schema_tables(connection)
+    if JOINT_TABLES <= registered:
+        # M11 result members use RESTRICT against terminal jobs. Remove these
+        # exact owned child rows only after their immutable deletion receipt
+        # and moved-file custody have been prepared and rechecked.
+        connection.execute('DELETE FROM joint_result_artifacts WHERE owner_id=? AND project_id=?',(owner_id,project_id))
+        connection.execute('''DELETE FROM joint_dataset_sources WHERE dataset_id IN
+            (SELECT id FROM observation_datasets WHERE owner_id=? AND project_id=?)''',(owner_id,project_id))
 
 
 def retire_project_forest_families(connection, *, owner_id, project_id):

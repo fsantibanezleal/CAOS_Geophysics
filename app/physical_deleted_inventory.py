@@ -18,8 +18,10 @@ from app.profile_archive_custody import ARCHIVE_SCHEMAS, archive_limits, validat
 
 
 SCHEMA = 'geophysics.physical-deleted-inventory/v1'
+JOINT_SCHEMA = 'geophysics.physical-deleted-inventory/v2'
 BASE = 'raw_assets datasets edges productions jobs custody source_policy_sha256'
 EXTRA = 'waveform_sources waveform_artifacts profile_archives'
+JOINT_EXTRA = 'joint_raw_assets joint_sources joint_result_indexes joint_result_members'
 DEFINITIONS = {
     'raw_assets': ('asset_id', 'asset_id source_id sha256 bytes'),
     'datasets': ('dataset_id', 'dataset_id raw_asset_id root_dataset_id parent_dataset_id version parser_version kind modality payload_schema sha256 bytes'),
@@ -28,6 +30,68 @@ DEFINITIONS = {
     'jobs': ('job_id', 'job_id dataset_id dataset_sha256 method_id state request_sha256 result_sha256 result_bytes physical_fingerprint physical_control_sha256 scientific_verdict'),
     'custody': ('batch_id', 'batch_id origin_kind origin_id initial_inventory_sha256'),
 }
+
+
+def joint_projection(raw_assets, datasets, jobs, source_rows, artifact_rows):
+    """Make the closed M11 projection from rows already checked by the reader.
+
+    This function does not admit data. Callers first run the complete
+    same-transaction classifier, which validates the index bytes, each member,
+    the dataset JSON, all source links, and the complete storage census.
+    """
+    from app.physical_joint_native_contract import METHOD_ID, PARSER, bounded_json, member_metadata
+
+    joint_raw = []
+    for row in raw_assets:
+        if row['detected_format'] != 'joint_native':
+            continue
+        metadata = bounded_json(row['physical_metadata'].encode('utf-8', 'strict'))
+        fields(metadata, 'schema role name descriptor scientific_values_decoded scientific_accepted')
+        require(metadata['schema'] == 'joint-native-member-1'
+                and metadata['name'] == row['filename']
+                and metadata['scientific_values_decoded'] is False
+                and metadata['scientific_accepted'] is False, 'current_deletion_joint_raw_metadata')
+        member_metadata(canonical(dict(role=metadata['role'], name=metadata['name'],
+            descriptor=metadata['descriptor'], source=dict(expected_bytes=row['byte_count'],
+                                                            expected_sha256=row['sha256']))))
+        joint_raw.append(dict(asset_id=row['id'], source_id=row['source_id'], filename=row['filename'],
+            role=metadata['role'], descriptor=metadata['descriptor'], sha256=row['sha256'], bytes=row['byte_count']))
+    dataset_ids = {r['id'] for r in datasets if r['parser_version'] == PARSER}
+    joint_jobs = {r['id']: r for r in jobs if r['method_id'] == METHOD_ID}
+    joint_sources = [dict(dataset_id=r['dataset_id'], role=r['role'], name=r['name'], asset_id=r['asset_id'],
+        source_id=r['source_id'], source_version=r['source_version'], raw_sha256=r['raw_sha256'],
+        raw_bytes=r['raw_bytes']) for r in source_rows if r['dataset_id'] in dataset_ids]
+    joint_sources.sort(key=lambda r: (r['dataset_id'], r['role'], r['name']))
+
+    members_by_job = {}
+    joint_members = []
+    for row in artifact_rows:
+        if row['job_id'] not in joint_jobs:
+            continue
+        item = dict(job_id=row['job_id'], owner_id=row['owner_id'], project_id=row['project_id'],
+            dataset_id=row['dataset_id'], dataset_sha256=row['dataset_sha256'], method_id=row['method_id'],
+            request_sha256=row['request_sha256'], name=row['name'], storage_key=row['storage_key'],
+            sha256=row['sha256'], bytes=row['byte_count'])
+        joint_members.append(item)
+        members_by_job.setdefault(row['job_id'], []).append(dict(name=row['name'], sha256=row['sha256'],
+                                                                  bytes=row['byte_count']))
+    joint_members.sort(key=lambda r: (r['job_id'], r['name']))
+    indexes = []
+    for job_id, job in sorted(joint_jobs.items()):
+        present = (job['result_key'] is not None, job['result_sha256'] is not None, job['result_bytes'] is not None)
+        require(len(set(present)) == 1, 'current_deletion_joint_index_tuple')
+        job_members = sorted(members_by_job.get(job_id, []), key=lambda r: r['name'])
+        if not present[0]:
+            require(not job_members and job['state'] != 'succeeded', 'current_deletion_joint_missing_index')
+            continue
+        require(job['state'] in ('succeeded', 'failed', 'cancelled') and job['result_key'] ==
+                f"derived/{job['owner_id']}/{job['project_id']}/results/{job_id}.json",
+                'current_deletion_joint_index_identity')
+        indexes.append(dict(job_id=job_id, state=job['state'], dataset_id=job['dataset_id'],
+            dataset_sha256=job['dataset_sha256'], method_id=job['method_id'], request_sha256=job['request_sha256'],
+            sha256=job['result_sha256'], bytes=job['result_bytes'], member_manifest=job_members))
+    return dict(joint_raw_assets=sorted(joint_raw, key=lambda r: r['asset_id']), joint_sources=joint_sources,
+        joint_result_indexes=indexes, joint_result_members=joint_members)
 
 
 def _ordered(values, key, keys, *, cap=4096):
@@ -45,17 +109,136 @@ def _ordered(values, key, keys, *, cap=4096):
 
 
 def validate_current_inventory(value, receipt, *, expected_source_policy_sha256, approved_installations):
-    fields(value, 'schema ' + BASE + ' ' + EXTRA)
-    require(value['schema'] == SCHEMA and sha(expected_source_policy_sha256) == value['source_policy_sha256'],
+    require(type(value) is dict, 'current_deletion_inventory_object')
+    version = value.get('schema')
+    fields(value, 'schema ' + BASE + ' ' + EXTRA + ((' ' + JOINT_EXTRA) if version == JOINT_SCHEMA else ''))
+    require(version in (SCHEMA, JOINT_SCHEMA) and sha(expected_source_policy_sha256) == value['source_policy_sha256'],
             'current_deletion_source_binding')
-    for name, (key, keys) in DEFINITIONS.items():
+    definitions = dict(DEFINITIONS)
+    if version == JOINT_SCHEMA:
+        definitions['raw_assets'] = ('asset_id', 'asset_id source_id sha256 bytes detected_format filename')
+    for name, (key, keys) in definitions.items():
         _ordered(value[name], key, keys)
-    require(sum(len(value[k]) for k in DEFINITIONS) <= 20000 and len(canonical(value)) <= 4*M,
+    counted = set(DEFINITIONS) | (set(JOINT_EXTRA.split()) if version == JOINT_SCHEMA else set())
+    require(sum(len(value[k]) for k in counted) <= 20000 and len(canonical(value)) <= 4*M,
             'current_deletion_inventory_cap')
     raw = {r['asset_id']: r for r in value['raw_assets']}
     datasets = {r['dataset_id']: r for r in value['datasets']}
     jobs = {r['job_id']: r for r in value['jobs']}
+    joint_job_ids = set()
+    if version == JOINT_SCHEMA:
+        from app.physical_joint_native_contract import METHOD_ID as JOINT_METHOD, PARSER as JOINT_PARSER, MAX_BYTES, MAX_JSON, member_metadata
+        from app.physical_joint_custody import NAME
+        expected_joint_raw = {r['asset_id'] for r in value['raw_assets'] if r['detected_format'] == 'joint_native'}
+        joint_raw_ids, joint_raw_sources = set(), set()
+        require(type(value['joint_raw_assets']) is list and len(value['joint_raw_assets']) <= 8192,
+                'current_deletion_joint_raw_cap')
+        raw_declarations = []
+        for entry in value['joint_raw_assets']:
+            fields(entry, 'asset_id source_id filename role descriptor sha256 bytes')
+            uuid(entry['asset_id']); uuid(entry['source_id']); sha(entry['sha256'])
+            require(type(entry['filename']) is str and entry['filename'].endswith(('.json','.npy')),
+                    'current_deletion_joint_raw_name')
+            integer(entry['bytes'], 1, MAX_JSON if entry['filename'].endswith('.json') else MAX_BYTES)
+            asset = raw.get(entry['asset_id'])
+            require(asset is not None and asset['detected_format'] == 'joint_native'
+                    and (asset['source_id'], asset['filename'], asset['sha256'], asset['bytes']) ==
+                    (entry['source_id'], entry['filename'], entry['sha256'], entry['bytes']),
+                    'current_deletion_joint_raw_binding')
+            member_metadata(canonical(dict(role=entry['role'], name=entry['filename'], descriptor=entry['descriptor'],
+                source=dict(expected_bytes=entry['bytes'], expected_sha256=entry['sha256']))))
+            require(entry['asset_id'] not in joint_raw_ids and entry['source_id'] not in joint_raw_sources,
+                    'current_deletion_joint_raw_duplicate')
+            joint_raw_ids.add(entry['asset_id']); joint_raw_sources.add(entry['source_id'])
+            raw_declarations.append(dict(asset_id=entry['asset_id'], source_id=entry['source_id'],
+                                         filename=entry['filename'], role=entry['role'], descriptor=entry['descriptor'],
+                                         sha256=entry['sha256'], bytes=entry['bytes']))
+        require(joint_raw_ids == expected_joint_raw, 'current_deletion_joint_raw_complete')
+        require(type(value['joint_sources']) is list and len(value['joint_sources']) <= 8192,
+                'current_deletion_joint_source_cap')
+        source_ids = set()
+        source_projection = []
+        joint_raw_by_id = {r['asset_id']:r for r in value['joint_raw_assets']}
+        for entry in value['joint_sources']:
+            fields(entry, 'dataset_id role name asset_id source_id source_version raw_sha256 raw_bytes')
+            for key in ('dataset_id', 'asset_id', 'source_id'): uuid(entry[key])
+            sha(entry['raw_sha256']); integer(entry['raw_bytes'], 1, MAX_BYTES); integer(entry['source_version'], 1)
+            dataset, asset = datasets.get(entry['dataset_id']), raw.get(entry['asset_id'])
+            require(dataset is not None and dataset['parser_version'] == JOINT_PARSER and asset is not None
+                    and asset['detected_format'] == 'joint_native'
+                    and (asset['source_id'], asset['sha256'], asset['bytes']) ==
+                    (entry['source_id'], entry['raw_sha256'], entry['raw_bytes']),
+                    'current_deletion_joint_source_binding')
+            raw_declaration = joint_raw_by_id.get(entry['asset_id'])
+            require(raw_declaration is not None and (raw_declaration['source_id'],raw_declaration['filename'],
+                    raw_declaration['role'],raw_declaration['sha256'],raw_declaration['bytes']) ==
+                    (entry['source_id'],entry['name'],entry['role'],entry['raw_sha256'],entry['raw_bytes']),
+                    'current_deletion_joint_source_raw_projection')
+            key = (entry['dataset_id'], entry['role'], entry['name'])
+            require(key not in source_ids, 'current_deletion_joint_source_duplicate')
+            source_ids.add(key); source_projection.append(entry)
+        require(source_projection == sorted(source_projection, key=lambda r:(r['dataset_id'],r['role'],r['name'])),
+                'current_deletion_joint_source_order')
+        require({r['dataset_id'] for r in source_projection} ==
+                {r['dataset_id'] for r in datasets.values() if r['parser_version'] == JOINT_PARSER},
+                'current_deletion_joint_source_complete')
+        joint_job_ids = {r['job_id'] for r in value['jobs'] if r['method_id'] == JOINT_METHOD}
+        require(type(value['joint_result_indexes']) is list and len(value['joint_result_indexes']) <= 4096,
+                'current_deletion_joint_index_cap')
+        index_ids, index_projection = set(), []
+        for entry in value['joint_result_indexes']:
+            fields(entry, 'job_id state dataset_id dataset_sha256 method_id request_sha256 sha256 bytes member_manifest')
+            for key in ('job_id','dataset_id'): uuid(entry[key])
+            for key in ('dataset_sha256','request_sha256','sha256'): sha(entry[key])
+            integer(entry['bytes'], 1, MAX_JSON)
+            job = jobs.get(entry['job_id'])
+            require(job is not None and job['method_id'] == JOINT_METHOD and entry['state'] in ('succeeded','failed','cancelled')
+                    and (job['state'],job['dataset_id'],job['dataset_sha256'],job['method_id'],job['request_sha256'],job['result_sha256'],job['result_bytes']) ==
+                    (entry['state'],entry['dataset_id'],entry['dataset_sha256'],entry['method_id'],entry['request_sha256'],entry['sha256'],entry['bytes']),
+                    'current_deletion_joint_index_binding')
+            require(type(entry['member_manifest']) is list and 0 < len(entry['member_manifest']) <= 1100,
+                    'current_deletion_joint_index_members')
+            previous = []
+            for member in entry['member_manifest']:
+                fields(member, 'name sha256 bytes'); sha(member['sha256']); integer(member['bytes'],1,MAX_BYTES)
+                require(type(member['name']) is str and NAME.fullmatch(member['name']) is not None,
+                        'current_deletion_joint_index_member_name')
+                previous.append(member['name'])
+            require(previous == sorted(set(previous)), 'current_deletion_joint_index_member_order')
+            require(entry['job_id'] not in index_ids, 'current_deletion_joint_index_duplicate')
+            index_ids.add(entry['job_id']); index_projection.append(entry)
+        expected_index_ids = {j['job_id'] for j in value['jobs'] if j['method_id'] == JOINT_METHOD
+                              and j['result_sha256'] is not None}
+        require(index_ids == expected_index_ids, 'current_deletion_joint_index_complete')
+        require(type(value['joint_result_members']) is list and len(value['joint_result_members']) <= 4096,
+                'current_deletion_joint_member_cap')
+        member_rows, by_job = [], {}
+        for entry in value['joint_result_members']:
+            fields(entry, 'job_id owner_id project_id dataset_id dataset_sha256 method_id request_sha256 name storage_key sha256 bytes')
+            for key in ('job_id','owner_id','project_id','dataset_id'): uuid(entry[key])
+            for key in ('dataset_sha256','request_sha256','sha256'): sha(entry[key])
+            integer(entry['bytes'],1,MAX_BYTES)
+            require(type(entry['name']) is str and NAME.fullmatch(entry['name']) is not None,
+                    'current_deletion_joint_member_name')
+            job = jobs.get(entry['job_id'])
+            require(job is not None and job['method_id'] == JOINT_METHOD
+                    and entry['storage_key'] == f"derived/{entry['owner_id']}/{entry['project_id']}/joint/{entry['job_id']}/{entry['name']}"
+                    and (entry['owner_id'],entry['project_id'],entry['dataset_id'],entry['dataset_sha256'],entry['method_id'],entry['request_sha256']) ==
+                    (receipt['owner_id'],receipt['project_id'],job['dataset_id'],job['dataset_sha256'],JOINT_METHOD,job['request_sha256']),
+                    'current_deletion_joint_member_binding')
+            by_job.setdefault(entry['job_id'],[]).append(dict(name=entry['name'],sha256=entry['sha256'],bytes=entry['bytes']))
+            member_rows.append(entry)
+        require(member_rows == sorted(member_rows,key=lambda r:(r['job_id'],r['name']))
+                and len({(r['job_id'],r['name']) for r in member_rows}) == len(member_rows),
+                'current_deletion_joint_member_order')
+        for entry in value['joint_result_indexes']:
+            require(entry['member_manifest'] == sorted(by_job.get(entry['job_id'],[]),key=lambda r:r['name']),
+                    'current_deletion_joint_index_member_projection')
+            require(sum(member['bytes'] for member in entry['member_manifest']) <= MAX_BYTES,
+                    'current_deletion_joint_member_total')
+        require(set(by_job) == index_ids, 'current_deletion_joint_orphan_member')
     old_datasets, new_datasets = [], []
+    from app.physical_joint_native_contract import METHOD_ID as JOINT_METHOD, MODALITY as JOINT_MODALITY, PARSER as JOINT_PARSER
     for row in datasets.values():
         require(row['raw_asset_id'] in raw, 'current_deletion_raw')
         integer(row['bytes'], 1, 64*M if row['payload_schema'] == 'gravity-transform-result-1' else 16*M)
@@ -63,6 +246,11 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
         discriminator = tuple(row[k] for k in ('kind', 'parser_version', 'modality', 'payload_schema'))
         if discriminator in DATASET_REGISTRY:
             old_datasets.append(row)
+        elif version == JOINT_SCHEMA and row['parser_version'] == JOINT_PARSER:
+            require((row['kind'],row['version'],row['root_dataset_id'],row['parent_dataset_id'],row['modality'],row['payload_schema']) ==
+                    ('root',1,row['dataset_id'],None,JOINT_MODALITY,'geophysics.joint-native-dataset/v1'),
+                    'current_deletion_joint_dataset_tuple')
+            new_datasets.append(row)
         else:
             require(row['kind'] == 'root' and row['version'] == 1 and row['root_dataset_id'] == row['dataset_id']
                     and row['parent_dataset_id'] is None
@@ -71,20 +259,28 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
             new_datasets.append(row)
     old_jobs = []
     for row in jobs.values():
-        require(row['method_id'] in METHODS | {CORRECTION, TRANSFORM}
+        require(row['method_id'] in METHODS | {CORRECTION, TRANSFORM, *({JOINT_METHOD} if version == JOINT_SCHEMA else set())}
                 and row['state'] in ('succeeded', 'failed', 'cancelled'), 'current_deletion_terminal_job')
         dataset = datasets.get(row['dataset_id'])
         require(dataset is not None and dataset['sha256'] == row['dataset_sha256'], 'current_deletion_job_input')
         success, physical = row['state'] == 'succeeded', row['method_id'] in (CORRECTION, TRANSFORM)
-        require((row['result_sha256'] is not None) == success and (row['result_bytes'] is not None) == success
+        joint = version == JOINT_SCHEMA and row['method_id'] == JOINT_METHOD
+        has_result = row['result_sha256'] is not None and row['result_bytes'] is not None
+        require((row['result_sha256'] is not None) == (row['result_bytes'] is not None)
+                and (has_result == success if not joint else (not success or has_result))
                 and (row['physical_fingerprint'] is not None) == physical
                 and (row['physical_control_sha256'] is not None) == physical
                 and row['scientific_verdict'] in (('passed', 'non_pass') if physical and success else (None,)),
                 'current_deletion_job_result')
         if success:
-            integer(row['result_bytes'], 1, 64*M)
+            integer(row['result_bytes'], 1, 256*1024 if joint else 64*M)
+        elif joint and has_result:
+            integer(row['result_bytes'],1,256*1024)
         if row['method_id'] in OLD_METHODS:
             old_jobs.append(row)
+        elif joint:
+            require(dataset['parser_version']==JOINT_PARSER and dataset['modality']==JOINT_MODALITY,
+                    'current_deletion_joint_job_registry')
         else:
             modality = {'ert.topographic-profile/v1':'ert_profile', 'traveltime.first-arrival-profile/v1':'traveltime_profile',
                         'seismic.waveform-qc-classical/v1':'waveform_counts_response'}[row['method_id']]
@@ -92,6 +288,8 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
 
     # Inherited complete physical graph predicates, no weakened old parser.
     inherited = {k:value[k] for k in BASE.split()}
+    if version == JOINT_SCHEMA:
+        inherited['raw_assets'] = [{k:r[k] for k in ('asset_id','source_id','sha256','bytes')} for r in value['raw_assets']]
     inherited['datasets'], inherited['jobs'] = old_datasets, old_jobs
     inherited_receipt = dict(asset_manifest=[dict(asset_id=r['asset_id'],sha256=r['sha256'],byte_count=r['bytes']) for r in raw.values()],
         derived_manifest=[dict(kind='dataset',id=r['dataset_id'],sha256=r['sha256'],byte_count=r['bytes']) for r in old_datasets] +
@@ -151,9 +349,15 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
     require(identifiers==sorted(set(identifiers)), 'current_deletion_archive_duplicate')
 
     projected_raw = [dict(asset_id=r['asset_id'],sha256=r['sha256'],byte_count=r['bytes']) for r in raw.values()]
+    joint_index_jobs = {r['job_id'] for r in value.get('joint_result_indexes', [])}
     projected = ([dict(kind='dataset',id=r['dataset_id'],sha256=r['sha256'],byte_count=r['bytes']) for r in datasets.values()] +
-        [dict(kind='result',id=r['job_id'],sha256=r['result_sha256'],byte_count=r['result_bytes']) for r in jobs.values() if r['state']=='succeeded'] +
-        artifact_projection + value['profile_archives'])
+        [dict(kind='result',id=r['job_id'],sha256=r['result_sha256'],byte_count=r['result_bytes'])
+         for r in jobs.values() if r['state']=='succeeded' and r['job_id'] not in joint_index_jobs] +
+        [dict(kind='result',id=r['job_id'],sha256=r['sha256'],byte_count=r['bytes'])
+         for r in value.get('joint_result_indexes', [])] +
+        artifact_projection + [dict(kind='joint_artifact',id=r['job_id'],name=r['name'],
+            relative_path=f"joint/{r['job_id']}/{r['name']}",sha256=r['sha256'],byte_count=r['bytes'])
+            for r in value.get('joint_result_members', [])] + value['profile_archives'])
     require(type(receipt['asset_manifest']) is list and type(receipt['derived_manifest']) is list,
             'current_deletion_receipt_type')
     for row in receipt['asset_manifest']:
@@ -202,22 +406,31 @@ def project_inventory(connection, *, owner_id, project_id, source_policy_sha256,
         joint_artifacts = connection.execute('''SELECT 1 FROM joint_result_artifacts a
             JOIN processing_jobs j ON j.id=a.job_id
             WHERE j.owner_id=? AND j.project_id=? LIMIT 1''',(owner_id,project_id)).fetchone() is not None
-    require(not (joint_raw or joint_datasets or joint_jobs or joint_children or joint_artifacts),
-            'current_deletion_joint_custody_unrepresentable')
+    from app.physical_schema import JOINT_TABLES
+    require(not (joint_raw or joint_datasets or joint_jobs or joint_children or joint_artifacts)
+            or JOINT_TABLES <= registered_tables, 'current_deletion_joint_schema_incomplete')
+    joint_source_rows = rows('joint_dataset_sources',
+        'dataset_id IN (SELECT id FROM observation_datasets WHERE owner_id=? AND project_id=?)') if JOINT_TABLES <= registered_tables else []
+    joint_member_rows = rows('joint_result_artifacts',
+        'job_id IN (SELECT id FROM processing_jobs WHERE owner_id=? AND project_id=?)') if JOINT_TABLES <= registered_tables else []
+    joint = joint_projection(raw,datasets,jobs,joint_source_rows,joint_member_rows)
+    has_joint = bool(joint_raw or joint_datasets or joint_jobs or joint_children or joint_artifacts)
     require(not any(j['state'] in ('queued','running') for j in jobs)
             and not rows('physical_publication_intents'),'current_deletion_active_operation')
     controls={r['job_id']:r for r in rows('physical_job_controls')}
     productions=rows('physical_dataset_productions')
     verdicts={r['job_id']:r['scientific_verdict'] for r in productions}
-    value=dict(schema=SCHEMA,source_policy_sha256=source_policy_sha256,
-        raw_assets=[dict(asset_id=r['id'],source_id=r['source_id'],sha256=r['sha256'],bytes=r['byte_count']) for r in raw],
+    joint_fields=joint if has_joint else {}
+    value=dict(schema=JOINT_SCHEMA if has_joint else SCHEMA,source_policy_sha256=source_policy_sha256,
+        raw_assets=[dict(asset_id=r['id'],source_id=r['source_id'],sha256=r['sha256'],bytes=r['byte_count'],
+                         **({'detected_format':r['detected_format'],'filename':r['filename']} if has_joint else {})) for r in raw],
         datasets=[dict(dataset_id=r['id'],**{k:r[k] for k in ('raw_asset_id','root_dataset_id','parent_dataset_id','version','parser_version','kind','modality','payload_schema','sha256')},bytes=r['byte_count']) for r in datasets],
         edges=[{k:r[k] for k in DEFINITIONS['edges'][1].split()} for r in rows('physical_dataset_edges')],
         productions=[dict(child_dataset_id=r['child_dataset_id'],job_id=r['job_id'],input_dataset_id=r['parent_dataset_id'],input_dataset_sha256=r['parent_dataset_sha256'],
             **{k:r[k] for k in DEFINITIONS['productions'][1].split() if k not in ('child_dataset_id','job_id','input_dataset_id','input_dataset_sha256')}) for r in productions],
         jobs=[dict(job_id=r['id'],**{k:r[k] for k in ('dataset_id','dataset_sha256','method_id','state','request_sha256','result_sha256','result_bytes','physical_fingerprint')},
             physical_control_sha256=digest(_native_control(controls[r['id']])) if r['id'] in controls else None,scientific_verdict=verdicts.get(r['id'])) for r in jobs],
-        custody=[],waveform_sources=[],waveform_artifacts=[],profile_archives=[])
+        custody=[],waveform_sources=[],waveform_artifacts=[],profile_archives=[],**joint_fields)
     for batch in rows('physical_custody_batches'):
         preparing=batch['origin_kind']=='project_deletion' and batch['state']=='sealed' and batch['charged_bytes']==0
         require((batch['state'] in ('cleanup_pending','removed') or preparing) and type(batch['inventory_bytes']) is bytes

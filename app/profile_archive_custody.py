@@ -204,6 +204,14 @@ def validate_original_receipt_entry(entry):
         require(type(entry['name']) is str and MEMBER.fullmatch(entry['name']) is not None and
                 entry['relative_path']==f'waveforms/{entry["id"]}/{entry["name"]}',
                 'profile_archive_unknown_receipt_entry')
+    elif entry.get('kind')=='joint_artifact':
+        from app.physical_joint_custody import NAME
+        from app.physical_joint_native_contract import MAX_BYTES
+        fields(entry,'kind id name relative_path sha256 byte_count')
+        uuid(entry['id']); sha(entry['sha256']); integer(entry['byte_count'],1,MAX_BYTES)
+        require(type(entry['name']) is str and NAME.fullmatch(entry['name']) is not None and
+                entry['relative_path']==f'joint/{entry["id"]}/{entry["name"]}',
+                'profile_archive_unknown_receipt_entry')
     else:
         require(set(entry)=={'kind','id','sha256','byte_count'} and entry['kind'] in ('dataset','result'),
                 'profile_archive_unknown_receipt_entry')

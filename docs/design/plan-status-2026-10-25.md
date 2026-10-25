@@ -42,9 +42,13 @@ That evidence does not close M11 online execution. The current FastAPI app does
 not register the M11 member, dataset, job, cancellation, custody-history or
 export routes expected by the project workbench. The current classifier now
 audits exact M11 originals, datasets, result members and indices in one
-snapshot and adds retained/active charges through that audit. Request-time
-admission, startup reconciliation and M11-aware deletion receipts remain
-unintegrated; deletion explicitly refuses projects containing M11 state. The
+snapshot and adds retained/active charges through that audit. Startup invokes
+the same classifier snapshot under its participant lease, but committed M11
+restart receipts remain unqualified. A versioned M11 deletion projection now
+binds originals, source dependencies, terminal indexes and result members; its
+prepare/transfer/restart fixture passes with changed-byte refusal. Request-time
+admission, assembled DELETE-route cleanup and actual-filesystem crash recovery
+remain unqualified. The
 workbench therefore cannot yet take a user's gravity and magnetic survey
 through an online solve. Do not label this vertical online-ready or
 scientifically accepted.

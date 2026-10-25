@@ -92,6 +92,15 @@ def test_joint_schema_requires_a_real_closed_member_without_promoting_old_slots(
         parse_current_custody([canonical(without_joint)])
 
 
+def test_joint_project_deletion_keeps_ordinary_large_result_slots_under_original_cap():
+    value=joint_inventory()
+    job=str(uuid4())
+    value['initial_files'].append(dict(ordinal=3,role='result_copy',location='deleting_derived',
+        artifact_id=job,leaf=f'results/{job}.json',max_bytes=64*M,actual_bytes=300000,actual_sha256='c'*64))
+    value['capacity_bytes']+=300000
+    assert validate_current_custody(value)['retained_bytes']==value['capacity_bytes']
+
+
 @pytest.mark.parametrize('damage',['empty','uuid','method','name','path','role','location','zero','cap','hash','extra'])
 def test_registered_joint_custody_does_not_accept_unknown_or_unbound_members(damage):
     value = joint_inventory()

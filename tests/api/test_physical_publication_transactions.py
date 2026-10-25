@@ -16,7 +16,10 @@ from tests.api.test_physical_successor import successor as successor
 
 
 def retained(name, expected):
-    path = Path(os.environ[name])
+    configured = os.environ.get(name)
+    if not configured:
+        pytest.skip(f"requires the external retained source receipt: {name}")
+    path = Path(configured)
     assert path.is_absolute() and all(not (p/'.git').exists() for p in (path,*path.parents))
     body = path.read_bytes()
     assert byte_sha(body) == expected, 'retained original science packet changed; never replace it with a rerun'

@@ -58,8 +58,10 @@ class CensusFiles:
             body = self.read(key, cap=rule['cap'], expected_bytes=rule['bytes'] if rule['bytes'] is not None else path.stat().st_size,
                              expected_sha256=rule['sha256'] if rule['sha256'] is not None else byte_sha(path.read_bytes()))
             actual[key] = dict(bytes=len(body), sha256=byte_sha(body))
-        if any(v['required'] and k not in actual for k, v in expected.items()):
-            raise ValueError('fixture_missing_file')
+        missing = sorted(k for k, v in expected.items() if v['required'] and k not in actual)
+        if missing:
+            tails = ['/'.join(k.split('/')[-6:]) for k in missing[:8]]
+            raise ValueError('fixture_missing_file:' + ','.join(tails))
         return actual
 
 
