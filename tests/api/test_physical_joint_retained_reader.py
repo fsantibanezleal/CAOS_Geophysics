@@ -7,6 +7,7 @@ member bytes are not a newly accepted fit. Never modify this retained fixture.
 from contextlib import closing
 from copy import deepcopy
 from pathlib import Path
+import os
 import sqlite3
 
 import pytest
@@ -14,8 +15,10 @@ import pytest
 from app.physical_contract import byte_sha
 from app.physical_joint_custody import accounting, audit_snapshot, dataset_inventory, result_inventory, scan_stream
 
-ROOT = Path('E:/_Temp/m11cu5/test_actual_full_native_public0/case-0/private')
+DATABASE = Path(os.environ['GEOPHYSICS_M11_TEST_DATABASE']).resolve() if os.environ.get('GEOPHYSICS_M11_TEST_DATABASE') else None
+ROOT = DATABASE.parent if DATABASE is not None else Path(__file__).parent / '_missing_m11_fixture'
 DATABASE_SHA = '30cf3f3e06649c98a2ce4810186e413582a428cf45e334a079f9e92621ece21b'
+pytestmark = pytest.mark.skipif(DATABASE is None, reason='exact retained M11 fixture is not configured')
 
 
 class RetainedFiles:
@@ -34,7 +37,7 @@ class RetainedFiles:
 
 @pytest.fixture(scope='module')
 def retained_rows():
-    path = ROOT/'api.sqlite3'
+    path = DATABASE
     assert byte_sha(path.read_bytes()) == DATABASE_SHA
     assert not path.with_name('api.sqlite3-wal').exists()
     with closing(sqlite3.connect(path.as_uri()+'?mode=ro&immutable=1', uri=True)) as connection:

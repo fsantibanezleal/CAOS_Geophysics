@@ -19,7 +19,6 @@ import os
 from pathlib import Path
 import subprocess
 import sys
-import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 RETAINED = {
@@ -27,7 +26,6 @@ RETAINED = {
     "M01_RETAINED_TRANSFORM_PACKET": "6881c30e13e39de03c7530a2b6fd2e1bb49b1b50d361fdf41dfb7cc44c8dbcb8",
     "GEOPHYSICS_PROFILE_INCOMPLETE_RECEIPT": "5a13e2c51abcd5c4ec90661d237f421e0c3a363b61ed6e5aa7bfc9fe43dccb89",
 }
-M11_PATH = Path("E:/_Temp/m11cu5/test_actual_full_native_public0/case-0/private/api.sqlite3")
 M11_SHA256 = "30cf3f3e06649c98a2ce4810186e413582a428cf45e334a079f9e92621ece21b"
 
 
@@ -44,7 +42,11 @@ def main() -> int:
     parser.add_argument("--data-root", type=Path, default=Path(os.environ["GEOPHYSICS_LOCAL_DATA_ROOT"]) if os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT") else None)
     parser.add_argument("--output-root", type=Path, help="external directory for pytest scratch and reports; defaults to <data-root>/validation")
     parser.add_argument("-k", "--keyword", help="optional pytest expression")
+    parser.add_argument("--m11-database", type=Path, default=Path(os.environ["GEOPHYSICS_M11_TEST_DATABASE"]) if os.environ.get("GEOPHYSICS_M11_TEST_DATABASE") else None, help="exact retained M11 API database outside the repository")
     args = parser.parse_args()
+    m11_path = args.m11_database.resolve() if args.m11_database else None
+    if m11_path is not None and (not m11_path.is_file() or m11_path.is_relative_to(ROOT)):
+        parser.error("--m11-database (or GEOPHYSICS_M11_TEST_DATABASE) must name an existing file outside the repository")
     data_root = args.data_root.resolve() if args.data_root else None
     if data_root is None or not data_root.is_dir() or (data_root / ".git").exists() or data_root.is_relative_to(ROOT):
         parser.error("--data-root (or GEOPHYSICS_LOCAL_DATA_ROOT) must name an existing external directory outside the repository")
@@ -70,8 +72,10 @@ def main() -> int:
                 missing.append(f"{name}: provide the exact retained original file (SHA-256 {expected})")
             elif digest(path) != expected:
                 missing.append(f"{name}: SHA-256 mismatch at {path}")
-        if not M11_PATH.is_file() or digest(M11_PATH) != M11_SHA256:
-            missing.append(f"M11 retained native database unavailable or hash-mismatched: {M11_PATH} (SHA-256 {M11_SHA256})")
+        if m11_path is None:
+            missing.append(f"M11 retained native database unavailable; set GEOPHYSICS_M11_TEST_DATABASE to the exact external file (SHA-256 {M11_SHA256})")
+        elif digest(m11_path) != M11_SHA256:
+            missing.append(f"M11 retained native database SHA-256 mismatch at {m11_path} (expected {M11_SHA256})")
         if missing:
             print("Full validation not started; original-evidence prerequisites are missing:", file=sys.stderr)
             for item in missing:
@@ -88,14 +92,16 @@ def main() -> int:
     scratch.mkdir()
     # API private-storage fixtures use a short external root: the application
     # enforces Windows MAX_PATH and pytest's nested node IDs can exceed it.
-    api_scratch = Path(tempfile.gettempdir()) / f"gph-{run_id[-10:]}"
-    api_scratch.mkdir()
+    api_scratch = data_root / "_Temp" / f"gph-{run_id[-10:]}"
+    api_scratch.mkdir(parents=True)
     junit = run_root / "numerical.junit.xml"
     env = os.environ.copy()
     env["GEOPHYSICS_LOCAL_DATA_ROOT"] = str(data_root)
     env["GEOPHYSICS_SCIENCE_TEST_PYTHON"] = str(pipeline_python)
     env["GEOPHYSICS_PROFILE_TEST_PYTHON"] = str(profile_python)
     env["M08_TEST_SCIENCE_PYTHON"] = str(m08_python)
+    if m11_path is not None:
+        env["GEOPHYSICS_M11_TEST_DATABASE"] = str(m11_path)
     env["GEOPHYSICS_TEST_SCRATCH"] = str(api_scratch)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     # The native M02/M04 workspace and RSS receipts are qualified only with
@@ -141,6 +147,8 @@ def main() -> int:
         "m08_waveform_exit_code": m08_result.returncode if m08_result else None,
         "python": str(pipeline_python),
         "data_root": str(data_root),
+        "m11_database": str(m11_path) if m11_path is not None else None,
+        "m11_database_sha256": digest(m11_path) if m11_path is not None else None,
         "pytest_command": command,
         "torch": torch_version,
         "cuda": cuda,
