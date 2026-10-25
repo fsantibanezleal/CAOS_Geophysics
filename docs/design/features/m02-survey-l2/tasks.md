@@ -27,9 +27,12 @@ are NOT activated or closed by this native-array sub-SDD. No shared-owner edits.
 - [x] The owner explicitly instructed implementation and validation of all pending
   approved product work on 2026-10-25. This authorizes work within the product
   scope; it does not waive any frozen scientific gate or independent review.
-- [ ] Independent reviewer verifies the exact packet/source diff, source/frame/
+- [x] Independent read-only reviewer audited the packet/source, source/frame/
   error declarations, covariance, split, candidate grid, stopping policy and
-  output contract against the fresh receipts before this unit is accepted.
+  output contract against the execution receipts. Findings and scope are
+  recorded in [the review note](reviews/independent-review-20261025.md). The
+  unavailable pre-edit runner bytes limit exact orchestration replay; this does
+  not promote the local unit to field or product acceptance.
 
 ## Implemented local ordinary-L2 paths and boundaries
 
