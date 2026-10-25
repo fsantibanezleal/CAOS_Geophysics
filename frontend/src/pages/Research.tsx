@@ -414,11 +414,19 @@ export function Methodology() {
         )}
       >
         {t(
-          "The six released synthetic-method chapters remain available alongside classical M08 and learned M13 earthquake arrival picking. Grouped navigation separates field response, wave physics and learned inference. M13 has a frozen offline checkpoint and a conditional browser execution path; model bytes and browser parity evidence are supplied separately.",
-          "Los seis capítulos sintéticos publicados siguen disponibles junto a detección clásica M08 y aprendida M13 de llegadas sísmicas. La navegación agrupa campos, ondas e inferencia aprendida. M13 tiene checkpoint offline congelado y una vía web condicional; modelo y prueba de paridad se aportan por separado.",
+          "This page presents the selected methods with interactive course material. The complete M01-M13 reference distinguishes implemented processing, inverses, research prototypes and unavailable workflows, with equations, data eligibility, reproducible commands, evidence and limitations in English and Spanish.",
+          "Esta página presenta métodos seleccionados con material interactivo de curso. La referencia completa M01-M13 distingue procesamiento implementado, inversiones, prototipos de investigación y flujos aún no disponibles, con ecuaciones, elegibilidad de datos, comandos reproducibles, evidencia y limitaciones en inglés y español.",
         )}
       </Head>
       <Tabs ariaLabel={t("Methodology groups", "Grupos de metodología")} tabs={groups} />
+      <section aria-labelledby="method-wiki-heading">
+        <h2 id="method-wiki-heading">{t("Complete M01-M13 method reference", "Referencia completa de métodos M01-M13")}</h2>
+        <p className="measure">{t(
+          "Read the full method-by-method science, executable paths, test boundaries, data rights and open limitations. The structural wiki check does not certify scientific or release acceptance.",
+          "Consulte la ciencia de cada método, rutas ejecutables, límites de pruebas, derechos de datos y limitaciones abiertas. La verificación estructural del wiki no certifica aceptación científica ni de lanzamiento.",
+        )}</p>
+        <p><a className="btn" href={source + "docs/wiki/README.md"}>{t("Open the bilingual methods wiki", "Abrir el wiki bilingüe de métodos")}</a></p>
+      </section>
     </div>
   );
 }

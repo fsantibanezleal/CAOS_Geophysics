@@ -30,6 +30,8 @@ jobs:
         run: python scripts/check_phase_assets.py
       - name: Product requirement ledger integrity (not release acceptance)
         run: python scripts/check_sdd_convergence.py
+      - name: M01-M13 wiki structure and implementation-link coverage (not science acceptance)
+        run: python scripts/check_docs_matrix.py
       - name: M01-M13 declared gate inventory (not scientific acceptance)
         run: |
           python scripts/check_method_matrix.py --report-only

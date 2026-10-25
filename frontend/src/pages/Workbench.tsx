@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   Download,
@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { CaseSelector, CaseWorkbench, Tabs, useShellLang, type CaseDef } from "@fasl-work/caos-app-shell";
 import { M11ScientificCourse } from "../components/M11ScientificCourse";
-import { EarthScene } from "../components/EarthScene";
 import {
   Heatmap,
   LayerColumn,
@@ -41,6 +40,8 @@ import { VelocityLocalWorkbench } from "../components/VelocityLocalWorkbench";
 import { ProfileLocalWorkbench } from "../components/ProfileLocalWorkbench";
 import { FwiLocalWorkbench } from "../components/FwiLocalWorkbench";
 import styles from "./Workbench.module.css";
+
+const EarthScene = lazy(() => import("../components/EarthScene").then((module) => ({ default: module.EarthScene })));
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -388,27 +389,35 @@ export default function Workbench() {
               {t("Orbit", "Orbitar")}
             </button>
           </div>
-          <EarthScene
-            run={run}
-            values={values}
-            opacity={opacity}
-            cut={cut}
-            showSurvey={survey}
-            surveyMaxAbs={entry?.survey_max_abs}
-            angle={angle}
-            speed={speed}
-            playing={orbit}
-            reset={reset}
-            label={
-              mode === "truth"
-                ? t("Synthetic target", "Objetivo sintético")
-                : displayedState
+          <Suspense
+            fallback={
+              <div className="load-state" data-state="loading" role="status">
+                {es ? "Cargando escena 3D…" : "Loading 3D scene…"}
+              </div>
             }
-            onCell={pickCell}
-            representation={representation}
-            threshold={displayThreshold}
-            range={comparisonScale.range}
-          />
+          >
+            <EarthScene
+              run={run}
+              values={values}
+              opacity={opacity}
+              cut={cut}
+              showSurvey={survey}
+              surveyMaxAbs={entry?.survey_max_abs}
+              angle={angle}
+              speed={speed}
+              playing={orbit}
+              reset={reset}
+              label={
+                mode === "truth"
+                  ? t("Synthetic target", "Objetivo sintético")
+                  : displayedState
+              }
+              onCell={pickCell}
+              representation={representation}
+              threshold={displayThreshold}
+              range={comparisonScale.range}
+            />
+          </Suspense>
           <div className="scene-bottom">
             <Legend
               range={comparisonScale.range}
