@@ -30,10 +30,10 @@ ROUTES = {"", "introduction", "methodology", "implementation", "experiments", "b
 def main() -> None:
     if not (DIST / "index.html").is_file():
         raise RuntimeError("Build frontend: npm run build:single-origin")
-    parent = ROOT / "frontend" / "node_modules" / ".processing-qa"
+    parent = Path(os.environ.get("GEOPHYSICS_QA_ROOT", Path(tempfile.gettempdir()) / "caos-geophysics-processing-qa")).expanduser().resolve()
     parent.mkdir(parents=True, exist_ok=True)
-    if not parent.resolve().is_relative_to((ROOT / "frontend").resolve()):
-        raise RuntimeError("QA root escaped scoped frontend directory")
+    if parent.is_relative_to(ROOT):
+        raise RuntimeError("QA root must be outside the repository checkout")
     port = int(os.environ.get("GEOPHYSICS_QA_PORT", "8876"))
     origin = f"http://127.0.0.1:{port}"
     with tempfile.TemporaryDirectory(prefix="run-", dir=parent) as temporary:
