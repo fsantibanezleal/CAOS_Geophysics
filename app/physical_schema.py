@@ -42,15 +42,18 @@ def schema_tables(connection):
     return revision, tables
 
 
-def require_bound_extensions(connection):
+def require_bound_extensions(connection, *, joint_reader=False):
     """No zero-charge/empty-result exemption for unbound retained custody.
 
-    Empty literal successor tables permit normal M01/legacy operation. Retained
-    rows stay refused until their owning runtime supplies the actual specific
-    custody adapter. This is a proof boundary, not a migration prerequisite.
+    Empty literal successor tables permit normal M01/legacy operation. The
+    joint reader exemption is only for callers that completed both M11 source
+    and derived-file inventories in this same transaction; other extensions
+    remain refused. This is a proof boundary, not a migration prerequisite.
     """
     revision, _ = schema_tables(connection)
     for table in sorted(EXTENSIONS[revision]):
+        if table in JOINT_TABLES and joint_reader:
+            continue
         require(connection.execute(f'SELECT 1 FROM "{table}" LIMIT 1').fetchone() is None,
                 'physical_union_custody_adapter_required:'+table)
     return revision

@@ -5,6 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { color, format, type Run } from "../science";
 import { useShellLang } from "@fasl-work/caos-app-shell";
 import { isosurface } from "../isosurface";
+import { surveyGlyphDiameter } from "./survey-glyphs";
 
 export function EarthScene({
   run,
@@ -47,6 +48,7 @@ export function EarthScene({
   const [readout, setReadout] = useState("");
   const [error, setError] = useState("");
   const [visibleCells, setVisibleCells] = useState(0);
+  const stationDiameter = run.survey ? surveyGlyphDiameter(run.survey.locations) : 0;
   const pose = useRef<{
     position: THREE.Vector3;
     target: THREE.Vector3;
@@ -194,33 +196,31 @@ export function EarthScene({
     const surveyValues = run.survey.observed;
     const observedMax = surveyMaxAbs && surveyMaxAbs > 0 ? surveyMaxAbs : Math.max(...surveyValues.map(Math.abs));
     if (showSurvey) {
-      const geom = new THREE.PlaneGeometry(0.132, 0.12);
+      const geom = new THREE.CircleGeometry(stationDiameter / 2000, 16);
       geom.rotateX(-Math.PI / 2);
       const mat = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.32,
         side: THREE.DoubleSide,
       });
-      const plane = new THREE.InstancedMesh(
+      const stations = new THREE.InstancedMesh(
         geom,
         mat,
         run.survey.locations.length,
       );
       run.survey.locations.forEach((p, i) => {
-        transform.makeTranslation(
-          p[0] / 1000,
-          p[2] / 1000 + 0.035,
-          p[1] / 1000,
-        );
-        plane.setMatrixAt(i, transform);
-        plane.setColorAt(
+        transform.makeScale(1, 1, 1);
+        transform.setPosition(p[0] / 1000, p[2] / 1000 + 0.035, p[1] / 1000);
+        stations.setMatrixAt(i, transform);
+        stations.setColorAt(
           i,
           new THREE.Color(
             color(surveyValues[i], [-observedMax, observedMax], "field"),
           ),
         );
       });
-      scene.add(plane);
+      stations.instanceMatrix.needsUpdate = true;
+      scene.add(stations);
       const positions = run.survey.locations
         .filter((_, i) => run.survey!.active[i])
         .flatMap((p) => [p[0] / 1000, p[2] / 1000 + 0.045, p[1] / 1000]);
@@ -462,6 +462,7 @@ export function EarthScene({
       ref={host}
       role="img"
       data-visible-cells={visibleCells}
+      data-survey-glyph-diameter-m={stationDiameter}
       aria-label={`${label}: ${es ? "modelo tridimensional y levantamiento" : "three-dimensional subsurface model and survey"}`}
     >
       <div className="scene-label">

@@ -31,7 +31,7 @@ threshold as pending owner decisions must not be used to plan or block work.
 ## Current branch evidence
 
 The isolated implementation branch is `task/geophysics-client-first-completion`
-at `76ee160b5f0d7c3efd47b76c282cbdd7a1312871` at the start of this review. Its
+at `1d90428307c4b710c7cb165a849ae11fe790c089` at the start of this review. Its
 M11 work includes a source-bound gravity/magnetic joint inverse, independent
 single-modality baselines, sealed selection/evaluation, a 24-control synthetic
 matrix, resource controls and a strict local bundle importer. The actual local
@@ -40,15 +40,28 @@ M11 receipts are documented in
 
 That evidence does not close M11 online execution. The current FastAPI app does
 not register the M11 member, dataset, job, cancellation, custody-history or
-export routes expected by the project workbench. Its existing retention schema
-refuses nonempty joint extension tables until complete custody, accounting and
-deletion adapters are wired. The workbench therefore cannot yet take a user's
-gravity and magnetic survey through an online solve. Do not label this vertical
-online-ready or scientifically accepted.
+export routes expected by the project workbench. The current classifier now
+audits exact M11 originals, datasets, result members and indices in one
+snapshot and adds retained/active charges through that audit. Request-time
+admission, startup reconciliation and M11-aware deletion receipts remain
+unintegrated; deletion explicitly refuses projects containing M11 state. The
+workbench therefore cannot yet take a user's gravity and magnetic survey
+through an online solve. Do not label this vertical online-ready or
+scientifically accepted.
 
-The M11 local suite is being rerun on this branch during this review. Its result
-will be recorded only after process completion; prior receipts are not a
-substitute for this run.
+The focused Linux M11 regression suite on this branch passed 488 tests with 3
+skips on CPython 3.12.10 x86_64. A subsequent full 24-control Linux workflow
+attempt did not complete and produced no qualifying matrix receipt; the earlier
+complete Windows-hosted 24-control receipt remains the only full matrix result.
+Do not infer Linux full-matrix acceptance from the focused suite or partial
+attempt.
+
+This review also verified a fresh production build, 318 frontend unit tests
+with 11 skips, 3 Playwright workbench checks, and the CAOS browser gate across
+142 measured states. The visual regression uses recorded station coordinates
+to render non-overlapping survey glyphs and confirms distinct gravity and
+magnetic model canvases. These are bounded UI/retention checks and do not close
+the whole-product or ML-VPS gates.
 
 ## Remaining release gates
 

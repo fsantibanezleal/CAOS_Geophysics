@@ -2,7 +2,7 @@
 // See scripts/vendor/caos-app-shell-gate-0.19.1/UPSTREAM.md for provenance and the product-specific adaptations.
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runGate } from './vendor/caos-app-shell-gate-0.19.1/gate/run.mjs';
 
@@ -31,6 +31,7 @@ if (!routes.some((route) => route.path === appRoute)) {
 }
 
 const values = new Map([
+  ['out', 'out'],
   ['url', 'url'],
   ['base-path', 'basePath'],
   ['routes', 'routes'],
@@ -62,7 +63,7 @@ for (let i = 0; i < argv.length; i += 1) {
   } else if (key === 'require-focus' || key === 'spa-fallback') {
     console.error(`gate: ${flag} is fixed by the product adapter`);
     process.exit(2);
-  } else if (['workbench', 'app-route', 'expect-brand', 'serve', 'out', 'no-require-focus'].includes(key)) {
+  } else if (['workbench', 'app-route', 'expect-brand', 'serve', 'no-require-focus'].includes(key)) {
     console.error(`gate: ${flag} is fixed by the product adapter`);
     process.exit(2);
   } else if (values.has(key)) {
@@ -92,13 +93,32 @@ if (routesArg !== undefined && !routesArg.split(',').map((route) => route.trim()
   process.exit(1);
 }
 
+const outputValue = extra.out ?? process.env.GEOPHYSICS_GATE_OUTPUT;
+if (!outputValue || !isAbsolute(outputValue)) {
+  console.error('gate: set GEOPHYSICS_GATE_OUTPUT or pass --out as an absolute path outside every Git checkout');
+  process.exit(1);
+}
+const outputPath = resolve(outputValue);
+const relativeOutput = relative(resolve(root), outputPath);
+if (!relativeOutput || (!relativeOutput.startsWith(`..${sep}`) && relativeOutput !== '..' && !isAbsolute(relativeOutput))) {
+  console.error('gate: visual evidence must be stored outside the product worktree');
+  process.exit(1);
+}
+for (let parent = outputPath; ; parent = dirname(parent)) {
+  if (existsSync(join(parent, '.git'))) {
+    console.error('gate: visual evidence must be stored outside every Git checkout');
+    process.exit(1);
+  }
+  if (parent === parse(parent).root) break;
+}
+
 const options = {
   ...extra,
   ...(extra.url ? {} : { serve: join(frontend, 'dist'), spaFallback: true }),
   expectBrand: product.name,
   workbench: appRoute,
   requireFocus: true,
-  out: join(frontend, 'gate-output'),
+  out: outputPath,
 };
 if (!options.url && !existsSync(join(frontend, 'dist', 'index.html'))) {
   console.error('gate: frontend/dist/index.html is missing; run npm run build first');
@@ -110,7 +130,7 @@ try {
   for (const failure of report.failures.slice(0, 80)) {
     console.error(`FAIL [${failure.check}] ${failure.route} ${failure.mode}${failure.trail ? ` (${failure.trail})` : ''}: ${failure.message}`);
   }
-  if (report.failures.length > 80) console.error(`... ${report.failures.length - 80} additional findings are recorded in frontend/gate-output/gate-report.json`);
+  if (report.failures.length > 80) console.error(`... ${report.failures.length - 80} additional findings are recorded in ${join(outputPath, 'gate-report.json')}`);
   for (const artifact of report.artifactMeasurements ?? []) {
     console.log(`served artifact verified: ${artifact.path}, HTTP ${artifact.status}, ${artifact.contentType}, ${artifact.bytes} bytes, sha256 ${artifact.sha256}`);
   }

@@ -315,7 +315,7 @@ class _Audit:
         sources = {row['id']: row for row in self.rows['source_records']}
         for row in sources.values():
             self.ownership(row)
-            require(row['declared_format'] in FORMATS | {'gravity_stations_json'}
+            require(row['declared_format'] in FORMATS | {'gravity_stations_json', 'joint_native'}
                     and row['private_storage_permission'] == 'attested'
                     and row['rights_decision'] in ('mirror', 'provider-link-only', 'derivative-only'),
                     'physical_classifier_source')
@@ -328,8 +328,32 @@ class _Audit:
                     and row['validation_status'] == 'raw_metadata_checked', 'physical_classifier_original')
             require(row['storage_key'] == f"projects/{row['owner_id']}/{row['project_id']}/{row['id']}",
                     'physical_classifier_original_key')
+            if row['detected_format'] == 'joint_native':
+                # The dedicated M11 reader closes both the completed-upload
+                # and dataset/result namespaces, including exact bounded hashes.
+                continue
             self.declare(row['storage_key'], cap=16*M if row['detected_format'] == 'gravity_stations_json' else 1024*M,
                          bytes=row['byte_count'], sha256=row['sha256'])
+
+    def joint_artifacts(self):
+        from app.physical_joint_native_contract import METHOD_ID, PARSER
+        from app.physical_joint_custody import audit_snapshot, original_inventory
+
+        original = original_inventory(self.rows, self.files)
+        audited = audit_snapshot(self.rows, self.files, connection=self.connection)
+        require(original['asset_ids'] == frozenset(r['id'] for r in self.raw.values()
+                if r['detected_format'] == 'joint_native'), 'physical_joint_original_dispatch')
+        for key, record in original['files'].items():
+            self.declare(key, required=True, **record)
+        for key, record in audited['files'].items():
+            self.declare(key, required=True, **record)
+        self.joint_dataset_ids = frozenset(r['id'] for r in self.datasets.values()
+                                           if r['parser_version'] == PARSER)
+        self.joint_job_ids = frozenset(r['id'] for r in self.jobs.values()
+                                       if r['method_id'] == METHOD_ID)
+        require(self.joint_dataset_ids == audited['dataset_ids']
+                and self.joint_job_ids == audited['job_ids'], 'physical_joint_classifier_inventory')
+        return audited
 
     def custody(self):
         by_batch = {key: [] for key in self.batches}
@@ -450,6 +474,8 @@ class _Audit:
         for row in self.datasets.values():
             if row['id'] in physical:
                 continue
+            if row['id'] in self.joint_dataset_ids:
+                continue
             self.ownership(row)
             require(row['kind'] == 'root' and row['version'] == 1 and row['root_dataset_id'] == row['id']
                     and row['parent_dataset_id'] is None and predecessor_payload(row['parser_version'], row['modality']) == row['payload_schema'],
@@ -541,8 +567,14 @@ class _Audit:
                             and (job['state'] == 'cancelled') == (job['error_code'] == 'physical_cancelled'),
                             'physical_classifier_terminal_error')
             else:
-                require(job['method_id'] in METHODS, 'physical_classifier_method')
+                from app.physical_joint_native_contract import METHOD_ID as JOINT_METHOD
+                require(job['method_id'] in METHODS | {JOINT_METHOD}, 'physical_classifier_method')
             if job['state'] == 'succeeded':
+                if job['id'] in self.joint_job_ids:
+                    # The M11 reader already bound its smaller exact index and
+                    # every member; generic M08/profile result parsing is wrong here.
+                    self.operations[job['id']] = 'retain_success'
+                    continue
                 key = f"derived/{job['owner_id']}/{job['project_id']}/results/{job['id']}.json"
                 require(job['result_key'] == key and job['error_code'] is None and job['error_message'] is None,
                         'physical_classifier_result_key')
@@ -552,8 +584,9 @@ class _Audit:
                     value = decode(self.files.read(key, cap=64*M, expected_bytes=job['result_bytes'], expected_sha256=job['result_sha256']), 64*M)
                     validate_result_identity(value, SimpleNamespace(**dict(job, request_json=request)))
             else:
-                require(all(job[k] is None for k in ('result_key', 'result_bytes', 'result_sha256')),
-                        'physical_classifier_nonsuccess_result')
+                if job['id'] not in self.joint_job_ids:
+                    require(all(job[k] is None for k in ('result_key', 'result_bytes', 'result_sha256')),
+                            'physical_classifier_nonsuccess_result')
             self.operations[job['id']] = 'retain_success' if job['state'] == 'succeeded' else 'retain_nonsuccess' if terminal else 'retain_reservation'
 
     def preparations(self):
@@ -657,25 +690,27 @@ def classify_snapshot(connection, files, *, approved_manifests, approved_install
     """
     try:
         rows, descriptors = _snapshot(connection)
-        from app.physical_schema import require_bound_extensions
-        require_bound_extensions(connection)
         audit = _Audit(connection, files, rows, approved_manifests, approved_installations, native_metadata,
                        expected_source_policy_sha256)
         audit.deleted_projects()
         audit.prepared_deletions()
         audit.originals()
+        joint_audit = audit.joint_artifacts()
         audit.custody()
         audit.forest()
         audit.job_controls()
         audit.preparations()
         audit.extra_members()
         records = audit.profile_archives()
+        from app.physical_schema import require_bound_extensions
+        require_bound_extensions(connection, joint_reader=True)
         measured = files.census(audit.expected, empty_directories=audit.empty)
         require(all((original in measured)!=(moved in measured) for original,moved in audit.relocations.items()),
                 'physical_classifier_predeletion_partition')
         require(not audit.absent & set(measured), 'physical_classifier_removed_reappeared')
         charges = {row['id']: MappingProxyType(dict(account_private_charge(connection, row['id'],
-            profile_records=records, approved_installations=approved_installations))) for row in rows['user']}
+            profile_records=records, approved_installations=approved_installations,
+            joint_audit=joint_audit, joint_rows=rows))) for row in rows['user']}
         require(all(c['total'] <= 1024*M for c in charges.values()), 'physical_classifier_account_quota')
         fingerprint = digest(dict(schema='geophysics.physical-classification/v1', revision=rows['alembic_version'][0]['version_num'],
                                   rows=descriptors, files=measured, profile_records=records))

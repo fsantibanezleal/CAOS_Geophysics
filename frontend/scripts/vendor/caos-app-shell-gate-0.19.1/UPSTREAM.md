@@ -21,6 +21,13 @@ The five gate modules below are otherwise copied from the package. Their upstrea
 3. The key constants are loaded through the pinned package's public `./keys` export because this copy does not live inside the package's `dist` tree.
 4. JSON response bodies are measured with real HTTP GETs to the gate's configured origin. For every fetched JSON path, the gate checks HTTP 200, `application/json`, reads the complete response body, checks `Content-Length` when supplied, parses JSON, and records byte length and SHA-256. It additionally requires the browser workbench to fetch all four FWI reference files and checks each response's `inverse-earth/v2` schema and case id.
 
+## Product-specific change in `gate/serve.mjs`
+
+The Windows file server retries `EBUSY` reads three times with 25/50/75 ms
+backoff, then returns HTTP 503 instead of terminating the gate process. This
+covers transient NTFS sharing violations observed while the browser gate read
+a 24 MiB built FWI artifact. Other filesystem errors are not retried.
+
 The artifact verification does not read files from `dist` directly. In the default local run, the HTTP origin is the shell gate's static server over `frontend/dist`, so the measured bytes are the bytes the server actually returns. With `--url`, the same checks run against the supplied origin.
 
 The five upstream gate modules have the same SHA-256 values in shell 0.19.1 as in 0.19.0; `gate/run.mjs` retains the documented product-specific adaptations above. Shell 0.19.1 also fixes narrow-screen flowing PlotCard content and localizes UPlot date labels; see the upstream changelog for the release details.

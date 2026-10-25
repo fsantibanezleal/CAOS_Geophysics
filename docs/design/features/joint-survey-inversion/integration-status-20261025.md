@@ -66,3 +66,37 @@ This work does not change the whole-product SDD convergence ledger. It does not
 close field-data rights/validity, broader M01–M13 submitted-data coverage,
 complete browser visual acceptance, current VPS resource admission, or the
 single-origin replacement cutover. No deployment was performed.
+
+## Online lifecycle audit — 2026-10-25
+
+The integration boundary was rechecked against the current branch's app
+assembly, authenticated project routes, processing API/worker, physical
+classifier, private-byte accounting, project deletion, and the frontend API
+client. The result is a hard integration gap, not a route-only task.
+
+| Seam | Current evidence | Required before online M11 admission |
+| --- | --- | --- |
+| Authenticated intake and dataset index | `app/server.py` registers `projects` and `processing` only. The frontend expects `/joint-members` and `/joint-datasets`; no current router implements these. | Register an owner/project-bound intake and exact dataset-index transaction; enforce native metadata, rights, bounded streaming, request-rate limits, immutable source links, and rollback-safe file publication. |
+| Solver job, cancel, history and result API | `app/processing.py` only admits its explicit current method set; `app/worker.py` dispatches the existing profile, waveform, MT and gravity-L2 children. M11 has no admitted job schema, child supervisor, cancellation drain, or result API in this branch. | Add M11-specific typed admission and dispatch under current queue/resource limits; bind input digest, code/runtime digest, worker identity and terminal states; persist all output copies and provide owner-scoped cancellation/history/export. |
+| Physical startup/classifier custody | The current candidate calls `original_inventory` and `audit_snapshot` inside the classifier snapshot, declares raw/dataset/result/index bytes, and closes the final namespace census. A new registration fixture passes for a populated failed M11 job and exact stored copies. Startup reconciliation outside this classifier path still does not supply the same M11 reader proof. | Carry the exact reader through every startup/current-custody call site; test committed restart and unknown-file refusal under the live lease. |
+| Quota and admission accounting | `app/physical_accounting.py` adds M11 retained members, terminal indices and active reservations only when passed the classifier's same-transaction audit token. The focused populated-state fixture verifies additive charges. Request-time admission and generic processing storage still do not use this M11 accounting path. | Bind request-time M11 reservations and completion writes to the same quota model; verify race, cancellation and retained failed-output accounting at quota boundaries. |
+| Project deletion and retained debt | `app/physical_deleted_inventory.py` now detects M11 raw assets, datasets, jobs and child rows and refuses project deletion with `current_deletion_joint_custody_unrepresentable`; it no longer silently omits them. | Extend deletion receipts, custody slots, cleanup acknowledgements, retained-byte charges and restart recovery to M11 rows and every copy. Prove changed/unknown members block deletion without losing rows or files. |
+| Database/migration lifecycle | The recognized current M11 tables are an explicit `0006_joint_artifacts` extension in `app/physical_schema.py`, but their nonempty state is intentionally unavailable to the serving lifecycle. | Mount the exact reviewed migration into the current chain only with forward/rollback policy and prove old database migration, startup, active jobs, quota and deletion behavior. |
+| Runtime portability | The old PR154 `joint_execution.py` binds Windows paths, interpreter/site-packages and source hashes. It is a reference only; its child worker is not a current-branch Linux VPS runtime. | Implement and qualify a separately pinned supported worker runtime, or keep the API lane closed. Recheck executable, dependency, source digest, scratch, RSS, deadline and cancellation behavior on the actual target before admission. |
+
+The PR154 implementation is not directly promotable: its APIs and ORM schema
+are absent from this branch's current assembly; its generic derived-usage and
+worker assumptions do not satisfy the current physical union; its deletion
+and startup paths predate the current registered-reader refusal; and its
+execution context is Windows-bound. Copying its route modules alone would
+create an API that accepts/uploads data which current startup, quota accounting,
+classification, or deletion cannot safely retain.
+
+The online M11 API and worker remain fail-closed: no route was registered and
+no scientific or public-activation verdict changed. The classifier now accepts
+only M11 bytes closed by the dedicated same-snapshot inventory and complete
+filesystem census; project deletion still refuses M11 state until its receipt
+protocol can represent it. The populated-state regression is a custody and
+accounting check, not solver or scientific acceptance. A separate route guard
+records that the frontend's expected endpoint is not served. The remaining
+seams must be closed before M11 online upload or compute can be advertised.

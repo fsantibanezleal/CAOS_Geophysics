@@ -49,7 +49,7 @@ describe("frontend route and shell foundation", () => {
     expect(read("../../vite.config.ts")).toContain("base: '/'");
     expect(read("../lib/deployment.ts")).not.toContain('"legacy"');
     const { scripts } = JSON.parse(read("../../package.json"));
-    expect(scripts.build).toBe("tsc --noEmit && node copy-data.mjs && vite build");
+    expect(scripts.build).toBe("node scripts/verify-joint-pins.mjs && tsc --noEmit && node copy-data.mjs && vite build");
     expect(scripts["build:single-origin"]).toBe("npm run build");
     expect(existsSync(new URL("../../create-route-entrypoints.mjs", import.meta.url))).toBe(false);
   });
@@ -93,6 +93,8 @@ describe("frontend route and shell foundation", () => {
     expect(gate).toContain("workbench: appRoute");
     expect(gate).toContain("requireFocus: true");
     expect(gate).toContain("expectedShellVersion = '0.19.1'");
+    expect(gate).toContain("GEOPHYSICS_GATE_OUTPUT");
+    expect(gate).toContain("outside every Git checkout");
     const ownedGate = read("../../scripts/vendor/caos-app-shell-gate-0.19.1/gate/run.mjs");
     expect(ownedGate).toContain("if (workbenchRoute === '/')");
     expect(ownedGate).toContain("route === '/' ? urlFor(route)");

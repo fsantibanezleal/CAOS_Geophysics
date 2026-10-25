@@ -202,6 +202,39 @@ class PrivateFiles:
                 os.close(descriptor)
             os.close(parent)
 
+    def scan_joint_member(self, key, *, byte_count, sha256, descriptor):
+        """Stream an M11 native member without retaining its potentially large bytes."""
+        from app.physical_joint_custody import scan_stream
+
+        parent, name = self._parent(key)
+        file_descriptor = None
+        stream_descriptor = None
+        try:
+            file_descriptor = self._open(parent, name)
+            before = os.fstat(file_descriptor)
+            require(before.st_uid == os.geteuid() and not stat.S_IMODE(before.st_mode) & 0o077,
+                    "physical_private_member")
+            require(before.st_size == integer(byte_count, 1, 256 * 1024**2), "physical_file_bytes")
+            stream_descriptor = os.dup(file_descriptor)
+            with os.fdopen(stream_descriptor, "rb", closefd=True) as stream:
+                stream_descriptor = None
+                measured = scan_stream(stream, byte_count=byte_count, sha256=sha256, descriptor=descriptor)
+            after = os.fstat(file_descriptor)
+            require((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns,
+                     before.st_nlink, before.st_mode, before.st_uid) ==
+                    (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns,
+                     after.st_nlink, after.st_mode, after.st_uid), "physical_file_changed")
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(after),
+                    "physical_file_replaced")
+            self.check_root()
+            return measured
+        finally:
+            if stream_descriptor is not None:
+                os.close(stream_descriptor)
+            if file_descriptor is not None:
+                os.close(file_descriptor)
+            os.close(parent)
+
     def directory_identity(self, key):
         parent, name = self._parent(key)
         descriptor = None

@@ -17,6 +17,23 @@ METHOD = native.METHOD_ID
 INDEX_SCHEMA = 'geophysics.joint-result-custody/v1'
 INDEX_CAP = native.MAX_JSON
 NAME = re.compile(r'(?:workflow\.json|failure\.json|(?:calibration|frozen|models|result|instrument|aborted)/[a-z][a-z0-9_]{0,120}\.(?:json|npy))\Z')
+_AUDIT_TOKEN = object()
+
+
+class JointAudit(dict):
+    """Same-transaction proof that the classifier completed both M11 inventories."""
+
+    def __init__(self, value, *, connection, rows, token):
+        require(token is _AUDIT_TOKEN and connection.in_transaction, 'physical_joint_audit_token')
+        super().__init__(value)
+        self.connection = connection
+        self.rows_identity = id(rows)
+
+
+def is_joint_audit(value, connection, rows=None):
+    return (isinstance(value, JointAudit) and value.connection is connection
+            and connection.in_transaction
+            and (rows is None or value.rows_identity == id(rows)))
 
 
 def scan_stream(stream, *, byte_count, sha256, descriptor):
@@ -198,7 +215,7 @@ def accounting(connection, owner_id):
     return dict(joint_members=members, joint_terminal_indices=indices, joint_active=active)
 
 
-def audit_snapshot(rows, files):
+def audit_snapshot(rows, files, *, connection=None):
     """Return exact declarations only after all joint SQL and source joins.
 
     The enclosing classifier still must close its complete namespace census.
@@ -228,4 +245,7 @@ def audit_snapshot(rows, files):
             for key, record in members:
                 require(key not in expected, 'physical_joint_duplicate_file')
                 expected[key] = record
-    return dict(dataset_ids=frozenset(datasets), job_ids=frozenset(jobs), index_ids=frozenset(indices), files=expected)
+    result = dict(dataset_ids=frozenset(datasets), job_ids=frozenset(jobs), index_ids=frozenset(indices), files=expected)
+    if connection is not None:
+        return JointAudit(result, connection=connection, rows=rows, token=_AUDIT_TOKEN)
+    return result

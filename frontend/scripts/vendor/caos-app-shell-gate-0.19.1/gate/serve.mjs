@@ -11,7 +11,8 @@
 // answers the app shell (an existing file, a dotfile included, is served as it is); the query string is no part of the path (`/route?x=1.5` answers the app shell, `/missing.js?v=2` is 404).
 
 import { createServer } from 'node:http';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
 
 const MIME = {
@@ -39,6 +40,17 @@ const MIME = {
   '.xml': 'application/xml',
 };
 
+export async function readFileWithBusyRetry(file, { read = readFile, pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms)) } = {}) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await read(file);
+    } catch (error) {
+      if (error?.code !== 'EBUSY' || attempt >= 3) throw error;
+      await pause(25 * (attempt + 1));
+    }
+  }
+}
+
 /**
  * @param {string} dir the built site
  * @param {string} basePath the site's base path ('/' for a custom domain, '/Repo/' for a project page)
@@ -52,9 +64,20 @@ export function servePages(dir, basePath = '/', port = 0, options = {}) {
   const notFound = join(root, '404.html');
   const rootIndex = join(root, 'index.html');
   const server = createServer((req, res) => {
-    const send = (status, file, headers = {}) => {
+    const send = async (status, file, headers = {}) => {
+      let body;
+      if (req.method !== 'HEAD') {
+        try {
+          body = await readFileWithBusyRetry(file);
+        } catch {
+          if (res.destroyed) return;
+          res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'Retry-After': '1' });
+          res.end('Temporary static artifact read failure');
+          return;
+        }
+      }
       res.writeHead(status, { 'Content-Type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream', 'Cache-Control': 'no-store', ...headers });
-      res.end(req.method === 'HEAD' ? undefined : readFileSync(file));
+      res.end(body);
     };
     const missing = () => {
       if (existsSync(notFound)) send(404, notFound);

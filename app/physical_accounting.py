@@ -29,13 +29,21 @@ def account_private_charge_transaction(connection, owner_id, *, profile_records,
                                       approved_installations=approved_installations)
 
 
-def account_private_charge(connection, owner_id, *, profile_records=None, approved_installations=None):
+def account_private_charge(connection, owner_id, *, profile_records=None, approved_installations=None,
+                           joint_audit=None, joint_rows=None):
     uuid(owner_id)
     require(connection.in_transaction, "physical_accounting_requires_consistent_transaction")
     # Native root intake and preparation call this same accounting function.
     # Recognized union DDL cannot silently omit another method's stored copies.
     from app.physical_schema import require_bound_extensions
-    require_bound_extensions(connection)
+    if joint_audit is None:
+        require_bound_extensions(connection)
+        joint = dict(joint_members=0, joint_terminal_indices=0, joint_active=0)
+    else:
+        from app.physical_joint_custody import accounting as joint_accounting, is_joint_audit
+        require(is_joint_audit(joint_audit, connection, joint_rows), 'physical_joint_account_snapshot')
+        require_bound_extensions(connection, joint_reader=True)
+        joint = joint_accounting(connection, owner_id)
     require(connection.execute("SELECT 1 FROM user WHERE id=?", (owner_id,)).fetchone() is not None, "physical_account_owner")
     def total(sql):
         value = connection.execute(sql, (owner_id,)).fetchone()[0]
@@ -63,6 +71,7 @@ def account_private_charge(connection, owner_id, *, profile_records=None, approv
             active += LEGACY_SCRATCH[method]
     result = dict(raw=raw, datasets=datasets, results=results, controls=controls,
                   permanent=permanent, custody=custody, legacy_active=active,
+                  **joint,
                   profile_retained=_profile_charge(connection,owner_id,profile_records,approved_installations))
     result["total"] = integer(sum(result.values()))
     return MappingProxyType(result)

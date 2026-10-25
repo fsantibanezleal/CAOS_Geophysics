@@ -179,7 +179,7 @@ def project_inventory(connection, *, owner_id, project_id, source_policy_sha256,
     uuid(owner_id); uuid(project_id); sha(source_policy_sha256)
     from app.physical_schema import schema_tables
     require(connection.in_transaction, 'current_deletion_snapshot')
-    schema_tables(connection)
+    _, registered_tables = schema_tables(connection)
     require(connection.execute('SELECT owner_id FROM projects WHERE id=?',(project_id,)).fetchone()==(owner_id,),
             'current_deletion_owner')
     def rows(table, where='owner_id=? AND project_id=?', values=(owner_id,project_id)):
@@ -189,6 +189,21 @@ def project_inventory(connection, *, owner_id, project_id, source_policy_sha256,
         require(len(result)<=20000,'current_deletion_row_cap')
         return result
     raw=rows('raw_assets'); datasets=rows('observation_datasets'); jobs=rows('processing_jobs')
+    from app.physical_joint_native_contract import METHOD_ID as JOINT_METHOD, PARSER as JOINT_PARSER
+    joint_raw = [r for r in raw if r['detected_format'] == 'joint_native']
+    joint_datasets = [r for r in datasets if r['parser_version'] == JOINT_PARSER]
+    joint_jobs = [r for r in jobs if r['method_id'] == JOINT_METHOD]
+    joint_children = joint_artifacts = False
+    if 'joint_dataset_sources' in registered_tables:
+        joint_children = connection.execute('''SELECT 1 FROM joint_dataset_sources s
+            JOIN observation_datasets d ON d.id=s.dataset_id
+            WHERE d.owner_id=? AND d.project_id=? LIMIT 1''',(owner_id,project_id)).fetchone() is not None
+    if 'joint_result_artifacts' in registered_tables:
+        joint_artifacts = connection.execute('''SELECT 1 FROM joint_result_artifacts a
+            JOIN processing_jobs j ON j.id=a.job_id
+            WHERE j.owner_id=? AND j.project_id=? LIMIT 1''',(owner_id,project_id)).fetchone() is not None
+    require(not (joint_raw or joint_datasets or joint_jobs or joint_children or joint_artifacts),
+            'current_deletion_joint_custody_unrepresentable')
     require(not any(j['state'] in ('queued','running') for j in jobs)
             and not rows('physical_publication_intents'),'current_deletion_active_operation')
     controls={r['job_id']:r for r in rows('physical_job_controls')}
