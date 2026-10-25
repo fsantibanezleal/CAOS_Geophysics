@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import csv
+from contextlib import redirect_stderr
 from hashlib import sha256
+import io
 import json
 from pathlib import Path
 import sys
@@ -160,4 +162,17 @@ def test_cli_processes_a_user_csv_without_overwriting_results():
         assert result["source"]["sha256"] == sha256(source.read_bytes()).hexdigest()
         assert result["claims"]["source_hash_recomputed_from_original_bytes"] is True
         assert main(["--csv", str(source), "--config", str(config), "--output", str(output)]) == 2
+
+
+def test_cli_rejects_duplicate_json_keys():
+    with tempfile.TemporaryDirectory() as folder:
+        directory = Path(folder)
+        request_path = directory / "ambiguous.json"
+        request_path.write_text('{"schema":"wrong","schema":"magnetic-flightline-process-request-1"}',
+                                encoding="utf-8")
+        error = io.StringIO()
+        with redirect_stderr(error):
+            status = main(["--input", str(request_path), "--output", str(directory / "result.json")])
+        assert status == 2
+        assert "duplicate key 'schema'" in error.getvalue()
 

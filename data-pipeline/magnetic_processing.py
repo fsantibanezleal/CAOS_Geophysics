@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 from dataclasses import dataclass
 from hashlib import sha256
 import json
@@ -17,9 +18,11 @@ import math
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 import numpy as np
 from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import QhullError
 
 
 MAX_SOURCE_BYTES = 256 * 1024 * 1024
@@ -30,6 +33,21 @@ SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 class MagneticProcessingError(ValueError):
     """Input contract cannot support the declared M03 operation."""
+
+
+def _strict_json(raw: bytes) -> object:
+    def unique_pairs(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise MagneticProcessingError(f"JSON contains duplicate key {key!r}")
+            result[key] = value
+        return result
+
+    def reject_constant(value):
+        raise MagneticProcessingError(f"JSON contains non-finite constant {value}")
+
+    return json.loads(raw, object_pairs_hook=unique_pairs, parse_constant=reject_constant)
 
 
 @dataclass(frozen=True)
@@ -270,13 +288,21 @@ def process(request: dict, *, source_hash_verified: bool = False) -> dict:
     x_axis = xmin + np.arange(nx, dtype=np.float64) * spacing
     y_axis = ymin + np.arange(ny, dtype=np.float64) * spacing
     xx, yy = np.meshgrid(x_axis, y_axis, indexing="xy")
-    grid_interp = LinearNDInterpolator(train_coordinates, train_values, fill_value=np.nan)
-    grid = np.asarray(grid_interp(xx, yy), dtype=np.float64)
+    try:
+        grid_interp = LinearNDInterpolator(train_coordinates, train_values, fill_value=np.nan)
+        grid = np.asarray(grid_interp(xx, yy), dtype=np.float64)
+    except QhullError as error:
+        raise MagneticProcessingError(f"Delaunay triangulation failed for the admitted flight geometry: {error}") from error
+    except MemoryError as error:
+        raise MagneticProcessingError("interpolation exceeded available memory; reduce the source subset and grid extent") from error
     support = np.isfinite(grid)
 
     heldout_xy = coordinates[heldout_rows]
     heldout_observed = values[heldout_rows]
-    predicted = np.asarray(grid_interp(heldout_xy), dtype=np.float64)
+    try:
+        predicted = np.asarray(grid_interp(heldout_xy), dtype=np.float64)
+    except MemoryError as error:
+        raise MagneticProcessingError("held-out interpolation exceeded available memory") from error
     valid = np.isfinite(predicted)
     residual = predicted[valid] - heldout_observed[valid]
     score = {
@@ -314,6 +340,28 @@ def process(request: dict, *, source_hash_verified: bool = False) -> dict:
     }
 
 
+def _write_new_file(path: Path, data: bytes) -> None:
+    """Stage and atomically install a new result without replacing a peer file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, staged_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    staged = Path(staged_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            os.link(staged, path)
+        except FileExistsError as error:
+            raise MagneticProcessingError("refusing to overwrite an existing result") from error
+    finally:
+        try:
+            staged.unlink()
+        except FileNotFoundError:
+            pass
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     source_group = parser.add_mutually_exclusive_group(required=True)
@@ -323,13 +371,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True, help="new result JSON path")
     args = parser.parse_args(argv)
     try:
+        if args.output.exists() or args.output.is_symlink():
+            raise MagneticProcessingError("refusing to overwrite an existing result")
         if args.csv is not None:
             if args.config is None:
                 raise MagneticProcessingError("--config is required with --csv")
             config_raw = args.config.read_bytes()
             if len(config_raw) > 1024 * 1024:
                 raise MagneticProcessingError("CSV mapping config exceeds the 1 MiB bound")
-            config = json.loads(config_raw)
+            config = _strict_json(config_raw)
             if not isinstance(config, dict) or set(config) != {"source", "frame", "mapping", "settings"}:
                 raise MagneticProcessingError("CSV config requires exactly source, frame, mapping and settings")
             request = read_csv(args.csv, field_map=config["mapping"], source_metadata=config["source"],
@@ -340,13 +390,10 @@ def main(argv: list[str] | None = None) -> int:
             raw = args.input.read_bytes()
             if len(raw) > MAX_SOURCE_BYTES:
                 raise MagneticProcessingError("request exceeds the 256 MiB input bound")
-            request = json.loads(raw)
+            request = _strict_json(raw)
         result = process(request, source_hash_verified=args.csv is not None)
         encoded = json.dumps(result, allow_nan=False, separators=(",", ":")).encode("utf-8")
-        if args.output.exists() or args.output.is_symlink():
-            raise MagneticProcessingError("refusing to overwrite an existing result")
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_bytes(encoded)
+        _write_new_file(args.output, encoded)
     except (OSError, UnicodeError, json.JSONDecodeError, MagneticProcessingError, ValueError) as error:
         print(f"M03 processing failed: {error}", file=sys.stderr)
         return 2
