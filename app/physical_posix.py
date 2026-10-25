@@ -433,6 +433,56 @@ class PrivateFiles:
                 os.close(descriptor)
             os.close(parent)
 
+    def write_new_stream(self, target, stream, *, cap, expected_bytes, expected_sha256, failure_cut=None):
+        """Publish an already bounded private spool without materializing it in RAM."""
+        integer(cap, 1, 1024*1048576)
+        expected_bytes = integer(expected_bytes, 1, cap)
+        expected_sha256 = sha(expected_sha256)
+        require(hasattr(stream, "read") and hasattr(stream, "seek"), "physical_stream_required")
+        stream.seek(0)
+        parent, name = self._parent(target)
+        descriptor = None
+        digest = hashlib.sha256()
+        count = 0
+        try:
+            descriptor = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC | os.O_NOFOLLOW,
+                                 0o600, dir_fd=parent)
+            info = os.fstat(descriptor)
+            require(stat.S_ISREG(info.st_mode) and info.st_nlink == 1 and info.st_dev == self.identity[0]
+                    and info.st_uid == os.geteuid() and stat.S_IMODE(info.st_mode) == 0o600,
+                    "physical_new_file_identity")
+            while True:
+                block = stream.read(65536)
+                require(type(block) is bytes, "physical_stream_bytes_required")
+                if not block:
+                    break
+                count += len(block)
+                require(count <= cap and count <= expected_bytes, "physical_new_file_limit")
+                digest.update(block)
+                view = memoryview(block)
+                while view:
+                    written = os.write(descriptor, view)
+                    require(written > 0, "physical_short_write")
+                    view = view[written:]
+            require(count == expected_bytes and digest.hexdigest() == expected_sha256,
+                    "physical_new_file_digest")
+            if failure_cut:
+                failure_cut('copy')
+            os.fsync(descriptor)
+            if failure_cut:
+                failure_cut('file_sync')
+            os.fsync(parent)
+            if failure_cut:
+                failure_cut('directory_sync')
+            require(self._identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) == self._identity(info),
+                    'physical_file_replaced')
+            self.check_root()
+            return dict(bytes=count, sha256=digest.hexdigest())
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+            os.close(parent)
+
     def install(self, source, target, *, cap, expected_bytes, expected_sha256, failure_cut=None):
         """Exclusive independent copy, then file fsync, then directory fsync.
 

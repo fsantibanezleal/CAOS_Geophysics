@@ -154,6 +154,15 @@ refusal. The original precision failures and scientific acceptance are unchanged
 
 ## Reproduce the adverse and resource matrices
 
+The authenticated intake/custody tests need source-directory inputs independently
+of solver outputs. Prepare those inputs outside the repository with
+`scripts/prepare_joint_input_matrix.py --output-root <new-absolute-external-dir>`.
+It writes the fixed24 authored Choclo controls through the strict development
+and sealed serializers and records every member hash in `fixture-manifest.json`.
+Set `GEOPHYSICS_JOINT_MATRIX_FIXTURE` to that directory for native upload and
+dataset lifecycle tests. This command runs no inversion and does not produce a
+recovery score, field dataset, or scientific acceptance receipt.
+
 `scripts/validate_joint_matrix.py` runs all24 fixed refined-source Choclo cases,
 strict solve/export/replay, each original beta control against the independent
 test-only raw BVLS return and post-freeze truth discrepancies. Raw BVLS exact-KKT

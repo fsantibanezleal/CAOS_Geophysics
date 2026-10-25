@@ -17,6 +17,7 @@ from app.errors import ApiError, api_error_handler
 from app.projects import install_project_routes
 from app.processing import install_processing_routes
 from app.security import install_security
+from app.joint_routes import install_joint_routes
 
 
 def create_app(settings: Settings, mail_sender: MailSender | None = None, *, physical=None) -> FastAPI:
@@ -58,6 +59,10 @@ def create_app(settings: Settings, mail_sender: MailSender | None = None, *, phy
     install_project_routes(app, settings, current_user, get_session)
     install_processing_routes(app, settings, current_user, get_session)
     if physical is not None:
+        # M11 intake is exposed only inside the explicitly operator-bound
+        # physical runtime. Its handlers independently require the exact
+        # registered 0006 schema before accepting a body or reading custody.
+        install_joint_routes(app, settings, current_user, get_session)
         # Last-added ASGI middleware is outermost: before CSRF/rate/auth writes,
         # in their same task, covering the final streamed response as well.
         physical.install(app, settings)

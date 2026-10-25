@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -279,9 +278,43 @@ def test_live_classifier_quota_and_m11_deletion_projection(joint_case):
         connection.close()
 
 
+def test_queued_m11_job_is_charged_once_from_the_joint_audit(joint_case):
+    connection, files, rows = joint_case["connection"], joint_case["files"], joint_case["rows"]
+    owner = joint_case["owner"]
+    job = rows["processing_jobs"][0]
+    result_keys = [job["result_key"], rows["joint_result_artifacts"][0]["storage_key"]]
+    connection.execute("UPDATE processing_jobs SET state='queued',cancel_requested=0,worker_id=NULL,"
+        "result_key=NULL,result_sha256=NULL,result_bytes=NULL,error_code=NULL,error_message=NULL,"
+        "started_at=NULL,finished_at=NULL,wall_ms=NULL,peak_rss_bytes=NULL,scratch_bytes=NULL WHERE id=?",
+        (job["id"],))
+    connection.execute("DELETE FROM joint_result_artifacts WHERE job_id=?", (job["id"],))
+    connection.commit()
+    for key in result_keys:
+        files.bodies.pop(key)
+    rows["joint_result_artifacts"] = []
+    job.update(state="queued", cancel_requested=0, worker_id=None, result_key=None,
+        result_sha256=None, result_bytes=None, error_code=None, error_message=None,
+        started_at=None, finished_at=None, wall_ms=None, peak_rss_bytes=None, scratch_bytes=None)
+
+    from app.physical_joint_native_contract import MAX_BYTES
+    connection.execute("BEGIN IMMEDIATE")
+    try:
+        result = classify_snapshot(connection, files, approved_manifests={}, approved_installations={},
+            native_metadata={}, expected_source_policy_sha256=joint_case["source_policy"])
+        assert result.classification == "prepared_uncommitted", result.reason
+        charge = result.account_charges[owner]
+        assert charge["joint_active"] == MAX_BYTES
+        assert charge["legacy_active"] == 0
+        assert charge["joint_terminal_indices"] == charge["joint_members"] == 0
+        assert charge["total"] == charge["raw"] + charge["datasets"] + MAX_BYTES
+    finally:
+        connection.rollback()
+        connection.close()
+
+
 def test_m11_project_deletion_transfers_all_indexes_and_members_for_restart(joint_case):
     from app.physical_project_deletion import transfer_project_deletion
-    connection, files, rows = joint_case["connection"], joint_case["files"], joint_case["rows"]
+    connection, files = joint_case["connection"], joint_case["files"]
     owner, project = joint_case["owner"], joint_case["project"]
     connection.execute("BEGIN IMMEDIATE")
     try:

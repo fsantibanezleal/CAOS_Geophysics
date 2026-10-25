@@ -38,20 +38,23 @@ matrix, resource controls and a strict local bundle importer. The actual local
 M11 receipts are documented in
 [`joint-survey-inversion/integration-status-20261025.md`](features/joint-survey-inversion/integration-status-20261025.md).
 
-That evidence does not close M11 online execution. The current FastAPI app does
-not register the M11 member, dataset, job, cancellation, custody-history or
-export routes expected by the project workbench. The current classifier now
-audits exact M11 originals, datasets, result members and indices in one
-snapshot and adds retained/active charges through that audit. Startup invokes
-the same classifier snapshot under its participant lease, but committed M11
-restart receipts remain unqualified. A versioned M11 deletion projection now
-binds originals, source dependencies, terminal indexes and result members; its
-prepare/transfer/restart fixture passes with changed-byte refusal. Request-time
-admission, assembled DELETE-route cleanup and actual-filesystem crash recovery
-remain unqualified. The
-workbench therefore cannot yet take a user's gravity and magnetic survey
-through an online solve. Do not label this vertical online-ready or
-scientifically accepted.
+That evidence does not close M11 online execution. The current worktree now has
+an owner/project-scoped M11 member intake and dataset-index route, and an
+isolated Linux candidate-schema API test passes through the production
+descriptor-relative file store. However, 0006 remains outside the default
+serving migration chain. M11 job submission, worker, cancellation, custody
+history and export routes expected by the project workbench are still absent.
+The current classifier audits exact M11 originals, datasets, result members
+and indices in one snapshot and adds retained/active charges through that
+audit. Startup invokes the same classifier snapshot under its participant
+lease, but committed M11 restart receipts remain unqualified. A versioned M11
+deletion projection now binds originals, source dependencies, terminal
+indexes and result members; its prepare/transfer/restart fixture passes with
+changed-byte refusal. Request-time quota reservation, assembled DELETE-route
+cleanup and actual-filesystem crash recovery remain unqualified. The workbench
+therefore cannot yet take a user's gravity and magnetic survey through an
+online solve. Do not label this vertical online-ready or scientifically
+accepted.
 
 The focused Linux M11 regression suite on this branch passed 488 tests with 3
 skips on CPython 3.12.10 x86_64. A subsequent full 24-control Linux workflow

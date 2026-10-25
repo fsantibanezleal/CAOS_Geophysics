@@ -62,7 +62,13 @@ def account_private_charge(connection, owner_id, *, profile_records=None, approv
     permanent += total("SELECT SUM(permanent_reservation_bytes) FROM physical_publication_intents WHERE owner_id=?")
     custody = total("SELECT SUM(charged_bytes) FROM physical_custody_batches WHERE owner_id=?")
     active = 0
+    from app.physical_joint_custody import METHOD as JOINT_METHOD
     for job_id, method in connection.execute("SELECT id,method_id FROM processing_jobs WHERE owner_id=? AND state IN ('queued','running')", (owner_id,)):
+        if method == JOINT_METHOD:
+            # Its fixed MAX_BYTES reservation is included by the same-snapshot
+            # JointAudit charge above. Never count it again as legacy scratch.
+            require(joint_audit is not None, "physical_joint_account_snapshot")
+            continue
         if method in (CORRECTION, TRANSFORM):
             require(connection.execute("SELECT 1 FROM physical_job_controls WHERE job_id=? AND owner_id=?", (job_id, owner_id)).fetchone() is not None,
                     "physical_control_missing")

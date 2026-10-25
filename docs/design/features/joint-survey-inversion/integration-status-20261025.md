@@ -76,12 +76,12 @@ client. The result is a hard integration gap, not a route-only task.
 
 | Seam | Current evidence | Required before online M11 admission |
 | --- | --- | --- |
-| Authenticated intake and dataset index | `app/server.py` registers `projects` and `processing` only. The frontend expects `/joint-members` and `/joint-datasets`; no current router implements these. | Register an owner/project-bound intake and exact dataset-index transaction; enforce native metadata, rights, bounded streaming, request-rate limits, immutable source links, and rollback-safe file publication. |
+| Authenticated intake and dataset index | `app/joint_routes.py` now contains owner/project-bound member upload and immutable dataset indexing. The router mounts only inside the explicit physical assembly and each handler requires the exact M11 0006 schema identity, current custody classification, quota and writer lease. A Linux candidate-runtime integration test uses the exact 0006 migration capsule and production `PrivateFiles`: all authored members upload byte-exactly, dataset creation and receipt readback pass, and every receipt remains `scientific_accepted=false`. | The 0006 migration is still an unmounted candidate, so the ordinary serving chain cannot admit this route. The isolated test does not prove production startup/restart, assembled project deletion, crash recovery, owner crossover negatives, or VPS admission. Complete those release gates before enabling the route. |
 | Solver job, cancel, history and result API | `app/processing.py` only admits its explicit current method set; `app/worker.py` dispatches the existing profile, waveform, MT and gravity-L2 children. M11 has no admitted job schema, child supervisor, cancellation drain, or result API in this branch. | Add M11-specific typed admission and dispatch under current queue/resource limits; bind input digest, code/runtime digest, worker identity and terminal states; persist all output copies and provide owner-scoped cancellation/history/export. |
 | Physical startup/classifier custody | `classify_startup_snapshot` delegates to `classify_snapshot`, and `audit_startup_participating` invokes that wrapper while holding the startup participant lease. The populated-state registration fixture passes for a failed M11 job and exact stored copies. Request-time publication and committed-restart M11 receipts remain unqualified. | Exercise the exact M11 reader through committed restart and unknown-file refusal under the live lease; qualify startup receipts on the supported Linux runtime. |
 | Quota and admission accounting | `app/physical_accounting.py` adds M11 retained members, terminal indices and active reservations only when passed the classifier's same-transaction audit token. The focused populated-state fixture verifies additive charges. Request-time admission and generic processing storage still do not use this M11 accounting path. | Bind request-time M11 reservations and completion writes to the same quota model; verify race, cancellation and retained failed-output accounting at quota boundaries. |
 | Project deletion and retained debt | The versioned M11 tombstone/custody projection now binds source originals, dependencies, terminal indexes (including failed/cancelled indexes), and every result member. Structural API tests exercise prepare, transfer to the retained receipt, restart classification, and rejection of changed originals/indexes/members. The project DELETE route's real native filesystem move, cleanup acknowledgements, and crash cuts are not yet qualified with M11 data. | Exercise the same projection through the assembled authenticated DELETE route and actual `PrivateFiles` storage on the supported Linux runtime; test each cleanup ordinal, missing/changed member, and process restart before releasing M11 online. |
-| Database/migration lifecycle | The recognized current M11 tables are an explicit `0006_joint_artifacts` extension in `app/physical_schema.py`; custody and deletion projections can now describe nonempty state, while online M11 admission/worker routes remain absent. | Mount the exact reviewed migration into the serving chain only with forward/rollback policy and prove old database migration, startup receipts, active jobs, quota and the actual deletion route. |
+| Database/migration lifecycle | The recognized M11 tables remain an explicit `0006_joint_artifacts` candidate in `app/physical_schema.py`; the new route test builds that candidate only in an isolated database. | Mount the reviewed migration into the serving chain only with forward/rollback policy and prove old database migration, startup receipts, active jobs, quota and the actual deletion route. |
 | Runtime portability | The old PR154 `joint_execution.py` binds Windows paths, interpreter/site-packages and source hashes. It is a reference only; its child worker is not a current-branch Linux VPS runtime. | Implement and qualify a separately pinned supported worker runtime, or keep the API lane closed. Recheck executable, dependency, source digest, scratch, RSS, deadline and cancellation behavior on the actual target before admission. |
 
 The PR154 implementation is not directly promotable: its APIs and ORM schema
@@ -92,11 +92,28 @@ execution context is Windows-bound. Copying its route modules alone would
 create an API that accepts/uploads data which current startup, quota accounting,
 classification, or deletion cannot safely retain.
 
-The online M11 API and worker remain fail-closed: no route was registered and
-no scientific or public-activation verdict changed. The classifier now accepts
-only M11 bytes closed by the dedicated same-snapshot inventory and complete
-filesystem census; project deletion still refuses M11 state until its receipt
-protocol can represent it. The populated-state regression is a custody and
-accounting check, not solver or scientific acceptance. A separate route guard
-records that the frontend's expected endpoint is not served. The remaining
-seams must be closed before M11 online upload or compute can be advertised.
+The online M11 worker remains fail-closed and no scientific or public-activation
+verdict changed. Before the candidate route implementation, a route guard
+recorded that the frontend's expected endpoint was not served. The remaining
+worker, startup/restart, deletion and VPS seams must be closed before M11 online
+compute can be advertised.
+
+## Candidate intake and indexing implementation — 2026-10-25
+
+The branch now has an isolated intake/index router and a successful authenticated
+API test against the exact allocated 0006 candidate migration. The test runs on
+Linux with the production descriptor-relative `PrivateFiles` implementation,
+uploads each member in the external authored `joint-control-00` input fixture,
+checks exact hashes and private storage, creates the structural dataset, and
+reads its receipt back. A separate `write_new_stream` primitive publishes a
+bounded upload spool without copying a potentially 256 MiB member into Python
+memory; its Linux test checks digest, byte cap, permissions and retained partial
+file behavior. The focused custody/source suite and these new tests pass 62
+checks together.
+
+These are candidate-branch results only. The default migration chain still does
+not mount 0006; no ordinary production database can pass the route's exact
+schema gate. Job submission, worker execution, cancellation, result history,
+result index/export, request-time quota reservation, startup/restart receipts,
+project deletion and VPS deployment remain open. This does not change M11, R-008
+or any parent acceptance verdict.
