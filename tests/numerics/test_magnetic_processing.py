@@ -20,7 +20,7 @@ from magnetic_processing import MagneticProcessingError, main, process, read_csv
 
 
 MAPPING = {"easting": "E", "northing": "N", "value": "field", "line_id": "line",
-           "line_role": "role", "sensor_height_m": "height"}
+           "line_role": "role", "sensor_height_m": "height", "sample_order": "index"}
 
 
 def request(*, outlier=False, duplicate=False):
@@ -33,9 +33,11 @@ def request(*, outlier=False, duplicate=False):
             if outlier and line == 2 and sample == 3:
                 height += 15
             rows.append({"E": x, "N": y, "field": 50000 + 0.3 * x - 0.15 * y,
-                         "line": f"F{line}", "role": "flight", "height": height})
+                         "line": f"F{line}", "role": "flight", "height": height, "index": sample})
     if duplicate:
-        rows.append(dict(rows[0]))
+        repeated = dict(rows[0])
+        repeated["index"] = 9
+        rows.append(repeated)
     return {
         "schema": "magnetic-flightline-process-request-1",
         "source": {"source_id": "controlled-plane", "sha256": sha256(b"controlled bytes").hexdigest(),
@@ -49,7 +51,7 @@ def request(*, outlier=False, duplicate=False):
     }
 
 
-def test_blocked_whole_line_holdout_recovers_plane_without_fit_leakage():
+def test_blocked_line_holdout():
     result = process(request())
     split = result["split"]
     assert set(split["fit_line_ids"]).isdisjoint(split["holdout_line_ids"])
@@ -79,14 +81,65 @@ def test_tie_line_remains_qc_only_and_exact_collocation_is_reported():
     data = request()
     tie = [{"E": float(sample * 50), "N": 50.0,
             "field": 50000 + 0.3 * sample * 50 - 0.15 * 50,
-            "line": "T0", "role": "tie", "height": 120.0}
+            "line": "T0", "role": "tie", "height": 120.0, "index": sample}
            for sample in range(9)]
     data["rows"].extend(tie)
     result = process(data)
     assert result["geometry_qc"]["tie_line_count"] == 1
     assert result["geometry_qc"]["exact_collocation_qc"]["cross_line_groups"] == 5
+    crossover = result["geometry_qc"]["crossover_interpolation_qc"]
+    assert crossover["intersection_count"] == 5
+    assert crossover["mae"] == pytest.approx(0, abs=2e-10)
     assert result["split"]["tie_lines_used_for_fit"] is False
     assert "Tie-line observations are retained" in result["limitations"][2]
+
+
+def test_crossover_interpolation_reports_independent_tie_offset_without_applying_leveling():
+    data = request()
+    data["rows"].extend(
+        {"E": float(sample * 50), "N": 50.0,
+         "field": 50000 + 0.3 * sample * 50 - 0.15 * 50 + 7.0,
+         "line": "T0", "role": "tie", "height": 120.0, "index": sample}
+        for sample in range(9)
+    )
+    result = process(data)
+    diagnostic = result["geometry_qc"]["crossover_interpolation_qc"]
+    assert diagnostic["intersection_count"] == 5
+    assert diagnostic["mean_signed_difference"] == pytest.approx(-7.0)
+    assert diagnostic["rmse"] == pytest.approx(7.0)
+    assert result["claims"]["corrections_applied"] == []
+
+
+def test_parallel_and_collinear_line_segments_are_not_reported_as_unique_crossings():
+    from magnetic_processing import _segment_intersection
+    import numpy as np
+
+    assert _segment_intersection(np.array([0., 0.]), np.array([1., 0.]),
+                                 np.array([0., 1.]), np.array([1., 1.])) is None
+    assert _segment_intersection(np.array([0., 0.]), np.array([2., 0.]),
+                                 np.array([1., 0.]), np.array([3., 0.])) is None
+
+
+def test_duplicate_sample_order_is_rejected_per_line():
+    data = request()
+    data["rows"][1]["index"] = data["rows"][0]["index"]
+    with pytest.raises(MagneticProcessingError, match="duplicate sample-order"):
+        process(data)
+
+
+def test_crossover_work_is_rejected_above_declared_pair_budget(monkeypatch):
+    import magnetic_processing
+
+    monkeypatch.setattr(magnetic_processing, "MAX_CROSSOVER_SEGMENT_TESTS", 1)
+    data = request()
+    data["rows"].extend(
+        {"E": float(sample * 50), "N": 50.0,
+         "field": 50000 + 0.3 * sample * 50 - 0.15 * 50,
+         "line": "T0", "role": "tie", "height": 120.0, "index": sample}
+        for sample in range(9)
+    )
+    with pytest.raises(MagneticProcessingError, match="segment comparisons; bound is 1"):
+        process(data)
 
 
 def test_grid_masks_points_outside_training_convex_hull():

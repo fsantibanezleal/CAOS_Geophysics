@@ -5,7 +5,7 @@
 3. [x] Specify an explicit-mapping, no-correction contract for eligible user CSVs.
 4. [x] Implement line/height QC, contiguous whole-line holdout, supported-only linear grid and held-out interpolation metrics.
 5. [x] Add analytic planar controls and malformed-geometry/duplicate/height/CSV checks.
-6. [ ] Add exact segment-intersection crossover interpolation and independent tie-line residual controls.
+6. [x] Add bounded segment-intersection crossover interpolation, explicit acquisition-order input, and independent tie-line residual controls; no leveling is applied.
 7. [ ] Acquire and parse the Charleston CSV, dictionary, contractor report and provider grid; bind every asset by URL, size and SHA-256.
 8. [ ] Implement source-lineage-aware leveling/correction operations only where the source report and raw inputs establish eligibility.
 9. [ ] Add justified upward continuation with regular-grid, padding, aliasing, support and independent analytic tests.

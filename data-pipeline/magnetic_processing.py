@@ -28,6 +28,7 @@ from scipy.spatial import QhullError
 MAX_SOURCE_BYTES = 256 * 1024 * 1024
 MAX_ROWS = 250_000
 MAX_GRID_CELLS = 250_000
+MAX_CROSSOVER_SEGMENT_TESTS = 2_000_000
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -58,6 +59,7 @@ class Observation:
     line_id: str
     line_role: str
     sensor_height_m: float
+    sample_order: float
 
 
 def _finite(value: object, field: str) -> float:
@@ -101,7 +103,7 @@ def _parse_request(request: object) -> tuple[dict, dict, list[Observation]]:
     _required_text(frame["crs"], "frame.crs")
 
     mapping = request["mapping"]
-    expected_mapping = {"easting", "northing", "value", "line_id", "line_role", "sensor_height_m"}
+    expected_mapping = {"easting", "northing", "value", "line_id", "line_role", "sensor_height_m", "sample_order"}
     if not isinstance(mapping, dict) or set(mapping) != expected_mapping:
         raise MagneticProcessingError("mapping: explicitly map easting, northing, value, line ID, role and sensor height")
     if any(not isinstance(value, str) or not value.strip() for value in mapping.values()):
@@ -136,6 +138,7 @@ def _parse_request(request: object) -> tuple[dict, dict, list[Observation]]:
         northing = _finite(row[mapping["northing"]], f"rows[{index}].northing")
         value = _finite(row[mapping["value"]], f"rows[{index}].value")
         height = _finite(row[mapping["sensor_height_m"]], f"rows[{index}].sensor_height_m")
+        order = _finite(row[mapping["sample_order"]], f"rows[{index}].sample_order")
         if max(abs(easting), abs(northing)) > 1e8:
             raise MagneticProcessingError(f"rows[{index}]: projected coordinates exceed the 100,000 km safety bound")
         if abs(value) > 1e15 or abs(height) > 1e6:
@@ -147,7 +150,14 @@ def _parse_request(request: object) -> tuple[dict, dict, list[Observation]]:
             line_id=_required_text(row[mapping["line_id"]], f"rows[{index}].line_id"),
             line_role=role,
             sensor_height_m=height,
+            sample_order=order,
         ))
+    orders: dict[tuple[str, str], set[float]] = {}
+    for point in parsed:
+        key = (point.line_role, point.line_id)
+        if point.sample_order in orders.setdefault(key, set()):
+            raise MagneticProcessingError(f"line {point.line_id!r} contains duplicate sample-order values")
+        orders[key].add(point.sample_order)
     return source, {**frame, **settings}, parsed
 
 
@@ -237,12 +247,87 @@ def _line_geometry(points: list[Observation]) -> dict:
             "flight_line_normal_xy": [float(value) for value in normal]}
 
 
+def _line_segments(points: list[Observation]) -> dict[tuple[str, str], list[tuple[np.ndarray, np.ndarray, float, float]]]:
+    """Build acquisition-order segments for each flight or tie line."""
+    grouped: dict[tuple[str, str], list[Observation]] = {}
+    for point in points:
+        grouped.setdefault((point.line_role, point.line_id), []).append(point)
+    result = {}
+    for key, observations in grouped.items():
+        observations.sort(key=lambda point: point.sample_order)
+        segments = []
+        for left, right in zip(observations, observations[1:]):
+            a = np.asarray([left.easting_m, left.northing_m], dtype=np.float64)
+            b = np.asarray([right.easting_m, right.northing_m], dtype=np.float64)
+            if not np.array_equal(a, b):
+                segments.append((a, b, left.value, right.value))
+        result[key] = segments
+    return result
+
+
+def _segment_intersection(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.ndarray):
+    """Return intersection coordinates and segment fractions; collinear overlap is undefined."""
+    r, s = b - a, d - c
+    cross = lambda u, v: float(u[0] * v[1] - u[1] * v[0])
+    denominator = cross(r, s)
+    scale = max(float(np.linalg.norm(r) * np.linalg.norm(s)), 1.0)
+    if abs(denominator) <= 1e-12 * scale:
+        return None
+    delta = c - a
+    t, u = cross(delta, s) / denominator, cross(delta, r) / denominator
+    tolerance = 1e-10
+    if -tolerance <= t <= 1 + tolerance and -tolerance <= u <= 1 + tolerance:
+        t, u = min(1.0, max(0.0, t)), min(1.0, max(0.0, u))
+        return a + t * r, t, u
+    return None
+
+
+def _crossover_interpolation(points: list[Observation]) -> dict:
+    """Compute line-to-line residual diagnostics at geometrical segment crossings."""
+    lines = _line_segments(points)
+    ordered = sorted(lines)
+    pairs = [(left, right) for i, left in enumerate(ordered) for right in ordered[i + 1:]
+             if left[0] != right[0]]
+    tests = sum(len(lines[left]) * len(lines[right]) for left, right in pairs)
+    if tests > MAX_CROSSOVER_SEGMENT_TESTS:
+        raise MagneticProcessingError(
+            f"crossover QC requires {tests} segment comparisons; bound is {MAX_CROSSOVER_SEGMENT_TESTS}"
+        )
+    crossings = {}
+    for left_key, right_key in pairs:
+        for a, b, va, vb in lines[left_key]:
+            for c, d, vc, vd in lines[right_key]:
+                if (max(a[0], b[0]) < min(c[0], d[0]) or max(c[0], d[0]) < min(a[0], b[0])
+                        or max(a[1], b[1]) < min(c[1], d[1]) or max(c[1], d[1]) < min(a[1], b[1])):
+                    continue
+                hit = _segment_intersection(a, b, c, d)
+                if hit is None:
+                    continue
+                xy, t, u = hit
+                key = (left_key, right_key, round(float(xy[0]), 6), round(float(xy[1]), 6))
+                crossings.setdefault(key, (xy, va + t * (vb - va), vc + u * (vd - vc)))
+    differences = [left - right for _, left, right in crossings.values()]
+    return {
+        "intersection_count": len(crossings), "segment_pair_tests": tests,
+        "mean_signed_difference": float(np.mean(differences)) if differences else None,
+        "mae": float(np.mean(np.abs(differences))) if differences else None,
+        "rmse": float(np.sqrt(np.mean(np.square(differences)))) if differences else None,
+        "crossings": [{"line_a": key[0][1], "role_a": key[0][0], "line_b": key[1][1],
+                       "role_b": key[1][0], "easting_m": float(xy[0]), "northing_m": float(xy[1]),
+                       "value_a": float(left), "value_b": float(right),
+                       "difference_a_minus_b": float(left - right)}
+                      for key, (xy, left, right) in sorted(crossings.items())],
+        "interpretation": "segment-linear crossover QC only; no leveling or correction applied",
+    }
+
+
 def process(request: dict, *, source_hash_verified: bool = False) -> dict:
     """Create measured-data QC, whole-line holdout, and a supported-only grid."""
     source, config, points = _parse_request(request)
     coordinates = np.asarray([(p.easting_m, p.northing_m) for p in points], dtype=np.float64)
     values = np.asarray([p.value for p in points], dtype=np.float64)
     geometry = _line_geometry(points)
+    geometry["crossover_interpolation_qc"] = _crossover_interpolation(points)
     line_sums: dict[str, list[float]] = {}
     for point in points:
         if point.line_role == "flight":
