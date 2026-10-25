@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node copy-data.mjs && vite --host 127.0.0.1",
-    "build": "tsc --noEmit && node copy-data.mjs && vite build",
+    "build": "node scripts/verify-joint-pins.mjs && tsc --noEmit && node copy-data.mjs && vite build",
     "build:single-origin": "npm run build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
