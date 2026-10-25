@@ -35,6 +35,14 @@ All outputs remain synthetic controls. `field_eligible`,
 `scientific_precision_accepted` for the overall matrix, and `public_activation`
 remain false by design.
 
+The browser importer is now pinned to the exact current
+`physical_nonlinear_optimizer.py` source bytes. `frontend/scripts/verify-joint-pins.mjs`
+checks the browser pin against both the optimizer source and the M11 adapter
+before every production build. The real-artifact browser import, input, and
+result views pass 46 focused tests; eight are conditional on optional component
+fixtures. Two additional hash-admission tests still require the retained
+maximum-size external output fixture.
+
 ## Product integration still open
 
 The local solver and CLI do not yet complete the online workflow. The current
