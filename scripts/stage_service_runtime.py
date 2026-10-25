@@ -1,4 +1,4 @@
-"""Install a measured API-only release runtime; never activate or accept it."""
+"""Install measured API and dedicated CPU gravity runtimes; never activate or accept them."""
 
 from __future__ import annotations
 
