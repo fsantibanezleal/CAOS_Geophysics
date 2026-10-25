@@ -278,7 +278,10 @@ def _segment_intersection(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.nda
     tolerance = 1e-10
     if -tolerance <= t <= 1 + tolerance and -tolerance <= u <= 1 + tolerance:
         t, u = min(1.0, max(0.0, t)), min(1.0, max(0.0, u))
-        return a + t * r, t, u
+        # Snap endpoint hits to the original sample coordinate so adjacent
+        # segments deduplicate exactly, without rounding distinct nearby hits.
+        xy = a if t == 0.0 else b if t == 1.0 else c if u == 0.0 else d if u == 1.0 else a + t * r
+        return xy, t, u
     return None
 
 
@@ -304,7 +307,7 @@ def _crossover_interpolation(points: list[Observation]) -> dict:
                 if hit is None:
                     continue
                 xy, t, u = hit
-                key = (left_key, right_key, round(float(xy[0]), 6), round(float(xy[1]), 6))
+                key = (left_key, right_key, float(xy[0]), float(xy[1]))
                 crossings.setdefault(key, (xy, va + t * (vb - va), vc + u * (vd - vc)))
     differences = [left - right for _, left, right in crossings.values()]
     return {

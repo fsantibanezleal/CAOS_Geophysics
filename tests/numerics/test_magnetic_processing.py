@@ -118,6 +118,12 @@ def test_parallel_and_collinear_line_segments_are_not_reported_as_unique_crossin
                                  np.array([0., 1.]), np.array([1., 1.])) is None
     assert _segment_intersection(np.array([0., 0.]), np.array([2., 0.]),
                                  np.array([1., 0.]), np.array([3., 0.])) is None
+    first = _segment_intersection(np.array([0., 0.]), np.array([1., 0.]),
+                                  np.array([.5, -1.]), np.array([.5, 1.]))
+    second = _segment_intersection(np.array([0., 0.]), np.array([1., 0.]),
+                                   np.array([.50000001, -1.]), np.array([.50000001, 1.]))
+    assert first is not None and second is not None
+    assert first[0][0] != second[0][0]
 
 
 def test_duplicate_sample_order_is_rejected_per_line():
