@@ -63,6 +63,21 @@ to render non-overlapping survey glyphs and confirms distinct gravity and
 magnetic model canvases. These are bounded UI/retention checks and do not close
 the whole-product or ML-VPS gates.
 
+## Current ML-VPS observation — 2026-10-25
+
+Read-only SSH inspection of the deployment host (`89.167.4.175`) measured an
+80,290,492,416-byte root filesystem with 34,615,701,504 bytes available (56%
+used), and 5,253,431,296 bytes of available RAM. The canonical HTTPS origin
+returned 200 and still served the `20260926235216` static release through
+`current`; Nginx was active. No persistent `fasl-geophysics` systemd API
+service is active, and the current Nginx product block serves the static root.
+The just-built frontend `dist` contains 846,490,406 bytes (807.3 MiB); this is
+only the static bundle size, not a qualified estimate for an API environment,
+private project storage or solver scratch. Three unactivated `qual` release
+directories each measure about 1.3 GiB. These observations establish present
+disk and memory headroom, not worker, concurrency, crash-recovery or project
+data capacity. No host files, services or release pointers were changed.
+
 ## Remaining release gates
 
 1. **Full data-to-result verticals:** implement and independently qualify each
