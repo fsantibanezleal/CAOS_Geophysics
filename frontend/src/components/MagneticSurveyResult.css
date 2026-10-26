@@ -1,0 +1,10 @@
+.magnetic-result { min-width: 0; color: var(--color-fg); }
+.magnetic-controls { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.magnetic-controls label { display: flex; gap: .5rem; align-items: center; }
+.magnetic-drawing { display: block; width: 100%; height: clamp(260px, 50vh, 560px); color: var(--color-fg); }
+.magnetic-drawing text { fill: currentColor; font-size: 14px; }
+.magnetic-drawing [role="button"] { cursor: pointer; }
+.magnetic-outer, .magnetic-observed { fill: var(--color-accent); }
+.magnetic-development, .magnetic-predicted, .magnetic-cell { fill: var(--color-fg-subtle); }
+.magnetic-readout { display: block; min-height: 3rem; }
+@media (prefers-reduced-motion: reduce) { .magnetic-result * { scroll-behavior: auto; } }
