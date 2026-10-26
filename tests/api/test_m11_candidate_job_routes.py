@@ -185,3 +185,48 @@ def test_candidate_workspace_reuses_root_without_adopting_interrupted_job(tmp_pa
 
     assert _workspace_root() == workspace
     assert (interrupted / "unreviewed.bin").read_bytes() == b"preserve"
+
+
+def test_candidate_worker_failure_code_keeps_only_stable_tokens():
+    from app.joint_job_worker import _failure_code
+
+    assert _failure_code(RuntimeError("m11_pinned_interpreter_invalid")) == "m11_pinned_interpreter_invalid"
+    assert _failure_code(RuntimeError("/private/data/input.npy")) == "RuntimeError"
+
+
+def test_candidate_worker_executes_real_uploaded_survey(m11_candidate):
+    if os.environ.get("GEOPHYSICS_M11_REAL_WORKER") != "1":
+        pytest.skip("set GEOPHYSICS_M11_REAL_WORKER=1 for pinned solver execution")
+    if not os.environ.get("GEOPHYSICS_M11_PYTHON") or not os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT"):
+        pytest.fail("real M11 execution requires the pinned interpreter and external data root")
+
+    fixture_root, row, client, headers, project, _, files = m11_candidate
+    dataset = _upload_dataset(fixture_root, row, client, headers, project)
+    app = client.app
+    physical = app.state.physical_assembly
+    settings = Settings(data_dir=Path(files.root_path), db_path=Path(app.state.sessions.kw["bind"].url.database),
+        auth_secret="candidate-m11-test-secret-long-enough-for-settings",
+        public_origin="http://testserver", cookie_secure=False, account_quota_bytes=1024**3)
+    queued = client.post(f"/api/projects/{project}/joint-jobs",
+                         json={"dataset_id": dataset["dataset_id"]}, headers=headers)
+    assert queued.status_code == 202, queued.text
+
+    from app.joint_job_worker import _claim, _execute
+
+    async def execute_real_job():
+        async with physical.leases.acquire():
+            async with physical.worker.acquire_processing():
+                assert await _claim(settings, app.state.sessions, physical, "m11-real-worker-test") == queued.json()["job_id"]
+                await _execute(settings, app.state.sessions, physical, queued.json()["job_id"])
+
+    client.portal.call(execute_real_job)
+    job_id = queued.json()["job_id"]
+    terminal = client.get(f"/api/projects/{project}/joint-jobs/{job_id}")
+    assert terminal.status_code == 200, terminal.text
+    assert terminal.json()["state"] == "succeeded", terminal.text
+    result = client.get(f"/api/projects/{project}/joint-results/{job_id}")
+    assert result.status_code == 200, result.text
+    assert result.json()["scientific_acceptance"] is False
+    assert "instrument/manifest.json" in result.json()["members"]
+    exported = client.get(f"/api/projects/{project}/joint-results/{job_id}/export")
+    assert exported.status_code == 200, exported.text

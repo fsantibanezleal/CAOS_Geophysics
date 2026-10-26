@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import shutil
 import signal
 import sys
@@ -27,6 +28,13 @@ from app.physical_contract import byte_sha, canonical
 
 METHOD = native.METHOD_ID
 MAX_CHILD_OUTPUT = 256 * 1024
+SAFE_FAILURE_CODE = re.compile(r"[a-z][a-z0-9_]{0,69}\Z")
+
+
+def _failure_code(error: Exception) -> str:
+    """Keep stable internal error tokens useful without persisting paths or logs."""
+    detail = str(error)
+    return detail if SAFE_FAILURE_CODE.fullmatch(detail) else type(error).__name__[:70]
 
 
 def _safe_external_root():
@@ -329,7 +337,7 @@ async def _execute(settings, sessions, physical, job_id):
         root = _safe_external_root()
         base = _workspace_root()
     except Exception as error:
-        failure = type(error).__name__[:70]
+        failure = _failure_code(error)
         members = _failure_member("failed", failure)
         await _publish(settings, sessions, physical, job_id, "failed", members, failure_code=failure,
                        wall_ms=int((time.monotonic() - execution_started) * 1000))
@@ -414,7 +422,8 @@ async def _execute(settings, sessions, physical, job_id):
         if members is None:
             members = _workflow_files(output, state, None, failure_code=failure)
     except Exception as error:
-        state, failure = ("cancelled", "user_cancelled") if await _cancelled(sessions, job_id) else ("failed", type(error).__name__[:70])
+        state, failure = (("cancelled", "user_cancelled") if await _cancelled(sessions, job_id)
+                          else ("failed", _failure_code(error)))
         try:
             members = _workflow_files(output, state, None, failure_code=failure)
         except Exception:
