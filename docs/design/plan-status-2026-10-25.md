@@ -135,3 +135,9 @@ schema. The 0005 no-dispatch, candidate dispatch, and legacy-claim exclusion
 tests pass on the Linux candidate runtime. The normal service still has no
 production operator binding that supplies the required `PhysicalAssembly`,
 and no M11 unit is installed on the VPS; this is not online availability.
+
+## Public origin recheck: 2026-10-26
+
+Read-only HTTPS inspection returned HTTP 200, HTML title `Inverse Earth Studio |
+Geophysics`, and `Last-Modified: Sat, 26 Sep 2026 23:46:49 GMT`. The existing
+legacy frontend remains live; this branch has not been deployed or cut over.
