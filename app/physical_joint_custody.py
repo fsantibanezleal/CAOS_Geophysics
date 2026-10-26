@@ -16,7 +16,7 @@ from app.physical_contract import byte_sha, canonical, fields, integer, require,
 METHOD = native.METHOD_ID
 INDEX_SCHEMA = 'geophysics.joint-result-custody/v1'
 INDEX_CAP = native.MAX_JSON
-NAME = re.compile(r'(?:workflow\.json|failure\.json|(?:calibration|frozen|models|result|instrument|aborted)/[a-z][a-z0-9_]{0,120}\.(?:json|npy))\Z')
+NAME = re.compile(r'(?:workflow\.json|failure\.json|api-failure\.json|(?:calibration|frozen|models|result|instrument|aborted)/[a-z][a-z0-9_]{0,120}\.(?:json|npy))\Z')
 _AUDIT_TOKEN = object()
 
 

@@ -21,6 +21,16 @@ describe("native stored custody never admits science",()=> {
     expect(()=>parseJointHistory(jointJson(encode({...history,jobs:[job,job]})),owner,project)).toThrow("duplicate");
     expect(()=>parseJointHistory(jointJson(encode(history)),project,project)).toThrow("scope");
   });
+  it("inspects a bounded worker infrastructure failure without claiming a solver run",async()=> {
+    const member=encode({schema:"geophysics.joint-job-failure/v1",state:"failed",reason:"m11_runtime_unavailable",
+      inverse_completed:false,sealed_evaluation_completed:false,scientific_acceptance:false,public_activation:false});
+    const value={...index(),members:{"api-failure.json":{byte_count:member.length,sha256:await jointSha(member)}},native_bytes:member.length};
+    const indexBytes=encode(value),bound={...job,result_sha256:await jointSha(indexBytes),result_bytes:indexBytes.length};
+    const zipped: Zippable={"private-custody-index.json":[indexBytes,{level:0}],"api-failure.json":[member,{level:0}]};
+    const inspected=await inspectCustodyArchive(zipSync(zipped),indexBytes,bound);
+    expect(inspected.outcome).toBe("failed");expect(inspected.receipt.reason).toBe("m11_runtime_unavailable");
+    expect(inspected.instrument).toBeNull();expect(inspected.limitations.scientific_acceptance_verified).toBe(false);
+  });
   it.each(["job_id","owner_id","project_id","dataset_id","dataset_sha256","request_sha256","state","scientific_acceptance","native_bytes","unknown"])("refuses changed index %s",field=> {
     const value: Record<string,unknown>={...index()}; value[field]=field==="scientific_acceptance"?true:field==="native_bytes"?2:field==="state"?"succeeded":field.endsWith("sha256")?"f".repeat(64):"55555555-5555-4555-8555-555555555555";
     expect(()=>parseJointCustodyIndex(jointJson(encode(value)),job)).toThrow();
@@ -60,6 +70,7 @@ describe("native stored custody never admits science",()=> {
     const archive=new Uint8Array(readFileSync(join(root,"actual-export.zip"))), bytes=new Uint8Array(readFileSync(join(root,"actual-index.json")));
     const inspected=await inspectCustodyArchive(archive,bytes,actual);
     expect(actual.state).toBe("failed");expect(actual.error_code).toBe("custody_fixture_no_execution");
-    expect(inspected.instrument).not.toBeNull();expect(inspected.limitations.scientific_acceptance_verified).toBe(false);
+    expect(inspected.outcome).toBe("failed");expect(inspected.receipt.schema).toBe("geophysics.joint-job-failure/v1");
+    expect(inspected.instrument).toBeNull();expect(inspected.limitations.scientific_acceptance_verified).toBe(false);
   });
 });

@@ -20,9 +20,6 @@ pytest_plugins = (
 )
 
 from app.config import Settings
-from app.physical_contract import canonical
-
-
 def _upload_dataset(fixture_root, row, client, headers, project):
     member_map = {"development": {}, "sealed": {}}
     for member in row["members"]:
@@ -74,17 +71,14 @@ def test_candidate_m11_queue_cancel_failure_publication_and_export(m11_candidate
     assert cancelled.status_code == 200 and cancelled.json()["state"] == "queued", cancelled.text
     assert cancelled.json()["cancel_requested"] is True
 
-    from app.joint_job_worker import _claim, _publish
+    from app.joint_job_worker import _claim, _failure_member, _publish
 
     async def publish_cancellation():
         async with physical.leases.acquire():
             async with physical.worker.acquire_processing():
                 assert await _claim(settings, app.state.sessions, physical, "m11-test-worker") == queued["job_id"]
                 await _publish(settings, app.state.sessions, physical, queued["job_id"], "failed",
-                               {"failure.json": canonical({"schema": "joint-survey-workflow-failure-1",
-                                   "status": "failed", "reason": "ignored_for_cancel", "inverse_completed": False,
-                                   "sealed_evaluation_completed": False, "field_eligible": False,
-                                   "public_activation": False})}, failure_code="ignored_for_cancel")
+                               _failure_member("failed", "ignored_for_cancel"), failure_code="ignored_for_cancel")
 
     client.portal.call(publish_cancellation)
     cancelled_result = client.get(f"/api/projects/{project}/joint-results/{queued['job_id']}")
@@ -101,11 +95,9 @@ def test_candidate_m11_queue_cancel_failure_publication_and_export(m11_candidate
             async with physical.worker.acquire_processing():
                 claimed = await _claim(settings, app.state.sessions, physical, "m11-test-worker")
                 assert claimed == job_id
-                failure = canonical({"schema": "joint-survey-workflow-failure-1", "status": "failed",
-                    "reason": "candidate_failure_publication_test", "inverse_completed": False,
-                    "sealed_evaluation_completed": False, "field_eligible": False, "public_activation": False})
+                failure = _failure_member("failed", "custody_fixture_no_execution")
                 await _publish(settings, app.state.sessions, physical, job_id, "failed",
-                               {"failure.json": failure}, failure_code="candidate_test_failure",
+                               failure, failure_code="custody_fixture_no_execution",
                                wall_ms=1, peak_rss=1024, scratch_bytes=1)
 
     client.portal.call(publish_measured_failure)
@@ -118,8 +110,24 @@ def test_candidate_m11_queue_cancel_failure_publication_and_export(m11_candidate
     exported = client.get(f"/api/projects/{project}/joint-results/{job_id}/export")
     assert exported.status_code == 200 and exported.headers["content-type"] == "application/zip"
     with zipfile.ZipFile(io.BytesIO(exported.content)) as archive:
-        assert set(archive.namelist()) == {"result-index.json", "failure.json"}
-        assert json.loads(archive.read("failure.json"))["status"] == "failed"
+        assert set(archive.namelist()) == {"private-custody-index.json", "api-failure.json"}
+        assert archive.getinfo("api-failure.json").compress_type == zipfile.ZIP_STORED
+        assert json.loads(archive.read("api-failure.json"))["state"] == "failed"
+    history = client.get(f"/api/projects/{project}/joint-results")
+    assert history.status_code == 200, history.text
+    assert history.json()["schema"] == "geophysics.joint-custody-history/v1"
+    assert history.json()["jobs"][0]["job_id"] == job_id
+    assert history.json()["jobs"][0]["index_available"] is True
+    receipt_root = os.environ.get("GEOPHYSICS_JOINT_CUSTODY_API_RECEIPT")
+    if receipt_root:
+        target = Path(receipt_root).resolve()
+        repository = Path(__file__).resolve().parents[2]
+        assert not target.is_relative_to(repository) and not any((p / ".git").exists() for p in (target, *target.parents))
+        target.mkdir(parents=True, exist_ok=True, mode=0o700)
+        for name, body in (("actual-history.json", history.content),
+                           ("actual-index.json", result.content),
+                           ("actual-export.zip", exported.content)):
+            (target / name).write_bytes(body)
 
     other = client.post("/api/projects", json={"name": "M11 owner boundary"}, headers=headers)
     assert other.status_code == 201
@@ -128,7 +136,7 @@ def test_candidate_m11_queue_cancel_failure_publication_and_export(m11_candidate
     assert client.get(f"/api/projects/{other_project}/joint-results/{job_id}").status_code == 404
 
     index_key = f"derived/{owner}/{project}/results/{job_id}.json"
-    member_key = f"derived/{owner}/{project}/joint/{job_id}/failure.json"
+    member_key = f"derived/{owner}/{project}/joint/{job_id}/api-failure.json"
     index_bytes = files.read(index_key, cap=1024 * 1024)
     member_bytes = files.read(member_key, cap=1024 * 1024)
     deleted = client.delete(f"/api/projects/{project}", headers=headers)
@@ -152,3 +160,13 @@ def test_candidate_job_request_rejects_unknown_fields():
     with pytest.raises(ValidationError):
         JointJobCreate.model_validate({"dataset_id": "00000000-0000-4000-8000-000000000001",
                                        "operation": "solve", "path": "/tmp/untrusted"})
+
+
+def test_candidate_worker_does_not_relabel_completed_workflow_as_failed(tmp_path):
+    from app.joint_job_worker import _workflow_files
+
+    (tmp_path / "workflow.json").write_text('{"status":"completed"}', encoding="utf-8")
+    members = _workflow_files(tmp_path, "failed", None, failure_code="instrument_validation_failed")
+    payload = json.loads(members["api-failure.json"])
+    assert payload["schema"] == "geophysics.joint-job-failure/v1"
+    assert payload["reason"] == "instrument_validation_failed"

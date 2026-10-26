@@ -116,17 +116,34 @@ checks together.
 The isolated candidate now mounts owner-scoped M11 job, cancel, result and
 export routes in the explicit physical API assembly. They share native intake's
 exact 0006 schema, custody, quota and lease checks. A dedicated worker claims
-only M11 jobs, invokes the pinned Linux workflow CLI, validates its output, and
-publishes terminal index and member copies in one transaction. The candidate
-API tests cover queue saturation, cancellation publication, failed terminal
-export, and cross-project denial. They use a controlled publisher for terminal
-states and do not substitute for the separate real solver run.
+only M11 jobs, invokes the pinned Linux workflow CLI, replays its output, exports
+the post-freeze state instrument, validates that instrument, and publishes
+terminal index and member copies in one transaction. Browser and API contracts
+now agree on the history schema, stored ZIP index name, byte-preserving archive,
+and the explicit infrastructure-failure record. The candidate API tests cover
+queue saturation, cancellation publication, failed terminal export, project
+deletion with a retained result, and cross-project denial. They use a controlled
+publisher for terminal states and do not substitute for the separate real
+solver and instrument workflow run.
 
 The authenticated project-delete route was exercised against POSIX private
 storage for a source-only M11 dataset. The test verifies raw and index hashes,
 both project-tree moves before cleanup, committed receipt ordering, cleanup,
-restart reconciliation, and tampered-source refusal. Result-bearing deletion
-and the crash-cut matrix remain unqualified.
+restart reconciliation, and tampered-source refusal. A separate failed-result
+case verifies deletion of the terminal index and native failure member and
+their digests in the committed deletion receipt. Result-bearing restart and
+the cleanup crash-cut matrix remain unqualified.
+
+A fresh current-source Linux CPU run was generated from the external development
+and sealed inputs, then independently validated. The post-freeze state
+instrument was exported and replay-validated from that exact fresh output. Its
+workflow/index data remain outside Git under
+`E:\_worktrees\_runs\CAOS_Geophysics-M11-integrated-20261025\data`; the
+reproducible receipt, hashes, resource samples and nonclaims are recorded in
+[`m11-fresh-workflow-20261026.json`](evidence/m11-fresh-workflow-20261026.json).
+The real artifact browser-import test passes on the instrument bundle, and the
+actual Python API archive test passes on the terminal failure receipt. This
+does not exercise the deployed VPS worker process.
 
 These are isolated candidate-schema results. Revision 0006 remains an unmounted
 migration candidate, so the normal deployed database cannot pass the job route's

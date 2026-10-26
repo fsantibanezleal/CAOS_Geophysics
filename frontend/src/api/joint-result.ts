@@ -237,15 +237,26 @@ const MANIFESTS: Record<string, [string, string]> = { frozen: ["frozen.json", "j
 export async function importJointOutput(input: readonly JointFile[], signal?: AbortSignal): Promise<JointInspection> {
   const cancel = () => { if (signal?.aborted) throw new Error("Joint import: cancelled"); };
   requireThat(input.length > 0 && input.length <= MAX_FILES, "whole file count"); let total = 0;
-  const top = input.some(f => f.path === "workflow.json" || f.path === "failure.json"), prefix = top ? "" : input[0].path.split("/")[0] + "/";
+  const top = input.some(f => f.path === "workflow.json" || f.path === "failure.json" || f.path === "api-failure.json"), prefix = top ? "" : input[0].path.split("/")[0] + "/";
   requireThat(top || /^[^./\\\x00-\x1f][^/\\\x00-\x1f]*\/$/.test(prefix), "ordinary selected directory prefix");
   const entries = new Map<string, JointFile>();
   for (const f of input) { requireThat(f.path.startsWith(prefix), "single selected output directory"); const path = f.path.slice(prefix.length);
-    requireThat(/^(?:workflow\.json|failure\.json|(?:frozen|result|models|calibration|aborted|instrument)\/[a-z0-9_]+\.(?:json|npy))$/.test(path) && !entries.has(path), "fixed unique output path");
+    requireThat(/^(?:workflow\.json|failure\.json|api-failure\.json|(?:frozen|result|models|calibration|aborted|instrument)\/[a-z0-9_]+\.(?:json|npy))$/.test(path) && !entries.has(path), "fixed unique output path");
     requireThat(Number.isSafeInteger(f.size) && f.size > 0 && f.size <= JOINT_IMPORT_CAP && (!path.endsWith(".json") || f.size <= JSON_CAP), "original file byte cap"); total += f.size; requireThat(total <= JOINT_IMPORT_CAP, "whole original byte cap"); entries.set(path, f); }
   cancel(); const files = new Map<string, Uint8Array>(), hashes = new Map<string, string>();
   async function read(path: string) { const file = entries.get(path); requireThat(file, "missing fixed file " + path); cancel(); const bytes = new Uint8Array(await file.read()); cancel(); requireThat(bytes.length === file.size, "original file size changed"); files.set(path, bytes); return bytes; }
   const receipts: Record<string, Obj> = {}; for (const path of ["workflow.json", "failure.json"]) if (entries.has(path)) receipts[path] = jointJson(await read(path));
+  if (entries.has("api-failure.json")) {
+    requireThat(entries.size === 1 && Object.keys(receipts).length === 0, "isolated API failure inventory");
+    const failure = jointJson(await read("api-failure.json"));
+    keys(failure, ["schema", "state", "reason", "inverse_completed", "sealed_evaluation_completed", "scientific_acceptance", "public_activation"]);
+    requireThat(failure.schema === "geophysics.joint-job-failure/v1" && ["failed", "cancelled"].includes(text(failure.state)), "API failure identity");
+    text(failure.reason); falseFlags(failure, ["inverse_completed", "sealed_evaluation_completed", "scientific_acceptance", "public_activation"]);
+    hashes.set("api-failure.json", await jointSha(files.get("api-failure.json")!));
+    return { schema: "joint-local-inspection-1", outcome: "failed", mode: "solve", receipt: failure,
+      frozen: null, result: null, model: null, calibration: null, aborted: null, instrument: null,
+      candidates: [], files, hashes, importedBytes: total, limitations: INSPECTION_FLAGS };
+  }
   requireThat(receipts["workflow.json"] || receipts["failure.json"], "workflow receipt required");
   const failed = !!receipts["failure.json"] || receipts["workflow.json"]?.status === "failed", receipt = receipts["failure.json"] ?? receipts["workflow.json"];
   function checkReceipt(receipt: Obj, failureMarker: boolean) {

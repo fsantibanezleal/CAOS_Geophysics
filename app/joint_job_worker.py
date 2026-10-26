@@ -86,11 +86,10 @@ async def _cancelled(sessions, job_id):
 
 
 def _failure_member(state: str, reason: str):
-    return {"failure.json": canonical({
-        "schema": "joint-survey-workflow-failure-1",
-        "status": "cancelled" if state == "cancelled" else "failed",
+    return {"api-failure.json": canonical({
+        "schema": "geophysics.joint-job-failure/v1", "state": state,
         "reason": reason, "inverse_completed": False,
-        "sealed_evaluation_completed": False, "field_eligible": False,
+        "sealed_evaluation_completed": False, "scientific_acceptance": False,
         "public_activation": False,
     })}
 
@@ -209,12 +208,19 @@ def _workflow_files(output: Path, state: str, job, *, failure_code=None):
         receipt = native.bounded_json(members["workflow.json"])
         if receipt.get("schema") != "joint-survey-workflow-receipt-1" or receipt.get("status") != "completed" or receipt.get("inverse_completed") is not True:
             raise ValueError("m11_success_receipt_invalid")
+    elif state == "cancelled":
+        return _failure_member(state, failure_code or "user_cancelled")
+    else:
+        workflow = native.bounded_json(members["workflow.json"]) if "workflow.json" in members else None
+        failure = native.bounded_json(members["failure.json"]) if "failure.json" in members else None
+        if ((workflow is not None and workflow.get("status") == "completed")
+                or (failure is not None and failure.get("status") != "failed")
+                or (workflow is None and failure is None)):
+            # A completed scientific receipt cannot be relabeled failed due to
+            # a later instrument, custody or infrastructure error.
+            return _failure_member(state, failure_code or "m11_terminal_validation_failed")
     if not members:
-        members["failure.json"] = canonical({
-            "schema": "joint-survey-workflow-failure-1", "status": "failed" if state == "failed" else "cancelled",
-            "reason": failure_code or "workflow_interrupted", "inverse_completed": False,
-            "sealed_evaluation_completed": False, "field_eligible": False, "public_activation": False,
-        })
+        members = _failure_member(state, failure_code or "workflow_interrupted")
     return members
 
 
@@ -233,11 +239,7 @@ async def _publish(settings, sessions, physical, job_id, state, members, *, fail
         if await session.scalar(select(ProcessingJob.cancel_requested).where(ProcessingJob.id == job_id)):
             state = "cancelled"
             failure_code = "user_cancelled"
-            members = {"failure.json": canonical({
-                "schema": "joint-survey-workflow-failure-1", "status": "cancelled",
-                "reason": "user_cancelled", "inverse_completed": False,
-                "sealed_evaluation_completed": False, "field_eligible": False, "public_activation": False,
-            })}
+            members = _failure_member(state, failure_code)
         native_total = sum(len(value) for value in members.values())
         if not members or native_total > native.MAX_BYTES:
             raise ValueError("m11_terminal_member_bound")
@@ -313,6 +315,7 @@ async def _publish(settings, sessions, physical, job_id, state, members, *, fail
 
 
 async def _execute(settings, sessions, physical, job_id):
+    execution_started = time.monotonic()
     try:
         if sys.platform != "linux":
             raise RuntimeError("m11_requires_pinned_linux_runtime")
@@ -326,12 +329,9 @@ async def _execute(settings, sessions, physical, job_id):
         base = _workspace_root()
     except Exception as error:
         failure = type(error).__name__[:70]
-        members = {"failure.json": canonical({
-            "schema": "joint-survey-workflow-failure-1", "status": "failed", "reason": failure,
-            "inverse_completed": False, "sealed_evaluation_completed": False,
-            "field_eligible": False, "public_activation": False,
-        })}
-        await _publish(settings, sessions, physical, job_id, "failed", members, failure_code=failure)
+        members = _failure_member("failed", failure)
+        await _publish(settings, sessions, physical, job_id, "failed", members, failure_code=failure,
+                       wall_ms=int((time.monotonic() - execution_started) * 1000))
         return
     work = base / f"{job_id}-{uuid4()}"
     output = work / "output"
@@ -360,8 +360,8 @@ async def _execute(settings, sessions, physical, job_id):
         cli = str(repository / "scripts" / "run_joint_survey.py")
         common = ["--data-root", data_root, "--development", str(development), "--sealed", str(sealed),
                   "--output", output_dir, "--scratch-root", scratch_dir]
-        code, output_bytes, wall_ms = await _run_child(interpreter, [cli, "solve", *common],
-                                                       job_id=job_id, sessions=sessions)
+        code, output_bytes, _ = await _run_child(interpreter, [cli, "solve", *common],
+                                                 job_id=job_id, sessions=sessions)
         if await _cancelled(sessions, job_id):
             state, failure = "cancelled", "user_cancelled"
         elif code == 0:
@@ -372,15 +372,46 @@ async def _execute(settings, sessions, physical, job_id):
             receipt = native.bounded_json(receipt_path.read_bytes()) if receipt_path.is_file() else {}
             if (validation_code == 0 and validation.get("validated") is True
                     and receipt.get("status") == "completed" and receipt.get("inverse_completed") is True):
-                state, failure = "succeeded", None
-                resources = receipt.get("resources", {})
-                peak_rss = resources.get("peak_sampled_rss_bytes")
-                scratch_bytes = resources.get("peak_sampled_scratch_bytes")
+                # The browser's native result instrument is a separate,
+                # post-freeze replay. It copies exact solver artifacts and
+                # computes recorded state responses; it never refits.
+                instrument_output = work / "instrument-output"
+                instrument_cli = str(repository / "scripts" / "run_joint_instrument.py")
+                instrument_common = ["--data-root", data_root, "--development", str(development),
+                    "--sealed", str(sealed), "--original", output_dir,
+                    "--output", str(instrument_output), "--scratch-root", scratch_dir]
+                instrument_code, instrument_bytes, _ = await _run_child(
+                    interpreter, [instrument_cli, "export", *instrument_common],
+                    job_id=job_id, sessions=sessions)
+                instrument = native.bounded_json(instrument_bytes.strip()) if instrument_bytes.strip() else {}
+                instrument_validation_code, instrument_validation_bytes, _ = await _run_child(
+                    interpreter, [instrument_cli, "validate", *instrument_common],
+                    job_id=job_id, sessions=sessions)
+                instrument_validation = (native.bounded_json(instrument_validation_bytes.strip())
+                    if instrument_validation_bytes.strip() else {})
+                if (instrument_code == 0 and instrument.get("validated") is True
+                        and instrument.get("scientific_acceptance_verified") is False
+                        and instrument_validation_code == 0
+                        and instrument_validation.get("validated") is True):
+                    state, failure = "succeeded", None
+                    members = _workflow_files(instrument_output, state, None)
+                    resource_receipts = [receipt.get("resources", {}),
+                        validation.get("verification_resources", {}), instrument.get("resources", {}),
+                        instrument_validation.get("resources", {})]
+                    peak_values = [r.get("peak_sampled_rss_bytes") for r in resource_receipts
+                                   if type(r.get("peak_sampled_rss_bytes")) is int]
+                    scratch_values = [r.get("peak_sampled_scratch_bytes") for r in resource_receipts
+                                      if type(r.get("peak_sampled_scratch_bytes")) is int]
+                    peak_rss = max(peak_values, default=None)
+                    scratch_bytes = max(scratch_values, default=None)
+                else:
+                    state, failure = "failed", "m11_state_instrument_validation_failed"
             else:
                 state, failure = "failed", "m11_workflow_validation_failed"
-        else:
+        elif not (await _cancelled(sessions, job_id)):
             state, failure = "failed", "m11_workflow_nonzero_exit"
-        members = _workflow_files(output, state, None, failure_code=failure)
+        if members is None:
+            members = _workflow_files(output, state, None, failure_code=failure)
     except Exception as error:
         state, failure = ("cancelled", "user_cancelled") if await _cancelled(sessions, job_id) else ("failed", type(error).__name__[:70])
         try:
@@ -397,6 +428,7 @@ async def _execute(settings, sessions, physical, job_id):
         except OSError:
             state, failure = "failed", "m11_workspace_cleanup_failed"
             members = _failure_member(state, failure)
+    wall_ms = int((time.monotonic() - execution_started) * 1000)
     await _publish(settings, sessions, physical, job_id, state, members, failure_code=failure,
                    wall_ms=wall_ms, peak_rss=peak_rss, scratch_bytes=scratch_bytes)
 

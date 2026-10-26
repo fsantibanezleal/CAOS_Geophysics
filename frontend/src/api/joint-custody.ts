@@ -51,7 +51,7 @@ export function parseJointCustodyIndex(value: Obj, job: JointCustodyJob): JointC
   assert(value.scientific_acceptance === false && value.authenticity_verified === false && value.public_activation === false, "claim boundary");
   const members = object(value.members), names = Object.keys(members); assert(names.length > 0 && names.length <= 1100, "member cap"); let bytes = 0;
   for (const name of names) {
-    assert(/^(?:workflow\.json|failure\.json|(?:calibration|frozen|models|result|instrument|aborted)\/[a-z][a-z0-9_]{0,120}\.(?:json|npy))$/.test(name), "member grammar");
+    assert(/^(?:workflow\.json|failure\.json|api-failure\.json|(?:calibration|frozen|models|result|instrument|aborted)\/[a-z][a-z0-9_]{0,120}\.(?:json|npy))$/.test(name), "member grammar");
     const member = object(members[name]); closed(member, ["byte_count", "sha256"]); bytes += integer(member.byte_count, JOINT_IMPORT_CAP); sha(member.sha256);
   }
   assert(bytes === integer(value.native_bytes, JOINT_IMPORT_CAP), "whole native bytes");

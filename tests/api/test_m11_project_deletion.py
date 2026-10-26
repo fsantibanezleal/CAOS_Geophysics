@@ -1,10 +1,4 @@
-"""Authenticated 0006 project deletion against real POSIX private files.
-
-The fixture intentionally stops at the current online M11 capability: native
-source originals and the structural dataset index. Terminal job publication is
-not registered in this app assembly, so this module records that boundary as a
-strict contract instead of fabricating result rows or claiming their deletion.
-"""
+"""Authenticated 0006 project deletion against real POSIX private files."""
 from __future__ import annotations
 
 import hashlib
@@ -18,7 +12,6 @@ from app.config import Settings
 from app.server import create_app
 from app.physical_posix import PrivateFiles
 from fastapi.testclient import TestClient
-from tests.api.test_m11_candidate_runtime_success import m11_candidate
 from tests.api.test_physical_roots import root_case as root_case
 from tests.api.test_physical_successor import successor as successor
 from tests.api.test_physical_wire import survey as survey

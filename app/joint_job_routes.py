@@ -34,7 +34,8 @@ METHOD = native.METHOD_ID
 ACTIVE_PER_OWNER = 1
 MAX_QUEUE = 8
 RESULT_SCHEMA = "geophysics.joint-result-custody/v1"
-MEMBER_NAME = re.compile(r"(?:workflow\.json|failure\.json|(?:calibration|frozen|models|result|instrument|aborted)/[a-z][a-z0-9_]{0,120}\.(?:json|npy))\Z")
+HISTORY_SCHEMA = "geophysics.joint-custody-history/v1"
+MEMBER_NAME = re.compile(r"(?:workflow\.json|failure\.json|api-failure\.json|(?:calibration|frozen|models|result|instrument|aborted)/[a-z][a-z0-9_]{0,120}\.(?:json|npy))\Z")
 
 
 class JointJobCreate(BaseModel):
@@ -54,13 +55,16 @@ def _job_view(job: ProcessingJob) -> dict:
         value = value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
         return value.isoformat().replace("+00:00", "Z")
     return {
-        "job_id": job.id, "project_id": job.project_id, "dataset_id": job.dataset_id,
+        "job_id": job.id, "owner_id": str(job.owner_id), "project_id": job.project_id,
+        "dataset_id": job.dataset_id,
         "dataset_sha256": job.dataset_sha256, "method_id": job.method_id,
         "request_sha256": job.request_sha256, "state": job.state,
         "cancel_requested": bool(job.cancel_requested), "created_at": stamp(job.created_at),
         "started_at": stamp(job.started_at), "finished_at": stamp(job.finished_at),
         "wall_ms": job.wall_ms, "peak_rss_bytes": job.peak_rss_bytes,
         "scratch_bytes": job.scratch_bytes, "result_sha256": job.result_sha256,
+        "result_bytes": job.result_bytes, "error_code": job.error_code,
+        "index_available": job.result_key is not None,
         "result_url": f"/api/projects/{job.project_id}/joint-results/{job.id}" if job.result_key else None,
         "scientific_acceptance": False,
     }
@@ -246,6 +250,29 @@ def install_joint_job_routes(app, settings, current_user, get_session) -> None:
         payload = _result_index(physical.leases.files, job)
         return JSONResponse(payload, headers={"Cache-Control": "no-store"})
 
+    @router.get("/{project_id}/joint-results")
+    async def history(project_id: str, request: Request,
+                      user: User = Depends(current_user), session: AsyncSession = Depends(get_session)):
+        physical = _physical(request, session)
+        owner_id = user.id
+        await _owned_project(session, project_id, user)
+        await session.rollback()
+        await session.execute(text("BEGIN"))
+        await _registered_0006(session)
+        await _proof(session, physical, owner_id, settings.account_quota_bytes)
+        jobs = (await session.execute(select(ProcessingJob).where(
+            ProcessingJob.project_id == project_id, ProcessingJob.owner_id == owner_id,
+            ProcessingJob.method_id == METHOD,
+        ).order_by(ProcessingJob.created_at.desc(), ProcessingJob.id).limit(200))).scalars().all()
+        payload = {"schema": HISTORY_SCHEMA, "owner_id": str(owner_id),
+                   "project_id": project_id, "jobs": [
+                       {key: _job_view(job)[key] for key in (
+                           "job_id", "owner_id", "project_id", "dataset_id", "dataset_sha256",
+                           "method_id", "request_sha256", "state", "cancel_requested", "error_code",
+                           "index_available", "result_sha256", "result_bytes",
+                       )} for job in jobs]}
+        return JSONResponse(payload, headers={"Cache-Control": "no-store"})
+
     @router.get("/{project_id}/joint-results/{job_id}/export")
     async def export(project_id: str, job_id: str, request: Request,
                      user: User = Depends(current_user), session: AsyncSession = Depends(get_session)):
@@ -264,8 +291,8 @@ def install_joint_job_routes(app, settings, current_user, get_session) -> None:
         stream = tempfile.SpooledTemporaryFile(max_size=8 * 1024**2, mode="w+b")
         total = 0
         try:
-            with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
-                archive.writestr("result-index.json", _json_bytes(index))
+            with zipfile.ZipFile(stream, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr("private-custody-index.json", _json_bytes(index))
                 for member in members:
                     if MEMBER_NAME.fullmatch(member["name"]) is None:
                         raise ApiError(409, "joint_result_integrity", "Stored result member name is invalid")
