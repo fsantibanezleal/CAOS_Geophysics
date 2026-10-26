@@ -1,0 +1,340 @@
+{
+  "schema": "m03-packet-checks/2",
+  "date": "2026-10-03",
+  "base_commit": "ba54d32f0932a09502f463f3aff9c8f21270dca1",
+  "scope": "Documentation and primary-retrieval custody only; no numerical, field, UI, worker, persistence or deployment acceptance.",
+  "predecessor": {
+    "commit": "26f09166102fca44d486769796eb8f2598d4f5ba",
+    "history_preserved": true,
+    "snapshot": {
+      "schema": "m03-packet-checks/1",
+      "date": "2026-10-03",
+      "base_commit": "ba54d32f0932a09502f463f3aff9c8f21270dca1",
+      "scope": "Documentation and primary-retrieval custody only; no numerical, field, UI, worker, persistence or deployment acceptance.",
+      "runtime": {
+        "path": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe",
+        "version": "CPython 3.12.10 MSC v.1943 64 bit AMD64",
+        "dependencies_installed": false
+      },
+      "files": [
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/research.md",
+          "bytes": 16377,
+          "sha256": "bda915507e1346150fa30d7cb6e43fa7921b1dda4802357605222c6b77db2daf"
+        },
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/requirements.md",
+          "bytes": 12079,
+          "sha256": "9d15d8bbb960d75d11eb826069dc3fdd04a8eafdeee485160e16a848d486ad19"
+        },
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/design.md",
+          "bytes": 14120,
+          "sha256": "ed7336fd9c6b07229f0b4ba2184f79b0932f06449c5d3a36e773a89534108604"
+        },
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/contracts.md",
+          "bytes": 17851,
+          "sha256": "726270c12378f231fe59a745d193477f9fe185d197761b612e3329a58e6803b6"
+        },
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/algorithms.md",
+          "bytes": 21720,
+          "sha256": "7f75b86feb00fa417eb085436e8c50e0c4cf88c9dabe82f65a3ed975ea21c5e2"
+        },
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/validation.md",
+          "bytes": 16338,
+          "sha256": "03a3c6c5f3c08f0e6e424673b010c6014cae54cbc51befb073aba7e7cf027bee"
+        },
+        {
+          "path": "docs/design/features/m03-aeromagnetic-lines/tasks.md",
+          "bytes": 12089,
+          "sha256": "fc1ac9ed1fbf7df79e1b0f9b5e8739032792a2efa5e9b4871561b13116c47a8f"
+        },
+        {
+          "path": "docs/research/m03-primary-retrieval-2026-10-03.json",
+          "bytes": 11747,
+          "sha256": "5fae05534bb92868ea4ec0d9a8f8b0e65eb9cca27d051aa39e6ce37d62ce2c0d"
+        }
+      ],
+      "checks": [
+        {
+          "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_content_standards.py",
+          "exit_code": 0,
+          "summary": "check_content_standards: OK, no em-dash or emoji in tracked content."
+        },
+        {
+          "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_template_residue.py",
+          "exit_code": 0,
+          "summary": "check_template_residue: OK: no template residue in 896 tracked files."
+        },
+        {
+          "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_ci_budget.py",
+          "exit_code": 0,
+          "summary": "ci budget: OK"
+        },
+        {
+          "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe scripts/check_sdd_convergence.py",
+          "exit_code": 0,
+          "summary": "Ledger structurally valid: {'fail': 1, 'ineligible': 0, 'pass': 0, 'unresolved': 18}. This is not scientific or release acceptance."
+        },
+        {
+          "command": "PowerShell exact seven-file inventory, literal sequential EARS/Implementation/Gate regex, minimum 5000 characters/file, relative-link existence, Get-FileHash and byte count for every response cache body",
+          "exit_code": 0,
+          "observed": {
+            "seven_files": 7,
+            "ears_requirements": 26,
+            "relative_links": 32,
+            "response_body_hashes": 18,
+            "http200": 16,
+            "http403": 2
+          },
+          "meaning": "Shape/link/custody checks only. Named M03 product tests remain prospective."
+        },
+        {
+          "command": "git diff --cached --check",
+          "exit_code": 0
+        },
+        {
+          "command": "git check-ignore data/raw/m03-primary-20261003/charleston-metadata.body",
+          "exit_code": 0
+        }
+      ],
+      "parent_ledger_observation": {
+        "pass": 0,
+        "fail": 1,
+        "unresolved": 18,
+        "ineligible": 0,
+        "modified": false
+      },
+      "status": {
+        "documentation": "checked",
+        "implementation": "not_started",
+        "main_review": "pending_full_read_and_explicit_approval",
+        "field_measurements_acquired": false,
+        "online": "CLOSED",
+        "numerical_tests": "prospective_not_executed",
+        "rendered_qa": "not_applicable_no_UI_change",
+        "deployment": "unchanged"
+      }
+    },
+    "meaning": "Historical first-pin checks only; not validation or approval of revised files."
+  },
+  "runtime": {
+    "path": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe",
+    "version": "CPython 3.12.10 MSC v.1943 64 bit AMD64",
+    "dependencies_installed": false
+  },
+  "files": [
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/research.md",
+      "bytes": 18240,
+      "sha256": "a995ebfe7f28fab99d368d3d3f167379ae00c679b52534ba88157a5e11c2c53b"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/requirements.md",
+      "bytes": 12885,
+      "sha256": "4e07d30b7bdb57c707926cdfc5ee5e78dfe5b6417725375c820db60293a66b92"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/design.md",
+      "bytes": 16892,
+      "sha256": "9cd1ea6ea2e7efe9676dc0292a1e09c16473cb8f60a3d720695d831a5886ee30"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/contracts.md",
+      "bytes": 61878,
+      "sha256": "9ee21534eb4b608cd1b232513b06d3836118813f61c2c53accb768ff8abfab79"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/algorithms.md",
+      "bytes": 30792,
+      "sha256": "288ccf770ff826e65a52780109814682b2a23c0cf5258dd8ceddd567d1c9037c"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/validation.md",
+      "bytes": 20332,
+      "sha256": "300cc50dd396b3811456e3725c3ee97e2da579b8b0f6d29440b196fe3527636b"
+    },
+    {
+      "path": "docs/design/features/m03-aeromagnetic-lines/tasks.md",
+      "bytes": 14173,
+      "sha256": "a26b5ea45a4ec35887895b47b0ff2be79fb09d4758c1f1cd36dc4d7b50aba3c6"
+    },
+    {
+      "path": "docs/research/m03-primary-retrieval-2026-10-03.json",
+      "bytes": 11747,
+      "sha256": "5fae05534bb92868ea4ec0d9a8f8b0e65eb9cca27d051aa39e6ce37d62ce2c0d"
+    }
+  ],
+  "receipt_identity": "This receipt omits its own file hash; the outer Git commit/PR identity binds it. files[] pins the seven current documents and unchanged primary receipt in their repository LF byte encoding.",
+  "checks": [
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe -B scripts/check_content_standards.py",
+      "exit_code": 0,
+      "summary": "check_content_standards: OK, no em-dash or emoji in tracked content."
+    },
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe -B scripts/check_template_residue.py",
+      "exit_code": 0,
+      "summary": "check_template_residue: OK: no template residue in 897 tracked files."
+    },
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe -B scripts/check_ci_budget.py",
+      "exit_code": 0,
+      "summary": "ci budget: OK"
+    },
+    {
+      "command": "D:/_Repos/_Web_Projects/CAOS_Geophysics/.venv/Scripts/python.exe -B scripts/check_sdd_convergence.py",
+      "exit_code": 0,
+      "summary": "Ledger structurally valid: {'fail': 1, 'ineligible': 0, 'pass': 0, 'unresolved': 18}. This is not scientific or release acceptance.",
+      "meaning": "Own branch baseline ledger is unchanged; historical unit counts in that ledger are not new M03 executions."
+    },
+    {
+      "command": "PowerShell exact seven-file inventory, sequential literal EARS/Implementation/Gate regex, relative-link existence, named object/key duplicate scan, exact current-file and18 cached response-body byte/SHA256 checks",
+      "source": "$ErrorActionPreference = 'Stop'\n$m03Root = (Get-Location).Path\n$m03Names = @('research','requirements','design','contracts','algorithms','validation','tasks')\n$m03Files = @()\n$m03Links = 0\nforeach ($m03Name in $m03Names) {\n  $m03Relative = \"docs/design/features/m03-aeromagnetic-lines/$m03Name.md\"\n  $m03Body = Get-Content -LiteralPath $m03Relative -Raw -Encoding UTF8\n  if ($m03Body.Length -lt 5000) { throw \"Short document: $m03Name\" }\n  foreach ($m03Match in [regex]::Matches($m03Body,'\\[[^\\]]+\\]\\(([^)]+)\\)')) {\n    $m03Target = $m03Match.Groups[1].Value\n    if ($m03Target -notmatch '^https?://') {\n      $m03LinkPath = Join-Path (Split-Path -Parent $m03Relative) ($m03Target.Split('#')[0])\n      if (-not (Test-Path -LiteralPath $m03LinkPath)) { throw \"Missing relative link: $m03Relative -> $m03Target\" }\n      $m03Links++\n    }\n  }\n  $m03Files += [ordered]@{path=$m03Relative;bytes=(Get-Item -LiteralPath $m03Relative).Length;sha256=(Get-FileHash -LiteralPath $m03Relative -Algorithm SHA256).Hash.ToLowerInvariant()}\n}\n$m03RequirementText = Get-Content -LiteralPath 'docs/design/features/m03-aeromagnetic-lines/requirements.md' -Raw -Encoding UTF8\n$m03Requirements = [regex]::Matches($m03RequirementText,'(?m)^(M03-\\d{3}) (WHEN|IF|WHILE) [^\\r\\n]*SHALL[^\\r\\n]*\\r?\\nImplementation: ([^\\r\\n]+)\\r?\\nGate: ([^\\r\\n]+)')\nif ($m03Requirements.Count -ne 26) { throw 'EARS/path/gate count is not26' }\nfor ($m03Index=0;$m03Index -lt 26;$m03Index++) {\n if ($m03Requirements[$m03Index].Groups[1].Value -ne ('M03-{0:d3}' -f ($m03Index+1))) { throw 'Requirement sequence drift' }\n}\n$m03ContractText = Get-Content -LiteralPath 'docs/design/features/m03-aeromagnetic-lines/contracts.md' -Raw -Encoding UTF8\n$m03Objects = [regex]::Matches($m03ContractText,'(?m)^\\| ([A-Za-z][A-Za-z0-9]*) \\| [^\\r\\n]*:.* \\|$')\n$m03Seen = @{}\n$m03Fields = 0\nforeach ($m03Object in $m03Objects) {\n $m03ObjectName = $m03Object.Groups[1].Value\n if ($m03ObjectName -eq 'Object') { continue }\n if ($m03Seen.ContainsKey($m03ObjectName)) { throw \"Duplicate object table: $m03ObjectName\" }\n $m03Seen[$m03ObjectName]=$true\n $m03KeyMatches = [regex]::Matches($m03Object.Value,'(?:\\| |; )([a-z][a-z0-9_]*):')\n $m03Keys = @($m03KeyMatches | ForEach-Object { $_.Groups[1].Value })\n if (($m03Keys | Select-Object -Unique).Count -ne $m03Keys.Count) { throw \"Duplicate typed key: $m03ObjectName\" }\n $m03Fields += $m03Keys.Count\n}\n$m03PrimaryPath = 'docs/research/m03-primary-retrieval-2026-10-03.json'\n$m03Primary = Get-Content -LiteralPath $m03PrimaryPath -Raw -Encoding UTF8 | ConvertFrom-Json\nforeach ($m03Receipt in $m03Primary.receipts) {\n if ((Get-Item -LiteralPath $m03Receipt.cache_path).Length -ne $m03Receipt.bytes) { throw \"Body size drift: $($m03Receipt.id)\" }\n if ((Get-FileHash -LiteralPath $m03Receipt.cache_path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $m03Receipt.sha256) { throw \"Body hash drift: $($m03Receipt.id)\" }\n}\n$m03Files += [ordered]@{path=$m03PrimaryPath;bytes=(Get-Item -LiteralPath $m03PrimaryPath).Length;sha256=(Get-FileHash -LiteralPath $m03PrimaryPath -Algorithm SHA256).Hash.ToLowerInvariant()}\n[ordered]@{meaning='Documentation shape/link/custody only, not implementation/science acceptance';seven_files=7;ears_requirements=26;relative_links=$m03Links;named_typed_objects=$m03Seen.Count;typed_keys=$m03Fields;response_body_hashes=$m03Primary.receipts.Count;http200=@($m03Primary.receipts | Where-Object http_status -eq '200').Count;http403=@($m03Primary.receipts | Where-Object http_status -eq '403').Count;files=$m03Files} | ConvertTo-Json -Depth 12\n",
+      "exit_code": 0,
+      "observed": {
+        "meaning": "Documentation shape/link/custody only, not implementation/science acceptance",
+        "seven_files": 7,
+        "ears_requirements": 26,
+        "relative_links": 34,
+        "named_typed_objects": 96,
+        "typed_keys": 608,
+        "response_body_hashes": 18,
+        "http200": 16,
+        "http403": 2
+      },
+      "meaning": "Text shape/link/custody only, not executable schema validation or any named M03 test."
+    },
+    {
+      "command": "Existing CPython3.12.10 -B -c documentation-only XY/identity generation, independent segment/closed-rectangle clipping, nearest training distances, hull endpoint containment and source-block inventories",
+      "source": "import hashlib,json,math\nrows=[]\nnorth=[-1400,-950,-520,-170,230,610,1050,1500]\neast=[-1100,0,1000]\nfor li in range(11):\n    line=('F%02d'%li) if li<8 else ('T%02d'%(li-8))\n    for j in range(33):\n        rid=line+'.%03d'%j\n        e=(-1600+100*j if li%2==0 else 1600-100*j) if li<8 else east[li-8]\n        n=north[li] if li<8 else -1600+100*j\n        def jitter(axis):\n            return 0.0 if j in (0,32) else (int.from_bytes(hashlib.sha256(('m03/20261003/'+rid+'/'+axis).encode('ascii')).digest()[:2],'big')%1001-500)/100\n        rows.append(dict(id=rid,line=line,ordinal=j,e=float(e)+jitter('e'),n=float(n)+jitter('n')))\nbyline={line:[r for r in rows if r['line']==line] for line in sorted({r['line'] for r in rows})}\ndef intersects(p,q,b):\n    lo,hi=0.0,1.0\n    dx,dy=q['e']-p['e'],q['n']-p['n']\n    for a,c in ((-dx,p['e']-b[0]),(dx,b[1]-p['e']),(-dy,p['n']-b[2]),(dy,b[3]-p['n'])):\n        if a==0:\n            if c<0:return False\n        else:\n            z=c/a\n            if a<0:lo=max(lo,z)\n            else:hi=min(hi,z)\n            if lo>hi:return False\n    return True\nouter=(-1610,1610,215,245)\nfolds=[('A',['F01','F06'],[(-1610,1610,-965,-935),(-1610,1610,1035,1065)],168,66),('B',['F02','F05'],[(-1610,1610,-535,-505),(-1610,1610,595,625)],195,66),('C',['F03'],[(-1610,1610,-185,-155)],249,33)]\ndef inventory(val,blocks):\n    expanded=[(b[0]-470,b[1]+470,b[2]-470,b[3]+470) for b in blocks]\n    denied=set()\n    for line,rr in byline.items():\n        if line.startswith('T'):\n            for p,q in zip(rr,rr[1:]):\n                if any(intersects(p,q,b) for b in expanded):denied.update((p['id'],q['id']))\n    training=[r for r in rows if r['line'] not in set(val+['F04']) and r['id'] not in denied]\n    validation=[r for r in rows if r['line'] in val]\n    nearest=max(min(math.hypot(r['e']-t['e'],r['n']-t['n']) for t in training) for r in validation)\n    assert nearest<470\n    assert all(-1600<=r['e']<=1600 and -1400<=r['n']<=1500 for r in validation)\n    blocks_map={}\n    for r in sorted(training,key=lambda r:r['id']):\n        key=(math.floor((r['e']+1600)/400),math.floor((r['n']+1600)/400))\n        blocks_map.setdefault(key,[]).append(r)\n    centers=[dict(block=list(k),count=len(v),e=math.fsum(x['e'] for x in v)/len(v),n=math.fsum(x['n'] for x in v)/len(v)) for k,v in sorted(blocks_map.items())]\n    assert len(centers)<=256\n    assert sum(x['count'] for x in centers)==len(training)\n    for x in (-2000,-1600,-1200,1600):\n        assert math.floor((x+1600)/400) in (-1,0,1,8)\n    return dict(training=len(training),validation=len(validation),masked_tie_rows=len(denied),source_blocks=len(centers),max_nearest_m=nearest,geometry_only_supported=len(validation))\nresult={'notice':'Documentation geometry arithmetic only: no magnetic values, engine fit, IGRF, provider measurements or field acceptance.','rows':len(rows),'original_segments':sum(len(v)-1 for v in byline.values()),'outer':inventory(['F04'],[outer]),'inner':{}}\nassert result['outer']['training']==294 and result['outer']['validation']==33\nfor name,ids,blocks,train_count,val_count in folds:\n    item=inventory(ids,[outer]+blocks)\n    assert item['training']==train_count and item['validation']==val_count\n    result['inner'][name]=item\nresult['geometry_preview_sha256']=hashlib.sha256(json.dumps(rows,sort_keys=True,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf-8')).hexdigest()\nprint(json.dumps(result,sort_keys=True))\n",
+      "exit_code": 0,
+      "observed": {
+        "geometry_preview_sha256": "0551c8e6d9586b75dbc15c02d1e0090ef59a0804d95e75e5a76d1464690d0d6e",
+        "inner": {
+          "A": {
+            "geometry_only_supported": 66,
+            "masked_tie_rows": 96,
+            "max_nearest_m": 447.2709304213723,
+            "source_blocks": 45,
+            "training": 168,
+            "validation": 66
+          },
+          "B": {
+            "geometry_only_supported": 66,
+            "masked_tie_rows": 69,
+            "max_nearest_m": 447.5201609983622,
+            "source_blocks": 48,
+            "training": 195,
+            "validation": 66
+          },
+          "C": {
+            "geometry_only_supported": 33,
+            "masked_tie_rows": 48,
+            "max_nearest_m": 357.61083274979245,
+            "source_blocks": 57,
+            "training": 249,
+            "validation": 33
+          }
+        },
+        "notice": "Documentation geometry arithmetic only: no magnetic values, engine fit, IGRF, provider measurements or field acceptance.",
+        "original_segments": 352,
+        "outer": {
+          "geometry_only_supported": 33,
+          "masked_tie_rows": 36,
+          "max_nearest_m": 387.45134262252844,
+          "source_blocks": 66,
+          "training": 294,
+          "validation": 33
+        },
+        "rows": 363
+      },
+      "meaning": "No magnetic truth/value, IGRF, numerical engine, science accuracy or provider measurement was computed. Preview hash covers XY/row/line/ordinal only, not the future complete generator manifest."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0
+    },
+    {
+      "command": "git check-ignore data/raw/m03-primary-20261003/charleston-metadata.body",
+      "exit_code": 0
+    },
+    {
+      "command": "Read-only existing CPython -B staged Git blob byte/SHA256 and predecessor JSON snapshot audit",
+      "source": "import subprocess,json,hashlib\np='docs/research/m03-packet-checks-2026-10-03.json'\nr=json.loads(subprocess.check_output(['git','show',':'+p]))\nold=json.loads(subprocess.check_output(['git','show','26f09166102fca44d486769796eb8f2598d4f5ba:'+p]))\nassert r['predecessor']['snapshot']==old\nassert r['status']['implementation']=='not_started'\nassert len(r['files'])==8\nbuf=subprocess.check_output(['git','cat-file','--batch'],input=('\\n'.join(':'+x['path'] for x in r['files'])+'\\n').encode())\no=0\nfor a in r['files']:\n end=buf.index(b'\\n',o); head=buf[o:end].split(); size=int(head[2]); o=end+1; b=buf[o:o+size]; o+=size+1\n assert size==a['bytes'] and hashlib.sha256(b).hexdigest()==a['sha256'],a['path']\nprint('Staged8 packet file byte/hash pins and exact historical snapshot: PASS')\n",
+      "exit_code": 0,
+      "summary": "Staged8 packet file byte/hash pins and exact historical snapshot: PASS",
+      "meaning": "Immutable byte/snapshot custody only. Receipt itself is bound by the outer commit; no science/release claim."
+    }
+  ],
+  "harness_failures": [
+    {
+      "command": "First revision2 PowerShell object-table duplicate scan",
+      "exit_code": 1,
+      "observed": "Duplicate object table: Object",
+      "cause": "Read-only scan initially included repeated Markdown Object header rows as object definitions.",
+      "correction": "Exclude the literal table header, then rerun same full inventory/body/hash/shape checks.",
+      "meaning": "Retained harness failure, not a product/scientific execution or discarded source failure."
+    }
+  ],
+  "self_review": {
+    "kind": "Producer full-text review, not independent approval",
+    "read_set": [
+      "docs/design/features/m03-aeromagnetic-lines/research.md",
+      "docs/design/features/m03-aeromagnetic-lines/requirements.md",
+      "docs/design/features/m03-aeromagnetic-lines/design.md",
+      "docs/design/features/m03-aeromagnetic-lines/contracts.md",
+      "docs/design/features/m03-aeromagnetic-lines/algorithms.md",
+      "docs/design/features/m03-aeromagnetic-lines/validation.md",
+      "docs/design/features/m03-aeromagnetic-lines/tasks.md",
+      "docs/research/m03-primary-retrieval-2026-10-03.json",
+      "docs/research/m03-packet-checks-2026-10-03.json"
+    ],
+    "corrections": [
+      "Explicit rereference enum, externally tagged exact old/new transaction payload, immutable ancestor versus actual DAG edge hashes, distinct target and repeat refusal.",
+      "Closed nested objects with typed keys/counts/enums/nulls; separate auxiliary source verification; typed local failure/CLOSED submission refusal; descriptor ordering, units, masks and external custody without hash fixed points.",
+      "Research/intake distinguishes total intensity from the only admitted harmonic scalar anomaly; no IGRF site vector/datum/uncertainty guessed.",
+      "Unweighted lambda dimensionless versus inverse-variance lambda nT^-2, explicit raw weights/no normalization, prospective augmented-QR W/lambda and data-unit rescaling oracles.",
+      "Scalar survey_reference versus genuine row_utc epoch branches, explicit Gregorian decimal-year semantics, independently reviewed old/new receipts without silent reevaluation.",
+      "Deterministic half-open source blocks, negative/max/tie edges, lexicographic signed IDs, sorted-row fsum representatives and exhaustive per-fold row maps.",
+      "Frozen original XY/IDs/candidates/anchors/outer and inner geometry, segment-wise closed tie masks and470m support; arithmetic inventories/support checked before values.",
+      "Coordinate/matrix limits in metres, determinant in m^2, dimensionless sine/parameters; nullable unavailable pair diagnostics rather than fictitious values.",
+      "V1 heading/base/lag calibrations independently supplied, no outer-training fitted coefficient leakage; crossover offsets/source scaling refit within each inner training fold.",
+      "Full approximately2.58GB provider coverage/offline executor remain unresolved, unimplemented and cannot be closed by400-row subset/metadata/synthetic/CLOSED port.",
+      "Correct management ADR Git remote links; result8MiB distinct from export/scratch64MiB; per-line/sensor inventory count and degenerate/no-result branches explicit.",
+      "Exact cross-object dictionary/sensor/selected-ancestor/geometry-gap/datum/leveling-weight/partition rules, with field-specific refusal rather than merged defaults."
+    ],
+    "unresolved": [
+      "Actual IGRF evaluator datum/source-rights/precision and independent numerical comparison receipt.",
+      "Charleston attachment rights/notices, actual bytes/dictionary/report/row metadata/untreated correction lineage and numerical comparator; Bartlett is a grid, not traces.",
+      "Full-survey offline contract/resources/coverage and actual provider field acceptance.",
+      "All prospective M03 algorithm/oracle/synthetic-accuracy/new-user-data tests, including frozen S1 quality target.",
+      "Native Windows/Linux method-specific CPU/stop/wall/RSS/scratch admission, durability/recovery/deletion-owner extension, genuine online child.",
+      "Rendered linked instrument/course and product integration/acceptance/deployment."
+    ],
+    "meaning": "Counts/regex/file presence are not the self-review verdict. Mandatory gaps corrected in docs; no implementation approval inferred."
+  },
+  "parent_ledger_observation": {
+    "pass": 0,
+    "fail": 1,
+    "unresolved": 18,
+    "ineligible": 0,
+    "modified": false
+  },
+  "status": {
+    "documentation": "revision2_checked_pending_MAIN_full_read",
+    "implementation": "not_started",
+    "main_review": "pending_full_reread_of_revision2_and_explicit_approval",
+    "field_measurements_acquired": false,
+    "online": "CLOSED",
+    "numerical_tests": "prospective_not_executed",
+    "rendered_qa": "not_applicable_no_UI_change",
+    "deployment": "unchanged",
+    "field_gate": "unresolved_not_mixed_with_M04",
+    "full_survey_offline": "unimplemented_unresolved",
+    "code_acquisition_env_frontend_VPS_changes": false
+  }
+}
