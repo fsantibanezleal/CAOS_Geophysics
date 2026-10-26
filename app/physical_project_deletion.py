@@ -23,12 +23,14 @@ def _transaction(connection):
 def original_slots(inventory):
     """Exact original files, not retained stages or profile archives."""
     from app.waveform_contract import SCRATCH
-    from app.physical_joint_native_contract import MAX_BYTES, MAX_JSON
+    from app.physical_joint_native_contract import MAX_BYTES, MAX_JSON, PARSER
+    joint_dataset_ids = {row['dataset_id'] for row in inventory['datasets'] if row.get('parser_version') == PARSER}
     joint_indexes = inventory.get('joint_result_indexes', [])
     joint_index_ids = {row['job_id'] for row in joint_indexes}
     records=([(r['asset_id'],'raw_delete','deleting_raw',r['asset_id'],1024*M,r['bytes'],r['sha256'])
               for r in inventory['raw_assets']] +
-        [(r['dataset_id'],'dataset_copy','deleting_derived',f"datasets/{r['dataset_id']}.json",64*M,r['bytes'],r['sha256'])
+        [(r['dataset_id'],'dataset_copy','deleting_derived',f"datasets/{r['dataset_id']}.json",
+          (MAX_JSON if r['dataset_id'] in joint_dataset_ids else 64*M),r['bytes'],r['sha256'])
          for r in inventory['datasets']] +
         [(r['job_id'],'result_copy','deleting_derived',f"results/{r['job_id']}.json",64*M,r['result_bytes'],r['result_sha256'])
          for r in inventory['jobs'] if r['state']=='succeeded' and r['job_id'] not in joint_index_ids] +

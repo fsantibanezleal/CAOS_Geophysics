@@ -118,6 +118,13 @@ class _PreparedOriginals:
             require(key in self.pairs,'physical_classifier_unregistered_missing_original')
             return self.original.read(self.pairs[key],**arguments)
 
+    def scan_joint_member(self,key,**arguments):
+        try:
+            return self.original.scan_joint_member(key,**arguments)
+        except FileNotFoundError:
+            require(key in self.pairs,'physical_classifier_unregistered_missing_joint_original')
+            return self.original.scan_joint_member(self.pairs[key],**arguments)
+
 
 class _Audit:
     def __init__(self, connection, files, rows, manifests, installations, metadata, source_policy):
@@ -228,7 +235,8 @@ class _Audit:
             self.empty.add('.deleting')
             projected=dict(raw_assets=[dict(asset_id=r['id'],bytes=r['byte_count'],sha256=r['sha256'])
                 for r in sorted(self.raw.values(),key=lambda r:r['id']) if r['project_id']==project],
-                datasets=[dict(dataset_id=r['id'],bytes=r['byte_count'],sha256=r['sha256'])
+                datasets=[dict(dataset_id=r['id'],parser_version=r['parser_version'],
+                    bytes=r['byte_count'],sha256=r['sha256'])
                 for r in sorted(self.datasets.values(),key=lambda r:r['id']) if r['project_id']==project],
                 jobs=[dict(job_id=r['id'],state=r['state'],result_bytes=r['result_bytes'],result_sha256=r['result_sha256'])
                 for r in sorted(self.jobs.values(),key=lambda r:r['id']) if r['project_id']==project],
@@ -273,8 +281,10 @@ class _Audit:
             # Include the exact leaf in projection, never SHA deduplication.
             projection = [(s['role'], s['artifact_id'], s['leaf'], s['actual_bytes'], s['actual_sha256'])
                           for s in inventory['initial_files']]
-            expected = ([('raw_delete', r['asset_id'], r['asset_id'], r['bytes'], r['sha256']) for r in deleted['raw_assets'].values()] +
-                [('dataset_copy', r['dataset_id'], f"datasets/{r['dataset_id']}.json", r['bytes'], r['sha256']) for r in deleted['datasets'].values()] +
+            expected = ([('raw_delete', r['asset_id'], r['asset_id'], r['bytes'], r['sha256'])
+                         for r in deleted['raw_assets'].values()] +
+                [('dataset_copy', r['dataset_id'], f"datasets/{r['dataset_id']}.json", r['bytes'], r['sha256'])
+                 for r in deleted['datasets'].values()] +
                 [('result_copy', r['job_id'], f"results/{r['job_id']}.json", r['result_bytes'], r['result_sha256']) for r in deleted['jobs'].values()
                  if r['state'] == 'succeeded' and r['job_id'] not in {x['job_id'] for x in deleted['inventory'].get('joint_result_indexes',[])}] +
                 [('result_copy', r['job_id'], f"results/{r['job_id']}.json", r['bytes'], r['sha256'])

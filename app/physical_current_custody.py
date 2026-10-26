@@ -29,15 +29,28 @@ def validate_current_custody(value):
     custody_header(inherited)
     entries = value['initial_files']
     require(type(entries) is list and len(entries) <= 4096, 'current_custody_count')
-    require(value['schema'] != JOINT_SCHEMA or any(type(item) is dict
-            and type(item.get('leaf')) is str and item['leaf'].startswith('joint/') for item in entries),
-            'current_custody_joint_dispatch_required')
+    joint_dataset_index = False
     ordinals, slots = [], set()
     from app.waveform_contract import MEMBER, SCRATCH
     for item in entries:
         fields(item, 'ordinal role location artifact_id leaf max_bytes actual_bytes actual_sha256')
         text(item['leaf'], 180)
-        if value['schema']==JOINT_SCHEMA and item['leaf'].startswith('joint/'):
+        if (value['schema'] == JOINT_SCHEMA and item['role'] == 'dataset_copy'
+                and item['leaf'].startswith('datasets/')):
+            from app.physical_joint_native_contract import MAX_JSON
+            if item['max_bytes'] == MAX_JSON:
+                pieces = item['leaf'].split('/')
+                require(len(pieces) == 2 and pieces[0] == 'datasets'
+                        and pieces[1] == f"{uuid(item['artifact_id'])}.json"
+                        and item['location'] == 'deleting_derived', 'current_custody_joint_dataset')
+                integer(item['ordinal'], 1, 4096)
+                integer(item['actual_bytes'], 1, item['max_bytes'])
+                sha(item['actual_sha256'])
+                require(len(canonical(item)) <= 1024, 'current_custody_file_cap')
+                joint_dataset_index = True
+            else:
+                custody_file(item, inherited)
+        elif value['schema']==JOINT_SCHEMA and item['leaf'].startswith('joint/'):
             from app.physical_joint_custody import NAME
             from app.physical_joint_native_contract import MAX_BYTES
             pieces = item['leaf'].split('/',2)
@@ -74,6 +87,9 @@ def validate_current_custody(value):
         slot = item['location'], item['leaf']
         require(slot not in slots, 'current_custody_duplicate_slot')
         slots.add(slot)
+    require(value['schema'] != JOINT_SCHEMA or joint_dataset_index
+            or any(type(item) is dict and type(item.get('leaf')) is str and item['leaf'].startswith('joint/')
+                   for item in entries), 'current_custody_joint_dispatch_required')
     require(ordinals == sorted(set(ordinals)), 'current_custody_ordinals')
     removed = value['removed_ordinals']
     require(type(removed) is list and all(type(n) is int for n in removed)

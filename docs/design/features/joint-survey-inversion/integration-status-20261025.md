@@ -1,4 +1,4 @@
-# M11 supplied-survey integration status — 2026-10-25
+# M11 supplied-survey integration status: 2026-10-25
 
 ## Implemented and validated locally
 
@@ -67,7 +67,7 @@ close field-data rights/validity, broader M01–M13 submitted-data coverage,
 complete browser visual acceptance, current VPS resource admission, or the
 single-origin replacement cutover. No deployment was performed.
 
-## Online lifecycle audit — 2026-10-25
+## Online lifecycle audit: 2026-10-25
 
 The integration boundary was rechecked against the current branch's app
 assembly, authenticated project routes, processing API/worker, physical
@@ -98,7 +98,7 @@ recorded that the frontend's expected endpoint was not served. The remaining
 worker, startup/restart, deletion and VPS seams must be closed before M11 online
 compute can be advertised.
 
-## Candidate intake and indexing implementation — 2026-10-25
+## Candidate intake and indexing implementation: 2026-10-25
 
 The branch now has an isolated intake/index router and a successful authenticated
 API test against the exact allocated 0006 candidate migration. The test runs on
@@ -111,9 +111,28 @@ memory; its Linux test checks digest, byte cap, permissions and retained partial
 file behavior. The focused custody/source suite and these new tests pass 62
 checks together.
 
-These are candidate-branch results only. The default migration chain still does
-not mount 0006; no ordinary production database can pass the route's exact
-schema gate. Job submission, worker execution, cancellation, result history,
-result index/export, request-time quota reservation, startup/restart receipts,
-project deletion and VPS deployment remain open. This does not change M11, R-008
-or any parent acceptance verdict.
+## Candidate job lifecycle and deletion implementation: 2026-10-26
+
+The isolated candidate now mounts owner-scoped M11 job, cancel, result and
+export routes in the explicit physical API assembly. They share native intake's
+exact 0006 schema, custody, quota and lease checks. A dedicated worker claims
+only M11 jobs, invokes the pinned Linux workflow CLI, validates its output, and
+publishes terminal index and member copies in one transaction. The candidate
+API tests cover queue saturation, cancellation publication, failed terminal
+export, and cross-project denial. They use a controlled publisher for terminal
+states and do not substitute for the separate real solver run.
+
+The authenticated project-delete route was exercised against POSIX private
+storage for a source-only M11 dataset. The test verifies raw and index hashes,
+both project-tree moves before cleanup, committed receipt ordering, cleanup,
+restart reconciliation, and tampered-source refusal. Result-bearing deletion
+and the crash-cut matrix remain unqualified.
+
+These are isolated candidate-schema results. Revision 0006 remains an unmounted
+migration candidate, so the normal deployed database cannot pass the job route's
+exact schema gate. The M11 worker has no installed service unit and is not
+running. Request-time active-job quota accounting, memory and scratch
+enforcement, committed result restart/deletion receipts, the full API/browser
+contract, actual-host capacity and the single-VPS cutover remain open. Nothing
+here changes M11 scientific acceptance, R-008, whole-product acceptance or
+deployment status.

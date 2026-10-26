@@ -63,6 +63,11 @@ def create_app(settings: Settings, mail_sender: MailSender | None = None, *, phy
         # physical runtime. Its handlers independently require the exact
         # registered 0006 schema before accepting a body or reading custody.
         install_joint_routes(app, settings, current_user, get_session)
+        # Job, cancellation, result and export routes share the same owner,
+        # physical-lease, custody and exact-0006 guards as native intake.
+        # Mounting the route contract does not migrate or activate 0006.
+        from app.joint_job_routes import install_joint_job_routes
+        install_joint_job_routes(app, settings, current_user, get_session)
         # Last-added ASGI middleware is outermost: before CSRF/rate/auth writes,
         # in their same task, covering the final streamed response as well.
         physical.install(app, settings)

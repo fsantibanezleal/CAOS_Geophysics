@@ -1,4 +1,4 @@
-# Approved product and release status — 2026-10-25
+# Approved product and release status: 2026-10-26
 
 This snapshot reconciles the approved product SDD, its 2026-10-03 operating
 amendment, current product-branch evidence and the open implementation gates.
@@ -31,29 +31,25 @@ threshold as pending owner decisions must not be used to plan or block work.
 ## Current branch evidence
 
 The isolated implementation branch is `task/geophysics-client-first-completion`
-at `1d90428307c4b710c7cb165a849ae11fe790c089` at the start of this review. Its
+at `10cd92e74fa7235d86ab0263f20874a4923a4cac` at the start of this review. Its
 M11 work includes a source-bound gravity/magnetic joint inverse, independent
 single-modality baselines, sealed selection/evaluation, a 24-control synthetic
 matrix, resource controls and a strict local bundle importer. The actual local
 M11 receipts are documented in
 [`joint-survey-inversion/integration-status-20261025.md`](features/joint-survey-inversion/integration-status-20261025.md).
 
-That evidence does not close M11 online execution. The current worktree now has
-an owner/project-scoped M11 member intake and dataset-index route, and an
-isolated Linux candidate-schema API test passes through the production
-descriptor-relative file store. However, 0006 remains outside the default
-serving migration chain. M11 job submission, worker, cancellation, custody
-history and export routes expected by the project workbench are still absent.
-The current classifier audits exact M11 originals, datasets, result members
-and indices in one snapshot and adds retained/active charges through that
-audit. Startup invokes the same classifier snapshot under its participant
-lease, but committed M11 restart receipts remain unqualified. A versioned M11
-deletion projection now binds originals, source dependencies, terminal
-indexes and result members; its prepare/transfer/restart fixture passes with
-changed-byte refusal. Request-time quota reservation, assembled DELETE-route
-cleanup and actual-filesystem crash recovery remain unqualified. The workbench
-therefore cannot yet take a user's gravity and magnetic survey through an
-online solve. Do not label this vertical online-ready or scientifically
+That evidence does not close M11 online execution. The current worktree adds
+owner/project-scoped job, cancellation, result and export routes to the explicit
+physical API assembly, plus a dedicated candidate worker that runs the pinned
+Linux workflow CLI. Isolated candidate-schema API tests exercise admission,
+cancellation, failed-result export, owner boundaries, terminal-result project
+deletion, and a source-only delete against production descriptor-relative POSIX
+storage. The exact 0006 migration remains outside the default serving chain, so
+ordinary deployment databases fail closed at M11 admission. No M11 worker
+service is installed. Request-time quota race qualification, process memory and
+scratch enforcement, result-bearing restart/crash recovery, the full browser
+contract and actual-host admission remain open. The workbench cannot yet offer a
+released online solve. Do not label this vertical online-ready or scientifically
 accepted.
 
 The focused Linux M11 regression suite on this branch passed 488 tests with 3
@@ -70,7 +66,7 @@ to render non-overlapping survey glyphs and confirms distinct gravity and
 magnetic model canvases. These are bounded UI/retention checks and do not close
 the whole-product or ML-VPS gates.
 
-## Current ML-VPS observation — 2026-10-25
+## Current ML-VPS observation: 2026-10-25
 
 Read-only SSH inspection of the deployment host (`89.167.4.175`) measured an
 80,290,492,416-byte root filesystem with 34,615,701,504 bytes available (56%
