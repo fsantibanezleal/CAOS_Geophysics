@@ -1,0 +1,5 @@
+# Scientific basis for bounded local waveform processing
+
+The scientific operators and exact numerical contracts are specified in [algorithms](algorithms.md) and [contracts](contracts.md). Source-backed provider representation semantics are specified in [original-format semantics](ridgecrest-format-diagnostic.md). Operational research, retrieval receipts, local runtime inventories and implementation coordination are maintained privately.
+
+Primary scientific references: [SEED2.4](https://www.fdsn.org/pdf/SEEDManual_V2.4.pdf), [FDSN StationXML](https://docs.fdsn.org/projects/stationxml/en/latest/reference.html), [ObsPy response removal](https://docs.obspy.org/packages/autogen/obspy.core.trace.Trace.remove_response.html), [SciPy SOS filtering](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.sosfiltfilt.html) and [Welch density](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html). Their availability does not authenticate a provider, calibrate an instrument, enforce native resource containment or establish method/host acceptance.

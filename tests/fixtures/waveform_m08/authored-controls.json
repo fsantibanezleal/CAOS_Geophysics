@@ -1,0 +1,21 @@
+{
+  "schema": "caos.authored-waveform-controls.v1",
+  "origin": "authored_not_field",
+  "network": "XX",
+  "station": "TEST",
+  "location": "",
+  "channel": "BHZ",
+  "start_utc": "2020-01-01T00:00:00Z",
+  "sample_rate_hz": 100,
+  "conditioning_seconds": 40,
+  "analysis_seconds": [8, 32],
+  "gain_counts_per_m_s": 1000,
+  "sinusoid_hz": [3, 17],
+  "count_amplitudes": [10000, 500],
+  "tolerances": {
+    "analytic_rtol": 1e-10,
+    "analytic_scale_atol": 1e-12,
+    "normalized_filter_cf_rtol": 1e-9,
+    "normalized_filter_cf_atol": 1e-9
+  }
+}
