@@ -194,7 +194,7 @@ def test_candidate_worker_failure_code_keeps_only_stable_tokens():
     assert _failure_code(RuntimeError("/private/data/input.npy")) == "RuntimeError"
 
 
-def test_candidate_worker_executes_real_uploaded_survey(m11_candidate):
+def test_candidate_worker_executes_real_nonrecovering_control_honestly(m11_candidate):
     if os.environ.get("GEOPHYSICS_M11_REAL_WORKER") != "1":
         pytest.skip("set GEOPHYSICS_M11_REAL_WORKER=1 for pinned solver execution")
     if not os.environ.get("GEOPHYSICS_M11_PYTHON") or not os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT"):
@@ -223,10 +223,22 @@ def test_candidate_worker_executes_real_uploaded_survey(m11_candidate):
     job_id = queued.json()["job_id"]
     terminal = client.get(f"/api/projects/{project}/joint-jobs/{job_id}")
     assert terminal.status_code == 200, terminal.text
-    assert terminal.json()["state"] == "succeeded", terminal.text
+    # Every row in this locked matrix is explicitly a non-recovering control.
+    # The candidate service must preserve that negative result and never turn
+    # completion of the software pipeline into scientific success.
+    assert terminal.json()["state"] == "failed", terminal.text
     result = client.get(f"/api/projects/{project}/joint-results/{job_id}")
     assert result.status_code == 200, result.text
+    assert result.json()["state"] == "failed"
     assert result.json()["scientific_acceptance"] is False
-    assert "instrument/manifest.json" in result.json()["members"]
+    assert "api-failure.json" in result.json()["members"] or "failure.json" in result.json()["members"]
     exported = client.get(f"/api/projects/{project}/joint-results/{job_id}/export")
     assert exported.status_code == 200, exported.text
+    with zipfile.ZipFile(io.BytesIO(exported.content)) as archive:
+        names = set(archive.namelist())
+        assert "private-custody-index.json" in names
+        evidence = names.intersection({"api-failure.json", "failure.json"})
+        assert evidence
+        failure = json.loads(archive.read(sorted(evidence)[0]))
+        assert failure.get("scientific_acceptance") is False
+        assert failure.get("public_activation") is False
