@@ -1,0 +1,59 @@
+{
+  "executed_utc": "2026-10-03T15:29:16.054861+00:00",
+  "files": [
+    {
+      "bytes": 423760,
+      "name": "diagnostics-dark.png",
+      "sha256": "d49fd283b824d97db6e7a9262c51f7a9e6f3cd8405d6d158b913bfdbfd148221"
+    },
+    {
+      "bytes": 106039,
+      "name": "diagnostics-dark.svg",
+      "sha256": "8fb755bfe3764e4fa4af1a02e3fac816032147b8f4ce1ce3071f0e990b91c0fb"
+    },
+    {
+      "bytes": 426969,
+      "name": "diagnostics-light.png",
+      "sha256": "410f3f67f1c15b29b69031a9b2896a75c7eb88c68690e2e5a552d5770819d146"
+    },
+    {
+      "bytes": 106039,
+      "name": "diagnostics-light.svg",
+      "sha256": "9d48f27c946d9e4b32326e34f4823014f9cdbaed10dae4e4048284d37b814a91"
+    },
+    {
+      "bytes": 562695,
+      "name": "maps-dark.png",
+      "sha256": "7fe5aa132922439707623a21a7983a8145730678d628b1eba314e09885604757"
+    },
+    {
+      "bytes": 161595,
+      "name": "maps-dark.svg",
+      "sha256": "3981fa40d016fe7384c304aa6288354f8d1a1d241df4c23a45495d3be0d9c7ad"
+    },
+    {
+      "bytes": 539796,
+      "name": "maps-light.png",
+      "sha256": "c3b9ed2e58e872bed96624819836a6bb5724cffc1d3bb86bc0eb1d22f2606901"
+    },
+    {
+      "bytes": 161595,
+      "name": "maps-light.svg",
+      "sha256": "8bd1c14ef92a8b4d9697f34dea4c534257d459388fe7f633f29a740a693b3c08"
+    },
+    {
+      "bytes": 202430,
+      "name": "request.json",
+      "sha256": "56cf777da0ca06e2b9b5fa7441f1616218f8240b90db74ab78f761c7098e07e1"
+    },
+    {
+      "bytes": 934813,
+      "name": "result.json",
+      "sha256": "c774e2901e95a5c401ebd0e4d54e3e4a6bf6297aa4e5d892474542082618f55d"
+    }
+  ],
+  "full_method_accepted": false,
+  "request_sha256": "0c2066862b17a97dd4ecc9efb0e28847343b9896cc0bb0e4a19c17a3efd585fc",
+  "result_sha256": "c582c46d1369e679964549d7d2e20e398284a9be3e073ab74aa704d75586f5da",
+  "schema_version": "gravity-transform-export-1"
+}

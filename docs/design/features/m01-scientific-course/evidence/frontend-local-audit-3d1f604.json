@@ -1,0 +1,49 @@
+{
+  "checks": 32,
+  "cpu_microseconds": {
+    "system": 281000,
+    "user": 3469000
+  },
+  "field_eligibility": false,
+  "host_admission": false,
+  "kind": "local_typescript_arithmetic_transport_react_ssr",
+  "loads": [
+    {
+      "elapsed_ms": 15.155399999999986,
+      "fetched_bytes": 977561,
+      "parsed_objects": 3,
+      "scenario_id": "prism-case-0"
+    },
+    {
+      "elapsed_ms": 13.488599999999906,
+      "fetched_bytes": 1087072,
+      "parsed_objects": 3,
+      "scenario_id": "prism-case-1"
+    },
+    {
+      "elapsed_ms": 50.47469999999976,
+      "fetched_bytes": 1139104,
+      "parsed_objects": 3,
+      "scenario_id": "prism-case-2"
+    }
+  ],
+  "negative_assertions": 115,
+  "node": "v24.14.1",
+  "process_memory_snapshot_bytes": {
+    "arrayBuffers": 1410149,
+    "external": 9303146,
+    "heapTotal": 197836800,
+    "heapUsed": 65949480,
+    "rss": 280322048
+  },
+  "process_peak_rss_kib": 300788,
+  "product_browser_qa": false,
+  "source_sha256": {
+    "components/M01CourseDiagram.tsx": "0301262551aab4004576eb4f436d0b7cafff08f34985a1c2a1edf57817aee91c",
+    "components/M01CourseExercise.tsx": "6135e0868a98cbbcb142b969abb110590b7fad5362d0fe281eb90f6553170a6b",
+    "components/M01ScientificCourse.tsx": "56b741dc43db1f2664d2b478be0fb70199bac8b7bfd9ee04b8dbf7c1838312c5",
+    "data/m01-scientific-course.ts": "c66633d3c8c3571a9e737893f753323f17d2a4f0079bb7e5b60b52e1347a4591"
+  },
+  "ssr_renders": 176,
+  "wall_ms": 3209.8382
+}

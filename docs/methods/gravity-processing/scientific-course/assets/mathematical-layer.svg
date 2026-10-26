@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" role="img" aria-labelledby="title desc">
+<title id="title">Physical body versus mathematical layer / Cuerpo y capa</title><desc id="desc">Irregular receivers above ground, an independent buried prism and a distinct common mathematical source plane. / Receptores irregulares, prisma independiente y plano matemático distinto.</desc>
+<style>
+:root{--bg:#f6f8fa;--surface:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--blue:#0969da;--cyan:#0a7c8a;--pink:#bf3989;--warn:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--surface:#161b22;--fg:#c9d1d9;--muted:#9aa6b2;--border:#30363d;--blue:#58a6ff;--cyan:#3fb1c8;--pink:#f778ba;--warn:#d29922}}
+text{fill:var(--fg);font:24px ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.small{font-size:22px;fill:var(--muted)}.head{font-size:26px;font-weight:600}.line{fill:none;stroke:var(--fg);stroke-width:2.5}.ref{fill:none;stroke:var(--blue);stroke-width:3}.geo{fill:none;stroke:var(--cyan);stroke-width:3;stroke-dasharray:8 5}.mass{fill:var(--cyan);fill-opacity:.13;stroke:var(--cyan);stroke-width:2.5}.layer{fill:none;stroke:var(--pink);stroke-width:3;stroke-dasharray:7 5}.box{fill:var(--surface);stroke:var(--border);stroke-width:2}.warn{fill:var(--warn)}.blue{fill:var(--blue)}.pink{fill:var(--pink)}.cyan{fill:var(--cyan)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="600" height="720" rx="12" fill="var(--bg)"/>
+
+<text class="head" x="30" y="48">Layer ≠ body / Capa ≠ cuerpo</text>
+<text class="small" x="30" y="84">Schematic / Esquema · x,z in m / en m</text>
+<path class="line" d="M60 575V125" marker-end="url(#arrow)"/><path class="line" d="M60 575H555" marker-end="url(#arrow)"/><text x="32" y="127">z</text><text x="555" y="609">x</text>
+<path class="line" d="M85 290L170 273L270 299L370 260L550 285"/>
+<text class="small" x="90" y="327">Surface / Superficie</text>
+<g fill="var(--blue)"><circle cx="110" cy="203" r="7"/><circle cx="220" cy="175" r="7"/><circle cx="350" cy="210" r="7"/><circle cx="475" cy="190" r="7"/></g>
+<text class="blue" x="90" y="145">Receivers / Receptores</text>
+<path class="ref" stroke-dasharray="5 5" d="M85 210H550"/>
+<rect class="mass" x="285" y="370" width="175" height="85"/><path class="mass" d="M285 370L315 345H490L460 370Z"/><path class="mass" d="M460 370L490 345V430L460 455Z"/>
+<text class="cyan" x="90" y="393">Prism / Prisma</text><text class="small" x="90" y="427">ρ known</text><text class="small" x="90" y="456">ρ conocida</text>
+<path class="layer" d="M85 520H550"/>
+<g fill="var(--pink)"><circle cx="110" cy="520" r="8"/><circle cx="220" cy="520" r="8"/><circle cx="350" cy="520" r="8"/><circle cx="475" cy="520" r="8"/></g>
+<path class="line" d="M535 217V513" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text class="small" x="320" y="480">Depth / Profundidad</text>
+<text class="pink" x="90" y="630">J = 1/r · c in mGal m / en mGal m</text>
+<text class="small" x="90" y="670">zₛ = min(z fit / ajuste) − depth</text>
+<text class="small" x="90" y="703">Mathematical sources / Fuentes matemáticas</text>
+</svg>

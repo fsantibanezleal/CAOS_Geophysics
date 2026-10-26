@@ -1,0 +1,244 @@
+{
+  "artifacts": [
+    {
+      "bytes": 202493,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/request.json",
+      "role": "request",
+      "sha256": "22209f7b19e89271162df2f59b6302ad9ea7864c76430630a4d7ed75d7b404e9"
+    },
+    {
+      "bytes": 773207,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/result.json",
+      "role": "result",
+      "sha256": "c3c94f316b60ec4badb7184d89181c514d66660939d3c75cf99d6a5e67e4f9b8"
+    },
+    {
+      "bytes": 1861,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/receipt.json",
+      "role": "export_receipt",
+      "sha256": "785640127180c05d390e47e1ef6a5d23ddf0ae968df8a8ad94a44d61610d57f3"
+    },
+    {
+      "bytes": 151806,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/maps-light.svg",
+      "role": "map_light",
+      "sha256": "413984df11e687855389be854f60820f9bf9f87abda2b45ffcc748b3335ca011"
+    },
+    {
+      "bytes": 151806,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/maps-dark.svg",
+      "role": "map_dark",
+      "sha256": "7477a8c98f6678d701aa25eb07a55becdd33aab261d916500364cdcf23dd5ea5"
+    },
+    {
+      "bytes": 104024,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/diagnostics-light.svg",
+      "role": "diagnostics_light",
+      "sha256": "a70addb094119745daae17c5484f94484b794a8e4adc758ec3daab9cc8114c2c"
+    },
+    {
+      "bytes": 104024,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/diagnostics-dark.svg",
+      "role": "diagnostics_dark",
+      "sha256": "a68f9c1f364bbdd943c0975dd260c06b94204108a15e0305c70ec71c36ba11d4"
+    },
+    {
+      "bytes": 514534,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/maps-light.png",
+      "role": "map_light_png",
+      "sha256": "84eb961b2047425afec3032d72af0876810453980d31609232b28e8cd0bbe390"
+    },
+    {
+      "bytes": 540126,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/maps-dark.png",
+      "role": "map_dark_png",
+      "sha256": "e4170868115ebe70ef9dbc8ef0f96157e5ef7b323281934b9ae116e6e5a209fb"
+    },
+    {
+      "bytes": 404317,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/diagnostics-light.png",
+      "role": "diagnostics_light_png",
+      "sha256": "2f299c6468db16c5689767344302b5fbe4c55d80253b6498b60ee66019814967"
+    },
+    {
+      "bytes": 400476,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-0/diagnostics-dark.png",
+      "role": "diagnostics_dark_png",
+      "sha256": "f3579c10f389267b7106b8179222933bd31ee7d5ed357a5990b601b6f19c4001"
+    },
+    {
+      "bytes": 202486,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/request.json",
+      "role": "request",
+      "sha256": "8ad491c813fb52df716b5cf79ea6156e5585cbd0f7b1a12aae24f8a5f7dd2c10"
+    },
+    {
+      "bytes": 882725,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/result.json",
+      "role": "result",
+      "sha256": "ad68fa515f402cc7877490d326ea91627748ceab8f47ed6001c60bac7a606ce2"
+    },
+    {
+      "bytes": 1861,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/receipt.json",
+      "role": "export_receipt",
+      "sha256": "24d4fd031a8eae6ce5a0d4db8fcab5c05830358088d9c6b116b2aad7729cd894"
+    },
+    {
+      "bytes": 160502,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/maps-light.svg",
+      "role": "map_light",
+      "sha256": "910ce9f2aab48e5517dd86d22d1ca4c98691915f830daeb34cb1dbb69bd9af9a"
+    },
+    {
+      "bytes": 160502,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/maps-dark.svg",
+      "role": "map_dark",
+      "sha256": "8455fd5a8e9ba92e71c12bed898352efda3cf9aebbe3fdb12380a04c695439e5"
+    },
+    {
+      "bytes": 110324,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/diagnostics-light.svg",
+      "role": "diagnostics_light",
+      "sha256": "5391f9654d274fc636ddaed5dffc5f862b324766c1f050ae5ed6640b1ee8873f"
+    },
+    {
+      "bytes": 110324,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/diagnostics-dark.svg",
+      "role": "diagnostics_dark",
+      "sha256": "2fb38e49ef7134e53da79682613dac43ffaef1b2b8b91528e189defafdaf9e13"
+    },
+    {
+      "bytes": 532890,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/maps-light.png",
+      "role": "map_light_png",
+      "sha256": "164ad365302cc9af90ff7064b79d8b458dd20fa742e5cd1c338802dc20196001"
+    },
+    {
+      "bytes": 559073,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/maps-dark.png",
+      "role": "map_dark_png",
+      "sha256": "30ba2899b04f003ded3e15ab1e2a872e369a29c511100597cc245514220a81b5"
+    },
+    {
+      "bytes": 431386,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/diagnostics-light.png",
+      "role": "diagnostics_light_png",
+      "sha256": "1c567b101d9a00e8f5b2b674473c79896a6b176822504dfe8d67be1fff200df6"
+    },
+    {
+      "bytes": 427390,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-1/diagnostics-dark.png",
+      "role": "diagnostics_dark_png",
+      "sha256": "44fbcab0a972d2d68affe92e7f2575132afbc1ca4a22b34f999864f7b3084bdb"
+    },
+    {
+      "bytes": 202430,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/request.json",
+      "role": "request",
+      "sha256": "56cf777da0ca06e2b9b5fa7441f1616218f8240b90db74ab78f761c7098e07e1"
+    },
+    {
+      "bytes": 934813,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/result.json",
+      "role": "result",
+      "sha256": "c774e2901e95a5c401ebd0e4d54e3e4a6bf6297aa4e5d892474542082618f55d"
+    },
+    {
+      "bytes": 1861,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/receipt.json",
+      "role": "export_receipt",
+      "sha256": "4ebd9b984ba9f3e3d4856ebd8d60c86811c9cf2f7b6eecbfd0f185d7d3d304d0"
+    },
+    {
+      "bytes": 161595,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/maps-light.svg",
+      "role": "map_light",
+      "sha256": "8bd1c14ef92a8b4d9697f34dea4c534257d459388fe7f633f29a740a693b3c08"
+    },
+    {
+      "bytes": 161595,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/maps-dark.svg",
+      "role": "map_dark",
+      "sha256": "3981fa40d016fe7384c304aa6288354f8d1a1d241df4c23a45495d3be0d9c7ad"
+    },
+    {
+      "bytes": 106039,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/diagnostics-light.svg",
+      "role": "diagnostics_light",
+      "sha256": "9d48f27c946d9e4b32326e34f4823014f9cdbaed10dae4e4048284d37b814a91"
+    },
+    {
+      "bytes": 106039,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/diagnostics-dark.svg",
+      "role": "diagnostics_dark",
+      "sha256": "8fb755bfe3764e4fa4af1a02e3fac816032147b8f4ce1ce3071f0e990b91c0fb"
+    },
+    {
+      "bytes": 539796,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/maps-light.png",
+      "role": "map_light_png",
+      "sha256": "c3b9ed2e58e872bed96624819836a6bb5724cffc1d3bb86bc0eb1d22f2606901"
+    },
+    {
+      "bytes": 562695,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/maps-dark.png",
+      "role": "map_dark_png",
+      "sha256": "7fe5aa132922439707623a21a7983a8145730678d628b1eba314e09885604757"
+    },
+    {
+      "bytes": 426969,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/diagnostics-light.png",
+      "role": "diagnostics_light_png",
+      "sha256": "410f3f67f1c15b29b69031a9b2896a75c7eb88c68690e2e5a552d5770819d146"
+    },
+    {
+      "bytes": 423760,
+      "git_blob_equals_original_and_working": true,
+      "path": "data/derived/m01-scientific-course/prism-case-2/diagnostics-dark.png",
+      "role": "diagnostics_dark_png",
+      "sha256": "d49fd283b824d97db6e7a9262c51f7a9e6f3cd8405d6d158b913bfdbfd148221"
+    }
+  ],
+  "full_method_accepted": false,
+  "git_revision": "47efb36f72be02ca297b5096a0681ab5e47b857c",
+  "index": {
+    "bytes": 10476,
+    "git_blob_equals_original_and_working": true,
+    "path": "frontend/src/data/m01-course-record-index.json",
+    "sha256": "e2d6752f235050cab1571f2ed33588586744074d6ec4aaa650ff9e6bb13c97ba"
+  },
+  "kind": "original_file_byte_git_publication"
+}
