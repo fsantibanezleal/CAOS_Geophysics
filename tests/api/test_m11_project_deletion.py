@@ -163,4 +163,3 @@ def test_m11_job_routes_are_assembled_but_empty_project_has_no_result_rows(m11_c
         assert revision == ("0006_joint_artifacts",)
         assert db.execute("SELECT COUNT(*) FROM processing_jobs WHERE method_id='joint.gravity-magnetic-native/v1'").fetchone() == (0,)
         assert db.execute("SELECT COUNT(*) FROM joint_result_artifacts").fetchone() == (0,)
-
