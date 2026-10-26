@@ -31,7 +31,8 @@ threshold as pending owner decisions must not be used to plan or block work.
 ## Current branch evidence
 
 The isolated implementation branch is `task/geophysics-client-first-completion`
-at `10cd92e74fa7235d86ab0263f20874a4923a4cac` at the start of this review. Its
+at `83193ee332e400e6650f3661347908eb1d43f84d` before the workspace recovery
+fix in this review. Its
 M11 work includes a source-bound gravity/magnetic joint inverse, independent
 single-modality baselines, sealed selection/evaluation, a 24-control synthetic
 matrix, resource controls and a strict local bundle importer. The actual local
@@ -111,3 +112,12 @@ data capacity. No host files, services or release pointers were changed.
 The convergence ledger remains the authority for per-requirement verdicts. A
 clean build, local synthetic matrix, HTTP 200, or successful VPS health check
 does not by itself complete the replacement release.
+
+## Sequential worker workspace regression: 2026-10-26
+
+The candidate worker previously rejected any non-empty shared workspace root,
+so one preserved interrupted job could permanently prevent later jobs from
+running. The root now permits up to 127 retained entries, preserves them
+without adoption or deletion, and refuses new work after that bound. The
+focused regression passes on the Linux candidate environment. This does not
+qualify scratch enforcement, crash recovery, service integration or VPS use.

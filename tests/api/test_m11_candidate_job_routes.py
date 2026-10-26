@@ -170,3 +170,18 @@ def test_candidate_worker_does_not_relabel_completed_workflow_as_failed(tmp_path
     payload = json.loads(members["api-failure.json"])
     assert payload["schema"] == "geophysics.joint-job-failure/v1"
     assert payload["reason"] == "instrument_validation_failed"
+
+
+def test_candidate_workspace_reuses_root_without_adopting_interrupted_job(tmp_path, monkeypatch):
+    from app.joint_job_worker import _workspace_root
+
+    root = tmp_path / "external"
+    root.mkdir(mode=0o700)
+    monkeypatch.setenv("GEOPHYSICS_LOCAL_DATA_ROOT", str(root))
+    workspace = _workspace_root()
+    interrupted = workspace / "interrupted-job"
+    interrupted.mkdir(mode=0o700)
+    (interrupted / "unreviewed.bin").write_bytes(b"preserve")
+
+    assert _workspace_root() == workspace
+    assert (interrupted / "unreviewed.bin").read_bytes() == b"preserve"

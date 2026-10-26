@@ -41,12 +41,13 @@ def _workspace_root():
     base = root / "m11-candidate-jobs"
     if not base.exists():
         _mkdir_exclusive(base)
-    elif base.is_symlink() or not base.is_dir():
+    elif base.is_symlink() or not base.is_dir() or base.lstat().st_mode & 0o077:
         raise RuntimeError("m11_workspace_root_invalid")
     with os.scandir(base) as entries:
-        if next(entries, None) is not None:
-            # Interrupted inputs/results remain available for operator review;
-            # never auto-adopt or recursively delete unknown scientific files.
+        if sum(1 for _ in entries) >= 128:
+            # Preserve interrupted inputs/results for operator review; never
+            # adopt or recursively delete unknown scientific files. A finite
+            # ceiling prevents unbounded recovery debris from being ignored.
             raise RuntimeError("m11_workspace_recovery_required")
     return base
 
