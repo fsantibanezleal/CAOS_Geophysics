@@ -1,0 +1,21 @@
+{
+  "schema": "caos.documentation-source-receipts/v1",
+  "scope": "m01-physical-vertical-design-only",
+  "baseline_commit": "cf086dc817d095d66e46fdab53cc235a8e70004b",
+  "full_html_committed": false,
+  "sources": [
+    {"url":"https://docs.python.org/3.12/library/json.html","http":200,"bytes":107891,"sha256":"1a5e4ba18342b32f5f174d129f9c226a21a9445a89384f13a3f33ec327c2b68f","retrieved_utc":"2026-10-03T09:33:00.2319058Z"},
+    {"url":"https://docs.sqlalchemy.org/en/20/core/constraints.html","http":200,"bytes":565768,"sha256":"d9834c70d164b2a3b7bd3fc2149a91e9c532c4963340e7fea9c4a6fe579bf731","retrieved_utc":"2026-10-03T09:33:01.0279947Z"},
+    {"url":"https://docs.sqlalchemy.org/en/20/orm/session_transaction.html","http":200,"bytes":109158,"sha256":"24f5d13d78b7ece505e2f5baa61fa64f871b961f74fdd4af67faa12031e8b90f","retrieved_utc":"2026-10-03T09:33:01.2320820Z"},
+    {"url":"https://docs.sqlalchemy.org/en/20/dialects/sqlite.html","http":200,"bytes":265941,"sha256":"3896115a1edde147ffad66bbe71bd2454184bf29a25936147d995181325084d1","retrieved_utc":"2026-10-03T09:33:01.4436944Z"},
+    {"url":"https://www.sqlite.org/partialindex.html","http":200,"bytes":327081,"sha256":"7fb393e3454552aa79224d51a1c9df804fcf3b53a2cac7e56a33cd10e2231f53","retrieved_utc":"2026-10-03T09:33:02.8369157Z"},
+    {"url":"https://www.sqlite.org/lang_transaction.html","http":200,"bytes":27068,"sha256":"b65dc308fd9e0ce471844c97366a4f5ad3a1f42833a3b19486ad7d6555a8e24e","retrieved_utc":"2026-10-03T09:33:03.0902250Z"},
+    {"url":"https://www.sqlite.org/foreignkeys.html","http":200,"bytes":47276,"sha256":"f9cc6cefbdf18e07893b036365a2f3ca2a9a81fa41ed0849c7e4df214ccca8c0","retrieved_utc":"2026-10-03T09:33:03.3435664Z"},
+    {"url":"https://www.sqlite.org/atomiccommit.html","http":200,"bytes":77968,"sha256":"5a5be7b660217c9408c8a81eaf2faa2d08832ed3790f895a0a713916ad856ea1","retrieved_utc":"2026-10-03T09:33:03.5944849Z"},
+    {"url":"https://alembic.sqlalchemy.org/en/latest/batch.html","http":200,"bytes":66484,"sha256":"a18b4b304cd71d913ee21a499434a8cb2bd9c23a4edad78f28d89cc95f4bb352","retrieved_utc":"2026-10-03T09:33:04.3019072Z"},
+    {"url":"https://www.w3.org/TR/prov-o/","http":200,"bytes":464179,"sha256":"6b96671ab84faf12ce3f041aca12c3f93a6df2ed242348810743179a68e69555","retrieved_utc":"2026-10-03T09:33:04.4042945Z"},
+    {"url":"https://docs.kernel.org/admin-guide/cgroup-v2.html","http":200,"bytes":172971,"sha256":"6efabe7ed748f1d863859a0e5c50e770e47255c9a071bf878f6460e7e01c0563","retrieved_utc":"2026-10-03T10:17:39.9908142Z"},
+    {"url":"https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information","http":200,"bytes":52723,"sha256":"b33eb0ae491fe2c23c8faa7624ae69db4051955af85079f9bdd9ee6eee1d0b10","retrieved_utc":"2026-10-03T10:17:40.4702732Z"},
+    {"url":"https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects","http":200,"bytes":61660,"sha256":"dd302113e93f866f7c445c87e255199f7d698cd5174d6492d0ba4505d04bcff1","retrieved_utc":"2026-10-03T10:17:40.6300842Z"}
+  ]
+}
