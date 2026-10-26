@@ -1,11 +1,14 @@
 """Candidate 0006 M11 admission, cancellation, custody publication and export."""
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import io
 import json
 import os
 import sqlite3
+import sys
+import time
 import zipfile
 from contextlib import closing
 from pathlib import Path
@@ -192,6 +195,19 @@ def test_candidate_worker_failure_code_keeps_only_stable_tokens():
 
     assert _failure_code(RuntimeError("m11_pinned_interpreter_invalid")) == "m11_pinned_interpreter_invalid"
     assert _failure_code(RuntimeError("/private/data/input.npy")) == "RuntimeError"
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="candidate child process contract is Linux-only")
+def test_candidate_worker_terminates_child_at_shared_deadline():
+    from app.joint_job_worker import _run_child
+
+    async def scenario():
+        with pytest.raises(TimeoutError, match="m11_job_wall_limit"):
+            await _run_child(Path(sys.executable), ["-c", "import time; time.sleep(30)"],
+                             job_id="deadline-test", sessions=None,
+                             deadline=time.monotonic() + 0.2)
+
+    asyncio.run(scenario())
 
 
 def test_candidate_worker_executes_real_nonrecovering_control_honestly(m11_candidate):

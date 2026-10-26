@@ -121,3 +121,17 @@ running. The root now permits up to 127 retained entries, preserves them
 without adoption or deletion, and refuses new work after that bound. The
 focused regression passes on the Linux candidate environment. This does not
 qualify scratch enforcement, crash recovery, service integration or VPS use.
+
+The candidate worker now applies one shared 1,800-second deadline across its
+runtime verifier, solve, validation, result instrument and instrument replay;
+previously each child received a fresh 1,810-second allowance. The focused
+Linux subprocess test verifies process-group termination at the shared
+deadline. This is a job wall-time bound, not actual-host admission evidence.
+
+The physical worker loop now checks the exact candidate schema under both
+existing worker locks, dispatches one M11 job only on canonical
+`0006_joint_artifacts`, and excludes M11 from the legacy claimant on that
+schema. The 0005 no-dispatch, candidate dispatch, and legacy-claim exclusion
+tests pass on the Linux candidate runtime. The normal service still has no
+production operator binding that supplies the required `PhysicalAssembly`,
+and no M11 unit is installed on the VPS; this is not online availability.

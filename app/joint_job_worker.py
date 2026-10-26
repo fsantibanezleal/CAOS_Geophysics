@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app import physical_joint_dataset_contract as dataset_contract
 from app import physical_joint_native_contract as native
-from app.joint_job_routes import MEMBER_NAME, RESULT_SCHEMA, _proof
+from app.joint_job_routes import JOB_WALL_SECONDS, MEMBER_NAME, RESULT_SCHEMA, _proof
 from app.joint_routes import (_ensure_parent_dirs, _registered_0006,
                               _remove_empty_dirs, _remove_new_file)
 from app.models import ObservationDataset, ProcessingJob, utcnow
@@ -164,7 +164,15 @@ async def _drain_output(reader):
             data.extend(block[:MAX_CHILD_OUTPUT - len(data)])
 
 
-async def _run_child(interpreter: Path, command: list[str], *, job_id, sessions):
+def _signal_child_group(process, sig):
+    try:
+        os.killpg(process.pid, sig)
+    except ProcessLookupError:
+        # The process may exit between asyncio's returncode check and signal.
+        pass
+
+
+async def _run_child(interpreter: Path, command: list[str], *, job_id, sessions, deadline):
     process = await asyncio.create_subprocess_exec(
         str(interpreter), *command, stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL, start_new_session=True,
@@ -175,20 +183,27 @@ async def _run_child(interpreter: Path, command: list[str], *, job_id, sessions)
     output_task = asyncio.create_task(_drain_output(process.stdout))
     started = time.monotonic()
     while process.returncode is None:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            _signal_child_group(process, signal.SIGKILL)
+            await process.wait()
+            await output_task
+            raise TimeoutError("m11_job_wall_limit")
         try:
-            await asyncio.wait_for(process.wait(), timeout=0.25)
+            await asyncio.wait_for(process.wait(), timeout=min(0.25, remaining))
         except TimeoutError:
+            if time.monotonic() >= deadline:
+                _signal_child_group(process, signal.SIGKILL)
+                await process.wait()
+                await output_task
+                raise TimeoutError("m11_job_wall_limit")
             if await _cancelled(sessions, job_id):
-                os.killpg(process.pid, signal.SIGTERM)
+                _signal_child_group(process, signal.SIGTERM)
                 try:
                     await asyncio.wait_for(process.wait(), timeout=3)
                 except TimeoutError:
-                    os.killpg(process.pid, signal.SIGKILL)
+                    _signal_child_group(process, signal.SIGKILL)
                     await process.wait()
-                break
-            if time.monotonic() - started > 1810:
-                os.killpg(process.pid, signal.SIGKILL)
-                await process.wait()
                 break
     output = await output_task
     return process.returncode, output, int((time.monotonic() - started) * 1000)
@@ -325,6 +340,7 @@ async def _publish(settings, sessions, physical, job_id, state, members, *, fail
 
 async def _execute(settings, sessions, physical, job_id):
     execution_started = time.monotonic()
+    deadline = execution_started + JOB_WALL_SECONDS
     try:
         if sys.platform != "linux":
             raise RuntimeError("m11_requires_pinned_linux_runtime")
@@ -357,7 +373,8 @@ async def _execute(settings, sessions, physical, job_id):
         development, sealed = await _prepare_inputs(settings, sessions, physical, job_id, work)
         repository = Path(__file__).resolve().parents[1]
         verifier = [str(repository / "scripts" / "verify_joint_linux_runtime.py")]
-        code, output_bytes, _ = await _run_child(interpreter, verifier, job_id=job_id, sessions=sessions)
+        code, output_bytes, _ = await _run_child(interpreter, verifier, job_id=job_id, sessions=sessions,
+                                                 deadline=deadline)
         if code != 0:
             raise RuntimeError("m11_runtime_pin_verification_failed")
         runtime = native.bounded_json(output_bytes.strip())
@@ -370,12 +387,12 @@ async def _execute(settings, sessions, physical, job_id):
         common = ["--data-root", data_root, "--development", str(development), "--sealed", str(sealed),
                   "--output", output_dir, "--scratch-root", scratch_dir]
         code, output_bytes, _ = await _run_child(interpreter, [cli, "solve", *common],
-                                                 job_id=job_id, sessions=sessions)
+                                                 job_id=job_id, sessions=sessions, deadline=deadline)
         if await _cancelled(sessions, job_id):
             state, failure = "cancelled", "user_cancelled"
         elif code == 0:
             validation_code, validation_bytes, _ = await _run_child(interpreter,
-                [cli, "validate", *common], job_id=job_id, sessions=sessions)
+                [cli, "validate", *common], job_id=job_id, sessions=sessions, deadline=deadline)
             validation = native.bounded_json(validation_bytes.strip()) if validation_bytes.strip() else {}
             receipt_path = output / "workflow.json"
             receipt = native.bounded_json(receipt_path.read_bytes()) if receipt_path.is_file() else {}
@@ -391,11 +408,11 @@ async def _execute(settings, sessions, physical, job_id):
                     "--output", str(instrument_output), "--scratch-root", scratch_dir]
                 instrument_code, instrument_bytes, _ = await _run_child(
                     interpreter, [instrument_cli, "export", *instrument_common],
-                    job_id=job_id, sessions=sessions)
+                    job_id=job_id, sessions=sessions, deadline=deadline)
                 instrument = native.bounded_json(instrument_bytes.strip()) if instrument_bytes.strip() else {}
                 instrument_validation_code, instrument_validation_bytes, _ = await _run_child(
                     interpreter, [instrument_cli, "validate", *instrument_common],
-                    job_id=job_id, sessions=sessions)
+                    job_id=job_id, sessions=sessions, deadline=deadline)
                 instrument_validation = (native.bounded_json(instrument_validation_bytes.strip())
                     if instrument_validation_bytes.strip() else {})
                 if (instrument_code == 0 and instrument.get("validated") is True

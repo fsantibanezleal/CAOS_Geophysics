@@ -115,6 +115,30 @@ async def _drain(pending):
         raise
 
 
+async def dispatch_candidate_m11(settings, sessions, physical):
+    """Run one M11 claim only on the exact, allocated 0006 schema.
+
+    The caller owns both physical worker guards. A non-0006 database keeps the
+    original worker path untouched; a stamped but noncanonical 0006 schema is
+    rejected by the same identity check used by M11's API admission.
+    """
+    from sqlalchemy import text
+    from app.joint_routes import _registered_0006
+    from app.joint_job_worker import run_once
+
+    physical.leases.require_held()
+    physical.worker.require_processing_held()
+    async with sessions() as session:
+        heads = (await session.execute(text(
+            "SELECT version_num FROM alembic_version"))).scalars().all()
+        if heads != ["0006_joint_artifacts"]:
+            return False, None
+        await _registered_0006(session)
+    physical.leases.require_held()
+    physical.worker.require_processing_held()
+    return True, await run_once(settings, sessions, physical)
+
+
 async def run_forever_participating(settings, physical, *, poll_interval=0.5):
     """Original claim/executor under SH from claim through final cleanup.
 
@@ -145,7 +169,17 @@ async def run_forever_participating(settings, physical, *, poll_interval=0.5):
                     physical.leases.require_held()
                     async with physical.worker.acquire_processing():
                         physical.worker.require_processing_held()
-                        job = await original._claim(sessions, identifier)
+                        joint_schema, joint_job = await dispatch_candidate_m11(settings, sessions, physical)
+                        if joint_job is not None:
+                            physical.worker.require_processing_held()
+                            physical.leases.require_held()
+                            return joint_job
+                        if joint_schema:
+                            from app.physical_joint_native_contract import METHOD_ID
+                            job = await original._claim(sessions, identifier,
+                                                        exclude_method_id=METHOD_ID)
+                        else:
+                            job = await original._claim(sessions, identifier)
                         if job is not None:
                             await original._execute(settings, sessions, job, min(poll_interval, 0.1))
                         physical.worker.require_processing_held()

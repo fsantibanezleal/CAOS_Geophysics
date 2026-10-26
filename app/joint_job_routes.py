@@ -33,6 +33,7 @@ from app.projects import _owned_project
 METHOD = native.METHOD_ID
 ACTIVE_PER_OWNER = 1
 MAX_QUEUE = 8
+JOB_WALL_SECONDS = 1800
 RESULT_SCHEMA = "geophysics.joint-result-custody/v1"
 HISTORY_SCHEMA = "geophysics.joint-custody-history/v1"
 MEMBER_NAME = re.compile(r"(?:workflow\.json|failure\.json|api-failure\.json|(?:calibration|frozen|models|result|instrument|aborted)/[a-z][a-z0-9_]{0,120}\.(?:json|npy))\Z")
@@ -184,7 +185,7 @@ def install_joint_job_routes(app, settings, current_user, get_session) -> None:
         request_bytes = _json_bytes(request_value)
         preflight = {"schema": "geophysics.joint-job-preflight/v1", "reserved_bytes": native.MAX_BYTES,
                      "memory_limit_bytes": 2 * 1024**3, "scratch_limit_bytes": 256 * 1024**2,
-                     "wall_limit_seconds": 1800, "execution": "pinned-linux-cp312"}
+                     "wall_limit_seconds": JOB_WALL_SECONDS, "execution": "pinned-linux-cp312"}
         created = utcnow().astimezone(timezone.utc).replace(tzinfo=None).isoformat(sep=" ")
         await session.execute(text(
             "INSERT INTO processing_jobs "

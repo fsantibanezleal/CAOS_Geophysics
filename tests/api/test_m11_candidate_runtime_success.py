@@ -184,6 +184,41 @@ def m11_candidate(root_case, monkeypatch):
         files.close()
 
 
+def test_physical_worker_dispatches_exact_0006_with_both_locks_owned(
+        root_case, m11_candidate, monkeypatch):
+    import asyncio
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from app.database import make_engine
+    from app.physical_assembly import dispatch_candidate_m11
+    from tests.api.test_physical_assembly import bound_fixture
+
+    settings, physical = bound_fixture(root_case, monkeypatch)
+    calls = []
+
+    async def dispatched(got_settings, sessions, got_physical):
+        assert got_settings is settings and got_physical is physical
+        physical.leases.require_held()
+        physical.worker.require_processing_held()
+        calls.append("m11")
+        return "candidate-job"
+
+    monkeypatch.setattr("app.joint_job_worker.run_once", dispatched)
+
+    async def run():
+        engine = make_engine(settings)
+        sessions = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with physical.leases.acquire():
+                async with physical.worker.acquire_processing():
+                    assert await dispatch_candidate_m11(settings, sessions, physical) == (True, "candidate-job")
+        finally:
+            await engine.dispose()
+
+    asyncio.run(run())
+    assert calls == ["m11"]
+    assert not physical.leases.held and not physical.worker.held
+
+
 def test_authenticated_0006_member_upload_dataset_create_and_receipt(m11_candidate):
     fixture_root, row, client, headers, project, owner, files = m11_candidate
     member_map = {"development": {}, "sealed": {}}

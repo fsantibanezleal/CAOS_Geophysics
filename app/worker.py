@@ -80,12 +80,15 @@ async def _recover_interrupted(sessions: async_sessionmaker) -> None:
         await session.commit()
 
 
-async def _claim(sessions: async_sessionmaker, worker_id: str) -> ProcessingJob | None:
+async def _claim(sessions: async_sessionmaker, worker_id: str, *,
+                 exclude_method_id: str | None = None) -> ProcessingJob | None:
     async with sessions() as session:
         await session.execute(text("BEGIN IMMEDIATE"))
-        row = (await session.execute(select(ProcessingJob).where(
-            ProcessingJob.state == "queued",
-        ).order_by(ProcessingJob.created_at, ProcessingJob.id).limit(1))).scalar_one_or_none()
+        query = select(ProcessingJob).where(ProcessingJob.state == "queued")
+        if exclude_method_id is not None:
+            query = query.where(ProcessingJob.method_id != exclude_method_id)
+        row = (await session.execute(query.order_by(
+            ProcessingJob.created_at, ProcessingJob.id).limit(1))).scalar_one_or_none()
         if row is None:
             await session.rollback()
             return None
