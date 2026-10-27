@@ -82,6 +82,15 @@ def service_environment_hashes(directory: Path) -> dict[str, str]:
     return {name: file_digest(directory / name)['sha256'] for name in ('api.env', 'worker.env')}
 
 
+def require_service_state(path: Path, identity: tuple[int, int]) -> None:
+    """Check the private state root against its dedicated service identity."""
+    no_links(path)
+    info = path.stat()
+    if (not stat.S_ISDIR(info.st_mode)
+            or (info.st_uid, info.st_gid, stat.S_IMODE(info.st_mode)) != (*identity, 0o700)):
+        raise ValueError('private service state ownership or mode differs')
+
+
 def stage_release_environment(release: Path, bundle_sha256: str, registry_source: Path | None = None,
                               registry_sha256: str | None = None) -> dict:
     """Stage immutable candidate envs and optional binding; never changes active globals."""
@@ -92,7 +101,7 @@ def stage_release_environment(release: Path, bundle_sha256: str, registry_source
     verify_bundle(release)
     if not re.fullmatch(r'[0-9a-f]{64}', bundle_sha256) or file_digest(release / 'release.json')['sha256'] != bundle_sha256:
         raise ValueError('candidate release digest differs')
-    for path in (STATE, CONFIG, CONFIG / 'releases'):
+    for path in (CONFIG, CONFIG / 'releases'):
         no_links(path)
         info = path.stat()
         if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
@@ -101,6 +110,7 @@ def stage_release_environment(release: Path, bundle_sha256: str, registry_source
     if identity is None:
         raise ValueError('dedicated service identity required')
     uid, gid = identity
+    require_service_state(STATE, identity)
     current = RELEASES.parent / 'current'
     active_release = current.resolve(strict=True)
     if active_release.parent != RELEASES:

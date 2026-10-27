@@ -229,6 +229,21 @@ def test_release_staging_is_explicit_and_does_not_offer_active_env_overwrite():
     assert 'cannot stage environments for the active release' in source
     assert 'os.rename(temporary, final)' in source
     assert "never changes active globals" in source
+    assert 'require_service_state(STATE, identity)' in source
+    assert 'for path in (STATE, CONFIG, CONFIG /' not in source
+
+
+def test_private_service_state_is_checked_against_service_identity(tmp_path, monkeypatch):
+    state = tmp_path / 'state'
+    state.mkdir()
+    info = state.stat()
+    monkeypatch.setattr(qualifier.stat, 'S_IMODE', lambda _mode: 0o700)
+    qualifier.require_service_state(state, (info.st_uid, info.st_gid))
+    with pytest.raises(ValueError, match='ownership or mode'):
+        qualifier.require_service_state(state, (info.st_uid + 1, info.st_gid))
+    monkeypatch.setattr(qualifier.stat, 'S_IMODE', lambda _mode: 0o755)
+    with pytest.raises(ValueError, match='ownership or mode'):
+        qualifier.require_service_state(state, (info.st_uid, info.st_gid))
 
 
 def test_deadline_and_command_output_bounds(monkeypatch):
