@@ -21,6 +21,7 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `05-ert` | 3 | [Sensibilidad ERT, regularización y límites de evidencia](05-ert/03-ert-state-of-art.ipynb) | [03-ert-state-of-art](../en/05-ert/03-ert-state-of-art.ipynb) |
 | `06-seismology` | 1 | [QC de formas de onda, filtrado y controles de picks](06-seismology/01-waveforms.ipynb) | [01-waveforms](../en/06-seismology/01-waveforms.ipynb) |
 | `06-seismology` | 2 | [Tomografía M09 y comparación FWI M10 controlada](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../en/06-seismology/02-traveltime-fwi.ipynb) |
+| `06-seismology` | 3 | [M10 FWI en cuatro geologías sísmicas](06-seismology/05-m10-fwi-case-matrix.ipynb) | [05-m10-fwi-case-matrix](../en/06-seismology/05-m10-fwi-case-matrix.ipynb) |
 | `06-seismology` | 3 | [FWI, regularización y controles de cycle-skipping](06-seismology/03-seismic-state-of-art.ipynb) | [03-seismic-state-of-art](../en/06-seismology/03-seismic-state-of-art.ipynb) |
 | `06-seismology` | 3 | [Picking P/S aprendido en trazas STEAD](06-seismology/04-m13-learned-phase-picking.ipynb) | [04-m13-learned-phase-picking](../en/06-seismology/04-m13-learned-phase-picking.ipynb) |
 | `07-joint` | 1 | [Sensibilidad complementaria y ambigüedad](07-joint/01-joint-hypothesis.ipynb) | [01-joint-hypothesis](../en/07-joint/01-joint-hypothesis.ipynb) |

@@ -367,7 +367,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the current 54-notebook set passes its structural mirrored-course gate. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved.",
+      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the current 56-notebook set passes its structural mirrored-course gate. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved. A bilingual M10 four-geology case-matrix lesson now inspects four existing hash-verified full-run artifacts and exposes the salt negative control and unresolved low-velocity channel; fresh-kernel runs and strict replays pass. It adds inspectability, not solver evidence, independent propagation, field validation or course/product acceptance.",
       "evidence": [
         {
           "path": "docs/validation/source-to-content-review.md",
@@ -432,6 +432,18 @@
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
           "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+        },
+        {
+          "path": "docs/validation/notebook-review-2026-10-27.md",
+          "sha256": "0503f2d42cf4886615582fc98d490233aaa8af9e1e0c1362393016f5a995749c"
+        },
+        {
+          "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
+          "sha256": "ca5d8378533d672ee617a5c2042618106f33b372131536955ad513ac3535379a"
+        },
+        {
+          "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
+          "sha256": "f3c63cc649f46e8c71aa519c614348dc46230cbd81d34f615ca2a031bc1b1ad6"
         }
       ],
       "receipts": []
