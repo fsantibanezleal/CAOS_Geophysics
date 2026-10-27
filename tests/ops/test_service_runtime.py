@@ -178,8 +178,12 @@ def test_inventory_rehashes_ordinary_files(tmp_path):
     (root / 'bin/python').write_bytes(b'fixture')
     (root / 'pyvenv.cfg').write_bytes(b'fixture')
     (root / 'Transparent Busy.ani').write_bytes(b'legitimate owned wheel data')
+    timezone = root / 'lib/python3.12/site-packages/tzdata/zoneinfo/Etc'
+    timezone.mkdir(parents=True)
+    (timezone / 'GMT+10').write_bytes(b'valid tzdata member')
     before = runtime.runtime_inventory(root, Path(sys.executable).resolve())
     assert 'Transparent Busy.ani' in before['files']
+    assert 'lib/python3.12/site-packages/tzdata/zoneinfo/Etc/GMT+10' in before['files']
     (root / 'pyvenv.cfg').write_bytes(b'mutated')
     after = runtime.runtime_inventory(root, Path(sys.executable).resolve())
     assert before != after

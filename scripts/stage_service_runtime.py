@@ -89,7 +89,7 @@ def root_owned_tree(root: Path) -> None:
 
 def runtime_relative(value: str) -> str:
     if (not isinstance(value, str) or not value or len(value) > 1024
-            or any(not re.fullmatch(r'[A-Za-z0-9_. -]+', part) or part in ('.', '..')
+            or any(not re.fullmatch(r'[A-Za-z0-9_. +\-]+', part) or part in ('.', '..')
                    or part != part.strip() or part.endswith('.') for part in value.split('/'))):
         raise ValueError('unsafe runtime member name')
     return value
