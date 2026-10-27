@@ -175,6 +175,7 @@ def test_candidate_worker_does_not_relabel_completed_workflow_as_failed(tmp_path
     assert payload["reason"] == "instrument_validation_failed"
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="candidate workspace permission contract is Linux-only")
 def test_candidate_workspace_reuses_root_without_adopting_interrupted_job(tmp_path, monkeypatch):
     from app.joint_job_worker import _workspace_root
 
@@ -239,22 +240,25 @@ def test_candidate_worker_executes_real_nonrecovering_control_honestly(m11_candi
     job_id = queued.json()["job_id"]
     terminal = client.get(f"/api/projects/{project}/joint-jobs/{job_id}")
     assert terminal.status_code == 200, terminal.text
-    # Every row in this locked matrix is explicitly a non-recovering control.
-    # The candidate service must preserve that negative result and never turn
-    # completion of the software pipeline into scientific success.
-    assert terminal.json()["state"] == "failed", terminal.text
+    # Software execution succeeded on this locked synthetic control, while its
+    # independent scientific-acceptance verdict remains false.
+    assert terminal.json()["state"] == "succeeded", terminal.text
+    assert terminal.json()["error_code"] is None
+    assert terminal.json()["wall_ms"] > 0
+    assert terminal.json()["peak_rss_bytes"] > 0
+    assert terminal.json()["scratch_bytes"] >= 0
     result = client.get(f"/api/projects/{project}/joint-results/{job_id}")
     assert result.status_code == 200, result.text
-    assert result.json()["state"] == "failed"
+    assert result.json()["state"] == "succeeded"
     assert result.json()["scientific_acceptance"] is False
-    assert "api-failure.json" in result.json()["members"] or "failure.json" in result.json()["members"]
     exported = client.get(f"/api/projects/{project}/joint-results/{job_id}/export")
     assert exported.status_code == 200, exported.text
     with zipfile.ZipFile(io.BytesIO(exported.content)) as archive:
         names = set(archive.namelist())
         assert "private-custody-index.json" in names
-        evidence = names.intersection({"api-failure.json", "failure.json"})
-        assert evidence
-        failure = json.loads(archive.read(sorted(evidence)[0]))
-        assert failure.get("scientific_acceptance") is False
-        assert failure.get("public_activation") is False
+        assert "workflow.json" in names
+        workflow = json.loads(archive.read("workflow.json"))
+        assert workflow["status"] == "completed"
+        assert workflow["inverse_completed"] is True
+        assert workflow["field_eligible"] is False
+        assert workflow["public_activation"] is False

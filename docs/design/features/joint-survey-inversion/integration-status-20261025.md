@@ -122,9 +122,8 @@ terminal index and member copies in one transaction. Browser and API contracts
 now agree on the history schema, stored ZIP index name, byte-preserving archive,
 and the explicit infrastructure-failure record. The candidate API tests cover
 queue saturation, cancellation publication, failed terminal export, project
-deletion with a retained result, and cross-project denial. They use a controlled
-publisher for terminal states and do not substitute for the separate real
-solver and instrument workflow run.
+deletion with a retained result, and cross-project denial. Most lifecycle cases
+use a controlled publisher; the separate real-solver case is recorded below.
 
 The authenticated project-delete route was exercised against POSIX private
 storage for a source-only M11 dataset. The test verifies raw and index hashes,
@@ -153,3 +152,24 @@ enforcement, committed result restart/deletion receipts, the full API/browser
 contract, actual-host capacity and the single-VPS cutover remain open. Nothing
 here changes M11 scientific acceptance, R-008, whole-product acceptance or
 deployment status.
+
+## Candidate real-worker control: 2026-10-27
+
+`tests/api/test_m11_candidate_job_routes.py::test_candidate_worker_executes_real_nonrecovering_control_honestly`
+now runs one authenticated upload through candidate-schema admission, the
+isolated pinned Linux worker, the actual solve and validation CLIs, state
+instrument export, owner-scoped result retrieval and ZIP export. The source is
+the external 24-case synthetic matrix at
+`E:\_worktrees\CAOS_Geophysics-data\joint-matrix-20261027`; its manifest
+SHA-256 is `946ca7904d5d9d063d0c3f57e1e78ffeb96453f04e4e9f25ff14601a746c659d`.
+The local CPython 3.12.10 runtime verifier checked 30 installed source files
+against the pinned M11/M02 manifests before the job ran.
+
+The control completed as a software job (`state=succeeded`) and returned a
+hash-bound `workflow.json`; its result still states
+`scientific_acceptance=false`, `field_eligible=false`, and
+`public_activation=false`. The test checks these distinctions and positive
+wall/RSS measurements instead of treating a setup failure as a successful
+negative-control run. This is one local synthetic control on the isolated 0006
+candidate schema. It does not qualify the default migration chain, full matrix,
+crash recovery, VPS resources, scientific acceptance, or public availability.
