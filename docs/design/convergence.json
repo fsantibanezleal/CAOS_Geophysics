@@ -115,7 +115,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Historical MT admission measured 29.42% free disk under the superseded 30% threshold; this is not a current release blocker. The owner-tested SDD instead requires measured capacity for the active release plus two rollbacks, existing project data, configured job scratch and worker memory. Current-product host resource, timeout, cancellation and concurrency acceptance remains unresolved; no current capacity pass is claimed.",
+      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This is only a baseline: candidate runtime/release bytes, configured scratch, retained future projects and API/worker/controller memory bounds have not been measured together. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -132,6 +132,10 @@
         {
           "path": "docs/validation/physical-accounting-independent-review-2026-10-03.md",
           "sha256": "3c32a7d42196d925f33ac7158e1b093aef760018bb97f75d18b43cc384b7f5ac"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
+          "sha256": "b0c1c123870513c565a846134d581371e95a21473f989e433109105d120114cb"
         }
       ],
       "receipts": []
