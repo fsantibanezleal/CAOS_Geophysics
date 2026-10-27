@@ -73,3 +73,38 @@ invariance diagnostics before any interpretation. Even a passing synthetic
 result does not establish field superiority, geological recovery, or
 deployment readiness. A failed result remains a useful negative result and
 must not be tuned against its test cohort.
+
+## Fresh held-out result: 2026-10-27
+
+The frozen v1.1 implementation ran on CPU in 16.32 seconds. The 160-case
+calibration selected classical lambda `100` and nullspace correction scale
+`alpha=1.0`. All 480 held-out cases were evaluated after selection, with zero
+forward-threshold exceedances. The receipt reports
+`supported-within-bounded-synthetic-protocol`:
+
+| Cohort | n | Velocity RMSE ratio | Paired bootstrap 95% interval | Oracle-time RMSE ratio | Paired bootstrap 95% interval |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ID | 160 | 0.8035 | 0.7796–0.8269 | 0.9841 | 0.9810–0.9860 |
+| Family-only | 80 | 0.9718 | 0.9685–0.9792 | 0.9962 | 0.9942–0.9988 |
+| Acquisition-only | 80 | 0.8023 | 0.7698–0.8371 | 0.9842 | 0.9789–0.9881 |
+| Joint OOD | 160 | 0.9701 | 0.9703–0.9770 | 0.9967 | 0.9951–0.9986 |
+
+Ratios below one favor the refined method. Intervals are percentile paired
+case-bootstrap intervals over the fixed synthetic generator, 20,000 draws,
+seed `6122026`; they quantify resampling variation within these cohorts, not
+uncertainty across natural geology. The joint-OOD travel-time improvement is
+small. For acquisition C, the ray matrix has rank 127 and nullity 129;
+`max(abs(A @ N)) = 1.52e-13` and the projected correction residual is
+`4.56e-18`, with no physical-bound clipping. Nonlinear velocity conversion
+still means this linear null-space result is not a general data-invariance
+guarantee.
+
+The full immutable receipt and checkpoint are retained outside the checkout
+at `E:\_worktrees\_runs\m12-nullspace-v1_1-full-20261027b`. Receipt
+SHA-256: `30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22`.
+Independent `--verify` replay regenerated all four held-out cohorts and
+reproduced their stored metrics; the scientific verdict reproduced as
+`supported-within-bounded-synthetic-protocol`. This result supports further
+controlled research only; it does not
+validate field data, establish geological recovery, or change overall M12 or
+product release acceptance.

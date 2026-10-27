@@ -50,3 +50,17 @@ authorship. Five focused unit tests, the production TypeScript/Vite build, and
 one Playwright interaction using the actual external 2026-10-27 receipt and
 checkpoint pass. This is a result-inspection feature, not new scientific
 acceptance or release acceptance.
+
+## Fresh nullspace-constrained residual study v1.1: 2026-10-27
+
+The corrected [v1.1 protocol](nullspace-v1_1-protocol.md) uses the exact
+checkpoint feature contract and new calibration/test seeds. Calibration
+selected lambda 100 and alpha 1.0. On the 160-case joint-OOD cohort, velocity
+RMSE ratio was 0.9701 (paired case-bootstrap 95% interval 0.9703–0.9770) and
+independent travel-time RMSE ratio was 0.9967 (0.9951–0.9986); all four held
+out cohorts improved on both aggregate metrics, with zero forward-threshold
+exceedances among 480 cases. This is a positive, narrowly bounded synthetic
+result for the projected correction. It is not field validation, a claim of
+geological recovery, or a change to product release status. Full protocol,
+cohort results, intervals, receipt hash and verification state are recorded
+in the linked report. The invalidated v1 results remain excluded.
