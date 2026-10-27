@@ -444,6 +444,13 @@ def test_runtime_epoch_and_external_source_pins(monkeypatch):
     with pytest.raises(RuntimeError, match="loaded package"): op.forward_gravity(request())
 
 
+@pytest.mark.parametrize("version", [(3, 12, 10), (3, 12, 16)])
+def test_registered_cpython_runtime_versions(version, monkeypatch):
+    with monkeypatch.context() as patch:
+        patch.setattr(op.sys, "version_info", version)
+        assert op._runtime() == op.VERSIONS
+
+
 def test_no_io_hooks_or_inverse_behavior(monkeypatch):
     source = (ROOT/"data-pipeline/gravity_forward.py").read_text()
     tree = ast.parse(source)

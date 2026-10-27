@@ -38,13 +38,16 @@ live releases. Failed candidate files and private evidence were retained.
 | `release-92e53bd` | API and gravity packages installed; both `pip check` steps passed. The gravity audit pin file was absent from the release inventory. |
 | `release-d576a9d` | Bundle and environment staging passed; API and gravity packages installed; both `pip check` steps passed. Gravity source audit rejected host CPython 3.12.3 because the approved Linux runtime pin requires CPython 3.12.10. |
 | `release-5355478` | Full bundle manifest verified on the VPS. Pinned CPython 3.12.16 archive hash and runtime probe passed, but the receipt recorded the temporary extraction path instead of the final path. This runtime was not passed to service staging or used by the app; retain it as failed qualification evidence. |
+| `release-ca9e2c1` | Full bundle manifest, corrected private CPython 3.12.16 runtime and candidate environment selectors verified. API and gravity dependencies installed and both `pip check` steps passed; external gravity source audit passed. The final gravity forward probe rejected 3.12.16 because the in-repo operator still hard-coded 3.12.10. Candidate runtime staging failed, no runtime receipt was admitted, and no service started. |
+
+On the local CPython 3.12.10 Windows validation environment, the full M02 gravity-forward and M04 induced-magnetic-forward suites passed after aligning the disposable pipeline environment to the committed `pymatsolver==0.4.0` pin. New version-boundary tests accept the historical 3.12.10 runtime and the explicitly registered 3.12.16 candidate. This is local compatibility evidence only; the matching VPS 3.12.16 numerical replay remains pending.
 
 The repository fixes for service-owned state validation, legal `+` characters
 in runtime paths, and inclusion of the gravity audit pin are committed and
 pushed in this branch. Regression tests cover those changes. The branch now
 registers CPython 3.12.16 from a hash-pinned standalone distribution and adds a
 private interpreter staging command. That new profile still requires host
-installation, numerical replay, and fresh source-pin verification. The system interpreter must not be relabelled as 3.12.10. The first private 3.12.16 runtime receipt failed its installed-path identity check; a corrected versioned stager is pending a fresh candidate bundle.
+installation, numerical replay, and fresh source-pin verification. The system interpreter must not be relabelled as 3.12.10. The first private 3.12.16 runtime receipt failed its installed-path identity check; the corrected versioned stager now records its final installed path. Candidate solver execution then exposed a separate hard-coded Python-version gate in the gravity and magnetic operators; explicit 3.12.16 compatibility was added, and fresh numerical replay is pending.
 [Python 3.12.16 release](https://www.python.org/downloads/release/python-31216/).
 
 ## Release decision

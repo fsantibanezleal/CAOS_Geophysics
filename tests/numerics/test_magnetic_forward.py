@@ -607,6 +607,13 @@ def test_linux_x86_64_runtime_epoch(monkeypatch):
         assert op._runtime() is None
 
 
+@pytest.mark.parametrize("version", [(3, 12, 10), (3, 12, 16)])
+def test_registered_cpython_runtime_versions(version, monkeypatch):
+    with monkeypatch.context() as patch:
+        patch.setattr(op.sys, "version_info", version)
+        assert op._runtime() is None
+
+
 def test_bad_actual_tensor_geometry(monkeypatch):
     original = op.discretize.TensorMesh
 

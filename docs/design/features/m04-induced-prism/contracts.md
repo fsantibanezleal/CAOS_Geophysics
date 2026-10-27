@@ -92,7 +92,9 @@ metadata limits, geometry, field, chi, runtime or engine output must never yield
 a successful result. No silent float32 cast, NaN masking, interpolation or backend
 fallback. No CLI, file/network/cache/environment/app worker/optimizer behavior.
 
-Runtime fixed to observed CPython3.12.10 Windows64 and observed five engine
-versions from research. External harness verifies targeted actual source bytes;
-the ordinary operator does not perform or falsely claim filesystem verification.
-Linux/other builds need a separately measured source epoch; no portability claim.
+The historical source execution used CPython3.12.10 Windows64 and the observed
+five engine versions from research. The ordinary operator now recognizes
+CPython3.12.10 and the hash-pinned CPython3.12.16 Linux candidate; 3.12.16
+compatibility and numerical replay remain unaccepted until the separate Linux
+gates pass. External harness verifies targeted actual source bytes; the
+ordinary operator does not perform or falsely claim filesystem verification.

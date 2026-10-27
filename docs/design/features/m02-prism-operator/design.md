@@ -142,8 +142,10 @@ The [runtime pin manifest](runtime-pins.json) records the Windows AMD64 profile
 and its CPython 3.12.10 source/binary pins. The Linux CPU profile is separately
 bound in [runtime-pins-linux-cp312.json](runtime-pins-linux-cp312.json), now
 targeting security-patched CPython 3.12.16 from a hash-pinned standalone
-distribution. That amended Linux epoch remains a candidate until its numerical
-replay and installed-source pins pass. Unsupported runtimes or missing/changed
+distribution. The ordinary gravity and induced-magnetic operator runtime gates
+explicitly recognize CPython 3.12.10 and this 3.12.16 candidate. This is runtime
+compatibility, not scientific acceptance: Linux numerical replay and
+installed-source pins for 3.12.16 remain pending. Unsupported runtimes or missing/changed
 external source pins cannot pass the reviewed harness. Targeted pins are not a
 full transitive supply-chain hash. The original docs-only manifest retains its
 planned null operator hash; do not retroactively rewrite that provenance.

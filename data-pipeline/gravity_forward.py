@@ -20,6 +20,7 @@ ENGINE = "simpeg-0.25.2-geoana-0.8.1-f64-ram"
 SOURCE_EPOCH = "m02-prism-cpu-1"
 VERSIONS = {"simpeg": "0.25.2", "geoana": "0.8.1", "discretize": "0.12.0",
             "numpy": "2.2.6", "scipy": "1.15.2"}
+SUPPORTED_PYTHON_VERSIONS = {(3, 12, 10), (3, 12, 16)}
 FRAME = {"kind": "local_cartesian", "axes": ("east", "north", "up"),
          "length_unit": "m", "vertical_positive": "up"}
 GEOMETRY_RTOL = 1e-10  # Local metadata fidelity, not a prediction tolerance.
@@ -104,7 +105,7 @@ def _runtime():
     supported_platform = (sys.platform == "win32" and platform.machine().lower() in {"amd64", "x86_64"}) or (
         sys.platform == "linux" and platform.machine().lower() == "x86_64"
     )
-    if (sys.version_info[:3] != (3, 12, 10) or not supported_platform
+    if (sys.version_info[:3] not in SUPPORTED_PYTHON_VERSIONS or not supported_platform
             or sys.implementation.name != "cpython" or sys.maxsize != 2**63 - 1):
         raise RuntimeError("runtime: unreviewed Python/platform source epoch")
     return observed
