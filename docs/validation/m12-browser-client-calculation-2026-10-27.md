@@ -1,4 +1,4 @@
-# M12 browser-side first-arrival calculation — 2026-10-27
+# M12 browser-side first-arrival calculation: 2026-10-27
 
 ## Implemented scope
 

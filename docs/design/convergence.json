@@ -38,7 +38,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+          "sha256": "95ca264ea2f716982c35f718f5572429b620c4fd738fb26d8badb8424814bb3f"
         }
       ],
       "receipts": []
@@ -51,7 +51,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+          "sha256": "95ca264ea2f716982c35f718f5572429b620c4fd738fb26d8badb8424814bb3f"
         },
         {
           "path": "docs/validation/physical-json-independent-review-2026-10-03.md",
@@ -135,7 +135,7 @@
         },
         {
           "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
-          "sha256": "cfa272dbe4d553aeafae1ee472138dc18015b21cacd45a5dec8eb30471cc7862"
+          "sha256": "ac3f66c0a039b95aded842d64e46a099828b7948738fb66bf74c1ab55d01f80e"
         },
         {
           "path": "docs/validation/service-capacity-preflight-2026-10-27.json",
@@ -299,7 +299,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+          "sha256": "95ca264ea2f716982c35f718f5572429b620c4fd738fb26d8badb8424814bb3f"
         },
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -501,7 +501,7 @@
         },
         {
           "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
-          "sha256": "cfa272dbe4d553aeafae1ee472138dc18015b21cacd45a5dec8eb30471cc7862"
+          "sha256": "ac3f66c0a039b95aded842d64e46a099828b7948738fb66bf74c1ab55d01f80e"
         },
         {
           "path": "docs/validation/service-capacity-preflight-2026-10-27.json",

@@ -35,7 +35,7 @@ At the time of this initial snapshot, capacity for the proposed immutable releas
 
 Commands were limited to read-only `df`, `free`, `readlink`, bounded directory-size scans, metadata/stat checks, service listings and process summaries. The raw values above are the relevant measured facts; this note does not authorize or propose deletion of unrelated application data.
 
-## Follow-up: candidate bundle and live capacity — 2026-10-27 20:39 UTC
+## Follow-up: candidate bundle and live capacity: 2026-10-27 20:39 UTC
 
 A second read-only SSH observation at 20:39:02 UTC confirmed the active symlink still resolves to `releases/20260926235216`; the two retained prior releases remain `20260926233737` and `20260926200023`. Their measured regular-file totals were 816,111,047, 816,120,188 and 686,433,273 bytes. Root filesystem free bytes were 32,396,886,016; `MemAvailable` was 5,284,040,704 bytes and free swap was 3,525,372 KiB. `systemctl is-active` returned inactive for the geophysics API socket/service and worker; `/run/geophysics-api.sock` was absent. No remote files, service state or active release were changed.
 
