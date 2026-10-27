@@ -216,7 +216,7 @@
         },
         {
           "path": "tests/api/test_magnetic_upload.py",
-          "sha256": "f2a42468e9d5c881420e0ff88de3d7e1cff3acc2d78ca66cd105bf936df53f9f"
+          "sha256": "836bdb4c7f7b2509a9a1ff0275bb845c933d915acb6f6e737d021dafe33706c4"
         },
         {
           "path": "app/magnetic_compute.py",
