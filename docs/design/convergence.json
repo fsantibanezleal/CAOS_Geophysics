@@ -449,8 +449,17 @@
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This source update records bounded M03 browser/native geometry parity and rejection evidence without relabeling gates; one requirement remains failed and eighteen unresolved. The new M03 controls and convergence-structure check pass; this does not establish scientific or release acceptance.",
-      "evidence": [],
+      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity plus M12 launcher refusal/fixture-forwarding evidence without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance.",
+      "evidence": [
+        {
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "d73523c28b86613f293de6b906d43bb718f972ec4457683860fd8bbf037641f0"
+        },
+        {
+          "path": "docs/validation/m12-launcher-forwarding-2026-10-27.md",
+          "sha256": "32e434c73c2dcc1e8f459de07846afeaa1e9aee88672158a8ee9cac9434cb212"
+        }
+      ],
       "receipts": []
     },
     {

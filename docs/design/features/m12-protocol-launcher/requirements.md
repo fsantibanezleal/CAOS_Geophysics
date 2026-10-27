@@ -1,8 +1,11 @@
 # Explicit M12 protocol launch
 
-Status: implemented; local Windows/POSIX launcher controls pass. The updated
-source-frozen declaration remains unqualified after an input-inventory memory
-failure before execution. Scientific protocols and checkpoints are unchanged.
+Status: implemented; 26 focused Windows/POSIX launcher controls and a real
+CPU `physics-v2 --fixture` child execution pass; the fixture is explicitly
+rejected as acceptance evidence. The broader source-frozen declaration remains
+unqualified after an input-inventory memory failure before execution.
+Scientific protocols and checkpoints are unchanged. See the bounded
+[launcher execution receipt](../../validation/m12-launcher-forwarding-2026-10-27.md).
 
 ML-01 THE launcher SHALL select only the literal historical-v1 or physics-v2 module, after explicit external output validation and before scientific imports. Gate: `tests/ops/test_m12_launcher.py::test_actual_cli_refuses_before_science` and `tests/ops/test_m12_launcher.py::test_exact_physics_protocol_forwarding`.
 

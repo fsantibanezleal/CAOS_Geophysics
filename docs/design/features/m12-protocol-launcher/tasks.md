@@ -3,7 +3,7 @@
 - [x] ML-01/ML-02: implement closed selector and unchanged scientific argv.
 - [x] ML-03: expose selector in both existing launchers.
 - [x] ML-04: correct repository-output reproduction instructions.
-- [ ] Run actual CLI refusal and authored forwarding controls under frozen source/runtime bindings.
+- [x] Run actual CLI refusal and authored forwarding controls under frozen source/runtime bindings; retain the real-child fixture receipt separately from scientific acceptance.
 
 No new training or learned-advantage acceptance is inferred from these gates.
 
@@ -25,3 +25,11 @@ receipt remains retained: report SHA-256
 The corrected declaration preserves Windows execution/path variables. Its
 inventory then raised MemoryError before executing tests; no new frozen PASS,
 runtime acceptance or scientific result is inferred. No assertion was relaxed.
+
+The launcher-specific acceptance was subsequently completed with 26 passing
+`tests/ops/test_m12_launcher.py` controls under the repository's pinned pipeline
+environment, plus an actual `physics-v2 --fixture` child execution and explicit
+fixture-only verification refusal. See
+[`docs/validation/m12-launcher-forwarding-2026-10-27.md`](../../../validation/m12-launcher-forwarding-2026-10-27.md).
+This does not qualify the broader source-frozen declaration or alter the
+scientific verdict.
