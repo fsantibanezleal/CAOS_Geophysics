@@ -36,6 +36,31 @@ const mapping = {
 const settings = { grid_spacing_m: 12.5, holdout_fraction: 0.2, seed: "M03-control-v1" };
 const options = { source, frame, mapping, settings };
 
+function expectNumericalParity(actual: unknown, expected: unknown, path = "result"): void {
+  if (typeof expected === "number" && typeof actual === "number") {
+    // Pyodide wheels use a different SciPy/BLAS build than the pinned native
+    // pipeline. Preserve categorical/array support exactly and bound only the
+    // floating point result drift, in nT/metres/diagnostic units.
+    expect(Math.abs(actual - expected), path).toBeLessThanOrEqual(2e-7 + Math.abs(expected) * 1e-12);
+    return;
+  }
+  if (Array.isArray(expected)) {
+    expect(Array.isArray(actual), path).toBe(true);
+    expect((actual as unknown[]).length, `${path}.length`).toBe(expected.length);
+    expected.forEach((value, index) => expectNumericalParity((actual as unknown[])[index], value, `${path}[${index}]`));
+    return;
+  }
+  if (expected !== null && typeof expected === "object") {
+    expect(actual !== null && typeof actual === "object" && !Array.isArray(actual), path).toBe(true);
+    expect(Object.keys(actual as object).sort(), `${path}.keys`).toEqual(Object.keys(expected).sort());
+    for (const key of Object.keys(expected)) {
+      expectNumericalParity((actual as Record<string, unknown>)[key], (expected as Record<string, unknown>)[key], `${path}.${key}`);
+    }
+    return;
+  }
+  expect(actual, path).toEqual(expected);
+}
+
 function fixtureCsv(): string {
   const rows = ["E,N,field,line,role,height,index"];
   for (let line = 0; line < 5; line++) {
@@ -49,6 +74,36 @@ function fixtureCsv(): string {
   for (let sample = 0; sample < 9; sample++) {
     const x = sample * 50;
     rows.push([x, 50, 50_000 + 0.3 * x - 0.15 * 50 + 7, "T0", "tie", 120, sample].join(","));
+  }
+  return `${rows.join("\n")}\n`;
+}
+
+function surveyCsv(seed: number, angle: number, reverse = false, tieOffset = 0): string {
+  // Deterministic, rotated flight-line surveys span several geometries without
+  // substituting an implementation-specific result for the Python oracle.
+  const rows = ["E,N,field,line,role,height,index"];
+  const along = [Math.cos(angle), Math.sin(angle)];
+  const across = [-Math.sin(angle), Math.cos(angle)];
+  const jitter = (line: number, sample: number) =>
+    Math.sin(seed * 0.71 + line * 1.93 + sample * 2.17) * 0.35;
+  for (let line = 0; line < 6; line++) {
+    const lineOffset = (line - 2.5) * (55 + (seed % 4) * 7);
+    const indices = Array.from({ length: 11 }, (_, sample) => sample);
+    if (reverse && line % 2 === 1) indices.reverse();
+    for (const sample of indices) {
+      const distance = (sample - 5) * (18 + (seed % 3) * 3);
+      const x = across[0] * lineOffset + along[0] * distance + jitter(line, sample);
+      const y = across[1] * lineOffset + along[1] * distance - jitter(sample, line);
+      const value = 49_800 + 0.17 * x - 0.09 * y + 0.0003 * x * y;
+      rows.push([x, y, value, `F${line}`, "flight", 115 + sample * 0.04, sample].join(","));
+    }
+  }
+  for (let sample = 0; sample < 13; sample++) {
+    const distance = (sample - 6) * 24;
+    const x = along[0] * distance;
+    const y = along[1] * distance;
+    rows.push([x, y, 49_800 + 0.17 * x - 0.09 * y + 0.0003 * x * y + tieOffset,
+      "T0", "tie", 116, sample].join(","));
   }
   return `${rows.join("\n")}\n`;
 }
@@ -78,6 +133,30 @@ function pythonOracle(csv: string): Record<string, any> {
   }
 }
 
+function pythonRejection(csv: string): string {
+  const temporary = mkdtempSync(join(tmpdir(), "m03-native-rejection-"));
+  const csvPath = join(temporary, "invalid-flightline.csv");
+  const configPath = join(temporary, "config.json");
+  const resultPath = join(temporary, "result.json");
+  writeFileSync(csvPath, csv, "utf8");
+  writeFileSync(configPath, JSON.stringify({ source, frame, mapping, settings }), "utf8");
+  try {
+    for (const python of pythonCandidates) {
+      if (python !== "python" && !existsSync(python)) continue;
+      try {
+        execFileSync(python, [join(repo, "data-pipeline", "magnetic_processing.py"), "--csv", csvPath,
+          "--config", configPath, "--output", resultPath], { cwd: repo, stdio: "pipe", timeout: 60_000 });
+      } catch (error) {
+        const stderr = (error as { stderr?: Buffer }).stderr?.toString("utf8") ?? String(error);
+        return stderr;
+      }
+    }
+    throw new Error("Native M03 unexpectedly accepted the degenerate fixture.");
+  } finally {
+    rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
 let server: ViteDevServer;
 let browser: Browser;
 let page: Page;
@@ -101,6 +180,12 @@ describe("M03 browser-local Python/SciPy parity", () => {
     browser = await chromium.launch({ headless: true });
     page = await browser.newPage();
     await page.goto(origin);
+    await page.addScriptTag({
+      type: "module",
+      content: `import { runMagneticLocal } from "/src/api/magnetic-local.ts";
+        window.__m03RunFn = runMagneticLocal;`,
+    });
+    await page.waitForFunction(() => typeof (window as any).__m03RunFn === "function", undefined, { timeout: 10_000 });
   }, 180_000);
 
   afterAll(async () => {
@@ -112,7 +197,6 @@ describe("M03 browser-local Python/SciPy parity", () => {
     await page.addScriptTag({
       type: "module",
       content: `import { runMagneticLocal } from "/src/api/magnetic-local.ts";
-        window.__m03RunFn = runMagneticLocal;
         window.__m03Progress = [];
         window.__m03RunPromise = runMagneticLocal(
           new File([${JSON.stringify(csv)}], "controlled-flightline.csv", {type:"text/csv"}),
@@ -206,6 +290,69 @@ describe("M03 browser-local Python/SciPy parity", () => {
     expect(maxRowsRun.execution.resource_limits.rows).toBe(M03_LOCAL_LIMITS.rows);
     expect(maxRowsRun.shape[0] * maxRowsRun.shape[1]).toBeLessThanOrEqual(M03_LOCAL_LIMITS.gridCells);
   }, 180_000);
+
+  it("matches native results across deterministic rotated, reversed and offset surveys", async () => {
+    const cases = Array.from({ length: 8 }, (_, index) => ({
+      name: `seed-${index + 1}`,
+      csv: surveyCsv(index + 1, (index + 1) * Math.PI / 17, index % 2 === 1, index % 3 === 0 ? 4.25 : 0),
+    }));
+    for (const scenario of cases) {
+      const native = pythonOracle(scenario.csv);
+      const browserResult = await page.evaluate(async ({ csvText, runOptions }) => {
+        const run = await ((window as any).__m03RunFn as
+          (file: File, input: unknown, hooks?: unknown) => Promise<any>)(
+          new File([csvText], "rotated-flightline.csv", { type: "text/csv" }), runOptions,
+        );
+        return run.result;
+      }, { csvText: scenario.csv, runOptions: options });
+      expect(browserResult.schema, scenario.name).toBe(native.schema);
+      expect(browserResult.source.sha256, scenario.name).toBe(native.source.sha256);
+      expect(browserResult.split, scenario.name).toEqual(native.split);
+      expectNumericalParity(browserResult.geometry_qc, native.geometry_qc, `${scenario.name}.geometry_qc`);
+      expectNumericalParity(browserResult.heldout_interpolation, native.heldout_interpolation, `${scenario.name}.heldout_interpolation`);
+      expectNumericalParity(browserResult.grid.x_easting_m, native.grid.x_easting_m, `${scenario.name}.grid.x`);
+      expectNumericalParity(browserResult.grid.y_northing_m, native.grid.y_northing_m, `${scenario.name}.grid.y`);
+      expect(browserResult.grid.support_mask, scenario.name).toEqual(native.grid.support_mask);
+      expectNumericalParity(browserResult.grid.values, native.grid.values, `${scenario.name}.grid.values`);
+    }
+  }, 240_000);
+
+  it("rejects duplicate sample-order and collapsed survey geometry in both runtimes", async () => {
+    const validRows = surveyCsv(11, Math.PI / 9).trimEnd().split("\n");
+    const duplicateOrder = [...validRows];
+    const firstFlight = duplicateOrder.findIndex(row => row.includes(",F0,flight,"));
+    duplicateOrder[firstFlight + 1] = duplicateOrder[firstFlight + 1].replace(/,1$/, ",0");
+    const collapsed = ["E,N,field,line,role,height,index"];
+    for (let line = 0; line < 6; line++) {
+      const radiusX = 20 + 3 * line;
+      const radiusY = 22 + 2 * line;
+      const points = [[radiusX, 0], [-radiusX, 0], [0, radiusY], [0, -radiusY]];
+      for (let sample = 0; sample < points.length; sample++) {
+        const [x, y] = points[sample];
+        collapsed.push([x, y, 49_800 + 0.17 * x - 0.09 * y, `F${line}`, "flight", 116, sample].join(","));
+      }
+    }
+    for (const [name, lines, diagnostic] of [
+      ["duplicate-order", duplicateOrder, "duplicate sample-order"],
+      ["collapsed-geometry", collapsed, "do not define a distinguishable survey-line direction"],
+    ] as const) {
+      const text = `${lines.join("\n")}\n`;
+      const nativeError = pythonRejection(text);
+      expect(nativeError, `${name} native diagnostic`).toContain(diagnostic);
+      const browserError = await page.evaluate(async ({ csvText, runOptions }) => {
+        try {
+          await ((window as any).__m03RunFn as
+            (file: File, input: unknown, hooks?: unknown) => Promise<unknown>)(
+            new File([csvText], "degenerate-flightline.csv", { type: "text/csv" }), runOptions,
+          );
+          return "unexpected browser success";
+        } catch (error) {
+          return error instanceof Error ? error.message : String(error);
+        }
+      }, { csvText: text, runOptions: options });
+      expect(browserError, `${name} browser diagnostic`).toContain(diagnostic);
+    }
+  }, 120_000);
 
   it("keeps a stricter browser resource envelope than the Python parser maximum", () => {
     expect(M03_LOCAL_LIMITS.sourceBytes).toBe(16 * 1024 * 1024);

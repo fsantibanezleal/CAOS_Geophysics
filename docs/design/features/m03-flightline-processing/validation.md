@@ -44,3 +44,25 @@ The online flag remains off in normal settings until actual ML VPS timing,
 memory, scratch and cancellation measurements are reviewed. Authored controls
 do not establish field validity: Charleston provider files, source-specific
 holdout, browser parity and the M03 scientific acceptance gate remain open.
+
+## Expanded browser/native parity: 2026-10-27
+
+`frontend/src/test/magnetic-local.test.ts` compares the browser Pyodide worker
+against the native `magnetic_processing.py` CLI on eight deterministic rotated
+surveys. The set varies line spacing and orientation, alternates acquisition
+order, perturbs coordinates deterministically, and includes positive and zero
+tie-line offsets. It checks the source-byte digest, whole-line split, line and
+crossover diagnostics, held-out interpolation, grid coordinates, support mask,
+and every supported grid value. The gate keeps contracts, classifications and
+support exact, with only floating outputs compared at absolute tolerance
+`2e-7` plus relative tolerance `1e-12` to account for the different SciPy/BLAS
+builds. The tolerance is explicit so platform variation cannot silently alter
+splits, coverage, or result interpretation.
+
+The same test requires both runtimes to reject duplicate per-line sample order
+and a survey whose distinct flight-line geometries share an indistinguishable
+center direction. The complete browser file passes four tests; the M03
+processing/continuation suites pass 25 tests and Ruff passes. These are
+controlled synthetic parity and rejection checks. They do not measure
+single-job latency or peak memory on supported device classes, demonstrate
+Charleston field-data parity, or open hosted job admission.
