@@ -72,7 +72,7 @@ function M11WorkflowDiagram({ t, titleId }: { t: (en: string, es: string) => str
       <path d="M874 138 H906" className="m11-flow-arrow" markerEnd={`url(#${titleId}-arrow)`} />
       <g className="m11-flow-node">
         <rect x="914" y="28" width="194" height="220" rx="6" />
-        <text x="930" y="57" className="m11-flow-heading">{t("Two recovered models", "Dos modelos recuperados")}</text>
+        <text x="930" y="57" className="m11-flow-heading">{t("Recovered models", "Modelos recuperados")}</text>
         <text x="930" y="105">ρ · g/cm³</text>
         <text x="930" y="136">κ · dimensionless</text>
         <path d="M930 155 H1092" className="m11-flow-rule" />
@@ -91,7 +91,7 @@ function M11WorkflowDiagram({ t, titleId }: { t: (en: string, es: string) => str
       <path d="M180 303 V325" className="m11-flow-arrow" markerEnd={`url(#${titleId}-compact-arrow)`}/>
       <g className="m11-flow-node m11-flow-objective"><rect x="12" y="332" width="336" height="202" rx="6"/><text x="28" y="360" className="m11-flow-heading">{t("Joint objective", "Objetivo conjunto")}</text><text x="28" y="393">½‖Wg(Ggρ − dg)‖²</text><text x="28" y="420">+ ½‖WB(Gmκ − dB)‖²</text><text x="28" y="447">+ βg Rg(ρ) + βm Rm(κ)</text><text x="28" y="474">+ λc Rc / Rc,0</text><text x="28" y="500">+ μ Pmix(ρ, κ) · PGI</text><text x="28" y="524" className="m11-flow-muted">{t("structure term and mixture prior are alternatives", "acoplamiento y mezcla son alternativas")}</text></g>
       <path d="M180 537 V559" className="m11-flow-arrow" markerEnd={`url(#${titleId}-compact-arrow)`}/>
-      <g className="m11-flow-node"><rect x="12" y="566" width="336" height="122" rx="6"/><text x="28" y="594" className="m11-flow-heading">{t("Two recovered models", "Dos modelos recuperados")}</text><text x="28" y="627">ρ · g/cm³</text><text x="28" y="654">κ · dimensionless</text><text x="28" y="680" className="m11-flow-muted">{t("shared structure · distinct amplitudes", "estructura compartida · amplitudes distintas")}</text></g>
+      <g className="m11-flow-node"><rect x="12" y="566" width="336" height="122" rx="6"/><text x="28" y="594" className="m11-flow-heading">{t("Recovered models", "Modelos recuperados")}</text><text x="28" y="627">ρ · g/cm³</text><text x="28" y="654">κ · dimensionless</text><text x="28" y="680" className="m11-flow-muted">{t("shared structure · distinct amplitudes", "estructura compartida · amplitudes distintas")}</text></g>
     </svg>
     <figcaption>{t("Operator-to-model path for the supplied-survey method. The current panel teaches the equations; it does not launch this solve.", "Trayecto desde los operadores hasta los modelos del método para datos suministrados. Este panel enseña las ecuaciones; no ejecuta la inversión.")}</figcaption>
   </figure>;

@@ -28,7 +28,7 @@ import {
   type Curves,
   type Run,
 } from "../science";
-import { methodName, metricInfo, historyInfo } from "../data/metrics";
+import { methodName, methodOptionName, metricInfo, historyInfo } from "../data/metrics";
 import { lessons } from "../data/lessons";
 import { absoluteThreshold, casePropertyScale, physicalTarget, selectedModel, sharedScale, type ModelState } from "../recovery";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, TargetEvidence, UncertaintyView } from "../components/ScientificEvidence";
@@ -1115,7 +1115,7 @@ export default function Workbench() {
                     ? t("Acoustic FWI · FC", "FWI acústica · FC")
                     : id === "joint"
                       ? t("Cross-gradient inversion", "Gradiente cruzado")
-                      : methodName(id, es, es ? m.name_es : m.name)}
+                  : methodOptionName(id, es, es ? m.name_es : m.name)}
               </option>
             ))}
           </select>

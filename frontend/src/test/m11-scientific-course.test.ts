@@ -37,6 +37,8 @@ describe("M11 deep scientific methodology, not a synthetic solve", () => {
     expect(html).toContain("data-m11-course"); expect(html).toContain("data-m11-chapter=\"quantity\"");
     expect(html).toContain("aria-expanded=\"false\""); expect(html).toContain("katex");
     expect(html).toContain(lang === "es" ? "Pregunta científica" : "Scientific question");
+    expect(html).toContain(lang === "es" ? "Modelos recuperados" : "Recovered models");
+    expect(html).not.toContain(lang === "es" ? "Dos modelos recuperados" : "Two recovered models");
     expect(html).not.toContain("<script"); expect(html).not.toContain("fetch(");
   });
 });

@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import katex from "katex";
 import { chapters } from "../data/methods";
 import { CITATIONS } from "../data/citations";
-import { historyInfo, methodName, metricInfo } from "../data/metrics";
+import { historyInfo, methodName, methodOptionName, metricInfo } from "../data/metrics";
 import { isosurface, isosurfaceWithValues } from "../isosurface";
 import { color } from "../science";
 const source = (name: string) =>
@@ -95,6 +95,14 @@ describe("scientific explanations and canonical presentation", () => {
     expect(metricInfo("wrms", "joint", "joint").description).toContain(
       "active gravity stations",
     );
+  });
+  it("uses compact bilingual method names in the constrained workbench selector", () => {
+    expect(methodOptionName("l2", true)).toBe("L2 espacial");
+    expect(methodOptionName("irls", true)).toBe("IRLS espacial");
+    expect(methodOptionName("cnn", true)).toBe("Inferencia CNN");
+    expect(methodOptionName("autoencoder", true)).toBe("Autoencoder observacional");
+    expect(methodOptionName("l2", false)).toBe("Spatial L2");
+    expect(methodOptionName("mt-lm", true)).toMatch(/trust.region|TRF/i);
   });
 });
 describe("isosurface interpolation", () => {

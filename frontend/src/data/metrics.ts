@@ -11,6 +11,18 @@ export function methodName(id: string, es: boolean, fallback = id) {
   };
   return added[id]?.[es ? 1 : 0] ?? algorithmFor(id)?.title[es ? 1 : 0] ?? fallback;
 }
+
+/** Compact selector text; the option title and method article retain the full scientific name. */
+export function methodOptionName(id: string, es: boolean, fallback = id) {
+  const labels: Record<string, Text> = {
+    l2: ["Spatial L2", "L2 espacial"],
+    irls: ["Spatial IRLS", "IRLS espacial"],
+    cnn: ["CNN inference", "Inferencia CNN"],
+    autoencoder: ["Observation autoencoder", "Autoencoder observacional"],
+    ae: ["Observation autoencoder", "Autoencoder observacional"],
+  };
+  return labels[id]?.[es ? 1 : 0] ?? methodName(id, es, fallback);
+}
 export function metricInfo(
   key: string,
   family: Family,
