@@ -39,7 +39,11 @@ def create_app(settings: Settings, mail_sender: MailSender | None = None, *, phy
                 await physical.startup(settings, application.state.sessions)
             yield
         finally:
-            await engine.dispose()
+            try:
+                await engine.dispose()
+            finally:
+                if physical is not None:
+                    physical.close()
 
     app = FastAPI(title="Geophysics private-state API", lifespan=lifespan)
     app.state.sessions = async_sessionmaker(engine, expire_on_commit=False)

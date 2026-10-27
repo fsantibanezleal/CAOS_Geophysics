@@ -118,6 +118,12 @@ class Settings:
     def database_url(self) -> str:
         return "sqlite+aiosqlite:///" + self.database_path.as_posix()
 
+    @property
+    def release_manifest_path(self) -> Path:
+        # Resolve through the immutable release checkout, not the mutable
+        # current symlink used by systemd during a cutover.
+        return Path(__file__).resolve().parents[2] / "release.json"
+
     @classmethod
     def from_env(cls) -> "Settings":
         data = configured_data_path()
@@ -177,6 +183,10 @@ class WorkerSettings:
     @property
     def database_url(self) -> str:
         return "sqlite+aiosqlite:///" + self.database_path.as_posix()
+
+    @property
+    def release_manifest_path(self) -> Path:
+        return Path(__file__).resolve().parents[2] / "release.json"
 
     @classmethod
     def from_env(cls) -> "WorkerSettings":

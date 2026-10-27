@@ -23,6 +23,12 @@ class PhysicalAssembly:
             approved_installations=approved_installations, native_metadata=native_metadata)
         self.leases, self.worker = leases, worker_exclusion
 
+    def close(self):
+        from app.physical_leases import WriterLeases
+        from app.physical_posix import PrivateFiles
+        if isinstance(self.leases, WriterLeases) and isinstance(self.leases.files, PrivateFiles):
+            self.leases.close()
+
     def bind_engine(self, settings, engine):
         require(Path(settings.data_dir) == self.leases.files.root_path
                 and engine.url.drivername == 'sqlite+aiosqlite'

@@ -141,3 +141,24 @@ and no M11 unit is installed on the VPS; this is not online availability.
 Read-only HTTPS inspection returned HTTP 200, HTML title `Inverse Earth Studio |
 Geophysics`, and `Last-Modified: Sat, 26 Sep 2026 23:46:49 GMT`. The existing
 legacy frontend remains live; this branch has not been deployed or cut over.
+
+## Operator-bound API and worker assembly: 2026-10-26
+
+The candidate now contains a read-only operator-binding loader. It validates a
+strict registry digest, its exact installed `release.json` digest, the
+pre-existing private root/database and both fixed lock identities. It neither
+creates or repairs files nor changes a schema or account. API and worker
+entrypoints select the physical assembly only when both
+`GEOPHYSICS_PHYSICAL_BINDING_PATH` and
+`GEOPHYSICS_PHYSICAL_BINDING_SHA256` are supplied; partial configuration
+fails closed. The API and worker release their retained descriptors on
+shutdown. This makes the route/worker integration executable for a properly
+provisioned candidate, but does not create the binding or qualify any method.
+Linux operator-binding and physical-assembly lifecycle tests pass 16/16; Ruff
+and whitespace checks pass. Windows cannot execute the POSIX lock qualification.
+
+No production binding file, reviewed source-policy registry, initialized
+physical locks, compatible service database, M11 systemd unit, or actual-host
+admission receipt has been installed. Existing bootstrap and activation
+contracts do not yet provision or admit this binding. The active VPS remains
+the legacy static release described above. No deployment or cutover occurred.

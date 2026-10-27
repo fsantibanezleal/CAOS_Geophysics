@@ -543,7 +543,13 @@ async def run_forever(settings: Settings | WorkerSettings, *, poll_interval: flo
 
 def main() -> None:
     settings = WorkerSettings.from_env()
-    asyncio.run(run_forever(settings))
+    from app.operator_runtime import configured_physical_assembly
+    physical = configured_physical_assembly(settings)
+    try:
+        asyncio.run(run_forever(settings, physical=physical))
+    finally:
+        if physical is not None:
+            physical.close()
 
 
 if __name__ == "__main__":
