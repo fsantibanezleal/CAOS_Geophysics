@@ -1,4 +1,4 @@
-# Approved product and release status: 2026-10-26
+# Approved product and release status: 2026-10-27
 
 This snapshot reconciles the approved product SDD, its 2026-10-03 operating
 amendment, current product-branch evidence and the open implementation gates.
@@ -31,8 +31,8 @@ threshold as pending owner decisions must not be used to plan or block work.
 ## Current branch evidence
 
 The isolated implementation branch is `task/geophysics-client-first-completion`
-at `83193ee332e400e6650f3661347908eb1d43f84d` before the workspace recovery
-fix in this review. Its
+at `d7b5f0eb6eaad0094b98037cc31805bac4c94a51` as of 2026-10-27. It descends
+from the M11 candidate workspace recovery work. Its
 M11 work includes a source-bound gravity/magnetic joint inverse, independent
 single-modality baselines, sealed selection/evaluation, a 24-control synthetic
 matrix, resource controls and a strict local bundle importer. The actual local
@@ -162,3 +162,30 @@ physical locks, compatible service database, M11 systemd unit, or actual-host
 admission receipt has been installed. Existing bootstrap and activation
 contracts do not yet provision or admit this binding. The active VPS remains
 the legacy static release described above. No deployment or cutover occurred.
+
+## Supplied ERT profile result view: 2026-10-27
+
+The branch adds a method-specific view for locally admitted Slagdump M07
+results. It draws the supplied electrode elevations and selected original
+ABMN quadrupole, plots observed and frozen-predicted transfer resistance with
+the declared assumed sigma, identifies held-out observations, and shows
+signed residuals and retained QC flags. The interface explicitly withholds
+apparent resistivity, geometric factors and instrumental errors that are not
+present in the input/result contract. Plot-card sizing follows the existing
+CAOS scientific-plot module, including the phone note/QC spacing fix.
+
+Evidence on the current build: the ERT result-view and supplied-profile tests
+pass 17 with 2 fixture-gated skips; the production frontend build succeeds;
+the local browser suite passes all 3 groups against actual Slagdump and
+Koenigsee results. Its English/light desktop and Spanish/dark phone captures
+cover ERT and travel-time mesh/residual views. The browser run records no page
+errors, API writes, physics replay or changes to the pinned local result files.
+The implementation is committed as `d7b5f0e` and pushed to PR #151; GitHub
+reports no checks for that PR. The approved SDD remains much broader than this
+one local-result view.
+
+The convergence script still reports 1 failed and 18 unresolved requirements.
+No current release passes, no host deployment occurred, and the origin
+`https://geophysics.ml.fasl-work.com/` still returns the legacy static release
+(HTTP 200; `Last-Modified: 2026-09-26 23:46:49 GMT`). No Pages publication or
+second deployment was created.
