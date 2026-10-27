@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import prepare_service_release as bundle  # noqa: E402
 import stage_service_runtime as runtime  # noqa: E402
+import stage_python_runtime as python_runtime  # noqa: E402
 
 
 def candidate(tmp_path):
@@ -170,6 +171,24 @@ def test_isolated_cli_loads_only_trusted_sibling_source():
     result = subprocess.run([sys.executable, '-I', '-B', str(ROOT / 'scripts/stage_service_runtime.py'),
                              '--help'], capture_output=True, timeout=15)
     assert result.returncode == 0 and b'--bundle-sha256' in result.stdout
+    assert b'--interpreter' in result.stdout
+
+
+def test_interpreter_runtime_pins_official_distribution_and_identity():
+    assert python_runtime.NAME == 'cpython-3.12.16-20261026'
+    assert python_runtime.ARCHIVE_BYTES == 67921566
+    assert python_runtime.SHA256 == '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'
+    assert python_runtime.URL.endswith('cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz')
+    assert runtime.interpreter_probe(b'cpython|3.12.16|linux|x86_64\n', '3.12.16') == [
+        'cpython', '3.12.16', 'linux', 'x86_64']
+    with pytest.raises(ValueError, match='does not match'):
+        runtime.interpreter_probe(b'cpython|3.12.3|linux|x86_64\n', '3.12.16')
+
+
+def test_python_interpreter_stager_cannot_mutate_from_workstation(monkeypatch):
+    monkeypatch.setattr(python_runtime.sys, 'platform', 'win32')
+    with pytest.raises(ValueError, match='Linux root'):
+        python_runtime.stage()
 
 
 def test_inventory_rehashes_ordinary_files(tmp_path):

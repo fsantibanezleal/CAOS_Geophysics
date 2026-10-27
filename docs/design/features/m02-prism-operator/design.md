@@ -138,14 +138,15 @@ No false claim of measured source hash or successful field validation. This is
 not a portable result bundle: external review receipts bind the actual new
 operator/test/tool revision, request-case specification and runtime/source hashes.
 
-The [runtime pin manifest](runtime-pins.json) records observed versions and
-targeted source/binary digests acquired by read-only metadata/file inspection,
-not a new computation. The current proposed source epoch is Windows AMD64 /
-CPython 3.12.10. Unsupported runtime or missing/changed external source pins
-cannot pass the reviewed harness. A separately reviewed equivalent Linux/runtime
-epoch is not authorized by relabelling these Windows hashes. Targeted pins are
-not a full transitive supply-chain hash. The original docs-only manifest retains
-its planned null operator hash; do not retroactively rewrite that provenance.
+The [runtime pin manifest](runtime-pins.json) records the Windows AMD64 profile
+and its CPython 3.12.10 source/binary pins. The Linux CPU profile is separately
+bound in [runtime-pins-linux-cp312.json](runtime-pins-linux-cp312.json), now
+targeting security-patched CPython 3.12.16 from a hash-pinned standalone
+distribution. That amended Linux epoch remains a candidate until its numerical
+replay and installed-source pins pass. Unsupported runtimes or missing/changed
+external source pins cannot pass the reviewed harness. Targeted pins are not a
+full transitive supply-chain hash. The original docs-only manifest retains its
+planned null operator hash; do not retroactively rewrite that provenance.
 Actual implementation/test hashes are bound in the new execution receipts in
 [validation](validation.md), never copied from old potential.py provenance.
 

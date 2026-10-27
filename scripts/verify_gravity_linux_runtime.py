@@ -27,7 +27,8 @@ def verify() -> dict:
     pin = json.loads(pin_bytes)
     if pin.get("schema") != "geophysics.prism-linux-runtime-pins/v1":
         raise ValueError("gravity_runtime_manifest_schema")
-    if (sys.implementation.name != "cpython" or sys.version_info[:3] != (3, 12, 10)
+    expected_python = tuple(int(part) for part in pin.get("python", "").split("."))
+    if (sys.implementation.name != "cpython" or sys.version_info[:3] != expected_python
             or sys.platform != "linux" or platform.machine().lower() != "x86_64"):
         raise ValueError("gravity_runtime_python_platform_unregistered")
     requirements_sha = digest(REQUIREMENTS_PATH)

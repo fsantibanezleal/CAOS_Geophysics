@@ -1,10 +1,10 @@
 {
   "schema": "geophysics.m11-linux-runtime-pins/v1",
-  "source_epoch": "m11-linux-cpu-1",
-  "date": "2026-10-25",
-  "status": "Local numerical regression passed; full Linux matrix and ML VPS admission remain open",
+  "source_epoch": "m11-linux-cpu-2",
+  "date": "2026-10-27",
+  "status": "CPython 3.12.16 security-patched candidate; numerical replay and ML VPS admission remain open",
   "platform": "Ubuntu 24.04 WSL2; Linux x86_64",
-  "python": "CPython 3.12.10",
+  "python": "CPython 3.12.16",
   "engine_versions": {
     "numpy": "2.2.6",
     "scipy": "1.15.2",
@@ -18,7 +18,7 @@
   },
   "inherited_potential_engine_manifest": {
     "path": "../m02-prism-operator/runtime-pins-linux-cp312.json",
-    "sha256": "c299d0556330658bd69175d841b18fbbcaf2c239ac919e859375dbf487d2bbef"
+    "sha256": "d8b41eced043640ed9cceb80998b2a668807654b342ad0b107d2ae5b8e6424de"
   },
   "m11_and_magnetic_source_sha256": {
     "simpeg/optimization.py": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",

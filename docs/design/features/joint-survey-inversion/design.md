@@ -67,9 +67,11 @@ public physical_nonlinear_optimizer export and its typed epoch2 binding, not the
 linear gravity certificate. Parent scientific acceptance remains separate.
 
 The original scientific epoch is CPython3.12.10 Windows64; NumPy2.2.6,
-SciPy1.15.2, SimPEG0.25.2, Geoana0.8.1 and discretize0.12.0. An additional
-CPython3.12.10 Linux x86_64 CPU epoch is now admitted for local numerical work
-with separate installed-source pins in
+SciPy1.15.2, SimPEG0.25.2, Geoana0.8.1 and discretize0.12.0. The previously
+replayed CPython3.12.10 Linux x86_64 CPU epoch remains historical evidence. Its
+security-patched CPython3.12.16 replacement is a new candidate pending fresh
+numerical replay and source-pin verification. The candidate uses separate
+installed-source pins in
 [`runtime-linux-cp312.json`](runtime-linux-cp312.json); its inherited potential
 field engine pins are in
 [`runtime-pins-linux-cp312.json`](../m02-prism-operator/runtime-pins-linux-cp312.json).

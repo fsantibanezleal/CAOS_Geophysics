@@ -42,11 +42,26 @@ statements, not switches a caller can change to authorize release.
 ## 2. Runtime and private state
 
 The Linux operator stages the immutable bundle under the application's
-releases root, installs an API-only `.venv` in that release from the exact
-`requirements-api.txt`, records the resolved dependency inventory and runs
-`pip check`. GPU/training requirements are not installed on the VPS. Source
-and environment are owned by the operator, readable but not writable by the
-service account. Staging and source verification precede activation.
+releases root, stages the hash-pinned CPython runtime in private deployment
+storage, then installs the API-only `.venv` in the release from the exact
+`requirements-api.txt`. The candidate records the interpreter identity and
+resolved dependency inventory and runs `pip check`. GPU/training requirements
+are not installed on the VPS. Source and environment are owned by the operator,
+readable but not writable by the service account. Staging and source
+verification precede activation.
+
+Stage the exact interpreter distribution registered in
+`docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json`:
+
+```bash
+/usr/bin/python3 -I -B source/scripts/stage_python_runtime.py
+```
+
+The script checks the official immutable archive's byte length and SHA-256,
+extracts into `/var/lib/geophysics-deploy/python-runtimes/`, checks the runtime
+tree and required extension modules, and writes a private receipt. It does not
+replace `/usr/bin/python3` or modify system packages. A failed staging directory
+is retained; use a new versioned interpreter identity after repair.
 
 The bounded installer is executable from the staged candidate's source:
 
@@ -54,7 +69,8 @@ The bounded installer is executable from the staged candidate's source:
 /usr/bin/python3 -I -B source/scripts/stage_service_runtime.py \
   --release /var/www/geophysics.ml.fasl-work.com/releases/REVIEWED_ID \
   --evidence /var/lib/geophysics-deploy/REVIEWED_RUNTIME_ID \
-  --bundle-sha256 REVIEWED_MANIFEST_SHA256
+  --bundle-sha256 REVIEWED_MANIFEST_SHA256 \
+  --interpreter /var/lib/geophysics-deploy/python-runtimes/cpython-3.12.16-20261026/python/bin/python3.12
 ```
 
 Use the explicit measured IDs and digest, not these placeholders. This operator

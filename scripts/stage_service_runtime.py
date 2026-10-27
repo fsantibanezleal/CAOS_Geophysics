@@ -95,6 +95,37 @@ def runtime_relative(value: str) -> str:
     return value
 
 
+def validate_interpreter(path: Path, release: Path) -> dict:
+    pin_path = release / 'source/docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json'
+    pin = json.loads(pin_path.read_text(encoding='utf-8'))
+    expected = pin.get('python')
+    if not isinstance(expected, str) or not re.fullmatch(r'3\.\d+\.\d+', expected):
+        raise ValueError('registered interpreter version pin invalid')
+    resolved = path.resolve(strict=True)
+    info = resolved.stat(follow_symlinks=False)
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022
+            or not os.access(resolved, os.X_OK)):
+        raise ValueError('trusted root-owned interpreter required')
+    probe = 'import platform,sys; print("|".join((sys.implementation.name,platform.python_version(),sys.platform,platform.machine())))'
+    result = subprocess.run([str(resolved), '-I', '-B', '-c', probe], stdin=subprocess.DEVNULL,
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15,
+                            check=True, env={'PATH': '/usr/bin:/bin', 'PYTHONNOUSERSITE': '1',
+                                             'PYTHONDONTWRITEBYTECODE': '1'})
+    fields = interpreter_probe(result.stdout, expected)
+    return {'path': str(resolved), 'implementation': fields[0], 'version': fields[1],
+            'platform': fields[2], 'machine': fields[3], 'sha256': file_digest(resolved)['sha256']}
+
+
+def interpreter_probe(raw: bytes, expected: str) -> list[str]:
+    try:
+        fields = raw.decode('ascii').strip().split('|')
+    except UnicodeDecodeError as exc:
+        raise ValueError('interpreter probe output invalid') from exc
+    if fields != ['cpython', expected, 'linux', 'x86_64']:
+        raise ValueError('interpreter version/platform does not match the committed runtime pin')
+    return fields
+
+
 def runtime_inventory(root: Path, interpreter: Path, *, deadline: float | None = None) -> dict:
     no_links(root)
     actual_python = interpreter.resolve(strict=True)
@@ -229,6 +260,10 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
     manifest = verify_bundle(release)
     if check_ownership:
         root_owned_tree(release)
+        interpreter_record = validate_interpreter(interpreter, release)
+        interpreter = Path(interpreter_record['path'])
+    else:
+        interpreter_record = None
     requirement_hash = requirements(release / 'source/requirements-api.txt')
     gravity_requirement_hash = requirements(release / 'source/requirements-gravity-runtime.txt')
     if shutil.disk_usage(release).free < INSTALL_RESERVE or shutil.disk_usage(evidence.parent).free < MAX_RECEIPT + MAX_LOG:
@@ -240,6 +275,7 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
     receipt = {'schema': 'geophysics.service-runtime/v2', 'source_revision': manifest['source_revision'],
                'bundle_sha256': expected_digest, 'requirements_sha256': requirement_hash,
                'gravity_requirements_sha256': gravity_requirement_hash,
+               'interpreter_profile': interpreter_record,
                'created_at': datetime.now(timezone.utc).isoformat(), 'runtime_installed': False,
                'host_admitted': False, 'full_release_accepted': False}
     try:
@@ -307,6 +343,7 @@ def main(argv=None) -> int:
     parser.add_argument('--release', type=Path, required=True)
     parser.add_argument('--evidence', type=Path, required=True)
     parser.add_argument('--bundle-sha256', required=True)
+    parser.add_argument('--interpreter', type=Path, default=PYTHON)
     args = parser.parse_args(argv)
     try:
         if sys.platform != 'linux' or os.geteuid() != 0:
@@ -323,7 +360,7 @@ def main(argv=None) -> int:
                 raise ValueError('operator-owned application staging parent required')
         if (RELEASES.parent / 'current').resolve(strict=True) == args.release:
             raise ValueError('active release must not be modified')
-        stage(args.release, args.evidence, args.bundle_sha256)
+        stage(args.release, args.evidence, args.bundle_sha256, interpreter=args.interpreter)
     except Exception:
         print('Runtime staging failed; inspect retained private evidence. No activation performed.', file=sys.stderr)
         return 1

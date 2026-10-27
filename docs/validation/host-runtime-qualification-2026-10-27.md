@@ -1,4 +1,4 @@
-# ML VPS candidate runtime qualification — 2026-10-27
+# ML VPS candidate runtime qualification: 2026-10-27
 
 This records bounded host evidence for the replacement candidate. It is not
 release acceptance, scientific admission, or a deployment receipt.
@@ -40,10 +40,11 @@ live releases. Failed candidate files and private evidence were retained.
 
 The repository fixes for service-owned state validation, legal `+` characters
 in runtime paths, and inclusion of the gravity audit pin are committed and
-pushed in this branch. Regression tests cover those changes. The latest
-official Python 3.12 security release is 3.12.16; adopting it requires
-reviewing and updating the approved runtime pin and staging a verified
-interpreter. The current host interpreter must not be relabelled as 3.12.10.
+pushed in this branch. Regression tests cover those changes. The branch now
+registers CPython 3.12.16 from a hash-pinned standalone distribution and adds a
+private interpreter staging command. That new profile still requires host
+installation, numerical replay, and fresh source-pin verification. The current
+host interpreter must not be relabelled as 3.12.10.
 [Python 3.12.16 release](https://www.python.org/downloads/release/python-31216/).
 
 ## Release decision

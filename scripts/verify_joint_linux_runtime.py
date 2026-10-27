@@ -33,7 +33,9 @@ def verify() -> dict:
     if (inherited["path"] != "../m02-prism-operator/runtime-pins-linux-cp312.json"
             or digest(M02_PATH) != inherited["sha256"]):
         raise ValueError("m11_inherited_runtime_manifest_changed")
-    if (sys.implementation.name != "cpython" or sys.version_info[:3] != (3, 12, 10)
+    expected_python = m02.get("python")
+    if (m11.get("python") != f"CPython {expected_python}"
+            or sys.implementation.name != "cpython" or platform.python_version() != expected_python
             or sys.platform != "linux" or platform.machine().lower() != "x86_64"):
         raise ValueError("m11_linux_runtime_tuple_unregistered")
 

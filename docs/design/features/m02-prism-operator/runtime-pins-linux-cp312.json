@@ -1,12 +1,18 @@
 {
-  "date": "2026-10-25",
+  "date": "2026-10-27",
   "evidence": {
     "field_eligibility": false,
     "full_M02_accepted": false,
-    "metric_workspace_closure": "passed",
+    "metric_workspace_closure": "previous-epoch passed; 3.12.16 replay pending",
     "ml_vps_host_admitted": false,
-    "scalar_bound_regression": "passed",
-    "uploaded_prism_calibration_and_sealed_evaluation": "passed"
+    "scalar_bound_regression": "previous-epoch passed; 3.12.16 replay pending",
+    "uploaded_prism_calibration_and_sealed_evaluation": "previous-epoch passed; 3.12.16 replay pending"
+  },
+  "interpreter_distribution": {
+    "name": "cpython-3.12.16+20261026-x86_64-unknown-linux-gnu-install_only.tar.gz",
+    "sha256": "6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de",
+    "size_bytes": 67921566,
+    "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz"
   },
   "machine": "x86_64",
   "metric_binary_sha256": {
@@ -20,7 +26,7 @@
     "numba": "0.67.0"
   },
   "platform": "Linux x86_64; Ubuntu 24.04 WSL2 candidate",
-  "python": "3.12.10",
+  "python": "3.12.16",
   "required_engine_runtime_versions": {
     "discretize": "0.12.0",
     "geoana": "0.8.1",
@@ -32,8 +38,8 @@
   "requirements": "requirements-gravity-runtime.txt",
   "requirements_sha256": "f34ad3ea85ebb0e1127fa9d36bcf558517c3d09a209dff856f8d2a46fceedd0e",
   "schema": "geophysics.prism-linux-runtime-pins/v1",
-  "source_epoch": "m02-prism-linux-cpu-1",
-  "status": "Local Linux numerical profile; ML VPS and release remain unadmitted",
+  "source_epoch": "m02-prism-linux-cpu-2",
+  "status": "CPython 3.12.16 security-patched candidate; Linux numerical replay and ML VPS admission remain open",
   "targeted_source_sha256": {
     "choclo/constants.py": "81eda92d7a631ad9544ba318319561be115906e32dc6de23bcd48ca1ea458494",
     "choclo/prism/_gravity.py": "b50aa392db4b18124f439f8ec4b9d3214bd74dba7fb43f559ac19e3e33e8b94a",
