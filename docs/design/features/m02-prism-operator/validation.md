@@ -256,8 +256,9 @@ Self-review: exactly two additive code/test paths and this feature folder; all
 six PR120 plan files, legacy physics, dependency/environment, API/UI and canonical
 bytes are unchanged. Private 137-file backup and ignored candidates/receipts
 remain unstaged/untouched. Independent final FULL code/policy/diff review and
-exact-source rerun by main are still pending. Keep the ready pin stable; this
-milestone is not inverse, survey, full M02, field, GPU, host or deployment acceptance.
+full product review are still pending. The current Linux source/test rerun is
+recorded separately below. Keep the ready pin stable; this milestone is not
+inverse, survey, full M02, field, GPU, host or deployment acceptance.
 
 Final staged static checks pass: content standards, template residue, CI budget,
 SDD structure and `git diff --cached --check`. Read-only receipt self-audit verifies
@@ -266,3 +267,26 @@ strict JSON/no duplicate keys, all source/test/receipt/manifest SHA bindings,
 scope, six PR120 files unchanged, and private backup count 137 / zero tracked.
 The structural ledger reports 1 fail / 18 unresolved on this branch; this does
 not imply scientific or release acceptance and has not been edited here.
+
+## Independent Linux rerun, 2026-10-27
+
+The current platform-amended source was independently reviewed and executed
+under its committed Linux CPython 3.12.10 source epoch in Ubuntu 24.04 WSL2.
+The receipt [linux-independent-rerun-2026-10-27.json](evidence/linux-independent-rerun-2026-10-27.json)
+binds the exact current operator/test bytes and the 2026-10-25 Linux source-pin
+manifest. The existing test verifies all 20 registered installed dependency
+source/binary digests. Standalone operator controls pass **80 / 0 skips**;
+the scoped potential-source and user-CSV regression passes **118 / 2 existing
+skips / 11 deselected**. The exact commands and runtimes are in the receipt.
+
+This is a test-environment rerun, not service-runtime staging. PyPI's official
+SimPEG 0.25.2 release has only a source archive, while
+`scripts/stage_service_runtime.py` currently passes `--only-binary=:all:`. Also,
+the dedicated gravity requirements omit `pymatsolver`, required by SimPEG's
+package metadata. The test environment built SimPEG from its PyPI sdist after
+matching SHA-256 `feeb106f70bf093ecd6b531dad49cc179d11c5e69dbff0c64f9c3cf8b5e2eb97`
+and installed `pymatsolver==0.4.0` from its SHA-verified PyPI sdist. Its
+`pip check` then passed. These repairs have not yet been carried into the
+production stager/requirements, so no runtime-install, VPS-capacity, admission,
+or release gate is claimed. Sources: [SimPEG 0.25.2 on PyPI](https://pypi.org/project/simpeg/0.25.2/),
+[pymatsolver 0.4.0 on PyPI](https://pypi.org/project/pymatsolver/0.4.0/).

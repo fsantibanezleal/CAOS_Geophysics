@@ -32,8 +32,13 @@ the exact pinned code/tests before any merge; no merge/deploy by this agent.
 - [x] Execute all proposed gates locally and persist scoped actual receipts,
   source/runtime hashes, deterministic cases and negatives. Local forward controls
   pass; [exact evidence](validation.md) is not full M02 acceptance.
-- [ ] Main independently repeats/reviews PINNED code/test/source receipts before
-  promotion. After ready handoff keep branch/files stable; no automatic merge.
+- [x] Main independently reviewed the current Linux-pinned operator implementation
+  and source-audit tests, then reran the exact 80-test operator suite and the
+  scoped 118-pass integration command; see [2026-10-27 Linux rerun receipt](evidence/linux-independent-rerun-2026-10-27.json).
+- [ ] Service runtime staging installs the complete declared gravity dependency
+  set. Current evidence exposes two defects: SimPEG 0.25.2 is sdist-only while
+  the stager requires wheels, and `pymatsolver` is missing from gravity runtime
+  requirements. Resolve and test these before host qualification.
 
 This branch initially changed only `docs/design/features/m02-prism-operator/*`;
 after exact authority only the two named new code/test paths were added. PR120 head
