@@ -31,6 +31,10 @@ MAX_LOG = 16 * 1024**2
 MAX_RECEIPT = 16 * 1024**2
 SECONDS = 900
 PIN = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]*(?:\[[A-Za-z0-9_,.-]+\])?==[A-Za-z0-9][A-Za-z0-9_.+-]*')
+GRAVITY_PROBE = ('import sys, pathlib; sys.path.insert(0, str(pathlib.Path.cwd())); '
+                 'from gravity_forward import _runtime; '
+                 'from gravity_l2_metric import _workspace_closure; '
+                 '_runtime(); _workspace_closure()')
 
 
 def exclusive_json(path: Path, value: dict) -> None:
@@ -311,11 +315,7 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
         receipt['gravity_source_audit'] = audit
         gravity_freeze = runner.run('gravity-freeze', [gravity_python, '-I', '-B', '-m', 'pip',
                                                        '--isolated', 'freeze', '--all'], release)
-        probe = ('import sys, pathlib; sys.path.insert(0, str(pathlib.Path.cwd())); '
-                 'from gravity_forward import _runtime; '
-                 'from gravity_l2_metric import _workspace_closure; '
-                 'assert _runtime(); assert _workspace_closure()')
-        runner.run('gravity-probe', [gravity_python, '-I', '-B', '-c', probe],
+        runner.run('gravity-probe', [gravity_python, '-I', '-B', '-c', GRAVITY_PROBE],
                    release / 'source/data-pipeline')
         receipt['gravity_runtime'] = runtime_inventory(release / '.venv-gravity', interpreter,
                                                        deadline=runner.deadline)

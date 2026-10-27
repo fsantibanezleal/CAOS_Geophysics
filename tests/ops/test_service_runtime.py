@@ -185,6 +185,12 @@ def test_interpreter_runtime_pins_official_distribution_and_identity():
         runtime.interpreter_probe(b'cpython|3.12.3|linux|x86_64\n', '3.12.16')
 
 
+def test_gravity_probe_uses_exception_contract_not_boolean_return():
+    assert '_runtime(); _workspace_closure()' in runtime.GRAVITY_PROBE
+    assert 'assert _runtime()' not in runtime.GRAVITY_PROBE
+    assert 'assert _workspace_closure()' not in runtime.GRAVITY_PROBE
+
+
 def test_python_interpreter_stager_cannot_mutate_from_workstation(monkeypatch):
     monkeypatch.setattr(python_runtime.sys, 'platform', 'win32')
     with pytest.raises(ValueError, match='Linux root'):
