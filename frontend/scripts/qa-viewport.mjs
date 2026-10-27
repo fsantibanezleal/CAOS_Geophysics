@@ -121,7 +121,7 @@ for (const [width, height] of [[390, 844], [1600, 900]]) {
   console.log('PERFORMANCE', JSON.stringify(performanceRows.at(-1)));
   transfers.length = 0;
   start = performance.now();
-  await page.getByLabel('Geological case', { exact: true }).selectOption('FWI_LAYERED');
+  await page.getByRole('combobox', { name: 'Geological case', exact: true }).selectOption('FWI_LAYERED');
   await page.locator('.seismic-view canvas').first().waitFor();
   await page.getByText('Loading numerical result…').waitFor({ state: 'hidden' });
   await paint(page);
@@ -144,9 +144,9 @@ await page.goto(base, { waitUntil: 'domcontentloaded' });
 await page.locator('.earth-scene canvas').waitFor();
 const rendered = { gravity: '.earth-scene', magnetics: '.earth-scene', mt: '.mt-view', seismic: '.seismic-view', joint: '.earth-scene', learned: '.learned-view' };
 for (const id of families) {
-  if (await page.getByLabel('Geological case', { exact: true }).inputValue() !== id) await Promise.all([
+  if (await page.getByRole('combobox', { name: 'Geological case', exact: true }).inputValue() !== id) await Promise.all([
     page.waitForResponse((response) => response.url().endsWith(`/data/v2/${id}/reference.json`)),
-    page.getByLabel('Geological case', { exact: true }).selectOption(id),
+    page.getByRole('combobox', { name: 'Geological case', exact: true }).selectOption(id),
   ]);
   const visualHashes = new Set();
   const metricHashes = new Set();

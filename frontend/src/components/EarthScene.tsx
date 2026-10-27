@@ -172,7 +172,7 @@ export function EarthScene({
               color: color(sign * level, range, palette),
               side: THREE.DoubleSide,
               transparent: true,
-              opacity: opacity * 0.55,
+              opacity: opacity * 0.78,
               depthWrite: false,
               clippingPlanes: [
                 new THREE.Plane(new THREE.Vector3(0, 0, -1), cut / 1000),

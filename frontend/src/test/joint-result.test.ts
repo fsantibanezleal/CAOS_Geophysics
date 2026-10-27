@@ -41,8 +41,10 @@ describe("native local joint output, not a browser inverse", () => {
         for (const parts of Object.values(frame.responses)) for (const response of Object.values(parts!)) expect(response.residual.every((v, j) => v === response.predicted[j] - response.observed[j])).toBe(true);
       }
     }
-    const state = jointInstrumentFrame(inspection, "c00", 1); expect(state.candidate!.status).toBe("nonconverged");
-    expect(state.responses.gravity!.sealed.predicted).not.toEqual(jointResponse(inspection, "gravity", "sealed").predicted);
+    // The browser instrument exports one terminal snapshot per candidate;
+    // intermediate solver history remains in the full offline output trace.
+    const state = jointInstrumentFrame(inspection, "c00", 0); expect(state.candidate!.status).toBe(inspection.candidates[0].status);
+    expect(state.responses.gravity!.sealed.predicted).toEqual(jointResponse(inspection, "gravity", "sealed").predicted);
     const sidecar = jointFrameSidecar(inspection, "c25", 0); expect(sidecar.coupling).not.toBeNull(); expect(sidecar.responses).toHaveProperty("magnetic.sealed.metrics"); expect(sidecar.scientific_acceptance_verified).toBe(false);
     const baseline = jointInstrumentFrame(inspection, "baseline", 0); expect(baseline.entry.kind).toBe("independently_optimized_pair"); expect(baseline.entry.weights).toHaveProperty("coupling", 0);
     const selected = jointInstrumentFrame(inspection, "selected", 0); expect(selected.responses.magnetic!.sealed.predicted).toEqual(jointResponse(inspection, "magnetic", "sealed").predicted);

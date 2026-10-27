@@ -1040,7 +1040,7 @@ export default function Workbench() {
   return (
     <CaseWorkbench
       caseId={selected}
-      cases={shellCases.length ? { cases: shellCases, selectedId: selected, onSelect: select, layout: "select", deepLink: true, lang: es ? "es" : "en" } : undefined}
+      cases={shellCases.length ? { cases: shellCases, selectedId: selected, onSelect: select, layout: "select", deepLink: true, lang: es ? "es" : "en", ariaLabel: t("Geological case", "Caso geológico") } : undefined}
       source={run?.provenance.synthetic ? "synthetic" : "real"}
       controls={{ variant, methodId, mode, section, cut, representation, threshold, opacity, survey, angle, angleStep, speed, orbit, frame, modelState, playing, blend, shot, gain, playbackKind }}
       railLabel={t("Geophysical experiment controls", "Controles del experimento geofísico")}
@@ -1312,7 +1312,7 @@ export default function Workbench() {
                     onSelect={select}
                     layout="select"
                     lang={es ? "es" : "en"}
-                    ariaLabel={t("Select geophysical case", "Seleccionar caso geofísico")}
+                    ariaLabel={t("Geological case", "Caso geológico")}
                     accessory={<button className="btn" type="button" aria-expanded="false" onClick={() => setRailOpen(true)}>{t("Experiment controls", "Controles del experimento")}</button>}
                   />}
               tabs={[

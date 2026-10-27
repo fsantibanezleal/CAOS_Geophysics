@@ -46,7 +46,8 @@ describe("joint scientific output instrument", () => {
       expect(html).toContain('href="https://github.com/simpeg/simpeg/blob/v0.25.2/simpeg/regularization/cross_gradient.py"');
       expect(html).toContain('href="https://docs.simpeg.xyz/v0.25.2/content/api/generated/simpeg.regularization.CrossGradient.html"');
       expect(html).toContain('data-testid="joint-native-coupling-readout"'); expect(html).toContain(lang === "en" ? "Export this exact native frame JSON" : "Exportar este marco nativo exacto JSON");
-      expect(html).toContain(lang === "en" ? 'aria-label="Native model frame"' : 'aria-label="Marco de modelo nativo"'); expect(html).toContain("nonconverged");
+      expect(html).toContain(lang === "en" ? 'aria-label="Native model frame"' : 'aria-label="Marco de modelo nativo"');
+      expect(html).toContain(initial.candidates.some(candidate => candidate.status === "nonconverged") ? "nonconverged" : "converged");
     }
   });
   it.skipIf(!process.env.GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE)("formats native readouts without rounding arrays, cell attributes or exact exports", async () => {

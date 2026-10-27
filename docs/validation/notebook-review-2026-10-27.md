@@ -2,8 +2,8 @@
 
 ## Current evidence
 
-- `scripts/check_notebooks.py`: 50 notebooks satisfy the structural bilingual bar.
-- `scripts/run_notebooks.py --check --tmp E:\_worktrees\_notebook-check-release`: the final 50-notebook full fresh-kernel replay passed on 2026-10-27 after all current edits. Both M09 notebooks were also individually checked repeatedly. Their pyGIMLi subprocess fixes NumPy and numerical-library thread settings; report metrics are rounded only for reproducibility, while full-precision model and coverage arrays remain in the notebook result object.
+- `scripts/check_notebooks.py`: 52 notebooks satisfy the structural bilingual bar.
+- `scripts/run_notebooks.py --check --tmp E:\_worktrees\_notebook-check-release`: the final 52-notebook full fresh-kernel replay passed on 2026-10-27 before the M02/M04 additions recorded below. Both M09 notebooks were also individually checked repeatedly. Their pyGIMLi subprocess fixes NumPy and numerical-library thread settings; report metrics are rounded only for reproducibility, while full-precision model and coverage arrays remain in the notebook result object.
 - The four ERT solver notebooks declare a narrowly bounded PNG pixel tolerance for repeat-run floating-point drift. Their text, numeric outputs and source inputs still compare exactly. The 94 saved PNGs were re-encoded canonically; decoded pixels were unchanged.
 - `scripts/check_method_matrix.py`: 13/13 structural gates are present; it reports `scientific_acceptance=false`.
 - Focused M07 tests: 6 passed, 3 skipped because the rights-restricted Slagdump raw asset is absent locally. The source ledger says provider-link-only; this review does not authorize mirroring it.
@@ -28,8 +28,8 @@ The M03 lesson now executes the shared line-processing implementation on an auth
 
 ## Release effect
 
-The bilingual notebook set passes its structural gate and every notebook has fresh-kernel execution evidence. The notebook runner unit tests pass (5); focused ERT tests pass 6 with 3 skips because rights-restricted Slagdump raw bytes are absent. The docs-matrix structure gate passes. The convergence ledger remains 1 failed and 18 unresolved.
+The bilingual notebook set passes its structural gate and every notebook has fresh-kernel execution evidence. The four added M02/M04 inversion notebooks were each replayed again in fresh kernels after their final edits; all four passed. The notebook runner unit tests pass (5); focused ERT tests pass 6 with 3 skips because rights-restricted Slagdump raw bytes are absent. The docs-matrix structure gate passes. The convergence ledger remains 1 failed and 18 unresolved.
 
-The bilingual notebook set is not accepted as complete course content. M03's new line-processing lesson and M09's new exact-core synthetic inverse are meaningful scoped additions; provider-source validation and the broader survey inverse remain unaccepted. Independent MT/ERT comparisons, a fresh FWI comparison, M11 optimizer and paired single-modality baselines, a fresh 23-trace M13 ONNX/private-oracle browser parity run, complete user-data workflows, rendered acceptance and actual-host gates remain open under `docs/design/SDD.md` and `docs/design/convergence.json`. No release cutover is authorized by these notebook checks.
+The bilingual notebook set is not accepted as complete course content. M02/M04's new 3D inversion lessons, M03's line-processing lesson and M09's exact-core synthetic inverse are meaningful scoped additions; provider-source validation and the broader survey inverse remain unaccepted. Fresh FWI optimization and an independent comparator, M11 optimizer and paired single-modality baselines, M12 velocity-checkpoint inference, independent MT/ERT comparisons, a fresh 23-trace M13 ONNX/private-oracle browser parity run, complete user-data workflows, rendered acceptance and actual-host gates remain open under `docs/design/SDD.md` and `docs/design/convergence.json`. No release cutover is authorized by these notebook checks.
 
 The notebook/harness milestone is evidence-backed and ready to persist on the task branch; it does not satisfy full product promotion or deployment acceptance.
