@@ -163,6 +163,12 @@ Set `GEOPHYSICS_JOINT_MATRIX_FIXTURE` to that directory for native upload and
 dataset lifecycle tests. This command runs no inversion and does not produce a
 recovery score, field dataset, or scientific acceptance receipt.
 
+Set `GEOPHYSICS_JOINT_OUTPUT_MATRIX_FIXTURE` to the separately retained output
+matrix directory for browser-import and runtime profiling tests. Set
+`GEOPHYSICS_JOINT_OUTPUT_FIXTURE` and `GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE` to
+one case's `output/` and `instrument/` directories when running the corresponding
+single-case views. Input controls and solver outputs are distinct fixture types.
+
 `scripts/validate_joint_matrix.py` runs all24 fixed refined-source Choclo cases,
 strict solve/export/replay, each original beta control against the independent
 test-only raw BVLS return and post-freeze truth discrepancies. Raw BVLS exact-KKT

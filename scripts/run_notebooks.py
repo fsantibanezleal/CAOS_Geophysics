@@ -8,13 +8,15 @@ outputs of one name are coalesced into one (as nbconvert does), so the committed
 
     python scripts/run_notebooks.py                 # every notebook, in place
     python scripts/run_notebooks.py --only notebooks/en/01-getting-started/01-first-run.ipynb
-    python scripts/run_notebooks.py --check --tmp DIR   # executes copies under DIR, writes nothing in the repository, fails on any
-                                                        # error and on committed bytes that differ from a fresh run (stale outputs)
+    python scripts/run_notebooks.py --check --tmp DIR   # executes in-memory notebook copies, saves outputs under DIR, fails on errors
+                                                        # or committed bytes that differ from a fresh run (stale outputs)
     CAOS_TEMP_ROOT=DIR python scripts/run_notebooks.py --check      # the same, the temp root from the environment
 
-``--check`` writes its copies to a fresh folder under the temp root the caller names (``--tmp DIR``, else ``CAOS_TEMP_ROOT``;
-the device's temp root, never a path written in the repository) and removes it after the run; without a temp root it stops
-with exit 2, and the system temp folder is never used. A product that declares method packages (``product.json``
+``--check`` executes each saved notebook in memory against the repository's read-only scientific inputs and writes the fresh
+notebook result under a unique folder in the temp root the caller names (``--tmp DIR``, else ``CAOS_TEMP_ROOT``; the device's
+temp root, never a path written in the repository). It removes that folder after the run and never copies the multi-gigabyte
+data tree. Notebook-generated files must use ``CAOS_TEMP_ROOT``. Without a temp root it stops with exit 2, and the system
+temp folder is never used. A product that declares method packages (``product.json``
 ``method_packages``, PyPI distributions) must have them installed here, each with an exact pin in ``notebooks/requirements.txt``,
 and no notebook may define a name they define: the run stops before any notebook executes (``scripts/check_notebooks.py`` holds
 the same names statically when the packages are installed).
@@ -28,8 +30,10 @@ Exit 0 every notebook ran, 1 on any failure, 2 on a usage or environment problem
 from __future__ import annotations
 
 import argparse
+import base64
 import copy
 import importlib.util
+import io
 import json
 import os
 import shutil
@@ -73,19 +77,44 @@ def coalesce_streams(outputs: list[dict]) -> list[dict]:
     return merged
 
 
+def canonical_png(encoded: str) -> str:
+    """Normalize PNG container bytes while preserving the exact rendered pixels."""
+    from PIL import Image, PngImagePlugin
+
+    with Image.open(io.BytesIO(base64.b64decode(encoded))) as source:
+        source.load()
+        metadata = PngImagePlugin.PngInfo()
+        software = source.info.get("Software")
+        if software:
+            metadata.add_text("Software", software)
+        output = io.BytesIO()
+        source.save(output, format="PNG", pnginfo=metadata, dpi=source.info.get("dpi"),
+                    optimize=False, compress_level=9)
+    return base64.b64encode(output.getvalue()).decode("ascii")
+
+
 def strip_volatile(nb: dict) -> dict:
     """The notebook without what changes from run to run or machine to machine: timings, widget state, the kernel's Python
     version and every cell metadata key but ``tags``, with consecutive streams coalesced. Cell ids stay (nbformat 4.5)."""
     nb = copy.deepcopy(nb)
     meta = nb.get("metadata", {})
     nb["metadata"] = {k: meta[k] for k in KEEP_NOTEBOOK_METADATA if k in meta}
-    nb["metadata"]["kernelspec"] = dict(KERNELSPEC)
+    kernel = nb.get("metadata", {}).get("kernelspec", {})
+    nb["metadata"]["kernelspec"] = {
+        "display_name": kernel.get("display_name", KERNELSPEC["display_name"]),
+        "language": "python",
+        "name": kernel.get("name", KERNEL),
+    }
     nb["metadata"]["language_info"] = {"name": "python"}
     for cell in nb.get("cells", []):
         tags = cell.get("metadata", {}).get("tags")
         cell["metadata"] = {"tags": tags} if tags else {}
         if cell.get("cell_type") == "code":
             cell["outputs"] = coalesce_streams(cell.get("outputs", []))
+            for output in cell["outputs"]:
+                image = output.get("data", {}).get("image/png")
+                if isinstance(image, str):
+                    output["data"]["image/png"] = canonical_png(image)
     return nb
 
 
@@ -123,7 +152,7 @@ def warm_matplotlib() -> None:
         pass
 
 
-def execute(src: Path, dest: Path) -> str | None:
+def execute(src: Path, dest: Path, pipeline_kernels: Path) -> str | None:
     """Execute ``src`` in a fresh kernel in its own folder and write the clean result to ``dest``; None when it ran, else why not."""
     import nbformat
     from nbclient import NotebookClient
@@ -133,14 +162,47 @@ def execute(src: Path, dest: Path) -> str | None:
     for cell in nb.cells:  # a fresh run: no stale output or count survives
         if cell.cell_type == "code":
             cell.outputs, cell.execution_count = [], None
-    client = NotebookClient(nb, timeout=TIMEOUT_SECONDS, kernel_name=KERNEL, resources={"metadata": {"path": str(src.parent)}},
-                            allow_errors=False)
+    kernel_name = nb.metadata.get("kernelspec", {}).get("name", KERNEL)
+    source_root = Path(os.environ.get("CAOS_SOURCE_ROOT", ROOT)).resolve()
+    kernels_dir = pipeline_kernels / "kernels"
+    if kernel_name == "caos-pipeline":
+        kernel_python = next(
+            (path for path in (source_root / ".venv-pipeline" / "Scripts" / "python.exe",
+                               source_root / ".venv-pipeline" / "bin" / "python") if path.is_file()),
+            None,
+        )
+        if kernel_python is None:
+            return "the notebook declares caos-pipeline, but .venv-pipeline is missing; run scripts/setup.ps1 -Gpu"
+    else:
+        kernel_python = venv_python() or Path(sys.executable)
+    spec_dir = kernels_dir / kernel_name
+    spec_dir.mkdir(parents=True, exist_ok=True)
+    display_name = "CAOS Pipeline Python" if kernel_name == "caos-pipeline" else "CAOS Notebook Python"
+    (spec_dir / "kernel.json").write_text(
+        json.dumps({"argv": [str(kernel_python), "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+                    "display_name": display_name, "language": "python"}),
+        encoding="utf-8",
+    )
+    existing_jupyter_path = os.environ.get("JUPYTER_PATH", "")
+    search_path = [str(pipeline_kernels)]
+    if existing_jupyter_path and str(pipeline_kernels) not in existing_jupyter_path.split(os.pathsep):
+        search_path.append(existing_jupyter_path)
+    os.environ["JUPYTER_PATH"] = os.pathsep.join(search_path)
+    # Let NotebookClient own the kernel manager. Passing a prebuilt manager can
+    # transfer lifecycle ownership ambiguously and leave kernels alive after a run.
+    # JUPYTER_PATH is scoped to this runner's disposable kernelspec directory.
+    client = NotebookClient(nb, timeout=TIMEOUT_SECONDS, kernel_name=kernel_name,
+                            resources={"metadata": {"path": str(src.parent)}}, allow_errors=False)
+    client.create_kernel_manager()
     try:
         client.execute()
     except CellExecutionError as e:
         return f"{type(e).__name__}: {str(e).strip().splitlines()[-1] if str(e).strip() else e}"
     except Exception as e:  # a dead kernel, a timeout: the run fails and says why
         return f"{type(e).__name__}: {e}"
+    finally:
+        if client.km is not None:
+            client._cleanup_kernel()
     dump(strip_volatile(json.loads(nbformat.writes(nb))), dest)
     return None
 
@@ -148,6 +210,66 @@ def execute(src: Path, dest: Path) -> str | None:
 def same_bytes(a: Path, b: Path) -> bool:
     """The two files hold the same bytes, line endings aside (a checkout may convert them)."""
     return a.read_bytes().replace(b"\r\n", b"\n") == b.read_bytes().replace(b"\r\n", b"\n")
+
+
+def within_declared_plot_tolerance(fresh: Path, committed: Path) -> bool:
+    """Allow only explicitly declared, subpixel-scale solver raster variation."""
+    import numpy as np
+    from PIL import Image
+
+    left = json.loads(fresh.read_text(encoding="utf-8"))
+    right = json.loads(committed.read_text(encoding="utf-8"))
+    tolerance = left.get("metadata", {}).get("caos", {}).get("render_tolerance")
+    if (not tolerance or tolerance != right.get("metadata", {}).get("caos", {}).get("render_tolerance")
+            or tolerance.get("kind") != "png-pixel-drift"):
+        return False
+    max_changed = float(tolerance["max_changed_pixel_fraction"])
+    max_mae = float(tolerance["max_normalized_mean_absolute_error"])
+    cells_left, cells_right = left.get("cells", []), right.get("cells", [])
+    if len(cells_left) != len(cells_right):
+        return False
+    for one, two in zip(cells_left, cells_right):
+        out_left, out_right = one.get("outputs", []), two.get("outputs", [])
+        if len(out_left) != len(out_right):
+            return False
+        for output_left, output_right in zip(out_left, out_right):
+            png_left = output_left.get("data", {}).get("image/png")
+            png_right = output_right.get("data", {}).get("image/png")
+            if png_left == png_right:
+                continue
+            if not isinstance(png_left, str) or not isinstance(png_right, str):
+                return False
+            try:
+                with Image.open(io.BytesIO(base64.b64decode(png_left))) as image_left, \
+                     Image.open(io.BytesIO(base64.b64decode(png_right))) as image_right:
+                    if image_left.size != image_right.size or image_left.mode != image_right.mode:
+                        return False
+                    pixels_left = np.asarray(image_left).astype(np.int16)
+                    pixels_right = np.asarray(image_right).astype(np.int16)
+            except (OSError, ValueError):
+                return False
+            delta = np.abs(pixels_left - pixels_right)
+            changed_fraction = float(np.mean(np.any(delta != 0, axis=-1)))
+            normalized_mae = float(np.mean(delta) / 255.0)
+            if changed_fraction > max_changed or normalized_mae > max_mae:
+                return False
+            output_left["data"]["image/png"] = "<declared-subpixel-render-variation>"
+            output_right["data"]["image/png"] = "<declared-subpixel-render-variation>"
+    return left == right
+
+
+def output_differences(fresh: Path, committed: Path) -> str:
+    """Locate saved cells that disagree with a clean run so nondeterministic outputs can be diagnosed."""
+    left = json.loads(fresh.read_text(encoding="utf-8"))
+    right = json.loads(committed.read_text(encoding="utf-8"))
+    changes = [
+        str(index)
+        for index, (new, old) in enumerate(zip(left.get("cells", []), right.get("cells", [])))
+        if new.get("cell_type") == "code" and new.get("outputs") != old.get("outputs")
+    ]
+    if len(left.get("cells", [])) != len(right.get("cells", [])):
+        return "cell structure also differs"
+    return "output cells differ at " + ", ".join(changes[:12]) if changes else "metadata or source bytes differ"
 
 
 def method_problems() -> list[str]:
@@ -175,7 +297,7 @@ def method_problems() -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="run_notebooks", description=__doc__.split("\n")[0])
-    ap.add_argument("--check", action="store_true", help="execute copies under the temp root; write nothing, fail on any error")
+    ap.add_argument("--check", action="store_true", help="execute in-memory copies and save outputs under the temp root; write nothing in the repository")
     ap.add_argument("--tmp", metavar="DIR", help="the temp root of --check (default: the environment variable CAOS_TEMP_ROOT)")
     ap.add_argument("--only", metavar="PATH", help="run one notebook (a path from the repository root)")
     ap.add_argument("--inner", action="store_true", help=argparse.SUPPRESS)
@@ -191,6 +313,21 @@ def main() -> int:
         if temp_root.exists() and not temp_root.is_dir():
             print(f"run_notebooks: the temp root {temp_root} is not a folder")
             return 2
+    else:
+        named = os.environ.get("CAOS_TEMP_ROOT") or ""
+        if not named.strip():
+            print("run_notebooks: set CAOS_TEMP_ROOT to the device-configured temporary directory before execution")
+            return 2
+        temp_root = Path(named).expanduser().resolve()
+
+    temp_root.mkdir(parents=True, exist_ok=True)
+    # jupyter_client places connection files through Python's tempfile module;
+    # route those there too instead of the Windows profile's default temp folder.
+    tempfile.tempdir = str(temp_root)
+    os.environ["CAOS_TEMP_ROOT"] = str(temp_root)
+    runtime_dir = temp_root / "jupyter-runtime"
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    os.environ["JUPYTER_RUNTIME_DIR"] = str(runtime_dir)
 
     py = venv_python()
     if not a.inner and py is not None and Path(sys.prefix).resolve() != VENV.resolve():
@@ -220,38 +357,39 @@ def main() -> int:
     # The M07 lesson invokes its separately pinned pyGIMLi solver from a temp copy during --check.
     os.environ.setdefault("CAOS_SOURCE_ROOT", str(ROOT))
     warm_matplotlib()
-    tmp_root = None
-    if temp_root is not None:
-        temp_root.mkdir(parents=True, exist_ok=True)
-        tmp_root = Path(tempfile.mkdtemp(prefix="run-notebooks-", dir=temp_root))
+    kernel_tmp = tempfile.TemporaryDirectory(prefix="caos-notebook-kernels-", dir=str(temp_root))
+    pipeline_kernels = Path(kernel_tmp.name)
+    search_path = [str(pipeline_kernels)]
+    existing_jupyter_path = os.environ.get("JUPYTER_PATH")
+    if existing_jupyter_path:
+        search_path.append(existing_jupyter_path)
+    os.environ["JUPYTER_PATH"] = os.pathsep.join(search_path)
+    tmp_root = Path(tempfile.mkdtemp(prefix="run-notebooks-", dir=temp_root)) if a.check else None
     failures: list[str] = []
     try:
         for book in books:
             rel = book.relative_to(ROOT).as_posix()
+            src = book
             if tmp_root is not None:
-                # a copy of the repository's inputs at the same relative depth: the notebook reads `../../../data/...`
-                work = tmp_root / "repo"
-                for item in ("data", "data-pipeline", "docs", "content", "notebooks", "tests"):
-                    if (ROOT / item).exists() and not (work / item).exists():
-                        shutil.copytree(ROOT / item, work / item, ignore=shutil.ignore_patterns("__pycache__", ".ipynb_checkpoints"))
-                work.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(ROOT / "VERSION", work / "VERSION")  # the pipeline package reads it at import
-                src = work / rel
+                # Execute the committed source in place but save outputs only to
+                # the device temp root. Large scientific inputs remain read-only.
+                os.environ["CAOS_TEMP_ROOT"] = str(tmp_root)
+                fresh = tmp_root / "out.ipynb"
             else:
-                src = book
-            fresh = (tmp_root / "out.ipynb") if tmp_root else src
-            why = execute(src, fresh)
-            if why is None and tmp_root is not None and not same_bytes(fresh, book):
-                why = ("stale: the committed outputs differ from a fresh run; run scripts/run_notebooks.py and commit the result "
-                       "(a notebook edited by hand keeps outputs it no longer produces)")
+                fresh = book
+            why = execute(src, fresh, pipeline_kernels)
+            if why is None and a.check and not same_bytes(fresh, book) and not within_declared_plot_tolerance(fresh, book):
+                why = ("stale: the committed outputs differ from a fresh run (" + output_differences(fresh, book) + "); "
+                       "run scripts/run_notebooks.py and commit the result")
             if why is None:
-                print(f"  ran   {rel}")
+                print(f"  ran   {rel}", flush=True)
             else:
                 failures.append(rel)
-                print(f"  FAIL  {rel}: {why}")
+                print(f"  FAIL  {rel}: {why}", flush=True)
     finally:
         if tmp_root is not None:
             shutil.rmtree(tmp_root, ignore_errors=True)
+        kernel_tmp.cleanup()
     if failures:
         print(f"run_notebooks: {len(failures)} of {len(books)} notebooks failed: {', '.join(failures)}")
         return 1

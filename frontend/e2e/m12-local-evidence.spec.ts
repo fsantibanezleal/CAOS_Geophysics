@@ -15,7 +15,7 @@ test("Benchmark inspects the exact local M12 receipt and preserves its failed re
   await page.getByLabel("m12-residual-v3.1.npz", { exact: true }).setInputFiles(`${root}/m12-residual-v3.1.npz`);
   await page.getByRole("button", { name: "Inspect local evidence" }).click();
 
-  await expect(page.getByText(/Scientific outcome: FAILED — held-out comparator/)).toBeVisible();
+  await expect(page.getByText(/Scientific outcome: FAILED; held-out comparator/)).toBeVisible();
   await expect(page.getByText(/Velocity ratio 1\.0436829910482/)).toBeVisible();
   await expect(page.getByText(/1\.39609388087989/)).toBeVisible();
   await expect(page.getByText(/0f7a8fc43a078ab4/)).toBeVisible();

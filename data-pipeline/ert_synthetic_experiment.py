@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 
@@ -18,6 +19,17 @@ import pygimli as pg
 from pygimli.physics import ert as pg_ert
 
 import ert
+
+# Keep pyGIMLi temporary mesh and solver files on the configured device volume.
+_temp_root = os.environ.get("CAOS_TEMP_ROOT")
+if _temp_root:
+    _temp_path = Path(_temp_root).expanduser().resolve()
+    if not _temp_path.is_dir():
+        raise RuntimeError(f"CAOS_TEMP_ROOT is not a directory: {_temp_path}")
+    tempfile.tempdir = str(_temp_path)
+
+# Fix pyGIMLi's worker count so the controlled receipt is stable across runs.
+pg.setThreadCount(1)
 
 
 def build(*, noise_seed: int = 20261027) -> tuple[bytes, dict]:
@@ -77,6 +89,9 @@ def experiment() -> dict:
         source = Path(folder) / "synthetic.ohm"
         source.write_bytes(raw)
         report = ert.run(source, source_sha256=hashlib.sha256(raw).hexdigest())
+    # Runtime is operational telemetry, not scientific result content; including
+    # it in this receipt makes the otherwise seeded result hash change each run.
+    report.pop("wall_seconds", None)
     # ert.run is shared with the restricted field workflow; replace its source
     # identity and rights metadata so this synthetic control cannot be mistaken
     # for a Slagdump result.

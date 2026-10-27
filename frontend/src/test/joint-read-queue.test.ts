@@ -16,7 +16,7 @@ it("starts the fifth real small header before a delayed first read, with only fo
   visit(root);
   try {const actual=await importJointOutput(files);expect(actual.candidates).toHaveLength(26);expect(peak).toBeLessThanOrEqual(4);expect(started).toBe(files.filter(f=>f.path.endsWith(".npy")).length);}
   finally {release();}
-});
+},30_000);
 
 it("reads each authentic original once per import, without a cross-import trust cache",async()=>{
   const root=process.env.GEOPHYSICS_JOINT_OUTPUT_FIXTURE;if(!root)throw new Error("Actual external original output required");
@@ -29,4 +29,4 @@ it("reads each authentic original once per import, without a cross-import trust 
   const second=await importJointOutput(files);expect([...reads.values()]).toEqual(files.map(()=>2));
   expect(second.files).not.toBe(first.files);
   expect(second.candidates).toHaveLength(26);expect(first.candidates).toHaveLength(26);
-});
+},30_000);

@@ -80,6 +80,7 @@ NO_LEVEL_3 = {"en": "No level 3:", "es": "Sin nivel 3:"}
 MIN_REASON_WORDS = 4
 NOTEBOOK_KEYS = {"kernelspec", "language_info", "caos"}
 CAOS_KEYS = ("language", "topic", "level", "title", "packages", "data", "sources", "beyond")
+CAOS_OPTIONAL_KEYS = ("render_tolerance",)
 BEYOND_SECTION = "Beyond the state of the art"
 SLUG = re.compile(r"^(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)$")
 NOTEBOOK = re.compile(r"^(\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)\.ipynb$")
@@ -517,8 +518,18 @@ def check_notebook(root: Path, lang: str, topic: str, name: str, nb: dict, pins:
         for key in CAOS_KEYS:
             if key not in caos:
                 findings.append(f"{rel}: metadata: caos.{key} is missing")
-        for key in sorted(set(caos) - set(CAOS_KEYS)):
+        for key in sorted(set(caos) - set(CAOS_KEYS) - set(CAOS_OPTIONAL_KEYS)):
             findings.append(f"{rel}: metadata: caos.{key} is not a field of the block")
+        if "render_tolerance" in caos:
+            tolerance = caos["render_tolerance"]
+            expected = {"kind", "max_changed_pixel_fraction", "max_normalized_mean_absolute_error"}
+            if (not isinstance(tolerance, dict) or set(tolerance) != expected
+                    or tolerance.get("kind") != "png-pixel-drift"
+                    or any(not isinstance(tolerance.get(field), (int, float))
+                           or isinstance(tolerance.get(field), bool)
+                           or not 0 <= tolerance[field] <= 0.001
+                           for field in ("max_changed_pixel_fraction", "max_normalized_mean_absolute_error"))):
+                findings.append(f"{rel}: metadata: caos.render_tolerance must be a bounded PNG pixel-drift policy")
         if caos.get("language") != lang:
             findings.append(f"{rel}: metadata: caos.language is {caos.get('language')!r}, the tree is {lang!r}")
         if caos.get("topic") != topic:
@@ -659,7 +670,7 @@ def counterpart_findings(root: Path, en_docs: dict[str, dict], es_docs: dict[str
         ca, cb = a["metadata"].get("caos"), b["metadata"].get("caos")
         rel = f"notebooks/es/{key}"
         if isinstance(ca, dict) and isinstance(cb, dict):
-            for field in ("level", "packages", "data", "beyond"):
+            for field in ("level", "packages", "data", "beyond", "render_tolerance"):
                 if ca.get(field) != cb.get(field):
                     findings.append(f"{rel}: mirror: caos.{field} differs from its English counterpart")
         kinds_a = [c["cell_type"] for c in a["cells"]]

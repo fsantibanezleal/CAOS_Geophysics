@@ -192,11 +192,11 @@
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "a78eebb8c9e13b738fce121c7a9c950362be552153b7a3a7a3f5b7ad912f4e57"
+          "sha256": "c2deb29216a6a4e4edf5a44f92c32db971d05862d19c3c7ea4f2319a7a508af9"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "6766063e03f73222ccc9e419eccdf0f0a16bc39b2d89d1fb784aeb191d8a2837"
+          "sha256": "6c97b557d8d51e69f6c48a6af0b1b1c97f636e959b475cd56ebbc1cb7b396fb5"
         }
       ],
       "receipts": []
@@ -310,11 +310,15 @@
       "id": "R-015",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "A bounded CAOS shell browser gate now passes 548 states across all six routes, mobile/desktop sizes, both themes and languages, and one representative workbench case. The wider-font pass, multiple-case visual matrix and complete user acceptance remain open; this bounded pass does not establish full product release acceptance.",
+      "note": "The 2026-10-27 local candidate shell gate passes 1332 measured states across all six routes, five viewport sizes, both themes/languages and wider-font probes, with 27 served artifacts hash-verified and zero waivers. Multiple-case visual acceptance, complete user acceptance and actual-host acceptance remain open; this does not establish full product release acceptance.",
       "evidence": [
         {
           "path": "docs/validation/shell-gate-20261025.json",
           "sha256": "1aa9130db551d99f42d8d47475a55562dcba497ceea0d3e7b71b6416a2d5aa72"
+        },
+        {
+          "path": "docs/validation/shell-gate-2026-10-27.md",
+          "sha256": "024e101b5db4c2e34e06d152cab58cc5a4951ff26cf8c254daefe237890a0a23"
         }
       ],
       "receipts": []
@@ -355,19 +359,19 @@
         },
         {
           "path": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
-          "sha256": "50ca41b687b748fb2cd06823b30d12b4065ea367bacdaf4aeb381ea58f6ce42e"
+          "sha256": "aca6cc03bff28fe65eb32d02477a9ab61478b9d25135826c118ccf20072e9fee"
         },
         {
           "path": "notebooks/es/08-learning/04-nullspace-refinement-evidence.ipynb",
-          "sha256": "eed9f0ae32859f18729df14c9f49bab1082e69cdbae5f96355310b4ece48530f"
+          "sha256": "c81623da03d5d483262dc6546b6dac11f718df6baf9c529f4a911bd184d8298a"
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "a78eebb8c9e13b738fce121c7a9c950362be552153b7a3a7a3f5b7ad912f4e57"
+          "sha256": "c2deb29216a6a4e4edf5a44f92c32db971d05862d19c3c7ea4f2319a7a508af9"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "6766063e03f73222ccc9e419eccdf0f0a16bc39b2d89d1fb784aeb191d8a2837"
+          "sha256": "6c97b557d8d51e69f6c48a6af0b1b1c97f636e959b475cd56ebbc1cb7b396fb5"
         }
       ],
       "receipts": []

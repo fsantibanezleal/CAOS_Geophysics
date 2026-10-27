@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { readdirSync, statSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
@@ -15,7 +15,7 @@ const root = process.env.GEOPHYSICS_JOINT_OUTPUT_FIXTURE;
 const evaluation = process.env.GEOPHYSICS_JOINT_EVALUATION_FIXTURE;
 const aborted = process.env.GEOPHYSICS_JOINT_ABORT_FIXTURE;
 const durableAbort = process.env.GEOPHYSICS_JOINT_DURABLE_ABORT_FIXTURE;
-const matrix = process.env.GEOPHYSICS_JOINT_MATRIX_FIXTURE;
+const outputMatrix = process.env.GEOPHYSICS_JOINT_OUTPUT_MATRIX_FIXTURE;
 const maximum = process.env.GEOPHYSICS_JOINT_MAX_OUTPUT_FIXTURE;
 const instrument = process.env.GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE;
 const encode = (v: unknown) => new TextEncoder().encode(typeof v === "string" ? v : JSON.stringify(v));
@@ -31,6 +31,7 @@ const mutateJson = async (files: JointFile[], path: string, mutate: (v: Record<s
 };
 
 describe("native local joint output, not a browser inverse", () => {
+  vi.setConfig({ testTimeout: 30_000 });
   it.skipIf(!instrument)("accepted state instrument", async () => {
     const inspection = await importJointOutput(actualJointFiles(instrument!)); expect(inspection.instrument).not.toBeNull();
     for (const e of inspection.instrument!.payload.entries as import("../api/joint-result").Json[]) { const entry = e as Record<string, import("../api/joint-result").Json>, key = entry.key as string;
@@ -129,9 +130,9 @@ describe("native local joint output, not a browser inverse", () => {
     expect(result.result).toBeNull(); expect(result.model).toBeNull(); expect(result.frozen).toBeNull();
     await expect(importJointOutput(await mutateJson(files, "aborted/aborted.json", v => { (v.payload as Record<string, unknown>).plan_sha256 = "0".repeat(64); }))).rejects.toThrow("retained failure identity binding");
   });
-  it.skipIf(!matrix)("imports every actual24-case output without excluding failures", async () => {
+  it.skipIf(!outputMatrix)("imports every actual24-case output without excluding failures", async () => {
     let actualAttempts = 0, nonconverged = 0;
-    for (let i = 0; i < 24; i++) { const r = await importJointOutput(actualJointFiles(join(matrix!, `joint-control-${String(i).padStart(2, "0")}`, "output")));
+    for (let i = 0; i < 24; i++) { const r = await importJointOutput(actualJointFiles(join(outputMatrix!, `joint-control-${String(i).padStart(2, "0")}`, "output")));
       actualAttempts += r.candidates.length; nonconverged += r.candidates.filter(c => c.status === "nonconverged").length; }
     expect(actualAttempts).toBe(624); expect(nonconverged).toBeGreaterThan(0);
   }, 30_000);

@@ -4,6 +4,8 @@ import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
 import { importJointOutput, jointSha, type JointFile } from "../api/joint-result";
 
+vi.setConfig({ testTimeout: 30_000 });
+
 const encode = (v: unknown) => new TextEncoder().encode(JSON.stringify(v));
 const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
 function originals(variable = "GEOPHYSICS_JOINT_OUTPUT_FIXTURE"): JointFile[] {

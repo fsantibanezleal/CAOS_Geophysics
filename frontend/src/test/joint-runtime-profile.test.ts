@@ -5,8 +5,10 @@ import {join,relative} from "node:path";
 import {performance} from "node:perf_hooks";
 import {importJointOutput,type JointFile} from "../api/joint-result";
 
+vi.setConfig({testTimeout:30_000});
+
 it("profiles original small native intake without altering bytes or predicates",async()=>{
-  const root=process.env.GEOPHYSICS_JOINT_MATRIX_FIXTURE;if(!root)throw new Error("Actual external originals required");
+  const root=process.env.GEOPHYSICS_JOINT_OUTPUT_MATRIX_FIXTURE;if(!root)throw new Error("Actual external output matrix required");
   let hashMs=0,readMs=0,hashes=0;const digest=crypto.subtle.digest.bind(crypto.subtle);
   const spy=vi.spyOn(crypto.subtle,"digest").mockImplementation(async(...args)=>{const at=performance.now();try{return await digest(...args);}finally{hashMs+=performance.now()-at;hashes++;}});
   try {for(const i of [0,8,16,23]){

@@ -1,4 +1,4 @@
-# Índice de cuadernos en español
+# Índice de notebooks en español
 
 Las lecciones bilingües conectan la teoría con las implementaciones y la evidencia registrada en el repositorio. Cada lección enlaza a su contraparte en inglés.
 

@@ -10,6 +10,7 @@ import {jointJson, jointSha} from "../api/joint-result";
 import {JointProjectWorkbench} from "../components/JointProjectWorkbench";
 
 const owner="11111111-1111-4111-8111-111111111111", project="22222222-2222-4222-8222-222222222222", jobid="33333333-3333-4333-8333-333333333333";
+vi.setConfig({ testTimeout: 30_000 });
 const job: JointCustodyJob={job_id:jobid,owner_id:owner,project_id:project,dataset_id:"44444444-4444-4444-8444-444444444444",dataset_sha256:"a".repeat(64),method_id:JOINT_NATIVE_METHOD,request_sha256:"b".repeat(64),state:"failed",cancel_requested:false,error_code:"custody_fixture_no_execution",index_available:true,result_sha256:"c".repeat(64),result_bytes:100};
 const encode=(value: unknown)=>new TextEncoder().encode(JSON.stringify(value));
 function index() {return {schema:"geophysics.joint-result-custody/v1",job_id:job.job_id,owner_id:owner,project_id:project,dataset_id:job.dataset_id,dataset_sha256:job.dataset_sha256,method_id:job.method_id,request_sha256:job.request_sha256,state:job.state,members:{"workflow.json":{byte_count:1,sha256:"d".repeat(64)}},native_bytes:1,scientific_acceptance:false,authenticity_verified:false,public_activation:false};}

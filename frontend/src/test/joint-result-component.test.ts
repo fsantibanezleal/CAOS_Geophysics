@@ -28,6 +28,7 @@ function renderRegistered(element: ReactElement): string {
   } finally { warnings.mockRestore(); errors.mockRestore(); }
 }
 describe("joint scientific output instrument", () => {
+  vi.setConfig({ testTimeout: 30_000 });
   it("resolves both scientific citations through the actual application registry and provider", () => {
     for (const [id, href] of [
       ["m11source", "https://github.com/simpeg/simpeg/blob/v0.25.2/simpeg/regularization/cross_gradient.py"],

@@ -17,14 +17,14 @@ SPEC.loader.exec_module(CHECK)
 
 
 class TestMethodMatrix(unittest.TestCase):
-    def test_repository_matrix_lists_all_thirteen_and_reports_missing_gates(self):
+    def test_repository_matrix_lists_all_thirteen_without_claiming_scientific_acceptance(self):
         rows = CHECK.audit()
         self.assertEqual(tuple(row.method_id for row in rows), CHECK.EXPECTED_METHODS)
-        self.assertTrue(any(not row.gate_exists for row in rows))
+        self.assertTrue(all(row.gate_exists for row in rows))
         output = io.StringIO()
         with redirect_stdout(output):
             status = CHECK.main([])
-        self.assertEqual(status, 1)
+        self.assertEqual(status, 0)
         self.assertIn("scientific_acceptance=false", output.getvalue())
         with redirect_stdout(io.StringIO()):
             self.assertEqual(CHECK.main(["--report-only"]), 0)
