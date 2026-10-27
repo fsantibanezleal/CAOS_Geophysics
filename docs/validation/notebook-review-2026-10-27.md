@@ -1,4 +1,4 @@
-# Notebook execution and content review — 2026-10-27
+# Notebook execution and content review: 2026-10-27
 
 ## Current evidence
 

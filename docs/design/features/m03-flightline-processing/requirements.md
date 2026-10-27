@@ -28,3 +28,6 @@ Gate: tests/numerics/test_magnetic_processing.py::test_blocked_line_holdout
 
 R-M03-09 THE crossover QC SHALL calculate geometric segment intersections from explicit per-line acquisition order, interpolate both observed values at each intersection, report signed residuals and aggregate metrics, and SHALL NOT apply tie-line leveling.
 Gate: tests/numerics/test_magnetic_processing.py::test_crossover_interpolation_reports_independent_tie_offset_without_applying_leveling
+
+R-M03-10 WHEN a caller selects a fully supported rectangular subgrid with uniform metric spacing, THE optional upward-continuation utility SHALL apply the harmonic Fourier transfer to non-affine residuals, preserve an affine regional plane, retain parent-result hash/coordinates/units, report periodic-edge seam diagnostics, and reject unsupported/nonfinite cells rather than filling them.
+Gate: tests/numerics/test_magnetic_continuation.py::test_affine_harmonic_field_is_preserved_at_height, tests/numerics/test_magnetic_continuation.py::test_single_harmonic_decays_by_analytic_fourier_transfer, tests/numerics/test_magnetic_continuation.py::test_m03_result_roi_preserves_coordinates_and_rejects_unsupported_cells, tests/numerics/test_magnetic_continuation.py::test_cli_hashes_parent_result_and_never_overwrites

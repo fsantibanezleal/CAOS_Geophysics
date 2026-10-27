@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "13d052751be3258f7a87c0ea2d72022af3eae2f1caed89fc9a1a45efcf4a161a",
+  "sdd_sha256": "3b42085ad175a8c57bd32e925932289f184cfcffd9b12c2d3b474cc24f4d3319",
   "assessed_revision": "4723af581ba8ed4136ec53ae2c9417b8642bf46a",
   "assessed_at": "2026-10-25T07:24:05Z",
   "release": {
@@ -140,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson; M03 remains partial because source-verified field data, measured-data processing acceptance and integrated app/host gates are open.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -197,6 +197,18 @@
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
           "sha256": "6c97b557d8d51e69f6c48a6af0b1b1c97f636e959b475cd56ebbc1cb7b396fb5"
+        },
+        {
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "73b1a33417fa668ee5168a37cf63393e08660ae598d445ba5a280376e0e7891d"
+        },
+        {
+          "path": "tests/numerics/test_magnetic_continuation.py",
+          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+        },
+        {
+          "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
+          "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
         }
       ],
       "receipts": []
@@ -339,7 +351,7 @@
         },
         {
           "path": "docs/wiki/methods/m01-m06.md",
-          "sha256": "a22ed398a2e1f8755291426743e93a168d303880f4d8c283bab4f244b4b54831"
+          "sha256": "d8585313e9cd98c83fedd08575728fe397094de8b8a5f3095c63f650379a959f"
         },
         {
           "path": "docs/wiki/methods/m07-m13.md",
@@ -347,7 +359,7 @@
         },
         {
           "path": "docs/wiki/methods/m01-m06.es.md",
-          "sha256": "fde2576b5d92bcc67454384b9cab3bfffe23eeee722442f6a0cc19da7134246e"
+          "sha256": "958af75c707f7f992b521470aced1728020448d0a77f298180aa00b6b38da04b"
         },
         {
           "path": "docs/wiki/methods/m07-m13.es.md",
@@ -372,6 +384,26 @@
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
           "sha256": "6c97b557d8d51e69f6c48a6af0b1b1c97f636e959b475cd56ebbc1cb7b396fb5"
+        },
+        {
+          "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+          "sha256": "e28ea8bc2153e57458dc540b5386cc66de254bcb8bfcd4f6c68fad652d95bae0"
+        },
+        {
+          "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+          "sha256": "582219d4b972c6ae22503c521f768b2e166d1e0eb2c95bd3c4329b7550c6606c"
+        },
+        {
+          "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
+          "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
+        },
+        {
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "73b1a33417fa668ee5168a37cf63393e08660ae598d445ba5a280376e0e7891d"
+        },
+        {
+          "path": "tests/numerics/test_magnetic_continuation.py",
+          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
         }
       ],
       "receipts": []

@@ -32,3 +32,9 @@ The USGS landing page and the Science Data Catalog child record are the authorit
 7. Record the exact CLI, settings, source/rights receipt, split hash, outputs, independent numerical checks and limitations in a full M03 feature SDD and acceptance record before publishing the case.
 
 No M03 parser, correction, gridding, continuation, holdout or user-data acceptance is claimed by this intake record.
+
+## Access refresh: 2026-10-27
+
+The two official ISO metadata records were fetched again from the USGS Science Data Catalog and saved outside Git under the configured CAOS working-data root at `data/downloads/usgs-charleston-2019/`. Their bytes and SHA-256 values match the prior recorded XML: child metadata 17,806 bytes (`badd712ff0e169bd62ed70b34ce273ef9bea4b4ec7a206627b09eac55a98a1c2`), parent metadata 16,902 bytes (`dd9aa31c9c3635bf715bd98aad1bb72aebde903ec05ff334b622e3c406036c71`). The metadata names the CSV and data dictionary, and describes the CSV as processed horizontal magnetic gradiometry line data.
+
+The live ScienceBase JSON item (`https://www.sciencebase.gov/catalog/item/5f4da2c182ce4c3d1231922e?format=json`) still returns HTTP 403 from this environment. The official DOI landing page confirms that flight-line CSVs, GeoTIFFs, and the contractor report are release products, but its accessible page does not expose direct asset URLs. The CSV, dictionary, report, and magnetic grid therefore remain unacquired and unhashed; the M03 processing component and synthetic continuation control are not provider-data validation. The source remains an external-data dependency, not permission to substitute the provider grid or authored controls for flight-line evidence.
