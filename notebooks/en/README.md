@@ -26,7 +26,7 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `07-joint` | 1 | [Complementary sensitivity and ambiguity](07-joint/01-joint-hypothesis.ipynb) | [01-joint-hypothesis](../es/07-joint/01-joint-hypothesis.ipynb) |
 | `07-joint` | 2 | [Independent fits and coupling-weight sweep](07-joint/02-joint-objective.ipynb) | [02-joint-objective](../es/07-joint/02-joint-objective.ipynb) |
 | `07-joint` | 3 | [Conflicting structures and predictive negative control](07-joint/03-joint-state-of-art.ipynb) | [03-joint-state-of-art](../es/07-joint/03-joint-state-of-art.ipynb) |
-| `07-joint` | 3 | [M11 physical gravity–magnetic control matrix](07-joint/04-m11-physical-matrix-evidence.ipynb) | [04-m11-physical-matrix-evidence](../es/07-joint/04-m11-physical-matrix-evidence.ipynb) |
+| `07-joint` | 3 | [M11 gravity–magnetic control matrix and fresh optimizer run](07-joint/04-m11-physical-matrix-evidence.ipynb) | [04-m11-physical-matrix-evidence](../es/07-joint/04-m11-physical-matrix-evidence.ipynb) |
 | `08-learning` | 1 | [Learned inverse, group splits and paired uncertainty](08-learning/01-learning-splits.ipynb) | [01-learning-splits](../es/08-learning/01-learning-splits.ipynb) |
 | `08-learning` | 2 | [Novelty thresholds and OOD consequences](08-learning/02-learning-heldout.ipynb) | [02-learning-heldout](../es/08-learning/02-learning-heldout.ipynb) |
 | `08-learning` | 3 | [Phase-picker stress strata and browser-parity boundary](08-learning/03-learning-state-of-art.ipynb) | [03-learning-state-of-art](../es/08-learning/03-learning-state-of-art.ipynb) |
