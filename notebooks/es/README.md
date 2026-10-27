@@ -22,6 +22,7 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `06-seismology` | 1 | [QC de formas de onda, filtrado y controles de picks](06-seismology/01-waveforms.ipynb) | [01-waveforms](../../en/06-seismology/01-waveforms.ipynb) |
 | `06-seismology` | 2 | [Tomografía de rayos rectos con fuentes retenidas](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../../en/06-seismology/02-traveltime-fwi.ipynb) |
 | `06-seismology` | 3 | [FWI, regularización y controles de cycle-skipping](06-seismology/03-seismic-state-of-art.ipynb) | [03-seismic-state-of-art](../../en/06-seismology/03-seismic-state-of-art.ipynb) |
+| `06-seismology` | 3 | [Picking P/S aprendido en trazas STEAD](06-seismology/04-m13-learned-phase-picking.ipynb) | [04-m13-learned-phase-picking](../../en/06-seismology/04-m13-learned-phase-picking.ipynb) |
 | `07-joint` | 1 | [Sensibilidad complementaria y ambigüedad](07-joint/01-joint-hypothesis.ipynb) | [01-joint-hypothesis](../../en/07-joint/01-joint-hypothesis.ipynb) |
 | `07-joint` | 2 | [Ajustes independientes y barrido de acoplamiento](07-joint/02-joint-objective.ipynb) | [02-joint-objective](../../en/07-joint/02-joint-objective.ipynb) |
 | `07-joint` | 3 | [Estructuras incompatibles y control predictivo negativo](07-joint/03-joint-state-of-art.ipynb) | [03-joint-state-of-art](../../en/07-joint/03-joint-state-of-art.ipynb) |

@@ -22,6 +22,7 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `06-seismology` | 1 | [Waveform QC, filtering and first-pick controls](06-seismology/01-waveforms.ipynb) | [01-waveforms](../../es/06-seismology/01-waveforms.ipynb) |
 | `06-seismology` | 2 | [Held-out straight-ray tomography](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../../es/06-seismology/02-traveltime-fwi.ipynb) |
 | `06-seismology` | 3 | [FWI iteration, regularization and cycle-skipping controls](06-seismology/03-seismic-state-of-art.ipynb) | [03-seismic-state-of-art](../../es/06-seismology/03-seismic-state-of-art.ipynb) |
+| `06-seismology` | 3 | [Learned P/S phase picking on STEAD traces](06-seismology/04-m13-learned-phase-picking.ipynb) | [04-m13-learned-phase-picking](../../es/06-seismology/04-m13-learned-phase-picking.ipynb) |
 | `07-joint` | 1 | [Complementary sensitivity and ambiguity](07-joint/01-joint-hypothesis.ipynb) | [01-joint-hypothesis](../../es/07-joint/01-joint-hypothesis.ipynb) |
 | `07-joint` | 2 | [Independent fits and coupling-weight sweep](07-joint/02-joint-objective.ipynb) | [02-joint-objective](../../es/07-joint/02-joint-objective.ipynb) |
 | `07-joint` | 3 | [Conflicting structures and predictive negative control](07-joint/03-joint-state-of-art.ipynb) | [03-joint-state-of-art](../../es/07-joint/03-joint-state-of-art.ipynb) |
