@@ -58,7 +58,7 @@ test("survey markers follow recorded station spacing and distinct cases render d
   const gravityDigest = createHash("sha256").update(gravityImage).digest("hex");
   await page.locator(".earth-view").screenshot({ path: testInfo.outputPath("gravity-intrusion-workbench.png") });
 
-  await page.locator('select[aria-label="Case selector"]').selectOption("MAGNETIC_DYKE");
+  await page.locator('select[aria-label="Geological case"]').selectOption("MAGNETIC_DYKE");
   await expect(scene.locator(".scene-label strong")).toHaveText("Dipping dyke swarm");
   await expect.poll(async () => createHash("sha256").update(await canvas.screenshot()).digest("hex")).not.toBe(gravityDigest);
   const magneticImage = await canvas.screenshot({ path: testInfo.outputPath("magnetic-dyke-canvas.png") });
