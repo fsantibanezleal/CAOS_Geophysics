@@ -3,7 +3,7 @@
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "3b42085ad175a8c57bd32e925932289f184cfcffd9b12c2d3b474cc24f4d3319",
   "assessed_revision": "4723af581ba8ed4136ec53ae2c9417b8642bf46a",
-  "assessed_at": "2026-10-25T07:24:05Z",
+  "assessed_at": "2026-10-27T20:39:02Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -115,7 +115,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This is only a baseline: candidate runtime/release bytes, configured scratch, retained future projects and API/worker/controller memory bounds have not been measured together. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy.",
+      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This initial snapshot was a baseline; its follow-up below compares a local candidate bundle and configured scratch/memory ceilings, while runtime installation, retained future data and actual job capacity remain unqualified. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy. A 20:39 UTC read-only follow-up measured the clean local qualification bundle at 856,096,919 logical bytes including manifest, confirmed current plus two rollback release sizes, and compared candidate plus configured 1 GiB scratch and API/worker/controller ceilings with live free disk and MemAvailable. This arithmetic is only preflight: API/gravity runtime installation, actual concurrent job/resource behavior, timeout/cancel/recovery and authenticated workflows remain unmeasured; no candidate was uploaded, and R-007 remains unresolved. The capacity-preflight JSON passes the inventory consistency check, which explicitly does not attest that its inputs were measured on the host.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -135,7 +135,11 @@
         },
         {
           "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
-          "sha256": "b0c1c123870513c565a846134d581371e95a21473f989e433109105d120114cb"
+          "sha256": "cfa272dbe4d553aeafae1ee472138dc18015b21cacd45a5dec8eb30471cc7862"
+        },
+        {
+          "path": "docs/validation/service-capacity-preflight-2026-10-27.json",
+          "sha256": "4daba4207e9b0ed660e976193ccf4b1ace9ce6fbf584094c374a7ae44ac84c69"
         }
       ],
       "receipts": []
@@ -473,7 +477,7 @@
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity and a one-host client resource profile, plus M12 launcher refusal/fixture-forwarding evidence, without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance. The current Linux M02 forward rerun is hash-bound in the feature receipt; it does not close method, service-runtime or release acceptance. A hash-bound Linux M02 runtime-profile receipt now verifies the declared package versions, 21 installed-source hashes, pure-Python wheel tags, clean pip check and focused operator/integration tests. It does not establish immutable release staging, VPS capacity, method acceptance or release acceptance.",
+      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity and a one-host client resource profile, plus M12 launcher refusal/fixture-forwarding evidence, without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance. The current Linux M02 forward rerun is hash-bound in the feature receipt; it does not close method, service-runtime or release acceptance. A hash-bound Linux M02 runtime-profile receipt now verifies the declared package versions, 21 installed-source hashes, pure-Python wheel tags, clean pip check and focused operator/integration tests. It does not establish immutable release staging, VPS capacity, method acceptance or release acceptance. A 2026-10-27 host/candidate bundle follow-up is recorded as R-007 evidence; it changes no requirement verdict and does not move the retained R-019 receipt revision anchor.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -494,6 +498,14 @@
         {
           "path": "docs/design/features/m02-prism-operator/evidence/linux-runtime-staging-2026-10-27.json",
           "sha256": "9fc098a632200caf8cc92040df2a1e2147075ecdd8526605582f0853ae939541"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
+          "sha256": "cfa272dbe4d553aeafae1ee472138dc18015b21cacd45a5dec8eb30471cc7862"
+        },
+        {
+          "path": "docs/validation/service-capacity-preflight-2026-10-27.json",
+          "sha256": "4daba4207e9b0ed660e976193ccf4b1ace9ce6fbf584094c374a7ae44ac84c69"
         }
       ],
       "receipts": []
