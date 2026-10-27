@@ -1,8 +1,21 @@
 # M12 nullspace-constrained residual refinement v1
 
-Status: predeclared experiment. It is not an accepted method, a field result,
-or a claim that v3.1's failed test has been repaired. The v3.1 receipt and
-checkpoint remain immutable.
+Status: invalidated implementation record. It is not an accepted method or a
+scientific result. The v3.1 receipt and checkpoint remain immutable.
+
+## Erratum: feature-contract mismatch
+
+The v1 runner used `velocity_validation.input_features` to build inputs for a
+checkpoint trained with `velocity_physics_refinement.input_features`. These
+functions have different ray-length normalization. The independent v1 receipt
+is retained at
+`E:\_worktrees\CAOS_Geophysics-data\experiments\m12-nullspace-v1-20261027`;
+its v1 script still reproduces that artifact. Its new calibration correctly
+fell back to alpha zero, so its test scores are the classical baseline alone.
+The model-score comparisons from this implementation are invalid and must not
+be used as evidence about the nullspace hypothesis. The calibration mismatch
+was identified without tuning on the v1 test cohort. Protocol v1.1 uses the
+checkpoint's exact feature contract and completely new seed ranges.
 
 ## Hypothesis and algorithm
 
