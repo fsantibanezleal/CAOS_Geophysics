@@ -1,4 +1,4 @@
-param([switch]$Gpu, [switch]$Notebooks, [switch]$M08, [switch]$Api)
+param([switch]$Gpu, [switch]$Notebooks, [switch]$M08, [switch]$Api, [switch]$Ert)
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $py = if (Get-Command py -ErrorAction SilentlyContinue) { 'py -3.12' } else { 'python' }
@@ -22,6 +22,16 @@ if ($Notebooks) {
   & $notebookPython -m pip install --upgrade pip -q
   & $notebookPython -m pip install -r notebooks/requirements.txt -q
   Write-Host '[setup] notebook environment ready. Run .\.venv-notebooks\Scripts\python.exe scripts/run_notebooks.py --check --tmp <device-temp-root>.'
+  exit 0
+}
+if ($Ert) {
+  Write-Host '[setup] creating isolated .venv-ert for the pyGIMLi M07 experiment'
+  if (-not (Test-Path '.venv-ert')) { Invoke-Expression "$py -m venv .venv-ert" }
+  $ertPython = VenvPy '.venv-ert'
+  & $ertPython -m pip install --upgrade pip -q
+  & $ertPython -m pip install -r data-pipeline/requirements-ert.txt -q
+  & $ertPython -m pip check
+  Write-Host '[setup] M07 solver ready. Run scripts/run_notebooks.py --only notebooks/en/05-ert/02-ert-inversion.ipynb.'
   exit 0
 }
 if ($M08) {

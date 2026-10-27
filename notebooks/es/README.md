@@ -17,7 +17,7 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `04-mt` | 2 | [Inversión MT estratificada e intervalos retenidos](04-mt/02-mt-forward.ipynb) | [02-mt-forward](../../en/04-mt/02-mt-forward.ipynb) |
 | `04-mt` | 3 | [Cobertura de frecuencias e identificabilidad MT](04-mt/03-mt-state-of-art.ipynb) | [03-mt-state-of-art](../../en/04-mt/03-mt-state-of-art.ipynb) |
 | `05-ert` | 1 | [Parser ERT, unidades y experimento de resistividad aparente](05-ert/01-ert-rights.ipynb) | [01-ert-rights](../../en/05-ert/01-ert-rights.ipynb) |
-| `05-ert` | 2 | [QC ERT, relieve y partición espacial retenida](05-ert/02-ert-inversion.ipynb) | [02-ert-inversion](../../en/05-ert/02-ert-inversion.ipynb) |
+| `05-ert` | 2 | [Inversión ERT 2D topográfica, verdad sintética y partición espacial retenida](05-ert/02-ert-inversion.ipynb) | [02-ert-inversion](../../en/05-ert/02-ert-inversion.ipynb) |
 | `05-ert` | 3 | [Sensibilidad ERT, regularización y límites de evidencia](05-ert/03-ert-state-of-art.ipynb) | [03-ert-state-of-art](../../en/05-ert/03-ert-state-of-art.ipynb) |
 | `06-seismology` | 1 | [QC de formas de onda, filtrado y controles de picks](06-seismology/01-waveforms.ipynb) | [01-waveforms](../../en/06-seismology/01-waveforms.ipynb) |
 | `06-seismology` | 2 | [Tomografía de rayos rectos con fuentes retenidas](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../../en/06-seismology/02-traveltime-fwi.ipynb) |

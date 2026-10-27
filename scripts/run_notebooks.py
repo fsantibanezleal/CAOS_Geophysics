@@ -217,6 +217,8 @@ def main() -> int:
         print(f"run_notebooks: no notebook to run ({a.only or 'notebooks/*/*/*.ipynb'})")
         return 2
     os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")  # the kernels import data-pipeline/ by path: leave no cache behind
+    # The M07 lesson invokes its separately pinned pyGIMLi solver from a temp copy during --check.
+    os.environ.setdefault("CAOS_SOURCE_ROOT", str(ROOT))
     warm_matplotlib()
     tmp_root = None
     if temp_root is not None:

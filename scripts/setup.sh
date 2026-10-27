@@ -8,15 +8,26 @@ GPU=0
 NOTEBOOKS=0
 M08=0
 API=0
+ERT=0
 for arg in "$@"; do
   case "$arg" in
     --gpu) GPU=1 ;;
     --notebooks) NOTEBOOKS=1 ;;
     --m08) M08=1 ;;
     --api) API=1 ;;
-    *) echo "setup: unknown option $arg (use --gpu, --api, --notebooks, or --m08)"; exit 2 ;;
+    --ert) ERT=1 ;;
+    *) echo "setup: unknown option $arg (use --gpu, --api, --notebooks, --m08, or --ert)"; exit 2 ;;
   esac
 done
+if [ "$ERT" -eq 1 ]; then
+  mkvenv .venv-ert
+  VERT="$(venvpy .venv-ert)"
+  "$VERT" -m pip install --upgrade pip -q
+  "$VERT" -m pip install -r data-pipeline/requirements-ert.txt -q
+  "$VERT" -m pip check
+  echo "[setup] M07 solver ready. Run scripts/run_notebooks.py --only notebooks/en/05-ert/02-ert-inversion.ipynb."
+  exit 0
+fi
 if [ "$NOTEBOOKS" -eq 1 ]; then
   mkvenv .venv-notebooks
   VN="$(venvpy .venv-notebooks)"

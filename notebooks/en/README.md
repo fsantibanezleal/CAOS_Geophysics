@@ -17,7 +17,7 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `04-mt` | 2 | [Layered MT inversion and held-out interval experiment](04-mt/02-mt-forward.ipynb) | [02-mt-forward](../../es/04-mt/02-mt-forward.ipynb) |
 | `04-mt` | 3 | [Frequency coverage and MT identifiability](04-mt/03-mt-state-of-art.ipynb) | [03-mt-state-of-art](../../es/04-mt/03-mt-state-of-art.ipynb) |
 | `05-ert` | 1 | [ERT parser, units and apparent-resistivity experiment](05-ert/01-ert-rights.ipynb) | [01-ert-rights](../../es/05-ert/01-ert-rights.ipynb) |
-| `05-ert` | 2 | [ERT QC, relief and spatial holdout experiment](05-ert/02-ert-inversion.ipynb) | [02-ert-inversion](../../es/05-ert/02-ert-inversion.ipynb) |
+| `05-ert` | 2 | [Topographic 2D ERT inverse, synthetic truth and spatial holdout experiment](05-ert/02-ert-inversion.ipynb) | [02-ert-inversion](../../es/05-ert/02-ert-inversion.ipynb) |
 | `05-ert` | 3 | [ERT sensitivity, regularization and evidence limits](05-ert/03-ert-state-of-art.ipynb) | [03-ert-state-of-art](../../es/05-ert/03-ert-state-of-art.ipynb) |
 | `06-seismology` | 1 | [Waveform QC, filtering and first-pick controls](06-seismology/01-waveforms.ipynb) | [01-waveforms](../../es/06-seismology/01-waveforms.ipynb) |
 | `06-seismology` | 2 | [Held-out straight-ray tomography](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../../es/06-seismology/02-traveltime-fwi.ipynb) |
