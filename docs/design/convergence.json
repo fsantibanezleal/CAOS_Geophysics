@@ -403,11 +403,11 @@
         },
         {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "e28ea8bc2153e57458dc540b5386cc66de254bcb8bfcd4f6c68fad652d95bae0"
+          "sha256": "8b039c2179925a6c63cbe644f340ab3851ef792025826b76299b064296748892"
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "582219d4b972c6ae22503c521f768b2e166d1e0eb2c95bd3c4329b7550c6606c"
+          "sha256": "e0a84610a9600d516431505142b99e6be3f8c9521c4d33681903f43a4e49cc37"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",

@@ -31,3 +31,9 @@ Gate: tests/numerics/test_magnetic_processing.py::test_crossover_interpolation_r
 
 R-M03-10 WHEN a caller selects a fully supported rectangular subgrid with uniform metric spacing, THE optional upward-continuation utility SHALL apply the harmonic Fourier transfer to non-affine residuals, preserve an affine regional plane, retain parent-result hash/coordinates/units, report periodic-edge seam diagnostics, and reject unsupported/nonfinite cells rather than filling them.
 Gate: tests/numerics/test_magnetic_continuation.py::test_affine_harmonic_field_is_preserved_at_height, tests/numerics/test_magnetic_continuation.py::test_single_harmonic_decays_by_analytic_fourier_transfer, tests/numerics/test_magnetic_continuation.py::test_m03_result_roi_preserves_coordinates_and_rejects_unsupported_cells, tests/numerics/test_magnetic_continuation.py::test_cli_hashes_parent_result_and_never_overwrites
+
+R-M03-11 THE public browser workbench SHALL execute the canonical Python M03 implementation locally in an isolated Web Worker, preserve user survey bytes on-device, expose explicit input mapping and physical assumptions, and enforce documented input/compute bounds with cancellation.
+Gate: frontend/src/test/magnetic-local.test.ts and frontend/src/test/magnetic-local-workbench.test.tsx; broader device/resource acceptance remains an open release gate.
+
+R-M03-12 WHEN the browser-local processor reports interpolation values, THE UI SHALL render unsupported cells as unsupported, distinguish line extents from measured paths, show holdout support separately from error, and preserve provenance and limitations in the exported receipt.
+Gate: frontend/src/test/magnetic-local-workbench.test.tsx plus visual inspection at desktop and mobile viewport sizes; visual QA does not establish scientific acceptance.

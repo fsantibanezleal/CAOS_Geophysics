@@ -42,6 +42,7 @@ import { FwiLocalWorkbench } from "../components/FwiLocalWorkbench";
 import styles from "./Workbench.module.css";
 
 const EarthScene = lazy(() => import("../components/EarthScene").then((module) => ({ default: module.EarthScene })));
+const MagneticLocalWorkbench = lazy(() => import("../components/MagneticLocalWorkbench").then((module) => ({ default: module.MagneticLocalWorkbench })));
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
@@ -1021,6 +1022,7 @@ export default function Workbench() {
       );
     }
   }
+  if (searchParams.get("instrument") === "magnetic-local") return <Suspense fallback={<div className="page-body wide workbench"><p role="status">{t("Loading local magnetic processing…", "Cargando procesamiento magnético local…")}</p></div>}><MagneticLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/></Suspense>;
   if (searchParams.get("instrument") === "velocity-local") return <VelocityLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
   if (searchParams.get("instrument") === "profile-local") return <ProfileLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
   if (searchParams.get("instrument") === "fwi-local") return <FwiLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
@@ -1051,6 +1053,7 @@ export default function Workbench() {
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "velocity-local"); return next; }, {replace:true})}>{t("Open local velocity result", "Abrir resultado local de velocidad")}</button>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "profile-local"); return next; }, {replace:true})}>{t("Open local ERT / traveltime result", "Abrir resultado local ERT / tiempo de viaje")}</button>
         <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "fwi-local"); return next; }, {replace:true})}>{t("Open local acoustic FWI result", "Abrir resultado local FWI acústico")}</button>
+        <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "magnetic-local"); return next; }, {replace:true})}>{t("Open local magnetic flight-line processing", "Abrir procesamiento magnético local de líneas de vuelo")}</button>
         <button
           className="btn mobile-controls-toggle"
           aria-expanded={controlsOpen}

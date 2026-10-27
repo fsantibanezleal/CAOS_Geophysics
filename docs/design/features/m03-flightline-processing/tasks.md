@@ -12,3 +12,6 @@
 10. [x] Integrate source-bound intake, isolated child execution, typed result storage, bounded export and case-specific workbench; keep online admission closed until actual host evidence is accepted.
 11. [ ] Measure and review numerical/resource admission, cancellation and browser result parity on the actual ML VPS.
 12. [ ] Acquire provider field deliverables and independently validate source-specific processing and held-out results before changing the method acceptance verdict.
+13. [x] Add a browser-local Pyodide Web Worker path that calls the canonical Python M03 processor, has explicit resource limits/cancellation, renders support-aware outputs and exports the computed receipt.
+14. [x] Verify exact-result parity on a controlled fixture and verify pre-runtime rejection at the browser row limit; document the runtime version delta and limits of that evidence.
+15. [ ] Expand browser/native parity over randomized, adversarial and degenerate survey geometries, then measure latency and memory on supported device classes.
