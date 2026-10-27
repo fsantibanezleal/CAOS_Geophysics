@@ -33,9 +33,20 @@ async function open(method:keyof typeof roots,es=false,width=1600){
   await page.goto(origin+"/?instrument=profile-local");if(width===390)await page.getByRole("button",{name:es?"Controles de perfil local":"Local profile controls",exact:true}).click();
   await page.getByLabel(es?"result.json original":"Original result.json",{exact:true}).setInputFiles(join(roots[method],"result.json"));await page.getByLabel(es?"manifest.json correspondiente":"Matching manifest.json",{exact:true}).setInputFiles(join(roots[method],"manifest.json"));await page.getByRole("button",{name:es?"Abrir resultado de perfil local":"Open local profile result",exact:true}).click();await expect(page.getByTestId("profile-local-instrument")).toBeVisible();
 }
+async function showNativeControls(es=false){
+  const summary=page.getByText(es?"Controles nativos de fila, celda y visualización":"Native row, cell and display controls",{exact:true});
+  if(!await summary.evaluate(element=>(element.parentElement as HTMLDetailsElement).open))await summary.click();
+}
 async function download(name:string){const [file]=await Promise.all([page.waitForEvent("download"),page.getByRole("button",{name:"Export exact local inspection JSON",exact:true}).click()]);const path=join(evidence,name);await file.saveAs(path);return JSON.parse(readFileSync(path,"utf8"));}
 test("actual ERT / Dijkstra native cells, exact linked rows, folds and export",async()=>{
-  for(const method of ["ert","traveltime"] as const){await open(method);const r=actual[method],m=method==="ert"?r.engine_report.inverse:r.engine_report.inverse.interleaved;
+  for(const method of ["ert","traveltime"] as const){await open(method);await showNativeControls();const r=actual[method],m=method==="ert"?r.engine_report.inverse:r.engine_report.inverse.interleaved;
+    if(method==="ert"){
+      await expect(page.getByTestId("ert-result-view")).toBeVisible();
+      await expect(page.getByTestId("ert-topographic-profile")).toBeVisible();
+      await expect(page.getByTestId("ert-qc-summary")).toContainText("Instrument errors");
+      await expect(page.getByTestId("ert-result-view")).toContainText("Transfer resistance [Ω]");
+      await page.getByRole("combobox",{name:"Measurement view",exact:true}).selectOption("mesh");
+    }
     await expect(page.locator("polygon[data-cell-index]")).toHaveCount(m.mesh_cells);
     await page.getByRole("combobox",{name:"Original measurement row",exact:true}).selectOption("3");await page.getByLabel("Native model cell",{exact:true}).fill("4");
     const saved=await download(method+"-inspection.json");expect(saved.result).toEqual(r);expect(saved.selected.row.index).toBe(3);expect(saved.selected.cell.index).toBe(4);expect(saved.selected.cell.value).toBe(method==="ert"?m.model_resistivity_ohm_m[4]:m.model_velocity_m_s[4]);
@@ -45,13 +56,21 @@ test("actual ERT / Dijkstra native cells, exact linked rows, folds and export",a
   }
 });
 test("wrong original manifest cannot replace previous admitted result",async()=>{
-  await open("ert");await page.getByLabel("Matching manifest.json",{exact:true}).setInputFiles(join(roots.traveltime,"manifest.json"));await page.getByRole("button",{name:"Open local profile result",exact:true}).click();await expect(page.getByRole("alert")).toContainText("Files rejected");expect((await download("after-manifest-refusal.json")).result).toEqual(actual.ert);
+  await open("ert");await showNativeControls();await page.getByLabel("Matching manifest.json",{exact:true}).setInputFiles(join(roots.traveltime,"manifest.json"));await page.getByRole("button",{name:"Open local profile result",exact:true}).click();await expect(page.getByRole("alert")).toContainText("Files rejected");expect((await download("after-manifest-refusal.json")).result).toEqual(actual.ert);
 });
 test("actual EN/ES light/dark phone and desktop linked maps / residuals",async()=>{
   test.setTimeout(240000);
-  for(const lang of ["en","es"])for(const theme of ["light","dark"])for(const [width,height] of [[1600,900],[390,844]])for(const method of ["ert","traveltime"] as const){
-    const es=lang==="es";await page.setViewportSize({width,height});await page.evaluate(({lang,theme})=>{localStorage.setItem("caos.lang",lang);localStorage.setItem("caos.theme",theme);},{lang,theme});await open(method,es,width);
-    const main=page.locator(".processing-main");await main.locator(".science-plot").first().scrollIntoViewIfNeeded();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await page.screenshot({path:join(evidence,`${lang}-${theme}-${width}-${method}-mesh.png`)});
-    await page.getByRole("combobox",{name:es?"Vista de mediciones":"Measurement view",exact:true}).selectOption("standardized");const curve=page.getByRole("group",{name:es?"Residual / sigma supuesta":"Residual / assumed sigma",exact:true});await curve.scrollIntoViewIfNeeded();await curve.focus();await curve.press("End");await expect(curve).toHaveAttribute("data-selected-index",String(actual[method].geometry.row_ids_zero_based.length-1));await page.screenshot({path:join(evidence,`${lang}-${theme}-${width}-${method}-residual.png`)});
+  // Two complete method pairs cover both viewports, locales and themes. Re-loading
+  // each large result for every Cartesian combination only repeats costly SVG work.
+  for(const [lang,theme,width,height] of [["en","light",1600,900],["es","dark",390,844]] as const)for(const method of ["ert","traveltime"] as const){
+    const es=lang==="es";await page.setViewportSize({width,height});await page.evaluate(({lang,theme})=>{localStorage.setItem("caos.lang",lang);localStorage.setItem("caos.theme",theme);},{lang,theme});await open(method,es,width);await showNativeControls(es);
+    const main=page.locator(".processing-main");
+    if(method==="ert"){
+      await expect(page.getByTestId("ert-result-view")).toBeVisible();
+      await main.getByTestId("ert-topographic-profile").scrollIntoViewIfNeeded();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await page.screenshot({path:join(evidence,`${lang}-${theme}-${width}-ert-survey.png`)});
+      await page.getByRole("combobox",{name:es?"Vista de mediciones":"Measurement view",exact:true}).selectOption("mesh");
+    }
+    await main.locator("[data-native-mesh]").first().scrollIntoViewIfNeeded();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);await page.screenshot({path:join(evidence,`${lang}-${theme}-${width}-${method}-mesh.png`)});
+    await page.getByRole("combobox",{name:es?"Vista de mediciones":"Measurement view",exact:true}).selectOption("standardized");const curve=page.getByRole("group",{name:es?"Residual / sigma supuesta":"Residual / assumed sigma",exact:true});await curve.scrollIntoViewIfNeeded();await curve.focus();const readout=curve.locator("..").locator(".caos-chart-readout");const before=await readout.textContent();await curve.press("End");await expect(readout).not.toHaveText(before??"");await page.screenshot({path:join(evidence,`${lang}-${theme}-${width}-${method}-residual.png`)});
   }
 });

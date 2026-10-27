@@ -30,6 +30,15 @@
   min-height: 300px;
 }
 
+.surveyPlotShell :global(.caos-plot.fill) {
+  height: clamp(440px, 66vh, 560px);
+  min-height: 440px;
+}
+
+.surveyPlotShell :global(.caos-plot.fill > .caos-plot-body) {
+  min-height: 340px;
+}
+
 /* Preserve the shell chart's full accessible data table without letting the
    app's table-width rule turn its screen-reader copy into a visible G6 surface. */
 .plotShell :global(.caos-chart-table) {
@@ -104,5 +113,10 @@
   .plotShell :global(.caos-plot.fill) {
     height: 420px;
     min-height: 420px;
+  }
+
+  .surveyPlotShell :global(.caos-plot.fill) {
+    height: 480px;
+    min-height: 480px;
   }
 }
