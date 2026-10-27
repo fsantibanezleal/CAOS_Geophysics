@@ -4,7 +4,7 @@
 
 The public `?instrument=velocity-local` workbench now has two separate paths: calculate a supplied `geophysics.velocity-user-data/v1` request in-browser, or inspect an existing verified Python generation. The browser path validates the closed request contract (512 KiB, 8–2,048 rays, fixed local x–z-down frame, metres/seconds/m/s, unique IDs, explicit uncertainty and regularization bounds), then runs in a dedicated Web Worker. It does not upload the input, invoke an API, or claim field acceptance.
 
-The worker implements the same fixed straight-ray cell-crossing operator, reference slowness, weighted normal equations, first-difference Gram penalty, diagonal stabilizer, Cholesky solve, explicit slowness clipping, predicted cell-crossing times and independent eight-samples-per-cell bilinear quadrature check as `data-pipeline/velocity_user_data.py` and `data-pipeline/velocity_validation.py`. The UI shows velocity, accumulated path-length coverage, observed/predicted times, signed residuals and normalized residuals, plus a downloadable result bound to the exact input SHA-256. Coverage is not resolution or uncertainty.
+The worker implements the same fixed straight-ray cell-crossing operator, reference slowness, weighted normal equations, first-difference Gram penalty, diagonal stabilizer, Cholesky solve, explicit slowness clipping, predicted cell-crossing times and independent eight-samples-per-cell bilinear quadrature check as `data-pipeline/velocity_user_data.py` and `data-pipeline/velocity_validation.py`. The user can change λ before solving; the selected value is applied to the first-difference penalty. The UI shows velocity, accumulated path-length coverage, observed/predicted times, signed residuals and normalized residuals. Its export records distinct SHA-256 digests for the original file bytes and the normalized request actually solved, so parameter changes do not erase input provenance. Coverage is not resolution or uncertainty.
 
 ## Numerical parity control
 
@@ -25,8 +25,8 @@ The same tests reject duplicate-key JSON, an invalid coordinate and fewer than e
 ## UI and execution evidence
 
 - `npm run build`: passed, including TypeScript and Vite production build. Vite retains the repository's existing >500 kB chunk advisory.
-- `npm test -- --run src/test/velocity-browser.test.ts src/test/velocity-local.test.ts`: 18 passed.
-- Production preview in Chromium at 1440×960 and 390×844: both selected a request, completed the worker calculation, changed to coverage view, showed the input digest, exported JSON, produced no page errors, and had no document-width overflow. Phone inspection found and fixed a mobile drawer overlay that initially intercepted the Calculate button.
+- `npm test -- --run src/test/velocity-browser.test.ts src/test/velocity-local.test.ts`: 19 passed. The added test verifies λ changes the recovered array and predictions and rejects values outside the solver bounds.
+- `npm exec playwright test -- --config playwright.velocity-calculator.config.ts --timeout=45000`: passed in Chromium at 1440×960 and 390×844. Both viewports selected the supplied request, ran the worker at λ=25 and 1,000, exported the result with source and solved-request hashes, showed changed predictions and velocity, produced no page errors or API requests, and had no document-width overflow. Screenshots and JSON exports are outside the repository under `E:\_Temp\caos-geophysics-velocity-lambda\run-01\evidence`.
 - Full frontend suite: 42 files passed, 2 skipped, 7 failed (36 fixture-gated tests). Failures require original custody, native-joint, actual magnetic, or retained model-extraction fixtures not present in this checkout; they are unrelated to this change and are not reclassified as passes.
 
 ## Scientific limits

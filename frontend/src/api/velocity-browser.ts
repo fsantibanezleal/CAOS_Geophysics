@@ -15,6 +15,12 @@ export type BrowserVelocityResult = {
   execution: { location: "browser"; uploaded: false; field_truth_known: false; field_validated: false; heldout_advantage: false };
 };
 
+export function velocityRequestWithLambda(bytes: Uint8Array, lambda: number): Uint8Array {
+  const request = parseVelocityRequest(bytes);
+  const selected = finite(lambda, 1e-6, 1e6, true);
+  return new TextEncoder().encode(JSON.stringify({ ...request, lambda: selected }));
+}
+
 const fail = (): never => { throw new Error("First-arrival request rejected: invalid schema, units, values or geometry"); };
 const finite = (x: unknown, lo: number, hi: number, openLo = false): number => {
   if (typeof x !== "number" || !Number.isFinite(x) || (openLo ? x <= lo : x < lo) || x > hi) return fail();

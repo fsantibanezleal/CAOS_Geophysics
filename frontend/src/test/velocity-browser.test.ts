@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseAndCalculateVelocity } from "../api/velocity-browser";
+import { parseAndCalculateVelocity, parseVelocityRequest, velocityRequestWithLambda } from "../api/velocity-browser";
 
 function request() {
   const f=(i:number)=>i/7;
@@ -37,5 +37,16 @@ describe("client-side first-arrival inversion",()=>{
     expect(()=>parseAndCalculateVelocity(new TextEncoder().encode(JSON.stringify(q)))).toThrow();
     const short=request();short.rays_m=short.rays_m.slice(0,7);short.ray_ids=short.ray_ids.slice(0,7);short.times_s=short.times_s.slice(0,7);short.sigma_s=short.sigma_s.slice(0,7);
     expect(()=>parseAndCalculateVelocity(new TextEncoder().encode(JSON.stringify(short)))).toThrow();
+  });
+  it("changes the actual recovered model when the user changes regularization",()=>{
+    const source=new TextEncoder().encode(JSON.stringify(request()));
+    const baseline=parseAndCalculateVelocity(source),selectedBytes=velocityRequestWithLambda(source,1000),selectedRequest=parseVelocityRequest(selectedBytes);
+    const selected=parseAndCalculateVelocity(selectedBytes);
+    expect(selectedRequest.lambda).toBe(1000);
+    expect(selected.request.lambda).toBe(1000);
+    expect(selected.velocity_m_s).not.toEqual(baseline.velocity_m_s);
+    expect(selected.predicted_s).not.toEqual(baseline.predicted_s);
+    expect(()=>velocityRequestWithLambda(source,0)).toThrow();
+    expect(()=>velocityRequestWithLambda(source,1_000_001)).toThrow();
   });
 });
