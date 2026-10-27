@@ -20,7 +20,7 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `05-ert` | 2 | [Inversión ERT 2D topográfica, verdad sintética y partición espacial retenida](05-ert/02-ert-inversion.ipynb) | [02-ert-inversion](../en/05-ert/02-ert-inversion.ipynb) |
 | `05-ert` | 3 | [Sensibilidad ERT, regularización y límites de evidencia](05-ert/03-ert-state-of-art.ipynb) | [03-ert-state-of-art](../en/05-ert/03-ert-state-of-art.ipynb) |
 | `06-seismology` | 1 | [QC de formas de onda, filtrado y controles de picks](06-seismology/01-waveforms.ipynb) | [01-waveforms](../en/06-seismology/01-waveforms.ipynb) |
-| `06-seismology` | 2 | [Tomografía de rayos rectos con fuentes retenidas](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../en/06-seismology/02-traveltime-fwi.ipynb) |
+| `06-seismology` | 2 | [Tomografía M09 y comparación FWI M10 controlada](06-seismology/02-traveltime-fwi.ipynb) | [02-traveltime-fwi](../en/06-seismology/02-traveltime-fwi.ipynb) |
 | `06-seismology` | 3 | [FWI, regularización y controles de cycle-skipping](06-seismology/03-seismic-state-of-art.ipynb) | [03-seismic-state-of-art](../en/06-seismology/03-seismic-state-of-art.ipynb) |
 | `06-seismology` | 3 | [Picking P/S aprendido en trazas STEAD](06-seismology/04-m13-learned-phase-picking.ipynb) | [04-m13-learned-phase-picking](../en/06-seismology/04-m13-learned-phase-picking.ipynb) |
 | `07-joint` | 1 | [Sensibilidad complementaria y ambigüedad](07-joint/01-joint-hypothesis.ipynb) | [01-joint-hypothesis](../en/07-joint/01-joint-hypothesis.ipynb) |
