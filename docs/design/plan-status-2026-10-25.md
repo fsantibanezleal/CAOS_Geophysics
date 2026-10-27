@@ -31,7 +31,7 @@ threshold as pending owner decisions must not be used to plan or block work.
 ## Current branch evidence
 
 The isolated implementation branch is `task/geophysics-client-first-completion`
-at `d7b5f0eb6eaad0094b98037cc31805bac4c94a51` as of 2026-10-27. It descends
+at `ec78ee186a128d629dcc4cea0739502ed52a204e` as of 2026-10-27. It descends
 from the M11 candidate workspace recovery work. Its
 M11 work includes a source-bound gravity/magnetic joint inverse, independent
 single-modality baselines, sealed selection/evaluation, a 24-control synthetic
@@ -183,6 +183,9 @@ errors, API writes, physics replay or changes to the pinned local result files.
 The implementation is committed as `d7b5f0e` and pushed to PR #151; GitHub
 reports no checks for that PR. The approved SDD remains much broader than this
 one local-result view.
+
+The fresh M12 CUDA comparison on 2026-10-27 is recorded in
+[`m12-velocity-validation/convergence.md`](features/m12-velocity-validation/convergence.md): CPU replay passed, but the locked joint held-out model and travel-time ratios remain above one. It does not change the failed verdict.
 
 The convergence script still reports 1 failed and 18 unresolved requirements.
 No current release passes, no host deployment occurred, and the origin
