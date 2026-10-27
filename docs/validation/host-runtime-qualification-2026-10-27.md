@@ -37,14 +37,14 @@ live releases. Failed candidate files and private evidence were retained.
 | `release-94ad4f4` | Environment staging passed. API runtime installation and `pip check` passed; runtime inventory rejected valid `tzdata` entries such as `Etc/GMT+10`. |
 | `release-92e53bd` | API and gravity packages installed; both `pip check` steps passed. The gravity audit pin file was absent from the release inventory. |
 | `release-d576a9d` | Bundle and environment staging passed; API and gravity packages installed; both `pip check` steps passed. Gravity source audit rejected host CPython 3.12.3 because the approved Linux runtime pin requires CPython 3.12.10. |
+| `release-5355478` | Full bundle manifest verified on the VPS. Pinned CPython 3.12.16 archive hash and runtime probe passed, but the receipt recorded the temporary extraction path instead of the final path. This runtime was not passed to service staging or used by the app; retain it as failed qualification evidence. |
 
 The repository fixes for service-owned state validation, legal `+` characters
 in runtime paths, and inclusion of the gravity audit pin are committed and
 pushed in this branch. Regression tests cover those changes. The branch now
 registers CPython 3.12.16 from a hash-pinned standalone distribution and adds a
 private interpreter staging command. That new profile still requires host
-installation, numerical replay, and fresh source-pin verification. The current
-host interpreter must not be relabelled as 3.12.10.
+installation, numerical replay, and fresh source-pin verification. The system interpreter must not be relabelled as 3.12.10. The first private 3.12.16 runtime receipt failed its installed-path identity check; a corrected versioned stager is pending a fresh candidate bundle.
 [Python 3.12.16 release](https://www.python.org/downloads/release/python-31216/).
 
 ## Release decision

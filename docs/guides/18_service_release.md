@@ -70,7 +70,7 @@ The bounded installer is executable from the staged candidate's source:
   --release /var/www/geophysics.ml.fasl-work.com/releases/REVIEWED_ID \
   --evidence /var/lib/geophysics-deploy/REVIEWED_RUNTIME_ID \
   --bundle-sha256 REVIEWED_MANIFEST_SHA256 \
-  --interpreter /var/lib/geophysics-deploy/python-runtimes/cpython-3.12.16-20261026/python/bin/python3.12
+  --interpreter /var/lib/geophysics-deploy/python-runtimes/cpython-3.12.16-20261026-r2/python/bin/python3.12
 ```
 
 Use the explicit measured IDs and digest, not these placeholders. This operator

@@ -175,7 +175,7 @@ def test_isolated_cli_loads_only_trusted_sibling_source():
 
 
 def test_interpreter_runtime_pins_official_distribution_and_identity():
-    assert python_runtime.NAME == 'cpython-3.12.16-20261026'
+    assert python_runtime.NAME == 'cpython-3.12.16-20261026-r2'
     assert python_runtime.ARCHIVE_BYTES == 67921566
     assert python_runtime.SHA256 == '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'
     assert python_runtime.URL.endswith('cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz')

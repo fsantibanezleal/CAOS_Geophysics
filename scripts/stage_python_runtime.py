@@ -20,7 +20,7 @@ from prepare_service_release import file_digest, no_links  # noqa: E402
 
 EVIDENCE = Path('/var/lib/geophysics-deploy')
 RUNTIMES = EVIDENCE / 'python-runtimes'
-NAME = 'cpython-3.12.16-20261026'
+NAME = 'cpython-3.12.16-20261026-r2'
 URL = ('https://github.com/astral-sh/python-build-standalone/releases/download/'
        '20261026/cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz')
 SHA256 = '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'
@@ -82,7 +82,7 @@ def _tree_digest(root: Path) -> tuple[str, int, int]:
     return hashlib.sha256(raw).hexdigest(), count, total
 
 
-def _verify_python(root: Path) -> dict:
+def _verify_python(root: Path, *, installed_path: Path | None = None) -> dict:
     executable = root / 'python/bin/python3.12'
     info = executable.stat(follow_symlinks=False)
     if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or not info.st_mode & 0o111:
@@ -101,7 +101,7 @@ def _verify_python(root: Path) -> dict:
         raise ValueError('standalone interpreter probe output differs') from exc
     if fields != ['cpython', '3.12.16', 'linux', 'x86_64']:
         raise ValueError('standalone interpreter platform/version differs')
-    return {'path': executable.as_posix(), 'implementation': fields[0],
+    return {'path': (installed_path or executable).as_posix(), 'implementation': fields[0],
             'version': fields[1], 'platform': fields[2], 'machine': fields[3],
             'sha256': _sha(executable)}
 
@@ -171,7 +171,7 @@ def stage() -> dict:
             elif not stat.S_ISLNK(info.st_mode):
                 raise ValueError('interpreter extraction contains an unexpected node')
         tree_hash, entries, unpacked = _tree_digest(tree)
-        interpreter = _verify_python(staging)
+        interpreter = _verify_python(staging, installed_path=target / 'python/bin/python3.12')
         receipt = {'schema': 'geophysics.python-runtime/v1', 'distribution': NAME,
                    'distribution_url': URL, 'distribution_sha256': SHA256,
                    'python': '3.12.16', 'platform': 'linux-x86_64',
