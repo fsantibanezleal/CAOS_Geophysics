@@ -73,7 +73,7 @@ def _metric_row(item: dict, *, noise_count: int) -> dict:
     }
 
 
-def process(assets_dir: Path, output_path: Path) -> dict:
+def process(assets_dir: Path, output_path: Path, probability_output_dir: Path | None = None) -> dict:
     assets_dir = Path(assets_dir).resolve()
     output_path = Path(output_path).resolve()
     temp_setting = os.environ.get("CAOS_TEMP_ROOT", "")
@@ -82,6 +82,10 @@ def process(assets_dir: Path, output_path: Path) -> dict:
     temp_root = Path(temp_setting).resolve()
     if not output_path.is_relative_to(temp_root):
         raise ValueError("M13 subset output must be beneath CAOS_TEMP_ROOT")
+    if probability_output_dir is not None:
+        probability_output_dir = Path(probability_output_dir).resolve()
+        if not probability_output_dir.is_relative_to(temp_root):
+            raise ValueError("M13 probability outputs must be beneath CAOS_TEMP_ROOT")
     manifest_path = assets_dir / "manifest.json"
     benchmark_path = assets_dir / "benchmark.json"
     manifest_bytes = manifest_path.read_bytes()
@@ -161,6 +165,13 @@ def process(assets_dir: Path, output_path: Path) -> dict:
                 or not np.allclose(probabilities.sum(axis=1), 1, atol=1e-3)):
             raise ValueError(f"invalid N/P/S probability output: {row['trace_id']}")
         probabilities = probabilities[0]
+        probability_sha256 = None
+        if probability_output_dir is not None:
+            probability_output_dir.mkdir(parents=True, exist_ok=True)
+            probability_name = Path(row["waveform_file"]).stem + ".probabilities.f32"
+            probability_bytes = probabilities.astype("<f4", copy=False).tobytes()
+            (probability_output_dir / probability_name).write_bytes(probability_bytes)
+            probability_sha256 = hashlib.sha256(probability_bytes).hexdigest()
         picks = pick_probabilities(
             probabilities, p_threshold=THRESHOLD, s_threshold=THRESHOLD,
             minimum_ps_s=0.4,
@@ -182,6 +193,7 @@ def process(assets_dir: Path, output_path: Path) -> dict:
             "m13_p_s": picks["P"], "m13_s_s": picks["S"],
             "m13_p_peak": float(probabilities[1].max()),
             "m13_s_peak": float(probabilities[2].max()),
+            "m13_probabilities_sha256": probability_sha256,
         })
         if example is None and analyst["P"] is not None and analyst["S"] is not None and picks["P"] is not None:
             example = {
@@ -208,6 +220,8 @@ def process(assets_dir: Path, output_path: Path) -> dict:
     result = {
         "schema": "caos.m13-browser-display-subset-analysis.v1",
         "status": "recomputed-23-trace-descriptive-subset; not full benchmark or browser parity",
+        "reference_runtime": {"name": "onnxruntime", "version": ort.__version__,
+                              "provider": "CPUExecutionProvider"},
         "selection_before_heldout_scoring": True,
         "selected_count": 24, "qc_valid_count": len(valid), "qc_rejected_count": len(rejected),
         "noise_valid_count": noise_count,
@@ -233,7 +247,7 @@ def process(assets_dir: Path, output_path: Path) -> dict:
     output_path.write_text(json.dumps(result, allow_nan=False, separators=(",", ":")), encoding="utf-8")
     return {key: result[key] for key in (
         "status", "selected_count", "qc_valid_count", "qc_rejected_count", "noise_valid_count",
-        "manifest_sha256", "model_sha256", "display_subset_metrics",
+        "manifest_sha256", "model_sha256", "reference_runtime", "display_subset_metrics",
     )}
 
 
@@ -241,8 +255,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--assets", type=Path, default=ROOT / "data/derived/phase/browser-assets/stead")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--probability-output-dir", type=Path,
+                        help="optional temporary directory for per-trace CPU reference arrays")
     args = parser.parse_args()
-    print(json.dumps(process(args.assets, args.output), indent=2))
+    print(json.dumps(process(args.assets, args.output, args.probability_output_dir), indent=2))
 
 
 if __name__ == "__main__":

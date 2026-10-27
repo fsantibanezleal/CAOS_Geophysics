@@ -7,6 +7,7 @@
 - [x] Train an actual GPU model from scratch with recorded seed, configuration, environment, optimizer, losses and checkpoint hash; choose threshold on dev only.
 - [x] Run M08 and M13 on identical untouched real test traces, preserving misses and noise false alarms; report stratified timing and degradation.
 - [x] Export that exact checkpoint for the browser; verify local/browser probability and peak parity on the same held-out traces in Playwright Chromium.
+- [x] Independently rerun the frozen ONNX through CPUExecutionProvider and the product WASM runtime on all 23 QC-valid browser traces; compare probability tensors, P/S peaks and accepted/abstained picks while preserving the rejected record. The 2026-10-27 receipt records maximum absolute probability error 5.07e-6 and zero peak-sample difference. This is runtime parity for one checkpoint, not an independent PyTorch comparison or an accuracy claim from the selected subset; see [validation record](../../../validation/m13-browser-population-parity-2026-10-27.md).
 - [ ] Approve source and derivative rights, then release a small attributed real-trace case only if all gates pass.
 
 The PhaseNet 100-trace sample is an engineering fixture, never training or benchmark evidence. The completed boxes above have local source, computation and browser-test receipts; the final public-release gate remains open.

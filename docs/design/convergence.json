@@ -355,7 +355,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The repository wiki contains bilingual M01-M13 chapters; the bilingual notebook matrix now includes receipt-backed M11 and M12 scientific analyses. All 50 notebooks pass structural and fresh-execution checks, and the docs matrix passes its structural gate. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved.",
+      "note": "The bilingual M01-M13 wiki remains indexed. All 52 notebooks passed one full fresh-kernel replay; the two new M13 lessons were rerun after their final edits and each passed a separate fresh-output check. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved.",
       "evidence": [
         {
           "path": "docs/validation/source-to-content-review.md",
@@ -457,7 +457,7 @@
       "id": "R-019",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
-      "note": "Fresh local production-build browser evidence on the assessed candidate passes inference for one of 23 QC-valid display traces, verifies the manifest-linked model hash, retains QC rejection, exports normalized N/P/S scores without API traffic, and shows the sealed offline same-population M08/M13 table for all 6000 selected traces. This is not a fresh full 23-trace private-oracle parity run; parity and product/VPS release acceptance remain unresolved.",
+      "note": "The local product-runtime check now runs the same hash-verified ONNX model through CPUExecutionProvider and the app WASM path on all 23 QC-valid real STEAD display traces, retains the QC rejection, verifies source/model/waveform/reference hashes, and records max probability difference 5.0664e-6, exact P/S peak samples and matching picks; see docs/validation/m13-browser-population-parity-2026-10-27.json. This is same-checkpoint runtime parity on a preselected display subset, not independent model validation or population accuracy. Full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",

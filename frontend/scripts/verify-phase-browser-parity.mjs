@@ -6,6 +6,11 @@ import { chromium } from '@playwright/test';
 import { createServer } from 'vite';
 
 const args = process.argv.slice(2);
+if (!args.includes("--oracle")) {
+  // The release gate can verify CPU/WASM parity without a private PyTorch oracle.
+  // Supplying --oracle retains the separate independent-model comparison below.
+  await import("./verify-phase-browser-population.mjs");
+} else {
 function argument(name) {
   const index = args.indexOf(name);
   if (index < 0 || !args[index + 1]) throw new Error(`Required ${name} absolute directory path`);
@@ -132,4 +137,5 @@ try {
 } finally {
   await browser?.close();
   await server.close();
+}
 }
