@@ -253,6 +253,12 @@ def test_linux_x86_64_runtime_epoch(monkeypatch):
     js._runtime()
 
 
+@pytest.mark.parametrize('version',[(3,12,10),(3,12,16)])
+def test_registered_python_versions(version,monkeypatch):
+    monkeypatch.setattr(js.sys,'version_info',version)
+    js._runtime()
+
+
 @pytest.mark.parametrize('bad',['node_nan','node_shift','centre_bias','bad_volume','bad_bounds','nonfinite_centre'])
 def test_actual_tensor_geometry_fail_closed(bad,monkeypatch):
     from types import SimpleNamespace

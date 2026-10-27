@@ -25,6 +25,7 @@ MAX_EXPORT_BYTES = 256*1024**2
 GEOMETRY_RTOL = 1e-10
 VERSIONS = {'numpy':'2.2.6','scipy':'1.15.2','simpeg':'0.25.2',
             'geoana':'0.8.1','discretize':'0.12.0'}
+SUPPORTED_PYTHON_VERSIONS={(3,12,10),(3,12,16)}
 POLICY = {'name':'joint-survey-l2-cross-gradient-1','seed':42,'cell_order':'x-fast',
           'training':'not_applicable_classical','group_scope':'global_acquisition',
           'modal_covariance':'independent'}
@@ -329,7 +330,7 @@ def _runtime():
     supported_platform = (sys.platform == 'win32' and platform.machine().lower() in ('amd64', 'x86_64')) or (
         sys.platform == 'linux' and platform.machine().lower() == 'x86_64'
     )
-    if (sys.version_info[:3]!=(3,12,10) or not supported_platform
+    if (sys.version_info[:3] not in SUPPORTED_PYTHON_VERSIONS or not supported_platform
             or sys.implementation.name!='cpython' or sys.maxsize!=2**63-1):
         raise RuntimeError('runtime: unreviewed source/platform epoch')
 

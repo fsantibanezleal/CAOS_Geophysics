@@ -33,6 +33,7 @@ _LINUX_X86_64_CLOSURE_EXPECTED=(
     '17e29fa532a795497e657a033e743fda363d366b200720220ec31a3c79c74458',
     '110fa0117a967f64ea347166a21e51123eedf283515fdc86f7adac92497a5bef',
     '0e20d023fd23064cc73d610ebf248652dca1d6db5232fb058a0ed503824c23e1')
+SUPPORTED_PYTHON_VERSIONS={(3,12,10),(3,12,16)}
 _LOADED_PINS=tuple(hashlib.sha256(Path(p).read_bytes()).hexdigest()
                    for p in (linsolve.__file__,_superlu.__file__,_flapack.__file__))
 
@@ -68,7 +69,7 @@ def allocation(n,m,a,covariance):
 def _workspace_closure():
     # Exact measured installed tuples only; no generic version>=, URLs-as-
     # binary-proof or unmeasured native-workspace fallback.
-    if sys.version_info[:3]!=(3,12,10):
+    if sys.version_info[:3] not in SUPPORTED_PYTHON_VERSIONS:
         raise ValueError('metric: native workspace candidate tuple not registered')
     if sys.platform=='win32':
         expected=_CLOSURE_EXPECTED

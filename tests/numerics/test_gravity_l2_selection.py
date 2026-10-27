@@ -13,6 +13,15 @@ import choclo
 
 import gravity_survey_l2 as survey
 import gravity_l2 as l2
+import gravity_l2_metric as metric
+
+
+@pytest.mark.parametrize('version', [(3,12,10),(3,12,16)])
+def test_registered_python_versions_keep_native_workspace_closure(version,monkeypatch):
+    monkeypatch.setattr(metric.sys,'version_info',version)
+    for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS'):
+        monkeypatch.setenv(name,'1')
+    assert metric._workspace_closure() is None
 
 
 def request():
