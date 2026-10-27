@@ -31,7 +31,7 @@ The SQLite storage key remains internal and must equal the generated owner/proje
 
 `private_storage_permission: "attested"` is a required user assertion of authority to store original bytes in this authenticated project; it is distinct from the public `rights_decision`. The latter remains `mirror`, `provider-link-only`, `derivative-only` or `forbidden`. An attested private upload with provider-link-only or derivative-only decision stays owner-only; forbidden is rejected; even mirror never publishes bytes without a separate reviewed catalogue/release step. Alembic adds a nullable attestation column for existing, unreleased rows and does not fabricate historical attestations.
 
-The merged frontend mirror currently requires a private `storage_key`, a non-null citation and `pending|valid|rejected` status. The API intentionally emits none of those unsafe or premature assertions: citation may honestly be null, and `raw_metadata_checked` is not a dataset-QC `valid` verdict. INT-API-FE-01 is a separate blocked parity gate owned by frontend integration; this branch does not modify `frontend/` or claim it passes.
+The frontend mirror accepts nullable citation and the exact `raw_metadata_checked` status; it does not accept a private `storage_key` or claim scientific validity. `INT-API-FE-01` is closed by the shared backend/frontend schema fixture and strict parser/lifecycle tests, with evidence in `tasks.md`. Hosted upload, scientific ingestion/QC and full-product acceptance remain separate gates.
 
 ## HTTP surface
 

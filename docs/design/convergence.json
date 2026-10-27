@@ -38,7 +38,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "95ca264ea2f716982c35f718f5572429b620c4fd738fb26d8badb8424814bb3f"
+          "sha256": "2da662e54b92837d93e65ff71f2c351aa1711112493661d8295ffa9eec191b08"
         }
       ],
       "receipts": []
@@ -51,7 +51,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "95ca264ea2f716982c35f718f5572429b620c4fd738fb26d8badb8424814bb3f"
+          "sha256": "2da662e54b92837d93e65ff71f2c351aa1711112493661d8295ffa9eec191b08"
         },
         {
           "path": "docs/validation/physical-json-independent-review-2026-10-03.md",
@@ -299,7 +299,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "95ca264ea2f716982c35f718f5572429b620c4fd738fb26d8badb8424814bb3f"
+          "sha256": "2da662e54b92837d93e65ff71f2c351aa1711112493661d8295ffa9eec191b08"
         },
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",

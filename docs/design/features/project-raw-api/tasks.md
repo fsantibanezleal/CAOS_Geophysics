@@ -16,7 +16,9 @@ Convergence: the API unit's named gates pass locally. With `FWI_RECOVERY_ARTIFAC
 - [x] R-API-12: implement the explicit owner-only source/asset view, redact storage paths from JSON and export, reject internal key drift, and test the response contract.
 - [x] R-API-13: separate private-storage attestation from public mirroring rights, migrate without inventing historical attestations, and test rights-negative cases.
 - [x] R-API-09, R-API-11 through R-API-13: rerun API/security/migration tests, repository guards and review staged scope before commit/push.
-- [ ] INT-API-FE-01: frontend mirror/adapter parity remains open and is not part of this branch.
+- [x] INT-API-FE-01: the frontend `RawAsset`/`SourceRecord` mirror and lifecycle adapter now match the versioned owner-only API projection. The shared fixture is validated by both Pydantic and TypeScript; strict negative cases reject private storage keys, invented scientific-validity states, changed schema versions and mismatched owner paths.
+
+Parity verification on 2026-10-27: `frontend` `npm test -- --run src/test/api-live-contract-parity.test.ts src/test/lifecycle-client.test.ts` passed 5 tests; `.venv-api/Scripts/python.exe -m pytest tests/api/test_views.py tests/api/test_frontend_contract_fixture.py tests/api/test_assets.py -q --tb=short` passed 16 tests. The backend emitted one upstream Starlette/httpx deprecation warning. This proves the fixture/schema and lifecycle-client boundary locally; it does not prove an operating-host upload or close product-level raw-data acceptance.
 
 Review gate receipt: `python -m pytest tests/api --tb=short` passed 42 tests; the focused auth/ownership/rights/view/security subset passed 7 tests. Both runs emitted one Starlette TestClient deprecation warning, not a test failure. `ruff check data-pipeline tests app`, `check_artifacts.py`, `check_content_standards.py`, `check_template_residue.py`, `check_ci_budget.py`, `pip check` and staged-diff whitespace/scope review passed. No API job route, frontend change or deployment was added.
 
