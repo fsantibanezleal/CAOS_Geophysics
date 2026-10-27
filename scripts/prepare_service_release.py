@@ -309,7 +309,8 @@ def prepare(source: Path, output: Path, *, build: Path | None = None) -> dict:
     paths = {p for p in tracked if p.startswith(("app/", "deploy/")) or
              p.startswith(("scripts/", "data-pipeline/")) and p.endswith(".py")}
     paths.update({"requirements-api.txt", "requirements-gravity-runtime.txt",
-                  "docs/design/SDD.md", "docs/design/convergence.json"})
+                  "docs/design/SDD.md", "docs/design/convergence.json",
+                  "docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json"})
     for gates in method_declarations(source / "docs/design/SDD.md").values():
         paths.update(GATE.fullmatch(gate)["file"] for gate in gates if GATE.fullmatch(gate)["file"] in tracked)
     for record in ledger["requirements"]:

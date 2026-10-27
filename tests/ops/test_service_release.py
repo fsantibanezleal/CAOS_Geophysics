@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import inspect
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -19,6 +20,15 @@ def module():
     result = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(result)
     return result
+
+
+def test_gravity_runtime_source_audit_pins_are_in_bundle_inventory():
+    service = module()
+    pin = "docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json"
+    assert (ROOT / pin).is_file()
+    assert pin in inspect.getsource(service.prepare)
+    audit = (ROOT / "scripts/verify_gravity_linux_runtime.py").read_text(encoding="utf-8")
+    assert "runtime-pins-linux-cp312.json" in audit
 
 
 def fixture(tmp_path):
