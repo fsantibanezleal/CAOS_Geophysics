@@ -64,3 +64,20 @@ result for the projected correction. It is not field validation, a claim of
 geological recovery, or a change to product release status. Full protocol,
 cohort results, intervals, receipt hash and verification state are recorded
 in the linked report. The invalidated v1 results remain excluded.
+
+## Receipt-backed bilingual research notebook: 2026-10-27
+
+The exact full v1.1 receipt is now mirrored at
+`data/derived/v2/models/m12-nullspace-v1_1/receipt.json` (SHA-256
+`30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22`);
+the original immutable external run and checkpoint remain preserved. The new
+English and Spanish lesson at
+`notebooks/{en,es}/08-learning/04-nullspace-refinement-evidence.ipynb` checks
+that receipt identity, reconstructs each cohort's aggregate ratios from its
+paired per-realization RMSE values, plots the calibration-only alpha rule,
+and exposes per-case joint outcomes. Its analyzer rejects fixture receipts,
+duplicate/missing cases and aggregate drift. The lesson does not rerun the
+solver, choose parameters from test cohorts, or change the receipt's
+`scientific_acceptance=false` status. Static notebook checks, three focused
+regressions, and fresh execution of both lessons pass; whole-product R-008
+and M12 acceptance remain open.

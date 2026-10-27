@@ -1,10 +1,10 @@
 # M12 nullspace-constrained residual refinement v1.1
 
-Status: implemented protocol, not yet scientifically evaluated. The v1
+Status: implemented and evaluated within the bounded synthetic protocol below. The v1
 implementation record is invalidated because it used an incompatible model
 feature normalization; see [the v1 erratum](nullspace-v1-protocol.md).
-The v3.1 checkpoint remains a failed held-out comparator. This study does
-not claim to repair it or establish field-data validity.
+The v3.1 checkpoint remains a failed held-out comparator. This follow-up does
+not claim field-data validity or product scientific acceptance.
 
 ## Question
 
