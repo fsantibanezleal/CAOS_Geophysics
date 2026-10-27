@@ -279,14 +279,16 @@ source/binary digests. Standalone operator controls pass **80 / 0 skips**;
 the scoped potential-source and user-CSV regression passes **118 / 2 existing
 skips / 11 deselected**. The exact commands and runtimes are in the receipt.
 
-This is a test-environment rerun, not service-runtime staging. PyPI's official
-SimPEG 0.25.2 release has only a source archive, while
-`scripts/stage_service_runtime.py` currently passes `--only-binary=:all:`. Also,
-the dedicated gravity requirements omit `pymatsolver`, required by SimPEG's
-package metadata. The test environment built SimPEG from its PyPI sdist after
-matching SHA-256 `feeb106f70bf093ecd6b531dad49cc179d11c5e69dbff0c64f9c3cf8b5e2eb97`
-and installed `pymatsolver==0.4.0` from its SHA-verified PyPI sdist. Its
-`pip check` then passed. These repairs have not yet been carried into the
-production stager/requirements, so no runtime-install, VPS-capacity, admission,
-or release gate is claimed. Sources: [SimPEG 0.25.2 on PyPI](https://pypi.org/project/simpeg/0.25.2/),
-[pymatsolver 0.4.0 on PyPI](https://pypi.org/project/pymatsolver/0.4.0/).
+At the time of that earlier rerun, the service stager still required wheels and
+the dedicated gravity requirements omitted SimPEG's `pymatsolver` dependency.
+The follow-up repair and isolated Linux install-profile evidence are recorded in
+[linux-runtime-staging-2026-10-27.json](evidence/linux-runtime-staging-2026-10-27.json).
+That receipt verifies the installed package versions, 21 targeted installed
+source files, both pure-Python wheel tags, and a clean `pip check`; the focused
+operator and scoped integration reruns pass 80 and 118 tests respectively. The
+runtime-stager unit suite passes 41 tests with five Windows-only skips for Linux
+process-group controls. The complete immutable release stager was not run against
+a VPS release, and no runtime, capacity, solver-admission or release gate is
+claimed. The earlier source-intake context refers to the official
+[SimPEG 0.25.2](https://pypi.org/project/simpeg/0.25.2/) and
+[pymatsolver 0.4.0](https://pypi.org/project/pymatsolver/0.4.0/) releases.

@@ -45,6 +45,10 @@ class FakeInstaller:
         self.records.append({'step': label, 'argv': argv})
         path = self.evidence / (label + '.log')
         path.write_bytes(b'fixture execution only\n')
+        if label == 'gravity-source-audit':
+            path.write_text(json.dumps({'schema': 'geophysics.gravity-linux-runtime-verification/v1',
+                                        'ml_vps_host_admitted': False, 'public_activation': False}),
+                            encoding='utf-8')
         if label in {'venv', 'gravity-venv'}:
             root = cwd / ('.venv-gravity' if label == 'gravity-venv' else '.venv')
             (root / 'bin').mkdir(parents=True)
@@ -69,10 +73,14 @@ def test_success_is_runtime_only_and_installation_order(tmp_path, monkeypatch):
     release, evidence, result = exercise(tmp_path, monkeypatch)
     assert result['runtime_installed'] is True
     assert result['host_admitted'] is result['full_release_accepted'] is False
-    assert [s['step'] for s in result['steps']] == ['venv', 'install', 'check', 'freeze', 'gravity-venv', 'gravity-install', 'gravity-check', 'gravity-freeze', 'gravity-probe']
+    assert [s['step'] for s in result['steps']] == ['venv', 'install', 'check', 'freeze', 'gravity-venv', 'gravity-install', 'gravity-check', 'gravity-source-audit', 'gravity-freeze', 'gravity-probe']
     install = result['steps'][1]['argv']
     assert '--isolated' in install and '--no-cache-dir' in install and '--only-binary=:all:' in install
     assert 'https://pypi.org/simple' in install
+    gravity_install = next(s['argv'] for s in result['steps'] if s['step'] == 'gravity-install')
+    assert '--only-binary=:all:' in gravity_install
+    assert '--no-binary=simpeg,pymatsolver' in gravity_install
+    assert result['gravity_source_audit']['ml_vps_host_admitted'] is False
     assert result['runtime']['regular_bytes'] > 0
     assert result['gravity_runtime_installed'] is True
     assert result['gravity_runtime']['regular_bytes'] > 0
@@ -112,6 +120,7 @@ def test_no_unpinned_or_indirect_requirements(tmp_path, pin):
 
 def test_declared_requirements_are_accepted():
     assert runtime.requirements(ROOT / 'requirements-api.txt') == bundle.file_digest(ROOT / 'requirements-api.txt')['sha256']
+    assert runtime.requirements(ROOT / 'requirements-gravity-runtime.txt') == bundle.file_digest(ROOT / 'requirements-gravity-runtime.txt')['sha256']
 
 
 def test_capacity_before_any_creation(tmp_path, monkeypatch):
@@ -122,7 +131,7 @@ def test_capacity_before_any_creation(tmp_path, monkeypatch):
     assert not evidence.exists() and not (release / '.venv').exists() and not (release / '.venv-gravity').exists()
 
 
-@pytest.mark.parametrize('step', ['venv', 'install', 'check', 'freeze', 'gravity-venv', 'gravity-install', 'gravity-check', 'gravity-freeze', 'gravity-probe'])
+@pytest.mark.parametrize('step', ['venv', 'install', 'check', 'freeze', 'gravity-venv', 'gravity-install', 'gravity-check', 'gravity-source-audit', 'gravity-freeze', 'gravity-probe'])
 def test_failure_retains_evidence_and_unaccepted_runtime(tmp_path, monkeypatch, step):
     class Failed(FakeInstaller):
         fail = step

@@ -26,10 +26,11 @@
     "geoana": "0.8.1",
     "numpy": "2.2.6",
     "scipy": "1.15.2",
-    "simpeg": "0.25.2"
+    "simpeg": "0.25.2",
+    "pymatsolver": "0.4.0"
   },
   "requirements": "requirements-gravity-runtime.txt",
-  "requirements_sha256": "e162783d2d0e205416b5446b532e9f816042b27cc6c242e1e6a4c3540d554b8a",
+  "requirements_sha256": "f34ad3ea85ebb0e1127fa9d36bcf558517c3d09a209dff856f8d2a46fceedd0e",
   "schema": "geophysics.prism-linux-runtime-pins/v1",
   "source_epoch": "m02-prism-linux-cpu-1",
   "status": "Local Linux numerical profile; ML VPS and release remain unadmitted",
@@ -53,7 +54,8 @@
     "simpeg/potential_fields/gravity/receivers.py": "0b72c8948e6bc6cd3b4077aa9109245f63719ed186fba47f030bacaa99709229",
     "simpeg/potential_fields/gravity/simulation.py": "1dad16969ce8db878f02350f1ce90bf16ededace3e85f117c2cc76447eda160f",
     "simpeg/potential_fields/gravity/sources.py": "d5653055db0b6faf474a647a2e38a6ceb198ad4d92347d572aac8390697267ba",
-    "simpeg/potential_fields/gravity/survey.py": "3e3f35e74a6c2423a25c51e106b7b38027602cf7e486309cf98117b508344938"
+    "simpeg/potential_fields/gravity/survey.py": "3e3f35e74a6c2423a25c51e106b7b38027602cf7e486309cf98117b508344938",
+    "pymatsolver/solvers.py": "2fa6610a5a5fed09395fc8ad550abf6d4dbc0c449f53c4e6e7024b9ffe8e94b1"
   },
   "versions": {
     "SQLAlchemy": "2.0.54",
@@ -71,6 +73,17 @@
     "pandas": "2.2.3",
     "pydantic": "2.13.5",
     "scipy": "1.15.2",
-    "simpeg": "0.25.2"
+    "simpeg": "0.25.2",
+    "pymatsolver": "0.4.0"
+  },
+  "source_distributions": {
+    "simpeg-0.25.2.tar.gz": {
+      "sha256": "feeb106f70bf093ecd6b531dad49cc179d11c5e69dbff0c64f9c3cf8b5e2eb97",
+      "release": "https://pypi.org/project/simpeg/0.25.2/"
+    },
+    "pymatsolver-0.4.0.tar.gz": {
+      "sha256": "0ef77e92ac5a780df08d921cc772e0fe230d88e114355eaa2958a2ffa5b35004",
+      "release": "https://pypi.org/project/pymatsolver/0.4.0/"
+    }
   }
 }

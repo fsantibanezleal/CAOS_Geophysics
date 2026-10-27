@@ -257,9 +257,22 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
         gravity_python = str(release / '.venv-gravity/bin/python')
         runner.run('gravity-install', [gravity_python, '-I', '-B', '-m', 'pip', '--isolated', 'install',
                                       '--no-cache-dir', '--only-binary=:all:', '--index-url',
-                                      'https://pypi.org/simple', '-r',
+                                      'https://pypi.org/simple', '--no-binary=simpeg,pymatsolver', '-r',
                                       str(release / 'source/requirements-gravity-runtime.txt')], release)
         runner.run('gravity-check', [gravity_python, '-I', '-B', '-m', 'pip', '--isolated', 'check'], release)
+        source_audit = runner.run('gravity-source-audit',
+                                  [gravity_python, '-I', '-B',
+                                   str(release / 'source/scripts/verify_gravity_linux_runtime.py')],
+                                  release / 'source')
+        try:
+            audit = json.loads(source_audit.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError('gravity source audit did not return valid JSON') from exc
+        if (audit.get('schema') != 'geophysics.gravity-linux-runtime-verification/v1'
+                or audit.get('ml_vps_host_admitted') is not False
+                or audit.get('public_activation') is not False):
+            raise ValueError('gravity source audit returned an unexpected receipt')
+        receipt['gravity_source_audit'] = audit
         gravity_freeze = runner.run('gravity-freeze', [gravity_python, '-I', '-B', '-m', 'pip',
                                                        '--isolated', 'freeze', '--all'], release)
         probe = ('import sys, pathlib; sys.path.insert(0, str(pathlib.Path.cwd())); '

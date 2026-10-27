@@ -424,7 +424,7 @@ def audit_trusted_pins(pin):
     for rel, digest in pin["targeted_source_sha256"].items():
         assert rel in expected["targeted_source_sha256"] and ".." not in Path(rel).parts
         pkg = rel.split("/")[0]
-        assert pkg in {"simpeg", "geoana", "discretize", "scipy", "choclo"}
+        assert pkg in {"simpeg", "geoana", "discretize", "scipy", "choclo", "pymatsolver"}
         dist = importlib.metadata.distribution(pkg)
         assert rel in {str(p).replace("\\", "/") for p in dist.files}
         assert hashlib.sha256(dist.locate_file(rel).read_bytes()).hexdigest() == digest

@@ -35,10 +35,15 @@ the exact pinned code/tests before any merge; no merge/deploy by this agent.
 - [x] Main independently reviewed the current Linux-pinned operator implementation
   and source-audit tests, then reran the exact 80-test operator suite and the
   scoped 118-pass integration command; see [2026-10-27 Linux rerun receipt](evidence/linux-independent-rerun-2026-10-27.json).
-- [ ] Service runtime staging installs the complete declared gravity dependency
-  set. Current evidence exposes two defects: SimPEG 0.25.2 is sdist-only while
-  the stager requires wheels, and `pymatsolver` is missing from gravity runtime
-  requirements. Resolve and test these before host qualification.
+- [x] Service runtime staging now installs the complete pinned gravity dependency
+  set: native dependencies remain wheel-only; only the pure-Python `simpeg` and
+  `pymatsolver` distributions may build from source. A post-install audit checks
+  CPython/platform, every declared package version, targeted installed-source
+  hashes, and `py3-none-any` wheel tags; `pip check`, the 80-test locked operator
+  suite, and the 41-test runtime-stager suite pass (five declared skips). See
+  [Linux runtime staging receipt](evidence/linux-runtime-staging-2026-10-27.json).
+  This qualifies the local Linux runtime profile only; it does not admit the
+  solver on the ML VPS or complete M02/product acceptance.
 
 This branch initially changed only `docs/design/features/m02-prism-operator/*`;
 after exact authority only the two named new code/test paths were added. PR120 head

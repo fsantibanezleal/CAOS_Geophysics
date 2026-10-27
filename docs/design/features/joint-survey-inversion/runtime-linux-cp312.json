@@ -18,7 +18,7 @@
   },
   "inherited_potential_engine_manifest": {
     "path": "../m02-prism-operator/runtime-pins-linux-cp312.json",
-    "sha256": "44ae16e4279975c713df1e43c12f62a6a8f3788542f2d0b0d06e5043b8187fcd"
+    "sha256": "c299d0556330658bd69175d841b18fbbcaf2c239ac919e859375dbf487d2bbef"
   },
   "m11_and_magnetic_source_sha256": {
     "simpeg/optimization.py": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
