@@ -8,6 +8,7 @@
 6. [x] Add bounded segment-intersection crossover interpolation, explicit acquisition-order input, and independent tie-line residual controls; no leveling is applied.
 7. [ ] Acquire and parse the Charleston CSV, dictionary, contractor report and provider grid; bind every asset by URL, size and SHA-256.
 8. [ ] Implement source-lineage-aware leveling/correction operations only where the source report and raw inputs establish eligibility.
-9. [ ] Add justified upward continuation with regular-grid, padding, aliasing, support and independent analytic tests.
-10. [ ] Integrate the pipeline with project ingestion, bounded online worker admission, local recipe/export and case-specific workbench views.
-11. [ ] Complete full M03 independent numerical and field holdout acceptance, then update the method matrix and product convergence receipt.
+9. [x] Add the optional source-bound upward continuation with regular-grid, support and independent analytic controls; padding/seam assumptions remain documented.
+10. [x] Integrate source-bound intake, isolated child execution, typed result storage, bounded export and case-specific workbench; keep online admission closed until actual host evidence is accepted.
+11. [ ] Measure and review numerical/resource admission, cancellation and browser result parity on the actual ML VPS.
+12. [ ] Acquire provider field deliverables and independently validate source-specific processing and held-out results before changing the method acceptance verdict.

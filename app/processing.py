@@ -16,6 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.bundle import build_bundle
 from app.config import Settings
 from app.errors import ApiError
+from app.magnetic_contract import (
+    METHOD_ID as MAGNETIC_ID, PARSER_VERSION as MAGNETIC_PARSER_VERSION,
+    SOURCE_LIMIT as MAGNETIC_SOURCE_LIMIT, MEMORY_BYTES as MAGNETIC_MEMORY,
+    SCRATCH_BYTES as MAGNETIC_SCRATCH, WALL_SECONDS as MAGNETIC_WALL,
+    MagneticDatasetOptions, MagneticParameters,
+    create_dataset_envelope as create_magnetic_envelope,
+)
 from app.gravity_l2_contract import (
     METHOD_ID as GRAVITY_L2_ID, METHOD_MEMORY_BYTES as GRAVITY_L2_MEMORY,
     METHOD_SCRATCH_BYTES as GRAVITY_L2_SCRATCH, METHOD_WALL_SECONDS as GRAVITY_L2_WALL,
@@ -54,6 +61,7 @@ class DatasetCreate(BaseModel):
     asset_id: uuid.UUID
     waveform_request: dict | None = None
     profile_metadata: dict | None = None
+    magnetic_request: MagneticDatasetOptions | None = None
 
 
 class JobParameters(BaseModel):
@@ -65,7 +73,7 @@ class JobCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     dataset_id: uuid.UUID
     method_id: str = Field(min_length=1, max_length=80)
-    parameters: JobParameters | M05Parameters | M06Parameters | ProfileParameters | WaveformParameters | GravityL2Parameters
+    parameters: JobParameters | M05Parameters | M06Parameters | ProfileParameters | WaveformParameters | GravityL2Parameters | MagneticParameters
 
 
 def _date(value: datetime | None) -> str | None:
@@ -81,6 +89,7 @@ def _dataset_view(item: ObservationDataset) -> dict:
         "qc_verdict": "structural_only_not_scientifically_admitted" if item.parser_version == 'gravity-stations-json/v1'
                       else "structural_index_not_physical_qc" if item.modality == WAVEFORM_MODALITY
                       else "awaiting_full_tensor_qc" if item.modality == "edi_transfer_function"
+                      else "source_bound_not_numerically_processed" if item.modality == "magnetic_flightline"
                       else "parsed_not_numerically_inverted" if item.modality in {"ert_profile", "traveltime_profile"}
                       else "parsed_for_flag_qc_only",
     }
@@ -190,21 +199,31 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                 asset, source, request.waveform_request))
         if request.waveform_request is not None:
             raise ApiError(422, "method_ineligible", "Waveform request is only valid for MiniSEED")
+        is_magnetic = asset.detected_format == "magnetic_csv"
+        if request.magnetic_request is not None and not is_magnetic:
+            raise ApiError(422, "method_ineligible", "M03 processing declarations are only valid for magnetic CSV")
+        if is_magnetic and (request.profile_metadata is not None or request.magnetic_request is None):
+            raise ApiError(422, "magnetic_metadata_required", "M03 requires explicit mapping, processing state, quantity and height reference")
         is_edi = asset.detected_format == "edi"
         is_profile = asset.detected_format in PROFILE_FORMATS
-        if asset.byte_count > (PROFILE_SOURCE_LIMIT if is_profile else EDI_SOURCE_LIMIT if is_edi else settings.max_dataset_bytes):
-            raise ApiError(413, "dataset_too_large", "EDI exceeds the processing byte cap" if is_edi
+        if asset.byte_count > (MAGNETIC_SOURCE_LIMIT if is_magnetic else PROFILE_SOURCE_LIMIT if is_profile else EDI_SOURCE_LIMIT if is_edi else settings.max_dataset_bytes):
+            raise ApiError(413, "dataset_too_large", "M03 CSV exceeds its 50 MiB processing bound" if is_magnetic
+                           else "EDI exceeds the processing byte cap" if is_edi
                            else "Gravity dataset exceeds the processing byte cap")
-        parser_version = PROFILE_PARSER_VERSION if is_profile else EDI_PARSER_VERSION if is_edi else PARSER_VERSION
+        parser_version = MAGNETIC_PARSER_VERSION if is_magnetic else PROFILE_PARSER_VERSION if is_profile else EDI_PARSER_VERSION if is_edi else PARSER_VERSION
         existing = (await session.execute(select(ObservationDataset).where(
             ObservationDataset.raw_asset_id == asset.id, ObservationDataset.parser_version == parser_version,
         ))).scalar_one_or_none()
         if existing is not None:
             raise ApiError(409, "dataset_exists", "This raw asset already has an immutable processed dataset")
         raw_path = await asyncio.to_thread(_verified_file, settings, asset)
-        raw = await asyncio.to_thread(raw_path.read_bytes)
+        raw = b"" if is_magnetic else await asyncio.to_thread(raw_path.read_bytes)
         dataset_id = str(uuid.uuid4())
-        if is_profile:
+        if is_magnetic:
+            payload = await asyncio.to_thread(create_magnetic_envelope, raw_path=raw_path,
+                dataset_id=dataset_id, owner_id=str(user.id), project_id=project_id,
+                asset=asset, source=source, options=request.magnetic_request)
+        elif is_profile:
             payload = parse_profile_envelope(raw, metadata=request.profile_metadata,
                 dataset_id=dataset_id, owner_id=str(user.id), project_id=project_id, asset=asset, source=source)
             if payload["dimensions"]["measurement"] > settings.max_dataset_rows:
@@ -240,7 +259,7 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                 id=dataset_id, project_id=project_id, owner_id=user.id, raw_asset_id=asset.id,
                 version=1, parser_version=parser_version,
                 modality=payload["modality"],
-                row_count=payload["dimensions"]["measurement"] if is_profile else payload["dimensions"]["frequency"] if is_edi else len(payload["station_ids"]),
+                row_count=payload["dimensions"]["measurement"] if is_profile or is_magnetic else payload["dimensions"]["frequency"] if is_edi else len(payload["station_ids"]),
                 raw_sha256=asset.sha256,
                 sha256=sha256(encoded), byte_count=len(encoded), storage_key=key, created_at=utcnow(),
             )
@@ -294,6 +313,31 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                     reason='Physical scientific worker runtime is not yet installed')
                 for method in (CORRECTION, TRANSFORM)]}
         data = _dataset_payload(settings, dataset)
+        if dataset.modality == "magnetic_flightline":
+            asset, source = await _owned_asset(session, project_id, dataset.raw_asset_id, user)
+            source_matches = (
+                asset.detected_format == "magnetic_csv" and source.declared_format == "magnetic_csv"
+                and asset.sha256 == dataset.raw_sha256
+                and data.get("parent_raw_sha256") == asset.sha256
+                and data.get("physical_metadata") == asset.physical_metadata
+                and data.get("source", {}).get("source_id") == source.id
+                and data.get("source", {}).get("citation") == source.citation
+                and data.get("source", {}).get("rights_decision") == source.rights_decision
+                and data.get("source", {}).get("rights_statement") == source.rights_statement
+                and source.private_storage_permission == "attested"
+                and source.rights_decision != "forbidden"
+            )
+            if not source_matches or not settings.magnetic_online_enabled:
+                return {"dataset_id": dataset.id, "methods": [], "unavailable": [{
+                "method_id": MAGNETIC_ID, "eligible": False, "lane": "pending_host_admission",
+                "source_eligible": source_matches,
+                "reason": ("The source-bound M03 dataset is ready; online execution remains closed until its worker and actual ML VPS resource admission are validated"
+                           if source_matches else "The original hash, citation, rights or private-storage attestation changed after dataset admission"),
+                }]}
+            return {"dataset_id": dataset.id, "methods": [{
+                "method_id": MAGNETIC_ID, "eligible": True, "lane": "online_cpu",
+                "scope": "Source-byte-verified flight-line/height/crossover QC, blocked-line interpolation holdout and supported-only grid",
+            }], "unavailable": []}
         if dataset.modality in {"ert_profile", "traveltime_profile"}:
             method = data["method_id"]
             if not settings.profile_online_enabled:
@@ -340,7 +384,8 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             unavailable = [entry for entry in unavailable if entry["method_id"] != "M02"]
             if not source_eligible:
                 unavailable.append({"method_id": GRAVITY_L2_ID, "eligible": False, "lane": "ineligible",
-                                   "source_eligible": False, "reasons": reasons})
+                                   "source_eligible": False, "reason": "M02 source admission failed: " + "; ".join(reasons),
+                                   "reasons": reasons})
             elif not settings.gravity_l2_online_enabled:
                 unavailable.append({"method_id": GRAVITY_L2_ID, "eligible": False,
                                    "lane": "pending_host_admission", "source_eligible": True,
@@ -362,10 +407,34 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
         dataset = await _owned_dataset(session, project_id, str(request.dataset_id), user)
         payload = _dataset_payload(settings, dataset)
         mt = dataset.modality == "edi_transfer_function"
+        magnetic = dataset.modality == "magnetic_flightline"
         profile = dataset.modality in {"ert_profile", "traveltime_profile"}
         waveform = dataset.modality == WAVEFORM_MODALITY
         gravity_l2 = dataset.modality == "gravity_station" and request.method_id == GRAVITY_L2_ID
-        if profile:
+        if magnetic:
+            if request.method_id != MAGNETIC_ID or not isinstance(request.parameters, MagneticParameters):
+                raise ApiError(422, "method_ineligible", "M03 method or interpolation settings do not match this magnetic dataset")
+            if not settings.magnetic_online_enabled:
+                raise ApiError(409, "host_admission_pending", "M03 online jobs require measured ML VPS numerical/resource admission")
+            asset, source = await _owned_asset(session, project_id, dataset.raw_asset_id, user)
+            source_matches = (
+                asset.detected_format == "magnetic_csv" and source.declared_format == "magnetic_csv"
+                and asset.sha256 == dataset.raw_sha256 == payload.get("parent_raw_sha256")
+                and payload.get("physical_metadata") == asset.physical_metadata
+                and payload.get("source", {}).get("source_id") == source.id
+                and payload.get("source", {}).get("citation") == source.citation
+                and payload.get("source", {}).get("rights_decision") == source.rights_decision
+                and payload.get("source", {}).get("rights_statement") == source.rights_statement
+                and source.private_storage_permission == "attested"
+                and source.rights_decision != "forbidden")
+            if not source_matches:
+                raise ApiError(409, "source_integrity_failed", "M03 dataset/source lineage changed after admission")
+            await asyncio.to_thread(_verified_file, settings, asset)
+            method_memory, method_scratch, method_wall = MAGNETIC_MEMORY, MAGNETIC_SCRATCH, MAGNETIC_WALL
+            estimated_memory = 512 * 1024 * 1024 + 4096 * dataset.row_count
+            estimated_scratch = asset.byte_count + 128 * 250_000 + 1024 * 1024
+            qc_screen_sha = None
+        elif profile:
             if not settings.profile_online_enabled:
                 raise ApiError(409, "host_admission_pending", "Profile online jobs require actual ML VPS admission")
             if request.method_id != payload["method_id"] or request.method_id not in PROFILE_METHODS:
@@ -472,8 +541,10 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             "project_id": project_id, "dataset_id": dataset.id, "dataset_sha256": dataset.sha256,
             "method_id": request.method_id, "parameters": parameters,
         }
-        if mt or profile or gravity_l2:
+        if mt or profile or gravity_l2 or magnetic:
             immutable.update(raw_asset_id=dataset.raw_asset_id, raw_sha256=dataset.raw_sha256)
+            if magnetic:
+                immutable.update(raw_bytes=asset.byte_count, source_id=source.id)
             if profile:
                 immutable.update(profile_child_sha256=profile_child_hash(),
                                  profile_code_hashes=profile_code_hashes(request.method_id))
@@ -489,7 +560,7 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                              implementation_sha256=implementation_sha256())
         preflight = {"estimated_memory_bytes": estimated_memory, "memory_limit_bytes": memory,
                      "scratch_limit_bytes": scratch, "wall_limit_seconds": wall}
-        if mt or profile or gravity_l2:
+        if mt or profile or gravity_l2 or magnetic:
             preflight["estimated_scratch_bytes"] = estimated_scratch
         if waveform:
             preflight.update(estimated_scratch_bytes=estimated_scratch,

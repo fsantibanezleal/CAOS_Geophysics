@@ -140,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson; M03 remains partial because source-verified field data, measured-data processing acceptance and integrated app/host gates are open.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Online admission stays closed pending measured ML VPS resource and cancellation evidence; Charleston provider assets, field holdout, browser parity and full product acceptance remain open.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -200,7 +200,7 @@
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "73b1a33417fa668ee5168a37cf63393e08660ae598d445ba5a280376e0e7891d"
+          "sha256": "ec81c4c0dae74772f81a5484e87d32799fffd0e9e9b7297dc460b9f6e23ff4ab"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
@@ -209,6 +209,22 @@
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
           "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
+        },
+        {
+          "path": "tests/api/test_magnetic_compute.py",
+          "sha256": "52262f50f19f8c89aace2c8d653227e9f66c8827911fa2853ff1b67e2b56ef3d"
+        },
+        {
+          "path": "tests/api/test_magnetic_upload.py",
+          "sha256": "f2a42468e9d5c881420e0ff88de3d7e1cff3acc2d78ca66cd105bf936df53f9f"
+        },
+        {
+          "path": "app/magnetic_compute.py",
+          "sha256": "6b4d780111499f3b835ee45356259ad629a451a99b1972c0639bc47a45b9686c"
+        },
+        {
+          "path": "app/magnetic_bundle.py",
+          "sha256": "5ad1aadf4cdaf6f8db7799de9798221706010f7abd6c19495e29ac8330d4460c"
         }
       ],
       "receipts": []
@@ -399,7 +415,7 @@
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "73b1a33417fa668ee5168a37cf63393e08660ae598d445ba5a280376e0e7891d"
+          "sha256": "ec81c4c0dae74772f81a5484e87d32799fffd0e9e9b7297dc460b9f6e23ff4ab"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",

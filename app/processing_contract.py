@@ -183,6 +183,10 @@ def parse_gravity_dataset(
 
 
 def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> None:
+    if dataset.modality == "magnetic_flightline":
+        from app.magnetic_contract import validate_dataset_identity as validate_magnetic_dataset
+        validate_magnetic_dataset(payload, dataset)
+        return
     if dataset.modality in {"ert_profile", "traveltime_profile"}:
         from app.profile_contract import validate_profile_dataset
         validate_profile_dataset(payload, dataset)
@@ -210,6 +214,20 @@ def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> Non
 
 
 def validate_result_identity(payload: dict, job: ProcessingJob) -> None:
+    if job.method_id == "magnetic.flightline-qc-grid/v1":
+        request = job.request_json
+        if (payload.get("schema") != "magnetic-flightline-process-result-1"
+                or payload.get("job_id") != job.id or payload.get("dataset_id") != job.dataset_id
+                or payload.get("dataset_sha256") != job.dataset_sha256
+                or payload.get("request_sha256") != job.request_sha256
+                or payload.get("method_id") != job.method_id
+                or payload.get("parameters") != request.get("parameters")
+                or payload.get("raw_asset_id") != request.get("raw_asset_id")
+                or payload.get("raw_sha256") != request.get("raw_sha256")
+                or payload.get("source_id") != request.get("source_id")
+                or payload.get("claims", {}).get("source_hash_recomputed_from_original_bytes") is not True):
+            raise ApiError(409, "derived_integrity_failed", "M03 result identity differs from its job/source receipt")
+        return
     from app.gravity_l2_contract import METHOD_ID as GRAVITY_L2_ID, validate_result as validate_gravity_l2_result
     from app.profile_contract import PROFILE_METHODS
     if job.method_id == GRAVITY_L2_ID:

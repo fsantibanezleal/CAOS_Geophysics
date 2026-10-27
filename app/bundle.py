@@ -15,6 +15,9 @@ MAX_MEMBER_BYTES = 8 * 1024 * 1024
 
 
 def build_bundle(dataset: dict, result: dict, dataset_sha: str, result_sha: str) -> bytes:
+    if dataset.get("modality") == "magnetic_flightline":
+        from app.magnetic_bundle import build_magnetic_bundle
+        return build_magnetic_bundle(dataset, result, dataset_sha, result_sha)
     if dataset.get("modality") in {"ert_profile", "traveltime_profile"}:
         from app.profile_bundle import build_profile_bundle
         return build_profile_bundle(dataset, result, dataset_sha, result_sha)
@@ -53,6 +56,20 @@ def build_bundle(dataset: dict, result: dict, dataset_sha: str, result_sha: str)
 
 def verify_bundle(encoded: bytes) -> tuple[dict, dict, dict]:
     """Strict local re-import; neither private paths nor raw bytes are accepted."""
+    if len(encoded) > 130 * 1024 * 1024:
+        raise ValueError("processing bundle exceeds absolute size cap")
+    try:
+        with zipfile.ZipFile(io.BytesIO(encoded), "r") as archive:
+            infos = archive.infolist()
+            if (infos and infos[0].filename == "manifest.json" and infos[0].compress_type == zipfile.ZIP_STORED
+                    and infos[0].file_size <= 1024 * 1024):
+                manifest_bytes = archive.read(infos[0])
+                manifest = json.loads(manifest_bytes)
+                if manifest.get("schema") == "geophysics.magnetic-processing-bundle/v1":
+                    from app.magnetic_bundle import verify_magnetic_bundle
+                    return verify_magnetic_bundle(encoded)
+    except (zipfile.BadZipFile, UnicodeError, json.JSONDecodeError, KeyError):
+        pass
     if len(encoded) > 2 * MAX_MEMBER_BYTES + 1024 * 1024:
         raise ValueError("processing bundle exceeds size cap")
     try:

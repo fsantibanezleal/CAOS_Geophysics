@@ -9,6 +9,7 @@ import { MtProjectWorkbench } from "./MtProjectWorkbench";
 import { ProfileProjectWorkbench } from "./ProfileProjectWorkbench";
 import { WaveformProjectWorkbench } from "./WaveformProjectWorkbench";
 import { JointProjectWorkbench } from "./JointProjectWorkbench";
+import { MagneticFlightlineWorkbench } from "./MagneticFlightlineWorkbench";
 import { ResultBundleInput } from "./ResultBundleInput";
 import { readSavedResult } from "./result-view-data";
 import { formatNumber } from "../lib/number-format";
@@ -61,9 +62,11 @@ export function ProjectProcessingWorkbench({ projectId, es, onManage, onCurated 
     {value:"profiles",label:es?"ERT / primeras llegadas":"ERT / first arrivals"},
     {value:"waveform",label:es?"Ondas / respuesta instrumental":"Waveforms / instrument response"},
     {value:"joint",label:es?"Gravedad / magnetismo nativo":"Native gravity / magnetics"},
+    {value:"magnetic-flightline",label:es?"Magnetismo · líneas de vuelo":"Magnetics · flight lines"},
   ].map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select></label></nav>;
   const shared = {projectId,es,onManage,onCurated,methodNavigation};
-  return mode === "waveform" ? <WaveformProjectWorkbench key={projectId} {...shared}/>
+  return mode === "magnetic-flightline" ? <MagneticFlightlineWorkbench key={projectId} projectId={projectId} es={es} methodNavigation={methodNavigation}/>
+    : mode === "waveform" ? <WaveformProjectWorkbench key={projectId} {...shared}/>
     : mode === "joint" ? <JointProjectWorkbench key={projectId} {...shared}/>
     : mode === "profiles" ? <ProfileProjectWorkbench key={projectId} {...shared} onGravity={() => select("gravity")} onMt={() => select("mt")} />
     : mode === "mt" ? <MtProjectWorkbench key={projectId} {...shared} onGravity={() => select("gravity")} onProfiles={() => select("profiles")} />

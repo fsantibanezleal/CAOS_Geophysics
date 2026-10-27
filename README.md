@@ -14,7 +14,7 @@ A geophysics investigation workbench with 20 distinct geological cases, six cond
 | API | [app/](app/) | active | Authenticated accounts, projects, datasets, jobs, and artifact routes. |
 | Core pipelines | [data-pipeline/](data-pipeline/) | active | Acquisition, preprocessing, forward models, inversion, evaluation, and export. |
 | Packages | [SimPEG](https://pypi.org/project/simpeg/) | active | Uses published scientific dependencies; this repository declares no package. |
-| Notebooks | [notebooks/](notebooks/) | dormant: lesson notebooks are not authored | Pinned bilingual notebook tooling and explicit science curriculum outline. |
+| Notebooks | [notebooks/](notebooks/) | 50 bilingual notebooks execute; full course coverage is incomplete | Fresh-kernel replay evidence exists; M09, independent MT/ERT and FWI comparisons, M11 optimizer/baselines and M13 held-out ONNX inference remain gaps. See [notebook review](docs/validation/notebook-review-2026-10-27.md). |
 | Data | [data/](data/) | active | Versioned synthetic experiments, derived results, source records, and readiness. |
 | Contracts | [docs/contracts/](docs/contracts/) | active | Catalogue schemas, API index, version lock, and deterministic readiness record. |
 | Documentation | [docs/](docs/) | active | Research, methods, assumptions, limitations, operations, and scientific evidence. |

@@ -24,6 +24,7 @@ from app.errors import ApiError
 from app.models import ObservationDataset, ProcessingJob, RawAsset, SourceRecord, utcnow
 from app.mt_contract import M05_ID, M06_ID
 from app.gravity_l2_contract import METHOD_ID as GRAVITY_L2_ID
+from app.magnetic_contract import METHOD_ID as MAGNETIC_ID
 from app.profile_contract import PROFILE_METHODS, profile_child_hash, profile_code_hashes
 from app.profile_compute import profile_command
 from app.projects import _verified_file
@@ -144,6 +145,20 @@ def _gravity_l2_command(job: ProcessingJob, input_path: Path, raw_path: Path, ou
         "--raw-asset-id", asset.id, "--source-id", job.request_json["source_id"],
         "--parameters", json.dumps(job.request_json["parameters"], sort_keys=True, separators=(",", ":")),
         "--implementation-sha256", json.dumps(job.request_json["implementation_sha256"], sort_keys=True, separators=(",", ":")),
+        "--memory-limit", str(job.preflight["memory_limit_bytes"]),
+        "--scratch-limit", str(job.preflight["scratch_limit_bytes"]),
+    ]
+
+
+def _magnetic_command(job: ProcessingJob, input_path: Path, raw_path: Path, output_path: Path,
+                      asset: RawAsset) -> list[str]:
+    return [
+        sys.executable, "-m", "app.magnetic_compute", "--input", str(input_path),
+        "--raw", str(raw_path), "--output", str(output_path), "--job-id", job.id,
+        "--dataset-sha256", job.dataset_sha256, "--request-sha256", job.request_sha256,
+        "--raw-sha256", job.request_json["raw_sha256"], "--raw-bytes", str(asset.byte_count),
+        "--raw-asset-id", asset.id, "--source-id", job.request_json["source_id"],
+        "--parameters", json.dumps(job.request_json["parameters"], sort_keys=True, separators=(",", ":")),
         "--memory-limit", str(job.preflight["memory_limit_bytes"]),
         "--scratch-limit", str(job.preflight["scratch_limit_bytes"]),
     ]
@@ -284,6 +299,8 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             raise ApiError(409, "host_admission_pending", "MT worker admission is closed")
         if job.method_id == GRAVITY_L2_ID and not settings.gravity_l2_online_enabled:
             raise ApiError(409, "host_admission_pending", "M02 ordinary-L2 worker admission is closed")
+        if job.method_id == MAGNETIC_ID and not settings.magnetic_online_enabled:
+            raise ApiError(409, "host_admission_pending", "M03 worker admission is closed pending measured ML VPS resource evidence")
         if job.method_id in PROFILE_METHODS and not settings.profile_online_enabled:
             raise ApiError(409, "host_admission_pending", "Profile worker admission is closed")
         async with sessions() as session:
@@ -292,13 +309,13 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
                 ObservationDataset.project_id == job.project_id,
             ))).scalar_one()
             asset = None
-            if job.method_id in (M05_ID, M06_ID, GRAVITY_L2_ID, *PROFILE_METHODS):
+            if job.method_id in (M05_ID, M06_ID, GRAVITY_L2_ID, MAGNETIC_ID, *PROFILE_METHODS):
                 asset = (await session.execute(select(RawAsset).where(
                     RawAsset.id == dataset.raw_asset_id, RawAsset.owner_id == job.owner_id,
                     RawAsset.project_id == job.project_id,
                 ))).scalar_one_or_none()
             source = None
-            if job.method_id == GRAVITY_L2_ID and asset is not None:
+            if job.method_id in (GRAVITY_L2_ID, MAGNETIC_ID) and asset is not None:
                 source = (await session.execute(select(SourceRecord).where(
                     SourceRecord.id == asset.source_id, SourceRecord.owner_id == job.owner_id,
                     SourceRecord.project_id == job.project_id,
@@ -307,33 +324,33 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
             raise ApiError(409, "dataset_changed", "Admitted dataset identity changed")
         payload = verified_json(settings, input_key, dataset.sha256, dataset.byte_count)
         validate_dataset_identity(payload, dataset)
-        if job.method_id == GRAVITY_L2_ID and (
+        if job.method_id in (GRAVITY_L2_ID, MAGNETIC_ID) and (
                 asset is None or source is None or payload.get("physical_metadata") != asset.physical_metadata
                 or payload.get("source", {}).get("source_id") != source.id
                 or payload.get("source", {}).get("citation") != source.citation
                 or payload.get("source", {}).get("rights_decision") != source.rights_decision
                 or payload.get("source", {}).get("rights_statement") != source.rights_statement
                 or payload.get("source", {}).get("attribution") != source.attribution
-                or source.declared_format != "gravity_csv"):
-            raise ApiError(409, "source_integrity_failed", "M02 dataset metadata differs from its current owner/source record")
-        if sha256(canonical_bytes(job.request_json)) != job.request_sha256 or job.method_id not in (METHOD_ID, M05_ID, M06_ID, GRAVITY_L2_ID, *PROFILE_METHODS):
+                or source.declared_format != ("magnetic_csv" if job.method_id == MAGNETIC_ID else "gravity_csv")):
+            raise ApiError(409, "source_integrity_failed", "Scientific dataset metadata differs from its current owner/source record")
+        if sha256(canonical_bytes(job.request_json)) != job.request_sha256 or job.method_id not in (METHOD_ID, M05_ID, M06_ID, GRAVITY_L2_ID, MAGNETIC_ID, *PROFILE_METHODS):
             raise ApiError(409, "request_changed", "Admitted request identity changed")
         raw_path = None
         if job.method_id in PROFILE_METHODS and (
                 job.request_json.get("profile_child_sha256") != profile_child_hash()
                 or job.request_json.get("profile_code_hashes") != profile_code_hashes(job.method_id)):
             raise ApiError(409, "engine_changed", "Admitted profile producer code differs from the worker release")
-        if job.method_id in (M05_ID, M06_ID, GRAVITY_L2_ID, *PROFILE_METHODS):
+        if job.method_id in (M05_ID, M06_ID, GRAVITY_L2_ID, MAGNETIC_ID, *PROFILE_METHODS):
             if (asset is None or asset.id != job.request_json.get("raw_asset_id")
                     or asset.sha256 != job.request_json.get("raw_sha256")
                     or asset.sha256 != dataset.raw_sha256):
                 raise ApiError(409, "raw_integrity_failed", "Admitted scientific original identity changed")
             raw_path = _verified_file(settings, asset)
-        if job.method_id == GRAVITY_L2_ID and (
+        if job.method_id in (GRAVITY_L2_ID, MAGNETIC_ID) and (
                 source is None or source.id != job.request_json.get("source_id")
                 or source.sha256 != asset.sha256 or source.private_storage_permission != "attested"
                 or source.rights_decision == "forbidden"):
-            raise ApiError(409, "source_integrity_failed", "M02 source rights/hash receipt changed after admission")
+            raise ApiError(409, "source_integrity_failed", "Scientific source rights/hash receipt changed after admission")
         limits = job.preflight
         repo_root = Path(__file__).resolve().parents[1]
         environment = {
@@ -367,6 +384,8 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
                        _gravity_l2_command(job, input_path, raw_path, output, asset,
                                            getattr(settings, "gravity_l2_python", None))
                        if job.method_id == GRAVITY_L2_ID else
+                       _magnetic_command(job, input_path, raw_path, output, asset)
+                       if job.method_id == MAGNETIC_ID else
                        _mt_command(job, input_path, raw_path, output, asset.byte_count))
             process = subprocess.Popen(
                 command,
@@ -423,6 +442,9 @@ async def _execute(settings: Settings | WorkerSettings, sessions: async_sessionm
                     import app.compute as compute
                 elif job.method_id == GRAVITY_L2_ID:
                     import app.gravity_l2_compute as compute
+                elif job.method_id == MAGNETIC_ID:
+                    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "data-pipeline"))
+                    import magnetic_processing as compute
                 else:
                     import app.mt_compute as compute
                 if compute is not None and result.get("engine_sha256") != hashlib.sha256(Path(compute.__file__).read_bytes()).hexdigest():

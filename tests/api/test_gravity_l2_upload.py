@@ -150,7 +150,11 @@ def test_native_plan_uses_the_source_dataset_and_locked_split():
                           np.asarray(dataset["sigma_mgal"])[plan["development_rows"]])
 
 
-def test_uploaded_survey_executes_native_calibration_then_sealed_evaluation(tmp_path):
+def test_uploaded_survey_executes_native_calibration_then_sealed_evaluation(tmp_path, monkeypatch):
+    # The production isolated child sets these before importing BLAS/SciPy;
+    # this direct adapter test must model the same frozen native policy.
+    for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+        monkeypatch.setenv(variable, "1")
     body, metadata = survey_upload()
     # A genuine synthetic integration input: derive the uploaded observations
     # from the same declared one-cell prism geometry, not a zero-field control

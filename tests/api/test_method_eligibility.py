@@ -47,5 +47,5 @@ def test_no_solver_or_fake_result_claim(harness):
     assert "/api/jobs" not in paths
     assert not any("solver" in path for path in paths)
     verdict = harness.client.get(f"/api/projects/{project['id']}/datasets/{dataset['dataset_id']}/methods").json()
-    assert all(item["lane"] == "not_activated" for item in verdict["unavailable"])
+    assert all(not item["eligible"] and item["reason"] for item in verdict["unavailable"])
     assert not any(item["method_id"] == "M01" for item in verdict["methods"])

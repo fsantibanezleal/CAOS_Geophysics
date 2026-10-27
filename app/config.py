@@ -71,6 +71,7 @@ class Settings:
     worker_wall_seconds: int = 600
     mt_online_enabled: bool = False  # Set only after the actual ML VPS admission receipt.
     gravity_l2_online_enabled: bool = False  # Set only after an M02-specific actual-host receipt.
+    magnetic_online_enabled: bool = False  # Set only after M03 numerical/resource admission on the ML VPS.
     profile_online_enabled: bool = False
     profile_python: Path | None = None
     profile_linux_supervisor: Path | None = None
@@ -140,6 +141,7 @@ class Settings:
             smtp_from=os.environ.get("GEOPHYSICS_SMTP_FROM", ""),
             mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
             gravity_l2_online_enabled=os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1",
+            magnetic_online_enabled=os.environ.get("GEOPHYSICS_MAGNETIC_ONLINE_ENABLED") == "1",
             profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
             profile_python=Path(os.environ["GEOPHYSICS_PROFILE_PYTHON"]) if os.environ.get("GEOPHYSICS_PROFILE_PYTHON") else None,
             profile_linux_supervisor=configured_profile_supervisor(),
@@ -155,6 +157,7 @@ class WorkerSettings:
     db_path: Path | None = None
     mt_online_enabled: bool = False
     gravity_l2_online_enabled: bool = False
+    magnetic_online_enabled: bool = False
     gravity_l2_python: Path | None = None
     profile_online_enabled: bool = False
     profile_python: Path | None = None
@@ -195,6 +198,7 @@ class WorkerSettings:
         return cls(data_dir=data, db_path=Path(db) if db else None,
                    mt_online_enabled=os.environ.get("GEOPHYSICS_MT_ONLINE_ENABLED") == "1",
                    gravity_l2_online_enabled=os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1",
+                   magnetic_online_enabled=os.environ.get("GEOPHYSICS_MAGNETIC_ONLINE_ENABLED") == "1",
                    gravity_l2_python=configured_gravity_worker_python(
                        os.environ.get("GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED") == "1"),
                    profile_online_enabled=os.environ.get("GEOPHYSICS_PROFILE_ONLINE_ENABLED") == "1",
