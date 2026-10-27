@@ -1,10 +1,27 @@
 # Local first-arrival survey processing
 
-The executable `scripts/process_velocity.py` accepts supplied source-receiver
-segments, arrival times and uncertainties. It computes a velocity estimate,
-coverage and signed residuals, and writes a verified local generation. Files
-remain on the workstation: this command neither uploads them nor trains a model.
-It is separate from the field bent-ray M09 solver and acoustic FWI.
+The App's **First-arrival velocity** instrument accepts this same JSON request
+and calculates it in a browser worker. The browser builds cell-crossing lengths,
+solves the 256-cell regularized weighted slowness system, and reports velocity,
+path-length coverage, predicted times, residuals, standardized residuals and a
+separate bilinear quadrature check. The input is capped at 512 KiB and 2,048
+rays. The worker does not upload data or call an API. The downloaded
+`geophysics.velocity-browser-result/v1` is a client calculation record; it is
+not the independently reopened Python generation described below.
+
+The equivalent local executable `scripts/process_velocity.py` accepts supplied
+source-receiver segments, arrival times and uncertainties and writes a verified
+local generation. It is useful for scripted processing and the optional frozen
+checkpoint path. It neither uploads data nor trains a model. Both methods use
+fixed straight rays and remain separate from the field bent-ray M09 solver and
+acoustic FWI.
+
+The browser port is compared with the pinned Python product solver on an
+authored 128-ray control (`frontend/src/test/velocity-browser.test.ts`). This
+establishes implementation parity for that control, not independent field
+validation, universal numerical equivalence, or geological truth. The
+calculation reports those limits in its output. See the [browser parity
+record](../validation/m12-browser-client-calculation-2026-10-27.md).
 
 ## Physical input
 

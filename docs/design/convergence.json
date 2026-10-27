@@ -367,7 +367,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. All 52 notebooks passed one full fresh-kernel replay; the two new M13 lessons were rerun after their final edits and each passed a separate fresh-output check. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved.",
+      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the current 54-notebook set passes its structural mirrored-course gate. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved.",
       "evidence": [
         {
           "path": "docs/validation/source-to-content-review.md",
