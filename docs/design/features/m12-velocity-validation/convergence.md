@@ -13,3 +13,26 @@ Date: 2026-09-28. Source: the [bounded M12 feature design](design.md). This is a
 | VEL-07 local pipeline and GPU | CPU pass; CUDA pending coordination | Full local command, checkpoint reload, complete recomputation and seven named tests pass. CUDA training was not launched while M13 may use the shared GPU. No canonical/public artifacts were changed. |
 
 The [full method and scientific limitations](../../../problem-types/04_learned-velocity-validation.md) explain why the failure cannot be repaired by relabelling the old gravity CNN or reporting a good synthetic forward fit as field geology. The current branch offers a reproducible negative control and a complete validation protocol. M12 remains **not accepted** as a learned seismic inverse until a new, predeclared training protocol passes new untouched holdouts and the remaining product gates. The existing experimental checkpoint is deliberately marked failed.
+
+## Fresh predeclared residual-v3.1 CUDA run: 2026-10-27
+
+The frozen [residual-v3.1 protocol](residual-v3-protocol.md) was executed
+without changing its split, seed, loss, optimizer, or locked test cohorts. The
+RTX 4070 Laptop run selected epoch 100, completed in 44.98 s, and passed the
+declared CPU/CUDA inference parity envelope. Its six method-specific
+regressions pass. The full receipt and checkpoint remain outside the checkout
+at `E:\_worktrees\CAOS_Geophysics-data\experiments\m12-residual-v3-20261027`;
+the receipt SHA-256 is
+`6633a816d55c745abe0c529d73074986b8fbcae383691f95b2df1fd0d0cf5239`, and the
+checkpoint SHA-256 is
+`0f7a8fc43a078ab4cb16016774d44b356ccb70d9c60e0f197506fd3f7a53ea03`.
+
+The independent `--verify` replay regenerated all five non-training cohorts
+from the same frozen manifests and reproduced the saved metrics. On all 160
+joint family-plus-acquisition holdouts, learned/classical velocity RMSE is
+`100.5909 / 96.3807 m/s` (ratio `1.04368`); independent-oracle travel-time
+RMSE is `3.26844 / 2.34113 ms` (ratio `1.39609`). Both ratios must be below
+one under the frozen gate. The training/validation improvement therefore
+does not pass M12: the saved verdict is `failed-held-out-comparator` and R-008
+remains failed. No public or canonical artifact was changed, and no test
+cohort was used for tuning after this evaluation.
