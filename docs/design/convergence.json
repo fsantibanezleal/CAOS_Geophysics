@@ -140,11 +140,11 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "55d22f8a915be976ce999ebcfe5e08e2ed725dfdcc5a46bece8f0bb9e5ce8a1b"
+          "sha256": "89069683dee5888b0a0b98386daa38046271c863a3dd2a9d579c558ac79ed0da"
         },
         {
           "path": "docs/design/features/m06-field-mt/convergence.md",
@@ -177,6 +177,10 @@
         {
           "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
           "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
+          "sha256": "7b7b4146118e68a882c6afd9e067cef7044bb74c0fa530435cf5a35428b580b7"
         }
       ],
       "receipts": []
@@ -198,7 +202,7 @@
       "id": "R-010",
       "verdict": "unresolved",
       "declared_gate": "tests/learning/test_split_and_benchmark.py::test_disjoint_groups_and_matched_inputs.",
-      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted. A fresh residual-v3.1 RTX 4070 run with disjoint seed namespaces and independent CPU replay also fails its frozen joint gate: velocity and oracle travel-time ratios are 1.04368 and 1.39609; the full receipt and checkpoint remain local and unchanged.",
+      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted. A fresh residual-v3.1 RTX 4070 run with disjoint seed namespaces and independent CPU replay also fails its frozen joint gate: velocity and oracle travel-time ratios are 1.04368 and 1.39609; the full receipt and checkpoint remain local and unchanged. M12 now has a corrected, independently replayed nullspace-refinement experiment on fresh disjoint cohorts, with both joint-OOD aggregate ratios below one; the source residual-v3.1 checkpoint itself remains a failed comparator, and this follow-up does not establish field generalization. M13 browser parity on the complete held-out trace population remains unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
@@ -206,7 +210,7 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "55d22f8a915be976ce999ebcfe5e08e2ed725dfdcc5a46bece8f0bb9e5ce8a1b"
+          "sha256": "89069683dee5888b0a0b98386daa38046271c863a3dd2a9d579c558ac79ed0da"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
@@ -215,6 +219,10 @@
         {
           "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
           "sha256": "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
+          "sha256": "7b7b4146118e68a882c6afd9e067cef7044bb74c0fa530435cf5a35428b580b7"
         }
       ],
       "receipts": []
@@ -353,7 +361,7 @@
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger preserves 18 unresolved and one failed whole requirement while recording merged code, canonical import, independent controls and failed host evidence. Fresh CI resolves the retained ADR failure, not release acceptance; structural/local unit passes do not replace full named convergence gates.",
+      "note": "scripts/check_sdd_convergence.py currently validates the ledger structure and every recorded evidence hash (one fail, eighteen unresolved). The active assessment remains anchored at the revision of the retained R-019 gate receipt; the M12 v1.1 result is a separately hashed post-assessment addendum. R-018 remains unresolved until the current whole-product assessment and its exact revision-matched gate receipt are recorded. Structural validation does not establish scientific or release acceptance.",
       "evidence": [],
       "receipts": []
     },
