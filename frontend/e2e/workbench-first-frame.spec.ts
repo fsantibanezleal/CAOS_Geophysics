@@ -16,6 +16,25 @@ test("lazy 3D workbench renders before the scientific acceptance gate measures i
   expect(pageErrors).toEqual([]);
 });
 
+test("nested signed property contours remain legible at desktop and mobile sizes", async ({ page }, testInfo) => {
+  const scene = page.locator(".earth-scene[role=img]");
+  for (const viewport of [
+    { name: "desktop", width: 1440, height: 1000 },
+    { name: "mobile", width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.goto("/");
+    const canvas = scene.locator("canvas");
+    await expect(canvas).toBeVisible({ timeout: 30_000 });
+    await expect.poll(() => canvas.evaluate((element) => element.width)).toBeGreaterThan(100);
+    await expect.poll(async () => Number(await scene.getAttribute("data-visible-cells"))).toBeGreaterThan(0);
+    await page.locator(".earth-view").screenshot({
+      path: testInfo.outputPath(`earth-contours-${viewport.name}.png`),
+      animations: "disabled",
+    });
+  }
+});
+
 test("methodology links to the bilingual M01-M13 repository wiki", async ({ page }) => {
   await page.goto("/methodology");
   const link = page.getByRole("link", { name: "Open the bilingual methods wiki" });

@@ -39,6 +39,54 @@ def test_worker_environment_storage_only():
     assert setup.ORIGIN.encode() in api
 
 
+def test_physical_binding_environment_is_identical_and_optional():
+    path, digest = '/var/lib/geophysics/physical-operator-binding.json', 'b' * 64
+    api = setup.private_environment(setup.STATE, 'a' * 64, binding_path=path, binding_sha256=digest)
+    worker = setup.private_environment(setup.STATE, None, binding_path=path, binding_sha256=digest)
+    for key, value in ((b'GEOPHYSICS_PHYSICAL_BINDING_PATH=', path.encode()),
+                       (b'GEOPHYSICS_PHYSICAL_BINDING_SHA256=', digest.encode())):
+        api_line = next(line for line in api.splitlines() if line.startswith(key))
+        worker_line = next(line for line in worker.splitlines() if line.startswith(key))
+        assert api_line == worker_line == key + value
+    assert b'PHYSICAL_BINDING' not in setup.private_environment(setup.STATE, None)
+    with pytest.raises(ValueError, match='complete'):
+        setup.private_environment(setup.STATE, None, binding_path=path)
+    with pytest.raises(ValueError, match='digest'):
+        setup.private_environment(setup.STATE, None, binding_path=path, binding_sha256='x' * 64)
+
+
+def binding_fixture():
+    import hashlib
+    release = {'schema': 'geophysics.service-release/v1', 'source_revision': 'a' * 40,
+               'qualification_only': True, 'full_release_accepted': False, 'source': {}, 'web': {}}
+    release_raw = json.dumps(release, sort_keys=True, separators=(',', ':')).encode()
+    registry = {'schema': 'geophysics.physical-operator-binding/v1',
+                'release_manifest_sha256': hashlib.sha256(release_raw).hexdigest(),
+                'source_policy_sha256': 'b' * 64, 'approved_manifests': {}, 'approved_installations': {}}
+    registry_raw = json.dumps(registry, sort_keys=True, separators=(',', ':')).encode()
+    return release_raw, registry_raw, hashlib.sha256(registry_raw).hexdigest()
+
+
+def test_binding_requires_exact_candidate_and_registry_hash():
+    import hashlib
+    release_raw, registry_raw, digest = binding_fixture()
+    assert setup.validate_binding_bytes(registry_raw, digest, release_raw) == hashlib.sha256(release_raw).hexdigest()
+    with pytest.raises(ValueError):
+        setup.validate_binding_bytes(registry_raw, '0' * 64, release_raw)
+    with pytest.raises(ValueError):
+        setup.validate_binding_bytes(registry_raw, digest, release_raw + b' ')
+
+
+def test_binding_is_not_a_policy_approval():
+    release_raw, registry_raw, digest = binding_fixture()
+    value = json.loads(registry_raw)
+    value['scientific_method_approved'] = True
+    altered = json.dumps(value, sort_keys=True).encode()
+    import hashlib
+    with pytest.raises(ValueError):
+        setup.validate_binding_bytes(altered, hashlib.sha256(altered).hexdigest(), release_raw)
+
+
 @pytest.mark.parametrize('secret', ['', 'fake', 'x' * 64, 'a' * 63])
 def test_environment_secret_requires_generated_hex(secret):
     with pytest.raises(ValueError):
@@ -148,7 +196,7 @@ def test_injected_initial_transaction_preserves_partial_failure(tmp_path, failur
     assert receipt['activated'] is receipt['host_admitted'] is receipt['full_release_accepted'] is False
     assert state.is_dir() and config.is_dir()
     assert all('test-only-password' not in p.read_text() for p in evidence.iterdir() if p.is_file())
-    assert all('test-only-password' not in p.read_text() for p in config.iterdir())
+    assert all('test-only-password' not in p.read_text() for p in config.rglob('*') if p.is_file())
     before = (config / 'api.env').read_bytes()
     with pytest.raises(ValueError, match='existing'):
         call()

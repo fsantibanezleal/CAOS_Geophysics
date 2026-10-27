@@ -184,7 +184,14 @@ def test_activation_and_rollback():
     assert text.index("require_pre_cutover") < text.index("systemctl stop")
     assert "trap rollback ERR" in text and "nginx -t" in text
     assert "alembic downgrade" not in text and "rm -rf" not in text
-    assert "GEOPHYSICS_AUTH_SECRET" not in text
+    assert 'echo "$GEOPHYSICS_AUTH_SECRET"' not in text
+    assert "GEOPHYSICS_PHYSICAL_BINDING_PATH" in text
+    assert "physical registry does not bind exact candidate release.json" in text
+    assert text.index("physical registry does not bind exact candidate release.json") < text.index("systemctl stop")
+    rollback = text[text.index('rollback() {'):text.index('trap rollback ERR')]
+    assert 'previous.api.env' in rollback and 'previous.worker.env' in rollback
+    assert '/etc/geophysics/releases' in text
+    assert 'service_environment_hashes' in text
 
 
 def test_empty_directory_bound(tmp_path, monkeypatch):

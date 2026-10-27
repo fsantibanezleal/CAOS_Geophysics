@@ -43,3 +43,38 @@ explicit test lock transports. Linux lock, child, durability and full merged
 runtime evidence remain separate acceptance gates; no portable fixture is an
 OS receipt. The default application remains at the waveform predecessor until
 the integration owner mounts the reviewed literal successor chain.
+
+## Optional fresh-state operator binding
+
+The initial-only `scripts/bootstrap_service_state.py` accepts an optional
+root-owned mode-0600 registry and an explicit SHA-256. Before creating state,
+it validates the exact versioned registry schema and requires its
+`release_manifest_sha256` to match the candidate bundle's literal
+`release.json`. It copies the same bytes into the fresh service-owned
+`/var/lib/geophysics/physical-operator-bindings/<release-id>.json`, then invokes
+the existing lock initializer as the service UID against that fresh private root.
+The registry supplies identity references only; it does not create source
+policy, approve scientific methods, or admit a release.
+
+Each release receives immutable root-owned mode-0600 API and worker env files
+under `/etc/geophysics/releases/<release-id>/`. A bound release points to its
+own service-owned registry under
+`/var/lib/geophysics/physical-operator-bindings/<release-id>.json`; both envs
+carry the same registry path and byte digest. Bootstrap also seeds the global
+systemd env pair from that first release. Qualification checks the candidate
+release env hashes, exact registry-to-manifest binding, registry ownership,
+and lock markers/owners. Activation requires the host-admission receipt to bind
+both candidate env hashes, snapshots the currently selected global env files,
+then installs the release-scoped pair before switching `current`. On any
+failed cutover it restores the exact previous env bytes before restarting the
+prior services. A binding for a different `release.json`, partial env
+configuration, changed registry/lock, or missing env-hash admission refuses
+qualification/activation. A release without a registry retains the legacy
+service path, while still using its release-scoped environment files.
+
+The current deployment scripts do not generate the host-admission receipt.
+The operator/evidence producer must add the exact `service_environment_hashes`
+object (`api.env` and `worker.env`, SHA-256 of the release-scoped bytes) before
+activation can pass. Until that producer is updated and independently
+qualified, activation intentionally refuses to cut over; no compatibility with
+the older admission-receipt shape is claimed.

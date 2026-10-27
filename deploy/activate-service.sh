@@ -25,6 +25,12 @@ getent passwd geophysics >/dev/null
 for env_file in /etc/geophysics/api.env /etc/geophysics/worker.env; do
   [[ ! -L "$env_file" && $(stat -c '%U:%a' "$env_file") == root:600 ]]
 done
+candidate_env_dir="/etc/geophysics/releases/$release_id"
+[[ -d "$candidate_env_dir" && ! -L "$candidate_env_dir" ]]
+[[ $(stat -c '%U:%a' "$candidate_env_dir") == root:700 ]]
+for env_file in "$candidate_env_dir/api.env" "$candidate_env_dir/worker.env"; do
+  [[ -f "$env_file" && ! -L "$env_file" && $(stat -c '%U:%a' "$env_file") == root:600 ]]
+done
 [[ ! -L /etc/geophysics && ! -L /var/lib/geophysics-deploy ]]
 [[ -f /etc/letsencrypt/live/geophysics.ml.fasl-work.com/fullchain.pem ]]
 [[ -f /etc/letsencrypt/live/geophysics.ml.fasl-work.com/privkey.pem ]]
@@ -38,13 +44,14 @@ exec 9>/run/lock/geophysics-deploy.lock
 flock -n 9
 cd "$release/source"
 # Verify exact bytes and all non-deployment scientific/UI receipts BEFORE stopping writes.
-"$python" -B - "$release" "$admission" <<'PY'
-import hashlib, json, pathlib, sys
+"$python" -B - "$release" "$admission" "$previous" <<'PY'
+import hashlib, json, os, pathlib, re, stat, sys
 sys.path.insert(0, str(pathlib.Path.cwd() / 'scripts'))
 from prepare_service_release import verify_bundle, require_pre_cutover, strict_json
 from check_sdd_convergence import validate
 from verify_single_vps_release import validate_capacity
 bundle = pathlib.Path(sys.argv[1])
+previous = pathlib.Path(sys.argv[3])
 manifest = verify_bundle(bundle)
 ledger = strict_json((pathlib.Path.cwd() / 'docs/design/convergence.json').read_bytes())
 validate(pathlib.Path.cwd(), ledger)
@@ -77,8 +84,9 @@ for check in checks:
 validate_capacity(admission['capacity'])
 # The service environment has deliberately simple literal entries, never shell code.
 import re
+envs = {}
 for name in ('api', 'worker'):
-    file = pathlib.Path('/etc/geophysics') / (name + '.env')
+    file = pathlib.Path('/etc/geophysics/releases') / bundle.name / (name + '.env')
     with file.open('rb') as handle:
         raw = handle.read(8193)
     if len(raw) > 8192:
@@ -87,16 +95,20 @@ for name in ('api', 'worker'):
     for line in raw.decode('ascii').splitlines():
         if not line or line.startswith('#'):
             continue
-        if not re.fullmatch(r'GEOPHYSICS_[A-Z_]+=[A-Za-z0-9_./:-]+', line):
+        if not re.fullmatch(r'GEOPHYSICS_[A-Z0-9_]+=[A-Za-z0-9_./:-]+', line):
             raise ValueError('service environment must use simple literal values')
         key, value = line.split('=', 1)
         if key in values:
             raise ValueError('duplicate service environment key')
         values[key] = value
     common = {'GEOPHYSICS_DATA_DIR', 'GEOPHYSICS_DB_PATH', 'GEOPHYSICS_MT_ONLINE_ENABLED',
-              'GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED', 'GEOPHYSICS_GRAVITY_L2_PYTHON'}
+              'GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED', 'GEOPHYSICS_GRAVITY_L2_PYTHON',
+              'GEOPHYSICS_PHYSICAL_BINDING_PATH', 'GEOPHYSICS_PHYSICAL_BINDING_SHA256'}
     if name == 'worker' and not set(values) <= common:
         raise ValueError('worker environment is not storage-only')
+    if name == 'api' and not set(values) <= (common | {'GEOPHYSICS_PUBLIC_ORIGIN',
+            'GEOPHYSICS_AUTH_MODE', 'GEOPHYSICS_AUTH_SECRET'}):
+        raise ValueError('API environment contains an unreviewed key')
     if values.get('GEOPHYSICS_DATA_DIR') != '/var/lib/geophysics':
         raise ValueError('private state path differs from service sandbox')
     if values.get('GEOPHYSICS_DB_PATH', '/var/lib/geophysics/api.sqlite3') != '/var/lib/geophysics/api.sqlite3':
@@ -104,6 +116,69 @@ for name in ('api', 'worker'):
     if name == 'api' and (values.get('GEOPHYSICS_PUBLIC_ORIGIN') != 'https://geophysics.ml.fasl-work.com'
                           or values.get('GEOPHYSICS_AUTH_MODE') != 'local'):
         raise ValueError('API origin/local account profile differs')
+    envs[name] = values
+    environment_hashes = globals().setdefault('environment_hashes', {})
+    environment_hashes[name + '.env'] = hashlib.sha256(raw).hexdigest()
+if admission.get('service_environment_hashes') != environment_hashes:
+    raise ValueError('host admission does not bind candidate release environment hashes')
+active_dir = pathlib.Path('/etc/geophysics/releases') / previous.name
+active_info = active_dir.stat(follow_symlinks=False)
+if (not stat.S_ISDIR(active_info.st_mode) or active_info.st_uid != 0
+        or stat.S_IMODE(active_info.st_mode) != 0o700):
+    raise ValueError('active release environment directory ownership or mode differs')
+for name in ('api.env', 'worker.env'):
+    if not active_dir.is_dir() or active_dir.is_symlink():
+        raise ValueError('active release environment selection is missing')
+    selected = active_dir / name
+    global_file = pathlib.Path('/etc/geophysics') / name
+    if hashlib.sha256(selected.read_bytes()).hexdigest() != hashlib.sha256(global_file.read_bytes()).hexdigest():
+        raise ValueError('global environment is not the active release selection')
+api_binding = tuple(envs['api'].get(k) for k in (
+    'GEOPHYSICS_PHYSICAL_BINDING_PATH', 'GEOPHYSICS_PHYSICAL_BINDING_SHA256'))
+worker_binding = tuple(envs['worker'].get(k) for k in (
+    'GEOPHYSICS_PHYSICAL_BINDING_PATH', 'GEOPHYSICS_PHYSICAL_BINDING_SHA256'))
+if api_binding != worker_binding or (bool(api_binding[0]) != bool(api_binding[1])):
+    raise ValueError('physical binding must be identical and complete in API and worker envs')
+if api_binding[0]:
+    registry_path = pathlib.Path(api_binding[0])
+    expected_path = pathlib.Path('/var/lib/geophysics/physical-operator-bindings') / (bundle.name + '.json')
+    if registry_path != expected_path or not re.fullmatch(r'[0-9a-f]{64}', api_binding[1]):
+        raise ValueError('physical binding path or digest is not canonical')
+    root_info = pathlib.Path('/var/lib/geophysics').stat()
+    import pwd, grp
+    service_uid, service_gid = pwd.getpwnam('geophysics').pw_uid, grp.getgrnam('geophysics').gr_gid
+    if (root_info.st_uid, root_info.st_gid, stat.S_IMODE(root_info.st_mode)) != (service_uid, service_gid, 0o700):
+        raise ValueError('physical registry root owner or mode differs')
+    binding_dir = registry_path.parent
+    binding_dir_info = binding_dir.stat(follow_symlinks=False)
+    if (binding_dir.is_symlink() or not stat.S_ISDIR(binding_dir_info.st_mode)
+            or binding_dir_info.st_uid != service_uid or stat.S_IMODE(binding_dir_info.st_mode) != 0o700):
+        raise ValueError('physical registry directory ownership or mode differs')
+    if registry_path.is_symlink():
+        raise ValueError('physical registry cannot be a symlink')
+    registry_stat = registry_path.stat(follow_symlinks=False)
+    if (not stat.S_ISREG(registry_stat.st_mode) or registry_stat.st_uid != service_uid
+            or registry_stat.st_nlink != 1 or stat.S_IMODE(registry_stat.st_mode) != 0o600):
+        raise ValueError('physical registry ownership or mode differs')
+    registry_raw = registry_path.read_bytes()
+    if hashlib.sha256(registry_raw).hexdigest() != api_binding[1]:
+        raise ValueError('physical registry hash differs')
+    sys.path.insert(0, str(pathlib.Path.cwd()))
+    from app.operator_runtime import _check_registry, _strict_json
+    registry = _strict_json(registry_raw, cap=4 * 1024 * 1024, code='operator_registry')
+    _check_registry(registry, (bundle / 'release.json').read_bytes())
+    if registry.get('release_manifest_sha256') != digest:
+        raise ValueError('physical registry does not bind exact candidate release.json')
+    for lock_name, marker in (('.physical-writers.lock', b'\0'), ('.processing-worker.lock', b'0')):
+        lock_path = pathlib.Path('/var/lib/geophysics') / lock_name
+        if lock_path.is_symlink():
+            raise ValueError('physical lock cannot be a symlink')
+        info = lock_path.stat(follow_symlinks=False)
+        if (not stat.S_ISREG(info.st_mode) or info.st_uid != service_uid or info.st_nlink != 1
+                or stat.S_IMODE(info.st_mode) != 0o600 or lock_path.read_bytes() != marker):
+            raise ValueError('physical lock ownership, mode or marker differs')
+        if hashlib.sha256(lock_path.read_bytes()).hexdigest() != hashlib.sha256(marker).hexdigest():
+            raise ValueError('physical lock hash differs')
 PY
 "$python" -B -m pip check
 # Existing database must match the reviewed compatible schema. No automatic downgrade/replacement.
@@ -122,6 +197,8 @@ install -d -m 0700 /var/lib/geophysics-deploy
 mkdir -m 0700 "$state"
 cp -- "$site" "$state/previous.nginx"
 printf '%s\n' "$previous" > "$state/previous-release"
+install -m 0600 /etc/geophysics/api.env "$state/previous.api.env"
+install -m 0600 /etc/geophysics/worker.env "$state/previous.worker.env"
 for unit in geophysics-api.socket geophysics-api.service geophysics-worker.service; do
   if [[ -e "/etc/systemd/system/$unit" ]]; then
     [[ -f "/etc/systemd/system/$unit" && ! -L "/etc/systemd/system/$unit" ]]
@@ -132,6 +209,8 @@ api_active=false
 worker_active=false
 socket_active=false
 worker_stopped=false
+environment_switched=false
+rollback_env_restored=true
 systemctl is-active --quiet geophysics-api.service && api_active=true
 systemctl is-active --quiet geophysics-worker.service && worker_active=true
 systemctl is-active --quiet geophysics-api.socket && socket_active=true
@@ -147,6 +226,10 @@ rollback() {
   stop_if_present geophysics-api.service
   stop_if_present geophysics-api.socket
   [[ "$worker_stopped" == false ]] || stop_if_present geophysics-worker.service
+  if [[ "$environment_switched" == true ]]; then
+    install -o root -g root -m 0600 "$state/previous.api.env" /etc/geophysics/api.env || rollback_env_restored=false
+    install -o root -g root -m 0600 "$state/previous.worker.env" /etc/geophysics/worker.env || rollback_env_restored=false
+  fi
   ln -s -- "$previous" "$root/rollback-$release_id"
   mv -T -- "$root/rollback-$release_id" "$root/current"
   install -m 0644 "$state/previous.nginx" "$site"
@@ -158,9 +241,13 @@ rollback() {
     fi
   done
   systemctl daemon-reload
-  [[ "$socket_active" == false ]] || systemctl start geophysics-api.socket
-  [[ "$api_active" == false ]] || systemctl start geophysics-api.service
-  if [[ "$worker_active" == true && "$worker_stopped" == true ]]; then
+  if [[ "$rollback_env_restored" == true ]]; then
+    [[ "$socket_active" == false ]] || systemctl start geophysics-api.socket
+    [[ "$api_active" == false ]] || systemctl start geophysics-api.service
+  else
+    echo 'Prior env restoration failed; prior services remain stopped.' >&2
+  fi
+  if [[ "$rollback_env_restored" == true && "$worker_active" == true && "$worker_stopped" == true ]]; then
     systemctl start geophysics-worker.service
   fi
   nginx -t && systemctl reload nginx
@@ -181,6 +268,9 @@ if count:
 PY
 worker_stopped=true
 stop_if_present geophysics-worker.service
+environment_switched=true
+install -o root -g root -m 0600 "$candidate_env_dir/api.env" /etc/geophysics/api.env
+install -o root -g root -m 0600 "$candidate_env_dir/worker.env" /etc/geophysics/worker.env
 ln -s -- "$release" "$root/activate-$release_id"
 mv -T -- "$root/activate-$release_id" "$root/current"
 for unit in geophysics-api.socket geophysics-api.service geophysics-worker.service; do

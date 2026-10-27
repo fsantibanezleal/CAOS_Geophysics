@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from bootstrap_service_state import (  # noqa: E402
     CONFIG, HEAD, STATE, BootstrapRunner, bounded_private_json, credentials, dedicated_identity,
     exclusive_private_file, operator_directory, verify_candidate,
+    physical_binding,
 )
 from prepare_service_release import file_digest, no_links, verify_bundle  # noqa: E402
 from stage_service_runtime import EVIDENCE, RELEASES, exclusive_json  # noqa: E402
@@ -32,6 +33,217 @@ PROPERTIES = ('User', 'Group', 'MainPID', 'ActiveState', 'SubState', 'MemoryMax'
               'MemoryCurrent', 'MemoryPeak', 'TasksMax', 'CPUQuotaPerSecUSec', 'NoNewPrivileges',
               'PrivateNetwork', 'ProtectSystem', 'ProtectHome', 'ProtectControlGroups',
               'CapabilityBoundingSet', 'RestrictAddressFamilies', 'ReadWritePaths')
+
+
+def service_environment(path: Path, uid: int) -> dict[str, str]:
+    no_links(path)
+    info = path.stat()
+    if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o600:
+        raise ValueError('private service environment differs')
+    raw = path.read_bytes()
+    if len(raw) > 8192:
+        raise ValueError('service environment exceeds bound')
+    values = {}
+    for line in raw.decode('ascii').splitlines():
+        if not re.fullmatch(r'GEOPHYSICS_[A-Z0-9_]+=[A-Za-z0-9_./:-]+', line):
+            raise ValueError('service environment must use simple literal values')
+        key, value = line.split('=', 1)
+        if key in values:
+            raise ValueError('duplicate service environment key')
+        values[key] = value
+    return values
+
+
+def release_environment_selection(root: Path, release_id: str, uid: int) -> tuple[dict, dict]:
+    if re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,63}', release_id) is None:
+        raise ValueError('invalid release environment identity')
+    directory = root / 'releases' / release_id
+    no_links(directory)
+    info = directory.stat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o700:
+        raise ValueError('release environment directory differs')
+    values, hashes = {}, {}
+    for name in ('api.env', 'worker.env'):
+        path = directory / name
+        values[name.split('.')[0]] = service_environment(path, uid)
+        hashes[name] = file_digest(path)
+    return values, hashes
+
+
+def validate_active_environment_selection(root: Path, release_id: str, uid: int) -> dict:
+    _, selected = release_environment_selection(root, release_id, uid)
+    current = service_environment_hashes(root)
+    if current != {name: value['sha256'] for name, value in selected.items()}:
+        raise ValueError('global service environments do not match active release selection')
+    return selected
+
+
+def service_environment_hashes(directory: Path) -> dict[str, str]:
+    return {name: file_digest(directory / name)['sha256'] for name in ('api.env', 'worker.env')}
+
+
+def stage_release_environment(release: Path, bundle_sha256: str, registry_source: Path | None = None,
+                              registry_sha256: str | None = None) -> dict:
+    """Stage immutable candidate envs and optional binding; never changes active globals."""
+    if sys.platform != 'linux' or os.geteuid() != 0:
+        raise ValueError('Linux root operator required')
+    if release.parent != RELEASES or re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,63}', release.name) is None:
+        raise ValueError('fixed candidate release path required')
+    verify_bundle(release)
+    if not re.fullmatch(r'[0-9a-f]{64}', bundle_sha256) or file_digest(release / 'release.json')['sha256'] != bundle_sha256:
+        raise ValueError('candidate release digest differs')
+    for path in (STATE, CONFIG, CONFIG / 'releases'):
+        no_links(path)
+        info = path.stat()
+        if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022:
+            raise ValueError('existing private service state required')
+    identity = dedicated_identity()
+    if identity is None:
+        raise ValueError('dedicated service identity required')
+    uid, gid = identity
+    current = RELEASES.parent / 'current'
+    active_release = current.resolve(strict=True)
+    if active_release.parent != RELEASES:
+        raise ValueError('active release path differs')
+    if active_release == release.resolve(strict=True):
+        raise ValueError('cannot stage environments for the active release')
+    active_id = active_release.name
+    source_dir = CONFIG / 'releases' / active_id
+    base, _ = release_environment_selection(CONFIG, active_id, 0)
+    if validate_active_environment_selection(CONFIG, active_id, 0) != {
+            name: file_digest(source_dir / name) for name in ('api.env', 'worker.env')}:
+        raise ValueError('active global environment changed')
+    api, worker = dict(base['api']), dict(base['worker'])
+    required_api = {'GEOPHYSICS_DATA_DIR': STATE.as_posix(),
+                    'GEOPHYSICS_DB_PATH': (STATE / 'api.sqlite3').as_posix(),
+                    'GEOPHYSICS_PUBLIC_ORIGIN': 'https://geophysics.ml.fasl-work.com',
+                    'GEOPHYSICS_AUTH_MODE': 'local'}
+    if any(api.get(key) != value for key, value in required_api.items()) or not re.fullmatch(
+            r'[0-9a-f]{64}', api.get('GEOPHYSICS_AUTH_SECRET', '')):
+        raise ValueError('active API environment profile differs')
+    if any(worker.get(key) != value for key, value in required_api.items() if key not in {
+            'GEOPHYSICS_PUBLIC_ORIGIN', 'GEOPHYSICS_AUTH_MODE'}):
+        raise ValueError('active worker environment profile differs')
+    for values in (api, worker):
+        values.pop('GEOPHYSICS_PHYSICAL_BINDING_PATH', None)
+        values.pop('GEOPHYSICS_PHYSICAL_BINDING_SHA256', None)
+    binding_record = None
+    if registry_source is not None or registry_sha256 is not None:
+        registry_raw, binding_path, binding_digest, release_digest = physical_binding(
+            registry_source, registry_sha256, release, STATE)
+        if binding_path is None:
+            raise ValueError('physical registry and digest must be supplied together')
+        binding_dir = STATE / 'physical-operator-bindings'
+        if not binding_dir.exists():
+            binding_dir.mkdir(mode=0o700)
+            os.chown(binding_dir, uid, gid)
+        info = binding_dir.stat()
+        if (not stat.S_ISDIR(info.st_mode) or (info.st_uid, info.st_gid) != (uid, gid)
+                or stat.S_IMODE(info.st_mode) != 0o700):
+            raise ValueError('physical registry directory ownership/mode differs')
+        target = Path(binding_path)
+        if target.exists():
+            no_links(target)
+            target_info = target.stat()
+            if ((target_info.st_uid, target_info.st_gid, stat.S_IMODE(target_info.st_mode),
+                 target_info.st_nlink) != (uid, gid, 0o600, 1) or target.read_bytes() != registry_raw):
+                raise ValueError('existing candidate physical registry differs')
+        else:
+            exclusive_private_file(target, registry_raw, uid, gid)
+        for values in (api, worker):
+            values['GEOPHYSICS_PHYSICAL_BINDING_PATH'] = binding_path
+            values['GEOPHYSICS_PHYSICAL_BINDING_SHA256'] = binding_digest
+        binding_record = {'path': binding_path, 'sha256': binding_digest,
+                          'release_manifest_sha256': release_digest}
+    api_raw = ''.join(f'{key}={value}\n' for key, value in sorted(api.items())).encode('ascii')
+    worker_raw = ''.join(f'{key}={value}\n' for key, value in sorted(worker.items())).encode('ascii')
+    final = CONFIG / 'releases' / release.name
+    if final.exists():
+        _, existing = release_environment_selection(CONFIG, release.name, 0)
+        expected = {'api.env': hashlib.sha256(api_raw).hexdigest(),
+                    'worker.env': hashlib.sha256(worker_raw).hexdigest()}
+        if {key: value['sha256'] for key, value in existing.items()} != expected:
+            raise ValueError('candidate release environments already exist with different content')
+        return {'release_id': release.name, 'service_environment_hashes': expected,
+                'physical_binding': binding_record, 'created': False}
+    temporary = CONFIG / 'releases' / ('.staging-' + release.name + '-' + secrets.token_hex(8))
+    temporary.mkdir(mode=0o700)
+    try:
+        exclusive_private_file(temporary / 'api.env', api_raw)
+        exclusive_private_file(temporary / 'worker.env', worker_raw)
+        os.rename(temporary, final)
+        descriptor = os.open(final.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    except Exception:
+        # Retain the exact private staging directory for operator inspection.
+        raise
+    return {'release_id': release.name,
+        'service_environment_hashes': {'api.env': hashlib.sha256(api_raw).hexdigest(),
+                                       'worker.env': hashlib.sha256(worker_raw).hexdigest()},
+            'physical_binding': binding_record, 'created': True}
+
+
+def validate_physical_binding(release: Path, environments: dict[str, dict[str, str]], uid: int) -> dict | None:
+    names = ('GEOPHYSICS_PHYSICAL_BINDING_PATH', 'GEOPHYSICS_PHYSICAL_BINDING_SHA256')
+    api, worker = environments['api'], environments['worker']
+    configured = [tuple(key in values for key in names) for values in (api, worker)]
+    if configured == [(False, False), (False, False)]:
+        return None
+    if configured != [(True, True), (True, True)]:
+        raise ValueError('physical binding must be identically present in both service environments')
+    binding = tuple(api[key] for key in names)
+    if tuple(worker[key] for key in names) != binding:
+        raise ValueError('physical binding environment differs between API and worker')
+    expected_path, expected_digest = binding
+    expected_file = (STATE / 'physical-operator-bindings' / (release.name + '.json')).as_posix()
+    if expected_path != expected_file or not re.fullmatch(r'[0-9a-f]{64}', expected_digest):
+        raise ValueError('physical binding path or digest is not canonical')
+    path = STATE / 'physical-operator-bindings' / (release.name + '.json')
+    binding_directory = path.parent
+    no_links(binding_directory)
+    directory_info = binding_directory.stat()
+    if (not stat.S_ISDIR(directory_info.st_mode) or directory_info.st_uid != uid
+            or stat.S_IMODE(directory_info.st_mode) != 0o700):
+        raise ValueError('physical binding directory ownership or mode differs')
+    no_links(path)
+    info = path.stat()
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != uid or stat.S_IMODE(info.st_mode) != 0o600
+            or info.st_nlink != 1):
+        raise ValueError('physical binding registry ownership or mode differs')
+    raw = path.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != expected_digest:
+        raise ValueError('physical binding registry hash differs')
+    from app.operator_runtime import _check_registry, _strict_json, LOCKS
+    registry = _strict_json(raw, cap=4 * 1024 * 1024, code='operator_registry')
+    release_raw = (release / 'release.json').read_bytes()
+    if hashlib.sha256(release_raw).hexdigest() != expected_digest_for_release(registry):
+        raise ValueError('physical binding does not name candidate release.json')
+    _check_registry(registry, release_raw)
+    locks = {}
+    directory = STATE.stat()
+    if (directory.st_uid, directory.st_gid, stat.S_IMODE(directory.st_mode)) != (*dedicated_identity(), 0o700):
+        raise ValueError('physical lock root ownership or mode differs')
+    for name, marker in LOCKS:
+        lock = STATE / name
+        no_links(lock)
+        lock_info = lock.stat()
+        content = lock.read_bytes()
+        if (not stat.S_ISREG(lock_info.st_mode) or lock_info.st_uid != uid or lock_info.st_nlink != 1
+                or stat.S_IMODE(lock_info.st_mode) != 0o600 or content != marker):
+            raise ValueError('physical lock ownership, mode or marker differs')
+        locks[name] = {'sha256': hashlib.sha256(content).hexdigest(), 'uid': uid, 'mode': '0600'}
+    return {'path': expected_path, 'sha256': expected_digest,
+            'release_manifest_sha256': registry['release_manifest_sha256'], 'locks': locks}
+
+
+def expected_digest_for_release(registry: dict) -> str:
+    value = registry.get('release_manifest_sha256')
+    if not isinstance(value, str) or re.fullmatch(r'[0-9a-f]{64}', value) is None:
+        raise ValueError('physical binding release digest invalid')
+    return value
 
 
 def qualification_account(name: str) -> dict:
@@ -213,16 +425,19 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
     if (identity is None or not stat.S_ISDIR(state.st_mode)
             or (state.st_uid, state.st_gid, stat.S_IMODE(state.st_mode)) != (*identity, 0o700)):
         raise ValueError('existing private identity/state required')
-    environments = {}
-    for filename in ('api.env', 'worker.env'):
-        path = CONFIG / filename
-        no_links(path)
-        info = path.stat()
-        if not stat.S_ISREG(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o600:
-            raise ValueError('private service environment differs')
-        environments[filename] = file_digest(path)
-    if environments != bootstrap.get('environment_hashes'):
-        raise ValueError('stable private environments changed')
+    candidate_config = CONFIG / 'releases' / release.name
+    environment_values, environments = release_environment_selection(CONFIG, release.name, 0)
+    if (bootstrap.get('release_id') == release.name
+            and environments != bootstrap.get('release_environment_hashes')):
+        raise ValueError('candidate release environment changed since bootstrap')
+    active_release_id = Path(initial_current).name
+    active_globals = validate_active_environment_selection(CONFIG, active_release_id, 0)
+    sys.path.insert(0, str(release / 'source'))
+    physical_binding = validate_physical_binding(release, environment_values, identity[0])
+    bound_receipt = ({key: physical_binding[key] for key in ('path', 'sha256', 'release_manifest_sha256')}
+                     if physical_binding is not None else None)
+    if bootstrap.get('release_id') == release.name and bound_receipt != bootstrap.get('physical_binding'):
+        raise ValueError('physical binding differs from immutable bootstrap receipt')
     for unit in ('geophysics-api.service', 'geophysics-api.socket', 'geophysics-worker.service'):
         status = commands.run(['/usr/bin/systemctl', 'show', unit, '--property=ActiveState', '--value'])
         if status not in ('inactive', 'failed', ''):
@@ -242,6 +457,9 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
               'bootstrap_receipt_sha256': bootstrap_sha,
               'state_compatibility': compatibility, 'existing_database': database,
               'initial_current': initial_current, 'environment_files': environments,
+              'service_environment_hashes': service_environment_hashes(candidate_config),
+              'active_environment_files': active_globals,
+              'physical_binding': physical_binding,
               'unit_name': name, 'transport_passed': False, 'stopped': False,
               'activated': False, 'host_admitted': False, 'full_release_accepted': False}
     started = False
@@ -317,19 +535,33 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--release', type=Path, required=True)
-    parser.add_argument('--runtime-receipt', type=Path, required=True)
-    parser.add_argument('--bundle-sha256', required=True)
-    parser.add_argument('--runtime-sha256', required=True)
-    parser.add_argument('--bootstrap-receipt', type=Path, required=True)
-    parser.add_argument('--bootstrap-sha256', required=True)
+    parser.add_argument('--stage-release-environment', action='store_true')
+    parser.add_argument('--release', type=Path)
+    parser.add_argument('--runtime-receipt', type=Path)
+    parser.add_argument('--bundle-sha256')
+    parser.add_argument('--runtime-sha256')
+    parser.add_argument('--bootstrap-receipt', type=Path)
+    parser.add_argument('--bootstrap-sha256')
     parser.add_argument('--original-bootstrap-bundle', type=Path)
     parser.add_argument('--original-bootstrap-bundle-sha256')
     parser.add_argument('--authenticated', action='store_true')
     parser.add_argument('--credentials', type=Path)
-    parser.add_argument('--evidence', type=Path, required=True)
+    parser.add_argument('--evidence', type=Path)
+    parser.add_argument('--physical-binding', type=Path)
+    parser.add_argument('--physical-binding-sha256')
     args = parser.parse_args()
     try:
+        if args.stage_release_environment:
+            if args.release is None or args.bundle_sha256 is None:
+                raise ValueError('release and bundle digest required for environment staging')
+            result = stage_release_environment(args.release, args.bundle_sha256, args.physical_binding,
+                                              args.physical_binding_sha256)
+            print(json.dumps(result, sort_keys=True))
+            return 0
+        required = (args.release, args.runtime_receipt, args.bundle_sha256, args.runtime_sha256,
+                    args.bootstrap_receipt, args.bootstrap_sha256, args.evidence)
+        if any(value is None for value in required):
+            raise ValueError('candidate qualification arguments are incomplete')
         if args.authenticated != (args.credentials is not None):
             raise ValueError('authenticated qualification requires an explicit private owner file')
         result = run(args.release, args.runtime_receipt, args.bundle_sha256, args.runtime_sha256, args.evidence,

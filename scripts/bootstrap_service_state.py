@@ -131,17 +131,79 @@ def dedicated_identity():
     return user.pw_uid, user.pw_gid
 
 
-def private_environment(state: Path, secret: str | None) -> bytes:
-    values = {'GEOPHYSICS_DATA_DIR': state.as_posix(), 'GEOPHYSICS_DB_PATH': (state / 'api.sqlite3').as_posix(),
+def private_environment(state: Path, secret: str | None, *, binding_path: str | None = None,
+                        binding_sha256: str | None = None) -> bytes:
+    state_text = state.as_posix().rstrip('/')
+    values = {'GEOPHYSICS_DATA_DIR': state_text, 'GEOPHYSICS_DB_PATH': state_text + '/api.sqlite3',
               'GEOPHYSICS_MT_ONLINE_ENABLED': '0', 'GEOPHYSICS_GRAVITY_L2_ONLINE_ENABLED': '0'}
     if secret is not None:
         if not re.fullmatch(r'[0-9a-f]{64}', secret):
             raise ValueError('invalid generated authentication secret')
         values.update(GEOPHYSICS_PUBLIC_ORIGIN=ORIGIN, GEOPHYSICS_AUTH_MODE='local', GEOPHYSICS_AUTH_SECRET=secret)
+    if (binding_path is None) != (binding_sha256 is None):
+        raise ValueError('physical binding environment must be complete')
+    if binding_path is not None:
+        if not re.fullmatch(r'[0-9a-f]{64}', binding_sha256 or ''):
+            raise ValueError('invalid physical binding digest')
+        values.update(GEOPHYSICS_PHYSICAL_BINDING_PATH=binding_path,
+                      GEOPHYSICS_PHYSICAL_BINDING_SHA256=binding_sha256)
     for key, value in values.items():
-        if not re.fullmatch(r'GEOPHYSICS_[A-Z_]+', key) or not re.fullmatch(r'[A-Za-z0-9_./:-]+', value):
+        if not re.fullmatch(r'GEOPHYSICS_[A-Z0-9_]+', key) or not re.fullmatch(r'[A-Za-z0-9_./:-]+', value):
             raise ValueError('service environment is not literal')
     return ''.join(f'{k}={v}\n' for k, v in sorted(values.items())).encode('ascii')
+
+
+def validate_binding_bytes(registry_raw: bytes, expected_sha256: str, release_raw: bytes) -> str:
+    digest = __import__('hashlib').sha256(registry_raw).hexdigest()
+    if digest != expected_sha256:
+        raise ValueError('physical binding digest differs')
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from app.operator_runtime import _check_registry, _strict_json
+    parsed = _strict_json(registry_raw, cap=4 * 1024 * 1024, code='operator_registry')
+    _check_registry(parsed, release_raw)
+    return parsed['release_manifest_sha256']
+
+
+def physical_binding(source: Path | None, expected_sha256: str | None, release: Path,
+                     state: Path) -> tuple[bytes | None, str | None, str | None, str | None]:
+    """Read and validate an explicitly supplied registry before fresh-state writes."""
+    if source is None:
+        if expected_sha256 is not None:
+            raise ValueError('physical binding digest requires registry')
+        return None, None, None, None
+    if not re.fullmatch(r'[0-9a-f]{64}', expected_sha256 or ''):
+        raise ValueError('physical binding requires explicit SHA-256')
+    if not source.is_absolute():
+        raise ValueError('physical binding source must be absolute')
+    no_links(source)
+    fd = os.open(source, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        before = os.fstat(fd)
+        if (not stat.S_ISREG(before.st_mode) or before.st_uid != 0 or stat.S_IMODE(before.st_mode) != 0o600
+                or before.st_size > 4 * 1024 * 1024):
+            raise ValueError('physical binding source must be root-owned mode0600 regular file')
+        chunks, total = [], 0
+        while True:
+            block = os.read(fd, min(65536, 4 * 1024 * 1024 + 1 - total))
+            if not block:
+                break
+            chunks.append(block)
+            total += len(block)
+            if total > 4 * 1024 * 1024:
+                raise ValueError('physical binding exceeds size bound')
+        after = os.fstat(fd)
+        if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+                after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+            raise ValueError('physical binding changed while read')
+        registry_raw = b''.join(chunks)
+    finally:
+        os.close(fd)
+    manifest_raw = (release / 'release.json').read_bytes()
+    release_digest = validate_binding_bytes(registry_raw, expected_sha256, manifest_raw)
+    target = state / 'physical-operator-bindings' / (release.name + '.json')
+    if not target.is_absolute():
+        raise ValueError('physical binding destination must be absolute')
+    return registry_raw, target.as_posix(), expected_sha256, release_digest
 
 
 def exclusive_private_file(path: Path, raw: bytes, uid: int = 0, gid: int = 0) -> None:
@@ -252,6 +314,8 @@ def inspect_database(path: Path, uid: int, gid: int) -> dict:
 
 
 def bootstrap(release: Path, evidence: Path, account: bytes, manifest: dict, *, state=STATE, config=CONFIG,
+              binding_bytes: bytes | None = None, binding_path: str | None = None,
+              binding_sha256: str | None = None, binding_release_sha256: str | None = None,
               identity=dedicated_identity, runner_factory=BootstrapRunner, user_creator=None) -> dict:
     # Test injection only exists in this Python operator function, never the CLI.
     require_absent((state, config, evidence))
@@ -259,7 +323,8 @@ def bootstrap(release: Path, evidence: Path, account: bytes, manifest: dict, *, 
         raise ValueError('private-state capacity insufficient')
     existing = identity()
     evidence.mkdir(mode=0o700)
-    receipt = {'schema': 'geophysics.service-bootstrap/v1', 'created_at': datetime.now(timezone.utc).isoformat(),
+    receipt = {'schema': 'geophysics.service-bootstrap/v1', 'release_id': release.name,
+               'created_at': datetime.now(timezone.utc).isoformat(),
                'source_revision': manifest['source_revision'], 'bootstrapped': False, 'activated': False,
                'host_admitted': False, 'full_release_accepted': False, 'user_created': False}
     runner = None
@@ -277,12 +342,34 @@ def bootstrap(release: Path, evidence: Path, account: bytes, manifest: dict, *, 
         if existing is None:
             raise ValueError('dedicated identity not established')
         uid, gid = existing
+        if (binding_bytes is None) != (binding_path is None) or (binding_bytes is None) != (binding_sha256 is None) \
+                or (binding_bytes is None) != (binding_release_sha256 is None):
+            raise ValueError('physical binding arguments must be complete')
         state.mkdir(mode=0o700)
         os.chown(state, uid, gid)
+        if binding_bytes is not None:
+            binding_dir = state / 'physical-operator-bindings'
+            binding_dir.mkdir(mode=0o700)
+            os.chown(binding_dir, uid, gid)
+            exclusive_private_file(binding_dir / (release.name + '.json'), binding_bytes, uid, gid)
         config.mkdir(mode=0o700)
-        exclusive_private_file(config / 'api.env', private_environment(state, secrets.token_hex(32)))
-        exclusive_private_file(config / 'worker.env', private_environment(state, None))
+        releases_config = config / 'releases'
+        releases_config.mkdir(mode=0o700)
+        release_config = releases_config / release.name
+        release_config.mkdir(mode=0o700)
+        api_raw = private_environment(state, secrets.token_hex(32), binding_path=binding_path,
+                                      binding_sha256=binding_sha256)
+        worker_raw = private_environment(state, None, binding_path=binding_path,
+                                         binding_sha256=binding_sha256)
+        exclusive_private_file(release_config / 'api.env', api_raw)
+        exclusive_private_file(release_config / 'worker.env', worker_raw)
+        exclusive_private_file(config / 'api.env', api_raw)
+        exclusive_private_file(config / 'worker.env', worker_raw)
         runner = runner_factory(uid, gid, state)
+        if binding_bytes is not None:
+            runner.run('physical-locks', [str(release / '.venv/bin/python'), '-I', '-B',
+                       str(release / 'source/scripts/ops_physical_bootstrap.py'),
+                       '--data-root', state.as_posix()], release / 'source')
         python = str(release / '.venv/bin/python')
         cwd = release / 'source'
         runner.run('migrate', [python, '-B', '-m', 'alembic', '-c', 'app/alembic.ini', 'upgrade', HEAD], cwd)
@@ -290,6 +377,11 @@ def bootstrap(release: Path, evidence: Path, account: bytes, manifest: dict, *, 
                                       '--internal-account'], cwd, account=account)
         receipt['database'] = inspect_database(state / 'api.sqlite3', uid, gid)
         receipt['environment_hashes'] = {name: file_digest(config / name) for name in ('api.env', 'worker.env')}
+        receipt['release_environment_hashes'] = {
+            name: file_digest(release_config / name) for name in ('api.env', 'worker.env')}
+        if binding_bytes is not None:
+            receipt['physical_binding'] = {'path': binding_path, 'sha256': binding_sha256,
+                                           'release_manifest_sha256': binding_release_sha256}
         receipt['steps'] = runner.steps
         receipt['bootstrapped'] = True
         exclusive_json(evidence / 'bootstrap.json', receipt)
@@ -324,6 +416,8 @@ def main(argv=None) -> int:
     parser.add_argument('--bundle-sha256', required=True)
     parser.add_argument('--runtime-sha256', required=True)
     parser.add_argument('--credentials', type=Path, required=True)
+    parser.add_argument('--physical-binding', type=Path)
+    parser.add_argument('--physical-binding-sha256')
     parser.add_argument('--evidence', type=Path, required=True)
     args = parser.parse_args(argv)
     try:
@@ -348,9 +442,16 @@ def main(argv=None) -> int:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
             require_absent((STATE, CONFIG, args.evidence))
             manifest = verify_candidate(args.release, args.runtime_receipt, args.bundle_sha256, args.runtime_sha256)
+            identity = dedicated_identity()
+            if identity is None:
+                raise ValueError('dedicated service identity required')
+            binding_bytes, binding_path, binding_sha256, binding_release_sha256 = physical_binding(
+                args.physical_binding, args.physical_binding_sha256, args.release, STATE)
             account = credentials(bounded_private_json(args.credentials))
             os.umask(0o077)
-            bootstrap(args.release, args.evidence, account, manifest)
+            bootstrap(args.release, args.evidence, account, manifest, binding_bytes=binding_bytes,
+                      binding_path=binding_path, binding_sha256=binding_sha256,
+                      binding_release_sha256=binding_release_sha256)
     except Exception:
         print('Initial setup refused or failed; preserve private evidence/state. No service activated.', file=sys.stderr)
         return 1

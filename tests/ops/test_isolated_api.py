@@ -101,6 +101,136 @@ def test_commands_never_emit_captured_error(monkeypatch, capsys):
     assert not captured.out + captured.err
 
 
+def test_legacy_service_environment_is_valid_without_physical_binding(tmp_path, monkeypatch):
+    path = tmp_path / 'api.env'
+    path.write_text('GEOPHYSICS_DATA_DIR=/var/lib/geophysics\nGEOPHYSICS_DB_PATH=/var/lib/geophysics/api.sqlite3\n')
+    if sys.platform == 'linux':
+        path.chmod(0o600)
+        assert qualifier.service_environment(path, 0 if __import__('os').geteuid() == 0 else path.stat().st_uid)
+    else:
+        pytest.skip('actual root-owned environment metadata requires Linux')
+    assert qualifier.validate_physical_binding(tmp_path, {'api': {}, 'worker': {}}, 0) is None
+
+
+@pytest.mark.skipif(sys.platform != 'linux', reason='physical lock identity requires POSIX')
+def test_bound_physical_state_checks_candidate_digest_registry_and_locks(tmp_path, monkeypatch):
+    import hashlib
+    import os
+    state = tmp_path / 'state'
+    state.mkdir(mode=0o700)
+    state.chmod(0o700)
+    monkeypatch.setattr(qualifier, 'STATE', state)
+    monkeypatch.setattr(qualifier, 'dedicated_identity', lambda: (os.getuid(), os.getgid()))
+    release = tmp_path / 'candidate'
+    release.mkdir()
+    release_manifest = {'schema': 'geophysics.service-release/v1', 'source_revision': 'a' * 40,
+                        'qualification_only': True, 'full_release_accepted': False, 'source': {}, 'web': {}}
+    release_raw = json.dumps(release_manifest, sort_keys=True, separators=(',', ':')).encode()
+    release_digest = hashlib.sha256(release_raw).hexdigest()
+    registry_value = {'schema': 'geophysics.physical-operator-binding/v1',
+                      'release_manifest_sha256': release_digest, 'source_policy_sha256': 'b' * 64,
+                      'approved_manifests': {}, 'approved_installations': {}}
+    registry_raw = json.dumps(registry_value, sort_keys=True, separators=(',', ':')).encode()
+    digest = hashlib.sha256(registry_raw).hexdigest()
+    (release / 'release.json').write_bytes(release_raw)
+    binding_root = state / 'physical-operator-bindings'
+    binding_root.mkdir(mode=0o700)
+    registry = binding_root / (release.name + '.json')
+    registry.write_bytes(registry_raw)
+    registry.chmod(0o600)
+    from app.operator_runtime import LOCKS
+    for name, marker in LOCKS:
+        lock = state / name
+        lock.write_bytes(marker)
+        lock.chmod(0o600)
+    env = {'GEOPHYSICS_PHYSICAL_BINDING_PATH': registry.as_posix(),
+           'GEOPHYSICS_PHYSICAL_BINDING_SHA256': digest}
+    (release / 'release.json').write_bytes(release_raw)
+    result = qualifier.validate_physical_binding(release, {'api': dict(env), 'worker': dict(env)}, os.getuid())
+    assert result['sha256'] == digest and len(result['locks']) == 2
+    registry.write_bytes(registry_raw + b' ')
+    with pytest.raises(ValueError, match='hash'):
+        qualifier.validate_physical_binding(release, {'api': dict(env), 'worker': dict(env)}, os.getuid())
+
+
+def test_binding_environment_partial_or_different_fails():
+    with pytest.raises(ValueError, match='identically'):
+        qualifier.validate_physical_binding(Path('/unused'),
+            {'api': {'GEOPHYSICS_PHYSICAL_BINDING_PATH': '/x'}, 'worker': {}}, 0)
+    with pytest.raises(ValueError, match='differs'):
+        qualifier.validate_physical_binding(Path('/unused'),
+            {'api': {'GEOPHYSICS_PHYSICAL_BINDING_PATH': '/x', 'GEOPHYSICS_PHYSICAL_BINDING_SHA256': 'a' * 64},
+             'worker': {'GEOPHYSICS_PHYSICAL_BINDING_PATH': '/y', 'GEOPHYSICS_PHYSICAL_BINDING_SHA256': 'a' * 64}}, 0)
+
+
+def test_rollback_restores_and_selects_previous_release_environment(tmp_path):
+    import os
+    if sys.platform != 'linux':
+        pytest.skip('root-owned release environment metadata requires Linux')
+    root = tmp_path / 'etc-geophysics'
+    old = root / 'releases' / 'old-release'
+    candidate = root / 'releases' / 'candidate-release'
+    old.mkdir(parents=True, mode=0o700)
+    candidate.mkdir(parents=True, mode=0o700)
+    old.chmod(0o700)
+    candidate.chmod(0o700)
+    previous = {}
+    for name in ('api.env', 'worker.env'):
+        previous[name] = (f'GEOPHYSICS_DATA_DIR=/var/lib/geophysics\n'
+                          f'GEOPHYSICS_PHYSICAL_BINDING_PATH=/var/lib/geophysics/physical-operator-bindings/old-release.json\n'
+                          f'GEOPHYSICS_PHYSICAL_BINDING_SHA256={"a" * 64}\n').encode()
+        newer = previous[name].replace(b'old-release', b'candidate-release').replace(b'a' * 64, b'b' * 64)
+        (old / name).write_bytes(previous[name])
+        (candidate / name).write_bytes(newer)
+        (old / name).chmod(0o600)
+        (candidate / name).chmod(0o600)
+        (root / name).write_bytes(previous[name])
+        (root / name).chmod(0o600)
+    values, hashes = qualifier.release_environment_selection(root, 'old-release', os.getuid())
+    assert values['api']['GEOPHYSICS_PHYSICAL_BINDING_SHA256'] == 'a' * 64
+    assert qualifier.validate_active_environment_selection(root, 'old-release', os.getuid()) == hashes
+    snapshots = {name: (root / name).read_bytes() for name in ('api.env', 'worker.env')}
+    for name in snapshots:
+        (root / name).write_bytes((candidate / name).read_bytes())
+    with pytest.raises(ValueError, match='active release selection'):
+        qualifier.validate_active_environment_selection(root, 'old-release', os.getuid())
+    for name, raw in snapshots.items():
+        (root / name).write_bytes(raw)
+    assert qualifier.validate_active_environment_selection(root, 'old-release', os.getuid()) == hashes
+
+    activation = (ROOT / 'deploy/activate-service.sh').read_text(encoding='utf-8')
+    rollback = activation[activation.index('rollback() {'):activation.index('trap rollback ERR')]
+    assert 'install -o root -g root -m 0600 "$state/previous.api.env" /etc/geophysics/api.env' in rollback
+    assert 'install -o root -g root -m 0600 "$state/previous.worker.env" /etc/geophysics/worker.env' in rollback
+    assert rollback.index('previous.api.env') < rollback.index('systemctl start geophysics-api.socket')
+    assert 'rollback_env_restored" == true' in rollback
+    assert 'install -o root -g root -m 0600 "$candidate_env_dir/api.env" /etc/geophysics/api.env' in activation
+    candidate_install = 'install -o root -g root -m 0600 "$candidate_env_dir/api.env" /etc/geophysics/api.env'
+    assert activation.index('environment_switched=true') < activation.index(candidate_install)
+
+
+def test_qualification_emits_activation_environment_hash_contract(tmp_path):
+    import hashlib
+    candidate = tmp_path / 'release'
+    candidate.mkdir()
+    expected = {}
+    for name in ('api.env', 'worker.env'):
+        raw = f'GEOPHYSICS_DATA_DIR=/var/lib/geophysics\n{ name }=candidate\n'.encode()
+        (candidate / name).write_bytes(raw)
+        expected[name] = hashlib.sha256(raw).hexdigest()
+    assert qualifier.service_environment_hashes(candidate) == expected
+    activation = (ROOT / 'deploy/activate-service.sh').read_text(encoding='utf-8')
+    assert "admission.get('service_environment_hashes') != environment_hashes" in activation
+
+
+def test_release_staging_is_explicit_and_does_not_offer_active_env_overwrite():
+    import inspect
+    source = inspect.getsource(qualifier.stage_release_environment)
+    assert 'cannot stage environments for the active release' in source
+    assert 'os.rename(temporary, final)' in source
+    assert "never changes active globals" in source
+
+
 def test_deadline_and_command_output_bounds(monkeypatch):
     controller = qualifier.Commands()
     controller.deadline = 0

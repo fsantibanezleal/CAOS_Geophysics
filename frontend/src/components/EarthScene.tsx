@@ -143,40 +143,45 @@ export function EarthScene({
     const surfaces: THREE.Mesh[] = [];
     if (representation === "surface" && threshold > 0)
       for (const sign of [1, -1]) {
-        if (!values.some((v) => v * sign > threshold)) continue;
-        const rawGeometry = new THREE.BufferGeometry();
-        rawGeometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(
-            isosurface(
-              values.map((v) => v * sign),
-              run.grid.shape,
-              run.grid.origin!,
-              spacing,
-              threshold,
-            ),
-            3,
-          ),
+        const signedValues = values.map((value) => sign * value);
+        let maximum = 0;
+        for (const value of signedValues) maximum = Math.max(maximum, value);
+        if (maximum <= threshold) continue;
+        // Nested contours encode the actual property levels on the fixed legend.
+        // The outer threshold remains the user-controlled inclusion boundary.
+        const levels = [0, 1, 2, 3].map(
+          (i) => threshold + ((maximum - threshold) * i) / 3,
         );
-        const meshGeometry = mergeVertices(rawGeometry, 1e-6);
-        rawGeometry.dispose();
-        meshGeometry.computeVertexNormals();
-        const surface = new THREE.Mesh(
-          meshGeometry,
-          new THREE.MeshStandardMaterial({
-            color: color(sign * threshold, range, palette),
-            roughness: 0.65,
-            side: THREE.DoubleSide,
-            transparent: opacity < 1,
-            opacity,
-            depthWrite: opacity > 0.65,
-            clippingPlanes: [
-              new THREE.Plane(new THREE.Vector3(0, 0, -1), cut / 1000),
-            ],
-          }),
-        );
-        scene.add(surface);
-        surfaces.push(surface);
+        for (const level of levels) {
+          const positions = isosurface(
+            signedValues,
+            run.grid.shape,
+            run.grid.origin!,
+            spacing,
+            level,
+          );
+          if (!positions.length) continue;
+          const rawGeometry = new THREE.BufferGeometry();
+          rawGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+          const meshGeometry = mergeVertices(rawGeometry, 1e-6);
+          rawGeometry.dispose();
+          meshGeometry.computeVertexNormals();
+          const surface = new THREE.Mesh(
+            meshGeometry,
+            new THREE.MeshBasicMaterial({
+              color: color(sign * level, range, palette),
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: opacity * 0.55,
+              depthWrite: false,
+              clippingPlanes: [
+                new THREE.Plane(new THREE.Vector3(0, 0, -1), cut / 1000),
+              ],
+            }),
+          );
+          scene.add(surface);
+          surfaces.push(surface);
+        }
       }
     const box = new THREE.BoxGeometry(2.24, 1.12, 1.92);
     const edges = new THREE.LineSegments(
