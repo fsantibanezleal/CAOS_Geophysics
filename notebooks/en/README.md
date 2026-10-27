@@ -29,5 +29,6 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `07-joint` | 3 | [M11 gravity–magnetic control matrix and fresh optimizer run](07-joint/04-m11-physical-matrix-evidence.ipynb) | [04-m11-physical-matrix-evidence](../es/07-joint/04-m11-physical-matrix-evidence.ipynb) |
 | `08-learning` | 1 | [Learned inverse, group splits and paired uncertainty](08-learning/01-learning-splits.ipynb) | [01-learning-splits](../es/08-learning/01-learning-splits.ipynb) |
 | `08-learning` | 2 | [Novelty thresholds and OOD consequences](08-learning/02-learning-heldout.ipynb) | [02-learning-heldout](../es/08-learning/02-learning-heldout.ipynb) |
+| `08-learning` | 3 | [First-arrival user-data processing and sensitivity](08-learning/05-first-arrival-user-data.ipynb) | [05-first-arrival-user-data](../es/08-learning/05-first-arrival-user-data.ipynb) |
 | `08-learning` | 3 | [Phase-picker stress strata and browser-parity boundary](08-learning/03-learning-state-of-art.ipynb) | [03-learning-state-of-art](../es/08-learning/03-learning-state-of-art.ipynb) |
 | `08-learning` | 3 | [Null-space refinement: calibration and held-out stress tests](08-learning/04-nullspace-refinement-evidence.ipynb) | [04-nullspace-refinement-evidence](../es/08-learning/04-nullspace-refinement-evidence.ipynb) |

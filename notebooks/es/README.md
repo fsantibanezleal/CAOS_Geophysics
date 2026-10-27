@@ -29,5 +29,6 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `07-joint` | 3 | [Matriz M11 y ejecución nueva del optimizador gravimétrico–magnético](07-joint/04-m11-physical-matrix-evidence.ipynb) | [04-m11-physical-matrix-evidence](../en/07-joint/04-m11-physical-matrix-evidence.ipynb) |
 | `08-learning` | 1 | [Inversa aprendida, grupos e incertidumbre pareada](08-learning/01-learning-splits.ipynb) | [01-learning-splits](../en/08-learning/01-learning-splits.ipynb) |
 | `08-learning` | 2 | [Umbrales de novedad y consecuencias OOD](08-learning/02-learning-heldout.ipynb) | [02-learning-heldout](../en/08-learning/02-learning-heldout.ipynb) |
+| `08-learning` | 3 | [Procesamiento de datos de primeras llegadas y sensibilidad](08-learning/05-first-arrival-user-data.ipynb) | [05-first-arrival-user-data](../en/08-learning/05-first-arrival-user-data.ipynb) |
 | `08-learning` | 3 | [Estratos de estrés del picker y límite de paridad del navegador](08-learning/03-learning-state-of-art.ipynb) | [03-learning-state-of-art](../en/08-learning/03-learning-state-of-art.ipynb) |
 | `08-learning` | 3 | [Refinamiento en el espacio nulo: calibración y pruebas retenidas](08-learning/04-nullspace-refinement-evidence.ipynb) | [04-nullspace-refinement-evidence](../en/08-learning/04-nullspace-refinement-evidence.ipynb) |
