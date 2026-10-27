@@ -36,3 +36,17 @@ one under the frozen gate. The training/validation improvement therefore
 does not pass M12: the saved verdict is `failed-held-out-comparator` and R-008
 remains failed. No public or canonical artifact was changed, and no test
 cohort was used for tuning after this evaluation.
+
+## Local app evidence inspection: 2026-10-27
+
+The Benchmark page now admits the exact `receipt.json`,
+`local-evidence-manifest.json`, and `m12-residual-v3.1.npz` files for this
+protocol. Browser-side SHA-256 and byte-length checks bind the selected
+receipt/checkpoint to the manifest and check the checkpoint hash recorded in
+the receipt. The page displays the training/validation curve and each scored
+cohort ratio while retaining `failed-held-out-comparator`. It reads files
+locally and does not upload, rerun the solver, or treat checksums as proof of
+authorship. Five focused unit tests, the production TypeScript/Vite build, and
+one Playwright interaction using the actual external 2026-10-27 receipt and
+checkpoint pass. This is a result-inspection feature, not new scientific
+acceptance or release acceptance.

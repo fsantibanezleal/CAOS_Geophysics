@@ -17,6 +17,7 @@ import { chapters, type Algorithm, type Chapter } from "../data/methods";
 import { phasePickers } from "../data/phase-picking";
 import { PhasePickingContent } from "../components/PhasePickingContent";
 import { PhasePickerPanel } from "../components/PhasePickerPanel";
+import { M12ResidualEvidence } from "../components/M12ResidualEvidence";
 import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
 import { M01ScientificCourse } from "../components/M01ScientificCourse";
 import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";
@@ -1257,6 +1258,7 @@ export function Benchmark() {
         </>
       )}
       {family === "learned" && <DetectionEvidence data={detection} />}
+      <M12ResidualEvidence />
       <section>
         <h2>
           {t(

@@ -1124,7 +1124,7 @@
 .phase-local-files { flex: 1 1 190px; min-width: 0; }
 .phase-local-files summary { cursor: pointer; font-size: 0.82rem; }
 .phase-local-files > div { display: grid; gap: 0.6rem; padding: 0.5rem 0; }
-.phase-controls input[type="file"] { width: 100%; max-width: 100%; font: 0.78rem var(--font-sans); }
+.phase-controls input[type="file"], .evidence-layout input[type="file"] { width: 100%; max-width: 100%; font: 0.78rem var(--font-sans); }
 .phase-controls .btn { flex: 0 0 auto; }
 .phase-error { padding: 0.65rem; border-left: 3px solid var(--color-bad); background: var(--color-surface-2); overflow-wrap: anywhere; }
 .phase-ledger { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.7rem; margin-block: 0.8rem; }

@@ -5,7 +5,7 @@ import { Cite, CitationsProvider, useLangStore } from "@fasl-work/caos-app-shell
 import { CITATIONS } from "../data/citations";
 import { JointNativeStateInstrument, JointResultWorkbench } from "../components/JointResultWorkbench";
 import { importJointOutput, jointFrameSidecar, jointInstrumentFrame, type JointFile } from "../api/joint-result";
-import { format } from "../science";
+import { formatNumber } from "../lib/number-format";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
@@ -52,16 +52,21 @@ describe("joint scientific output instrument", () => {
     const initial = await importJointOutput(files(process.env.GEOPHYSICS_JOINT_INSTRUMENT_FIXTURE!));
     const frame = jointInstrumentFrame(initial, "selected", 0), original = jointFrameSidecar(initial, "selected", 0);
     const value = frame.model.arrays.density_kg_m3.values[0];
-    const observed = frame.responses.gravity!.sealed.observed[0];
+    const response = frame.responses.gravity!.sealed;
     for (const lang of ["en", "es"] as const) {
       useLangStore.setState({ lang });
-      const html = renderRegistered(createElement(JointNativeStateInstrument, { inspection: initial }));
-      expect(html).toContain(`data-value="${value}"`);
-      expect(html).toContain(`${format(value)} kg/m³</output>`);
-      const readout = html.match(/data-testid="joint-native-response-readout">([^<]*)<\/output>/)![1];
-      expect(readout).toContain(`${format(observed)} /`);
-      expect(readout).not.toMatch(/\d\.\d{10}/);
-      expect(html).toContain(`data-cell="${frame.model.arrays.active_full_indices.values[0]}"`);
+      vi.stubGlobal("document", { documentElement: { lang: lang === "es" ? "es-CL" : "en-US" } });
+      const display = (v: number) => formatNumber(v, lang === "es" ? "es-CL" : "en-US");
+      try {
+        const html = renderRegistered(createElement(JointNativeStateInstrument, { inspection: initial }));
+        expect(html).toContain(`data-value="${value}"`);
+        const modelReadout = html.match(/<output[^>]*data-testid="joint-native-cell-readout"[^>]*>([^<]*)<\/output>/)![1];
+        expect(modelReadout).toContain(`${display(value)} kg/m³`);
+        expect(html).toContain(`data-density-kg-m3="${value}"`);
+        const readout = html.match(/data-testid="joint-native-response-readout">([^<]*)<\/output>/)![1];
+        expect(readout).toBe(`${response.rows[0]} · ${display(response.observed[0])} / ${display(response.predicted[0])} / ${display(response.residual[0])} ${response.unit} · ${display(response.whitened[0])} [1] · RMSE ${display(response.metrics.rmse_physical)} ${response.unit} · WRMS ${display(response.metrics.wrms)} · χ² ${display(response.metrics.chi_square)}`);
+        expect(html).toContain(`data-cell="${frame.model.arrays.active_full_indices.values[0]}"`);
+      } finally { vi.unstubAllGlobals(); }
     }
     expect(frame.model.arrays.density_kg_m3.values[0]).toBe(value);
     expect(jointFrameSidecar(initial, "selected", 0)).toEqual(original);

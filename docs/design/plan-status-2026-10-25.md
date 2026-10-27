@@ -31,7 +31,7 @@ threshold as pending owner decisions must not be used to plan or block work.
 ## Current branch evidence
 
 The isolated implementation branch is `task/geophysics-client-first-completion`
-at `ec78ee186a128d629dcc4cea0739502ed52a204e` as of 2026-10-27. It descends
+at the branch revision recorded with this status update on 2026-10-27. It descends
 from the M11 candidate workspace recovery work. Its
 M11 work includes a source-bound gravity/magnetic joint inverse, independent
 single-modality baselines, sealed selection/evaluation, a 24-control synthetic
@@ -54,11 +54,15 @@ released online solve. Do not label this vertical online-ready or scientifically
 accepted.
 
 The focused Linux M11 regression suite on this branch passed 488 tests with 3
-skips on CPython 3.12.10 x86_64. A subsequent full 24-control Linux workflow
-attempt did not complete and produced no qualifying matrix receipt; the earlier
-complete Windows-hosted 24-control receipt remains the only full matrix result.
-Do not infer Linux full-matrix acceptance from the focused suite or partial
-attempt.
+skips on CPython 3.12.10 x86_64. On 2026-10-27, the fixed 24-control matrix
+was regenerated on the Windows RTX host in external storage and all 24 strict
+workflows and replay validations completed. It retained 624 candidate records,
+including 105 nonconverged candidates; no workflow failed. The matrix explicitly
+does not claim precision acceptance or field recovery. The separate maximum
+resource workflow admitted 4,096 full cells, 1,932 active cells, 2,048
+receivers per modality and full covariance, rejected active-count plus one,
+replayed successfully, and sampled 524 MB peak RSS under the 2 GiB process
+limit. These Windows receipts do not replace Linux VPS qualification.
 
 This review also verified a fresh production build, 318 frontend unit tests
 with 11 skips, 3 Playwright workbench checks, and the CAOS browser gate across
@@ -186,6 +190,40 @@ one local-result view.
 
 The fresh M12 CUDA comparison on 2026-10-27 is recorded in
 [`m12-velocity-validation/convergence.md`](features/m12-velocity-validation/convergence.md): CPU replay passed, but the locked joint held-out model and travel-time ratios remain above one. It does not change the failed verdict.
+
+The M12 failed residual-v3.1 outcome now has a local-file evidence viewer on the
+Benchmark page. The viewer checks the actual receipt, manifest and checkpoint
+bytes in-browser, shows training history and all five evaluation cohorts, and
+preserves the failed held-out comparator. It uploads no files and runs no
+solver. Five focused unit tests and a real-file desktop Playwright test pass;
+the production build and the updated MT integration guard pass. These are
+method-evidence and bounded UI checks, not a new scientific pass.
+
+The M11 candidate API custody test passed under WSL/Linux and produced actual
+history, index and export receipts in external storage. Its first direct
+Windows run correctly refused the POSIX-only storage root. The complete
+frontend run, with the M11 authored 24-case and maximum-size result fixtures
+and the POSIX API receipt, reports 43 passing files, 402 passed tests, 12
+skipped tests and 2 remaining fixture-required suite errors. Both remaining
+suites require retained magnetic selected-final and owned-custody controls;
+they were not fabricated. The actual M11 matrix importer and native result
+instrument tests pass on the generated external outputs.
+
+The bilingual course now has controlled learner-run Level 2 experiments for
+MT and ERT: seeded complex-impedance inversion with three beta values and a
+withheld-frequency diagnostic; and synthetic Wenner parsing, flag-only QC,
+geometry-factor analysis and a predeclared holdout. Both call the repository
+implementations and label their limits. Eight stale joint/learning notebook
+outputs were regenerated. All 46 notebooks execute in fresh kernels, and the
+final `--check` confirms saved outputs match. This validates the notebooks,
+not full product or scientific release acceptance.
+
+The rebuilt frontend passes the 3-file M12/M11 component test slice (15 passed,
+3 fixture-gated skips) and the actual-file M12 browser test. The focused shell
+gate across two phone/tablet widths, both languages and both themes clears the
+new evidence panel's file overflow and dark-button contrast. It still records
+three root-route drawing failures in two existing FWI error canvases and the
+autoencoder question view; no full shell-gate pass is claimed.
 
 The convergence script still reports 1 failed and 18 unresolved requirements.
 No current release passes, no host deployment occurred, and the origin
