@@ -14,4 +14,4 @@
 12. [ ] Acquire provider field deliverables and independently validate source-specific processing and held-out results before changing the method acceptance verdict.
 13. [x] Add a browser-local Pyodide Web Worker path that calls the canonical Python M03 processor, has explicit resource limits/cancellation, renders support-aware outputs and exports the computed receipt.
 14. [x] Verify exact-result parity on a controlled fixture and verify pre-runtime rejection at the browser row limit; document the runtime version delta and limits of that evidence.
-15. [ ] Complete browser/native parity and resource characterization: deterministic rotated/reversed surveys, tie offsets, duplicate order and collapsed geometry now have native/browser coverage; still measure latency and peak memory on supported device classes.
+15. [ ] Complete browser/native parity and resource characterization: eight deterministic rotated/reversed surveys and degenerate rejection cases pass; a 25,000-row cold/warm timing and WASM heap profile is recorded for one local host. Measure total worker/process memory and latency across supported device classes before closing.

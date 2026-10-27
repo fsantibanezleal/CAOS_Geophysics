@@ -216,6 +216,11 @@ describe("M03 browser-local Python/SciPy parity", () => {
     expect(execution.python_version).toBe("3.13.2");
     expect(execution.numpy_version).toBe("2.2.5");
     expect(execution.scipy_version).toBe("1.14.1");
+    expect(execution.runtime_reused).toBe(false);
+    expect(execution.runtime_load_ms).toBeGreaterThan(0);
+    expect(execution.processing_ms).toBeGreaterThan(0);
+    expect(execution.total_worker_ms).toBeGreaterThanOrEqual(execution.processing_ms);
+    expect(execution.wasm_heap_capacity_bytes).toBeGreaterThan(0);
     expect(execution.python_pipeline_sha256).toBe(createHash("sha256").update(readFileSync(join(repo, "data-pipeline", "magnetic_processing.py"))).digest("hex"));
     expect(execution.original_csv_sha256).toBe(expected.source.sha256);
     expect(execution.original_csv_bytes).toBe(new TextEncoder().encode(csv).byteLength);
@@ -290,6 +295,61 @@ describe("M03 browser-local Python/SciPy parity", () => {
     expect(maxRowsRun.execution.resource_limits.rows).toBe(M03_LOCAL_LIMITS.rows);
     expect(maxRowsRun.shape[0] * maxRowsRun.shape[1]).toBeLessThanOrEqual(M03_LOCAL_LIMITS.gridCells);
   }, 180_000);
+
+  it("reuses the initialized scientific worker for a sequential calculation", async () => {
+    const reused = await page.evaluate(async ({ csvText, runOptions }) => {
+      const stages: string[] = [];
+      const run = await ((window as any).__m03RunFn as
+        (file: File, input: unknown, hooks?: unknown) => Promise<any>)(
+        new File([csvText], "reused-worker.csv", { type: "text/csv" }), runOptions,
+        { onProgress: (item: { stage: string }) => stages.push(item.stage) },
+      );
+      return { stages, sourceSha256: run.result.source.sha256, schema: run.result.schema, split: run.result.split,
+        execution: run.execution };
+    }, { csvText: csv, runOptions: options });
+    expect(reused.stages).toEqual(["processing"]);
+    expect(reused.sourceSha256).toBe(expected.source.sha256);
+    expect(reused.schema).toBe(expected.schema);
+    expect(reused.split).toEqual(expected.split);
+    expect(reused.execution.runtime_reused).toBe(true);
+    expect(reused.execution.runtime_load_ms).toBe(0);
+    expect(reused.execution.processing_ms).toBeGreaterThan(0);
+    expect(reused.execution.wasm_heap_capacity_bytes).toBeGreaterThan(0);
+  });
+
+  it("terminates a cancelled worker and initializes a clean replacement", async () => {
+    const outcomes = await page.evaluate(async ({ csvText, runOptions }) => {
+      const controller = new AbortController();
+      const cancelledStages: string[] = [];
+      let cancellation = "unexpected-success";
+      try {
+        await ((window as any).__m03RunFn as
+          (file: File, input: unknown, hooks?: unknown) => Promise<unknown>)(
+          new File([csvText], "cancelled-flightline.csv", { type: "text/csv" }), runOptions,
+          { signal: controller.signal, onProgress: (item: { stage: string }) => {
+            cancelledStages.push(item.stage);
+            if (item.stage === "processing") controller.abort();
+          } },
+        );
+      } catch (error) {
+        cancellation = error instanceof DOMException ? error.name : String(error);
+      }
+      const replacementStages: string[] = [];
+      const replacement = await ((window as any).__m03RunFn as
+        (file: File, input: unknown, hooks?: unknown) => Promise<any>)(
+        new File([csvText], "replacement-flightline.csv", { type: "text/csv" }), runOptions,
+        { onProgress: (item: { stage: string }) => replacementStages.push(item.stage) },
+      );
+      return { cancellation, cancelledStages, replacementStages, sourceSha256: replacement.result.source.sha256,
+        runtimeReused: replacement.execution.runtime_reused, wasmHeapBytes: replacement.execution.wasm_heap_capacity_bytes };
+    }, { csvText: csv, runOptions: options });
+    expect(outcomes.cancellation).toBe("AbortError");
+    expect(outcomes.cancelledStages).toContain("processing");
+    expect(outcomes.replacementStages).toEqual(["loading-runtime", "loading-scientific-packages", "processing"]);
+    expect(outcomes.sourceSha256).toBe(expected.source.sha256);
+    expect(outcomes.runtimeReused).toBe(false);
+    expect(outcomes.wasmHeapBytes).toBeGreaterThan(0);
+  }, 120_000);
 
   it("matches native results across deterministic rotated, reversed and offset surveys", async () => {
     const cases = Array.from({ length: 8 }, (_, index) => ({

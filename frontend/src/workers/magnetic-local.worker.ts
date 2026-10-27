@@ -13,6 +13,7 @@ const CROSSOVER_TEST_LIMIT = 2_000_000;
 
 interface PyodideRuntime {
   FS: { writeFile(path: string, data: Uint8Array): void };
+  _module?: { HEAPU8?: { byteLength: number }; wasmMemory?: { buffer: ArrayBuffer } };
   loadPackage(packages: string[]): Promise<void>;
   runPythonAsync<T = unknown>(source: string): Promise<T>;
   runPython<T = unknown>(source: string): T;
@@ -49,52 +50,62 @@ function runtime(): Promise<PyodideRuntime> {
     pyodide.FS.writeFile("/magnetic_processing.py", new TextEncoder().encode(magneticPipelineSource));
     return pyodide;
   })();
-  return runtimePromise;
+  return runtimePromise.catch(error => {
+    runtimePromise = undefined;
+    throw error;
+  });
 }
 
 let activeId = "";
 const runCanonicalPipeline = `
-import json, sys
-from pathlib import Path
-sys.path.insert(0, "/")
-import magnetic_processing as m03
+def _m03_run():
+    import json, sys
+    from pathlib import Path
+    if "/" not in sys.path:
+        sys.path.insert(0, "/")
+    import magnetic_processing as m03
 
-with open("/m03-config.json", "r", encoding="utf-8") as stream:
-    cfg = json.load(stream)
-request = m03.read_csv(
-    Path("/m03-original.csv"),
-    field_map=cfg["mapping"],
-    source_metadata=cfg["source"],
-    frame=cfg["frame"],
-    settings=cfg["settings"],
-)
-if len(request["rows"]) > ${ROW_LIMIT}:
-    raise m03.MagneticProcessingError("Browser lane limit is ${ROW_LIMIT.toLocaleString("en-US")} observations; use the local pipeline for larger surveys.")
+    with open("/m03-config.json", "r", encoding="utf-8") as stream:
+        cfg = json.load(stream)
+    request = m03.read_csv(
+        Path("/m03-original.csv"),
+        field_map=cfg["mapping"],
+        source_metadata=cfg["source"],
+        frame=cfg["frame"],
+        settings=cfg["settings"],
+    )
+    if len(request["rows"]) > ${ROW_LIMIT}:
+        raise m03.MagneticProcessingError("Browser lane limit is ${ROW_LIMIT.toLocaleString("en-US")} observations; use the local pipeline for larger surveys.")
 
-# Fail before allocating the interpolation mesh if the source exceeds the
-# public worker budget. These are preflight checks only; processing remains in
-# the canonical m03.process() implementation below.
-_, config, points = m03._parse_request(request)
-segments = m03._line_segments(points)
-ordered_lines = sorted(segments)
-segment_tests = sum(
-    len(segments[left]) * len(segments[right])
-    for i, left in enumerate(ordered_lines)
-    for right in ordered_lines[i + 1:]
-    if left[0] != right[0]
-)
-if segment_tests > ${CROSSOVER_TEST_LIMIT}:
-    raise m03.MagneticProcessingError("Browser crossover-QC budget exceeded; reduce line samples or use the local pipeline.")
-coordinates = [(point.easting_m, point.northing_m) for point in points]
-xmin, xmax = min(x for x, _ in coordinates), max(x for x, _ in coordinates)
-ymin, ymax = min(y for _, y in coordinates), max(y for _, y in coordinates)
-nx = int((xmax - xmin) // config["grid_spacing_m"]) + 1
-ny = int((ymax - ymin) // config["grid_spacing_m"]) + 1
-if nx < 2 or ny < 2 or nx * ny > ${GRID_CELL_LIMIT}:
-    raise m03.MagneticProcessingError("Browser grid budget is ${GRID_CELL_LIMIT.toLocaleString("en-US")} cells; increase spacing or use the local pipeline.")
+    # Fail before allocating the interpolation mesh if the source exceeds the
+    # public worker budget. Processing remains canonical m03.process().
+    _, config, points = m03._parse_request(request)
+    segments = m03._line_segments(points)
+    ordered_lines = sorted(segments)
+    segment_tests = sum(
+        len(segments[left]) * len(segments[right])
+        for i, left in enumerate(ordered_lines)
+        for right in ordered_lines[i + 1:]
+        if left[0] != right[0]
+    )
+    if segment_tests > ${CROSSOVER_TEST_LIMIT}:
+        raise m03.MagneticProcessingError("Browser crossover-QC budget exceeded; reduce line samples or use the local pipeline.")
+    coordinates = [(point.easting_m, point.northing_m) for point in points]
+    xmin, xmax = min(x for x, _ in coordinates), max(x for x, _ in coordinates)
+    ymin, ymax = min(y for _, y in coordinates), max(y for _, y in coordinates)
+    nx = int((xmax - xmin) // config["grid_spacing_m"]) + 1
+    ny = int((ymax - ymin) // config["grid_spacing_m"]) + 1
+    if nx < 2 or ny < 2 or nx * ny > ${GRID_CELL_LIMIT}:
+        raise m03.MagneticProcessingError("Browser grid budget is ${GRID_CELL_LIMIT.toLocaleString("en-US")} cells; increase spacing or use the local pipeline.")
 
-result = m03.process(request, source_hash_verified=True)
-json.dumps(result, allow_nan=False, separators=(",", ":"))
+    result = m03.process(request, source_hash_verified=True)
+    return json.dumps(result, allow_nan=False, separators=(",", ":"))
+
+try:
+    _m03_json = _m03_run()
+finally:
+    del _m03_run
+_m03_json
 `;
 
 async function sha256(bytes: Uint8Array): Promise<string> {
@@ -106,6 +117,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
 
 scope.onmessage = async ({ data }: MessageEvent<Job>) => {
   activeId = data.id;
+  const workerStartedAt = performance.now();
   try {
     if (!(data.bytes instanceof ArrayBuffer) || data.bytes.byteLength < 1 || data.bytes.byteLength > 16 * 1024 * 1024)
       throw new Error("M03 browser lane accepts original CSV files from 1 byte to 16 MiB.");
@@ -119,21 +131,33 @@ scope.onmessage = async ({ data }: MessageEvent<Job>) => {
     if (originalBytes[originalBytes.length - 1] === 10 || originalBytes[originalBytes.length - 1] === 13) physicalLines--;
     if (physicalLines > SOURCE_LINE_LIMIT)
       throw new Error(`Browser lane limit is ${ROW_LIMIT.toLocaleString("en-US")} CSV observations; reduce the source or use the local pipeline.`);
+    const runtimeReused = runtimePromise !== undefined;
+    const runtimeStartedAt = performance.now();
     const pyodide = await runtime();
+    const runtimeLoadMilliseconds = runtimeReused ? 0 : performance.now() - runtimeStartedAt;
     scope.postMessage({ id: data.id, progress: { stage: "processing" } });
+    const processingStartedAt = performance.now();
     pyodide.FS.writeFile("/m03-original.csv", originalBytes);
     const config = new TextEncoder().encode(JSON.stringify(data.options));
     pyodide.FS.writeFile("/m03-config.json", config);
     const encoded = await pyodide.runPythonAsync<string>(runCanonicalPipeline);
-    const result = JSON.parse(encoded);
+    let result: any;
+    try {
+      result = JSON.parse(encoded);
+    } finally {
+      pyodide.runPython('globals().pop("_m03_json", None)');
+    }
     if (result?.schema !== "magnetic-flightline-process-result-1" ||
         result?.claims?.source_hash_recomputed_from_original_bytes !== true ||
         result?.source?.sha256 !== await sha256(originalBytes))
       throw new Error("Canonical M03 result failed original-byte identity verification.");
     const versions = JSON.parse(pyodide.runPython<string>(
-      'import json, numpy, scipy, sys; json.dumps({"python": ".".join(map(str, sys.version_info[:3])), "numpy": numpy.__version__, "scipy": scipy.__version__})',
+      '(lambda sys, numpy, scipy: __import__("json").dumps({"python": ".".join(map(str, sys.version_info[:3])), "numpy": numpy.__version__, "scipy": scipy.__version__}))(__import__("sys"), __import__("numpy"), __import__("scipy"))',
     ));
+    const processingMilliseconds = performance.now() - processingStartedAt;
     const pipelineHash = await sha256(new TextEncoder().encode(magneticPipelineSource));
+    const wasmHeapCapacityBytes = pyodide._module?.HEAPU8?.byteLength ??
+      pyodide._module?.wasmMemory?.buffer.byteLength ?? null;
     scope.postMessage({
       id: data.id,
       ok: true,
@@ -141,6 +165,11 @@ scope.onmessage = async ({ data }: MessageEvent<Job>) => {
         result,
         execution: {
           lane: "browser-local-pyodide",
+          runtime_reused: runtimeReused,
+          runtime_load_ms: runtimeLoadMilliseconds,
+          processing_ms: processingMilliseconds,
+          total_worker_ms: performance.now() - workerStartedAt,
+          wasm_heap_capacity_bytes: wasmHeapCapacityBytes,
           pyodide_version: PYODIDE_VERSION,
           python_version: versions.python,
           numpy_version: versions.numpy,

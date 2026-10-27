@@ -9,6 +9,7 @@
     "build:single-origin": "npm run build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
+    "benchmark:m03": "node scripts/benchmark-magnetic-local.mjs",
     "gate": "node scripts/gate.mjs"
   },
   "dependencies": {

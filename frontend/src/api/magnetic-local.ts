@@ -71,6 +71,11 @@ export interface MagneticLocalResult {
 
 export interface MagneticLocalExecution {
   lane: "browser-local-pyodide";
+  runtime_reused: boolean;
+  runtime_load_ms: number;
+  processing_ms: number;
+  total_worker_ms: number;
+  wasm_heap_capacity_bytes: number | null;
   pyodide_version: string;
   python_version: string;
   numpy_version: string;
@@ -120,11 +125,53 @@ function validateOptions(options: MagneticLocalOptions): void {
     throw new Error("M03 grid spacing, whole-line holdout fraction or deterministic seed is outside its contract.");
 }
 
+let sharedWorker: Worker | undefined;
+let workerIdleTimer: ReturnType<typeof setTimeout> | undefined;
+let workerQueue: Promise<void> = Promise.resolve();
+const WORKER_IDLE_MILLISECONDS = 5 * 60 * 1000;
+
+function enqueueWorkerJob<T>(job: () => Promise<T>): Promise<T> {
+  const current = workerQueue.then(job);
+  workerQueue = current.then(() => undefined, () => undefined);
+  return current;
+}
+
+function acquireWorker(): Worker {
+  if (workerIdleTimer !== undefined) clearTimeout(workerIdleTimer);
+  workerIdleTimer = undefined;
+  sharedWorker ??= new Worker(new URL("../workers/magnetic-local.worker.ts", import.meta.url), {
+    type: "module", name: "m03-magnetic-local",
+  });
+  return sharedWorker;
+}
+
+function releaseWorker(worker: Worker, discard: boolean): void {
+  worker.onmessage = null;
+  worker.onerror = null;
+  if (discard) {
+    worker.terminate();
+    if (sharedWorker === worker) sharedWorker = undefined;
+    if (workerIdleTimer !== undefined) clearTimeout(workerIdleTimer);
+    workerIdleTimer = undefined;
+    return;
+  }
+  if (sharedWorker !== worker) return;
+  if (workerIdleTimer !== undefined) clearTimeout(workerIdleTimer);
+  workerIdleTimer = setTimeout(() => {
+    if (sharedWorker === worker) {
+      worker.terminate();
+      sharedWorker = undefined;
+    }
+    workerIdleTimer = undefined;
+  }, WORKER_IDLE_MILLISECONDS);
+}
+
 /**
  * Run the repository's magnetic_processing.py in Pyodide. No CSV bytes or
- * derived arrays are sent to the application API. Cancellation terminates the
- * worker because Pyodide/WebAssembly cannot be preempted without shared-memory
- * headers that this static VPS does not currently configure.
+ * derived arrays are sent to the application API. Sequential runs reuse the
+ * initialized Pyodide/SciPy worker for five idle minutes. Cancellation and
+ * execution failure terminate the worker because WebAssembly cannot be
+ * preempted safely; the next run starts with a clean runtime.
  */
 export async function runMagneticLocal(
   file: File,
@@ -137,37 +184,42 @@ export async function runMagneticLocal(
     throw new Error(`This browser lane accepts CSV files up to ${M03_LOCAL_LIMITS.sourceBytes / 1024 / 1024} MiB.`);
   if (runOptions.signal?.aborted) throw abortError();
 
-  const id = crypto.randomUUID();
-  const worker = new Worker(new URL("../workers/magnetic-local.worker.ts", import.meta.url), { type: "module", name: "m03-magnetic-local" });
-  return new Promise<MagneticLocalRun>((resolve, reject) => {
-    let settled = false;
-    const finish = (error?: Error, value?: MagneticLocalRun) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timeout);
-      runOptions.signal?.removeEventListener("abort", onAbort);
-      worker.terminate();
-      if (error) reject(error);
-      else resolve(value!);
-    };
-    const onAbort = () => finish(abortError());
-    const timeout = setTimeout(() => finish(new Error("M03 browser processing exceeded its 180 second execution limit.")), M03_LOCAL_LIMITS.wallMilliseconds);
-    runOptions.signal?.addEventListener("abort", onAbort, { once: true });
-    worker.onerror = event => finish(new Error(`M03 worker failed: ${event.message || "unknown worker error"}`));
-    worker.onmessage = (event: MessageEvent<WorkerReply | { id: string; progress: MagneticLocalProgress }>) => {
-      const message = event.data;
-      if (message.id !== id) return;
-      if ("progress" in message) {
-        runOptions.onProgress?.(message.progress);
-        return;
-      }
-      if (message.ok) finish(undefined, message.result);
-      else finish(new Error(message.error));
-    };
-    void file.arrayBuffer().then(bytes => {
-      if (settled) return;
-      if (runOptions.signal?.aborted) return onAbort();
-      worker.postMessage({ id, bytes, filename: file.name, options }, [bytes]);
-    }).catch(error => finish(error instanceof Error ? error : new Error(String(error))));
+  return enqueueWorkerJob(() => {
+    if (runOptions.signal?.aborted) return Promise.reject(abortError());
+    const id = crypto.randomUUID();
+    const worker = acquireWorker();
+    return new Promise<MagneticLocalRun>((resolve, reject) => {
+      let settled = false;
+      const finish = (error?: Error, value?: MagneticLocalRun, discardWorker = false) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        runOptions.signal?.removeEventListener("abort", onAbort);
+        releaseWorker(worker, discardWorker);
+        if (error) reject(error);
+        else resolve(value!);
+      };
+      const onAbort = () => finish(abortError(), undefined, true);
+      const timeout = setTimeout(() => finish(
+        new Error("M03 browser processing exceeded its 180 second execution limit."), undefined, true,
+      ), M03_LOCAL_LIMITS.wallMilliseconds);
+      runOptions.signal?.addEventListener("abort", onAbort, { once: true });
+      worker.onerror = event => finish(new Error(`M03 worker failed: ${event.message || "unknown worker error"}`), undefined, true);
+      worker.onmessage = (event: MessageEvent<WorkerReply | { id: string; progress: MagneticLocalProgress }>) => {
+        const message = event.data;
+        if (message.id !== id) return;
+        if ("progress" in message) {
+          runOptions.onProgress?.(message.progress);
+          return;
+        }
+        if (message.ok) finish(undefined, message.result);
+        else finish(new Error(message.error));
+      };
+      void file.arrayBuffer().then(bytes => {
+        if (settled) return;
+        if (runOptions.signal?.aborted) return onAbort();
+        worker.postMessage({ id, bytes, filename: file.name, options }, [bytes]);
+      }).catch(error => finish(error instanceof Error ? error : new Error(String(error))));
+    });
   });
 }

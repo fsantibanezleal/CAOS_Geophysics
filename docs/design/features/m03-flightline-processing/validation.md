@@ -61,8 +61,40 @@ splits, coverage, or result interpretation.
 
 The same test requires both runtimes to reject duplicate per-line sample order
 and a survey whose distinct flight-line geometries share an indistinguishable
-center direction. The complete browser file passes four tests; the M03
+center direction. The complete browser file passes six tests; the M03
 processing/continuation suites pass 25 tests and Ruff passes. These are
-controlled synthetic parity and rejection checks. They do not measure
-single-job latency or peak memory on supported device classes, demonstrate
-Charleston field-data parity, or open hosted job admission.
+controlled synthetic parity and rejection checks. They do not demonstrate
+Charleston field-data parity or open hosted job admission.
+
+## Warm-worker and resource profile: 2026-10-27
+
+Successful browser-local jobs now reuse a serialized Pyodide/SciPy worker for
+five minutes of idle time. The worker reports initialization versus warm reuse,
+processing and total worker time, plus Pyodide WASM heap capacity. Per-run
+Python objects are function-scoped and the serialized result string is deleted
+after transfer. Cancellation and timeout terminate the worker; a browser test
+aborts at the processing stage and verifies the next request loads a fresh
+runtime and produces the correct source-bound output.
+
+Reproduce the controlled 25,000-row benchmark from `frontend/` with:
+
+```powershell
+npm run benchmark:m03 -- --output 'E:\_Temp\CAOS_Geophysics\m03-profile.json' --repeats 3
+```
+
+The benchmark refuses paths inside the repository and refuses overwrite. Its
+input is an authored deterministic 1,040,828-byte parallel-line CSV, not field
+data. On this measured host (headless Chromium 153.0.8010.12, 1280 x 900,
+32 reported hardware threads and 32 GiB reported device memory), the cold run
+took 8.83 s wall time (3.58 s runtime/package initialization; 5.16 s processing).
+Three warm runs took 2.01–2.12 s wall time, with a 2.09 s median. All four
+reported Pyodide WASM linear heaps had 187,695,104 bytes capacity (about
+179 MiB). The exact receipt is
+[`m03-browser-resource-profile-2026-10-27.json`](../../../validation/m03-browser-resource-profile-2026-10-27.json),
+SHA-256 `3ca36efeb1acfdcca3c4a5f7e52f4ef4640f59c385a657d8bea4ec07e13ff260`.
+
+The JS heap sample is main-thread `performance.memory`; it does not include
+worker RSS, and WASM capacity is the allocator's high-water capacity, not
+total browser memory. This one local headless host is not a supported-device
+population. Cross-device process-memory/latency qualification, Charleston
+provider files and field holdout, and actual ML VPS admission remain open.

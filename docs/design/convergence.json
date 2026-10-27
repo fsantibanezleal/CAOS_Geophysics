@@ -140,7 +140,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. These are controlled synthetic fixtures only. Actual device latency/memory, Charleston provider assets and field holdout, online admission, and full product acceptance remain open.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. A 25,000-row client benchmark measured 8.83-second cold wall time, three 2.01–2.12-second warm reruns and 187,695,104-byte WASM heap capacity on one local headless Chromium host. This is authored synthetic evidence, not a device population or total RSS measurement. Charleston assets/field holdout, actual host admission, broader device memory and latency, and full product acceptance remain open.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -200,7 +200,7 @@
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "d73523c28b86613f293de6b906d43bb718f972ec4457683860fd8bbf037641f0"
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
@@ -415,7 +415,7 @@
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "d73523c28b86613f293de6b906d43bb718f972ec4457683860fd8bbf037641f0"
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
@@ -449,11 +449,15 @@
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity plus M12 launcher refusal/fixture-forwarding evidence without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance.",
+      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity and a one-host client resource profile, plus M12 launcher refusal/fixture-forwarding evidence, without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "d73523c28b86613f293de6b906d43bb718f972ec4457683860fd8bbf037641f0"
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
+        },
+        {
+          "path": "docs/validation/m03-browser-resource-profile-2026-10-27.json",
+          "sha256": "3ca36efeb1acfdcca3c4a5f7e52f4ef4640f59c385a657d8bea4ec07e13ff260"
         },
         {
           "path": "docs/validation/m12-launcher-forwarding-2026-10-27.md",
