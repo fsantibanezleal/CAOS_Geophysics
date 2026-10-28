@@ -51,8 +51,14 @@ def test_full_covariance_condition_is_checked_before_partition_selection():
 
 def test_oversized_covariance_is_rejected_before_finite_scan(monkeypatch):
     covariance = np.zeros((513, 513), dtype=np.float64)
-    monkeypatch.setattr(ml, "_finite", lambda *_: (_ for _ in ()).throw(
-        AssertionError("finite scan occurred before covariance dimension cap")))
+    original_isfinite = np.isfinite
+
+    def guarded_isfinite(value, *args, **kwargs):
+        if type(value) is np.ndarray and value.shape == covariance.shape:
+            raise AssertionError("covariance finite scan occurred before dimension cap")
+        return original_isfinite(value, *args, **kwargs)
+
+    monkeypatch.setattr(ml.np, "isfinite", guarded_isfinite)
     with pytest.raises(ValueError, match="dimension 1..512"):
         GaussianWhitener("full_covariance", covariance, np.array([0], dtype=np.int64))
 
