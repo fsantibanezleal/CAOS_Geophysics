@@ -107,8 +107,8 @@ def _identity(objective):
         if type(value[key]) is not int or value[key]<=0:
             raise ValueError('nonlinear: positive native count')
     if value['parameter_count']>8192 or value['observation_rows']>4096 or (
-            value['observation_components'] not in (1,2,3)):
-        raise ValueError('nonlinear: native observation count caps')
+            value['observation_components'] not in (1,2)):
+        raise ValueError('nonlinear: literal M11 count caps')
     if type(value['stage_index']) is not int or not 0<=value['stage_index']<=25:
         raise ValueError('nonlinear: stage index')
     return value.copy()
@@ -176,9 +176,6 @@ class _NativeRecorded(optimization.ProjectedGNCG):
             maxIterLS=30,cg_maxiter=512,cg_rtol=1e-6,cg_atol=0.,step_active_set=False,
             LSreduction=1e-4,LSshorten=.5,use_WolfeCurvature=False,
             require_decrease=True,maxStep=np.inf)
-        # SimPEG squeezes one-element bounds to scalars. Keep the public
-        # parameter-vector contract intact for single-parameter inversions.
-        self.lower,self.upper=lower.copy(),upper.copy()
         self.objective,self.identity_value,self.budget=objective,identity,budget
         tolerance=getattr(objective,'_solver_kkt_tolerance',KKT_TOLERANCE)
         if type(tolerance) is not float or not 0.<tolerance<=1e-5: raise ValueError('nonlinear: trusted normalized KKT tolerance required')
@@ -251,9 +248,7 @@ class _NativeRecorded(optimization.ProjectedGNCG):
 
     def state(self,q,gradient,phi):
         values=self.components(q,phi)
-        lower=np.broadcast_to(self.lower,q.shape).astype(np.float64,copy=False)
-        upper=np.broadcast_to(self.upper,q.shape).astype(np.float64,copy=False)
-        kkt=float(np.linalg.norm(feasible_gradient(q,gradient,lower,upper),
+        kkt=float(np.linalg.norm(feasible_gradient(q,gradient,self.lower,self.upper),
                                  ord=np.inf))/self.initial_norm
         return (q.copy(),values['phi_d'],values['phi_m'],phi,kkt)
 
