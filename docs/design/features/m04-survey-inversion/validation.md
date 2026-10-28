@@ -1,5 +1,25 @@
 # Independent validation and complete acceptance matrix
 
+## 2026-10-28 bounded likelihood-composition increment
+
+`data-pipeline/magnetic_objective.py` now composes the frozen Gaussian data
+term with secondary ENU, linear TMI, and exact total-field anomaly quantities.
+It returns the dimensionless whitened L2 value, physical `observed - predicted`
+residual, gradient, and matrix-free Gauss-Newton action for normalized
+`q=chi_si/0.01`. Selected original rows are matched exactly to the whitener;
+principal full-covariance whitening is retained. Kernel receiver/cell/product
+caps are checked before copying or scanning numeric values.
+
+The focused local run passed 32 tests across `test_magnetic_likelihood.py`,
+`test_magnetic_quantity.py`, and `test_magnetic_objective.py`; Ruff, Python
+compilation, and `git diff --check` passed for the new objective/test files.
+An initial test exposed that the exported residual used `observed - (predicted
+- observed)`; the return path was corrected and regression-tested against
+`observed - predicted`. This increment does not create SimPEG kernels, solve
+for a model, bind an accepted optimizer, run a user survey, create artifacts,
+or satisfy R-405..R-420. The optimizer and all nonlinear precision gates remain
+open; this is objective-component evidence only.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
