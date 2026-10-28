@@ -203,7 +203,7 @@
         },
         {
           "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
-          "sha256": "7c65e1209f892aabc9f164f8c8708298a9287b84bc4efb786a78a14ad2712635"
+          "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
         }
       ],
       "receipts": []
@@ -212,47 +212,15 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. A 25,000-row client benchmark measured 8.83-second cold wall time, three 2.01–2.12-second warm reruns and 187,695,104-byte WASM heap capacity on one local headless Chromium host. This is authored synthetic evidence, not a device population or total RSS measurement. Charleston assets/field holdout, actual host admission, broader device memory and latency, and full product acceptance remain open. Current Linux CPython 3.12.10 M02 forward controls independently rerun: 80 pass; scoped integration 118 pass, 2 existing skips. This verifies the ordinary operator source epoch only. The previous M02 service-runtime packaging defects are repaired in the current branch: pymatsolver is pinned and isolated Linux runtime-profile audit verifies 21 installed-source hashes plus pure-Python SimPEG/PyMatSolver wheel tags. This remains local staging-profile evidence only; immutable VPS release staging, method acceptance, user-data/UI, host and full-product gates remain open. R-008 remains failed. The fresh VPS replay for candidate 033a5e7 passed all 381 named gravity/magnetic forward, locked L2 selection and joint-plan controls under Linux CPython 3.12.16. This closes that bounded cross-runtime numerical replay only; M12 remains failed and full method/user-data/owner/host/browser acceptance remains open, so R-008 remains failed. The uploaded M02 control now independently checks the returned model forward response and recomputes its withheld residual metrics from the exported values. This authored one-cell path does not validate field geology or complete M01-M13 acceptance; R-008 remains failed. A focused Windows rerun of four locked M02 controls (condition/family 0/1) passed under the declared single-thread environment; see docs/validation/m02-windows-focused-rerun-2026-10-28.md. The full Windows matrix and whole-method acceptance remain open.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. A 25,000-row client benchmark measured 8.83-second cold wall time, three 2.01–2.12-second warm reruns and 187,695,104-byte WASM heap capacity on one local headless Chromium host. This is authored synthetic evidence, not a device population or total RSS measurement. Charleston assets/field holdout, actual host admission, broader device memory and latency, and full product acceptance remain open. Current Linux CPython 3.12.10 M02 forward controls independently rerun: 80 pass; scoped integration 118 pass, 2 existing skips. This verifies the ordinary operator source epoch only. The previous M02 service-runtime packaging defects are repaired in the current branch: pymatsolver is pinned and isolated Linux runtime-profile audit verifies 21 installed-source hashes plus pure-Python SimPEG/PyMatSolver wheel tags. This remains local staging-profile evidence only; immutable VPS release staging, method acceptance, user-data/UI, host and full-product gates remain open. R-008 remains failed. The fresh VPS replay for candidate 033a5e7 passed all 381 named gravity/magnetic forward, locked L2 selection and joint-plan controls under Linux CPython 3.12.16. This closes that bounded cross-runtime numerical replay only; M12 remains failed and full method/user-data/owner/host/browser acceptance remains open, so R-008 remains failed. The uploaded M02 control now independently checks the returned model forward response and recomputes its withheld residual metrics from the exported values. This authored one-cell path does not validate field geology or complete M01-M13 acceptance; R-008 remains failed. A focused Windows rerun of four locked M02 controls (condition/family 0/1) passed under the declared single-thread environment; see docs/validation/m02-windows-focused-rerun-2026-10-28.md. The full Windows matrix and whole-method acceptance remain open. The complete current-source Windows matrix subsequently passed all24 locked condition/family controls with zero failures, errors or skips under the declared single-thread policy; see docs/validation/m02-windows-full-matrix-2026-10-28.md and its per-case receipt. This closes only that local synthetic control rerun. The new bilingual M12 checkpoint notebook pair freshly trains and source-verifies the fixed 40-epoch CPU model, reconstructs six cohorts, compares same-input classical outputs and independent forward predictions, and retains the failed joint comparator (velocity ratio5.616; oracle-time ratio12.231). This improves reproducibility and teaching; M12 and R-008 remain failed, and full method, field, hosted and release acceptance remain open.",
       "evidence": [
         {
-          "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "a7bef27d780d620ad66d1acc45804110553cc9b7712cbc96e0897c0e519ce951"
+          "path": "app/magnetic_bundle.py",
+          "sha256": "5ad1aadf4cdaf6f8db7799de9798221706010f7abd6c19495e29ac8330d4460c"
         },
         {
-          "path": "docs/design/features/m06-field-mt/convergence.md",
-          "sha256": "89bfb88e433262a152490c0aa379b419a33f3e6e00c3bd5223d3fbbf80188b0c"
-        },
-        {
-          "path": "docs/validation/fwi-canonical-import-20261003.json",
-          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
-        },
-        {
-          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
-          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
-        },
-        {
-          "path": "docs/validation/gravity-forward-independent-review-2026-10-03.md",
-          "sha256": "cbfc9293b23091d115bf38ca8bb75884ad000de7328aaa686139803fe1acea56"
-        },
-        {
-          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
-          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
-        },
-        {
-          "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
-          "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
-        },
-        {
-          "path": "docs/design/features/m02-survey-l2/evidence/local-matrix-execution-20261025.json",
-          "sha256": "c5628dbcca4b017754b7c27e923f4fb8542278520e826eb7e4c2884377e82802"
-        },
-        {
-          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
-          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
-        },
-        {
-          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
-          "sha256": "e2d6f99896e3cfba581bdf055aee42f2a70e26a7855507c935e8fafdfae9c0cf"
+          "path": "app/magnetic_compute.py",
+          "sha256": "6b4d780111499f3b835ee45356259ad629a451a99b1972c0639bc47a45b9686c"
         },
         {
           "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
@@ -263,24 +231,104 @@
           "sha256": "2fda6e4748e6f8f6b3c812d9653a3fd06c0748afbe53745ca5b22c8094ad721e"
         },
         {
-          "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "4dd0250db54a36ed8b3d5cf709ca0c48e9fbeab8f15b714f23fd06566374b02a"
+          "path": "docs/design/features/m02-prism-operator/evidence/linux-independent-rerun-2026-10-27.json",
+          "sha256": "49b413eb9fa9e11820aa6f4c09d3b9add89093dc754f919e4403759faa7393f9"
         },
         {
-          "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "b0a4fa38da1ffb1d4f23dfa88aa462c0df497e520f63062eac85173e81791fa2"
+          "path": "docs/design/features/m02-prism-operator/evidence/linux-runtime-staging-2026-10-27.json",
+          "sha256": "9fc098a632200caf8cc92040df2a1e2147075ecdd8526605582f0853ae939541"
+        },
+        {
+          "path": "docs/design/features/m02-survey-l2/evidence/local-matrix-execution-20261025.json",
+          "sha256": "c5628dbcca4b017754b7c27e923f4fb8542278520e826eb7e4c2884377e82802"
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
           "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
         },
         {
-          "path": "tests/numerics/test_magnetic_continuation.py",
-          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+          "path": "docs/design/features/m06-field-mt/convergence.md",
+          "sha256": "89bfb88e433262a152490c0aa379b419a33f3e6e00c3bd5223d3fbbf80188b0c"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/convergence.md",
+          "sha256": "a7bef27d780d620ad66d1acc45804110553cc9b7712cbc96e0897c0e519ce951"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
+          "sha256": "e2d6f99896e3cfba581bdf055aee42f2a70e26a7855507c935e8fafdfae9c0cf"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
           "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
+        },
+        {
+          "path": "docs/validation/fwi-canonical-import-20261003.json",
+          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        },
+        {
+          "path": "docs/validation/gravity-forward-independent-review-2026-10-03.md",
+          "sha256": "cbfc9293b23091d115bf38ca8bb75884ad000de7328aaa686139803fe1acea56"
+        },
+        {
+          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
+          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
+        },
+        {
+          "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
+          "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
+        },
+        {
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
+        },
+        {
+          "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
+          "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
+        },
+        {
+          "path": "docs/validation/m02-windows-full-matrix-2026-10-28.json",
+          "sha256": "1ab7ba10489d479bc8613ba8734081c9d4909bb2d42157fdefbcdeb0c15ac8cb"
+        },
+        {
+          "path": "docs/validation/m02-windows-full-matrix-2026-10-28.md",
+          "sha256": "354d35f886d56886ba59a49ff4b3b81c9a40f60c54e381ff1663a1c60f7a6d8f"
+        },
+        {
+          "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
+          "sha256": "d5f21007a6a6149137586a0e19b866e098ac4e3e7cf97d493792117037192c1c"
+        },
+        {
+          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
+          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
+        },
+        {
+          "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
+          "sha256": "7f6f218568cdba0df6052abda6494202fa3acc72446e7a2081c636955d4bd1fb"
+        },
+        {
+          "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "4dd0250db54a36ed8b3d5cf709ca0c48e9fbeab8f15b714f23fd06566374b02a"
+        },
+        {
+          "path": "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb",
+          "sha256": "7877c54b6f5e526b1fe955103af9a325ae2541b4b0786859159c81d66026d6eb"
+        },
+        {
+          "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "b0a4fa38da1ffb1d4f23dfa88aa462c0df497e520f63062eac85173e81791fa2"
+        },
+        {
+          "path": "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb",
+          "sha256": "96ed019c4c8e7f760984e4a81a1f52d75cff468e81c4503e27503dbdabe080d2"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "88584d441d23e614d8f8f3670e69168ef9174adf20625c9318dddae61e6d3729"
         },
         {
           "path": "tests/api/test_magnetic_compute.py",
@@ -291,36 +339,8 @@
           "sha256": "67d64829b47c16d60e4adb40979fc4f2131335c1a9e240c9481b20009de96cf3"
         },
         {
-          "path": "app/magnetic_compute.py",
-          "sha256": "6b4d780111499f3b835ee45356259ad629a451a99b1972c0639bc47a45b9686c"
-        },
-        {
-          "path": "app/magnetic_bundle.py",
-          "sha256": "5ad1aadf4cdaf6f8db7799de9798221706010f7abd6c19495e29ac8330d4460c"
-        },
-        {
-          "path": "docs/design/features/m02-prism-operator/evidence/linux-independent-rerun-2026-10-27.json",
-          "sha256": "49b413eb9fa9e11820aa6f4c09d3b9add89093dc754f919e4403759faa7393f9"
-        },
-        {
-          "path": "docs/design/features/m02-prism-operator/evidence/linux-runtime-staging-2026-10-27.json",
-          "sha256": "9fc098a632200caf8cc92040df2a1e2147075ecdd8526605582f0853ae939541"
-        },
-        {
-          "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
-          "sha256": "7f6f218568cdba0df6052abda6494202fa3acc72446e7a2081c636955d4bd1fb"
-        },
-        {
-          "path": "tests/api/test_gravity_l2_upload.py",
-          "sha256": "88584d441d23e614d8f8f3670e69168ef9174adf20625c9318dddae61e6d3729"
-        },
-        {
-          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
-          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
-        },
-        {
-          "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
-          "sha256": "7c65e1209f892aabc9f164f8c8708298a9287b84bc4efb786a78a14ad2712635"
+          "path": "tests/numerics/test_magnetic_continuation.py",
+          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
         }
       ],
       "receipts": []
@@ -528,87 +548,99 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the 56-notebook set now passes full fresh-kernel execution and structural mirrored-course gates. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved. A bilingual M10 four-geology case-matrix lesson now inspects four existing hash-verified full-run artifacts and exposes the salt negative control and unresolved low-velocity channel; fresh-kernel runs and strict replays pass. It adds inspectability, not solver evidence, independent propagation, field validation or course/product acceptance. A hash-bound coverage manifest now associates all 13 method IDs and 56 bilingual notebook files with the source review inventory. Structural matrix checks pass; scientific correctness, rights, full in-app chapter depth and rendered teaching acceptance remain separate and unresolved.",
+      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the 56-notebook set now passes full fresh-kernel execution and structural mirrored-course gates. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved. A bilingual M10 four-geology case-matrix lesson now inspects four existing hash-verified full-run artifacts and exposes the salt negative control and unresolved low-velocity channel; fresh-kernel runs and strict replays pass. It adds inspectability, not solver evidence, independent propagation, field validation or course/product acceptance. A hash-bound coverage manifest now associates all 13 method IDs and 56 bilingual notebook files with the source review inventory. Structural matrix checks pass; scientific correctness, rights, full in-app chapter depth and rendered teaching acceptance remain separate and unresolved. The reviewed course inventory now contains58 mirrored notebooks. A bilingual M12 checkpoint-inference lesson pair executes and freshly replays the source-bound training/checkpoint verifier and independent held-out comparison; its negative ratios remain explicit. This closes that missing teaching artifact, not in-app course rendering, comprehensive method coverage or product acceptance.",
       "evidence": [
         {
-          "path": "docs/validation/source-to-content-review.md",
-          "sha256": "6e63dea484e001864b503295cb617904fbe36895d5021c9643b4ead681009b03"
-        },
-        {
-          "path": "docs/wiki/README.md",
-          "sha256": "462e5d90f1dfe519a1e7954597151dd51237c1bd3e3577eacf3ca82ea673d02a"
-        },
-        {
-          "path": "docs/wiki/methods/m01-m06.md",
-          "sha256": "d8585313e9cd98c83fedd08575728fe397094de8b8a5f3095c63f650379a959f"
-        },
-        {
-          "path": "docs/wiki/methods/m07-m13.md",
-          "sha256": "0325187ba3a873a0537f37f2d1aebc96b0a3577aea8a9530ae4832d6baa947fd"
-        },
-        {
-          "path": "docs/wiki/methods/m01-m06.es.md",
-          "sha256": "958af75c707f7f992b521470aced1728020448d0a77f298180aa00b6b38da04b"
-        },
-        {
-          "path": "docs/wiki/methods/m07-m13.es.md",
-          "sha256": "405e8dc47cb8a9271eb430c3c70ee7847363497ac866436029975d6cf851f2bc"
-        },
-        {
-          "path": "scripts/check_docs_matrix.py",
-          "sha256": "312175b68d1707894239c222c8319ec9d98c28835abb513c956485be4f9be3f7"
-        },
-        {
-          "path": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
-          "sha256": "aca6cc03bff28fe65eb32d02477a9ab61478b9d25135826c118ccf20072e9fee"
-        },
-        {
-          "path": "notebooks/es/08-learning/04-nullspace-refinement-evidence.ipynb",
-          "sha256": "c81623da03d5d483262dc6546b6dac11f718df6baf9c529f4a911bd184d8298a"
-        },
-        {
-          "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "4dd0250db54a36ed8b3d5cf709ca0c48e9fbeab8f15b714f23fd06566374b02a"
-        },
-        {
-          "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "b0a4fa38da1ffb1d4f23dfa88aa462c0df497e520f63062eac85173e81791fa2"
-        },
-        {
-          "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "8b039c2179925a6c63cbe644f340ab3851ef792025826b76299b064296748892"
-        },
-        {
-          "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "e0a84610a9600d516431505142b99e6be3f8c9521c4d33681903f43a4e49cc37"
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
           "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
         },
         {
-          "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
-        },
-        {
-          "path": "tests/numerics/test_magnetic_continuation.py",
-          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+          "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
+          "sha256": "d5f21007a6a6149137586a0e19b866e098ac4e3e7cf97d493792117037192c1c"
         },
         {
           "path": "docs/validation/notebook-review-2026-10-27.md",
-          "sha256": "c71633811770657afa73851dac887ad83702ef898656dde36e8f252620c829a8"
+          "sha256": "eb2394f88d7207f0b58d3fe2ea1721f2607d802d32bd990fb22934e6f3949066"
+        },
+        {
+          "path": "docs/validation/source-content-coverage.json",
+          "sha256": "08ae5fb9e87c096325c8995f80c30dbe8218b34e82c2c157e116154721ca4dac"
+        },
+        {
+          "path": "docs/validation/source-to-content-review.md",
+          "sha256": "1e44c43b24728234f1ae601347c59a85711c1ed6e8d168fe6b04fb974109710f"
+        },
+        {
+          "path": "docs/wiki/README.md",
+          "sha256": "462e5d90f1dfe519a1e7954597151dd51237c1bd3e3577eacf3ca82ea673d02a"
+        },
+        {
+          "path": "docs/wiki/methods/m01-m06.es.md",
+          "sha256": "958af75c707f7f992b521470aced1728020448d0a77f298180aa00b6b38da04b"
+        },
+        {
+          "path": "docs/wiki/methods/m01-m06.md",
+          "sha256": "d8585313e9cd98c83fedd08575728fe397094de8b8a5f3095c63f650379a959f"
+        },
+        {
+          "path": "docs/wiki/methods/m07-m13.es.md",
+          "sha256": "405e8dc47cb8a9271eb430c3c70ee7847363497ac866436029975d6cf851f2bc"
+        },
+        {
+          "path": "docs/wiki/methods/m07-m13.md",
+          "sha256": "0325187ba3a873a0537f37f2d1aebc96b0a3577aea8a9530ae4832d6baa947fd"
+        },
+        {
+          "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+          "sha256": "8b039c2179925a6c63cbe644f340ab3851ef792025826b76299b064296748892"
         },
         {
           "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
           "sha256": "ca5d8378533d672ee617a5c2042618106f33b372131536955ad513ac3535379a"
         },
         {
+          "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "4dd0250db54a36ed8b3d5cf709ca0c48e9fbeab8f15b714f23fd06566374b02a"
+        },
+        {
+          "path": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
+          "sha256": "aca6cc03bff28fe65eb32d02477a9ab61478b9d25135826c118ccf20072e9fee"
+        },
+        {
+          "path": "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb",
+          "sha256": "7877c54b6f5e526b1fe955103af9a325ae2541b4b0786859159c81d66026d6eb"
+        },
+        {
+          "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+          "sha256": "e0a84610a9600d516431505142b99e6be3f8c9521c4d33681903f43a4e49cc37"
+        },
+        {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
           "sha256": "f3c63cc649f46e8c71aa519c614348dc46230cbd81d34f615ca2a031bc1b1ad6"
         },
         {
-          "path": "docs/validation/source-content-coverage.json",
-          "sha256": "91f15ca9195c9512ba821b0881f072d8e6bdc5990104f99c361e1df16d9c07cc"
+          "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "b0a4fa38da1ffb1d4f23dfa88aa462c0df497e520f63062eac85173e81791fa2"
+        },
+        {
+          "path": "notebooks/es/08-learning/04-nullspace-refinement-evidence.ipynb",
+          "sha256": "c81623da03d5d483262dc6546b6dac11f718df6baf9c529f4a911bd184d8298a"
+        },
+        {
+          "path": "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb",
+          "sha256": "96ed019c4c8e7f760984e4a81a1f52d75cff468e81c4503e27503dbdabe080d2"
+        },
+        {
+          "path": "scripts/check_docs_matrix.py",
+          "sha256": "4822435287f6dd836d8e7325358ea3f341bf84ab2df8e6cd36711f22879c5fad"
+        },
+        {
+          "path": "tests/numerics/test_magnetic_continuation.py",
+          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
         }
       ],
       "receipts": []
@@ -686,7 +718,7 @@
         },
         {
           "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
-          "sha256": "7c65e1209f892aabc9f164f8c8708298a9287b84bc4efb786a78a14ad2712635"
+          "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
         }
       ],
       "receipts": []

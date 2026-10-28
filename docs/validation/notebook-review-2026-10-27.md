@@ -36,3 +36,16 @@ The bilingual notebook set passes its structural gate at 56 mirrored notebooks; 
 The bilingual notebook set is not accepted as complete course content. M02/M04's new 3D inversion lessons, M03's line-processing lesson and M09's exact-core synthetic inverse are meaningful scoped additions; provider-source validation and the broader survey inverse remain unaccepted. Additional FWI regimes and an independent solver comparison, multi-family M11 optimizer and paired single-modality analysis beyond one fresh calibration, M12 velocity-checkpoint inference, independent MT/ERT comparisons, a fresh 23-trace M13 ONNX/private-oracle browser parity run, complete cross-modality user-data workflows beyond the implemented first-arrival browser calculation, rendered acceptance and actual-host gates remain open under `docs/design/SDD.md` and `docs/design/convergence.json`. No release cutover is authorized by these notebook checks.
 
 The notebook/harness milestone is evidence-backed and ready to persist on the task branch; it does not satisfy full product promotion or deployment acceptance.
+
+## 2026-10-28 M12 checkpoint lesson update
+
+The bilingual course now has 58 mirrored notebooks. The new M12 Level 3 pair
+trains and verifies the fixed learned velocity checkpoint, compares all six
+cohorts with the same-input classical solver, and checks each result with the
+independent quadrature forward operator. Both fresh-kernel runs and subsequent
+fresh-output `--check` replays pass; see
+[`m12-checkpoint-notebook-2026-10-28.md`](m12-checkpoint-notebook-2026-10-28.md).
+The measured joint family/acquisition holdout fails the frozen comparator by
+wide margins (velocity ratio 5.616; independent time ratio 12.231). This closes
+the missing checkpoint-inference teaching artifact only. M12 remains failed;
+full notebook/course acceptance and whole-product release gates remain open.

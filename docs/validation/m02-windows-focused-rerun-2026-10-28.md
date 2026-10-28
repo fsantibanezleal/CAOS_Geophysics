@@ -24,6 +24,6 @@ An earlier direct invocation omitted the required one-thread variables. The
 optimizer's workspace guard rejected it before optimization; the API recorded
 those as `engine_error`, which is not a solver convergence result. This is a
 harness invocation error, not evidence for relaxing the solver's stopping
-policy. The full 24-control Windows matrix was not rerun. The existing pinned
-Linux full-matrix receipt remains separate evidence; overall M02 and M01-M13
-product acceptance remain open.
+policy. This focused result has since been superseded by the full current-source
+24-control Windows matrix: [execution report](m02-windows-full-matrix-2026-10-28.md).
+Overall M02 and M01-M13 product acceptance remain open.

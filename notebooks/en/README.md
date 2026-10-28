@@ -33,3 +33,4 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `08-learning` | 3 | [First-arrival user-data processing and sensitivity](08-learning/05-first-arrival-user-data.ipynb) | [05-first-arrival-user-data](../es/08-learning/05-first-arrival-user-data.ipynb) |
 | `08-learning` | 3 | [Phase-picker stress strata and browser-parity boundary](08-learning/03-learning-state-of-art.ipynb) | [03-learning-state-of-art](../es/08-learning/03-learning-state-of-art.ipynb) |
 | `08-learning` | 3 | [Null-space refinement: calibration and held-out stress tests](08-learning/04-nullspace-refinement-evidence.ipynb) | [04-nullspace-refinement-evidence](../es/08-learning/04-nullspace-refinement-evidence.ipynb) |
+| `08-learning` | 3 | [M12 learned velocity checkpoint: locked holdout](08-learning/06-m12-velocity-checkpoint.ipynb) | [06-m12-velocity-checkpoint](../es/08-learning/06-m12-velocity-checkpoint.ipynb) |

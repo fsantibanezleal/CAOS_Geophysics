@@ -33,3 +33,4 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `08-learning` | 3 | [Procesamiento de datos de primeras llegadas y sensibilidad](08-learning/05-first-arrival-user-data.ipynb) | [05-first-arrival-user-data](../en/08-learning/05-first-arrival-user-data.ipynb) |
 | `08-learning` | 3 | [Estratos de estrés del picker y límite de paridad del navegador](08-learning/03-learning-state-of-art.ipynb) | [03-learning-state-of-art](../en/08-learning/03-learning-state-of-art.ipynb) |
 | `08-learning` | 3 | [Refinamiento en el espacio nulo: calibración y pruebas retenidas](08-learning/04-nullspace-refinement-evidence.ipynb) | [04-nullspace-refinement-evidence](../en/08-learning/04-nullspace-refinement-evidence.ipynb) |
+| `08-learning` | 3 | [Checkpoint M12 de velocidad aprendida: prueba bloqueada](08-learning/06-m12-velocity-checkpoint.ipynb) | [06-m12-velocity-checkpoint](../en/08-learning/06-m12-velocity-checkpoint.ipynb) |

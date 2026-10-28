@@ -420,6 +420,18 @@
         "https://www.pygimli.org/user-guide/inversion/"
       ],
       "content_scope": "Exercises first-arrival user-data inversion and sensitivity with its documented evidence limits."
+    },
+    {
+      "en": "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb",
+      "es": "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb",
+      "methods": [
+        "M12"
+      ],
+      "title": "M12 learned velocity checkpoint: locked holdout",
+      "sources": [
+        "https://github.com/lanl/OpenFWI"
+      ],
+      "content_scope": "Runs the trained M12 velocity checkpoint on family/acquisition-disjoint held-outs, compares the same inputs with the classical solver and independently forwards both maps."
     }
   ]
 }
