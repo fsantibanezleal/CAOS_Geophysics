@@ -92,8 +92,13 @@ susceptibility unit.
 
 Use actual SimPEG WeightedLeastSquares, IdentityMap(A), explicit q_ref,
 reference_model_in_smooth=True, alpha_s=1, alpha_j=ell_j^2 m^2,
-alpha_xx=alpha_yy=alpha_zz=0. Add constant cell weights 1/V with
-V=sum(active cell volumes) m^3, not per-cell inverse volumes.
+alpha_xx=alpha_yy=alpha_zz=0. Let V=sum(active cell volumes) m^3. For the
+pinned SimPEG 0.25.2 `weights` API, pass `weights={"volume": v_i/V}` on active
+cells. A constant `1/V` array passed through that API does not insert cell
+volumes; it produces unweighted smallness and fails the equation below. The
+per-cell values are volume fractions, not per-cell inverse volumes. Verify
+SimPEG objective, gradient and Hessian against the independent active-face
+formula before using this regularizer.
 Do not use vendor length_scale_* as literal metre lengths.
 For delta=q-q_ref:
 

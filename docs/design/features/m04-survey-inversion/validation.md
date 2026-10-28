@@ -39,6 +39,25 @@ candidate is accepted, and the magnetic inverse remains unimplemented until the
 M02 accepted export/source, semantics, and M04-specific precision and resource
 evidence are bound. The open draft M02 survey-L2 PR is not acceptance evidence.
 
+## 2026-10-28 SimPEG regularization cross-check
+
+`data-pipeline/magnetic_regularization.py` now constructs the pinned SimPEG
+0.25.2 `WeightedLeastSquares` objective with identity mapping, explicit
+reference-in-smoothness, dimensionless beta-ready q units, zero second-order
+coefficients and volume fractions `v_i/V`. A separate explicit sparse quadratic
+uses only physical center-to-center faces whose two cells are active. On a
+nonuniform 3D mesh with two inactive cells, SimPEG objective, gradient and
+Hessian action match that oracle at the test tolerances; the test observes 6,
+4 and 5 valid faces along x, y and z. Three focused regularization tests passed,
+including inactive/exterior face exclusion and shape-before-finite-scan.
+
+This test resolved a genuine API mismatch in the written recipe: a constant
+`1/V` passed as SimPEG `weights["volume"]` yields an unweighted-per-cell
+smallness term, not `sum(v_i/V * delta_i^2)`. The algorithm note now records the
+actual pinned API use that matches its frozen equation. This is local
+regularization evidence only; no magnetic inverse, accepted optimizer, field
+case, complete method gate or release acceptance is implied.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
