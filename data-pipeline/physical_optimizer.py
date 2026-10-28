@@ -21,6 +21,7 @@ import gravity_l2_precision as certificate_contract
 RUNTIME_EPOCH = 'physical-gncg-linear-candidate-1'
 POLICY = 'projected-gncg-binding-release-certified-delta-1'
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+CERTIFICATE_SOURCE_SHA256 = hashlib.sha256(Path(certificate_contract.__file__).read_bytes()).hexdigest()
 _DIGEST = re.compile('[0-9a-f]{64}\\Z', re.ASCII)
 _IDENTITY_KEYS = {'mode','runtime_epoch','objective_sha256','source_inventory_sha256',
     'q_unit','physical_unit','physical_scale','parameter_count','observation_rows',
@@ -109,6 +110,7 @@ def _preflight(objective, lower, upper, start, budget, binding):
     if type(binding) is not OptimizerBinding or (
         binding.accepted_export!='physical_optimizer.solve_bounded_physical'
         or binding.optimizer_source_sha256!=SOURCE_SHA256
+        or binding.certificate_source_sha256!=CERTIFICATE_SOURCE_SHA256
         or binding.runtime_epoch!=RUNTIME_EPOCH or identity['runtime_epoch']!=RUNTIME_EPOCH
         or binding.policy!=POLICY
         or binding.source_inventory_sha256!=identity['source_inventory_sha256']

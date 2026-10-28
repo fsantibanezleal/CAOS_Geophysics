@@ -194,7 +194,7 @@ def test_GS07_nonlinear_remains_explicitly_unsupported():
 
 @pytest.mark.parametrize('field,value', [('optimizer_source_sha256','0'*64),
     ('runtime_epoch','wrong'), ('policy','wrong'), ('accepted_export','gravity_l2._solve_partition'),
-    ('source_inventory_sha256','c'*64), ('certificate_source_sha256',None)])
+    ('source_inventory_sha256','c'*64), ('certificate_source_sha256','0'*64)])
 def test_GS10_wrong_binding_rejects_before_callbacks(field,value):
     obj = NativeObjective()
     args = _arguments(obj)
