@@ -34,6 +34,7 @@ trusted calibration state.
 | --- | --- | --- |
 | magnetic_survey_json.py | stdlib byte/token/depth/duplicate/type/canonical parsing | NumPy, SimPEG, filesystem side effects during parse |
 | magnetic_survey.py | geometry, metadata eligibility, IDs/QC, exact seal, preflight | observed amplitudes, uncertainty values, solver |
+| magnetic_fit_assembly.py | sealed fit-fold row selection, actual forward-kernel/data/regularizer composition | optimizer, validation/outer rows, candidate selection |
 | magnetic_inverse.py | actual physical G, quantity composition/J, WLS/Sparse, fit/score/refit | alternate prism kernel, IGRF, guessed corrections |
 | magnetic_optimizer_adapter.py | verify and compose accepted M02 mathematical core | gravity-private constructors, copied optimizer |
 | magnetic_survey_bundle.py | bounded arrays/manifest/hash roundtrip, local atomic generation | auth, hosted secrets, provider acquisition |

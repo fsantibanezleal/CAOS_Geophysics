@@ -82,6 +82,27 @@ kernel test and the existing closed legacy-result-schema test both passed.
 This creates a real kernel-to-objective input path, but does not yet parse a
 full survey into the forward request, run calibration or satisfy M04 acceptance.
 
+## 2026-10-28 fold-scoped objective assembly
+
+`magnetic_fit_assembly.assemble_magnetic_fit_objective` now joins the closed
+survey byte protocol to a freshly planned geometry partition, actual
+SimPEG/Geoana fit-receiver kernel, frozen Gaussian likelihood, and actual
+SimPEG WLS regularizer. It selects only the requested development fold's fit
+rows, preserves original receiver/component flattening, extracts the matching
+principal covariance for full-covariance noise, and returns the geometry seal
+and source flat indices. Before materializing observations/noise it reparses
+and revalidates the original bounded bytes; geometry planning continues to
+exclude those values.
+
+Three focused tests pass for diagonal-SD selection, full-covariance principal
+subsetting and invalid fold rejection. One actual pinned-runtime assembly run
+used the protocol-only fixture: 144 fit receivers, zero observations and a
+zero start model, producing zero initial data and regularization objectives.
+That zero control checks assembly plumbing only, not model recovery or
+scientific accuracy. No optimizer, candidate selection, held-out scoring, final
+refit, durable result bundle, native admission, user-data CLI or online path is
+implemented or accepted by this increment.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
