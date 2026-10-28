@@ -105,3 +105,23 @@ def test_subsets_full_covariance_by_original_scalar_rows(monkeypatch):
     result = assembly.assemble_magnetic_fit_objective(handle, 0)
     assert np.array_equal(result["source_flat_indices"], np.array(fit_rows, dtype=np.int64))
     assert result["initial_data"]["phi_d"] == sum((row / 0.5) ** 2 for row in fit_rows)
+
+
+def test_actual_nonzero_simpeg_fit_assembly_has_physical_objective_derivative():
+    doc = request()
+    doc["prior"]["start_si"]["data"] = [0.002] * 528
+    rehash(doc, "prior/start_si")
+    result = assembly.assemble_magnetic_fit_objective(parse_request(encode(doc)), 0)
+    objective = result["objective"]
+    q = result["start_q"].copy()
+    direction = np.zeros_like(q)
+    direction[0] = 1.
+    step = 1e-5
+    plus = objective.evaluate(q + step * direction)["phi_d"]
+    minus = objective.evaluate(q - step * direction)["phi_d"]
+    finite_difference = (plus - minus) / (2 * step)
+    analytic = float(result["initial_data"]["gradient_q"] @ direction)
+    assert len(result["fit_rows"]) > 0
+    assert result["initial_data"]["phi_d"] > 0.
+    assert np.isfinite(analytic) and abs(analytic) > 0.
+    assert np.isclose(finite_difference, analytic, rtol=2e-5, atol=2e-6)

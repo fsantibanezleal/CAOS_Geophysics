@@ -94,14 +94,17 @@ and source flat indices. Before materializing observations/noise it reparses
 and revalidates the original bounded bytes; geometry planning continues to
 exclude those values.
 
-Three focused tests pass for diagonal-SD selection, full-covariance principal
-subsetting and invalid fold rejection. One actual pinned-runtime assembly run
-used the protocol-only fixture: 144 fit receivers, zero observations and a
-zero start model, producing zero initial data and regularization objectives.
-That zero control checks assembly plumbing only, not model recovery or
-scientific accuracy. No optimizer, candidate selection, held-out scoring, final
-refit, durable result bundle, native admission, user-data CLI or online path is
-implemented or accepted by this increment.
+Four focused tests pass for diagonal-SD selection, full-covariance principal
+subsetting, invalid fold rejection and a nonzero actual SimPEG assembly. The
+nonzero test uses 144 fit receivers with chi=0.002 SI and zero protocol-control
+observations; the assembled objective is positive and its directional
+finite-difference derivative matches the analytic gradient at relative
+tolerance 2e-5. An earlier zero-start control produced zero objectives and is
+retained only as the exact zero baseline. These authored protocol controls do
+not establish inversion recovery or scientific accuracy. No optimizer,
+candidate selection, held-out scoring, final refit, durable result bundle,
+native admission, user-data CLI or online path is implemented or accepted by
+this increment.
 
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
