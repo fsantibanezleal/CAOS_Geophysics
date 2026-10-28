@@ -43,6 +43,17 @@ def test_exact_candidate_unit_keeps_production_sandbox(release):
     assert 'SocketMode=0660' in socket and 'SocketGroup=www-data' in socket
 
 
+def test_candidate_unit_uses_private_clone_environment(release, tmp_path, monkeypatch):
+    monkeypatch.setattr(qualifier, 'EVIDENCE', tmp_path)
+    evidence = tmp_path / 'api-qualification'
+    evidence.mkdir()
+    environment = evidence / 'api.env'
+    environment.write_text('GEOPHYSICS_AUTH_MODE=local\n', encoding='ascii')
+    _, service, _ = qualifier.unit_texts(release, '123456abcdef', environment)
+    assert f'EnvironmentFile={environment.as_posix()}' in service
+    assert 'EnvironmentFile=/etc/geophysics/api.env' not in service
+
+
 @pytest.mark.parametrize('token', ['', 'x' * 12, 'a' * 13, '../api', 'ABCDEF123456', 'a;reboot'])
 def test_no_caller_selected_unit_target(release, token):
     with pytest.raises(ValueError, match='identity'):
@@ -265,22 +276,30 @@ def test_outside_linux_never_creates_evidence(tmp_path, monkeypatch):
 
 def state_manifests():
     source = {'app/migrations/env.py': {'bytes': 5, 'sha256': 'a' * 64},
-              'app/migrations/versions/0003_processing_jobs.py': {'bytes': 6, 'sha256': 'b' * 64},
+              'app/migrations/versions/0001_api_foundation.py': {'bytes': 6, 'sha256': '1' * 64},
+              'app/migrations/versions/0002_private_storage_permission.py': {'bytes': 6, 'sha256': '2' * 64},
+              'app/migrations/versions/0003_processing_jobs.py': {'bytes': 6, 'sha256': '3' * 64},
               'data-pipeline/ordinary.py': {'bytes': 7, 'sha256': 'c' * 64}}
     initial = {'source_revision': 'a' * 40, 'source': source}
     candidate = {'source_revision': 'b' * 40, 'source': dict(source)}
+    candidate['source']['app/migrations/versions/0004_waveform_artifacts.py'] = {
+        'bytes': 36, 'sha256': qualifier.FORWARD_MIGRATION_SHA256}
     candidate['source']['data-pipeline/ordinary.py'] = {'bytes': 8, 'sha256': 'd' * 64}
     bootstrap = {'schema': 'geophysics.service-bootstrap/v1', 'bootstrapped': True,
                  'source_revision': initial['source_revision'],
-                 'database': {'schema_revision': qualifier.HEAD}}
+                 'database': {'schema_revision': qualifier.LEGACY_HEAD}}
     return bootstrap, initial, candidate
 
 
 def test_same_source_binds_historical_bootstrap_without_reference():
-    bootstrap, initial, _ = state_manifests()
-    assert qualifier.state_compatibility(bootstrap, initial) == {
-        'initial_source_revision': 'a' * 40, 'schema_revision': qualifier.HEAD,
-        'migration_inventory_sha256': qualifier.migration_digest(initial)}
+    _, _, candidate = state_manifests()
+    bootstrap = {'schema': 'geophysics.service-bootstrap/v1', 'bootstrapped': True,
+                 'source_revision': candidate['source_revision'],
+                 'database': {'schema_revision': qualifier.HEAD}}
+    result = qualifier.state_compatibility(bootstrap, candidate)
+    assert result['database_revision_before'] == result['database_revision_after'] == qualifier.HEAD
+    assert result['migration_compatibility']['migration'] is None
+    assert result['migration_inventory_sha256'] == qualifier.migration_digest(candidate)
 
 
 def test_later_candidate_requires_original_hash_and_full_reverification(tmp_path, monkeypatch):
@@ -301,6 +320,8 @@ def test_later_candidate_requires_original_hash_and_full_reverification(tmp_path
     monkeypatch.setattr(qualifier, 'verify_bundle', verify)
     result = qualifier.state_compatibility(bootstrap, candidate, reference, sha)
     assert calls == [reference] and result['initial_source_revision'] == 'a' * 40
+    assert result['migration_compatibility']['from'] == qualifier.LEGACY_HEAD
+    assert result['migration_compatibility']['to'] == qualifier.HEAD
     assert result['original_bundle_sha256'] == sha
     with pytest.raises(ValueError, match='original bundle'):
         qualifier.state_compatibility(bootstrap, candidate, reference, '0' * 64)
@@ -319,7 +340,7 @@ def test_compatibility_refuses_schema_changes_and_historical_relabel(tmp_path, m
     monkeypatch.setattr(qualifier, 'verify_bundle', lambda _: initial)
     path = 'app/migrations/versions/0003_processing_jobs.py'
     if fault == 'changed': candidate['source'][path] = {'bytes': 6, 'sha256': 'e' * 64}
-    if fault == 'extra': candidate['source']['app/migrations/versions/0004.py'] = {'bytes': 2, 'sha256': 'f' * 64}
+    if fault == 'extra': candidate['source']['app/migrations/versions/0005.py'] = {'bytes': 2, 'sha256': 'f' * 64}
     if fault == 'missing': candidate['source'].pop(path)
     if fault == 'head': bootstrap['database']['schema_revision'] = '0002'
     if fault == 'revision': bootstrap['source_revision'] = 'c' * 40
@@ -369,3 +390,33 @@ def test_existing_database_refusal_preserves_bytes(tmp_path, monkeypatch, fault)
     with pytest.raises((ValueError, sqlite3.DatabaseError)):
         qualifier.existing_database(path, 999 if fault == 'owner' else 123, 456)
     assert path.read_bytes() == before
+
+
+def test_qualification_clone_is_independent_and_preserves_live_database(tmp_path, monkeypatch):
+    source = tmp_path / 'state'
+    source.mkdir()
+    monkeypatch.setattr(qualifier, 'STATE', source)
+    monkeypatch.setattr(qualifier.os, 'chown', lambda *_args: None, raising=False)
+    (source / 'projects/owner/project').mkdir(parents=True)
+    (source / 'projects/owner/project/raw.bin').write_bytes(b'original raw bytes')
+    (source / '.staging').mkdir()
+    database = source / 'api.sqlite3'
+    with sqlite3.connect(database) as connection:
+        connection.execute('CREATE TABLE alembic_version(version_num TEXT)')
+        connection.execute('INSERT INTO alembic_version VALUES (?)', (qualifier.LEGACY_HEAD,))
+        connection.execute('CREATE TABLE sample(value TEXT)')
+        connection.execute('INSERT INTO sample VALUES (\'live\')')
+    target = source / '.qualification-123456abcdef'
+    info = database.stat()
+    result = qualifier.clone_private_state(source, target, info.st_uid, info.st_gid)
+    with sqlite3.connect(target / 'api.sqlite3') as clone:
+        clone.execute('UPDATE sample SET value=\'candidate\'')
+        assert clone.execute('SELECT version_num FROM alembic_version').fetchone() == (qualifier.LEGACY_HEAD,)
+    with sqlite3.connect(database) as original:
+        assert original.execute('SELECT value FROM sample').fetchone() == ('live',)
+    original_file = source / 'projects/owner/project/raw.bin'
+    clone_file = target / 'projects/owner/project/raw.bin'
+    assert clone_file.read_bytes() == original_file.read_bytes()
+    assert not clone_file.samefile(original_file)
+    assert result['source_revision'] == qualifier.LEGACY_HEAD
+    assert result['clone_database']['sha256']

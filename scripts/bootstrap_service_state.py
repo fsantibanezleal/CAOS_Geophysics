@@ -29,7 +29,7 @@ from stage_python_runtime import _receipt as python_runtime_receipt  # noqa: E40
 
 STATE = Path('/var/lib/geophysics')
 CONFIG = Path('/etc/geophysics')
-HEAD = '0003_processing_jobs'
+HEAD = '0004_waveform_artifacts'
 ORIGIN = 'https://geophysics.ml.fasl-work.com'
 SECONDS = 120
 OUTPUT = 65536

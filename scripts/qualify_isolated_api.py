@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import shutil
 import sqlite3
 import stat
 import subprocess
@@ -29,6 +30,11 @@ from verify_local_service import verify  # noqa: E402
 UNIT_ROOT = Path('/run/systemd/system')
 RUN = Path('/run')
 SECONDS = 180
+MAX_QUALIFICATION_STATE_BYTES = 2 * 1024**3
+MAX_QUALIFICATION_STATE_ENTRIES = 100000
+LEGACY_HEAD = '0003_processing_jobs'
+FORWARD_MIGRATION = 'app/migrations/versions/0004_waveform_artifacts.py'
+FORWARD_MIGRATION_SHA256 = 'c08dde26f55aea87af39e9228013f23a6823de1cf54ba9163d164b0ebfb49bc0'
 PROPERTIES = ('User', 'Group', 'MainPID', 'ActiveState', 'SubState', 'MemoryMax', 'MemorySwapMax',
               'MemoryCurrent', 'MemoryPeak', 'TasksMax', 'CPUQuotaPerSecUSec', 'NoNewPrivileges',
               'PrivateNetwork', 'ProtectSystem', 'ProtectHome', 'ProtectControlGroups',
@@ -265,7 +271,7 @@ def qualification_account(name: str) -> dict:
             'password': secrets.token_urlsafe(32)}
 
 
-def unit_texts(release: Path, token: str) -> tuple[str, str, str]:
+def unit_texts(release: Path, token: str, environment_file: Path | None = None) -> tuple[str, str, str]:
     if not re.fullmatch(r'[0-9a-f]{12}', token):
         raise ValueError('invalid qualification identity')
     if release.parent != RELEASES or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', release.name):
@@ -276,10 +282,17 @@ def unit_texts(release: Path, token: str) -> tuple[str, str, str]:
     sock = (release / 'source/deploy/service/geophysics-api.socket').read_text(encoding='utf-8')
     if (api.count('/var/www/geophysics.ml.fasl-work.com/current') != 2
             or api.count('geophysics-api.socket') != 2
-            or sock.count('/run/geophysics-api/api.sock') != 1):
+            or sock.count('/run/geophysics-api/api.sock') != 1
+            or api.count('EnvironmentFile=/etc/geophysics/api.env') != 1):
         raise ValueError('reviewed production template changed')
     api = api.replace('/var/www/geophysics.ml.fasl-work.com/current', release.as_posix())
     api = api.replace('geophysics-api.socket', name + '.socket')
+    if environment_file is not None:
+        if (not environment_file.is_absolute() or '..' in environment_file.parts
+                or not environment_file.as_posix().startswith(EVIDENCE.as_posix() + '/')):
+            raise ValueError('qualification environment path differs')
+        api = api.replace('EnvironmentFile=/etc/geophysics/api.env',
+                          'EnvironmentFile=' + environment_file.as_posix())
     api = api.replace('[Install]\nWantedBy=multi-user.target', '')
     api = api.replace('Restart=on-failure', 'Restart=no\nRuntimeMaxSec=300')
     sock = sock.replace('/run/geophysics-api/api.sock', socket_path.as_posix())
@@ -333,8 +346,8 @@ def read_properties(raw: str) -> dict[str, str]:
 
 def migration_digest(manifest: dict) -> str:
     selected = {key: value for key, value in manifest['source'].items()
-                if key.startswith('app/migrations/')}
-    if not selected or len(selected) > 128 or 'app/migrations/versions/' + HEAD + '.py' not in selected:
+                if key.startswith('app/migrations/versions/')}
+    if not selected or len(selected) > 128:
         raise ValueError('committed migration inventory incomplete')
     return hashlib.sha256(json.dumps(selected, sort_keys=True, separators=(',', ':'),
                                      allow_nan=False).encode('ascii')).hexdigest()
@@ -342,9 +355,10 @@ def migration_digest(manifest: dict) -> str:
 
 def state_compatibility(bootstrap: dict, candidate: dict, original_bundle: Path | None = None,
                         original_sha: str | None = None) -> dict:
+    previous_revision = bootstrap.get('database', {}).get('schema_revision')
     if (bootstrap.get('schema') != 'geophysics.service-bootstrap/v1'
             or bootstrap.get('bootstrapped') is not True
-            or bootstrap.get('database', {}).get('schema_revision') != HEAD):
+            or previous_revision not in {LEGACY_HEAD, HEAD}):
         raise ValueError('initial bootstrap schema/state differs')
     original = candidate
     if (original_bundle is None) != (original_sha is None):
@@ -364,17 +378,41 @@ def state_compatibility(bootstrap: dict, candidate: dict, original_bundle: Path 
         raise ValueError('later candidate requires explicit original bundle')
     if original['source_revision'] != bootstrap.get('source_revision'):
         raise ValueError('historical initial source revision differs')
-    initial_digest = migration_digest(original)
-    if initial_digest != migration_digest(candidate):
-        raise ValueError('migration compatibility changed; separate reviewed contract required')
-    result = {'initial_source_revision': original['source_revision'], 'schema_revision': HEAD,
-              'migration_inventory_sha256': initial_digest}
+    old_migrations = {key: value for key, value in original['source'].items()
+                      if key.startswith('app/migrations/versions/')}
+    new_migrations = {key: value for key, value in candidate['source'].items()
+                      if key.startswith('app/migrations/versions/')}
+    if (not old_migrations or len(old_migrations) > 128
+            or 'app/migrations/versions/' + LEGACY_HEAD + '.py' not in old_migrations):
+        raise ValueError('historical migration inventory incomplete')
+    if any(new_migrations.get(name) != value for name, value in old_migrations.items()):
+        raise ValueError('historical migration source changed')
+    if 'app/migrations/versions/' + HEAD + '.py' not in new_migrations:
+        raise ValueError('candidate migration head is absent')
+    added = set(new_migrations) - set(old_migrations)
+    if previous_revision == LEGACY_HEAD:
+        if (added != {FORWARD_MIGRATION}
+                or new_migrations[FORWARD_MIGRATION].get('sha256') != FORWARD_MIGRATION_SHA256):
+            raise ValueError('migration compatibility changed; separate reviewed contract required')
+        contract = {'from': LEGACY_HEAD, 'to': HEAD, 'migration': FORWARD_MIGRATION,
+                    'sha256': FORWARD_MIGRATION_SHA256,
+                    'operations': ['create waveform_dataset_sources', 'create waveform_result_artifacts'],
+                    'data_rewrite': False, 'downgrade': 'forbidden'}
+    else:
+        if added or migration_digest(original) != migration_digest(candidate):
+            raise ValueError('migration compatibility changed; separate reviewed contract required')
+        contract = {'from': HEAD, 'to': HEAD, 'migration': None, 'data_rewrite': False,
+                    'downgrade': 'forbidden'}
+    result = {'initial_source_revision': original['source_revision'],
+              'database_revision_before': previous_revision,
+              'database_revision_after': HEAD, 'migration_inventory_sha256': migration_digest(candidate),
+              'migration_compatibility': contract}
     if original_sha is not None:
         result['original_bundle_sha256'] = original_sha
     return result
 
 
-def existing_database(path: Path, uid: int, gid: int) -> dict:
+def existing_database(path: Path, uid: int, gid: int, *, expected_revision: str = HEAD) -> dict:
     no_links(path)
     info = path.stat()
     if (not stat.S_ISREG(info.st_mode) or (info.st_uid, info.st_gid) != (uid, gid)
@@ -386,12 +424,102 @@ def existing_database(path: Path, uid: int, gid: int) -> dict:
         connection.execute('PRAGMA query_only=ON')
         if connection.execute('PRAGMA quick_check').fetchall() != [('ok',)]:
             raise ValueError('existing database integrity failed')
-        if connection.execute('SELECT version_num FROM alembic_version').fetchall() != [(HEAD,)]:
+        revision = connection.execute('SELECT version_num FROM alembic_version').fetchall()
+        if revision != [(expected_revision,)]:
             raise ValueError('existing database schema differs')
         count = connection.execute('SELECT COUNT(*) FROM "user" WHERE is_active=1').fetchone()[0]
         if count < 1:
             raise ValueError('existing database requires an active internal account')
-    return {'schema_revision': HEAD, 'active_accounts': count, 'uid': uid, 'gid': gid, 'mode': '0600'}
+    return {'schema_revision': expected_revision, 'active_accounts': count,
+            'uid': uid, 'gid': gid, 'mode': '0600'}
+
+
+def _copy_tree(source: Path, target: Path, uid: int, gid: int, budget: dict) -> None:
+    no_links(source)
+    info = source.lstat()
+    budget['entries'] += 1
+    if budget['entries'] > MAX_QUALIFICATION_STATE_ENTRIES or not stat.S_ISDIR(info.st_mode):
+        raise ValueError('qualification state tree entry invalid')
+    target.mkdir(mode=0o700)
+    os.chown(target, uid, gid)
+    with os.scandir(source) as scan:
+        for entry in sorted(scan, key=lambda item: item.name):
+            src, dst = Path(entry.path), target / entry.name
+            no_links(src)
+            member = src.lstat()
+            if stat.S_ISDIR(member.st_mode):
+                _copy_tree(src, dst, uid, gid, budget)
+            elif stat.S_ISREG(member.st_mode):
+                budget['entries'] += 1
+                budget['bytes'] += member.st_size
+                if (budget['entries'] > MAX_QUALIFICATION_STATE_ENTRIES
+                        or budget['bytes'] > MAX_QUALIFICATION_STATE_BYTES):
+                    raise ValueError('qualification state copy exceeds bound')
+                shutil.copyfile(src, dst, follow_symlinks=False)
+                os.chmod(dst, 0o600)
+                os.chown(dst, uid, gid)
+            else:
+                raise ValueError('qualification state contains unsupported filesystem entry')
+
+
+def clone_private_state(source: Path, target: Path, uid: int, gid: int) -> dict:
+    """Make an independent bounded copy; all migration/API writes stay off the live state."""
+    if (source != STATE or target.parent != STATE
+            or re.fullmatch(r'\.qualification-[0-9a-f]{12}', target.name) is None):
+        raise ValueError('qualification clone path is not canonical')
+    no_links(source)
+    no_links(target)
+    if target.exists():
+        raise ValueError('existing qualification clone retained')
+    source_db = source / 'api.sqlite3'
+    no_links(source_db)
+    source_info = source_db.stat()
+    if (not stat.S_ISREG(source_info.st_mode) or source_info.st_size > MAX_QUALIFICATION_STATE_BYTES
+            or (source_info.st_uid, source_info.st_gid) != (uid, gid)):
+        raise ValueError('source database ownership differs')
+    target.mkdir(mode=0o700)
+    os.chown(target, uid, gid)
+    budget = {'entries': 1, 'bytes': 0}
+    with os.scandir(source) as scan:
+        for entry in sorted(scan, key=lambda item: item.name):
+            if entry.name == target.name:
+                continue
+            src = Path(entry.path)
+            no_links(src)
+            if entry.name in {'api.sqlite3', 'api.sqlite3-wal', 'api.sqlite3-shm'}:
+                if entry.name != 'api.sqlite3' and not stat.S_ISREG(src.lstat().st_mode):
+                    raise ValueError('SQLite sidecar type differs')
+                continue  # SQLite backup below includes committed WAL frames.
+            dst = target / entry.name
+            if stat.S_ISDIR(src.lstat().st_mode):
+                _copy_tree(src, dst, uid, gid, budget)
+            else:
+                raise ValueError('private state root contains an unsupported direct file')
+    destination_db = target / 'api.sqlite3'
+    source_uri = 'file:' + source_db.as_posix() + '?mode=ro'
+    with sqlite3.connect(source_uri, uri=True, timeout=5) as original:
+        original.execute('PRAGMA query_only=ON')
+        expected_database_bytes = (original.execute('PRAGMA page_count').fetchone()[0]
+                                    * original.execute('PRAGMA page_size').fetchone()[0])
+        if budget['bytes'] + expected_database_bytes > MAX_QUALIFICATION_STATE_BYTES:
+            raise ValueError('qualification state copy exceeds byte bound')
+        with sqlite3.connect(destination_db) as clone:
+            original.backup(clone, pages=256, sleep=0.05)
+            if clone.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
+                raise ValueError('qualification database clone integrity failed')
+            if clone.execute('PRAGMA foreign_key_check').fetchall():
+                raise ValueError('qualification database clone foreign keys differ')
+            if clone.execute('SELECT version_num FROM alembic_version').fetchall() != [(LEGACY_HEAD,)]:
+                raise ValueError('qualification database clone schema differs')
+    os.chmod(destination_db, 0o600)
+    os.chown(destination_db, uid, gid)
+    budget['bytes'] += destination_db.stat().st_size
+    budget['entries'] += 1
+    if budget['bytes'] > MAX_QUALIFICATION_STATE_BYTES:
+        raise ValueError('qualification database clone exceeds byte bound')
+    return {'path': target.as_posix(), 'source_database': file_digest(source_db),
+            'clone_database': file_digest(destination_db), 'entries': budget['entries'],
+            'copied_bytes': budget['bytes'], 'source_revision': LEGACY_HEAD}
 
 
 def run(release: Path, receipt: Path, bundle_sha: str, runtime_sha: str, evidence: Path,
@@ -452,8 +580,11 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
         status = commands.run(['/usr/bin/systemctl', 'show', unit, '--property=ActiveState', '--value'])
         if status not in ('inactive', 'failed', ''):
             raise ValueError('production writer active; parallel qualification refused')
-    database = existing_database(STATE / 'api.sqlite3', *identity)
-    name, api, sock = unit_texts(release, secrets.token_hex(6))
+    database = existing_database(STATE / 'api.sqlite3', *identity,
+                                 expected_revision=compatibility['database_revision_before'])
+    token = secrets.token_hex(6)
+    name = 'geophysics-qualification-' + token
+    qualification_state = STATE / ('.qualification-' + token)
     socket_path = RUN / (name + '.sock')
     paths = (UNIT_ROOT / (name + '.service'), UNIT_ROOT / (name + '.socket'))
     for path in (*paths, socket_path):
@@ -470,16 +601,35 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
               'service_environment_hashes': service_environment_hashes(candidate_config),
               'active_environment_files': active_globals,
               'physical_binding': physical_binding,
-              'unit_name': name, 'transport_passed': False, 'stopped': False,
+              'unit_name': name, 'qualification_state': qualification_state.as_posix(),
+              'transport_passed': False, 'stopped': False,
               'activated': False, 'host_admitted': False, 'full_release_accepted': False}
     started = False
     try:
+        clone = clone_private_state(STATE, qualification_state, *identity)
+        record['state_clone'] = clone
+        migration_runner = BootstrapRunner(*identity, qualification_state)
+        migration_runner.run('candidate-migration',
+                             [str(release / '.venv/bin/python'), '-I', '-B', '-m', 'alembic',
+                              '-c', 'app/alembic.ini', 'upgrade', HEAD], release / 'source')
+        migrated_database = existing_database(qualification_state / 'api.sqlite3', *identity,
+                                              expected_revision=HEAD)
+        record['migration'] = {'compatibility': compatibility['migration_compatibility'],
+                               'steps': migration_runner.steps, 'database': migrated_database,
+                               'database_sha256': file_digest(qualification_state / 'api.sqlite3')['sha256']}
+        api_values = dict(environment_values['api'])
+        api_values['GEOPHYSICS_DATA_DIR'] = qualification_state.as_posix()
+        api_values['GEOPHYSICS_DB_PATH'] = (qualification_state / 'api.sqlite3').as_posix()
+        api_environment = evidence / 'api.env'
+        exclusive_private_file(api_environment,
+                               ''.join(f'{key}={value}\n' for key, value in sorted(api_values.items())).encode('ascii'))
+        name, api, sock = unit_texts(release, token, api_environment)
         owner, other = None, None
         if owner_credentials is not None:
             owner = json.loads(credentials(bounded_private_json(owner_credentials)))
             other = qualification_account(name)
             exclusive_private_file(evidence / 'qualification-account.json', credentials(other))
-            runner = BootstrapRunner(*identity, STATE)
+            runner = BootstrapRunner(*identity, qualification_state)
             try:
                 runner.run('qualification-account', [str(release / '.venv/bin/python'), '-I', '-B',
                            str(release / 'source/scripts/bootstrap_service_state.py'), '--internal-account'],
@@ -537,6 +687,25 @@ def _locked(release, receipt, bundle_sha, runtime_sha, evidence, current, bootst
             if os.readlink(current) != initial_current:
                 raise ValueError('active release changed during qualification')
             record['stopped'] = True
+            for path in paths:
+                no_links(path)
+                if path.exists():
+                    if not stat.S_ISREG(path.stat().st_mode):
+                        raise ValueError('owned qualification unit path changed')
+                    path.unlink()
+            if socket_path.exists():
+                no_links(socket_path)
+                if not stat.S_ISSOCK(socket_path.stat().st_mode):
+                    raise ValueError('owned qualification socket path changed')
+                socket_path.unlink()
+            commands.run(['/usr/bin/systemctl', 'daemon-reload'], shutdown=True)
+            if 'failure' not in record:
+                no_links(qualification_state)
+                if qualification_state.exists():
+                    if qualification_state.parent != STATE or not qualification_state.name.startswith('.qualification-'):
+                        raise ValueError('qualification state cleanup target changed')
+                    shutil.rmtree(qualification_state)
+                record['qualification_state_removed'] = True
         finally:
             record['wall_seconds'] = SECONDS - (commands.deadline - time.monotonic())
             exclusive_json(evidence / 'qualification.json', record)

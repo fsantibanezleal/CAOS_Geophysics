@@ -31,6 +31,4 @@ def upgrade():
 
 
 def downgrade():
-    # Existing artifact bytes are intentionally not deleted by a schema migration.
-    op.drop_table("waveform_result_artifacts")
-    op.drop_table("waveform_dataset_sources")
+    raise RuntimeError("0004_waveform_artifacts is forward-only; table removal would lose lineage records")

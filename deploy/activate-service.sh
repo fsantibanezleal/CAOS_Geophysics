@@ -181,17 +181,44 @@ if api_binding[0]:
             raise ValueError('physical lock hash differs')
 PY
 "$python" -B -m pip check
-# Existing database must match the reviewed compatible schema. No automatic downgrade/replacement.
+# The only admitted existing schemas are the exact pre-waveform and candidate heads.
+# The fixed DDL digests bind the additive upgrade; arbitrary same-version schemas refuse.
 "$python" -B - <<'PY'
-import pathlib, sqlite3
+import hashlib, json, pathlib, sqlite3
 path = pathlib.Path('/var/lib/geophysics/api.sqlite3')
 if path.is_symlink() or not path.is_file():
     raise ValueError('provision the exact migration and internal accounts before activation')
+known = {
+    '0003_processing_jobs': '33a96998cd77c595a0d983461f84e1367a813e460b9c13222d07490fd9b86709',
+    '0004_waveform_artifacts': 'f2a1a28305e8115d42549bc64508afe8de76f42b8b2e32b516ff753f6f45851f',
+}
 with sqlite3.connect('file:' + str(path) + '?mode=ro', uri=True) as connection:
+    connection.execute('PRAGMA query_only=ON')
     head = connection.execute('SELECT version_num FROM alembic_version').fetchall()
-if head != [('0003_processing_jobs',)]:
-    raise ValueError('database schema incompatible; explicit migration review required')
+    ddl = [tuple(row) for row in connection.execute(
+        'SELECT type,name,tbl_name,sql FROM sqlite_master WHERE sql IS NOT NULL ORDER BY type,name')]
+    integrity = connection.execute('PRAGMA integrity_check').fetchall()
+    foreign_keys = connection.execute('PRAGMA foreign_key_check').fetchall()
+if len(head) != 1 or head[0][0] not in known:
+    raise ValueError('database schema revision is not an admitted migration state')
+schema = hashlib.sha256(json.dumps(ddl, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+if schema != known[head[0][0]] or integrity != [('ok',)] or foreign_keys:
+    raise ValueError('database schema or integrity differs from the reviewed migration')
 PY
+database_head=$("$python" -B - <<'PY'
+import sqlite3
+with sqlite3.connect('file:/var/lib/geophysics/api.sqlite3?mode=ro', uri=True) as connection:
+    print(connection.execute('SELECT version_num FROM alembic_version').fetchone()[0])
+PY
+)
+if [[ "$database_head" == 0003_processing_jobs ]]; then
+  for unit in geophysics-api.socket geophysics-api.service geophysics-worker.service; do
+    if systemctl is-active --quiet "$unit"; then
+      echo '0003-to-0004 migration requires all existing service writers to be inactive' >&2
+      exit 1
+    fi
+  done
+fi
 [[ ! -e "$state" && ! -L "$state" ]]
 install -d -m 0700 /var/lib/geophysics-deploy
 mkdir -m 0700 "$state"
@@ -211,6 +238,7 @@ socket_active=false
 worker_stopped=false
 environment_switched=false
 rollback_env_restored=true
+rollback_schema_verified=true
 systemctl is-active --quiet geophysics-api.service && api_active=true
 systemctl is-active --quiet geophysics-worker.service && worker_active=true
 systemctl is-active --quiet geophysics-api.socket && socket_active=true
@@ -219,6 +247,32 @@ stop_if_present() {
     systemctl stop "$1"
   fi
 }
+recover_migration_observation() {
+  [[ -f "$state/schema-migration-attempted.json" && ! -e "$state/schema-migration.json" \
+      && ! -e "$state/schema-migration-recovery.json" ]] || return 0
+  local verification observation
+  if ! verification=$(runuser -u geophysics -- env \
+      GEOPHYSICS_DATA_DIR=/var/lib/geophysics \
+      GEOPHYSICS_DB_PATH=/var/lib/geophysics/api.sqlite3 \
+      PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 \
+      "$python" -I -B "$release/source/scripts/migrate_service_schema.py" --verify-only); then
+    echo 'Migration completion receipt is absent and read-only recovery verification failed; inspect the retained attempt marker and database revision.' >&2
+    return 1
+  fi
+  observation=$("$python" -B - "$verification" "$state/schema-migration-attempted.json" <<'PY'
+import json, pathlib, sys
+sys.path.insert(0, str(pathlib.Path.cwd() / 'scripts'))
+from migrate_service_schema import recovery_observation
+verified = json.loads(sys.argv[1])
+attempt = json.loads(pathlib.Path(sys.argv[2]).read_text(encoding='ascii'))
+print(json.dumps(recovery_observation(attempt, verified), sort_keys=True, separators=(',', ':')))
+PY
+  ) || return 1
+  printf '%s\n' "$observation" > "$state/schema-migration-recovery.json.tmp" \
+    && mv -T -- "$state/schema-migration-recovery.json.tmp" "$state/schema-migration-recovery.json" \
+    || return 1
+  echo 'The forward schema head was verified read-only and its recovery observation was retained.' >&2
+}
 rollback() {
   trap - ERR INT TERM
   set +e
@@ -226,6 +280,7 @@ rollback() {
   stop_if_present geophysics-api.service
   stop_if_present geophysics-api.socket
   [[ "$worker_stopped" == false ]] || stop_if_present geophysics-worker.service
+  if ! recover_migration_observation; then rollback_schema_verified=false; fi
   if [[ "$environment_switched" == true ]]; then
     install -o root -g root -m 0600 "$state/previous.api.env" /etc/geophysics/api.env || rollback_env_restored=false
     install -o root -g root -m 0600 "$state/previous.worker.env" /etc/geophysics/worker.env || rollback_env_restored=false
@@ -241,13 +296,14 @@ rollback() {
     fi
   done
   systemctl daemon-reload
-  if [[ "$rollback_env_restored" == true ]]; then
+  if [[ "$rollback_env_restored" == true && "$rollback_schema_verified" == true ]]; then
     [[ "$socket_active" == false ]] || systemctl start geophysics-api.socket
     [[ "$api_active" == false ]] || systemctl start geophysics-api.service
   else
-    echo 'Prior env restoration failed; prior services remain stopped.' >&2
+    echo 'Prior environment or database schema could not be verified; prior services remain stopped.' >&2
   fi
-  if [[ "$rollback_env_restored" == true && "$worker_active" == true && "$worker_stopped" == true ]]; then
+  if [[ "$rollback_env_restored" == true && "$rollback_schema_verified" == true \
+      && "$worker_active" == true && "$worker_stopped" == true ]]; then
     systemctl start geophysics-worker.service
   fi
   nginx -t && systemctl reload nginx
@@ -268,6 +324,26 @@ if count:
 PY
 worker_stopped=true
 stop_if_present geophysics-worker.service
+# Keep the old release selected while the exact additive migration runs. The migration is
+# forward-only; a failed activation retains its receipt and never deletes user data or downgrades.
+printf '{"schema":"geophysics.service-schema-migration-attempt/v1","status":"attempted","preflight_revision":"%s","to":"0004_waveform_artifacts"}\n' \
+  "$database_head" > "$state/schema-migration-attempted.json"
+migration_receipt=$(runuser -u geophysics -- env \
+  GEOPHYSICS_DATA_DIR=/var/lib/geophysics \
+  GEOPHYSICS_DB_PATH=/var/lib/geophysics/api.sqlite3 \
+  PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 \
+  "$python" -I -B "$release/source/scripts/migrate_service_schema.py")
+[[ ${#migration_receipt} -le 8192 ]]
+"$python" -B - "$migration_receipt" <<'PY'
+import json, sys
+receipt = json.loads(sys.argv[1])
+if (receipt.get('schema') != 'geophysics.service-schema-migration/v1'
+        or receipt.get('to') != '0004_waveform_artifacts'
+        or receipt.get('migration_sha256') != 'c08dde26f55aea87af39e9228013f23a6823de1cf54ba9163d164b0ebfb49bc0'):
+    raise ValueError('candidate migration receipt is incomplete')
+PY
+printf '%s\n' "$migration_receipt" > "$state/schema-migration.json.tmp"
+mv -T -- "$state/schema-migration.json.tmp" "$state/schema-migration.json"
 environment_switched=true
 install -o root -g root -m 0600 "$candidate_env_dir/api.env" /etc/geophysics/api.env
 install -o root -g root -m 0600 "$candidate_env_dir/worker.env" /etc/geophysics/worker.env

@@ -206,6 +206,10 @@ def test_activation_and_rollback():
     assert "GEOPHYSICS_PHYSICAL_BINDING_PATH" in text
     assert "physical registry does not bind exact candidate release.json" in text
     assert text.index("physical registry does not bind exact candidate release.json") < text.index("systemctl stop")
+    assert text.index("require_pre_cutover") < text.index("schema-migration-attempted.json")
+    assert text.index("migrate_service_schema.py") < text.index('mv -T -- "$root/activate-$release_id" "$root/current"')
+    assert "0003_processing_jobs" in text and "0004_waveform_artifacts" in text
+    assert "schema-migration.json" in text
     rollback = text[text.index('rollback() {'):text.index('trap rollback ERR')]
     assert 'previous.api.env' in rollback and 'previous.worker.env' in rollback
     assert '/etc/geophysics/releases' in text
