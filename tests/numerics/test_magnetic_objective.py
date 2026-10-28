@@ -65,3 +65,21 @@ def test_selection_must_match_the_frozen_whitener_rows():
     with pytest.raises(ValueError, match="mismatch"):
         MagneticGaussianObjective(kernel, np.array([0., 0., 50000.]), np.zeros(2),
             whitener, np.array([0, 2], dtype=np.int64), "linear_tmi_nT")
+
+
+def test_malformed_background_shape_is_rejected_before_finite_scan(monkeypatch):
+    kernel = np.ones((6, 1), dtype=np.float64)
+    rows = np.array([0, 1], dtype=np.int64)
+    whitener = GaussianWhitener("diagonal_sd", np.ones((1, 2), dtype=np.float64), rows)
+    oversized = np.zeros(1_000_000, dtype=np.float64)
+    original_isfinite = np.isfinite
+
+    def guarded_isfinite(value, *args, **kwargs):
+        if value is oversized:
+            raise AssertionError("malformed background finite scan occurred before shape check")
+        return original_isfinite(value, *args, **kwargs)
+
+    monkeypatch.setattr(np, "isfinite", guarded_isfinite)
+    with pytest.raises(ValueError, match="three ENU"):
+        MagneticGaussianObjective(kernel, oversized, np.zeros(2, dtype=np.float64),
+            whitener, rows, "linear_tmi_nT")

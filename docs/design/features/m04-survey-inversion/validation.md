@@ -10,7 +10,7 @@ residual, gradient, and matrix-free Gauss-Newton action for normalized
 principal full-covariance whitening is retained. Kernel receiver/cell/product
 caps are checked before copying or scanning numeric values.
 
-The focused local run passed 32 tests across `test_magnetic_likelihood.py`,
+The focused local run passed 33 tests across `test_magnetic_likelihood.py`,
 `test_magnetic_quantity.py`, and `test_magnetic_objective.py`; Ruff, Python
 compilation, and `git diff --check` passed for the new objective/test files.
 An additional actual-Choclo integration control passed for an exact-magnitude

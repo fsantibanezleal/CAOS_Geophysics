@@ -19,6 +19,10 @@ class MagneticGaussianObjective:
 
     def __init__(self, component_jacobian_nT_per_si, background_enu_nT,
                  observed_selected_nT, whitener, selected_flat_indices, quantity):
+        if type(quantity) is not str or quantity not in {
+            "secondary_enu", "linear_tmi_nT", "exact_total_anomaly_nT"
+        }:
+            raise ValueError("quantity: unsupported measured magnetic quantity")
         if type(whitener) is not GaussianWhitener:
             raise TypeError("whitener: expected a frozen GaussianWhitener")
         indices = np.asarray(selected_flat_indices)
@@ -33,9 +37,10 @@ class MagneticGaussianObjective:
                 or rows * columns > MAX_PROJECTED_ENTRIES):
             raise ValueError("kernel: receiver, active-cell or projected-entry cap exceeded")
         self._kernel = self._owned_matrix(component_jacobian_nT_per_si, "kernel")
-        self._background = self._owned_vector(background_enu_nT, "background")
-        if self._background.shape != (3,):
+        self._vector_metadata(background_enu_nT, "background")
+        if background_enu_nT.shape != (3,):
             raise ValueError("background: expected three ENU components")
+        self._background = self._owned_vector(background_enu_nT, "background")
         total = self._kernel.shape[0] if quantity == "secondary_enu" else self._kernel.shape[0] // 3
         if np.any(indices < 0) or np.any(indices >= total) or np.any(np.diff(indices) <= 0):
             raise ValueError("selected_flat_indices: require increasing in-range original rows")
@@ -44,10 +49,6 @@ class MagneticGaussianObjective:
         self._indices = indices.copy()
         self._indices.flags.writeable = False
         self.quantity = quantity
-        if type(quantity) is not str or quantity not in {
-            "secondary_enu", "linear_tmi_nT", "exact_total_anomaly_nT"
-        }:
-            raise ValueError("quantity: unsupported measured magnetic quantity")
         if (type(observed_selected_nT) is not np.ndarray or observed_selected_nT.dtype != np.float64
                 or observed_selected_nT.ndim != 1 or observed_selected_nT.size != len(indices)):
             raise TypeError("observations: expected selected native float64 vector")
@@ -79,6 +80,11 @@ class MagneticGaussianObjective:
     def _matrix_metadata(value, name):
         if type(value) is not np.ndarray or value.dtype != np.float64 or value.ndim != 2:
             raise TypeError(f"{name}: expected native float64 matrix")
+
+    @staticmethod
+    def _vector_metadata(value, name):
+        if type(value) is not np.ndarray or value.dtype != np.float64 or value.ndim != 1:
+            raise TypeError(f"{name}: expected native float64 vector")
 
     @property
     def parameter_count(self):
