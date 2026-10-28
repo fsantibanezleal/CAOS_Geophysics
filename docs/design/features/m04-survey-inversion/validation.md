@@ -102,15 +102,32 @@ finite-difference derivative matches the analytic gradient at relative
 tolerance 2e-5. An earlier zero-start control produced zero objectives and is
 retained only as the exact zero baseline. These authored protocol controls do
 not establish inversion recovery or scientific accuracy. No optimizer,
-candidate selection, held-out scoring, final refit, durable result bundle,
+candidate selection, outer evaluation, final refit, durable result bundle,
 native admission, user-data CLI or online path is implemented or accepted by
 this increment.
 
-The complete focused M04 regression selection (survey JSON/geometry/bundle/CLI,
-fit assembly, forward, likelihood, quantity, objective and regularization)
-collected 421 tests and exited successfully with all tests passing on the pinned
-Windows runtime. Ruff, Python compilation and `git diff --check` also passed for
-the added assembly and test files.
+## 2026-10-28 frozen development-fold scoring
+
+`magnetic_fold_score.score_magnetic_validation_fold` accepts only a hash-matched
+normalized model, replans the sealed geometry, builds the real kernel on one
+fold's validation rows, applies the declared quantity and Gaussian noise model,
+and returns aggregate phi-d/RMS metrics without observation, prediction or
+residual vectors. It records the geometry seal, model hash, noise dependence
+declaration and explicit development-only role; it neither calls a fit callback
+nor selects a candidate nor evaluates outer rows. A changed model hash is
+rejected before planning or forward computation.
+
+Three focused tests pass, including a nonzero actual SimPEG validation score
+from the authored protocol fixture. That score is a synthetic plumbing check,
+not validation accuracy or a selected-model result. The final sealed outer
+evaluator, candidate workflow, and any method acceptance remain open.
+
+The complete focused M04 regression selection before the scorer addition
+(survey JSON/geometry/bundle/CLI, fit assembly, forward, likelihood, quantity,
+objective and regularization) collected 421 tests and exited successfully with
+all tests passing on the pinned Windows runtime. Three additional fold-score
+tests also pass. Ruff, Python compilation and `git diff --check` passed for the
+added M04 files.
 
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
