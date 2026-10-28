@@ -8,13 +8,14 @@ graph, and the reference model participates in the smoothness residual.
 import numpy as np
 from discretize import TensorMesh
 from simpeg import maps
-from simpeg.regularization import WeightedLeastSquares
+from simpeg.regularization import Sparse, WeightedLeastSquares
 
 
 MAX_FULL_CELLS = 4096
 MAX_ACTIVE_CELLS = 2048
 MAX_LENGTH_M = 1e5
 ENGINE_EPOCH = "simpeg-0.25.2-discretize-0.12.0-magnetic-volume-faces-1"
+SPARSE_EPSILON_Q = (.1, .05, .025, .0125, .00625, .003125, .0015625, .001)
 
 
 class MagneticRegularizer:
@@ -76,6 +77,18 @@ class MagneticRegularizer:
             reference_model=self.reference_q, reference_model_in_smooth=True,
             weights={"volume": self.volumes / self.total_volume},
         )
+        self.sparse = Sparse(
+            mesh, active_cells=self.active_cells, norms=[1., 2., 2., 2.],
+            gradient_type="components", irls_scaled=False, irls_threshold=.1,
+            alpha_s=1., alpha_x=float(lengths_m[0]**2),
+            alpha_y=float(lengths_m[1]**2), alpha_z=float(lengths_m[2]**2),
+            alpha_xx=0., alpha_yy=0., alpha_zz=0.,
+            mapping=maps.IdentityMap(nP=active_count),
+            reference_model=self.reference_q, reference_model_in_smooth=True,
+            weights={"volume": self.volumes / self.total_volume},
+        )
+        self._smallness_quadratic = np.diag(self.volumes / self.total_volume)
+        self._smooth_quadratic = self._quadratic - self._smallness_quadratic
 
     @property
     def parameter_count(self):
@@ -158,6 +171,72 @@ class MagneticRegularizer:
             "active_face_count_by_axis": tuple(
                 sum(face[0] == axis for face in self._face_pairs) for axis in range(3)
             ),
+            "unit": "dimensionless",
+            "parameter_unit": "q=chi_si/0.01",
+            "engine_epoch": ENGINE_EPOCH,
+        }
+
+    def evaluate_sparse(self, q, epsilon_q):
+        """Refresh actual SimPEG IRLS weights and evaluate true fixed-epsilon psi.
+
+        This evaluates one surrogate at its weight-refresh model. It does not
+        advance an IRLS stage or certify convergence/monotonicity across solves.
+        """
+        if type(epsilon_q) is not float or epsilon_q not in SPARSE_EPSILON_Q:
+            raise ValueError("epsilon_q: must be one frozen positive sparse stage")
+        if type(q) is not np.ndarray or q.dtype != np.float64 or q.shape != (self.parameter_count,):
+            raise TypeError("q: expected native float64 active-cell vector")
+        if not np.isfinite(q).all() or np.any((q < 0.) | (q > 10.)):
+            raise ValueError("q: finite normalized susceptibility values in [0,10] required")
+
+        delta = q - self.reference_q
+        self.sparse.objfcts[0].irls_threshold = epsilon_q
+        smooth_thresholds = tuple(float(epsilon_q / ell) for ell in self.lengths_m)
+        for axis, threshold in enumerate(smooth_thresholds, start=1):
+            self.sparse.objfcts[axis].irls_threshold = threshold
+        self.sparse.update_weights(q)
+
+        root = np.hypot(delta, epsilon_q)
+        smallness_weights = np.asarray(self.sparse.objfcts[0].get_weights("irls"), dtype=np.float64)
+        smoothness_weights = tuple(
+            np.asarray(obj.get_weights("irls"), dtype=np.float64)
+            for obj in self.sparse.objfcts[1:]
+        )
+        expected_weights = 1. / root
+        if (not np.array_equal(smallness_weights, expected_weights)
+                or any(not np.array_equal(weights, np.ones_like(weights))
+                       for weights in smoothness_weights)):
+            raise RuntimeError("SimPEG sparse weights differ from frozen positive-epsilon policy")
+
+        # Rationalized square-root difference preserves tiny positive penalties.
+        smallness_difference = np.divide(
+            delta * delta, root + epsilon_q,
+            out=np.zeros_like(delta), where=(delta != 0.),
+        )
+        volume_fraction = self.volumes / self.total_volume
+        smooth_value = float(delta @ self._smooth_quadratic @ delta)
+        true_value = float(2. * (volume_fraction @ smallness_difference) + smooth_value)
+        true_gradient = (2. * volume_fraction * delta / root
+                         + 2. * (self._smooth_quadratic @ delta))
+        surrogate_value = float(self.sparse(q))
+        simpeg_gradient = np.asarray(self.sparse.deriv(q), dtype=np.float64)
+        if (not np.isfinite([true_value, smooth_value, surrogate_value]).all()
+                or not np.isfinite(true_gradient).all() or not np.isfinite(simpeg_gradient).all()):
+            raise FloatingPointError("sparse regularization produced nonfinite values")
+        return {
+            "true_fixed_epsilon_psi": true_value,
+            "true_smallness": float(2. * (volume_fraction @ smallness_difference)),
+            "true_smoothness": smooth_value,
+            "surrogate_quadratic": surrogate_value,
+            "true_gradient_q": true_gradient,
+            "simpeg_surrogate_gradient_q": simpeg_gradient,
+            "smallness_irls_weights": smallness_weights.copy(),
+            "smoothness_irls_weights": tuple(weights.copy() for weights in smoothness_weights),
+            "epsilon_q": epsilon_q,
+            "smoothness_epsilon_per_m": smooth_thresholds,
+            "norms": tuple(float(value) for value in self.sparse.norms),
+            "gradient_type": self.sparse.gradient_type,
+            "irls_scaled": self.sparse.irls_scaled,
             "unit": "dimensionless",
             "parameter_unit": "q=chi_si/0.01",
             "engine_epoch": ENGINE_EPOCH,

@@ -58,6 +58,17 @@ actual pinned API use that matches its frozen equation. This is local
 regularization evidence only; no magnetic inverse, accepted optimizer, field
 case, complete method gate or release acceptance is implied.
 
+The module also evaluates one frozen sparse weight refresh through actual
+SimPEG `Sparse.update_weights`. It fixes norms `[1,2,2,2]`, component gradients,
+`irls_scaled=False`, the prescribed eight `epsilon_q` values and
+`epsilon_j=epsilon_q/ell_j` thresholds. SimPEG smallness weights match
+`1/sqrt(delta_q^2+epsilon_q^2)`; first-order weights remain one. For every
+epsilon, the refreshed surrogate gradient agrees with the derivative of the
+true fixed-epsilon penalty and a directional finite-difference oracle.
+Decimal80 controls at delta `+/-1e-10` and zero confirm positive tiny penalties
+and exact zero. Outer reweight-and-solve convergence, fixed-objective
+monotonicity and terminal stationarity remain unimplemented and unaccepted.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances

@@ -1,3 +1,5 @@
+from decimal import Decimal, localcontext
+
 import numpy as np
 import pytest
 from discretize import TensorMesh
@@ -57,3 +59,75 @@ def test_metadata_limits_precede_numeric_finite_scans(monkeypatch):
     with pytest.raises(TypeError, match="reference_q"):
         MagneticRegularizer(regularizer.mesh, regularizer.active_cells,
                             oversized_reference, regularizer.lengths_m)
+
+
+@pytest.mark.parametrize("epsilon", [.1, .05, .025, .0125, .00625, .003125, .0015625, .001])
+def test_sparse_refresh_uses_actual_simpeg_weights_and_true_fixed_epsilon_gradient(epsilon):
+    regularizer, _ = _regularizer()
+    q = np.array([.3, .24, .19, .55, .37, .41, .8, .22, .47, .9], dtype=np.float64)
+    result = regularizer.evaluate_sparse(q, epsilon)
+    delta = q - regularizer.reference_q
+    root = np.hypot(delta, epsilon)
+    expected_smallness = float(2. * np.dot(
+        regularizer.volumes / regularizer.total_volume,
+        delta**2 / (root + epsilon),
+    ))
+    expected_gradient = (
+        2. * (regularizer.volumes / regularizer.total_volume) * delta / root
+        + 2. * regularizer._smooth_quadratic @ delta
+    )
+    np.testing.assert_allclose(result["true_smallness"], expected_smallness, rtol=2e-15, atol=0.)
+    np.testing.assert_allclose(result["true_gradient_q"], expected_gradient, rtol=2e-14, atol=2e-15)
+    np.testing.assert_allclose(result["simpeg_surrogate_gradient_q"], expected_gradient,
+                               rtol=3e-13, atol=2e-14)
+    np.testing.assert_allclose(result["smallness_irls_weights"], 1. / root, rtol=3e-16, atol=0.)
+    direction = np.linspace(-.4, .5, len(q), dtype=np.float64)
+    step = 1e-6
+    plus = regularizer.evaluate_sparse(q + step * direction, epsilon)["true_fixed_epsilon_psi"]
+    minus = regularizer.evaluate_sparse(q - step * direction, epsilon)["true_fixed_epsilon_psi"]
+    finite_difference = (plus - minus) / (2. * step)
+    np.testing.assert_allclose(finite_difference, expected_gradient @ direction,
+                               rtol=2e-7, atol=2e-9)
+    assert result["norms"] == (1., 2., 2., 2.)
+    assert result["gradient_type"] == "components"
+    assert result["irls_scaled"] is False
+    assert result["smoothness_epsilon_per_m"] == tuple(epsilon / ell for ell in (4., 9., 16.))
+
+
+@pytest.mark.parametrize("change", [1e-10, -1e-10, 0.])
+def test_sparse_smallness_preserves_tiny_positive_values_against_decimal80(change):
+    regularizer, _ = _regularizer()
+    q = regularizer.reference_q.copy()
+    q[0] += change
+    epsilon = .1
+    result = regularizer.evaluate_sparse(q, epsilon)
+    delta = float(q[0] - regularizer.reference_q[0])
+    with localcontext() as context:
+        context.prec = 80
+        exact_delta = Decimal.from_float(delta)
+        exact_epsilon = Decimal.from_float(epsilon)
+        expected = (Decimal(2) * Decimal.from_float(
+            float(regularizer.volumes[0] / regularizer.total_volume)
+        ) * exact_delta**2 / ((exact_delta**2 + exact_epsilon**2).sqrt() + exact_epsilon))
+        observed = Decimal.from_float(float(result["true_smallness"]))
+        if delta == 0.:
+            assert observed == 0 and expected == 0
+        else:
+            assert observed > 0 and expected > 0
+            assert abs(observed - expected) <= Decimal("2e-8") * abs(expected)
+
+
+def test_sparse_calls_simpeg_update_weights_at_each_recorded_model(monkeypatch):
+    regularizer, _ = _regularizer()
+    calls = []
+    original = regularizer.sparse.update_weights
+
+    def recording(model):
+        calls.append(model.copy())
+        return original(model)
+
+    monkeypatch.setattr(regularizer.sparse, "update_weights", recording)
+    q = regularizer.reference_q.copy()
+    regularizer.evaluate_sparse(q, .05)
+    assert len(calls) == 1
+    np.testing.assert_array_equal(calls[0], q)
