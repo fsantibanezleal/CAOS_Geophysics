@@ -13,6 +13,7 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `03-magnetics` | 1 | [Magnitudes magnéticas, marco y procedencia](03-magnetics/01-magnetic-quantities-and-frame.ipynb) | [01-magnetic-quantities-and-frame](../en/03-magnetics/01-magnetic-quantities-and-frame.ipynb) |
 | `03-magnetics` | 2 | [Admisión magnética y retención espacial](03-magnetics/02-m03-survey-geometry-and-holdout.ipynb) | [02-m03-survey-geometry-and-holdout](../en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb) |
 | `03-magnetics` | 3 | [Física directa y controles de prismas inducidos](03-magnetics/03-m04-induced-prism-forward.ipynb) | [03-m04-induced-prism-forward](../en/03-magnetics/03-m04-induced-prism-forward.ipynb) |
+| `03-magnetics` | 3 | [Objetivo magnético y validación de pliegue congelado](03-magnetics/04-m04-fit-objective-validation.ipynb) | [04-m04-fit-objective-validation](../en/03-magnetics/04-m04-fit-objective-validation.ipynb) |
 | `04-mt` | 1 | [QC tensorial MT y experimento de tipper](04-mt/01-mt-qc.ipynb) | [01-mt-qc](../en/04-mt/01-mt-qc.ipynb) |
 | `04-mt` | 2 | [Inversión MT estratificada e intervalos retenidos](04-mt/02-mt-forward.ipynb) | [02-mt-forward](../en/04-mt/02-mt-forward.ipynb) |
 | `04-mt` | 3 | [Cobertura de frecuencias e identificabilidad MT](04-mt/03-mt-state-of-art.ipynb) | [03-mt-state-of-art](../en/04-mt/03-mt-state-of-art.ipynb) |

@@ -122,6 +122,19 @@ from the authored protocol fixture. That score is a synthetic plumbing check,
 not validation accuracy or a selected-model result. The final sealed outer
 evaluator, candidate workflow, and any method acceptance remain open.
 
+The new English/Spanish lesson pair
+`notebooks/{en,es}/03-magnetics/04-m04-fit-objective-validation.ipynb` was
+executed in fresh kernels and passed a second `run_notebooks.py --check` replay.
+Both render the same computed values: 144 fit, 72 validation and 72 outer rows
+with zero overlaps; 528 active cells; `chi_start=0.002 SI`; `phi_d=564455.5774`,
+`phi_m=0.04`; and a directional gradient finite-difference discrepancy of
+`1.98e-6`. The validation fold reports `phi_d=263336.3622` for that fixed model.
+These high residual values are properties of the deliberately zero-observation,
+authored protocol fixture; they are not an accuracy score or geological result.
+The figures map the computed east-component fit prediction and residual at the
+fixture's ENU coordinates. The static notebook checker passes across both
+language trees, 60 notebooks total.
+
 The complete focused M04 regression selection before the scorer addition
 (survey JSON/geometry/bundle/CLI, fit assembly, forward, likelihood, quantity,
 objective and regularization) collected 421 tests and exited successfully with

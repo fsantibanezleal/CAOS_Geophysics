@@ -13,6 +13,7 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `03-magnetics` | 1 | [Magnetic quantities, frame and provenance](03-magnetics/01-magnetic-quantities-and-frame.ipynb) | [01-magnetic-quantities-and-frame](../es/03-magnetics/01-magnetic-quantities-and-frame.ipynb) |
 | `03-magnetics` | 2 | [Magnetic survey admission and spatial holdout](03-magnetics/02-m03-survey-geometry-and-holdout.ipynb) | [02-m03-survey-geometry-and-holdout](../es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb) |
 | `03-magnetics` | 3 | [Induced prism forward physics and controls](03-magnetics/03-m04-induced-prism-forward.ipynb) | [03-m04-induced-prism-forward](../es/03-magnetics/03-m04-induced-prism-forward.ipynb) |
+| `03-magnetics` | 3 | [Magnetic fit objective and frozen-fold validation](03-magnetics/04-m04-fit-objective-validation.ipynb) | [04-m04-fit-objective-validation](../es/03-magnetics/04-m04-fit-objective-validation.ipynb) |
 | `04-mt` | 1 | [Magnetotelluric tensor QC and tipper experiment](04-mt/01-mt-qc.ipynb) | [01-mt-qc](../es/04-mt/01-mt-qc.ipynb) |
 | `04-mt` | 2 | [Layered MT inversion and held-out interval experiment](04-mt/02-mt-forward.ipynb) | [02-mt-forward](../es/04-mt/02-mt-forward.ipynb) |
 | `04-mt` | 3 | [Frequency coverage and MT identifiability](04-mt/03-mt-state-of-art.ipynb) | [03-mt-state-of-art](../es/04-mt/03-mt-state-of-art.ipynb) |
