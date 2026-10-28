@@ -2,7 +2,7 @@
   "schema": "geophysics.m11-linux-runtime-pins/v1",
   "source_epoch": "m11-linux-cpu-2",
   "date": "2026-10-27",
-  "status": "CPython 3.12.16 security-patched candidate; numerical replay and ML VPS admission remain open",
+  "status": "CPython 3.12.16 candidate runtime installed and source-pinned; VPS numerical replay passes; ML VPS admission and full release acceptance remain open",
   "platform": "Ubuntu 24.04 WSL2; Linux x86_64",
   "python": "CPython 3.12.16",
   "engine_versions": {
@@ -47,5 +47,17 @@
     "full_precision_receipt": false,
     "ml_vps_host_admitted": false,
     "public_activation": false
+  },
+  "candidate_vps_replay": {
+    "evidence": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
+    "source_revision": "033a5e7cf9c37300b5008767892fea1fd5d1ad5d",
+    "runtime_receipt_sha256": "e7e376a53278e8a66f7b287f023c99da3ac9ea060a85279f4394f9c0d2b5a7f7",
+    "passed": 381,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 10793.32,
+    "active_release_unchanged": true,
+    "candidate_activated": false,
+    "host_admitted": false
   }
 }
