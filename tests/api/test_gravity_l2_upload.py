@@ -287,6 +287,7 @@ def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predic
         # Recompute the withheld prediction, residual and standardized metrics
         # from the values actually exported by the job.
         heldout = result["gravity_l2"]["outer_evaluation"]
+        assert heldout["field_truth"] is None and heldout["model_accuracy"] is None
         heldout_rows = np.asarray(heldout["rows"]["data"], dtype=np.int64)
         observed = np.asarray(heldout["observations"]["gz_up_mgal"]["data"], dtype=np.float64)
         heldout_predicted = np.asarray(heldout["predicted_mgal"]["data"], dtype=np.float64)
