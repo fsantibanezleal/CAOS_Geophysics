@@ -175,7 +175,7 @@ def test_isolated_cli_loads_only_trusted_sibling_source():
 
 
 def test_interpreter_runtime_pins_official_distribution_and_identity():
-    assert python_runtime.NAME == 'cpython-3.12.16-20261026-r2'
+    assert python_runtime.NAME == 'cpython-3.12.16-20261026-r3'
     assert python_runtime.ARCHIVE_BYTES == 67921566
     assert python_runtime.SHA256 == '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'
     assert python_runtime.URL.endswith('cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz')
@@ -183,6 +183,26 @@ def test_interpreter_runtime_pins_official_distribution_and_identity():
         'cpython', '3.12.16', 'linux', 'x86_64']
     with pytest.raises(ValueError, match='does not match'):
         runtime.interpreter_probe(b'cpython|3.12.3|linux|x86_64\n', '3.12.16')
+
+
+def test_private_interpreter_must_match_its_receipted_canonical_path(tmp_path, monkeypatch):
+    root = tmp_path / 'python-runtimes'
+    monkeypatch.setattr(runtime, 'PYTHON_RUNTIMES', root)
+    monkeypatch.setattr(runtime, 'verify_python_runtime', lambda path: {'tree_sha256': 'a' * 64})
+    expected = root / python_runtime.NAME / 'python/bin/python3.12'
+    assert runtime.verify_pinned_interpreter(expected)['tree_sha256'] == 'a' * 64
+    with pytest.raises(ValueError, match='registered private runtime'):
+        runtime.verify_pinned_interpreter(tmp_path / 'unreceipted-python')
+
+
+def test_private_interpreter_mutation_is_not_hidden(tmp_path, monkeypatch):
+    monkeypatch.setattr(runtime, 'PYTHON_RUNTIMES', tmp_path / 'python-runtimes')
+    def changed(_path):
+        raise ValueError('existing interpreter runtime receipt differs')
+    monkeypatch.setattr(runtime, 'verify_python_runtime', changed)
+    expected = runtime.PYTHON_RUNTIMES / python_runtime.NAME / 'python/bin/python3.12'
+    with pytest.raises(ValueError, match='receipt differs'):
+        runtime.verify_pinned_interpreter(expected)
 
 
 def test_gravity_probe_uses_exception_contract_not_boolean_return():

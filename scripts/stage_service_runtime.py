@@ -19,6 +19,7 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from prepare_service_release import file_digest, no_links, verify_bundle  # noqa: E402
+from stage_python_runtime import NAME as PYTHON_RUNTIME_NAME, RUNTIMES as PYTHON_RUNTIMES, _receipt as verify_python_runtime  # noqa: E402
 
 RELEASES = Path('/var/www/geophysics.ml.fasl-work.com/releases')
 EVIDENCE = Path('/var/lib/geophysics-deploy')
@@ -128,6 +129,16 @@ def interpreter_probe(raw: bytes, expected: str) -> list[str]:
     if fields != ['cpython', expected, 'linux', 'x86_64']:
         raise ValueError('interpreter version/platform does not match the committed runtime pin')
     return fields
+
+
+def verify_pinned_interpreter(interpreter: Path) -> dict:
+    """Verify the private interpreter receipt and require its canonical path."""
+    runtime_root = PYTHON_RUNTIMES / PYTHON_RUNTIME_NAME
+    receipt = verify_python_runtime(runtime_root)
+    expected = runtime_root / 'python/bin/python3.12'
+    if interpreter != expected:
+        raise ValueError('service interpreter is not the registered private runtime')
+    return receipt
 
 
 def runtime_inventory(root: Path, interpreter: Path, *, deadline: float | None = None) -> dict:
@@ -266,6 +277,10 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
         root_owned_tree(release)
         interpreter_record = validate_interpreter(interpreter, release)
         interpreter = Path(interpreter_record['path'])
+        # The pinned standalone interpreter is shared immutable deployment input.
+        # Verify its receipt before and after package installation so pip or a
+        # concurrent service cannot silently contaminate the runtime tree.
+        verify_pinned_interpreter(interpreter)
     else:
         interpreter_record = None
     requirement_hash = requirements(release / 'source/requirements-api.txt')
@@ -321,6 +336,8 @@ def stage(release: Path, evidence: Path, expected_digest: str, *, interpreter: P
                                                        deadline=runner.deadline)
         receipt['gravity_resolved_dependencies'] = file_digest(gravity_freeze)
         receipt['gravity_runtime_installed'] = True
+        if check_ownership:
+            verify_pinned_interpreter(interpreter)
         if verify_bundle(release) != manifest:
             raise ValueError('bundle changed during runtime installation')
         if time.monotonic() >= runner.deadline:

@@ -20,7 +20,7 @@ from prepare_service_release import file_digest, no_links  # noqa: E402
 
 EVIDENCE = Path('/var/lib/geophysics-deploy')
 RUNTIMES = EVIDENCE / 'python-runtimes'
-NAME = 'cpython-3.12.16-20261026-r2'
+NAME = 'cpython-3.12.16-20261026-r3'
 URL = ('https://github.com/astral-sh/python-build-standalone/releases/download/'
        '20261026/cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz')
 SHA256 = '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'
