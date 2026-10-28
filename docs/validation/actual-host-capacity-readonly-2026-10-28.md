@@ -59,3 +59,28 @@ The remaining 28 direct release directories total 31,413,694,464 logical bytes. 
 The current host has only 3.65 GB free, while the prior local qualification bundle was 856,103,491 bytes before service-runtime installation and scratch reservation. This is not a fresh capacity admission for the current branch. No capacity, job, ownership, cancellation, whole-product or replacement-release gate is claimed. The active public service remains the legacy static application.
 
 `docs/guides/18_service_release.md` requires final product gates before activation and directs operators to retain the current release plus two explicitly qualified rollbacks. It also requires inspecting and approving each extra ordinary release directory before removal. This snapshot makes the required review concrete; no release directory was removed or compressed.
+
+## Read-only follow-up, 2026-10-28 15:51 UTC
+
+The same approved SSH identity was used for a bounded follow-up. No host file,
+service, symlink, account, DNS record or release directory was changed.
+
+| Measurement | Observed |
+|---|---:|
+| Root filesystem available | 3,099,168,768 bytes |
+| Root filesystem used | 73,863,720,960 bytes (96%) |
+| `MemAvailable` at 15:47 UTC | 5,276,319,744 bytes |
+| `/var` logical usage | 53,134,458,880 bytes |
+| `/var/www` logical usage | 41,643,077,632 bytes |
+| `/opt` logical usage | 10,586,038,272 bytes |
+| `/tmp` logical usage | 278,687,744 bytes |
+| Geophysics release directories | 31 |
+
+`current` still resolves to `20260926235216`; the API and worker services are
+inactive and Nginx is active. The canonical HTTPS origin returned 200 with
+successful TLS verification; the former GitHub Pages URL returned 404. The
+current release and two dated rollback directories still occupy 2,322,509,824
+logical bytes. No candidate was staged. This observation does not qualify
+candidate disk admission or job capacity. The 553 MB reduction in free space
+since 12:18 UTC is a host-state change; no cause is inferred from directory
+totals, which are logical sizes and can overlap physical allocations.
