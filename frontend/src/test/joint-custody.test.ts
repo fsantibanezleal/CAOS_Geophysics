@@ -5,7 +5,7 @@ import {join, relative} from "node:path";
 import {zipSync, type Zippable} from "fflate";
 import {describe, expect, it, vi} from "vitest";
 import {ApiClient} from "../api/client";
-import {inspectCustodyArchive, parseJointCustodyIndex, parseJointHistory, JOINT_NATIVE_METHOD, type JointCustodyJob} from "../api/joint-custody";
+import {inspectCustodyArchive, parseJointCustodyIndex, parseJointHistory, JointCustodyApi, JOINT_NATIVE_METHOD, type JointCustodyJob} from "../api/joint-custody";
 import {jointJson, jointSha} from "../api/joint-result";
 import {JointProjectWorkbench} from "../components/JointProjectWorkbench";
 
@@ -15,6 +15,29 @@ const job: JointCustodyJob={job_id:jobid,owner_id:owner,project_id:project,datas
 const encode=(value: unknown)=>new TextEncoder().encode(JSON.stringify(value));
 function index() {return {schema:"geophysics.joint-result-custody/v1",job_id:job.job_id,owner_id:owner,project_id:project,dataset_id:job.dataset_id,dataset_sha256:job.dataset_sha256,method_id:job.method_id,request_sha256:job.request_sha256,state:job.state,members:{"workflow.json":{byte_count:1,sha256:"d".repeat(64)}},native_bytes:1,scientific_acceptance:false,authenticity_verified:false,public_activation:false};}
 describe("native stored custody never admits science",()=> {
+  it("submits only the selected immutable dataset and binds status and cancellation",async()=> {
+    const queued={...job,state:"queued",cancel_requested:false,error_code:null,index_available:false,result_sha256:null,result_bytes:null,
+      created_at:"2026-10-28T10:00:00Z",started_at:null,finished_at:null,wall_ms:null,peak_rss_bytes:null,scratch_bytes:null,result_url:null,scientific_acceptance:false};
+    const running={...queued,state:"running"};
+    const cancelled={...queued,state:"cancelled",cancel_requested:true};
+    const calls: Array<{url:string;method:string;body?:string;csrf?:string}> = [];
+    const transport=vi.fn(async(input: RequestInfo|URL,init?:RequestInit)=> {
+      const url=String(input), method=init?.method??"GET";
+      calls.push({url,method,body:typeof init?.body==="string"?init.body:undefined,csrf:new Headers(init?.headers).get("X-CSRF-Token")??undefined});
+      if(url.endsWith("/api/auth/csrf"))return new Response(JSON.stringify({csrf_token:"csrf-test"}),{headers:{"Content-Type":"application/json"}});
+      const response=url.endsWith("/joint-jobs")?queued:url.endsWith("/cancel")?cancelled:running;
+      return new Response(JSON.stringify(response),{headers:{"Content-Type":"application/json"}});
+    });
+    const api=new JointCustodyApi(new ApiClient("http://localhost",transport));
+    const selected={dataset_id:job.dataset_id,sha256:job.dataset_sha256};
+    expect(await api.submit(owner,project,selected)).toMatchObject({job_id:jobid, state:"queued", dataset_id:selected.dataset_id});
+    expect(await api.status(owner,project,jobid)).toMatchObject({job_id:jobid, state:"running"});
+    expect(await api.cancel(owner,project,jobid)).toMatchObject({job_id:jobid, state:"cancelled"});
+    const submit=calls.find(row=>row.url.endsWith("/joint-jobs"));
+    expect(JSON.parse(submit!.body!)).toEqual({dataset_id:selected.dataset_id,operation:"solve"});
+    expect(calls.filter(row=>row.method==="POST").every(row=>row.csrf==="csrf-test")).toBe(true);
+    await expect(api.submit(owner,project,{...selected,sha256:"x"})).rejects.toThrow();
+  });
   it("binds literal failed history and all index identities",()=> {
     const history={schema:"geophysics.joint-custody-history/v1",owner_id:owner,project_id:project,jobs:[job]};
     expect(parseJointHistory(jointJson(encode(history)),owner,project)[0]).toEqual(job);

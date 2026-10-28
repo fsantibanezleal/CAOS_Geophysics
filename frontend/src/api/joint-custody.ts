@@ -29,6 +29,29 @@ function validateBinding(value: Obj, owner: string, project: string) {
   assert(value.method_id === JOINT_NATIVE_METHOD && value.owner_id === id(owner) && value.project_id === id(project), "owned identity");
 }
 function object(value: unknown): Obj { assert(value && typeof value === "object" && !Array.isArray(value), "object"); return value as Obj; }
+function parseJobView(value: unknown, owner: string, project: string, expectedJob?: string): JointCustodyJob {
+  const row = object(value);
+  closed(row, ["job_id", "owner_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "request_sha256", "state",
+    "cancel_requested", "created_at", "started_at", "finished_at", "wall_ms", "peak_rss_bytes", "scratch_bytes",
+    "result_sha256", "result_bytes", "error_code", "index_available", "result_url", "scientific_acceptance"]);
+  validateBinding(row, owner, project);
+  if (expectedJob) assert(row.job_id === id(expectedJob), "job status identity");
+  assert(["queued", "running", "succeeded", "failed", "cancelled"].includes(String(row.state)) &&
+    typeof row.cancel_requested === "boolean" && typeof row.index_available === "boolean" && row.scientific_acceptance === false,
+    "literal job state");
+  for (const key of ["created_at", "started_at", "finished_at"] as const) {
+    const stamp = row[key];
+    assert(stamp === null || typeof stamp === "string" && /^\d{4}-\d\d-\d\dT.*(?:Z|[+-]\d\d:\d\d)$/.test(stamp) && !Number.isNaN(Date.parse(stamp)), "job timestamp");
+  }
+  for (const [key, cap] of [["wall_ms", 1800000], ["peak_rss_bytes", 2147483648], ["scratch_bytes", JOINT_IMPORT_CAP]] as const)
+    assert(row[key] === null || typeof row[key] === "number" && Number.isSafeInteger(row[key]) && row[key] >= 0 && row[key] <= cap, "job resource bound");
+  assert(row.error_code === null || typeof row.error_code === "string" && row.error_code.length <= 80, "job error code");
+  if (row.index_available) {
+    sha(row.result_sha256); integer(row.result_bytes, CAP);
+    assert(row.result_url === `/api/projects/${project}/joint-results/${row.job_id}`, "job result URL");
+  } else assert(row.result_sha256 === null && row.result_bytes === null && row.result_url === null, "absent job result");
+  return row as unknown as JointCustodyJob;
+}
 export function parseJointHistory(value: Obj, owner: string, project: string): JointCustodyJob[] {
   closed(value, ["schema", "owner_id", "project_id", "jobs"]);
   assert(value.schema === "geophysics.joint-custody-history/v1" && value.owner_id === owner && value.project_id === project, "history scope");
@@ -79,6 +102,27 @@ export async function inspectCustodyArchive(bytes: Uint8Array, indexBytes: Uint8
 
 export class JointCustodyApi {
   constructor(private readonly api: ApiClient) {}
+  async submit(owner: string, project: string, dataset: { dataset_id: string; sha256: string }, signal?: AbortSignal) {
+    id(owner); id(project); id(dataset.dataset_id); sha(dataset.sha256);
+    const token = await this.api.requestJson("/api/auth/csrf", value => object(value).csrf_token, { signal });
+    assert(typeof token === "string" && token.length > 0, "CSRF token");
+    return this.api.requestJson(`/api/projects/${project}/joint-jobs`, value => {
+      const row = parseJobView(value, owner, project);
+      assert(row.dataset_id === dataset.dataset_id && row.dataset_sha256 === dataset.sha256, "submitted dataset identity");
+      return row;
+    }, { method: "POST", body: { dataset_id: dataset.dataset_id, operation: "solve" }, csrfToken: token, signal });
+  }
+  async status(owner: string, project: string, job: string, signal?: AbortSignal) {
+    id(project); id(job);
+    return this.api.requestJson(`/api/projects/${project}/joint-jobs/${job}`, value => parseJobView(value, owner, project, job), { signal });
+  }
+  async cancel(owner: string, project: string, job: string, signal?: AbortSignal) {
+    id(owner); id(project); id(job);
+    const token = await this.api.requestJson("/api/auth/csrf", value => object(value).csrf_token, { signal });
+    assert(typeof token === "string" && token.length > 0, "CSRF token");
+    return this.api.requestJson(`/api/projects/${project}/joint-jobs/${job}/cancel`, value => parseJobView(value, owner, project, job),
+      { method: "POST", body: {}, csrfToken: token, signal });
+  }
   async history(owner: string, project: string, signal?: AbortSignal) {
     const bytes = await this.api.requestBoundedBytes(`/api/projects/${id(project)}/joint-results`, CAP, {signal});
     return parseJointHistory(jointJson(bytes), owner, project);

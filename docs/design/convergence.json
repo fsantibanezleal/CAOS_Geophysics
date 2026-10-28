@@ -536,7 +536,7 @@
         },
         {
           "path": "docs/wiki/methods/m07-m13.md",
-          "sha256": "73b3947b213867bbda9a3124787e01651665c18eeb95219a798c5c6f238aefea"
+          "sha256": "0325187ba3a873a0537f37f2d1aebc96b0a3577aea8a9530ae4832d6baa947fd"
         },
         {
           "path": "docs/wiki/methods/m01-m06.es.md",
@@ -544,7 +544,7 @@
         },
         {
           "path": "docs/wiki/methods/m07-m13.es.md",
-          "sha256": "00ff24851fefad13d33d3237626d221e18c3843493b6bba56c58eab2e4b73932"
+          "sha256": "405e8dc47cb8a9271eb430c3c70ee7847363497ac866436029975d6cf851f2bc"
         },
         {
           "path": "scripts/check_docs_matrix.py",
