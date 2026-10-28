@@ -256,8 +256,49 @@ def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predic
         assert result["raw_sha256"] == asset["sha256"]
         assert result["gravity_l2"]["source"]["raw_sha256"] == asset["sha256"]
         assert result["gravity_l2"]["outer_evaluation"]["field_truth"] is None
-        predictions = result["gravity_l2"]["calibration"]["predictions"]["gz_up_mgal"]
-        assert predictions["data"] is not None and predictions["sha256"]
+        calibration = result["gravity_l2"]["calibration"]
+        assert calibration["selection_status"] == "selected"
+        final_solve = calibration["final_solve"]
+        assert final_solve["status"] == "converged"
+        model = np.asarray(final_solve["model_kg_m3"]["data"], dtype=np.float64)
+        assert model.shape == (1,) and np.isfinite(model).all()
+        assert -1500.0 <= model[0] <= 1500.0
+
+        # Independently recompute the exact submitted 3D prism response from
+        # Choclo, including the declared fixed background. This checks the
+        # exported model/prediction relationship, not recovery of synthetic
+        # truth or field geology.
+        mesh = result["parameters"]["mesh"]
+        x0, y0, z0 = mesh["origin_m"]
+        hx, hy, hz = mesh["hx_m"][0], mesh["hy_m"][0], mesh["hz_m"][0]
+        receivers = np.asarray(
+            calibration["plan"]["request"]["stations"]["receivers_m"]["data"], dtype=np.float64)
+        independent = np.asarray([
+            choclo.prism.gravity_u(x, y, z, x0, x0 + hx, y0, y0 + hy,
+                                   z0, z0 + hz, float(model[0])) * 1e5
+            + result["parameters"]["background_mgal"]
+            for x, y, z in receivers
+        ])
+        predictions = calibration["predictions"]["gz_up_mgal"]
+        predicted = np.asarray(predictions["data"], dtype=np.float64)
+        assert predicted.shape == (len(receivers),) and predictions["sha256"]
+        np.testing.assert_allclose(predicted, independent, rtol=1e-7, atol=1e-10)
+
+        # Recompute the withheld prediction, residual and standardized metrics
+        # from the values actually exported by the job.
+        heldout = result["gravity_l2"]["outer_evaluation"]
+        heldout_rows = np.asarray(heldout["rows"]["data"], dtype=np.int64)
+        observed = np.asarray(heldout["observations"]["gz_up_mgal"]["data"], dtype=np.float64)
+        heldout_predicted = np.asarray(heldout["predicted_mgal"]["data"], dtype=np.float64)
+        residual = np.asarray(
+            heldout["residual_observed_minus_predicted_mgal"]["data"], dtype=np.float64)
+        whitened = np.asarray(heldout["whitened_residual"]["data"], dtype=np.float64)
+        np.testing.assert_array_equal(heldout_predicted, predicted[heldout_rows])
+        np.testing.assert_array_equal(residual, observed - heldout_predicted)
+        np.testing.assert_allclose(whitened, residual / 0.1, rtol=1e-12, atol=1e-12)
+        assert heldout["phi_d"] == pytest.approx(float(whitened @ whitened), rel=1e-12)
+        assert heldout["wrms"] == pytest.approx(float(np.sqrt(np.mean(whitened**2))), rel=1e-12)
+        assert heldout["rmse_mgal"] == pytest.approx(float(np.sqrt(np.mean(residual**2))), rel=1e-12)
     assert first["request_sha256"] != second["request_sha256"]
     assert (first["gravity_l2"]["calibration"]["predictions"]["gz_up_mgal"]["sha256"]
             != second["gravity_l2"]["calibration"]["predictions"]["gz_up_mgal"]["sha256"])
