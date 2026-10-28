@@ -33,6 +33,7 @@ HEAD = '0003_processing_jobs'
 ORIGIN = 'https://geophysics.ml.fasl-work.com'
 SECONDS = 120
 OUTPUT = 65536
+RUNTIME_RECEIPT_LIMIT = 16 * 1024**2
 
 
 def bounded_private_json(path: Path, limit: int = OUTPUT) -> dict:
@@ -44,7 +45,7 @@ def bounded_private_json(path: Path, limit: int = OUTPUT) -> dict:
         raw = handle.read(limit + 1)
     if len(raw) > limit:
         raise ValueError('private input bound exceeded')
-    value = strict_json(raw.removeprefix(b'\xef\xbb\xbf'))
+    value = strict_json(raw.removeprefix(b'\xef\xbb\xbf'), max_bytes=limit)
     if not isinstance(value, dict):
         raise ValueError('private input object required')
     return value

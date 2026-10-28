@@ -101,8 +101,8 @@ def inventory(root: Path) -> dict:
     return dict(sorted(result.items()))
 
 
-def strict_json(raw: bytes) -> dict:
-    if len(raw) > MAX_MANIFEST:
+def strict_json(raw: bytes, *, max_bytes: int = MAX_MANIFEST) -> dict:
+    if type(max_bytes) is not int or not 0 < max_bytes <= MAX_TOTAL or len(raw) > max_bytes:
         raise ValueError("manifest byte bound exceeded")
 
     def pairs(items):

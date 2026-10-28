@@ -141,6 +141,14 @@ def test_bounds_and_duplicate_manifest(tmp_path, monkeypatch):
         service.strict_json(b'{"a":NaN}')
 
 
+def test_strict_json_explicit_large_private_receipt_bound():
+    service = module()
+    raw = b'{"receipt":"' + b'x' * (5 * 1024**2) + b'"}'
+    with pytest.raises(ValueError, match="byte bound"):
+        service.strict_json(raw)
+    assert service.strict_json(raw, max_bytes=16 * 1024**2)['receipt'].endswith('x')
+
+
 def test_service_boundaries():
     socket = (ROOT / "deploy/service/geophysics-api.socket").read_text(encoding="utf-8")
     api = (ROOT / "deploy/service/geophysics-api.service").read_text(encoding="utf-8")
