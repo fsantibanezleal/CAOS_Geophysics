@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from magnetic_likelihood import GaussianWhitener
+from magnetic_likelihood import GaussianDataTerm, GaussianWhitener
 
 
 def test_diagonal_whitening_precision_and_weighted_sensitivity():
@@ -42,6 +42,12 @@ def test_covariance_rejects_asymmetry_and_non_positive_definite(covariance):
         GaussianWhitener("full_covariance", covariance, np.array([0, 1], dtype=np.int64))
 
 
+def test_full_covariance_condition_is_checked_before_partition_selection():
+    covariance = np.diag(np.array([1e-9, 1.0, 1.0], dtype=np.float64))
+    with pytest.raises(ValueError, match="full condition"):
+        GaussianWhitener("full_covariance", covariance, np.array([2], dtype=np.int64))
+
+
 @pytest.mark.parametrize("rows", [
     np.array([1, 0], dtype=np.int64),
     np.array([0, 0], dtype=np.int64),
@@ -70,3 +76,45 @@ def test_operands_are_shape_checked_and_input_storage_is_not_retained():
     np.testing.assert_array_equal(whitener.whiten(np.array([2.0, 3.0], dtype=np.float64)), [1.0, 1.0])
     with pytest.raises(ValueError):
         whitener.whiten(np.ones(3, dtype=np.float64))
+
+
+def test_gaussian_data_term_gradient_and_gn_action_match_full_covariance():
+    covariance = np.array([[4.0, 1.25], [1.25, 9.0]], dtype=np.float64)
+    rows = np.array([0, 1], dtype=np.int64)
+    whitener = GaussianWhitener("full_covariance", covariance, rows)
+    observed = np.array([1.0, 2.0], dtype=np.float64)
+    predicted = np.array([3.0, 1.0], dtype=np.float64)
+    jacobian = np.array([[1.0, 2.0], [3.0, -1.0]], dtype=np.float64)
+    term = GaussianDataTerm(observed, whitener)
+    result = term.evaluate(predicted, jacobian)
+    residual = predicted - observed
+    precision_residual = np.linalg.solve(covariance, residual)
+    precision_jacobian = np.linalg.solve(covariance, jacobian)
+    expected_gradient = 2 * jacobian.T @ precision_residual
+    expected_hessian = 2 * jacobian.T @ precision_jacobian
+
+    assert result.phi_d == pytest.approx(float(residual @ precision_residual), rel=2e-15)
+    np.testing.assert_allclose(result.gradient_q, expected_gradient, rtol=5e-14, atol=1e-15)
+    direction = np.array([0.25, -0.5], dtype=np.float64)
+    np.testing.assert_allclose(result.gauss_newton_action(direction), expected_hessian @ direction,
+                               rtol=5e-14, atol=1e-15)
+    np.testing.assert_allclose(result.hessian_diagonal_q, np.diag(expected_hessian),
+                               rtol=5e-14, atol=1e-15)
+
+    step = 1e-6
+    shifted = predicted + step * (jacobian @ direction)
+    shifted_result = term.evaluate(shifted, jacobian)
+    finite_difference = (shifted_result.phi_d - result.phi_d) / step
+    np.testing.assert_allclose(finite_difference, result.gradient_q @ direction, rtol=2e-6, atol=2e-6)
+    assert not result.gradient_q.flags.writeable
+    assert not result.gauss_newton_action(direction).flags.writeable
+
+
+def test_gaussian_data_term_rejects_dimension_mismatch():
+    whitener = GaussianWhitener("diagonal_sd", np.ones((1, 2), dtype=np.float64),
+                                np.array([0, 1], dtype=np.int64))
+    with pytest.raises(ValueError):
+        GaussianDataTerm(np.ones(1, dtype=np.float64), whitener)
+    term = GaussianDataTerm(np.ones(2, dtype=np.float64), whitener)
+    with pytest.raises(ValueError):
+        term.evaluate(np.ones(2, dtype=np.float64), np.ones((1, 2), dtype=np.float64))

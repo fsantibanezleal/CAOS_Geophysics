@@ -68,6 +68,13 @@ class GaussianWhitener:
             # The covariance contract requires exact symmetry; do not repair it.
             if not np.array_equal(source, source.T):
                 raise ValueError("covariance_nT2: exact symmetry required")
+            try:
+                np.linalg.cholesky(source)
+                full_condition = float(np.linalg.cond(source, p=2))
+            except np.linalg.LinAlgError as exc:
+                raise ValueError("covariance_nT2: full matrix must be positive definite") from exc
+            if not np.isfinite(full_condition) or full_condition > MAX_COVARIANCE_CONDITION:
+                raise ValueError("covariance_nT2: full condition number exceeds 1e8")
             principal = source[np.ix_(indices, indices)].copy(order="C")
             try:
                 factor = np.linalg.cholesky(principal)
@@ -130,3 +137,54 @@ class GaussianWhitener:
         if not np.isfinite(result).all():
             raise FloatingPointError("weighted sensitivity norms are nonfinite")
         return _owned(result)
+
+
+class GaussianDataEvaluation:
+    """One evaluated Gaussian data objective and its Gauss-Newton quadratic."""
+
+    def __init__(self, residual_nT, whitened_residual, weighted_jacobian):
+        self.residual_nT = _owned(residual_nT)
+        self.whitened_residual = _owned(whitened_residual)
+        self._weighted_jacobian = _owned(weighted_jacobian)
+        self.phi_d = float(self.whitened_residual @ self.whitened_residual)
+        self.gradient_q = _owned(2.0 * self._weighted_jacobian.T @ self.whitened_residual)
+        self.hessian_diagonal_q = _owned(2.0 * np.einsum(
+            "ij,ij->j", self._weighted_jacobian, self._weighted_jacobian))
+        if not np.isfinite([self.phi_d, *self.gradient_q, *self.hessian_diagonal_q]).all():
+            raise FloatingPointError("Gaussian data objective derivatives are nonfinite")
+
+    def gauss_newton_action(self, direction_q):
+        """Apply 2 J.T W.T W J to one finite parameter-space direction."""
+        _vector(direction_q, "direction_q")
+        if direction_q.shape != (self._weighted_jacobian.shape[1],):
+            raise ValueError("direction_q: parameter count mismatch")
+        result = 2.0 * self._weighted_jacobian.T @ (self._weighted_jacobian @ direction_q)
+        if not np.isfinite(result).all():
+            raise FloatingPointError("Gauss-Newton action is nonfinite")
+        return _owned(result)
+
+
+class GaussianDataTerm:
+    """Frozen observations plus exact noise model for a selected partition."""
+
+    def __init__(self, observed_selected_nT, whitener):
+        _vector(observed_selected_nT, "observed_selected_nT")
+        if type(whitener) is not GaussianWhitener:
+            raise TypeError("whitener: expected GaussianWhitener")
+        if observed_selected_nT.shape != (whitener.dimension,):
+            raise ValueError("observed_selected_nT: selected observation count mismatch")
+        self.observed_selected_nT = _owned(observed_selected_nT)
+        self.whitener = whitener
+
+    def evaluate(self, predicted_selected_nT, jacobian_q_nT):
+        """Compute phi_d, gradient and frozen GN action for H(q)-d in nT."""
+        _vector(predicted_selected_nT, "predicted_selected_nT")
+        _matrix(jacobian_q_nT, "jacobian_q_nT")
+        if predicted_selected_nT.shape != self.observed_selected_nT.shape:
+            raise ValueError("predicted_selected_nT: selected observation count mismatch")
+        if jacobian_q_nT.shape[0] != self.whitener.dimension or jacobian_q_nT.shape[1] < 1:
+            raise ValueError("jacobian_q_nT: observation or parameter count mismatch")
+        residual = predicted_selected_nT - self.observed_selected_nT
+        weighted_residual = self.whitener.whiten(residual)
+        weighted_jacobian = self.whitener.whiten(jacobian_q_nT)
+        return GaussianDataEvaluation(residual, weighted_residual, weighted_jacobian)
