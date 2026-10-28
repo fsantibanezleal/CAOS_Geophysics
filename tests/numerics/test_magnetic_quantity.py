@@ -1,3 +1,5 @@
+from decimal import Decimal, ROUND_HALF_EVEN, localcontext
+
 import numpy as np
 import pytest
 
@@ -66,6 +68,29 @@ def test_exact_total_field_ill_conditioning_is_rejected():
     kernel = np.array([[-background[0] / chi[0]], [0.0], [0.0]], dtype=np.float64)
     with pytest.raises(ValueError, match="ill-conditioned"):
         compose_magnetic_observable(kernel, chi, background, "exact_total_anomaly_nT")
+
+
+@pytest.mark.parametrize("secondary", [1e-9, -1e-9, 1e-12, -1e-12, 0.0])
+def test_exact_magnitude_tiny_longitudinal_anomaly_matches_decimal80(secondary):
+    field = 50000.0
+    chi = np.array([0.001], dtype=np.float64)
+    kernel = np.zeros((3, 1), dtype=np.float64)
+    kernel[1, 0] = secondary / chi[0]
+    background = np.array([0.0, field, 0.0], dtype=np.float64)
+    result = compose_magnetic_observable(kernel, chi, background, "exact_total_anomaly_nT")
+    actual_secondary = float(kernel[1, 0] * chi[0])
+    with localcontext() as context:
+        context.prec = 80
+        context.rounding = ROUND_HALF_EVEN
+        total = (Decimal.from_float(field) + Decimal.from_float(actual_secondary)) ** 2
+        total = total.sqrt()
+        expected = total - Decimal.from_float(field)
+        observed = Decimal.from_float(float(result["values_nT"][0]))
+        if expected == 0:
+            assert observed == 0
+        else:
+            assert observed != 0 and (observed > 0) == (expected > 0)
+            assert abs(observed - expected) <= Decimal("2e-8") * abs(expected)
 
 
 @pytest.mark.parametrize("quantity", ["secondary", "TMI", "magnitude", "exact_total_anomaly"])

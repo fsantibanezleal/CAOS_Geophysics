@@ -18,7 +18,8 @@ inverse, M04, field, upload, or release acceptance.
   and exact total-field anomaly, including the magnitude Jacobian, null-model
   derivative, and ill-conditioned total-field rejection. A cross-check composes
   an independent Choclo prism component kernel and finite-differences the exact
-  magnitude lane against new Choclo responses.
+  magnitude lane against new Choclo responses. Decimal80 controls retain signed
+  tiny longitudinal anomalies without subtractive cancellation.
 - Independent, read-only snapshots for retained observations and computed
   result arrays.
 
@@ -35,7 +36,7 @@ $env:PYTHONPATH='data-pipeline'
 git diff --check
 ```
 
-Result: **23 passed** across the two component suites and the independent
+Result: **28 passed** across the two component suites and the independent
 Choclo-backed integration control. Ruff, byte compilation and whitespace
 validation passed.
 Controls compare the full-covariance quadratic, gradient and Gauss-Newton
@@ -43,8 +44,9 @@ action with direct small-matrix solutions, check directional finite
 differences for both the likelihood and exact-magnitude Jacobian, compare the
 quantity composition with a Choclo-generated component kernel, test principal
 covariance selection and quantity-specific responses, reject asymmetric,
-indefinite, ill-conditioned and malformed inputs, and verify that covariance
-dimension caps run before element scans.
+indefinite, ill-conditioned and malformed inputs, verify that covariance
+dimension caps run before element scans, and check tiny anomaly values against
+Decimal80 square roots.
 
 The optimizer binding remains unaccepted. These modules do not generate or
 independently verify the supplied SimPEG kernel, choose or seal survey
