@@ -106,7 +106,7 @@
       "id": "R-006",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete. A new authenticated uploaded-survey integration now runs the isolated M02 ordinary weighted L2 child, changes predictions when its declared background parameter changes, preserves the original bytes, and exports a verifiable unit/provenance bundle. The authored control passes locally; the complete required method ladder and actual-host admission remain open.",
+      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete. A new authenticated uploaded-survey integration now runs the isolated M02 ordinary weighted L2 child, changes predictions when its declared background parameter changes, preserves the original bytes, and exports a verifiable unit/provenance bundle. The authored control passes locally; the complete required method ladder and actual-host admission remain open. The uploaded M02 test now checks both parameter-dependent jobs against an independent Choclo prism response at all 144 receiver locations, validates sealed held-out residual and weighted metrics from exported arrays, and verifies source-preserving bundle round-trip. This remains one authored one-cell path; other online methods and host admission remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -118,11 +118,15 @@
         },
         {
           "path": "tests/api/test_gravity_l2_upload.py",
-          "sha256": "612dcd4bab1f27fb035a7505b215607dddf5ab62c428b579618cf878eec0dbd4"
+          "sha256": "88584d441d23e614d8f8f3670e69168ef9174adf20625c9318dddae61e6d3729"
         },
         {
           "path": "app/worker.py",
           "sha256": "fd9614d2dfa604158ad8a815a508cb072f06cd02d7d6112e4279601d80893eb9"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
         }
       ],
       "receipts": []
@@ -176,7 +180,7 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. A 25,000-row client benchmark measured 8.83-second cold wall time, three 2.01–2.12-second warm reruns and 187,695,104-byte WASM heap capacity on one local headless Chromium host. This is authored synthetic evidence, not a device population or total RSS measurement. Charleston assets/field holdout, actual host admission, broader device memory and latency, and full product acceptance remain open. Current Linux CPython 3.12.10 M02 forward controls independently rerun: 80 pass; scoped integration 118 pass, 2 existing skips. This verifies the ordinary operator source epoch only. The previous M02 service-runtime packaging defects are repaired in the current branch: pymatsolver is pinned and isolated Linux runtime-profile audit verifies 21 installed-source hashes plus pure-Python SimPEG/PyMatSolver wheel tags. This remains local staging-profile evidence only; immutable VPS release staging, method acceptance, user-data/UI, host and full-product gates remain open. R-008 remains failed. The fresh VPS replay for candidate 033a5e7 passed all 381 named gravity/magnetic forward, locked L2 selection and joint-plan controls under Linux CPython 3.12.16. This closes that bounded cross-runtime numerical replay only; M12 remains failed and full method/user-data/owner/host/browser acceptance remains open, so R-008 remains failed.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. A 25,000-row client benchmark measured 8.83-second cold wall time, three 2.01–2.12-second warm reruns and 187,695,104-byte WASM heap capacity on one local headless Chromium host. This is authored synthetic evidence, not a device population or total RSS measurement. Charleston assets/field holdout, actual host admission, broader device memory and latency, and full product acceptance remain open. Current Linux CPython 3.12.10 M02 forward controls independently rerun: 80 pass; scoped integration 118 pass, 2 existing skips. This verifies the ordinary operator source epoch only. The previous M02 service-runtime packaging defects are repaired in the current branch: pymatsolver is pinned and isolated Linux runtime-profile audit verifies 21 installed-source hashes plus pure-Python SimPEG/PyMatSolver wheel tags. This remains local staging-profile evidence only; immutable VPS release staging, method acceptance, user-data/UI, host and full-product gates remain open. R-008 remains failed. The fresh VPS replay for candidate 033a5e7 passed all 381 named gravity/magnetic forward, locked L2 selection and joint-plan controls under Linux CPython 3.12.16. This closes that bounded cross-runtime numerical replay only; M12 remains failed and full method/user-data/owner/host/browser acceptance remains open, so R-008 remains failed. The uploaded M02 control now independently checks the returned model forward response and recomputes its withheld residual metrics from the exported values. This authored one-cell path does not validate field geology or complete M01-M13 acceptance; R-008 remains failed.",
       "evidence": [
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -273,6 +277,14 @@
         {
           "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
           "sha256": "7f6f218568cdba0df6052abda6494202fa3acc72446e7a2081c636955d4bd1fb"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "88584d441d23e614d8f8f3670e69168ef9174adf20625c9318dddae61e6d3729"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
         }
       ],
       "receipts": []
@@ -281,11 +293,19 @@
       "id": "R-009",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_artifact_contract.py::test_truth_only_for_synthetic.",
-      "note": "The corrected canonical container preserves producer identities and known synthetic truths separately from the QC-only truth-null cl061 field screen. Complete replacement user-data artifact acceptance across all methods remains incomplete.",
+      "note": "The corrected canonical container preserves producer identities and known synthetic truths separately from the QC-only truth-null cl061 field screen. Complete replacement user-data artifact acceptance across all methods remains incomplete. The uploaded M02 integration explicitly asserts `field_truth=null` and `model_accuracy=null` for the held-out result. It does not establish product-wide artifact truth semantics for every method.",
       "evidence": [
         {
           "path": "docs/validation/fwi-canonical-import-20261003.json",
           "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "88584d441d23e614d8f8f3670e69168ef9174adf20625c9318dddae61e6d3729"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
         }
       ],
       "receipts": []
@@ -327,7 +347,7 @@
       "id": "R-011",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_export.py::test_bundle_roundtrip_and_rights.",
-      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete. The uploaded M02 integration round-trips the result bundle with units, source identity and raw SHA-256 preserved. This closes that result path only; product-wide export and import coverage remain unresolved.",
+      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete. The uploaded M02 integration round-trips the result bundle with units, source identity and raw SHA-256 preserved. This closes that result path only; product-wide export and import coverage remain unresolved. The uploaded M02 integration verifies the source, units and result survive bundle export and round-trip after the independent forward and residual checks. Other method formats, rights paths and complete product export acceptance remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
@@ -343,11 +363,15 @@
         },
         {
           "path": "tests/api/test_gravity_l2_upload.py",
-          "sha256": "612dcd4bab1f27fb035a7505b215607dddf5ab62c428b579618cf878eec0dbd4"
+          "sha256": "88584d441d23e614d8f8f3670e69168ef9174adf20625c9318dddae61e6d3729"
         },
         {
           "path": "app/bundle.py",
           "sha256": "dda6f2fd625b03bbd7f3458dd588d50c3b61af0141521981a05592770e1896e2"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
         }
       ],
       "receipts": []
