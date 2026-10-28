@@ -152,6 +152,39 @@ def _result_payload(settings: Settings, job: ProcessingJob) -> dict:
     return payload
 
 
+def _gravity_l2_reason_fields(reasons: list[str]) -> list[str]:
+    """Translate M02 source-admission failures to the submitted fields they name."""
+    fields: set[str] = set()
+    for reason in reasons:
+        if "ordinary_l2 processing" in reason:
+            fields.add("physical_metadata.geometry.ordinary_l2")
+        elif "Only the source-bound gravity station CSV parser" in reason:
+            fields.update(("dataset.modality", "dataset.parser_version"))
+        elif "Original asset identity" in reason:
+            fields.update(("raw_asset.sha256", "dataset.parent_raw_sha256"))
+        elif "Original gravity CSV or source-record hash" in reason:
+            fields.update(("raw_asset.detected_format", "source.sha256"))
+        elif "Private processing rights/storage permission" in reason:
+            fields.update(("source.private_storage_permission", "source.rights_decision"))
+        elif "Citation, attribution and rights statement" in reason:
+            fields.update(("source.citation", "source.attribution", "source.rights_statement"))
+        elif "local east/north/up coordinates" in reason:
+            fields.update((f"physical_metadata.{key}" for key in (
+                "coordinate_reference", "axis_order", "horizontal_unit", "vertical_unit",
+                "vertical_positive", "measurement_unit", "component_frame")))
+        elif "Explicit eligible gravity declaration required:" in reason:
+            key = reason.rsplit(":", 1)[-1].strip()
+            fields.add(f"physical_metadata.geometry.ordinary_l2.{key}")
+        elif "Explicit non-unknown " in reason:
+            key = reason.split("Explicit non-unknown ", 1)[1].split(" ", 1)[0]
+            fields.add(f"physical_metadata.geometry.ordinary_l2.{key}")
+        elif "acquisition group column" in reason:
+            fields.update(("physical_metadata.geometry.ordinary_l2.partition_group_column", "raw_columns"))
+        else:
+            fields.add("physical_metadata.geometry.ordinary_l2")
+    return sorted(fields)
+
+
 async def _eligible_mt_qc(session: AsyncSession, settings: Settings, dataset: ObservationDataset,
                           qc_job_id: str | None = None) -> tuple[ProcessingJob, dict] | None:
     query = select(ProcessingJob).where(
@@ -310,7 +343,8 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             # runtime before these two actual scientific methods can be queued.
             return {'dataset_id': dataset.id, 'methods': [], 'unavailable': [
                 dict(method_id=method, eligible=False, lane='native_context_pending',
-                    reason='Physical scientific worker runtime is not yet installed')
+                    reason='Physical scientific worker runtime is not yet installed',
+                    reason_fields=['physical_metadata', 'worker.native_runtime'])
                 for method in (CORRECTION, TRANSFORM)]}
         data = _dataset_payload(settings, dataset)
         if dataset.modality == "magnetic_flightline":
@@ -327,12 +361,29 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                 and source.private_storage_permission == "attested"
                 and source.rights_decision != "forbidden"
             )
+            source_reason_fields = []
+            if asset.detected_format != "magnetic_csv" or source.declared_format != "magnetic_csv":
+                source_reason_fields.extend(("raw_asset.detected_format", "source.declared_format"))
+            if asset.sha256 != dataset.raw_sha256 or data.get("parent_raw_sha256") != asset.sha256:
+                source_reason_fields.extend(("raw_asset.sha256", "dataset.parent_raw_sha256"))
+            if data.get("physical_metadata") != asset.physical_metadata:
+                source_reason_fields.extend(("dataset.physical_metadata", "raw_asset.physical_metadata"))
+            if data.get("source", {}).get("source_id") != source.id or data.get("source", {}).get("citation") != source.citation:
+                source_reason_fields.extend(("source.source_id", "source.citation"))
+            if data.get("source", {}).get("rights_decision") != source.rights_decision or data.get("source", {}).get("rights_statement") != source.rights_statement:
+                source_reason_fields.extend(("source.rights_decision", "source.rights_statement"))
+            if source.private_storage_permission != "attested":
+                source_reason_fields.append("source.private_storage_permission")
+            if source.rights_decision == "forbidden":
+                source_reason_fields.append("source.rights_decision")
             if not source_matches or not settings.magnetic_online_enabled:
                 return {"dataset_id": dataset.id, "methods": [], "unavailable": [{
-                "method_id": MAGNETIC_ID, "eligible": False, "lane": "pending_host_admission",
+                "method_id": MAGNETIC_ID, "eligible": False,
+                "lane": "ineligible_source" if not source_matches else "pending_host_admission",
                 "source_eligible": source_matches,
                 "reason": ("The source-bound M03 dataset is ready; online execution remains closed until its worker and actual ML VPS resource admission are validated"
                            if source_matches else "The original hash, citation, rights or private-storage attestation changed after dataset admission"),
+                "reason_fields": sorted(set(source_reason_fields)) if not source_matches else ["host.magnetic_online_admission"],
                 }]}
             return {"dataset_id": dataset.id, "methods": [{
                 "method_id": MAGNETIC_ID, "eligible": True, "lane": "online_cpu",
@@ -343,7 +394,8 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             if not settings.profile_online_enabled:
                 return {"dataset_id": dataset.id, "methods": [], "unavailable": [{
                     "method_id": method, "eligible": False, "lane": "pending_host_admission",
-                    "reason": "Use the complete local profile pipeline and result importer; actual host admission is not yet recorded"}]}
+                    "reason": "Use the complete local profile pipeline and result importer; actual host admission is not yet recorded",
+                    "reason_fields": ["host.profile_online_admission"]}]}
             return {"dataset_id": dataset.id, "methods": [{"method_id": method, "eligible": True,
                     "lane": "online_processing", "scope": "Original profile inverse with independent physical and holdout gates"}],
                     "unavailable": []}
@@ -352,14 +404,16 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             method = {"method_id": WAVEFORM_ID, "eligible": available,
                 "lane": "online_processing" if available else "native_context_pending",
                 **({"scope": "Conditional native response/QC/filter/PSD and unlabelled onset candidates"}
-                   if available else {"reason": "Selected native context must be validated by the worker before execution"})}
+                   if available else {"reason": "Selected native context must be validated by the worker before execution",
+                                     "reason_fields": ["waveform_context.native_runtime"]})}
             return {"dataset_id": dataset.id, "methods": [method] if available else [],
                     "unavailable": [] if available else [method]}
         if dataset.modality == "edi_transfer_function":
             if not settings.mt_online_enabled:
                 return {"dataset_id": dataset.id, "methods": [], "unavailable": [
                     {"method_id": method, "eligible": False, "lane": "pending_host_admission",
-                     "reason": "Actual ML VPS numerical and resource admission is not recorded"}
+                     "reason": "Actual ML VPS numerical and resource admission is not recorded",
+                     "reason_fields": ["settings.mt_online_enabled", "host.actual_ml_vps_admission"]}
                     for method in (M05_ID, M06_ID)]}
             qualified = await _eligible_mt_qc(session, settings, dataset)
             return {
@@ -371,13 +425,32 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                    if qualified and 12 <= dataset.row_count <= 64 else []),
                 "unavailable": [] if qualified and 12 <= dataset.row_count <= 64 else [{
                     "method_id": M06_ID, "eligible": False, "lane": "ineligible",
-                    "reason": "A passing M05 full-tensor screen and 12..64 frequencies are required"}],
+                    "reason": "A passing M05 full-tensor screen and 12..64 frequencies are required",
+                    "reason_fields": (["methods[M05].eligible"] if not qualified else [])
+                        + (["dataset.row_count"] if not 12 <= dataset.row_count <= 64 else [])}],
             }
         methods = [{"method_id": METHOD_ID, "eligible": True, "lane": "online_processing",
                     "scope": "flag-only QC; no correction or inversion"}]
-        unavailable = [{"method_id": f"M{number:02d}", "eligible": False, "lane": "not_activated",
-                        "reason": "No validated online adapter and host benchmark for this complete method"}
-                       for number in range(1, 14)]
+        modality_methods = {
+            "M01": {"gravity_station", "magnetic_flightline"}, "M02": {"gravity_station"},
+            "M03": {"magnetic_flightline"}, "M04": {"magnetic_flightline"},
+            "M05": {"edi_transfer_function"}, "M06": {"edi_transfer_function"},
+            "M07": {"ert_profile"}, "M08": {WAVEFORM_MODALITY},
+            "M09": {"traveltime_profile"}, "M10": {WAVEFORM_MODALITY},
+            "M11": {"joint_survey"}, "M12": {"traveltime_profile"}, "M13": {WAVEFORM_MODALITY},
+        }
+        unavailable = []
+        for number in range(1, 14):
+            method = f"M{number:02d}"
+            if method == "M02" and dataset.modality == "gravity_station":
+                continue
+            compatible = dataset.modality in modality_methods[method]
+            unavailable.append({"method_id": method, "eligible": False,
+                "lane": "offline_only" if compatible else "incompatible_input",
+                "reason": ("This method has no admitted online user-data adapter for the selected dataset"
+                           if compatible else "This method's input modality does not match the selected dataset"),
+                "reason_fields": (["method.input_contract", "method.online_lane"] if compatible
+                                  else ["dataset.modality"])})
         if dataset.modality == "gravity_station":
             asset, source = await _owned_asset(session, project_id, dataset.raw_asset_id, user)
             source_eligible, reasons = eligible_upload(data, asset, source)
@@ -385,11 +458,12 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             if not source_eligible:
                 unavailable.append({"method_id": GRAVITY_L2_ID, "eligible": False, "lane": "ineligible",
                                    "source_eligible": False, "reason": "M02 source admission failed: " + "; ".join(reasons),
-                                   "reasons": reasons})
+                                   "reason_fields": _gravity_l2_reason_fields(reasons), "reasons": reasons})
             elif not settings.gravity_l2_online_enabled:
                 unavailable.append({"method_id": GRAVITY_L2_ID, "eligible": False,
                                    "lane": "pending_host_admission", "source_eligible": True,
-                                   "reason": "M02 ordinary-L2 has no measured ML VPS admission receipt"})
+                                   "reason": "M02 ordinary-L2 has no measured ML VPS admission receipt",
+                                   "reason_fields": ["host.gravity_l2_online_admission"]})
             else:
                 methods.append({"method_id": GRAVITY_L2_ID, "eligible": True, "lane": "online_cpu",
                                 "scope": "Source-bound ordinary weighted L2; fixed-geometry conditional result; full M02/field acceptance remains false"})

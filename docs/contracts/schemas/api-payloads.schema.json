@@ -1018,17 +1018,57 @@
         "reason": {
           "type": "string"
         },
+        "reason_fields": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Dataset or admission fields that explain why an ineligible method is filtered."
+        },
+        "source_eligible": {
+          "type": "boolean",
+          "description": "Whether source declarations pass the method source gate; not host admission."
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "description": "Detailed source-admission failures when source_eligible is false."
+        },
         "qc_job_id": {
           "type": "string",
           "format": "uuid"
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "eligible": { "const": false } },
+            "required": ["eligible"]
+          },
+          "then": { "required": ["reason", "reason_fields"] }
+        },
+        {
+          "if": {
+            "properties": { "eligible": { "const": true } },
+            "required": ["eligible"]
+          },
+          "then": { "required": ["scope"] }
+        }
+      ]
     },
     "Methods": {
       "type": "object",
       "required": [
         "dataset_id",
-        "methods"
+        "methods",
+        "unavailable"
       ],
       "properties": {
         "dataset_id": {

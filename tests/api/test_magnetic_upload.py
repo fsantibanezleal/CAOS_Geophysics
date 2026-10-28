@@ -72,6 +72,7 @@ def test_magnetic_csv_creates_source_bound_dataset_without_claiming_processing(h
     assert eligibility["unavailable"][0]["method_id"] == "magnetic.flightline-qc-grid/v1"
     assert eligibility["unavailable"][0]["lane"] == "pending_host_admission"
     assert eligibility["unavailable"][0]["source_eligible"] is True
+    assert eligibility["unavailable"][0]["reason_fields"] == ["host.magnetic_online_admission"]
     job = harness.request("POST", f"/api/projects/{project['id']}/jobs", json={
         "dataset_id": receipt["dataset_id"], "method_id": "magnetic.flightline-qc-grid/v1",
         "parameters": {"grid_spacing_m": 20, "holdout_fraction": 0.2, "seed": "m03-test"},
@@ -82,6 +83,8 @@ def test_magnetic_csv_creates_source_bound_dataset_without_claiming_processing(h
                    (upload.json()["source"]["source_id"],))
     changed = harness.client.get(f"/api/projects/{project['id']}/datasets/{receipt['dataset_id']}/methods").json()
     assert changed["unavailable"][0]["source_eligible"] is False
+    assert changed["unavailable"][0]["lane"] == "ineligible_source"
+    assert changed["unavailable"][0]["reason_fields"] == ["source.private_storage_permission"]
 
 
 def test_magnetic_csv_requires_explicit_mapping_and_source_declarations(harness):

@@ -85,11 +85,19 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across the uploaded-data modalities and a browser workbench check. The API suite and browser eligibility case pass locally; R-005 remains unresolved because complete end-to-end eligibility coverage across all supported inputs is not accepted.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "tests/api/test_method_eligibility.py",
+          "sha256": "b84af52103274752af597839010accda9c5f23100e155c68ab370bedec230352"
+        },
+        {
+          "path": "frontend/e2e/eligibility.spec.ts",
+          "sha256": "ed70d0363d85e85b953a833387155d16435d8e25e2c0b0b1377a54f192bc52de"
         }
       ],
       "receipts": []
@@ -98,7 +106,7 @@
       "id": "R-006",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete.",
+      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete. A new authenticated uploaded-survey integration now runs the isolated M02 ordinary weighted L2 child, changes predictions when its declared background parameter changes, preserves the original bytes, and exports a verifiable unit/provenance bundle. The authored control passes locally; the complete required method ladder and actual-host admission remain open.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -107,6 +115,14 @@
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
           "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "612dcd4bab1f27fb035a7505b215607dddf5ab62c428b579618cf878eec0dbd4"
+        },
+        {
+          "path": "app/worker.py",
+          "sha256": "fd9614d2dfa604158ad8a815a508cb072f06cd02d7d6112e4279601d80893eb9"
         }
       ],
       "receipts": []
@@ -115,7 +131,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This initial snapshot was a baseline; its follow-up below compares a local candidate bundle and configured scratch/memory ceilings, while runtime installation, retained future data and actual job capacity remain unqualified. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy. A 20:39 UTC read-only follow-up measured the clean local qualification bundle at 856,096,919 logical bytes including manifest, confirmed current plus two rollback release sizes, and compared candidate plus configured 1 GiB scratch and API/worker/controller ceilings with live free disk and MemAvailable. This arithmetic is only preflight: API/gravity runtime installation, actual concurrent job/resource behavior, timeout/cancel/recovery and authenticated workflows remain unmeasured; no candidate was uploaded, and R-007 remains unresolved. The capacity-preflight JSON passes the inventory consistency check, which explicitly does not attest that its inputs were measured on the host. The 21:15 UTC current-branch preflight records a 856,103,491-byte qualification bundle, 32,396,664,832 bytes filesystem availability, and 5,253,464,064 bytes MemAvailable; explicit service/controller ceilings fit arithmetically. Runtime installation, candidate execution and job admission are still unmeasured, so R-007 remains unresolved. A 2026-10-27 isolated host-runtime qualification report records the unchanged active release, recovered receipt-matched environment selector, pinned API/gravity installs and pip checks, and the still-open CPython version gate; no host admission or activation passed. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass, while four of the locked Windows gravity L2 cases still report low-beta line_search_failed; the established Linux matrix is separate evidence and fresh VPS replay remains pending. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The release-033a5e7 candidate now has a fresh pinned Linux CPython 3.12.16 numerical replay: 381 passed, zero failed/skipped in 10,793.32 s. The candidate runtime receipt and validation overlay are hash-bound in docs/validation/vps-science-replay-033a5e7-2026-10-27.json. This still does not measure authenticated admission, timeout/cancellation/recovery, concurrent capacity or full host acceptance; R-007 remains unresolved. A 2026-10-27 post-staging snapshot measured 12,510,769,152 bytes free on the release filesystem and 5,193,476 kB MemAvailable, with candidate `release-9d203f1` plus its private API/gravity runtimes present. Read-only bootstrap verification caught a parser-cap mismatch before state creation. This inventory is not a job-capacity or admission pass; R-007 remains unresolved. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending.",
+      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This initial snapshot was a baseline; its follow-up below compares a local candidate bundle and configured scratch/memory ceilings, while runtime installation, retained future data and actual job capacity remain unqualified. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy. A 20:39 UTC read-only follow-up measured the clean local qualification bundle at 856,096,919 logical bytes including manifest, confirmed current plus two rollback release sizes, and compared candidate plus configured 1 GiB scratch and API/worker/controller ceilings with live free disk and MemAvailable. This arithmetic is only preflight: API/gravity runtime installation, actual concurrent job/resource behavior, timeout/cancel/recovery and authenticated workflows remain unmeasured; no candidate was uploaded, and R-007 remains unresolved. The capacity-preflight JSON passes the inventory consistency check, which explicitly does not attest that its inputs were measured on the host. The 21:15 UTC current-branch preflight records a 856,103,491-byte qualification bundle, 32,396,664,832 bytes filesystem availability, and 5,253,464,064 bytes MemAvailable; explicit service/controller ceilings fit arithmetically. Runtime installation, candidate execution and job admission are still unmeasured, so R-007 remains unresolved. A 2026-10-27 isolated host-runtime qualification report records the unchanged active release, recovered receipt-matched environment selector, pinned API/gravity installs and pip checks, and the still-open CPython version gate; no host admission or activation passed. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass, while four of the locked Windows gravity L2 cases still report low-beta line_search_failed; the established Linux matrix is separate evidence and fresh VPS replay remains pending. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The release-033a5e7 candidate now has a fresh pinned Linux CPython 3.12.16 numerical replay: 381 passed, zero failed/skipped in 10,793.32 s. The candidate runtime receipt and validation overlay are hash-bound in docs/validation/vps-science-replay-033a5e7-2026-10-27.json. This still does not measure authenticated admission, timeout/cancellation/recovery, concurrent capacity or full host acceptance; R-007 remains unresolved. A 2026-10-27 post-staging snapshot measured 12,510,769,152 bytes free on the release filesystem and 5,193,476 kB MemAvailable, with candidate `release-9d203f1` plus its private API/gravity runtimes present. Read-only bootstrap verification caught a parser-cap mismatch before state creation. This inventory is not a job-capacity or admission pass; R-007 remains unresolved. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. A fresh read-only 2026-10-28 snapshot measured 3,652,116,480 bytes available (96% used) and 5,300,334,592 bytes MemAvailable. The active legacy release and two dated rollback directories total 2,322,509,824 logical bytes; the geophysics releases tree totals 33,736,204,288 bytes, including 28 individually inventoried non-retained directories at 31,413,694,464 bytes. No directories were removed. Current candidate capacity, runtime installation, actual-host job behavior and release admission remain unqualified.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -148,6 +164,10 @@
         {
           "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
           "sha256": "7f6f218568cdba0df6052abda6494202fa3acc72446e7a2081c636955d4bd1fb"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-28.md",
+          "sha256": "2c7e7d55531f39b34d2b5e856bdd501873efea9415f7099add669c4e63137b2c"
         }
       ],
       "receipts": []
@@ -232,7 +252,7 @@
         },
         {
           "path": "tests/api/test_magnetic_upload.py",
-          "sha256": "836bdb4c7f7b2509a9a1ff0275bb845c933d915acb6f6e737d021dafe33706c4"
+          "sha256": "67d64829b47c16d60e4adb40979fc4f2131335c1a9e240c9481b20009de96cf3"
         },
         {
           "path": "app/magnetic_compute.py",
@@ -307,7 +327,7 @@
       "id": "R-011",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_export.py::test_bundle_roundtrip_and_rights.",
-      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete.",
+      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete. The uploaded M02 integration round-trips the result bundle with units, source identity and raw SHA-256 preserved. This closes that result path only; product-wide export and import coverage remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
@@ -320,6 +340,14 @@
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
           "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "612dcd4bab1f27fb035a7505b215607dddf5ab62c428b579618cf878eec0dbd4"
+        },
+        {
+          "path": "app/bundle.py",
+          "sha256": "dda6f2fd625b03bbd7f3458dd588d50c3b61af0141521981a05592770e1896e2"
         }
       ],
       "receipts": []
@@ -383,11 +411,11 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the 56-notebook set now passes full fresh-kernel execution and structural mirrored-course gates. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved. A bilingual M10 four-geology case-matrix lesson now inspects four existing hash-verified full-run artifacts and exposes the salt negative control and unresolved low-velocity channel; fresh-kernel runs and strict replays pass. It adds inspectability, not solver evidence, independent propagation, field validation or course/product acceptance.",
+      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the 56-notebook set now passes full fresh-kernel execution and structural mirrored-course gates. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved. A bilingual M10 four-geology case-matrix lesson now inspects four existing hash-verified full-run artifacts and exposes the salt negative control and unresolved low-velocity channel; fresh-kernel runs and strict replays pass. It adds inspectability, not solver evidence, independent propagation, field validation or course/product acceptance. A hash-bound coverage manifest now associates all 13 method IDs and 56 bilingual notebook files with the source review inventory. Structural matrix checks pass; scientific correctness, rights, full in-app chapter depth and rendered teaching acceptance remain separate and unresolved.",
       "evidence": [
         {
           "path": "docs/validation/source-to-content-review.md",
-          "sha256": "bbe95d3e157c025c4fb18f8319e3ac8fcf3fbda8b76ac9d1cc99942f9f6cc9b6"
+          "sha256": "6e63dea484e001864b503295cb617904fbe36895d5021c9643b4ead681009b03"
         },
         {
           "path": "docs/wiki/README.md",
@@ -411,7 +439,7 @@
         },
         {
           "path": "scripts/check_docs_matrix.py",
-          "sha256": "f8c1576986aa321f0ff674d134e1236dcf106bf389070a27a5ce22a23af539ec"
+          "sha256": "312175b68d1707894239c222c8319ec9d98c28835abb513c956485be4f9be3f7"
         },
         {
           "path": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
@@ -460,6 +488,10 @@
         {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
           "sha256": "f3c63cc649f46e8c71aa519c614348dc46230cbd81d34f615ca2a031bc1b1ad6"
+        },
+        {
+          "path": "docs/validation/source-content-coverage.json",
+          "sha256": "91f15ca9195c9512ba821b0881f072d8e6bdc5990104f99c361e1df16d9c07cc"
         }
       ],
       "receipts": []
@@ -468,7 +500,7 @@
       "id": "R-017",
       "verdict": "unresolved",
       "declared_gate": "scripts/verify_single_vps_release.py::main plus independently reviewed private scientific/UI/actual-host jobs/ownership/HTTPS/browser/retired-publication/rollback receipts. The read-only verifier alone cannot accept this requirement.",
-      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Pages publication was withdrawn and active source/build paths removed; this is not replacement acceptance. The owner amendment on 2026-10-03 removes SMTP, off-host backup/deletion-journal and arbitrary whole-host 30% free-space prerequisites for this test deployment. Full scientific/UI, actual-host job capacity, account/ownership and single-origin cutover gates remain unresolved. Existing hostname retained; current plus two rollback releases required. Historical failed disk/restore evidence is preserved, not relabelled passed. The initial candidate bootstrap integration was not ready: `release-9d203f1` produced a 5,119,892-byte v2 runtime receipt while the shared strict parser allowed only 4 MiB. Read-only verification refused before private database creation. A caller-bounded parser fix and regression test are implemented; fresh immutable-candidate host verification remains required. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending.",
+      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Pages publication was withdrawn and active source/build paths removed; this is not replacement acceptance. The owner amendment on 2026-10-03 removes SMTP, off-host backup/deletion-journal and arbitrary whole-host 30% free-space prerequisites for this test deployment. Full scientific/UI, actual-host job capacity, account/ownership and single-origin cutover gates remain unresolved. Existing hostname retained; current plus two rollback releases required. Historical failed disk/restore evidence is preserved, not relabelled passed. The initial candidate bootstrap integration was not ready: `release-9d203f1` produced a 5,119,892-byte v2 runtime receipt while the shared strict parser allowed only 4 MiB. Read-only verification refused before private database creation. A caller-bounded parser fix and regression test are implemented; fresh immutable-candidate host verification remains required. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. Fresh 2026-10-28 checks returned HTTP 200 from the canonical VPS origin, HTTP 404 from the former GitHub Pages URL, and 404 from the GitHub Pages API. The VPS still serves legacy 0.04.001 and no replacement cutover occurred; R-017 remains unresolved.",
       "evidence": [
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
@@ -485,6 +517,10 @@
         {
           "path": "docs/validation/host-runtime-qualification-2026-10-27.md",
           "sha256": "32d7e5375e983912d0d638908be7ed3c65e96e46bdc1ed77f5fdd4c2ad67876a"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-28.md",
+          "sha256": "2c7e7d55531f39b34d2b5e856bdd501873efea9415f7099add669c4e63137b2c"
         }
       ],
       "receipts": []

@@ -18,6 +18,10 @@ export interface DatasetReceipt {
 export interface GravityDataset {
   schema: "geophysics.observation-dataset/v1"; dataset_id: string; version: 1;
   owner_id: string; project_id: string; raw_asset_id: string; parent_raw_sha256: string;
+  parent_raw_bytes: number; raw_columns: string[]; partition_group_ids: string[];
+  source: { source_id: string; provider: string; exact_url: string | null; doi: string | null;
+    citation: string | null; retrieved_at: string | null; rights_decision: RightsDecision;
+    rights_statement: string; attribution: string };
   parser_version: "gravity-station-csv/v1"; modality: "gravity_station";
   dimensions: { station: number }; axis_order: ["station"]; station_ids: string[];
   xyz_m: [number, number, number][]; observed_mgal: number[]; sigma_mgal: number[];
@@ -39,7 +43,8 @@ export const isProfileReceipt = (receipt: ProjectDatasetReceipt): receipt is Pro
 export interface MethodEligibility {
   dataset_id: string;
   methods: { method_id: string; eligible: true; lane: string; scope: string; qc_job_id?: string }[];
-  unavailable: { method_id: string; eligible: false; lane: string; reason: string }[];
+  unavailable: { method_id: string; eligible: false; lane: string; reason: string;
+    reason_fields: string[]; source_eligible?: boolean; reasons?: string[] }[];
 }
 export interface ProcessingRequest {
   schema: "geophysics.processing-request/v1"; job_id: string; project_id: string;
@@ -193,11 +198,20 @@ export function parseDatasetReceipt(value: unknown): DatasetReceipt {
 }
 export function parseGravityDataset(value: unknown): GravityDataset {
   const data = processingObject(value, "dataset");
-  keys(data, ["schema", "dataset_id", "version", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parser_version", "modality", "dimensions", "axis_order", "station_ids", "xyz_m", "observed_mgal", "sigma_mgal", "uncertainty_kind", "mask", "missing_reasons", "physical_metadata", "correction_history", "qc_verdict", "rights_decision", "rights_statement", "attribution"], "dataset");
+  keys(data, ["schema", "dataset_id", "version", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parent_raw_bytes", "raw_columns", "partition_group_ids", "source", "parser_version", "modality", "dimensions", "axis_order", "station_ids", "xyz_m", "observed_mgal", "sigma_mgal", "uncertainty_kind", "mask", "missing_reasons", "physical_metadata", "correction_history", "qc_verdict", "rights_decision", "rights_statement", "attribution"], "dataset");
   if (data.schema !== "geophysics.observation-dataset/v1" || data.version !== 1 || data.modality !== "gravity_station" || data.parser_version !== "gravity-station-csv/v1" || data.qc_verdict !== "parsed_for_flag_qc_only") fail("dataset schema/verdict");
   for (const key of ["dataset_id", "owner_id", "project_id", "raw_asset_id"]) processingId(data[key]);
   hash(data.parent_raw_sha256); processingText(data.attribution, "attribution");
+  integer(data.parent_raw_bytes, 1, 2 * 1024 * 1024);
+  if (!Array.isArray(data.raw_columns) || !data.raw_columns.length || data.raw_columns.some(column => typeof column !== "string" || !column.trim())) fail("dataset raw columns");
+  if (!Array.isArray(data.partition_group_ids) || data.partition_group_ids.some(group => typeof group !== "string" || !group.trim())) fail("dataset partition groups");
+  const source = processingObject(data.source, "dataset source");
+  keys(source, ["source_id", "provider", "exact_url", "doi", "citation", "retrieved_at", "rights_decision", "rights_statement", "attribution"], "dataset source");
+  processingId(source.source_id); processingText(source.provider, "dataset source provider");
+  if (source.rights_decision !== data.rights_decision || source.rights_statement !== data.rights_statement || source.attribution !== data.attribution) fail("dataset source declarations");
   const count = stationArrays(data);
+  if (data.partition_group_ids.length !== 0 && data.partition_group_ids.length !== count) fail("dataset partition group dimensions");
+  if (data.raw_columns.length !== (data.partition_group_ids.length ? 7 : 6)) fail("dataset raw column dimensions");
   same(data.mask, Array(count).fill(false), "flag QC input mask");
   same(data.missing_reasons, Array(count).fill(null), "flag QC missingness");
   same(data.correction_history, [], "input correction history");
@@ -217,11 +231,21 @@ export function parseEligibility(value: unknown): MethodEligibility {
     for (const item of data[key]) {
       const row = processingObject(item, "method");
       const qc = eligible && row.method_id === M06_METHOD;
-      keys(row, ["method_id", "eligible", "lane", eligible ? "scope" : "reason", ...(qc ? ["qc_job_id"] : [])], "method");
+      keys(row, ["method_id", "eligible", "lane", eligible ? "scope" : "reason",
+        ...(qc ? ["qc_job_id"] : []), ...(!eligible ? ["reason_fields", "source_eligible", "reasons"].filter(key => key in row) : [])], "method");
       if (qc) processingId(row.qc_job_id);
       const id = processingText(row.method_id, "method ID");
       if (ids.has(id) || row.eligible !== eligible) fail("duplicate or contradictory eligibility");
       ids.add(id); processingText(row.lane, "method lane"); processingText(row[eligible ? "scope" : "reason"], "method reason");
+      if (!eligible) {
+        if (!Array.isArray(row.reason_fields) || row.reason_fields.length === 0) fail("ineligible method reason fields");
+        row.reason_fields.forEach(field => processingText(field, "method reason field"));
+      }
+      if (!eligible && row.source_eligible !== undefined && typeof row.source_eligible !== "boolean") fail("method source eligibility");
+      if (!eligible && row.reasons !== undefined) {
+        if (!Array.isArray(row.reasons) || row.reasons.length === 0) fail("method source reasons");
+        row.reasons.forEach(reason => processingText(reason, "method source reason"));
+      }
       if (id === FLAG_METHOD && eligible && row.lane !== "online_processing") fail("gravity method lane");
     }
   }

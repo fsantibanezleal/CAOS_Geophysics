@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -16,7 +15,7 @@ import tempfile
 import urllib.request
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from prepare_service_release import file_digest, no_links  # noqa: E402
+from prepare_service_release import no_links  # noqa: E402
 
 EVIDENCE = Path('/var/lib/geophysics-deploy')
 RUNTIMES = EVIDENCE / 'python-runtimes'

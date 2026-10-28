@@ -45,7 +45,7 @@ describe("M03 flight-line user-data workbench",()=>{
   });
 
   it.each([
-    {methods:[],unavailable:[{method_id:"magnetic.flightline-qc-grid/v1",eligible:false,lane:"pending_host_admission",source_eligible:true,reason:"Source-bound M03 is ready; execution remains closed until its worker is validated"}]},
+    {methods:[],unavailable:[{method_id:"magnetic.flightline-qc-grid/v1",eligible:false,lane:"pending_host_admission",source_eligible:true,reason:"Source-bound M03 is ready; execution remains closed until its worker is validated",reason_fields:["host.magnetic_online_admission"]}]},
     {methods:[{method_id:"magnetic.flightline-qc-grid/v1",eligible:true,lane:"online_processing",scope:"pending_host_admission"}],unavailable:[]},
   ])("keeps execution closed for pending-host response %#",async verdict=>{
     vi.stubGlobal("window",{location:{origin:"https://geophysics.example"}});

@@ -125,7 +125,6 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
     raw = {r['asset_id']: r for r in value['raw_assets']}
     datasets = {r['dataset_id']: r for r in value['datasets']}
     jobs = {r['job_id']: r for r in value['jobs']}
-    joint_job_ids = set()
     if version == JOINT_SCHEMA:
         from app.physical_joint_native_contract import METHOD_ID as JOINT_METHOD, PARSER as JOINT_PARSER, MAX_BYTES, MAX_JSON, member_metadata
         from app.physical_joint_custody import NAME
@@ -182,7 +181,6 @@ def validate_current_inventory(value, receipt, *, expected_source_policy_sha256,
         require({r['dataset_id'] for r in source_projection} ==
                 {r['dataset_id'] for r in datasets.values() if r['parser_version'] == JOINT_PARSER},
                 'current_deletion_joint_source_complete')
-        joint_job_ids = {r['job_id'] for r in value['jobs'] if r['method_id'] == JOINT_METHOD}
         require(type(value['joint_result_indexes']) is list and len(value['joint_result_indexes']) <= 4096,
                 'current_deletion_joint_index_cap')
         index_ids, index_projection = set(), []

@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import asyncio
+import os
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -11,7 +15,10 @@ import choclo
 
 from app.gravity_l2_compute import build_native_requests, compute_gravity_l2
 from app.gravity_l2_contract import METHOD_ID, GravityL2Parameters, implementation_hashes, validate_typed_arrays
+from app.config import WorkerSettings
+from app.bundle import verify_bundle
 from app.processing_contract import parse_gravity_dataset
+from app.worker import run_one
 
 
 def survey_upload():
@@ -82,6 +89,7 @@ def test_upload_is_source_bound_but_host_lane_stays_closed(make_harness):
     ).json()
     entry = next(item for item in methods["unavailable"] if item["method_id"] == METHOD_ID)
     assert entry["source_eligible"] is True and entry["lane"] == "pending_host_admission"
+    assert entry["reason_fields"] == ["host.gravity_l2_online_admission"]
     assert harness.client.get(asset["download_url"]).content == raw
     assert payload["source"]["source_id"] == asset["source"]["source_id"]
     assert payload["partition_group_ids"][:12] == ["L00"] * 12
@@ -186,6 +194,81 @@ def test_uploaded_survey_executes_native_calibration_then_sealed_evaluation(tmp_
     assert result["gravity_l2"]["outer_evaluation"]["field_truth"] is None
     assert result["gravity_l2"]["outer_evaluation"]["model_accuracy"] is None
     assert result["gravity_l2"]["scope"]["host_accepted"] is False
+
+
+def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions(make_harness):
+    """Exercise authenticated upload -> eligibility -> isolated M02 child -> owned result."""
+    # Build an authored, non-zero physical survey from the declared one-cell
+    # prism so the real solver has an identifiable descent direction.
+    body, metadata = survey_upload()
+    rows = body.decode("utf-8").splitlines()
+    for index in range(1, len(rows)):
+        station, x, y, z, _anomaly, sigma, group = rows[index].split(",")
+        anomaly = choclo.prism.gravity_u(
+            float(x), float(y), float(z), -50.0, 50.0, -50.0, 50.0,
+            -200.0, -100.0, 500.0,
+        ) * 1e5
+        rows[index] = ",".join((station, x, y, z, f"{anomaly:.12g}", sigma, group))
+    body = ("\n".join(rows) + "\n").encode("utf-8")
+    metadata["source"]["expected_bytes"] = len(body)
+    metadata["source"]["expected_sha256"] = hashlib.sha256(body).hexdigest()
+
+    gravity_python = Path(os.environ.get(
+        "GEOPHYSICS_TEST_GRAVITY_PYTHON",
+        Path(__file__).resolve().parents[2] / ".venv-pipeline" / "Scripts" / "python.exe"
+        if os.name == "nt" else sys.executable,
+    )).resolve()
+    harness = make_harness(gravity_l2_online_enabled=True)
+    worker_settings = WorkerSettings(data_dir=harness.settings.data_dir,
+        db_path=harness.settings.db_path, gravity_l2_online_enabled=True,
+        gravity_l2_python=gravity_python)
+    harness.account()
+    project = harness.project("Uploaded physical M02 control")
+    asset_response = harness.upload(project["id"], body, metadata)
+    assert asset_response.status_code == 201, asset_response.text
+    asset = asset_response.json()
+    dataset_response = harness.request("POST", f"/api/projects/{project['id']}/datasets",
+                                       json={"asset_id": asset["asset_id"]})
+    assert dataset_response.status_code == 201, dataset_response.text
+    dataset = dataset_response.json()
+    method_response = harness.client.get(
+        f"/api/projects/{project['id']}/datasets/{dataset['dataset_id']}/methods")
+    methods = method_response.json()
+    assert any(item["method_id"] == METHOD_ID and item["eligible"] for item in methods["methods"])
+
+    def execute(background_mgal):
+        params = parameters()
+        params["background_mgal"] = background_mgal
+        queued = harness.request("POST", f"/api/projects/{project['id']}/jobs", json={
+            "dataset_id": dataset["dataset_id"], "method_id": METHOD_ID, "parameters": params,
+        })
+        assert queued.status_code == 202, queued.text
+        job_id = queued.json()["job_id"]
+        assert asyncio.run(run_one(worker_settings)) == job_id
+        status = harness.client.get(f"/api/projects/{project['id']}/jobs/{job_id}").json()
+        assert status["state"] == "succeeded", status["error"]
+        return harness.client.get(status["result_url"]).json()
+
+    first = execute(0.0)
+    second = execute(0.05)
+    for result in (first, second):
+        assert result["method_id"] == METHOD_ID
+        assert result["raw_sha256"] == asset["sha256"]
+        assert result["gravity_l2"]["source"]["raw_sha256"] == asset["sha256"]
+        assert result["gravity_l2"]["outer_evaluation"]["field_truth"] is None
+        predictions = result["gravity_l2"]["calibration"]["predictions"]["gz_up_mgal"]
+        assert predictions["data"] is not None and predictions["sha256"]
+    assert first["request_sha256"] != second["request_sha256"]
+    assert (first["gravity_l2"]["calibration"]["predictions"]["gz_up_mgal"]["sha256"]
+            != second["gravity_l2"]["calibration"]["predictions"]["gz_up_mgal"]["sha256"])
+    assert harness.client.get(asset["download_url"]).content == body
+    exported = harness.client.get(
+        f"/api/projects/{project['id']}/jobs/{second['job_id']}/export")
+    assert exported.status_code == 200
+    manifest, exported_dataset, exported_result = verify_bundle(exported.content)
+    assert manifest["units"] == {"model": "kg/m3", "observation": "mGal", "coordinates": "m"}
+    assert exported_dataset["parent_raw_sha256"] == asset["sha256"]
+    assert exported_result == second
 
 
 def test_changed_original_bytes_fail_before_native_calibration(tmp_path, monkeypatch):

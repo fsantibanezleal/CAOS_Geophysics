@@ -78,6 +78,7 @@ def test_host_flag_closed_preserves_local_route(make_harness):
     methods = harness.client.get(f"{base}/datasets/{dataset['dataset_id']}/methods").json()
     assert methods["methods"] == []
     assert methods["unavailable"][0]["method_id"] == meta["method"]
+    assert methods["unavailable"][0]["reason_fields"] == ["host.profile_online_admission"]
     job = harness.request("POST", base+"/jobs", json={"dataset_id": dataset["dataset_id"],
                                 "method_id": meta["method"], "parameters": {}})
     assert job.status_code == 409 and job.json()["code"] == "host_admission_pending"
@@ -172,6 +173,24 @@ def test_native_config_is_private_bounded_and_narrowly_cleaned(tmp_path):
     unknown.unlink()  # Exact test-owned file only; not a generalized cleanup.
     _clear_known_stage(stage)
     assert not stage.exists()
+
+
+def test_stage_accounting_tolerates_a_disappearing_matplotlib_lock(tmp_path, monkeypatch):
+    stage = tmp_path / "job"
+    cache = stage / ".matplotlib"
+    cache.mkdir(parents=True)
+    (stage / "result.json").write_bytes(b"123")
+    lock = cache / "fontlist-v390.json.matplotlib-lock"
+    lock.write_bytes(b"")
+    original_lstat = Path.lstat
+
+    def disappearing_lock(path):
+        if path == lock:
+            raise FileNotFoundError(path)
+        return original_lstat(path)
+
+    monkeypatch.setattr(Path, "lstat", disappearing_lock)
+    assert _stage_bytes(stage) == 3
 
 
 def test_actual_running_profile_cancel_preserves_original(make_harness):

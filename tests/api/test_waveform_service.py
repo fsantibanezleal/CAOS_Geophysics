@@ -151,7 +151,8 @@ def test_worker_dispatch_and_closed_context(harness):
     receipt = indexed.json()
     eligibility = harness.client.get(f"/api/projects/{project['id']}/datasets/{receipt['dataset_id']}/methods").json()
     assert eligibility["unavailable"][0]["method_id"] == "seismic.waveform-qc-classical/v1"
-    assert set(eligibility["unavailable"][0]) == {"method_id", "eligible", "lane", "reason"}
+    assert set(eligibility["unavailable"][0]) == {"method_id", "eligible", "lane", "reason", "reason_fields"}
+    assert eligibility["unavailable"][0]["reason_fields"] == ["waveform_context.native_runtime"]
     response = harness.request(
         "POST",
         f"/api/projects/{project['id']}/jobs",

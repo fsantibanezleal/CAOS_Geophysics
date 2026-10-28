@@ -13,8 +13,9 @@ describe("activated flag-only processing contracts", () => {
     const changed = {...f.dataset, sigma_mgal: [1,1,1,1,1]}; expect(() => bindResult(f.result, f.job, changed)).toThrow("unchanged sigma");
     expect(() => parseDatasetReceipt({...f.receipt,dataset_id: "../../"})).toThrow();
     for (const n of [NaN, Infinity, "6", 0, 10.1]) expect(() => validateThreshold(n)).toThrow(); expect(validateThreshold(1.5)).toBe(1.5);
-    const eligibility = {dataset_id: id(3), methods: [{method_id: "future.mt/v1", eligible: true, lane: "online_processing", scope: "API says eligible"}], unavailable: [{method_id: "M01", eligible: false, lane: "not_activated", reason: "No full adapter"}]};
+    const eligibility = {dataset_id: id(3), methods: [{method_id: "future.mt/v1", eligible: true, lane: "online_processing", scope: "API says eligible"}], unavailable: [{method_id: "M01", eligible: false, lane: "offline_only", reason: "No full adapter", reason_fields: ["method.input_contract", "method.online_lane"]}, {method_id: "gravity.survey-l2-ordinary/v1", eligible: false, lane: "ineligible", reason: "Source admission failed", reason_fields: ["physical_metadata.geometry.ordinary_l2"], source_eligible: false, reasons: ["Explicit ordinary_l2 processing declaration is required"]}]};
     expect(parseEligibility(eligibility)).toEqual(eligibility); expect(() => parseEligibility({...eligibility, unavailable: [...eligibility.unavailable,...eligibility.unavailable]})).toThrow();
+    expect(() => parseEligibility({...eligibility, unavailable: [{...eligibility.unavailable[0], reason_fields: []}]})).toThrow();
   });
   it("validates state dependent job fields", () => {
     const {job} = fixture(); expect(parseProcessingJob(job)).toEqual(job);

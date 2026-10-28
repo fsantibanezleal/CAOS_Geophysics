@@ -1,0 +1,425 @@
+{
+  "schema": "caos.geophysics.source-content-coverage/v1",
+  "basis": "Titles and citation URLs are copied from each English notebook metadata.caos block; EN/ES pairs are asserted against the current repository. Method association and content_scope are explicit review annotations, not acceptance findings.",
+  "methods": [
+    {
+      "id": "M01",
+      "wiki_en": "docs/wiki/methods/m01-m06.md#m01-gravity-station-reduction-and-equivalent-source-transforms",
+      "wiki_es": "docs/wiki/methods/m01-m06.es.md#m01-reduccion-de-estaciones-gravimetricas-y-transformadas-de-fuentes-equivalentes"
+    },
+    {
+      "id": "M02",
+      "wiki_en": "docs/wiki/methods/m01-m06.md#m02-3d-gravity-prism-forward-response-and-bounded-inversion",
+      "wiki_es": "docs/wiki/methods/m01-m06.es.md#m02-respuesta-directa-de-prismas-gravimetricos-3d-e-inversion-acotada"
+    },
+    {
+      "id": "M03",
+      "wiki_en": "docs/wiki/methods/m01-m06.md#m03-airborne-magnetic-line-qc-and-supported-gridding",
+      "wiki_es": "docs/wiki/methods/m01-m06.es.md#m03-control-de-calidad-de-lineas-magneticas-aerotransportadas-y-grillado-con-soporte"
+    },
+    {
+      "id": "M04",
+      "wiki_en": "docs/wiki/methods/m01-m06.md#m04-induced-magnetic-prism-forward-operator-survey-inverse-planned",
+      "wiki_es": "docs/wiki/methods/m01-m06.es.md#m04-operador-directo-de-prismas-magneticos-inducidos-inversion-del-levantamiento-planificada"
+    },
+    {
+      "id": "M05",
+      "wiki_en": "docs/wiki/methods/m01-m06.md#m05-mt-edi-tensor-variance-frame-and-dimensionality-qc",
+      "wiki_es": "docs/wiki/methods/m01-m06.es.md#m05-control-de-calidad-del-tensor-mt-edi-varianza-marco-y-dimensionalidad"
+    },
+    {
+      "id": "M06",
+      "wiki_en": "docs/wiki/methods/m01-m06.md#m06-bounded-1d-layered-earth-mt-impedance-inversion",
+      "wiki_es": "docs/wiki/methods/m01-m06.es.md#m06-inversion-mt-acotada-1d-de-impedancia-de-tierra-estratificada"
+    },
+    {
+      "id": "M07",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m07-topography-aware-electrical-resistivity-tomography",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m07-tomografia-de-resistividad-electrica-con-consideracion-de-la-topografia"
+    },
+    {
+      "id": "M08",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m08-instrument-corrected-waveform-processing-and-classical-onset-candidates",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m08-procesamiento-de-formas-de-onda-corregidas-por-instrumento-y-candidatos-clasicos-de-inicio"
+    },
+    {
+      "id": "M09",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m09-first-arrival-travel-time-tomography",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m09-tomografia-de-tiempos-de-primera-llegada"
+    },
+    {
+      "id": "M10",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m10-acoustic-full-waveform-inversion",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m10-inversion-acustica-de-forma-de-onda-completa"
+    },
+    {
+      "id": "M11",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m11-gravity-magnetic-structural-joint-inversion",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m11-inversion-estructural-conjunta-gravimetrica-magnetica"
+    },
+    {
+      "id": "M12",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m12-learned-first-arrival-velocity-inversion",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m12-inversion-aprendida-de-velocidad-de-primeras-llegadas"
+    },
+    {
+      "id": "M13",
+      "wiki_en": "docs/wiki/methods/m07-m13.md#m13-learned-p-and-s-earthquake-phase-picking",
+      "wiki_es": "docs/wiki/methods/m07-m13.es.md#m13-picks-aprendidos-de-fases-sismicas-p-y-s"
+    }
+  ],
+  "notebooks": [
+    {
+      "en": "notebooks/en/01-foundations/01-inverse-problem-and-evidence.ipynb",
+      "es": "notebooks/es/01-foundations/01-inverse-problem-and-evidence.ipynb",
+      "methods": [],
+      "title": "Inverse problems: fit, model and evidence",
+      "sources": [
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Introduces the inverse-problem vocabulary, fit/model distinction, and evidence boundary across the course."
+    },
+    {
+      "en": "notebooks/en/01-foundations/02-residuals-and-identifiability.ipynb",
+      "es": "notebooks/es/01-foundations/02-residuals-and-identifiability.ipynb",
+      "methods": [],
+      "title": "Residuals and identifiability in a two-cell gravity model",
+      "sources": [
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Uses a two-cell gravity example to discuss residuals, identifiability, and non-uniqueness."
+    },
+    {
+      "en": "notebooks/en/02-gravity/01-gravity-reference-and-units.ipynb",
+      "es": "notebooks/es/02-gravity/01-gravity-reference-and-units.ipynb",
+      "methods": [
+        "M01"
+      ],
+      "title": "Gravity observations: reference, units and plate scale",
+      "sources": [
+        "https://pubs.usgs.gov/tm/02/d04/tm2d4.pdf",
+        "https://www.fatiando.org/harmonica/latest/api/index.html"
+      ],
+      "content_scope": "Explains gravity reference, sign, units, and plate-scale context used before station reduction."
+    },
+    {
+      "en": "notebooks/en/02-gravity/02-m01-station-corrections.ipynb",
+      "es": "notebooks/es/02-gravity/02-m01-station-corrections.ipynb",
+      "methods": [
+        "M01"
+      ],
+      "title": "M01 gravity station corrections: a traceable calculation",
+      "sources": [
+        "https://pubs.usgs.gov/tm/02/d04/tm2d4.pdf",
+        "https://www.fatiando.org/harmonica/latest/api/index.html"
+      ],
+      "content_scope": "Works through station correction lineage and the declared gravity reference chain."
+    },
+    {
+      "en": "notebooks/en/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb",
+      "es": "notebooks/es/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb",
+      "methods": [
+        "M02"
+      ],
+      "title": "M02 prism gravity: production operator and independent oracle",
+      "sources": [
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Examines prism forward response, an independent oracle, and the bounded inverse acceptance limit."
+    },
+    {
+      "en": "notebooks/en/03-magnetics/01-magnetic-quantities-and-frame.ipynb",
+      "es": "notebooks/es/03-magnetics/01-magnetic-quantities-and-frame.ipynb",
+      "methods": [
+        "M03",
+        "M04"
+      ],
+      "title": "Magnetic quantities, frame and provenance",
+      "sources": [
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Defines magnetic quantities, coordinate frame, and provenance common to the magnetic methods."
+    },
+    {
+      "en": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+      "es": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+      "methods": [
+        "M03"
+      ],
+      "title": "Magnetic survey admission and spatial holdout",
+      "sources": [
+        "https://www.fatiando.org/verde/latest/api/generated/verde.train_test_split.html"
+      ],
+      "content_scope": "Exercises survey geometry admission, spatial holdout, support, and line-processing evidence."
+    },
+    {
+      "en": "notebooks/en/03-magnetics/03-m04-induced-prism-forward.ipynb",
+      "es": "notebooks/es/03-magnetics/03-m04-induced-prism-forward.ipynb",
+      "methods": [
+        "M04"
+      ],
+      "title": "Induced prism forward physics and controls",
+      "sources": [
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Studies induced-prism forward physics and analytic controls; it does not claim a measured survey inverse."
+    },
+    {
+      "en": "notebooks/en/04-mt/01-mt-qc.ipynb",
+      "es": "notebooks/es/04-mt/01-mt-qc.ipynb",
+      "methods": [
+        "M05"
+      ],
+      "title": "MT response and a measured QC decision",
+      "sources": [
+        "https://github.com/MTgeophysics/mtpy-v2",
+        "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california"
+      ],
+      "content_scope": "Reviews MT response and the measured QC decision, including the stated eligibility boundary."
+    },
+    {
+      "en": "notebooks/en/04-mt/02-mt-forward.ipynb",
+      "es": "notebooks/es/04-mt/02-mt-forward.ipynb",
+      "methods": [
+        "M06"
+      ],
+      "title": "Layered-earth calibration and interval coverage",
+      "sources": [
+        "https://github.com/MTgeophysics/mtpy-v2",
+        "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california"
+      ],
+      "content_scope": "Uses layered-earth calibration and frequency-interval coverage for the 1D impedance workflow."
+    },
+    {
+      "en": "notebooks/en/04-mt/03-mt-state-of-art.ipynb",
+      "es": "notebooks/es/04-mt/03-mt-state-of-art.ipynb",
+      "methods": [
+        "M06"
+      ],
+      "title": "Forward sensitivity and identifiability",
+      "sources": [
+        "https://github.com/MTgeophysics/mtpy-v2",
+        "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california"
+      ],
+      "content_scope": "Examines forward sensitivity and identifiability for layered MT responses."
+    },
+    {
+      "en": "notebooks/en/05-ert/01-ert-rights.ipynb",
+      "es": "notebooks/es/05-ert/01-ert-rights.ipynb",
+      "methods": [
+        "M07"
+      ],
+      "title": "ERT data contracts and geometry",
+      "sources": [
+        "https://www.pygimli.org/user-guide/inversion/",
+        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/"
+      ],
+      "content_scope": "Covers ERT input contracts, geometry, apparent data, and source-rights status."
+    },
+    {
+      "en": "notebooks/en/05-ert/02-ert-inversion.ipynb",
+      "es": "notebooks/es/05-ert/02-ert-inversion.ipynb",
+      "methods": [
+        "M07"
+      ],
+      "title": "Topographic ERT inverse with synthetic control",
+      "sources": [
+        "https://www.pygimli.org/user-guide/inversion/",
+        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/"
+      ],
+      "content_scope": "Runs the topographic 2D ERT inverse on an authored synthetic control."
+    },
+    {
+      "en": "notebooks/en/05-ert/03-ert-state-of-art.ipynb",
+      "es": "notebooks/es/05-ert/03-ert-state-of-art.ipynb",
+      "methods": [
+        "M07"
+      ],
+      "title": "Reproducible readiness audit when data are absent",
+      "sources": [
+        "https://www.pygimli.org/user-guide/inversion/",
+        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/"
+      ],
+      "content_scope": "Audits ERT inversion readiness and evidence limits when provider data are absent."
+    },
+    {
+      "en": "notebooks/en/06-seismology/01-waveforms.ipynb",
+      "es": "notebooks/es/06-seismology/01-waveforms.ipynb",
+      "methods": [
+        "M08"
+      ],
+      "title": "Waveform QC and controlled picks",
+      "sources": [
+        "https://docs.obspy.org/packages/autogen/obspy.core.stream.stream.html"
+      ],
+      "content_scope": "Examines waveform QC and controlled classical onset candidates."
+    },
+    {
+      "en": "notebooks/en/06-seismology/02-traveltime-fwi.ipynb",
+      "es": "notebooks/es/06-seismology/02-traveltime-fwi.ipynb",
+      "methods": [
+        "M09"
+      ],
+      "title": "First-arrival tomography",
+      "sources": [
+        "https://www.pygimli.org/_examples_auto/2_seismics/plot_04_koenigsee",
+        "https://www.pygimli.org/user-guide/inversion"
+      ],
+      "content_scope": "Introduces first-arrival tomography and its defined comparison context."
+    },
+    {
+      "en": "notebooks/en/06-seismology/03-seismic-state-of-art.ipynb",
+      "es": "notebooks/es/06-seismology/03-seismic-state-of-art.ipynb",
+      "methods": [
+        "M10"
+      ],
+      "title": "Acoustic FWI and cycle-skipping",
+      "sources": [
+        "https://www.ausargeo.com/deepwave/example_fwi"
+      ],
+      "content_scope": "Studies acoustic FWI and cycle-skipping limitations."
+    },
+    {
+      "en": "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb",
+      "es": "notebooks/es/06-seismology/04-m13-learned-phase-picking.ipynb",
+      "methods": [
+        "M13"
+      ],
+      "title": "Learned P/S phase picking on STEAD traces",
+      "sources": [
+        "https://doi.org/10.1093/gji/ggy423"
+      ],
+      "content_scope": "Reviews learned P/S phase picking on STEAD traces and the stated evaluation limits."
+    },
+    {
+      "en": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
+      "es": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
+      "methods": [
+        "M10"
+      ],
+      "title": "M10 four-case FWI comparison",
+      "sources": [
+        "https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html"
+      ],
+      "content_scope": "Compares four catalogued synthetic FWI cases, including explicit negative or unresolved controls."
+    },
+    {
+      "en": "notebooks/en/07-joint/01-joint-hypothesis.ipynb",
+      "es": "notebooks/es/07-joint/01-joint-hypothesis.ipynb",
+      "methods": [
+        "M11"
+      ],
+      "title": "Complementary sensitivity and ambiguity",
+      "sources": [
+        "https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html"
+      ],
+      "content_scope": "Explores complementary sensitivity and ambiguity in joint inversion."
+    },
+    {
+      "en": "notebooks/en/07-joint/02-joint-objective.ipynb",
+      "es": "notebooks/es/07-joint/02-joint-objective.ipynb",
+      "methods": [
+        "M11"
+      ],
+      "title": "Independent fits and coupling-weight sweep",
+      "sources": [
+        "https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html"
+      ],
+      "content_scope": "Separates independent fits and reports a coupling-weight sweep."
+    },
+    {
+      "en": "notebooks/en/07-joint/03-joint-state-of-art.ipynb",
+      "es": "notebooks/es/07-joint/03-joint-state-of-art.ipynb",
+      "methods": [
+        "M11"
+      ],
+      "title": "Conflicting structures and predictive negative control",
+      "sources": [
+        "https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html"
+      ],
+      "content_scope": "Examines conflicting structures and a predictive negative control."
+    },
+    {
+      "en": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
+      "es": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
+      "methods": [
+        "M11"
+      ],
+      "title": "M11 gravity–magnetic inversion: the physical control matrix",
+      "sources": [
+        "https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html",
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Inspects the documented gravity-magnetic control matrix and its bounded synthetic evidence."
+    },
+    {
+      "en": "notebooks/en/08-learning/01-learning-splits.ipynb",
+      "es": "notebooks/es/08-learning/01-learning-splits.ipynb",
+      "methods": [
+        "M12",
+        "M13"
+      ],
+      "title": "A learned inverse map and its test set",
+      "sources": [
+        "https://doi.org/10.1093/gji/ggy423",
+        "https://github.com/AI4EPS/PhaseNet",
+        "https://github.com/lanl/OpenFWI"
+      ],
+      "content_scope": "Introduces learned inverse maps, group-aware test splits, and paired uncertainty concepts."
+    },
+    {
+      "en": "notebooks/en/08-learning/02-learning-heldout.ipynb",
+      "es": "notebooks/es/08-learning/02-learning-heldout.ipynb",
+      "methods": [
+        "M12"
+      ],
+      "title": "Novelty detection and threshold cost",
+      "sources": [
+        "https://doi.org/10.1093/gji/ggy423",
+        "https://github.com/AI4EPS/PhaseNet",
+        "https://github.com/lanl/OpenFWI"
+      ],
+      "content_scope": "Examines novelty thresholds and their consequences for held-out learned inversion."
+    },
+    {
+      "en": "notebooks/en/08-learning/03-learning-state-of-art.ipynb",
+      "es": "notebooks/es/08-learning/03-learning-state-of-art.ipynb",
+      "methods": [
+        "M13"
+      ],
+      "title": "PhaseNet evidence and browser parity",
+      "sources": [
+        "https://doi.org/10.1093/gji/ggy423",
+        "https://github.com/AI4EPS/PhaseNet",
+        "https://github.com/lanl/OpenFWI"
+      ],
+      "content_scope": "Reviews PhaseNet evidence and the browser parity boundary for learned phase picking."
+    },
+    {
+      "en": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
+      "es": "notebooks/es/08-learning/04-nullspace-refinement-evidence.ipynb",
+      "methods": [
+        "M12"
+      ],
+      "title": "Null-space refinement: calibration and held-out stress tests",
+      "sources": [
+        "https://arxiv.org/abs/2309.06573",
+        "https://github.com/lanl/OpenFWI"
+      ],
+      "content_scope": "Studies null-space refinement calibration and held-out stress evidence."
+    },
+    {
+      "en": "notebooks/en/08-learning/05-first-arrival-user-data.ipynb",
+      "es": "notebooks/es/08-learning/05-first-arrival-user-data.ipynb",
+      "methods": [
+        "M12"
+      ],
+      "title": "First-arrival user-data inversion",
+      "sources": [
+        "https://www.pygimli.org/_examples_auto/2_seismics/plot_04_koenigsee/",
+        "https://www.pygimli.org/user-guide/inversion/"
+      ],
+      "content_scope": "Exercises first-arrival user-data inversion and sensitivity with its documented evidence limits."
+    }
+  ]
+}

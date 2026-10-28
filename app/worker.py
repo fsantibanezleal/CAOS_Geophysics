@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import subprocess
+import stat
 import sys
 import time
 import uuid
@@ -142,6 +143,7 @@ def _gravity_l2_command(job: ProcessingJob, input_path: Path, raw_path: Path, ou
         "--raw", str(raw_path), "--output", str(output_path), "--job-id", job.id,
         "--dataset-sha256", job.dataset_sha256, "--request-sha256", job.request_sha256,
         "--raw-sha256", job.request_json["raw_sha256"], "--raw-bytes", str(asset.byte_count),
+        "--method-id", job.method_id,
         "--raw-asset-id", asset.id, "--source-id", job.request_json["source_id"],
         "--parameters", json.dumps(job.request_json["parameters"], sort_keys=True, separators=(",", ":")),
         "--implementation-sha256", json.dumps(job.request_json["implementation_sha256"], sort_keys=True, separators=(",", ":")),
@@ -214,12 +216,42 @@ def _stage_bytes(stage: Path) -> int:
     entries = set(stage.iterdir())
     cache = stage / ".matplotlib"
     native_files, _ = _profile_config_entries(stage)
-    if any(item.is_symlink() or (not item.is_file() and item not in (cache, stage / ".pygimli-config")) for item in entries):
-        raise RuntimeError("unknown worker staging entry requires operator recovery")
-    cached = set(cache.iterdir()) if cache in entries and cache.is_dir() else set()
-    if cache in entries and not cache.is_dir() or any(item.is_symlink() or not item.is_file() for item in cached):
+    allowed_dirs = {cache, stage / ".pygimli-config"}
+    for item in entries:
+        try:
+            mode = item.lstat().st_mode
+        except FileNotFoundError:
+            # A child can atomically remove a short-lived cache lock between
+            # directory enumeration and accounting; it no longer consumes disk.
+            continue
+        if stat.S_ISLNK(mode) or (not stat.S_ISREG(mode) and not (stat.S_ISDIR(mode) and item in allowed_dirs)):
+            raise RuntimeError("unknown worker staging entry requires operator recovery")
+    try:
+        cache_mode = cache.lstat().st_mode
+    except FileNotFoundError:
+        cache_mode = None
+    if cache_mode is not None and (stat.S_ISLNK(cache_mode) or not stat.S_ISDIR(cache_mode)):
         raise RuntimeError("unknown worker cache entry requires operator recovery")
-    return sum(item.stat().st_size for item in entries if item.is_file()) + sum(item.stat().st_size for item in cached | set(native_files))
+    cached = set(cache.iterdir()) if cache_mode is not None else set()
+    for item in cached:
+        try:
+            mode = item.lstat().st_mode
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISREG(mode):
+            raise RuntimeError("unknown worker cache entry requires operator recovery")
+    total = 0
+    for item in entries | cached | set(native_files):
+        try:
+            current = item.lstat()
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISREG(current.st_mode):
+            if stat.S_ISDIR(current.st_mode) and item in allowed_dirs:
+                continue
+            raise RuntimeError("unknown worker staging file requires operator recovery")
+        total += current.st_size
+    return total
 
 
 def _clear_known_stage(stage: Path) -> None:

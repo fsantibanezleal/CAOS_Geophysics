@@ -105,7 +105,7 @@ def main() -> int:
             return 1
         actual = output.read_text(encoding="utf-8")
         if actual != expected:
-            print(f"readiness: stale; run python scripts/check_readiness.py --write")
+            print("readiness: stale; run python scripts/check_readiness.py --write")
             return 1
         print(f"readiness: current ({fresh['state']}; {fresh['counts']['cases']} cases, "
               f"{fresh['counts']['variants']} variants, {fresh['artifacts']['present']} artifacts present)")

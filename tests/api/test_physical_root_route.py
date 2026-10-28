@@ -89,6 +89,8 @@ def test_original_dataset_route_root_publication_debt_duplicate_read_restart_and
     methods = client.get(base+'/'+root+'/methods')
     assert methods.status_code == 200 and methods.json()['methods'] == []
     assert all(item['lane'] == 'native_context_pending' for item in methods.json()['unavailable'])
+    assert all(item['reason_fields'] == ['physical_metadata', 'worker.native_runtime']
+               for item in methods.json()['unavailable'])
     before = {p.relative_to(settings.data_dir).as_posix(): p.read_bytes() for p in settings.data_dir.rglob('*') if p.is_file()}
     duplicate = client.post(base, json={'asset_id': asset['asset_id']}, headers=headers)
     assert duplicate.status_code == 409 and duplicate.json()['code'] == 'dataset_exists'

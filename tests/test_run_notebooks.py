@@ -97,7 +97,6 @@ def test_plot_tolerance_is_opt_in(tmp_path: Path):
     write_notebook(left, image, policy=None)
     write_notebook(right, image, policy=None)
     fresh = json.loads(left.read_text(encoding="utf-8"))
-    saved = json.loads(right.read_text(encoding="utf-8"))
     fresh["cells"][0]["outputs"][0]["data"]["image/png"] = encoded_png(
         Image.new("RGBA", (8, 8), (21, 40, 60, 255)), compression=1
     )

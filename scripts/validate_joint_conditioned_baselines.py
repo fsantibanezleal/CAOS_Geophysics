@@ -5,7 +5,6 @@ production, used for fitting, projection rescue or source/metric construction.
 """
 import argparse
 from contextlib import redirect_stdout
-import hashlib
 import io
 import json
 import os

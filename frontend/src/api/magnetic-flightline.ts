@@ -58,10 +58,12 @@ export class MagneticFlightlineApi {
   async methods(project:string,dataset:string,signal?:AbortSignal){return this.api.requestJson(`${root(project)}/datasets/${processingId(dataset)}/methods`,raw=>{
     const m=processingObject(raw,"M03 eligibility");if(m.dataset_id!==dataset||!Array.isArray(m.methods)||!Array.isArray(m.unavailable))throw new Error("Invalid method eligibility response");
     const row=[...m.methods,...m.unavailable].map(x=>processingObject(x,"method eligibility")).find(x=>x.method_id===M03_FLIGHTLINE_METHOD);
-    if(!row)return{eligible:false,reason:"The host has not advertised M03 for this dataset."};
+    if(!row)return{eligible:false,reason:"The host has not advertised M03 for this dataset.",reason_fields:["dataset.method_catalog"]};
     const reason=[row.reason,row.scope,row.lane].find(v=>typeof v==="string"&&v.trim()) as string|undefined;
     const pending=reason?.toLowerCase().includes("pending_host_admission")??false;
-    return{eligible:row.eligible===true&&!pending,reason:pending?"pending_host_admission · M03 worker is implemented; online execution awaits measured ML VPS resource admission. The local pipeline remains available.":reason??""};
+    const reasonFields=Array.isArray(row.reason_fields)&&row.reason_fields.every(v=>typeof v==="string"&&v.trim())?row.reason_fields as string[]:[];
+    if(row.eligible!==true&&!reasonFields.length)throw new Error("M03 ineligibility response has no field-specific reason");
+    return{eligible:row.eligible===true&&!pending,reason:pending?"pending_host_admission · M03 worker is implemented; online execution awaits measured ML VPS resource admission. The local pipeline remains available.":reason??"",reason_fields:reasonFields};
   },{signal});}
   async submit(project:string,receipt:M03Receipt,parameters:{grid_spacing_m:number;holdout_fraction:number;seed:string},signal?:AbortSignal){
     const csrf=await this.api.requestJson("/api/auth/csrf",v=>processingObject(v,"csrf"),{signal});

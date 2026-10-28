@@ -6,6 +6,7 @@ import { ProfileProcessingApi, verifyProfileBundle } from "../api/profile-proces
 import { M07_METHOD, M09_METHOD, isProfileReceipt, isProfileJob, type ProfileDatasetReceipt, type ProjectProcessingJob, type MethodEligibility } from "../api/processing-contracts";
 import type { ProfileAdmission } from "../api/profile-local-contracts";
 import { ProfileLocalInstrument } from "./ProfileLocalInstrument";
+import { MethodEligibilityNote } from "./MethodEligibilityNote";
 import { ResultBundleInput } from "./ResultBundleInput";
 import { WorkbenchLayout } from "@fasl-work/caos-app-shell";
 
@@ -81,7 +82,7 @@ export function ProfileProjectWorkbench({ projectId, es, onManage, onCurated, on
         </details>
         <label className="select-control"><span>{t("Parsed dataset", "Conjunto analizado")}</span><select className="select" value={datasetId} disabled={busy} onChange={event => setDatasetId(event.target.value)}>{!receipts.length && <option value="">{t("No profile dataset", "Sin conjunto de perfil")}</option>}{receipts.map(value => <option key={value.dataset_id} value={value.dataset_id}>{assets.find(item => item.asset_id === value.raw_asset_id)?.original_filename ?? value.dataset_id} · {value.row_count} · {value.modality}</option>)}</select></label>
         <p className="project-note">{t("Fixed conditional error policy: uncertainty is assumed, not measured. Held-source / held-geometry tests, fit checks and coverage can refuse a model. Successful job completion is not a passed scientific verdict.", "Política de error condicional fija: incertidumbre supuesta, no medida. Pruebas de fuentes/geometrías reservadas, ajuste y cobertura pueden rechazar un modelo. Finalizar trabajo no implica veredicto científico aprobado.")}</p>
-        {unavailable && <p role="status">{unavailable.reason}</p>}
+        {unavailable && <MethodEligibilityNote lane={unavailable.lane} reason={unavailable.reason} reasonFields={unavailable.reason_fields} es={es} />}
         <button className="btn primary" disabled={busy || !receipt || !eligible || hasActive} onClick={() => { if (!receipt) return; void act(async signal => { const admitted = await clients.profile.submitProfile(projectId, receipt, signal); if (!signal.aborted) { setJobs(values => [...values, admitted]); setJobId(admitted.job_id); } }); }}>{t("Run native profile inversion on VPS", "Ejecutar inversión nativa de perfil en VPS")}</button>
         <label className="select-control"><span>{t("Job history", "Historial de trabajos")}</span><select className="select" value={jobId} onChange={event => setJobId(event.target.value)}>{!history.length && <option value="">{t("No job", "Sin trabajo")}</option>}{history.map(value => <option key={value.job_id} value={value.job_id}>{value.state} · {value.job_id}</option>)}</select></label>
         {job && <><button className="btn" disabled={busy || !active(job) || job.cancel_requested} onClick={() => void act(async signal => { const updated = await clients.profile.cancel(projectId, job.job_id, signal); if (!signal.aborted) setJobs(values => values.map(value => value.job_id === updated.job_id ? updated : value)); })}>{job.cancel_requested ? t("Cancellation requested", "Cancelación solicitada") : t("Cancel job", "Cancelar trabajo")}</button>
