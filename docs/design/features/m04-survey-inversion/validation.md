@@ -13,6 +13,9 @@ caps are checked before copying or scanning numeric values.
 The focused local run passed 32 tests across `test_magnetic_likelihood.py`,
 `test_magnetic_quantity.py`, and `test_magnetic_objective.py`; Ruff, Python
 compilation, and `git diff --check` passed for the new objective/test files.
+An additional actual-Choclo integration control passed for an exact-magnitude
+Gaussian gradient with correlated principal covariance and a directional
+finite-difference oracle on independent Choclo predictions.
 An initial test exposed that the exported residual used `observed - (predicted
 - observed)`; the return path was corrected and regression-tested against
 `observed - predicted`. This increment does not create SimPEG kernels, solve

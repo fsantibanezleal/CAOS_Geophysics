@@ -19,6 +19,8 @@ import pytest
 
 import magnetic_forward as op
 from magnetic_quantity import CHI_SCALE_SI, compose_magnetic_observable
+from magnetic_likelihood import GaussianWhitener
+from magnetic_objective import MagneticGaussianObjective
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -343,6 +345,43 @@ def test_m04_quantity_composition_against_independent_choclo_kernel_and_derivati
     finite_difference = (shifted_anomaly - expected_exact)/step
     np.testing.assert_allclose(finite_difference, exact["jacobian_q_nT"] @ direction_q,
                                rtol=2e-6, atol=2e-8)
+
+
+def test_m04_exact_magnitude_gaussian_gradient_against_choclo_observations():
+    req = request(True)
+    unit_columns = physical_oracle(req, unit_columns=True)
+    n_receivers, n_active, _ = unit_columns.shape
+    kernel = unit_columns.transpose(0, 2, 1).reshape(3*n_receivers, n_active)
+    background = req["inducing_field"]["amplitude_nt"] * direction(req)
+    selected = np.array([0, 2, 3], dtype=np.int64)
+    chol = np.array([[2., 0., 0., 0.], [.1, 3., 0., 0.],
+                     [.05, .2, 4., 0.], [.1, .2, .3, 5.]], dtype=np.float64)
+    covariance = chol @ chol.T
+    principal = covariance[np.ix_(selected, selected)]
+    whitener = GaussianWhitener("full_covariance", covariance, selected)
+    q = req["susceptibility_si"] / CHI_SCALE_SI
+    truth_b = physical_oracle(req)
+    truth = np.linalg.norm(background + truth_b, axis=1) - np.linalg.norm(background)
+    observed = truth[selected] + np.array([.2, -.15, .1])
+    objective = MagneticGaussianObjective(kernel, background, observed, whitener,
+        selected, "exact_total_anomaly_nT")
+    result = objective.evaluate(q)
+
+    direction_q = np.array([.3, -.2, .1, -.25, .15], dtype=np.float64)
+    step = 1e-4
+    independent = []
+    for sign in (1., -1.):
+        candidate = deepcopy(req)
+        candidate["susceptibility_si"] = CHI_SCALE_SI * (q + sign*step*direction_q)
+        secondary = physical_oracle(candidate)
+        anomaly = np.linalg.norm(background + secondary, axis=1) - np.linalg.norm(background)
+        residual = anomaly[selected] - observed
+        independent.append(float(residual @ np.linalg.solve(principal, residual)))
+    directional_fd = (independent[0] - independent[1]) / (2*step)
+    np.testing.assert_allclose(directional_fd, result["gradient_q"] @ direction_q,
+                               rtol=3e-6, atol=2e-8)
+    action = result["gauss_newton_action"](direction_q)
+    assert float(direction_q @ action) > 0.
 
 
 @pytest.mark.parametrize("b", [(1e-4, 0., 0.), (-1e-4, 0., 0.), (0., 1e-10, 0.),
