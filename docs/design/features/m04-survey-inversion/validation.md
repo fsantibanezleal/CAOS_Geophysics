@@ -23,6 +23,22 @@ for a model, bind an accepted optimizer, run a user survey, create artifacts,
 or satisfy R-405..R-420. The optimizer and all nonlinear precision gates remain
 open; this is objective-component evidence only.
 
+## 2026-10-28 optimizer-binding review
+
+The repository's public `physical_nonlinear_optimizer.solve_bounded_nonlinear`
+is a candidate, not an accepted M02 binding. Its M11 source hash matches the
+current file, but the M11 precision receipt leaves scientific precision and
+full release acceptance false. An independent source review found it is a
+plausible candidate for a narrowly scoped scalar exact-magnitude M04 lane after
+a normative binding amendment and independent M04 replay. It rejects three
+component observations, so that review does not qualify secondary ENU. The
+review also confirmed its existing tests exercise a quartic joint objective,
+not the new M04 likelihood, and that runtime resource containment is external
+to the optimizer. Consequently R-407 stays open: no M04 adapter may claim this
+candidate is accepted, and the magnetic inverse remains unimplemented until the
+M02 accepted export/source, semantics, and M04-specific precision and resource
+evidence are bound. The open draft M02 survey-L2 PR is not acceptance evidence.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
