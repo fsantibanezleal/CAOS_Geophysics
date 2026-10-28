@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from scripts.run_notebooks import canonical_png, within_declared_plot_tolerance
+from scripts.run_notebooks import canonical_png, notebook_scratch_path, within_declared_plot_tolerance
 
 
 POLICY = {
@@ -17,6 +17,14 @@ POLICY = {
     "max_changed_pixel_fraction": 0.01,
     "max_normalized_mean_absolute_error": 0.01,
 }
+
+
+def test_notebook_scratch_isolated_between_language_mirrors() -> None:
+    root = Path("external-temp")
+    english = notebook_scratch_path(root, "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb")
+    spanish = notebook_scratch_path(root, "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb")
+    assert english != spanish
+    assert english.is_relative_to(root) and spanish.is_relative_to(root)
 
 
 def encoded_png(image: Image.Image, *, compression: int) -> str:

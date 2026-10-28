@@ -122,6 +122,11 @@ def dump(nb: dict, path: Path) -> None:
     path.write_text(json.dumps(nb, indent=1, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
 
 
+def notebook_scratch_path(root: Path, relative_notebook: str) -> Path:
+    """Give every notebook an isolated external work directory, including language mirrors."""
+    return root / "notebook-work" / Path(relative_notebook).with_suffix("")
+
+
 def misplaced() -> list[str]:
     """Notebooks anywhere but ``notebooks/<language>/<topic>/<notebook>.ipynb``: the layout the static check holds, and the
     only one the runner executes."""
@@ -152,13 +157,14 @@ def warm_matplotlib() -> None:
         pass
 
 
-def execute(src: Path, dest: Path, pipeline_kernels: Path) -> str | None:
+def execute(src: Path, dest: Path, pipeline_kernels: Path, notebook_tmp: Path) -> str | None:
     """Execute ``src`` in a fresh kernel in its own folder and write the clean result to ``dest``; None when it ran, else why not."""
     import nbformat
     from nbclient import NotebookClient
     from nbclient.exceptions import CellExecutionError
 
     nb = nbformat.read(src, as_version=4)
+    notebook_tmp.mkdir(parents=True, exist_ok=True)
     for cell in nb.cells:  # a fresh run: no stale output or count survives
         if cell.cell_type == "code":
             cell.outputs, cell.execution_count = [], None
@@ -194,6 +200,8 @@ def execute(src: Path, dest: Path, pipeline_kernels: Path) -> str | None:
     client = NotebookClient(nb, timeout=TIMEOUT_SECONDS, kernel_name=kernel_name,
                             resources={"metadata": {"path": str(src.parent)}}, allow_errors=False)
     client.create_kernel_manager()
+    previous_temp_root = os.environ.get("CAOS_TEMP_ROOT")
+    os.environ["CAOS_TEMP_ROOT"] = str(notebook_tmp)
     try:
         client.execute()
     except CellExecutionError as e:
@@ -203,6 +211,10 @@ def execute(src: Path, dest: Path, pipeline_kernels: Path) -> str | None:
     finally:
         if client.km is not None:
             client._cleanup_kernel()
+        if previous_temp_root is None:
+            os.environ.pop("CAOS_TEMP_ROOT", None)
+        else:
+            os.environ["CAOS_TEMP_ROOT"] = previous_temp_root
     dump(strip_volatile(json.loads(nbformat.writes(nb))), dest)
     return None
 
@@ -370,14 +382,15 @@ def main() -> int:
         for book in books:
             rel = book.relative_to(ROOT).as_posix()
             src = book
+            notebook_tmp = notebook_scratch_path(tmp_root or temp_root, rel)
             if tmp_root is not None:
                 # Execute the committed source in place but save outputs only to
                 # the device temp root. Large scientific inputs remain read-only.
-                os.environ["CAOS_TEMP_ROOT"] = str(tmp_root)
-                fresh = tmp_root / "out.ipynb"
+                fresh = tmp_root / "results" / rel
+                fresh.parent.mkdir(parents=True, exist_ok=True)
             else:
                 fresh = book
-            why = execute(src, fresh, pipeline_kernels)
+            why = execute(src, fresh, pipeline_kernels, notebook_tmp)
             if why is None and a.check and not same_bytes(fresh, book) and not within_declared_plot_tolerance(fresh, book):
                 why = ("stale: the committed outputs differ from a fresh run (" + output_differences(fresh, book) + "); "
                        "run scripts/run_notebooks.py and commit the result")
