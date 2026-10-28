@@ -127,6 +127,20 @@ def _tensor_state(tensor, edges, widths, declared):
 
 
 def forward_magnetic(request: dict) -> dict:
+    """Evaluate the fixed M04 forward response with the legacy result schema."""
+    return _forward_magnetic(request, include_component_kernel=False)
+
+
+def forward_magnetic_with_kernel(request: dict) -> dict:
+    """Evaluate the same response and expose its actual SimPEG component matrix.
+
+    This local numerical seam returns ``d(ENU nT)/d(chi SI)`` in receiver-major
+    E,N,U row order. It does not admit or run a survey inverse.
+    """
+    return _forward_magnetic(request, include_component_kernel=True)
+
+
+def _forward_magnetic(request: dict, *, include_component_kernel: bool) -> dict:
     """Evaluate actual scalar induced SimPEG/Geoana components and linear-TMI Jacobian.
 
     Exact ABI: docs/design/features/m04-induced-prism/contracts.md.
@@ -265,8 +279,10 @@ def forward_magnetic(request: dict) -> dict:
         raise
     except Exception as exc:
         raise RuntimeError("engine: ordinary induced magnetic evaluation failed") from exc
-    return {
-        "schema": "magnetic-prism-forward-result-1", "engine": ENGINE, "source_epoch": SOURCE_EPOCH,
+    result = {
+        "schema": ("magnetic-prism-forward-kernel-result-1" if include_component_kernel
+                   else "magnetic-prism-forward-result-1"),
+        "engine": ENGINE, "source_epoch": SOURCE_EPOCH,
         "inducing_field": {**field, "direction_enu": _owned(f), "background_enu_nt": _owned(background)},
         "geometry": {"receivers_m": _owned(receivers), "active_indices": _owned(indices, np.int64),
                      "active_bounds_m": _owned(full_bounds[indices]),
@@ -278,3 +294,6 @@ def forward_magnetic(request: dict) -> dict:
                           "maximum_abs_difference_nt": float(np.max(abs(difference))),
                           "interpretation": "uniform-induced-no-self-demagnetization",
                           "field_source_verified": False, "full_method_accepted": False, "host_approved": False}}
+    if include_component_kernel:
+        result["component_jacobian_nT_per_si"] = _owned(kernel)
+    return result

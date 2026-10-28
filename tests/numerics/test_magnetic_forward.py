@@ -347,6 +347,21 @@ def test_m04_quantity_composition_against_independent_choclo_kernel_and_derivati
                                rtol=2e-6, atol=2e-8)
 
 
+def test_actual_simpeg_component_kernel_is_available_for_m04_objective():
+    req = request(True)
+    result = op.forward_magnetic_with_kernel(req)
+    components = result["component_jacobian_nT_per_si"]
+    expected = physical_oracle(req, unit_columns=True)
+    expected = expected.transpose(0, 2, 1).reshape(3*len(req["receivers_m"]), -1)
+    assert result["schema"] == "magnetic-prism-forward-kernel-result-1"
+    assert components.shape == expected.shape == (3*len(req["receivers_m"]), len(req["susceptibility_si"]))
+    np.testing.assert_allclose(components, expected, rtol=2e-8, atol=1e-7)
+    np.testing.assert_allclose(components @ req["susceptibility_si"],
+                               result["field_components_nt"].ravel(), rtol=1e-12, atol=1e-10)
+    assert not components.flags.writeable
+    assert "component_jacobian_nT_per_si" not in op.forward_magnetic(req)
+
+
 def test_m04_exact_magnitude_gaussian_gradient_against_choclo_observations():
     req = request(True)
     unit_columns = physical_oracle(req, unit_columns=True)

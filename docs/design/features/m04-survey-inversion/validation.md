@@ -69,6 +69,19 @@ Decimal80 controls at delta `+/-1e-10` and zero confirm positive tiny penalties
 and exact zero. Outer reweight-and-solve convergence, fixed-objective
 monotonicity and terminal stationarity remain unimplemented and unaccepted.
 
+## 2026-10-28 SimPEG sensitivity handoff
+
+`magnetic_forward.forward_magnetic_with_kernel` now exposes the actual
+receiver-major E,N,U SimPEG/Geoana sensitivity matrix in nT per SI
+susceptibility through a distinct `magnetic-prism-forward-kernel-result-1`
+schema. The ordinary forward function retains its previous exact key set and
+result schema. On the multi-cell, sparse-active control the new matrix matches
+independent Choclo unit-SI component columns and its product with the supplied
+susceptibility reproduces the returned physical field components. The focused
+kernel test and the existing closed legacy-result-schema test both passed.
+This creates a real kernel-to-objective input path, but does not yet parse a
+full survey into the forward request, run calibration or satisfy M04 acceptance.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
