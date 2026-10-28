@@ -111,6 +111,7 @@ def test_actual_native_three_starts_against_independent_bounded_choclo(physical,
         native_kkt_normalized=result['kkt_normalized'], norm_proofs=proofs,
         field_accepted=False, global_optimum_claimed=False)
     (tmp_path/'actual-nonlinear-audit.json').write_text(json.dumps(evidence, allow_nan=False), encoding='utf-8')
+    assert result['kkt_normalized'] <= 1e-7
     assert objective_gap <= 1e-8 and discrepancy <= 1e-6
 
 

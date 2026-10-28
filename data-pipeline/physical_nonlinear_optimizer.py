@@ -278,7 +278,11 @@ class _NativeRecorded(optimization.ProjectedGNCG):
             self.states.append(state)
         elif (len(self.states)!=self.iter+1 or not np.array_equal(state[0],self.states[-1][0])
               or state[1:]!=self.states[-1][1:]): self.fail('state_mismatch')
-        if state[4]<=1e-5:
+        # The frozen M04 prerequisite requires the independent projected
+        # gradient to satisfy 1e-7 times max(1, ||g_initial||_inf).  The prior
+        # 1e-5 stop reported premature convergence on the zero and unit starts
+        # despite their objective values matching the independent oracle.
+        if state[4]<=1e-7:
             self.reason='kkt'
             return True
         if self.iter>=self.budget.remaining_steps:
