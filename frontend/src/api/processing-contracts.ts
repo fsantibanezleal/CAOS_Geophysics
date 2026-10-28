@@ -2,6 +2,7 @@
 import { unzipSync } from "fflate";
 import { WAVEFORM_METHOD, parseWaveformSources, type WaveformJob, type WaveformReceipt } from "./waveform-contracts";
 import { rawPhysical, type RawPhysicalMetadata, type RightsDecision } from "./contracts";
+import { GRAVITY_L2_METHOD, parseGravityL2Job, type GravityL2Job } from "./gravity-l2-contracts";
 
 export const FLAG_METHOD = "gravity.station-outlier-flags/v1" as const;
 export const M05_METHOD = "mt.edi-full-tensor-qc/v1" as const;
@@ -91,7 +92,7 @@ export type ProfileProcessingJob = Omit<ProcessingJob, "method_id" | "request" |
   };
   preflight: ProcessingJob["preflight"] & {estimated_scratch_bytes:number};
 };
-export type ProjectProcessingJob = ProcessingJob | MtProcessingJob | ProfileProcessingJob | WaveformJob;
+export type ProjectProcessingJob = ProcessingJob | MtProcessingJob | ProfileProcessingJob | WaveformJob | GravityL2Job;
 export const isFlagJob = (job: ProjectProcessingJob): job is ProcessingJob => job.method_id === FLAG_METHOD;
 export const isMtJob = (job: ProjectProcessingJob): job is MtProcessingJob => job.method_id === M05_METHOD || job.method_id === M06_METHOD;
 export const isProfileJob = (job: ProjectProcessingJob): job is ProfileProcessingJob => job.method_id === M07_METHOD || job.method_id === M09_METHOD;
@@ -253,10 +254,11 @@ export function parseEligibility(value: unknown): MethodEligibility {
 }
 export function parseProjectProcessingJob(value: unknown): ProjectProcessingJob {
   const data = processingObject(value, "job");
+  if (data.method_id === GRAVITY_L2_METHOD) return parseGravityL2Job(value);
   keys(data, ["job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "request", "request_sha256", "preflight", "state", "cancel_requested", "created_at", "started_at", "finished_at", "wall_ms", "peak_rss_bytes", "scratch_bytes", "result_sha256", "error", "result_url"], "job");
   for (const key of ["job_id", "project_id", "dataset_id"]) processingId(data[key]);
   hash(data.dataset_sha256); hash(data.request_sha256);
-  if (!new Set<string>([FLAG_METHOD,M05_METHOD,M06_METHOD,M07_METHOD,M09_METHOD,WAVEFORM_METHOD]).has(String(data.method_id))) fail("unsupported job method version");
+  if (!new Set<string>([FLAG_METHOD,M05_METHOD,M06_METHOD,M07_METHOD,M09_METHOD,WAVEFORM_METHOD,GRAVITY_L2_METHOD]).has(String(data.method_id))) fail("unsupported job method version");
   const wave = data.method_id === WAVEFORM_METHOD;
   const profile = data.method_id === M07_METHOD || data.method_id === M09_METHOD;
   const mt = profile || data.method_id === M05_METHOD || data.method_id === M06_METHOD, inverse = data.method_id === M06_METHOD;
