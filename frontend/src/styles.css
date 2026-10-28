@@ -51,6 +51,29 @@
   .mt-instrument .mt-axis-toggle { display: block; }
   .mt-toolbar:not(.axes-open) > .select-control:nth-of-type(n+3) { display: none; }
 }
+
+/* The root workbench is a fixed AppShell route. Preserve that viewport contract
+   on phones; the shell's document-route mobile fallback otherwise lets the
+   intrinsic workbench height push the footer below the viewport. Research pages
+   retain the shell's normal scrolling behavior. */
+@media (max-width: 760px) {
+  .app-shell.fixed.contain:has(> .page > .caos-wb) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app-shell.fixed.contain:has(> .page > .caos-wb) > .page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app-shell.fixed.contain:has(> .page > .caos-wb) > .page > .caos-wb {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
 @media (max-width: 760px) {
   .processing-workbench { height: 100%; overflow: hidden !important; }
   .processing-workbench .processing-sidebar { display: flex; padding: 0; }
@@ -72,6 +95,10 @@
   gap: 1rem;
   align-items: stretch;
   overflow: hidden;
+}
+@media (min-width: 761px) and (max-height: 850px) {
+  /* Keep the full method and control set inside a short desktop viewport. */
+  .caos-wb-rail-panel > .instrument-sidebar { gap: 0.55rem; }
 }
 .workbench > * {
   min-width: 0;
