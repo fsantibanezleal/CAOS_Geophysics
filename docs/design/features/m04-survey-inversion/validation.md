@@ -106,6 +106,12 @@ candidate selection, held-out scoring, final refit, durable result bundle,
 native admission, user-data CLI or online path is implemented or accepted by
 this increment.
 
+The complete focused M04 regression selection (survey JSON/geometry/bundle/CLI,
+fit assembly, forward, likelihood, quantity, objective and regularization)
+collected 421 tests and exited successfully with all tests passing on the pinned
+Windows runtime. Ruff, Python compilation and `git diff --check` also passed for
+the added assembly and test files.
+
 This is the complete acceptance matrix. Ordinary input/geometry gates verify
 their implemented foundation only; numerical/full-generation/integration gates
 remain required and are not satisfied by geometry roundtrip. P04 frozen scientific tolerances
