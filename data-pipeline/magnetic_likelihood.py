@@ -13,6 +13,9 @@ from scipy.linalg import solve_triangular
 
 MAX_COVARIANCE_ROWS = 512
 MAX_COVARIANCE_CONDITION = 1e8
+MAX_OBSERVATION_ROWS = 6144
+MAX_PARAMETER_COUNT = 2048
+MAX_PROJECTED_ENTRIES = 12_582_912
 
 
 def _owned(value):
@@ -31,6 +34,9 @@ def _vector(value, name):
 def _matrix(value, name):
     if type(value) is not np.ndarray or value.dtype != np.float64 or value.ndim != 2:
         raise TypeError(f"{name}: expected native float64 matrix")
+
+
+def _finite(value, name):
     if not np.isfinite(value).all():
         raise ValueError(f"{name}: values must be finite")
 
@@ -53,7 +59,11 @@ class GaussianWhitener:
             raise ValueError("kind: expected diagonal_sd or full_covariance")
         if kind == "diagonal_sd":
             _matrix(source, "standard_deviation_nT")
-            if not source.size or np.any(source <= 0):
+            if not 1 <= source.size <= MAX_OBSERVATION_ROWS:
+                raise ValueError("standard_deviation_nT: element count outside 1..6144")
+            if not np.isfinite(source).all():
+                raise ValueError("standard_deviation_nT: values must be finite")
+            if np.any(source <= 0):
                 raise ValueError("standard_deviation_nT: all values must be positive")
             indices = _indices(selected, source.size)
             sigma = source.ravel(order="C")[indices].copy()
@@ -65,6 +75,7 @@ class GaussianWhitener:
             if source.shape[0] != source.shape[1] or not 1 <= source.shape[0] <= MAX_COVARIANCE_ROWS:
                 raise ValueError("covariance_nT2: expected square matrix with dimension 1..512")
             indices = _indices(selected, source.shape[0])
+            _finite(source, "covariance_nT2")
             # The covariance contract requires exact symmetry; do not repair it.
             if not np.array_equal(source, source.T):
                 raise ValueError("covariance_nT2: exact symmetry required")
@@ -93,7 +104,12 @@ class GaussianWhitener:
     def _operand(self, value, name):
         if type(value) is not np.ndarray or value.dtype != np.float64 or value.ndim not in (1, 2):
             raise TypeError(f"{name}: expected native float64 vector or matrix")
-        if value.shape[0] != self.dimension or not np.isfinite(value).all():
+        if value.shape[0] != self.dimension:
+            raise ValueError(f"{name}: wrong row count or nonfinite values")
+        if value.ndim == 2 and (not 1 <= value.shape[1] <= MAX_PARAMETER_COUNT
+                                or value.size > MAX_PROJECTED_ENTRIES):
+            raise ValueError(f"{name}: matrix exceeds declared parameter/storage limits")
+        if not np.isfinite(value).all():
             raise ValueError(f"{name}: wrong row count or nonfinite values")
 
     def whiten(self, value):

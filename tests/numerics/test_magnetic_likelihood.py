@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import magnetic_likelihood as ml
 from magnetic_likelihood import GaussianDataTerm, GaussianWhitener
 
 
@@ -46,6 +47,14 @@ def test_full_covariance_condition_is_checked_before_partition_selection():
     covariance = np.diag(np.array([1e-9, 1.0, 1.0], dtype=np.float64))
     with pytest.raises(ValueError, match="full condition"):
         GaussianWhitener("full_covariance", covariance, np.array([2], dtype=np.int64))
+
+
+def test_oversized_covariance_is_rejected_before_finite_scan(monkeypatch):
+    covariance = np.zeros((513, 513), dtype=np.float64)
+    monkeypatch.setattr(ml, "_finite", lambda *_: (_ for _ in ()).throw(
+        AssertionError("finite scan occurred before covariance dimension cap")))
+    with pytest.raises(ValueError, match="dimension 1..512"):
+        GaussianWhitener("full_covariance", covariance, np.array([0], dtype=np.int64))
 
 
 @pytest.mark.parametrize("rows", [

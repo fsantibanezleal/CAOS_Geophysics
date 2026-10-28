@@ -18,6 +18,7 @@ from numpy.polynomial.legendre import leggauss
 import pytest
 
 import magnetic_forward as op
+from magnetic_quantity import CHI_SCALE_SI, compose_magnetic_observable
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -307,6 +308,41 @@ def test_components_projection_exact_magnitude():
     zero = op.forward_magnetic(null)
     np.testing.assert_array_equal(zero["field_components_nt"], np.zeros_like(b))
     np.testing.assert_array_equal(zero["exact_magnitude_anomaly_nt"], np.zeros(len(b)))
+
+
+def test_m04_quantity_composition_against_independent_choclo_kernel_and_derivative():
+    req = request(True)
+    components_oracle = physical_oracle(req)
+    unit_columns = physical_oracle(req, unit_columns=True)
+    n_receivers, n_active, _ = unit_columns.shape
+    component_kernel = unit_columns.transpose(0, 2, 1).reshape(3*n_receivers, n_active)
+    background = req["inducing_field"]["amplitude_nt"] * direction(req)
+    chi = req["susceptibility_si"]
+
+    secondary = compose_magnetic_observable(component_kernel, chi, background, "secondary_enu")
+    np.testing.assert_allclose(secondary["values_nT"], components_oracle, rtol=3e-14, atol=2e-12)
+    np.testing.assert_allclose(secondary["jacobian_q_nT"], CHI_SCALE_SI*component_kernel,
+                               rtol=0, atol=0)
+
+    tmi = compose_magnetic_observable(component_kernel, chi, background, "linear_tmi_nT")
+    exact = compose_magnetic_observable(component_kernel, chi, background, "exact_total_anomaly_nT")
+    expected_tmi = components_oracle @ direction(req)
+    expected_exact = np.linalg.norm(background + components_oracle, axis=1) - np.linalg.norm(background)
+    np.testing.assert_allclose(tmi["values_nT"], expected_tmi, rtol=3e-14, atol=2e-12)
+    np.testing.assert_allclose(exact["values_nT"], expected_exact, rtol=2e-11, atol=2e-10)
+
+    # Compare the exact-magnitude Jacobian to a Choclo-backed directional
+    # perturbation in q, not to a derivative of the same response routine.
+    direction_q = np.array([0.3, -0.2, 0.1, -0.25, 0.15], dtype=np.float64)
+    step = 2e-3
+    shifted = deepcopy(req)
+    shifted["susceptibility_si"] = chi + CHI_SCALE_SI*step*direction_q
+    shifted_components = physical_oracle(shifted)
+    shifted_anomaly = (np.linalg.norm(background + shifted_components, axis=1)
+                       - np.linalg.norm(background))
+    finite_difference = (shifted_anomaly - expected_exact)/step
+    np.testing.assert_allclose(finite_difference, exact["jacobian_q_nT"] @ direction_q,
+                               rtol=2e-6, atol=2e-8)
 
 
 @pytest.mark.parametrize("b", [(1e-4, 0., 0.), (-1e-4, 0., 0.), (0., 1e-10, 0.),
