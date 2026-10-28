@@ -106,7 +106,7 @@
       "id": "R-006",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete. A new authenticated uploaded-survey integration now runs the isolated M02 ordinary weighted L2 child, changes predictions when its declared background parameter changes, preserves the original bytes, and exports a verifiable unit/provenance bundle. The authored control passes locally; the complete required method ladder and actual-host admission remain open. The uploaded M02 test now checks both parameter-dependent jobs against an independent Choclo prism response at all 144 receiver locations, validates sealed held-out residual and weighted metrics from exported arrays, and verifies source-preserving bundle round-trip. This remains one authored one-cell path; other online methods and host admission remain incomplete.",
+      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete. A new authenticated uploaded-survey integration now runs the isolated M02 ordinary weighted L2 child, changes predictions when its declared background parameter changes, preserves the original bytes, and exports a verifiable unit/provenance bundle. The authored control passes locally; the complete required method ladder and actual-host admission remain open. The uploaded M02 test now checks both parameter-dependent jobs against an independent Choclo prism response at all 144 receiver locations, validates sealed held-out residual and weighted metrics from exported arrays, and verifies source-preserving bundle round-trip. This remains one authored one-cell path; other online methods and host admission remain incomplete. The authenticated M02 uploaded-survey path now has a strict browser job/result adapter, hash-verified typed arrays and ZIP export validation, plus a project-workbench parameter/job flow. This closes one local frontend vertical only; host admission, other uploaded methods and full acceptance remain open.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -127,6 +127,34 @@
         {
           "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
           "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-contracts.ts",
+          "sha256": "acb0acd37c7567e5e7108444097d47f11045499da94afe4931ca8d0c377f6954"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-processing.ts",
+          "sha256": "bcdf45e676bd780eea7f5ff0bc7cf0bf8d106761d9d7f4671df0f5e02e5e7ab0"
+        },
+        {
+          "path": "frontend/src/api/processing-contracts.ts",
+          "sha256": "2fa9aeeeb120362c32d9f6cc3b9af07d5611c29eb8675f4627ef69fdf35ca025"
+        },
+        {
+          "path": "frontend/src/components/ProjectProcessingWorkbench.tsx",
+          "sha256": "f3acc6dc7b8f72fcde0051749b50acace7fcb2d6a90023dcaa9fc163c4aa869f"
+        },
+        {
+          "path": "frontend/src/components/GravityL2ResultInstrument.tsx",
+          "sha256": "82032c69a1a271bf9caa5cbc53eeec167af691c60e4cba192c44ede80df3f0ab"
+        },
+        {
+          "path": "frontend/src/test/gravity-l2-contracts.test.ts",
+          "sha256": "539ca5ed3fed5a31cd031b5b95e28e5fac6fbefd70c6a37f83b6eeaddeaadebd"
+        },
+        {
+          "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
+          "sha256": "51511ad5c7fbdf7124495f7606ecb34ee8fcd56d692269fd0c637d0499e132ee"
         }
       ],
       "receipts": []
@@ -393,7 +421,7 @@
       "id": "R-013",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
-      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete.",
+      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete. For uploaded gravity M02, selected dataset, eligibility, parameters, job state and completed result are connected in one workbench; the result binds to the selected dataset/job receipt. This local path does not establish product-wide selected-case reactivity.",
       "evidence": [
         {
           "path": "docs/design/features/processing-workbench/validation.md",
@@ -402,6 +430,34 @@
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
           "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-contracts.ts",
+          "sha256": "acb0acd37c7567e5e7108444097d47f11045499da94afe4931ca8d0c377f6954"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-processing.ts",
+          "sha256": "bcdf45e676bd780eea7f5ff0bc7cf0bf8d106761d9d7f4671df0f5e02e5e7ab0"
+        },
+        {
+          "path": "frontend/src/api/processing-contracts.ts",
+          "sha256": "2fa9aeeeb120362c32d9f6cc3b9af07d5611c29eb8675f4627ef69fdf35ca025"
+        },
+        {
+          "path": "frontend/src/components/ProjectProcessingWorkbench.tsx",
+          "sha256": "f3acc6dc7b8f72fcde0051749b50acace7fcb2d6a90023dcaa9fc163c4aa869f"
+        },
+        {
+          "path": "frontend/src/components/GravityL2ResultInstrument.tsx",
+          "sha256": "82032c69a1a271bf9caa5cbc53eeec167af691c60e4cba192c44ede80df3f0ab"
+        },
+        {
+          "path": "frontend/src/test/gravity-l2-contracts.test.ts",
+          "sha256": "539ca5ed3fed5a31cd031b5b95e28e5fac6fbefd70c6a37f83b6eeaddeaadebd"
+        },
+        {
+          "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
+          "sha256": "51511ad5c7fbdf7124495f7606ecb34ee8fcd56d692269fd0c637d0499e132ee"
         }
       ],
       "receipts": []
@@ -410,8 +466,37 @@
       "id": "R-014",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
-      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete.",
-      "evidence": [],
+      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete. The uploaded M02 result view uses returned active-cell bounds and receiver coordinates in metres, a depth selector, observed/predicted/residual values in mGal, held-out markers and signed residual shapes. The complete method/view/animation matrix and owner visual acceptance remain open.",
+      "evidence": [
+        {
+          "path": "frontend/src/api/gravity-l2-contracts.ts",
+          "sha256": "acb0acd37c7567e5e7108444097d47f11045499da94afe4931ca8d0c377f6954"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-processing.ts",
+          "sha256": "bcdf45e676bd780eea7f5ff0bc7cf0bf8d106761d9d7f4671df0f5e02e5e7ab0"
+        },
+        {
+          "path": "frontend/src/api/processing-contracts.ts",
+          "sha256": "2fa9aeeeb120362c32d9f6cc3b9af07d5611c29eb8675f4627ef69fdf35ca025"
+        },
+        {
+          "path": "frontend/src/components/ProjectProcessingWorkbench.tsx",
+          "sha256": "f3acc6dc7b8f72fcde0051749b50acace7fcb2d6a90023dcaa9fc163c4aa869f"
+        },
+        {
+          "path": "frontend/src/components/GravityL2ResultInstrument.tsx",
+          "sha256": "82032c69a1a271bf9caa5cbc53eeec167af691c60e4cba192c44ede80df3f0ab"
+        },
+        {
+          "path": "frontend/src/test/gravity-l2-contracts.test.ts",
+          "sha256": "539ca5ed3fed5a31cd031b5b95e28e5fac6fbefd70c6a37f83b6eeaddeaadebd"
+        },
+        {
+          "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
+          "sha256": "51511ad5c7fbdf7124495f7606ecb34ee8fcd56d692269fd0c637d0499e132ee"
+        }
+      ],
       "receipts": []
     },
     {
@@ -553,7 +638,7 @@
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity and a one-host client resource profile, plus M12 launcher refusal/fixture-forwarding evidence, without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance. The current Linux M02 forward rerun is hash-bound in the feature receipt; it does not close method, service-runtime or release acceptance. A hash-bound Linux M02 runtime-profile receipt now verifies the declared package versions, 21 installed-source hashes, pure-Python wheel tags, clean pip check and focused operator/integration tests. It does not establish immutable release staging, VPS capacity, method acceptance or release acceptance. A 2026-10-27 host/candidate bundle follow-up is recorded as R-007 evidence; it changes no requirement verdict and does not move the retained R-019 receipt revision anchor. The 21:15 UTC read-only capacity snapshot and current-branch candidate are recorded in the refreshed R-007 evidence; the runner still reports no whole-product or release acceptance. The 2026-10-27 host-runtime report records a security-patched CPython 3.12.16 candidate distribution and its immutable asset digest; fresh numerical replay, interpreter installation, host admission, and release acceptance remain pending. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass, while four of the locked Windows gravity L2 cases still report low-beta line_search_failed; the established Linux matrix is separate evidence and fresh VPS replay remains pending. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The 2026-10-27 VPS numerical replay is recorded with runtime receipt and overlay SHA-256 in docs/validation/vps-science-replay-033a5e7-2026-10-27.json: 381 passed, zero failed/skipped. The active release remained 20260926235216; candidate was not activated or admitted. This candidate evidence does not change the retained R-019 receipt revision anchor or overall acceptance. Candidate `release-9d203f1` was runtime-staged but read-only bootstrap verification exposed a 4 MiB parser cap against its valid 5,119,892-byte v2 receipt. No state was created and the active release did not change. The fix raises only the bounded private receipt parse to 16 MiB while preserving the 4 MiB manifest default; the subsequent immutable-candidate replay remains pending. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending.",
+      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity and a one-host client resource profile, plus M12 launcher refusal/fixture-forwarding evidence, without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance. The current Linux M02 forward rerun is hash-bound in the feature receipt; it does not close method, service-runtime or release acceptance. A hash-bound Linux M02 runtime-profile receipt now verifies the declared package versions, 21 installed-source hashes, pure-Python wheel tags, clean pip check and focused operator/integration tests. It does not establish immutable release staging, VPS capacity, method acceptance or release acceptance. A 2026-10-27 host/candidate bundle follow-up is recorded as R-007 evidence; it changes no requirement verdict and does not move the retained R-019 receipt revision anchor. The 21:15 UTC read-only capacity snapshot and current-branch candidate are recorded in the refreshed R-007 evidence; the runner still reports no whole-product or release acceptance. The 2026-10-27 host-runtime report records a security-patched CPython 3.12.16 candidate distribution and its immutable asset digest; fresh numerical replay, interpreter installation, host admission, and release acceptance remain pending. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass, while four of the locked Windows gravity L2 cases still report low-beta line_search_failed; the established Linux matrix is separate evidence and fresh VPS replay remains pending. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The 2026-10-27 VPS numerical replay is recorded with runtime receipt and overlay SHA-256 in docs/validation/vps-science-replay-033a5e7-2026-10-27.json: 381 passed, zero failed/skipped. The active release remained 20260926235216; candidate was not activated or admitted. This candidate evidence does not change the retained R-019 receipt revision anchor or overall acceptance. Candidate `release-9d203f1` was runtime-staged but read-only bootstrap verification exposed a 4 MiB parser cap against its valid 5,119,892-byte v2 receipt. No state was created and the active release did not change. The fix raises only the bounded private receipt parse to 16 MiB while preserving the 4 MiB manifest default; the subsequent immutable-candidate replay remains pending. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. The 2026-10-28 M02 frontend adapter, geometry-based result view and focused parser/API/workbench checks are recorded under R-006, R-013 and R-014 with source commit f3275d3; they do not alter or re-anchor the retained R-019 measurement receipt.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
