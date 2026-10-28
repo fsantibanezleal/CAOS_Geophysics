@@ -21,7 +21,11 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from prepare_service_release import file_digest, no_links, strict_json, verify_bundle  # noqa: E402
-from stage_service_runtime import EVIDENCE, PYTHON, RELEASES, exclusive_json, runtime_inventory  # noqa: E402
+from stage_service_runtime import (  # noqa: E402
+    EVIDENCE, RELEASES, exclusive_json, runtime_inventory, validate_interpreter,
+)
+from stage_python_runtime import NAME as PYTHON_RUNTIME_NAME, RUNTIMES as PYTHON_RUNTIMES  # noqa: E402
+from stage_python_runtime import _receipt as python_runtime_receipt  # noqa: E402
 
 STATE = Path('/var/lib/geophysics')
 CONFIG = Path('/etc/geophysics')
@@ -88,6 +92,47 @@ def operator_runtime(root: Path) -> None:
             raise ValueError('unexpected runtime node')
 
 
+def verify_runtime_receipt(release: Path, manifest: dict, runtime: dict, bundle_sha: str) -> None:
+    """Bind both installed service environments to the staged private interpreter."""
+    if (runtime.get('schema') != 'geophysics.service-runtime/v2'
+            or runtime.get('runtime_installed') is not True
+            or runtime.get('gravity_runtime_installed') is not True
+            or runtime.get('host_admitted') is not False
+            or runtime.get('full_release_accepted') is not False
+            or runtime.get('bundle_sha256') != bundle_sha
+            or runtime.get('source_revision') != manifest.get('source_revision')):
+        raise ValueError('runtime receipt does not bind this installed bundle')
+
+    profile = runtime.get('interpreter_profile')
+    if not isinstance(profile, dict) or set(profile) != {
+            'path', 'implementation', 'version', 'platform', 'machine', 'sha256'}:
+        raise ValueError('runtime receipt interpreter profile invalid')
+    runtime_root = PYTHON_RUNTIMES / PYTHON_RUNTIME_NAME
+    interpreter = runtime_root / 'python/bin/python3.12'
+    if profile.get('path') != interpreter.as_posix():
+        raise ValueError('runtime receipt interpreter path differs from pinned private runtime')
+    pinned = python_runtime_receipt(runtime_root)
+    if profile != pinned.get('interpreter') or profile != validate_interpreter(interpreter, release):
+        raise ValueError('runtime receipt interpreter identity differs')
+
+    audit = runtime.get('gravity_source_audit')
+    if (not isinstance(audit, dict)
+            or audit.get('schema') != 'geophysics.gravity-linux-runtime-verification/v1'
+            or audit.get('ml_vps_host_admitted') is not False
+            or audit.get('public_activation') is not False):
+        raise ValueError('runtime receipt gravity source audit invalid')
+    for key in ('requirements_sha256', 'gravity_requirements_sha256',
+                'resolved_dependencies', 'gravity_resolved_dependencies'):
+        if not isinstance(runtime.get(key), str) or not re.fullmatch(r'[0-9a-f]{64}', runtime[key]):
+            raise ValueError('runtime receipt dependency digest invalid')
+
+    for directory, key in (('.venv', 'runtime'), ('.venv-gravity', 'gravity_runtime')):
+        installed = release / directory
+        operator_runtime(installed)
+        if runtime_inventory(installed, interpreter) != runtime.get(key):
+            raise ValueError(f'installed {directory} differs from runtime receipt')
+
+
 def verify_candidate(release: Path, receipt: Path, bundle_sha: str, runtime_sha: str) -> dict:
     for digest in (bundle_sha, runtime_sha):
         if not re.fullmatch(r'[0-9a-f]{64}', digest):
@@ -97,17 +142,11 @@ def verify_candidate(release: Path, receipt: Path, bundle_sha: str, runtime_sha:
     if file_digest(release / 'release.json')['sha256'] != bundle_sha or file_digest(receipt)['sha256'] != runtime_sha:
         raise ValueError('candidate or runtime receipt changed')
     manifest = verify_bundle(release)
-    if (runtime.get('schema') != 'geophysics.service-runtime/v1' or runtime.get('runtime_installed') is not True
-            or runtime.get('bundle_sha256') != bundle_sha
-            or runtime.get('source_revision') != manifest['source_revision']):
-        raise ValueError('runtime receipt does not bind this installed bundle')
+    verify_runtime_receipt(release, manifest, runtime, bundle_sha)
     from stage_service_runtime import root_owned_tree
     root_owned_tree(release / 'release.json')
     root_owned_tree(release / 'source')
     root_owned_tree(release / 'web')
-    operator_runtime(release / '.venv')
-    if runtime_inventory(release / '.venv', PYTHON) != runtime.get('runtime'):
-        raise ValueError('installed runtime changed')
     return manifest
 
 

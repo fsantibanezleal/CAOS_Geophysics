@@ -14,6 +14,63 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 import bootstrap_service_state as setup  # noqa: E402
 
 
+def candidate_runtime_receipt():
+    interpreter = (setup.PYTHON_RUNTIMES / setup.PYTHON_RUNTIME_NAME /
+                   'python/bin/python3.12').as_posix()
+    profile = {'path': interpreter, 'implementation': 'cpython', 'version': '3.12.16',
+               'platform': 'linux', 'machine': 'x86_64', 'sha256': 'a' * 64}
+    return profile, {
+        'schema': 'geophysics.service-runtime/v2', 'runtime_installed': True,
+        'gravity_runtime_installed': True, 'host_admitted': False, 'full_release_accepted': False,
+        'bundle_sha256': 'b' * 64, 'source_revision': 'c' * 40,
+        'interpreter_profile': profile, 'runtime': {'api': 'inventory'},
+        'gravity_runtime': {'gravity': 'inventory'},
+        'gravity_source_audit': {'schema': 'geophysics.gravity-linux-runtime-verification/v1',
+                                 'ml_vps_host_admitted': False, 'public_activation': False},
+        'requirements_sha256': 'd' * 64, 'gravity_requirements_sha256': 'e' * 64,
+        'resolved_dependencies': 'f' * 64, 'gravity_resolved_dependencies': '0' * 64,
+    }
+
+
+def test_v2_runtime_receipt_revalidates_both_private_environments(tmp_path, monkeypatch):
+    profile, runtime = candidate_runtime_receipt()
+    release = tmp_path / 'candidate'
+    checked = []
+    monkeypatch.setattr(setup, 'python_runtime_receipt', lambda root: {'interpreter': profile})
+    monkeypatch.setattr(setup, 'validate_interpreter', lambda path, root: profile)
+    monkeypatch.setattr(setup, 'operator_runtime', lambda path: checked.append(path.name))
+    monkeypatch.setattr(setup, 'runtime_inventory', lambda path, python: runtime[
+        'runtime' if path.name == '.venv' else 'gravity_runtime'])
+
+    setup.verify_runtime_receipt(release, {'source_revision': 'c' * 40}, runtime, 'b' * 64)
+
+    assert checked == ['.venv', '.venv-gravity']
+
+
+@pytest.mark.parametrize('change, message', [
+    (lambda r: r.update(schema='geophysics.service-runtime/v1'), 'does not bind'),
+    (lambda r: r.update(host_admitted=True), 'does not bind'),
+    (lambda r: r.update(gravity_runtime_installed=False), 'does not bind'),
+    (lambda r: r['interpreter_profile'].update(path='/usr/bin/python3'), 'path differs'),
+    (lambda r: r.update(gravity_runtime={'gravity': 'tampered'}), 'differs from runtime receipt'),
+    (lambda r: r.update(gravity_source_audit={'schema': 'unexpected'}), 'source audit invalid'),
+    (lambda r: r.update(gravity_requirements_sha256='not-a-digest'), 'dependency digest invalid'),
+])
+def test_v2_runtime_receipt_rejects_unbound_or_changed_content(tmp_path, monkeypatch, change, message):
+    import copy
+    profile, original = candidate_runtime_receipt()
+    runtime = copy.deepcopy(original)
+    change(runtime)
+    monkeypatch.setattr(setup, 'python_runtime_receipt', lambda root: {'interpreter': profile})
+    monkeypatch.setattr(setup, 'validate_interpreter', lambda path, root: profile)
+    monkeypatch.setattr(setup, 'operator_runtime', lambda path: None)
+    monkeypatch.setattr(setup, 'runtime_inventory', lambda path, python: original[
+        'runtime' if path.name == '.venv' else 'gravity_runtime'])
+
+    with pytest.raises(ValueError, match=message):
+        setup.verify_runtime_receipt(tmp_path / 'candidate', {'source_revision': 'c' * 40}, runtime, 'b' * 64)
+
+
 def test_credentials_project_notes_not_forwarded():
     raw = setup.credentials({'username': 'operator@example.org', 'password': 'test-only-password',
                              'private_note': 'never forwarded'})
