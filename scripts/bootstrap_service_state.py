@@ -122,9 +122,15 @@ def verify_runtime_receipt(release: Path, manifest: dict, runtime: dict, bundle_
             or audit.get('ml_vps_host_admitted') is not False
             or audit.get('public_activation') is not False):
         raise ValueError('runtime receipt gravity source audit invalid')
-    for key in ('requirements_sha256', 'gravity_requirements_sha256',
-                'resolved_dependencies', 'gravity_resolved_dependencies'):
+    for key in ('requirements_sha256', 'gravity_requirements_sha256'):
         if not isinstance(runtime.get(key), str) or not re.fullmatch(r'[0-9a-f]{64}', runtime[key]):
+            raise ValueError('runtime receipt dependency digest invalid')
+    for key in ('resolved_dependencies', 'gravity_resolved_dependencies'):
+        dependency_file = runtime.get(key)
+        if (not isinstance(dependency_file, dict) or set(dependency_file) != {'bytes', 'sha256'}
+                or type(dependency_file.get('bytes')) is not int or dependency_file['bytes'] < 0
+                or not isinstance(dependency_file.get('sha256'), str)
+                or not re.fullmatch(r'[0-9a-f]{64}', dependency_file['sha256'])):
             raise ValueError('runtime receipt dependency digest invalid')
 
     for directory, key in (('.venv', 'runtime'), ('.venv-gravity', 'gravity_runtime')):

@@ -28,7 +28,8 @@ def candidate_runtime_receipt():
         'gravity_source_audit': {'schema': 'geophysics.gravity-linux-runtime-verification/v1',
                                  'ml_vps_host_admitted': False, 'public_activation': False},
         'requirements_sha256': 'd' * 64, 'gravity_requirements_sha256': 'e' * 64,
-        'resolved_dependencies': 'f' * 64, 'gravity_resolved_dependencies': '0' * 64,
+        'resolved_dependencies': {'bytes': 812, 'sha256': 'f' * 64},
+        'gravity_resolved_dependencies': {'bytes': 943, 'sha256': '0' * 64},
     }
 
 
@@ -55,6 +56,8 @@ def test_v2_runtime_receipt_revalidates_both_private_environments(tmp_path, monk
     (lambda r: r.update(gravity_runtime={'gravity': 'tampered'}), 'differs from runtime receipt'),
     (lambda r: r.update(gravity_source_audit={'schema': 'unexpected'}), 'source audit invalid'),
     (lambda r: r.update(gravity_requirements_sha256='not-a-digest'), 'dependency digest invalid'),
+    (lambda r: r.update(resolved_dependencies='not-a-file-digest'), 'dependency digest invalid'),
+    (lambda r: r['gravity_resolved_dependencies'].update(bytes=True), 'dependency digest invalid'),
 ])
 def test_v2_runtime_receipt_rejects_unbound_or_changed_content(tmp_path, monkeypatch, change, message):
     import copy
