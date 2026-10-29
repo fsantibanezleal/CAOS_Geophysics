@@ -107,9 +107,13 @@ def executable_gate(root: Path, name: str) -> Path:
 def method_declarations(sdd: Path) -> dict[str, list[str]]:
     """Expand R-008's explicit reference to the M01-M13 acceptance table."""
     text = sdd.read_text(encoding="utf-8")
-    rows = re.findall(r"^\| (M\d{2}) \|[^\n]+\| ([^|]+) \|\s*$", text, re.M)
+    # The current SDD labels this first column M-01..M-13, while the approved
+    # baseline and requirement R-008 refer to the same methods as M01..M13.
+    # Accept both spellings and normalize before enforcing complete coverage.
+    rows = re.findall(r"^\| (M-?\d{1,2}) \|[^\n]+\| ([^|]+) \|\s*$", text, re.M)
     result = {}
     for key, gate in rows:
+        key = f"M{int(key.removeprefix('M').replace('-', '')):02d}"
         matches = list(GATE.finditer(gate))
         if key in result or not matches:
             raise LedgerError(f"duplicate method or missing method gate: {key}")
