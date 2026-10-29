@@ -1,7 +1,8 @@
 # M13 public asset rights review
 
-Review date: 2026-10-28  
-Scope: the committed STEAD browser package at `data/derived/phase/browser-assets/stead/` and its generated copy in the frontend release directory.
+**Review date:** 2026-10-28
+
+**Scope:** the committed STEAD browser package at `data/derived/phase/browser-assets/stead/` and its generated copy in the frontend release directory.
 
 ## Decision
 
