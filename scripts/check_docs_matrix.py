@@ -139,8 +139,8 @@ def check_source_content_coverage(errors: list[str]) -> tuple[int, int]:
             "source-to-content manifest inventory differs from current notebooks: "
             f"missing={sorted(expected_paths - seen_paths)}, extra={sorted(seen_paths - expected_paths)}"
         )
-    if len(actual_en) != 29 or len(actual_es) != 29:
-        errors.append(f"expected the reviewed 29 EN + 29 ES notebook set, found {len(actual_en)} + {len(actual_es)}")
+    if len(actual_en) != 30 or len(actual_es) != 30:
+        errors.append(f"expected the reviewed 30 EN + 30 ES notebook set, found {len(actual_en)} + {len(actual_es)}")
 
     method_entries = manifest.get("methods")
     expected_methods = {f"M{i:02d}" for i in range(1, 14)}

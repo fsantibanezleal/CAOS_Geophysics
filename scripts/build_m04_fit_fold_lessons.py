@@ -18,8 +18,8 @@ def _cell(kind, source):
 def _notebook(language):
     es = language == "es"
     translated = {
-        "title": ("M04 — Assemble and score a magnetic fit fold" if not es else
-                  "M04 — Ensamblar y evaluar un pliegue magnético"),
+        "title": ("M04: Assemble and score a magnetic fit fold" if not es else
+                  "M04: Ensamblar y evaluar un pliegue magnético"),
         "question": ("How does a physical magnetic prediction enter a noise-weighted objective, "
                      "and how do we keep held-out rows out of fitting?" if not es else
                      "¿Cómo entra una predicción magnética física en un objetivo ponderado por ruido, "
@@ -175,7 +175,7 @@ def _notebook(language):
              _cell("markdown", translated["refs"])]
     ref = json.loads(REFERENCE.read_text(encoding="utf-8"))
     topic = "03-magnetics"
-    title = translated["title"].split(" — ", 1)[1]
+    title = translated["title"].split(": ", 1)[1]
     path = ROOT / f"notebooks/{language}/{topic}/04-m04-fit-objective-validation.ipynb"
     notebook = {"cells": cells, "metadata": {
         "kernelspec": ref["metadata"]["kernelspec"],

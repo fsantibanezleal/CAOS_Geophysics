@@ -165,6 +165,18 @@
       "content_scope": "Studies induced-prism forward physics and analytic controls; it does not claim a measured survey inverse."
     },
     {
+      "en": "notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb",
+      "es": "notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb",
+      "methods": [
+        "M04"
+      ],
+      "title": "Assemble and score a magnetic fit fold",
+      "sources": [
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
+      ],
+      "content_scope": "Assembles the physics-backed magnetic fit objective, checks its derivative, and scores a frozen model on separate validation rows; it does not run an inversion."
+    },
+    {
       "en": "notebooks/en/04-mt/01-mt-qc.ipynb",
       "es": "notebooks/es/04-mt/01-mt-qc.ipynb",
       "methods": [
