@@ -14,7 +14,9 @@ export default defineConfig({
     command: "npm run preview -- --host 127.0.0.1 --port 8899 --strictPort",
     cwd: resolve("."),
     url: "http://127.0.0.1:8899/",
-    reuseExistingServer: false,
+    // CI owns its isolated preview server. Local diagnostics can opt into a
+    // separately managed server so the preview survives runner teardown.
+    reuseExistingServer: process.env.CAOS_PLAYWRIGHT_REUSE_SERVER === "1",
     timeout: 60_000,
   },
 });

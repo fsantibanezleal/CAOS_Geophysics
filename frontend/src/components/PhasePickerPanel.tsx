@@ -272,8 +272,8 @@ export function PhasePickerPanel() {
       <p><strong>{t("Population", "Población")}:</strong> {manifest ? t("Browser display: 23 QC-valid / 24 selected; one retained QC failure. Full held-out benchmark: 6,000 selected, separate from this display.",
         "Vista web: 23 válidas de 24 seleccionadas; se conserva una falla QC. Benchmark reservado completo: 6.000, separado de esta vista.") : t("No curated held-out population loaded.", "Sin población reservada curada cargada.")}</p>
     </div>
-    {manifest && <p className="phase-source">{manifest.source.authors} · {manifest.source.dataset} · <a href={`https://doi.org/${manifest.source.doi}`}>{manifest.source.citation}</a> · <a href={manifest.source.license_url}>{manifest.source.license}</a>.
-      {" "}{manifest.source.modification}</p>}
+    {manifest && <p className="phase-source">{manifest.source.authors} · {manifest.source.dataset} · <a href={`https://doi.org/${manifest.source.doi}`}>{manifest.source.citation}</a> · <a href={manifest.source.redistribution.license_url}>{manifest.source.redistribution.license}</a> · <a href={`${import.meta.env.BASE_URL}data/phase/stead/${manifest.source.redistribution.attribution_file}`}>{t("Attribution and changes", "Atribución y cambios")}</a>.
+      {" "}{manifest.source.modification} {t("The project-trained model is distributed under the same license; no endorsement is implied.", "El modelo entrenado por el proyecto se distribuye bajo la misma licencia; esto no implica respaldo.")}</p>}
     {scores && trace && <>
       <div className="phase-arrivals">
         <div><span>P · {t("candidate", "candidata")}</span><strong>{labelPick("P")}</strong></div>

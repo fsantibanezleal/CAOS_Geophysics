@@ -548,7 +548,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. The 52-notebook baseline passed one full fresh-kernel replay; after later additions, the changed M02/M04, M10/M11/M12 and M13 pairs have separate fresh-output checks, and the 56-notebook set now passes full fresh-kernel execution and structural mirrored-course gates. The docs-matrix structural gate passes. Complete in-app course coverage, rendered acceptance and whole-product content acceptance remain unresolved. A bilingual M10 four-geology case-matrix lesson now inspects four existing hash-verified full-run artifacts and exposes the salt negative control and unresolved low-velocity channel; fresh-kernel runs and strict replays pass. It adds inspectability, not solver evidence, independent propagation, field validation or course/product acceptance. A hash-bound coverage manifest now associates all 13 method IDs and 56 bilingual notebook files with the source review inventory. Structural matrix checks pass; scientific correctness, rights, full in-app chapter depth and rendered teaching acceptance remain separate and unresolved. The reviewed course inventory now contains58 mirrored notebooks. A bilingual M12 checkpoint-inference lesson pair executes and freshly replays the source-bound training/checkpoint verifier and independent held-out comparison; its negative ratios remain explicit. This closes that missing teaching artifact, not in-app course rendering, comprehensive method coverage or product acceptance.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 60 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -568,11 +568,19 @@
         },
         {
           "path": "docs/validation/source-content-coverage.json",
-          "sha256": "08ae5fb9e87c096325c8995f80c30dbe8218b34e82c2c157e116154721ca4dac"
+          "sha256": "a390ccd7429a465c8ef9729d61091be0f46d8467c419bc23c7929696e799296f"
         },
         {
           "path": "docs/validation/source-to-content-review.md",
-          "sha256": "1e44c43b24728234f1ae601347c59a85711c1ed6e8d168fe6b04fb974109710f"
+          "sha256": "632073861b7523207bc5469421bc892645bd86195efeebf5b470ff4255aa86d1"
+        },
+        {
+          "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
+          "sha256": "6d73bd4c0b9593c8d72100f810c49126091ba4cf7075ccccd53c026e9352ae6c"
+        },
+        {
+          "path": "docs/design/features/phase-picking/rights-review-2026-10-28.md",
+          "sha256": "b75496f554f1f372518df0a52d6f3917fa5822febc418efc6de06343962e09d3"
         },
         {
           "path": "docs/wiki/README.md",
@@ -636,7 +644,7 @@
         },
         {
           "path": "scripts/check_docs_matrix.py",
-          "sha256": "4822435287f6dd836d8e7325358ea3f341bf84ab2df8e6cd36711f22879c5fad"
+          "sha256": "1fecb92df7bab5aa93e9b763fe8451d0176e87855ad5bfed3c38b1337658aace"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
@@ -727,7 +735,7 @@
       "id": "R-019",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
-      "note": "The local product-runtime check now runs the same hash-verified ONNX model through CPUExecutionProvider and the app WASM path on all 23 QC-valid real STEAD display traces, retains the QC rejection, verifies source/model/waveform/reference hashes, and records max probability difference 5.0664e-6, exact P/S peak samples and matching picks; see docs/validation/m13-browser-population-parity-2026-10-27.json. This is same-checkpoint runtime parity on a preselected display subset, not independent model validation or population accuracy. Full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
+      "note": "The local product-runtime check runs the same hash-verified ONNX model through CPUExecutionProvider and the app WASM path on all 23 QC-valid real STEAD display traces, retains the QC rejection, verifies source/model/waveform/reference hashes, and records max probability difference 5.0664e-6, exact P/S peak samples and matching picks; see docs/validation/m13-browser-population-parity-2026-10-27.json. This is same-checkpoint runtime parity on a preselected display subset, not independent model validation or population accuracy. The 2026-10-25 browser receipt is retained as historical evidence only because the E2E contract has since expanded. The expanded test passed on 2026-10-29 against a fresh production build and persistent local preview (1/1, runner exit 0); see docs/validation/m13-browser-attribution-e2e-2026-10-29.json. This validates the curated route and attribution behavior, not population accuracy. Full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
@@ -736,14 +744,25 @@
         {
           "path": "docs/validation/m13-browser-e2e-20261025.json",
           "sha256": "a2516269963302a545cbc9c62959a87352b35f0884fc3938082f600c9864018c"
-        }
-      ],
-      "receipts": [
+        },
         {
           "path": "docs/validation/receipts/r019-m13-browser-e2e-20261025.json",
           "sha256": "dbbef67d5cd234b8bb5050e74a6c0a3e2a15bd91f0abfe76ad755d18afbcc251"
+        },
+        {
+          "path": "docs/validation/m13-browser-attribution-e2e-2026-10-29.json",
+          "sha256": "1a6aeffa1c055bc977622032f291e31ce30387b2e6a6ad393b9216385e24d732"
+        },
+        {
+          "path": "frontend/e2e/phase-picker-live.spec.ts",
+          "sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8"
+        },
+        {
+          "path": "frontend/playwright.phase-picker.config.ts",
+          "sha256": "24320f8ba6a8a208e465c6bc68059c5f333a0fbdb82d32f33a8fad6a360910b9"
         }
-      ]
+      ],
+      "receipts": []
     }
   ]
 }

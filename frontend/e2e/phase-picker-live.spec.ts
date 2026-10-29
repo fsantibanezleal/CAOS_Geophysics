@@ -25,6 +25,12 @@ test("M13 runs a hash-verified held-out STEAD trace in-browser and exports valid
   await expect(selector.locator("option")).toHaveCount(manifest.records.length);
   await expect(page.getByText(new RegExp(`SHA-256 ${modelHash}`))).toBeVisible();
   await expect(page.getByText(new RegExp(`${record.trace_id}.*qc-valid`))).toBeVisible();
+  const attributionLink = page.getByRole("link", { name: "Attribution and changes", exact: true });
+  await expect(attributionLink).toHaveAttribute("href", "/data/phase/stead/ATTRIBUTION.md");
+  const attributionResponse = await page.request.get("/data/phase/stead/ATTRIBUTION.md");
+  expect(attributionResponse.ok()).toBe(true);
+  expect(await attributionResponse.text()).toContain("CC BY 4.0");
+  expect(await attributionResponse.text()).toContain("These are changes to the source material.");
   const benchmark = page.locator(".phase-benchmark table");
   await expect(benchmark).toContainText("M08");
   await expect(benchmark).toContainText("M13");

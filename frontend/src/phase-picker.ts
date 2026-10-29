@@ -48,7 +48,11 @@ export interface PhaseManifest {
     shape: [1, 3, 6000]; file_dtype: "float32-little-endian"; file_layout: string; unit: string };
   output: { shape: [1, 3, 6000]; classes: ["N", "P", "S"] };
   source: { dataset: string; citation: string; authors: string; doi: string; license: string;
-    license_url: string; original_url: string; mirror_url: string; modification: string };
+    license_url: string; original_url: string; mirror_url: string; modification: string;
+    redistribution: { decision: "approved-with-attribution"; license: "CC BY 4.0"; license_url: string;
+      review: string; attribution_file: string; upstream_license_commit: string;
+      upstream_license_blob_sha1: string; upstream_license_sha256: string; seisbench_commit: string;
+      seisbench_stead_blob_sha1: string; mirror_license_sha256: string } };
   records: PhaseManifestEntry[];
 }
 export interface PhaseBenchmarkRow {
@@ -204,13 +208,37 @@ export function parsePhaseManifest(value: unknown): PhaseManifest {
       parsedBenchmark.qc_valid < 0 || parsedBenchmark.qc_valid > 6000 || parsedBenchmark.tolerance_s !== 0.5)
     throw new Error("Full benchmark population or tolerance differs from the fixed contract");
   const source = object(data.source, "source");
+  const redistribution = object(source.redistribution, "source.redistribution");
+  const parsedRedistribution = {
+    decision: redistribution.decision,
+    license: redistribution.license,
+    license_url: string(redistribution.license_url, "redistribution.license_url"),
+    review: string(redistribution.review, "redistribution.review"),
+    attribution_file: filename(redistribution.attribution_file, "redistribution.attribution_file"),
+    upstream_license_commit: string(redistribution.upstream_license_commit, "redistribution.upstream_license_commit"),
+    upstream_license_blob_sha1: string(redistribution.upstream_license_blob_sha1, "redistribution.upstream_license_blob_sha1"),
+    upstream_license_sha256: hash(redistribution.upstream_license_sha256, "redistribution.upstream_license_sha256"),
+    seisbench_commit: string(redistribution.seisbench_commit, "redistribution.seisbench_commit"),
+    seisbench_stead_blob_sha1: string(redistribution.seisbench_stead_blob_sha1, "redistribution.seisbench_stead_blob_sha1"),
+    mirror_license_sha256: hash(redistribution.mirror_license_sha256, "redistribution.mirror_license_sha256"),
+  };
+  if (parsedRedistribution.decision !== "approved-with-attribution" || parsedRedistribution.license !== "CC BY 4.0" ||
+      parsedRedistribution.license_url !== "https://creativecommons.org/licenses/by/4.0/" ||
+      !/^[0-9a-f]{40}$/.test(parsedRedistribution.upstream_license_commit) ||
+      !/^[0-9a-f]{40}$/.test(parsedRedistribution.upstream_license_blob_sha1) ||
+      !/^[0-9a-f]{40}$/.test(parsedRedistribution.seisbench_commit) ||
+      !/^[0-9a-f]{40}$/.test(parsedRedistribution.seisbench_stead_blob_sha1))
+    throw new Error("M13 asset redistribution rights are not approved or do not identify valid license evidence");
   const parsedSource = {
     dataset: string(source.dataset, "source.dataset"), citation: string(source.citation, "source.citation"),
     authors: string(source.authors, "source.authors"), doi: string(source.doi, "source.doi"),
     license: string(source.license, "source.license"), license_url: string(source.license_url, "source.license_url"),
     original_url: string(source.original_url, "source.original_url"),
     mirror_url: string(source.mirror_url, "source.mirror_url"), modification: string(source.modification, "source.modification"),
+    redistribution: parsedRedistribution as PhaseManifest["source"]["redistribution"],
   };
+  if (parsedSource.license_url !== "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE")
+    throw new Error("STEAD source license URL is not pinned to the reviewed license revision");
   if (!Array.isArray(data.records) || data.records.length !== 24) throw new Error("The fixed browser selection must retain all 24 entries");
   const ids = new Set<string>();
   const records = data.records.map((unknownEntry): PhaseManifestEntry => {
