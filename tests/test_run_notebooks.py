@@ -9,7 +9,12 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from scripts.run_notebooks import canonical_png, notebook_scratch_path, within_declared_plot_tolerance
+from scripts.run_notebooks import (
+    canonical_png,
+    notebook_scratch_path,
+    staged_notebook_source,
+    within_declared_plot_tolerance,
+)
 
 
 POLICY = {
@@ -21,10 +26,28 @@ POLICY = {
 
 def test_notebook_scratch_isolated_between_language_mirrors() -> None:
     root = Path("external-temp")
-    english = notebook_scratch_path(root, "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb")
-    spanish = notebook_scratch_path(root, "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb")
+    english = notebook_scratch_path(root, "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb")
+    spanish = notebook_scratch_path(root, "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb")
     assert english != spanish
     assert english.is_relative_to(root) and spanish.is_relative_to(root)
+
+
+def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    model = source / "models" / "picker" / "weights.json"
+    notebook = source / "notebooks" / "en" / "06-seismology" / "04-learned-picker.ipynb"
+    model.parent.mkdir(parents=True)
+    notebook.parent.mkdir(parents=True)
+    model.write_text('{"weights": [1, 2, 3]}', encoding="utf-8")
+    notebook.write_text("{}", encoding="utf-8")
+    (source / "VERSION").write_text("0.04.003\n", encoding="utf-8")
+
+    staged = staged_notebook_source(tmp_path / "check", notebook.relative_to(source).as_posix(), source)
+
+    assert staged.is_file()
+    repo = staged.parents[3]
+    assert (repo / "models" / "picker" / "weights.json").read_bytes() == model.read_bytes()
+    assert (repo / "VERSION").read_text(encoding="utf-8") == "0.04.003\n"
 
 
 def encoded_png(image: Image.Image, *, compression: int) -> str:

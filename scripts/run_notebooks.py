@@ -127,6 +127,21 @@ def notebook_scratch_path(root: Path, relative_notebook: str) -> Path:
     return root / "notebook-work" / Path(relative_notebook).with_suffix("")
 
 
+def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: Path = ROOT) -> Path:
+    """Return a notebook in an isolated, input-complete copy of the product."""
+    work = tmp_root / "repo"
+    work.mkdir(parents=True, exist_ok=True)
+    for name in ("data", "data-pipeline", "docs", "content", "models", "notebooks"):
+        origin = source_root / name
+        target = work / name
+        if origin.exists() and not target.exists():
+            shutil.copytree(origin, target, ignore=shutil.ignore_patterns("__pycache__", ".ipynb_checkpoints"))
+    version = source_root / "VERSION"
+    if version.is_file() and not (work / "VERSION").exists():
+        shutil.copy2(version, work / "VERSION")
+    return work / Path(relative_notebook)
+
+
 def misplaced() -> list[str]:
     """Notebooks anywhere but ``notebooks/<language>/<topic>/<notebook>.ipynb``: the layout the static check holds, and the
     only one the runner executes."""
@@ -384,8 +399,9 @@ def main() -> int:
             src = book
             notebook_tmp = notebook_scratch_path(tmp_root or temp_root, rel)
             if tmp_root is not None:
-                # Execute the committed source in place but save outputs only to
-                # the device temp root. Large scientific inputs remain read-only.
+                # Execute against an isolated release-shaped tree, including
+                # trained/released model files, as required by template 0.13.001.
+                src = staged_notebook_source(tmp_root, rel)
                 fresh = tmp_root / "results" / rel
                 fresh.parent.mkdir(parents=True, exist_ok=True)
             else:
