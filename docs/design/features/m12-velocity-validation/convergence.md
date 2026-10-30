@@ -56,10 +56,11 @@ acceptance or release acceptance.
 The corrected [v1.1 protocol](nullspace-v1_1-protocol.md) uses the exact
 checkpoint feature contract and new calibration/test seeds. Calibration
 selected lambda 100 and alpha 1.0. On the 160-case joint-OOD cohort, velocity
-RMSE ratio was 0.9701 (paired case-bootstrap 95% interval 0.9703–0.9770) and
-independent travel-time RMSE ratio was 0.9967 (0.9951–0.9986); all four held
-out cohorts improved on both aggregate metrics, with zero forward-threshold
-exceedances among 480 cases. This is a positive, narrowly bounded synthetic
+RMSE ratio was 0.9701 (paired case-bootstrap 95% interval 0.9661–0.9737) and
+independent travel-time RMSE ratio was 0.9967 (0.9950–0.9983); all four held
+out cohorts improved on both aggregate metrics. The v1.1 scorer uses an
+infinite threshold, so its zero-exceedance fields are not a threshold
+evaluation. This is a positive, narrowly bounded synthetic
 result for the projected correction. It is not field validation, a claim of
 geological recovery, or a change to product release status. Full protocol,
 cohort results, intervals, receipt hash and verification state are recorded
@@ -72,7 +73,7 @@ The exact full v1.1 receipt is now mirrored at
 `30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22`);
 the original immutable external run and checkpoint remain preserved. The new
 English and Spanish lesson at
-`notebooks/{en,es}/08-learning/04-nullspace-refinement-evidence.ipynb` checks
+`notebooks/{en,es}/08-learning/06-nullspace-refinement-evidence.ipynb` checks
 that receipt identity, reconstructs each cohort's aggregate ratios from its
 paired per-realization RMSE values, plots the calibration-only alpha rule,
 and exposes per-case joint outcomes. Its analyzer rejects fixture receipts,

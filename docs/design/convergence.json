@@ -260,11 +260,11 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "9c733f685e227545c3e57e99ce2873ddcca2b32d905cba03021966c11d054bf6"
+          "sha256": "4246a2000f2698c7b8fa0eb1c216c7330d588dc0c5aa2c0004b713f5dd22937b"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
-          "sha256": "e2d6f99896e3cfba581bdf055aee42f2a70e26a7855507c935e8fafdfae9c0cf"
+          "sha256": "2bd5d88620907361cef67efcecc25647108c35f9197e895db931f0f474a7f161"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
@@ -386,7 +386,7 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "9c733f685e227545c3e57e99ce2873ddcca2b32d905cba03021966c11d054bf6"
+          "sha256": "4246a2000f2698c7b8fa0eb1c216c7330d588dc0c5aa2c0004b713f5dd22937b"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
@@ -398,7 +398,7 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
-          "sha256": "e2d6f99896e3cfba581bdf055aee42f2a70e26a7855507c935e8fafdfae9c0cf"
+          "sha256": "2bd5d88620907361cef67efcecc25647108c35f9197e895db931f0f474a7f161"
         },
         {
           "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",

@@ -78,22 +78,18 @@ must not be tuned against its test cohort.
 
 The frozen v1.1 implementation ran on CPU in 16.32 seconds. The 160-case
 calibration selected classical lambda `100` and nullspace correction scale
-`alpha=1.0`. All 480 held-out cases were evaluated after selection, with zero
-forward-threshold exceedances. The receipt reports
+`alpha=1.0`. All 480 held-out cases were evaluated after selection. The receipt
+reports
 `supported-within-bounded-synthetic-protocol`:
 
 | Cohort | n | Velocity RMSE ratio | Paired bootstrap 95% interval | Oracle-time RMSE ratio | Paired bootstrap 95% interval |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| ID | 160 | 0.8035 | 0.7796–0.8269 | 0.9841 | 0.9810–0.9860 |
-| Family-only | 80 | 0.9718 | 0.9685–0.9792 | 0.9962 | 0.9942–0.9988 |
-| Acquisition-only | 80 | 0.8023 | 0.7698–0.8371 | 0.9842 | 0.9789–0.9881 |
-| Joint OOD | 160 | 0.9701 | 0.9703–0.9770 | 0.9967 | 0.9951–0.9986 |
+| ID | 160 | 0.8035 | 0.7808–0.8256 | 0.9841 | 0.9816–0.9865 |
+| Family-only | 80 | 0.9718 | 0.9667–0.9771 | 0.9962 | 0.9939–0.9984 |
+| Acquisition-only | 80 | 0.8023 | 0.7692–0.8352 | 0.9842 | 0.9795–0.9887 |
+| Joint OOD | 160 | 0.9701 | 0.9661–0.9737 | 0.9967 | 0.9950–0.9983 |
 
-Ratios below one favor the refined method. Intervals are percentile paired
-case-bootstrap intervals over the fixed synthetic generator, 20,000 draws,
-seed `6122026`; they quantify resampling variation within these cohorts, not
-uncertainty across natural geology. The joint-OOD travel-time improvement is
-small. For acquisition C, the ray matrix has rank 127 and nullity 129;
+Ratios below one favor the refined method. Intervals are 95% percentile paired-case bootstrap intervals for the ratio of mean per-case RMSEs, computed from the immutable per-record receipt with 20,000 draws and seed 6122026 using NumPy PCG64 and linear quantiles. The archived v1.1 prose intervals could not be reproduced from the receipt and are superseded by this calculation. The intervals quantify resampling variation within these fixed synthetic cohorts, not uncertainty across natural geology. The joint-OOD travel-time improvement is small. For acquisition C, the ray matrix has rank 127 and nullity 129;
 `max(abs(A @ N)) = 1.52e-13` and the projected correction residual is
 `4.56e-18`, with no physical-bound clipping. Nonlinear velocity conversion
 still means this linear null-space result is not a general data-invariance
@@ -125,3 +121,7 @@ checks and delegates alpha selection, calibration metrics, all four held-out
 cohorts, and the final result to the original verifier. Its result is a
 reproducibility check for this bounded synthetic experiment, not M12 or
 product scientific acceptance.
+The v1.1 runner passed an infinite threshold to the scoring function, so its
+stored zero exceedance counts are not a threshold evaluation and must not be
+interpreted as one. The v1.1 scientific result depends on the paired aggregate
+RMSE ratios only.
