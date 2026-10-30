@@ -604,11 +604,11 @@
         },
         {
           "path": "docs/wiki/methods/m07-m13.es.md",
-          "sha256": "405e8dc47cb8a9271eb430c3c70ee7847363497ac866436029975d6cf851f2bc"
+          "sha256": "9d91a087612d7e841b1bec33d498d2e96090a2e7e91e4a9a4b45760860475746"
         },
         {
           "path": "docs/wiki/methods/m07-m13.md",
-          "sha256": "0325187ba3a873a0537f37f2d1aebc96b0a3577aea8a9530ae4832d6baa947fd"
+          "sha256": "ac367f6043b1a3fbbf118f72c355844695c6b7c3b0846bda2a4cb98d6cf905be"
         },
         {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
