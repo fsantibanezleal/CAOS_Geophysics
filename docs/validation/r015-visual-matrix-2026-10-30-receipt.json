@@ -2,18 +2,18 @@
   "schema": "geophysics.gate-receipt/v1",
   "requirement": "R-015",
   "gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation",
-  "gate_sha256": "551b5b49d235f1f7e70ae1e4d877443a3e9c402af8b378bce53e4510cd9a1a6c",
+  "gate_sha256": "cd803a717f88c8623000896c89b1aff5aa65452d37c0a49054cca1711e129488",
   "verdict": "pass",
-  "source_revision": "4bfcc8635a6af334384d9ab79bc56915ad1e8e4e",
+  "source_revision": "bbb71fd9a710bddeb8ea9b20fc28077e8a3c91d2",
   "command": [
-    "npm run test:e2e:visual-matrix",
-    "CAOS_VISUAL_MATRIX_OUTPUT=E:\\_Temp\\geophysics-visual-matrix-20261030-final3"
+    "npm run build",
+    "npm run test:e2e:visual-matrix"
   ],
-  "measured_at": "2026-10-30T11:28:41.621Z",
+  "measured_at": "2026-10-30T11:51:37.165Z",
   "outputs": [
     {
       "path": "docs/validation/r015-visual-matrix-2026-10-30.json",
-      "sha256": "015f8d284ea761978457d650a7c5204665ccca335636ca7a1425c35acb483016"
+      "sha256": "5718332794ac1c8e03fdb0845d29d361c70c7cd9cfceaac1f8e0e290ef93d1b2"
     }
   ]
 }
