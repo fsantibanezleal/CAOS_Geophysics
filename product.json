@@ -11,10 +11,10 @@
   "holder": "Felipe Santibáñez-Leal",
   "year": 2026,
   "app": "workbench",
-  "workbench_route": "/",
+  "workbench_route": "/app",
   "method_packages": [],
   "pages": [
-    { "id": "app", "path": "/", "en": "App", "es": "App" },
+    { "id": "app", "path": "/app", "en": "App", "es": "App" },
     { "id": "introduction", "path": "/introduction", "en": "Introduction", "es": "Introducción" },
     { "id": "methodology", "path": "/methodology", "en": "Methodology", "es": "Metodología" },
     { "id": "implementation", "path": "/implementation", "en": "Implementation", "es": "Implementación" },
