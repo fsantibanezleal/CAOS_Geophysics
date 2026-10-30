@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "12dfe0cba42721d2796976a1d2df33d140af0ddb51fb46b71cc92865d12f7b30",
-  "assessed_revision": "43f4f9bc68699bd1090406688b50ffd1a73a87a9",
-  "assessed_at": "2026-10-30T08:13:53Z",
+  "assessed_revision": "4bfcc8635a6af334384d9ab79bc56915ad1e8e4e",
+  "assessed_at": "2026-10-30T11:32:04Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -537,9 +537,9 @@
     },
     {
       "id": "R-015",
-      "verdict": "unresolved",
+      "verdict": "pass",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "The 2026-10-27 local candidate shell gate passes 1332 measured states across all six routes, five viewport sizes, both themes/languages and wider-font probes, with 27 served artifacts hash-verified and zero waivers. Multiple-case visual acceptance, complete user acceptance and actual-host acceptance remain open; this does not establish full product release acceptance.",
+      "note": "The declared local visual gate passes all 16 EN/ES × light/dark × desktop/phone × normal/reduced-motion combinations across six routes and the five-tab architecture dialog. All 112 route/dialog captures were generated and hashed; zero failures, skips or flaky retries, with instrument loading cleared and dialog/tab bounds checked in both axes. This accepts the declared local visual requirement only; broader owner/product acceptance, scientific correctness and VPS release acceptance remain separate.",
       "evidence": [
         {
           "path": "docs/validation/shell-gate-20261025.json",
@@ -548,9 +548,18 @@
         {
           "path": "docs/validation/shell-gate-2026-10-27.md",
           "sha256": "024e101b5db4c2e34e06d152cab58cc5a4951ff26cf8c254daefe237890a0a23"
+        },
+        {
+          "path": "docs/validation/r015-visual-matrix-2026-10-30.json",
+          "sha256": "015f8d284ea761978457d650a7c5204665ccca335636ca7a1425c35acb483016"
         }
       ],
-      "receipts": []
+      "receipts": [
+        {
+          "path": "docs/validation/r015-visual-matrix-2026-10-30-receipt.json",
+          "sha256": "33ff4b197e578e95df7135eb5ef08356f1b60698c8dfd3afebbc1da9571ee276"
+        }
+      ]
     },
     {
       "id": "R-016",
