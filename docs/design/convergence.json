@@ -264,7 +264,7 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
-          "sha256": "2bd5d88620907361cef67efcecc25647108c35f9197e895db931f0f474a7f161"
+          "sha256": "82dd33258558ba1827c22efafd080a4eba4eab9c5a663823e36a5e692609dcfa"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
@@ -398,7 +398,7 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
-          "sha256": "2bd5d88620907361cef67efcecc25647108c35f9197e895db931f0f474a7f161"
+          "sha256": "82dd33258558ba1827c22efafd080a4eba4eab9c5a663823e36a5e692609dcfa"
         },
         {
           "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
