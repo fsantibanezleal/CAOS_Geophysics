@@ -108,3 +108,20 @@ reproduced their stored metrics; the scientific verdict reproduced as
 controlled research only; it does not
 validate field data, establish geological recovery, or change overall M12 or
 product release acceptance.
+
+### Float-safe compatibility replay
+
+On 2026-10-30, the original verify entry point was independently rerun against
+the retained external run. It stopped at the calibration-score comparison:
+the selected lambda and calibration manifest were unchanged, but candidate
+RMSE values differed by at most floating-point roundoff (approximately
+2.2e-13). The original verifier compares that floating-point mapping by exact
+equality. The hash-bound method, runner, checkpoint, and receipt were left
+unchanged. Run
+python scripts/verify_m12_nullspace_v1_1_compat.py --output <external-run>
+for a full replay with rtol=1e-10 and atol=1e-12 on those candidate scores.
+That compatibility path retains exact selected-lambda and source/hash/split
+checks and delegates alpha selection, calibration metrics, all four held-out
+cohorts, and the final result to the original verifier. Its result is a
+reproducibility check for this bounded synthetic experiment, not M12 or
+product scientific acceptance.
