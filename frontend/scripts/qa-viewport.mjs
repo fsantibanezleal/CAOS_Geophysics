@@ -12,7 +12,17 @@ const failures = [];
 const measurements = [];
 const performanceRows = [];
 const caseVariations = [];
-const writeReport = () => writeFileSync(resolve(output, 'report.json'), JSON.stringify({ base, measurements, performanceRows, caseVariations, failures }, null, 2));
+const progress = { family: null, variant: null, completedFamilies: 0, completedConditions: 0 };
+const reportPath = resolve(output, 'report.json');
+const writeReport = () => writeFileSync(reportPath, JSON.stringify({ base, measurements, performanceRows, caseVariations, progress, failures }, null, 2));
+const recordHarnessError = (error) => {
+  failures.push(`${progress.family ?? 'layout'}/${progress.variant ?? 'setup'}: ${error?.stack ?? String(error)}`);
+  writeReport();
+  console.error('QA_HARNESS_ERROR', error);
+  process.exit(1);
+};
+process.on('uncaughtException', recordHarnessError);
+process.on('unhandledRejection', recordHarnessError);
 const defaultFamilies = [
   'GRAVITY_INTRUSION', 'GRAVITY_DEEP_BODY', 'GRAVITY_NOISY', 'GRAVITY_TILTED',
   'MAGNETIC_DYKE', 'MAGNETIC_REMANENCE', 'MAGNETIC_DEEP', 'MAGNETIC_NOISY',
@@ -151,6 +161,9 @@ for (const [width, height] of [[390, 844], [1600, 900]]) {
 
 const rendered = { gravity: '.earth-scene', magnetics: '.earth-scene', mt: '.mt-view', seismic: '.seismic-view', joint: '.earth-scene', learned: '.learned-view' };
 for (const id of families) {
+  progress.family = id;
+  progress.variant = null;
+  writeReport();
   // Release every case's Three.js/WebGL resources before loading another case.
   // A single 120-condition page accumulates SwiftShader allocations until
   // Chromium loses the context, which turns an otherwise useful matrix into a
@@ -172,6 +185,8 @@ for (const id of families) {
   const visualHashes = new Set();
   const metricHashes = new Set();
   for (const variant of variants) {
+    progress.variant = variant;
+    writeReport();
     let experimentControl = page.locator('[data-control="experiment"]');
     if (!await experimentControl.count()) {
       const openControls = page.getByRole('button', { name: 'Experiment controls', exact: true });
@@ -217,15 +232,20 @@ for (const id of families) {
     const metricHash = createHash('sha256').update(JSON.stringify(metrics)).digest('hex').slice(0, 12);
     metricHashes.add(metricHash);
     console.log('CONDITION', JSON.stringify({ id, variant, methods: methodCount, visualHash, metricHash, metricCount: Object.keys(metrics).length }));
+    progress.completedConditions++;
+    writeReport();
   }
   if (visualHashes.size < 2) failures.push(`${id}: all six rendered visualizations identical`);
   caseVariations.push({ id, distinctVisuals: visualHashes.size, distinctMetricViews: metricHashes.size });
+  progress.completedFamilies++;
+  progress.family = null;
+  progress.variant = null;
   writeReport();
   console.log('FAMILY_VARIATION', JSON.stringify(caseVariations.at(-1)));
   await page.goto('about:blank');
   await context.close();
   await browser.close();
 }
-writeFileSync(resolve(output, 'report.json'), JSON.stringify({ base, measurements, performanceRows, caseVariations, failures }, null, 2));
+writeFileSync(reportPath, JSON.stringify({ base, measurements, performanceRows, caseVariations, progress, failures }, null, 2));
 console.log('FAILURES', JSON.stringify(failures));
 if (failures.length) process.exitCode = 1;

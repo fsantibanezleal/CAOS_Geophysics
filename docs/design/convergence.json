@@ -1,9 +1,9 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "3b42085ad175a8c57bd32e925932289f184cfcffd9b12c2d3b474cc24f4d3319",
-  "assessed_revision": "4723af581ba8ed4136ec53ae2c9417b8642bf46a",
-  "assessed_at": "2026-10-27T20:39:02Z",
+  "sdd_sha256": "12dfe0cba42721d2796976a1d2df33d140af0ddb51fb46b71cc92865d12f7b30",
+  "assessed_revision": "43f4f9bc68699bd1090406688b50ffd1a73a87a9",
+  "assessed_at": "2026-10-30T08:13:53Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -25,7 +25,7 @@
         },
         {
           "path": "docs/design/features/stead-source-reconciliation/validation.md",
-          "sha256": "2da6560749321c4738e0ef54ea677d67a7fec62e5287b83b86fd124f7a88d65a"
+          "sha256": "31366492ac2050aadc6dfa6ae8883373a1f1f295539c7954e7eabdab8ea99d0c"
         }
       ],
       "receipts": []
@@ -163,7 +163,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This initial snapshot was a baseline; its follow-up below compares a local candidate bundle and configured scratch/memory ceilings, while runtime installation, retained future data and actual job capacity remain unqualified. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy. A 20:39 UTC read-only follow-up measured the clean local qualification bundle at 856,096,919 logical bytes including manifest, confirmed current plus two rollback release sizes, and compared candidate plus configured 1 GiB scratch and API/worker/controller ceilings with live free disk and MemAvailable. This arithmetic is only preflight: API/gravity runtime installation, actual concurrent job/resource behavior, timeout/cancel/recovery and authenticated workflows remain unmeasured; no candidate was uploaded, and R-007 remains unresolved. The capacity-preflight JSON passes the inventory consistency check, which explicitly does not attest that its inputs were measured on the host. The 21:15 UTC current-branch preflight records a 856,103,491-byte qualification bundle, 32,396,664,832 bytes filesystem availability, and 5,253,464,064 bytes MemAvailable; explicit service/controller ceilings fit arithmetically. Runtime installation, candidate execution and job admission are still unmeasured, so R-007 remains unresolved. A 2026-10-27 isolated host-runtime qualification report records the unchanged active release, recovered receipt-matched environment selector, pinned API/gravity installs and pip checks, and the still-open CPython version gate; no host admission or activation passed. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass. The four previously reported Windows L2 control IDs (conditions 0/1, families 0/1) passed a focused rerun on 2026-10-28 with the required single-thread environment; a direct invocation without those variables had been rejected by the native workspace guard before optimization, so it was not a solver failure. The remaining 20 Windows controls and fresh VPS replay are not included in that rerun; the established Linux matrix remains separate evidence. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The release-033a5e7 candidate now has a fresh pinned Linux CPython 3.12.16 numerical replay: 381 passed, zero failed/skipped in 10,793.32 s. The candidate runtime receipt and validation overlay are hash-bound in docs/validation/vps-science-replay-033a5e7-2026-10-27.json. This still does not measure authenticated admission, timeout/cancellation/recovery, concurrent capacity or full host acceptance; R-007 remains unresolved. A 2026-10-27 post-staging snapshot measured 12,510,769,152 bytes free on the release filesystem and 5,193,476 kB MemAvailable, with candidate `release-9d203f1` plus its private API/gravity runtimes present. Read-only bootstrap verification caught a parser-cap mismatch before state creation. This inventory is not a job-capacity or admission pass; R-007 remains unresolved. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. A fresh read-only 2026-10-28 snapshot measured 3,652,116,480 bytes available (96% used) and 5,300,334,592 bytes MemAvailable. The active legacy release and two dated rollback directories total 2,322,509,824 logical bytes; the geophysics releases tree totals 33,736,204,288 bytes, including 28 individually inventoried non-retained directories at 31,413,694,464 bytes. No directories were removed. Current candidate capacity, runtime installation, actual-host job behavior and release admission remain unqualified. A 15:51 UTC follow-up measured 3,099,168,768 bytes free (96% used), 5,276,319,744 bytes MemAvailable at 15:47 UTC, and 31 release directories. The API and worker remained inactive, Nginx active, current remained the legacy 0.04.001 release, canonical HTTPS returned 200 with TLS verification, and the retired Pages URL returned 404. Available space fell by 552,947,712 bytes since 12:18 UTC; the cause is not established. No release directory was removed and no candidate was staged.",
+      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This initial snapshot was a baseline; its follow-up below compares a local candidate bundle and configured scratch/memory ceilings, while runtime installation, retained future data and actual job capacity remain unqualified. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy. A 20:39 UTC read-only follow-up measured the clean local qualification bundle at 856,096,919 logical bytes including manifest, confirmed current plus two rollback release sizes, and compared candidate plus configured 1 GiB scratch and API/worker/controller ceilings with live free disk and MemAvailable. This arithmetic is only preflight: API/gravity runtime installation, actual concurrent job/resource behavior, timeout/cancel/recovery and authenticated workflows remain unmeasured; no candidate was uploaded, and R-007 remains unresolved. The capacity-preflight JSON passes the inventory consistency check, which explicitly does not attest that its inputs were measured on the host. The 21:15 UTC current-branch preflight records a 856,103,491-byte qualification bundle, 32,396,664,832 bytes filesystem availability, and 5,253,464,064 bytes MemAvailable; explicit service/controller ceilings fit arithmetically. Runtime installation, candidate execution and job admission are still unmeasured, so R-007 remains unresolved. A 2026-10-27 isolated host-runtime qualification report records the unchanged active release, recovered receipt-matched environment selector, pinned API/gravity installs and pip checks, and the still-open CPython version gate; no host admission or activation passed. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass. The four previously reported Windows L2 control IDs (conditions 0/1, families 0/1) passed a focused rerun on 2026-10-28 with the required single-thread environment; a direct invocation without those variables had been rejected by the native workspace guard before optimization, so it was not a solver failure. The remaining 20 Windows controls and fresh VPS replay are not included in that rerun; the established Linux matrix remains separate evidence. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The release-033a5e7 candidate now has a fresh pinned Linux CPython 3.12.16 numerical replay: 381 passed, zero failed/skipped in 10,793.32 s. The candidate runtime receipt and validation overlay are hash-bound in docs/validation/vps-science-replay-033a5e7-2026-10-27.json. This still does not measure authenticated admission, timeout/cancellation/recovery, concurrent capacity or full host acceptance; R-007 remains unresolved. A 2026-10-27 post-staging snapshot measured 12,510,769,152 bytes free on the release filesystem and 5,193,476 kB MemAvailable, with candidate `release-9d203f1` plus its private API/gravity runtimes present. Read-only bootstrap verification caught a parser-cap mismatch before state creation. This inventory is not a job-capacity or admission pass; R-007 remains unresolved. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. A fresh read-only 2026-10-28 snapshot measured 3,652,116,480 bytes available (96% used) and 5,300,334,592 bytes MemAvailable. The active legacy release and two dated rollback directories total 2,322,509,824 logical bytes; the geophysics releases tree totals 33,736,204,288 bytes, including 28 individually inventoried non-retained directories at 31,413,694,464 bytes. No directories were removed. Current candidate capacity, runtime installation, actual-host job behavior and release admission remain unqualified. A 15:51 UTC follow-up measured 3,099,168,768 bytes free (96% used), 5,276,319,744 bytes MemAvailable at 15:47 UTC, and 31 release directories. The API and worker remained inactive, Nginx active, current remained the legacy 0.04.001 release, canonical HTTPS returned 200 with TLS verification, and the retired Pages URL returned 404. Available space fell by 552,947,712 bytes since 12:18 UTC; the cause is not established. No release directory was removed and no candidate was staged. A 2026-10-29 isolated Windows CPU rerun executed all 24 locked ordinary L2 synthetic controls in separate one-thread processes: 24 passed, zero failed/errors/skipped. Results and solver/test/runner hashes are recorded in docs/validation/m02-windows-full-matrix-2026-10-29-final.json; condition 3 retains elevated outer residuals and the evidence remains synthetic/local. This does not qualify current VPS runtime, actual workload capacity, or host admission, so R-007 remains unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -204,6 +204,14 @@
         {
           "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
           "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
+        },
+        {
+          "path": "docs/validation/m02-windows-full-matrix-2026-10-29-final.json",
+          "sha256": "93854aeb8c80df63f4307e76cce24f3a14a6d6f2ca8abbb867d481c577987eee"
+        },
+        {
+          "path": "docs/validation/m02-windows-full-matrix-2026-10-29.md",
+          "sha256": "a6640a70a9bef1e8ce98fa05d6c10c90a0337ab2ca4b91686f720ab21fbd8246"
         }
       ],
       "receipts": []
@@ -244,7 +252,7 @@
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
+          "sha256": "9a5fbd787689b5da271958c2200ed00f677c68069f6db8ec26490487baa79ab3"
         },
         {
           "path": "docs/design/features/m06-field-mt/convergence.md",
@@ -252,7 +260,7 @@
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "a7bef27d780d620ad66d1acc45804110553cc9b7712cbc96e0897c0e519ce951"
+          "sha256": "9c733f685e227545c3e57e99ce2873ddcca2b32d905cba03021966c11d054bf6"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
@@ -300,7 +308,7 @@
         },
         {
           "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
-          "sha256": "d5f21007a6a6149137586a0e19b866e098ac4e3e7cf97d493792117037192c1c"
+          "sha256": "150842b2a9cc024cacb2ea903ad9136ff24e0cd498455a1ea080dbd38a4c12cc"
         },
         {
           "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
@@ -312,19 +320,19 @@
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "4dd0250db54a36ed8b3d5cf709ca0c48e9fbeab8f15b714f23fd06566374b02a"
+          "sha256": "948ae84044b0d2b9379676ee3ed1074da81188b7ed969a275fd99026afe9363b"
         },
         {
-          "path": "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb",
-          "sha256": "7877c54b6f5e526b1fe955103af9a325ae2541b4b0786859159c81d66026d6eb"
+          "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "fa066309f512df60c1cf8a7e1596353f39a4ddacc9c2081646da149d60f208d3"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "b0a4fa38da1ffb1d4f23dfa88aa462c0df497e520f63062eac85173e81791fa2"
+          "sha256": "e5c438e00761e468dd06117b196da430b557248024e4408622cf7e31bd9f9689"
         },
         {
-          "path": "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb",
-          "sha256": "96ed019c4c8e7f760984e4a81a1f52d75cff468e81c4503e27503dbdabe080d2"
+          "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "64b9af048b7c9dccc983e0a13a8bb743dd0b5ed49ad74a881508c3044a1dfede"
         },
         {
           "path": "tests/api/test_gravity_l2_upload.py",
@@ -374,11 +382,11 @@
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+          "sha256": "2ca931f8c7e5f5bb8028d28934cd55d9e6f06adafe8758a0f2fc27ffde95efe6"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "a7bef27d780d620ad66d1acc45804110553cc9b7712cbc96e0897c0e519ce951"
+          "sha256": "9c733f685e227545c3e57e99ce2873ddcca2b32d905cba03021966c11d054bf6"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
@@ -453,7 +461,7 @@
       "evidence": [
         {
           "path": "docs/design/features/processing-workbench/validation.md",
-          "sha256": "1d7581dab9a26c489a9dbd2764417f39a27ce9e2865da0c03c321f40cd07200b"
+          "sha256": "18db8436c325f7dc581a04183f0278e925dca153399585ca93ef4465303c9d8f"
         },
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
@@ -552,7 +560,7 @@
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
+          "sha256": "9a5fbd787689b5da271958c2200ed00f677c68069f6db8ec26490487baa79ab3"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
@@ -560,7 +568,7 @@
         },
         {
           "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
-          "sha256": "d5f21007a6a6149137586a0e19b866e098ac4e3e7cf97d493792117037192c1c"
+          "sha256": "150842b2a9cc024cacb2ea903ad9136ff24e0cd498455a1ea080dbd38a4c12cc"
         },
         {
           "path": "docs/validation/notebook-review-2026-10-27.md",
@@ -568,11 +576,11 @@
         },
         {
           "path": "docs/validation/source-content-coverage.json",
-          "sha256": "a390ccd7429a465c8ef9729d61091be0f46d8467c419bc23c7929696e799296f"
+          "sha256": "9eb3b9f8b0fefc10cabfef86643b73f2deb1ec8c8c534237a8e5de35b20ce00f"
         },
         {
           "path": "docs/validation/source-to-content-review.md",
-          "sha256": "632073861b7523207bc5469421bc892645bd86195efeebf5b470ff4255aa86d1"
+          "sha256": "3fc301b4800f57ad5e22c5a56b57d3055adbdfa7545c5d6d9335057d784c0311"
         },
         {
           "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
@@ -604,43 +612,43 @@
         },
         {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "8b039c2179925a6c63cbe644f340ab3851ef792025826b76299b064296748892"
+          "sha256": "26690a257970d5bae082385d8531f2df8391a0ec1c6f9cd93ef24c4668790141"
         },
         {
           "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
-          "sha256": "ca5d8378533d672ee617a5c2042618106f33b372131536955ad513ac3535379a"
+          "sha256": "631af52c70178df669f85fd328d9129fcda426f3302a685eb29d43e007fc0499"
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "4dd0250db54a36ed8b3d5cf709ca0c48e9fbeab8f15b714f23fd06566374b02a"
+          "sha256": "948ae84044b0d2b9379676ee3ed1074da81188b7ed969a275fd99026afe9363b"
         },
         {
-          "path": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
-          "sha256": "aca6cc03bff28fe65eb32d02477a9ab61478b9d25135826c118ccf20072e9fee"
+          "path": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
+          "sha256": "c8dcda9777e237e03c00357e6a0a96ac0ee141a7f761b169fc1b071dac69df2e"
         },
         {
-          "path": "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb",
-          "sha256": "7877c54b6f5e526b1fe955103af9a325ae2541b4b0786859159c81d66026d6eb"
+          "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "fa066309f512df60c1cf8a7e1596353f39a4ddacc9c2081646da149d60f208d3"
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "e0a84610a9600d516431505142b99e6be3f8c9521c4d33681903f43a4e49cc37"
+          "sha256": "5bece8b44e97f37b32d4809fb1503743ba53e14461bedbcdc40f3f1ce365b2aa"
         },
         {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
-          "sha256": "f3c63cc649f46e8c71aa519c614348dc46230cbd81d34f615ca2a031bc1b1ad6"
+          "sha256": "c4cb863c154acfe06d1df1bca48016d7fd2b731880e8b2d434b44c1c90f2e980"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "b0a4fa38da1ffb1d4f23dfa88aa462c0df497e520f63062eac85173e81791fa2"
+          "sha256": "e5c438e00761e468dd06117b196da430b557248024e4408622cf7e31bd9f9689"
         },
         {
-          "path": "notebooks/es/08-learning/04-nullspace-refinement-evidence.ipynb",
-          "sha256": "c81623da03d5d483262dc6546b6dac11f718df6baf9c529f4a911bd184d8298a"
+          "path": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
+          "sha256": "53a551a7704ba526390ae4349834f6bc671dca5520898d9d9699fd7c31d8980c"
         },
         {
-          "path": "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb",
-          "sha256": "96ed019c4c8e7f760984e4a81a1f52d75cff468e81c4503e27503dbdabe080d2"
+          "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "64b9af048b7c9dccc983e0a13a8bb743dd0b5ed49ad74a881508c3044a1dfede"
         },
         {
           "path": "scripts/check_docs_matrix.py",
@@ -690,7 +698,7 @@
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
-          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
+          "sha256": "9a5fbd787689b5da271958c2200ed00f677c68069f6db8ec26490487baa79ab3"
         },
         {
           "path": "docs/validation/m03-browser-resource-profile-2026-10-27.json",
@@ -735,11 +743,15 @@
       "id": "R-019",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
-      "note": "The local product-runtime check runs the same hash-verified ONNX model through CPUExecutionProvider and the app WASM path on all 23 QC-valid real STEAD display traces, retains the QC rejection, verifies source/model/waveform/reference hashes, and records max probability difference 5.0664e-6, exact P/S peak samples and matching picks; see docs/validation/m13-browser-population-parity-2026-10-27.json. This is same-checkpoint runtime parity on a preselected display subset, not independent model validation or population accuracy. The 2026-10-25 browser receipt is retained as historical evidence only because the E2E contract has since expanded. The expanded test passed on 2026-10-29 against a fresh production build and persistent local preview (1/1, runner exit 0); see docs/validation/m13-browser-attribution-e2e-2026-10-29.json. This validates the curated route and attribution behavior, not population accuracy. Full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
+      "note": "The current 2026-10-29 local product-runtime check runs the same hash-verified ONNX model through CPUExecutionProvider and the app WASM path on all 23 QC-valid real STEAD display traces, retains the QC rejection, verifies source/model/waveform/reference hashes, and records maximum probability difference 5.0664e-6, exact P/S peak samples and matching picks; see docs/validation/m13-browser-population-parity-2026-10-29.json. This is same-checkpoint runtime parity on a preselected display subset, not independent model validation or population accuracy. The 2026-10-25 and 2026-10-27 receipts remain historical. The expanded M13 route test also passed on 2026-10-29 against a fresh production build and persistent local preview (1/1, runner exit 0); see docs/validation/m13-browser-attribution-e2e-2026-10-29.json. This validates the curated route and attribution behavior, not population accuracy. Full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
       "evidence": [
         {
+          "path": "docs/validation/m13-browser-population-parity-2026-10-29.json",
+          "sha256": "0aca5945831dcf0643bb0c9630a0c7716706caa5f9423a13cdc259124db47070"
+        },
+        {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+          "sha256": "2ca931f8c7e5f5bb8028d28934cd55d9e6f06adafe8758a0f2fc27ffde95efe6"
         },
         {
           "path": "docs/validation/m13-browser-e2e-20261025.json",
@@ -755,7 +767,7 @@
         },
         {
           "path": "frontend/e2e/phase-picker-live.spec.ts",
-          "sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8"
+          "sha256": "ea66f0c624cb61d70df88092a8f884b5d056e212dc3aafbdee5106f1df209dd0"
         },
         {
           "path": "frontend/playwright.phase-picker.config.ts",
