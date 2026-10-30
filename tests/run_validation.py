@@ -100,6 +100,7 @@ def main() -> int:
     env["GEOPHYSICS_SCIENCE_TEST_PYTHON"] = str(pipeline_python)
     env["GEOPHYSICS_PROFILE_TEST_PYTHON"] = str(profile_python)
     env["M08_TEST_SCIENCE_PYTHON"] = str(m08_python)
+    env["CAOS_TEMP_ROOT"] = str(api_scratch.parent)
     if m11_path is not None:
         env["GEOPHYSICS_M11_TEST_DATABASE"] = str(m11_path)
     env["GEOPHYSICS_TEST_SCRATCH"] = str(api_scratch)
@@ -117,7 +118,8 @@ def main() -> int:
     env.update(thread_policy)
     command = [str(pipeline_python), "-m", "pytest", "tests", "-x", "--tb=short", "-q",
                f"--junitxml={junit}", f"--basetemp={scratch}",
-               "--ignore-glob=tests/data/test_waveform_*.py"]
+               "--ignore-glob=tests/data/test_waveform_*.py",
+               "--ignore=tests/adversarial/test_waveform_user_data_adversarial.py"]
     if args.keyword:
         command.extend(["-k", args.keyword])
     started = dt.datetime.now(dt.timezone.utc)
@@ -125,14 +127,19 @@ def main() -> int:
     m08_result = None
     if result.returncode == 0 and args.keyword is None:
         waveform_tests = sorted((ROOT / "tests" / "data").glob("test_waveform_*.py"))
+        waveform_tests.extend((ROOT / "tests" / "numerics" / "test_waveform_picks.py",
+                              ROOT / "tests" / "adversarial" / "test_waveform_user_data_adversarial.py"))
         waveform_scratch = api_scratch.parent / f"{api_scratch.name}-m08"
         waveform_scratch.mkdir()
+        waveform_env = env.copy()
+        waveform_env["CAOS_TEST_PYTHON"] = str(m08_python)
+        waveform_env["CAOS_TEST_BASETEMP"] = str(api_scratch.parent / f"{api_scratch.name}-m08-nested")
         waveform_junit = run_root / "m08-waveform.junit.xml"
         waveform_command = [str(m08_python), "-m", "pytest", *(str(path) for path in waveform_tests),
                             "-x", "--tb=short", "-q", f"--junitxml={waveform_junit}",
                             f"--basetemp={waveform_scratch}"]
         print("Running isolated M08 data-layer suite with the pinned waveform engine:", flush=True)
-        m08_result = subprocess.run(waveform_command, cwd=ROOT, env=env, check=False)
+        m08_result = subprocess.run(waveform_command, cwd=ROOT, env=waveform_env, check=False)
     try:
         import torch
         gpu = torch.cuda.get_device_name(0) if torch.cuda.is_available() else None
