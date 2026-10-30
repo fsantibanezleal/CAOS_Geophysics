@@ -1,6 +1,6 @@
 # Replacement release readiness, 2026-10-30
 
-Assessed product branch: `task/geophysics-client-first-completion`, pushed through `43f4f9b`. PR #151 remains a draft. The working tree also contains extensive uncommitted implementation; this assessment does not treat those files as part of the pushed source.
+Assessed product branch: `task/geophysics-client-first-completion`; PR #151 remains a draft. The working tree also contains extensive uncommitted implementation. The browser report records that dirty-tree state explicitly and does not treat it as release-commit acceptance.
 
 ## Checks that pass
 
@@ -11,8 +11,10 @@ Assessed product branch: `task/geophysics-client-first-completion`, pushed throu
 | Notebook structure | 60 English/Spanish notebooks are mirrored, ordered, annotated, and clean | A fresh-kernel replay executed all 60 without execution errors; three stale figures were refreshed and their focused replays passed. |
 | Shell adoption | Exact shell 0.19.9 pin, production build, six route tests, and 1,442-state browser gate pass | 157 captures, no waivers or failures; shared-shell integration only. |
 | Case and condition rendering | Full local browser sweep covers 20 case families × 6 experiment conditions; all 20 families expose six distinct metric views and no browser/layout failures; [full measured report](case-condition-viewport-2026-10-30.json) | 18 physical/joint families render six distinct visual states each; learned families render four distinct reconstructions and six distinct metric views. The report records that it was measured from a dirty working tree. This validates rendering/data selection, not scientific accuracy or a release commit. |
+| API suite | 1,196 tests, 0 failures/errors, 138 skips; exit 0 in 460.631s; [JUnit and run details](api-tests-2026-10-30.md) | Local API/service tests only; retained platform/host controls are skipped and no ML-VPS acceptance is implied. |
 | M02 locked controls | Retained Windows CPU matrix records 24/24 locked cases passing; its report validator passes 4/4 tests, and the current forward identity test passed | The only current gravity-L2 source delta is a corrected `FORWARD_SOURCE` hash matching the unchanged forward implementation; the matrix report remains historical evidence from 2026-10-29. |
 | VPS service unit controls | `test_service_release.py`, `test_service_runtime.py`, `test_service_bootstrap.py`, `test_isolated_api.py`, and `test_single_vps_service_adversarial.py` pass locally (exit 0) | Platform-specific Linux controls are skipped on this Windows host; no live host qualification or service activation occurred. |
+| API suite | 1,196 tests, 0 failures/errors, 138 skips; exit 0 in 460.631s; [JUnit and run details](api-tests-2026-10-30.md) | Local API/service tests only; retained platform/host controls are skipped and no ML-VPS acceptance is implied. |
 | Deployment-origin source guard | `check_single_origin.py`: pass | Source/build policy only; not live deployment acceptance. |
 | Local accounting/service controls | `test_protocol.py` and the single-VPS adversarial suite pass, with one skip | These do not establish native Windows/Linux containment or actual-host admission. |
 
