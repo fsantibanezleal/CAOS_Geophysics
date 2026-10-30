@@ -10,6 +10,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e:eligibility": "playwright test -c playwright.eligibility.config.ts",
+    "test:e2e:visual-matrix": "tsc --noEmit -p tsconfig.visual-matrix.json && playwright test -c playwright.visual-matrix.config.ts",
     "benchmark:m03": "node scripts/benchmark-magnetic-local.mjs",
     "gate": "node scripts/gate.mjs"
   },
