@@ -743,7 +743,7 @@
       "id": "R-019",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
-      "note": "The current 2026-10-29 local product-runtime check runs the same hash-verified ONNX model through CPUExecutionProvider and the app WASM path on all 23 QC-valid real STEAD display traces, retains the QC rejection, verifies source/model/waveform/reference hashes, and records maximum probability difference 5.0664e-6, exact P/S peak samples and matching picks; see docs/validation/m13-browser-population-parity-2026-10-29.json. This is same-checkpoint runtime parity on a preselected display subset, not independent model validation or population accuracy. The 2026-10-25 and 2026-10-27 receipts remain historical. The expanded M13 route test also passed on 2026-10-29 against a fresh production build and persistent local preview (1/1, runner exit 0); see docs/validation/m13-browser-attribution-e2e-2026-10-29.json. This validates the curated route and attribution behavior, not population accuracy. Full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
+      "note": "The retained 2026-10-29 CPU/WASM comparison remains same-checkpoint parity on a preselected display subset, not independent model validation or population accuracy. On 2026-10-30, the fresh product build and browser preview passed all four current phase-picker route/adversarial tests (0 failures, 0 skips); the exact dirty-worktree run is recorded at docs/validation/m13-browser-attribution-e2e-2026-10-30.json. This updates the bounded UI integration evidence only. The independent PyTorch-oracle parity and matched-input scientific evaluation are not established by that route suite; full app-route/owner acceptance, VPS release and broader product gates remain unresolved.",
       "evidence": [
         {
           "path": "docs/validation/m13-browser-population-parity-2026-10-29.json",
@@ -772,6 +772,10 @@
         {
           "path": "frontend/playwright.phase-picker.config.ts",
           "sha256": "24320f8ba6a8a208e465c6bc68059c5f333a0fbdb82d32f33a8fad6a360910b9"
+        },
+        {
+          "path": "docs/validation/m13-browser-attribution-e2e-2026-10-30.json",
+          "sha256": "2b3366ed80b6272435da1d489b301c9c37dc1d11a2590cde3cb7c4b9d5c2e00a"
         }
       ],
       "receipts": []
