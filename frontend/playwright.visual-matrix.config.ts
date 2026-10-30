@@ -24,7 +24,8 @@ for (let parent = outputPath; ; parent = dirname(parent)) {
 export default defineConfig({
   testDir: "./e2e",
   testMatch: "visual-matrix.spec.ts",
-  workers: 1,
+  fullyParallel: true,
+  workers: 4,
   timeout: 120_000,
   expect: { timeout: 20_000 },
   outputDir: resolve(outputPath, "playwright-results"),
