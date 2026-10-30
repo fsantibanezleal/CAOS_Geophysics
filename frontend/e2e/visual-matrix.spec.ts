@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
 const routes = [
-  { id: "app", path: "/", en: "App", es: "App" },
+  { id: "app", path: "/app", en: "App", es: "App" },
   { id: "introduction", path: "/introduction", en: "Introduction", es: "Introducción" },
   { id: "methodology", path: "/methodology", en: "Methodology", es: "Metodología" },
   { id: "implementation", path: "/implementation", en: "Implementation", es: "Implementación" },
@@ -102,8 +102,8 @@ export async function fit_and_pointer_navigation(page: Page, info: TestInfo, mod
   page.on("console", message => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
-  await page.goto("/", { waitUntil: "domcontentloaded" });
-  await fit(page, mode, "/");
+  await page.goto("/app", { waitUntil: "domcontentloaded" });
+  await fit(page, mode, "/app");
 
   for (const route of routes) {
     const label = route[mode.lang];
