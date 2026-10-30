@@ -121,7 +121,15 @@ checks and delegates alpha selection, calibration metrics, all four held-out
 cohorts, and the final result to the original verifier. Its result is a
 reproducibility check for this bounded synthetic experiment, not M12 or
 product scientific acceptance.
-The v1.1 runner passed an infinite threshold to the scoring function, so its
-stored zero exceedance counts are not a threshold evaluation and must not be
-interpreted as one. The v1.1 scientific result depends on the paired aggregate
-RMSE ratios only.
+The v1.1 runner passed an infinite threshold to its scoring function, so the
+original saved exceedance flags were invalid. A separate reconciliation now
+recomputes those flags from the immutable per-record errors using a calibration-
+only 95th-percentile threshold of 1.0649004873 ms. It reports 7/160
+ID flags (95.625% sample specificity), 160/160 joint-OOD
+flags (100% sample sensitivity), 80/80 family-only flags,
+and 3/80 acquisition-only flags. These
+are descriptive rates on fixed synthetic cohorts, not field-calibrated
+probabilities. The original v1.1 receipt and RMSE metrics are unchanged; M12
+scientific acceptance remains false. See
+[the reconciliation record](../../../validation/m12-nullspace-threshold-reconciliation-2026-10-30.md)
+for source hashes and reproduction.
