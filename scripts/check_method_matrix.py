@@ -15,8 +15,8 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-METHOD = re.compile(r"^\|\s*(M\d{2})\s*\|\s*(.*?)\s*\|\s*([^|]+?)\s*\|\s*$")
-GATE = re.compile(r"^(?P<path>(?:scripts|tests|frontend|docs)/[\w./-]+)(?:::(?P<symbol>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*))?$")
+METHOD_ID = re.compile(r"^M(?:-(\d{1,2})|(\d{2}))$")
+GATE = re.compile(r"^(?P<path>(?:scripts|tests|frontend|docs|notebooks)/[\w./-]+)(?:::(?P<symbol>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*))?$")
 EXPECTED_METHODS = tuple(f"M{i:02}" for i in range(1, 14))
 
 
@@ -49,19 +49,30 @@ def _python_symbols(path: Path) -> set[str]:
 
 
 def audit(sdd_path: Path = ROOT / "docs/design/SDD.md", root: Path = ROOT) -> list[MethodRow]:
-    """Read section 4's method table and check each named Python gate."""
+    """Read the method ladder table and check each named source/notebook gate."""
     text = sdd_path.read_text(encoding="utf-8")
-    section_match = re.search(r"(?ms)^##\s+4\.\s+Method ladder and acceptance oracle\s*$\n(.*?)(?=^##\s+\d+\.|\Z)", text)
+    section_match = re.search(
+        r"(?ms)^##\s+(?:\d+\.\s+)?Method ladder(?:\s+and acceptance oracle)?\s*$\n(.*?)(?=^##\s+|\Z)",
+        text,
+    )
     if not section_match:
         raise ValueError("SDD section 4 method ladder not found")
 
     rows: list[MethodRow] = []
     for line in section_match.group(1).splitlines():
-        match = METHOD.fullmatch(line)
+        if not line.startswith("|") or not line.endswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        match = METHOD_ID.fullmatch(cells[0])
         if not match:
             continue
-        method_id, workflow, gate = match.groups()
-        components = [component.strip() for component in gate.split(" and ")]
+        number = int(match.group(1) or match.group(2))
+        method_id = f"M{number:02}"
+        workflow = " | ".join(cells[1:-1])
+        gate = cells[-1].strip().strip("`")
+        components = [component.strip().strip("`") for component in gate.split(" and ")]
         issues = []
         for component in components:
             parsed = GATE.fullmatch(component)

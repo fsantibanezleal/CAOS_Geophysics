@@ -36,7 +36,7 @@ class TestMethodMatrix(unittest.TestCase):
             (root / "frontend/e2e").mkdir(parents=True)
             (root / "tests/numerics/gates.py").write_text("def gate():\n    return None\n", encoding="utf-8")
             (root / "frontend/e2e/gate.spec.ts").write_text("// fixture gate file\n", encoding="utf-8")
-            lines = ["## 4. Method ladder and acceptance oracle", "",
+            lines = ["## Method ladder", "",
                      "| ID | Scientific workflow and release acceptance | Named gate |",
                      "| --- | --- | --- |"]
             lines.extend(f"| M{i:02} | workflow {i} | tests/numerics/gates.py::gate |" for i in range(1, 13))
