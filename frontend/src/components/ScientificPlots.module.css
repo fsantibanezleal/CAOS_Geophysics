@@ -3,6 +3,24 @@
   min-width: 0;
 }
 
+/* Narrow MT columns cannot fit a long provenance badge beside the plot title.
+   Let the shell caption use a second line instead of widening the grid track. */
+.plotShell :global(.caos-plot-head) {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.plotShell :global(.caos-plot-title),
+.plotShell :global(.caos-plot-actions),
+.plotShell :global(.caos-badges) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plotShell :global(.caos-plot-actions),
+.plotShell :global(.caos-badges) {
+  flex-wrap: wrap;
+}
 /* PlotCard's fill mode needs a definite block size when it is used inside a
    content-sized scientific panel. Without that height chain its flex body can
    collapse while the chart still mounts, leaving a canvas only a few pixels
