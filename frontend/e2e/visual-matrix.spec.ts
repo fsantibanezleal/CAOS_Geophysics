@@ -102,6 +102,10 @@ export async function fit_and_pointer_navigation(page: Page, info: TestInfo, mod
   page.on("console", message => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: /Geophysical inverse problems|Problemas inversos geofísicos/i }))
+    .toBeVisible();
+  await fit(page, mode, "/");
   await page.goto("/app", { waitUntil: "domcontentloaded" });
   await fit(page, mode, "/app");
 
