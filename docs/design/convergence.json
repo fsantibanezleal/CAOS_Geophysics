@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "9e93bee153e88511623dd441948dc04c74991304af0589e1afea4e7ae406b93d",
-  "assessed_revision": "ebb584ac44dc01d11fb14f952673103844500f96",
-  "assessed_at": "2026-10-30T12:23:13.839424Z",
+  "assessed_revision": "ad221c52a2e64a842ee77299b5c2f300c8d9296f",
+  "assessed_at": "2026-10-30T12:33:43.686504Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -539,7 +539,7 @@
       "id": "R-015",
       "verdict": "pass",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "The declared local visual gate passed on a clean checkout and freshly built dist at source commit ebb584ac44dc01d11fb14f952673103844500f96: all 16 EN/ES × light/dark × desktop/phone × normal/reduced-motion combinations across six product routes and the five-tab architecture dialog. All 112 route/dialog captures were generated and hashed; zero failures, skips or flaky retries, with loading completion and dialog/tab bounds checked in both axes. This accepts the declared local visual requirement only; broader owner/product acceptance, scientific correctness and VPS release acceptance remain separate.",
+      "note": "The declared local visual gate passed on a clean checkout and freshly built dist at source commit ad221c52a2e64a842ee77299b5c2f300c8d9296f: all 16 EN/ES × light/dark × desktop/phone × normal/reduced-motion combinations checked both the `/` Introduction alias and App at `/app`, traversed all six product routes and the five-tab architecture dialog. All 112 route/dialog captures were generated and hashed; zero failures, skips or flaky retries, with scientific-view loading and dialog/tab bounds checked. This accepts the declared local visual requirement only; broader owner/product acceptance, scientific correctness and VPS release acceptance remain separate.",
       "evidence": [
         {
           "path": "docs/validation/shell-gate-20261025.json",
@@ -551,13 +551,13 @@
         },
         {
           "path": "docs/validation/r015-visual-matrix-2026-10-30.json",
-          "sha256": "16971057b378d864e488c597b4dbbccc90c3d050a5c8d7cfe1e012955225866c"
+          "sha256": "ba8d7b6dd1233e9936fc09d145e884d4f1a5ba9ffc699879ef127f81c8067665"
         }
       ],
       "receipts": [
         {
           "path": "docs/validation/r015-visual-matrix-2026-10-30-receipt.json",
-          "sha256": "b4338e7cd9ea78285472e4afce649b78bf4d7952a5db39fc888f62de4852ab3b"
+          "sha256": "a4b0b85628b7c7f9558ba5bfd9b54dfc9f75d41029aaf7c673fd622459e2f7fa"
         }
       ]
     },
