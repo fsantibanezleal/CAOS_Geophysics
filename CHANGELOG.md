@@ -4,6 +4,7 @@ All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
 ## Unreleased replacement
 
+- Adopts CAOS App Shell 0.19.9, including the ordinary CaseWorkbench G6 instrument-marker fix, and removes the temporary PlotCard caption-wrapping override after the measured product gate passed 1,442 states. Scientific acceptance and VPS cutover remain open.
 - Adds a source-bound requirement convergence ledger with strict coverage, evidence hashes, executable-gate checks and a separate release-refusal mode. Records the current incomplete M01-M13 platform state without changing the legacy release, scientific artifacts or public deployment.
 
 ## [0.04.001] - 2026-09-26
