@@ -41,6 +41,7 @@ async function largeAdverseFiles() {
   const doc = JSON.parse(new TextDecoder().decode(await manifestFile.read()));
   const candidate = doc.payload.candidates[0], count = 20, n = candidate.identity.parameter_count;
   candidate.result.iterations = count - 1;
+  if (candidate.result.failed_trial) candidate.result.failed_trial.iteration = count - 1;
   for (const [key, d] of Object.entries(doc.arrays) as [string, { dtype: string; shape: number[]; file_bytes: number; file_sha256: string; data_sha256: string }][]) {
     if (!key.startsWith("c00_") || key === "c00_q") continue;
     const shape = key.endsWith("models_q") || key.endsWith("physical_trace") ? [count, n] : key.endsWith("terms_trace") ? [count, 5]
@@ -57,7 +58,7 @@ async function largeAdverseFiles() {
   buffers.set(manifestFile.path, encode(doc));
   const receiptFile = files.find(f => f.path === "workflow.json")!;
   const receipt = JSON.parse(new TextDecoder().decode(await receiptFile.read()));
-  receipt.private_export_bytes_before_receipt = files.reduce((sum, f) => sum + (f.path === "workflow.json" ? 0 : buffers.get(f.path)?.length ?? f.size), 0);
+  receipt.private_export_bytes_before_receipt = files.reduce((sum, f) => sum + (f.path === "workflow.json" || f.path === "failure.json" || f.path.startsWith("aborted/") || f.path.startsWith("instrument/") ? 0 : buffers.get(f.path)?.length ?? f.size), 0);
   buffers.set(receiptFile.path, encode(receipt));
   return files.map(f => { const bytes = buffers.get(f.path); return bytes ? { path: f.path, size: bytes.length, read: async () => bytes } : f; });
 }

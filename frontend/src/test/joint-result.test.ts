@@ -44,10 +44,11 @@ describe("native local joint output, not a browser inverse", () => {
     // The browser instrument exports one terminal snapshot per candidate;
     // intermediate solver history remains in the full offline output trace.
     const state = jointInstrumentFrame(inspection, "c00", 0); expect(state.candidate!.status).toBe(inspection.candidates[0].status);
-    expect(state.responses.gravity!.sealed.predicted).toEqual(jointResponse(inspection, "gravity", "sealed").predicted);
     const sidecar = jointFrameSidecar(inspection, "c25", 0); expect(sidecar.coupling).not.toBeNull(); expect(sidecar.responses).toHaveProperty("magnetic.sealed.metrics"); expect(sidecar.scientific_acceptance_verified).toBe(false);
     const baseline = jointInstrumentFrame(inspection, "baseline", 0); expect(baseline.entry.kind).toBe("independently_optimized_pair"); expect(baseline.entry.weights).toHaveProperty("coupling", 0);
-    const selected = jointInstrumentFrame(inspection, "selected", 0); expect(selected.responses.magnetic!.sealed.predicted).toEqual(jointResponse(inspection, "magnetic", "sealed").predicted);
+    const selected = jointInstrumentFrame(inspection, "selected", 0);
+    expect(selected.responses.gravity!.sealed.predicted).toEqual(jointResponse(inspection, "gravity", "sealed").predicted);
+    expect(selected.responses.magnetic!.sealed.predicted).toEqual(jointResponse(inspection, "magnetic", "sealed").predicted);
     await expect(importJointOutput(actualJointFiles(instrument!).map(f => f.path === "instrument/c25_face_contribution.npy" ? { ...f, read: async () => { const b = await f.read(); b[b.length - 1] ^= 1; return b; } } : f))).rejects.toThrow("digest mismatch");
   });
   it("does not invent negative susceptibility or constant legend values", () => {
