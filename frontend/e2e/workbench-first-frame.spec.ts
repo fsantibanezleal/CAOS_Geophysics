@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 test("lazy 3D workbench renders before the scientific acceptance gate measures it", async ({ page }) => {
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.goto("/");
+  await page.goto("/app");
 
   const scene = page.locator(".earth-scene[role=img]");
   await expect(scene).toBeVisible({ timeout: 30_000 });
@@ -23,7 +23,7 @@ test("nested signed property contours remain legible at desktop and mobile sizes
     { name: "mobile", width: 390, height: 844 },
   ]) {
     await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await page.goto("/");
+    await page.goto("/app");
     const canvas = scene.locator("canvas");
     await expect(canvas).toBeVisible({ timeout: 30_000 });
     await expect.poll(() => canvas.evaluate((element) => element.width)).toBeGreaterThan(100);
@@ -46,7 +46,7 @@ test("methodology links to the bilingual M01-M13 repository wiki", async ({ page
 });
 
 test("survey markers follow recorded station spacing and distinct cases render distinct fields", async ({ page }, testInfo) => {
-  await page.goto("/");
+  await page.goto("/app");
   const scene = page.locator(".earth-scene");
   const canvas = scene.locator("canvas");
   await expect(canvas).toBeVisible({ timeout: 30_000 });
@@ -64,4 +64,19 @@ test("survey markers follow recorded station spacing and distinct cases render d
   const magneticImage = await canvas.screenshot({ path: testInfo.outputPath("magnetic-dyke-canvas.png") });
   await page.locator(".earth-view").screenshot({ path: testInfo.outputPath("magnetic-dyke-workbench.png") });
   expect(createHash("sha256").update(magneticImage).digest("hex")).not.toBe(gravityDigest);
+});
+
+test("browser decodes the compressed FWI artifact and renders its wavefield", async ({ page }) => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto("/app");
+  await expect(page.locator(".earth-scene canvas")).toBeVisible({ timeout: 30_000 });
+  await page.locator('select[aria-label="Geological case"]').selectOption("FWI_LAYERED");
+  const wavefield = page.locator(".seismic-view canvas").first();
+  await expect(wavefield).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/invalid gzip data/i)).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Experiment", exact: true }).selectOption("noise");
+  await expect(wavefield).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/invalid gzip data|HTTP 404/i)).toHaveCount(0);
+  expect(pageErrors).toEqual([]);
 });

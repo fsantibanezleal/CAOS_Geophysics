@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const base = process.env.QA_BASE ?? 'http://127.0.0.1:5179';
+const base = (process.env.QA_BASE ?? 'http://127.0.0.1:5179').replace(/\/+$/, '');
 const output = resolve(process.env.QA_OUTPUT ?? '../data/experiments/browser-viewport');
 mkdirSync(output, { recursive: true });
 const launchBrowser = () => chromium.launch({ headless: true, args: ['--use-angle=swiftshader'] });
@@ -102,7 +102,7 @@ for (const [width, height] of layoutViewports) {
     const browser = await launchBrowser();
     const { page, context } = await createPage(browser, width, height, theme);
     page.setDefaultNavigationTimeout(60000);
-    await page.goto(base, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${base}/app`, { waitUntil: 'domcontentloaded' });
     await page.locator('.earth-scene canvas').waitFor();
     await layout(page, 'app / model', width, height, theme);
     for (const route of ['introduction', 'methodology', 'implementation', 'experiments', 'benchmark']) {
@@ -123,7 +123,7 @@ for (const [width, height] of [[390, 844], [1600, 900]]) {
   const transfers = [];
   page.on('response', (response) => { if (response.url().startsWith(base)) transfers.push(response); });
   let start = performance.now();
-  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/app`, { waitUntil: 'domcontentloaded' });
   await page.locator('.earth-scene canvas').waitFor();
   await paint(page);
   const defaultMs = Math.round(performance.now() - start);
@@ -160,13 +160,13 @@ for (const id of families) {
   page.setDefaultNavigationTimeout(60000);
   const conditionResponses = new Map();
   page.on('response', (response) => {
-    const match = response.url().match(/\/data\/v2\/([A-Z_]+)\/(reference|contrast|noise|acquisition|coverage|regularization)\.json$/);
+    const match = response.url().match(/\/data\/v2\/([A-Z_]+)\/(reference|contrast|noise|acquisition|coverage|regularization)\.json(?:\.gz)?$/);
     if (match) conditionResponses.set(`${match[1]}/${match[2]}`, response);
   });
-  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${base}/app`, { waitUntil: 'domcontentloaded' });
   await page.locator('.earth-scene canvas').waitFor();
   if (await page.getByRole('combobox', { name: 'Geological case', exact: true }).inputValue() !== id) await Promise.all([
-    page.waitForResponse((response) => response.url().endsWith(`/data/v2/${id}/reference.json`)),
+    page.waitForResponse((response) => response.url().endsWith(`/data/v2/${id}/reference.json`) || response.url().endsWith(`/data/v2/${id}/reference.json.gz`)),
     page.getByRole('combobox', { name: 'Geological case', exact: true }).selectOption(id),
   ]);
   const visualHashes = new Set();
@@ -182,7 +182,7 @@ for (const id of families) {
       await experimentControl.waitFor({ state: 'visible' });
     }
     if (variant !== 'reference') await Promise.all([
-      page.waitForResponse((response) => response.url().endsWith(`/data/v2/${id}/${variant}.json`)),
+      page.waitForResponse((response) => response.url().endsWith(`/data/v2/${id}/${variant}.json`) || response.url().endsWith(`/data/v2/${id}/${variant}.json.gz`)),
       experimentControl.selectOption(variant),
     ]);
     await page.getByText('Loading numerical result…').waitFor({ state: 'hidden' });
