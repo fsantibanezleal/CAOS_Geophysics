@@ -1,0 +1,19 @@
+{
+  "schema": "geophysics.caos-shell-gate/v1",
+  "measured_at": "2026-10-30",
+  "tested_commit": "ee9b1575ec3744ab6d0502bc659ede96fbf8edbc",
+  "workspace_dirty": true,
+  "workspace_changed_paths": 324,
+  "template": "CAOS_PRODUCT_TEMPLATE 0.13.001",
+  "shell": "@fasl-work/caos-app-shell 0.19.9",
+  "gate_report_sha256": "8b62e419b5cee7d0f29f131da35e6c9fc4ab30f199ea876c8721a161a34eeff7",
+  "built_index_sha256": "379e77f953f8616d138f1e339b0e7be48f920d68805f10ec56f8e53fe3bde4b7",
+  "states": 1442,
+  "captures": 157,
+  "waivers": 0,
+  "failures": 0,
+  "result": "passed",
+  "capture_directory": "E:/_Temp/geophysics-shell-gate-20261030-current/shots",
+  "capture_count": 157,
+  "scope": "Full installed CAOS shell product gate after a fresh production build: five viewport sizes, light/dark themes, EN/ES, routes, workbench cases, focus and interaction states. Local dirty-worktree integration evidence; not exact-commit acceptance, owner visual acceptance, scientific acceptance, or deployment acceptance."
+}
