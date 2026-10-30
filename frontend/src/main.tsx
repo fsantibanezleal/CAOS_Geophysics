@@ -1,6 +1,6 @@
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
 import {
   AppShell,
   applyTheme,
@@ -63,7 +63,7 @@ const config: ShellConfig = {
     es: "Licencia Apache para código · licencia CC BY para contenido",
   },
   architecture,
-  fixedRoutes: ["/"],
+  fixedRoutes: ["/app"],
   footer: {
     attribution: {
       en: "Developed by Felipe Santibáñez-Leal",
@@ -86,7 +86,8 @@ createRoot(document.getElementById("root")!).render(
               {PRODUCT_ROUTES.map(({ id, path }) => (
                 <Route key={id} path={path} element={pageElements[id as keyof typeof pageElements]} />
               ))}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/" element={<Intro />} />
+              <Route path="*" element={<Intro />} />
             </Routes>
           </Suspense>
         </AppShell>

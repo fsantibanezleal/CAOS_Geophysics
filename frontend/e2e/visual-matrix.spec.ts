@@ -21,7 +21,7 @@ type MatrixMode = {
 async function pointerClick(page: Page, locator: Locator) {
   await locator.evaluate(node => node.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" }));
   const nav = await locator.evaluate(node => {
-    const element = node.closest<HTMLElement>(".main-nav");
+    const element = node.closest<HTMLElement>("nav");
     if (!element) return null;
     const box = element.getBoundingClientRect();
     const target = node.getBoundingClientRect();
@@ -31,7 +31,7 @@ async function pointerClick(page: Page, locator: Locator) {
   if (nav && (nav.targetLeft < nav.left - 1 || nav.targetRight > nav.right + 1)) {
     for (let attempt = 0; attempt < 5; attempt++) {
       const current = await locator.evaluate(node => {
-        const element = node.closest<HTMLElement>(".main-nav")!;
+        const element = node.closest<HTMLElement>("nav")!;
         const box = element.getBoundingClientRect();
         const target = node.getBoundingClientRect();
         return { left: box.left, right: box.right, top: box.top, bottom: box.bottom,
@@ -43,7 +43,7 @@ async function pointerClick(page: Page, locator: Locator) {
       await page.waitForTimeout(100);
     }
     const final = await locator.evaluate(node => {
-      const element = node.closest<HTMLElement>(".main-nav")!;
+      const element = node.closest<HTMLElement>("nav")!;
       const box = element.getBoundingClientRect();
       const target = node.getBoundingClientRect();
       return { left: box.left, right: box.right, targetLeft: target.left, targetRight: target.right };
@@ -107,7 +107,8 @@ export async function fit_and_pointer_navigation(page: Page, info: TestInfo, mod
 
   for (const route of routes) {
     const label = route[mode.lang];
-    const link = page.locator(`.main-nav a[href$="${route.path}"]`).first();
+    const navigation = page.getByRole("navigation", { name: "Inverse Earth Studio" });
+    const link = navigation.getByRole("link", { name: label, exact: true });
     await expect(link).toHaveAccessibleName(label);
     await pointerClick(page, link);
     await expect.poll(() => new URL(page.url()).pathname).toBe(route.path);
