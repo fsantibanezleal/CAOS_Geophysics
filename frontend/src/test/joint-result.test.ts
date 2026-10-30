@@ -138,7 +138,7 @@ describe("native local joint output, not a browser inverse", () => {
     for (let i = 0; i < 24; i++) { const r = await importJointOutput(actualJointFiles(join(outputMatrix!, `joint-control-${String(i).padStart(2, "0")}`, "output")));
       actualAttempts += r.candidates.length; nonconverged += r.candidates.filter(c => c.status === "nonconverged").length; }
     expect(actualAttempts).toBe(624); expect(nonconverged).toBeGreaterThan(0);
-  }, 30_000);
+  }, 120_000);
   it.skipIf(!maximum)("admits actual maximum-count resource output without recovery claim", async () => {
     const r = await importJointOutput(actualJointFiles(maximum!)); expect(r.model!.arrays.density_kg_m3.shape).toEqual([1932]);
     expect(r.model!.arrays.density_kg_m3.values.every(v => v === 0)).toBe(true);

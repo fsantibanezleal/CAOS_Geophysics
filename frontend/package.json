@@ -1,7 +1,7 @@
 {
   "name": "inverse-earth-studio-web",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.4.3",
   "type": "module",
   "scripts": {
     "dev": "node copy-data.mjs && vite --host 127.0.0.1",
@@ -14,7 +14,7 @@
     "gate": "node scripts/gate.mjs"
   },
   "dependencies": {
-    "@fasl-work/caos-app-shell": "0.19.1",
+    "@fasl-work/caos-app-shell": "0.19.9",
     "fflate": "0.8.3",
     "katex": "^0.19.1",
     "lucide-react": "^0.577.0",

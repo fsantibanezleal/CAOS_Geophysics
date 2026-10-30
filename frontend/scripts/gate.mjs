@@ -1,18 +1,17 @@
-// Product-owned CAOS shell gate, based on the exact shell version pinned by this product.
-// See scripts/vendor/caos-app-shell-gate-0.19.1/UPSTREAM.md for provenance and the product-specific adaptations.
+// CAOS shell gate entry point. Keep its source and measured behavior on the exact installed shell version.
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runGate } from './vendor/caos-app-shell-gate-0.19.1/gate/run.mjs';
+import { runGate } from '@fasl-work/caos-app-shell/gate';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
 const frontend = join(root, 'frontend');
 const product = JSON.parse(readFileSync(join(root, 'product.json'), 'utf8'));
 const routes = JSON.parse(readFileSync(join(frontend, 'src', 'lib', 'routes.json'), 'utf8'));
-const appRoute = product.workbench_route ?? '/';
-const expectedShellVersion = '0.19.1';
+const appRoute = product.workbench_route ?? '/app';
+const expectedShellVersion = '0.19.9';
 const require = createRequire(import.meta.url);
 const shellPackagePath = require.resolve('@fasl-work/caos-app-shell/package.json');
 const shellPackage = JSON.parse(readFileSync(shellPackagePath, 'utf8'));
