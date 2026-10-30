@@ -1,471 +1,471 @@
 {
   "schema": "geophysics.visual-matrix-run/v1",
   "requirement": "R-015",
-  "source_revision": "bbb71fd9a710bddeb8ea9b20fc28077e8a3c91d2",
+  "source_revision": "ebb584ac44dc01d11fb14f952673103844500f96",
   "gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation",
-  "gate_sha256": "cd803a717f88c8623000896c89b1aff5aa65452d37c0a49054cca1711e129488",
+  "gate_sha256": "ac50e2f0ce000ff17024f9190a7b9a3c6e3aa1082f9676aa8a32489d0ab134c9",
   "build_command": "npm run build",
-  "build_source_revision": "bbb71fd9a710bddeb8ea9b20fc28077e8a3c91d2",
+  "build_source_revision": "ebb584ac44dc01d11fb14f952673103844500f96",
   "command": [
     "npm run test:e2e:visual-matrix"
   ],
-  "measured_at": "2026-10-30T11:51:37.165Z",
-  "duration_ms": 83998.192,
+  "measured_at": "2026-10-30T12:23:13.839424Z",
+  "duration_ms": 84689.342,
   "expected": 16,
   "passed": 16,
   "skipped": 0,
   "unexpected": 0,
   "flaky": 0,
   "capture_count": 112,
-  "playwright_json_sha256": "527b47ea010ba5db3b11a310218c4354b054e0a20bca6c9794258fae3a70df62",
-  "capture_artifact_directory": "E:\\_Temp\\geophysics-visual-matrix-20261030-exact-bbb71fd",
+  "playwright_json_sha256": "ab013045da5d94e30905b4c507ff4c6321d1082ce8de68ae082417e21035f7f3",
+  "capture_artifact_directory": "E:\\_Temp\\geophysics-r015-ebb584a-20261030",
   "capture_sha256": [
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-app.png",
-      "sha256": "62bdc10682e0811555111357a16aedc2d54bafb01d505f51e4f8407add582886"
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-app.png",
+      "sha256": "e6d8c0af8a29332592d21f851c1413198f1eda804a43ed0960cd62e98f0c74af"
     },
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-architecture.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-architecture.png",
       "sha256": "ea39196ddd6415d6d2b05d759858e550c2048820c17923d38d22b43aa2ce06bf"
     },
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-benchmark.png",
       "sha256": "d7da08063e3431ee2f26f6da30c5f0f209298596c7c5686027d5f1def2fb4163"
     },
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-experiments.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-experiments.png",
       "sha256": "5b39f4e2e02956f6dca23aed09519cf8a750416ec5a46461c56120823e25bba2"
     },
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-implementation.png",
       "sha256": "549bcb78f1e5e9ac139e12c12ccf18645af1829f37a634fce56f5fd1d1df1bab"
     },
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-introduction.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-introduction.png",
       "sha256": "df9593e0a8440cd2b27ffdb1a4ed2bc83bb9f091c91a28f5ed95549492b50a71"
     },
     {
-      "file": "visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-025b6-ion-es-light-desktop-reduce/es-light-desktop-reduce-methodology.png",
       "sha256": "c5fd389f693e8cc64f9f79a97dcff76b2c9eda924001e195ae61acf2ee79d3b8"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-app.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-app.png",
       "sha256": "30cbead72b1fa98ba93ba52a3f5b366442c5cdb35c6604b9872cab638130def7"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-architecture.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-architecture.png",
       "sha256": "4709bde56bad1c6685015c018f5af29af01e7028378efe57dea433a60ecc6fd6"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-benchmark.png",
       "sha256": "19a0036911f73b15ae50cc219c5c8a6af1b258a56df8c03fb2ca9e4ae94e84ce"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-experiments.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-experiments.png",
       "sha256": "456f4f911acac4ac9249da16c378415f31d1aa18a19571a4894554355c3ffec0"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-implementation.png",
       "sha256": "cbd208c39606f1eb0d09de942194d3d49aee263970ec2685fdc20d1c17f748c0"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-introduction.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-introduction.png",
       "sha256": "3a72a35ed8dab7f4fac0801fcc57059b02641a8ac4d3230a2d732b83dbaf1c3f"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0b3bc-n-light-phone-no-preference/en-light-phone-no-preference-methodology.png",
       "sha256": "894dee69a4f5838ac7d6939f2aeb575beeb2eaf060c2737b4709e433b0f765a1"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-app.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-app.png",
       "sha256": "e386be5fe9e3a9305fd56ca27b3396cb8cfff861a6d7ad6a8d5f511e875041d3"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-architecture.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-architecture.png",
       "sha256": "c812e81793afcbc87a55bbf19fd4e0deac62943706b4ffb82d1bd33eb7c47d5a"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-benchmark.png",
       "sha256": "47b92698ce2f039edcc88183f06ae7eedb098a57dde3fa9b05eb74ff1d0c8282"
     },
     {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-experiments.png",
-      "sha256": "ee4fd72d2a7b5062290ceb4e3b1437f5d80b3ddb9c167b6870a7e334fd2ed7bf"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-implementation.png",
-      "sha256": "ebf798c5cb04255558ad4c90add72357ee978a5086f813caaa197728a610d4cc"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-introduction.png",
-      "sha256": "63762cb07fa0472fe64263c9350d9133e0f776acc15513386017337a5b3c60c4"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-methodology.png",
-      "sha256": "a606211c9c6e32d504775f4e57c8b1a6ed97fa317257ff622da07c7d0ae9d21f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-app.png",
-      "sha256": "506f79c9e6f2e2145f81e68f677a2ebbbd48279c37294c5a8875a71f07b012a7"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-architecture.png",
-      "sha256": "dc6b8a23fb1005febb7c1f0c59275b4b8486159ce09e7dea95a20869b2c0af55"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-benchmark.png",
-      "sha256": "b10b92cbc86e19f295432e2b088a40fa7ffbb30da2837e84915afe7d8fa5aa1f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-experiments.png",
-      "sha256": "2a60f13de438cb61f7e77d6908de9b90b43a841e75ad65ac1755c87157651273"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-implementation.png",
-      "sha256": "cdb75afa76ec30c26be8411930a9d4f701d89828fbbd1d6ee0ff56e304e9ab5a"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-introduction.png",
-      "sha256": "56fa16057264beb3ca34b0d4052b8ea058e388e730faacf49623ee24763f019f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-methodology.png",
-      "sha256": "d26b3db50f41ab87acc1e0c219a794612c6c70d4480bbd1ab820591c725c62ec"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-app.png",
-      "sha256": "29e2bc24a28cd9f35436ca0fe44abd1069b9816acf62c0dcbf7414137c3938b3"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-architecture.png",
-      "sha256": "e72d13ce28fd0d20eb524d83b88ca453ccd4fea9e8a84b0b272b0780804c444a"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-benchmark.png",
-      "sha256": "928ca8f743c7932ea77e48e69339a968a823574cf2130706676084d6e5ae1a53"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-experiments.png",
-      "sha256": "9dcd1c4c52b2db1a7464ab03d5716949ff4ce244e4d89bafedeac298bd6bc23c"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-implementation.png",
-      "sha256": "e6a27f55642c8d7866073f7e178860a2c9adaa57cfbb3b9e211ca6c09c3a0f7f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-introduction.png",
-      "sha256": "7b97cfb1c57e39e75df42714a1576a04f7454438d5403e92aff3bbbed4ab6fe3"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-methodology.png",
-      "sha256": "1fbb56847d7d7ee575e06ec754d50e334408dcd17fecdc04c60f2497f5e80ab5"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-app.png",
-      "sha256": "c4ab1f247413f5d5a40043a15c438c60f8d09200fea359b5df560c67f2fd61cc"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-architecture.png",
-      "sha256": "cdc6bf5283a6788c3e476adcef86a99b26c7589ee9a373711d5dd6d7ee734976"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-benchmark.png",
-      "sha256": "130aa0912f4485ff04acd5d2249e55d422bc120ed4368cedc2e53f8ad5016cb6"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-experiments.png",
-      "sha256": "bb3e208c6ea951227c6b5e38f2c838779c391d665297a3a7d678da1bd025aaaf"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-implementation.png",
-      "sha256": "20bbd6f43a62d02c2affd796f92131044d988155065c526fd4b8e05333272b9d"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-introduction.png",
-      "sha256": "39ccc1759f774cf1b5bf026c68cdeb0a90a9852fd8a648aa6f50b543a8910ebb"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-methodology.png",
-      "sha256": "09a5c5cef5fc97ebdbfcd47920acc4451716e6c77b44b51f5331781fda225ac9"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-app.png",
-      "sha256": "29e2bc24a28cd9f35436ca0fe44abd1069b9816acf62c0dcbf7414137c3938b3"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-architecture.png",
-      "sha256": "e016dd00ed9842a829f331334dc87711b62324838186e8ee6a4c83ac48833f60"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-benchmark.png",
-      "sha256": "928ca8f743c7932ea77e48e69339a968a823574cf2130706676084d6e5ae1a53"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-experiments.png",
-      "sha256": "36db9f84b32912414d1fa0c60b06caa9b00236db25e9c07c200f4d821d47de85"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-implementation.png",
-      "sha256": "e6a27f55642c8d7866073f7e178860a2c9adaa57cfbb3b9e211ca6c09c3a0f7f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-introduction.png",
-      "sha256": "7b97cfb1c57e39e75df42714a1576a04f7454438d5403e92aff3bbbed4ab6fe3"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-methodology.png",
-      "sha256": "1fbb56847d7d7ee575e06ec754d50e334408dcd17fecdc04c60f2497f5e80ab5"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-app.png",
-      "sha256": "b7e73bffdea0850aa304b7e3b1a683c1b04d81b42c144dda4180ee9e00f58e5c"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-architecture.png",
-      "sha256": "0cc2642b192e44c8be75f7a69a0f3d4edbbf10c508cb100c0820eedd05681ff6"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-benchmark.png",
-      "sha256": "777e6308821f3534895a66eb59cc4bf8246fa285a4259b043d0faae042eef3ac"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-experiments.png",
-      "sha256": "191fa62f0440a4168c7ac2c1dab54c9a969ddd8c984ef230d91b3686cf148b9d"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-implementation.png",
-      "sha256": "442900bc7825e03880f60513eb4f2fd1c3e03ced1a159cf06a18275a15e04cff"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-introduction.png",
-      "sha256": "d6813e27894decba53459f56318dc32e1129f8558d038f885bf2331697de9eb5"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-methodology.png",
-      "sha256": "955ca9793207ef93452b8863078dd6024495616272c0af22652a17d75236dde4"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-app.png",
-      "sha256": "c4ab1f247413f5d5a40043a15c438c60f8d09200fea359b5df560c67f2fd61cc"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-architecture.png",
-      "sha256": "cdc6bf5283a6788c3e476adcef86a99b26c7589ee9a373711d5dd6d7ee734976"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-benchmark.png",
-      "sha256": "130aa0912f4485ff04acd5d2249e55d422bc120ed4368cedc2e53f8ad5016cb6"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-experiments.png",
-      "sha256": "bb3e208c6ea951227c6b5e38f2c838779c391d665297a3a7d678da1bd025aaaf"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-implementation.png",
-      "sha256": "20bbd6f43a62d02c2affd796f92131044d988155065c526fd4b8e05333272b9d"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-introduction.png",
-      "sha256": "4573f5dd06f505f72c511e1021af01a0bf99c9c38c251f6e5045215586d31c04"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-methodology.png",
-      "sha256": "09a5c5cef5fc97ebdbfcd47920acc4451716e6c77b44b51f5331781fda225ac9"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-app.png",
-      "sha256": "e386be5fe9e3a9305fd56ca27b3396cb8cfff861a6d7ad6a8d5f511e875041d3"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-architecture.png",
-      "sha256": "c812e81793afcbc87a55bbf19fd4e0deac62943706b4ffb82d1bd33eb7c47d5a"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-benchmark.png",
-      "sha256": "47b92698ce2f039edcc88183f06ae7eedb098a57dde3fa9b05eb74ff1d0c8282"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-experiments.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-experiments.png",
       "sha256": "691f053b35a7987d3afd624ab7d1733c83368c66eccf29b8e166b8ba781d2fe1"
     },
     {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-implementation.png",
       "sha256": "ebf798c5cb04255558ad4c90add72357ee978a5086f813caaa197728a610d4cc"
     },
     {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-introduction.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-introduction.png",
       "sha256": "63762cb07fa0472fe64263c9350d9133e0f776acc15513386017337a5b3c60c4"
     },
     {
-      "file": "visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f17c--dark-desktop-no-preference/en-dark-desktop-no-preference-methodology.png",
       "sha256": "a606211c9c6e32d504775f4e57c8b1a6ed97fa317257ff622da07c7d0ae9d21f"
     },
     {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-app.png",
-      "sha256": "30cbead72b1fa98ba93ba52a3f5b366442c5cdb35c6604b9872cab638130def7"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-architecture.png",
-      "sha256": "4d2c20c5d720939519374923332fcd597bd333947926c4d8279999d953615b8e"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-benchmark.png",
-      "sha256": "19a0036911f73b15ae50cc219c5c8a6af1b258a56df8c03fb2ca9e4ae94e84ce"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-experiments.png",
-      "sha256": "456f4f911acac4ac9249da16c378415f31d1aa18a19571a4894554355c3ffec0"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-implementation.png",
-      "sha256": "cbd208c39606f1eb0d09de942194d3d49aee263970ec2685fdc20d1c17f748c0"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-introduction.png",
-      "sha256": "3a72a35ed8dab7f4fac0801fcc57059b02641a8ac4d3230a2d732b83dbaf1c3f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-methodology.png",
-      "sha256": "894dee69a4f5838ac7d6939f2aeb575beeb2eaf060c2737b4709e433b0f765a1"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-app.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-app.png",
       "sha256": "506f79c9e6f2e2145f81e68f677a2ebbbd48279c37294c5a8875a71f07b012a7"
     },
     {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-architecture.png",
-      "sha256": "6cfa232d46745b9339427d982130f41cfeadf4f9d649083e4dfeb4dd05ebaffa"
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-architecture.png",
+      "sha256": "dc6b8a23fb1005febb7c1f0c59275b4b8486159ce09e7dea95a20869b2c0af55"
     },
     {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-benchmark.png",
       "sha256": "b10b92cbc86e19f295432e2b088a40fa7ffbb30da2837e84915afe7d8fa5aa1f"
     },
     {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-experiments.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-experiments.png",
       "sha256": "2a60f13de438cb61f7e77d6908de9b90b43a841e75ad65ac1755c87157651273"
     },
     {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-implementation.png",
       "sha256": "cdb75afa76ec30c26be8411930a9d4f701d89828fbbd1d6ee0ff56e304e9ab5a"
     },
     {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-introduction.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-introduction.png",
       "sha256": "56fa16057264beb3ca34b0d4052b8ea058e388e730faacf49623ee24763f019f"
     },
     {
-      "file": "visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-0f412-es-dark-phone-no-preference/es-dark-phone-no-preference-methodology.png",
       "sha256": "d26b3db50f41ab87acc1e0c219a794612c6c70d4480bbd1ab820591c725c62ec"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-app.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-app.png",
+      "sha256": "29e2bc24a28cd9f35436ca0fe44abd1069b9816acf62c0dcbf7414137c3938b3"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-architecture.png",
+      "sha256": "e72d13ce28fd0d20eb524d83b88ca453ccd4fea9e8a84b0b272b0780804c444a"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-benchmark.png",
+      "sha256": "928ca8f743c7932ea77e48e69339a968a823574cf2130706676084d6e5ae1a53"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-experiments.png",
+      "sha256": "9dcd1c4c52b2db1a7464ab03d5716949ff4ce244e4d89bafedeac298bd6bc23c"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-implementation.png",
+      "sha256": "e6a27f55642c8d7866073f7e178860a2c9adaa57cfbb3b9e211ca6c09c3a0f7f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-introduction.png",
+      "sha256": "7b97cfb1c57e39e75df42714a1576a04f7454438d5403e92aff3bbbed4ab6fe3"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-10da0-tion-es-dark-desktop-reduce/es-dark-desktop-reduce-methodology.png",
+      "sha256": "1fbb56847d7d7ee575e06ec754d50e334408dcd17fecdc04c60f2497f5e80ab5"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-app.png",
+      "sha256": "c4ab1f247413f5d5a40043a15c438c60f8d09200fea359b5df560c67f2fd61cc"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-architecture.png",
+      "sha256": "430bb74cdb92ab2bfd862eaa55fa8c00027d1cc5b58fa84bff83296efbfae239"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-benchmark.png",
+      "sha256": "130aa0912f4485ff04acd5d2249e55d422bc120ed4368cedc2e53f8ad5016cb6"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-experiments.png",
+      "sha256": "bb3e208c6ea951227c6b5e38f2c838779c391d665297a3a7d678da1bd025aaaf"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-implementation.png",
+      "sha256": "20bbd6f43a62d02c2affd796f92131044d988155065c526fd4b8e05333272b9d"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-introduction.png",
+      "sha256": "39ccc1759f774cf1b5bf026c68cdeb0a90a9852fd8a648aa6f50b543a8910ebb"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-11a4b-ation-es-light-phone-reduce/es-light-phone-reduce-methodology.png",
+      "sha256": "09a5c5cef5fc97ebdbfcd47920acc4451716e6c77b44b51f5331781fda225ac9"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-app.png",
+      "sha256": "29e2bc24a28cd9f35436ca0fe44abd1069b9816acf62c0dcbf7414137c3938b3"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-architecture.png",
+      "sha256": "e016dd00ed9842a829f331334dc87711b62324838186e8ee6a4c83ac48833f60"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-benchmark.png",
+      "sha256": "928ca8f743c7932ea77e48e69339a968a823574cf2130706676084d6e5ae1a53"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-experiments.png",
+      "sha256": "36db9f84b32912414d1fa0c60b06caa9b00236db25e9c07c200f4d821d47de85"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-implementation.png",
+      "sha256": "e6a27f55642c8d7866073f7e178860a2c9adaa57cfbb3b9e211ca6c09c3a0f7f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-introduction.png",
+      "sha256": "4fb442a94dcceb4d7a0f5cadd39ee5e0de2266d76aa9b5cb19299d91f7f12ffb"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-252e4--dark-desktop-no-preference/es-dark-desktop-no-preference-methodology.png",
+      "sha256": "1fbb56847d7d7ee575e06ec754d50e334408dcd17fecdc04c60f2497f5e80ab5"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-app.png",
       "sha256": "b7e73bffdea0850aa304b7e3b1a683c1b04d81b42c144dda4180ee9e00f58e5c"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-architecture.png",
-      "sha256": "2aa327c2e77ff835b20e9790881141de42cf63ea868b3e852805053f398926fe"
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-architecture.png",
+      "sha256": "3e0e60d32fab61d75656e344b289e2f68d95030c1673ebcc37140a103102935d"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-benchmark.png",
       "sha256": "777e6308821f3534895a66eb59cc4bf8246fa285a4259b043d0faae042eef3ac"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-experiments.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-experiments.png",
       "sha256": "191fa62f0440a4168c7ac2c1dab54c9a969ddd8c984ef230d91b3686cf148b9d"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-implementation.png",
       "sha256": "442900bc7825e03880f60513eb4f2fd1c3e03ced1a159cf06a18275a15e04cff"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-introduction.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-introduction.png",
       "sha256": "d6813e27894decba53459f56318dc32e1129f8558d038f885bf2331697de9eb5"
     },
     {
-      "file": "visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-5eb47-en-dark-phone-no-preference/en-dark-phone-no-preference-methodology.png",
       "sha256": "955ca9793207ef93452b8863078dd6024495616272c0af22652a17d75236dde4"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-app.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-app.png",
+      "sha256": "c4ab1f247413f5d5a40043a15c438c60f8d09200fea359b5df560c67f2fd61cc"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-architecture.png",
+      "sha256": "f4ad0760c339a998b1cba8c49a555451ca29f6f74643b1b3b1c78ed0e86133b0"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-benchmark.png",
+      "sha256": "130aa0912f4485ff04acd5d2249e55d422bc120ed4368cedc2e53f8ad5016cb6"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-experiments.png",
+      "sha256": "bb3e208c6ea951227c6b5e38f2c838779c391d665297a3a7d678da1bd025aaaf"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-implementation.png",
+      "sha256": "20bbd6f43a62d02c2affd796f92131044d988155065c526fd4b8e05333272b9d"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-introduction.png",
+      "sha256": "39ccc1759f774cf1b5bf026c68cdeb0a90a9852fd8a648aa6f50b543a8910ebb"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-776f9-s-light-phone-no-preference/es-light-phone-no-preference-methodology.png",
+      "sha256": "09a5c5cef5fc97ebdbfcd47920acc4451716e6c77b44b51f5331781fda225ac9"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-app.png",
+      "sha256": "e386be5fe9e3a9305fd56ca27b3396cb8cfff861a6d7ad6a8d5f511e875041d3"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-architecture.png",
+      "sha256": "c812e81793afcbc87a55bbf19fd4e0deac62943706b4ffb82d1bd33eb7c47d5a"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-benchmark.png",
+      "sha256": "47b92698ce2f039edcc88183f06ae7eedb098a57dde3fa9b05eb74ff1d0c8282"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-experiments.png",
+      "sha256": "691f053b35a7987d3afd624ab7d1733c83368c66eccf29b8e166b8ba781d2fe1"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-implementation.png",
+      "sha256": "ebf798c5cb04255558ad4c90add72357ee978a5086f813caaa197728a610d4cc"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-introduction.png",
+      "sha256": "63762cb07fa0472fe64263c9350d9133e0f776acc15513386017337a5b3c60c4"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-92ecb-tion-en-dark-desktop-reduce/en-dark-desktop-reduce-methodology.png",
+      "sha256": "a606211c9c6e32d504775f4e57c8b1a6ed97fa317257ff622da07c7d0ae9d21f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-app.png",
+      "sha256": "30cbead72b1fa98ba93ba52a3f5b366442c5cdb35c6604b9872cab638130def7"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-architecture.png",
+      "sha256": "4d2c20c5d720939519374923332fcd597bd333947926c4d8279999d953615b8e"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-benchmark.png",
+      "sha256": "19a0036911f73b15ae50cc219c5c8a6af1b258a56df8c03fb2ca9e4ae94e84ce"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-experiments.png",
+      "sha256": "456f4f911acac4ac9249da16c378415f31d1aa18a19571a4894554355c3ffec0"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-implementation.png",
+      "sha256": "cbd208c39606f1eb0d09de942194d3d49aee263970ec2685fdc20d1c17f748c0"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-introduction.png",
+      "sha256": "3a72a35ed8dab7f4fac0801fcc57059b02641a8ac4d3230a2d732b83dbaf1c3f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-982f9-ation-en-light-phone-reduce/en-light-phone-reduce-methodology.png",
+      "sha256": "894dee69a4f5838ac7d6939f2aeb575beeb2eaf060c2737b4709e433b0f765a1"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-app.png",
+      "sha256": "506f79c9e6f2e2145f81e68f677a2ebbbd48279c37294c5a8875a71f07b012a7"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-architecture.png",
+      "sha256": "6cfa232d46745b9339427d982130f41cfeadf4f9d649083e4dfeb4dd05ebaffa"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-benchmark.png",
+      "sha256": "b10b92cbc86e19f295432e2b088a40fa7ffbb30da2837e84915afe7d8fa5aa1f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-experiments.png",
+      "sha256": "2a60f13de438cb61f7e77d6908de9b90b43a841e75ad65ac1755c87157651273"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-implementation.png",
+      "sha256": "cdb75afa76ec30c26be8411930a9d4f701d89828fbbd1d6ee0ff56e304e9ab5a"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-introduction.png",
+      "sha256": "56fa16057264beb3ca34b0d4052b8ea058e388e730faacf49623ee24763f019f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-b3357-gation-es-dark-phone-reduce/es-dark-phone-reduce-methodology.png",
+      "sha256": "d26b3db50f41ab87acc1e0c219a794612c6c70d4480bbd1ab820591c725c62ec"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-app.png",
+      "sha256": "b7e73bffdea0850aa304b7e3b1a683c1b04d81b42c144dda4180ee9e00f58e5c"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-architecture.png",
+      "sha256": "2aa327c2e77ff835b20e9790881141de42cf63ea868b3e852805053f398926fe"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-benchmark.png",
+      "sha256": "777e6308821f3534895a66eb59cc4bf8246fa285a4259b043d0faae042eef3ac"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-experiments.png",
+      "sha256": "191fa62f0440a4168c7ac2c1dab54c9a969ddd8c984ef230d91b3686cf148b9d"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-implementation.png",
+      "sha256": "442900bc7825e03880f60513eb4f2fd1c3e03ced1a159cf06a18275a15e04cff"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-introduction.png",
+      "sha256": "47e6820b3213aef0c1b7ea72508455fc7778a5380f4a7c9d45a716fe116e9c9b"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-ca603-gation-en-dark-phone-reduce/en-dark-phone-reduce-methodology.png",
+      "sha256": "955ca9793207ef93452b8863078dd6024495616272c0af22652a17d75236dde4"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-app.png",
       "sha256": "62bdc10682e0811555111357a16aedc2d54bafb01d505f51e4f8407add582886"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-architecture.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-architecture.png",
       "sha256": "ea39196ddd6415d6d2b05d759858e550c2048820c17923d38d22b43aa2ce06bf"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-benchmark.png",
       "sha256": "d7da08063e3431ee2f26f6da30c5f0f209298596c7c5686027d5f1def2fb4163"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-experiments.png",
-      "sha256": "5c6d0e8fef05385f1e0b0657e7fade6cd1d77af39dbf2d131d63d940778189b4"
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-experiments.png",
+      "sha256": "5b39f4e2e02956f6dca23aed09519cf8a750416ec5a46461c56120823e25bba2"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-implementation.png",
       "sha256": "549bcb78f1e5e9ac139e12c12ccf18645af1829f37a634fce56f5fd1d1df1bab"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-introduction.png",
-      "sha256": "572d5cb84e83ed113e52d9dbfa97dd916a1fb820f6df23742756edcd81aab7e3"
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-introduction.png",
+      "sha256": "df9593e0a8440cd2b27ffdb1a4ed2bc83bb9f091c91a28f5ed95549492b50a71"
     },
     {
-      "file": "visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-dabcb-light-desktop-no-preference/es-light-desktop-no-preference-methodology.png",
       "sha256": "c5fd389f693e8cc64f9f79a97dcff76b2c9eda924001e195ae61acf2ee79d3b8"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-app.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-app.png",
       "sha256": "1e22ad8a3e4282f8a7134ba70b774931adcee8572cba437a841b8a04d46db8aa"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-architecture.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-architecture.png",
       "sha256": "df6cff4714bcb01b8fa31bfe5dbd793de8aab5553468d14652de5e29a3e65e6b"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-benchmark.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-benchmark.png",
       "sha256": "3594bd815a92c2814f7ffc6c976cea2cad20ea00fed5297802e3df2fcbe7fff4"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-experiments.png",
-      "sha256": "e1d69bb5c8293e363e45ccd51845a77100a194772f889a554450ee6a4b08f346"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-implementation.png",
-      "sha256": "858e28158d522ee2704be59f6301faf650e7f0714e9516647837b4c6115be44f"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-introduction.png",
-      "sha256": "614dc9ad884e754f453dd79a970f5f189d12db848b66fd850339a0aef859d747"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-methodology.png",
-      "sha256": "db8bed92f89cdd2cd940dd348d43065c5c47df96de31bfc70ddf3fa746b92a37"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-app.png",
-      "sha256": "1e22ad8a3e4282f8a7134ba70b774931adcee8572cba437a841b8a04d46db8aa"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-architecture.png",
-      "sha256": "df6cff4714bcb01b8fa31bfe5dbd793de8aab5553468d14652de5e29a3e65e6b"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-benchmark.png",
-      "sha256": "3594bd815a92c2814f7ffc6c976cea2cad20ea00fed5297802e3df2fcbe7fff4"
-    },
-    {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-experiments.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-experiments.png",
       "sha256": "58e00355c0587f01f9876e86ccee2667d06121443f9b6455867c6ff107dc7a02"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-implementation.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-implementation.png",
       "sha256": "858e28158d522ee2704be59f6301faf650e7f0714e9516647837b4c6115be44f"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-introduction.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-introduction.png",
       "sha256": "614dc9ad884e754f453dd79a970f5f189d12db848b66fd850339a0aef859d747"
     },
     {
-      "file": "visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-methodology.png",
+      "file": "playwright-results/visual-matrix-fit-and-poin-e1eed-light-desktop-no-preference/en-light-desktop-no-preference-methodology.png",
+      "sha256": "db8bed92f89cdd2cd940dd348d43065c5c47df96de31bfc70ddf3fa746b92a37"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-app.png",
+      "sha256": "1e22ad8a3e4282f8a7134ba70b774931adcee8572cba437a841b8a04d46db8aa"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-architecture.png",
+      "sha256": "df6cff4714bcb01b8fa31bfe5dbd793de8aab5553468d14652de5e29a3e65e6b"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-benchmark.png",
+      "sha256": "3594bd815a92c2814f7ffc6c976cea2cad20ea00fed5297802e3df2fcbe7fff4"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-experiments.png",
+      "sha256": "e1d69bb5c8293e363e45ccd51845a77100a194772f889a554450ee6a4b08f346"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-implementation.png",
+      "sha256": "858e28158d522ee2704be59f6301faf650e7f0714e9516647837b4c6115be44f"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-introduction.png",
+      "sha256": "b3cde23902ac6a98594cfa57882e3fb7512c6a8029e5632040120e97ebe1de2c"
+    },
+    {
+      "file": "playwright-results/visual-matrix-fit-and-poin-e3f40-ion-en-light-desktop-reduce/en-light-desktop-reduce-methodology.png",
       "sha256": "db8bed92f89cdd2cd940dd348d43065c5c47df96de31bfc70ddf3fa746b92a37"
     }
   ]

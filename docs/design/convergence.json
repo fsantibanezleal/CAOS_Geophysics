@@ -1,9 +1,9 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "12dfe0cba42721d2796976a1d2df33d140af0ddb51fb46b71cc92865d12f7b30",
-  "assessed_revision": "bbb71fd9a710bddeb8ea9b20fc28077e8a3c91d2",
-  "assessed_at": "2026-10-30T11:53:31Z",
+  "sdd_sha256": "9e93bee153e88511623dd441948dc04c74991304af0589e1afea4e7ae406b93d",
+  "assessed_revision": "ebb584ac44dc01d11fb14f952673103844500f96",
+  "assessed_at": "2026-10-30T12:23:13.839424Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -539,7 +539,7 @@
       "id": "R-015",
       "verdict": "pass",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "The declared local visual gate passed on a clean checkout and freshly built dist at source commit bbb71fd9a710bddeb8ea9b20fc28077e8a3c91d2: all 16 EN/ES × light/dark × desktop/phone × normal/reduced-motion combinations across six routes and the five-tab architecture dialog. All 112 route/dialog captures were generated and hashed; zero failures, skips or flaky retries, with instrument loading cleared and dialog/tab bounds checked in both axes. This accepts the declared local visual requirement only; broader owner/product acceptance, scientific correctness and VPS release acceptance remain separate.",
+      "note": "The declared local visual gate passed on a clean checkout and freshly built dist at source commit ebb584ac44dc01d11fb14f952673103844500f96: all 16 EN/ES × light/dark × desktop/phone × normal/reduced-motion combinations across six product routes and the five-tab architecture dialog. All 112 route/dialog captures were generated and hashed; zero failures, skips or flaky retries, with loading completion and dialog/tab bounds checked in both axes. This accepts the declared local visual requirement only; broader owner/product acceptance, scientific correctness and VPS release acceptance remain separate.",
       "evidence": [
         {
           "path": "docs/validation/shell-gate-20261025.json",
@@ -551,13 +551,13 @@
         },
         {
           "path": "docs/validation/r015-visual-matrix-2026-10-30.json",
-          "sha256": "5718332794ac1c8e03fdb0845d29d361c70c7cd9cfceaac1f8e0e290ef93d1b2"
+          "sha256": "16971057b378d864e488c597b4dbbccc90c3d050a5c8d7cfe1e012955225866c"
         }
       ],
       "receipts": [
         {
           "path": "docs/validation/r015-visual-matrix-2026-10-30-receipt.json",
-          "sha256": "eceab70a79a50ca9b6f891d0c69e612b599e7ef23b898710d58d5ffac3eef68c"
+          "sha256": "b4338e7cd9ea78285472e4afce649b78bf4d7952a5db39fc888f62de4852ab3b"
         }
       ]
     },
