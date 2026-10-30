@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
 
 const routes = [
-  { id: "app", path: "/app", en: "App", es: "App" },
+  { id: "app", path: "/", en: "App", es: "App" },
   { id: "introduction", path: "/introduction", en: "Introduction", es: "Introducción" },
   { id: "methodology", path: "/methodology", en: "Methodology", es: "Metodología" },
   { id: "implementation", path: "/implementation", en: "Implementation", es: "Implementación" },
@@ -66,7 +66,7 @@ async function fit(page: Page, mode: MatrixMode, route: string) {
   // Main text can be supplied by the shell while the selected experiment is
   // still fetching its numerical artifact. Do not screenshot a blank/loading
   // workbench as if it were a visually accepted route.
-  await expect(page.locator(".instrument-main [data-state='loading']"), `${route}: scientific instrument must finish loading`)
+  await expect(page.locator("main [data-state='loading']"), `${route}: all scientific views must finish loading`)
     .toHaveCount(0);
   const layout = await page.evaluate(() => {
     const main = document.querySelector("main");
@@ -102,8 +102,8 @@ export async function fit_and_pointer_navigation(page: Page, info: TestInfo, mod
   page.on("console", message => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
-  await page.goto("/app", { waitUntil: "domcontentloaded" });
-  await fit(page, mode, "/app");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await fit(page, mode, "/");
 
   for (const route of routes) {
     const label = route[mode.lang];
