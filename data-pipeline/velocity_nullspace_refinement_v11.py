@@ -8,6 +8,7 @@ and correction scale. All test cohorts use new, disjoint realizations.
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import platform
 import shutil
@@ -28,6 +29,12 @@ SEED_BASES = {"calibration": 417001, "id_test": 427001, "family_only": 437001,
               "acquisition_only": 447001, "joint_ood": 457001}
 ALPHAS = (0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0)
 TEST_NAMES = ("id_test", "family_only", "acquisition_only", "joint_ood")
+LEGACY_FEATURE_MODULE_SHA256 = "99f1b079774709143debf0702059108acb7a6d18f3364404f791124053b5a460"
+LEGACY_INPUT_FEATURES_SHA256 = "36cf0dea80e2bc9c396f1b8eee89709f33d5ffcce6b4be6e34c6ed7c1ec574dc"
+LEGACY_METHOD_MODULE_SHA256 = "332b2ff9bb81feb2142f5719d8d32aec6b7c82c2db8cd30c7641b0a5609c68b8"
+LEGACY_PRODUCER_CODE_SHA256 = "c4c495ed07c7f1f0d8280b38395598b6e25049f0e00e7f2e0151b6cc8ed588df"
+PRODUCER_FUNCTIONS = ("make_cohort", "nullspace_basis", "project_correction",
+                      "_attach_model_features", "_select_alpha", "_verified_base", "execute")
 
 
 def sha256_file(path: Path) -> str:
@@ -45,6 +52,47 @@ def source_hashes() -> dict[str, str]:
             "learned_checkpoint_model": sha256_file(Path(learned.__file__)),
             "forward_inverse": sha256_file(Path(physics.__file__)),
             "feature_contract": sha256_file(Path(refinement.__file__))}
+
+
+def feature_contract_hash_compatible(recorded: str) -> bool:
+    """Accept the exact old module hash only while its executed feature function is unchanged."""
+    current = sha256_file(Path(refinement.__file__))
+    if recorded == current:
+        return True
+    if recorded != LEGACY_FEATURE_MODULE_SHA256:
+        return False
+    function_source = inspect.getsource(refinement.input_features).encode("utf-8")
+    return hashlib.sha256(function_source).hexdigest() == LEGACY_INPUT_FEATURES_SHA256
+
+
+def producer_code_hash() -> str:
+    digest = hashlib.sha256()
+    namespace = globals()
+    for name in PRODUCER_FUNCTIONS:
+        digest.update(name.encode("utf-8") + b"\0")
+        digest.update(inspect.getsource(namespace[name]).strip("\n").encode("utf-8") + b"\0")
+    return digest.hexdigest()
+
+
+def method_module_hash_compatible(recorded: str) -> bool:
+    current = sha256_file(Path(__file__))
+    return recorded == current or (
+        recorded == LEGACY_METHOD_MODULE_SHA256
+        and producer_code_hash() == LEGACY_PRODUCER_CODE_SHA256
+    )
+
+
+def source_receipt_matches(recorded: object) -> bool:
+    current = source_hashes()
+    if not isinstance(recorded, dict) or set(recorded) != set(current):
+        return False
+    if not method_module_hash_compatible(recorded["method"]):
+        return False
+    return all(
+        feature_contract_hash_compatible(recorded[name]) if name == "feature_contract"
+        else recorded[name] == current[name]
+        for name in current if name != "method"
+    )
 
 
 def make_cohort(name: str, ops: dict, *, fixture: bool = False) -> dict:
@@ -273,7 +321,7 @@ def verify(output: Path) -> dict:
     receipt = json.loads((output / "receipt.json").read_text(encoding="utf-8"))
     if receipt.get("schema") != "caos-geophysics.m12-nullspace-residual/v1.1" or receipt.get("protocol") != PROTOCOL:
         raise ValueError("Unsupported M12 nullspace receipt")
-    if receipt.get("sources") != source_hashes():
+    if not source_receipt_matches(receipt.get("sources")):
         raise ValueError("M12 nullspace source hashes changed")
     checkpoint = output / receipt["base_checkpoint"]["copied_name"]
     if sha256_file(checkpoint) != receipt["base_checkpoint"]["sha256"]:
@@ -283,11 +331,12 @@ def verify(output: Path) -> dict:
         raise ValueError("M12 nullspace base training receipt hash mismatch")
     base_receipt = json.loads(training_receipt_path.read_text(encoding="utf-8"))
     expected_base_sources = {"implementation_sha256": sha256_file(Path(learned.__file__)),
-                             "forward_inverse_sha256": sha256_file(Path(physics.__file__)),
-                             "corrected_feature_sha256": sha256_file(Path(refinement.__file__))}
+                             "forward_inverse_sha256": sha256_file(Path(physics.__file__))}
+    base_sources = base_receipt.get("sources", {})
     if (base_receipt.get("schema") != "caos-geophysics.m12-residual/v3.1"
             or base_receipt.get("status") != "failed-held-out-comparator"
-            or base_receipt.get("sources") != expected_base_sources
+            or {key: base_sources.get(key) for key in expected_base_sources} != expected_base_sources
+            or not feature_contract_hash_compatible(base_sources.get("corrected_feature_sha256"))
             or base_receipt.get("checkpoint_sha256") != receipt["base_checkpoint"]["sha256"]):
         raise ValueError("M12 nullspace checkpoint and training receipt differ")
     ops = physics.operators()

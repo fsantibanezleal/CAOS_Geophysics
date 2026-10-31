@@ -12,6 +12,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import inspect
+import subprocess
 import sys
 from pathlib import Path
 
@@ -61,6 +63,7 @@ def verify_compat(output: Path) -> dict:
         physics.select_classical = original_selector
     receipt_path = Path(output) / "receipt.json"
     receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    current_sources = study.source_hashes()
     return {
         "verification": "compatibility-replay-passed",
         "replay": result,
@@ -73,6 +76,15 @@ def verify_compat(output: Path) -> dict:
         "receipt_sha256": hashlib.sha256(receipt_path.read_bytes()).hexdigest(),
         "compatibility_verifier_sha256": _script_sha256(),
         "original_bound_sources_verified": True,
+        "checkout_head_revision": subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True,
+        ).strip(),
+        "retained_source_hashes": receipt["sources"],
+        "replay_source_hashes": current_sources,
+        "producer_code_sha256": study.producer_code_hash(),
+        "input_features_sha256": hashlib.sha256(
+            inspect.getsource(study.refinement.input_features).encode("utf-8")
+        ).hexdigest(),
     }
 
 

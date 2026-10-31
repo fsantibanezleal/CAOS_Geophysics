@@ -59,3 +59,25 @@ def test_zero_scale_is_exact_classical_identity_and_projection_stays_bounded():
     assert np.all((refined >= 1400.0) & (refined <= 4000.0))
     assert all(row["max_abs_A_projected_correction"] <= row["residual_limit"]
                for row in evidence.values())
+
+
+def test_retained_v11_receipt_accepts_only_the_verified_historical_code_epoch(monkeypatch):
+    historical = study.source_hashes()
+    historical["method"] = study.LEGACY_METHOD_MODULE_SHA256
+    historical["feature_contract"] = study.LEGACY_FEATURE_MODULE_SHA256
+    assert study.source_receipt_matches(historical)
+    historical["forward_inverse"] = "0" * 64
+    assert not study.source_receipt_matches(historical)
+
+    historical = study.source_hashes()
+    historical["method"] = study.LEGACY_METHOD_MODULE_SHA256
+    historical["feature_contract"] = study.LEGACY_FEATURE_MODULE_SHA256
+    monkeypatch.setattr(study, "project_correction", lambda *args, **kwargs: None)
+    assert not study.source_receipt_matches(historical)
+
+
+def test_legacy_feature_module_hash_requires_exact_input_function(monkeypatch):
+    assert study.feature_contract_hash_compatible(study.LEGACY_FEATURE_MODULE_SHA256)
+    assert not study.feature_contract_hash_compatible("0" * 64)
+    monkeypatch.setattr(refinement, "input_features", lambda observed, matrix: None)
+    assert not study.feature_contract_hash_compatible(study.LEGACY_FEATURE_MODULE_SHA256)

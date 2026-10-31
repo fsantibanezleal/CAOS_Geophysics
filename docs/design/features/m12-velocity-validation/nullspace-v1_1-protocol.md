@@ -121,6 +121,19 @@ checks and delegates alpha selection, calibration metrics, all four held-out
 cohorts, and the final result to the original verifier. Its result is a
 reproducibility check for this bounded synthetic experiment, not M12 or
 product scientific acceptance.
+
+On 2026-10-31, the complete compatibility replay passed from the retained
+checkpoint and exact calibration/test manifests. The historical module hash is
+accepted only because the seven source functions that generate the experiment
+still match their pinned producer digest, and the feature module's executed
+`input_features` function matches its exact historical digest. All other
+source pins remain exact. The report records both retained and replay source
+hashes at
+[`m12-nullspace-v1_1-compatible-replay-2026-10-31.json`](../../../validation/m12-nullspace-v1_1-compatible-replay-2026-10-31.json).
+The reproduced bounded synthetic verdict remains
+`supported-within-bounded-synthetic-protocol`; `scientific_acceptance` remains
+false and this replay does not change R-008 or product acceptance.
+
 The v1.1 runner passed an infinite threshold to its scoring function, so the
 original saved exceedance flags were invalid. A separate reconciliation now
 recomputes those flags from the immutable per-record errors using a calibration-
