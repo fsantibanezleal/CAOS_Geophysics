@@ -3,6 +3,8 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import subprocess
+import sys
 from types import SimpleNamespace
 
 import discretize
@@ -15,6 +17,20 @@ import joint_survey_instrument as instrument
 import joint_survey_resources as resources
 from test_joint_survey_oracles import explicit_faces,models
 from test_joint_survey_plan import request
+
+
+def test_instrument_exporter_cli_is_executable():
+    script = Path(__file__).resolve().parents[2] / 'scripts' / 'export_joint_survey_instrument.py'
+    result = subprocess.run(
+        [sys.executable, str(script), '--help'],
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0
+    assert 'Private post-freeze joint state instrument export' in result.stdout
+    assert "{export,validate}" in result.stdout
 
 
 @pytest.mark.parametrize('sparse',[False,True])
