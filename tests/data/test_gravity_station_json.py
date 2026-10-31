@@ -24,7 +24,7 @@ CORE_SHA = "dc6d529bdaef766012d076a5786fefd8388f6e6ad310c6239aa91ca43da425fe"
 SOURCE_PINS = {
     "gravity_processing.py": CORE_SHA,
     "gravity_station_adapter.py": "77e855b63bf31bd292ef8302253a06e49db3e0a332f936e0a06b53b478e492fd",
-    "gravity_transforms.py": "25ba24d4aaf442641d15924139e4ef1a131d7f6fe0dabab3eaa6549a5ba15312",
+    "gravity_transforms.py": "ed95fb8251dd63eaef38f2a91ffacc521c4aee016db0a144578971c1a8e07685",
     "edi.py": "1a6226f34cd36e3e30f6406a296c6f4e3bc38aa93ca5bda1d4f4428d3852b543",
 }
 RAW_CAP = 16 * 1024 * 1024

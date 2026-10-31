@@ -55,6 +55,13 @@ PROCESSING_FIELDS = (
     "full_method_accepted",
     "warnings",
 )
+# M01 course bundles retain the exact core digest used at production time.
+# The accepted predecessor differs only in CLI storage-path enforcement; the
+# scientific processing function is byte-identical across the two versions.
+COMPATIBLE_PROCESSING_MODULE_SHA256 = frozenset({
+    "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321",
+    "dc6d529bdaef766012d076a5786fefd8388f6e6ad310c6239aa91ca43da425fe",
+})
 
 
 def _array(values, count, label):
@@ -104,6 +111,11 @@ def _processing_identity(original, dataset, processing, replay):
             "processing.input_sha256: no independently reconstructable canonical earlier input; exact parent needed"
         )
     expected["input_sha256"] = processing["input_sha256"]
+    if processing["module_sha256"] not in COMPATIBLE_PROCESSING_MODULE_SHA256:
+        raise GravityContractError("correction_result.processing.module_sha256: unsupported scientific core")
+    # Keep the recorded source identity while replaying all deterministic
+    # scientific fields against the current function implementation.
+    expected["module_sha256"] = processing["module_sha256"]
     # Compatibility is not authentication. Preserve the declaration rather than
     # silently rewriting it to the replay machine's patch version.
     expected["python"] = recorded_python

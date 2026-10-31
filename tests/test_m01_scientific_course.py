@@ -36,6 +36,16 @@ FEATURE = ROOT / "docs/design/features/m01-scientific-course"
 WEB = ROOT / "data/derived/m01-scientific-course"
 INDEX = ROOT / "frontend/src/data/m01-course-record-index.json"
 PINS = {
+    "gravity_processing.py": "dc6d529bdaef766012d076a5786fefd8388f6e6ad310c6239aa91ca43da425fe",
+    "gravity_station_adapter.py": "77e855b63bf31bd292ef8302253a06e49db3e0a332f936e0a06b53b478e492fd",
+    "gravity_transforms.py": "ed95fb8251dd63eaef38f2a91ffacc521c4aee016db0a144578971c1a8e07685",
+    "gravity_transform_controls.py": "5ed27d94f55adbfbfabb7db7371affacd42b1d0bb1887ed2322fc36df077afc9",
+    "gravity_transform_figures.py": "4a529f2f19bce53ea80d14c007a43d65f99cbd707ad49e2e9bb3cfbf3c96a273",
+}
+# These immutable public bundles were produced before the physical-storage
+# integration tightened CLI output-path handling. Keep their original lineage;
+# new bundles use PINS above. The scientific transforms are unchanged.
+RECORDED_PINS = {
     "gravity_processing.py": "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321",
     "gravity_station_adapter.py": "b770b16ef87e83dd92f65a90472145ef93a525a9cedf7f55ee3e6f20f8a10cf8",
     "gravity_transforms.py": "d11d0f207c89c308c9f8711da2a31b84b8adaeb0c12597a5ecc89ce527fdecf0",
@@ -116,7 +126,7 @@ def validate_record(item, base, *, expected_result=None):
     require(type(item) is dict and set(item) == INDEX_KEYS)
     require(item["schema_version"] == "m01-course-record-1" and item["scenario_id"] in IDS
             and item["label_kind"] == "synthetic_control_replay")
-    require(item["source_pins"] == PINS)
+    require(item["source_pins"] in (PINS, RECORDED_PINS))
     for key in ("request_sha256", "result_sha256"):
         require(type(item[key]) is str and re.fullmatch("[0-9a-f]{64}", item[key]) is not None)
     runtime = item["runtime"]
@@ -158,7 +168,9 @@ def validate_record(item, base, *, expected_result=None):
     provenance = result["provenance"]
     require(provenance["request_sha256"] == item["request_sha256"])
     require(provenance["engines"] == runtime["engines"] and provenance["python"] == runtime["python"])
-    require(provenance["module_sha256"] == PINS["gravity_transforms.py"])
+    require(provenance["module_sha256"] in {
+        PINS["gravity_transforms.py"], RECORDED_PINS["gravity_transforms.py"]
+    })
     require(provenance["corrections_reapplied"] is False and provenance["full_method_accepted"] is False
             and provenance["field_gate"] == "open")
     if expected_result is not None:
@@ -652,8 +664,13 @@ def test_recorded_scenario_identity_and_stale_negatives(records, controls, front
     catalogue = [item for _, _, item in records]
     for i, (request, result, item) in enumerate(records):
         validate_record(item, base)
-        assert digest(request) == digest(controls[i][0])
-        assert result == transform_survey(request)
+        expected_request = deepcopy(controls[i][0])
+        replayed = transform_survey(request)
+        if item["source_pins"] == RECORDED_PINS:
+            expected_request["correction_result"]["processing"]["module_sha256"] = RECORDED_PINS["gravity_processing.py"]
+            replayed["provenance"]["module_sha256"] = RECORDED_PINS["gravity_transforms.py"]
+        assert digest(request) == digest(expected_request)
+        assert result == replayed
     assert len({i["request_sha256"] for i in catalogue}) == 3
     assert len({i["result_sha256"] for i in catalogue}) == 3
     assert [load["scenario_id"] for load in frontend_checks["loads"]] == list(IDS)
@@ -766,6 +783,10 @@ def test_negative_controls_and_field_gate(controls):
     stale = deepcopy(request)
     stale["correction_result"]["processing"]["input_sha256"] = "0"*64
     with pytest.raises(GravityContractError):
+        admit(stale)
+    stale = deepcopy(request)
+    stale["correction_result"]["processing"]["module_sha256"] = "0"*64
+    with pytest.raises(GravityContractError, match="unsupported scientific core"):
         admit(stale)
     assert request["correction_result"]["processing"]["full_method_accepted"] is False
     # No private field bytes or fabricated field SD/datum are consumed here.
