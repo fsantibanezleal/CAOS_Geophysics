@@ -30,6 +30,6 @@
       "trail": "case FWI_CYCLE_SKIP > analysis > question"
     }
   },
-  "raw_artifact_directory": "E:/_Temp/CAOS_Geophysics/validation/shell-gate-20261031",
+  "raw_artifact_directory": "${CAOS_TEMP_ROOT}/CAOS_Geophysics/validation/shell-gate-20261031",
   "scope": "Local dirty-tree shell integration only; not scientific, complete frontend fixture, actual-host, or owner design acceptance."
 }

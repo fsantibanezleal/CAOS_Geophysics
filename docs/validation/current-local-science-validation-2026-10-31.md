@@ -6,14 +6,14 @@ This is evidence from the dirty direct checkout at `9f022aae8d178211b4c77730b722
 
 | Check | Result | Receipt / boundary |
 |---|---:|---|
-| Offline lane | 569 passed, 0 failed, 0 errors, 0 skipped | `E:\_Temp\CAOS_Geophysics\validation\offline-suite-20261031-stepwise-resume5.junit.xml` · stepwise lane excludes API/ops, adversarial, ERT/traveltime/profile-mesh and the locked 24-solve matrix. The locked matrix was reused from exact verified JUnit receipts. |
-| M01 scientific course and gravity JSON custody controls | 28 passed, 0 failed | `E:\_Temp\CAOS_Geophysics\validation\m01-current-source-replay-20261031.junit.xml` · retained historical bundles keep their exact source hashes; current code replays their scientific arrays. |
+| Offline lane | 569 passed, 0 failed, 0 errors, 0 skipped | `${CAOS_TEMP_ROOT}\CAOS_Geophysics\validation\offline-suite-20261031-stepwise-resume5.junit.xml` · stepwise lane excludes API/ops, adversarial, ERT/traveltime/profile-mesh and the locked 24-solve matrix. The locked matrix was reused from exact verified JUnit receipts. |
+| M01 scientific course and gravity JSON custody controls | 28 passed, 0 failed | `${CAOS_TEMP_ROOT}\CAOS_Geophysics\validation\m01-current-source-replay-20261031.junit.xml` · retained historical bundles keep their exact source hashes; current code replays their scientific arrays. |
 | Gravity transforms and M01 negative controls | passed | Current-source checks include historical/current module identities and refusal of an unsupported core hash. |
 | API metadata | 14 passed, 0 failed | `.venv-api`; includes StationXML companion rejection as a standalone dataset. |
-| API suite | 1,198 passed, 0 failed/errors, 138 skipped | `E:\_Temp\CAOS_Geophysics\validation\api-suite-6421f5c-20261031\api-complete.junit.xml` · local API/service evidence only; skips remain explicit. |
+| API suite | 1,198 passed, 0 failed/errors, 138 skipped | `${CAOS_TEMP_ROOT}\CAOS_Geophysics\validation\api-suite-6421f5c-20261031\api-complete.junit.xml` · local API/service evidence only; skips remain explicit. |
 | Cross-format data tests | 72 passed | `.venv-pipeline`; parser/format checks only. |
 | Production frontend build | passed | TypeScript and Vite build; 1,045,868,078 bytes across 311 built files. Build warning: the Workbench and Three.js chunks exceed 500 kB minified. |
-| CAOS shell browser gate | 1,442 states, 157 screenshots, 0 failures, 0 waivers | [Gate report](shell-gate-2026-10-31.json); external captures are in `E:\_Temp\CAOS_Geophysics\validation\shell-gate-20261031`. Dirty-tree UI/layout evidence only. |
+| CAOS shell browser gate | 1,442 states, 157 screenshots, 0 failures, 0 waivers | [Gate report](shell-gate-2026-10-31.json); external captures are in `${CAOS_TEMP_ROOT}\CAOS_Geophysics\validation\shell-gate-20261031`. Dirty-tree UI/layout evidence only. |
 | Read-only ML VPS refresh | passed | [Host receipt](actual-host-capacity-readonly-2026-10-31.md): 31,749,431,296 bytes free; current release plus exactly two rollback releases; no extra release directory existed to prune. |
 
 ## Open acceptance gaps

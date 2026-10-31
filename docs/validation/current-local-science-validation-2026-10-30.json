@@ -1,0 +1,194 @@
+{
+  "schema": "geophysics.current-local-science-validation/v1",
+  "measured_at": "2026-10-30",
+  "tested_commit": "221d031ca366410ca36066da37d302b9832008b1",
+  "workspace_dirty": true,
+  "workspace_changed_paths_at_capture": 97,
+  "gpu": {
+    "device": "NVIDIA GeForce RTX 4070 Laptop GPU",
+    "memory_total_mib": 8188,
+    "torch": "2.14.0+cu126",
+    "cuda": "12.6",
+    "available": true
+  },
+  "local_gates": {
+    "documentation_matrix": {
+      "command": ".venv-pipeline/Scripts/python.exe scripts/check_docs_matrix.py",
+      "result": "passed",
+      "methods": 13,
+      "bilingual_notebooks": 62
+    },
+    "notebook_structure": {
+      "command": ".venv-pipeline/Scripts/python.exe scripts/check_notebooks.py",
+      "result": "passed",
+      "bilingual_notebooks": 62
+    },
+    "method_matrix": {
+      "command": ".venv-pipeline/Scripts/python.exe scripts/check_method_matrix.py",
+      "result": "passed_structurally",
+      "methods_with_declared_gates": 13,
+      "scientific_acceptance": false
+    },
+    "convergence_ledger": {
+      "command": ".venv-pipeline/Scripts/python.exe scripts/check_sdd_convergence.py",
+      "result": "structurally_valid",
+      "requirements": 19,
+      "pass": 1,
+      "fail": 1,
+      "unresolved": 17,
+      "ineligible": 0
+    },
+    "m02_uploaded_gravity": {
+      "command": ".venv-gravity/Scripts/python.exe -m pytest tests/api/test_gravity_l2_upload.py -q",
+      "result": "passed",
+      "scope": "Uploaded source lineage, locked split, isolated M02 inverse, sealed evaluation, parameter effect and result provenance."
+    },
+    "uploaded_mt": {
+      "command": ".venv-api/Scripts/python.exe -m pytest tests/api/test_online_mt.py -q",
+      "result": "passed",
+      "scope": "Uploaded EDI workflow and independent response oracle controls in the API runtime."
+    },
+    "joint_browser_inputs_and_results": {
+      "command": "npm test -- src/test/joint-input.test.ts src/test/joint-result.test.ts src/test/joint-result-component.test.ts",
+      "result": "passed",
+      "passed": 46,
+      "skipped": 5,
+      "fixtures": "Current retained external intake matrix, solver outputs, and state instrument."
+    },
+    "joint_browser_output_profile": {
+      "command": "npm test -- src/test/joint-runtime-profile.test.ts src/test/joint-read-queue.test.ts",
+      "result": "passed",
+      "passed": 3,
+      "profile_cases": [
+        0,
+        8,
+        16,
+        23
+      ],
+      "files_per_case": 568,
+      "bytes_per_case_range": [
+        343458,
+        671683
+      ]
+    },
+    "fwi_gpu_reference_replay": {
+      "command": "FWI_RECOVERY_ARTIFACTS=data/derived/v2 .venv-pipeline/Scripts/python.exe -m pytest tests/test_seismic_recovery.py::test_reference_recovery_state_and_forward_replay -q",
+      "result": "passed",
+      "passed": 4,
+      "cases": [
+        "FWI_LAYERED",
+        "FWI_FAULT",
+        "FWI_NOISY",
+        "FWI_CYCLE_SKIP"
+      ],
+      "reference_sha256": {
+        "FWI_CYCLE_SKIP": "5ae0fbea6c386fc1703184405b27a299dd7ebcdb21b4dd9876b115bb7c183644",
+        "FWI_FAULT": "85beea1f0cc8f07d70a108aa20dd3c01445c2582356743235285f1f641982f2d",
+        "FWI_LAYERED": "0bd58753bebf96d8a8d577abc40abd27ad230e2f1a5a4e99f017af4c73fab4c9",
+        "FWI_NOISY": "c74f02d7c0684857be4e645261f6afe8e5972bc313f15ec6de1662c138ffcc59"
+      }
+    },
+    "fwi_gpu_adjoint": {
+      "command": ".venv-pipeline/Scripts/python.exe -m pytest tests/test_seismic_recovery.py::test_deepwave_refined_discretization_and_adjoint -q",
+      "result": "passed",
+      "passed": 1
+    },
+    "m12_gpu_receipt_replay": {
+      "command": ".venv-pipeline/Scripts/python.exe -m pytest tests/learning/test_velocity_physics.py::test_frozen_receipt_and_replay -q",
+      "result": "passed",
+      "passed": 1,
+      "receipt": "models/experimental/m12-physics-cuda-20261004/receipt.json",
+      "receipt_sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1",
+      "scope": "Replay of the retained CUDA result; no model retraining was performed in this run."
+    }
+  },
+  "m07_field_ert": {
+    "commands": [
+      "GEOPHYSICS_LOCAL_DATA_ROOT=${GEOPHYSICS_LOCAL_DATA_ROOT} .venv-ert/Scripts/python.exe data-pipeline/ert.py --qc-only",
+      "GEOPHYSICS_LOCAL_DATA_ROOT=${GEOPHYSICS_LOCAL_DATA_ROOT} .venv-ert/Scripts/python.exe data-pipeline/ert.py",
+      "GEOPHYSICS_LOCAL_DATA_ROOT=${GEOPHYSICS_LOCAL_DATA_ROOT} .venv-ert/Scripts/python.exe -m pytest tests/numerics/test_ert.py -q -rs"
+    ],
+    "result": "passed_local_predictive_field_gate",
+    "tests_passed": 5,
+    "source_id": "pygimli-slagdump",
+    "raw_path_outside_repository": "${GEOPHYSICS_LOCAL_DATA_ROOT}/data/downloads/pygimli/slagdump.ohm",
+    "source_sha256": "c010a11b78ea4392cb926d675e847c74010b4cdec536aacaf8db6a644e886de2",
+    "source_bytes": 5435,
+    "rights_decision": "provider-link-only",
+    "result_receipt_outside_repository": "${GEOPHYSICS_LOCAL_DATA_ROOT}/data/raw/ert/slagdump-m07-inverse-4c3c67dcd064.json",
+    "result_receipt_sha256": "04b4382b75b5d36b1a42e30641142ed13d04cf9485e7da3efce74018456baf19",
+    "qc": {
+      "sensors": 38,
+      "readings": 222,
+      "topographic_relief_m": 12.75,
+      "flagged_rows_zero_based": [
+        215
+      ],
+      "reciprocal_pairs": 0,
+      "source_error_column": false
+    },
+    "factor_oracle": {
+      "flat_formula_max_relative_error": 3.1617395639001067e-15,
+      "topography_median_absolute_log_factor_ratio": 0.11353568741388377
+    },
+    "interleaved_holdout": {
+      "training_rows": 182,
+      "heldout_rows": 40,
+      "model_log_resistance_rmse": 0.11300106125916,
+      "homogeneous_baseline_log_resistance_rmse": 0.47088256273577545,
+      "improvement_fraction": 0.7600228375358893,
+      "engine_converged": true,
+      "stopping_reason": "objective-stagnation"
+    },
+    "central_spatial_block": {
+      "training_rows": 143,
+      "heldout_rows": 79,
+      "model_log_resistance_rmse": 0.10849771820363213,
+      "homogeneous_baseline_log_resistance_rmse": 0.4324668768099734,
+      "improvement_fraction": 0.7491190099830323,
+      "engine_stopped_before_iteration_limit": true,
+      "iterations": 4
+    },
+    "predeclared_sensitivity": {
+      "alternate_mesh_heldout_log_resistance_rmse": 0.11126967099091292,
+      "doubled_assumed_error_heldout_log_resistance_rmse": 0.15111825223048475
+    },
+    "boundary": "Single-profile predictive evidence under assumed weights; not calibrated uncertainty, independent-site transfer, unique geology, redistribution permission, or product release acceptance."
+  },
+  "m07_owned_profile_job": {
+    "command": "GEOPHYSICS_LOCAL_DATA_ROOT=${GEOPHYSICS_LOCAL_DATA_ROOT} GEOPHYSICS_PROFILE_TEST_PYTHON=.venv-ert/Scripts/python.exe .venv-api/Scripts/python.exe -m pytest tests/api/test_profile_jobs.py::test_actual_owned_profile_execution[ert_ohm-slagdump.ohm-38-222] -q -rs",
+    "result": "passed",
+    "tests_passed": 1,
+    "scope": "Authenticated local project upload, immutable profile dataset creation, fixed pyGIMLi child inversion, owned result read, original-byte preservation, and result bundle export/re-import equality.",
+    "source_sha256": "c010a11b78ea4392cb926d675e847c74010b4cdec536aacaf8db6a644e886de2",
+    "numerical_verdict": "passed",
+    "host_admission": false,
+    "boundary": "Local API harness and real external source bytes; not live VPS admission, native host containment acceptance, or public field-data release."
+  },
+  "joint_solver_matrix": {
+    "path": "${TEMP}/geophysics-joint-solver-matrix-20261030",
+    "matrix_sha256": "ce01795e4602b9e33c9a0b797d05f4e78b23b341c84f0e182eee76b8363a9a8b",
+    "source_hashes_match": true,
+    "cells_attempted": 24,
+    "complete_cli_workflows": 24,
+    "replay_validated": 24,
+    "candidate_counts": {
+      "converged": 524,
+      "nonconverged": 100,
+      "failed": 0,
+      "eligible_positive": 181
+    },
+    "cases_with_nonconverged_candidates": 22,
+    "files": 14521,
+    "bytes": 13157538,
+    "scientific_precision_accepted": false,
+    "field_eligible": false,
+    "public_activation": false
+  },
+  "limitations": [
+    "M07 now passes its local Slagdump predictive gate on the pinned provider-linked profile; rights, instrument-error, independent-site and release acceptance remain open.",
+    "The 24-case joint matrix is synthetic solver/import evidence. Its retained nonconvergence prevents scientific precision acceptance.",
+    "The focused local gates do not establish all 13 methods, field validity, full API/worker security and capacity, or the ML-VPS release gates.",
+    "The full release matrix requires retained M01 source packets, the exact M11 native database, missing M04 browser controls, and host qualification."
+  ]
+}
