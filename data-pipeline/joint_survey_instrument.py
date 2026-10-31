@@ -10,7 +10,6 @@ import joint_survey_calibration_io as calibration
 import joint_survey_evaluation as evaluation
 import joint_survey_files as files
 import joint_survey_intake as intake
-import joint_survey_objective as objective
 import joint_survey_plan as planner
 import joint_survey_resources as resources
 import joint_survey_workflow as workflow

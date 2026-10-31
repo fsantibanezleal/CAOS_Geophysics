@@ -5,7 +5,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import subprocess
-import sys
 import tempfile
 
 from tests.adversarial._existing_pytest_gate import run_existing
