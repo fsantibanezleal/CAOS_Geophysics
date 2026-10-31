@@ -16,7 +16,8 @@ if str(PIPELINE) not in sys.path:
     sys.path.insert(0, str(PIPELINE))
 
 from geology import registry, VARIANTS, SURVEY_SHAPE, VOLUME_SHAPE, VOLUME_SPACING, SEISMIC_SHAPE, SEISMIC_SPACING  # noqa: E402
-from rebuild import RELEASE_VERSION, REUSABLE_VERSIONS, generator_fingerprint  # noqa: E402
+from rebuild import RELEASE_VERSION, REUSABLE_VERSIONS  # noqa: E402
+from provenance import matches_generator_fingerprint  # noqa: E402
 from artifact_versions import RUN_VERSIONS  # noqa: E402
 
 
@@ -516,9 +517,8 @@ def verify_candidate_release(directory: str | Path, *, allow_subset: bool = Fals
             producer_version = provenance.get("version")
             if producer_version not in REUSABLE_VERSIONS:
                 _fail(f"{variant['path']} has an unsupported producer version")
-            _same(provenance.get("generator_fingerprint"),
-                  generator_fingerprint(case["family"], version=producer_version),
-                  f"{variant['path']} scientific source fingerprint")
+            if not matches_generator_fingerprint(case["family"], provenance.get("generator_fingerprint"), version=producer_version):
+                _fail(f"{variant['path']} scientific source fingerprint")
             if not isinstance(artifact.get("methods"), dict) or not artifact["methods"]:
                 _fail(f"artifact has no methods: {variant['path']}")
             _verify_scientific_contract(artifact, case, variant["path"], root)

@@ -7,7 +7,7 @@ import argparse
 import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'data-pipeline'))
-from provenance import generator_fingerprint
+from provenance import matches_generator_fingerprint
 from artifact_versions import RUN_VERSIONS, allowed_run_version, validate_migration
 
 ROOT=Path(__file__).resolve().parents[1]/"data/derived/v2"
@@ -42,7 +42,7 @@ def assert_method_matrix(family, run_methods, catalog_methods):
 def assert_run_provenance(family, provenance, container_version):
     run_version=provenance['version']
     allowed_run_version(container_version,run_version)
-    assert provenance['generator_fingerprint']==generator_fingerprint(family,version=run_version),'Stale scientific source/settings'
+    assert matches_generator_fingerprint(family,provenance['generator_fingerprint'],version=run_version),'Stale scientific source/settings'
 
 
 def finite(obj):

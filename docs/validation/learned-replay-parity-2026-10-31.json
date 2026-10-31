@@ -1,0 +1,146 @@
+{
+  "schema": "inverse-earth/learned-replay-parity/v1",
+  "canonical_root": "data/derived/v2",
+  "candidate_root": "external candidate directory",
+  "compared_artifacts": 12,
+  "allowed_metadata_changes": [
+    "provenance.generator_fingerprint",
+    "provenance.version",
+    "runtime_seconds"
+  ],
+  "all_scientific_fields_identical": true,
+  "artifacts": [
+    {
+      "path": "LEARNED_CNN/reference.json",
+      "canonical_sha256": "84d3a90bb2360b6e541c64b980d6f430eca3163c090fc59be4e0a4223e2a7934",
+      "candidate_sha256": "0cb85cd2e42a97c0ab2d393da7997881ef27a5ce8737e462f03a16802c5a42c1",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_CNN/contrast.json",
+      "canonical_sha256": "8d2afd9a1743f04b804a4300a320cadce1cb9a5c672e647af6bcab9fff57abe2",
+      "candidate_sha256": "15ab40b701f64b3bc8cbafe677bd49aa4308fee3ef3438985e06a7a8d7fa9a4e",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_CNN/noise.json",
+      "canonical_sha256": "55e71d34ea0edfcc87ba7e21cda3ffcc1f1b40958bae261864cad70e6fe79a39",
+      "candidate_sha256": "e835e3c4831ad7de7faecdb3fc6b51199418a4e037e067be9946760403160c76",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_CNN/acquisition.json",
+      "canonical_sha256": "85fa0b7709b3ce239d9d83b615f25d60efffd1ce5f13c57848e473879474f9fa",
+      "candidate_sha256": "6ef6c3834c57030bfca4ff02bf95c368da6e522b6e8629f3211ff812a2a6f818",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_CNN/coverage.json",
+      "canonical_sha256": "26d9926cfb0aac18b6c61e3f0eb7debd8d1f4fcc48f6cb164410f296455f58db",
+      "candidate_sha256": "43909d9ed7bb7dd0c15557d1f24483b10eead7f1ce18ab403c251c57d17c139a",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_CNN/regularization.json",
+      "canonical_sha256": "5711f6d3d80757b18e0fec1b4d637e3bd47db2380433152a51b3b54827974310",
+      "candidate_sha256": "954b19e98ff1bf46b6b55dad2240c88b41a7509540579cc03585e11a32b1106f",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/reference.json",
+      "canonical_sha256": "b03e8cf6bbcc88e651ad855fd2991d4d8716b1aa16e245fcbc81384eed40db4c",
+      "candidate_sha256": "ebeea82f9ee2fd065025748864e565030ac69b6bc737b5a8a43cfc86b88fc358",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/contrast.json",
+      "canonical_sha256": "b2a3e3d5e525376af5034f8b6b9f3d76a35bf32b113614a870a62ec5113326b4",
+      "candidate_sha256": "4ee5a6098a8432fd862f10161b4398f33fbc65b05f91af9d2a9cd7bf08f5e301",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/noise.json",
+      "canonical_sha256": "93905c975bf6bbf703e448d022ed8fb7f8092de73238f0ebf197626b362a7396",
+      "candidate_sha256": "81aeb750b513fef8b81084a290ed1da426f6f27fefb187a8391e921e95a1c295",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/acquisition.json",
+      "canonical_sha256": "6ed0954b7425238646061715474e91a77d9746c69492ae30fa075220b1ab772c",
+      "candidate_sha256": "474e079d877d7521a09a08d809acc990bc4fa3f853c2088b0be53ac7c9268f9c",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/coverage.json",
+      "canonical_sha256": "a0f2f59d63103b3d63406238f0fb8a67f2bdea5505e6ec56ef4a810c6aa46bb2",
+      "candidate_sha256": "8b1d3d669fcb7ba98c78489a9306e39342210b42db5d06a43341c429e8742716",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    },
+    {
+      "path": "LEARNED_AUTOENCODER/regularization.json",
+      "canonical_sha256": "1c2db38e3ba6293d61cc64c5241995337869a8bacc9790051eaad0812e2e8e40",
+      "candidate_sha256": "f3f1ec96b3e62f1acb54b883e9a4bf7b5de88f09f209a00aede1b40bc705c8bf",
+      "changed_metadata": [
+        "provenance.generator_fingerprint",
+        "provenance.version",
+        "runtime_seconds"
+      ],
+      "scientific_fields_identical": true
+    }
+  ]
+}
