@@ -1,6 +1,8 @@
 # Local reproduction
 
-Run `scripts/setup.ps1 -Gpu` (Windows) or `scripts/setup.sh --gpu` (Linux). Python 3.12 and NVIDIA-compatible CUDA wheels are required for the GPU validation. `.venv` and `.venv-pipeline` are ignored. No editable package installation is used.
+Run each environment setup command separately: `scripts/setup.ps1 -Gpu`, `scripts/setup.ps1 -Api`, `scripts/setup.ps1 -Ert`, and `scripts/setup.ps1 -M08` (Windows); use `scripts/setup.sh --gpu`, `--api`, `--ert`, and `--m08` (Linux). Python 3.12 and NVIDIA-compatible CUDA wheels are required for GPU validation. The runner uses separate ignored environments for offline science, pyGIMLi profiles, API/service checks, and waveform checks. No editable package installation is used.
+
+The M07 ERT, M09 travel-time, and native parameter-mesh tests run in `.venv-ert`; they must not run in `.venv-pipeline`, which does not include the pinned pyGIMLi solver.
 
 For the six-route responsive/theme/language UI gate, first build `frontend`, then run `npm run gate -- --out <absolute external evidence directory>`. The output path is required and must be outside every Git checkout. Optional `--routes`, `--sizes`, `--themes`, `--langs`, `--idle-ms`, and `--settle-ms` flags select a scoped capture matrix.
 
