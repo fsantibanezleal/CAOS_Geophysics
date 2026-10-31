@@ -13,3 +13,72 @@ Date: 2026-09-28. Source: the [bounded M12 feature design](design.md). This is a
 | VEL-07 local pipeline and GPU | CPU pass; CUDA pending coordination | Full local command, checkpoint reload, complete recomputation and seven named tests pass. CUDA training was not launched while M13 may use the shared GPU. No canonical/public artifacts were changed. |
 
 The [full method and scientific limitations](../../../problem-types/04_learned-velocity-validation.md) explain why the failure cannot be repaired by relabelling the old gravity CNN or reporting a good synthetic forward fit as field geology. The current branch offers a reproducible negative control and a complete validation protocol. M12 remains **not accepted** as a learned seismic inverse until a new, predeclared training protocol passes new untouched holdouts and the remaining product gates. The existing experimental checkpoint is deliberately marked failed.
+
+## Fresh predeclared residual-v3.1 CUDA run: 2026-10-27
+
+The frozen [residual-v3.1 protocol](residual-v3-protocol.md) was executed
+without changing its split, seed, loss, optimizer, or locked test cohorts. The
+RTX 4070 Laptop run selected epoch 100, completed in 44.98 s, and passed the
+declared CPU/CUDA inference parity envelope. Its six method-specific
+regressions pass. The full receipt and checkpoint remain outside the checkout
+at `E:\_worktrees\CAOS_Geophysics-data\experiments\m12-residual-v3-20261027`;
+the receipt SHA-256 is
+`6633a816d55c745abe0c529d73074986b8fbcae383691f95b2df1fd0d0cf5239`, and the
+checkpoint SHA-256 is
+`0f7a8fc43a078ab4cb16016774d44b356ccb70d9c60e0f197506fd3f7a53ea03`.
+
+The independent `--verify` replay regenerated all five non-training cohorts
+from the same frozen manifests and reproduced the saved metrics. On all 160
+joint family-plus-acquisition holdouts, learned/classical velocity RMSE is
+`100.5909 / 96.3807 m/s` (ratio `1.04368`); independent-oracle travel-time
+RMSE is `3.26844 / 2.34113 ms` (ratio `1.39609`). Both ratios must be below
+one under the frozen gate. The training/validation improvement therefore
+does not pass M12: the saved verdict is `failed-held-out-comparator` and R-008
+remains failed. No public or canonical artifact was changed, and no test
+cohort was used for tuning after this evaluation.
+
+## Local app evidence inspection: 2026-10-27
+
+The Benchmark page now admits the exact `receipt.json`,
+`local-evidence-manifest.json`, and `m12-residual-v3.1.npz` files for this
+protocol. Browser-side SHA-256 and byte-length checks bind the selected
+receipt/checkpoint to the manifest and check the checkpoint hash recorded in
+the receipt. The page displays the training/validation curve and each scored
+cohort ratio while retaining `failed-held-out-comparator`. It reads files
+locally and does not upload, rerun the solver, or treat checksums as proof of
+authorship. Five focused unit tests, the production TypeScript/Vite build, and
+one Playwright interaction using the actual external 2026-10-27 receipt and
+checkpoint pass. This is a result-inspection feature, not new scientific
+acceptance or release acceptance.
+
+## Fresh nullspace-constrained residual study v1.1: 2026-10-27
+
+The corrected [v1.1 protocol](nullspace-v1_1-protocol.md) uses the exact
+checkpoint feature contract and new calibration/test seeds. Calibration
+selected lambda 100 and alpha 1.0. On the 160-case joint-OOD cohort, velocity
+RMSE ratio was 0.9701 (paired case-bootstrap 95% interval 0.9661–0.9737) and
+independent travel-time RMSE ratio was 0.9967 (0.9950–0.9983); all four held
+out cohorts improved on both aggregate metrics. The v1.1 scorer uses an
+infinite threshold, so its zero-exceedance fields are not a threshold
+evaluation. This is a positive, narrowly bounded synthetic
+result for the projected correction. It is not field validation, a claim of
+geological recovery, or a change to product release status. Full protocol,
+cohort results, intervals, receipt hash and verification state are recorded
+in the linked report. The invalidated v1 results remain excluded.
+
+## Receipt-backed bilingual research notebook: 2026-10-27
+
+The exact full v1.1 receipt is now mirrored at
+`data/derived/v2/models/m12-nullspace-v1_1/receipt.json` (SHA-256
+`30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22`);
+the original immutable external run and checkpoint remain preserved. The new
+English and Spanish lesson at
+`notebooks/{en,es}/08-learning/06-nullspace-refinement-evidence.ipynb` checks
+that receipt identity, reconstructs each cohort's aggregate ratios from its
+paired per-realization RMSE values, plots the calibration-only alpha rule,
+and exposes per-case joint outcomes. Its analyzer rejects fixture receipts,
+duplicate/missing cases and aggregate drift. The lesson does not rerun the
+solver, choose parameters from test cohorts, or change the receipt's
+`scientific_acceptance=false` status. Static notebook checks, three focused
+regressions, and fresh execution of both lessons pass; whole-product R-008
+and M12 acceptance remain open.

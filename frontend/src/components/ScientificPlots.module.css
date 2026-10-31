@@ -1,0 +1,140 @@
+.plotShell {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Narrow MT columns cannot fit a long provenance badge beside the plot title.
+   Let the shell caption use a second line instead of widening the grid track. */
+.plotShell :global(.caos-plot-head) {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.plotShell :global(.caos-plot-title),
+.plotShell :global(.caos-plot-actions),
+.plotShell :global(.caos-badges) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.plotShell :global(.caos-plot-actions),
+.plotShell :global(.caos-badges) {
+  flex-wrap: wrap;
+}
+/* PlotCard's fill mode needs a definite block size when it is used inside a
+   content-sized scientific panel. Without that height chain its flex body can
+   collapse while the chart still mounts, leaving a canvas only a few pixels
+   tall. Keep the measured drawing stage large enough for axes and readouts. */
+.plotShell :global(.caos-plot.fill) {
+  box-sizing: border-box;
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 100%;
+  height: clamp(440px, 66vh, 560px);
+  min-height: 440px;
+}
+
+.plotShell :global(.caos-plot.fill > .caos-plot-body) {
+  flex: 1 1 auto;
+  min-height: 340px;
+}
+
+.plotShell :global(.caos-chart.fill) {
+  min-height: 340px;
+}
+
+.plotShell :global(.caos-chart-plot) {
+  min-height: 300px;
+}
+
+.surveyPlotShell :global(.caos-plot.fill) {
+  height: clamp(440px, 66vh, 560px);
+  min-height: 440px;
+}
+
+.surveyPlotShell :global(.caos-plot.fill > .caos-plot-body) {
+  min-height: 340px;
+}
+
+/* Preserve the shell chart's full accessible data table without letting the
+   app's table-width rule turn its screen-reader copy into a visible G6 surface. */
+.plotShell :global(.caos-chart-table) {
+  position: absolute;
+  transform: scale(0);
+  transform-origin: top left;
+  width: 1px !important;
+  max-width: 1px !important;
+  height: 1px !important;
+  max-height: 1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%);
+  white-space: nowrap !important;
+}
+
+.heatmap {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.heatmapAxes {
+  align-items: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.heatmapArea {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+}
+
+.meshOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.meshOverlay path {
+  fill: none;
+  stroke: var(--color-fg-subtle);
+  stroke-opacity: 0.38;
+  stroke-width: 0.04;
+}
+
+.heatmap :global(.axis-y) {
+  flex: 0 0 1.4rem;
+  font-size: 0.8rem;
+  line-height: 1.2;
+}
+
+.heatmap :global(.axis-x) {
+  align-items: baseline;
+  gap: 0.45rem;
+  min-height: 1.6rem;
+  padding-left: 1.8rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.heatmap :global(.scale-legend) {
+  min-height: 1.2rem;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 760px) {
+  .plotShell :global(.caos-plot.fill) {
+    height: 420px;
+    min-height: 420px;
+  }
+
+  .surveyPlotShell :global(.caos-plot.fill) {
+    height: 480px;
+    min-height: 480px;
+  }
+}

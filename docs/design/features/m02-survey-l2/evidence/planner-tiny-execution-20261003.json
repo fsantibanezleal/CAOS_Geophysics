@@ -1,0 +1,352 @@
+{
+  "schema": "geophysics.m02-survey-l2-local-milestone/v1",
+  "date": "2026-10-03",
+  "scope": "Planner and tiny real-engine objective/whitening/J/volume controls only; optimizer/calibration/evaluation and full L2 matrix remain unimplemented",
+  "reviewed_spec_revision": "48245d1a947870758553e612be1a0a2e3e823afb",
+  "git_head_at_execution": "48245d1a947870758553e612be1a0a2e3e823afb",
+  "source_state": "All five new source/test files were authored and measured while untracked/uncommitted; no claim that a commit preceded their creation",
+  "approval": {
+    "recorded_at": "2026-10-03T11:46:06.522Z",
+    "text": "I fully read all seven final M02 survey-L2 docs before compaction; see48245d1 now. Please freeze exact head, confirm no postreview content delta and guards. MAIN grants narrow local implementation scope in frozen SDD: NEWdata-pipeline/gravity_survey_l2.py,gravity_l2.py and three named test files, own feature/research docs only. Test-first, all physics/noise/optimizer/split/trace gates predeclared; use real pinned existing runtime, noinstall/env/legacyforward edits, noAPI/IRLS/GPU/host deployment. Persist gated milestones with exact no-skips/skips attribution. Implement planner+tiny numerical/oracle first, then sealed selection. No metric/tolerance loosening or silent solver fallback; retain all failures. I will independently run/review returned code."
+  },
+  "chronology_origin": "Read-only extraction of this session's contemporaneous tool records; timestamps below are record timestamps, not reconstructed or backdated process clocks",
+  "test_first": [
+    {
+      "stage": "planner",
+      "test_authored_call_at": "2026-10-03T11:51:20.760Z",
+      "red_call_at": "2026-10-03T11:51:40.751Z",
+      "red_output_recorded_at": "2026-10-03T11:51:42.399Z",
+      "exit_code": 1,
+      "collection_errors": 2,
+      "missing_module": "gravity_survey_l2",
+      "module_sha256": null,
+      "source_binding_basis": "Exact original authoring-patch LF bytes recovered from contemporaneous tool record; data test bytes independently equal current file",
+      "test_sha256": {
+        "tests/data/test_gravity_survey_l2.py": "6ee9460fc62dc789c431499466cbebb89e23a66b12788c346b2dcbe075451109",
+        "tests/numerics/test_gravity_l2_selection.py": "7fa6664825c8e97031359ba542439119acd48a39b9dde46fa20200b385141189"
+      },
+      "implementation_authored_call_at": "2026-10-03T11:55:00.366Z",
+      "green_output_recorded_at": "2026-10-03T11:55:41.431Z",
+      "green_passed": 40,
+      "green_skipped": 0
+    },
+    {
+      "stage": "tiny_engine_objective_oracles",
+      "test_authored_call_at": "2026-10-03T11:57:58.113Z",
+      "red_output_recorded_at": "2026-10-03T11:57:59.689Z",
+      "exit_code": 1,
+      "collection_errors": 1,
+      "missing_module": "gravity_l2",
+      "module_sha256": null,
+      "source_binding_basis": "Exact first authored LF bytes recovered from contemporaneous tool record; subsequent test additions are not retroactively attributed",
+      "test_sha256": {
+        "tests/numerics/test_gravity_l2.py": "0a91f5310051266869204df9f3bcb04c893889b3d6de8475092d179b0e62f528"
+      },
+      "implementation_authored_call_at": "2026-10-03T12:02:00.863Z",
+      "green_output_recorded_at": "2026-10-03T12:02:02.978Z",
+      "green_passed": 11,
+      "green_skipped": 0
+    }
+  ],
+  "actual_tool_runs": [
+    {
+      "chunk_id": "0e35d3",
+      "exit_code": 1,
+      "recorded_at": "2026-10-03T11:51:42.399Z",
+      "stdout_utf8_sha256": "c9ed66c027186729746afe8cb9da1bfc53fdda3ee58daf339d1796244d3d1e95",
+      "summary_lines": [
+        "____________ ERROR collecting tests/data/test_gravity_survey_l2.py ____________",
+        "E   ModuleNotFoundError: No module named 'gravity_survey_l2'",
+        "________ ERROR collecting tests/numerics/test_gravity_l2_selection.py _________",
+        "E   ModuleNotFoundError: No module named 'gravity_survey_l2'",
+        "!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!"
+      ],
+      "wall_time_seconds": 1.4467352
+    },
+    {
+      "chunk_id": "4b2538",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T11:55:41.431Z",
+      "stdout_utf8_sha256": "6ebed2952a4b894cf41fe3f033912ab2809f8670a405e433039e960465e4f5b8",
+      "summary_lines": [
+        "........................................                                 [100%]"
+      ],
+      "wall_time_seconds": 1.4624168
+    },
+    {
+      "chunk_id": "e2111f",
+      "exit_code": 1,
+      "recorded_at": "2026-10-03T11:57:59.689Z",
+      "stdout_utf8_sha256": "4ccbb7b375bc163ae1f0d9dea0f437a0864b2bd708fba187b9f768b75f18787b",
+      "summary_lines": [
+        "_____________ ERROR collecting tests/numerics/test_gravity_l2.py ______________",
+        "E   ModuleNotFoundError: No module named 'gravity_l2'",
+        "!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!"
+      ],
+      "wall_time_seconds": 1.3624034
+    },
+    {
+      "chunk_id": "e7bcae",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T12:02:02.978Z",
+      "stdout_utf8_sha256": "707448a389a591ecdd107570d76b27d5b7c7c449886793eb0b7f5b63e033c3fa",
+      "summary_lines": [
+        "...........                                                              [100%]",
+        "11 passed in 1.26s"
+      ],
+      "wall_time_seconds": 1.8821488
+    },
+    {
+      "chunk_id": "f28d4b",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T12:03:17.250Z",
+      "stdout_utf8_sha256": "0898ed43d094975b6b5428143e3fc06c4d34c4e6b295f14ef99c3b2492739eac",
+      "summary_lines": [
+        "...........................................................              [100%]",
+        "131 passed in 2.08s"
+      ],
+      "wall_time_seconds": 2.7917961
+    },
+    {
+      "chunk_id": "74f52e",
+      "exit_code": 1,
+      "recorded_at": "2026-10-03T12:04:04.111Z",
+      "stdout_utf8_sha256": "0ca4de1930ce59736275397130a0980731f41cb03558f68cc93af4f3930085b0",
+      "summary_lines": [
+        "_________ ERROR collecting tests/numerics/test_gravity_processing.py __________",
+        "E   ModuleNotFoundError: No module named 'boule'",
+        "_______ ERROR collecting tests/numerics/test_gravity_station_adapter.py _______",
+        "E   ModuleNotFoundError: No module named 'boule'",
+        "_________ ERROR collecting tests/numerics/test_gravity_transforms.py __________",
+        "E   ModuleNotFoundError: No module named 'harmonica'",
+        "!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!"
+      ],
+      "wall_time_seconds": 1.7504598
+    },
+    {
+      "chunk_id": "13937d",
+      "exit_code": null,
+      "recorded_at": "2026-10-03T12:05:43.012Z",
+      "stdout_utf8_sha256": "eec170915a671d107d795586956f4d3862b0c40a3a5653ae1326702995b66b42",
+      "summary_lines": [
+        "..........................ssssssss..                                     [100%]",
+        "SKIPPED [1] tests\\data\\test_potential_sources.py:151: explicit local archive gate only; no download in tests or CI",
+        "SKIPPED [1] tests\\data\\test_potential_sources.py:296: Windows symlink privilege unavailable; junction control remains required",
+        "SKIPPED [1] tests\\numerics\\test_ert.py:18: could not import 'pygimli': No module named 'pygimli'",
+        "SKIPPED [1] tests\\numerics\\test_ert.py:54: rights-restricted field raw asset is not present; run documented local acquisition",
+        "SKIPPED [1] tests\\numerics\\test_ert.py:62: rights-restricted field raw asset is not present; run documented local acquisition",
+        "SKIPPED [1] tests\\numerics\\test_ert.py:85: rights-restricted field raw asset is not present; run documented local acquisition",
+        "SKIPPED [1] tests\\numerics\\test_mt_field_qc.py:84: Acquire the ignored C15 EDI using the documented command",
+        "SKIPPED [1] tests\\numerics\\test_mt_field_qc.py:99: Acquire the ignored C15 EDI using the documented command",
+        "SKIPPED [1] tests\\numerics\\test_mt_field_qc.py:116: Acquire the ignored C15 EDI using the documented command",
+        "SKIPPED [1] tests\\numerics\\test_traveltime.py:22: could not import 'pygimli': No module named 'pygimli'",
+        "SKIPPED [1] tests\\numerics\\test_traveltime.py:57: rights-restricted .sgt absent; run documented local acquisition",
+        "SKIPPED [1] tests\\numerics\\test_traveltime.py:83: rights-restricted .sgt absent; run documented local acquisition",
+        "SKIPPED [1] tests\\numerics\\test_traveltime.py:115: rights-restricted .sgt absent; run documented local acquisition",
+        "SKIPPED [1] tests\\numerics\\test_traveltime.py:155: rights-restricted .sgt absent; run documented local acquisition",
+        "238 passed, 14 skipped in 9.48s"
+      ],
+      "wall_time_seconds": 10.0121161
+    },
+    {
+      "chunk_id": "b3072c",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T12:07:29.694Z",
+      "stdout_utf8_sha256": "d4504ffef3162b0a630520610771c373465adcbfb914b812cd587f225673d7f5",
+      "summary_lines": [
+        "..............................................................           [100%]",
+        "134 passed in 2.13s"
+      ],
+      "wall_time_seconds": 2.8234662
+    },
+    {
+      "chunk_id": "0e423a",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T12:09:03.497Z",
+      "stdout_utf8_sha256": "a38588f20e3bd81307da77a5ce72d9514eacd73451d90574aba604a58715f880",
+      "summary_lines": [
+        ".....................                                                    [100%]",
+        "SKIPPED [1] tests\\numerics\\test_gravity_processing.py:380: Attributed field archive is a separate source acquisition, not a synthetic substitute",
+        "164 passed, 1 skipped in 29.94s"
+      ],
+      "wall_time_seconds": 0.000007
+    },
+    {
+      "chunk_id": "bb2596",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T12:09:03.497Z",
+      "stdout_utf8_sha256": "38d5dfe304e8f80e08940637e9a4b2b3cc7fade26c0b410811c331e5b61ebf25",
+      "summary_lines": [
+        "..............................................................           [100%]",
+        "134 passed in 2.19s"
+      ],
+      "wall_time_seconds": 2.9121984
+    },
+    {
+      "chunk_id": "6b1784",
+      "exit_code": 0,
+      "recorded_at": "2026-10-03T12:10:11.518Z",
+      "stdout_utf8_sha256": "d0f8168c49e619b2a9456e356ceb1390a5282dd36640a5c6e771a2440d18f472",
+      "summary_lines": [],
+      "wall_time_seconds": 2.8721092
+    }
+  ],
+  "historical_attribution": "Initial 40/11/131/238 runs retain their own chronology, negatives and stdout hashes; do not attribute later additions or final test SHA to them. No file was moved/deleted to recreate missing-module red.",
+  "final_source_sha256": {
+    "data-pipeline/gravity_l2.py": "0f37fcafa440dafdd899a24d636be9d0557a7fb5a08e7004c84db31e086c19e4",
+    "data-pipeline/gravity_survey_l2.py": "4bc6788f7c46bc2a36bcd871989becf535c03d9702bb1034949ecc37ed040c01",
+    "tests/data/test_gravity_survey_l2.py": "6ee9460fc62dc789c431499466cbebb89e23a66b12788c346b2dcbe075451109",
+    "tests/numerics/test_gravity_l2.py": "e6806d8b390b9a5ead4f06c69bbf932d045496eaa5f61e5bb73f0d17c9ca6995",
+    "tests/numerics/test_gravity_l2_selection.py": "44ea730ab3737e8b193141e6d27f6f9a221fb3df22ac938eecdcbc4c558b9ce5"
+  },
+  "final_focused_command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/data/test_gravity_survey_l2.py",
+    "tests/numerics/test_gravity_l2.py",
+    "tests/numerics/test_gravity_l2_selection.py",
+    "tests/numerics/test_gravity_forward.py",
+    "-o",
+    "addopts=",
+    "-q",
+    "-rs",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "final_focused_tool_chunk": "bb2596",
+  "final_focused_results": {
+    "passed": 134,
+    "skipped": 0,
+    "new_passed": 54,
+    "unchanged_forward_passed": 80,
+    "deselected": 0
+  },
+  "broader_pipeline_command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/data",
+    "tests/numerics",
+    "--ignore=tests/numerics/test_gravity_processing.py",
+    "--ignore=tests/numerics/test_gravity_station_adapter.py",
+    "--ignore=tests/numerics/test_gravity_transforms.py",
+    "-o",
+    "addopts=",
+    "-q",
+    "-rs",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "broader_pipeline_results": {
+    "passed": 238,
+    "skipped": 14,
+    "note": "Intermediate source/test state; exclusions explicitly follow three genuine missing-boule/harmonica collection errors retained above",
+    "terminal_poll_chunk": "35a78f",
+    "terminal_poll_exit_code": 0
+  },
+  "separate_existing_m01_command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/numerics/test_gravity_processing.py",
+    "tests/numerics/test_gravity_transforms.py",
+    "tests/numerics/test_gravity_station_adapter.py",
+    "-o",
+    "addopts=",
+    "-q",
+    "-rs",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "separate_existing_m01_results": {
+    "passed": 164,
+    "skipped": 1,
+    "skip": "Attributed field archive is a separate source acquisition, not a synthetic substitute",
+    "runtime": "Existing isolated M01 interpreter, read-only; not M02 source/runtime acceptance"
+  },
+  "runtime": {
+    "python": "3.12.10",
+    "platform": "Windows AMD64",
+    "trusted_interpreter": "ProductCheckout/.venv-pipeline/Scripts/python.exe",
+    "bytecode_writes_disabled": true,
+    "blas_omp_threads": 1,
+    "installs_or_upgrades": 0,
+    "source_pins_verified": 28,
+    "versions": {
+      "simpeg": "0.25.2",
+      "geoana": "0.8.1",
+      "discretize": "0.12.0",
+      "numpy": "2.2.6",
+      "scipy": "1.15.2",
+      "choclo": "0.3.2",
+      "pymatsolver": "0.4.0"
+    }
+  },
+  "quantitative_tool_chunk": "6b1784",
+  "quantitative_controls": [
+    {
+      "beta_candidate": 0.1,
+      "beta_engine": 0.4,
+      "choclo_physical_j_max_abs": 6.0701557373795366e-18,
+      "choclo_physical_j_max_relative": 3.570878306293702e-11,
+      "directional_relative_errors": [
+        1.829647544582258e-13,
+        3.2027713814386516e-12,
+        9.231726494363102e-12
+      ],
+      "directional_steps": [
+        0.01,
+        0.001,
+        0.0001
+      ],
+      "gradient_max_abs_error": 1.4210854715202004e-14,
+      "hessian_action_max_abs_error": 6.661338147750939e-16,
+      "independent_phi_d": 31.53181072552666,
+      "independent_phi_m": 0.22335641711229953,
+      "kind": "diagonal_sd",
+      "official_phi_d": 31.53181072552666,
+      "official_phi_m": 0.22335641711229948,
+      "phi_d_abs_error": 0,
+      "phi_m_abs_error": 5.551115123125783e-17,
+      "receivers": 4,
+      "source_prisms": 5
+    },
+    {
+      "beta_candidate": 0.1,
+      "beta_engine": 0.4,
+      "choclo_physical_j_max_abs": 6.0701557373795366e-18,
+      "choclo_physical_j_max_relative": 3.570878306293702e-11,
+      "directional_relative_errors": [
+        2.7622348852673895e-13,
+        3.1183944315671397e-12,
+        3.509281754077165e-11
+      ],
+      "directional_steps": [
+        0.01,
+        0.001,
+        0.0001
+      ],
+      "gradient_max_abs_error": 3.552713678800501e-15,
+      "hessian_action_max_abs_error": 2.220446049250313e-15,
+      "independent_phi_d": 33.974874028749184,
+      "independent_phi_m": 0.22335641711229953,
+      "kind": "full_covariance",
+      "official_phi_d": 33.974874028749184,
+      "official_phi_m": 0.22335641711229948,
+      "phi_d_abs_error": 0,
+      "phi_m_abs_error": 5.551115123125783e-17,
+      "receivers": 4,
+      "source_prisms": 5,
+      "wcwt_max_abs_error": 1.0510675264128398e-15
+    }
+  ],
+  "accepted_forward_sha256": "46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5",
+  "unchanged_reviewed_packet": true,
+  "new_optimizer_acceptance": false,
+  "sealed_selection_acceptance": false,
+  "full_24_l2_matrix_executed": false,
+  "resource_envelope_measured": false,
+  "field_eligible": false,
+  "full_M02_accepted": false
+}

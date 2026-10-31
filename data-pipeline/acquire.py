@@ -13,6 +13,7 @@ def main(argv=None) -> int:
     group.add_argument("--source-id", help="Stable ID from data/source-ledger.json")
     group.add_argument("--list", action="store_true", help="Show the reviewed source allowlist")
     parser.add_argument("--file", type=Path, help="Existing local file for a manual or offline import")
+    parser.add_argument("--data-root", type=Path, help="External working-data root; otherwise GEOPHYSICS_LOCAL_DATA_ROOT")
     args = parser.parse_args(argv)
     try:
         if args.list:
@@ -22,7 +23,7 @@ def main(argv=None) -> int:
                                ("source_id", "provider_url", "object_url", "acquisition", "format", "rights_decision")}
                               for record in load_ledger().values()], indent=2))
             return 0
-        _, _, receipt = acquire_source(args.source_id, local_file=args.file)
+        _, _, receipt = acquire_source(args.source_id, local_file=args.file, root=args.data_root)
     except SourceError as error:
         print(f"Acquisition failed: {error}", file=sys.stderr)
         return 2

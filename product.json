@@ -1,0 +1,28 @@
+{
+  "name": "Inverse Earth Studio",
+  "slug": "caos-geophysics",
+  "tagline": {
+    "en": "A geophysics workbench for data, processing, modelling, inversion and scientific review.",
+    "es": "Un espacio de trabajo de geofísica para datos, procesamiento, modelado, inversión y revisión científica."
+  },
+  "repo": "https://github.com/fsantibanezleal/CAOS_Geophysics",
+  "visibility": "public",
+  "license": "Apache-2.0",
+  "holder": "Felipe Santibáñez-Leal",
+  "year": 2026,
+  "app": "workbench",
+  "workbench_route": "/app",
+  "method_packages": [],
+  "pages": [
+    { "id": "app", "path": "/app", "en": "App", "es": "App" },
+    { "id": "introduction", "path": "/introduction", "en": "Introduction", "es": "Introducción" },
+    { "id": "methodology", "path": "/methodology", "en": "Methodology", "es": "Metodología" },
+    { "id": "implementation", "path": "/implementation", "en": "Implementation", "es": "Implementación" },
+    { "id": "experiments", "path": "/experiments", "en": "Experiments", "es": "Experimentos" },
+    { "id": "benchmark", "path": "/benchmark", "en": "Benchmark", "es": "Benchmark" }
+  ],
+  "deployment": {
+    "place": "vps",
+    "origin": "https://geophysics.ml.fasl-work.com/"
+  }
+}

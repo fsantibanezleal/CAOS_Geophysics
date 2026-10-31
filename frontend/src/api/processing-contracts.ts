@@ -1,10 +1,14 @@
 /** The activated processing API; deliberately separate from the future solver contracts. */
 import { unzipSync } from "fflate";
+import { WAVEFORM_METHOD, parseWaveformSources, type WaveformJob, type WaveformReceipt } from "./waveform-contracts";
 import { rawPhysical, type RawPhysicalMetadata, type RightsDecision } from "./contracts";
+import { GRAVITY_L2_METHOD, parseGravityL2Job, type GravityL2Job } from "./gravity-l2-contracts";
 
 export const FLAG_METHOD = "gravity.station-outlier-flags/v1" as const;
 export const M05_METHOD = "mt.edi-full-tensor-qc/v1" as const;
 export const M06_METHOD = "mt.edi-fixed-thickness-trf/v1" as const;
+export const M07_METHOD = "ert.topographic-profile/v1" as const;
+export const M09_METHOD = "traveltime.first-arrival-profile/v1" as const;
 export type ProcessingState = "queued" | "running" | "succeeded" | "failed" | "cancelled";
 export interface DatasetReceipt {
   dataset_id: string; project_id: string; raw_asset_id: string; version: 1;
@@ -15,6 +19,10 @@ export interface DatasetReceipt {
 export interface GravityDataset {
   schema: "geophysics.observation-dataset/v1"; dataset_id: string; version: 1;
   owner_id: string; project_id: string; raw_asset_id: string; parent_raw_sha256: string;
+  parent_raw_bytes: number; raw_columns: string[]; partition_group_ids: string[];
+  source: { source_id: string; provider: string; exact_url: string | null; doi: string | null;
+    citation: string | null; retrieved_at: string | null; rights_decision: RightsDecision;
+    rights_statement: string; attribution: string };
   parser_version: "gravity-station-csv/v1"; modality: "gravity_station";
   dimensions: { station: number }; axis_order: ["station"]; station_ids: string[];
   xyz_m: [number, number, number][]; observed_mgal: number[]; sigma_mgal: number[];
@@ -26,12 +34,18 @@ export interface GravityDataset {
 export type EdiDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_version" | "qc_verdict"> & {
   modality: "edi_transfer_function"; parser_version: "edi-strict-envelope/v1"; qc_verdict: "awaiting_full_tensor_qc";
 };
-export type ProjectDatasetReceipt = DatasetReceipt | EdiDatasetReceipt;
+export type ProfileDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_version" | "qc_verdict"> & {
+  modality: "ert_profile" | "traveltime_profile"; parser_version: "supplied-profile-original/v1"; qc_verdict: "parsed_not_numerically_inverted";
+};
+export type ProjectDatasetReceipt = DatasetReceipt | EdiDatasetReceipt | ProfileDatasetReceipt | WaveformReceipt;
 export const isGravityReceipt = (receipt: ProjectDatasetReceipt): receipt is DatasetReceipt => receipt.modality === "gravity_station";
+export const isEdiReceipt = (receipt: ProjectDatasetReceipt): receipt is EdiDatasetReceipt => receipt.modality === "edi_transfer_function";
+export const isProfileReceipt = (receipt: ProjectDatasetReceipt): receipt is ProfileDatasetReceipt => ["ert_profile","traveltime_profile"].includes(receipt.modality);
 export interface MethodEligibility {
   dataset_id: string;
   methods: { method_id: string; eligible: true; lane: string; scope: string; qc_job_id?: string }[];
-  unavailable: { method_id: string; eligible: false; lane: string; reason: string }[];
+  unavailable: { method_id: string; eligible: false; lane: string; reason: string;
+    reason_fields: string[]; source_eligible?: boolean; reasons?: string[] }[];
 }
 export interface ProcessingRequest {
   schema: "geophysics.processing-request/v1"; job_id: string; project_id: string;
@@ -70,8 +84,18 @@ export type MtProcessingJob = Omit<ProcessingJob, "method_id" | "request" | "pre
   };
   preflight: ProcessingJob["preflight"] & {estimated_scratch_bytes: number};
 };
-export type ProjectProcessingJob = ProcessingJob | MtProcessingJob;
+export type ProfileProcessingJob = Omit<ProcessingJob, "method_id" | "request" | "preflight"> & {
+  method_id: typeof M07_METHOD | typeof M09_METHOD;
+  request: Omit<ProcessingRequest, "method_id" | "parameters"> & {
+    method_id: typeof M07_METHOD | typeof M09_METHOD; parameters: Record<string, never>;
+    raw_asset_id: string; raw_sha256: string; profile_child_sha256: string; profile_code_hashes: Record<string,string>;
+  };
+  preflight: ProcessingJob["preflight"] & {estimated_scratch_bytes:number};
+};
+export type ProjectProcessingJob = ProcessingJob | MtProcessingJob | ProfileProcessingJob | WaveformJob | GravityL2Job;
 export const isFlagJob = (job: ProjectProcessingJob): job is ProcessingJob => job.method_id === FLAG_METHOD;
+export const isMtJob = (job: ProjectProcessingJob): job is MtProcessingJob => job.method_id === M05_METHOD || job.method_id === M06_METHOD;
+export const isProfileJob = (job: ProjectProcessingJob): job is ProfileProcessingJob => job.method_id === M07_METHOD || job.method_id === M09_METHOD;
 
 function fail(context: string): never { throw new Error(`Processing contract rejected: ${context}`); }
 export function processingObject(value: unknown, context: string): Record<string, unknown> {
@@ -162,6 +186,8 @@ export function parseProjectDatasetReceipt(value: unknown): ProjectDatasetReceip
   if (data.schema !== "geophysics.observation-dataset/v1" || data.version !== 1) fail("dataset receipt schema/version");
   if (data.modality === "gravity_station" && data.parser_version === "gravity-station-csv/v1" && data.qc_verdict === "parsed_for_flag_qc_only") integer(data.row_count, 4, 4096);
   else if (data.modality === "edi_transfer_function" && data.parser_version === "edi-strict-envelope/v1" && data.qc_verdict === "awaiting_full_tensor_qc") integer(data.row_count, 2, 512);
+  else if (["ert_profile","traveltime_profile"].includes(String(data.modality)) && data.parser_version === "supplied-profile-original/v1" && data.qc_verdict === "parsed_not_numerically_inverted") integer(data.row_count,4,4096);
+  else if (data.modality === "waveform_counts_response" && /^m08\/v1\/[a-f0-9]{64}$/.test(String(data.parser_version)) && data.qc_verdict === "structural_index_not_physical_qc") integer(data.row_count, 1, 180000);
   else fail("dataset receipt modality/parser/verdict");
   hash(data.raw_sha256); hash(data.sha256); timestamp(data.created_at);
   return value as ProjectDatasetReceipt;
@@ -173,11 +199,20 @@ export function parseDatasetReceipt(value: unknown): DatasetReceipt {
 }
 export function parseGravityDataset(value: unknown): GravityDataset {
   const data = processingObject(value, "dataset");
-  keys(data, ["schema", "dataset_id", "version", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parser_version", "modality", "dimensions", "axis_order", "station_ids", "xyz_m", "observed_mgal", "sigma_mgal", "uncertainty_kind", "mask", "missing_reasons", "physical_metadata", "correction_history", "qc_verdict", "rights_decision", "rights_statement", "attribution"], "dataset");
+  keys(data, ["schema", "dataset_id", "version", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parent_raw_bytes", "raw_columns", "partition_group_ids", "source", "parser_version", "modality", "dimensions", "axis_order", "station_ids", "xyz_m", "observed_mgal", "sigma_mgal", "uncertainty_kind", "mask", "missing_reasons", "physical_metadata", "correction_history", "qc_verdict", "rights_decision", "rights_statement", "attribution"], "dataset");
   if (data.schema !== "geophysics.observation-dataset/v1" || data.version !== 1 || data.modality !== "gravity_station" || data.parser_version !== "gravity-station-csv/v1" || data.qc_verdict !== "parsed_for_flag_qc_only") fail("dataset schema/verdict");
   for (const key of ["dataset_id", "owner_id", "project_id", "raw_asset_id"]) processingId(data[key]);
   hash(data.parent_raw_sha256); processingText(data.attribution, "attribution");
+  integer(data.parent_raw_bytes, 1, 2 * 1024 * 1024);
+  if (!Array.isArray(data.raw_columns) || !data.raw_columns.length || data.raw_columns.some(column => typeof column !== "string" || !column.trim())) fail("dataset raw columns");
+  if (!Array.isArray(data.partition_group_ids) || data.partition_group_ids.some(group => typeof group !== "string" || !group.trim())) fail("dataset partition groups");
+  const source = processingObject(data.source, "dataset source");
+  keys(source, ["source_id", "provider", "exact_url", "doi", "citation", "retrieved_at", "rights_decision", "rights_statement", "attribution"], "dataset source");
+  processingId(source.source_id); processingText(source.provider, "dataset source provider");
+  if (source.rights_decision !== data.rights_decision || source.rights_statement !== data.rights_statement || source.attribution !== data.attribution) fail("dataset source declarations");
   const count = stationArrays(data);
+  if (data.partition_group_ids.length !== 0 && data.partition_group_ids.length !== count) fail("dataset partition group dimensions");
+  if (data.raw_columns.length !== (data.partition_group_ids.length ? 7 : 6)) fail("dataset raw column dimensions");
   same(data.mask, Array(count).fill(false), "flag QC input mask");
   same(data.missing_reasons, Array(count).fill(null), "flag QC missingness");
   same(data.correction_history, [], "input correction history");
@@ -197,11 +232,21 @@ export function parseEligibility(value: unknown): MethodEligibility {
     for (const item of data[key]) {
       const row = processingObject(item, "method");
       const qc = eligible && row.method_id === M06_METHOD;
-      keys(row, ["method_id", "eligible", "lane", eligible ? "scope" : "reason", ...(qc ? ["qc_job_id"] : [])], "method");
+      keys(row, ["method_id", "eligible", "lane", eligible ? "scope" : "reason",
+        ...(qc ? ["qc_job_id"] : []), ...(!eligible ? ["reason_fields", "source_eligible", "reasons"].filter(key => key in row) : [])], "method");
       if (qc) processingId(row.qc_job_id);
       const id = processingText(row.method_id, "method ID");
       if (ids.has(id) || row.eligible !== eligible) fail("duplicate or contradictory eligibility");
       ids.add(id); processingText(row.lane, "method lane"); processingText(row[eligible ? "scope" : "reason"], "method reason");
+      if (!eligible) {
+        if (!Array.isArray(row.reason_fields) || row.reason_fields.length === 0) fail("ineligible method reason fields");
+        row.reason_fields.forEach(field => processingText(field, "method reason field"));
+      }
+      if (!eligible && row.source_eligible !== undefined && typeof row.source_eligible !== "boolean") fail("method source eligibility");
+      if (!eligible && row.reasons !== undefined) {
+        if (!Array.isArray(row.reasons) || row.reasons.length === 0) fail("method source reasons");
+        row.reasons.forEach(reason => processingText(reason, "method source reason"));
+      }
       if (id === FLAG_METHOD && eligible && row.lane !== "online_processing") fail("gravity method lane");
     }
   }
@@ -209,18 +254,30 @@ export function parseEligibility(value: unknown): MethodEligibility {
 }
 export function parseProjectProcessingJob(value: unknown): ProjectProcessingJob {
   const data = processingObject(value, "job");
+  if (data.method_id === GRAVITY_L2_METHOD) return parseGravityL2Job(value);
   keys(data, ["job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "request", "request_sha256", "preflight", "state", "cancel_requested", "created_at", "started_at", "finished_at", "wall_ms", "peak_rss_bytes", "scratch_bytes", "result_sha256", "error", "result_url"], "job");
   for (const key of ["job_id", "project_id", "dataset_id"]) processingId(data[key]);
   hash(data.dataset_sha256); hash(data.request_sha256);
-  if (!new Set<string>([FLAG_METHOD,M05_METHOD,M06_METHOD]).has(String(data.method_id))) fail("unsupported job method version");
-  const mt = data.method_id !== FLAG_METHOD, inverse = data.method_id === M06_METHOD;
+  if (!new Set<string>([FLAG_METHOD,M05_METHOD,M06_METHOD,M07_METHOD,M09_METHOD,WAVEFORM_METHOD,GRAVITY_L2_METHOD]).has(String(data.method_id))) fail("unsupported job method version");
+  const wave = data.method_id === WAVEFORM_METHOD;
+  const profile = data.method_id === M07_METHOD || data.method_id === M09_METHOD;
+  const mt = profile || data.method_id === M05_METHOD || data.method_id === M06_METHOD, inverse = data.method_id === M06_METHOD;
   const request = processingObject(data.request, "request");
-  keys(request, ["schema", "job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "parameters", ...(mt ? ["raw_asset_id","raw_sha256"] : []), ...(inverse ? ["qc_screen_sha256"] : [])], "request");
+  keys(request, ["schema", "job_id", "project_id", "dataset_id", "dataset_sha256", "method_id", "parameters", ...(mt ? ["raw_asset_id","raw_sha256"] : []), ...(inverse ? ["qc_screen_sha256"] : []), ...(profile ? ["profile_child_sha256","profile_code_hashes"]:[]), ...(wave ? ["waveform_sources","scientific_request","scientific_request_sha256","implementation_sha256"] : [])], "request");
   if (request.schema !== "geophysics.processing-request/v1") fail("request schema");
   for (const key of ["job_id", "project_id", "dataset_id", "dataset_sha256", "method_id"]) same(request[key], data[key], `request ${key}`);
-  if (!mt) parameters(request.parameters);
+  if (wave) {
+    const params = processingObject(request.parameters,"waveform parameters");keys(params,["scientific_request_sha256"],"waveform parameters");hash(params.scientific_request_sha256);hash(request.scientific_request_sha256);hash(request.implementation_sha256);same(params.scientific_request_sha256,request.scientific_request_sha256,"waveform request digest");parseWaveformSources(request.waveform_sources);processingObject(request.scientific_request,"waveform scientific request");
+  }
+  else if (!mt) parameters(request.parameters);
   else {
     processingId(request.raw_asset_id); hash(request.raw_sha256);
+    if (profile) {
+      hash(request.profile_child_sha256);
+      const code = processingObject(request.profile_code_hashes,"profile producer code");
+      keys(code,[data.method_id===M07_METHOD?"ert.py":"traveltime.py","supplied_profiles.py","profile_mesh.py"],"profile producer code");
+      Object.values(code).forEach(hash);
+    }
     const params = processingObject(request.parameters, "MT parameters");
     if (!inverse) keys(params, [], "M05 has no inverse parameters");
     else {
@@ -235,10 +292,11 @@ export function parseProjectProcessingJob(value: unknown): ProjectProcessingJob 
     }
   }
   const preflight = processingObject(data.preflight, "preflight");
-  keys(preflight, ["estimated_memory_bytes", "memory_limit_bytes", "scratch_limit_bytes", "wall_limit_seconds", ...(mt ? ["estimated_scratch_bytes"] : [])], "preflight");
-  Object.values(preflight).forEach(value => integer(value, 1));
+  keys(preflight, ["estimated_memory_bytes", "memory_limit_bytes", "scratch_limit_bytes", "wall_limit_seconds", ...(mt || wave ? ["estimated_scratch_bytes"] : []), ...(wave ? ["memory_kind","cpu_budget_ns","cpu_stop_ns"] : [])], "preflight");
+  Object.entries(preflight).filter(([key])=>key!=="memory_kind").forEach(([,value]) => integer(value, 1));
+  if(wave && (preflight.memory_kind!=="platform_committed_or_cgroup_charge_not_rss"||preflight.cpu_budget_ns!==60000000000||preflight.cpu_stop_ns!==57000000000||Number(preflight.memory_limit_bytes)>1073741824||Number(preflight.scratch_limit_bytes)>52690944||Number(preflight.wall_limit_seconds)>120))fail("waveform resource contract");
   if (Number(preflight.estimated_memory_bytes) > Number(preflight.memory_limit_bytes)) fail("admitted memory estimate exceeds ceiling");
-  if (mt && Number(preflight.estimated_scratch_bytes) > Number(preflight.scratch_limit_bytes)) fail("admitted scratch estimate exceeds ceiling");
+  if ((mt || wave) && Number(preflight.estimated_scratch_bytes) > Number(preflight.scratch_limit_bytes)) fail("admitted scratch estimate exceeds ceiling");
   if (!["queued", "running", "succeeded", "failed", "cancelled"].includes(String(data.state)) || typeof data.cancel_requested !== "boolean") fail("job state");
   timestamp(data.created_at);
   for (const key of ["started_at", "finished_at"]) if (data[key] !== null) { timestamp(data[key]); if (Date.parse(data[key] as string) < Date.parse(data.created_at as string)) fail("job timestamp order"); }

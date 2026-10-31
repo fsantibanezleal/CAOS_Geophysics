@@ -14,20 +14,51 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install lightweight linter only
-        run: pip install ruff==0.15.18
+      - name: Install lightweight contract and lint checkers
+        run: pip install ruff==0.15.18 jsonschema==4.25.1
       - name: Lint
-        run: ruff check data-pipeline tests
+        run: ruff check data-pipeline tests scripts/build_api_contracts.py scripts/check_api_contracts.py
       - name: CONTRACT 2, manifests <-> artifacts consistent (no drift)
         run: python scripts/check_artifacts.py
       - name: M13 committed browser-asset integrity (no training)
         run: python scripts/check_phase_assets.py
       - name: Product requirement ledger integrity (not release acceptance)
         run: python scripts/check_sdd_convergence.py
+      - name: M01-M13 wiki structure and implementation-link coverage (not science acceptance)
+        run: python scripts/check_docs_matrix.py
+      - name: M01-M13 declared gate inventory (not scientific acceptance)
+        run: |
+          python scripts/check_method_matrix.py --report-only
+          python -m unittest tests/test_method_matrix.py
+      - name: One deploy place
+        run: python scripts/check_deploy_place.py
+      - name: Contract catalog paths and required fields
+        run: python scripts/check_contracts.py docs/contracts/catalog.md --repo-root .
+      - name: API route coverage, OpenAPI export and JSON Schema payload checks
+        run: |
+          python scripts/build_api_contracts.py --check
+          python scripts/check_api_contracts.py
+      - name: Contract schema versions and lock
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base="$BEFORE"
+          if [ -z "${base//0/}" ]; then base=origin/develop; fi
+          python scripts/check_contract_versions.py --base "$base"
+      - name: Committed catalogue readiness record
+        run: python scripts/check_readiness.py
+      - name: Notebook structure and bilingual static guard; no notebook execution
+        run: python scripts/check_notebooks.py
+      - name: Reader-facing method names; internal classification stays internal
+        run: python scripts/check_internal_names.py
+      - name: Repository area index
+        run: python scripts/check_readme_areas.py
 
   guards:
     runs-on: ubuntu-latest

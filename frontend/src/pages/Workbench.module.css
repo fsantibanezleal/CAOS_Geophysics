@@ -1,0 +1,15 @@
+/* Page-local exceptions for the full-screen App workbench. */
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .sceneSettings {
+    position: static;
+    align-self: stretch;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  .sceneSettings[open] {
+    width: auto;
+  }
+}

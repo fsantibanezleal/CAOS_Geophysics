@@ -62,7 +62,7 @@ def main():
                 worker.wait(timeout=10)
             worker = None
         async def capture(_address, _subject, body): messages.append(body)
-        app = create_app(Settings(data_dir=private, db_path=db,
+        app = create_app(Settings(data_dir=private, db_path=db, auth_mode="email",
             auth_secret="isolated-mt-browser-qa-not-deployment-1234567890",
             public_origin=origin, cookie_secure=False, mt_online_enabled=enabled), capture)
         original_lifespan = app.router.lifespan_context

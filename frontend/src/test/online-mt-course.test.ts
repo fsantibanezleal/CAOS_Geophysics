@@ -75,8 +75,51 @@ describe("online MT course", () => {
     expected = expected.replace('"Geophysical inversion estimates subsurface properties from measured physical responses. This application compares density, magnetic susceptibility, resistivity and acoustic velocity in controlled synthetic experiments. The relation "', '"Geophysical research separates immutable observations, derived processing and conditional subsurface inversion. This platform combines audited synthetic lessons with owned CSV flag processing and reviewed bounded EDI QC/inversion; method-specific admission is not public host activation. The relation "');
     expected = expected.replace('"La inversión geofísica estima propiedades del subsuelo a partir de respuestas físicas medidas. Esta aplicación compara densidad, susceptibilidad, resistividad y velocidad acústica en experimentos sintéticos controlados. La relación "', '"La investigación geofísica separa observaciones inmutables, procesamiento derivado e inversión condicional del subsuelo. La plataforma combina lecciones sintéticas auditadas, flags de CSV propio y QC/inversión EDI acotados revisados; admisión por método no implica host público activo. La relación "');
     expected = expected.replace("      <section>", "      <OnlineMTIntroduction />\n      <section>");
+    expected = expected.replace('"The six released synthetic-method chapters remain available alongside classical M08 and learned M13 earthquake arrival picking. Grouped navigation separates field response, wave physics and learned inference. M13 has a frozen offline checkpoint and a conditional browser execution path; model bytes and browser parity evidence are supplied separately."', '"This page presents the selected methods with interactive course material. The complete M01-M13 reference distinguishes implemented processing, inverses, research prototypes and unavailable workflows, with equations, data eligibility, reproducible commands, evidence and limitations in English and Spanish."');
+    expected = expected.replace('"Los seis capítulos sintéticos publicados siguen disponibles junto a detección clásica M08 y aprendida M13 de llegadas sísmicas. La navegación agrupa campos, ondas e inferencia aprendida. M13 tiene checkpoint offline congelado y una vía web condicional; modelo y prueba de paridad se aportan por separado."', '"Esta página presenta métodos seleccionados con material interactivo de curso. La referencia completa M01-M13 distingue procesamiento implementado, inversiones, prototipos de investigación y flujos aún no disponibles, con ecuaciones, elegibilidad de datos, comandos reproducibles, evidencia y limitaciones en inglés y español."');
+    expected = expected.replace('      <Tabs ariaLabel={t("Methodology groups", "Grupos de metodología")} tabs={groups} />\n    </div>', `      <Tabs ariaLabel={t("Methodology groups", "Grupos de metodología")} tabs={groups} />
+      <section aria-labelledby="method-wiki-heading">
+        <h2 id="method-wiki-heading">{t("Complete M01-M13 method reference", "Referencia completa de métodos M01-M13")}</h2>
+        <p className="measure">{t(
+          "Read the full method-by-method science, executable paths, test boundaries, data rights and open limitations. The structural wiki check does not certify scientific or release acceptance.",
+          "Consulte la ciencia de cada método, rutas ejecutables, límites de pruebas, derechos de datos y limitaciones abiertas. La verificación estructural del wiki no certifica aceptación científica ni de lanzamiento.",
+        )}</p>
+        <p><a className="btn" href={source + "docs/wiki/README.md"}>{t("Open the bilingual methods wiki", "Abrir el wiki bilingüe de métodos")}</a></p>
+      </section>
+    </div>`);
     expected = expected.replace('"4. Experimental calculation and interpretation"', '"4. Synthetic experimental calculation and interpretation"').replace('"4. Cálculo e interpretación experimental"', '"4. Cálculo e interpretación experimental sintética"');
-    expect(current.replaceAll("\r\n", "\n")).toBe(expected.replaceAll("\r\n", "\n"));
+    // Only MAIN's explicitly approved M01 seams extend this full-file guard.
+    expected = expected.replace('import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";', 'import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";\nimport { M01ScientificCourse } from "../components/M01ScientificCourse";');
+    expected = expected.replace('tabs={released(["potential", "mt", "joint"])}', 'tabs={[\n        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },\n        ...released(["potential", "mt", "joint"]),\n      ]}');
+    expected = expected.replace('ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={chapters', 'ariaLabel={t("Field algorithms by method", "Algoritmos de campos por método")} tabs={[\n        { id: "m01", label: t("Gravity processing", "Procesamiento gravimétrico"), content: <M01ScientificCourse /> },\n        ...chapters');
+    expected = expected.replace('        }))} />,\n    },\n    {\n      id: "waves",', '        })),\n      ]} />,\n    },\n    {\n      id: "waves",');
+    // The reviewed pure-theory mount changes only these three exact seams;
+    // keep full-file equality for every existing MT equation and algorithm.
+    expected = expected.replace('import { M01ScientificCourse } from "../components/M01ScientificCourse";',
+      'import { M01ScientificCourse } from "../components/M01ScientificCourse";\nimport { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";');
+    expected = expected.replace('        ...released(["potential", "mt", "joint"]),',
+      '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse /> },\n        ...released(["potential", "mt", "joint"]),');
+    expected = expected.replace('        ...chapters\n',
+      '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse implementation /> },\n        ...chapters\n');
+    // Exactly two deployment prose exceptions; retain whole-file science checks.
+    const deploymentCopy = [
+      ["The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",
+        "The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. The current live 0.04.001 deployment uses only the ML VPS; Pages publication has been withdrawn. The replacement keeps courses, curated replay and validated browser computations public, including layered MT forward calculation and locally implemented M13 phase-picking inference. Server project persistence, uploads and VPS jobs require login; implementation and local validation do not mean new VPS jobs are deployed."],
+      ["El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. Pages y VPS sirven archivos estáticos. Sólo la calculadora directa MT recalcula respuesta física en navegador.",
+        "El build copia resultados calculados. SimPEG/SciPy resuelven campos potenciales; PyTorch/Deepwave ejecutan cálculos diferenciables y aprendidos en GPU local disponible. El despliegue live 0.04.001 actual usa sólo ML VPS; la publicación en Pages fue retirada. El reemplazo mantiene públicos los cursos, la reproducción curada y los cálculos validados en navegador, incluido MT directo por capas y la inferencia M13 de fases implementada localmente. La persistencia de proyectos, las cargas y las tareas VPS requieren inicio de sesión; la implementación y validación local no significan que se hayan desplegado nuevas tareas VPS."],
+    ];
+    for (const [oldCopy, newCopy] of deploymentCopy) {
+      expect(expected.split(oldCopy)).toHaveLength(2);
+      expect(current.split(newCopy)).toHaveLength(2);
+      expected = expected.replace(oldCopy, newCopy);
+    }
+    expected = expected.replace("<td>CC-BY-4.0</td>", '<td><code translate="no">CC-BY-4.0</code></td>');
+    expected = expected.replace("<td>36 · 0.01–100 Hz</td>", '<td>{t("36 · 0.01–100 Hz", "36 · 0,01–100 Hz")}</td>');
+    expected = expected.replace('{es ? v.name_es : v.name}', '{es ? v.name_es.replace(/(\\d)\\.(\\d)/g, "$1,$2") : v.name}');
+    expect(current.slice(current.indexOf("function TheoryChapter"))
+      .replace(/^[\t ]*<M12ResidualEvidence \/>[\t ]*\r?\n/m, "")
+      .replaceAll("\r\n", "\n"))
+      .toBe(expected.slice(expected.indexOf("function TheoryChapter")).replaceAll("\r\n", "\n"));
     const diagram = source("components/OnlineMTDiagram.tsx"), css = source("components/OnlineMTCourse.module.css");
     expect(diagram).toContain("useShellLang");
     expect(diagram).toContain("var(--color-accent)");
@@ -88,9 +131,17 @@ describe("online MT course", () => {
     for (const text of ["immutable original", "flag", "correction", "truth=null", "QC-only", "offline local CPU/GPU", "closed pending", "verification/re-import", "not public host activation"])
       expect(introduction + source("pages/Research.tsx")).toContain(text);
     expect(introduction).toContain("neither public API activation nor all M01–M13 methods online");
-    const base = execFileSync("git", ["show", "afac8ab:frontend/src/pages/Research.tsx"], { encoding: "utf8" });
+    const research = source("pages/Research.tsx");
+    for (const area of ["problem", "principles", "math", "pipeline", "honesty"])
+      expect(research).toContain(`area="${area}"`);
+    expect(research).toContain("function TechnicalIntroduction()");
+    expect(research).toContain("<ExecutiveView data={executiveBrief}");
     const equations = (text: string) => [...text.split("function TheoryChapter")[0].matchAll(/tex=\{String\.raw`([^`]+)`\}/g)].map(m => m[1]);
-    expect(equations(source("pages/Research.tsx"))).toEqual(equations(base));
+    expect(equations(research)).toEqual([
+      String.raw`\begin{aligned}d_i^{obs}&=F_i(m_{true})+\epsilon_i\\G_{ij}&=\frac{\partial F_i}{\partial m_j}\end{aligned}`,
+      String.raw`\begin{aligned}J_d&=\Phi_d(F(m),d^{obs})\\J_m&=\beta\Phi_m(m)\\\widehat m&=\arg\min_m(J_d+J_m)\end{aligned}`,
+      String.raw`\mathrm{RMSE}_m=\sqrt{\frac1M\sum_{j=1}^{M}e_j^2}`,
+    ]);
   });
   it("orthogonal fields in a right-handed x-depth section", () => {
     const diagram = source("components/OnlineMTDiagram.tsx");

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="350" viewBox="0 0 960 350" role="img" aria-labelledby="title desc">
+  <title id="title">Local waveform processing and separate reference scoring</title>
+  <desc id="desc">Exact original bytes pass bounded input and scientific QC before response, filter, spectrum and unlabelled onset calculation. Failures are retained. References enter only after a calculation seal. No online or host acceptance follows.</desc>
+  <style>
+    svg { color: var(--text-primary, #1e293b); background: var(--surface, #f8fafc); }
+    rect { fill: var(--surface-raised, #ffffff); stroke: var(--border-strong, #64748b); stroke-width: 1.5; }
+    text { fill: currentColor; font: 15px system-ui, sans-serif; }
+    .small { font-size: 13px; }
+    .arrow { fill: none; stroke: var(--accent, #0369a1); stroke-width: 2; marker-end: url(#head); }
+    .hold { fill: var(--surface-warning, #fff7ed); }
+  </style>
+  <defs><marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#0369a1"/></marker></defs>
+  <rect x="20" y="40" width="150" height="76" rx="8"/>
+  <text x="35" y="66">Original bytes</text><text x="35" y="89" class="small">Counts + instrument XML</text>
+  <rect x="204" y="40" width="166" height="76" rx="8"/>
+  <text x="219" y="66">Input / QC gates</text><text x="219" y="89" class="small">Caps, epochs, units, flags</text>
+  <rect x="404" y="40" width="188" height="76" rx="8"/>
+  <text x="419" y="66">Conditional calculation</text><text x="419" y="89" class="small">Response → filter → PSD / CF</text>
+  <rect x="626" y="40" width="138" height="76" rx="8"/>
+  <text x="641" y="66">Content seal</text><text x="641" y="89" class="small">Arrays + metadata</text>
+  <rect x="798" y="40" width="142" height="76" rx="8"/>
+  <text x="813" y="66">Separate scoring</text><text x="813" y="89" class="small">Retain all denominators</text>
+  <path class="arrow" d="M170 78 H204"/><path class="arrow" d="M370 78 H404"/>
+  <path class="arrow" d="M592 78 H626"/><path class="arrow" d="M764 78 H798"/>
+  <rect x="190" y="176" width="192" height="74" rx="8" class="hold"/>
+  <text x="205" y="202">Retained negative</text><text x="205" y="225" class="small">Reject or QC-only; no repair</text>
+  <path class="arrow" d="M286 116 V176"/>
+  <rect x="784" y="176" width="168" height="74" rx="8"/>
+  <text x="799" y="202">Analyst references</text><text x="799" y="225" class="small">Only after original seal</text>
+  <path class="arrow" d="M868 176 V116"/>
+  <text x="20" y="290">Unlabelled intervals: phase = null; timing sigma = null; no calibrated clock claim.</text>
+  <text x="20" y="320" class="small">Local scientific evidence is separate from native containment, positive field eligibility and host admission.</text>
+</svg>

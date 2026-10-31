@@ -1,9 +1,9 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "b14406ecc21ca928f32970f4dc8fdb125c0dbd5fb24c1df8475cdcf2eb097904",
-  "assessed_revision": "e700b8d087dc3ae9f9c2b0fa4333d2f4a5ba2dbe",
-  "assessed_at": "2026-10-04T00:03:59Z",
+  "sdd_sha256": "ed72028e6866febf20ab48c69f8120c02efb88fa43e16b69ea92418f51adef30",
+  "assessed_revision": "ad221c52a2e64a842ee77299b5c2f300c8d9296f",
+  "assessed_at": "2026-10-30T12:33:43.686504Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -38,7 +38,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+          "sha256": "2da662e54b92837d93e65ff71f2c351aa1711112493661d8295ffa9eec191b08"
         }
       ],
       "receipts": []
@@ -51,7 +51,7 @@
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+          "sha256": "2da662e54b92837d93e65ff71f2c351aa1711112493661d8295ffa9eec191b08"
         },
         {
           "path": "docs/validation/physical-json-independent-review-2026-10-03.md",
@@ -85,11 +85,19 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across the uploaded-data modalities and a browser workbench check. The API suite and browser eligibility case pass locally; R-005 remains unresolved because complete end-to-end eligibility coverage across all supported inputs is not accepted.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
+        },
+        {
+          "path": "tests/api/test_method_eligibility.py",
+          "sha256": "b84af52103274752af597839010accda9c5f23100e155c68ab370bedec230352"
+        },
+        {
+          "path": "frontend/e2e/eligibility.spec.ts",
+          "sha256": "ed70d0363d85e85b953a833387155d16435d8e25e2c0b0b1377a54f192bc52de"
         }
       ],
       "receipts": []
@@ -97,8 +105,8 @@
     {
       "id": "R-006",
       "verdict": "unresolved",
-      "declared_gate": "tests/api/test_job_execution.py::test_user_dataset_actual_solve_and_parameter_effect.",
-      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete.",
+      "declared_gate": "tests/api/test_gravity_l2_upload.py::test_admission_memory_preflight_does_not_import_solver_engines, tests/api/test_gravity_l2_upload.py::test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions, and tests/api/test_online_mt.py::test_inverse_parameter_effect_and_independent_oracle.",
+      "note": "Merged M05/M06 worker and scientific workbench execute actual supplied EDI calculations, parameter effects and verified bundles in isolated local tests. Independent MT browser five-test review and integrated retest pass. Hosted admission and all other promised submitted-data methods remain incomplete. A new authenticated uploaded-survey integration now runs the isolated M02 ordinary weighted L2 child, changes predictions when its declared background parameter changes, preserves the original bytes, and exports a verifiable unit/provenance bundle. The authored control passes locally; the complete required method ladder and actual-host admission remain open. The uploaded M02 test now checks both parameter-dependent jobs against an independent Choclo prism response at all 144 receiver locations, validates sealed held-out residual and weighted metrics from exported arrays, and verifies source-preserving bundle round-trip. This remains one authored one-cell path; other online methods and host admission remain incomplete. The authenticated M02 uploaded-survey path now has a strict browser job/result adapter, hash-verified typed arrays and ZIP export validation, plus a project-workbench parameter/job flow. This closes one local frontend vertical only; host admission, other uploaded methods and full acceptance remain open. On 2026-10-30, three focused local API tests passed: M02 admission avoids importing solver engines, an authenticated uploaded authored survey executes in the dedicated gravity child with independent Choclo predictions and parameter-dependent results, and the EDI MT inverse reproduces its independent oracle. The API and gravity test runtimes are now provisioned separately from pinned requirements. This is synthetic/local evidence only; full submitted-method coverage and actual-host admission remain incomplete.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -107,6 +115,74 @@
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
           "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "8a3688f8cf67ffcfc7b5c9a1ff78942479490964b8e21aa96900b51d3138fa90"
+        },
+        {
+          "path": "app/worker.py",
+          "sha256": "fd9614d2dfa604158ad8a815a508cb072f06cd02d7d6112e4279601d80893eb9"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-contracts.ts",
+          "sha256": "acb0acd37c7567e5e7108444097d47f11045499da94afe4931ca8d0c377f6954"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-processing.ts",
+          "sha256": "bcdf45e676bd780eea7f5ff0bc7cf0bf8d106761d9d7f4671df0f5e02e5e7ab0"
+        },
+        {
+          "path": "frontend/src/api/processing-contracts.ts",
+          "sha256": "2fa9aeeeb120362c32d9f6cc3b9af07d5611c29eb8675f4627ef69fdf35ca025"
+        },
+        {
+          "path": "frontend/src/components/ProjectProcessingWorkbench.tsx",
+          "sha256": "f3acc6dc7b8f72fcde0051749b50acace7fcb2d6a90023dcaa9fc163c4aa869f"
+        },
+        {
+          "path": "frontend/src/components/GravityL2ResultInstrument.tsx",
+          "sha256": "82032c69a1a271bf9caa5cbc53eeec167af691c60e4cba192c44ede80df3f0ab"
+        },
+        {
+          "path": "frontend/src/test/gravity-l2-contracts.test.ts",
+          "sha256": "539ca5ed3fed5a31cd031b5b95e28e5fac6fbefd70c6a37f83b6eeaddeaadebd"
+        },
+        {
+          "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
+          "sha256": "f06e815c1c2a9574d307061a0a8a0e709deb66eb1e7b860aedd3ce74b0da6209"
+        },
+        {
+          "path": "app/processing.py",
+          "sha256": "d72c6cbc8cf5a75316a2053f586b0794382ad2c9476c6b7c14b215a6fe3d9342"
+        },
+        {
+          "path": "app/gravity_l2_compute.py",
+          "sha256": "6b519ae0b731906dc1b127a77406d15ca6c54a84d7b85326fde60b8bdbc8859b"
+        },
+        {
+          "path": "requirements-api-test.txt",
+          "sha256": "c78cb7f97407a0a71e052ada6b2f91d0e7095e75b9c7546031cdb18863d15d1d"
+        },
+        {
+          "path": "scripts/setup.ps1",
+          "sha256": "5562012aee4894cb1c580b248e266a8ac57eb5ac806fb7ced68fe68d517ccfb5"
+        },
+        {
+          "path": "scripts/setup.sh",
+          "sha256": "ed55538d24dde7ad6e122c016e7986e72c0d8017d626f3e452140795086c5891"
+        },
+        {
+          "path": "docs/guides/06_api.md",
+          "sha256": "6b3f28c3d4fc78171a1e8e6121c53489430e21ab337cce78ccf1aef24fd764ad"
+        },
+        {
+          "path": "docs/validation/m02-online-preflight-2026-10-30.json",
+          "sha256": "64faf0c992cf382110a46c4b1a73532c5b60aefe98594897c58b7ed06b9cc4e9"
         }
       ],
       "receipts": []
@@ -115,7 +191,7 @@
       "id": "R-007",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_job_limits.py::test_preflight_timeout_cancel_and_recovery.",
-      "note": "Merged actual-VPS admission retains six passing failure controls and forty nominal calculations whose overall disk gate failed at 29.42% against unchanged 30%. Separately merged pure accounting and its independent review passed419 unit tests and43 supplied-record checks; these are not OS measurements, runtime authority remains false and all15 native gates remain closed. Local API/recovery/source-bundle controls do not establish public-service or complete product admission.",
+      "note": "A read-only 2026-10-27 ML VPS snapshot measured 32,397,824,000 bytes disk available and 5,270,228,992 bytes MemAvailable; current legacy static release plus two preceding dated releases total 2,318,664,508 logical bytes, and the private project/derived trees are empty. Three qualification directories and older artifacts remain untouched. This initial snapshot was a baseline; its follow-up below compares a local candidate bundle and configured scratch/memory ceilings, while runtime installation, retained future data and actual job capacity remain unqualified. Timeout, cancellation, concurrency and replacement admission remain unresolved; no current capacity pass is claimed. The historical 29.42% MT snapshot was under a superseded 30% threshold, which is not the current policy. A 20:39 UTC read-only follow-up measured the clean local qualification bundle at 856,096,919 logical bytes including manifest, confirmed current plus two rollback release sizes, and compared candidate plus configured 1 GiB scratch and API/worker/controller ceilings with live free disk and MemAvailable. This arithmetic is only preflight: API/gravity runtime installation, actual concurrent job/resource behavior, timeout/cancel/recovery and authenticated workflows remain unmeasured; no candidate was uploaded, and R-007 remains unresolved. The capacity-preflight JSON passes the inventory consistency check, which explicitly does not attest that its inputs were measured on the host. The 21:15 UTC current-branch preflight records a 856,103,491-byte qualification bundle, 32,396,664,832 bytes filesystem availability, and 5,253,464,064 bytes MemAvailable; explicit service/controller ceilings fit arithmetically. Runtime installation, candidate execution and job admission are still unmeasured, so R-007 remains unresolved. A 2026-10-27 isolated host-runtime qualification report records the unchanged active release, recovered receipt-matched environment selector, pinned API/gravity installs and pip checks, and the still-open CPython version gate; no host admission or activation passed. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass. The four previously reported Windows L2 control IDs (conditions 0/1, families 0/1) passed a focused rerun on 2026-10-28 with the required single-thread environment; a direct invocation without those variables had been rejected by the native workspace guard before optimization, so it was not a solver failure. The remaining 20 Windows controls and fresh VPS replay are not included in that rerun; the established Linux matrix remains separate evidence. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The release-033a5e7 candidate now has a fresh pinned Linux CPython 3.12.16 numerical replay: 381 passed, zero failed/skipped in 10,793.32 s. The candidate runtime receipt and validation overlay are hash-bound in docs/validation/vps-science-replay-033a5e7-2026-10-27.json. This still does not measure authenticated admission, timeout/cancellation/recovery, concurrent capacity or full host acceptance; R-007 remains unresolved. A 2026-10-27 post-staging snapshot measured 12,510,769,152 bytes free on the release filesystem and 5,193,476 kB MemAvailable, with candidate `release-9d203f1` plus its private API/gravity runtimes present. Read-only bootstrap verification caught a parser-cap mismatch before state creation. This inventory is not a job-capacity or admission pass; R-007 remains unresolved. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. A fresh read-only 2026-10-28 snapshot measured 3,652,116,480 bytes available (96% used) and 5,300,334,592 bytes MemAvailable. The active legacy release and two dated rollback directories total 2,322,509,824 logical bytes; the geophysics releases tree totals 33,736,204,288 bytes, including 28 individually inventoried non-retained directories at 31,413,694,464 bytes. No directories were removed. Current candidate capacity, runtime installation, actual-host job behavior and release admission remain unqualified. A 15:51 UTC follow-up measured 3,099,168,768 bytes free (96% used), 5,276,319,744 bytes MemAvailable at 15:47 UTC, and 31 release directories. The API and worker remained inactive, Nginx active, current remained the legacy 0.04.001 release, canonical HTTPS returned 200 with TLS verification, and the retired Pages URL returned 404. Available space fell by 552,947,712 bytes since 12:18 UTC; the cause is not established. No release directory was removed and no candidate was staged. The earlier 2026-10-29 Windows matrix assertion is unverified: its cited JSON and Markdown artifacts are absent from this checkout and configured validation roots, so that result is not treated as passed. The separately verified 2026-10-28 24-control Windows matrix is retained under R-008 and supports only its stated synthetic/local scope. Current VPS runtime, actual workload capacity, and host admission remain unqualified; R-007 remains unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -123,7 +199,7 @@
         },
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
-          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+          "sha256": "18c18a1ea532c51a189f3485c45a48f082afb0cd60003494bc4023501abdf119"
         },
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
@@ -132,6 +208,30 @@
         {
           "path": "docs/validation/physical-accounting-independent-review-2026-10-03.md",
           "sha256": "3c32a7d42196d925f33ac7158e1b093aef760018bb97f75d18b43cc384b7f5ac"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
+          "sha256": "26f02cd6ca615d764b6424d78864d5b2ab3437651f13fc1181914d92352b9620"
+        },
+        {
+          "path": "docs/validation/service-capacity-preflight-2026-10-27.json",
+          "sha256": "f4304592a584462e2364aa46e0001c583c180e52dd2d757af9e8681f1f25b514"
+        },
+        {
+          "path": "docs/validation/host-runtime-qualification-2026-10-27.md",
+          "sha256": "850d6037715932a734a15639d4e2ed9b462c5e0ae7afcb563d02721ae86e74a8"
+        },
+        {
+          "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
+          "sha256": "45a2d8ca3d2e7ca03275c03fb84515ce0e7ef739d424bb438ec47b4e0463d354"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-28.md",
+          "sha256": "cc156db52238593b840e7cc5c0cfe9cff25bb2744cc5e6165ab94a8908012356"
+        },
+        {
+          "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
+          "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
         }
       ],
       "receipts": []
@@ -140,39 +240,139 @@
       "id": "R-008",
       "verdict": "fail",
       "declared_gate": "scripts/check_method_matrix.py::main plus the M01-M13 gates in section 4.",
-      "note": "M12 learned velocity still loses to its matched classical baseline. FWI/MT evidence and private original backup remain preserved. M01 local transforms/adapter and the narrow M02 forward unit pass independent controls. Later merged L2 reviews retain134 original passes, then168 regressions/12 metadata controls at d7c6670, but the new independent physical oracle has two tight-bound failures and two wide-bound passes. L2 candidate code remains unmerged; an approved active-set amendment is not numerical success. Complete submitted-survey L2/IRLS, field/host and M01-M13 acceptance remain failed or pending.",
+      "note": "M04 induced forward physics independently passes176 tests with no skips; full survey inverse is not accepted. The frozen M02 ordinary L2 controls now pass locally: 213 supporting tests and all24 locked family/condition outcomes, zero skips, under the required single-thread native policy. This is synthetic/local scope only; independent replay, owner custody, broader field, API/UI, host and full product acceptance remain pending. Actual user-data first-arrival tools compute weighted classical estimates and real checkpoint inference with verified exports. A fresh40-epoch CUDA M12 study corrects ray-length feature units, independently replays on CPU and retains failed joint comparator ratios2.1875 model/5.4173 forward; original failed checkpoint/results are unchanged. Combined velocity controls33PASS/zero skips establish scoped implementations, not learned superiority or field validity. R-008 remains failed because M12 and full M01-M13/user-data/host/visual acceptance are not accepted. A fresh predeclared 100-epoch RTX 4070 residual-v3.1 run passed CPU/CUDA parity and independent CPU replay, but joint held-out learned/classical ratios remain 1.04368 for velocity and 1.39609 for oracle travel time; the frozen verdict remains failed. A corrected nullspace-constrained follow-up now replays successfully on four fresh held-out synthetic cohorts (480 cases); its 2026-10-27 result is recorded in the v1.1 protocol. Joint-OOD velocity RMSE ratio is 0.9701 and independent oracle-time ratio 0.9967, both narrowly below one. This is bounded evidence, not field validation or completion of the M01-M13 acceptance matrix. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. A bilingual M11 lesson now inspects the exact reviewed 24-case physical gravity-magnetic workflow receipt, retained nonconvergence and resource boundary; it is local synthetic evidence and does not change method or product acceptance. M03 now includes a standalone source-linked Fourier upward-continuation utility with analytic mode/affine-plane controls and a bilingual executed lesson. Authenticated M03 intake, isolated child execution, typed result storage and bounded rights/provenance export now run end to end on an authored planar control. Eight deterministic rotated M03 surveys now pass native/browser parity, with exact contracts/splits/support masks and explicit floating tolerance; duplicate-order and collapsed-direction rejections agree. A 25,000-row client benchmark measured 8.83-second cold wall time, three 2.01???2.12-second warm reruns and 187,695,104-byte WASM heap capacity on one local headless Chromium host. This is authored synthetic evidence, not a device population or total RSS measurement. Charleston assets/field holdout, actual host admission, broader device memory and latency, and full product acceptance remain open. Current Linux CPython 3.12.10 M02 forward controls independently rerun: 80 pass; scoped integration 118 pass, 2 existing skips. This verifies the ordinary operator source epoch only. The previous M02 service-runtime packaging defects are repaired in the current branch: pymatsolver is pinned and isolated Linux runtime-profile audit verifies 21 installed-source hashes plus pure-Python SimPEG/PyMatSolver wheel tags. This remains local staging-profile evidence only; immutable VPS release staging, method acceptance, user-data/UI, host and full-product gates remain open. R-008 remains failed. The fresh VPS replay for candidate 033a5e7 passed all 381 named gravity/magnetic forward, locked L2 selection and joint-plan controls under Linux CPython 3.12.16. This closes that bounded cross-runtime numerical replay only; M12 remains failed and full method/user-data/owner/host/browser acceptance remains open, so R-008 remains failed. The uploaded M02 control now independently checks the returned model forward response and recomputes its withheld residual metrics from the exported values. This authored one-cell path does not validate field geology or complete M01-M13 acceptance; R-008 remains failed. A focused Windows rerun of four locked M02 controls (condition/family 0/1) passed under the declared single-thread environment; see docs/validation/m02-windows-focused-rerun-2026-10-28.md. The full Windows matrix and whole-method acceptance remain open. The complete current-source Windows matrix subsequently passed all24 locked condition/family controls with zero failures, errors or skips under the declared single-thread policy; see docs/validation/m02-windows-full-matrix-2026-10-28.md and its per-case receipt. This closes only that local synthetic control rerun. The new bilingual M12 checkpoint notebook pair freshly trains and source-verifies the fixed 40-epoch CPU model, reconstructs six cohorts, compares same-input classical outputs and independent forward predictions, and retains the failed joint comparator (velocity ratio5.616; oracle-time ratio12.231). This improves reproducibility and teaching; M12 and R-008 remain failed, and full method, field, hosted and release acceptance remain open. On 2026-10-31, the retained v1.1 nullspace study completed a fresh full held-out replay from its immutable checkpoint and split receipt after a narrow source-compatibility repair proved its executed feature function and producer code unchanged; the bounded synthetic verdict reproduced and scientific_acceptance remains false. Receipt: docs/validation/m12-nullspace-v1_1-compatible-replay-2026-10-31.json. R-008 remains failed.",
       "evidence": [
         {
-          "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "300fa2617be1edd3a682c6adf97259c166b520703f5f391f6057f92b9d867b00"
+          "path": "app/magnetic_bundle.py",
+          "sha256": "5ad1aadf4cdaf6f8db7799de9798221706010f7abd6c19495e29ac8330d4460c"
+        },
+        {
+          "path": "app/magnetic_compute.py",
+          "sha256": "6b4d780111499f3b835ee45356259ad629a451a99b1972c0639bc47a45b9686c"
+        },
+        {
+          "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
+          "sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22"
+        },
+        {
+          "path": "docs/design/features/joint-survey-inversion/evidence/m11-final-precision-20261025.json",
+          "sha256": "94b6adee9a62e41eb57783446aaaf2c48b92bda4ef4bc11a97429b861c75cd1a"
+        },
+        {
+          "path": "docs/design/features/m02-prism-operator/evidence/linux-independent-rerun-2026-10-27.json",
+          "sha256": "49b413eb9fa9e11820aa6f4c09d3b9add89093dc754f919e4403759faa7393f9"
+        },
+        {
+          "path": "docs/design/features/m02-prism-operator/evidence/linux-runtime-staging-2026-10-27.json",
+          "sha256": "9fc098a632200caf8cc92040df2a1e2147075ecdd8526605582f0853ae939541"
+        },
+        {
+          "path": "docs/design/features/m02-survey-l2/evidence/local-matrix-execution-20261025.json",
+          "sha256": "883cf4003db7d7144358e37d2756fb6cfa594762fd229dfce9a9b240bd3ee181"
+        },
+        {
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
         },
         {
           "path": "docs/design/features/m06-field-mt/convergence.md",
           "sha256": "89bfb88e433262a152490c0aa379b419a33f3e6e00c3bd5223d3fbbf80188b0c"
         },
         {
-          "path": "docs/validation/fwi-canonical-import-20261003.json",
-          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+          "path": "docs/design/features/m12-velocity-validation/convergence.md",
+          "sha256": "4246a2000f2698c7b8fa0eb1c216c7330d588dc0c5aa2c0004b713f5dd22937b"
         },
         {
-          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
-          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
+          "sha256": "bd6762ba623f1311c96b07c2fed57677501256fd43e2b469c5385631ef325ffc"
+        },
+        {
+          "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
+          "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
+        },
+        {
+          "path": "docs/validation/fwi-canonical-import-20261003.json",
+          "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
         },
         {
           "path": "docs/validation/gravity-forward-independent-review-2026-10-03.md",
           "sha256": "cbfc9293b23091d115bf38ca8bb75884ad000de7328aaa686139803fe1acea56"
         },
         {
-          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
-          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
+          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
+          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
         },
         {
           "path": "docs/validation/gravity-l2-independent-review-2026-10-03.md",
           "sha256": "38cc7785e3d3cd8ec858dcd57671e52181b08540700c098e62c242b1355e91d5"
         },
         {
-          "path": "docs/validation/gravity-l2-bounded-independent-review-2026-10-03.md",
-          "sha256": "9ceae86372364e05a8ffb38dc3f5314f78155d90b46b5d501275235805a6d948"
+          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
+          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
+        },
+        {
+          "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
+          "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
+        },
+        {
+          "path": "docs/validation/m02-windows-full-matrix-2026-10-28.json",
+          "sha256": "1ab7ba10489d479bc8613ba8734081c9d4909bb2d42157fdefbcdeb0c15ac8cb"
+        },
+        {
+          "path": "docs/validation/m02-windows-full-matrix-2026-10-28.md",
+          "sha256": "354d35f886d56886ba59a49ff4b3b81c9a40f60c54e381ff1663a1c60f7a6d8f"
+        },
+        {
+          "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
+          "sha256": "150842b2a9cc024cacb2ea903ad9136ff24e0cd498455a1ea080dbd38a4c12cc"
+        },
+        {
+          "path": "docs/validation/station-adapter-independent-review-2026-10-03.md",
+          "sha256": "c5ce3c6633029eaf7c61d6039ca98d3eaee2de61f0b06e920bde184f1ecbb515"
+        },
+        {
+          "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
+          "sha256": "45a2d8ca3d2e7ca03275c03fb84515ce0e7ef739d424bb438ec47b4e0463d354"
+        },
+        {
+          "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "7cada013798dbf8283daf5bbc76de31a64435d8cda3f938058c92f5ffc225271"
+        },
+        {
+          "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "df062229075c254758556f1d753a009fa3504f38cf09f06d095ad26772abaec8"
+        },
+        {
+          "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "36dfe906f3da5e77902f749b4f8ac1ac629c1a8c4677c64646c5211bb153cf6f"
+        },
+        {
+          "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "ec8927bb8d547e369d301975303104aa26051d5f2d2d2951bed8d9d4980c4f78"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "8a3688f8cf67ffcfc7b5c9a1ff78942479490964b8e21aa96900b51d3138fa90"
+        },
+        {
+          "path": "tests/api/test_magnetic_compute.py",
+          "sha256": "52262f50f19f8c89aace2c8d653227e9f66c8827911fa2853ff1b67e2b56ef3d"
+        },
+        {
+          "path": "tests/api/test_magnetic_upload.py",
+          "sha256": "67d64829b47c16d60e4adb40979fc4f2131335c1a9e240c9481b20009de96cf3"
+        },
+        {
+          "path": "tests/numerics/test_magnetic_continuation.py",
+          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+        },
+        {
+          "path": "docs/validation/m12-nullspace-v1_1-compatible-replay-2026-10-31.json",
+          "sha256": "5b314bbac1b953bf62c7ff52a639794cef91982003036e73b0d3acadbfb7ad2c"
         }
       ],
       "receipts": []
@@ -181,11 +381,19 @@
       "id": "R-009",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_artifact_contract.py::test_truth_only_for_synthetic.",
-      "note": "The corrected canonical container preserves producer identities and known synthetic truths separately from the QC-only truth-null cl061 field screen. Complete replacement user-data artifact acceptance across all methods remains incomplete.",
+      "note": "The corrected canonical container preserves producer identities and known synthetic truths separately from the QC-only truth-null cl061 field screen. Complete replacement user-data artifact acceptance across all methods remains incomplete. The uploaded M02 integration explicitly asserts `field_truth=null` and `model_accuracy=null` for the held-out result. It does not establish product-wide artifact truth semantics for every method.",
       "evidence": [
         {
           "path": "docs/validation/fwi-canonical-import-20261003.json",
           "sha256": "fb3d5257717ff16dfba364da96fb492051910aed485cc4d436a542838851ac5a"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "8a3688f8cf67ffcfc7b5c9a1ff78942479490964b8e21aa96900b51d3138fa90"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
         }
       ],
       "receipts": []
@@ -194,15 +402,31 @@
       "id": "R-010",
       "verdict": "unresolved",
       "declared_gate": "tests/learning/test_split_and_benchmark.py::test_disjoint_groups_and_matched_inputs.",
-      "note": "M13 has frozen event/station-disjoint STEAD evidence and browser parity. M12 retains its failed independent family/acquisition benchmark; complete product acceptance remains open.",
+      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted. A fresh residual-v3.1 RTX 4070 run with disjoint seed namespaces and independent CPU replay also fails its frozen joint gate: velocity and oracle travel-time ratios are 1.04368 and 1.39609; the full receipt and checkpoint remain local and unchanged. M12 now has a corrected, independently replayed nullspace-refinement experiment on fresh disjoint cohorts, with both joint-OOD aggregate ratios below one; the source residual-v3.1 checkpoint itself remains a failed comparator, and this follow-up does not establish field generalization. M13 browser parity on the complete held-out trace population remains unresolved. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance.",
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+          "sha256": "911126d734955fc1c67cdd2425f884372d5deaa029eb3dd4f55ad0c846e8470c"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
-          "sha256": "300fa2617be1edd3a682c6adf97259c166b520703f5f391f6057f92b9d867b00"
+          "sha256": "4246a2000f2698c7b8fa0eb1c216c7330d588dc0c5aa2c0004b713f5dd22937b"
+        },
+        {
+          "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
+          "sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1"
+        },
+        {
+          "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
+          "sha256": "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
+          "sha256": "bd6762ba623f1311c96b07c2fed57677501256fd43e2b469c5385631ef325ffc"
+        },
+        {
+          "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
+          "sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22"
         }
       ],
       "receipts": []
@@ -211,11 +435,11 @@
       "id": "R-011",
       "verdict": "unresolved",
       "declared_gate": "tests/data/test_export.py::test_bundle_roundtrip_and_rights.",
-      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete.",
+      "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete. The uploaded M02 integration round-trips the result bundle with units, source identity and raw SHA-256 preserved. This closes that result path only; product-wide export and import coverage remain unresolved. The uploaded M02 integration verifies the source, units and result survive bundle export and round-trip after the independent forward and residual checks. Other method formats, rights paths and complete product export acceptance remain unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/project-raw-api/tasks.md",
-          "sha256": "db147d38bb370ef063b2ade04e075defc8ec552509e38d1797e047d45c7d2a37"
+          "sha256": "2da662e54b92837d93e65ff71f2c351aa1711112493661d8295ffa9eec191b08"
         },
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -224,6 +448,18 @@
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
           "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "tests/api/test_gravity_l2_upload.py",
+          "sha256": "8a3688f8cf67ffcfc7b5c9a1ff78942479490964b8e21aa96900b51d3138fa90"
+        },
+        {
+          "path": "app/bundle.py",
+          "sha256": "dda6f2fd625b03bbd7f3458dd588d50c3b61af0141521981a05592770e1896e2"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-user-data-integration-2026-10-28.md",
+          "sha256": "cd7a30be721b08138a419fe333bad19931d6d1a4c5ddd7c1f4557400b47f7efa"
         }
       ],
       "receipts": []
@@ -245,7 +481,7 @@
       "id": "R-013",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
-      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete.",
+      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete. For uploaded gravity M02, selected dataset, eligibility, parameters, job state and completed result are connected in one workbench; the result binds to the selected dataset/job receipt. This local path does not establish product-wide selected-case reactivity.",
       "evidence": [
         {
           "path": "docs/design/features/processing-workbench/validation.md",
@@ -254,6 +490,34 @@
         {
           "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
           "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-contracts.ts",
+          "sha256": "acb0acd37c7567e5e7108444097d47f11045499da94afe4931ca8d0c377f6954"
+        },
+        {
+          "path": "frontend/src/api/gravity-l2-processing.ts",
+          "sha256": "bcdf45e676bd780eea7f5ff0bc7cf0bf8d106761d9d7f4671df0f5e02e5e7ab0"
+        },
+        {
+          "path": "frontend/src/api/processing-contracts.ts",
+          "sha256": "2fa9aeeeb120362c32d9f6cc3b9af07d5611c29eb8675f4627ef69fdf35ca025"
+        },
+        {
+          "path": "frontend/src/components/ProjectProcessingWorkbench.tsx",
+          "sha256": "f3acc6dc7b8f72fcde0051749b50acace7fcb2d6a90023dcaa9fc163c4aa869f"
+        },
+        {
+          "path": "frontend/src/components/GravityL2ResultInstrument.tsx",
+          "sha256": "82032c69a1a271bf9caa5cbc53eeec167af691c60e4cba192c44ede80df3f0ab"
+        },
+        {
+          "path": "frontend/src/test/gravity-l2-contracts.test.ts",
+          "sha256": "539ca5ed3fed5a31cd031b5b95e28e5fac6fbefd70c6a37f83b6eeaddeaadebd"
+        },
+        {
+          "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
+          "sha256": "f06e815c1c2a9574d307061a0a8a0e709deb66eb1e7b860aedd3ce74b0da6209"
         }
       ],
       "receipts": []
@@ -262,44 +526,178 @@
       "id": "R-014",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
-      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete.",
-      "evidence": [],
-      "receipts": []
-    },
-    {
-      "id": "R-015",
-      "verdict": "unresolved",
-      "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "Independent scoped gravity/MT browser controls and original MAIN course 32-case matrix pass at their respective pins. The course producer reran 32 combined-style cases; final MAIN integration passed 77 numerical and 101 frontend tests plus build/content guards. Tiny ADR fix and fresh develop CI pass; complete visual/user acceptance remains open.",
+      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete. The uploaded M02 result view uses returned active-cell bounds and receiver coordinates in metres, a depth selector, observed/predicted/residual values in mGal, held-out markers and signed residual shapes. The complete method/view/animation matrix and owner visual acceptance remain open.",
       "evidence": [
         {
-          "path": "docs/validation/mt-workbench-independent-review-2026-10-03.md",
-          "sha256": "500fbdd738f95f4bf22eb66f9e4414643bc9a0d00c69405d46834765cc229bb3"
+          "path": "frontend/src/api/gravity-l2-contracts.ts",
+          "sha256": "acb0acd37c7567e5e7108444097d47f11045499da94afe4931ca8d0c377f6954"
         },
         {
-          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
-          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
+          "path": "frontend/src/api/gravity-l2-processing.ts",
+          "sha256": "bcdf45e676bd780eea7f5ff0bc7cf0bf8d106761d9d7f4671df0f5e02e5e7ab0"
+        },
+        {
+          "path": "frontend/src/api/processing-contracts.ts",
+          "sha256": "2fa9aeeeb120362c32d9f6cc3b9af07d5611c29eb8675f4627ef69fdf35ca025"
+        },
+        {
+          "path": "frontend/src/components/ProjectProcessingWorkbench.tsx",
+          "sha256": "f3acc6dc7b8f72fcde0051749b50acace7fcb2d6a90023dcaa9fc163c4aa869f"
+        },
+        {
+          "path": "frontend/src/components/GravityL2ResultInstrument.tsx",
+          "sha256": "82032c69a1a271bf9caa5cbc53eeec167af691c60e4cba192c44ede80df3f0ab"
+        },
+        {
+          "path": "frontend/src/test/gravity-l2-contracts.test.ts",
+          "sha256": "539ca5ed3fed5a31cd031b5b95e28e5fac6fbefd70c6a37f83b6eeaddeaadebd"
+        },
+        {
+          "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
+          "sha256": "f06e815c1c2a9574d307061a0a8a0e709deb66eb1e7b860aedd3ce74b0da6209"
         }
       ],
       "receipts": []
     },
     {
+      "id": "R-015",
+      "verdict": "pass",
+      "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
+      "note": "The declared local visual gate passed on a clean checkout and freshly built dist at source commit ad221c52a2e64a842ee77299b5c2f300c8d9296f: all 16 EN/ES ?? light/dark ?? desktop/phone ?? normal/reduced-motion combinations checked both the `/` Introduction alias and App at `/app`, traversed all six product routes and the five-tab architecture dialog. All 112 route/dialog captures were generated and hashed; zero failures, skips or flaky retries, with scientific-view loading and dialog/tab bounds checked. This accepts the declared local visual requirement only; broader owner/product acceptance, scientific correctness and VPS release acceptance remain separate. A fresh 2026-10-30 run on the current dirty direct checkout also passed all 16 combinations and produced 112 hashed screenshots; see docs/validation/r015-visual-matrix-current-dirty-2026-10-30.md. This run is supplemental current-tree UI evidence and does not change scientific or VPS acceptance.",
+      "evidence": [
+        {
+          "path": "docs/validation/shell-gate-20261025.json",
+          "sha256": "1aa9130db551d99f42d8d47475a55562dcba497ceea0d3e7b71b6416a2d5aa72"
+        },
+        {
+          "path": "docs/validation/shell-gate-2026-10-27.md",
+          "sha256": "024e101b5db4c2e34e06d152cab58cc5a4951ff26cf8c254daefe237890a0a23"
+        },
+        {
+          "path": "docs/validation/r015-visual-matrix-2026-10-30.json",
+          "sha256": "8f255d8cedf3c0cbb431e7cb244c17a00777fdea5fa98f3dae9f458d4dab203e"
+        },
+        {
+          "path": "docs/validation/r015-visual-matrix-current-dirty-2026-10-30.json",
+          "sha256": "cd079390cce80d745693fb54001dc2d231d6123c3fccd16861995a71c3b509ed"
+        },
+        {
+          "path": "docs/validation/r015-visual-matrix-current-dirty-2026-10-30.md",
+          "sha256": "a06ccdb5f60c119429734477c4a99318d37426c068cd2a45fa8391e4257514a4"
+        }
+      ],
+      "receipts": [
+        {
+          "path": "docs/validation/r015-visual-matrix-2026-10-30-receipt.json",
+          "sha256": "b46f4a6900dc46432f25ce325799758ec100384220d3d7ede677d6dbf29b781a"
+        }
+      ]
+    },
+    {
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "Source/M08/M13/M01 correction/transform wiki units and source-bound M05/M06 course are merged. Independent original course 75 numeric/89 frontend/32 browser controls remain separately pinned; final integration adds exact source-compatibility proof, 77 numeric and 101 frontend passes. Full deep M01-M13 bilingual wiki remains incomplete.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open.",
       "evidence": [
         {
-          "path": "docs/data-contract/01_source-to-result.md",
-          "sha256": "60b59df62d4c72572ccd2d95b11406a1065cc99b8bbcee902277c866902aba29"
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
         },
         {
-          "path": "docs/validation/m01-transforms-independent-review-2026-10-03.md",
-          "sha256": "8297e70d9d4a3b24d51a77d6d087a178f487d0a3ead3d984f681ac91a7a315aa"
+          "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
+          "sha256": "41a86a3eee9f449ccee182a6fdfc89061ef7900850ed2ba963dd55955d73ee32"
         },
         {
-          "path": "docs/validation/mt-course-independent-review-2026-10-03.md",
-          "sha256": "56b3df976eff84ef4c475540337ad3b4b8fbf7791439724acaa96615f8337074"
+          "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
+          "sha256": "150842b2a9cc024cacb2ea903ad9136ff24e0cd498455a1ea080dbd38a4c12cc"
+        },
+        {
+          "path": "docs/validation/notebook-review-2026-10-27.md",
+          "sha256": "5417edd9b4157ad5dc8d9e75d5a7a3d418b4ec4555faf9df38ba495f5ec4e756"
+        },
+        {
+          "path": "docs/validation/source-content-coverage.json",
+          "sha256": "d71d5f7b1de7d2cb48e4f34d593a742337846452c6791c27ab9146b91ea51f34"
+        },
+        {
+          "path": "docs/validation/source-to-content-review.md",
+          "sha256": "2f777d10a62e379aea39ac85624af9eda5abfe6eb7dce07317deb8e57e52a08b"
+        },
+        {
+          "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
+          "sha256": "6d73bd4c0b9593c8d72100f810c49126091ba4cf7075ccccd53c026e9352ae6c"
+        },
+        {
+          "path": "docs/design/features/phase-picking/rights-review-2026-10-28.md",
+          "sha256": "1fae06c417442b64be5f39eefaf51012246298c3d39e3f264c94de954b14b0cb"
+        },
+        {
+          "path": "docs/wiki/README.md",
+          "sha256": "462e5d90f1dfe519a1e7954597151dd51237c1bd3e3577eacf3ca82ea673d02a"
+        },
+        {
+          "path": "docs/wiki/methods/m01-m06.es.md",
+          "sha256": "958af75c707f7f992b521470aced1728020448d0a77f298180aa00b6b38da04b"
+        },
+        {
+          "path": "docs/wiki/methods/m01-m06.md",
+          "sha256": "d8585313e9cd98c83fedd08575728fe397094de8b8a5f3095c63f650379a959f"
+        },
+        {
+          "path": "docs/wiki/methods/m07-m13.es.md",
+          "sha256": "9d91a087612d7e841b1bec33d498d2e96090a2e7e91e4a9a4b45760860475746"
+        },
+        {
+          "path": "docs/wiki/methods/m07-m13.md",
+          "sha256": "ac367f6043b1a3fbbf118f72c355844695c6b7c3b0846bda2a4cb98d6cf905be"
+        },
+        {
+          "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+          "sha256": "8b039c2179925a6c63cbe644f340ab3851ef792025826b76299b064296748892"
+        },
+        {
+          "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
+          "sha256": "d9b31fb9f06399569984210f08257b322b3d38a1da2cde0279f7d52d67e5d6c8"
+        },
+        {
+          "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "7cada013798dbf8283daf5bbc76de31a64435d8cda3f938058c92f5ffc225271"
+        },
+        {
+          "path": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
+          "sha256": "e453604d8a3c26d06d0e35da3db4474357790854c523c3c4096684bc99ea420b"
+        },
+        {
+          "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "df062229075c254758556f1d753a009fa3504f38cf09f06d095ad26772abaec8"
+        },
+        {
+          "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
+          "sha256": "e0a84610a9600d516431505142b99e6be3f8c9521c4d33681903f43a4e49cc37"
+        },
+        {
+          "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
+          "sha256": "0c2ac993fb7ef01390d3b41b20caa2d47a53422005765e8c01958d7cdee32937"
+        },
+        {
+          "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
+          "sha256": "36dfe906f3da5e77902f749b4f8ac1ac629c1a8c4677c64646c5211bb153cf6f"
+        },
+        {
+          "path": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
+          "sha256": "81032b35e5e8daee266e5040b78197b837f64c4848617a484827aa0881251614"
+        },
+        {
+          "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "ec8927bb8d547e369d301975303104aa26051d5f2d2d2951bed8d9d4980c4f78"
+        },
+        {
+          "path": "scripts/check_docs_matrix.py",
+          "sha256": "1cc6c0a91a14d3a38cb1e4734f86eb513ec609d3fe5a392098b74436424ea42d"
+        },
+        {
+          "path": "tests/numerics/test_magnetic_continuation.py",
+          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
         }
       ],
       "receipts": []
@@ -307,12 +705,12 @@
     {
       "id": "R-017",
       "verdict": "unresolved",
-      "declared_gate": "scripts/verify_single_vps_release.py::main and docs/validation/cutover-receipt.json.",
-      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Secondary publication was withdrawn and active source/build publication paths removed; that is not replacement acceptance. Actual-host admission failed disk headroom. Strict local MT recovery and paired source-builder reviews pass, but actual Linux drill, externally durable deletion authority, identity, SMTP and complete acceptance remain open.",
+      "declared_gate": "scripts/verify_single_vps_release.py::main plus independently reviewed private scientific/UI/actual-host jobs/ownership/HTTPS/browser/retired-publication/rollback receipts. The read-only verifier alone cannot accept this requirement.",
+      "note": "Main/public app remain legacy0.04.001 with no replacement cutover. Pages publication was withdrawn and active source/build paths removed; this is not replacement acceptance. The owner amendment on 2026-10-03 removes SMTP, off-host backup/deletion-journal and arbitrary whole-host 30% free-space prerequisites for this test deployment. Full scientific/UI, actual-host job capacity, account/ownership and single-origin cutover gates remain unresolved. Existing hostname retained; current plus two rollback releases required. Historical failed disk/restore evidence is preserved, not relabelled passed. The initial candidate bootstrap integration was not ready: `release-9d203f1` produced a 5,119,892-byte v2 runtime receipt while the shared strict parser allowed only 4 MiB. Read-only verification refused before private database creation. A caller-bounded parser fix and regression test are implemented; fresh immutable-candidate host verification remains required. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. Fresh 2026-10-28 checks returned HTTP 200 from the canonical VPS origin, HTTP 404 from the former GitHub Pages URL, and 404 from the GitHub Pages API. The VPS still serves legacy 0.04.001 and no replacement cutover occurred; R-017 remains unresolved.",
       "evidence": [
         {
           "path": "docs/validation/actual-host-mt-2026-10-03.md",
-          "sha256": "0b10bcaa44adef44ba5a3105fb4bd4af3c25816140cfe2f28d334325c52904ef"
+          "sha256": "18c18a1ea532c51a189f3485c45a48f082afb0cd60003494bc4023501abdf119"
         },
         {
           "path": "docs/validation/ops-fixture-independent-review-2026-10-03.md",
@@ -321,6 +719,14 @@
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",
           "sha256": "0af5aa3e306bfabdfd10fd0d3f2fe4eca585504c97ccf0575bb1d19c9d2049ca"
+        },
+        {
+          "path": "docs/validation/host-runtime-qualification-2026-10-27.md",
+          "sha256": "850d6037715932a734a15639d4e2ed9b462c5e0ae7afcb563d02721ae86e74a8"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-28.md",
+          "sha256": "cc156db52238593b840e7cc5c0cfe9cff25bb2744cc5e6165ab94a8908012356"
         }
       ],
       "receipts": []
@@ -329,19 +735,100 @@
       "id": "R-018",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "The ledger preserves 18 unresolved and one failed whole requirement while recording merged code, canonical import, independent controls and failed host evidence. Fresh CI resolves the retained ADR failure, not release acceptance; structural/local unit passes do not replace full named convergence gates.",
-      "evidence": [],
+      "note": "The ledger remains anchored at the revision of the retained R-019 gate receipt. This update records bounded M03 browser/native geometry parity and a one-host client resource profile, plus M12 launcher refusal/fixture-forwarding evidence, without relabeling scientific or release gates; one requirement remains failed and eighteen unresolved. These focused controls and the convergence-structure check pass; this does not establish scientific or release acceptance. The current Linux M02 forward rerun is hash-bound in the feature receipt; it does not close method, service-runtime or release acceptance. A hash-bound Linux M02 runtime-profile receipt now verifies the declared package versions, 21 installed-source hashes, pure-Python wheel tags, clean pip check and focused operator/integration tests. It does not establish immutable release staging, VPS capacity, method acceptance or release acceptance. A 2026-10-27 host/candidate bundle follow-up is recorded as R-007 evidence; it changes no requirement verdict and does not move the retained R-019 receipt revision anchor. The 21:15 UTC read-only capacity snapshot and current-branch candidate are recorded in the refreshed R-007 evidence; the runner still reports no whole-product or release acceptance. The 2026-10-27 host-runtime report records a security-patched CPython 3.12.16 candidate distribution and its immutable asset digest; fresh numerical replay, interpreter installation, host admission, and release acceptance remain pending. A 2026-10-27 release-5355478 candidate verified its complete 283-file web inventory and pinned CPython 3.12.16 archive, but the first interpreter receipt recorded a staging path and is retained as failed evidence; corrected versioned staging and numerical replay remain pending. Candidate release-ca9e2c1 verified the full bundle, pinned 3.12.16 runtime and private environment; dependency installs, both pip checks and external source audit passed. The integrated gravity probe then exposed hard-coded CPython 3.12.10 gates in the gravity and magnetic operators, so the runtime transaction correctly failed before admission. Those gates now explicitly include 3.12.16, but fresh numerical replay remains pending. After explicitly registering 3.12.16 in both ordinary potential-field operator runtime guards, the complete local M02 gravity-forward and M04 induced-magnetic-forward tests pass on the historical pinned Windows 3.12.10 environment with the exact pymatsolver 0.4.0 pin. The equivalent VPS 3.12.16 test replay remains open. The b544af1 candidate passed dependency installation, both pip checks and installed-source audit, but the integrated workspace-closure probe found a remaining 3.12.10 guard in gravity_l2_metric.py. The gravity workspace closure and joint-survey planner now also register the 3.12.16 candidate. Local boundary/closure/planner and forward tests pass. The four previously reported Windows L2 control IDs (conditions 0/1, families 0/1) passed a focused rerun on 2026-10-28 with the required single-thread environment; a direct invocation without those variables had been rejected by the native workspace guard before optimization, so it was not a solver failure. The remaining 20 Windows controls and fresh VPS replay are not included in that rerun; the established Linux matrix remains separate evidence. Candidate 37f1883 passed bundle, interpreter, environment, API/gravity dependency installs, both pip checks, external source audit and both scientific runtime guards. The staging harness then incorrectly required the gravity workspace validator to return a truthy value although it validates by raising and returns None; this caused a harness-only candidate failure. The probe now invokes validators without return-value assertions and has a regression test; fresh host replay remains pending. The 2026-10-27 VPS numerical replay is recorded with runtime receipt and overlay SHA-256 in docs/validation/vps-science-replay-033a5e7-2026-10-27.json: 381 passed, zero failed/skipped. The active release remained 20260926235216; candidate was not activated or admitted. This candidate evidence does not change the retained R-019 receipt revision anchor or overall acceptance. Candidate `release-9d203f1` was runtime-staged but read-only bootstrap verification exposed a 4 MiB parser cap against its valid 5,119,892-byte v2 receipt. No state was created and the active release did not change. The fix raises only the bounded private receipt parse to 16 MiB while preserving the 4 MiB manifest default; the subsequent immutable-candidate replay remains pending. Candidate `release-8f192e8b` failed read-only bootstrap verification because the shared CPython r2 tree had 163 generated bytecode files beyond its immutable receipt (4,913 entries observed versus 4,732 expected). No database/state was created and the active release remained unchanged. Runtime staging now uses a new immutable r3 identity and verifies its receipt before and after dependency installation; fresh candidate qualification remains pending. Candidate `release-0517c13` passed complete bundle verification, pinned CPython r3 staging, API/gravity installation, both dependency checks, gravity source audit, and both runtime probes. Read-only bootstrap verification exposed a verifier/schema mismatch: dependency receipt values are the documented file-digest objects `{bytes, sha256}`, not bare hash strings. The verifier and malformed-shape tests are corrected locally; no database/state was created and the active release did not change. Fresh-candidate qualification remains pending. The 2026-10-28 M02 frontend adapter, geometry-based result view and focused parser/API/workbench checks are recorded under R-006, R-013 and R-014 with source commit f3275d3; they do not alter or re-anchor the retained R-019 measurement receipt.",
+      "evidence": [
+        {
+          "path": "docs/design/features/m03-flightline-processing/validation.md",
+          "sha256": "bb83d0992b35ebb19d840b9db940519085a96836b2b7f6128806e06f4c7ca080"
+        },
+        {
+          "path": "docs/validation/m03-browser-resource-profile-2026-10-27.json",
+          "sha256": "3ca36efeb1acfdcca3c4a5f7e52f4ef4640f59c385a657d8bea4ec07e13ff260"
+        },
+        {
+          "path": "docs/validation/m12-launcher-forwarding-2026-10-27.md",
+          "sha256": "32e434c73c2dcc1e8f459de07846afeaa1e9aee88672158a8ee9cac9434cb212"
+        },
+        {
+          "path": "docs/design/features/m02-prism-operator/evidence/linux-independent-rerun-2026-10-27.json",
+          "sha256": "49b413eb9fa9e11820aa6f4c09d3b9add89093dc754f919e4403759faa7393f9"
+        },
+        {
+          "path": "docs/design/features/m02-prism-operator/evidence/linux-runtime-staging-2026-10-27.json",
+          "sha256": "9fc098a632200caf8cc92040df2a1e2147075ecdd8526605582f0853ae939541"
+        },
+        {
+          "path": "docs/validation/actual-host-capacity-readonly-2026-10-27.md",
+          "sha256": "26f02cd6ca615d764b6424d78864d5b2ab3437651f13fc1181914d92352b9620"
+        },
+        {
+          "path": "docs/validation/service-capacity-preflight-2026-10-27.json",
+          "sha256": "f4304592a584462e2364aa46e0001c583c180e52dd2d757af9e8681f1f25b514"
+        },
+        {
+          "path": "docs/validation/host-runtime-qualification-2026-10-27.md",
+          "sha256": "850d6037715932a734a15639d4e2ed9b462c5e0ae7afcb563d02721ae86e74a8"
+        },
+        {
+          "path": "docs/validation/vps-science-replay-033a5e7-2026-10-27.json",
+          "sha256": "45a2d8ca3d2e7ca03275c03fb84515ce0e7ef739d424bb438ec47b4e0463d354"
+        },
+        {
+          "path": "docs/validation/m02-windows-focused-rerun-2026-10-28.md",
+          "sha256": "8e80c84f5f089502cc5c556fd3a734fe8de80452be28897a1dfa03ea59100723"
+        }
+      ],
       "receipts": []
     },
     {
       "id": "R-019",
       "verdict": "unresolved",
-      "declared_gate": "frontend/e2e/phase-picker-live.spec.ts::real_trace_parity_and_matched_baseline plus tests/learning/test_live_export.py::test_onnx_offline_parity.",
-      "note": "Local Chromium inference on 23 valid held-out STEAD records passed parity; one flat record remains excluded. Full named release gates and deployment acceptance remain open.",
+      "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
+      "note": "The retained 2026-10-29 CPU/WASM comparison remains same-checkpoint parity on a preselected display subset, not independent model validation or population accuracy. On 2026-10-30, the fresh product build and browser preview passed all four current phase-picker route/adversarial tests (0 failures, 0 skips); the exact dirty-worktree run is recorded at docs/validation/m13-browser-attribution-e2e-2026-10-30.json. This updates the bounded UI integration evidence only. The independent PyTorch-oracle parity and matched-input scientific evaluation are not established by that route suite; full app-route/owner acceptance, VPS release and broader product gates remain unresolved. On 2026-10-30, current-manifest same-checkpoint CPU/WASM parity passed across all 23 QC-valid display traces (max probability error 5.0664e-6, zero peak displacement); this does not establish the separate PyTorch-oracle comparison or accuracy, so R-019 remains unresolved. The current direct checkout was rebuilt and its current phase-picker browser suite passed 1/1 test on 2026-10-30; see docs/validation/m13-browser-current-e2e-2026-10-30.md. The suite is narrower than the older 4-test run and does not close independent PyTorch parity or M13 scientific accuracy; R-019 remains unresolved.",
       "evidence": [
         {
+          "path": "docs/validation/m13-browser-population-parity-2026-10-30.json",
+          "sha256": "30781d2a28fa4179062ee0a1c75749c86782bf3e145b910ab4b33b80f65330d0"
+        },
+        {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "7c2a4e357dacf80d256677ea5d6a7af79a91354cac57750d25cc68a63a2c0f3e"
+          "sha256": "911126d734955fc1c67cdd2425f884372d5deaa029eb3dd4f55ad0c846e8470c"
+        },
+        {
+          "path": "docs/validation/m13-browser-e2e-20261025.json",
+          "sha256": "bd61ebda038b59435f0c0505431a3fc51c08704a155fbc27b17a0b67d2cf46bc"
+        },
+        {
+          "path": "docs/validation/receipts/r019-m13-browser-e2e-20261025.json",
+          "sha256": "00519637b348c17629631023ec65ad4828beb2caef0aa13e78f98cfee385a2ef"
+        },
+        {
+          "path": "docs/validation/m13-browser-attribution-e2e-2026-10-29.json",
+          "sha256": "53976e371ccdc1af647e94c78c3cb53696db9362b439fa76f8badb313315ee18"
+        },
+        {
+          "path": "frontend/e2e/phase-picker-live.spec.ts",
+          "sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8"
+        },
+        {
+          "path": "frontend/playwright.phase-picker.config.ts",
+          "sha256": "24320f8ba6a8a208e465c6bc68059c5f333a0fbdb82d32f33a8fad6a360910b9"
+        },
+        {
+          "path": "docs/validation/m13-browser-attribution-e2e-2026-10-30.json",
+          "sha256": "ee77497d22953be1862ab44cb607aaa50965eb00e215ed288351bb374a548f6c"
+        },
+        {
+          "path": "docs/validation/m13-browser-current-e2e-2026-10-30.json",
+          "sha256": "244d5e3b22044ca395f9a21d21809a06b81b1a9a21b912f94e819ea51e0408f2"
+        },
+        {
+          "path": "docs/validation/m13-browser-current-e2e-2026-10-30.md",
+          "sha256": "56144280e47f8bbc2b239e2a244cdfcc0a082453c4509f614ad1d95e82d58bbe"
+        },
+        {
+          "path": "frontend/e2e/phase-picker-live.spec.ts",
+          "sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8"
         }
       ],
       "receipts": []

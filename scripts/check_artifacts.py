@@ -7,7 +7,7 @@ import argparse
 import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'data-pipeline'))
-from provenance import generator_fingerprint
+from provenance import matches_generator_fingerprint
 from artifact_versions import RUN_VERSIONS, allowed_run_version, validate_migration
 
 ROOT=Path(__file__).resolve().parents[1]/"data/derived/v2"
@@ -42,7 +42,7 @@ def assert_method_matrix(family, run_methods, catalog_methods):
 def assert_run_provenance(family, provenance, container_version):
     run_version=provenance['version']
     allowed_run_version(container_version,run_version)
-    assert provenance['generator_fingerprint']==generator_fingerprint(family,version=run_version),'Stale scientific source/settings'
+    assert matches_generator_fingerprint(family,provenance['generator_fingerprint'],version=run_version),'Stale scientific source/settings'
 
 
 def finite(obj):
@@ -130,7 +130,8 @@ def validate():
                 if method['frames']:assert method['frames'][-1]==method['model'],'Last replay state differs from final model'
                 if key=='autoencoder':
                     assert method['evaluation']==dict(status='unresolved',reason_codes=['case-score-not-calibrated-as-geology'])
-                    assert len(method['network_input'])==len(method['predicted'])==len(method['residual'])==256
+                    sample_count=math.prod(run['survey']['shape'])
+                    assert len(method['network_input'])==len(method['predicted'])==len(method['residual'])==sample_count
                 if case['family']=='seismic':
                     metrics=method['metrics'];status=method['evaluation']['status']
                     if case['geometry']=='salt':assert status=='negative-control'
@@ -153,6 +154,27 @@ def validate():
     release=json.loads((ROOT/"release.json").read_text())
     assert release['complete'] and catalog['complete']
     assert release['version']==catalog['version'],'Catalogue/release version mismatch'
+    if release['version'] == '0.04.003':
+        evidence = release.get('evidence_files')
+        required = {'validation.json', 'fwi-replay.json', 'mt-replay.json'}
+        assert isinstance(evidence, dict) and set(evidence) == required, 'Release evidence inventory is incomplete'
+        reports = {}
+        for name, receipt in evidence.items():
+            path = ROOT / name
+            raw = path.read_bytes()
+            assert len(raw) == receipt.get('bytes') and hashlib.sha256(raw).hexdigest() == receipt.get('sha256'), f'{name} evidence hash mismatch'
+            report = json.loads(raw)
+            assert report.get('schema') == receipt.get('schema'), f'{name} evidence schema mismatch'
+            reports[name] = report
+        recovery = reports['validation.json']
+        assert recovery.get('status') == 'PASS' and recovery.get('failures') == [], 'Recovery validation is not a pass'
+        assert recovery.get('catalog_sha256') == hashlib.sha256((ROOT/'catalog.json').read_bytes()).hexdigest(), 'Recovery receipt refers to another catalogue'
+        fwi = reports['fwi-replay.json']
+        assert (fwi.get('conditions'), fwi.get('method_results'), len(fwi.get('records', []))) == (24, 48, 48), 'FWI replay receipt is incomplete'
+        mt = reports['mt-replay.json']
+        assert (mt.get('status'), mt.get('conditions'), mt.get('method_results'), mt.get('bootstrap_refits')) == ('PASS', 24, 72, 3072), 'MT replay receipt is incomplete'
+        field = mt.get('field_screen', {})
+        assert field.get('one_d_inversion_eligible') is False and field.get('compatibility', {}).get('passes_screen') is False, 'Clear Lake cl061 must remain QC-only'
     validate_migration(ROOT,catalog,release)
     assert (runs,cells)==(release["runs"],release["methods"])
     edi=json.loads((ROOT/'edi/manifest.json').read_text())

@@ -1,5 +1,5 @@
 [
-  { "id": "app", "path": "/", "en": "App", "es": "App" },
+  { "id": "app", "path": "/app", "en": "App", "es": "App" },
   { "id": "introduction", "path": "/introduction", "en": "Introduction", "es": "Introducción" },
   { "id": "methodology", "path": "/methodology", "en": "Methodology", "es": "Metodología" },
   { "id": "implementation", "path": "/implementation", "en": "Implementation", "es": "Implementación" },

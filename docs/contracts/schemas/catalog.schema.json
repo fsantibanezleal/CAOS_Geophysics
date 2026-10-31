@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://geophysics.ml.fasl-work.com/contracts/catalog.schema.json",
+  "title": "Inverse Earth experiment catalog",
+  "description": "The v2 committed experiment index in data/derived/v2/catalog.json. Artifact hash and byte closure are checked by scripts/check_artifacts.py.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema", "version", "complete", "cases"],
+  "properties": {
+    "schema": { "const": "inverse-earth.catalog/v2" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d{2}\\.\\d{3}$" },
+    "complete": { "type": "boolean" },
+    "cases": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": true,
+        "required": ["id", "family", "name", "name_es", "geometry", "seed", "variants"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "family": { "enum": ["gravity", "magnetics", "mt", "seismic", "joint", "learned"] },
+          "name": { "type": "string", "minLength": 1 },
+          "name_es": { "type": "string", "minLength": 1 },
+          "geometry": { "type": "string", "minLength": 1 },
+          "seed": { "type": "integer" },
+          "variants": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object", "additionalProperties": true,
+              "required": ["id", "path", "sha256", "bytes", "methods"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "path": { "type": "string", "pattern": "^(?!/)(?!.*\\.\\.)[^\\\\]+\\.json$" },
+                "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "bytes": { "type": "integer", "minimum": 1 },
+                "methods": { "type": "object", "minProperties": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

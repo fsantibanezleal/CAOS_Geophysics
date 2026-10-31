@@ -13,8 +13,8 @@ from geology import registry, VARIANTS
 from provenance import generator_fingerprint
 import potential
 
-RELEASE_VERSION = '0.04.001'
-REUSABLE_VERSIONS = {'0.04.000', RELEASE_VERSION}
+RELEASE_VERSION = '0.04.003'
+REUSABLE_VERSIONS = {'0.04.000', '0.04.001', '0.04.002', RELEASE_VERSION}
 
 
 def annotate(result, case, runtime, iterations=28, epochs=180):

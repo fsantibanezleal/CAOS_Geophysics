@@ -1,0 +1,513 @@
+{
+  "assessed_branch": "task/geophysics-client-first-completion",
+  "base_feature_revision": "0df6aae52a05bc977f2eca8a440a0be0fdd4bc8a",
+  "created_utc": "2026-10-25",
+  "exact_face_precision": {
+    "accepted_candidate_predicate_failures": {
+      "model_gate": 0,
+      "objective_gate": 0,
+      "prediction_gate": 0,
+      "stationarity_gate": 0
+    },
+    "all_scientific_predicates_pass": true,
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-integrated-20261025\\data\\exact-face-validation\\face-inverse-controls.json",
+    "baseline_controls": 384,
+    "candidate_status_counts": {
+      "converged": 343,
+      "nonconverged": 41
+    },
+    "nonconverged_candidate_count": 41,
+    "reference_stationarity_failures": 0,
+    "selected_baseline_count": 48,
+    "selected_baseline_failures": 0,
+    "sha256": "258408049dd7cbe9af01b6984f8cb399b865afa2c54bbb8bb75204f6709739c1",
+    "accepted_candidate_count": 343
+  },
+  "matrix": {
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-integrated-20261025\\data\\matrix.json",
+    "candidate_fits": {
+      "converged": 524,
+      "failed": 0,
+      "nonconverged": 100,
+      "eligible_positive": 181
+    },
+    "cases": 24,
+    "complete_cli_workflows": 24,
+    "max_observed_sampled_rss_bytes": 772468736,
+    "max_observed_sampled_scratch_bytes": 0,
+    "max_observed_workflow_elapsed_seconds": 97.56299999999464,
+    "positive_coupling_selected_cases": 24,
+    "sha256": "3bd038371d1bf2685e51856aa80df3583af8b135bcd5989e4dda05e9dd44d1ec",
+    "summary": {
+      "cells_attempted": 24,
+      "complete_cli_workflows": 24,
+      "field_eligible": false,
+      "original_precision_failures_retained": true,
+      "public_activation": false,
+      "records": [
+        {
+          "candidate_counts": {
+            "converged": 22,
+            "eligible_positive": 9,
+            "failed": 0,
+            "nonconverged": 4
+          },
+          "case_id": "joint-control-00",
+          "cell_sha256": "10467c78b9c2b22510db5f2b974fe3cb4a07f5b0d4a3841021013e55086204b0",
+          "covariance": false,
+          "family": "co_structural",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 22,
+            "eligible_positive": 8,
+            "failed": 0,
+            "nonconverged": 4
+          },
+          "case_id": "joint-control-01",
+          "cell_sha256": "cd772cd3cea57e118b5ec84e45f7b604957d3d479e0003b13560fb50b274cf86",
+          "covariance": true,
+          "family": "co_structural",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 25,
+            "eligible_positive": 9,
+            "failed": 0,
+            "nonconverged": 1
+          },
+          "case_id": "joint-control-02",
+          "cell_sha256": "346147e0efef87d2aad889375f4346c68aa18b364a39fbd2c6c206986892b561",
+          "covariance": false,
+          "family": "co_structural",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 24,
+            "eligible_positive": 9,
+            "failed": 0,
+            "nonconverged": 2
+          },
+          "case_id": "joint-control-03",
+          "cell_sha256": "5046085a8e21ee1c41076fc3605b8fb5400bfc4385ecea6f5bee80b4b70636e9",
+          "covariance": true,
+          "family": "co_structural",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 23,
+            "eligible_positive": 9,
+            "failed": 0,
+            "nonconverged": 3
+          },
+          "case_id": "joint-control-04",
+          "cell_sha256": "2c58b78dbe1b150c6e4738cf0586b952eed2b4ff83678833aa0e21269730f8aa",
+          "covariance": false,
+          "family": "co_structural",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 21,
+            "eligible_positive": 8,
+            "failed": 0,
+            "nonconverged": 5
+          },
+          "case_id": "joint-control-05",
+          "cell_sha256": "859dfe69de6acf27a819e09e719732d4c2127595e344370ec7886daabc7ca0c6",
+          "covariance": true,
+          "family": "co_structural",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 22,
+            "eligible_positive": 8,
+            "failed": 0,
+            "nonconverged": 4
+          },
+          "case_id": "joint-control-06",
+          "cell_sha256": "e56f151c6cdc8ef7ab3dad3757098491978226f0a50423d7d2b69f7c5d46207a",
+          "covariance": false,
+          "family": "disjoint",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 24,
+            "eligible_positive": 10,
+            "failed": 0,
+            "nonconverged": 2
+          },
+          "case_id": "joint-control-07",
+          "cell_sha256": "e7c66556683d1b9dedeb277a507cde27bc039100a2ce25cf8984c251faf8302e",
+          "covariance": true,
+          "family": "disjoint",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 26,
+            "eligible_positive": 10,
+            "failed": 0,
+            "nonconverged": 0
+          },
+          "case_id": "joint-control-08",
+          "cell_sha256": "e2243b64e87adf6d6f43b5561e370abf27d27388ce029d4a6d3a21fa5c06fffd",
+          "covariance": false,
+          "family": "disjoint",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 1.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 26,
+            "eligible_positive": 10,
+            "failed": 0,
+            "nonconverged": 0
+          },
+          "case_id": "joint-control-09",
+          "cell_sha256": "1661b3a482a3c1e0238b1ebdf57ad9e4c71547e5d7968cd7d23b5870eb06ed85",
+          "covariance": true,
+          "family": "disjoint",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 20,
+            "eligible_positive": 7,
+            "failed": 0,
+            "nonconverged": 6
+          },
+          "case_id": "joint-control-10",
+          "cell_sha256": "ac128862e87fe9a460ceab6a9462a3dc323919cf464cf6a9ab94e7c6323f9c5b",
+          "covariance": false,
+          "family": "disjoint",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 20,
+            "eligible_positive": 7,
+            "failed": 0,
+            "nonconverged": 6
+          },
+          "case_id": "joint-control-11",
+          "cell_sha256": "0456abe424c4b8d61305e1725afd1c60c1532ae5d89f04f922979f5aa488154a",
+          "covariance": true,
+          "family": "disjoint",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 22,
+            "eligible_positive": 8,
+            "failed": 0,
+            "nonconverged": 4
+          },
+          "case_id": "joint-control-12",
+          "cell_sha256": "d9a117cefc975a3ee4a54531ba534769ce0e41e7ff741a0727a74d7edc1ff7ea",
+          "covariance": false,
+          "family": "flat_null",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 25,
+            "eligible_positive": 10,
+            "failed": 0,
+            "nonconverged": 1
+          },
+          "case_id": "joint-control-13",
+          "cell_sha256": "137dea8d3c7183e42807bd4c812c561c0106de3a0aa5650c5f0230cf2bf6d6a1",
+          "covariance": true,
+          "family": "flat_null",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 22,
+            "eligible_positive": 6,
+            "failed": 0,
+            "nonconverged": 4
+          },
+          "case_id": "joint-control-14",
+          "cell_sha256": "395732a8913e64ca88d3a940d2d67160fa6fd4521745bb88b70c864601178afd",
+          "covariance": false,
+          "family": "flat_null",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 0.1,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 19,
+            "eligible_positive": 3,
+            "failed": 0,
+            "nonconverged": 7
+          },
+          "case_id": "joint-control-15",
+          "cell_sha256": "6d9597b9aeae30013bd58adb3af2a585bc17bfe0c2160d430ba669de45c5376b",
+          "covariance": true,
+          "family": "flat_null",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 17,
+            "eligible_positive": 4,
+            "failed": 0,
+            "nonconverged": 9
+          },
+          "case_id": "joint-control-16",
+          "cell_sha256": "9f30502aa3b4d26f05e8df214473bcd28844c731836eed85a9ef5aa11f5aeabd",
+          "covariance": false,
+          "family": "flat_null",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 19,
+            "eligible_positive": 6,
+            "failed": 0,
+            "nonconverged": 7
+          },
+          "case_id": "joint-control-17",
+          "cell_sha256": "a7067b214951331cdef04c2d1e055bd72fc61f4832a6c3e39514555227b207a1",
+          "covariance": true,
+          "family": "flat_null",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 0.01,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 22,
+            "eligible_positive": 9,
+            "failed": 0,
+            "nonconverged": 4
+          },
+          "case_id": "joint-control-18",
+          "cell_sha256": "7e8ab320d06bc016a8170fb7a8ce47e0b8899050233f291a609c8f22e46330a4",
+          "covariance": false,
+          "family": "wrong_field",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 21,
+            "eligible_positive": 7,
+            "failed": 0,
+            "nonconverged": 5
+          },
+          "case_id": "joint-control-19",
+          "cell_sha256": "ed4150d3fcb811bac998f858d110a84adc7065a489803bf150123a90373e19ff",
+          "covariance": true,
+          "family": "wrong_field",
+          "regime": "dense",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 19,
+            "eligible_positive": 3,
+            "failed": 0,
+            "nonconverged": 7
+          },
+          "case_id": "joint-control-20",
+          "cell_sha256": "ba2ae0b62e9491a99a8ecd742179ad49fe46a4a295527bc2c0cd97427239bcd4",
+          "covariance": false,
+          "family": "wrong_field",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 0.01,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 19,
+            "eligible_positive": 4,
+            "failed": 0,
+            "nonconverged": 7
+          },
+          "case_id": "joint-control-21",
+          "cell_sha256": "ec81bb0d3ba58bca1a62948f21810ad9fdf13b39491ba0444556223b814540c0",
+          "covariance": true,
+          "family": "wrong_field",
+          "regime": "sparse_blocked",
+          "replay_validated": true,
+          "selected_coupling": 0.01,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 21,
+            "eligible_positive": 9,
+            "failed": 0,
+            "nonconverged": 5
+          },
+          "case_id": "joint-control-22",
+          "cell_sha256": "19b4edb7d918adc6950c01f37e2b84f4700bd4134196ff12d11c8c1fdbdd6ba9",
+          "covariance": false,
+          "family": "wrong_field",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 10.0,
+          "workflow_status": "completed"
+        },
+        {
+          "candidate_counts": {
+            "converged": 23,
+            "eligible_positive": 8,
+            "failed": 0,
+            "nonconverged": 3
+          },
+          "case_id": "joint-control-23",
+          "cell_sha256": "8dc6e8b10e100e9420c7e9c8294d2d22d00db21e8d7b81c488e382c80a0f1df8",
+          "covariance": true,
+          "family": "wrong_field",
+          "regime": "shifted_geometry",
+          "replay_validated": true,
+          "selected_coupling": 0.001,
+          "workflow_status": "completed"
+        }
+      ],
+      "schema": "joint-survey-matrix-1",
+      "scientific_precision_accepted": false,
+      "source_sha256": {
+        "joint_survey_cases.py": "a2ae4596a5afb1e03b19c5210d7541dce4e226c60bdbdff709481bff076eba81",
+        "joint_survey_optimizer.py": "ce953419ba668d2c0edd1ea13025b8fda88292479f3332c9743dd540c0868c15",
+        "validate_joint_matrix.py": "5656fbbbc3674261c0610dfea1d5de8e93425bc8853757ba1935175e92def62b"
+      }
+    },
+    "validated_replays": 24
+  },
+  "maximum_count_resource_gate": {
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-integrated-20261025\\data\\resource-gate.json",
+    "sha256": "cd8d06de82f44850fdaec841ae16e3b77aabdf626c3b9ec60b2e4672b6426210",
+    "full_cells": 4096,
+    "active_cells": 1932,
+    "active_count_plus_one_rejected": true,
+    "receivers_per_modality": 2048,
+    "full_covariance": true,
+    "projected_kernel_bytes": 126615552,
+    "private_export_bytes": 2386008,
+    "workflow_status": "completed",
+    "workflow_elapsed_seconds": 11.514999999999418,
+    "workflow_peak_sampled_rss_bytes": 494010368,
+    "workflow_peak_sampled_scratch_bytes": 0,
+    "replay_validated": true,
+    "verification_elapsed_seconds": 8.905999999988126,
+    "verification_peak_sampled_rss_bytes": 464322560,
+    "inverse_completed": true,
+    "field_eligible": false,
+    "public_activation": false
+  },
+  "method_scope": {
+    "field_eligible": false,
+    "full_m11_release_accepted": false,
+    "full_parent_sdd_release_gates_closed": false,
+    "maximum_count_resource_gate_run": true,
+    "public_activation": false
+  },
+  "notes": [
+    "Nonconverged optimizer candidates remain in the ledger and are not treated as accepted model fits.",
+    "The solver-accuracy change tightens joint-fit stationarity only; the conditioned comparator retains its declared separate tolerance.",
+    "Maximum-count resource qualification, field validation, complete M01-M13 product release gates, and VPS deployment remain open.",
+    "M11 pipeline, scripts, scientific docs and focused numerical tests are integrated into the current product branch; authenticated online project/job API and current VPS integration remain incomplete."
+  ],
+  "restored_pinned_dependency_closure": {
+    "data-pipeline/gravity_l2_metric.py": "d49d24331df1273597f5f646bceedc629776a020f3dc4d8a63f55bf55e205118",
+    "data-pipeline/gravity_l2_precision.py": "57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a",
+    "data-pipeline/physical_compiled_optimizer.py": "1554320f49012062b523e7a2d6d02baf0cf54ca18ec5c47efaee48c39194e7ab",
+    "data-pipeline/physical_conditioned_optimizer.py": "1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c",
+    "data-pipeline/physical_optimizer.py": "4745d41ff8afb908260611601861db8303ce7bd612ff0ea614cceb201a20bc86",
+    "data-pipeline/physical_original_quadratic.py": "07c67519110d59758614516a3f3d98ed49713a969affcefb4711430b604186ce",
+    "data-pipeline/physical_original_residual_terminal.py": "a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7",
+    "data-pipeline/physical_original_rows.py": "8a18a0ae04bfd09336480e06d2e9526aecab79a232033e9ca5d0040b16e9f399",
+    "data-pipeline/physical_original_terminal.py": "dd4b07defa6921a173d3e4d75dad28697fa36743a5dccef6f5db815ae6a73991",
+    "data-pipeline/physical_owned_spd.py": "8924508c3328b70bb9e08ac11a81e107bcdd713402812ba64afec838892d36c2",
+    "data-pipeline/physical_reduced_optimizer.py": "22bf04a7e260b5f93c2e54430f54c3d3464150b3ce78d861c8236bc3d6b21aad"
+  },
+  "schema": "caos-geophysics.m11-final-precision-receipt/v1",
+  "solver_policy": {
+    "cg_relative_residual_tolerance": 1e-06,
+    "conditioned_comparator_normalized_projected_kkt_tolerance": 1e-05,
+    "joint_fit_normalized_projected_kkt_tolerance": 1e-08,
+    "selection_rule_changed": false
+  },
+  "source_sha256": {
+    "data-pipeline/joint_survey_compiled_baseline.py": "7b9d56ad042fb78f8aea33d1486c0403146e7394093b2679cc08906b629add6a",
+    "data-pipeline/joint_survey_conditioned.py": "c668405d4bbd9c82853ddddc46f8f81cad1ff43952273ee90c06b0dc94e32673",
+    "data-pipeline/joint_survey_optimizer.py": "ce953419ba668d2c0edd1ea13025b8fda88292479f3332c9743dd540c0868c15",
+    "data-pipeline/physical_nonlinear_optimizer.py": "b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919",
+    "scripts/validate_joint_precision.py": "392e76992e3f36b016d7d28808e3a723d8ce066bb81007d88190e83d746ecd45",
+    "data-pipeline/gravity_l2_metric.py": "d49d24331df1273597f5f646bceedc629776a020f3dc4d8a63f55bf55e205118"
+  },
+  "targeted_numerical_regression": {
+    "artifact": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-integrated-20261025\\targeted-numerical-regression.xml",
+    "sha256": "f5a75a786528dbf1183dba2eec4b143adabdfdc12f7a49cf6f363aa64936c7e3",
+    "tests": 451,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 5
+  }
+}

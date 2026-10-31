@@ -2,6 +2,9 @@
 
 from app.config import Settings
 from app.server import create_app
+from app.operator_runtime import configured_physical_assembly
 
 
-app = create_app(Settings.from_env())
+settings = Settings.from_env()
+physical = configured_physical_assembly(settings)
+app = create_app(settings, physical=physical)

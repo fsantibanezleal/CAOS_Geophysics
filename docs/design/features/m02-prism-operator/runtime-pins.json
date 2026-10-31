@@ -13,7 +13,8 @@
     "geoana": "0.8.1",
     "discretize": "0.12.0",
     "numpy": "2.2.6",
-    "scipy": "1.15.2"
+    "scipy": "1.15.2",
+    "pymatsolver": "0.4.0"
   },
   "oracle_runtime_versions_observed": {
     "choclo": "0.3.2",
@@ -41,7 +42,8 @@
     "choclo/prism/_gravity.py": "b50aa392db4b18124f439f8ec4b9d3214bd74dba7fb43f559ac19e3e33e8b94a",
     "choclo/prism/_kernels.py": "27c14a03c0d5d39bcbd46304687f6b7c559d7ac498039e2cd0874fd2e8afb2c2",
     "choclo/constants.py": "81eda92d7a631ad9544ba318319561be115906e32dc6de23bcd48ca1ea458494",
-    "scipy/constants/_codata.py": "6720b92f0773413d9dbab052a2a343e9a9dd6032e8f0cd916c967fdd4553d303"
+    "scipy/constants/_codata.py": "6720b92f0773413d9dbab052a2a343e9a9dd6032e8f0cd916c967fdd4553d303",
+    "pymatsolver/solvers.py": "2fa6610a5a5fed09395fc8ad550abf6d4dbc0c449f53c4e6e7024b9ffe8e94b1"
   },
   "new_numerical_execution": false,
   "field_eligibility": false,

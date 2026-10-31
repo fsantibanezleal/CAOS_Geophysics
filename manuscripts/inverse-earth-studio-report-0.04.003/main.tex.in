@@ -1,0 +1,78 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Noto Serif}
+\usepackage{microtype}
+\usepackage{longtable,booktabs,array}
+\usepackage{enumitem}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{bookmark}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\urlstyle{same}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\emergencystretch}{3em}
+\setcounter{secnumdepth}{2}
+
+\newcommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+
+\newcommand{\doctype}{Technical report}
+
+\newcommand{\docversion}{v0.04.003}
+
+\newcommand{\docdate}{30 October 2026}
+
+\newcommand{\versiondoi}{10.5281/zenodo.NNNNNNNN}
+
+\newcommand{\conceptdoi}{10.5281/zenodo.NNNNNNNN}
+
+\newcommand{\docrepo}{github.com/fsantibanezleal/CAOS\_Geophysics}
+
+
+\newcommand{\headerblock}{%
+\begin{center}
+\fbox{\parbox{0.94\textwidth}{\small\raggedright
+\textbf{\doctype} \quad$\cdot$\quad \docversion, \docdate \quad$\cdot$\quad Licence CC BY 4.0\\[2pt]
+CAOS Research open-problems programme \quad$\cdot$\quad product Inverse Earth Studio \quad$\cdot$\quad geophysics\\[2pt]
+Version DOI (TODO, draft-only placeholder; not assigned): \texttt{\versiondoi}\\[2pt]
+Concept DOI, always latest (TODO, draft-only placeholder; not assigned): \texttt{\conceptdoi}\\[2pt]
+Not peer reviewed. Source code, data and computational records: \href{https://github.com/fsantibanezleal/CAOS_Geophysics}{\texttt{\docrepo}}
+}}
+\end{center}
+\vspace{4pt}}
+
+\title{Inverse Earth Studio: a reproducible geophysical workbench for processing, forward modelling, inversion, and scientific review}
+\author{Felipe Santib\'a\~nez-Leal}
+\date{}
+\begin{document}
+\maketitle
+\headerblock
+\begin{abstract}
+\input{abstract-generated.tex}
+\end{abstract}
+\clearpage
+\input{body-generated.tex}
+
+\begin{thebibliography}{99}
+\bibitem{cockett2015} R. Cockett, L. J. Heagy, A. Pidlisecky, and D. W. Oldenburg, ``SimPEG: An open source framework for simulation and gradient based parameter estimation in geophysical applications,'' \emph{Computers \& Geosciences}, vol. 85, pp. 142--154, 2015. \href{https://doi.org/10.1016/j.cageo.2015.09.015}{doi:10.1016/j.cageo.2015.09.015}.
+\bibitem{heagy2017} L. J. Heagy, R. Cockett, S. Kang, G. K. Rosenkjaer, and D. W. Oldenburg, ``A framework for simulation and inversion in electromagnetics,'' \emph{Computers \& Geosciences}, vol. 107, pp. 1--19, 2017. \href{https://doi.org/10.1016/j.cageo.2017.06.018}{doi:10.1016/j.cageo.2017.06.018}.
+\bibitem{goyes2025} P. Goyes-Pe\~nafiel et al., ``Physically guided deep unsupervised inversion for 1D magnetotelluric models,'' \emph{IEEE Geoscience and Remote Sensing Letters}, 2025. \href{https://doi.org/10.1109/LGRS.2025.3528767}{doi:10.1109/LGRS.2025.3528767}.
+\bibitem{virieux2009} J. Virieux and S. Operto, ``An overview of full-waveform inversion in exploration geophysics,'' \emph{Geophysics}, vol. 74, no. 6, pp. WCC1--WCC26, 2009. \href{https://doi.org/10.1190/1.3238367}{doi:10.1190/1.3238367}.
+\bibitem{deepwave} Deepwave, ``Full waveform inversion example and documentation.'' \url{https://ausargeo.com/deepwave/example_fwi}.
+\bibitem{mousavi2019} S. M. Mousavi, Y. Sheng, W. Zhu, and G. C. Beroza, ``STanford EArthquake Dataset (STEAD): A global data set of seismic signals for AI,'' \emph{IEEE Access}, vol. 7, pp. 179464--179476, 2019. \href{https://doi.org/10.1109/ACCESS.2019.2947848}{doi:10.1109/ACCESS.2019.2947848}.
+\bibitem{zhu2019} W. Zhu and G. C. Beroza, ``PhaseNet: A deep-neural-network-based seismic arrival-time picking method,'' \emph{Geophysical Journal International}, vol. 216, no. 1, pp. 261--273, 2019. \href{https://doi.org/10.1093/gji/ggy423}{doi:10.1093/gji/ggy423}.
+\bibitem{choclo} Fatiando a Terra, \emph{Choclo: geophysical forward modelling with equivalent sources}. \url{https://www.fatiando.org/choclo/latest/overview.html}.
+\bibitem{pygimli} PyGIMLi, \emph{Inversion guide and ERT examples}. \url{https://www.pygimli.org/user-guide/inversion/}.
+\bibitem{simpegJoint} SimPEG, \emph{Joint inversion with cross-gradient regularization}. \url{https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html}.
+\bibitem{astic2020} T. Astic et al., ``Joint inversion of geophysical data with a petrophysical prior.'' \url{https://arxiv.org/abs/2002.09515}.
+\bibitem{openfwi} W. Lu et al., ``OpenFWI: Large-scale multi-structural benchmark datasets for seismic full waveform inversion.'' \url{https://github.com/lanl/OpenFWI}.
+\bibitem{course} A. G. Mantilla, \emph{Curso te\'orico-pr\'actico sobre inversi\'on geof\'isica en Python}, source commit \texttt{0084021fcc6c1d2f112b144e6e5f0a3d92f20dff}. \url{https://github.com/Anagabrielamantilla/inversion-geofisica-python}.
+\bibitem{mtpy} MTpy v2, \emph{Magnetotelluric data and EDI documentation}. \url{https://mtpy-v2.readthedocs.io/en/stable/index.html}.
+\bibitem{usgsClearLake} U.S. Geological Survey, \emph{Magnetotelluric data, Clear Lake region, northern California}. \href{https://doi.org/10.5066/P14KAQ3M}{doi:10.5066/P14KAQ3M}.
+\bibitem{earthscopeClearLake} EarthScope, \emph{EMTF transfer-function collection: Clear Lake}. \href{https://doi.org/10.17611/DP/EMTF/GMEG/Clearlake}{doi:10.17611/DP/EMTF/GMEG/Clearlake}.
+\end{thebibliography}
+
+\end{document}

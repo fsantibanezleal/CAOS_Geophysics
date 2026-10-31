@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "data/derived/phase/browser-assets/stead"
 BENCHMARK = ROOT / "data/derived/phase/stead-heldout-benchmark.json"
 OVERLAP = ROOT / "data/derived/phase/stead-heldout-overlap.json"
+SOURCE_RECEIPT = ROOT / "data/derived/phase/stead-waveform-source.json"
+RIGHTS_REVIEW = ROOT / "docs/design/features/phase-picking/rights-review-2026-10-28.md"
 HOST_PATH = re.compile(rb"[A-Za-z]:\\(?:[^\\\x00\r\n]{1,100}\\){2}")
 
 
@@ -30,9 +32,39 @@ def validate() -> None:
     benchmark_bytes = raw("benchmark.json")
     benchmark = json.loads(benchmark_bytes)
     overlap = json.loads(OVERLAP.read_bytes())
+    source_receipt = json.loads(SOURCE_RECEIPT.read_text(encoding="utf-8"))
+    rights = manifest["source"]["redistribution"]
+    source_rights = source_receipt["rights"]
     assert manifest["schema"] == "caos.phase-browser-assets.v1"
     assert manifest["source"]["license"] == "CC BY 4.0"
+    assert manifest["source"]["license_url"] == (
+        "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE"
+    )
     assert manifest["source"]["doi"] == "10.1109/ACCESS.2019.2947848"
+    assert rights["decision"] == "approved-with-attribution"
+    assert rights["license"] == "CC BY 4.0"
+    assert rights["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
+    assert rights["review"] == "docs/design/features/phase-picking/rights-review-2026-10-28.md"
+    assert rights["attribution_file"] == "ATTRIBUTION.md"
+    assert source_rights["release_decision"] == "public-selected-derivatives-approved-with-CC-BY-4.0-attribution"
+    assert source_rights["rights_review"] == rights["review"]
+    assert source_rights["reviewed_upstream_license_url"] == manifest["source"]["license_url"]
+    for key, manifest_key in (
+        ("reviewed_upstream_license_commit", "upstream_license_commit"),
+        ("reviewed_upstream_license_blob_sha1", "upstream_license_blob_sha1"),
+        ("reviewed_upstream_license_sha256", "upstream_license_sha256"),
+        ("reviewed_seisbench_commit", "seisbench_commit"),
+        ("reviewed_seisbench_stead_blob_sha1", "seisbench_stead_blob_sha1"),
+        ("reviewed_mirror_license_sha256", "mirror_license_sha256"),
+    ):
+        assert source_rights[key] == rights[manifest_key]
+    attribution = raw("ATTRIBUTION.md").decode("utf-8")
+    review = RIGHTS_REVIEW.read_text(encoding="utf-8")
+    assert RIGHTS_REVIEW.is_file()
+    for required in ("Mousavi", "Sheng", "Zhu", "Beroza", "CC BY 4.0", "changes", "not endorsed"):
+        assert required.casefold() in attribution.casefold()
+    assert "no-warranty" in attribution.casefold()
+    assert "approved for public distribution" in review
     assert manifest["selection"]["selected_before_heldout_scoring"] is True
     assert (manifest["selection"]["selected"], manifest["selection"]["qc_valid"],
             manifest["selection"]["qc_rejected"]) == (24, 23, 1)
@@ -72,7 +104,7 @@ def validate() -> None:
         assert digest(payload) == row["waveform_sha256"]
     assert wave_files == {path.name for path in ASSETS.glob("trace-*.f32")}
     assert (ASSETS / "ATTRIBUTION.md").is_file()
-    print("PASS: M13 model, 23 waveform assets, QC rejection, benchmark and hashes consistent")
+    print("PASS: M13 model, rights decision, attribution, 23 waveform assets, QC rejection, benchmark and hashes consistent")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 param(
     [ValidateSet('cpu', 'cuda')][string]$Device = 'cpu',
-    [string]$Output = 'data/experiments/m12-velocity',
+    [ValidateSet('historical-v1', 'physics-v2')][string]$Protocol = 'historical-v1',
+    [string]$Output,
     [ValidateRange(1, 10000)][int]$Epochs = 40,
     [switch]$Verify,
     [switch]$Fixture,
@@ -8,6 +9,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($Output)) { throw 'M12 requires an explicit absolute external -Output path.' }
 $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 if (-not $Python) {
     foreach ($candidate in @('.venv-pipeline/Scripts/python.exe', '.venv-m12/Scripts/python.exe')) {
@@ -18,10 +20,11 @@ if (-not $Python) {
 if (-not $Python) { throw 'Create an ignored local Python environment with NumPy, SciPy and PyTorch, or pass -Python.' }
 Push-Location $root
 try {
-    $arguments = @('data-pipeline/velocity_validation.py', '--output', $Output)
+    $arguments = @('scripts/run_m12_velocity.py', '--output', $Output, '--protocol', $Protocol,
+                   '--epochs', $Epochs)
     if ($Verify) { $arguments += '--verify' }
     else {
-        $arguments += @('--device', $Device, '--epochs', $Epochs)
+        $arguments += @('--device', $Device)
         if ($Fixture) { $arguments += '--fixture' }
     }
     & $Python @arguments

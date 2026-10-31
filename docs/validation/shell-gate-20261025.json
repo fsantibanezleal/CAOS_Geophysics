@@ -1,0 +1,227 @@
+{
+  "ok": true,
+  "base": "http://127.0.0.1:63788/",
+  "expectBrand": "Inverse Earth Studio",
+  "sizes": "390x844,1280x800",
+  "themes": "light,dark",
+  "langs": "en,es",
+  "wideFontSizes": "",
+  "states": 548,
+  "minima": {
+    "drawnShare": {
+      "value": 0.5023,
+      "route": "/",
+      "mode": "1280x800 light en",
+      "trail": "analysis > recovery"
+    },
+    "stageFill": {
+      "value": 0.5307,
+      "route": "/",
+      "mode": "1280x800 light en",
+      "trail": "case FWI_CYCLE_SKIP > analysis > question"
+    }
+  },
+  "waivers": [],
+  "checks": {},
+  "artifactMeasurements": [
+    {
+      "path": "/data/v2/catalog.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 347002,
+      "sha256": "f333943bd56bf2e44f8f7679ded4c4bc4100a64518b88398e0b30717b6b271a2"
+    },
+    {
+      "path": "/data/v2/GRAVITY_INTRUSION/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1807791,
+      "sha256": "7139c86798fa90687acf04f19a8b03b0560b2d2b62f8de009a5e837accde0282"
+    },
+    {
+      "path": "/data/v2/LEARNED_AUTOENCODER/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1840985,
+      "sha256": "b03e8cf6bbcc88e651ad855fd2991d4d8716b1aa16e245fcbc81384eed40db4c"
+    },
+    {
+      "path": "/data/v2/edi/manifest.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 6052,
+      "sha256": "92f24baf8f2920e60f0d10b70fd5f32b91c6293364d1fab794676b677e999413"
+    },
+    {
+      "path": "/data/v2/edi/calibration-halfspace.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 19727,
+      "sha256": "047a413bb2ab1eb17f9442497852bcd19926e0535b4403c6353a1612c96575e4"
+    },
+    {
+      "path": "/data/v2/edi/calibration-two-layer.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 24701,
+      "sha256": "9a9138fedc5d3e8f87c4616ede81e08e6ee18a75f86712e51607007156fd99e1"
+    },
+    {
+      "path": "/data/v2/edi/halfspace-100-native.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 46751,
+      "sha256": "2e251e36bcfc9549e5c4c6b412eb6cc4972be4590b2a8fe58bdda8e46d6342e5"
+    },
+    {
+      "path": "/data/v2/edi/clear-lake-cl061-screen.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 50910,
+      "sha256": "0bb33c3fdeed7bec98064a753979d7f8184bdb89795fbbcd2c76ec6cc520e364"
+    },
+    {
+      "path": "/data/v2/GRAVITY_INTRUSION/contrast.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1786701,
+      "sha256": "e383f6660745d850a8ed75da05c19b42074cae73cf4b1d366037ddae774d9291"
+    },
+    {
+      "path": "/data/v2/GRAVITY_DEEP_BODY/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1747315,
+      "sha256": "43d556d2d44fd9c54855d10276d34c027455271f353cc9ed9d729c95cbd26647"
+    },
+    {
+      "path": "/data/v2/GRAVITY_NOISY/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1835718,
+      "sha256": "59657cae89ebfb56691c42591229194b8f634020568ec2e6573ebb25aa225f8c"
+    },
+    {
+      "path": "/data/v2/GRAVITY_TILTED/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1709693,
+      "sha256": "a129bb292317edcbac40aee36fe091cf905075236ac664f2944482d204f53056"
+    },
+    {
+      "path": "/data/v2/MAGNETIC_DYKE/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 2653947,
+      "sha256": "3d9da79036045b89c63c7570f852e669c51b1e1d01070e46d8b928af412a98c4"
+    },
+    {
+      "path": "/data/v2/MAGNETIC_REMANENCE/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 2735923,
+      "sha256": "c5740ad61a0ec52d26ab02b7ea6bf53b406390df52be5c704e4bf04a09f51750"
+    },
+    {
+      "path": "/data/v2/MAGNETIC_DEEP/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 2682480,
+      "sha256": "ff690d78e621991fdf23498712cce3d63c24bc44fc41c0d0d4c6eb408d9b7954"
+    },
+    {
+      "path": "/data/v2/MAGNETIC_NOISY/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 2633839,
+      "sha256": "61e6f083b0e1e8b177c0fbf147571501c0f30ef33ecb3d193d3d949a45fb4375"
+    },
+    {
+      "path": "/data/v2/MT_RESISTIVE/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 60374,
+      "sha256": "4e24f6651635a43dbed1c557e8cab1c14813553c63bfbb8193062343630e9b56"
+    },
+    {
+      "path": "/data/v2/MT_CONDUCTIVE/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 60151,
+      "sha256": "19c3314f3ad57e74c9087bbb061fd9accd8f295a6a5492cd1e78c12046771d08"
+    },
+    {
+      "path": "/data/v2/MT_MIXED/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 68811,
+      "sha256": "7efb833d7bd42d23a8bbba7948331b8759c14add2afbfa3844bc521fa0a75c3e"
+    },
+    {
+      "path": "/data/v2/MT_NOISY/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 63209,
+      "sha256": "c9acbf1cadd8c1cf387458bc23cdb8c43d7557a797b570f5a2a34bbe2c0ac173"
+    },
+    {
+      "path": "/data/v2/FWI_LAYERED/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 24665632,
+      "sha256": "0bd58753bebf96d8a8d577abc40abd27ad230e2f1a5a4e99f017af4c73fab4c9",
+      "id": "FWI_LAYERED",
+      "schema": "inverse-earth/v2"
+    },
+    {
+      "path": "/data/v2/FWI_FAULT/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 24622627,
+      "sha256": "85beea1f0cc8f07d70a108aa20dd3c01445c2582356743235285f1f641982f2d",
+      "id": "FWI_FAULT",
+      "schema": "inverse-earth/v2"
+    },
+    {
+      "path": "/data/v2/FWI_CYCLE_SKIP/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 25083849,
+      "sha256": "5ae0fbea6c386fc1703184405b27a299dd7ebcdb21b4dd9876b115bb7c183644",
+      "id": "FWI_CYCLE_SKIP",
+      "schema": "inverse-earth/v2"
+    },
+    {
+      "path": "/data/v2/FWI_NOISY/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 24257802,
+      "sha256": "c74f02d7c0684857be4e645261f6afe8e5972bc313f15ec6de1662c138ffcc59",
+      "id": "FWI_NOISY",
+      "schema": "inverse-earth/v2"
+    },
+    {
+      "path": "/data/v2/JOINT_SHARED/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 7301694,
+      "sha256": "369179f2ec11e9a394bd9bfb7361d81c5989b1db704c80ba822f31d0921b982e"
+    },
+    {
+      "path": "/data/v2/JOINT_CONFLICT/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 7948915,
+      "sha256": "c915c5a098dd7bdb3f561c34866080f1c2e9b7ab9029c67fbc4b2b791e65c0b7"
+    },
+    {
+      "path": "/data/v2/LEARNED_CNN/reference.json",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 1852761,
+      "sha256": "84d3a90bb2360b6e541c64b980d6f430eca3163c090fc59be4e0a4223e2a7934"
+    }
+  ],
+  "captures": 56,
+  "failures": []
+}

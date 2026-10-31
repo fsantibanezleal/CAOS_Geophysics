@@ -51,6 +51,29 @@
   .mt-instrument .mt-axis-toggle { display: block; }
   .mt-toolbar:not(.axes-open) > .select-control:nth-of-type(n+3) { display: none; }
 }
+
+/* The root workbench is a fixed AppShell route. Preserve that viewport contract
+   on phones; the shell's document-route mobile fallback otherwise lets the
+   intrinsic workbench height push the footer below the viewport. Research pages
+   retain the shell's normal scrolling behavior. */
+@media (max-width: 760px) {
+  .app-shell.fixed.contain:has(> .page > .caos-wb) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app-shell.fixed.contain:has(> .page > .caos-wb) > .page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app-shell.fixed.contain:has(> .page > .caos-wb) > .page > .caos-wb {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
 @media (max-width: 760px) {
   .processing-workbench { height: 100%; overflow: hidden !important; }
   .processing-workbench .processing-sidebar { display: flex; padding: 0; }
@@ -73,17 +96,44 @@
   align-items: stretch;
   overflow: hidden;
 }
+@media (min-width: 761px) and (max-height: 850px) {
+  /* Keep the full method and control set inside a short desktop viewport. */
+  .caos-wb-rail-panel > .instrument-sidebar { gap: 0.55rem; }
+}
 .workbench > * {
   min-width: 0;
   min-height: 0;
+}
+/* The CAOS App shell gives scientific workbenches the full viewport. On data
+   and inversion views, the shell's own rail toggle opens/closes the product
+   rail; an empty rail must therefore release its grid track completely. */
+.caos-wb:has(> .caos-wb-rail > .caos-wb-rail-panel:empty) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.caos-wb:has(> .caos-wb-rail > .caos-wb-rail-panel:empty) > .caos-wb-rail {
+  display: none;
+}
+.caos-wb:has(> .caos-wb-rail > .caos-wb-rail-panel:empty) .seismic-view {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 901px) {
+  .app-shell.fixed.contain > .page > .page-body.wide.caos-wb {
+    width: 100%;
+    max-width: none;
+  }
 }
 .instrument-sidebar {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding-right: 0.4rem;
   scrollbar-width: thin;
+}
+.caos-focus-rail .instrument-sidebar {
+  gap: 0.35rem;
+  padding: 0.35rem;
 }
 .sidebar-panel-switch {
   display: grid;
@@ -209,6 +259,15 @@
   display: flex;
   flex-direction: column;
 }
+.instrument-main > .tabs.tabs-has-slot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: 0.5rem;
+}
+.instrument-main > .tabs.tabs-has-slot > .tablist { grid-column: 1; grid-row: 1; }
+.instrument-main > .tabs.tabs-has-slot > .tabs-slot { grid-column: 2; grid-row: 1; }
+.instrument-main > .tabs.tabs-has-slot > .tabpanel { grid-column: 1 / -1; grid-row: 2; }
 .instrument-main > .tabs > .tablist {
   flex: none;
 }
@@ -317,8 +376,13 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  min-height: 420px;
-  height: 100%;
+  min-height: clamp(420px, 72vh, 980px);
+  height: auto;
+}
+.earth-view > .earth-scene {
+  height: clamp(420px, 72vh, 980px);
+  min-height: clamp(420px, 72vh, 980px);
+  flex: 0 0 auto;
 }
 .scene-toolbar {
   position: absolute;
@@ -627,10 +691,31 @@
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
 }
+.data-view-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+.data-view-tools .plot-note { margin: 0; }
 .evidence-layout > * {
   min-width: 0;
 }
 .evidence-layout code {
+  overflow-wrap: anywhere;
+}
+.science-plot-shell {
+  width: 100%;
+  min-width: 0;
+}
+.science-plot-shell .caos-chart-table {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;
+}
+.science-plot-shell .caos-chart-table th,
+.science-plot-shell .caos-chart-table td {
   overflow-wrap: anywhere;
 }
 .evaluation-status {
@@ -663,9 +748,114 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
-.three-plots {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+/* The measured field and section panels are the primary instrument. Let their
+   scientific rasters use the available desktop height when the rail is
+   collapsed; mobile keeps the shell's normal scrolling chart size. */
+@media (min-width: 901px) {
+  [data-instrument="data-view"] .three-plots > .science-plot,
+  [data-instrument="inversion-view"] .two-plots > .science-plot,
+  .learned-view .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(600px, min(80vh, 1080px));
+  }
+  .context-view .case-evidence .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(560px, min(72vh, 900px));
+  }
+  .learned-view .learned-primary-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(600px, min(80vh, 1080px));
+  }
+  .learned-view .learned-support-plots .two-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(520px, min(66vh, 840px));
+  }
 }
+.three-plots {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+/* Three coupled fields (observed, predicted, residual/error) are one
+   scientific comparison. At desktop widths keep them in the same row so the
+   third field is visible with its peers and the viewport gate measures the
+   complete comparison rather than a clipped second-row panel. */
+@media (min-width: 1120px) {
+  .three-plots {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+/* Learned maps are coordinate-bearing survey rasters. Two large physical-scale
+   maps per row preserve their aspect ratio and keep both input and output legible. */
+@media (min-width: 1120px) {
+  .learned-view .three-plots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .learned-view .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: max(600px, min(80vh, 1080px));
+  }
+}
+@media (min-width: 1801px) {
+  .learned-view .three-plots {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .learned-view .three-plots > .science-plot {
+    height: clamp(440px, 50vh, 680px);
+  }
+  .context-view .case-evidence .three-plots > .science-plot {
+    box-sizing: border-box;
+    height: clamp(720px, 72vh, 980px);
+  }
+  .mt-view .layer-stack {
+    height: clamp(680px, 78vh, 1040px);
+  }
+  .mt-view .mt-curves .science-plot-shell .caos-plot.fill,
+  [data-instrument="data-view"] .two-plots .science-plot-shell .caos-plot.fill {
+    box-sizing: border-box;
+    height: clamp(680px, 78vh, 1040px);
+  }
+  [data-instrument="inversion-view"] .learned-recovery-layout > .convergence-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  [data-instrument="inversion-view"] .learned-recovery-layout .science-plot-shell .caos-plot.fill {
+    box-sizing: border-box;
+    height: clamp(720px, 78vh, 1040px);
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout .convergence-panel .science-plot-shell .caos-plot.fill {
+    box-sizing: border-box;
+    height: clamp(440px, 34vh, 500px);
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "section-control" "section-maps" "section-detail" "section-history";
+    align-items: start;
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout > .range-control { grid-area: section-control; }
+  [data-instrument="inversion-view"] .section-recovery-layout > .two-plots { grid-area: section-maps; }
+  [data-instrument="inversion-view"] .section-recovery-layout > .two-plots > .science-plot {
+    box-sizing: border-box;
+    height: clamp(640px, 66vh, 960px);
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout > .recovery-analysis {
+    grid-area: section-history;
+  }
+  [data-instrument="inversion-view"] .section-recovery-layout > :not(.range-control, .two-plots, .recovery-analysis) {
+    grid-area: section-detail;
+  }
+}
+.recovery-analysis > summary,
+.learned-support-plots > summary,
+.joint-support-evidence > summary {
+  cursor: pointer;
+  color: var(--color-accent);
+  font-weight: 650;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card, 0.65rem);
+  background: var(--color-surface-2);
+}
+.recovery-analysis[open] > summary { margin-bottom: 0.8rem; }
+.learned-support-plots[open] > summary { margin-bottom: 0.8rem; }
+.joint-support-evidence[open] > summary { margin-bottom: 0.8rem; }
 .plot-note {
   font-size: 0.84rem;
   color: var(--color-fg-subtle);
@@ -679,6 +869,24 @@
 .convergence-panel > .plot-note {
   grid-column: 1/-1;
 }
+.single-history-state {
+  box-sizing: border-box;
+  min-height: 12rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card, 0.65rem);
+  background: var(--color-surface-2);
+  color: var(--color-fg-subtle);
+}
+.single-history-state strong {
+  color: var(--color-fg);
+  font: 2rem var(--font-mono);
+}
+.single-history-state code { color: var(--color-fg); }
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -703,10 +911,36 @@
   grid-template-columns: minmax(170px, 0.6fr) minmax(0, 2fr);
   gap: 1.25rem;
 }
+.mt-curves {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
 .layer-stack {
-  height: 360px;
+  height: clamp(400px, 60vh, 480px);
   display: flex;
   flex-direction: column;
+}
+.layer-stack-svg {
+  display: block;
+  width: 100%;
+  flex: none;
+}
+.layer-stack-svg text {
+  fill: var(--color-fg);
+  font-family: var(--font-mono);
+}
+.layer-stack-svg .layer-label-plate {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.layer-stack-svg .layer-depth-label { font-size: 13px; }
+.layer-stack-svg .layer-value-label { font-size: 15px; font-weight: 700; }
+.layer-stack-svg [role="button"] { cursor: pointer; }
+.layer-stack-svg [role="button"]:focus-visible rect:first-child {
+  stroke: var(--color-fg);
+  stroke-width: 4px;
 }
 .earth-layer {
   min-height: 40px;
@@ -773,9 +1007,32 @@
 .context-view {
   padding: 0.5rem 0;
 }
+.learning-explanation {
+  margin-top: 0.35rem;
+}
+.learning-explanation summary {
+  color: var(--color-fg-subtle);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.learning-explanation p {
+  margin-block: 0.4rem;
+}
+.case-evidence-title {
+  margin-block: 0.1rem 0.35rem;
+}
 .context-view p,
 .context-view li {
   max-width: 70ch;
+}
+.context-view,
+.context-view > *,
+.parameter-ledger > * {
+  min-width: 0;
+}
+.context-view code,
+.parameter-ledger dd {
+  overflow-wrap: anywhere;
 }
 .investigation {
   display: flex;
@@ -899,7 +1156,7 @@
 .phase-local-files { flex: 1 1 190px; min-width: 0; }
 .phase-local-files summary { cursor: pointer; font-size: 0.82rem; }
 .phase-local-files > div { display: grid; gap: 0.6rem; padding: 0.5rem 0; }
-.phase-controls input[type="file"] { width: 100%; max-width: 100%; font: 0.78rem var(--font-sans); }
+.phase-controls input[type="file"], .evidence-layout input[type="file"] { width: 100%; max-width: 100%; font: 0.78rem var(--font-sans); }
 .phase-controls .btn { flex: 0 0 auto; }
 .phase-error { padding: 0.65rem; border-left: 3px solid var(--color-bad); background: var(--color-surface-2); overflow-wrap: anywhere; }
 .phase-ledger { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 0.7rem; margin-block: 0.8rem; }
@@ -925,6 +1182,19 @@
 .phase-legend { display: flex; flex-wrap: wrap; gap: 0.3rem 0.75rem; font-size: 0.72rem; color: var(--color-fg-subtle); }
 .phase-legend span { display: inline-flex; align-items: center; gap: 0.3rem; }
 .phase-legend i { display: inline-block; width: 12px; height: 3px; }
+.m11-workflow { margin: 1rem 0; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-surface); overflow: hidden; }
+.m11-workflow svg { display: block; width: 100%; height: auto; }
+.m11-workflow .m11-flow-compact { display: none; }
+.m11-flow-node rect { fill: var(--color-bg); stroke: var(--color-border); stroke-width: 1.5; }
+.m11-flow-node text { fill: var(--color-fg); font: 15px var(--font-mono); }
+.m11-flow-node .m11-flow-heading { font: 600 17px var(--font-sans); }
+.m11-flow-node .m11-flow-muted,
+.m11-workflow .m11-flow-footnote { fill: var(--color-fg-subtle); font: 13px var(--font-sans); }
+.m11-flow-node .m11-flow-rule { stroke: var(--color-border); stroke-width: 1; }
+.m11-flow-node.m11-flow-objective rect { fill: var(--color-surface-2); }
+.m11-workflow .m11-flow-arrow { fill: none; stroke: var(--color-accent); stroke-width: 2; }
+.m11-workflow marker path { fill: var(--color-accent); }
+.m11-workflow figcaption { padding: .5rem .75rem; color: var(--color-fg-subtle); font-size: .8rem; }
 @media (max-width: 900px) { .phase-plots { grid-template-columns: 1fr; } }
 @media (max-width: 650px) { .phase-heading { display: block; } .phase-ledger, .phase-arrivals { grid-template-columns: 1fr; } }
 .geology-overlay {
@@ -951,7 +1221,7 @@
     grid-template-columns: 272px minmax(0, 1fr);
   }
 }
-@media (max-width: 1100px) {
+@media (max-width: 1400px) {
   .scene-adjustments,
   .three-plots {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -964,7 +1234,23 @@
     display: none;
   }
 }
+@media (min-width: 901px) {
+  /* Keep the signed recovery-error field in the first viewport at full
+     survey width; the two absolute velocity models remain a linked pair
+     immediately below it. */
+  .fwi-recovery-plots {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .fwi-recovery-plots > .science-plot:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    height: 560px;
+  }
+}
 @media (max-width: 760px) {
+  .m11-workflow { overflow-x: auto; }
+  .m11-workflow .m11-flow-wide { display: none; }
+  .m11-workflow .m11-flow-compact { display: block; min-width: min(100%, 360px); }
   .project-launch { align-items: stretch; }
   .project-launch-context { display: none; }
   .project-launch .btn { width: 100%; justify-content: center; }
@@ -1006,6 +1292,44 @@
   .instrument-sidebar > .select-control:first-of-type {
     grid-column: 1/-1;
   }
+  /* Keep each scientific view tab independently visible and pointer-reachable
+     on narrow screens. The shared shell's horizontal tab scroller becomes
+     clipped by the nested case-workbench scrollport on mobile. */
+  .instrument-main > .tabs.tabs-has-slot {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    row-gap: 0.45rem;
+  }
+  .instrument-main > .tabs.tabs-has-slot > .tablist {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-flow: row nowrap;
+    overflow: visible;
+    gap: 0.15rem;
+  }
+  .instrument-main > .tabs.tabs-has-slot > .tablist > .tab {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 0.74rem;
+    padding-inline: 0.18rem;
+  }
+  .instrument-main > .tabs.tabs-has-slot > .tabs-slot {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+  }
+  .instrument-main > .tabs.tabs-has-slot > .tabs-slot > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .instrument-main > .tabs.tabs-has-slot > .tabpanel {
+    grid-column: 1;
+    grid-row: 3;
+  }
   .instrument-brand,
   .case-question,
   .playback,
@@ -1040,7 +1364,7 @@
   .earth-view .scene-compass {
     top: 0.75rem;
   }
-  .earth-scene {
+  .earth-view > .earth-scene {
     height: 220px;
     min-height: 220px;
     flex: none;
@@ -1049,6 +1373,35 @@
   .three-plots,
   .two-columns,
   .mt-view {
+    grid-template-columns: 1fr;
+  }
+  /* Heatmaps are flex figures. Give the raster stage a real mobile block size;
+     otherwise the nested flex items resolve against a content-sized panel and
+     the canvas collapses to its caption height. */
+  [data-instrument="data-view"] .three-plots > .science-plot,
+  [data-instrument="inversion-view"] .two-plots > .science-plot,
+  .learned-view .three-plots > .science-plot,
+  .learned-view .learned-primary-plots > .science-plot,
+  .learned-view .learned-support-plots .two-plots > .science-plot {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: clamp(340px, 104vw, 430px);
+  }
+  [data-instrument="data-view"] .heatmap-axes,
+  [data-instrument="inversion-view"] .heatmap-axes,
+  .learned-view .heatmap-axes {
+    flex: 1 0 260px;
+    min-height: 260px;
+  }
+  [data-instrument="data-view"] .heatmap-area,
+  [data-instrument="inversion-view"] .heatmap-area,
+  .learned-view .heatmap-area {
+    align-self: stretch;
+    min-height: 0;
+  }
+  .mt-curves {
     grid-template-columns: 1fr;
   }
   .scene-bottom {

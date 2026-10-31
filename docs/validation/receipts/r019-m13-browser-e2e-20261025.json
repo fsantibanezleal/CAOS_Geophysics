@@ -1,0 +1,22 @@
+{
+  "schema": "geophysics.gate-receipt/v1",
+  "requirement": "R-019",
+  "gate": "frontend/e2e/phase-picker-live.spec.ts",
+  "verdict": "pass",
+  "source_revision": "4723af581ba8ed4136ec53ae2c9417b8642bf46a",
+  "command": [
+    "npx",
+    "playwright",
+    "test",
+    "--config",
+    "playwright.phase-picker.config.ts"
+  ],
+  "measured_at": "2026-10-25T07:24:05.031Z",
+  "gate_sha256": "7884c97538515331272ff4fadcececfaf8a0ddb641bf1608fa9f68e7025a60bb",
+  "outputs": [
+    {
+      "path": "docs/validation/m13-browser-e2e-20261025.json",
+      "sha256": "a2516269963302a545cbc9c62959a87352b35f0884fc3938082f600c9864018c"
+    }
+  ]
+}

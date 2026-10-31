@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import {
   Download,
@@ -8,8 +8,8 @@ import {
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
-import { Tabs, useShellLang } from "@fasl-work/caos-app-shell";
-import { EarthScene } from "../components/EarthScene";
+import { CaseSelector, CaseWorkbench, Tabs, useShellLang, type CaseDef } from "@fasl-work/caos-app-shell";
+import { M11ScientificCourse } from "../components/M11ScientificCourse";
 import {
   Heatmap,
   LayerColumn,
@@ -22,12 +22,13 @@ import {
   flatten,
   format,
   loadArtifact,
+  preferredSection,
   sliceVolume,
   type Catalog,
   type Curves,
   type Run,
 } from "../science";
-import { methodName, metricInfo, historyInfo } from "../data/metrics";
+import { methodName, methodOptionName, metricInfo, historyInfo } from "../data/metrics";
 import { lessons } from "../data/lessons";
 import { absoluteThreshold, casePropertyScale, physicalTarget, selectedModel, sharedScale, type ModelState } from "../recovery";
 import { ApplicabilityWarning, DetectionEvidence, EvidenceMetrics, EvaluationStatus, PetrophysicalView, TargetEvidence, UncertaintyView } from "../components/ScientificEvidence";
@@ -35,11 +36,28 @@ import { provenanceDescription } from "../data/evidence";
 import { deploymentMode } from "../lib/deployment";
 import { ProjectDrawer } from "../components/ProjectDrawer";
 import { ProjectProcessingWorkbench } from "../components/ProjectProcessingWorkbench";
+import { VelocityLocalWorkbench } from "../components/VelocityLocalWorkbench";
+import { ProfileLocalWorkbench } from "../components/ProfileLocalWorkbench";
+import { FwiLocalWorkbench } from "../components/FwiLocalWorkbench";
+import styles from "./Workbench.module.css";
+
+const EarthScene = lazy(() => import("../components/EarthScene").then((module) => ({ default: module.EarthScene })));
+const MagneticLocalWorkbench = lazy(() => import("../components/MagneticLocalWorkbench").then((module) => ({ default: module.MagneticLocalWorkbench })));
 
 const matrix = (v: number[], rows = 16, cols = 16) =>
   Array.from({ length: rows }, (_, i) => v.slice(i * cols, (i + 1) * cols));
 const transpose = (v: number[][]) => v[0].map((_, j) => v.map((row) => row[j]));
 const indices = (n: number) => Array.from({ length: n }, (_, i) => i);
+const parameterText = (key: string, value: unknown, es: boolean): string => {
+  if (typeof value !== "string" || !es) return String(value);
+  const translations: Record<string, string> = {
+    initial_policy: "Tendencia independiente de 1.800 + 0,88 z m/s; luego fondo 1D ajustado sólo a datos",
+    data_origin: "Presión sintética del mismo operador con ruido gaussiano aditivo independiente",
+    withheld_policy: "Receptores con índice módulo 5 igual a 2, excluidos del objetivo y de la selección del estado",
+    iterations_semantics: "Máximo de llamadas L-BFGS por etapa espacial (cuatro etapas)",
+  };
+  return translations[key] ?? value;
+};
 const signed = (v: number[]): [number, number] => {
   const bounds = extent(v);
   const m = Math.max(Math.abs(bounds[0]), Math.abs(bounds[1]), 1e-12);
@@ -74,6 +92,7 @@ function Range({
         aria-label={label}
         type="range"
         className="range"
+        data-control={label}
         min={min}
         max={max}
         step={step}
@@ -114,6 +133,8 @@ export default function Workbench() {
   const [blend, setBlend] = useState(0);
   const [shot, setShot] = useState(1);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [scientificView, setScientificView] = useState("earth");
+  const [railOpen, setRailOpen] = useState(true);
   const [sidebarPanel, setSidebarPanel] = useState<"experiment" | "replay" | "evidence">("experiment");
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -144,6 +165,13 @@ export default function Workbench() {
     return () => controller.abort();
   }, []);
   const entry = catalog?.cases.find((c) => c.id === selected);
+  useEffect(() => {
+    setScientificView("earth");
+  }, [selected]);
+  const usesSpatialVolume = ["gravity", "magnetics", "joint"].includes(run?.family ?? "");
+  useEffect(() => {
+    setRailOpen(scientificView === "earth" && usesSpatialVolume);
+  }, [scientificView, usesSpatialVolume]);
   const artifact = entry?.variants.find((v) => v.id === variant) ?? entry?.variants[0];
   useEffect(() => {
     if (!artifact) return;
@@ -168,6 +196,7 @@ export default function Workbench() {
         const nextId =
           run?.id === r.id && r.methods[methodId] ? methodId : r.methods[preferred] ? preferred : Object.keys(r.methods)[0];
         setMethodId(nextId);
+        if (r.grid) setSection(preferredSection(flatten(physicalTarget(r, nextId)), r.grid.shape));
         setFrame(0);
         setLoading(false);
       })
@@ -278,15 +307,20 @@ export default function Workbench() {
     const truth = flatten(physicalTarget(run, methodId));
     const h = historyInfo(methodId, es);
     const history = (
-      <div className="convergence-panel">
-        <Plot
+        <div className="convergence-panel">
+        {method.history.length > 1 ? <Plot
           title={h.label}
           x={method.history_indices ?? method.states?.map(s => s.step) ?? indices(method.history.length).map((i) => i * h.stride)}
           series={[{ name: h.label, values: method.history }]}
           xLabel={h.axis}
           yLabel={h.label + " · 1"}
           logY={method.history.every((v) => v > 0)}
-        />
+        /> : <div className="single-history-state" role="status">
+          <span>{t("Recorded solver states", "Estados guardados del solver")}</span>
+          <strong>{method.history.length}</strong>
+          <span>{t("One selected solution; no convergence curve was recorded.", "Una solución seleccionada; no se registró una curva de convergencia.")}</span>
+          <code>{h.label}: {format(method.history[0])} · {h.axis}: {method.history_indices?.[0] ?? method.states?.[0]?.step ?? 0}</code>
+        </div>}
         <div className="metric-grid">
           {Object.entries(method.metrics).map(([key, value]) => (
             <div
@@ -316,6 +350,8 @@ export default function Workbench() {
     );
     if (physical && run.grid && run.survey) {
       const s = run.survey;
+      const eastingRange = extent(s.locations.map((point) => point[0]));
+      const northingRange = extent(s.locations.map((point) => point[1]));
       const bounds = sharedScale([s.observed, ...Object.values(run.methods).flatMap(m => Array.isArray(m.predicted) && !Array.isArray(m.predicted[0]) ? [m.predicted as number[]] : [])], true).range;
       const predicted = method.predicted as number[];
       earth = (
@@ -339,7 +375,7 @@ export default function Workbench() {
               </button>
             </div>
             <label>
-              <input
+                <input
                 type="checkbox"
                 checked={survey}
                 onChange={(e) => setSurvey(e.target.checked)}
@@ -354,27 +390,35 @@ export default function Workbench() {
               {t("Orbit", "Orbitar")}
             </button>
           </div>
-          <EarthScene
-            run={run}
-            values={values}
-            opacity={opacity}
-            cut={cut}
-            showSurvey={survey}
-            surveyMaxAbs={entry?.survey_max_abs}
-            angle={angle}
-            speed={speed}
-            playing={orbit}
-            reset={reset}
-            label={
-              mode === "truth"
-                ? t("Synthetic target", "Objetivo sintético")
-                : displayedState
+          <Suspense
+            fallback={
+              <div className="load-state" data-state="loading" role="status">
+                {es ? "Cargando escena 3D…" : "Loading 3D scene…"}
+              </div>
             }
-            onCell={pickCell}
-            representation={representation}
-            threshold={displayThreshold}
-            range={comparisonScale.range}
-          />
+          >
+            <EarthScene
+              run={run}
+              values={values}
+              opacity={opacity}
+              cut={cut}
+              showSurvey={survey}
+              surveyMaxAbs={entry?.survey_max_abs}
+              angle={angle}
+              speed={speed}
+              playing={orbit}
+              reset={reset}
+              label={
+                mode === "truth"
+                  ? t("Synthetic target", "Objetivo sintético")
+                  : displayedState
+              }
+              onCell={pickCell}
+              representation={representation}
+              threshold={displayThreshold}
+              range={comparisonScale.range}
+            />
+          </Suspense>
           <div className="scene-bottom">
             <Legend
               range={comparisonScale.range}
@@ -393,7 +437,7 @@ export default function Workbench() {
               {survey && entry?.survey_max_abs ? ` ${t("Survey colours", "Colores del levantamiento")} ±${format(entry.survey_max_abs)} ${run.data_units}.` : ""}
             </span>
           </div>
-          <details className="scene-settings">
+          <details className={`scene-settings ${styles.sceneSettings}`}>
             <summary>
               {t(
                 "View controls: threshold, cut and rotation",
@@ -405,6 +449,7 @@ export default function Workbench() {
                 <span>{t("Representation", "Representación")}</span>
                 <select
                   className="select"
+                  data-control="representation"
                   aria-label={t("Representation", "Representación")}
                   value={representation}
                   onChange={(e) =>
@@ -483,6 +528,26 @@ export default function Workbench() {
       );
       measurements = (
         <div className="evidence-layout">
+          <Plot
+            title={t(
+              "Central survey line · shared scale",
+              "Línea central · escala compartida",
+            )}
+            x={s.locations.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]).map((p) => p[0])}
+            series={[
+              {
+                name: t("Observed", "Observado"),
+                values: s.observed.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]),
+                points: true,
+              },
+              {
+                name: t("Predicted", "Predicho"),
+                values: predicted.slice(Math.floor(s.shape[0] / 2) * s.shape[1], (Math.floor(s.shape[0] / 2) + 1) * s.shape[1]),
+              },
+            ]}
+            xLabel={t("Easting · m", "Este · m")}
+            yLabel={run.data_units}
+          />
           <div className="three-plots">
             {[
               [s.observed, t("Observed field", "Campo observado")],
@@ -495,36 +560,19 @@ export default function Workbench() {
               <Heatmap
                 key={i}
                 title={title as string}
-                data={matrix(data as number[])}
+                data={matrix(data as number[], s.shape[0], s.shape[1])}
                 range={bounds}
+                interpolation
+                showSampleNodes
                 unit={run.data_units}
                 xLabel={t("Easting · m", "Este · m")}
                 yLabel={t("Northing · m", "Norte · m")}
-                xRange={[-1120, 1120]}
-                yRange={[-960, 960]}
+                xRange={eastingRange}
+                yRange={northingRange}
+                aspectRatio={(eastingRange[1] - eastingRange[0]) / (northingRange[1] - northingRange[0])}
               />
             ))}
           </div>
-          <Plot
-            title={t(
-              "Central survey line · shared scale",
-              "Línea central · escala compartida",
-            )}
-            x={s.locations.slice(128, 144).map((p) => p[0])}
-            series={[
-              {
-                name: t("Observed", "Observado"),
-                values: s.observed.slice(128, 144),
-                points: true,
-              },
-              {
-                name: t("Predicted", "Predicho"),
-                values: predicted.slice(128, 144),
-              },
-            ]}
-            xLabel={t("Easting · m", "Este · m")}
-            yLabel={run.data_units}
-          />
           <p className="plot-note">
             {t(
               "Survey markers identify active stations. Coverage experiments fit alternate stations; predictions at omitted stations remain visible.",
@@ -534,7 +582,7 @@ export default function Workbench() {
         </div>
       );
       recovery = (
-        <div className="evidence-layout">
+        <div className="evidence-layout section-recovery-layout">
           <Range
             label={t("Northing section", "Sección norte")}
             value={section}
@@ -557,11 +605,18 @@ export default function Workbench() {
                 yLabel={t("Depth · m", "Profundidad · m")}
                 xRange={[-1120, 1120]}
                 yRange={[0, 1120]}
+                showMesh
               />
             ))}
           </div>
-          {run.family === "joint" && <PetrophysicalView run={run} methodId={methodId} section={section} caseRange={entry?.display_scales?.secondary?.range} />}
-          {history}
+          {run.family === "joint" && <details className="joint-support-evidence">
+            <summary>{t("Show secondary property and petrophysical prior", "Mostrar propiedad secundaria y prior petrofísico")}</summary>
+            <PetrophysicalView run={run} methodId={methodId} section={section} caseRange={entry?.display_scales?.secondary?.range} />
+          </details>}
+          <details className="recovery-analysis">
+            <summary>{t("Solver history and evaluation", "Historial del solver y evaluación")}</summary>
+            {history}
+          </details>
         </div>
       );
     } else if (run.family === "mt") {
@@ -716,6 +771,7 @@ export default function Workbench() {
           yRange={[-run.dt! / 2, (nt - 0.5) * run.dt!]}
           xCoordinates={run.receivers}
           yCoordinates={time}
+          aspectRatio={1.22}
         />
       );
       earth = (
@@ -791,20 +847,6 @@ export default function Workbench() {
       );
       measurements = (
         <div className="evidence-layout">
-          <label className="inline-control">
-            {t("Source position", "Posición de fuente")}
-            <select
-              className="select"
-              value={shot}
-              onChange={(e) => setShot(+e.target.value)}
-            >
-              {run.sources!.map((p, i) => (
-                <option key={i} value={i}>
-                  S{i + 1} · {p[0]} m
-                </option>
-              ))}
-            </select>
-          </label>
           <div className="three-plots">
             {gatherPlot(gather, t("Observed", "Observado"))}
             {gatherPlot(pred[shot], t("Predicted", "Predicho"))}
@@ -830,7 +872,7 @@ export default function Workbench() {
       );
       recovery = (
         <div className="evidence-layout">
-          <div className="three-plots">
+          <div className="three-plots fwi-recovery-plots">
             {run.initial && vel(run.initial as number[][], t("Starting model", "Modelo inicial"))}
             {vel(
               method.model as number[][],
@@ -853,9 +895,15 @@ export default function Workbench() {
       );
     } else if (run.family === "learned") {
       const cnn = methodId === "cnn";
+      const survey = run.survey!;
+      const [surveyRows, surveyCols] = survey.shape;
+      const observedField = matrix(survey.observed, surveyRows, surveyCols);
+      const surveyEasting = extent(survey.locations.map((point) => point[0]));
+      const surveyNorthing = extent(survey.locations.map((point) => point[1]));
       const networkInput = !cnn && method.network_input?.length === run.survey!.observed.length
         ? method.network_input : undefined;
-      const ref = cnn ? run.column_truth! : matrix(networkInput ?? run.survey!.observed);
+      const networkField = matrix(networkInput ?? survey.observed, surveyRows, surveyCols);
+      const ref = cnn ? run.column_truth! : networkField;
       const predicted = cnn
         ? (method.model as number[][])
         : matrix(method.predicted as number[]);
@@ -864,62 +912,49 @@ export default function Workbench() {
         : (method.model as number[][]);
       const classicalColumns = cnn ? Object.entries(run.methods).filter(([, m]) => m.column_model) : [];
       const bounds = sharedScale([ref, predicted, ...classicalColumns.map(([, m]) => m.column_model!)], cnn).range;
+      const observedRange = signed(survey.observed);
+      const reconstructionRange = cnn ? bounds : signed([...survey.observed, ...flatten(predicted)]);
       earth = (
         <div className="learned-view">
           <ApplicabilityWarning method={method} />
-          <div className="learning-contract">
-            <span className="small-caps">
-              {cnn ? "CNN · 800 / 160 / 160" : "AUTOENCODER · LATENT 12"}
-            </span>
-            <h2>
-              {cnn
-                ? t(
-                    "Depth-integrated density prediction",
-                    "Predicción de densidad integrada",
-                  )
-                : t(
-                    "Observation reconstruction error",
-                    "Error de reconstrucción de observaciones",
-                  )}
-            </h2>
-            <p>{lesson.read[lang]}</p>
-            {!cnn && !networkInput && <p role="note" className="plot-note">{t(
-              "This artifact does not export the network input. The first map shows recorded observations; its preprocessing support cannot be checked against the exported error map here.",
-              "Este artefacto no exporta la entrada de la red. El primer mapa muestra observaciones registradas; aquí no se puede comprobar su soporte de preprocesamiento frente al mapa de error exportado.",
-            )}</p>}
-            {!cnn && networkInput && run.variant === "coverage" && <p className="plot-note">{t(
-              "Missing stations are interpolated in the network input. The score and error map compare reconstruction with that input; the separate raw-observation MSE retains the comparison with recorded stations.",
-              "Las estaciones omitidas se interpolan en la entrada de la red. Puntaje y mapa de error comparan reconstrucción con esa entrada; el MSE separado frente a observaciones originales conserva la comparación con estaciones registradas.",
-            )}</p>}
-          </div>
-          <div className="three-plots">
+          <div className="two-plots learned-primary-plots">
             <Heatmap
-              data={ref}
-              title={
-                cnn
-                  ? t("Known column density", "Densidad integrada conocida")
-                  : networkInput ? t("Network input", "Entrada de la red") : t("Recorded observations", "Observaciones registradas")
-              }
-              range={bounds}
-              unit={cnn ? "g/cm³ m" : "mGal"}
+              data={observedField}
+              title={t("Observed survey field supplied to the method", "Campo medido suministrado al método")}
+              range={observedRange}
+              unit={run.data_units}
               xLabel="E · m"
               yLabel="N · m"
-              xRange={[-1120, 1120]}
-              yRange={[-960, 960]}
+              xRange={surveyEasting}
+              yRange={surveyNorthing}
             />
             <Heatmap
               data={predicted}
-              title={t("Network reconstruction", "Reconstrucción de la red")}
-              range={bounds}
+              title={cnn ? t("CNN depth-integrated density result", "Resultado CNN de densidad integrada en profundidad") : t("Autoencoder reconstruction", "Reconstrucción del autoencoder")}
+              range={reconstructionRange}
               unit={cnn ? "g/cm³ m" : "mGal"}
               xLabel="E · m"
               yLabel="N · m"
               xRange={[-1120, 1120]}
               yRange={[-960, 960]}
             />
+          </div>
+          <details className="learned-support-plots">
+            <summary>{t("Show network input, target and error maps", "Mostrar entrada de red, objetivo y mapas de error")}</summary>
+            <div className="two-plots">
+            <Heatmap
+              data={cnn ? ref : networkField}
+              title={cnn ? t("Known synthetic depth-integrated target", "Objetivo sintético conocido integrado en profundidad") : t("Network input after survey coverage handling", "Entrada de red tras tratar la cobertura del levantamiento")}
+              range={cnn ? bounds : observedRange}
+              unit={cnn ? "g/cm³ m" : "mGal"}
+              xLabel="E · m"
+              yLabel="N · m"
+              xRange={cnn ? [-1120, 1120] : surveyEasting}
+              yRange={cnn ? [-960, 960] : surveyNorthing}
+            />
             <Heatmap
               data={errorMap}
-              title={cnn ? t("Column error", "Error de columna") : networkInput ? t("Squared error versus network input", "Error cuadrático frente a entrada de red") : t("Exported squared-error map", "Mapa de error cuadrático exportado")}
+              title={cnn ? t("Prediction error against synthetic target", "Error de predicción frente al objetivo sintético") : t("Normalized squared reconstruction error", "Error cuadrático normalizado de reconstrucción")}
               unit={
                 cnn
                   ? "g/cm³ m"
@@ -934,6 +969,29 @@ export default function Workbench() {
               yRange={[-960, 960]}
               palette={cnn ? "field" : "error"}
             />
+            </div>
+          </details>
+          <div className="learning-contract">
+            <span className="small-caps">
+              {cnn ? "CNN · 800 / 160 / 160" : "AUTOENCODER · LATENT 12"}
+            </span>
+            <h2>
+              {cnn
+                ? t("Depth-integrated density prediction", "Predicción de densidad integrada")
+                : t("Observation reconstruction error", "Error de reconstrucción de observaciones")}
+            </h2>
+            <details className="learning-explanation">
+              <summary>{t("Method interpretation and data limits", "Interpretación del método y límites de datos")}</summary>
+              <p>{lesson.read[lang]}</p>
+              {!cnn && !networkInput && <p role="note" className="plot-note">{t(
+                "This artifact does not export the network input. The first map shows recorded observations; its preprocessing support cannot be checked against the exported error map here.",
+                "Este artefacto no exporta la entrada de la red. El primer mapa muestra observaciones registradas; aquí no se puede comprobar su soporte de preprocesamiento frente al mapa de error exportado.",
+              )}</p>}
+              {!cnn && networkInput && run.variant === "coverage" && <p className="plot-note">{t(
+                "Missing stations are interpolated in the network input. The score and error map compare reconstruction with that input; the separate raw-observation MSE retains the comparison with recorded stations.",
+                "Las estaciones omitidas se interpolan en la entrada de la red. Puntaje y mapa de error comparan reconstrucción con esa entrada; el MSE separado frente a observaciones originales conserva la comparación con estaciones registradas.",
+              )}</p>}
+            </details>
           </div>
           {!!classicalColumns.length && <section>
             <h3>{t("Matched classical column estimates", "Estimaciones clásicas de columna comparables")}</h3>
@@ -951,7 +1009,7 @@ export default function Workbench() {
       );
       measurements = earth;
       recovery = (
-        <div className="evidence-layout">
+        <div className="evidence-layout learned-recovery-layout">
           {history}
           <p className="plot-note">
             {t(
@@ -964,38 +1022,38 @@ export default function Workbench() {
       );
     }
   }
+  if (searchParams.get("instrument") === "magnetic-local") return <Suspense fallback={<div className="page-body wide workbench"><p role="status">{t("Loading local magnetic processing…", "Cargando procesamiento magnético local…")}</p></div>}><MagneticLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/></Suspense>;
+  if (searchParams.get("instrument") === "velocity-local") return <VelocityLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
+  if (searchParams.get("instrument") === "profile-local") return <ProfileLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
+  if (searchParams.get("instrument") === "fwi-local") return <FwiLocalWorkbench es={es} onCurated={() => setSearchParams(current => { const next = new URLSearchParams(current); next.delete("instrument"); return next; }, {replace:true})}/>;
   if (processingProjectId) return <>
     <ProjectProcessingWorkbench key={processingProjectId} projectId={processingProjectId} es={es} onManage={() => setProjectsOpen(true)} onCurated={() => selectProcessingProject("")} />
     {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOwnerCleared={() => selectProcessingProject("")} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
   </>;
+  const shellCases: CaseDef[] = (catalog?.cases ?? []).map((c) => ({
+    id: c.id,
+    name: es ? c.name_es : c.name,
+    category: familyLabels[c.family][lang],
+    kind: "synthetic",
+    anchor: `${c.geometry} · seed ${c.seed}`,
+  }));
   return (
-    <div className="page-body wide workbench">
-      <aside className={`instrument-sidebar ${controlsOpen ? "expanded" : ""}`}>
+    <CaseWorkbench
+      caseId={selected}
+      cases={shellCases.length ? { cases: shellCases, selectedId: selected, onSelect: select, layout: "select", deepLink: true, lang: es ? "es" : "en", ariaLabel: t("Geological case", "Caso geológico") } : undefined}
+      source={run?.provenance.synthetic ? "synthetic" : "real"}
+      controls={{ variant, methodId, mode, section, cut, representation, threshold, opacity, survey, angle, angleStep, speed, orbit, frame, modelState, playing, blend, shot, gain, playbackKind }}
+      railLabel={t("Geophysical experiment controls", "Controles del experimento geofísico")}
+      rail={railOpen ? <aside id="geophysics-control-rail" className={`instrument-sidebar ${controlsOpen ? "expanded" : ""}`}>
         <div className="instrument-brand">
           <span className="small-caps">{entry && familyLabels[entry.family][lang]} / {String((catalog?.cases.findIndex((c) => c.id === selected) ?? 0) + 1).padStart(2, "0")}</span>
           <h1>{es ? entry?.name_es : entry?.name}</h1>
         </div>
-        <label className="select-control">
-          <span>01 / {t("Geological case", "Caso geológico")}</span>
-          <select
-            className="select"
-            aria-label={t("Geological case", "Caso geológico")}
-            value={selected}
-            onChange={(e) => select(e.target.value)}
-          >
-            {Object.entries(familyLabels).map(([family, labels]) => (
-              <optgroup key={family} label={labels[lang]}>
-                {catalog?.cases
-                  .filter((c) => c.family === family)
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {es ? c.name_es : c.name}
-                    </option>
-                  ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
+        {deploymentMode === "single-origin" && <button ref={projectLauncher} className="btn" onClick={() => setProjectsOpen(true)}>{t("Projects & raw data", "Proyectos y datos originales")}</button>}
+        <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "velocity-local"); return next; }, {replace:true})}>{t("Open local velocity result", "Abrir resultado local de velocidad")}</button>
+        <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "profile-local"); return next; }, {replace:true})}>{t("Open local ERT / traveltime result", "Abrir resultado local ERT / tiempo de viaje")}</button>
+        <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "fwi-local"); return next; }, {replace:true})}>{t("Open local acoustic FWI result", "Abrir resultado local FWI acústico")}</button>
+        <button className="btn" onClick={() => setSearchParams(current => { const next = new URLSearchParams(current); next.set("instrument", "magnetic-local"); return next; }, {replace:true})}>{t("Open local magnetic flight-line processing", "Abrir procesamiento magnético local de líneas de vuelo")}</button>
         <button
           className="btn mobile-controls-toggle"
           aria-expanded={controlsOpen}
@@ -1021,6 +1079,7 @@ export default function Workbench() {
           <span>02 / {t("Experiment", "Experimento")}</span>
           <select
             className="select"
+            data-control="experiment"
             aria-label={t("Experiment", "Experimento")}
             value={variant}
             onChange={(e) => setVariant(e.target.value)}
@@ -1032,10 +1091,11 @@ export default function Workbench() {
             ))}
           </select>
         </label>
-        <label className="select-control">
+        <label className={`select-control ${styles.methodControl}`}>
           <span>03 / {t("Inverse method", "Método inverso")}</span>
           <select
             className="select"
+            data-control="inverse-method"
             aria-label={t("Inverse method", "Método inverso")}
             value={methodId}
             onChange={(e) => {
@@ -1047,8 +1107,18 @@ export default function Workbench() {
             }}
           >
             {Object.entries(run?.methods ?? {}).map(([id, m]) => (
-              <option key={id} value={id}>
-                {methodName(id, es, es ? m.name_es : m.name)}
+              <option
+                key={id}
+                value={id}
+                title={methodName(id, es, es ? m.name_es : m.name)}
+              >
+                {id === "mt-lm"
+                  ? t("TRF · bounded LS", "Mínimos cuadrados TRF")
+                  : id === "fwi-multiscale"
+                    ? t("Acoustic FWI · FC", "FWI acústica · FC")
+                    : id === "joint"
+                      ? t("Cross-gradient inversion", "Gradiente cruzado")
+                  : methodOptionName(id, es, es ? m.name_es : m.name)}
               </option>
             ))}
           </select>
@@ -1064,6 +1134,7 @@ export default function Workbench() {
                 <span>{t("Recorded process", "Proceso registrado")}</span>
                 <select
                   className="select"
+                  data-control="recorded-process"
                   aria-label={t("Animation process", "Proceso animado")}
                   value={playbackKind}
                   onChange={(e) => {
@@ -1124,6 +1195,7 @@ export default function Workbench() {
               aria-label={t("Replay frame", "Cuadro de reproducción")}
               type="range"
               className="range"
+              data-control="replay-frame"
               min={0}
               max={Math.max(0, count - 1)}
               value={Math.min(frame, Math.max(0, count - 1))}
@@ -1200,9 +1272,15 @@ export default function Workbench() {
           {method && <EvaluationStatus method={method} methodId={methodId} variant={run?.variant} />}
         </div>
         </>}
-      </aside>
+      </aside> : null}
+      onGroupChange={(group) => {
+        setRailOpen(group !== "analysis" || (scientificView === "earth" && usesSpatialVolume));
+      }}
+      groups={[{
+        id: "analysis",
+        label: { en: "Case analysis", es: "Análisis del caso" },
+        content: <>
       <section className="instrument-main" aria-label={es ? entry?.name_es : entry?.name}>
-        {deploymentMode === "single-origin" && <div className="project-launch"><span className="project-launch-context">{t("Curated case view · private originals are separate", "Caso curado · los originales privados son independientes")}</span><button ref={projectLauncher} className="btn" onClick={() => setProjectsOpen(true)}>{t("Projects & raw data", "Proyectos y datos originales")}</button></div>}
         {error ? (
           <div role="alert" className="load-state">
             {error}
@@ -1211,7 +1289,7 @@ export default function Workbench() {
             </button>
           </div>
         ) : loading ? (
-          <div className="load-state">
+          <div className="load-state" data-state="loading" role="status" aria-live="polite">
             <span className="loading-orbit" />
             {t("Loading numerical result…", "Cargando resultado numérico…")}
           </div>
@@ -1220,28 +1298,62 @@ export default function Workbench() {
           method && (
             <Tabs
               key={selected}
+              value={scientificView}
+              onChange={(view) => {
+                setScientificView(view);
+                setRailOpen(view === "earth" && usesSpatialVolume);
+              }}
               ariaLabel={t("Scientific views", "Vistas científicas")}
+              trailing={railOpen
+                ? <button className="btn" type="button" aria-controls="geophysics-control-rail" aria-expanded="true" onClick={() => setRailOpen(false)}>{t("Hide controls", "Ocultar controles")}</button>
+                : <CaseSelector
+                    cases={shellCases}
+                    selectedId={selected}
+                    onSelect={select}
+                    layout="select"
+                    lang={es ? "es" : "en"}
+                    ariaLabel={t("Geological case", "Caso geológico")}
+                    accessory={<button className="btn" type="button" aria-expanded="false" onClick={() => setRailOpen(true)}>{t("Experiment controls", "Controles del experimento")}</button>}
+                  />}
               tabs={[
                 {
                   id: "earth",
                   label: t("Model", "Modelo"),
-                  content: <>{run.family !== "learned" && !physical && <p className="plot-note" role="status">{playbackKind === "wave" && run.family === "seismic" ? t("Synthetic-target wavefield; not propagation in the recovered model.", "Campo de ondas del objetivo sintético; no propagación en el modelo recuperado.") : displayedState}. {t("Data predictions and evaluation remain at the selected final model.", "Las predicciones y evaluación corresponden al modelo final seleccionado.")}</p>}{earth}</>,
+                  content: <div data-instrument="model-view" data-state="available">{run.family !== "learned" && !physical && <p className="plot-note" role="status">{playbackKind === "wave" && run.family === "seismic" ? t("Synthetic-target wavefield; not propagation in the recovered model.", "Campo de ondas del objetivo sintético; no propagación en el modelo recuperado.") : displayedState}. {t("Data predictions and evaluation remain at the selected final model.", "Las predicciones y la evaluación corresponden al modelo final seleccionado.")}</p>}{earth}</div>,
                 },
+                ...(run.family === "joint" ? [{
+                  id: "supplied-joint-method",
+                  label: t("Joint theory", "Teoría conjunta"),
+                  content: <>
+                    {run.survey?.observed && Array.isArray(method.predicted) && typeof method.predicted[0] === "number" && <Plot
+                      title={t("Supplied gravity observations and selected-model response", "Observaciones gravimétricas suministradas y respuesta del modelo seleccionado")}
+                      x={indices(run.survey.observed.length)}
+                      series={[{ name: t("Observed", "Observado"), values: run.survey.observed, points: true }, { name: t("Selected-model prediction", "Predicción del modelo seleccionado"), values: method.predicted as number[] }]}
+                      xLabel={t("Original gravity station index [1]", "Índice original de estación gravimétrica [1]")}
+                      yLabel={run.data_units}
+                    />}
+                    <M11ScientificCourse />
+                  </>,
+                }] : []),
                 {
                   id: "observations",
                   label: t("Data", "Datos"),
-                  content: <div className="evidence-layout"><p className="plot-note">{t("Predictions and residuals are evaluated at the selected final model. Scrubbing a model replay does not recompute these data.", "Predicciones y residuos se evalúan en el modelo final seleccionado. Mover la reproducción del modelo no recalcula estos datos.")}</p>{measurements}</div>,
+                  content: <div className="evidence-layout" data-instrument="data-view" data-state="available"><div className="data-view-tools"><p className="plot-note">{t("Predictions and residuals use the final model, not the replay frame.", "Las predicciones y los residuos usan el modelo final, no el fotograma reproducido.")}</p>{run.family === "seismic" && <label className="inline-control">{t("Source position", "Posición de fuente")}<select className="select" data-control="source-position" value={shot} onChange={(e) => setShot(+e.target.value)}>{run.sources!.map((p, i) => <option key={i} value={i}>S{i + 1} · {p[0]} m</option>)}</select></label>}</div>{measurements}</div>,
                 },
                 {
                   id: "recovery",
                   label: t("Inversion", "Inversión"),
-                  content: <div className="evidence-layout"><TargetEvidence run={run} methodId={methodId} />{recovery}<UncertaintyView run={run} method={method} section={section} /></div>,
+                  content: <div className="evidence-layout" data-instrument="inversion-view" data-state="available">{recovery}<TargetEvidence run={run} methodId={methodId} /><UncertaintyView run={run} method={method} section={section} /></div>,
                 },
                 {
                   id: "question",
-                  label: t("Case analysis", "Análisis del caso"),
+                  label: t("Analysis", "Análisis"),
                   content: (
                     <div className="context-view">
+                      <section className="case-evidence" aria-label={t("Observed and modelled evidence", "Evidencia observada y modelada")}>
+                        <h3 className="case-evidence-title">{t("Observed data and selected-model response", "Datos observados y respuesta del modelo seleccionado")}</h3>
+                        {measurements}
+                      </section>
                       <span className="small-caps">
                         {t(
                           "Experimental conditions",
@@ -1330,7 +1442,7 @@ export default function Workbench() {
                                 } as Record<string, string>
                               )[k] ?? k}
                             </dt>
-                            <dd>{typeof v === "number" ? format(v) : typeof v === "boolean" ? v ? t("Yes", "Sí") : t("No", "No") : Array.isArray(v) ? v.map(format).join(", ") : v}</dd>
+                            <dd>{typeof v === "number" ? format(v) : typeof v === "boolean" ? v ? t("Yes", "Sí") : t("No", "No") : Array.isArray(v) ? v.map(format).join(", ") : parameterText(k, v, es)}</dd>
                           </div>
                         ))}
                       </dl>
@@ -1347,6 +1459,17 @@ export default function Workbench() {
         )}
       </section>
       {projectsOpen && <ProjectDrawer es={es} onClose={closeProjects} onOpenWorkbench={id => { selectProcessingProject(id); setProjectsOpen(false); }} />}
-    </div>
+      </>,
+      }]}
+      context={{
+        label: { en: "Interpretation", es: "Interpretación" },
+        content: <div className="context-view">
+          <h2>{lesson.question[lang]}</h2>
+          <p>{lesson.read[lang]}</p>
+          <p>{lesson.limit[lang]}</p>
+        </div>,
+      }}
+      focus
+    />
   );
 }

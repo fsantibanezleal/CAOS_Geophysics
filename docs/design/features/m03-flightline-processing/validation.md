@@ -1,0 +1,100 @@
+# M03 mapped flight-line processing validation
+
+Run on the local pinned pipeline environment (NumPy 2.2.6, SciPy 1.15.2):
+
+```powershell
+.venv-pipeline\Scripts\python.exe -m pytest tests\numerics\test_magnetic_processing.py -q
+.venv-pipeline\Scripts\python.exe -m ruff check data-pipeline\magnetic_processing.py tests\numerics\test_magnetic_processing.py
+```
+
+Observed during implementation: the initial random whole-line holdout selected an exterior line, giving zero convex-hull support. The failing control exposed the defect. The split was changed to select a seeded contiguous interior block along the measured flight-line-normal coordinate. The focused line-processing suite passes 14 tests; the new upward-continuation suite passes 11 tests. Line controls construct crossing flight/tie lines on an analytic plane, recover a deliberately injected 7 nT tie offset from independent segment interpolation, reject duplicate per-line sample-order keys and excessive segment-pair work, and exclude parallel/collinear segment pairs. Continuation controls recover the affine plane, match the analytic Fourier attenuation of a single mode, preserve grid coordinates/units and parent-result digest, reject unsupported/nonuniform grids, and refuse output overwrite. These are authored algorithm controls, not field evidence.
+
+The SDD-declared `tests/numerics/test_magnetic_processing.py::test_blocked_line_holdout` symbol is present. The optional `data-pipeline/magnetic_continuation.py` utility now passes analytic affine-plane preservation and single-Fourier-mode attenuation checks, rejects incomplete support and nonuniform axes, binds outputs to the parent M03 artifact digest, and refuses overwrite. Reproduce with `.venv-pipeline\Scripts\python.exe -m pytest tests\numerics\test_magnetic_processing.py tests\numerics\test_magnetic_continuation.py -q` and Ruff on both implementation and test files. These controls verify the spectral operator only; they are not measured survey evidence.
+
+This structural and numerical evidence does not confer M03 scientific acceptance. M03 remains unaccepted because Charleston provider assets and source-specific processing comparison, tie-line/diurnal/IGRF state, measured-data continuation, integrated project/worker/view flows, and live browser/host gates remain incomplete. Continuation additionally assumes a caller-selected complete uniform ROI and a periodic FFT extension; the returned seam diagnostic is review evidence, not an automatic quality pass.
+
+## Authenticated project intake: 2026-10-27
+
+`POST /api/projects/{project_id}/datasets` now admits an owned `magnetic_csv`
+only with an explicit seven-column M03 map, source citation, processing state,
+measured quantity, sensor-height reference, declared nT units and projected
+metric CRS. Admission scans the CSV header and bounded row count without
+retaining its observations in the API process, rechecks the raw SHA-256, and
+stores a canonical source-bound dataset receipt. `GET .../methods` rechecks the
+owned source, rights attestation and physical metadata and reports the M03
+method as `pending_host_admission`; it does not claim that numerical processing
+has run. Intake and existing dataset API tests pass.
+
+## Authenticated worker, result and export: 2026-10-27
+
+The worker launches `app.magnetic_compute` with the immutable dataset, original
+file, job identity and admitted resource limits. The child re-hashes the source,
+uses the same `data-pipeline/magnetic_processing.py` implementation as the local
+pipeline, writes a canonical result without overwrite, and adds exact job/source
+identity. Parent validation checks the result contract and executing engine
+SHA-256 before commit. Result export has its own bounded uncompressed ZIP
+contract with units, source citation, rights, attribution and hashes; original
+bytes are never included.
+
+`test_admitted_local_m03_worker_creates_provenance_bound_result_and_export`
+executes the real API worker and child on an authored planar control, reads the
+stored result and round-trips the bundle. Held-out interpolation RMSE is below
+`1e-8` nT. Focused API and numerical tests pass, alongside Ruff and diff checks.
+The online flag remains off in normal settings until actual ML VPS timing,
+memory, scratch and cancellation measurements are reviewed. Authored controls
+do not establish field validity: Charleston provider files, source-specific
+holdout, browser parity and the M03 scientific acceptance gate remain open.
+
+## Expanded browser/native parity: 2026-10-27
+
+`frontend/src/test/magnetic-local.test.ts` compares the browser Pyodide worker
+against the native `magnetic_processing.py` CLI on eight deterministic rotated
+surveys. The set varies line spacing and orientation, alternates acquisition
+order, perturbs coordinates deterministically, and includes positive and zero
+tie-line offsets. It checks the source-byte digest, whole-line split, line and
+crossover diagnostics, held-out interpolation, grid coordinates, support mask,
+and every supported grid value. The gate keeps contracts, classifications and
+support exact, with only floating outputs compared at absolute tolerance
+`2e-7` plus relative tolerance `1e-12` to account for the different SciPy/BLAS
+builds. The tolerance is explicit so platform variation cannot silently alter
+splits, coverage, or result interpretation.
+
+The same test requires both runtimes to reject duplicate per-line sample order
+and a survey whose distinct flight-line geometries share an indistinguishable
+center direction. The complete browser file passes six tests; the M03
+processing/continuation suites pass 25 tests and Ruff passes. These are
+controlled synthetic parity and rejection checks. They do not demonstrate
+Charleston field-data parity or open hosted job admission.
+
+## Warm-worker and resource profile: 2026-10-27
+
+Successful browser-local jobs now reuse a serialized Pyodide/SciPy worker for
+five minutes of idle time. The worker reports initialization versus warm reuse,
+processing and total worker time, plus Pyodide WASM heap capacity. Per-run
+Python objects are function-scoped and the serialized result string is deleted
+after transfer. Cancellation and timeout terminate the worker; a browser test
+aborts at the processing stage and verifies the next request loads a fresh
+runtime and produces the correct source-bound output.
+
+Reproduce the controlled 25,000-row benchmark from `frontend/` with:
+
+```powershell
+npm run benchmark:m03 -- --output 'E:\_Temp\CAOS_Geophysics\m03-profile.json' --repeats 3
+```
+
+The benchmark refuses paths inside the repository and refuses overwrite. Its
+input is an authored deterministic 1,040,828-byte parallel-line CSV, not field
+data. On this measured host (headless Chromium 153.0.8010.12, 1280 x 900,
+32 reported hardware threads and 32 GiB reported device memory), the cold run
+took 8.83 s wall time (3.58 s runtime/package initialization; 5.16 s processing).
+Three warm runs took 2.01–2.12 s wall time, with a 2.09 s median. All four
+reported Pyodide WASM linear heaps had 187,695,104 bytes capacity (about
+179 MiB). The exact receipt is
+[`m03-browser-resource-profile-2026-10-27.json`](../../../validation/m03-browser-resource-profile-2026-10-27.json),
+SHA-256 `3ca36efeb1acfdcca3c4a5f7e52f4ef4640f59c385a657d8bea4ec07e13ff260`.
+
+The JS heap sample is main-thread `performance.memory`; it does not include
+worker RSS, and WASM capacity is the allocator's high-water capacity, not
+total browser memory. This one local headless host is not a supported-device
+population. Cross-device process-memory/latency qualification, Charleston
+provider files and field holdout, and actual ML VPS admission remain open.

@@ -2,13 +2,15 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { PRODUCT_ROUTES } from "../lib/routes";
 import { artifactBase, deploymentMode, routerBasename } from "../lib/deployment";
+import { validateExecutive } from "@fasl-work/caos-app-shell";
+import executiveBrief from "../../../content/executive.json";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
 describe("frontend route and shell foundation", () => {
-  it("six_routes_share_one_manifest", () => {
+  it("adversarial: refuses route additions or path drift from the approved six-route manifest", () => {
     expect(PRODUCT_ROUTES.map(({ id, path, en }) => [id, path, en])).toEqual([
-      ["app", "/", "App"],
+      ["app", "/app", "App"],
       ["introduction", "/introduction", "Introduction"],
       ["methodology", "/methodology", "Methodology"],
       ["implementation", "/implementation", "Implementation"],
@@ -18,9 +20,31 @@ describe("frontend route and shell foundation", () => {
     expect(new Set(PRODUCT_ROUTES.map(route => route.path)).size).toBe(6);
     expect(PRODUCT_ROUTES.every(route => route.es && route.en)).toBe(true);
     expect(read("../main.tsx")).toContain("PRODUCT_ROUTES.map");
+    expect(read("../main.tsx")).toContain('<Route path="/" element={<Landing />} />');
+    expect(read("../main.tsx")).toContain('<Route path="*" element={<Landing />} />');
   });
 
-  it("all_builds_use_one_root_origin_without_route_asset_copies", () => {
+  it("six_pages_are_deferred_without_changing_the_route_manifest", () => {
+    const entry = read("../main.tsx");
+    for (const page of ["Workbench", "Research"]) {
+      expect(entry).toContain(`lazy(() => import("./pages/${page}")`);
+    }
+    for (const page of ["Introduction", "Methodology", "Implementation", "Experiments", "Benchmark"]) {
+      expect(entry).toContain(`module.${page}`);
+    }
+    expect(entry).toContain("<Suspense fallback={<RouteLoading />}>");
+    expect(entry).not.toContain('from "./pages"');
+    expect(PRODUCT_ROUTES.map(({ id, path }) => [id, path])).toEqual([
+      ["app", "/app"],
+      ["introduction", "/introduction"],
+      ["methodology", "/methodology"],
+      ["implementation", "/implementation"],
+      ["experiments", "/experiments"],
+      ["benchmark", "/benchmark"],
+    ]);
+  });
+
+  it("adversarial: refuses legacy basenames, nested asset roots, and generated route copies", () => {
     expect(deploymentMode).toBe("single-origin");
     for (const path of ["/", "/benchmark/", "/CAOS_Geophysics/benchmark/", "/CAOS_Geophysics-copy/benchmark"]) {
       expect(routerBasename(deploymentMode, path)).toBe("/");
@@ -29,12 +53,12 @@ describe("frontend route and shell foundation", () => {
     expect(read("../../vite.config.ts")).toContain("base: '/'");
     expect(read("../lib/deployment.ts")).not.toContain('"legacy"');
     const { scripts } = JSON.parse(read("../../package.json"));
-    expect(scripts.build).toBe("tsc --noEmit && node copy-data.mjs && vite build");
+    expect(scripts.build).toBe("node scripts/verify-joint-pins.mjs && tsc --noEmit && node copy-data.mjs && vite build");
     expect(scripts["build:single-origin"]).toBe("npm run build");
     expect(existsSync(new URL("../../create-route-entrypoints.mjs", import.meta.url))).toBe(false);
   });
 
-  it("shell_tokens_and_chrome_are_centralized", () => {
+  it("adversarial: rejects product-owned font, palette, and shell chrome overrides", () => {
     const entry = read("../main.tsx");
     const css = read("../styles.css");
     expect(entry).toContain('import "@fasl-work/caos-app-shell/styles.css"');
@@ -45,7 +69,52 @@ describe("frontend route and shell foundation", () => {
     expect(read("../../index.html")).not.toContain('name="theme-color"');
   });
 
-  it("no_unreleased_operation_route", () => {
+  it("the_exact_shared_shell_consumer_declares_product_metadata_and_containment", () => {
+    expect(validateExecutive(executiveBrief)).toEqual([]);
+    const introduction = read("../pages/Research.tsx");
+    expect(introduction).toContain("<ExecutiveView data={executiveBrief}");
+    expect(introduction).toContain('id: "executive"');
+    expect(introduction).toContain('id: "technical"');
+    const manifest = JSON.parse(read("../../package.json"));
+    const lock = JSON.parse(read("../../package-lock.json"));
+    const installed = JSON.parse(read("../../node_modules/@fasl-work/caos-app-shell/package.json"));
+    expect(manifest.dependencies["@fasl-work/caos-app-shell"]).toBe("0.19.9");
+    expect(lock.packages[""].dependencies["@fasl-work/caos-app-shell"]).toBe("0.19.9");
+    expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.19.9");
+    expect(installed.version).toBe("0.19.9");
+    const entry = read("../main.tsx");
+    const releaseVersion = read("../../../VERSION").trim();
+    const metadata = entry.slice(entry.indexOf(`version: "${releaseVersion}"`), entry.indexOf("  architecture,"));
+    expect(metadata).toContain('visibility: "public"');
+    expect(metadata).toContain("contain: true");
+    expect(metadata).toContain("license: {");
+    expect(metadata).toContain('en: "Apache code license · CC BY content license"');
+    expect(metadata).toContain('es: "Licencia Apache para código · licencia CC BY para contenido"');
+    const waveformMount = read("./waveform-browser-entry.tsx");
+    expect(waveformMount).toContain('visibility: "public"');
+    expect(waveformMount).toContain("contain: true");
+    expect(waveformMount).toContain('en: "Apache-2.0 code and CC-BY-4.0 content"');
+    expect(waveformMount).toContain('es: "Código Apache-2.0 y contenido CC-BY-4.0"');
+    expect(read("../../vite.config.ts")).toContain("dedupe: ['react', 'react-dom', 'react-router']");
+    const gate = read("../../scripts/gate.mjs");
+    expect(gate).toContain("@fasl-work/caos-app-shell/gate");
+    expect(gate).toContain("product.workbench_route ?? '/app'");
+    expect(gate).toContain("workbench: appRoute");
+    expect(gate).toContain("requireFocus: true");
+    expect(gate).toContain("expectedShellVersion = '0.19.9'");
+    expect(gate).toContain("GEOPHYSICS_GATE_OUTPUT");
+    expect(gate).toContain("outside every Git checkout");
+    expect(existsSync(new URL("../../scripts/vendor/caos-app-shell-gate-0.19.1/gate/run.mjs", import.meta.url))).toBe(false);
+    expect(read("../pages/Workbench.tsx")).toContain("<CaseWorkbench");
+    expect(read("../pages/Workbench.tsx")).toContain('data-control="inverse-method"');
+    expect(read("../main.tsx")).toContain('@fasl-work/caos-app-shell/chart.css');
+    const manifestJson = JSON.parse(read("../../../product.json"));
+    expect(manifestJson.name).toBe("Inverse Earth Studio");
+    expect(manifestJson.workbench_route).toBe("/app");
+    // This is an ABI/consumer guard, not a measured mobile instrument-area gate.
+  });
+
+  it("adversarial: refuses routes that imply unavailable API operations are runnable", () => {
     expect(PRODUCT_ROUTES.map(route => route.path)).not.toEqual(expect.arrayContaining([
       "/catalogue", "/projects", "/processing", "/modelling", "/evaluation",
     ]));

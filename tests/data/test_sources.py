@@ -9,7 +9,7 @@ from urllib.request import Request
 import pytest
 import sources
 
-from sources import SourceError, _NoRedirect, acquire_source, load_ledger
+from sources import SourceError, _NoRedirect, acquire_source, load_ledger, local_data_root
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -71,6 +71,36 @@ def test_immutable_raw_asset_and_receipt(tmp_path):
     with pytest.raises(SourceError, match="test-source: byte/hash mismatch"):
         acquire_source("test-source", root=tmp_path, ledger_path=ledger)
     assert target.read_bytes() == b"changed bytes"  # acquisition did not overwrite the disputed asset
+
+
+def test_existing_verified_receipt_is_reusable_without_retrieval_claim(tmp_path):
+    ledger, local, record = _test_ledger(tmp_path)
+    target = tmp_path / record["raw_path"]
+    target.parent.mkdir(parents=True)
+    target.write_bytes(local.read_bytes())
+    _, first_target, first = acquire_source("test-source", root=tmp_path, ledger_path=ledger)
+    assert first_target == target and first["acquisition_method"] == "existing-verified"
+    receipt_path = tmp_path / "data/raw/acquisition/test-source.json"
+    original_receipt, original_data = receipt_path.read_bytes(), target.read_bytes()
+    _, second_target, second = acquire_source("test-source", root=tmp_path, ledger_path=ledger)
+    assert second_target == target and second == first
+    assert receipt_path.read_bytes() == original_receipt and target.read_bytes() == original_data
+    changed = dict(first, acquisition_method="unverified")
+    receipt_path.write_text(json.dumps(changed), encoding="utf-8")
+    with pytest.raises(SourceError, match="invalid acquisition provenance"):
+        acquire_source("test-source", root=tmp_path, ledger_path=ledger)
+
+
+def test_working_data_root_requires_external_explicit_configuration(tmp_path, monkeypatch):
+    monkeypatch.delenv("GEOPHYSICS_LOCAL_DATA_ROOT", raising=False)
+    with pytest.raises(SourceError, match="Set GEOPHYSICS_LOCAL_DATA_ROOT"):
+        local_data_root()
+    for value in (ROOT, ROOT/"data/raw", Path("relative-data")):
+        with pytest.raises(SourceError):
+            local_data_root(value)
+    monkeypatch.setenv("GEOPHYSICS_LOCAL_DATA_ROOT", str(tmp_path))
+    assert local_data_root() == tmp_path.resolve()
+    assert local_data_root(tmp_path/"explicit") == (tmp_path/"explicit").resolve()
 
 
 def test_source_allowlist_and_link_only(tmp_path):

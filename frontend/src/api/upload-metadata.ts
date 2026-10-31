@@ -7,6 +7,8 @@ const field = (key: string, en: string, es: string, kind: FieldKind = "text", po
 const channels = field("channels", "Channel codes (comma-separated)", "Códigos de canal (separados por coma)", "list");
 
 export const FORMAT_SPECS = {
+  ert_ohm: { en: "Topographic ERT original (.ohm)", es: "Original ERT topográfico (.ohm)", extensions: [".ohm"], mimes: ["text/plain", "application/octet-stream"], maxMiB: 1_000_000 / 1048576, units: ["ohm"], frames: ["ABMN"], geometry: [field("electrode_count", "Electrode count", "Cantidad de electrodos", "integer", true), field("measurement_count", "ABMN measurement count", "Cantidad de mediciones ABMN", "integer", true)] },
+  traveltime_sgt: { en: "First-arrival original (.sgt)", es: "Original de primeras llegadas (.sgt)", extensions: [".sgt"], mimes: ["text/plain", "application/octet-stream"], maxMiB: 1_000_000 / 1048576, units: ["s"], frames: ["source-receiver"], geometry: [field("sensor_count", "Sensor count", "Cantidad de sensores", "integer", true), field("measurement_count", "First-arrival count", "Cantidad de primeras llegadas", "integer", true)] },
   gravity_csv: { en: "Gravity station CSV", es: "CSV de estaciones gravimétricas", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["mGal", "m/s2"], frames: ["local vertical down", "local vertical up"], geometry: [field("station_id_column", "Station ID column", "Columna de estación"), field("x_column", "X column", "Columna X"), field("y_column", "Y column", "Columna Y"), field("z_column", "Z column", "Columna Z"), field("value_column", "Value column", "Columna de valor"), field("sigma_column", "Sigma column (required for flag QC)", "Columna sigma (necesaria para QC de marcas)", "text", false, true)] },
   magnetic_csv: { en: "Magnetic flight-line CSV", es: "CSV de líneas magnéticas", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["nT"], frames: ["total field", "ENU", "NED"], geometry: [field("line_id_column", "Line ID column", "Columna de línea"), field("x_column", "X column", "Columna X"), field("y_column", "Y column", "Columna Y"), field("z_column", "Z column", "Columna Z"), field("value_column", "Value column", "Columna de valor")] },
   traveltime_csv: { en: "Traveltime CSV", es: "CSV de tiempos de viaje", extensions: [".csv"], mimes: ["text/csv"], maxMiB: 50, units: ["s", "ms"], frames: ["source-receiver"], geometry: [field("source_x_column", "Source X column", "Columna X fuente"), field("source_y_column", "Source Y column", "Columna Y fuente"), field("receiver_x_column", "Receiver X column", "Columna X receptor"), field("receiver_y_column", "Receiver Y column", "Columna Y receptor"), field("time_column", "Time column", "Columna de tiempo")] },
@@ -107,6 +109,14 @@ export function prepareUpload(file: File | null, draft: UploadDraft, stationxmlA
     if (geometry.sign_convention !== undefined) required(["+", "-"].includes(String(geometry.sign_convention)), "physical.geometry.sign_convention");
     if (geometry.variance_convention !== undefined) required(["complex", "per-real-component"].includes(String(geometry.variance_convention)), "physical.geometry.variance_convention");
     if (geometry.rotation_reference !== undefined) required(["unspecified", "geographic-north"].includes(String(geometry.rotation_reference)), "physical.geometry.rotation_reference");
+  }
+  if (draft.format === "ert_ohm" || draft.format === "traveltime_sgt") {
+    required(draft.coordinateReference === "local", "physical.coordinate_reference");
+    required(draft.axisOrder === "xy", "physical.axis_order");
+    required(draft.horizontalUnit === "m", "physical.horizontal_unit");
+    required(draft.verticalUnit === "m", "physical.vertical_unit");
+    required(draft.verticalPositive === "up", "physical.vertical_positive");
+    required(nonempty(draft.citation), "source.citation");
   }
   if (draft.format === "miniseed" || draft.format === "stationxml" || draft.format === "mth5") {
     const orientations: Record<string, [number, number]> = {};

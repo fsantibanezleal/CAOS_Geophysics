@@ -217,5 +217,5 @@ def test_real_parent_crash_and_recovery(make_harness, tmp_path):
 def test_host_guide_contract():
     guide = (ROOT / "docs/guides/12_actual_host_admission.md").read_text(encoding="utf-8")
     for term in ("DynamicUser", "StateDirectory", "twenty", "TestClient", "SIGKILL",
-                 "operator", "Pages", "70%", "30%", "RLIMIT_AS"):
+                 "operator", "Pages", "70%", "two rollback releases", "RLIMIT_AS"):
         assert term in guide
