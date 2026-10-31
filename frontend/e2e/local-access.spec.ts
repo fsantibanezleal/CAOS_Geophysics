@@ -37,7 +37,7 @@ async function protocol(context: BrowserContext) {
   return state;
 }
 async function open(page: Page, es = false) {
-  await page.goto(origin + "/app");
+  await page.goto(origin + "/app", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: es ? "Proyectos y datos originales" : "Projects & raw data", exact: true }).click();
   await expect(page.getByRole("button", { name: es ? "Iniciar sesión" : "Sign in", exact: true })).toBeVisible();
 }
@@ -111,7 +111,7 @@ test("invalid login clears secret; plural account switch and expiry clear privat
 test("anonymous browser MT forward calculator remains interactive without an API request", async ({ browser }) => {
   const context = await browser.newContext(); const state = await protocol(context), page = await context.newPage();
   await context.addInitScript(() => localStorage.setItem("caos.lang", "en"));
-  await page.goto(origin + "/experiments");
+  await page.goto(origin + "/experiments", { waitUntil: "domcontentloaded" });
   await page.getByRole("tab", { name: "MT forward and EDI evidence", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Layered-earth MT forward response", exact: true })).toBeVisible();
   const layer = page.getByRole("slider", { name: "Layer 1 Ω m", exact: true });
@@ -126,11 +126,11 @@ test("unknown/unavailable profiles fail private closed without blocking six publ
   const context = await browser.newContext(); const state = await protocol(context), page = await context.newPage();
   await context.addInitScript(() => localStorage.setItem("caos.lang", "en"));
   for (const route of ["/", "/introduction", "/methodology", "/implementation", "/experiments", "/benchmark"]) {
-    await page.goto(origin + route); await expect(page.locator("main")).toBeVisible();
+    await page.goto(origin + route, { waitUntil: "domcontentloaded" }); await expect(page.locator("main")).toBeVisible();
     await expect(page.getByRole("navigation", { name: "Inverse Earth Studio" }).getByRole("link")).toHaveCount(6);
   }
   expect(state.calls).toEqual([]);
-  await page.goto(origin + "/app");
+  await page.goto(origin + "/app", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("tab", { name: "Model", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Replay", exact: true }).click();
   await expect(page.getByRole("button", { name: /Export run/ })).toBeEnabled();
@@ -151,7 +151,7 @@ test("direct private project and MT URLs deny guests before project/upload/serve
   const context = await browser.newContext(); const state = await protocol(context), page = await context.newPage();
   await context.addInitScript(() => localStorage.setItem("caos.lang", "en"));
   for (const suffix of ["", "&instrument=mt"]) {
-    await page.goto(origin + `/app?project=${ids[0]}${suffix}`);
+    await page.goto(origin + `/app?project=${ids[0]}${suffix}`, { waitUntil: "domcontentloaded" });
     await expect(page.locator(".load-state")).toContainText(suffix ? "Sign in through Projects or retry the unavailable project service." : "Sign in through Projects to load this private project.");
     await expect(page.getByRole("button", { name: /Submit.*job|Validate station table|Upload original bytes/ })).toHaveCount(0);
   }
@@ -163,7 +163,7 @@ test("anonymous reviewed M13 model performs actual browser inference without any
   test.setTimeout(120_000);
   const context = await browser.newContext(); const state = await protocol(context), page = await context.newPage();
   await context.addInitScript(() => localStorage.setItem("caos.lang", "en"));
-  await page.goto(origin + "/benchmark#phase-picker");
+  await page.goto(origin + "/benchmark#phase-picker", { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Load reviewed STEAD assets", exact: true }).click();
   const inference = page.getByRole("button", { name: "Run browser inference", exact: true });
   await expect(inference).toBeEnabled({ timeout: 60_000 });
@@ -177,7 +177,7 @@ test("closing a pending probe prevents late owner restoration on a reopened gues
   const context = await browser.newContext(); const state = await protocol(context), page = await context.newPage();
   await context.addInitScript(() => localStorage.setItem("caos.lang", "en"));
   let release!: () => void; state.holdConfig = new Promise<void>(resolve => { release = resolve; });
-  await page.goto(origin + "/app"); await page.getByRole("button", { name: "Projects & raw data", exact: true }).click();
+  await page.goto(origin + "/app", { waitUntil: "domcontentloaded" }); await page.getByRole("button", { name: "Projects & raw data", exact: true }).click();
   await expect.poll(() => state.calls.some(call => call.path === "/api/auth/config")).toBe(true);
   await page.keyboard.press("Escape"); state.holdConfig = null;
   await page.getByRole("button", { name: "Projects & raw data", exact: true }).click();
@@ -215,7 +215,7 @@ for (const lang of ["en", "es"] as const) for (const status of ["not_configured"
     state.deletionStatus = status;
     state.account = { ...user, is_verified: status === "pending_reconciliation" };
     if (status === "pending_reconciliation") state.profile = { mode: "email", registration_enabled: true, mail_flows_enabled: true };
-    await page.goto(origin + "/app");
+    await page.goto(origin + "/app", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: es ? "Proyectos y datos originales" : "Projects & raw data", exact: true }).click();
     await page.getByRole("textbox", { name: es ? /Escriba el nombre exacto para confirmar/ : /Type the exact project name to confirm/ }).fill("First owner survey 1");
     await page.getByRole("button", { name: es ? "Eliminar proyecto y solicitar recibo" : "Delete project and request receipt", exact: true }).click();
