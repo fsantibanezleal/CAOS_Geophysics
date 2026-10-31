@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT / "data-pipeline"))
 from phase_picking import classical_stalta_picks
 
 ASSETS = ROOT / "data/derived/phase/browser-assets/stead"
-MANIFEST_SHA = "d4d2b5b1a98d3a7a2077baab7750c8a96e4b5152b6930e4a09ae4bdc97db8394"
+MANIFEST_SHA = "3e8fac54427eeb5525c70317c508d1f55188deac3a5964ad78931561fe3c32f0"
 SELECTION_SHA = "0d15ae67096df0a39761e1d2a5e7ab110d6a8eb862adba132d0d0a7e391d9cd8"
 COMPARATOR_SHA = "daef04c71c81c6c3b63bdaab72d6ccd74445bb2ee3268ff52004b3bae393938a"
 

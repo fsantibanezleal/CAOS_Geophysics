@@ -22,9 +22,9 @@ PUBLIC_COMMIT='c184e3cadcd94a94f46b129009bfc7b6810d115b'
 PINS={
     'physical_conditioned_optimizer.py':'1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c',
     'physical_owned_spd.py':'8924508c3328b70bb9e08ac11a81e107bcdd713402812ba64afec838892d36c2',
-    'gravity_l2_metric.py':'d49d24331df1273597f5f646bceedc629776a020f3dc4d8a63f55bf55e205118',
+    'gravity_l2_metric.py':'202b8e6355334d805b6b4f898089ef0e3c5e92f9264f8200dd647a5184fc12ba',
     'gravity_l2_precision.py':'57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a',
-    'physical_optimizer.py':'4745d41ff8afb908260611601861db8303ce7bd612ff0ea614cceb201a20bc86',
+    'physical_optimizer.py':'179f998ba35e9419dbbc06bc16d36fd026dea66344109e7e157df501316bc82c',
 }
 
 

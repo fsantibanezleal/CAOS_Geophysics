@@ -30,14 +30,14 @@ PINS = {
     'physical_compiled_optimizer.py': '1554320f49012062b523e7a2d6d02baf0cf54ca18ec5c47efaee48c39194e7ab',
     'physical_conditioned_optimizer.py': '1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c',
     'physical_nonlinear_optimizer.py': 'b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919',
-    'physical_optimizer.py': '4745d41ff8afb908260611601861db8303ce7bd612ff0ea614cceb201a20bc86',
+    'physical_optimizer.py': '179f998ba35e9419dbbc06bc16d36fd026dea66344109e7e157df501316bc82c',
     'physical_original_quadratic.py': '07c67519110d59758614516a3f3d98ed49713a969affcefb4711430b604186ce',
     'physical_original_residual_terminal.py': 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7',
     'physical_original_rows.py': '8a18a0ae04bfd09336480e06d2e9526aecab79a232033e9ca5d0040b16e9f399',
     'physical_original_terminal.py': 'dd4b07defa6921a173d3e4d75dad28697fa36743a5dccef6f5db815ae6a73991',
     'physical_owned_spd.py': '8924508c3328b70bb9e08ac11a81e107bcdd713402812ba64afec838892d36c2',
     'physical_reduced_optimizer.py': '22bf04a7e260b5f93c2e54430f54c3d3464150b3ce78d861c8236bc3d6b21aad',
-    'gravity_l2_metric.py': 'd49d24331df1273597f5f646bceedc629776a020f3dc4d8a63f55bf55e205118',
+    'gravity_l2_metric.py': '202b8e6355334d805b6b4f898089ef0e3c5e92f9264f8200dd647a5184fc12ba',
     'gravity_l2_precision.py': '57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a',
 }
 _NATIVE_VENDOR_PINS = (
