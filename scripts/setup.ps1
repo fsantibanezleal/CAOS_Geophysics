@@ -2,15 +2,27 @@ param([switch]$Gpu, [switch]$Notebooks, [switch]$M08, [switch]$Api, [switch]$Ert
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $py = if (Get-Command py -ErrorAction SilentlyContinue) { 'py -3.12' } else { 'python' }
-function VenvPy($dir) { $p = Join-Path $dir 'Scripts/python.exe'; if (-not (Test-Path $p)) { $p = Join-Path $dir 'bin/python' }; return $p }
+function VenvPy($dir) {
+  $root = Join-Path (Get-Location).Path $dir
+  $p = Join-Path $root 'Scripts/python.exe'
+  if (-not (Test-Path -LiteralPath $p)) { $p = Join-Path $root 'bin/python' }
+  if (-not (Test-Path -LiteralPath $p)) { throw "Python interpreter was not created in $root" }
+  return (Get-Item -LiteralPath $p).FullName
+}
 if ($Api) {
   Write-Host '[setup] creating isolated .venv-api'
   if (-not (Test-Path '.venv-api')) { Invoke-Expression "$py -m venv .venv-api" }
   $apiPython = VenvPy '.venv-api'
   & $apiPython -m pip install --upgrade pip -q
-  & $apiPython -m pip install -r requirements-api.txt -r requirements-dev.txt -q
+  & $apiPython -m pip install -r requirements-api.txt -r requirements-dev.txt -r requirements-api-test.txt -q
   & $apiPython -m pip check
-  Write-Host '[setup] API environment ready. Run .\.venv-api\Scripts\python.exe -m pytest tests\api -q.'
+  Write-Host '[setup] creating the dedicated .venv-gravity child runtime'
+  if (-not (Test-Path '.venv-gravity')) { Invoke-Expression "$py -m venv .venv-gravity" }
+  $gravityPython = VenvPy '.venv-gravity'
+  & $gravityPython -m pip install --upgrade pip -q
+  & $gravityPython -m pip install -r requirements-gravity-runtime.txt -q
+  & $gravityPython -m pip check
+  Write-Host '[setup] API and M02 test environments ready. Run .\.venv-api\Scripts\python.exe -m pytest tests\api -q.'
   exit 0
 }
 if ($Notebooks) {
@@ -20,7 +32,7 @@ if ($Notebooks) {
   # `[switch]$Notebooks` parameter and attempts to assign a path to a switch.
   $notebookPython = VenvPy '.venv-notebooks'
   & $notebookPython -m pip install --upgrade pip -q
-  & $notebookPython -m pip install -r notebooks/requirements.txt -q
+  & $notebookPython -m pip install -r notebooks/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu -q
   Write-Host '[setup] notebook environment ready. Run .\.venv-notebooks\Scripts\python.exe scripts/run_notebooks.py --check --tmp <device-temp-root>.'
   exit 0
 }

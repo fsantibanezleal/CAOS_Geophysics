@@ -230,6 +230,24 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             from app.waveform_processing import create_waveform_dataset
             return _dataset_view(await create_waveform_dataset(settings, session, user, project_id,
                 asset, source, request.waveform_request))
+        # A raw upload receipt is not a parsed scientific dataset. Keep
+        # companion and not-yet-adapted formats out of the gravity CSV parser;
+        # otherwise callers get a misleading parse failure (or, worse, a
+        # dataset created under the wrong modality).
+        dataset_adapters = {
+            "gravity_csv", "gravity_stations_json", "magnetic_csv", "edi",
+            *PROFILE_FORMATS,
+        }
+        if asset.detected_format not in dataset_adapters:
+            if asset.detected_format == "stationxml":
+                message = ("StationXML is instrument metadata, not an observation dataset. "
+                           "Select the matching owned MiniSEED asset to create a waveform dataset.")
+            else:
+                message = (f"No scientific dataset adapter is currently available for "
+                           f"{asset.detected_format}. The original remains stored and downloadable; "
+                           "no dataset or processing result was created.")
+            raise ApiError(422, "dataset_adapter_unavailable", message,
+                           ["asset.detected_format", "dataset.adapter"])
         if request.waveform_request is not None:
             raise ApiError(422, "method_ineligible", "Waveform request is only valid for MiniSEED")
         is_magnetic = asset.detected_format == "magnetic_csv"
@@ -570,9 +588,8 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
                 raise ApiError(422, "dataset_physics_ineligible", "Uploaded gravity observations do not satisfy M02 source admission", reasons)
             await asyncio.to_thread(_verified_file, settings, asset)
             try:
-                from app.gravity_l2_compute import _native_modules
-                _forward, inverse, _survey = _native_modules()
-                estimated_memory = inverse.metric.allocation(
+                from app.gravity_l2_compute import native_memory_preflight
+                estimated_memory = native_memory_preflight(
                     dataset.row_count, dataset.row_count,
                     sum(request.parameters.mesh.active), False,
                 )["maximum"]

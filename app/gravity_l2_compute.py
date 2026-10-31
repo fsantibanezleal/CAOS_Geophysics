@@ -29,6 +29,19 @@ def _native_modules():
     return forward, inverse, survey
 
 
+def native_memory_preflight(n: int, m: int, active_cells: int, covariance: bool = False) -> dict:
+    """Apply the native allocation policy without importing solver engines.
+
+    Job admission needs the same bounded memory contract as the worker, but it
+    must not import SimPEG/discretize or initialize a forward/inverse engine in
+    the API process. The isolated worker repeats this check before solving.
+    """
+    if str(PIPELINE) not in sys.path:
+        sys.path.insert(0, str(PIPELINE))
+    import gravity_l2_metric as metric
+    return metric.allocation(n, m, active_cells, covariance)
+
+
 def _array(value, dtype=np.float64):
     return np.asarray(value, dtype=dtype).copy(order="C")
 

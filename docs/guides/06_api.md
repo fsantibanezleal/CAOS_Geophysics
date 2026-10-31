@@ -4,11 +4,21 @@ This guide covers the unreleased API foundation and its opt-in single-origin fro
 
 ## Local setup
 
-Use Python 3.12 or newer. On PowerShell, create a separate ignored runtime environment and install only the API lane:
+Use Python 3.12 or newer. The API and isolated M02 scientific child use separate ignored environments because their pandas pins differ. On PowerShell, create both environments with the repository setup command:
 
 ```powershell
-py -3.12 -m venv .venv-api
-.\.venv-api\Scripts\python.exe -m pip install -r requirements-api.txt
+./scripts/setup.ps1 -Api
+```
+
+On Linux, use `bash scripts/setup.sh --api`. The API environment includes its test-only Choclo oracle, and `.venv-gravity` uses the pinned M02 child requirements. To run the API suite:
+
+```powershell
+.\.venv-api\Scripts\python.exe -m pytest tests\api -q
+```
+
+Apply migrations and start the API from `.venv-api`:
+
+```powershell
 .\.venv-api\Scripts\alembic.exe -c app\alembic.ini upgrade head
 .\.venv-api\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
 ```

@@ -1,7 +1,7 @@
 # M12 learned velocity checkpoint notebook pair
 
 Added and freshly executed the English and Spanish Level 3 notebook pair
-`notebooks/{en,es}/08-learning/06-m12-velocity-checkpoint.ipynb`. Both lessons
+`notebooks/{en,es}/08-learning/05-m12-velocity-checkpoint.ipynb`. Both lessons
 run the actual fixed 40-epoch CPU training protocol into external scratch,
 reload the checkpoint, verify its SHA-256 and source receipt, reconstruct all
 six declared cohorts, compare the learned and same-input classical maps, and

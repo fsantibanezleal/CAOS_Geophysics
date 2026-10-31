@@ -32,7 +32,7 @@ if [ "$NOTEBOOKS" -eq 1 ]; then
   mkvenv .venv-notebooks
   VN="$(venvpy .venv-notebooks)"
   "$VN" -m pip install --upgrade pip -q
-  "$VN" -m pip install -r notebooks/requirements.txt -q
+  "$VN" -m pip install -r notebooks/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu -q
   echo "[setup] notebook environment ready. Run python scripts/run_notebooks.py --check --tmp <device-temp-root>."
   exit 0
 fi
@@ -40,9 +40,14 @@ if [ "$API" -eq 1 ]; then
   mkvenv .venv-api
   VAPI="$(venvpy .venv-api)"
   "$VAPI" -m pip install --upgrade pip -q
-  "$VAPI" -m pip install -r requirements-api.txt -r requirements-dev.txt -q
+  "$VAPI" -m pip install -r requirements-api.txt -r requirements-dev.txt -r requirements-api-test.txt -q
   "$VAPI" -m pip check
-  echo "[setup] API environment ready. Run .venv-api/bin/python -m pytest tests/api -q."
+  mkvenv .venv-gravity
+  VGRAVITY="$(venvpy .venv-gravity)"
+  "$VGRAVITY" -m pip install --upgrade pip -q
+  "$VGRAVITY" -m pip install -r requirements-gravity-runtime.txt -q
+  "$VGRAVITY" -m pip check
+  echo "[setup] API and M02 test environments ready. Run .venv-api/bin/python -m pytest tests/api -q."
   exit 0
 fi
 if [ "$M08" -eq 1 ]; then

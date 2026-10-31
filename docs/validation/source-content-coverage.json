@@ -203,8 +203,8 @@
       "content_scope": "Uses layered-earth calibration and frequency-interval coverage for the 1D impedance workflow."
     },
     {
-      "en": "notebooks/en/04-mt/03-mt-state-of-art.ipynb",
-      "es": "notebooks/es/04-mt/03-mt-state-of-art.ipynb",
+      "en": "notebooks/en/04-mt/03-mt-method-comparison.ipynb",
+      "es": "notebooks/es/04-mt/03-mt-method-comparison.ipynb",
       "methods": [
         "M06"
       ],
@@ -242,8 +242,8 @@
       "content_scope": "Runs the topographic 2D ERT inverse on an authored synthetic control."
     },
     {
-      "en": "notebooks/en/05-ert/03-ert-state-of-art.ipynb",
-      "es": "notebooks/es/05-ert/03-ert-state-of-art.ipynb",
+      "en": "notebooks/en/05-ert/03-ert-method-comparison.ipynb",
+      "es": "notebooks/es/05-ert/03-ert-method-comparison.ipynb",
       "methods": [
         "M07"
       ],
@@ -280,8 +280,8 @@
       "content_scope": "Introduces first-arrival tomography and its defined comparison context."
     },
     {
-      "en": "notebooks/en/06-seismology/03-seismic-state-of-art.ipynb",
-      "es": "notebooks/es/06-seismology/03-seismic-state-of-art.ipynb",
+      "en": "notebooks/en/06-seismology/03-seismic-method-comparison.ipynb",
+      "es": "notebooks/es/06-seismology/03-seismic-method-comparison.ipynb",
       "methods": [
         "M10"
       ],
@@ -340,8 +340,8 @@
       "content_scope": "Separates independent fits and reports a coupling-weight sweep."
     },
     {
-      "en": "notebooks/en/07-joint/03-joint-state-of-art.ipynb",
-      "es": "notebooks/es/07-joint/03-joint-state-of-art.ipynb",
+      "en": "notebooks/en/07-joint/03-joint-method-comparison.ipynb",
+      "es": "notebooks/es/07-joint/03-joint-method-comparison.ipynb",
       "methods": [
         "M11"
       ],
@@ -394,8 +394,8 @@
       "content_scope": "Examines novelty thresholds and their consequences for held-out learned inversion."
     },
     {
-      "en": "notebooks/en/08-learning/03-learning-state-of-art.ipynb",
-      "es": "notebooks/es/08-learning/03-learning-state-of-art.ipynb",
+      "en": "notebooks/en/08-learning/03-learning-method-comparison.ipynb",
+      "es": "notebooks/es/08-learning/03-learning-method-comparison.ipynb",
       "methods": [
         "M13"
       ],
@@ -408,8 +408,8 @@
       "content_scope": "Reviews PhaseNet evidence and the browser parity boundary for learned phase picking."
     },
     {
-      "en": "notebooks/en/08-learning/04-nullspace-refinement-evidence.ipynb",
-      "es": "notebooks/es/08-learning/04-nullspace-refinement-evidence.ipynb",
+      "en": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
+      "es": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
       "methods": [
         "M12"
       ],
@@ -421,8 +421,8 @@
       "content_scope": "Studies null-space refinement calibration and held-out stress evidence."
     },
     {
-      "en": "notebooks/en/08-learning/05-first-arrival-user-data.ipynb",
-      "es": "notebooks/es/08-learning/05-first-arrival-user-data.ipynb",
+      "en": "notebooks/en/08-learning/04-first-arrival-user-data.ipynb",
+      "es": "notebooks/es/08-learning/04-first-arrival-user-data.ipynb",
       "methods": [
         "M12"
       ],
@@ -434,8 +434,8 @@
       "content_scope": "Exercises first-arrival user-data inversion and sensitivity with its documented evidence limits."
     },
     {
-      "en": "notebooks/en/08-learning/06-m12-velocity-checkpoint.ipynb",
-      "es": "notebooks/es/08-learning/06-m12-velocity-checkpoint.ipynb",
+      "en": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+      "es": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
       "methods": [
         "M12"
       ],
@@ -444,6 +444,19 @@
         "https://github.com/lanl/OpenFWI"
       ],
       "content_scope": "Runs the trained M12 velocity checkpoint on family/acquisition-disjoint held-outs, compares the same inputs with the classical solver and independently forwards both maps."
+    },
+    {
+      "en": "notebooks/en/08-learning/07-physics-conditioned-velocity-refinement.ipynb",
+      "es": "notebooks/es/08-learning/07-physics-conditioned-velocity-refinement.ipynb",
+      "methods": [
+        "M12"
+      ],
+      "title": "Geometry-normalized velocity refinement",
+      "sources": [
+        "https://arxiv.org/abs/2309.06573",
+        "https://github.com/lanl/OpenFWI"
+      ],
+      "content_scope": "Regenerates disjoint held-out surveys, applies the frozen CNN and validation-selected regularized ray solver, and computes paired model-space and independent forward-time errors."
     }
   ]
 }

@@ -8,15 +8,17 @@ outputs of one name are coalesced into one (as nbconvert does), so the committed
 
     python scripts/run_notebooks.py                 # every notebook, in place
     python scripts/run_notebooks.py --only notebooks/en/01-getting-started/01-first-run.ipynb
+    python scripts/run_notebooks.py --only notebooks/en/01-getting-started/01-first-run.ipynb --only notebooks/es/01-getting-started/01-first-run.ipynb
     python scripts/run_notebooks.py --check --tmp DIR   # executes in-memory notebook copies, saves outputs under DIR, fails on errors
                                                         # or committed bytes that differ from a fresh run (stale outputs)
+    python scripts/run_notebooks.py --check --keep-results --tmp DIR  # also retains fresh notebooks for review
     CAOS_TEMP_ROOT=DIR python scripts/run_notebooks.py --check      # the same, the temp root from the environment
 
 ``--check`` executes each saved notebook in memory against the repository's read-only scientific inputs and writes the fresh
 notebook result under a unique folder in the temp root the caller names (``--tmp DIR``, else ``CAOS_TEMP_ROOT``; the device's
-temp root, never a path written in the repository). It removes that folder after the run and never copies the multi-gigabyte
-data tree. Notebook-generated files must use ``CAOS_TEMP_ROOT``. Without a temp root it stops with exit 2, and the system
-temp folder is never used. A product that declares method packages (``product.json``
+    temp root, never a path written in the repository). It removes that folder after the run unless ``--keep-results`` is
+    specified, and excludes the ignored ``data/experiments`` run-output tree from staging. Notebook-generated files must use ``CAOS_TEMP_ROOT``. Without a
+temp root it stops with exit 2, and the system temp folder is never used. A product that declares method packages (``product.json``
 ``method_packages``, PyPI distributions) must have them installed here, each with an exact pin in ``notebooks/requirements.txt``,
 and no notebook may define a name they define: the run stops before any notebook executes (``scripts/check_notebooks.py`` holds
 the same names statically when the packages are installed).
@@ -135,7 +137,25 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
         origin = source_root / name
         target = work / name
         if origin.exists() and not target.exists():
-            shutil.copytree(origin, target, ignore=shutil.ignore_patterns("__pycache__", ".ipynb_checkpoints"))
+            def ignore_generated(directory: str, entries: list[str]) -> set[str]:
+                ignored = {entry for entry in entries if entry in {"__pycache__", ".ipynb_checkpoints"}}
+                if name == "data" and Path(directory).resolve() == origin.resolve():
+                    ignored.add("experiments")
+                return ignored
+
+            shutil.copytree(origin, target, ignore=ignore_generated)
+    # The magnetic survey lessons execute these reviewed support modules from
+    # their project-relative paths. They are notebook inputs just like the
+    # pipeline and documentation trees above, not optional test-only fixtures.
+    for relative in (
+        "tests/data/magnetic_survey_support.py",
+        "tests/fixtures/magnetic_survey/generate.py",
+    ):
+        origin = source_root / relative
+        target = work / relative
+        if origin.is_file() and not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(origin, target)
     version = source_root / "VERSION"
     if version.is_file() and not (work / "VERSION").exists():
         shutil.copy2(version, work / "VERSION")
@@ -153,10 +173,13 @@ def misplaced() -> list[str]:
     return out
 
 
-def discover(only: str | None) -> list[Path]:
+def discover(only: list[str] | None) -> list[Path]:
     if only:
-        p = (ROOT / only).resolve() if not Path(only).is_absolute() else Path(only).resolve()
-        return [p] if p.is_file() else []
+        paths = [
+            (ROOT / value).resolve() if not Path(value).is_absolute() else Path(value).resolve()
+            for value in only
+        ]
+        return list(dict.fromkeys(paths)) if all(path.is_file() for path in paths) else []
     return sorted(p for lang in LANGS for p in NOTEBOOKS.glob(f"{lang}/*/*.ipynb"))
 
 
@@ -326,9 +349,15 @@ def main() -> int:
     ap = argparse.ArgumentParser(prog="run_notebooks", description=__doc__.split("\n")[0])
     ap.add_argument("--check", action="store_true", help="execute in-memory copies and save outputs under the temp root; write nothing in the repository")
     ap.add_argument("--tmp", metavar="DIR", help="the temp root of --check (default: the environment variable CAOS_TEMP_ROOT)")
-    ap.add_argument("--only", metavar="PATH", help="run one notebook (a path from the repository root)")
+    ap.add_argument("--only", metavar="PATH", action="append",
+                    help="run one notebook (repeat to select several paths from the repository root)")
+    ap.add_argument("--keep-results", action="store_true",
+                    help="keep fresh --check notebooks under the temporary run folder for scientific review")
     ap.add_argument("--inner", action="store_true", help=argparse.SUPPRESS)
     a = ap.parse_args()
+
+    if a.keep_results and not a.check:
+        ap.error("--keep-results requires --check")
 
     temp_root: Path | None = None
     if a.check:
@@ -417,7 +446,12 @@ def main() -> int:
                 print(f"  FAIL  {rel}: {why}", flush=True)
     finally:
         if tmp_root is not None:
-            shutil.rmtree(tmp_root, ignore_errors=True)
+            if a.keep_results:
+                shutil.rmtree(tmp_root / "repo", ignore_errors=True)
+                shutil.rmtree(tmp_root / "notebook-work", ignore_errors=True)
+                print(f"  fresh notebook outputs retained at {tmp_root / 'results'}", flush=True)
+            else:
+                shutil.rmtree(tmp_root, ignore_errors=True)
         kernel_tmp.cleanup()
     if failures:
         print(f"run_notebooks: {len(failures)} of {len(books)} notebooks failed: {', '.join(failures)}")

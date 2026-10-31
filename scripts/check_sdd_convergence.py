@@ -22,6 +22,10 @@ REQUIREMENT = re.compile(r"^(R-\d{3})\s+THE\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
 ALTERNATE = re.compile(r"^(R-\d{3})\s+(?:WHEN|IF)\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
 GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|mjs|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
 SHA = re.compile(r"^[0-9a-f]{64}$")
+TEXT_SUFFIXES = {
+    ".css", ".csv", ".html", ".ipynb", ".js", ".json", ".md", ".mjs",
+    ".py", ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
+}
 
 
 class LedgerError(ValueError):
@@ -29,7 +33,14 @@ class LedgerError(ValueError):
 
 
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    # Evidence hashes are created on Windows and checked on Linux as well.
+    # Git may normalize CRLF text to LF between those environments, so hash a
+    # canonical LF representation for known text formats. Binary artifacts
+    # retain their exact byte-level SHA-256.
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def strict_json(path: Path) -> dict:

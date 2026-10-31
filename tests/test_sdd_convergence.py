@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, timezone
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -132,6 +133,17 @@ class TestConvergence(unittest.TestCase):
         path.parent.mkdir(parents=True)
         path.write_text("process.exitCode = 0;\n", encoding="utf-8")
         self.assertEqual(CHECK.executable_gate(self.root, "frontend/scripts/verify.mjs"), path)
+
+    def test_text_hashes_are_stable_across_windows_line_endings(self):
+        path = self.root / "docs/evidence.json"
+        path.write_bytes(b'{\r\n  "ok": true\r\n}\r\n')
+        expected = hashlib.sha256(b'{\n  "ok": true\n}\n').hexdigest()
+        self.assertEqual(CHECK.digest(path), expected)
+
+    def test_binary_hashes_preserve_every_byte(self):
+        path = self.root / "docs/evidence.bin"
+        path.write_bytes(b"header\r\n\x00payload")
+        self.assertEqual(CHECK.digest(path), hashlib.sha256(path.read_bytes()).hexdigest())
 
     def test_receipt_tampering_and_measured_output_tampering(self):
         self.measured()

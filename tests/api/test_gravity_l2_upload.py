@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import asyncio
+import builtins
 import os
 import sys
 from pathlib import Path
@@ -196,8 +197,29 @@ def test_uploaded_survey_executes_native_calibration_then_sealed_evaluation(tmp_
     assert result["gravity_l2"]["scope"]["host_accepted"] is False
 
 
-def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions(make_harness):
+def test_admission_memory_preflight_does_not_import_solver_engines(monkeypatch):
+    """Admission uses the allocation guard without loading SimPEG or a solver."""
+    for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+        monkeypatch.setenv(variable, "1")
+    original_import = builtins.__import__
+    forbidden = {"gravity_forward", "gravity_l2", "gravity_survey_l2"}
+
+    def guarded_import(name, *args, **kwargs):
+        if name in forbidden:
+            raise AssertionError(f"solver engine imported during admission: {name}")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    from app.gravity_l2_compute import native_memory_preflight
+    estimate = native_memory_preflight(144, 144, 1, False)
+    assert 0 < estimate["maximum"] <= estimate["ceiling"]
+
+
+def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions(make_harness, monkeypatch):
     """Exercise authenticated upload -> eligibility -> isolated M02 child -> owned result."""
+    # Match the worker's declared single-thread numerical policy for admission.
+    for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+        monkeypatch.setenv(variable, "1")
     # Build an authored, non-zero physical survey from the declared one-cell
     # prism so the real solver has an identifiable descent direction.
     body, metadata = survey_upload()
@@ -215,7 +237,7 @@ def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predic
 
     gravity_python = Path(os.environ.get(
         "GEOPHYSICS_TEST_GRAVITY_PYTHON",
-        Path(__file__).resolve().parents[2] / ".venv-pipeline" / "Scripts" / "python.exe"
+            Path(__file__).resolve().parents[2] / ".venv-gravity" / "Scripts" / "python.exe"
         if os.name == "nt" else sys.executable,
     )).resolve()
     harness = make_harness(gravity_l2_online_enabled=True)

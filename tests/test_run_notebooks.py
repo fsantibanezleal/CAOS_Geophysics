@@ -11,6 +11,7 @@ from PIL import Image
 
 from scripts.run_notebooks import (
     canonical_png,
+    discover,
     notebook_scratch_path,
     staged_notebook_source,
     within_declared_plot_tolerance,
@@ -22,6 +23,16 @@ POLICY = {
     "max_changed_pixel_fraction": 0.01,
     "max_normalized_mean_absolute_error": 0.01,
 }
+
+
+def test_discover_accepts_multiple_notebook_paths_and_deduplicates() -> None:
+    english = "notebooks/en/03-magnetics/01-magnetic-quantities-and-frame.ipynb"
+    spanish = "notebooks/es/03-magnetics/01-magnetic-quantities-and-frame.ipynb"
+
+    assert discover([english, spanish, english]) == [
+        (Path(__file__).resolve().parents[1] / english).resolve(),
+        (Path(__file__).resolve().parents[1] / spanish).resolve(),
+    ]
 
 
 def test_notebook_scratch_isolated_between_language_mirrors() -> None:
@@ -41,6 +52,15 @@ def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -
     model.write_text('{"weights": [1, 2, 3]}', encoding="utf-8")
     notebook.write_text("{}", encoding="utf-8")
     (source / "VERSION").write_text("0.04.003\n", encoding="utf-8")
+    experiment_output = source / "data" / "experiments" / "discardable-run" / "large-result.bin"
+    experiment_output.parent.mkdir(parents=True)
+    experiment_output.write_bytes(b"generated run output")
+    support = source / "tests" / "data" / "magnetic_survey_support.py"
+    fixture = source / "tests" / "fixtures" / "magnetic_survey" / "generate.py"
+    support.parent.mkdir(parents=True)
+    fixture.parent.mkdir(parents=True)
+    support.write_text("SUPPORT = True\n", encoding="utf-8")
+    fixture.write_text("FIXTURE = True\n", encoding="utf-8")
 
     staged = staged_notebook_source(tmp_path / "check", notebook.relative_to(source).as_posix(), source)
 
@@ -48,6 +68,9 @@ def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -
     repo = staged.parents[3]
     assert (repo / "models" / "picker" / "weights.json").read_bytes() == model.read_bytes()
     assert (repo / "VERSION").read_text(encoding="utf-8") == "0.04.003\n"
+    assert not (repo / "data" / "experiments").exists()
+    assert (repo / "tests" / "data" / "magnetic_survey_support.py").read_bytes() == support.read_bytes()
+    assert (repo / "tests" / "fixtures" / "magnetic_survey" / "generate.py").read_bytes() == fixture.read_bytes()
 
 
 def encoded_png(image: Image.Image, *, compression: int) -> str:
