@@ -1,4 +1,4 @@
-# Current local science and user-data validation — 2026-10-30
+# Current local science and user-data validation : 2026-10-30
 
 This receipt records focused validation from the direct product checkout at `221d031ca366410ca36066da37d302b9832008b1`. The checkout was dirty; commands and machine-readable counts are in the companion JSON.
 

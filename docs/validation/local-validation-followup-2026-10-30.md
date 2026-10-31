@@ -1,4 +1,4 @@
-# Local validation follow-up — 2026-10-30
+# Local validation follow-up : 2026-10-30
 
 This follow-up records checks run after the earlier local-science receipt. They ran in the direct CAOS_Geophysics checkout at base `0cf38910ff69a90bf895ea1fde417bf62c049068` with an uncommitted working tree. The earlier receipt remains tied to its recorded revision; this file does not retroactively change its evidence.
 
@@ -7,7 +7,7 @@ This follow-up records checks run after the earlier local-science receipt. They 
 - Fresh-kernel execution passed for all 10 newly added method-comparison notebooks: MT, ERT, seismic, joint inversion, and learning, in English and Spanish. The runner exited 0 and retained execution outputs under `${CAOS_TEMP_ROOT}\caos-notebooks-current-2026-10-30`; repository notebook sources were not rewritten by check mode.
 - `\.venv-api\Scripts\python.exe -m pytest tests/api/test_metadata.py -q` passed all 14 tests, including the StationXML companion-metadata rejection path.
 
-## Expanded local validation — 2026-10-30
+## Expanded local validation : 2026-10-30
 
 The expanded checks below ran in the same direct checkout and dirty working tree. They are local evidence only.
 

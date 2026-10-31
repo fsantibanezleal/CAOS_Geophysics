@@ -1,4 +1,4 @@
-# Cross-format physical-metadata gate — 2026-10-30
+# Cross-format physical-metadata gate : 2026-10-30
 
 ## Result
 
