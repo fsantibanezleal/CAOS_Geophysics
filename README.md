@@ -14,7 +14,7 @@ A geophysics investigation workbench with 20 distinct geological cases, six cond
 | API | [app/](app/) | active | Authenticated accounts, projects, datasets, jobs, and artifact routes. |
 | Core pipelines | [data-pipeline/](data-pipeline/) | active | Acquisition, preprocessing, forward models, inversion, evaluation, and export. |
 | Packages | [SimPEG](https://pypi.org/project/simpeg/) | active | Uses published scientific dependencies; this repository declares no package. |
-| Notebooks | [notebooks/](notebooks/) | 54 bilingual notebooks; the course remains incomplete | Fresh-kernel replay evidence exists. M02/M04 now include actual 3D inversions; M09 includes the product tomography inverse; M10 executes full-band and frequency-continuation product FWI on one controlled synthetic case; M13 executes ONNX inference. M11 now executes one real train-only 26-candidate calibration with separate modality baselines; a broader accepted FWI study (the single controlled M10 comparison remains unresolved), browser-side M12 classical first-arrival calculation is now available; learned M12 checkpoint inference remains experimental and fails its comparator, independent MT/ERT comparison, field-data workflows and whole-course acceptance remain open. See [notebook review](docs/validation/notebook-review-2026-10-27.md). |
+| Notebooks | [notebooks/](notebooks/) | active | 62 bilingual notebooks; executable method cases, theory, assumptions, limitations, and comparisons. Fresh-kernel replay evidence exists. M02/M04 include actual 3D inversions; M09 includes the product tomography inverse; M10 executes full-band and frequency-continuation product FWI on one controlled synthetic case; M13 executes ONNX inference. M11 executes one train-only 26-candidate calibration with separate modality baselines; a broader accepted FWI study (the single controlled M10 comparison remains unresolved), browser-side M12 straight-ray first-arrival calculation is available; learned M12 checkpoint inference remains experimental and fails its comparator, independent MT/ERT comparison, field-data workflows and whole-course acceptance remain open. See [notebook review](docs/validation/notebook-review-2026-10-27.md). |
 | Data | [data/](data/) | active | Versioned synthetic experiments, derived results, source records, and readiness. |
 | Contracts | [docs/contracts/](docs/contracts/) | active | Catalogue schemas, API index, version lock, and deterministic readiness record. |
 | Documentation | [docs/](docs/) | active | Research, methods, assumptions, limitations, operations, and scientific evidence. |
@@ -34,6 +34,7 @@ A geophysics investigation workbench with 20 distinct geological cases, six cond
 
 ```powershell
 ./scripts/setup.ps1 -Gpu
+./scripts/setup.ps1 -Api
 ./scripts/rebuild-release.ps1
 $env:INVERSE_EARTH_DATA = 'data/experiments/release-0.04.001'
 $env:FWI_RECOVERY_ARTIFACTS = $env:INVERSE_EARTH_DATA
@@ -52,7 +53,7 @@ node copy-data.mjs --source ../data/experiments/release-0.04.001
 npx vite --host 127.0.0.1 --port 5179
 ```
 
-Python 3.12. Both `.venv` and `.venv-pipeline` are local and ignored. The full candidate rebuild runs artifact, recovery and 48-model CUDA replay gates; it requires the hash-pinned Clear Lake station EDI at the ignored path in `data/source-ledger.json` and fails before GPU computation if the file is missing. It never overwrites the canonical release. The default numerical precompute path is also ignored. The Vite command above previews candidate arrays; `npm run build` copies the committed canonical release only. CI performs CPU-safe artifact and frontend gates. Scripts are invoked by file path; there is no internal Python package.
+Python 3.12. `.venv`, `.venv-pipeline`, `.venv-ert`, and `.venv-api` are local and ignored. The validation runner executes offline scientific tests in `.venv-pipeline`, ERT/travel-time/profile-mesh tests in `.venv-ert`, API/service tests in `.venv-api`, and waveform data tests in their pinned M08 environment; mutable evidence stays under the external data root. Project-backup drills and the Windows-only local Job-custody harness are outside the approved release gate. The full candidate rebuild runs artifact, recovery and 48-model CUDA replay gates; it requires the hash-pinned Clear Lake station EDI at the ignored path in `data/source-ledger.json` and fails before GPU computation if the file is missing. It never overwrites the canonical release. The default numerical precompute path is also ignored. The Vite command above previews candidate arrays; `npm run build` copies the committed canonical release only. CI performs CPU-safe artifact and frontend gates. Scripts are invoked by file path; there is no internal Python package.
 
 ## What the results mean
 
