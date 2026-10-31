@@ -55,6 +55,8 @@ jobs:
         run: python scripts/check_readiness.py
       - name: Notebook structure and bilingual static guard; no notebook execution
         run: python scripts/check_notebooks.py
+      - name: Reader-facing method names; internal classification stays internal
+        run: python scripts/check_internal_names.py
       - name: Repository area index
         run: python scripts/check_readme_areas.py
 
