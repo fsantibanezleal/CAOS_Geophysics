@@ -32,4 +32,3 @@ This is a current-source local Windows measurement of the approved resource harn
 ## Interpretation
 
 The automated harness summary explicitly leaves `resource_upper_proof` and `host_accepted` false for both categories. These receipts establish repeatable local process measurements only. They do not establish the 24-condition scientific matrix, an allocation upper bound, VPS admission, field eligibility or full M02 acceptance. The scientific matrix is recorded separately.
-
