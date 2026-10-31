@@ -70,6 +70,26 @@ def test_scientific_verdict_preserves_failure():
                                        "learned_to_classical_oracle_ratio": 0.9}) == "failed-held-out-comparator"
 
 
+def test_classical_selection_replay_accepts_json_float_keys_but_keeps_selection_exact():
+    candidates = {1.0: 4.0, 10.0: 2.0}
+    recorded = {"selected_lambda": 10.0,
+                "validation_candidate_rmse_m_s": {"1.0": 4.0, "10.0": 2.0 + 1e-12}}
+    # JSON converts numeric object keys to strings; values permit only roundoff-level drift.
+    assert refined.verify_classical_selection(recorded, 10.0, candidates) is None
+    with pytest.raises(ValueError, match="selection drift"):
+        refined.verify_classical_selection(recorded, 1.0, candidates)
+    with pytest.raises(ValueError, match="selection drift"):
+        refined.verify_classical_selection(
+            {"selected_lambda": 10.0, "validation_candidate_rmse_m_s": {"1.0": 4.0}},
+            10.0,
+            candidates,
+        )
+    drifted = {"selected_lambda": 10.0,
+               "validation_candidate_rmse_m_s": {"1.0": 4.0, "10.0": 2.001}}
+    with pytest.raises(ValueError, match="score drift"):
+        refined.verify_classical_selection(drifted, 10.0, candidates)
+
+
 def test_fixture_is_not_full_receipt(tmp_path):
     result = refined.execute(tmp_path / "fixture", device="cpu", fixture=True)
     assert result["status"] == "fixture-only"

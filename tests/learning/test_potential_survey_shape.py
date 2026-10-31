@@ -104,7 +104,13 @@ def test_training_and_validation_run_with_refined_survey_shape(tmp_path, monkeyp
     )
     monkeypatch.setattr(learning, "invert", lambda _G, _data, _sigma: {"model": np.zeros(8).tolist()})
 
-    cnn, autoencoder, metadata = learning.train(mesh, forward, tmp_path, epochs=1)
+    prior_determinism = torch.are_deterministic_algorithms_enabled()
+    prior_warn_only = torch.is_deterministic_algorithms_warn_only_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        cnn, autoencoder, metadata = learning.train(mesh, forward, tmp_path, epochs=1)
+    finally:
+        torch.use_deterministic_algorithms(prior_determinism, warn_only=prior_warn_only)
 
     expected_device = "cuda" if torch.cuda.is_available() else "cpu"
     assert metadata["schema"] == "inverse-earth.learning/v3"
@@ -117,6 +123,25 @@ def test_training_and_validation_run_with_refined_survey_shape(tmp_path, monkeyp
     saved = json.loads((tmp_path / "training.json").read_text(encoding="utf-8"))
     assert saved["survey_shape"] == [32, 32]
     assert saved["device"] == expected_device
+
+
+def test_irregular_pool_matches_adaptive_values_and_has_deterministic_cuda_backward():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    values = torch.randn((2, 3, 17, 19), dtype=torch.float32, device=device, requires_grad=True)
+    pool = learning.DeterministicAdaptiveAveragePool2d((17, 19), (4, 4)).to(device)
+    expected = torch.nn.functional.adaptive_avg_pool2d(values.detach(), (4, 4))
+    prior_determinism = torch.are_deterministic_algorithms_enabled()
+    prior_warn_only = torch.is_deterministic_algorithms_warn_only_enabled()
+    torch.use_deterministic_algorithms(True)
+    try:
+        actual = pool(values)
+        actual.square().mean().backward()
+    finally:
+        torch.use_deterministic_algorithms(prior_determinism, warn_only=prior_warn_only)
+
+    assert actual.shape == (2, 3, 4, 4)
+    torch.testing.assert_close(actual, expected, rtol=1e-6, atol=1e-7)
+    assert values.grad is not None and torch.isfinite(values.grad).all()
 
 
 def test_attach_reconstructs_and_infers_on_canonical_32_by_32_grid(monkeypatch):

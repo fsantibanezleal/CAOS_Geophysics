@@ -51,11 +51,56 @@ class InverseCNN(nn.Module):
     def __init__(self, input_shape=None):
         super().__init__()
         self.input_shape = tuple(input_shape or survey_shape())
-        self.net=nn.Sequential(nn.Conv2d(1,16,3,padding=1),nn.GELU(),nn.Conv2d(16,24,3,padding=1),nn.GELU(),nn.AdaptiveAvgPool2d((4,4)),nn.Flatten(),nn.Linear(384,96),nn.GELU(),nn.Linear(96,VOLUME_SHAPE[1]*VOLUME_SHAPE[2]))
+        self.net=nn.Sequential(nn.Conv2d(1,16,3,padding=1),nn.GELU(),nn.Conv2d(16,24,3,padding=1),nn.GELU(),DeterministicAdaptiveAveragePool2d(self.input_shape,(4,4)),nn.Flatten(),nn.Linear(384,96),nn.GELU(),nn.Linear(96,VOLUME_SHAPE[1]*VOLUME_SHAPE[2]))
     def forward(self,x):
         if x.ndim != 4 or tuple(x.shape[1:2]) != (1,) or tuple(x.shape[-2:]) != self.input_shape:
             raise ValueError(f"CNN expects (batch, 1, {self.input_shape[0]}, {self.input_shape[1]}), got {tuple(x.shape)}")
         return self.net(x).reshape(-1,*VOLUME_SHAPE[1:])
+
+
+class DeterministicAdaptiveAveragePool2d(nn.Module):
+    """Adaptive average pooling with a deterministic CUDA backward path.
+
+    PyTorch's adaptive CUDA backward is not deterministic. Divisible survey
+    shapes use the mathematically identical AvgPool2d kernel; irregular shapes
+    use a fixed linear map, whose matrix backward is deterministic under
+    ``torch.use_deterministic_algorithms(True)``.
+    """
+
+    def __init__(self, input_shape, output_shape):
+        super().__init__()
+        self.input_shape = tuple(int(size) for size in input_shape)
+        self.output_shape = tuple(int(size) for size in output_shape)
+        if len(self.input_shape) != 2 or any(size < 1 for size in self.input_shape):
+            raise ValueError(f"Pooling input shape must contain two positive sizes; got {self.input_shape!r}")
+        if len(self.output_shape) != 2 or any(size < 1 for size in self.output_shape):
+            raise ValueError(f"Pooling output shape must contain two positive sizes; got {self.output_shape!r}")
+        if all(source % target == 0 for source, target in zip(self.input_shape, self.output_shape)):
+            kernel = tuple(source // target for source, target in zip(self.input_shape, self.output_shape))
+            self.pool = nn.AvgPool2d(kernel_size=kernel, stride=kernel)
+            self.register_buffer("weights", None, persistent=False)
+        else:
+            self.pool = None
+            height, width = self.input_shape
+            output_height, output_width = self.output_shape
+            weights = torch.zeros((output_height * output_width, height * width), dtype=torch.float32)
+            for row in range(output_height):
+                top = row * height // output_height
+                bottom = ((row + 1) * height + output_height - 1) // output_height
+                for column in range(output_width):
+                    left = column * width // output_width
+                    right = ((column + 1) * width + output_width - 1) // output_width
+                    indices = [y * width + x for y in range(top, bottom) for x in range(left, right)]
+                    weights[row * output_width + column, indices] = 1.0 / len(indices)
+            self.register_buffer("weights", weights, persistent=False)
+
+    def forward(self, values):
+        if values.ndim != 4 or tuple(values.shape[-2:]) != self.input_shape:
+            raise ValueError(f"Pooling expects (*, *, {self.input_shape[0]}, {self.input_shape[1]}), got {tuple(values.shape)}")
+        if self.pool is not None:
+            return self.pool(values)
+        pooled = values.flatten(start_dim=2) @ self.weights.to(dtype=values.dtype).T
+        return pooled.reshape(values.shape[0], values.shape[1], *self.output_shape)
 
 
 class ObservationAE(nn.Module):
