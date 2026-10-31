@@ -9,7 +9,7 @@ field, hosted or product acceptance.
 
 ## Exact run
 
-- Repository commit: `cf2f0f7af90307ed2689ea584e77fa9c5c772275`.
+- Repository commit: `11cef85ea302d3b256145a4489ae0841ca80c8b9`.
 - Runtime: CPython 3.12.10, Windows, `.venv-pipeline`.
 - Native thread policy: `OPENBLAS_NUM_THREADS=1`, `OMP_NUM_THREADS=1`,
   `MKL_NUM_THREADS=1`.
@@ -17,7 +17,7 @@ field, hosted or product acceptance.
   `tests/numerics/test_gravity_l2.py`.
 - Result: 186 passed, 0 failed, 0 errors, 0 skipped.
 - JUnit SHA-256:
-  `5e0b8d9004ad5415d8bcd59c904fee6ee0e264b2507b40339725e2c744c4500c`.
+  `36a703c59e9d10a89c49ebbd8c51cd44387c1fded6827cd987ab21c3749f828f`.
 - JUnit and pytest scratch remain outside the repository under the configured
   external validation root.
 

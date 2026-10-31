@@ -2,9 +2,7 @@
 
 Status: scoped local ordinary-L2 implementation and test gates have been executed.
 The product owner authorized implementation of approved pending product work on
-2026-10-25. A fresh current-source core replay on 2026-10-31 passed 186 survey
-admission and ordinary-L2 tests under the required single-thread native policy;
-see the [current-source replay](evidence/core-replay-2026-10-31.md). Historical
+2026-10-25. Fresh exact-head replays on 2026-10-31 passed 186 survey-admission/ordinary-L2 tests and 27 selection workflow tests under the required single-thread native policy; see the [core replay](evidence/core-replay-2026-10-31.md) and [selection replay](evidence/selection-replay-2026-10-31.md). Historical
 diagnostics and failed controls remain preserved. Independent pinned review,
 full matrix/IRLS, field and product acceptance remain pending. Base
 `1b112bb258520a5679a865335cec30b6a97a1a0d`.
@@ -39,8 +37,8 @@ are NOT activated or closed by this native-array sub-SDD. No shared-owner edits.
 | Owner | Paths | Boundary |
 | --- | --- | --- |
 | M02 sidecar | `data-pipeline/gravity_survey_l2.py`; `tests/data/test_gravity_survey_l2.py` | Native admission/hash/geometry-only split; no JSON/upload/I/O/provider corrections |
-| M02 sidecar | `data-pipeline/gravity_l2.py`; `tests/numerics/test_gravity_l2.py`; `tests/numerics/test_gravity_l2_selection.py` | Fixed L2/calibration/evaluation and recorded stop mapping; source-matched full selection remains open |
-| Evidence | This feature's dated evidence | Current 186-test core receipt; not an independent numerical or field acceptance |
+| M02 sidecar | `data-pipeline/gravity_l2.py`; `tests/numerics/test_gravity_l2.py`; `tests/numerics/test_gravity_l2_selection.py` | Fixed L2/calibration/evaluation and recorded stop mapping; all selection workflow tests except the locked 24-condition matrix passed; efficacy and independent replay remain open |
+| Evidence | This feature's dated evidence | Current 186-test core and 27-test selection receipts; not independent numerical or field acceptance |
 | MAIN/M01/source owners | Future source/M01 normalized-survey proof, sealing custody, upload/JSON/storage/API/UI/replay integration | Separate explicit design/authority; not supplied by this module |
 | MAIN independent review | Exact-source engine/objective/KKT/covariance/leakage/control/resource replay | Authored controls/self-review not independent acceptance |
 
@@ -56,7 +54,7 @@ app edits, runtime package installs or implicit builder scripts are authorized.
 | L2-B, Native admission and geometry-only plan | L2-A | L2-01..04,08,13,15 | Current core replay passed; independent replay pending |
 | L2-C, Official objective, symmetric covariance, independent tiny R/J oracle | L2-B | L2-04..07,12 | Local source/tests exist; current exact independent replay pending |
 | L2-D, Exact recorded stop/terminal/null/cap mapping | L2-C | L2-07,11,14,15 | Local source/tests exist; complete current-source gate pending |
-| L2-E, All candidate folds and immutable separate outer evaluation | L2-D | L2-08..10,13 | Full current-source selection not replayed in this run |
+| L2-E, All candidate folds and immutable separate outer evaluation | L2-D | L2-08..10,13 | 27 current-source selection workflow tests passed; locked 24-condition matrix and independent replay remain open |
 | L2-F, Complete locked24L2 and resource/control receipts | L2-E | L2-12,14,16 | Full matrix/resource replay at current source not established |
 | L2-G, MAIN pinned independent replay/full diff | L2-F | All16 | NOT RUN; required before code merge |
 
