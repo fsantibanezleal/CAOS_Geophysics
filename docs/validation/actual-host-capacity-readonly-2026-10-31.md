@@ -1,4 +1,4 @@
-# ML VPS read-only capacity check — 2026-10-31
+# ML VPS read-only capacity check: 2026-10-31
 
 Refreshed at `2026-10-31T08:01:00Z` from the direct product checkout at `9f022aae8d178211b4c77730b722723fc3345a3b`; the working tree had 73 changed paths. This was a read-only check. No release, service, account, project data, or host configuration was changed.
 

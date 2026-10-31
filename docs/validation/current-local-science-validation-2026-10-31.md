@@ -1,4 +1,4 @@
-# Local validation checkpoint — 2026-10-31
+# Local validation checkpoint: 2026-10-31
 
 This is evidence from the dirty direct checkout at `9f022aae8d178211b4c77730b722723fc3345a3b`. It records bounded local checks, not a release acceptance. The canonical ML VPS still serves `0.04.001`; no replacement was staged or deployed.
 

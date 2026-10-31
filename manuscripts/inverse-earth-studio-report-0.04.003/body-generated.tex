@@ -21,13 +21,14 @@ choices and identifies where the methods differ from cited work
 assumptions, executable calculations, diagnostic evidence, and failure
 states within one inspectable project.
 
-The method suite has three tiers. \textbf{Classical methods} establish
-data conventions and reproducible baselines. \textbf{State-of-the-art
-(SOTA) methods} implement established numerical or learned approaches
-with independent checks and explicit comparison criteria.
-\textbf{Beyond-SOTA (BS)} identifies a falsifiable research proposal,
-without implying a successful result or established novelty. Method
-definitions and numerical assumptions are in
+The report covers gravity station correction and prism inversion,
+aeromagnetic processing, induced-magnetization modelling,
+magnetotelluric screening and layered-earth inversion, electrical
+resistivity inversion, response-aware waveform processing, first-arrival
+tomography, acoustic full-waveform inversion, joint potential-field
+inversion, learned seismic-velocity estimation, and earthquake phase
+picking. It also evaluates a proposed coverage-conditioned null-space
+correction. Method definitions and numerical assumptions are in
 \texttt{docs/design/SDD.md}.
 
 \section{Software and evidence
@@ -142,27 +143,27 @@ validated use for every input or a complete end-to-end workflow.
 \begin{center}\small
 \begin{longtable}{@{}p{0.12\textwidth}p{0.40\textwidth}p{0.41\textwidth}@{}}
 \toprule
-ID and tier & Executable method and purpose & Principal limitations \\
+Method & Executable purpose & Principal limitations \\
 \midrule
 \endfirsthead
 \toprule
-ID and tier & Executable method and purpose & Principal limitations \\
+Method & Executable purpose & Principal limitations \\
 \midrule
 \endhead
-M-1 Classical & Gravity station corrections, datum and uncertainty lineage, and transforms with safeguards against duplicate corrections. & Field eligibility still depends on exact source, datum, instrument, and uncertainty lineage. A local adapter pass does not validate arbitrary field tables. \\
-M-2 SOTA & Weighted 3D gravity prism forward/inverse calculations, including a bounded L2 survey inversion and comparison with independent prism physics. & Non-uniqueness persists; a good data fit or a visually compact body does not identify geology. Full-survey and field performance remain untested. \\
-M-3 Classical & Aeromagnetic line/tie-line/height checks, blocked line holdout, support-aware gridding, and physically supported upward continuation. & Authored survey controls do not establish broad provider-data validation or field magnetic inversion. \\
-M-4 SOTA & Induced-magnetization prism forward modelling and physical objective/derivative construction, checked against Choclo. & A full nonzero survey inverse with held-out evaluation is not included in the available evidence. Remanence violates the induced-direction assumption. \\
-M-5 Classical & MT EDI component, variance, rotation, tipper, and dimensionality screening. & A tensor record is not automatically eligible for a 1D inverse. cl061 remains QC-only. \\
-M-6 SOTA & Layered-earth complex-impedance response and bounded 1D inversion, with cross-checks against MTpy and browser/local analytic cases. & Known layer thickness and isotropic 1D assumptions constrain the synthetic inverse. The cl061 field screen fails. \\
-M-7 SOTA & 2D ERT processing/inversion with electrode geometry, topography, reciprocal/QC logic, blocked holdout, and explicit failed-inverse states. & Rights-restricted raw data are not fabricated or represented as executed; independent comparison and some field paths remain open. \\
-M-8 Classical & MiniSEED/StationXML waveform handling, response-aware filtering, STA/LTA or matched-arrival picks. & Response epochs, units, gaps, and channel orientation are strict eligibility conditions. Classical picks are not universal truth labels. \\
-M-9 SOTA & First-arrival travel-time inversion with explicit source/receiver geometry, bounded velocity, ray coverage, and held-out-shot comparison against a baseline. & The executed teaching control is synthetic and uses a straight-ray/Dijkstra model; the synthetic control does not represent provider-linked field data. \\
-M-10 SOTA & Acoustic constant-density FWI with Deepwave, bounded velocity updates, full-band and frequency-continuation schedules, active/withheld receiver diagnostics, and saved optimizer states. & Non-convexity, cycle skipping, limited illumination, inverse crime from using the same forward engine, and acoustic-only physics remain material limitations. Some cases improve model RMSE but fail the specified noise-consistency criterion. \\
-M-11 SOTA & Joint potential-field inversion comparing uncoupled fits, spatial cross-gradient coupling, and an explicit Gaussian-mixture petrophysical prior. & The project Gaussian-mixture-prior implementation is not the SimPEG PGI optimizer. Coupling can trade one property against another; one calibration matrix does not establish general performance. \\
-M-12 SOTA & A learned seismic-velocity inversion trained on disjoint procedural families and compared with a same-input classical solve and independent quadrature forward operator. & The frozen joint family/acquisition holdout fails both prespecified ratios; training success does not override the held-out result. \\
-M-13 SOTA & PhaseNet-family P/S inference \cite{zhu2019}, matched classical comparison, and local browser ONNX inference with explicit preprocessing and abstention rules. & Curated browser parity is runtime consistency, not accuracy. Population metrics come from the separate locked test cohort and analyst references, not geological truth. \\
-BS-1 research proposal & Geometry-normalized backprojection of travel-time residuals, divided by path length and cell coverage, supplied with a coverage channel to a bounded residual CNN. & It is a falsifiable refinement proposal. The initial checkpoint 3.1 failed the joint-shift comparison; the later null-space-constrained variant gives a narrow synthetic improvement but does not change the M12 checkpoint result or establish field transfer. \\
+Gravity corrections and transforms & Gravity station corrections, datum and uncertainty lineage, and transforms with safeguards against duplicate corrections. & Field eligibility still depends on exact source, datum, instrument, and uncertainty lineage. A local adapter pass does not validate arbitrary field tables. \\
+Weighted 3D gravity prism inversion & Weighted 3D gravity prism forward/inverse calculations, including a bounded L2 survey inversion and comparison with independent prism physics. & Non-uniqueness persists; a good data fit or a visually compact body does not identify geology. Full-survey and field performance remain untested. \\
+Aeromagnetic processing and continuation & Aeromagnetic line/tie-line/height checks, blocked line holdout, support-aware gridding, and physically supported upward continuation. & Authored survey controls do not establish broad provider-data validation or field magnetic inversion. \\
+Induced-magnetization prism modelling & Induced-magnetization prism forward modelling and physical objective/derivative construction, checked against Choclo. & A full nonzero survey inverse with held-out evaluation is not included in the available evidence. Remanence violates the induced-direction assumption. \\
+EDI quality and dimensionality screening & MT EDI component, variance, rotation, tipper, and dimensionality screening. & A tensor record is not automatically eligible for a 1D inverse. cl061 remains QC-only. \\
+Layered-earth impedance inversion & Layered-earth complex-impedance response and bounded 1D inversion, with cross-checks against MTpy and browser/local analytic cases. & Known layer thickness and isotropic 1D assumptions constrain the synthetic inverse. The cl061 field screen fails. \\
+Two-dimensional electrical resistivity inversion & 2D ERT processing/inversion with electrode geometry, topography, reciprocal/QC logic, blocked holdout, and explicit failed-inverse states. & Rights-restricted raw data are not fabricated or represented as executed; independent comparison and some field paths remain open. \\
+Response-aware waveform processing & MiniSEED/StationXML waveform handling, response-aware filtering, STA/LTA or matched-arrival picks. & Response epochs, units, gaps, and channel orientation are strict eligibility conditions. STA/LTA picks are not universal truth labels. \\
+First-arrival travel-time inversion & First-arrival travel-time inversion with explicit source/receiver geometry, bounded velocity, ray coverage, and held-out-shot comparison against a baseline. & The executed teaching control is synthetic and uses a straight-ray/Dijkstra model; the synthetic control does not represent provider-linked field data. \\
+Acoustic full-waveform inversion & Acoustic constant-density FWI with Deepwave, bounded velocity updates, full-band and frequency-continuation schedules, active/withheld receiver diagnostics, and saved optimizer states. & Non-convexity, cycle skipping, limited illumination, inverse crime from using the same forward engine, and acoustic-only physics remain material limitations. Some cases improve model RMSE but fail the specified noise-consistency criterion. \\
+Joint potential-field inversion & Joint potential-field inversion comparing uncoupled fits, spatial cross-gradient coupling, and an explicit Gaussian-mixture petrophysical prior. & The project Gaussian-mixture-prior implementation is not the SimPEG PGI optimizer. Coupling can trade one property against another; one calibration matrix does not establish general performance. \\
+Learned seismic-velocity estimation & A learned seismic-velocity inversion trained on disjoint procedural families and compared with a same-input weighted L2 solve and independent quadrature forward operator. & The frozen joint family/acquisition holdout fails both prespecified ratios; training success does not override the held-out result. \\
+PhaseNet-family phase picking & PhaseNet-family P/S inference \cite{zhu2019}, matched STA/LTA comparison, and local browser ONNX inference with explicit preprocessing and abstention rules. & Curated browser parity is runtime consistency, not accuracy. Population metrics come from the separate locked test cohort and analyst references, not geological truth. \\
+Coverage-conditioned null-space velocity correction & Geometry-normalized backprojection of travel-time residuals, divided by path length and cell coverage, supplied with a coverage channel to a bounded residual CNN. & It is a falsifiable refinement proposal. The initial checkpoint 3.1 failed the joint-shift comparison; the later null-space-constrained variant gives a narrow synthetic improvement but does not change the M12 checkpoint result or establish field transfer. \\
 \bottomrule
 \end{longtable}
 \end{center}
@@ -222,7 +223,7 @@ factors before inversion, following established 2D methods such as
 PyGIMLi \cite{pygimli}. The numerical examples distinguish authored
 controls from absent or restricted field assets and retain failed
 inversions. Seismic preprocessing distinguishes instrument counts,
-response-corrected units, filters, gaps, and sample windows. Classical
+response-corrected units, filters, gaps, and sample windows. STA/LTA
 picking and M13 learned inference consume explicitly specified traces;
 analyst picks are reference annotations, not subsurface truth.
 
@@ -270,31 +271,38 @@ comparison with a spatial L2 baseline uses identical seeded noisy
 observations and a shared column target. The autoencoder's threshold is
 selected on a separate calibration set and tested on withheld
 geometries; its measured failure to detect the withheld family is
-retained. These models are compact baselines and are not described as
-state of the art.
+retained. These models are compact baselines and have not been compared
+with a broader set of published inverse methods.
 
 M12 predicts seismic velocity from travel-time data and is evaluated by
 family/acquisition-disjoint cohorts. The 2026-10-28 M12 computation used
-160 joint family/acquisition holdouts with learned/classical velocity
+160 joint family/acquisition holdouts with learned/weighted-L2 velocity
 RMSE 536.99/95.62 m/s (ratio 5.616) and independent-oracle travel-time
 RMSE 28.61/2.34 ms (ratio 12.231; source:
 \texttt{docs/validation/m12-checkpoint-notebook-2026-10-28.md}). Both
 pre-specified comparison criteria fail. A separate checkpoint 3.1 run
 also fails its specified joint-shift comparisons. The separate
 null-space-constrained residual study reports velocity RMSE ratio 0.9701
-(paired case-bootstrap interval 0.9703--0.9770) and independent
-travel-time RMSE ratio 0.9967 (0.9951--0.9986), with aggregate
-improvements on its four held-out cohorts and no forward-threshold
-exceedances in 480 cases. This result is specific to that protocol and
-cohort. It does not change the failing M12 checkpoint result, establish
-geological recovery, or demonstrate field transfer.
+(paired case-bootstrap interval 0.9661--0.9737) and independent
+travel-time RMSE ratio 0.9967 (0.9950--0.9983); the aggregate ratios
+improve in all four fixed held-out cohorts. The v1.1 scorer used an
+infinite threshold, so the saved exceedance counts are not a valid
+threshold assessment and are not interpreted here. The paired intervals
+resample case IDs and compute the ratio of mean per-case RMSEs over
+20,000 PCG64 draws (seed 6122026); the exact calculation is retained in
+\texttt{docs/validation/m12-nullspace-v1\_1-bootstrap-2026-10-30.json}.
+These intervals quantify variation within the fixed synthetic cohorts,
+not natural-geology uncertainty. The result is specific to that protocol
+and cohort. It does not change the failing M12 checkpoint result,
+establish geological recovery, or demonstrate field transfer.
 
-BS-1 asks whether a dimensionally consistent, coverage-conditioned
-learned residual improves on a matched classical inverse under geometry
-shifts. The proposal is falsifiable because model and independent
-forward-data ratios are frozen and both must be below one for an
-advantage claim. The differing outcomes show why protocol and checkpoint
-identity must accompany each comparison.
+The proposed coverage-conditioned correction asks whether a
+dimensionally consistent, coverage-conditioned learned residual improves
+on a matched weighted L2 inverse under geometry shifts. The proposal is
+falsifiable because model and independent forward-data ratios are frozen
+and both must be below one for an advantage claim. The differing
+outcomes show why protocol and checkpoint identity must accompany each
+comparison.
 
 \section{Selected results and
 interpretation}\label{selected-results-and-interpretation}
@@ -346,19 +354,18 @@ be described as geological truth.
 refinement}\label{nullspace-constrained-learned-refinement}
 
 The null-space-constrained computation uses a fixed cohort and reports
-both velocity and independent forward-data ratios with paired bootstrap
-intervals (source:
-\texttt{docs/design/features/m12-velocity-validation/nullspace-v1\_1-protocol.md}).
-For the joint-OOD cohort, velocity RMSE ratio is 0.9701 with reported
-interval 0.9703--0.9770; independent travel-time RMSE ratio is 0.9967
-with interval 0.9951--0.9986. The metrics show a small synthetic
-aggregate difference and do not establish a practical gain across field
-settings. Field robustness, performance under realistic source/model
-error, and reproduction by an external group have not been evaluated.
-The v1 computation was invalidated by a dimensional feature error; the
-checkpoint 3.1 computation remains a failed comparison. The correction
-and protocol are described in
-\texttt{docs/design/features/m12-velocity-validation/}.
+velocity and independent forward-data ratios with paired case-bootstrap
+intervals. Each replicate resamples case IDs and computes the ratio of
+mean per-case RMSEs; 20,000 PCG64 draws use seed 6122026. The exact
+intervals, method protocol and receipt hash are archived with the
+computational outputs. For the joint-OOD cohort, velocity RMSE ratio is
+0.9701 with interval 0.9661--0.9737; independent travel-time RMSE ratio
+is 0.9967 with interval 0.9950--0.9983. The metrics show a small
+synthetic aggregate difference and do not establish a practical gain
+across field settings. Field robustness, performance under realistic
+source/model error, and reproduction by an external group have not been
+evaluated. The v1 computation was invalidated by a dimensional feature
+error; the checkpoint 3.1 computation remains a failed comparison.
 
 \section{Educational and visualization
 design}\label{educational-and-visualization-design}
@@ -473,11 +480,12 @@ questions}\label{limitations-and-open-research-questions}
 \end{enumerate}
 
 Useful next studies include preregistered geological-family and
-acquisition/noise ensembles; external reproduction of the BS-1 result;
-calibration under forward-model and geological uncertainty; independent
-FWI propagation; licensed field inversions with source/datum/error
-review; and user studies of whether linking assumptions, predictions,
-residuals, and uncertainty improves interpretation.
+acquisition/noise ensembles; external reproduction of the null-space
+correction result; calibration under forward-model and geological
+uncertainty; independent FWI propagation; licensed field inversions with
+source/datum/error review; and user studies of whether linking
+assumptions, predictions, residuals, and uncertainty improves
+interpretation.
 
 \section{Conclusions}\label{conclusions}
 

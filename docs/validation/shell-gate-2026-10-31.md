@@ -1,4 +1,4 @@
-# CAOS shell browser gate — 2026-10-31
+# CAOS shell browser gate: 2026-10-31
 
 The current dirty checkout at `9f022aae8d178211b4c77730b722723fc3345a3b` passed the installed CAOS shell gate on 2026-10-31. At capture the checkout had 73 changed paths. The measured production build used shell `@fasl-work/caos-app-shell@0.19.9`; `frontend/dist/index.html` was 670 bytes with SHA-256 `06c49bbe04ed753a5fbd07a9713118f1f38f06341f8603580e226b2c9ff15180`. The complete built artifact tree is 1,045,868,078 bytes.
 
