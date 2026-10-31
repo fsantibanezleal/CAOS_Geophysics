@@ -18,9 +18,9 @@ def policy():
         'epsilon_floor':(.001,.00001,.00001,.00001),
         'epsilon_units':('g/cc','g/cc/m','g/cc/m','g/cc/m'),
         'epsilon_initialization':'max_submitted_floor_and_fit_L2_kernel_max',
-        'epsilon_continuation':{'name':'log17_floor3_1','floor_update':17,'max_updates':20,
+        'epsilon_continuation':{'name':'log17_floor3_1','floor_update':17,'max_updates':128,
                               'rounding':'native_log_exp_clamp_endpoints'},
-        'beta_transition':'fixed_initial_beta_every_stage','max_weight_updates':20,
+        'beta_transition':'fixed_initial_beta_every_stage','max_weight_updates':128,
         'overall_stop_policy':'saturated_floor_three_stage_fixed_point_1'}
 
 
@@ -45,7 +45,7 @@ def native_problem(null=True, sparse=False):
 @pytest.mark.parametrize('initial,floor',[(1.,1.),(.1,.001),(1.,.001),
     (np.finfo(np.float64).max,np.nextafter(0.,1.)),(1e-300,1e-310)])
 def test_IR_C01_exact_log17_endpoints_monotonic_no_ratio(initial,floor):
-    values=[irls._epsilon(float(initial),float(floor),k) for k in range(21)]
+    values=[irls._epsilon(float(initial),float(floor),k) for k in range(129)]
     assert values[0].hex()==float(initial).hex()
     assert all(v.hex()==float(floor).hex() for v in values[17:])
     assert all(np.isfinite(v) and floor<=v<=initial for v in values)
@@ -57,7 +57,7 @@ def test_IR_C01_exact_log17_endpoints_monotonic_no_ratio(initial,floor):
 
 
 @pytest.mark.parametrize('initial,floor,k',[(0.,.001,1),(1.,0.,1),(float('inf'),.1,1),
-    (1.,float('nan'),1),(.001,.1,1),(1.,.1,True),(1.,.1,-1),(1.,.1,21)])
+    (1.,float('nan'),1),(.001,.1,1),(1.,.1,True),(1.,.1,-1),(1.,.1,129)])
 def test_IR_C02_invalid_log_domain_no_floor_guess(initial,floor,k):
     with pytest.raises(ValueError): irls._epsilon(initial,floor,k)
 
@@ -235,7 +235,10 @@ def test_IR_C06_nonnull_actual_fixed_floor_stages_shared_budget_no_step_fabricat
     record_property('actual_stage_epsilon',json.dumps([s['epsilon'] for s in result['stages']],allow_nan=False))
     assert result['iterations']==result['l2_initialization']['iterations']+sum(a[1] for a in actual)
     assert result['iterations']<=200
-    assert len(actual)==21 and terminal['weight_updates']==20
+    assert len(actual)==len(result['stages'])
+    assert len(terminal['stage_changes'])==len(actual)-1
+    assert terminal['weight_updates']==len(actual)-1
+    assert 20<=terminal['weight_updates']<=128
     assert len(result['trace']['models_kg_m3'])==result['iterations']+1
     for i,(remaining,accepted,status,reason) in enumerate(actual):
         assert remaining==200-result['l2_initialization']['iterations']-sum(a[1] for a in actual[:i])

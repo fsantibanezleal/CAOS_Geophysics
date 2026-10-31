@@ -56,10 +56,10 @@ def _validate_policy(value):
         raise ValueError('irls: exact continuation')
     if (type(continuation['name']) is not str or continuation['name']!='log17_floor3_1'
         or type(continuation['floor_update']) is not int or continuation['floor_update']!=17
-        or type(continuation['max_updates']) is not int or continuation['max_updates']!=20
+        or type(continuation['max_updates']) is not int or continuation['max_updates']!=128
         or type(continuation['rounding']) is not str
         or continuation['rounding']!='native_log_exp_clamp_endpoints'
-        or type(value['max_weight_updates']) is not int or value['max_weight_updates']!=20):
+        or type(value['max_weight_updates']) is not int or value['max_weight_updates']!=128):
         raise ValueError('irls: exact log17/floor3 schedule')
     for key,literal in (
         ('epsilon_initialization','max_submitted_floor_and_fit_L2_kernel_max'),
@@ -72,7 +72,7 @@ def _validate_policy(value):
 def _epsilon(initial,floor,index):
     if (type(initial) is not float or type(floor) is not float or not np.isfinite(initial)
         or not np.isfinite(floor) or not 0.<floor<=initial
-        or type(index) is not int or not 0<=index<=20):
+        or type(index) is not int or not 0<=index<=128):
         raise ValueError('irls: positive finite log domain and exact update')
     if index==0: return initial
     if index>=17 or initial==floor: return floor
@@ -164,7 +164,11 @@ class _StageObjective:
             'source_inventory_sha256':_INVENTORY,'q_unit':'g/cc','physical_unit':'kg/m3',
             'physical_scale':1000.,'parameter_count':len(self.lower),
             'observation_rows':len(p['observations']),'observation_components':1,
-            'beta_engine':float(p['beta_engine']),'stage_index':self.index,
+            # The generic optimizer stage is the regularization schedule index,
+            # which saturates at 20. Post-floor IRLS reweighting continues under
+            # the same schedule stage; the exact update index remains sealed in
+            # policy_sha256/objective_sha256 and the exported IRLS trace.
+            'beta_engine':float(p['beta_engine']),'stage_index':min(self.index,20),
             'allocation_plan_sha256':self.allocation_hash}
 
     def components(self,q):
@@ -203,14 +207,17 @@ class _StageObjective:
 
 
 def _fixed_point(index,saturated,changes):
-    if index!=20 or saturated is not True or len(changes)!=20: return False
+    # Require at least twenty updates, but keep iterating at the frozen floor
+    # until three consecutive model AND weight transitions meet the unchanged
+    # 1e-6 criterion. The cap is a bound, not a declaration of convergence.
+    if index<20 or saturated is not True or len(changes)!=index: return False
     return all(type(c) is dict and set(c)=={'model_relative','weights_relative'}
         and all(type(v) is float and np.isfinite(v) and 0.<=v<=1e-6 for v in c.values())
         for c in changes[-3:])
 
 
 def _solve_partition(problem,prior,policy,deadline):
-    """Real L2 initialization and0..20 immutable fixed Sparse stages.
+    """Real L2 initialization and bounded immutable fixed Sparse reweighting stages.
 
     Private six-key unit result; NOT a public L2/IRLS calibration result or bundle.
     Shared accepted model rows, stage-specific Phi only (no global monotone Phi).
@@ -248,7 +255,7 @@ def _solve_partition(problem,prior,policy,deadline):
                 raise ValueError('unsupported_sparse_empty_face')
             if any(not np.isfinite(v).all() for v in kernels): raise ArithmeticError('nonfinite kernel')
             initial=tuple(max(f,float(np.max(np.abs(v)))) for f,v in zip(policy['epsilon_floor'],kernels))
-            for index in range(21):
+            for index in range(policy['max_weight_updates']+1):
                 if monotonic()>deadline:
                     reason,status='wall_cap','nonconverged'
                     break

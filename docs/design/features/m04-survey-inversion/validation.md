@@ -39,6 +39,27 @@ candidate is accepted, and the magnetic inverse remains unimplemented until the
 M02 accepted export/source, semantics, and M04-specific precision and resource
 evidence are bound. The open draft M02 survey-L2 PR is not acceptance evidence.
 
+## 2026-10-30 focused source rerun
+
+On the current direct checkout, the dedicated `.venv-gravity` lane passed three
+focused controls: the actual SimPEG component-kernel export is available to the
+M04 objective; the exact-total-field Gaussian gradient agrees with independent
+Choclo observations; and the nonzero SimPEG fit assembly has the declared
+physical objective derivative. Command:
+
+```powershell
+.\.venv-gravity\Scripts\python.exe -m pytest `
+  tests/numerics/test_magnetic_forward.py::test_actual_simpeg_component_kernel_is_available_for_m04_objective `
+  tests/numerics/test_magnetic_forward.py::test_m04_exact_magnitude_gaussian_gradient_against_choclo_observations `
+  tests/data/test_magnetic_fit_assembly.py::test_actual_nonzero_simpeg_fit_assembly_has_physical_objective_derivative -q
+```
+
+This confirms those operator/likelihood pieces on the present checkout only.
+It does not satisfy R-407: the M02 optimizer remains a gravity-bound private
+class, and no accepted generic source/export/epoch exists. Consequently no
+magnetic model was optimized, no held-out survey was evaluated, and no M04
+artifact or resource profile is accepted by this rerun.
+
 ## 2026-10-28 SimPEG regularization cross-check
 
 `data-pipeline/magnetic_regularization.py` now constructs the pinned SimPEG
