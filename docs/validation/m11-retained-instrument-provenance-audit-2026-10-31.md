@@ -1,52 +1,80 @@
-# M11 retained instrument provenance audit, 2026-10-31
+# M11 nonzero synthetic case replay and instrument validation, 2026-10-31
 
-## Finding
+## Correction to the earlier audit
 
-The retained M11 input fixture and the archived solver output do not form a
-replayable pair. The browser and archive tests must not treat the archived
-output as a valid state instrument or scientific result.
+The earlier audit incorrectly compared two different digest fields: the digest
+of the compiled development model (`problem.development_sha256`) and the intake
+receipt's `input_bindings.development_sha256`. They do not identify the same
+object. The reported mismatch between `56d8...` and `99d0...` was therefore not
+evidence that the solver output used different input bytes. The earlier
+conclusion that this case was mismatched is withdrawn.
 
-The selected input-matrix manifest has SHA-256
-`946ca7904d5d9d063d0c3f57e1e78ffeb96453f04e4e9f25ff14601a746c659d`. Its
-`joint-control-00` development input compiled to development identity
-`56d8c70997a6e42e57b9533c7397e7b28f3fb7689c310b3119afd64ce429b2a4`.
-The archived `workflow.json` beside the retained output binds a different
-development identity, `99d074fcaf4ee6185ff52aeab318e9fc280176ced7877a3c3ca32b76a7a142a5`.
-The retained output therefore cannot be paired with the selected input case.
+The older retained output still fails the current calibration replay with
+`calibration: reviewed source/allocation drift`. I regenerated the output with
+the current pinned pipeline from the exact retained case inputs. The current
+workflow's intake identity is
+`99d074fcaf4ee6185ff52aeab318e9fc280176ced7877a3c3ca32b76a7a142a5`, matching
+the retained workflow identity for those same inputs.
 
-The post-freeze instrument validator independently refuses the archived
-calibration with `calibration: reviewed source/allocation drift`. No bypass,
-refit, or compatibility exception was introduced. The failed and unresolved
-state remains explicit: this is not a valid solver replay, field result, or
-scientific acceptance.
+## Current-source case result
 
-## Reproduction and controls
+The selected external case is `joint-control-00`, declared `co_structural /
+dense`. Its intake-matrix manifest SHA-256 is
+`946ca7904d5d9d063d0c3f57e1e78ffeb96453f04e4e9f25ff14601a746c659d`. Both
+modalities contain nonzero observations. The solve, independent workflow
+validator, instrument export, and separate instrument validator all completed
+on the same copied, hash-checked inputs and current source.
 
-- The 24-case retained intake manifest is external to the repository. Its
-  exact file hashes were preserved when one case was copied to the configured
-  external data root for replay; all 605 files and 386,672 bytes matched.
-- The exact external intake configuration passed the frontend joint-input
-  suite: 31 passed, 0 failed.
-- With the retained failed Python API custody export also configured, the
-  joint-input and custody suites reported 50 passed and 1 failed. The remaining
-  test requires an actual successful native instrument archive, which is not
-  present.
-- The default full frontend run reported 380 passed, 23 skipped, and 36 failed
-  because the external fixture environment was not supplied. This is not a
-  passing suite.
-- `scripts/export_joint_survey_instrument.py --help` is the supported CLI
-  entry point. The underlying scientific module remains byte-identical to its
-  pinned source so opening the CLI does not invalidate historical solver
-  provenance.
+| Measure | Gravity | Magnetics |
+|---|---:|---:|
+| Training samples | 16 | 16 |
+| Training RMSE | 0.004540 mGal | 0.855767 nT |
+| Validation samples | 16 | 16 |
+| Validation RMSE | 0.004063 mGal | 1.312575 nT |
+| Sealed samples | 16 | 16 |
+| Sealed RMSE | 0.006474 mGal | 0.766111 nT |
 
-The 2026-10-25 solver matrix records completed command workflows, but completion
-does not repair the input identity mismatch or establish numerical precision.
-Its scientific precision, field eligibility, and public activation flags remain
-false. Rebuild the output from the exact current input and reviewed source set
-before using this case as a state-instrument fixture. Until then, M11 and the
-product release gate remain unresolved.
+The calibration contains 26 candidate fits: 22 converged, 4 nonconverged, and
+0 failed. Nine positive-coupling candidates were eligible under the local
+selection rule. The selected stage is 24 with gravity beta 100, magnetic beta
+1000, and coupling 10. The nonconverged attempts remain in the ledger.
 
-## Scope boundary
+The workflow receipt says `inverse_completed=true`, while the result's
+independent claims retain `inverse_completed=false`, `recovery_verified=false`,
+`field_eligible=false`, and `rights_verified=false`. The source diagnostics
+also deny verified source bytes and correction science. The instrument receipt
+records `refit=false`, `scientific_acceptance_verified=false`, and
+`public_activation=false`. Thus this is a reproducible nonzero synthetic
+workflow and an artifact-parity result, not field-data acceptance or a claim
+that M11 is scientifically accepted.
 
-This audit changes no solver output and does not authorize native physical
-worker integration, API activation, VPS deployment, or scientific acceptance.
+The separate top-level control in the retained run has exactly zero gravity
+and magnetic observations and zero residuals. It is excluded from substantive
+case evidence; a completed command on that zero-signal control is not a useful
+recovery demonstration.
+
+## Executable evidence
+
+- `scripts/run_joint_survey.py solve` completed on the selected nonzero case;
+  the receipt binds the exact intake, current frozen model and calibration.
+- `scripts/run_joint_survey.py validate` returned `validated=true` and verified
+  the physical model and exported result. It retained `field_eligible=false`.
+- `scripts/export_joint_survey_instrument.py export` and `validate` both
+  returned `validated=true`; the instrument manifest SHA-256 is
+  `540fce1b801740bf9c8808d4221867b58f7c114a757dddb923bca7c6b21cfb08`.
+- Frontend `joint-input.test.ts` plus `joint-custody.test.ts`, configured with
+  the retained intake, Python custody receipt and current nonzero instrument,
+  passed 51 tests with 0 failures.
+- The full frontend suite with the retained joint inputs, current nonzero
+  instrument, output matrix and maximum-resource fixture reported 427 passed
+  and 12 skipped. The two remaining suites fail during setup because the exact
+  retained M04 selected-final extraction and owned-custody browser controls are
+  absent. No frontend assertion failed in this configured run. The default
+  unconfigured run reports 380 passed, 23 skipped and 36 fixture failures.
+- The full numerical release harness separately lacks retained M01 custody
+  packets, a profile receipt and the exact M11 native database.
+
+All generated inputs, outputs, arrays, and scratch remain in the configured
+external data root. No output was edited to force replay, and no scientific
+acceptance or public activation flag was raised. M11, full product acceptance,
+and deployment remain open.
