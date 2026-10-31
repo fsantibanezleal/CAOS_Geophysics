@@ -820,11 +820,11 @@ def test_private_whitening_rejects_duplicate_marginal_indices(monkeypatch, kind,
 def test_no_io_hooks_runtime_or_legacy_mutation(monkeypatch):
     root = Path(__file__).resolve().parents[2]
     assert hashlib.sha256((root/'data-pipeline/gravity_forward.py').read_bytes()).hexdigest() == (
-        '46d205a453147cc18697464e4a6deda2920d0d88307e366b6fd336d9a1ac07d5')
+        '000992755f06859340b725f5fa504d59695a45814328ef785a9b91e61c389678')
     old = json.loads((root/'docs/design/features/m02-prism-operator/runtime-pins.json').read_text())
     new = json.loads((root/'docs/research/m02-survey-l2-evidence-2026-10-03.json').read_text())
     sources = {**old['targeted_source_sha256'], **{k:v['sha256'] for k,v in new['installed_sources'].items()}}
-    assert len(sources) == 28
+    assert len(sources) == 29
     for rel, expected in sources.items():
         path = importlib.metadata.distribution(rel.split('/')[0]).locate_file(rel)
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, rel

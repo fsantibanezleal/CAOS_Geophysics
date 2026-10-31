@@ -1,0 +1,59 @@
+{
+  "base_commit": "0cf38910ff69a90bf895ea1fde417bf62c049068",
+  "measured_at_utc": "2026-10-31T05:48:49Z",
+  "schema": "geophysics.m02-locked-source-hashes/v1",
+  "scope": "Locked local synthetic gravity survey L2 matrix replay; no product scientific or field acceptance.",
+  "source_files": [
+    {
+      "bytes": 67893,
+      "path": "data-pipeline/gravity_l2.py",
+      "sha256": "3e0132b5acca58256851b9b577a89611e95bf15fc7c4f0e205c50d354fceb545"
+    },
+    {
+      "bytes": 12506,
+      "path": "data-pipeline/gravity_l2_metric.py",
+      "sha256": "202b8e6355334d805b6b4f898089ef0e3c5e92f9264f8200dd647a5184fc12ba"
+    },
+    {
+      "bytes": 20313,
+      "path": "data-pipeline/gravity_l2_precision.py",
+      "sha256": "57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a"
+    },
+    {
+      "bytes": 20023,
+      "path": "data-pipeline/gravity_survey_l2.py",
+      "sha256": "50934e1f56fcd468787b113598d01966b0a0eb1b124cb95363605fea8278da97"
+    },
+    {
+      "bytes": 14828,
+      "path": "data-pipeline/gravity_forward.py",
+      "sha256": "000992755f06859340b725f5fa504d59695a45814328ef785a9b91e61c389678"
+    },
+    {
+      "bytes": 18118,
+      "path": "tests/data/test_gravity_survey_l2.py",
+      "sha256": "0da369509d4725646473fb611ee69a5c8e4aead81bfa4468b2e1b763c2a7816e"
+    },
+    {
+      "bytes": 49185,
+      "path": "tests/numerics/test_gravity_l2.py",
+      "sha256": "9779d463d46a7adf5fe7434ace9bd58c99a853e2c4615a3790455e1679e3bcf9"
+    },
+    {
+      "bytes": 21233,
+      "path": "tests/numerics/test_gravity_l2_selection.py",
+      "sha256": "112abe0ebeea7c74e1ea60728f2d47a5283bf2fe71fc6045b8a49f51b3b0a17a"
+    },
+    {
+      "bytes": 6913,
+      "path": "scripts/validate_gravity_l2_matrix.py",
+      "sha256": "5d0a077d4b93a9c73191c0001ee519d0a4cfc5a3bce674117a36888e6273ba0c"
+    },
+    {
+      "bytes": 4218,
+      "path": "tests/test_validate_gravity_l2_matrix.py",
+      "sha256": "123e2d6ab8dd9d4febc881ef0023e0f0cb25d89fd1c3341f4e772dc408741714"
+    }
+  ],
+  "working_tree_dirty": true
+}

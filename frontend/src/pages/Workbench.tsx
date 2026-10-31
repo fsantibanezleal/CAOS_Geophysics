@@ -1462,7 +1462,7 @@ export default function Workbench() {
       </>,
       }]}
       context={{
-        label: { en: "Scientific interpretation", es: "Interpretación científica" },
+        label: { en: "Interpretation", es: "Interpretación" },
         content: <div className="context-view">
           <h2>{lesson.question[lang]}</h2>
           <p>{lesson.read[lang]}</p>
