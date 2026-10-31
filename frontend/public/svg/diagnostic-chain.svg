@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="title desc">
+  <title id="title">A reviewed interpretation with independent checks</title>
+  <desc id="desc">The same survey setting now shows an inversion analyst comparing observations, alternative models and sensitivity.</desc>
+  <style>
+    .ink { fill: none; stroke: var(--color-fg); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .soft { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .ground { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 2; }
+    .panel { fill: var(--color-surface); stroke: var(--color-border); stroke-width: 2; }
+    .mark { fill: var(--color-accent); fill-opacity: .2; stroke: var(--color-accent); stroke-width: 2; }
+    .alternate { fill: var(--color-surface-2); stroke: var(--color-fg-subtle); stroke-width: 2; stroke-dasharray: 6 5; }
+    .flow { fill: none; stroke: var(--color-accent); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; animation: checked 3s ease-in-out infinite; }
+    .label { fill: var(--color-fg); font-size: 16px; }
+    .es { display: none; }
+    .caos-exec-fig[data-lang="es"] .en { display: none; }
+    .caos-exec-fig[data-lang="es"] .es { display: inline; }
+    @keyframes checked { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -44; } }
+    @media (prefers-reduced-motion: reduce) { .flow { animation: none; } }
+  </style>
+  <path class="ink" d="M22 184H698"/>
+  <path class="ground" d="M22 184Q112 161 196 179T365 171T535 177T698 165V320H22Z"/>
+  <path class="soft" d="M22 236Q166 216 300 239T575 228T698 235M22 274Q170 255 321 278T698 268"/>
+  <path class="mark" d="M382 300 408 256Q454 220 500 256L526 300Z"/>
+  <path class="alternate" d="M330 300 351 278Q452 242 553 278L574 300Z"/>
+  <path class="flow" d="M160 176Q190 147 227 139T292 139"/>
+  <path class="ink" d="M177 80 192 67 207 80V99H177Z"/><path class="soft" d="M184 88H199M192 83V95"/>
+  <path class="ink" d="M126 180 138 147 151 180M138 147V137M134 136H143"/>
+  <circle class="ink" cx="138" cy="121" r="9"/><path class="ink" d="M138 130V151M138 137 124 148M138 137 151 147M138 151 128 177M138 151 151 177"/>
+  <g transform="translate(290 56)"><path class="panel" d="M0 0H154V91H0Z"/><path class="mark" d="M14 55Q29 23 45 47T77 37T107 50T139 27"/><path class="soft" d="M14 69H138M14 77H103"/></g>
+  <circle class="ink" cx="258" cy="106" r="16"/><path class="soft" d="M269 118 284 133"/>
+  <text class="label en" x="301" y="46">observed / predicted</text><text class="label es" x="301" y="46">observado / predicho</text>
+  <text class="label en" x="397" y="311">supported feature</text><text class="label es" x="397" y="311">rasgo respaldado</text>
+  <text class="label en" x="536" y="292">alternative retained</text><text class="label es" x="536" y="292">alternativa conservada</text>
+</svg>

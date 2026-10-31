@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import {
   AppShell,
+  Landing,
   applyTheme,
   readTheme,
   CitationsProvider,
@@ -83,11 +84,11 @@ createRoot(document.getElementById("root")!).render(
         <AppShell config={config}>
           <Suspense fallback={<RouteLoading />}>
             <Routes>
+              <Route path="/" element={<Landing />} />
               {PRODUCT_ROUTES.map(({ id, path }) => (
                 <Route key={id} path={path} element={pageElements[id as keyof typeof pageElements]} />
               ))}
-              <Route path="/" element={<Intro />} />
-              <Route path="*" element={<Intro />} />
+              <Route path="*" element={<Landing />} />
             </Routes>
           </Suspense>
         </AppShell>

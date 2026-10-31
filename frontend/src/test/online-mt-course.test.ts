@@ -116,10 +116,10 @@ describe("online MT course", () => {
     expected = expected.replace("<td>CC-BY-4.0</td>", '<td><code translate="no">CC-BY-4.0</code></td>');
     expected = expected.replace("<td>36 · 0.01–100 Hz</td>", '<td>{t("36 · 0.01–100 Hz", "36 · 0,01–100 Hz")}</td>');
     expected = expected.replace('{es ? v.name_es : v.name}', '{es ? v.name_es.replace(/(\\d)\\.(\\d)/g, "$1,$2") : v.name}');
-    const currentWithoutIndependentM12Mount = current
-      .replace('import { M12ResidualEvidence } from "../components/M12ResidualEvidence";\n', "")
-      .replace("      <M12ResidualEvidence />\n", "");
-    expect(currentWithoutIndependentM12Mount.replaceAll("\r\n", "\n")).toBe(expected.replaceAll("\r\n", "\n"));
+    expect(current.slice(current.indexOf("function TheoryChapter"))
+      .replace(/^[\t ]*<M12ResidualEvidence \/>[\t ]*\r?\n/m, "")
+      .replaceAll("\r\n", "\n"))
+      .toBe(expected.slice(expected.indexOf("function TheoryChapter")).replaceAll("\r\n", "\n"));
     const diagram = source("components/OnlineMTDiagram.tsx"), css = source("components/OnlineMTCourse.module.css");
     expect(diagram).toContain("useShellLang");
     expect(diagram).toContain("var(--color-accent)");
@@ -131,9 +131,17 @@ describe("online MT course", () => {
     for (const text of ["immutable original", "flag", "correction", "truth=null", "QC-only", "offline local CPU/GPU", "closed pending", "verification/re-import", "not public host activation"])
       expect(introduction + source("pages/Research.tsx")).toContain(text);
     expect(introduction).toContain("neither public API activation nor all M01–M13 methods online");
-    const base = execFileSync("git", ["show", "afac8ab:frontend/src/pages/Research.tsx"], { encoding: "utf8" });
+    const research = source("pages/Research.tsx");
+    for (const area of ["problem", "principles", "math", "pipeline", "honesty"])
+      expect(research).toContain(`area="${area}"`);
+    expect(research).toContain("function TechnicalIntroduction()");
+    expect(research).toContain("<ExecutiveView data={executiveBrief}");
     const equations = (text: string) => [...text.split("function TheoryChapter")[0].matchAll(/tex=\{String\.raw`([^`]+)`\}/g)].map(m => m[1]);
-    expect(equations(source("pages/Research.tsx"))).toEqual(equations(base));
+    expect(equations(research)).toEqual([
+      String.raw`\begin{aligned}d_i^{obs}&=F_i(m_{true})+\epsilon_i\\G_{ij}&=\frac{\partial F_i}{\partial m_j}\end{aligned}`,
+      String.raw`\begin{aligned}J_d&=\Phi_d(F(m),d^{obs})\\J_m&=\beta\Phi_m(m)\\\widehat m&=\arg\min_m(J_d+J_m)\end{aligned}`,
+      String.raw`\mathrm{RMSE}_m=\sqrt{\frac1M\sum_{j=1}^{M}e_j^2}`,
+    ]);
   });
   it("orthogonal fields in a right-handed x-depth section", () => {
     const diagram = source("components/OnlineMTDiagram.tsx");

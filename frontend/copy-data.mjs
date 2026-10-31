@@ -1,5 +1,6 @@
-import {cpSync,existsSync,mkdirSync,lstatSync,readFileSync} from 'node:fs';
+import {cpSync,existsSync,mkdirSync,lstatSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
+import {gzipSync} from 'node:zlib';
 import {dirname,join,resolve,relative,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
 const here=dirname(fileURLToPath(import.meta.url));
@@ -33,6 +34,18 @@ if(!existsSync(join(source,'catalog.json')))throw new Error('Missing committed v
 if(!existsSync(join(phaseSource,'manifest.json')))throw new Error('Missing reviewed M13 browser assets; run scripts/export_stead_browser_assets.py after the held-out benchmark.');
 mkdirSync(join(here,'public-release/data/v2'),{recursive:true});
 cpSync(source,join(here,'public-release/data/v2'),{recursive:true});
+// FWI traces are served as bounded, serial gzip sidecars to keep the browser's
+// peak memory controlled. Generate these only in the ignored build overlay.
+function gzipFwiArtifacts(directory){
+  for(const entry of readdirSync(directory,{withFileTypes:true})){
+    const path=join(directory,entry.name);
+    if(entry.isDirectory())gzipFwiArtifacts(path);
+    else if(entry.isFile()&&entry.name.endsWith('.json'))
+      writeFileSync(`${path}.gz`,gzipSync(readFileSync(path),{level:9,mtime:0}));
+  }
+}
+for(const entry of readdirSync(join(here,'public-release/data/v2'),{withFileTypes:true}))
+  if(entry.isDirectory()&&/^FWI_[A-Z0-9_]+$/.test(entry.name))gzipFwiArtifacts(join(here,'public-release/data/v2',entry.name));
 mkdirSync(join(here,'public-release/data/phase'),{recursive:true});
 cpSync(phaseSource,join(here,'public-release/data/phase/stead'),{recursive:true});
 cpSync(join(here,'public/svg'),join(here,'public-release/svg'),{recursive:true});

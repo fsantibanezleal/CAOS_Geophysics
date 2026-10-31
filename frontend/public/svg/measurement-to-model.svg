@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="title desc">
+  <title id="title">Roles and assumptions in present-day interpretation</title>
+  <desc id="desc">A field observer, inversion analyst and geologist review different records from the same survey.</desc>
+  <style>
+    .ink { fill: none; stroke: var(--color-fg); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .soft { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .ground { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 2; }
+    .panel { fill: var(--color-surface); stroke: var(--color-border); stroke-width: 2; }
+    .mark { fill: var(--color-accent); fill-opacity: .2; stroke: var(--color-accent); stroke-width: 2; }
+    .label { fill: var(--color-fg); font-size: 16px; }
+    .es { display: none; }
+    .caos-exec-fig[data-lang="es"] .en { display: none; }
+    .caos-exec-fig[data-lang="es"] .es { display: inline; }
+  </style>
+  <path class="ink" d="M22 184H698"/>
+  <path class="ground" d="M22 184Q112 161 196 179T365 171T535 177T698 165V320H22Z"/>
+  <path class="soft" d="M22 236Q166 216 300 239T575 228T698 235M22 274Q170 255 321 278T698 268"/>
+  <path class="soft" d="M86 178H166M275 178H357M493 178H575"/>
+  <g class="ink">
+    <circle cx="126" cy="125" r="10"/><path d="M126 135V157M126 142 111 153M126 142 143 150M126 157 115 178M126 157 140 178"/>
+    <circle cx="365" cy="119" r="10"/><path d="M365 129V153M365 137 349 148M365 137 380 147M365 153 354 179M365 153 377 179"/>
+    <circle cx="596" cy="125" r="10"/><path d="M596 135V157M596 142 581 152M596 142 611 152M596 157 585 178M596 157 608 178"/>
+  </g>
+  <path class="soft" d="M119 105 106 93M371 99 384 87M602 105 614 94"/>
+  <g transform="translate(76 68)"><path class="panel" d="M0 0H106V66H0Z"/><path class="mark" d="M13 46Q27 12 41 43T69 25T93 45"/><path class="soft" d="M13 54H93"/></g>
+  <g transform="translate(315 62)"><path class="panel" d="M0 0H108V72H0Z"/><path class="mark" d="M15 57 32 39 48 44 64 19 86 29"/><path class="soft" d="M15 63H92M15 15H28"/></g>
+  <g transform="translate(548 68)"><path class="panel" d="M0 0H102V66H0Z"/><path class="soft" d="M15 17H85M15 30H76M15 43H82M15 55H57"/></g>
+  <text class="label en" x="83" y="55">field record</text><text class="label es" x="83" y="55">registro de campo</text>
+  <text class="label en" x="325" y="48">inverse model</text><text class="label es" x="325" y="48">modelo inverso</text>
+  <text class="label en" x="558" y="55">geological context</text><text class="label es" x="558" y="55">contexto geológico</text>
+</svg>

@@ -1,0 +1,112 @@
+{
+  "title": {
+    "en": "What can a geophysical survey identify beneath the surface?",
+    "es": "¿Qué puede identificar un levantamiento geofísico bajo la superficie?"
+  },
+  "key_statement": {
+    "en": "Geophysical observations constrain physical contrasts, while several subsurface models can explain the same measurements. Decisions therefore depend on acquisition, assumptions, uncertainty and independent checks.",
+    "es": "Las observaciones geofísicas restringen contrastes físicos, mientras varios modelos del subsuelo pueden explicar las mismas mediciones. Las decisiones dependen de adquisición, supuestos, incertidumbre y verificaciones independientes."
+  },
+  "headline_figures": [
+    { "heading": { "en": "Gravity and magnetic interpretation", "es": "Interpretación gravimétrica y magnética" }, "value": { "en": "Non-unique", "es": "No única" }, "unit": { "en": "multiple source structures can explain an anomaly", "es": "múltiples estructuras fuente pueden explicar una anomalía" }, "source": "usgs-potential" },
+    { "heading": { "en": "Published inversion results", "es": "Resultados publicados de inversión" }, "value": { "en": "Preferred model", "es": "Modelo preferido" }, "unit": { "en": "often reported without uncertainty or resolution analysis", "es": "a menudo informado sin análisis de incertidumbre o resolución" }, "source": "uncertainty-review" }
+  ],
+  "pain": {
+    "key_message": { "en": "A close data fit does not establish a unique or well-resolved subsurface model.", "es": "Un buen ajuste de datos no establece un modelo único ni bien resuelto del subsuelo." },
+    "paragraphs": [
+      { "en": "Gravity and magnetic measurements respond to subsurface density and magnetization contrasts, not directly to geological boundaries. Their fields spread spatially, so different source geometries and depths can produce similar observations.", "es": "Las mediciones de gravedad y magnetismo responden a contrastes de densidad y magnetización del subsuelo, no directamente a límites geológicos. Sus campos se distribuyen espacialmente, por lo que distintas geometrías y profundidades pueden producir observaciones similares." },
+      { "en": "Electrical and seismic inversions add different sensitivities, yet remain conditional on geometry, physics, noise, parameterization and regularization. Reporting only one preferred model can conceal ambiguity that matters for interpretation. The cause weights below allocate analytical attention; they are not measured shares of industry failures.", "es": "Las inversiones eléctricas y sísmicas aportan sensibilidades distintas, pero siguen condicionadas por geometría, física, ruido, parametrización y regularización. Reportar solo un modelo preferido puede ocultar ambigüedades relevantes para la interpretación. Los pesos siguientes asignan atención analítica; no son proporciones medidas de fallas de la industria." }
+    ],
+    "bearers": [
+      { "who": { "en": "Survey geophysicists", "es": "Geofísicos de levantamientos" }, "cost": { "en": "Time spent separating acquisition effects from subsurface response", "es": "Tiempo dedicado a separar efectos de adquisición de la respuesta del subsuelo" }, "measure": { "en": "Processing history, masks, repeatability and held-out fit", "es": "Historial de procesamiento, máscaras, repetibilidad y ajuste reservado" } },
+      { "who": { "en": "Geological interpreters", "es": "Intérpretes geológicos" }, "cost": { "en": "Risk of treating a regularized model as uniquely resolved geology", "es": "Riesgo de tratar un modelo regularizado como geología resuelta de forma única" }, "measure": { "en": "Sensitivity, alternative models and resolution limits", "es": "Sensibilidad, modelos alternativos y límites de resolución" } },
+      { "who": { "en": "Researchers and students", "es": "Investigadores y estudiantes" }, "cost": { "en": "Difficulty reproducing solver choices and diagnosing failure", "es": "Dificultad para reproducir elecciones del solver y diagnosticar fallas" }, "measure": { "en": "Re-run agreement, provenance and explicit negative controls", "es": "Concordancia al repetir, procedencia y controles negativos explícitos" } }
+    ],
+    "figures": [
+      { "heading": { "en": "Potential-field interpretation", "es": "Interpretación de campos potenciales" }, "value": { "en": "Non-unique", "es": "No única" }, "unit": { "en": "different source structures can fit the observations", "es": "distintas estructuras fuente pueden ajustarse a las observaciones" }, "source": "usgs-potential" },
+      { "heading": { "en": "Typical inversion reporting", "es": "Reporte habitual de inversión" }, "value": { "en": "Preferred model", "es": "Modelo preferido" }, "unit": { "en": "uncertainty and resolution are often omitted", "es": "a menudo se omiten incertidumbre y resolución" }, "source": "uncertainty-review" }
+    ],
+    "causes": [
+      { "cause": { "en": "Non-unique physical explanations", "es": "Explicaciones físicas no únicas" }, "weight": 35 },
+      { "cause": { "en": "Acquisition geometry and incomplete coverage", "es": "Geometría de adquisición y cobertura incompleta" }, "weight": 25 },
+      { "cause": { "en": "Noise and uncertain observation errors", "es": "Ruido e incertidumbre de errores observacionales" }, "weight": 20 },
+      { "cause": { "en": "Regularization and parameterization choices", "es": "Elecciones de regularización y parametrización" }, "weight": 20 }
+    ]
+  },
+  "context": {
+    "key_message": { "en": "Every interpretation sits inside a chain of data, physics and modeling choices.", "es": "Toda interpretación depende de una cadena de datos, física y elecciones de modelado." },
+    "paragraphs": [
+      { "en": "Geophysical teams combine field measurements, format-specific processing, physical forward models and inverse methods. Reproducible interpretation requires those stages to retain units, coordinates, uncertainty and provenance.", "es": "Los equipos geofísicos combinan mediciones de campo, procesamiento por formato, modelos directos físicos y métodos inversos. La interpretación reproducible requiere conservar unidades, coordenadas, incertidumbre y procedencia en cada etapa." }
+    ],
+    "setting": { "en": "Research and applied geoscience using gravity, magnetics, electrical, electromagnetic and seismic observations.", "es": "Investigación y geociencias aplicadas con observaciones gravimétricas, magnéticas, eléctricas, electromagnéticas y sísmicas." },
+    "forces": [
+      { "force": { "en": "Larger and more varied survey datasets", "es": "Conjuntos de levantamientos mayores y más diversos" }, "direction": "rising" },
+      { "force": { "en": "Open scientific Python tools and reproducible workflows", "es": "Herramientas científicas abiertas de Python y flujos reproducibles" }, "direction": "rising" },
+      { "force": { "en": "Field data with incomplete metadata and uneven coverage", "es": "Datos de campo con metadatos incompletos y cobertura desigual" }, "direction": "steady" }
+    ],
+    "evidence": [
+      { "statement": { "en": "Potential-field observations provide indirect information about density and magnetization contrasts.", "es": "Las observaciones de campos potenciales entregan información indirecta sobre contrastes de densidad y magnetización." }, "source": "usgs-potential" },
+      { "statement": { "en": "The EDI format is an established interchange form for magnetotelluric transfer functions.", "es": "El formato EDI es un formato establecido de intercambio para funciones de transferencia magnetotelúricas." }, "source": "usgs-edi" }
+    ]
+  },
+  "situation": {
+    "key_message": { "en": "Different roles need to inspect different links between a measurement and an interpretation.", "es": "Distintos roles necesitan inspeccionar vínculos diferentes entre una medición y una interpretación." },
+    "roles": [
+      { "role": { "en": "Survey geophysicist", "es": "Geofísico de levantamiento" }, "decides": { "en": "Whether acquisition and quality checks support analysis", "es": "Si la adquisición y los controles de calidad permiten el análisis" }, "needs": { "en": "Geometry, units, masks, uncertainty and processing lineage", "es": "Geometría, unidades, máscaras, incertidumbre y linaje de procesamiento" } },
+      { "role": { "en": "Inversion specialist", "es": "Especialista en inversión" }, "decides": { "en": "Which forward model and regularization answer the question", "es": "Qué modelo directo y regularización responden la pregunta" }, "needs": { "en": "Objective terms, solver states, sensitivity and residuals", "es": "Términos del objetivo, estados del solver, sensibilidad y residuos" } },
+      { "role": { "en": "Geological interpreter", "es": "Intérprete geológico" }, "decides": { "en": "Which model features are consistent with other evidence", "es": "Qué rasgos del modelo son consistentes con otra evidencia" }, "needs": { "en": "Alternative models, resolution limits and independent constraints", "es": "Modelos alternativos, límites de resolución y restricciones independientes" } }
+    ],
+    "interaction": { "en": "Survey geophysicists qualify observations, inversion specialists test conditional models, and geological interpreters compare them with independent evidence.", "es": "Los geofísicos califican observaciones, especialistas prueban modelos condicionales e intérpretes geológicos los comparan con evidencia independiente." },
+    "state_of_the_art": [
+      { "approach": { "en": "Modular gradient-based inversion frameworks", "es": "Marcos modulares de inversión basada en gradientes" }, "achieves": { "en": "Composable forward simulation, parameterization, optimization and regularization", "es": "Simulación directa, parametrización, optimización y regularización componibles" }, "falls_short": { "en": "The analyst must still define assumptions and assess identifiability", "es": "El analista aún debe definir supuestos y evaluar identificabilidad" }, "source": "simpeg" },
+      { "approach": { "en": "Potential-field processing and modeling libraries", "es": "Bibliotecas de procesamiento y modelado de campos potenciales" }, "achieves": { "en": "Documented processing, forward calculations and inversion tools", "es": "Procesamiento documentado, cálculos directos y herramientas de inversión" }, "falls_short": { "en": "A library does not determine whether a survey supports a chosen inverse model", "es": "Una biblioteca no determina si un levantamiento sustenta el modelo inverso elegido" }, "source": "fatiando" },
+      { "approach": { "en": "Resolution and uncertainty analysis", "es": "Análisis de resolución e incertidumbre" }, "achieves": { "en": "Sensitivity, covariance and alternative-model diagnostics", "es": "Diagnósticos de sensibilidad, covarianza y modelos alternativos" }, "falls_short": { "en": "Many studies still present a preferred model without these analyses", "es": "Muchos estudios aún presentan un modelo preferido sin esos análisis" }, "source": "uncertainty-review" }
+    ],
+    "status": { "heading": { "en": "Established potential-field methods", "es": "Métodos establecidos de campos potenciales" }, "value": { "en": "2", "es": "2" }, "unit": { "en": "gravity and magnetics", "es": "gravedad y magnetismo" }, "date": { "en": "1995 USGS overview", "es": "Resumen del USGS de 1995" }, "source": "usgs-potential" }
+  },
+  "trends": {
+    "key_message": { "en": "More computation expands the experiments that can be compared, not the information in a survey by itself.", "es": "Más cómputo amplía los experimentos comparables, no la información de un levantamiento por sí sola." },
+    "items": [
+      { "trend": { "en": "Open, modular inversion software", "es": "Software de inversión modular y abierto" }, "kind": "technological", "direction": "rising", "horizon": "now", "signal": { "statement": { "en": "SimPEG provides an open framework for simulation and gradient-based parameter estimation.", "es": "SimPEG ofrece un marco abierto para simulación y estimación de parámetros basada en gradientes." }, "source": "simpeg" }, "effect": { "en": "Teams can inspect and adapt operators while retaining explicit numerical assumptions.", "es": "Los equipos pueden inspeccionar y adaptar operadores conservando supuestos numéricos explícitos." }, "confidence": "high" },
+      { "trend": { "en": "Interoperable geophysical data exchange", "es": "Intercambio interoperable de datos geofísicos" }, "kind": "practice", "direction": "rising", "horizon": "two_years", "signal": { "statement": { "en": "USGS publishes magnetotelluric transfer functions in EDI interchange files.", "es": "El USGS publica funciones de transferencia magnetotelúricas en archivos de intercambio EDI." }, "source": "usgs-edi" }, "effect": { "en": "Format support must preserve coordinate frames, errors and provenance across processing steps.", "es": "El soporte de formatos debe conservar marcos de coordenadas, errores y procedencia entre etapas." }, "confidence": "high" },
+      { "trend": { "en": "Explicit resolution and uncertainty reporting", "es": "Reporte explícito de resolución e incertidumbre" }, "kind": "practice", "direction": "rising", "horizon": "now", "signal": { "statement": { "en": "A review documents sensitivity, resolution and covariance analyses for geophysical inversions.", "es": "Una revisión documenta análisis de sensibilidad, resolución y covarianza para inversiones geofísicas." }, "source": "uncertainty-review" }, "effect": { "en": "Interpretations can state which model features are constrained and which remain ambiguous.", "es": "Las interpretaciones pueden indicar qué rasgos están restringidos y cuáles siguen siendo ambiguos." }, "confidence": "medium" }
+    ]
+  },
+  "proposal": {
+    "key_message": { "en": "Inspect the full measurement-to-model chain and retain failure cases beside successful fits.", "es": "Inspeccionar la cadena completa de medición a modelo y conservar los casos fallidos junto a los buenos ajustes." },
+    "paragraphs": [
+      { "en": "A useful research workflow links source data, reversible processing, physical forward predictions, inverse models, residuals and sensitivity evidence. Each result should state its assumptions, units, provenance and limits.", "es": "Un flujo de investigación útil vincula datos fuente, procesamiento reversible, predicciones directas físicas, modelos inversos, residuos y evidencia de sensibilidad. Cada resultado debe declarar supuestos, unidades, procedencia y límites." }
+    ],
+    "four_cs": [
+      { "c": { "en": "Choice", "es": "Elección" }, "applies": { "en": "Select a physical method that matches the data and the question.", "es": "Elegir un método físico que corresponda a los datos y la pregunta." } },
+      { "c": { "en": "Context", "es": "Contexto" }, "applies": { "en": "Record acquisition, units, coordinate frames, errors and geological assumptions.", "es": "Registrar adquisición, unidades, marcos de coordenadas, errores y supuestos geológicos." } },
+      { "c": { "en": "Cost", "es": "Costo" }, "applies": { "en": "Estimate resolution, compute and data limitations before interpreting a model.", "es": "Estimar resolución, cómputo y límites de datos antes de interpretar un modelo." } },
+      { "c": { "en": "Control", "es": "Control" }, "applies": { "en": "Compare predictions, residuals, alternatives and independent physical checks.", "es": "Comparar predicciones, residuos, alternativas y verificaciones físicas independientes." } }
+    ],
+    "actions": [
+      { "action": { "en": "Publish immutable source records and reversible processing steps.", "es": "Publicar registros de fuentes inmutables y pasos reversibles de procesamiento." }, "owner": { "en": "Survey geophysicist", "es": "Geofísico de levantamiento" }, "horizon": { "en": "Before modeling", "es": "Antes del modelado" }, "check": { "en": "Re-imported hashes, units and coordinates match the recorded source.", "es": "Los hashes, unidades y coordenadas reimportados coinciden con la fuente registrada." } },
+      { "action": { "en": "Test forward operators and inverse assumptions against independent controls.", "es": "Probar operadores directos y supuestos inversos con controles independientes." }, "owner": { "en": "Inversion specialist", "es": "Especialista en inversión" }, "horizon": { "en": "For each method", "es": "Para cada método" }, "check": { "en": "Analytic or independent solvers reproduce declared tolerances and failure cases.", "es": "Solvers analíticos o independientes reproducen tolerancias y casos fallidos declarados." } },
+      { "action": { "en": "Interpret only features supported by sensitivity and independent evidence.", "es": "Interpretar solo rasgos respaldados por sensibilidad y evidencia independiente." }, "owner": { "en": "Geological interpreter", "es": "Intérprete geológico" }, "horizon": { "en": "At review", "es": "Durante la revisión" }, "check": { "en": "Alternative models and unresolved features remain visible in the record.", "es": "Los modelos alternativos y rasgos no resueltos permanecen visibles en el registro." } }
+    ],
+    "risks": [
+      { "en": "Synthetic recovery can be mistaken for validation on field geology.", "es": "La recuperación sintética puede confundirse con validación de geología de campo." },
+      { "en": "A low residual can conceal non-uniqueness or incorrect physics.", "es": "Un residuo bajo puede ocultar no unicidad o física incorrecta." }
+    ],
+    "unknowns": [
+      { "en": "How reliably do the chosen methods transfer across field acquisition settings?", "es": "¿Con qué fiabilidad se transfieren los métodos elegidos entre configuraciones de adquisición de campo?" },
+      { "en": "Which uncertainty summaries remain calibrated under realistic correlated errors?", "es": "¿Qué resúmenes de incertidumbre siguen calibrados bajo errores correlacionados realistas?" }
+    ]
+  },
+  "illustrations": {
+    "pain": { "file": "svg/inverse-nonuniqueness.svg", "caption": { "en": "One surface response can remain compatible with distinct subsurface structures.", "es": "Una respuesta superficial puede seguir siendo compatible con estructuras distintas del subsuelo." } },
+    "situation": { "file": "svg/measurement-to-model.svg", "caption": { "en": "Acquisition, processing and interpretation carry different assumptions.", "es": "Adquisición, procesamiento e interpretación incorporan supuestos distintos." } },
+    "proposal": { "file": "svg/diagnostic-chain.svg", "caption": { "en": "Independent checks help distinguish supported features from unresolved structure.", "es": "Las verificaciones independientes ayudan a distinguir rasgos respaldados de estructuras no resueltas." } }
+  },
+  "sources": [
+    { "id": "usgs-potential", "title": { "en": "USGS introduction to gravity and potential fields", "es": "Introducción del USGS a gravedad y campos potenciales" }, "url": "https://pubs.usgs.gov/fs/fs-0239-95/" },
+    { "id": "simpeg", "title": { "en": "SimPEG: an open framework for geophysical simulation and inversion", "es": "SimPEG: marco abierto para simulación e inversión geofísica" }, "url": "https://doi.org/10.1016/j.cageo.2015.09.015" },
+    { "id": "fatiando", "title": { "en": "Fatiando a Terra geophysical software", "es": "Software geofísico Fatiando a Terra" }, "url": "https://www.fatiando.org/" },
+    { "id": "uncertainty-review", "title": { "en": "Uncertainty and resolution analysis of geophysical inversion models", "es": "Análisis de incertidumbre y resolución de modelos de inversión geofísica" }, "url": "https://doi.org/10.1007/s10712-019-09567-3" },
+    { "id": "usgs-edi", "title": { "en": "USGS EDI magnetotelluric data", "es": "Datos magnetotelúricos EDI del USGS" }, "url": "https://pubs.usgs.gov/ds/0901/edi_data.html" }
+  ]
+}

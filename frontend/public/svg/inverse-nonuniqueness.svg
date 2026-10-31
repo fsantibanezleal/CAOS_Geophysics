@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-labelledby="title desc">
+  <title id="title">Several subsurface structures fit the same measurements</title>
+  <desc id="desc">A field crew measures one response above two physically distinct possible bodies.</desc>
+  <style>
+    .ink { color: var(--color-fg); fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .soft { color: var(--color-fg-subtle); fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .ground { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 2; }
+    .rock { fill: var(--color-accent); fill-opacity: .16; stroke: var(--color-accent); stroke-width: 2; }
+    .alt { fill: var(--color-surface); fill-opacity: .5; stroke: var(--color-fg-subtle); stroke-width: 2; stroke-dasharray: 7 6; }
+    .signal { fill: none; stroke: var(--color-accent); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; animation: survey 3s ease-in-out infinite; }
+    .label { fill: var(--color-fg); font-size: 17px; }
+    .es { display: none; }
+    .caos-exec-fig[data-lang="es"] .en { display: none; }
+    .caos-exec-fig[data-lang="es"] .es { display: inline; }
+    @keyframes survey { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -44; } }
+    @media (prefers-reduced-motion: reduce) { .signal { animation: none; } }
+  </style>
+  <path class="ink" d="M22 184H698"/>
+  <path class="ground" d="M22 184Q112 161 196 179T365 171T535 177T698 165V320H22Z"/>
+  <path class="soft" d="M22 236Q166 216 300 239T575 228T698 235M22 274Q170 255 321 278T698 268"/>
+  <path class="rock" d="M382 300 408 256Q454 220 500 256L526 300Z"/>
+  <path class="alt" d="M330 300 351 278Q452 242 553 278L574 300Z"/>
+  <text class="label en" x="434" y="311">model A</text><text class="label es" x="434" y="311">modelo A</text>
+  <text class="label en" x="534" y="292">model B</text><text class="label es" x="534" y="292">modelo B</text>
+  <path class="signal" d="M160 176Q168 146 176 117T191 81"/>
+  <path class="ink" d="M177 80 192 67 207 80V99H177Z"/><path class="soft" d="M184 88H199M192 83V95"/>
+  <path class="soft" d="M185 101V163M192 101V163M199 101V163"/>
+  <path class="ink" d="M126 180 138 147 151 180M138 147V137M134 136H143"/>
+  <circle class="ink" cx="138" cy="121" r="9"/><path class="ink" d="M138 130V151M138 137 124 148M138 137 151 147M138 151 128 177M138 151 151 177"/>
+  <path class="ink" d="M80 177 87 159 94 177M87 159V153M84 152H90"/><circle class="soft" cx="87" cy="146" r="6"/>
+  <path class="soft" d="M91 178H169M205 178H274"/>
+  <text class="label en" x="33" y="45">same measured response</text><text class="label es" x="33" y="45">misma respuesta medida</text>
+</svg>

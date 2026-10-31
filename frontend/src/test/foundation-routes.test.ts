@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync } from "node:fs";
 import { PRODUCT_ROUTES } from "../lib/routes";
 import { artifactBase, deploymentMode, routerBasename } from "../lib/deployment";
+import { validateExecutive } from "@fasl-work/caos-app-shell";
+import executiveBrief from "../../../content/executive.json";
 
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
 
@@ -18,6 +20,8 @@ describe("frontend route and shell foundation", () => {
     expect(new Set(PRODUCT_ROUTES.map(route => route.path)).size).toBe(6);
     expect(PRODUCT_ROUTES.every(route => route.es && route.en)).toBe(true);
     expect(read("../main.tsx")).toContain("PRODUCT_ROUTES.map");
+    expect(read("../main.tsx")).toContain('<Route path="/" element={<Landing />} />');
+    expect(read("../main.tsx")).toContain('<Route path="*" element={<Landing />} />');
   });
 
   it("six_pages_are_deferred_without_changing_the_route_manifest", () => {
@@ -66,6 +70,11 @@ describe("frontend route and shell foundation", () => {
   });
 
   it("the_exact_shared_shell_consumer_declares_product_metadata_and_containment", () => {
+    expect(validateExecutive(executiveBrief)).toEqual([]);
+    const introduction = read("../pages/Research.tsx");
+    expect(introduction).toContain("<ExecutiveView data={executiveBrief}");
+    expect(introduction).toContain('id: "executive"');
+    expect(introduction).toContain('id: "technical"');
     const manifest = JSON.parse(read("../../package.json"));
     const lock = JSON.parse(read("../../package-lock.json"));
     const installed = JSON.parse(read("../../node_modules/@fasl-work/caos-app-shell/package.json"));

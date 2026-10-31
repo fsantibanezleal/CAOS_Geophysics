@@ -6,9 +6,13 @@ import {
   InlineMath,
   Refs,
   SubTabs,
+  DocPage,
+  DocSection,
+  ExecutiveView,
   Tabs,
   useShellLang,
 } from "@fasl-work/caos-app-shell";
+import executiveBrief from "../../../content/executive.json";
 import { Plot } from "../components/ScientificPlots";
 import { MethodDiagram } from "../components/MethodDiagram";
 import { EdiFixtures } from "../components/EdiFixtures";
@@ -65,16 +69,13 @@ function Sources({ ids }: { ids: string[] }) {
   return <Refs ids={ids} label={t("References", "Referencias")} />;
 }
 
-export function Introduction() {
+function TechnicalIntroduction() {
   const t = useText();
   return (
     <div className="page-body prose">
-      <Head
-        title={t(
-          "Geophysical inverse problems",
-          "Problemas inversos geofísicos",
-        )}
-      >
+      <header className="page-head">
+        <h2>{t("From measurements to an earth model", "De las mediciones al modelo del subsuelo")}</h2>
+        <p className="lede">
         {t(
           "Geophysical research separates immutable observations, derived processing and conditional subsurface inversion. This platform combines audited synthetic lessons with owned CSV flag processing and reviewed bounded EDI QC/inversion; method-specific admission is not public host activation. The relation ",
           "La investigación geofísica separa observaciones inmutables, procesamiento derivado e inversión condicional del subsuelo. La plataforma combina lecciones sintéticas auditadas, flags de CSV propio y QC/inversión EDI acotados revisados; admisión por método no implica host público activo. La relación ",
@@ -84,15 +85,10 @@ export function Introduction() {
           " separates the unknown model, the forward operator and observation error.",
           " separa modelo desconocido, operador directo y error de observación.",
         )}
-      </Head>
+        </p>
+      </header>
       <OnlineMTIntroduction />
-      <section>
-        <h2>
-          {t(
-            "1. Physical properties and observations",
-            "1. Propiedades físicas y observaciones",
-          )}
-        </h2>
+      <DocSection title={t("Physical properties and observations", "Propiedades físicas y observaciones")} area="problem" refs={["cockett2015", "heagy2017", "virieux2009"]}>
         <p className="measure">
           {t(
             "Gravity anomalies respond to density contrasts; magnetic anomalies respond to magnetization; magnetotelluric impedance responds to electrical resistivity; seismic waveforms respond here to acoustic velocity. These quantities are not interchangeable geological images. Each method requires a different acquisition model, forward equation and interpretation of spatial resolution. The examples include sedimentary basins, intrusive bodies, dipping dykes, conductive layers, faults, salt and low-velocity channels.",
@@ -163,38 +159,36 @@ export function Introduction() {
             </tbody>
           </table>
         </div>
-        <Sources ids={["cockett2015", "heagy2017", "virieux2009"]} />
-      </section>
-      <section>
-        <h2>
+        <p className="measure">
           {t(
-            "2. Forward modelling and discretization",
-            "2. Modelación directa y discretización",
+            "Survey design begins with a decision: which physical contrast is resolvable at the planned stations, frequencies, source offsets and noise level? A gravity profile may constrain integrated density but not a unique body boundary; an MT sounding may resolve conductive layering only across its usable band. Results therefore pair maps with geometry, coverage and quality flags before interpretation.",
+            "El diseño del levantamiento comienza con una decisión: ¿qué contraste físico puede resolverse con las estaciones, frecuencias, offsets de fuente y niveles de ruido disponibles? Un perfil gravimétrico puede restringir densidad integrada, pero no un límite único; una estación MT solo resuelve capas conductoras dentro de su banda útil. Por eso, los resultados emparejan mapas con geometría, cobertura y banderas de calidad antes de interpretar.",
           )}
-        </h2>
+        </p>
+      </DocSection>
+      <DocSection title={t("Forward modelling and discretization", "Modelación directa y discretización")} area="principles" refs={["simpeggravity", "deepwave"]}>
         <p className="measure">
           {t(
             "The forward operator predicts what a specified survey would measure for a candidate earth. It includes receiver locations, source parameters and boundary conditions; these cannot be separated from the interpretation of a result. Potential fields use integrated prism kernels. MT uses complex impedance recursion through layers. Seismic uses finite-difference propagation. Refining a grid improves the representation of geometry and numerical propagation, but cannot replace missing observations.",
             "El operador directo predice lo que mediría un levantamiento para un subsuelo candidato. Incluye receptores, fuentes y fronteras, inseparables de la interpretación. Los campos potenciales usan núcleos prismáticos integrados; MT, recursión compleja entre capas; sísmica, propagación por diferencias finitas. Refinar una malla mejora geometría y propagación numérica, pero no sustituye datos ausentes.",
           )}
         </p>
+        <p className="measure">
+          {t(
+            "Potential-field responses are approximately linear in density or magnetization for a fixed geometry, while MT impedance changes nonlinearly with layer resistivity and thickness. Seismic travel times depend on paths through velocity, and waveform FWI also depends on phase, source signature and discretization. Each inverse therefore needs its own units, sensitivity analysis and acquisition-aware validation.",
+            "Las respuestas de campos potenciales son aproximadamente lineales en densidad o magnetización para una geometría fija, mientras que la impedancia MT cambia de forma no lineal con resistividad y espesor. Los tiempos sísmicos dependen de las trayectorias en velocidad, y FWI también de fase, fuente y discretización. Cada inversor requiere unidades, análisis de sensibilidad y validación propios de su adquisición.",
+          )}
+        </p>
         <Equation
-          tex={String.raw`d_i^{obs}=F_i(m_{true})+\epsilon_i,\qquad G_{ij}=\frac{\partial F_i}{\partial m_j}`}
+          tex={String.raw`\begin{aligned}d_i^{obs}&=F_i(m_{true})+\epsilon_i\\G_{ij}&=\frac{\partial F_i}{\partial m_j}\end{aligned}`}
           caption={t(
             "dᵒᵇˢ is observed data; mtrue is the synthetic model; ε is measurement noise; Gᵢⱼ is sensitivity of observation i to parameter j. For linear potential fields, G does not depend on m.",
             "dᵒᵇˢ son datos observados; mtrue es modelo sintético; ε es ruido; Gᵢⱼ es sensibilidad del dato i al parámetro j. En campos potenciales lineales, G no depende de m.",
           )}
         />
         <MethodDiagram kind="potential" />
-        <Sources ids={["simpeggravity", "deepwave"]} />
-      </section>
-      <section>
-        <h2>
-          {t(
-            "3. Regularization and identifiability",
-            "3. Regularización e identificabilidad",
-          )}
-        </h2>
+      </DocSection>
+      <DocSection title={t("Regularization and identifiability", "Regularización e identificabilidad")} area="math" refs={["cockett2015", "crossgradient"]}>
         <p className="measure">
           {t(
             "Different subsurface models can reproduce similar observations. Regularization selects among these possibilities using explicit preferences such as small coefficients, sparse support, smooth layer transitions or shared boundaries. It does not establish that the selected preference is geologically correct. A reduced data residual and a reduced model error are therefore different outcomes. The benchmark reports both where synthetic truth is available, with no combined score across physical units.",
@@ -202,76 +196,20 @@ export function Introduction() {
           )}
         </p>
         <Equation
-          tex={String.raw`\widehat m=\arg\min_m\{\Phi_d(F(m),d^{obs})+\beta\Phi_m(m)\}`}
+          tex={String.raw`\begin{aligned}J_d&=\Phi_d(F(m),d^{obs})\\J_m&=\beta\Phi_m(m)\\\widehat m&=\arg\min_m(J_d+J_m)\end{aligned}`}
           caption={t(
             "Φd measures data disagreement; Φm encodes a model preference; β controls their relative weight. Each implemented algorithm defines these terms separately; not every history curve includes both.",
             "Φd mide desacuerdo de datos; Φm expresa preferencia de modelo; β pondera ambos. Cada algoritmo define sus términos; no toda curva histórica incluye los dos.",
           )}
         />
         <Equation
-          tex={String.raw`\mathrm{RMSE}_m=\sqrt{\frac1M\sum_{j=1}^M(\widehat m_j-m_{true,j})^2}`}
+          tex={String.raw`\mathrm{RMSE}_m=\sqrt{\frac1M\sum_{j=1}^{M}e_j^2}`}
           caption={t(
-            "M is the number of model parameters. Model RMSE uses the property units and requires known truth. It does not measure uncertainty and is not available for an unknown field subsurface.",
-            "M es número de parámetros. RMSE usa unidades de propiedad y requiere verdad conocida. No mide incertidumbre ni está disponible para un subsuelo de campo desconocido.",
+            "M is the number of model parameters; eⱼ is the recovered-minus-true value at parameter j. Model RMSE uses the property units and requires known truth. It does not measure uncertainty and is not available for an unknown field subsurface.",
+            "M es la cantidad de parámetros; eⱼ es la diferencia recuperado-menos-verdadero en el parámetro j. El RMSE conserva las unidades de la propiedad y requiere una verdad conocida. No mide incertidumbre ni está disponible para un subsuelo de campo desconocido.",
           )}
         />
-        <Sources ids={["cockett2015", "crossgradient"]} />
-      </section>
-      <section>
-        <h2>
-          {t(
-            "4. Synthetic experimental calculation and interpretation",
-            "4. Cálculo e interpretación experimental sintética",
-          )}
-        </h2>
-        <ol className="measure">
-          <li>
-            {t(
-              "Define the geological geometry, property contrasts and physical units.",
-              "Definir geometría, contrastes y unidades.",
-            )}
-          </li>
-          <li>
-            {t(
-              "Set receivers, sources, frequencies and the numerical domain.",
-              "Configurar receptores, fuentes, frecuencias y dominio numérico.",
-            )}
-          </li>
-          <li>
-            {t(
-              "Generate the forward response; add seeded observation noise and apply the acquisition mask.",
-              "Generar respuesta directa; agregar ruido con semilla y aplicar máscara de adquisición.",
-            )}
-          </li>
-          <li>
-            {t(
-              "Run each inverse algorithm from its declared initialization without using the known solution for checkpoint selection.",
-              "Ejecutar cada inversor desde su inicialización declarada sin usar la solución conocida para seleccionar checkpoints.",
-            )}
-          </li>
-          <li>
-            {t(
-              "Compare predicted observations, residuals and recovered properties. Use the noise and coverage variants to assess sensitivity, not to construct an unsupported probability interval.",
-              "Comparar predicciones, residuos y propiedades. Usar variantes de ruido y cobertura para sensibilidad, no para construir intervalos probabilísticos no sustentados.",
-            )}
-          </li>
-        </ol>
-        <p className="measure">
-          {t(
-            "On the App page, Model shows geometry or physical response, Data shows observations and predictions, and Inversion shows recovered properties and numerical histories. Case analysis explains the specific geological question. Experiment selection loads separately computed results; camera rotation and display gain only alter the view. The MT calculator is a separate browser forward calculation.",
-            "En App, Modelo muestra geometría o respuesta física; Datos, observaciones y predicciones; Inversión, propiedades recuperadas e historiales. Análisis del caso explica la pregunta geológica. Elegir un experimento carga resultados calculados separadamente; cámara y ganancia sólo modifican la vista. La calculadora MT es un cálculo directo separado en navegador.",
-          )}
-        </p>
-        <Sources ids={["deepwave", "heagy2017"]} />
-      </section>
-      <section>
-        <h2>
-          {t(
-            "5. Notation and scope of validation",
-            "5. Notación y alcance de validación",
-          )}
-        </h2>
-        <ul className="method-symbols">
+        <ul className="method-symbols" data-glossary>
           {[
             [
               "m: subsurface model; m̂: recovered model.",
@@ -325,6 +263,49 @@ export function Introduction() {
             <li key={en}>{t(en, sp)}</li>
           ))}
         </ul>
+      </DocSection>
+      <DocSection title={t("Synthetic experimental calculation and interpretation", "Cálculo e interpretación experimental sintética")} area="pipeline" refs={["deepwave", "heagy2017"]}>
+        <ol className="measure">
+          <li>
+            {t(
+              "Define the geological geometry, property contrasts and physical units.",
+              "Definir geometría, contrastes y unidades.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Set receivers, sources, frequencies and the numerical domain.",
+              "Configurar receptores, fuentes, frecuencias y dominio numérico.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Generate the forward response; add seeded observation noise and apply the acquisition mask.",
+              "Generar respuesta directa; agregar ruido con semilla y aplicar máscara de adquisición.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Run each inverse algorithm from its declared initialization without using the known solution for checkpoint selection.",
+              "Ejecutar cada inversor desde su inicialización declarada sin usar la solución conocida para seleccionar checkpoints.",
+            )}
+          </li>
+          <li>
+            {t(
+              "Compare predicted observations, residuals and recovered properties. Use the noise and coverage variants to assess sensitivity, not to construct an unsupported probability interval.",
+              "Comparar predicciones, residuos y propiedades. Usar variantes de ruido y cobertura para sensibilidad, no para construir intervalos probabilísticos no sustentados.",
+            )}
+          </li>
+        </ol>
+        <p className="measure">
+          {t(
+            "On the App page, Model shows geometry or physical response, Data shows observations and predictions, and Inversion shows recovered properties and numerical histories. Case analysis explains the specific geological question. Experiment selection loads separately computed results; camera rotation and display gain only alter the view. The MT calculator is a separate browser forward calculation.",
+            "En App, Modelo muestra geometría o respuesta física; Datos, observaciones y predicciones; Inversión, propiedades recuperadas e historiales. Análisis del caso explica la pregunta geológica. Elegir un experimento carga resultados calculados separadamente; cámara y ganancia sólo modifican la vista. La calculadora MT es un cálculo directo separado en navegador.",
+          )}
+        </p>
+      </DocSection>
+      <DocSection title={t("Notation and scope of validation", "Notación y alcance de validación")} area="honesty" refs={["cockett2015", "virieux2009", "goyes2024"]}>
+
         <Callout
           variant="honest"
           title={t("Synthetic validation", "Validación sintética")}
@@ -334,9 +315,46 @@ export function Introduction() {
             "Recuperación de modelos conocidos, pruebas prismáticas independientes, identidades MT y pruebas de gradiente verifican cálculos específicos. No establecen precisión de campo, geología única, incertidumbre posterior ni un método nuevo. Los datos externos de tutorial se manejan separados del benchmark sintético.",
           )}
         </Callout>
-        <Sources ids={["cockett2015", "virieux2009", "goyes2024"]} />
-      </section>
+        <p className="measure">
+          {t(
+            "A rendered surface, interpolated color ramp or smooth boundary is a view of sampled or synthetic quantities; it is not additional evidence. Exactness applies only to the declared equations, discretization, inputs, versions, masks and reproducible outputs. A case with known synthetic truth can report model error; a field case cannot without independent reference truth. Appearance alone does not establish uncertainty or geological uniqueness.",
+            "Una superficie renderizada, una escala de color interpolada o un límite suavizado son vistas de cantidades muestreadas o sintéticas; no agregan evidencia. La exactitud corresponde solo a ecuaciones, discretización, entradas, versiones, máscaras y resultados reproducibles declarados. Un caso con verdad sintética conocida permite informar error de modelo; uno de campo no, sin una referencia independiente. La apariencia no demuestra incertidumbre ni unicidad geológica.",
+          )}
+        </p>
+      </DocSection>
     </div>
+  );
+}
+
+export function Introduction() {
+  const t = useText();
+  const [view, setView] = useState("executive");
+  return (
+    <DocPage
+      title={{ en: "Geophysical inverse problems", es: "Problemas inversos geofísicos" }}
+      lede={t(
+        "Geophysical inverse problems use gravity, magnetic, electrical, electromagnetic and seismic measurements to constrain physical properties beneath a survey. The measured response, acquisition geometry and chosen assumptions determine what can be inferred and what remains unresolved.",
+        "Los problemas inversos geofísicos usan mediciones gravimétricas, magnéticas, eléctricas, electromagnéticas y sísmicas para restringir propiedades físicas bajo un levantamiento. La respuesta medida, geometría de adquisición y supuestos elegidos determinan qué se infiere y qué permanece sin resolver.",
+      )}
+    >
+      <SubTabs
+        value={view}
+        onChange={setView}
+        ariaLabel={t("Introduction views", "Vistas de introducción")}
+        tabs={[
+          {
+            id: "executive",
+            label: t("Problem context", "Contexto del problema"),
+            content: <ExecutiveView data={executiveBrief} onOpenTechnical={() => setView("technical")} />,
+          },
+          {
+            id: "technical",
+            label: t("Technical view", "Vista técnica"),
+            content: <TechnicalIntroduction />,
+          },
+        ]}
+      />
+    </DocPage>
   );
 }
 
