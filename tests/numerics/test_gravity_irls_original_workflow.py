@@ -1,7 +1,6 @@
 """Closed source epoch/workflow, original sealed outer and transport controls."""
 from copy import deepcopy
 
-import numpy as np
 import pytest
 
 import gravity_irls_original as public

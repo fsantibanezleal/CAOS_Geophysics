@@ -4,7 +4,6 @@ The original plain-IRLS positive test and failure archives remain unchanged.
 Every actual state is exported before replay or accuracy can fail.
 """
 import json
-import os
 from pathlib import Path
 from time import monotonic
 
