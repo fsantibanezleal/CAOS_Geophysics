@@ -15,8 +15,8 @@
     "sha256": "b6eb000fb9163088f2d7d2af6aa9dcc55ff3d7093f5e9a7d88d801e63facfd32"
   },
   "api-payloads": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "schema": "docs/contracts/schemas/api-payloads.schema.json",
-    "sha256": "65f3622aa96bf468de7cb12ba6a07a7c4a2cb2f2b3ea96756dd4a272e2c60b55"
+    "sha256": "ef56bd4c0859cca841cca30c528d98491d9e1ab05699eed4c593a05ecf27e668"
   }
 }

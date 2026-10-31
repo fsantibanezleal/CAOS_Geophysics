@@ -11,7 +11,7 @@ The experiment catalogue is the precomputed public data lane. Its `version` may 
 | experiment-catalog | 2.0.0 | data-pipeline/catalog.py | docs/contracts/schemas/catalog.schema.json | data/derived/v2/catalog.json | data/derived/v2/catalog.json | scripts/check_artifacts.py | frontend/src/test/contract.test.ts | missing: no selectable baked cases; surface an unavailable state | fixture:data/derived/v2/catalog.json | - | tests/test_artifact_contract.py | real |
 | data-readiness | 1.0.0 | scripts/check_readiness.py | docs/contracts/schemas/readiness.schema.json | data/derived/readiness.json | data/derived/readiness.json | scripts/check_readiness.py | frontend/src/test/foundation-contracts.test.ts | missing: show readiness unavailable; never infer completeness | fixture:data/derived/readiness.json | - | scripts/check_readiness.py | real |
 | private-api | 1.1.0 | app/server.py | docs/contracts/api.openapi.json | - | docs/contracts/api.openapi.json#paths | scripts/check_api_contracts.py | tests/test_api_contract_catalog.py | auth unavailable or owner-scope miss is an explicit error; no fabricated success | fixture:docs/contracts/api.openapi.json | - | tests/test_api_contract_catalog.py | real |
-| api-payloads | 1.0.0 | app/schemas.py, app/views.py, app/processing.py | docs/contracts/schemas/api-payloads.schema.json | - | docs/data-contract/*.md | scripts/check_api_contracts.py | tests/test_api_contract_catalog.py | reject invalid wire payloads; method availability and scientific admission remain explicit | fixture:docs/contracts/schemas/api-payloads.schema.json | - | tests/test_api_contract_catalog.py | real |
+| api-payloads | 1.1.0 | app/schemas.py, app/views.py, app/processing.py | docs/contracts/schemas/api-payloads.schema.json | - | docs/data-contract/*.md | scripts/check_api_contracts.py | tests/test_api_contract_catalog.py | reject invalid wire payloads; method availability and scientific admission remain explicit | fixture:docs/contracts/schemas/api-payloads.schema.json | - | tests/test_api_contract_catalog.py | real |
 
 ## History
 
@@ -22,6 +22,7 @@ The experiment catalogue is the precomputed public data lane. Its `version` may 
 | private-api | 1.0.0 | 2026-10-24 | Record the existing private API boundary and route groups; no API behavior is changed. | initial |
 | private-api | 1.1.0 | 2026-10-24 | Add the complete current route/operation inventory, request and response media, auth modes, CSRF and error shapes. No API behavior is changed. | minor |
 | api-payloads | 1.0.0 | 2026-10-24 | Export request, response, dataset and scientific result envelope JSON Schema definitions; retain modality-specific runtime validation. | initial |
+| api-payloads | 1.1.0 | 2026-10-31 | Add the uploaded-data method eligibility response fields to the exported API payload schema. | minor |
 
 ## Existing versioned runtime contracts
 
