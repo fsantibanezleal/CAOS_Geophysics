@@ -7,6 +7,7 @@ import argparse
 from contextlib import redirect_stdout
 import hashlib
 import io
+from itertools import product
 from pathlib import Path
 import sys
 from time import monotonic
@@ -40,8 +41,9 @@ def main():
     from test_joint_survey_objective import body,independent_function
     records=[]
     deadline=monotonic()+1800.
-    for covariance in (False,True):
+    for covariance,coupling in product((False,True),(0.,.001,.01,.1,1.,10.)):
         value=body(covariance)
+        value['weights']['coupling']=coupling
         problem=compile_joint_development({'schema':'joint-survey-compile-request-1',
             'survey_request':value['survey_request'],'development':value['development']})
         weights=value['weights']
@@ -94,8 +96,8 @@ def main():
             budget=solver.NonlinearBudget(deadline,250,2*1024**3,1024**2,'3'*64)
             with redirect_stdout(io.StringIO()):
                 result=solver.solve_bounded_nonlinear(adapter,problem.lower,problem.upper,start,budget=budget,binding=source)
-            records.append({'full_covariance':covariance,'boundary_start':boundary,'result':result})
-            print(covariance,boundary,result['status'],result['reason'],result['iterations'],flush=True)
+            records.append({'full_covariance':covariance,'coupling':coupling,'boundary_start':boundary,'result':result})
+            print(covariance,coupling,boundary,result['status'],result['reason'],result['iterations'],flush=True)
             assert adapter.released
             trace=result['trace']
             scale=max(1.,float(np.linalg.norm(problem.state(start,weights)['gradient_normalized'],np.inf)))

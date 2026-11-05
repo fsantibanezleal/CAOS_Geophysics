@@ -7,9 +7,9 @@ admission. This candidate is not native/host/scientific acceptance authority.
 import hashlib
 import math
 import os
-import platform
 from pathlib import Path
 import sys
+import traceback
 from time import monotonic
 
 import numpy as np
@@ -29,11 +29,6 @@ _CLOSURE_EXPECTED=(
     '616ab442a96cccea5b09ba1ed70a0f118c2d771a5b721531e7b9e59696700ccf',
     '4b8eaea83fb58bcae42504d36500211375c69be9e15f189225a0ee86b0f9c10e',
     '000d0bf5b84cee94ead7022b9e6a55d1bdcb4b4e9fe4b7f218921cd35f06e2fa')
-_LINUX_X86_64_CLOSURE_EXPECTED=(
-    '17e29fa532a795497e657a033e743fda363d366b200720220ec31a3c79c74458',
-    '110fa0117a967f64ea347166a21e51123eedf283515fdc86f7adac92497a5bef',
-    '0e20d023fd23064cc73d610ebf248652dca1d6db5232fb058a0ed503824c23e1')
-SUPPORTED_PYTHON_VERSIONS={(3,12,10),(3,12,16)}
 _LOADED_PINS=tuple(hashlib.sha256(Path(p).read_bytes()).hexdigest()
                    for p in (linsolve.__file__,_superlu.__file__,_flapack.__file__))
 
@@ -67,17 +62,12 @@ def allocation(n,m,a,covariance):
 
 
 def _workspace_closure():
-    # Exact measured installed tuples only; no generic version>=, URLs-as-
-    # binary-proof or unmeasured native-workspace fallback.
-    if sys.version_info[:3] not in SUPPORTED_PYTHON_VERSIONS:
+    # One actual examined installed candidate tuple, not generic version>=,
+    # URLs-as-binary-proof or an invented native workspace fallback. Extension
+    # to another native build requires independently reviewed source closure.
+    if sys.version_info[:3]!=(3,12,10) or sys.platform!='win32':
         raise ValueError('metric: native workspace candidate tuple not registered')
-    if sys.platform=='win32':
-        expected=_CLOSURE_EXPECTED
-    elif sys.platform=='linux' and platform.machine()=='x86_64':
-        expected=_LINUX_X86_64_CLOSURE_EXPECTED
-    else:
-        raise ValueError('metric: native workspace candidate tuple not registered')
-    if _LOADED_PINS!=expected:
+    if _LOADED_PINS!=_CLOSURE_EXPECTED:
         raise ValueError('metric: native workspace source/build identity mismatch')
     if any(os.environ.get(k)!='1' for k in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS')):
         raise ValueError('metric: reviewed single-thread native workspace required')
@@ -89,16 +79,30 @@ def _workspace_closure():
         raise ValueError('metric: Python object workspace closure unsupported')
 
 
-def _stencil(matrix):
-    if (type(matrix) is not sp.csr_matrix or matrix.dtype!=np.float64
-        or matrix.indices.dtype!=np.int32 or matrix.indptr.dtype!=np.int32
-        or not 1<=matrix.shape[0]<=4096 or matrix.shape[0]!=matrix.shape[1]
-        or matrix.nnz>7*matrix.shape[0] or not np.isfinite(matrix.data).all()):
-        raise ValueError('metric: native first-order float64/int32 CSR required')
-    n=matrix.shape[0]
-    if (len(matrix.indptr)!=n+1 or matrix.indptr[0]!=0 or matrix.indptr[-1]!=matrix.nnz
-        or np.any(np.diff(matrix.indptr)<0) or np.any(matrix.indices<0) or np.any(matrix.indices>=n)):
+def _csr_storage(matrix,n,maximum):
+    # Validate backing arrays BEFORE dtype/nnz properties, sparse slicing/copy
+    # or a native entry can index malformed pointers. No user refusal assert.
+    if (type(matrix) is not sp.csr_matrix or matrix.shape!=(n,n)
+        or any(type(v) is not np.ndarray or v.ndim!=1 or not v.flags.c_contiguous
+               for v in (matrix.data,matrix.indices,matrix.indptr))
+        or matrix.data.dtype!=np.float64 or matrix.indices.dtype!=np.int32
+        or matrix.indptr.dtype!=np.int32 or len(matrix.data)!=len(matrix.indices)
+        or len(matrix.data)>maximum or len(matrix.indptr)!=n+1):
+        raise ValueError('metric: exact bounded float64/int32 CSR storage')
+    count=len(matrix.data)
+    if (matrix.indptr[0]!=0 or matrix.indptr[-1]!=count
+        or np.any(matrix.indptr<0) or np.any(matrix.indptr>count)
+        or np.any(np.diff(matrix.indptr)<0) or np.any(matrix.indices<0) or np.any(matrix.indices>=n)
+        or not np.isfinite(matrix.data).all()):
         raise ValueError('metric: invalid CSR index structure')
+
+
+def _stencil(matrix):
+    if (type(matrix) is not sp.csr_matrix or not 1<=matrix.shape[0]<=4096
+        or matrix.shape[0]!=matrix.shape[1]):
+        raise ValueError('metric: native first-order square CSR required')
+    n=matrix.shape[0]
+    _csr_storage(matrix,n,7*n)
     for i in range(n):
         columns=matrix.indices[matrix.indptr[i]:matrix.indptr[i+1]]
         values=matrix.data[matrix.indptr[i]:matrix.indptr[i+1]]
@@ -218,10 +222,12 @@ class JosephMetric:
             or free.dtype!=np.int64 or free.ndim!=1 or not 1<=len(free)<=self.a
             or np.any(free<0) or np.any(free>=self.a) or np.any(np.diff(free)<=0)):
             raise ValueError('metric: exact native operands/free principal face')
+        _csr_storage(weights,g.shape[0],g.shape[0]**2)
+        principal=t=s=chol=None
         try:
             principal=regularizer[free][:,free].tocsr()
             self.lower,self.pivots=_factor(principal,deadline)
-            del principal
+            principal=None
             _time(deadline)
             with np.errstate(over='raise',invalid='raise'):
                 self.b=_finite_array(np.sqrt(2.)*(weights@g[:,free]))
@@ -242,15 +248,30 @@ class JosephMetric:
             self.f=t
             # Actual independent S/factor/multi-RHS scratch cannot coexist with
             # CG or NI. Stored F reuses T; no parent/closure holds local scratch.
-            del s,chol,t
+            s=chol=t=None
             self.free=free.copy()
             for value in (self.pivots,self.b,self.f,self.free): value.flags.writeable=False
             for value in (self.lower.data,self.lower.indices,self.lower.indptr): value.flags.writeable=False
             _time(deadline)
             self.setup_seconds=monotonic()-started
-        except BaseException:
+        except BaseException as exc:
             self.close()
+            # Keep the original exception/cause/stack identity, but dispose
+            # inactive native-wrapper/factor frames even when a caller retains
+            # the failure traceback. The current executing frame is cleared by
+            # the explicit finally below, not by relying on cycle collection.
+            pending,seen=[exc],set()
+            while pending:
+                failure=pending.pop()
+                if id(failure) in seen: continue
+                seen.add(id(failure))
+                traceback.clear_frames(failure.__traceback__)
+                for linked in (failure.__cause__,failure.__context__):
+                    if linked is not None and id(linked) not in seen: pending.append(linked)
             raise
+        finally:
+            principal=t=s=chol=None
+            pending=seen=failure=linked=None
 
     @property
     def live_payload_bytes(self):

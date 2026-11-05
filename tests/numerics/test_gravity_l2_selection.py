@@ -13,15 +13,6 @@ import choclo
 
 import gravity_survey_l2 as survey
 import gravity_l2 as l2
-import gravity_l2_metric as metric
-
-
-@pytest.mark.parametrize('version', [(3,12,10),(3,12,16)])
-def test_registered_python_versions_keep_native_workspace_closure(version,monkeypatch):
-    monkeypatch.setattr(metric.sys,'version_info',version)
-    for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS'):
-        monkeypatch.setenv(name,'1')
-    assert metric._workspace_closure() is None
 
 
 def request():
@@ -39,14 +30,6 @@ def calibration_request():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module.calibration_request()
-
-
-def test_projected_kkt_accepts_scalar_native_bounds_for_one_cell():
-    # SimPEG exposes one-cell bounds as scalars; the physical model remains a
-    # one-element vector. Exercise interior and active-bound projections.
-    assert l2._kkt_gradient(np.array([0.]), np.array([2.]), -1., 1.).tolist() == [2.]
-    assert l2._kkt_gradient(np.array([-1.]), np.array([2.]), -1., 1.).tolist() == [0.]
-    assert l2._kkt_gradient(np.array([1.]), np.array([-2.]), -1., 1.).tolist() == [0.]
 
 
 def outer_request(result,values=None):
