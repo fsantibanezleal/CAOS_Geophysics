@@ -2,8 +2,13 @@
 
 ## Scope
 
-This is a current-source Windows replay of native survey admission, geometry
-partitioning and the ordinary gravity L2 solver. It does not run the
+This is a Windows replay of native survey admission, geometry partitioning and
+the ordinary gravity L2 solver at the exact source identities below. A later
+source-bound focused replay is recorded in
+`E:\_Datos\CAOS_Geophysics\validation\combined-m02-20261031\core-r2.xml`
+(183 passed, 0 failures/errors/skips; SHA-256
+`78726d2315e9e5aaee359c9392e0384e2419d2842acf0cd06c652eb3db1978a6`). This
+receipt does not run the
 receipt-backed 24-condition calibration matrix or establish independent M02,
 field, hosted or product acceptance.
 

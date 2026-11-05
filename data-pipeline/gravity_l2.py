@@ -236,8 +236,9 @@ class _SolveFailure(RuntimeError):
 
 
 def _kkt_gradient(q, gradient, lower, upper):
-    tolerance = 32*np.finfo(np.float64).eps*np.maximum.reduce(
-        [np.ones_like(q), np.abs(q), np.abs(lower), np.abs(upper)])
+    scale = np.maximum(np.maximum(np.ones_like(q), np.abs(q)),
+                       np.maximum(np.abs(lower), np.abs(upper)))
+    tolerance = 32*np.finfo(np.float64).eps*scale
     projected = gradient.copy()
     projected[(q <= lower+tolerance) & (gradient > 0)] = 0.
     projected[(q >= upper-tolerance) & (gradient < 0)] = 0.
@@ -494,8 +495,10 @@ class _RecordedProjectedGNCG(optimization.ProjectedGNCG):
         super().doEndIteration(xt)
 
 
-def _solve_partition(problem, prior, deadline=None):
+def _solve_partition(problem, prior, deadline=None, *, preserve_exact_q=False):
     """Return reviewed local hybrid solve/accepted trace under frozen stops."""
+    if type(preserve_exact_q) is not bool:
+        raise ValueError('optimizer: literal exact-q trace control')
     started = monotonic()
     stop_time = min(started+120., deadline) if deadline is not None else started+120.
     opt = _RecordedProjectedGNCG(problem, prior, stop_time)
@@ -570,6 +573,9 @@ def _solve_partition(problem, prior, deadline=None):
         'relative_changes': survey._readonly(np.abs(np.diff(phi_trace))/np.maximum(1., np.abs(phi_trace[:-1]))),
         'line_search_counts': survey._readonly(np.array(opt._ls_counts[:max(k-1, 0)], dtype=np.int64)),
         'cg_counts': survey._readonly(np.array(opt._cg_counts[:max(k-1, 0)], dtype=np.int64))}
+    if preserve_exact_q:
+        trace['models_q'] = survey._readonly(np.array([s[0] for s in states], dtype=np.float64)
+                                              .reshape(k, len(diagonal)))
     if monotonic() > stop_time and reason not in ('nonfinite', 'engine_error', 'state_mismatch', 'line_search_failed'):
         reason = 'wall_cap'
     # Private bounded evidence for external trusted controls, not extra public
@@ -848,10 +854,18 @@ def _solve_metadata(value,a,rows,beta):
             if value[key]<0: raise ValueError('solve: nonnegative metric')
     _int(value['iterations'],200,'solve.iterations')
     trace = value['trace']
-    survey._keys(trace,('models_kg_m3','phi_d','phi_m','phi_engine','kkt_normalized','relative_changes',
-                       'line_search_counts','cg_counts'),'trace')
+    trace_keys = ('models_kg_m3','phi_d','phi_m','phi_engine','kkt_normalized','relative_changes',
+                  'line_search_counts','cg_counts')
+    trace_key_set = set(trace)
+    if trace_key_set not in (set(trace_keys), set(trace_keys) | {'models_q'}):
+        raise ValueError('trace: exact optional native q path only')
+    survey._keys(trace,trace_keys+('models_q',) if 'models_q' in trace else trace_keys,'trace')
     survey._array(trace['models_kg_m3'],(None,a),'trace.models')
     k = len(trace['models_kg_m3'])
+    if 'models_q' in trace:
+        survey._array(trace['models_q'],(k,a),'trace.models_q')
+        if not np.array_equal(trace['models_q']*1000.,trace['models_kg_m3']):
+            raise ValueError('trace: exact q/physical state identity')
     if k>201: raise ValueError('trace:201states cap')
     for key in ('phi_d','phi_m','phi_engine','kkt_normalized'): survey._array(trace[key],(k,),'trace.'+key)
     survey._array(trace['relative_changes'],(max(0,k-1),),'trace.relative_changes')
@@ -939,6 +953,8 @@ def _calibration_result_metadata(result):
 def _validate_solve_state(solve,rows):
     if not np.array_equal(solve['fit_rows'],rows): raise ValueError('solve: row binding')
     trace,k = solve['trace'],len(solve['trace']['models_kg_m3'])
+    if 'models_q' in trace and not np.array_equal(trace['models_q']*1000.,trace['models_kg_m3']):
+        raise ValueError('trace: exact q/physical state identity')
     if solve['iterations']!=max(0,k-1): raise ValueError('solve: accepted history count')
     if any(np.any(trace[key]<0) for key in ('phi_d','phi_m','phi_engine','kkt_normalized','relative_changes')):
         raise ValueError('trace: negative metrics')

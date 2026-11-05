@@ -9,14 +9,16 @@ Las lecciones bilingües conectan la teoría con las implementaciones y la evide
 | `01-foundations` | No aplica | Sin nivel 3: la orientación e identificabilidad fundamentales se desarrollan en dos lecciones; luego siguen casos avanzados. | No aplica |
 | `02-gravity` | 1 | [Observaciones gravimétricas: referencia y signo](02-gravity/01-gravity-reference-and-units.ipynb) | [01-gravity-reference-and-units](../en/02-gravity/01-gravity-reference-and-units.ipynb) |
 | `02-gravity` | 2 | [Correcciones de estaciones gravimétricas](02-gravity/02-m01-station-corrections.ipynb) | [02-m01-station-corrections](../en/02-gravity/02-m01-station-corrections.ipynb) |
-| `02-gravity` | 3 | [Prismas gravimétricos y límite de aceptación inversa](02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb) | [03-m02-prism-forward-and-inverse-limits](../en/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb) |
+| `02-gravity` | 3 | [Prismas gravimétricos y límite de aceptación inversa](02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb) | [04-m02-prism-forward-and-inverse-limits](../en/02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb) |
+| `02-gravity` | 2 | [Gravedad de Long Valley en el tiempo: observaciones emparejadas](02-gravity/03-long-valley-time-lapse-processing.ipynb) | [03-long-valley-time-lapse-processing](../en/02-gravity/03-long-valley-time-lapse-processing.ipynb) |
 | `03-magnetics` | 1 | [Magnitudes magnéticas, marco y procedencia](03-magnetics/01-magnetic-quantities-and-frame.ipynb) | [01-magnetic-quantities-and-frame](../en/03-magnetics/01-magnetic-quantities-and-frame.ipynb) |
 | `03-magnetics` | 2 | [Admisión magnética y retención espacial](03-magnetics/02-m03-survey-geometry-and-holdout.ipynb) | [02-m03-survey-geometry-and-holdout](../en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb) |
 | `03-magnetics` | 3 | [Física directa y controles de prismas inducidos](03-magnetics/03-m04-induced-prism-forward.ipynb) | [03-m04-induced-prism-forward](../en/03-magnetics/03-m04-induced-prism-forward.ipynb) |
 | `03-magnetics` | 3 | [Objetivo magnético y validación de pliegue congelado](03-magnetics/04-m04-fit-objective-validation.ipynb) | [04-m04-fit-objective-validation](../en/03-magnetics/04-m04-fit-objective-validation.ipynb) |
-| `04-mt` | 1 | [QC tensorial MT y experimento de tipper](04-mt/01-mt-qc.ipynb) | [01-mt-qc](../en/04-mt/01-mt-qc.ipynb) |
-| `04-mt` | 2 | [Inversión MT estratificada e intervalos retenidos](04-mt/02-mt-forward.ipynb) | [02-mt-forward](../en/04-mt/02-mt-forward.ipynb) |
-| `04-mt` | 3 | [Cobertura de frecuencias e identificabilidad MT](04-mt/03-mt-method-comparison.ipynb) | [03-mt-method-comparison](../en/04-mt/03-mt-method-comparison.ipynb) |
+| `04-mt` | 1 | [Respuesta MT medida: unidades, orientación y período](04-mt/01-mt-response-observables.ipynb) | [01-mt-response-observables](../en/04-mt/01-mt-response-observables.ipynb) |
+| `04-mt` | 2 | [QC tensorial MT y sensibilidad a incertidumbre](04-mt/02-mt-qc.ipynb) | [02-mt-qc](../en/04-mt/02-mt-qc.ipynb) |
+| `04-mt` | 2 | [Inversión MT estratificada e intervalos retenidos](04-mt/03-mt-forward.ipynb) | [03-mt-forward](../en/04-mt/03-mt-forward.ipynb) |
+| `04-mt` | 3 | [Cobertura de frecuencias e identificabilidad MT](04-mt/04-mt-method-comparison.ipynb) | [04-mt-method-comparison](../en/04-mt/04-mt-method-comparison.ipynb) |
 | `05-ert` | 1 | [Parser ERT, unidades y experimento de resistividad aparente](05-ert/01-ert-rights.ipynb) | [01-ert-rights](../en/05-ert/01-ert-rights.ipynb) |
 | `05-ert` | 2 | [Inversión ERT 2D topográfica, verdad sintética y partición espacial retenida](05-ert/02-ert-inversion.ipynb) | [02-ert-inversion](../en/05-ert/02-ert-inversion.ipynb) |
 | `05-ert` | 3 | [Sensibilidad ERT, regularización y límites de evidencia](05-ert/03-ert-method-comparison.ipynb) | [03-ert-method-comparison](../en/05-ert/03-ert-method-comparison.ipynb) |

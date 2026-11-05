@@ -1,6 +1,7 @@
 # M02 result inspection and user-data mounting design
 
-Status: proposed; no new route, worker method or UI is activated by this document.
+Status: owner-approved design; no new route, worker method or UI is activated by
+this document.
 
 Prospective owned implementation is authorized by the full M02 continuation;
 source/host/online mounting remains separately reviewed. Corrected cpu2 uses

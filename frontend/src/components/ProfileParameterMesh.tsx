@@ -15,6 +15,7 @@ export function ProfileParameterMesh({model,sensors,row,cell,onCell,coverage,ran
   const values=coverage?model.coverage:model.values.map(Math.log10),bounds=coverage?extent(values):range&&range[0]>0&&range[1]>range[0]?[Math.log10(range[0]),Math.log10(range[1])] as [number,number]:extent(values);
   const palette=coverage?"field":"velocity",title=coverage?t("Returned coverage, not posterior uncertainty","Cobertura devuelta, no incertidumbre posterior"):t("Native parameter mesh","Malla nativa de parámetros");
   return <>
+    <div className="profile-parameter-mesh-view">
     <PlotCard title={title} lane="replay" provenance={provenance} fill note={t("Equal physical scale on both axes. Cell boundaries are the returned discretization, not geological contacts or subcell resolution. Selected sensors show acquisition locations, not computed current lines or bent rays.","Escala física igual en ambos ejes. Los límites corresponden a la discretización devuelta, no a contactos geológicos ni resolución subcelda. Los sensores seleccionados indican la adquisición, no líneas de corriente ni rayos curvos calculados.")} actions={<details><summary>{t("Mesh view","Vista de malla")}</summary>
     <div className="processing-view-controls"><button className="btn" onClick={()=>setZoom(Math.min(8,zoom*1.25))}>+</button><button className="btn" onClick={()=>setZoom(Math.max(1,zoom/1.25))}>−</button><button className="btn" onClick={()=>setPan(pan-width*.1/zoom)}>←</button><button className="btn" onClick={()=>setPan(pan+width*.1/zoom)}>→</button><button className="btn" onClick={()=>{setZoom(1);setPan(0);}}>{t("Reset view","Restablecer vista")}</button></div></details>}>
     <Stage label={title}>{({width:w,height:h})=>{
@@ -27,12 +28,13 @@ export function ProfileParameterMesh({model,sensors,row,cell,onCell,coverage,ran
         <polyline pointerEvents="none" points={sensors.map(p=>`${X(p[0])},${Y(p[1])}`).join(" ")} fill="none" stroke="var(--color-fg)" strokeWidth="1.5"/>
         {row.map((id,i)=><g key={i} pointerEvents="none"><circle cx={X(sensors[id][0])} cy={Y(sensors[id][1])} r="4" fill="var(--color-surface)" stroke="var(--color-fg)" strokeWidth="2"/><text x={X(sensors[id][0])} y={Y(sensors[id][1])-8} textAnchor="middle" fill="var(--color-fg)">{row.length===4?["A","B","M","N"][i]:["S","R"][i]}</text></g>)}
       </g>
-      {Array.from({length:4},(_,i)=>{const x=centre+pan-width/(2*zoom)+i*width/(3*zoom),z=yr[1]-i*height/(3*zoom);return <g key={i}><text x={X(x)} y={bottom+20} textAnchor="middle" fill="var(--color-fg)">{format(x)}</text><text x="64" y={Y(z)+4} textAnchor="end" fill="var(--color-fg)">{format(z)}</text></g>;})}
+      {Array.from({length:4},(_,i)=>{const x=centre+pan-width/(2*zoom)+i*width/(3*zoom),z=yr[1]-i*height/(3*zoom),tickFormat={maximumFractionDigits:w<500?1:2};return <g key={i}><text x={X(x)} y={bottom+20} textAnchor="middle" fill="var(--color-fg)">{format(x,tickFormat)}</text><text x="64" y={Y(z)+4} textAnchor="end" fill="var(--color-fg)">{format(z,tickFormat)}</text></g>;})}
       <text x="16" y="15" fill="var(--color-fg)">{t("Elevation [m] · up","Elevación [m] · arriba")}</text>
       <text x={(w+52)/2} y={Math.min(h-10,bottom+60)} textAnchor="middle" fill="var(--color-fg)">{t("Distance [m]","Distancia [m]")}</text>
     </svg>;
     }}</Stage>
     </PlotCard>
+    </div>
     <Legend range={bounds} unit={coverage?model.coverageUnit:`log₁₀ ${model.unit}`} palette={palette}/>
   </>;
 }

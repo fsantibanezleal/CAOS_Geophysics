@@ -1,11 +1,13 @@
-"""Geometry-only export closure, not future inverse-bundle durability."""
+"""Geometry closure and bounded local bundle-generation controls."""
 
 import json
 import pytest
 from magnetic_survey_support import encode, request
 from magnetic_survey_json import InputError, parse_request
 from magnetic_survey import plan_geometry
+import magnetic_survey_bundle as bundle
 from magnetic_survey_bundle import export_geometry, import_geometry, write_geometry, read_geometry
+from magnetic_bundle_support import make_manifest
 
 
 def test_geometry_roundtrip_and_write_failure(tmp_path, monkeypatch):
@@ -29,6 +31,24 @@ def test_geometry_roundtrip_and_write_failure(tmp_path, monkeypatch):
         write_geometry(failed, handle)
     assert not failed.exists()
     assert target.read_bytes() == previous
+
+
+def test_roundtrip_and_interrupted_generation(tmp_path, monkeypatch):
+    first, first_payloads = make_manifest("local_calibrate", "failed")
+    root = tmp_path / "result-bundle"
+    bundle.write_bundle_generation(root, first, first_payloads)
+    roundtrip, roundtrip_payloads = bundle.read_bundle_generation(root)
+    assert roundtrip == first
+    assert roundtrip_payloads == first_payloads
+
+    replacement, replacement_payloads = make_manifest("local_evaluate", "ineligible")
+    def interrupted_replace(*_args, **_kwargs):
+        raise OSError("injected pointer interruption")
+    monkeypatch.setattr(bundle.os, "replace", interrupted_replace)
+    with pytest.raises(OSError, match="injected pointer interruption"):
+        bundle.write_bundle_generation(root, replacement, replacement_payloads)
+    still_current, _ = bundle.read_bundle_generation(root)
+    assert still_current["generation_sha256"] == first["generation_sha256"]
 
 
 @pytest.mark.parametrize("attack", ["extra", "hash", "plan", "request", "oversized", "truncated"])

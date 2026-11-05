@@ -5,6 +5,7 @@ import pytest
 
 import gravity_irls_original as public
 import gravity_irls_pool as pool
+import gravity_irls_corrected_workflow as workflow
 import gravity_workflow_io as transport
 from test_gravity_irls import policy
 from test_gravity_l2_selection import calibration_request, outer_request
@@ -21,6 +22,25 @@ def request():
 def actual():
     req = request()
     return req, public.calibrate(req)
+
+
+def test_expired_original24_clock_exports_wall_cap_without_solver(monkeypatch):
+    clock_calls = []
+
+    def clock():
+        clock_calls.append(1)
+        return 0. if len(clock_calls) == 1 else 1801.
+
+    monkeypatch.setattr(workflow, 'monotonic', clock)
+    monkeypatch.setattr(public, 'solve_partition',
+        lambda *args, **kwargs: pytest.fail('expired original24 workflow launched optimizer'))
+    result = public.calibrate(request())
+    assert result['wall_seconds'] == 1801.
+    assert result['selection_status'] == 'insufficient_candidates'
+    assert len(result['fits']) == 24
+    raw = [pool.decode(fit) for fit in result['fits']]
+    assert all(fit['schema'] == 'gravity-corrected-unstarted-1'
+        and fit['reason'] == 'wall_cap' for fit in raw)
 
 
 def test_source_correct_all25_null_fits_export_and_frozen_outer(actual, tmp_path, monkeypatch):

@@ -133,7 +133,20 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
     """Return a notebook in an isolated, input-complete copy of the product."""
     work = tmp_root / "repo"
     work.mkdir(parents=True, exist_ok=True)
-    for name in ("data", "data-pipeline", "docs", "content", "models", "notebooks"):
+    # These two seismic lessons declare all runtime inputs under data/ and
+    # data-pipeline/. Copy their notebook files individually instead of staging
+    # unrelated documentation and model trees for a narrowly scoped check.
+    relative = Path(relative_notebook)
+    seismic_lesson = relative.as_posix() in {
+        "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb",
+        "notebooks/es/06-seismology/04-m13-learned-phase-picking.ipynb",
+        "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
+        "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
+    }
+    names = ("data", "data-pipeline") if seismic_lesson else (
+        "data", "data-pipeline", "docs", "content", "models", "notebooks"
+    )
+    for name in names:
         origin = source_root / name
         target = work / name
         if origin.exists() and not target.exists():
@@ -144,22 +157,32 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
                 return ignored
 
             shutil.copytree(origin, target, ignore=ignore_generated)
+    if seismic_lesson:
+        origin = source_root / relative
+        target = work / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if not target.exists():
+            shutil.copy2(origin, target)
     # The magnetic survey lessons execute these reviewed support modules from
     # their project-relative paths. They are notebook inputs just like the
     # pipeline and documentation trees above, not optional test-only fixtures.
-    for relative in (
+    support_files = (
+        "scripts/run_m10_lesson_worker.py",
+    ) if relative.as_posix().endswith("05-m10-fwi-case-matrix.ipynb") else (() if seismic_lesson else (
         "tests/data/magnetic_survey_support.py",
         "tests/fixtures/magnetic_survey/generate.py",
-    ):
-        origin = source_root / relative
-        target = work / relative
+        "scripts/run_m10_lesson_worker.py",
+    ))
+    for support in support_files:
+        origin = source_root / support
+        target = work / support
         if origin.is_file() and not target.exists():
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(origin, target)
     version = source_root / "VERSION"
     if version.is_file() and not (work / "VERSION").exists():
         shutil.copy2(version, work / "VERSION")
-    return work / Path(relative_notebook)
+    return work / relative
 
 
 def misplaced() -> list[str]:
@@ -412,6 +435,17 @@ def main() -> int:
     os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")  # the kernels import data-pipeline/ by path: leave no cache behind
     # The M07 lesson invokes its separately pinned pyGIMLi solver from a temp copy during --check.
     os.environ.setdefault("CAOS_SOURCE_ROOT", str(ROOT))
+    # M10 executes its solver through the GPU-capable pipeline environment. In
+    # --check mode notebooks run from a release-shaped copy without virtualenvs,
+    # so pass the explicit executable while keeping source/data imports local to
+    # that isolated copy.
+    source_root = Path(os.environ["CAOS_SOURCE_ROOT"]).resolve()
+    pipeline_python = next((path for path in (
+        source_root / ".venv-pipeline" / "Scripts" / "python.exe",
+        source_root / ".venv-pipeline" / "bin" / "python",
+    ) if path.is_file()), None)
+    if pipeline_python is not None:
+        os.environ.setdefault("CAOS_PIPELINE_PYTHON", str(pipeline_python))
     warm_matplotlib()
     kernel_tmp = tempfile.TemporaryDirectory(prefix="caos-notebook-kernels-", dir=str(temp_root))
     pipeline_kernels = Path(kernel_tmp.name)

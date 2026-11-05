@@ -1,5 +1,28 @@
 # Independent validation and complete acceptance matrix
 
+## 2026-11-02 positive-down background correction
+
+The fold assembler had used the wrong vertical sign for its inducing-field
+background. It now consumes the ENU vector validated and returned by the
+actual SimPEG forward engine. The exact-total-anomaly regression compares the
+assembled prediction to that engine on the same fit rows; see the
+[field-sign validation](../../../validation/m04-positive-down-background-2026-11-02.md).
+The exact R-405 and R-406 gates now independently check all quantity Jacobians
+against Choclo observations and full-covariance principal whitening against
+explicit solves; see the [gate evidence](../../../validation/m04-quantity-covariance-gates-2026-11-02.md).
+The current focused M04 regression passes 456 tests with no skips. Inverse,
+optimizer, and product acceptance remain open.
+
+## 2026-11-02 independent synthetic acquisition matrix
+
+The geometry-first six-regime, three-quantity Choclo generator and its
+manifest-bound request/truth files are documented in the
+[current R-412 validation report](../../../validation/m04-synthetic-acquisition-2026-11-02.md).
+The exact `test_independent_case_matrix` gate passes for all 18 cases, and the
+current focused M04 foundation/regression run passed 453 tests with no skips.
+This closes synthetic generation controls only; the full inverse and M04
+acceptance matrix remain open.
+
 ## 2026-10-28 bounded likelihood-composition increment
 
 `data-pipeline/magnetic_objective.py` now composes the frozen Gaussian data
@@ -357,3 +380,11 @@ inheritance assumption, no view-domain masking becoming model QC. Course/wiki
 needs source-linked theory, all equations/symbols, two worked user-data modes,
 six-regime interpretation, exercises and failures; an EN-only forward wiki is
 not a completed bilingual inverse course.
+
+The bounded NPY member and history codecs plus generation-envelope pointer
+controls have a focused 48-test replay recorded in
+`docs/validation/m04-bounded-array-member-codec-2026-11-02.md`. This is container
+integrity evidence using a structural failure fixture. Request semantics and
+request-array unit binding are now checked by reconstruction and reparsing; full
+Result semantics, Result-array field-to-unit binding, fitted-result replay, Windows
+crash durability, optimizer binding, and R-415 acceptance remain open.

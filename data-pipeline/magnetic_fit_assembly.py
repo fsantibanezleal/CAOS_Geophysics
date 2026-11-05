@@ -84,9 +84,6 @@ def assemble_magnetic_fit_objective(handle, fold_index):
     amplitude = float(frame["F_nT"])
     inclination = float(frame["I_deg"])
     declination = float(frame["D_deg"])
-    inc, dec = np.deg2rad(inclination), np.deg2rad(declination)
-    background = amplitude * np.array([np.cos(inc)*np.sin(dec),
-                                       np.cos(inc)*np.cos(dec), np.sin(inc)], dtype=np.float64)
     original_receivers = np.asarray(
         geometry["receivers_m"]["data"], dtype=np.float64
     ).reshape(-1, 3, order="C")
@@ -100,6 +97,12 @@ def assemble_magnetic_fit_objective(handle, fold_index):
                             "declination_deg": declination},
     }
     forward = forward_magnetic_with_kernel(forward_request)
+    # Reuse the engine-validated ENU vector. Re-deriving its convention here
+    # had inverted the vertical sign for positive-down inclination.
+    background = np.asarray(forward["inducing_field"]["background_enu_nt"], dtype=np.float64)
+    if background.shape != (3,) or not np.isfinite(background).all():
+        raise ValueError("inducing field: engine returned an invalid ENU background vector")
+    background = background.copy()
 
     source_indices = (fit_rows[:, None] * components + np.arange(components, dtype=np.int64)).reshape(-1)
     observed = observations.reshape(-1, order="C")[source_indices].astype(np.float64, copy=True)

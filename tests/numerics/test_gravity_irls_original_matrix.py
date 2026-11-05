@@ -91,7 +91,7 @@ def test_original_archive_resume_requires_exact_request_and_all_sources(tmp_path
 
 @pytest.mark.parametrize('condition', range(4))
 @pytest.mark.parametrize('family', range(6))
-def test_original24_source_correct_science(family, condition, record_property):
+def test_original24_source_correct_science(family, condition, record_property, monkeypatch):
     request, values, covariance = original_request(family, condition)
     data, temp = archive_roots()
     archive_name = existing_original_archive(data, family, condition, request)
@@ -110,17 +110,42 @@ def test_original24_source_correct_science(family, condition, record_property):
     outcome = {'family': family, 'condition': condition, 'seed': 700001+100*family+condition,
         'request_sha256': survey._digest(request), 'result_sha256': result['result_sha256'],
         'runtime_epoch': irls.RUNTIME_EPOCH, 'selection_status': result['selection_status'],
-        'selected_index': result['selected_index'], 'outer_wrms': None, 'model_rmse_ratio': None,
+        'selected_index': result['selected_index'], 'calibration_wall_seconds': result['wall_seconds'],
+        'outer_wrms': None, 'model_rmse_ratio': None,
         'resumed_exact_archive': resumed,
         'fits': tuple({'status': irls_workflow_summary(fit)[0],
             'reason': irls_workflow_summary(fit)[1], 'iterations': fit['iterations'],
+            'wall_seconds': fit.get('wall_seconds'),
             'weight_updates': fit['terminal']['weight_updates'] if 'terminal' in fit else None}
             for fit in fits)}
     record_property('original24_irls_outcome', json.dumps(outcome, sort_keys=True, allow_nan=False))
     wrapper = {'schema': 'gravity-calibration-archive-1', 'request': request, 'result': result}
     if not resumed:
         workflow.publish_archive(data, temp, archive_name, wrapper)
-    irls.validate(result, request)
+    # One exact replay is sufficient: transport verification dispatches to
+    # `irls.validate` for this result schema. Calling both duplicated the full
+    # native 24-fold replay without adding an independent acceptance check.
+    validate_partition = irls.validate_partition
+    replay_index = 0
+
+    def record_partition_replay(*args, **kwargs):
+        nonlocal replay_index
+        index = replay_index
+        replay_index += 1
+        replay_started = monotonic()
+        try:
+            value = validate_partition(*args, **kwargs)
+        except Exception as error:
+            record_property(f'original24_partition_replay_{index:02d}', json.dumps({
+                'status': 'failed', 'error': type(error).__name__,
+                'seconds': monotonic()-replay_started}, sort_keys=True, allow_nan=False))
+            raise
+        record_property(f'original24_partition_replay_{index:02d}', json.dumps({
+            'status': 'passed', 'seconds': monotonic()-replay_started},
+            sort_keys=True, allow_nan=False))
+        return value
+
+    monkeypatch.setattr(irls, 'validate_partition', record_partition_replay)
     workflow.verify_calibration(workflow.read_archive(data, archive_name))
     assert len(result['candidates']) == 8 and all(len(c['folds']) == 3 for c in result['candidates'])
     assert result['wall_seconds'] <= 1800.

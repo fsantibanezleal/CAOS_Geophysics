@@ -134,7 +134,7 @@ export default function Workbench() {
   const [shot, setShot] = useState(1);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [scientificView, setScientificView] = useState("earth");
-  const [railOpen, setRailOpen] = useState(true);
+  const [railOpen, setRailOpen] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<"experiment" | "replay" | "evidence">("experiment");
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -169,9 +169,25 @@ export default function Workbench() {
     setScientificView("earth");
   }, [selected]);
   const usesSpatialVolume = ["gravity", "magnetics", "joint"].includes(run?.family ?? "");
+  const lastScientificView = useRef(scientificView);
   useEffect(() => {
-    setRailOpen(scientificView === "earth" && usesSpatialVolume);
-  }, [scientificView, usesSpatialVolume]);
+    if (lastScientificView.current !== scientificView) setRailOpen(false);
+  }, [scientificView]);
+  useEffect(() => {
+    if (lastScientificView.current === scientificView) return;
+    lastScientificView.current = scientificView;
+    // Keep a newly selected scientific panel anchored at its own tab row.
+    // Long case views can otherwise retain the previous panel's scroll
+    // offset and open halfway through the next panel, hiding its first data
+    // plot and its context from both readers and visual QA.
+    window.requestAnimationFrame(() => {
+      const tabs = document.querySelector<HTMLElement>(".instrument-main > .tabs > .tablist");
+      if (!tabs) return;
+      const headerBottom = document.querySelector<HTMLElement>("header")?.getBoundingClientRect().bottom ?? 0;
+      const top = tabs.getBoundingClientRect().top + window.scrollY - headerBottom - 8;
+      window.scrollTo({ top: Math.max(0, top), behavior: "instant" });
+    });
+  }, [scientificView]);
   const artifact = entry?.variants.find((v) => v.id === variant) ?? entry?.variants[0];
   useEffect(() => {
     if (!artifact) return;
@@ -740,7 +756,7 @@ export default function Workbench() {
         fullWaveRange[1] / gain,
       ];
       const bounds = comparisonScale.range;
-      const vel = (data: number[][], title: string) => (
+      const vel = (data: number[][], title: string, showMesh = false) => (
         <Heatmap
           data={data}
           title={title}
@@ -751,6 +767,7 @@ export default function Workbench() {
           yLabel={t("Depth · m", "Profundidad · m")}
           xRange={seismicX}
           yRange={seismicY}
+          showMesh={showMesh}
         />
       );
       const gatherPlot = (data: number[][], title: string) => (
@@ -873,10 +890,11 @@ export default function Workbench() {
       recovery = (
         <div className="evidence-layout">
           <div className="three-plots fwi-recovery-plots">
-            {run.initial && vel(run.initial as number[][], t("Starting model", "Modelo inicial"))}
+            {run.initial && vel(run.initial as number[][], t("Starting model", "Modelo inicial"), true)}
             {vel(
               method.model as number[][],
               t("Recovered velocity", "Velocidad recuperada"),
+              true,
             )}
             <Heatmap
               title={t("Velocity error", "Error de velocidad")}
@@ -1010,6 +1028,39 @@ export default function Workbench() {
       measurements = earth;
       recovery = (
         <div className="evidence-layout learned-recovery-layout">
+          <div className="three-plots learned-recovery-plots">
+            <Heatmap
+              data={ref}
+              title={cnn ? t("Known held-out density-column target", "Objetivo conocido de columna de densidad retenido") : t("Network input used for reconstruction", "Entrada de red usada para la reconstrucción")}
+              unit={cnn ? "g/cm³ m" : "mGal"}
+              range={reconstructionRange}
+              xLabel="E · m"
+              yLabel="N · m"
+              xRange={cnn ? [-1120, 1120] : surveyEasting}
+              yRange={cnn ? [-960, 960] : surveyNorthing}
+            />
+            <Heatmap
+              data={predicted}
+              title={cnn ? t("Held-out density-column estimate", "Estimado de columna de densidad retenido") : t("Reconstructed observation field", "Campo de observaciones reconstruido")}
+              unit={cnn ? "g/cm³ m" : "mGal"}
+              range={reconstructionRange}
+              xLabel="E · m"
+              yLabel="N · m"
+              xRange={cnn ? [-1120, 1120] : surveyEasting}
+              yRange={cnn ? [-960, 960] : surveyNorthing}
+            />
+            <Heatmap
+              data={errorMap}
+              title={cnn ? t("Signed column-density error", "Error con signo de columna de densidad") : t("Normalized reconstruction error", "Error normalizado de reconstrucción")}
+              unit={cnn ? "g/cm³ m" : t("normalized squared error", "error cuadrático normalizado")}
+              range={signed(flatten(errorMap))}
+              palette="error"
+              xLabel="E · m"
+              yLabel="N · m"
+              xRange={[-1120, 1120]}
+              yRange={[-960, 960]}
+            />
+          </div>
           {history}
           <p className="plot-note">
             {t(
@@ -1037,6 +1088,7 @@ export default function Workbench() {
     kind: "synthetic",
     anchor: `${c.geometry} · seed ${c.seed}`,
   }));
+
   return (
     <CaseWorkbench
       caseId={selected}

@@ -83,3 +83,19 @@ unit; none is silently removed from PR120's accepted plan:
 
 No issue is closed by docs/static success. MAIN decides plan readiness and later
 authority after complete read; this agent does not merge/deploy.
+
+## Approved additive terminal-certificate work
+
+| Work item | State | Evidence and remaining gate |
+| --- | --- | --- |
+| Exact fixed-point certificate design | Approved by user; dated amendment recorded | `terminal-certificate-amendment-2026-11-02.md` |
+| Versioned CPU2 candidate implementation and independent-result validator | Present in dirty checkout; candidate only | `gravity_irls_corrected.py`; do not treat as merged/promoted |
+| Focused positive and adversarial tests | 36 tests passed on current source with reviewed single-thread environment, including the seven input-identity tamper cases | [`terminal-certificate-validation-2026-11-02.md`](terminal-certificate-validation-2026-11-02.md); first unpinned invocation failed at workspace admission and is excluded from solver evidence |
+| Implicated archived-fold audit and separate seeded positive | Seeded non-null positive terminal route and adversarial controls pass in the 36-test exact-source suite; research-only archived weight/KKT audit remains diagnostic | The archived 12-fold audit does not exercise this terminal route; independent reproduction from original request/native archive remains required |
+| Complete current-source matrix and resource gates | All 24 actual nodes selected a candidate; 22 passed held-out evaluation, and two initially exceeded the unchanged 120 s per-fit cap by 2.656 s and 0.047 s. Both fresh-root replay cases now pass under the same limits. The earlier 20+20 resource children had a stale solver source pin; a fresh exact-current-source 20+20 replay now passes with complete sampling (see dated validation ledger). Local aggregate `resource_upper_proof` and `host_accepted` remain false. | First launcher had a node-ID ordering mismatch; its eight nonexistent selectors are harness errors, excluded from solver evidence. Preserve the 1,800 s aggregate and 120 s per-fit limits. See the dated validation ledger. |
+| Current exact-source CPU2 terminal-certificate matrix — 2026-11-02 | All 24 family/condition nodes passed; all selected candidates completed outer evaluation. 600 fit records, max individual wall 118.234 s, max calibration wall 867.844 s. Independent computational audit checked 208 terminal certificates across 24 source-matched archives. | Exact JUnit, archive and audit receipt hashes are in `terminal-certificate-validation-2026-11-02.md`. This does not replace external owner review, allocation upper-bound proof, host admission, or full M02/product acceptance. |
+| Independent certificate reproduction | Open | Reviewer must calculate from original request and native archive without importing producer terminal decision |
+
+The user-approved design does not waive any open validation row. The terminal
+route remains ineligible for scientific selection or VPS promotion until all
+gates pass.

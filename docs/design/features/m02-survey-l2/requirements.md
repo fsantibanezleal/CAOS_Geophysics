@@ -1,7 +1,12 @@
 # Ordinary submitted-survey L2 requirements
 
-Status: planned. MAIN complete sub-SDD read and explicit code/test authority
-pending. All gates below are prospective and NOT RUN; no new named test exists.
+Status: partially implemented and locally tested; full M02 acceptance remains open.
+The code and test functions named below now exist. The current-source focused
+CPU receipt reports 183 passed with no failures, errors or skips; see
+[core replay](evidence/core-replay-2026-10-31.md) and its newer external receipt
+at `E:\_Datos\CAOS_Geophysics\validation\combined-m02-20261031\core-r2.xml`.
+The 24-condition ordinary-L2 matrix has a separate passing receipt for its
+recorded source revision; it must be replayed if any pinned source changes.
 This does not close the [parent's 19 requirements](../m02-survey-inversion/requirements.md).
 [Typed protocol](contract.md), [design](design.md), [controls](validation.md).
 
@@ -85,6 +90,25 @@ complete predeclared control matrix, all negative/noise/geometry/model outcomes
 and untouched sealed scores, never relax thresholds or treat synthetic truth as field.
 Gate: tests/numerics/test_gravity_l2_selection.py::test_complete_locked_l2_control_matrix
 
-Each requirement's numerical or data gate is named in validation but absent.
-Documentation/source inspection checks establish reviewability, NOT numerical
-implementation, field admission, IRLS, API, GPU, host or full-M02 acceptance.
+These gates establish local data and ordinary-L2 behavior only. Synthetic
+controls are not field evidence. Sparse IRLS candidate selection and refits,
+field-source eligibility, authenticated uploaded-data integration, GPU use,
+VPS admission, and full-M02/product acceptance remain separate open gates.
+
+## Additive CPU2 terminal-certificate amendment
+
+L2-17 WHEN the non-null CPU2 IRLS run reaches its approved 20-update epsilon-floor
+terminal without satisfying the existing three-transition test, THE unit MAY
+report convergence only if the exact-state fixed-point certificate in
+[`terminal-certificate-amendment-2026-11-02.md`](terminal-certificate-amendment-2026-11-02.md)
+replays: stationary zero-iteration final native solve, bitwise-identical weights,
+independently recomputed projected-KKT infinity <=1e-12, and a positive strict-
+convexity lower bound for the frozen stage objective. All source/request/bounds/
+operator/beta/epsilon/stage/resource identities SHALL replay exactly. No extra
+solve/update is allowed. Null/reference and pre-existing three-transition paths
+SHALL remain unchanged. Any ambiguity or failed invariant SHALL retain failure.
+
+Gate: `tests/numerics/test_gravity_irls_corrected.py` plus source-bound positive
+fold controls, complete 24-cell and resource replay, and independent certificate
+reproduction. The focused tests alone do not close L2-17 or establish method,
+scientific, or product acceptance.

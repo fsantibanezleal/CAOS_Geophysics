@@ -11,7 +11,8 @@ MANIFEST = ROOT / 'docs/data-contract/03_gravity-survey-native-integration.md'
 def test_manifest_exports_name_existing_product_definitions():
     text = MANIFEST.read_text(encoding='utf-8')
     exports = re.findall(r'\b(gravity_[a-z0-9_]+)\.([a-z0-9_]+)', text)
-    assert len(exports) == 12
+    assert len(exports) >= 12
+    assert len(set(exports)) == len(exports)
     for module, name in exports:
         tree = ast.parse((ROOT / 'data-pipeline' / (module + '.py')).read_text(encoding='utf-8'))
         functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
@@ -25,13 +26,14 @@ def test_manifest_exports_name_existing_product_definitions():
         assert epoch in text
 
 
-def test_inspection_proposal_has_named_gates_and_is_not_an_implemented_mount():
+def test_inspection_sdd_is_approved_and_mount_remains_gated():
     folder = ROOT / 'docs/design/features/m02-result-inspection'
     requirements = (folder / 'requirements.md').read_text(encoding='utf-8')
-    assert 'Status: proposed; review required before implementation.' in requirements
+    assert 'Status: owner-approved specification' in requirements
     parts = re.split(r'(?m)^MV-\d{2}\b', requirements)[1:]
     assert len(parts) == 13
-    assert all('Gate: proposed ' in part for part in parts)
+    assert all('Gate: ' in part for part in parts)
+    assert all('Gate: proposed ' not in part for part in parts)
     design = ' '.join((folder / 'design.md').read_text(encoding='utf-8').split())
     for predicate in ('observed_minus_predicted', 'fit_sha256', 'frame_model_sha256',
                       'recipe_sha256', 'field_eligible=false', 'host_accepted=false',

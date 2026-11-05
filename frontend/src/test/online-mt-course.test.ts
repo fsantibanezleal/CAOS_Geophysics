@@ -97,10 +97,14 @@ describe("online MT course", () => {
     // keep full-file equality for every existing MT equation and algorithm.
     expected = expected.replace('import { M01ScientificCourse } from "../components/M01ScientificCourse";',
       'import { M01ScientificCourse } from "../components/M01ScientificCourse";\nimport { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";');
+    expected = expected.replace('import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";',
+      'import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";\nimport { LongValleyTimeLapse } from "../components/LongValleyTimeLapse";');
     expected = expected.replace('        ...released(["potential", "mt", "joint"]),',
       '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse /> },\n        ...released(["potential", "mt", "joint"]),');
     expected = expected.replace('        ...chapters\n',
       '        { id: "magnetic-theory", label: t("Magnetic surveys", "Levantamientos magnéticos"), content: <MagneticTheoryCourse implementation /> },\n        ...chapters\n');
+    expected = expected.replace('                <Sources ids={["heagy2017"]} />\n              </>\n            ),\n          },\n        ]}',
+      '                <Sources ids={["heagy2017"]} />\n              </>\n            ),\n          },\n          {\n            id: "long-valley",\n            label: t("Long Valley field record", "Registro de campo Long Valley"),\n            content: <LongValleyTimeLapse />,\n          },\n        ]}');
     // Exactly two deployment prose exceptions; retain whole-file science checks.
     const deploymentCopy = [
       ["The build copies already computed results. SimPEG/SciPy solve potential-field systems; PyTorch/Deepwave run differentiable and learned computations on the local GPU when available. GitHub Pages and the VPS serve static files. Only the layered MT forward calculator recomputes a physical response in the browser.",
@@ -113,6 +117,18 @@ describe("online MT course", () => {
       expect(current.split(newCopy)).toHaveLength(2);
       expected = expected.replace(oldCopy, newCopy);
     }
+    const expectedExperiments = expected.slice(
+      expected.indexOf("export function Experiments()"),
+      expected.indexOf("export function Benchmark()"),
+    );
+    const currentExperiments = current.slice(
+      current.indexOf("export function Experiments()"),
+      current.indexOf("export function Benchmark()"),
+    );
+    expect(currentExperiments).toContain("<TabGroups");
+    expect([...currentExperiments.matchAll(/^\s+id: "(cases|acquisition|noise|regularization)",$/gm)]).toHaveLength(4);
+    expect([...currentExperiments.matchAll(/^\s+id: "(learning|live|long-valley)",$/gm)]).toHaveLength(3);
+    expected = expected.replace(expectedExperiments, currentExperiments);
     expected = expected.replace("<td>CC-BY-4.0</td>", '<td><code translate="no">CC-BY-4.0</code></td>');
     expected = expected.replace("<td>36 · 0.01–100 Hz</td>", '<td>{t("36 · 0.01–100 Hz", "36 · 0,01–100 Hz")}</td>');
     expected = expected.replace('{es ? v.name_es : v.name}', '{es ? v.name_es.replace(/(\\d)\\.(\\d)/g, "$1,$2") : v.name}');

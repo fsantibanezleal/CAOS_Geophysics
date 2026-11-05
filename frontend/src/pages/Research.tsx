@@ -9,6 +9,7 @@ import {
   DocPage,
   DocSection,
   ExecutiveView,
+  TabGroups,
   Tabs,
   useShellLang,
 } from "@fasl-work/caos-app-shell";
@@ -24,6 +25,7 @@ import { PhasePickerPanel } from "../components/PhasePickerPanel";
 import { M12ResidualEvidence } from "../components/M12ResidualEvidence";
 import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
 import { M01ScientificCourse } from "../components/M01ScientificCourse";
+import { LongValleyTimeLapse } from "../components/LongValleyTimeLapse";
 import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
@@ -721,9 +723,14 @@ export function Experiments() {
           "Cada geometría sintética se evalúa con un levantamiento de referencia y cinco modificaciones. Se comparan contraste, ruido, adquisición, observaciones disponibles y regularización. Cada caso usa semilla fija, pero eso no convierte todos los datos modificados en pares con ruido idéntico.",
         )}
       </Head>
-      <Tabs
+      <p><a className="btn" href="/story/reference">{t("Read the M10 FWI result", "Explorar el resultado FWI M10")}</a></p>
+      <TabGroups
         ariaLabel={t("Experiment protocols", "Protocolos experimentales")}
-        tabs={[
+        groups={[
+          {
+            id: "design",
+            label: t("How does the experiment change?", "¿Cómo cambia el experimento?"),
+            tabs: [
           {
             id: "cases",
             label: t("Case design", "Diseño de casos"),
@@ -891,6 +898,12 @@ export function Experiments() {
               </section>
             ),
           },
+            ],
+          },
+          {
+            id: "method-evidence",
+            label: t("What evidence does each method show?", "¿Qué evidencia muestra cada método?"),
+            tabs: [
           {
             id: "learning",
             label: t("Learning protocol", "Protocolo aprendido"),
@@ -1003,6 +1016,13 @@ export function Experiments() {
                 <Sources ids={["heagy2017"]} />
               </>
             ),
+          },
+          {
+            id: "long-valley",
+            label: t("Long Valley field record", "Registro de campo Long Valley"),
+            content: <LongValleyTimeLapse />,
+          },
+            ],
           },
         ]}
       />

@@ -25,6 +25,7 @@ const Methodology = lazy(() => import("./pages/Research").then(module => ({ defa
 const Implementation = lazy(() => import("./pages/Research").then(module => ({ default: module.Implementation })));
 const Experiments = lazy(() => import("./pages/Research").then(module => ({ default: module.Experiments })));
 const Benchmark = lazy(() => import("./pages/Research").then(module => ({ default: module.Benchmark })));
+const FWIReplayStory = lazy(() => import("./pages/FWIReplayStory"));
 
 function RouteLoading() {
   const lang = useLangStore(state => state.lang);
@@ -56,7 +57,7 @@ const config: ShellConfig = {
   },
   routes: PRODUCT_ROUTES.map(({ path, en, es }) => ({ path, en, es })),
   links: { github: "https://github.com/fsantibanezleal/CAOS_Geophysics" },
-  version: "0.04.002",
+  version: "0.04.003",
   visibility: "public",
   contain: true,
   license: {
@@ -88,6 +89,7 @@ createRoot(document.getElementById("root")!).render(
               {PRODUCT_ROUTES.map(({ id, path }) => (
                 <Route key={id} path={path} element={pageElements[id as keyof typeof pageElements]} />
               ))}
+              <Route path="/story/:step" element={<FWIReplayStory />} />
               <Route path="*" element={<Landing />} />
             </Routes>
           </Suspense>

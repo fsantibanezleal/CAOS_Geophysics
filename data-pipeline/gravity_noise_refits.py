@@ -242,8 +242,12 @@ def engine_pool_decode(value):
 
 
 def validate_noise_refits(result, request, frozen):
-    # Charge the complete envelope before original calibration or array traversal.
-    l2._result_native_metadata({'refits':result,'request':request,'frozen':frozen})
+    # The serialized refit artifact contains only `result`. The request and
+    # frozen calibration are separately admitted and whole-wrapper validated
+    # by _frozen(); combining all three here duplicates their arrays and can
+    # reject a valid set of individually bounded artifacts at the unchanged
+    # native-storage cap.
+    l2._result_native_metadata(result)
     survey._keys(result,('schema','calibration_sha256','request_sha256','method','seed','generator','count',
         'beta_candidate','rows','targets_mgal','records','successful','wall_seconds','conditioning',
         'posterior','coverage_calibrated','field_truth','field_eligible','full_M02_accepted','result_sha256'),'noise refits')

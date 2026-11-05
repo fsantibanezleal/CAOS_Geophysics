@@ -8,7 +8,9 @@ const sourceArg=process.argv.indexOf('--source');
 const source=sourceArg<0?join(here,'../data/derived/v2'):resolve(here,process.argv[sourceArg+1]??'');
 const phaseSource=join(here,'../data/derived/phase/browser-assets/stead');
 const courseSource=join(here,'../data/derived/m01-scientific-course');
+const fieldSource=join(here,'../data/derived/field');
 const courseIndex=JSON.parse(readFileSync(join(here,'src/data/m01-course-record-index.json'),'utf8'));
+const fieldIndex=JSON.parse(readFileSync(join(here,'src/data/field-study-index.json'),'utf8'));
 if(!Array.isArray(courseIndex)||courseIndex.length!==3)throw new Error('Invalid authored M01 course index.');
 // Copy only each explicitly bound public artifact, never a raw/private directory.
 // Validate the complete set before changing the build overlay.
@@ -26,6 +28,18 @@ const courseFiles=courseIndex.flatMap((record,i)=>{
   });
 });
 if(new Set(courseFiles).size!==33)throw new Error('Duplicate authored M01 artifact.');
+if(fieldIndex.schema!=='geophysics.field-study-index/v1'||!Array.isArray(fieldIndex.artifacts)||fieldIndex.artifacts.length!==1)
+  throw new Error('Invalid field-study artifact index.');
+const fieldFiles=fieldIndex.artifacts.map(artifact=>{
+  if(typeof artifact.path!=='string'||!/^long-valley\/1982-06_to_1999-07\.json$/.test(artifact.path)||
+    !Number.isSafeInteger(artifact.bytes)||artifact.bytes<1||artifact.bytes>2*1024*1024||!/^[0-9a-f]{64}$/.test(artifact.sha256))
+    throw new Error('Invalid field-study artifact binding.');
+  const file=join(fieldSource,artifact.path),stat=lstatSync(file);
+  if(!stat.isFile()||stat.isSymbolicLink()||stat.size!==artifact.bytes||createHash('sha256').update(readFileSync(file)).digest('hex')!==artifact.sha256)
+    throw new Error('Field-study artifact byte identity mismatch.');
+  return artifact.path;
+});
+if(new Set(fieldFiles).size!==1)throw new Error('Duplicate field-study artifact.');
 if(sourceArg>=0){
   const within=relative(resolve(here,'../data/experiments'),source);
   if(within.startsWith('..')||isAbsolute(within))throw new Error('Preview source must be an ignored data/experiments candidate.');
@@ -53,5 +67,10 @@ for(const file of courseFiles){
   const destination=join(here,'public-release/data/m01-scientific-course',file);
   mkdirSync(dirname(destination),{recursive:true});
   cpSync(join(courseSource,file),destination);
+}
+for(const file of fieldFiles){
+  const destination=join(here,'public-release/data/field',file);
+  mkdirSync(dirname(destination),{recursive:true});
+  cpSync(join(fieldSource,file),destination);
 }
 console.log(sourceArg<0?'Copied canonical v2 experiments and reviewed M13 browser assets. No computation in build.':'Copied candidate v2 artifacts and reviewed M13 browser assets for local QA only; canonical data unchanged.');

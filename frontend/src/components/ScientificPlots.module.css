@@ -102,9 +102,9 @@
 
 .meshOverlay path {
   fill: none;
-  stroke: var(--color-fg-subtle);
-  stroke-opacity: 0.38;
-  stroke-width: 0.04;
+  stroke: var(--color-fg);
+  stroke-opacity: 0.42;
+  stroke-width: 0.08;
 }
 
 .heatmap :global(.axis-y) {

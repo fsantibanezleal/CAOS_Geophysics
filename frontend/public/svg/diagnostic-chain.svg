@@ -9,7 +9,7 @@
     .mark { fill: var(--color-accent); fill-opacity: .2; stroke: var(--color-accent); stroke-width: 2; }
     .alternate { fill: var(--color-surface-2); stroke: var(--color-fg-subtle); stroke-width: 2; stroke-dasharray: 6 5; }
     .flow { fill: none; stroke: var(--color-accent); stroke-width: 3; stroke-dasharray: 2 9; stroke-linecap: round; animation: checked 3s ease-in-out infinite; }
-    .label { fill: var(--color-fg); font-size: 16px; }
+    .label { fill: var(--color-fg); font-size: 20px; }
     .es { display: none; }
     .caos-exec-fig[data-lang="es"] .en { display: none; }
     .caos-exec-fig[data-lang="es"] .es { display: inline; }
@@ -28,6 +28,6 @@
   <g transform="translate(290 56)"><path class="panel" d="M0 0H154V91H0Z"/><path class="mark" d="M14 55Q29 23 45 47T77 37T107 50T139 27"/><path class="soft" d="M14 69H138M14 77H103"/></g>
   <circle class="ink" cx="258" cy="106" r="16"/><path class="soft" d="M269 118 284 133"/>
   <text class="label en" x="301" y="46">observed / predicted</text><text class="label es" x="301" y="46">observado / predicho</text>
-  <text class="label en" x="397" y="311">supported feature</text><text class="label es" x="397" y="311">rasgo respaldado</text>
-  <text class="label en" x="536" y="292">alternative retained</text><text class="label es" x="536" y="292">alternativa conservada</text>
+  <text class="label en" x="397" y="311">supported</text><text class="label es" x="397" y="311">respaldado</text>
+  <text class="label en" x="536" y="292">alternative</text><text class="label es" x="536" y="292">alternativa</text>
 </svg>

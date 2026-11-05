@@ -22,6 +22,16 @@ import gravity_l2 as l2
 import gravity_survey_l2 as survey
 
 
+def test_kkt_gradient_accepts_scalar_bounds_for_single_cell():
+    q = np.array([0.0])
+    gradient = np.array([2.0])
+    np.testing.assert_array_equal(l2._kkt_gradient(q, gradient, -1.5, 1.5), gradient)
+    np.testing.assert_array_equal(
+        l2._kkt_gradient(np.array([-1.5]), gradient, -1.5, 1.5), np.array([0.0]))
+    np.testing.assert_array_equal(
+        l2._kkt_gradient(np.array([1.5]), np.array([-2.0]), -1.5, 1.5), np.array([0.0]))
+
+
 def tiny():
     origin = np.array([-140., -180., -260.])
     widths = [np.array([40., 70.]), np.array([30., 50., 90.]), np.array([60., 110.])]
@@ -274,6 +284,22 @@ def test_bounded_l2_independent_bvls_and_kkt(bound, start):
     assert np.all(np.diff(trace['phi_engine']) <= 1e-12*np.maximum(1., np.abs(trace['phi_engine'][:-1])))
     assert np.all(trace['cg_counts'] <= 200) and np.all(trace['line_search_counts'] <= 20)
     assert not density.flags.writeable
+
+
+def test_exact_q_trace_is_opt_in_and_physically_bound():
+    req, d, prior, _, _ = tiny()
+    problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    result = l2._solve_partition(problem, prior, preserve_exact_q=True)
+    trace = result['trace']
+    assert 'models_q' in trace
+    assert trace['models_q'].shape == trace['models_kg_m3'].shape
+    assert not trace['models_q'].flags.writeable
+    np.testing.assert_array_equal(trace['models_q']*1000., trace['models_kg_m3'])
+    l2._solve_metadata(result, len(prior['start_kg_m3']), result['fit_rows'], result['beta_candidate'])
+    l2._validate_solve_state(result, result['fit_rows'])
+    legacy_problem = l2._build_problem(req, d, noise(), prior, np.arange(4, dtype=np.int64), .01)
+    legacy = l2._solve_partition(legacy_problem, prior)
+    assert 'models_q' not in legacy['trace']
 
 
 def test_private_optimizer_delegates_official_algorithms_and_fixed_parameters():

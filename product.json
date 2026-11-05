@@ -14,15 +14,67 @@
   "workbench_route": "/app",
   "method_packages": [],
   "pages": [
-    { "id": "app", "path": "/app", "en": "App", "es": "App" },
-    { "id": "introduction", "path": "/introduction", "en": "Introduction", "es": "Introducción" },
-    { "id": "methodology", "path": "/methodology", "en": "Methodology", "es": "Metodología" },
-    { "id": "implementation", "path": "/implementation", "en": "Implementation", "es": "Implementación" },
-    { "id": "experiments", "path": "/experiments", "en": "Experiments", "es": "Experimentos" },
-    { "id": "benchmark", "path": "/benchmark", "en": "Benchmark", "es": "Benchmark" }
+    {
+      "id": "app",
+      "path": "/app",
+      "en": "App",
+      "es": "App"
+    },
+    {
+      "id": "introduction",
+      "path": "/introduction",
+      "en": "Introduction",
+      "es": "Introducción"
+    },
+    {
+      "id": "methodology",
+      "path": "/methodology",
+      "en": "Methodology",
+      "es": "Metodología"
+    },
+    {
+      "id": "implementation",
+      "path": "/implementation",
+      "en": "Implementation",
+      "es": "Implementación"
+    },
+    {
+      "id": "experiments",
+      "path": "/experiments",
+      "en": "Experiments",
+      "es": "Experimentos"
+    },
+    {
+      "id": "benchmark",
+      "path": "/benchmark",
+      "en": "Benchmark",
+      "es": "Benchmark"
+    }
   ],
   "deployment": {
     "place": "vps",
     "origin": "https://geophysics.ml.fasl-work.com/"
-  }
+  },
+  "method_entrypoints": [
+    "gravity_processing.process_survey",
+    "gravity_l2.calibrate_gravity_l2",
+    "magnetic_processing.process",
+    "magnetic_forward.forward_magnetic",
+    "mt_field_qc.inspect_edi",
+    "electromagnetics.invert_mt",
+    "ert.run",
+    "waveform_processing.process_waveform_record",
+    "traveltime.run",
+    "seismic.invert_observations",
+    "physical_optimizer.solve_bounded_physical",
+    "velocity_residual_learning.execute",
+    "phase_model.pick_probabilities",
+    "velocity_physics_refinement.execute",
+    "phase_picking.classical_stalta_picks",
+    "phase_picking.evaluate_matched_picks",
+    "fwi_lesson.load_case",
+    "fwi_lesson.run_case",
+    "fwi_lesson.summarize_case",
+    "fwi_lesson.compare_schedules"
+  ]
 }

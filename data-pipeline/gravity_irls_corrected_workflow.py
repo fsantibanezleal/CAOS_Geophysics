@@ -18,6 +18,8 @@ l2, survey = plain.l2, plain.survey
 REQUEST_SCHEMA = 'gravity-survey-irls-corrected-calibration-request-1'
 RESULT_SCHEMA = 'gravity-survey-irls-corrected-calibration-result-1'
 EVALUATION_SCHEMA = 'gravity-survey-irls-corrected-evaluation-request-1'
+FIT_WALL_CAP_SECONDS = 120.
+FIT_FINALIZATION_RESERVE_SECONDS = 2.
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 _SOURCES = dict(corrected._SOURCES, gravity_irls_pool=pool.SOURCE_SHA256,
                 gravity_irls_corrected_workflow=SOURCE_SHA256)
@@ -78,14 +80,17 @@ class _Workflow:
             result = self.engine.solve_partition(req, admitted['observations']['gz_up_mgal'],
                 {k:admitted['noise'][k] for k in ('kind', 'values')}, prior, rows, beta,
                 observation_rows=admitted['plan']['development_rows'], policy=admitted['policy']['irls'],
-                deadline=min(deadline, started+120.))
+                deadline=min(deadline, started+FIT_WALL_CAP_SECONDS))
             return pool.encode_compact(result)
         problem = None
         try:
             problem = l2._build_problem(req, admitted['observations']['gz_up_mgal'],
                 {k:admitted['noise'][k] for k in ('kind', 'values')}, prior, rows, beta,
                 observation_rows=admitted['plan']['development_rows'])
-            result = self.engine.solve_partition(problem, prior, admitted['policy']['irls'], min(deadline, started+120.))
+            # Reserve tail time for a non-interruptible native action and result
+            # serialization so measured fit wall time stays within 120 seconds.
+            solver_deadline = min(deadline, started+FIT_WALL_CAP_SECONDS-FIT_FINALIZATION_RESERVE_SECONDS)
+            result = self.engine.solve_partition(problem, prior, admitted['policy']['irls'], solver_deadline)
             return pool.encode(result)
         except (ValueError, RuntimeError, ArithmeticError) as error:
             # An actual source/setup/whole-cap failure is never a dummy native fit.

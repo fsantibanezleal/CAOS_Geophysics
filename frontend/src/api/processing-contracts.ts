@@ -164,7 +164,10 @@ function stationArrays(data: Record<string, unknown>): number {
   (data.sigma_mgal as unknown[]).forEach(sigma => { number(sigma); if (sigma <= 0) fail("sigma must be positive mGal"); });
   if (data.uncertainty_kind !== "per_station_standard_deviation") fail("uncertainty kind");
   const physical = rawPhysical(data.physical_metadata);
-  if (physical.coordinate_reference !== "epsg" || physical.epsg === null || physical.axis_order !== "xy" ||
+  const referenceValid = physical.coordinate_reference === "epsg"
+    ? physical.epsg !== null && physical.local_crs === null
+    : physical.local_crs !== null && physical.epsg === null;
+  if (!referenceValid || physical.axis_order !== "xy" ||
       physical.horizontal_unit !== "m" || physical.vertical_unit !== "m" || physical.measurement_unit !== "mGal") fail("gravity physical reference or units");
   const cols = ["station_id_column", "x_column", "y_column", "z_column", "value_column", "sigma_column"].map(key => processingText(physical.geometry[key], key));
   if (new Set(cols).size !== 6) fail("six distinct gravity columns");

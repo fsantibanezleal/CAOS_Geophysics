@@ -1,8 +1,17 @@
 import numpy as np
 
+from magnetic_forward import ENGINE, FRAME, forward_magnetic_with_kernel
 import magnetic_fit_assembly as assembly
 from magnetic_survey_json import parse_request
 from magnetic_survey_support import descriptor, encode, rehash, request
+
+
+def forward_metadata(forward_request):
+    field = forward_request["inducing_field"]
+    inc, dec = np.deg2rad([field["inclination_deg"], field["declination_deg"]])
+    background = field["amplitude_nt"] * np.array([
+        np.cos(inc)*np.sin(dec), np.cos(inc)*np.cos(dec), -np.sin(inc)])
+    return {"inducing_field": {"background_enu_nt": background}}
 
 
 def test_assembles_only_sealed_fit_rows_and_subsets_data_noise(monkeypatch):
@@ -34,7 +43,7 @@ def test_assembles_only_sealed_fit_rows_and_subsets_data_noise(monkeypatch):
         return {"component_jacobian_nT_per_si": np.zeros(
             (3 * len(request["receivers_m"]), len(request["susceptibility_si"])),
             dtype=np.float64,
-        )}
+        ), **forward_metadata(request)}
 
     monkeypatch.setattr(assembly, "MagneticRegularizer", Regularizer)
     monkeypatch.setattr(assembly, "forward_magnetic_with_kernel", forward)
@@ -97,7 +106,7 @@ def test_subsets_full_covariance_by_original_scalar_rows(monkeypatch):
         return {"component_jacobian_nT_per_si": np.zeros(
             (3 * len(request["receivers_m"]), len(request["susceptibility_si"])),
             dtype=np.float64,
-        )}
+        ), **forward_metadata(request)}
 
     monkeypatch.setattr(assembly, "MagneticRegularizer", Regularizer)
     monkeypatch.setattr(assembly, "forward_magnetic_with_kernel", forward)
@@ -125,3 +134,46 @@ def test_actual_nonzero_simpeg_fit_assembly_has_physical_objective_derivative():
     assert result["initial_data"]["phi_d"] > 0.
     assert np.isfinite(analytic) and abs(analytic) > 0.
     assert np.isclose(finite_difference, analytic, rtol=2e-5, atol=2e-6)
+
+
+def test_exact_magnitude_assembly_uses_engine_positive_down_enu_background():
+    doc = request()
+    doc["processing"]["quantity"] = "exact_total_anomaly_nT"
+    doc["processing"]["background_relation"] = "total_norm_minus_declared_uniform_F"
+    values = descriptor("float64", [288, 1], [0.] * 288)
+    doc["observations"] = {"quantity": "exact_total_anomaly_nT", "unit": "nT",
+                           "values": values, "values_sha256": values["sha256"]}
+    doc["processing"]["nodes"][0]["output_sha256"] = values["sha256"]
+    doc["noise"]["values"] = descriptor("float64", [288, 1], [.5] * 288)
+    doc["prior"]["start_si"]["data"] = [.002] * 528
+    rehash(doc, "prior/start_si")
+    handle = parse_request(encode(doc))
+    assembled = assembly.assemble_magnetic_fit_objective(handle, 0)
+
+    metadata = handle.metadata()
+    geometry = metadata["geometry"]
+    mesh = geometry["mesh"]
+    fit_rows = assembled["fit_rows"]
+    receivers = np.asarray(geometry["receivers_m"]["data"], dtype=np.float64).reshape(-1, 3)[fit_rows]
+    field = metadata["inducing_field"]
+    inc, dec = np.deg2rad([field["I_deg"], field["D_deg"]])
+    expected_background = field["F_nT"] * np.array([
+        np.cos(inc)*np.sin(dec), np.cos(inc)*np.cos(dec), -np.sin(inc)])
+    forward = forward_magnetic_with_kernel({
+        "schema": "magnetic-prism-forward-request-1", "engine": ENGINE, "frame": FRAME,
+        "mesh": {"origin_m": np.asarray(mesh["origin_m"]["data"], dtype=np.float64),
+                 "hx_m": np.asarray(mesh["widths_x_m"]["data"], dtype=np.float64),
+                 "hy_m": np.asarray(mesh["widths_y_m"]["data"], dtype=np.float64),
+                 "hz_m": np.asarray(mesh["widths_z_m"]["data"], dtype=np.float64),
+                 "active": np.asarray(mesh["active"]["data"], dtype=np.bool_)},
+        "receivers_m": receivers,
+        "susceptibility_si": np.asarray(metadata["prior"]["start_si"]["data"], dtype=np.float64),
+        "inducing_field": {"amplitude_nt": field["F_nT"],
+                            "inclination_deg": field["I_deg"],
+                            "declination_deg": field["D_deg"]},
+    })
+    np.testing.assert_allclose(forward["inducing_field"]["background_enu_nt"],
+                               expected_background, rtol=0., atol=1e-10)
+    assembled_prediction = assembled["objective"].evaluate(assembled["start_q"])["predicted_selected_nT"]
+    np.testing.assert_allclose(assembled_prediction, forward["exact_magnitude_anomaly_nt"],
+                               rtol=2e-12, atol=2e-10)

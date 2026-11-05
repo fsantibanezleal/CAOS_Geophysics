@@ -116,8 +116,8 @@
       "content_scope": "Works through station correction lineage and the declared gravity reference chain."
     },
     {
-      "en": "notebooks/en/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb",
-      "es": "notebooks/es/02-gravity/03-m02-prism-forward-and-inverse-limits.ipynb",
+      "en": "notebooks/en/02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb",
+      "es": "notebooks/es/02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb",
       "methods": [
         "M02"
       ],
@@ -126,6 +126,20 @@
         "https://doi.org/10.1016/j.cageo.2015.09.015"
       ],
       "content_scope": "Examines prism forward response, an independent oracle, and the bounded inverse acceptance limit."
+    },
+    {
+      "en": "notebooks/en/02-gravity/03-long-valley-time-lapse-processing.ipynb",
+      "es": "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
+      "methods": [
+        "M01"
+      ],
+      "title": "Long Valley time-lapse gravity: from archive to paired observations",
+      "sources": [
+        "https://pubs.usgs.gov/dds/dds-81/intro.html",
+        "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/DataFormat.html",
+        "https://doi.org/10.1126/science.285.5436.2119"
+      ],
+      "content_scope": "Processes source-bound repeated station occupations, paired epoch differences, independent-error propagation and covariance sensitivity; no inversion or source interpretation."
     },
     {
       "en": "notebooks/en/03-magnetics/01-magnetic-quantities-and-frame.ipynb",
@@ -177,21 +191,37 @@
       "content_scope": "Assembles the physics-backed magnetic fit objective, checks its derivative, and scores a frozen model on separate validation rows; it does not run an inversion."
     },
     {
-      "en": "notebooks/en/04-mt/01-mt-qc.ipynb",
-      "es": "notebooks/es/04-mt/01-mt-qc.ipynb",
+      "en": "notebooks/en/04-mt/01-mt-response-observables.ipynb",
+      "es": "notebooks/es/04-mt/01-mt-response-observables.ipynb",
       "methods": [
         "M05"
       ],
-      "title": "MT response and a measured QC decision",
+      "title": "Magnetotelluric response: units, orientation and period",
       "sources": [
-        "https://github.com/MTgeophysics/mtpy-v2",
-        "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california"
+        "https://doi.org/10.1111/j.1365-246X.2004.02281.x",
+        "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california",
+        "https://doi.org/10.21105/joss.01358"
       ],
-      "content_scope": "Reviews MT response and the measured QC decision, including the stated eligibility boundary."
+      "content_scope": "Computes apparent resistivity and orientation-specific phase from the measured cl061 complex tensor, verifies the committed response arrays and visualizes the frequency-indexed transfer function without estimating a subsurface model."
     },
     {
-      "en": "notebooks/en/04-mt/02-mt-forward.ipynb",
-      "es": "notebooks/es/04-mt/02-mt-forward.ipynb",
+      "en": "notebooks/en/04-mt/02-mt-qc.ipynb",
+      "es": "notebooks/es/04-mt/02-mt-qc.ipynb",
+      "methods": [
+        "M05"
+      ],
+      "title": "MT tensor QC and uncertainty sensitivity",
+      "sources": [
+        "https://doi.org/10.1111/j.1365-246X.2004.02281.x",
+        "https://github.com/MTgeophysics/mtpy-v2",
+        "https://www.usgs.gov/data/magnetotelluric-data-clear-lake-region-northern-california",
+        "https://doi.org/10.21105/joss.01358"
+      ],
+      "content_scope": "Runs the measured cl061 necessary 1D impedance gate, phase-tensor and tipper diagnostics, uncertainty multiplier sweep and per-period score map; keeps the failed sounding QC-only."
+    },
+    {
+      "en": "notebooks/en/04-mt/03-mt-forward.ipynb",
+      "es": "notebooks/es/04-mt/03-mt-forward.ipynb",
       "methods": [
         "M06"
       ],
@@ -203,8 +233,8 @@
       "content_scope": "Uses layered-earth calibration and frequency-interval coverage for the 1D impedance workflow."
     },
     {
-      "en": "notebooks/en/04-mt/03-mt-method-comparison.ipynb",
-      "es": "notebooks/es/04-mt/03-mt-method-comparison.ipynb",
+      "en": "notebooks/en/04-mt/04-mt-method-comparison.ipynb",
+      "es": "notebooks/es/04-mt/04-mt-method-comparison.ipynb",
       "methods": [
         "M06"
       ],

@@ -36,7 +36,11 @@ test("owned_result_roundtrip",async({browser})=>{
         await expect(page.getByTestId("profile-local-instrument")).toBeVisible();
         const methodNav=page.getByRole("navigation",{name:lang==="es"?"Método del proyecto":"Project method",exact:true});
         const methodSelect=methodNav.getByRole("combobox");
-        await expect(methodSelect.locator("option")).toHaveCount(4);
+        await expect(methodSelect.locator("option")).toHaveCount(6);
+        expect(await methodSelect.locator("option").evaluateAll(options=>options.map(option=>(option as HTMLOptionElement).value)))
+          .toEqual(["gravity","mt","profiles","waveform","joint","magnetic-flightline"]);
+        await page.getByText(lang==="es"?"Controles nativos de fila, celda y visualización":"Native row, cell and display controls",{exact:true}).click();
+        await page.getByRole("combobox",{name:lang==="es"?"Vista de mediciones":"Measurement view",exact:true}).selectOption("mesh");
         await expect(page.locator("polygon[data-cell-index]")).toHaveCount(item.name==="ert"?original.profile.engine_report.inverse.mesh_cells:original.profile.engine_report.inverse.interleaved.mesh_cells);
         expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
         const main=page.locator(".processing-main");await main.locator("[data-native-mesh]").scrollIntoViewIfNeeded();
@@ -48,7 +52,6 @@ test("owned_result_roundtrip",async({browser})=>{
         const share=mesh&&paint&&stageFill>=.3?unionArea([mesh.view],facts.vw,facts.vh)/(facts.vw*facts.vh):0;
         drawingGates.push({case:item.name,lang,theme,width,share,stage_fill:stageFill,passed:stageFill>=.3&&share>=.5});
         writeFileSync(join(evidence,"drawing-gates.json"),JSON.stringify({schema:"geophysics.profile-shared-drawing-gate/v1",algorithm:"installed-caos-shell-0.8.1-G6",drawingGates},null,2));
-        await page.getByText(lang==="es"?"Controles nativos de fila, celda y visualización":"Native row, cell and display controls",{exact:true}).click();
         const meshSvg=page.locator("[data-native-mesh]");
         const selectedPolygon=meshSvg.locator('polygon[data-cell-index="4"]');
         await selectedPolygon.scrollIntoViewIfNeeded();
@@ -63,7 +66,7 @@ test("owned_result_roundtrip",async({browser})=>{
         await meshSvg.focus();await page.keyboard.press("ArrowRight");
         await expect(page.getByLabel(lang==="es"?"Celda nativa del modelo":"Native model cell",{exact:true})).toHaveValue("5");
         await page.getByRole("combobox",{name:lang==="es"?"Vista de mediciones":"Measurement view",exact:true}).selectOption("standardized");
-        await main.locator(".science-plot").last().scrollIntoViewIfNeeded();await page.screenshot({path:join(evidence,`${item.name}-${lang}-${theme}-${width}-residual.png`)});
+        await main.locator(".science-plot-shell").last().scrollIntoViewIfNeeded();await page.screenshot({path:join(evidence,`${item.name}-${lang}-${theme}-${width}-residual.png`)});
         if(lang==="en"&&theme==="light"&&width===1600){
           await page.getByRole("combobox",{name:"Original measurement row",exact:true}).selectOption("3");await page.getByLabel("Native model cell",{exact:true}).fill("4");
           const [inspection]=await Promise.all([page.waitForEvent("download"),page.getByRole("button",{name:"Export exact inspection JSON",exact:true}).click()]);const inspectedPath=join(evidence,item.name+"-inspection.json");await inspection.saveAs(inspectedPath);const inspected=JSON.parse(readFileSync(inspectedPath,"utf8"));expect(inspected.result).toEqual(original.profile);expect(inspected.execution_lane).toBe("protected-worker");expect(inspected.selected.row.index).toBe(3);

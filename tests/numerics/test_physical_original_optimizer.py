@@ -24,6 +24,55 @@ import magnetic_original_optimizer as bridge
 from test_physical_original_quadratic import operands
 
 
+MAGNETIC_CONTROL_SOURCES = {
+    'data-pipeline/magnetic_optimizer_adapter.py': '3530ed3c7ff0edc74d18e9e5919bbbd395fa439539bca82c88fb2f2bcea434dd',
+    'data-pipeline/magnetic_inverse.py': '4ad9e1e0f4ca7fec03aedbe0025260f059286155584a2950d4887a854d49887d',
+    'data-pipeline/magnetic_inverse_precision.py': '52ab673c92a3f882e8e3d18a1972a9c20a7e99c8294dc702caab8ca10fdb8978',
+    'data-pipeline/magnetic_forward.py': 'c5c041cded5a8cb93072aee28c244754c547154d2113d2a3aae676ef7d5938d2',
+    'tests/numerics/test_magnetic_optimizer_adapter.py': 'b294d3561368a2a807322d3332e130a5aebe0dbbb7a095b999e0c78676ed9617',
+    'tests/numerics/test_magnetic_survey_objective.py': '692bd5704b469069f331df573d959f151e30f28993c64733c0f7177d31e2f997',
+}
+
+
+def magnetic_control_source():
+    value = os.environ.get('GEOPHYSICS_M02_MAGNETIC_SOURCE')
+    if not value:
+        raise RuntimeError('GEOPHYSICS_M02_MAGNETIC_SOURCE must name the retained M04 control snapshot before collection')
+    root = Path(value).resolve()
+    if (not Path(value).is_absolute() or (root/'.git').exists()
+            or any((parent/'.git').exists() for parent in root.parents)):
+        raise RuntimeError('M04 control snapshot must be an external absolute source with the exact retained six-file closure')
+    for relative, expected in MAGNETIC_CONTROL_SOURCES.items():
+        path = root/relative
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise RuntimeError('M04 control snapshot must be an external absolute source with the exact retained six-file closure')
+    return root
+
+
+def test_magnetic_control_source_preflight(tmp_path, monkeypatch):
+    monkeypatch.delenv('GEOPHYSICS_M02_MAGNETIC_SOURCE', raising=False)
+    with pytest.raises(RuntimeError, match='must name the retained M04 control snapshot'):
+        magnetic_control_source()
+    monkeypatch.setenv('GEOPHYSICS_M02_MAGNETIC_SOURCE', 'relative')
+    with pytest.raises(RuntimeError, match='external absolute source with the exact retained six-file closure'):
+        magnetic_control_source()
+    root = tmp_path/'snapshot'
+    monkeypatch.setenv('GEOPHYSICS_M02_MAGNETIC_SOURCE', str(root))
+    with pytest.raises(RuntimeError, match='external absolute source with the exact retained six-file closure'):
+        magnetic_control_source()
+    expected = {}
+    for relative in MAGNETIC_CONTROL_SOURCES:
+        path = root/relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(relative, encoding='utf-8')
+        expected[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+    monkeypatch.setitem(globals(), 'MAGNETIC_CONTROL_SOURCES', expected)
+    assert magnetic_control_source() == root
+    (root/'data-pipeline/magnetic_forward.py').write_text('tampered', encoding='utf-8')
+    with pytest.raises(RuntimeError, match='external absolute source with the exact retained six-file closure'):
+        magnetic_control_source()
+
+
 @pytest.mark.parametrize('ambient', [6, 28, 80])
 def test_original_direction_both_endpoints_and_strict_domain(ambient):
     o, identity, q = operands(projected=True)
@@ -48,7 +97,7 @@ def test_original_direction_both_endpoints_and_strict_domain(ambient):
 
 
 def native_control():
-    path = Path(os.environ['GEOPHYSICS_M02_MAGNETIC_SOURCE']).resolve()
+    path = magnetic_control_source().resolve()
     spec = importlib.util.spec_from_file_location('original_magnetic_controls',
         path/'tests/numerics/test_magnetic_optimizer_adapter.py')
     control = importlib.util.module_from_spec(spec)
@@ -119,14 +168,18 @@ def serial(value):
 
 def test_actual_original_full528_firstfold_strong_accuracy():
     """Exactly one new source epoch/prerequisite; dependent matrix is external."""
+    request_value = os.environ.get('GEOPHYSICS_M02_FROZEN_REQUEST')
+    receipt_value = os.environ.get('GEOPHYSICS_M02_FIRSTFOLD_RECEIPT')
+    if not request_value or not receipt_value:
+        pytest.skip('exact frozen 528-parameter request and external receipt path are not provisioned')
     from magnetic_likelihood import SealedLikelihood
     from magnetic_calibration import mesh_from_metadata
     from magnetic_inverse import build_operator
     from magnetic_optimizer_adapter import MagneticObjective, MagneticRegularizer
     from magnetic_survey_json import digest
     from run_magnetic_survey import source_inventory
-    path = Path(os.environ['GEOPHYSICS_M02_FROZEN_REQUEST']).resolve()
-    output = Path(os.environ['GEOPHYSICS_M02_FIRSTFOLD_RECEIPT']).resolve()
+    path = Path(request_value).resolve()
+    output = Path(receipt_value).resolve()
     if output.exists() or any((p/'.git').exists() for p in output.parents):
         raise ValueError('new external immutable firstfold receipt required')
     raw = path.read_bytes()

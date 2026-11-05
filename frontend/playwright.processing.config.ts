@@ -7,5 +7,7 @@ export default defineConfig({
   use: {baseURL: "http://127.0.0.1:8876", viewport: {width: 1440, height: 900}, trace: "retain-on-failure"},
   webServer: {command: `"${resolve("../.venv-api/Scripts/python.exe")}" "${resolve("../tests/ui/processing_devserver.py")}"`, cwd: resolve(".."), url: "http://127.0.0.1:8876/__qa/processing", reuseExistingServer: false, timeout: 60_000,
     env: {PYTHONPATH: resolve(".."), GEOPHYSICS_QA_PORT: "8876",
-      GEOPHYSICS_QA_ROOT: join(tmpdir(), "caos-geophysics-processing-qa")}},
+      GEOPHYSICS_QA_ROOT: join(tmpdir(), "caos-geophysics-processing-qa"),
+      GEOPHYSICS_QA_M02: "1",
+      GEOPHYSICS_GRAVITY_L2_PYTHON: resolve("../.venv-gravity/Scripts/python.exe")}},
 });

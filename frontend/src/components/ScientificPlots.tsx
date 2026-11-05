@@ -197,7 +197,7 @@ export function Heatmap({
               strokeWidth="0.045"
             />)}
           </svg>}
-          {showMesh && rows <= 64 && cols <= 64 && <svg
+          {showMesh && rows <= 512 && cols <= 512 && <svg
             className={plotStyles.meshOverlay}
             viewBox={`0 0 ${cols} ${rows}`}
             preserveAspectRatio="none"
@@ -315,7 +315,7 @@ export function plotYRange(values: number[], logY: boolean): [number, number] {
 export function Plot({
   x, series, title, xLabel, yLabel, logX = false, logY = false, band,
   interactive = false, selectedIndex, onSelect, viewport,
-  zeroCentered = false, fixedYRange, pointLabels,
+  zeroCentered = false, fixedYRange, pointLabels, fillStage = false,
 }: {
   x: number[]; series: Series[]; title: string; xLabel: string; yLabel: string;
   logX?: boolean; logY?: boolean; band?: Band; interactive?: boolean;
@@ -323,6 +323,8 @@ export function Plot({
   /** Domain in transformed x coordinates (log10 where logX). */
   viewport?: [number, number] | null; onViewport?: (range: [number, number] | null) => void;
   zeroCentered?: boolean; fixedYRange?: [number, number]; pointLabels?: string[];
+  /** Let a shell-owned story stage provide the chart's definite fill height. */
+  fillStage?: boolean;
 }) {
   const workbench = useWorkbenchState();
   const pick = selectedIndex ?? null;
@@ -367,7 +369,7 @@ export function Plot({
     provenance={workbench.source === "real" ? "real" : "synthetic"}
     dataKey={workbench.stateKey} fill
   >{chart}</PlotCard> : chart;
-  return <div className={`${plotStyles.plotShell} science-plot-shell`}>{content}</div>;
+  return <div className={`${plotStyles.plotShell} science-plot-shell`} style={fillStage ? { height: "100%" } : undefined}>{content}</div>;
 }
 
 export function LayerColumn({

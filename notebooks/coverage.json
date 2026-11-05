@@ -1,0 +1,53 @@
+{
+  "methods": {
+    "M-1": [
+      "02-gravity/02-m01-station-corrections.ipynb"
+    ],
+    "M-2": [
+      "02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb"
+    ],
+    "M-3": [
+      "03-magnetics/02-m03-survey-geometry-and-holdout.ipynb"
+    ],
+    "M-4": [
+      "03-magnetics/04-m04-fit-objective-validation.ipynb"
+    ],
+    "M-5": [
+      "04-mt/02-mt-qc.ipynb"
+    ],
+    "M-6": [
+      "04-mt/04-mt-method-comparison.ipynb"
+    ],
+    "M-7": [
+      "05-ert/03-ert-method-comparison.ipynb"
+    ],
+    "M-8": [
+      "06-seismology/04-m13-learned-phase-picking.ipynb"
+    ],
+    "M-9": [
+      "08-learning/04-first-arrival-user-data.ipynb"
+    ],
+    "M-10": [
+      "06-seismology/05-m10-fwi-case-matrix.ipynb"
+    ],
+    "M-11": [
+      "07-joint/04-m11-physical-matrix-evidence.ipynb"
+    ],
+    "M-12": [
+      "08-learning/05-m12-velocity-checkpoint.ipynb"
+    ],
+    "M-13": [
+      "06-seismology/04-m13-learned-phase-picking.ipynb"
+    ],
+    "BS-1": [
+      "08-learning/07-physics-conditioned-velocity-refinement.ipynb"
+    ]
+  },
+  "contracts": {
+    "experiment-catalog": [
+      "02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb"
+    ]
+  },
+  "stages": {},
+  "packages": {}
+}

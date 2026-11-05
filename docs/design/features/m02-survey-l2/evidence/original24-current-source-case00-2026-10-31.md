@@ -36,3 +36,17 @@ reuses one only when its embedded request, runtime epoch and full source
 inventory match; a fast regression test covers those exact-match rules. This
 avoids repeating the 30-minute calibration when only the cache filename rule
 changes. The scientific failure remains visible and unchanged.
+
+## Superseding precision-path replay, 2026-10-31
+
+The above archive predates the narrow-stencil arithmetic-path change. The newer current-source archive is
+`E:\_Datos\CAOS_Geophysics\validation\m02-original24-irls-20261031\archives\family0-condition0-42c602cd2ccd226e.gza`
+(SHA-256 `c4b14395699a84a5ca459ae865f955a7f8baea1ec2869051cc8b215b3b6a64bf`). Its request SHA-256 is
+`21df6770b31fcc94b67025a202cc589e0df4412f156f41bf4b8db1f4bd9b2cc6`, result SHA-256
+`72148cb969aca853f7c3b494ddcb03676c15af9e4a99ed717dde83bc2835dda3`, and source-inventory SHA-256
+`f543f9f1919481f1e2c7b110789fde4872548f0ba00d607691c4fbb6853de0ef`.
+
+This newer archive was fully replay-verified. Calibration wall time was `1800.313000000002` seconds, exceeding the frozen 1800-second total limit by 0.313 seconds. Selection remained `insufficient_candidates` with zero of eight eligible candidates. Its 24 fit records comprise four fixed-point convergences, sixteen iteration caps, one merit-line-search failure, and three wall caps. The 22 started fits all passed independent replay; their maximum actual duration was 117.453 seconds. Two unstarted records correctly retain explicit wall-cap outcomes. JUnit SHA-256
+`f657d5230bd18700ed4abe7be3d5209dea8d9ff69d6552f5bde211cd9a56bbd5`; the archive and all fits verified, with the test failing only its strict total wall assertion. No threshold or scientific acceptance rule was changed.
+
+This supersedes the interruption/no-archive statement in the companion precision replay note. It does not supersede this document's older result above; it is the later experiment using the changed arithmetic route. Neither result makes the complete 24-case matrix or M02 release gate pass.

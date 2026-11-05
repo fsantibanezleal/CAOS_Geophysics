@@ -1,11 +1,14 @@
 # Prospective L2 gates, controls and evidence policy
 
-Status: planned. New numerical gates executed: **0**. No code/test authorization.
-MAIN must fully read [contract](contract.md), [design](design.md),
-[requirements](requirements.md), [research](../../../research/m02-survey-l2-2026-10-03.md),
-[source receipt](../../../research/m02-survey-l2-evidence-2026-10-03.json) and
-[tasks](tasks.md) before authorizing prospective paths. Never label these gates
-PASS from a source read, plan merge or documentation check.
+Status: implementation and local testing exist; full M02/product acceptance is
+open. The frozen thresholds and control designs below remain requirements.
+They are not evidence that every gate passed. The current-source focused CPU
+replay passed 183 tests (0 failures/errors/skips, 106.800 seconds); its external
+JUnit SHA-256 is `78726d2315e9e5aaee359c9392e0384e2419d2842acf0cd06c652eb3db1978a6`.
+The retained 24-condition ordinary-L2 report is source-bound to commit
+`64372916d2853db13b8b7595570bce4f31eba2f2` and must not be presented as a pass
+for later source bytes. See [requirements](requirements.md) for the release
+boundary.
 
 ## Frozen proposed tolerances and meanings
 
@@ -43,7 +46,7 @@ wall caps. No success on returned vector, low WRMS, early line-search failure,
 retuned beta, zero-jitter start or stale terminal model. Deadlines are cooperative,
 not a hard preemption guarantee. Native source defaults are not our stop policy.
 
-## Requirement-to-gate matrix, all NOT RUN
+## Requirement-to-gate matrix
 
 | Requirement | Named prospective control | Positive, negative and independent proof |
 | --- | --- | --- |
@@ -64,10 +67,12 @@ not a hard preemption guarantee. Native source defaults are not our stop policy.
 | L2-15 | test_no_io_hooks_runtime_or_legacy_mutation | File/network/subprocess writes denied after imports; no user callbacks/importpaths; loaded official version checks; external eight+existing20 hashes; accepted legacy/artifact bytes unchanged |
 | L2-16 | test_complete_locked_l2_control_matrix | All 24 prospective source-disjoint ordinary controls including poor/null/model-sensitive outcomes; no erased errors/replaced seeds; prospective synthetic positives separate from field |
 
-Full file paths are in requirements. These names do NOT exist yet. Small private
-partition-solve unit tests may use tiny official objects without pretending that
-they meet public calibration split minima or are eligible submitted surveys.
-No testing-only public engine injection/bypass is proposed.
+Full test paths are in requirements; the named functions now exist. The focused
+183-test receipt covers the admission, ordinary solver, metric/resource and
+selection controls. The separately reported 24-condition L2 replay is valid
+only for the source revision named above. Some controls require retained
+external evidence and are not included in those receipts. Small private
+partition-solve tests do not establish public survey eligibility.
 
 ## Frozen small and ordinary authored control specifications
 
@@ -160,19 +165,17 @@ Output truth/model accuracy absent for field/upload. Broader M02 IRLS, source/M0
 normalization, uncertainty refits, bundle/export, shared API/UI/wiki, GPU/host and
 full-method gates remain backlog. Local inverse convergence is not their proxy.
 
-After implementation approval, each receipt must record exact input/spec/array,
+For every source-bound replay, each receipt must record exact input/spec/array,
 plan/prior/policy/module/test/runtime/source SHA, command, seed/fold/row counts,
 actual official engine calls, every candidate/model/state/score and all negatives.
 Main independently replays exact-source objective/physical output/selection and
 ownership seams before merge. Historical source/tests/receipts never relabelled.
 
-## Docs-only checks
+## Historical docs-only checks (2026-10-03)
 
-Only document/research inspection and static checks may execute before approval.
-Recorded results will be separate from this prospective numerical ledger. Public
-commands use `$ExistingPipelinePython` resolved from the trusted `$ProductCheckout`,
-not a workstation absolute path or request-supplied executable. No installation,
-CI fitting, source changes or missing-test PASS is permitted.
+This section records the planning-time review boundary only. It does not describe
+the current implementation or validation state. Its historical static-check
+results below are not current-source product acceptance.
 
 ### Executed documentation/source checks, 2026-10-03
 
@@ -189,7 +192,7 @@ scientific source change occurred in the source-byte audit.
 | `& $ExistingPipelinePython scripts/check_sdd_convergence.py` | Structurally valid; 1 fail, 18 unresolved, 0 pass; NOT release acceptance |
 | `& $ExistingPipelinePython scripts/check_artifacts.py` | PASS, unchanged 20 truths / 120 experiments / 348 methods, SHA/size verified; NOT L2 evidence |
 | Existing CI base-integrity rules, read-only tracked paths and literal path grep | PASS; no machine-path leak, tracked environment/native/heavy/raw blobs |
-| Strict JSON, scoped index, relative links, prospective gate absence | Exactly seven new docs; valid links; all16 unique gates absent, NOT RUN |
+| Strict JSON, scoped index, relative links, prospective gate absence | Historical docs-only check: seven docs and gates absent at that time; superseded by the implementation and receipts above |
 | Stdlib hashes/metadata against source receipt and prior runtime manifest | All18 protected repository hashes, accepted forward test and 28 distinct installed source pins unchanged; seven versions match |
 | Private original backup tracking/ignore/presence check | Zero tracked paths, present and ignored; no backup digest recomputation or modifications |
 | `git diff --cached --check` | PASS |
@@ -197,6 +200,6 @@ scientific source change occurred in the source-byte audit.
 The eight previously retrieved official files remain byte-bound to their recorded
 installed counterparts. This final source audit rechecks 20 inherited plus eight
 new installed pins, not a new remote retrieval or a full environment certificate.
-The complete packet and actual check counts are pinned by the handoff commit;
-prospective source/test hashes remain null. MAIN's full read/explicit authority
-and every new numerical gate remain pending.
+The complete packet and counts above remain historical. Current method gaps,
+source-bound IRLS failures, user-data integration, field eligibility, and hosted
+acceptance are tracked separately and are not closed by ordinary-L2 tests.

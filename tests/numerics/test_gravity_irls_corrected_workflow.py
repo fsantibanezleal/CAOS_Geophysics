@@ -101,6 +101,24 @@ def test_whole_clock_expiry_no_native_optimizer(monkeypatch):
     workflow.validate(result, req)
 
 
+def test_fit_reserves_deadline_tail_for_native_completion(monkeypatch):
+    observed = {}
+    monkeypatch.setattr(workflow, 'monotonic', lambda: 10.)
+    monkeypatch.setattr(workflow.l2, '_build_problem', lambda *args, **kwargs: object())
+    monkeypatch.setattr(corrected, 'solve_partition',
+        lambda *args, **kwargs: observed.update(deadline=args[3]) or {'result':'captured'})
+    monkeypatch.setattr(pool, 'encode', lambda _value: 'packed-fit')
+    admitted = {
+        'plan': {'request':{}, 'development_rows':np.array([0], dtype=np.int64)},
+        'observations': {'gz_up_mgal':np.array([0.])},
+        'noise': {'kind':'diagonal_sd', 'values':np.array([1.])},
+        'prior': {}, 'policy': {'irls':{}},
+    }
+    fitted = workflow._Workflow('cpu2')._fit(admitted, np.array([0], dtype=np.int64), .1, 1000.)
+    assert fitted == 'packed-fit'
+    assert observed['deadline'] == 10.+workflow.FIT_WALL_CAP_SECONDS-workflow.FIT_FINALIZATION_RESERVE_SECONDS
+
+
 def test_actual_cli_calibration_verify_and_frozen_evaluation(tmp_path, monkeypatch, capsys):
     root, temp = tmp_path/'data', tmp_path/'temp'
     req = request()

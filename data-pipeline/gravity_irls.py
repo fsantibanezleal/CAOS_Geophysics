@@ -553,9 +553,12 @@ def _admit_request(request):
     return admitted
 
 
-def _initial_thresholds(problem,initialization,policy):
+def _initial_thresholds(problem,initialization,policy,*,q=None):
     if initialization['status']!='converged': return None
-    kernels=[c.f_m(initialization['model_kg_m3']/1000.) for alpha,c in
+    model = initialization['model_kg_m3']/1000. if q is None else q
+    if type(model) is not np.ndarray or model.dtype!=np.float64 or model.shape!=initialization['model_kg_m3'].shape or not np.isfinite(model).all():
+        raise ValueError('IRLS thresholds: exact finite model state')
+    kernels=[c.f_m(model) for alpha,c in
         zip(problem['regularization'].multipliers,problem['regularization'].objfcts) if alpha>0.]
     if len(kernels)!=4 or any(k.size==0 for k in kernels): return None
     return tuple(max(f,float(np.max(np.abs(k)))) for f,k in zip(policy['epsilon_floor'],kernels))

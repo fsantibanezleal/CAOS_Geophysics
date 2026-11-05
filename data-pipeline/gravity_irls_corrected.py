@@ -10,13 +10,14 @@ from pathlib import Path
 from time import monotonic
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.sparse.linalg import LinearOperator, cg
 
 import gravity_irls as plain
 
 
-POLICY = 'safeguarded-irls-interior-threepair-log17-stage-1'
-RUNTIME_EPOCH = 'm02-survey-irls-cpu-2'
+POLICY = 'safeguarded-irls-interior-threepair-log17-terminal-certificate-exact-q-replay-legacy-init-1'
+RUNTIME_EPOCH = 'm02-survey-irls-cpu-2-terminal-certificate-exact-q-replay-legacy-init-1'
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 _SOURCES = dict(plain._SOURCES)
 _SOURCES[Path(__file__).name] = SOURCE_SHA256
@@ -111,6 +112,93 @@ def _branch(q, reference, lower, upper):
     if np.any(active):
         return 'disabled_bound_face_active_max' if active[j] else 'disabled_bound_face_free_max', j
     return 'interior_unique_nonzero_max', j
+
+
+def _terminal_fixed_point_certificate(problem, prior, policy, initial, stages, models, changes):
+    """Return a replayable unique-minimizer certificate, or fail closed.
+
+    This is limited to the approved CPU2 terminal case after the complete
+    twenty-update schedule. It adds no solve, transition, tolerance, or retry.
+    """
+    if (len(stages) != 21 or len(changes) != 20
+        or plain._fixed_point(20, True, tuple(changes))
+        or any(row['inner']['status'] != 'converged' for row in stages)):
+        return None
+    row = stages[-1]
+    inner = row.get('inner')
+    if (row.get('index') != 20 or row.get('epsilon') != policy['epsilon_floor']
+        or type(inner) is not dict or inner.get('status') != 'converged'
+        or inner.get('reason') != 'absolute_stationary' or inner.get('iterations') != 0
+        or inner.get('failed_trial') is not None):
+        return None
+    try:
+        start, stop = row['adopted_row'], row['stop_row']
+        q = np.asarray(models[stop], dtype=np.float64)
+        inner_models = inner['trace']['models_q']
+        if (type(start) is not int or type(stop) is not int or start >= len(models)
+            or stop >= len(models) or not np.array_equal(models[start], q)
+            or not np.array_equal(models[stop], q) or inner_models.shape != (1, len(q))
+            or not np.array_equal(inner_models[0], q) or not np.array_equal(inner['q'], q)):
+            return None
+        lower, upper = prior['lower_kg_m3']/1000., prior['upper_kg_m3']/1000.
+        if _branch(q, problem['reference_q'], lower, upper)[0] != 'interior_unique_nonzero_max':
+            return None
+        stage = _stage(problem, q, policy, 20, initial)
+        adopted = row['adopted_weights']
+        weights = stage['weights'][0]
+        if (not np.array_equal(weights, adopted) or row['weight_sha256'] != stage['weight_sha256']
+            or row['operator_sha256'] != stage['operator_sha256']):
+            return None
+        objective = _Objective(stage, 20, lower, upper, 'b'*64)
+        objective.identity()
+        gradient = objective.evaluate(q, True, False)[1]
+        absolute = float(np.linalg.norm(plain.l2._kkt_gradient(q, gradient, lower, upper), np.inf))
+        if (not np.isfinite(absolute) or absolute > 1e-12
+            or absolute != row['canonical_absolute_kkt']
+            or not np.array_equal(gradient, row['canonical_gradient'])
+            or row['canonical_weight_mismatch'] != 0.0):
+            return None
+
+        regularizer = stage['problem']['regularization']
+        if (len(regularizer.objfcts) != 4 or len(regularizer.multipliers) != 4
+            or any(not np.isfinite(alpha) or alpha <= 0. for alpha in regularizer.multipliers)
+            or any(not np.isfinite(w).all() or np.any(w <= 0.) for w in stage['weights'])):
+            return None
+        smallness_hessian = regularizer.objfcts[0].deriv2(q)
+        if not sp.issparse(smallness_hessian):
+            return None
+        smallness_hessian = smallness_hessian.tocsr(copy=True)
+        smallness_hessian.sum_duplicates()
+        smallness_hessian.eliminate_zeros()
+        coo = smallness_hessian.tocoo()
+        if (smallness_hessian.shape != (len(q), len(q))
+            or np.any(coo.row != coo.col) or not np.isfinite(smallness_hessian.data).all()):
+            return None
+        diagonal = smallness_hessian.diagonal()
+        if not np.isfinite(diagonal).all() or np.any(diagonal <= 0.):
+            return None
+        minimum = float(np.min(diagonal))
+        beta = float(problem['beta_engine'])
+        lower_bound = float(beta*minimum)
+        if not np.isfinite(beta) or beta <= 0. or not np.isfinite(lower_bound) or lower_bound <= 0.:
+            return None
+        return {
+            'schema': 'm02-cpu2-terminal-fixed-point-certificate-1',
+            'runtime_epoch': RUNTIME_EPOCH, 'policy': POLICY,
+            'source_inventory_sha256': _INVENTORY,
+            'problem_sha256': _problem_hash(problem, prior, policy),
+            'stage_index': 20, 'objective_sha256': stage['objective_sha256'],
+            'operator_sha256': stage['operator_sha256'],
+            'weight_sha256': stage['weight_sha256'],
+            'model_sha256': plain.survey._digest(q),
+            'projected_kkt_inf': absolute,
+            'smallness_hessian_sha256': plain.survey._digest(plain._sparse_snapshot(smallness_hessian)),
+            'smallness_min_curvature': minimum,
+            'strict_convexity_lower_bound': lower_bound,
+            'proof': 'positive-smallness-diagonal-plus-psd-data-and-directional-quadratics',
+        }
+    except (ArithmeticError, IndexError, KeyError, TypeError, ValueError, RuntimeError):
+        return None
 
 
 def _denominator(c, j):
@@ -235,16 +323,28 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
     policy = plain._validate_policy(policy)
     budget = _Budget(deadline)
     lower, upper = prior['lower_kg_m3']/1000., prior['upper_kg_m3']/1000.
-    initialization = (plain.l2._solve_partition(problem, prior, budget.deadline)
+    initialization = (plain.l2._solve_partition(problem, prior, budget.deadline, preserve_exact_q=True)
         if original_owner is None else original_owner.initialize())
     budget.steps = initialization['iterations']
     a = len(lower)
-    models = [row/1000. for row in initialization['trace']['models_kg_m3']]
+    if original_owner is None:
+        exact_initial_q = initialization['trace'].get('models_q')
+        if (type(exact_initial_q) is not np.ndarray
+            or exact_initial_q.shape != initialization['trace']['models_kg_m3'].shape
+            or not np.array_equal(exact_initial_q*1000., initialization['trace']['models_kg_m3'])):
+            raise ValueError('corrected IRLS: missing exact native initialization states')
+        # Keep the established corrected-IRLS start bitwise identical to the
+        # original physical-density round trip. The exact optimizer q path is
+        # retained separately in the initialization trace for native replay.
+        physical_initial_q = initialization['trace']['models_kg_m3']/1000.
+        models = [row.copy() for row in physical_initial_q]
+    else:
+        models = [row/1000. for row in initialization['trace']['models_kg_m3']]
     kinds, labels = [0]*len(models), [-1]*len(models)
     attempts, stages, changes = [], [], []
     native_evidence = []
-    q = initialization['model_kg_m3']/1000. if initialization['model_kg_m3'] is not None else None
-    initial = plain._initial_thresholds(problem, initialization, policy)
+    q = models[-1].copy() if models else None
+    initial = plain._initial_thresholds(problem, initialization, policy, q=q) if original_owner is None else plain._initial_thresholds(problem, initialization, policy)
     if original_owner is not None:
         native_initial = original_owner.initial_evidence
         models = [row.copy() for row in native_initial['trace']['models_q']]
@@ -263,6 +363,7 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
     # vector-only inside the existing native/trace reserve, not a dense inverse.
     if admitted > 2*1024**3:
         raise ValueError('corrected IRLS: unchanged2GiB admission')
+    fixed_point_certificate = None
     try:
         if initialization['status'] == 'converged':
             if initial is None:
@@ -381,8 +482,14 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
                     success = plain._fixed_point(index, stage['epsilon'] == policy['epsilon_floor'], tuple(changes))
                     success = success and mismatch <= 1e-6 and (absolute <= 1e-12 or absolute/norm <= 1e-5)
                     null = not np.any(q-problem['reference_q']) and not np.any(canonical_g)
+                    if not success and not null and original_owner is None:
+                        fixed_point_certificate = _terminal_fixed_point_certificate(
+                            problem, prior, policy, initial, stages, models, changes)
+                        success = fixed_point_certificate is not None
                     status = 'converged' if success else 'nonconverged'
-                    reason = ('irls_stationary_null' if null else 'irls_fixed_point') if success else 'irls_iteration_cap'
+                    reason = ('irls_stationary_null' if null else
+                              'irls_fixed_point' if fixed_point_certificate is None else
+                              'irls_fixed_point_certificate') if success else 'irls_iteration_cap'
             budget.check()
     except _Failure as error:
         reason = str(error)
@@ -395,6 +502,11 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
         reason, status = 'nonfinite', 'failed'
     except (ValueError, RuntimeError, TypeError, KeyError):
         reason, status = 'engine_error', 'failed'
+    terminal_record = dict(status=status, reason=reason, weight_updates=max(0, len(stages)-1),
+        epsilon_saturated=bool(stages and stages[-1]['epsilon'] == policy['epsilon_floor']),
+        stage_changes=changes)
+    if original_owner is None:
+        terminal_record['fixed_point_certificate'] = fixed_point_certificate
     result = _freeze(dict(schema='gravity-irls-corrected-partition-1', runtime_epoch=RUNTIME_EPOCH,
         policy=POLICY, source_inventory=_SOURCES, problem_sha256=_problem_hash(problem, prior, policy),
         initialization=initialization, initial_epsilon=initial, stages=stages, attempts=attempts,
@@ -402,9 +514,7 @@ def _solve_partition(problem, prior, policy, deadline, *, original_owner=None):
         event_kinds=np.array(kinds, dtype=np.int64), event_stages=np.array(labels, dtype=np.int64),
         iterations=budget.steps, auxiliary_calls=budget.calls, residual_evaluations=budget.evaluations,
         model_kg_m3=q*1000. if q is not None else None, wall_seconds=float(monotonic()-started),
-        terminal=dict(status=status, reason=reason, weight_updates=max(0, len(stages)-1),
-                      epsilon_saturated=bool(stages and stages[-1]['epsilon'] == policy['epsilon_floor']),
-                      stage_changes=changes)))
+        terminal=terminal_record))
     if original_owner is not None:
         result.update(schema='gravity-irls-original-partition-1',
             runtime_epoch=prospective.RUNTIME_EPOCH, policy=prospective.POLICY,
@@ -457,6 +567,10 @@ def _validate_partition(result, problem, prior, policy, *, original_owner=None):
         raise ValueError('corrected replay: original box')
     init = result['initialization']
     plain.l2._validate_solve_state(init, init['fit_rows'])
+    exact_init_q = init['trace'].get('models_q')
+    if original_owner is None and (type(exact_init_q) is not np.ndarray
+        or not np.array_equal(exact_init_q*1000., init['trace']['models_kg_m3'])):
+        raise ValueError('corrected replay: exact native initialization states')
     prefix = init['trace']['models_kg_m3']/1000.
     if original_owner is not None:
         import gravity_irls_pool as pool
@@ -464,7 +578,9 @@ def _validate_partition(result, problem, prior, policy, *, original_owner=None):
         prefix = evidence['trace']['models_q']
     if not np.array_equal(models[:len(prefix)], prefix):
         raise ValueError('corrected replay: actual native initialization prefix')
-    thresholds = (plain._initial_thresholds(problem, init, policy) if original_owner is None else
+    thresholds = (plain._initial_thresholds(problem, init, policy,
+                    q=prefix[-1] if len(prefix) else None)
+        if original_owner is None else
         None if evidence['status'] != 'converged' else original_owner.thresholds(policy, evidence['q']))
     if result['initial_epsilon'] != thresholds:
         raise ValueError('corrected replay: original thresholds')
@@ -489,10 +605,16 @@ def _validate_partition(result, problem, prior, policy, *, original_owner=None):
     previous_weights = None
     changes = []
     terminal = result['terminal']
-    plain.survey._keys(terminal, ('status', 'reason', 'weight_updates', 'epsilon_saturated', 'stage_changes'), 'actual corrected terminal')
+    terminal_keys = ('status', 'reason', 'weight_updates', 'epsilon_saturated', 'stage_changes')
+    if original_owner is None:
+        terminal_keys += ('fixed_point_certificate',)
+    plain.survey._keys(terminal, terminal_keys, 'actual corrected terminal')
     failed = terminal['status'] in ('failed', 'nonconverged')
     if terminal['status'] not in ('failed', 'nonconverged', 'converged'):
         raise ValueError('corrected replay: literal terminal status')
+    terminal_certificate = terminal.get('fixed_point_certificate')
+    if terminal_certificate is not None and terminal['status'] != 'converged':
+        raise ValueError('corrected replay: certificate on nonconverged terminal')
     for attempt in attempts:
         base = {'stage', 'correction', 'model_row', 'branch', 'maximum_index', 'outcome', 'cg', 'trials'}
         optional = {'canonical_gradient', 'denominator', 'conditioning_ratio', 'direction', 'merit_slope',
@@ -674,10 +796,17 @@ def _validate_partition(result, problem, prior, policy, *, original_owner=None):
     if terminal['stage_changes'] != tuple(changes) or terminal['weight_updates'] != max(0, len(stages)-1):
         raise ValueError('corrected replay: actual transition/adoption ledger')
     if terminal['status'] == 'converged':
+        certificate = terminal_certificate
+        existing_fixed_point = plain._fixed_point(20, terminal['epsilon_saturated'], tuple(changes))
         if (len(stages) != 21 or not all(s['inner']['status'] == 'converged' for s in stages)
-            or not plain._fixed_point(20, terminal['epsilon_saturated'], tuple(changes))
             or stages[-1]['canonical_weight_mismatch'] > 1e-6
-            or not (stages[-1]['canonical_absolute_kkt'] <= 1e-12 or stages[-1]['canonical_normalized_kkt'] <= 1e-5)):
+            or not (stages[-1]['canonical_absolute_kkt'] <= 1e-12 or stages[-1]['canonical_normalized_kkt'] <= 1e-5)
+            or (certificate is None and (not existing_fixed_point
+                or terminal['reason'] not in ('irls_fixed_point', 'irls_stationary_null')))
+            or (certificate is not None and (existing_fixed_point
+                or terminal['reason'] != 'irls_fixed_point_certificate'
+                or certificate != _terminal_fixed_point_certificate(problem, prior, policy,
+                    result['initial_epsilon'], stages, models, changes)))):
             raise ValueError('corrected replay: original positive scientific assertions')
         if (not np.array_equal(result['event_kinds'], np.array(expected_kinds, dtype=np.int64))
             or not np.array_equal(result['event_stages'], np.array(expected_labels, dtype=np.int64))
@@ -690,7 +819,13 @@ def _validate_partition(result, problem, prior, policy, *, original_owner=None):
 def _replay_native(solved, problem, lower, upper, deadline, *, physical_initialization=False):
     """Original physical metrics/stopping/certificates, no optimizer invocation."""
     trace = solved['trace']
-    models = trace['models_kg_m3']/1000. if physical_initialization else trace['models_q']
+    if physical_initialization:
+        models = trace.get('models_q')
+        if (type(models) is not np.ndarray or models.shape != trace['models_kg_m3'].shape
+            or not np.array_equal(models*1000., trace['models_kg_m3'])):
+            raise ValueError('corrected replay: exact physical-initialization q path')
+    else:
+        models = trace['models_q']
     if not len(models):
         if solved['status'] == 'converged':
             raise ValueError('corrected replay: empty native success')
@@ -720,7 +855,12 @@ def _replay_native(solved, problem, lower, upper, deadline, *, physical_initiali
         previous_q, previous_phi, previous_gradient = q, phi, gradient
     if solved['status'] == 'converged':
         if solved['reason'] == 'absolute_stationary':
-            if absolute > 1e-12:
+            # The native solve record's public stopping contract is normalized
+            # KKT (gravity_l2._validate_solve). For physical initialization the
+            # exact optimizer q is serialized as kg/m^3 and reconstructed by
+            # division here; that round trip can move an absolute residual by a
+            # few ulps even while the recorded normalized stationarity is exact.
+            if trace['kkt_normalized'][-1] > 1e-12:
                 raise ValueError('corrected replay: original absolute native stopping')
         elif solved['reason'] != 'kkt_stable' or (len(models) < 4 or absolute/norm > 1e-5
             or np.any(trace['relative_changes'][-3:] > 1e-6)):

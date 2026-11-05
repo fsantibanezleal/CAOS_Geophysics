@@ -3,6 +3,18 @@ import { bindDataset, bindResult, parseDatasetReceipt, parseEligibility, parseFl
 import { bytes, fixture, id } from "./fixtures/processing";
 
 describe("activated flag-only processing contracts", () => {
+  it("accepts an explicitly declared local metric gravity frame", () => {
+    const f = fixture();
+    const dataset = {...f.dataset, physical_metadata: {...f.dataset.physical_metadata,
+      coordinate_reference: "local" as const, epsg: null, local_crs: "authored local east north metric frame",
+      horizontal_datum: "authored local origin", vertical_datum: "authored upward survey plane",
+      vertical_positive: "up" as const, component_frame: "local vertical up"}};
+    expect(parseGravityDataset(dataset)).toEqual(dataset);
+    expect(() => parseGravityDataset({...dataset, physical_metadata: {...dataset.physical_metadata,
+      coordinate_reference: "local", local_crs: null}})).toThrow();
+    expect(() => parseGravityDataset({...dataset, physical_metadata: {...dataset.physical_metadata,
+      coordinate_reference: "epsg", epsg: null}})).toThrow();
+  });
   it("rejects identity shape physics and fake inverse drift", () => {
     const f = fixture();
     expect(parseDatasetReceipt(f.receipt)).toEqual(f.receipt); expect(parseGravityDataset(f.dataset)).toEqual(f.dataset); expect(parseFlagResult(f.result)).toEqual(f.result);

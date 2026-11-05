@@ -4,6 +4,7 @@ from time import monotonic
 
 import numpy as np
 import pytest
+import scipy.sparse as sp
 
 import gravity_irls_corrected as corrected
 import gravity_irls as plain
@@ -17,7 +18,12 @@ def test_corrected_original_positive(record_property):
     record_property('actual_combined_steps', result['iterations'])
     assert result['terminal']['status'] == 'converged', result['terminal']
     assert result['terminal']['reason'] == 'irls_fixed_point'
+    assert result['terminal']['fixed_point_certificate'] is None
     assert result['initialization']['status'] == 'converged'
+    exact_initial_q = result['initialization']['trace']['models_q']
+    np.testing.assert_array_equal(exact_initial_q*1000., result['initialization']['trace']['models_kg_m3'])
+    legacy_initial_q = result['initialization']['trace']['models_kg_m3']/1000.
+    np.testing.assert_array_equal(result['models_q'][:len(legacy_initial_q)], legacy_initial_q)
     assert len(result['stages']) == 21 and result['terminal']['weight_updates'] == 20
     assert all(s['inner']['status'] == 'converged' for s in result['stages'])
     assert all(s['epsilon'] == policy()['epsilon_floor'] for s in result['stages'][17:])
@@ -171,13 +177,14 @@ def test_ledger_replay():
 
 
 def test_epoch_separation():
-    assert corrected.RUNTIME_EPOCH == 'm02-survey-irls-cpu-2'
-    assert corrected.POLICY == 'safeguarded-irls-interior-threepair-log17-stage-1'
+    assert corrected.RUNTIME_EPOCH == 'm02-survey-irls-cpu-2-terminal-certificate-exact-q-replay-legacy-init-1'
+    assert corrected.POLICY == 'safeguarded-irls-interior-threepair-log17-terminal-certificate-exact-q-replay-legacy-init-1'
     assert corrected.RUNTIME_EPOCH != plain.RUNTIME_EPOCH and corrected.POLICY != plain.POLICY
     problem, prior = native_problem()
     result = corrected.solve_partition(problem, prior, policy(), monotonic()+120.)
     assert result['terminal']['status'] == 'converged'
     assert result['terminal']['reason'] == 'irls_stationary_null'
+    assert result['terminal']['fixed_point_certificate'] is None
     assert len(result['stages']) == 21 and result['iterations'] == 0
     assert all(a['branch'] == 'disabled_null' for a in result['attempts'])
     assert all(not a.get('cg') for a in result['attempts'])
@@ -217,3 +224,125 @@ def test_actual_expired_tail_is_retained_and_replayed(monkeypatch, tail):
     changed['result_sha256'] = plain.survey._digest({k:v for k,v in changed.items() if k != 'result_sha256'})
     with pytest.raises(ValueError, match='phase ledger'):
         corrected.validate_partition(changed, problem, prior, policy())
+
+
+@pytest.fixture(scope='module')
+def terminal_certificate_case():
+    problem, prior = native_problem(null=False)
+    fixed_point = plain._fixed_point
+    plain._fixed_point = lambda *_args: False
+    try:
+        result = corrected.solve_partition(problem, prior, policy(), monotonic()+120.)
+    finally:
+        plain._fixed_point = fixed_point
+    assert result['terminal']['status'] == 'converged'
+    assert result['terminal']['reason'] == 'irls_fixed_point_certificate'
+    return problem, prior, result
+
+
+def test_exact_terminal_certificate_proves_unique_fixed_point(terminal_certificate_case, monkeypatch):
+    problem, prior, result = terminal_certificate_case
+    monkeypatch.setattr(plain, '_fixed_point', lambda *_args: False)
+    certificate = result['terminal']['fixed_point_certificate']
+    assert certificate['schema'] == 'm02-cpu2-terminal-fixed-point-certificate-1'
+    assert certificate['projected_kkt_inf'] <= 1e-12
+    assert certificate['smallness_min_curvature'] > 0.
+    assert certificate['strict_convexity_lower_bound'] > 0.
+    corrected.validate_partition(result, problem, prior, policy())
+
+
+@pytest.mark.parametrize('mutation', ['weight', 'kkt', 'inner', 'iteration', 'state', 'curvature'])
+def test_terminal_certificate_rejects_near_misses(terminal_certificate_case, monkeypatch, mutation):
+    problem, prior, original = terminal_certificate_case
+    monkeypatch.setattr(plain, '_fixed_point', lambda *_args: False)
+    result = deepcopy(original)
+    row = result['stages'][-1]
+    if mutation == 'weight':
+        row['adopted_weights'] = row['adopted_weights'].copy()
+        row['adopted_weights'][0] *= 1.+1e-8
+    elif mutation == 'kkt':
+        row['canonical_absolute_kkt'] = np.nextafter(1e-12, np.inf)
+    elif mutation == 'inner':
+        row['inner']['reason'] = 'iteration_cap'
+    elif mutation == 'iteration':
+        row['inner']['iterations'] = 1
+    elif mutation == 'state':
+        row['inner']['trace']['models_q'] = row['inner']['trace']['models_q'].copy()
+        row['inner']['trace']['models_q'][0, 0] = np.nextafter(
+            row['inner']['trace']['models_q'][0, 0], np.inf)
+    elif mutation == 'curvature':
+        result['terminal']['fixed_point_certificate']['strict_convexity_lower_bound'] = 0.
+    result['result_sha256'] = plain.survey._digest(
+        {key:value for key,value in result.items() if key != 'result_sha256'})
+    with pytest.raises((TypeError, ValueError)):
+        corrected.validate_partition(result, problem, prior, policy())
+
+
+@pytest.mark.parametrize('mutation', [
+    'problem_beta', 'problem_background', 'prior_bounds', 'epsilon',
+    'operator', 'source_inventory', 'native_state',
+])
+def test_terminal_certificate_rejects_changed_input_and_replay_identities(
+        terminal_certificate_case, monkeypatch, mutation):
+    problem, prior, original = terminal_certificate_case
+    monkeypatch.setattr(plain, '_fixed_point', lambda *_args: False)
+    result = deepcopy(original)
+    changed_problem, changed_prior = problem, prior
+    if mutation == 'problem_beta':
+        changed_problem = dict(problem, beta_engine=np.nextafter(problem['beta_engine'], np.inf))
+    elif mutation == 'problem_background':
+        background = problem['background'].copy()
+        background[0] = np.nextafter(background[0], np.inf)
+        changed_problem = dict(problem, background=background)
+    elif mutation == 'prior_bounds':
+        lower = prior['lower_kg_m3'].copy()
+        lower[0] = np.nextafter(lower[0], -np.inf)
+        changed_prior = dict(prior, lower_kg_m3=lower)
+    elif mutation == 'epsilon':
+        initial = list(result['initial_epsilon'])
+        initial[0] = np.nextafter(initial[0], np.inf)
+        result['initial_epsilon'] = tuple(initial)
+    elif mutation == 'operator':
+        result['stages'][-1]['operator_sha256'] = '0'*64
+    elif mutation == 'source_inventory':
+        result['source_inventory'][next(iter(result['source_inventory']))] = '0'*64
+    elif mutation == 'native_state':
+        result['models_q'] = result['models_q'].copy()
+        stop = result['stages'][-1]['stop_row']
+        result['models_q'][stop, 0] = np.nextafter(result['models_q'][stop, 0], np.inf)
+        result['model_kg_m3'] = result['models_q'][-1]*1000.
+    result['result_sha256'] = plain.survey._digest(
+        {key:value for key,value in result.items() if key != 'result_sha256'})
+    with pytest.raises((TypeError, ValueError)):
+        corrected.validate_partition(result, changed_problem, changed_prior, policy())
+
+
+def test_terminal_certificate_rejects_tied_or_active_branch(terminal_certificate_case, monkeypatch):
+    problem, prior, result = terminal_certificate_case
+    monkeypatch.setattr(plain, '_fixed_point', lambda *_args: False)
+    stages = deepcopy(result['stages'])
+    models = [row.copy() for row in result['models_q']]
+    q = models[stages[-1]['stop_row']]
+    tied_reference = q.copy()
+    tied_reference[0] -= 1.
+    tied_reference[1] -= 1.
+    tied_problem = dict(problem, reference_q=tied_reference)
+    assert corrected._terminal_fixed_point_certificate(tied_problem, prior, policy(),
+        result['initial_epsilon'], stages, models, result['terminal']['stage_changes']) is None
+
+    active_prior = dict(prior, lower_kg_m3=prior['lower_kg_m3'].copy())
+    active_prior['lower_kg_m3'][0] = q[0]*1000.
+    assert corrected._terminal_fixed_point_certificate(problem, active_prior, policy(),
+        result['initial_epsilon'], stages, models, result['terminal']['stage_changes']) is None
+
+
+def test_terminal_certificate_rejects_nonpositive_smallness_curvature(
+        terminal_certificate_case, monkeypatch):
+    problem, prior, result = terminal_certificate_case
+    monkeypatch.setattr(plain, '_fixed_point', lambda *_args: False)
+    component_type = type(problem['regularization'].objfcts[0])
+    monkeypatch.setattr(component_type, 'deriv2', lambda self, _q: sp.csr_matrix(
+        (len(result['models_q'][-1]), len(result['models_q'][-1]))))
+    assert corrected._terminal_fixed_point_certificate(problem, prior, policy(),
+        result['initial_epsilon'], result['stages'], list(result['models_q']),
+        result['terminal']['stage_changes']) is None

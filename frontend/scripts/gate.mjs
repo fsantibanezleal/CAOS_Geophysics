@@ -11,7 +11,7 @@ const frontend = join(root, 'frontend');
 const product = JSON.parse(readFileSync(join(root, 'product.json'), 'utf8'));
 const routes = JSON.parse(readFileSync(join(frontend, 'src', 'lib', 'routes.json'), 'utf8'));
 const appRoute = product.workbench_route ?? '/app';
-const expectedShellVersion = '0.19.9';
+const expectedShellVersion = '0.20.0';
 const require = createRequire(import.meta.url);
 const shellPackagePath = require.resolve('@fasl-work/caos-app-shell/package.json');
 const shellPackage = JSON.parse(readFileSync(shellPackagePath, 'utf8'));
@@ -117,6 +117,8 @@ const options = {
   expectBrand: product.name,
   workbench: appRoute,
   requireFocus: true,
+  requireShowcase: true,
+  routes: extra.routes ?? [...routes.map((route) => route.path), '/story/reference', '/story/coverage', '/story/regularization'].join(','),
   out: outputPath,
 };
 if (!options.url && !existsSync(join(frontend, 'dist', 'index.html'))) {
