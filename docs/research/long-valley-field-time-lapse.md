@@ -27,14 +27,18 @@ dataset remains attributed to DDS-81 and its credited authors.
 
 ## Download, process, reproduce
 
-Raw downloads live in ignored `data/downloads/long-valley/`. The downloader
-allows only the two pinned USGS URLs, enforces a 1 MiB response ceiling, checks
+Raw downloads live under
+`$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/long-valley/`, outside the
+repository. Set `GEOPHYSICS_LOCAL_DATA_ROOT` to an absolute device data root
+(for example `E:\_Datos\CAOS_Geophysics`) or pass `--data-root` explicitly.
+The downloader allows only the two pinned USGS URLs, enforces a 1 MiB response ceiling, checks
 the gravity table byte count and SHA-256, and checks a canonical metadata hash.
 The HTML metadata includes rotating Cloudflare email tokens and a transient
 script; canonicalization removes only that injected wrapper and those contact
 tokens. All other source-authored metadata remains in the fingerprint.
 
 ```powershell
+$env:GEOPHYSICS_LOCAL_DATA_ROOT = 'E:\_Datos\CAOS_Geophysics'
 .\.venv-pipeline\Scripts\python.exe scripts/download_long_valley.py
 .\.venv-pipeline\Scripts\python.exe data-pipeline/long_valley_timelapse.py
 .\.venv-pipeline\Scripts\python.exe data-pipeline/long_valley_timelapse.py --check

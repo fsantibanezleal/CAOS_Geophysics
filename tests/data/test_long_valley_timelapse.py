@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import os
 from pathlib import Path
 
 import pytest
@@ -14,8 +15,10 @@ def write_table(path: Path, rows: list[list[str]]) -> None:
 
 
 def test_real_archive_parses_and_preserves_epoch_values():
-    root = Path(__file__).resolve().parents[2]
-    source = parse_source(root / "data/downloads/long-valley/GravitySurveys.txt")
+    data_root = os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT")
+    if not data_root:
+        pytest.skip("set GEOPHYSICS_LOCAL_DATA_ROOT to run the source-bound USGS archive control")
+    source = parse_source(Path(data_root) / "data/downloads/long-valley/GravitySurveys.txt")
     assert source["epochs"] == ["1980-06", "1982-06", "1982-09", "1983-07", "1984-07", "1985-07", "1998-07", "1999-07"]
     assert len(source["stations"]) == 37
     by_id = {row["station_id"]: row for row in source["stations"]}

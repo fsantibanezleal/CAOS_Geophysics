@@ -13,6 +13,7 @@ import csv
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import re
 from typing import Any
@@ -21,6 +22,7 @@ from typing import Any
 SOURCE_URL = "https://pubs.usgs.gov/dds/dds-81/MonitoringData/Gravity/SpreadsheetFormatData/GravitySurveys.txt"
 METADATA_URL = "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/gravitymetadata.htm"
 FORMAT_URL = "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/DataFormat.html"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 EPOCH = re.compile(r"\s*(JUNE|SEPT|JULY)\s+(19\d{2})\s*", re.IGNORECASE)
 # Exact-source review flag. The raw observation is retained without correction.
 QC_SOURCE_SHA256 = "d7cca18741ef85fa7ea6fe448dabfee40900de6ed45ba5ea3d13b9e9f9ec1424"
@@ -203,16 +205,36 @@ def build_artifact(source_path: Path, metadata_path: Path, earlier: str, later: 
     }
 
 
+def external_data_root(value: str | None) -> Path:
+    configured = value or os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT")
+    if not configured:
+        raise ValueError("set GEOPHYSICS_LOCAL_DATA_ROOT or pass --data-root to an absolute directory outside the repository")
+    root = Path(configured).expanduser()
+    if not root.is_absolute():
+        raise ValueError("the Long Valley data root must be absolute")
+    root = root.resolve()
+    if root == REPOSITORY_ROOT or root.is_relative_to(REPOSITORY_ROOT):
+        raise ValueError("raw Long Valley inputs must live outside the repository")
+    return root
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, default=Path("data/downloads/long-valley/GravitySurveys.txt"))
-    parser.add_argument("--metadata", type=Path, default=Path("data/downloads/long-valley/gravitymetadata.htm"))
+    parser.add_argument("--data-root", help="absolute external CAOS data root; defaults to GEOPHYSICS_LOCAL_DATA_ROOT")
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--metadata", type=Path)
     parser.add_argument("--earlier", default="1982-06")
     parser.add_argument("--later", default="1999-07")
-    parser.add_argument("--output", type=Path, default=Path("data/derived/field/long-valley/1982-06_to_1999-07.json"))
+    parser.add_argument("--output", type=Path, default=REPOSITORY_ROOT / "data/derived/field/long-valley/1982-06_to_1999-07.json")
     parser.add_argument("--check", action="store_true", help="fail unless the committed derived artifact is byte-identical to a fresh replay")
     args = parser.parse_args()
-    artifact = build_artifact(args.source, args.metadata, args.earlier, args.later)
+    try:
+        data_root = external_data_root(args.data_root)
+    except ValueError as exc:
+        parser.error(str(exc))
+    source_path = args.source or data_root / "data/downloads/long-valley/GravitySurveys.txt"
+    metadata_path = args.metadata or data_root / "data/downloads/long-valley/gravitymetadata.htm"
+    artifact = build_artifact(source_path, metadata_path, args.earlier, args.later)
     encoded = json.dumps(artifact, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
     if args.check:
         if not args.output.is_file() or args.output.read_text(encoding="utf-8") != encoded:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import argparse
 import os
 from pathlib import Path
 import re
@@ -11,12 +12,24 @@ from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEST = ROOT / "data" / "downloads" / "long-valley"
 ASSETS = (
     ("GravitySurveys.txt", "https://pubs.usgs.gov/dds/dds-81/MonitoringData/Gravity/SpreadsheetFormatData/GravitySurveys.txt", 5_029, "d7cca18741ef85fa7ea6fe448dabfee40900de6ed45ba5ea3d13b9e9f9ec1424"),
     ("gravitymetadata.htm", "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/gravitymetadata.htm", 25_537, "6eeb2dccc73900d409f2126dcdf7a9a910ffebaabf7f22054528a8afd7ebebb7"),
 )
 MAX_BYTES = 1024 * 1024
+
+
+def external_data_root(value: str | None) -> Path:
+    configured = value or os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT")
+    if not configured:
+        raise ValueError("set GEOPHYSICS_LOCAL_DATA_ROOT or pass --data-root to an absolute directory outside the repository")
+    root = Path(configured).expanduser()
+    if not root.is_absolute():
+        raise ValueError("the Long Valley data root must be absolute")
+    root = root.resolve()
+    if root == ROOT or root.is_relative_to(ROOT):
+        raise ValueError("raw Long Valley downloads must live outside the repository")
+    return root
 
 
 def fetch(url: str) -> bytes:
@@ -43,20 +56,27 @@ def source_digest(name: str, body: bytes) -> str:
     return hashlib.sha256(body).hexdigest()
 
 
-def main() -> int:
-    DEST.mkdir(parents=True, exist_ok=True)
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-root", help="absolute external CAOS data root; defaults to GEOPHYSICS_LOCAL_DATA_ROOT")
+    args = parser.parse_args(argv)
+    try:
+        destination = external_data_root(args.data_root) / "data" / "downloads" / "long-valley"
+    except ValueError as exc:
+        parser.error(str(exc))
+    destination.mkdir(parents=True, exist_ok=True)
     for name, url, expected_bytes, expected_sha256 in ASSETS:
         body = fetch(url)
         actual = source_digest(name, body)
         if len(body) != expected_bytes or actual != expected_sha256:
             raise RuntimeError(f"pinned source identity mismatch for {name}: {len(body)} bytes, sha256={actual}")
-        fd, temp_name = tempfile.mkstemp(prefix=f".{name}.", dir=DEST)
+        fd, temp_name = tempfile.mkstemp(prefix=f".{name}.", dir=destination)
         try:
             with os.fdopen(fd, "wb") as stream:
                 stream.write(body)
                 stream.flush()
                 os.fsync(stream.fileno())
-            os.replace(temp_name, DEST / name)
+            os.replace(temp_name, destination / name)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)
