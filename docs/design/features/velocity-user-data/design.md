@@ -26,13 +26,34 @@ positive seconds (time<=100,sigma<=10). Lambda is explicit finite[1e-6,1e6], not
 selected on user truth. Raw JSON<=512 KiB, depth<=12 and nodes<=40000, scanned
 before scientific imports; only exact native numeric types, not booleans.
 
-For q=1000(s-s0), s0=1/v0, C=A/1000, W=diag(1/sigma),
-min ||W(Cq-(t-As0))||^2 + lambda||Dq||^2 +0.01||q||^2.
-Cholesky solves the SPD normal equation. Slowness is then clipped explicitly to
-[1/4000,1/1400] s/m; record the clipped-cell count and residual/objective AFTER
-clipping, not the unclipped optimizer as a bounded optimum. This direct clipped
-estimate is not a certified bound-constrained solution. D uses the existing
-dimensionless neighbour differences. Sigma is never estimated from residuals.
+For q=1000(s-s0), s0=1/v0, C=A/1000, and W=diag(1/sigma), the weighted
+objective is
+
+    min_q ||W(Cq-(t-As0))||^2 + lambda||Dq||^2 + 0.01||q||^2
+
+subject to the cellwise velocity bounds represented in slowness coordinates:
+
+    1000(1/4000-s0) <= q <= 1000(1/1400-s0).
+
+The positive ridge makes the quadratic Hessian positive definite. The current
+implementation solves this box-constrained quadratic with a deterministic
+primal active-set method: it solves on the current free face, advances only to
+the first blocking bound, and releases a bound when its multiplier violates
+the KKT sign condition. It does not solve an unconstrained system and clip the
+result afterward. The solver stops only when the projected KKT residual is at
+most 1e-9 relative to the declared scale. The producer reconstructs q from the
+serialized velocity grid and independently recomputes that residual before an
+export can be reopened as a successful v2 generation. D uses the existing
+dimensionless neighbour differences. Sigma is supplied by the user and is
+never estimated from residuals.
+
+An independent SciPy bounded least-squares solve is used as a numerical
+optimizer control on the same Hessian, right-hand side and physical box. The
+control compares model values; it shares the declared ray matrix, so it cannot
+validate the ray geometry or establish independent geophysical accuracy. A
+small KKT residual proves optimality only for this finite straight-ray
+quadratic and its supplied data, not that the straight paths represent bent
+first arrivals in an unknown earth.
 
 CNN input uses only observed times and supplied A through the existing fixed
 backprojection/coverage transform. Load and evaluate the real checkpoint with
