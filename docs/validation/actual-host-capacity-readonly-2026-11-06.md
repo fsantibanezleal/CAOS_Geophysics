@@ -61,3 +61,16 @@ growth, concurrent job memory/scratch, timeout/cancellation/recovery, or
 authenticated owner workflows. It does not change service activation. A
 qualified bundle and the full numerical, account, ownership, browser, and
 actual-worker gates remain prerequisites before cutover.
+
+## Follow-up host snapshot : 2026-11-06 12:46:20 UTC
+
+The same canonical host was queried again over read-only SSH. Root filesystem
+availability was 28,007,555,072 bytes (64% used), and
+`/proc/meminfo` reported `MemAvailable: 5,099,332 kB`. The `current` symlink
+still resolves to `/var/www/geophysics.ml.fasl-work.com/releases/20260926235216`.
+The release tree still contains exactly `20260926200023`, `20260926233737`,
+and `20260926235216`: the active release plus two rollback releases. Nginx is
+active; `geophysics-api` and `geophysics-worker` are inactive. No host files,
+services, or configuration were changed. This updated capacity satisfies the
+previously recorded 4 GiB staging-space precondition, but does not qualify an
+API/worker candidate or any deployment gate.
