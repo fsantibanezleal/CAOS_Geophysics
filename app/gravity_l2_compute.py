@@ -291,7 +291,12 @@ def compute_gravity_l2(dataset: dict, raw_path: Path, *, job_id: str, dataset_sh
         raise ValueError("gravity L2 projected native memory or scratch exceeds the admitted cap")
     calibration = inverse.calibrate_gravity_l2(calibration_request)
     if calibration["selection_status"] != "selected" or calibration["final_solve"] is None or calibration["final_solve"]["status"] != "converged":
-        raise ValueError("gravity L2 calibration did not converge; its exact terminal result is not published as success")
+        final = calibration["final_solve"] or {}
+        terminal = "/".join(str(value) for value in (
+            calibration["selection_status"], final.get("status", "missing"),
+            final.get("reason", "no_final_solve"), final.get("iterations", 0),
+        ))
+        raise ValueError(f"gravity L2 calibration is not publishable (selection/status/reason/iterations={terminal})")
     outer = plan["outer_rows"]
     observed = {"rows": outer.copy(), "gz_up_mgal": _array(dataset["observed_mgal"])[outer],
                 "acceleration_unit": "mGal", "vertical_positive": "up"}
