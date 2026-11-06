@@ -64,9 +64,18 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_regularizer(monke
     _,_,hessian=objective.evaluate(q,return_g=True,return_H=True)
     np.testing.assert_allclose(hessian@vector,expected,rtol=2e-14,atol=1e-14)
     np.testing.assert_allclose(hessian@(-vector),-expected,rtol=2e-14,atol=1e-14)
-    metric=magnetic_original_optimizer._MagneticDTO(objective,9).metric_operands(q)
+    dto=magnetic_original_optimizer._MagneticDTO(objective,9)
+    metric=dto.metric_operands(q)
     np.testing.assert_allclose(metric.regularizer.toarray(),beta*regularizer.source.hessian.toarray(),
                                rtol=0.,atol=0.)
+    assert dto.metric_operands(q) is metric
+    q_next=q.copy()
+    q_next[0]=.31
+    next_metric=dto.metric_operands(q_next)
+    assert next_metric is not metric
+    assert next_metric.regularizer is metric.regularizer
+    assert next_metric.binding.model_sha256 != metric.binding.model_sha256
+    np.testing.assert_array_equal(next_metric.whitened_jacobian,metric.whitened_jacobian)
     assert len(calls)==1
 
 

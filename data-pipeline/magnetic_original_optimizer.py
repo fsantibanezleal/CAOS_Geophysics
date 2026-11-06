@@ -28,6 +28,18 @@ class _MagneticDTO:
             or not 3*objective.operator.rows <= source_components <= 2048):
             raise ValueError('original magnetic bridge: original linear source COMPONENTS')
         self.native, self.source_components = objective, source_components
+        self._metric_model = None
+        self._metric_operands = None
+        self._regularizer_metric = None
+        source_regularizer = getattr(objective.regularizer, 'source', None)
+        if source_regularizer is not None:
+            regularizer_metric = (objective.beta * source_regularizer.hessian).tocsr(copy=True)
+            regularizer_metric.sum_duplicates()
+            regularizer_metric.sort_indices()
+            regularizer_metric.data.flags.writeable = False
+            regularizer_metric.indices.flags.writeable = False
+            regularizer_metric.indptr.flags.writeable = False
+            self._regularizer_metric = regularizer_metric
 
     def __getattr__(self, name):
         return getattr(self.native, name)
@@ -37,19 +49,24 @@ class _MagneticDTO:
 
     def metric_operands(self, q):
         o = self.native
+        if self._metric_model is not None and np.array_equal(q, self._metric_model):
+            return self._metric_operands
         source_regularizer = getattr(o.regularizer, 'source', None)
         if source_regularizer is None:
             # The retained M04 fixture imports its frozen adapter class; its
             # own engine remains authoritative for that historical control.
             regularizer_hessian = o.regularizer.vendor.deriv2(q)
         else:
-            regularizer_hessian = source_regularizer.hessian
-        regularizer_hessian = (o.beta * regularizer_hessian).tocsr(copy=True)
-        regularizer_hessian.sort_indices()
-        return owned.MetricOperands(owned.binding_for(self.identity(), q),
+            regularizer_hessian = self._regularizer_metric
+        operands = owned.MetricOperands(owned.binding_for(self.identity(), q),
             self.source_components, o.observed.size, len(q), o.factor is not None,
             regularizer_hessian,
             np.ascontiguousarray(o._state(q)[-1]))
+        if source_regularizer is not None:
+            self._metric_model = q.copy()
+            self._metric_model.flags.writeable = False
+            self._metric_operands = operands
+        return operands
 
     def quadratic_operands(self, q):
         o = self.native
