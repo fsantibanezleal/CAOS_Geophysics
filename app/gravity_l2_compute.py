@@ -292,11 +292,18 @@ def compute_gravity_l2(dataset: dict, raw_path: Path, *, job_id: str, dataset_sh
     calibration = inverse.calibrate_gravity_l2(calibration_request)
     if calibration["selection_status"] != "selected" or calibration["final_solve"] is None or calibration["final_solve"]["status"] != "converged":
         final = calibration["final_solve"] or {}
+        folds = ";".join(
+            f"{candidate['index']}:" + ",".join(
+                f"{fold['solve']['status']}/{fold['solve']['reason']}"
+                for fold in candidate["folds"]
+            )
+            for candidate in calibration["candidates"]
+        )
         terminal = "/".join(str(value) for value in (
             calibration["selection_status"], final.get("status", "missing"),
-            final.get("reason", "no_final_solve"), final.get("iterations", 0),
+            final.get("reason", "no_final_solve"), final.get("iterations", 0), folds,
         ))
-        raise ValueError(f"gravity L2 calibration is not publishable (selection/status/reason/iterations={terminal})")
+        raise ValueError(f"gravity L2 calibration is not publishable (selection/status/reason/iterations/folds={terminal})")
     outer = plan["outer_rows"]
     observed = {"rows": outer.copy(), "gz_up_mgal": _array(dataset["observed_mgal"])[outer],
                 "acceleration_unit": "mGal", "vertical_positive": "up"}
