@@ -191,6 +191,24 @@ test("authored prism upload runs the isolated M02 solver and renders its returne
     zip], {cwd: resolve(".."), encoding: "utf8"});
   expect(JSON.parse(verified)).toBeTruthy();
   await page.screenshot({path: resolve(evidence, "m02-uploaded-prism-result.png"), fullPage: true});
+  const instrument = page.getByTestId("gravity-l2-result");
+  const stateSlider = instrument.locator('input[type="range"]').first();
+  const frameMaximum = Number(await stateSlider.getAttribute("max"));
+  expect(frameMaximum).toBeGreaterThan(0);
+  await stateSlider.focus();
+  await stateSlider.press("End");
+  await expect(instrument).toContainText(`Accepted state ${frameMaximum + 1} / ${frameMaximum + 1}`);
+  const volume = page.locator("[data-testid=gravity-density-volume] canvas");
+  const terminalImage = await volume.screenshot();
+  writeFileSync(resolve(evidence, "m02-terminal-density-frame.png"), terminalImage);
+  const terminalMetric = await instrument.locator("p.project-note").filter({hasText: "normalized KKT"}).textContent();
+  await stateSlider.press("Home");
+  await expect(instrument).toContainText("Accepted state 1 /");
+  await expect.poll(async () => (await instrument.locator("p.project-note").filter({hasText: "normalized KKT"}).textContent()) ?? "")
+    .not.toBe(terminalMetric ?? "");
+  const initialImage = await volume.screenshot();
+  writeFileSync(resolve(evidence, "m02-initial-density-frame.png"), initialImage);
+  expect(initialImage.equals(terminalImage)).toBe(false);
 });
 
 test("linked station controls and viewport fit", async () => {
