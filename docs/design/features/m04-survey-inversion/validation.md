@@ -400,3 +400,23 @@ foundation modules. The command selection did not exercise a completed M04
 inverse or user-survey calibration: `magnetic_inverse.py`, the accepted M02
 optimizer binding, and the calibration CLI are absent. This replay refreshes
 only the foundation evidence; M04 remains planned and unaccepted.
+
+## 2026-11-06 declared-gate inventory
+
+At source revision `6711efd`, `scripts/check_magnetic_method_matrix.py` parses
+the twenty R-401..R-420 requirements, checks named Python test symbols and
+gate files, and reports whether declared implementation files exist. It fails
+closed by default when references are missing; `--report-only` is used to
+inspect an in-progress matrix. Four checker tests passed, Ruff passed, and the
+JSON inventory reported 7/20 declared source/gate pairs present and 13
+incomplete. The exact command was
+`.venv-pipeline/Scripts/python.exe scripts/check_magnetic_method_matrix.py
+--report-only --json`.
+
+This is a structural inventory. Existing gate symbols are not evidence that
+their tests passed, and source/test presence does not establish numerical,
+field, API, UI, durability, or host acceptance. In particular the checker
+reports the missing `magnetic_inverse.py`, `magnetic_optimizer_adapter.py`,
+calibration CLI, hosted adapter, linked views, bilingual docs gate, and field
+eligibility gate. Scientific and field acceptance remain false; the M04
+requirements status remains planned.
