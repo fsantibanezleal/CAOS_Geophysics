@@ -73,6 +73,8 @@ def main() -> None:
         async def capture(_address: str, _subject: str, body: str) -> None:
             messages.append(body)
 
+        server: uvicorn.Server | None = None
+
         app = create_app(Settings(data_dir=private, db_path=db, auth_mode="email",
             auth_secret="qa-only-processing-not-deployment-secret-123456789",
             public_origin=origin, cookie_secure=False,
@@ -156,6 +158,15 @@ def main() -> None:
             stop_worker()
             return {"stopped": True}
 
+        @app.post("/__qa/shutdown")
+        async def shutdown_qa_server():
+            nonlocal server
+            stop_worker()
+            if server is None:
+                raise HTTPException(503, "QA server is not initialized")
+            server.should_exit = True
+            return {"shutting_down": True}
+
         @app.get("/{path:path}")
         async def browser_files(path: str):
             candidate = (DIST / path).resolve()
@@ -165,7 +176,8 @@ def main() -> None:
                 return FileResponse(DIST / "index.html")
             raise HTTPException(404, "Not found")
 
-        uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+        server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
+        server.run()
 
 if __name__ == "__main__":
     main()

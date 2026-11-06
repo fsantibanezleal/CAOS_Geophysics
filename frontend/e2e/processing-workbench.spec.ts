@@ -40,7 +40,16 @@ test.beforeAll(async ({browser}) => {
   const {token} = await (await context.request.get(origin+"/__qa/mail/latest")).json();
   expect((await unsafe(context.request,"/api/auth/verify/verify",{token})).ok()).toBe(true);
 });
-test.afterAll(async () => {await context?.close();});
+test.afterAll(async () => {
+  try {
+    if (context) {
+      const stopped = await context.request.post(origin+"/__qa/shutdown");
+      expect(stopped.ok(), await stopped.text()).toBe(true);
+    }
+  } finally {
+    await context?.close();
+  }
+});
 
 test("owner upload to flag result and verified export", async () => {
   await page.goto(origin+"/app");

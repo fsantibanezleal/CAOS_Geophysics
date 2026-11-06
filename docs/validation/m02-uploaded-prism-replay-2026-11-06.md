@@ -69,3 +69,23 @@ render and export path exercised above. It does not establish field eligibility,
 complete M02 acceptance, other uploaded modalities, VPS admission, product-wide
 visual acceptance, or release readiness. The convergence ledger remains
 authoritative and the broader M01–M13 acceptance gates remain open.
+
+## Windows QA teardown rerun
+
+After the replay assertions were retained, the loopback server gained an
+explicit shutdown route. The owner suite posts to it after all selected tests;
+the route stops the worker and signals Uvicorn to exit, allowing the server's
+`TemporaryDirectory` context to remove that run's private files on Windows.
+This avoids leaving the worker orphaned when Playwright terminates its server
+process group.
+
+The same two browser tests then passed again in **1.1 minutes**. The QA run
+directory count was 37 both before and after, and no QA worker or server process
+remained. The application code under test was unchanged at
+`037aa0373f23ef94695ea4aaf7deb49513aa9c0f`; the follow-up test file SHA-256 is
+`2e486eef077e91f25816d0f5c5a018e9605beb529d13533eabd4026b0328f3cf` and the
+QA server SHA-256 is
+`223ca38f657790019f9100ae34ec63fe59b46be824ce642189cf8594140fba47`.
+The follow-up receipt, screenshots, ZIP, and their hashes are under
+`E:\_Datos\CAOS_Geophysics\validation\m02-replay-state-20261106-cleanup-verified\`;
+`manifest.json` binds these outputs and the process-cleanup observation.

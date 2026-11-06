@@ -707,7 +707,15 @@
         },
         {
           "path": "docs/validation/m02-uploaded-prism-replay-2026-11-06.md",
-          "sha256": "bb84ae14cc4697ab60fcea8fe0c9b4b4cbb2e902463c150fc28389b9af4adf2b"
+          "sha256": "53e6eaae9cf2c01b34dcb625258baff666b3b9dda1a4375f1d2a303bb1fe3cf9"
+        },
+        {
+          "path": "frontend/e2e/processing-workbench.spec.ts",
+          "sha256": "2e486eef077e91f25816d0f5c5a018e9605beb529d13533eabd4026b0328f3cf"
+        },
+        {
+          "path": "tests/ui/processing_devserver.py",
+          "sha256": "223ca38f657790019f9100ae34ec63fe59b46be824ce642189cf8594140fba47"
         }
       ],
       "receipts": []
