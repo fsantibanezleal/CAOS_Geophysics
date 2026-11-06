@@ -75,6 +75,7 @@ class OwnedOriginalTerminal:
             initial_norm, *, deadline, resource_limit_bytes, admitted_bytes,
             retained_audit_bytes=0):
         self._metric = self._original = self._q = self._native_gradient = None
+        self._preconditioner_basis = None
         self._identity = None
         self.actions = 0
         self.last_record = None
@@ -106,6 +107,8 @@ class OwnedOriginalTerminal:
         phase = dict(source_arithmetic_bytes=allocation['arithmetic_phase_bytes'],
             free_endpoint_bytes=source.ENDPOINT_PAIR_BYTES*12*f,
             factor_and_transpose_bytes=16*m*f+16*7*f+64*f+4*(f+1),
+            preconditioner_basis_bytes=8*f*f,
+            interval_matrix_workspace_bytes=32*f*f,
             retained_audit_bytes=retained_audit_bytes,
             native_workspace_bytes=source.RESERVE_BYTES, metadata_bytes=32768)
         maximum = allocation['maximum']+sum(v for k, v in phase.items() if k != 'source_arithmetic_bytes')
@@ -154,6 +157,7 @@ class OwnedOriginalTerminal:
             return 0
         o = self._original
         return (source_payload(o)+self._q.nbytes+self._native_gradient.nbytes+self.free.nbytes
+            + (0 if self._preconditioner_basis is None else self._preconditioner_basis.nbytes)
             + (0 if self._metric is None else self._metric.live_payload_bytes))
 
     def _check(self):
@@ -188,6 +192,29 @@ class OwnedOriginalTerminal:
         by = ar.matrix(numeric.b, y)
         fy, fz = ar.matrix(numeric.f, by), ar.matrix(numeric.f, z)
         return [ar.add(ar.sub(v, left), right) for v, left, right in zip(y, fy, fz)]
+
+    def _make_preconditioner_basis(self):
+        """Freeze owner-generated binary64 basis responses as an exact matrix.
+
+        The subsequent interval product uses these stored coefficients as exact
+        reals. The certificate therefore does not assume rounded applications
+        are linear; it proves contraction for this explicitly defined matrix.
+        """
+        f, a = len(self.free), len(self._q)
+        basis = np.empty((f, f), dtype=np.float64)
+        for column, index in enumerate(self.free):
+            self._check()
+            vector = np.zeros(a, dtype=np.float64)
+            vector[int(index)] = 1.
+            result = self._metric.apply(vector)
+            if result.shape != (a,) or not np.isfinite(result).all():
+                raise ValueError('original terminal: finite owner preconditioner basis')
+            basis[:, column] = result[self.free]
+        if not np.isfinite(basis).all():
+            raise ValueError('original terminal: finite owner preconditioner basis')
+        basis.flags.writeable = False
+        self._preconditioner_basis = basis
+        return basis
 
     def _free_column(self, ar, j, restricted_g, restricted_terms):
         o = self._original
@@ -264,16 +291,23 @@ class OwnedOriginalTerminal:
             phase='entry')
         try:
             phase='source_gradient'
+            record['phase']=phase
             gradient = source._gradient(ar, o, q)
-            # Outward binary64 row bounds accelerate the ordinary source KKT
-            # enclosure. If every component can still be zero, refine once
-            # through the original Decimal row path so exact-source stationarity
-            # remains distinguishable from a merely small rounded residual.
-            if all(lo<=ZERO<=hi for lo,hi in gradient):
+            native = self._native_gradient.copy()
+            native[q == o.lower] = np.minimum(native[q == o.lower], 0.)
+            native[q == o.upper] = np.maximum(native[q == o.upper], 0.)
+            native_kkt = float(np.linalg.norm(native, np.inf)/self.initial_norm)
+            # Native-row enclosures are fast for ordinary iterations. At a
+            # declared terminal point, recompute the original source gradient
+            # with directed Decimal rows so binary64 reduction radii do not
+            # dominate model and prediction error bounds.
+            if (all(lo<=ZERO<=hi for lo,hi in gradient)
+                    or native_kkt <= policy.required_kkt_normalized):
                 exact_ar=source.intervals._Intervals(34,self.deadline)
                 exact_ar._use_native_rows=False
                 gradient=source._gradient(exact_ar,o,q)
             phase='source_kkt'
+            record['phase']=phase
             projected, squared, inf = [], ZERO, ZERO
             for i, (lo, hi) in enumerate(gradient):
                 if q[i] == o.lower[i]:
@@ -290,10 +324,6 @@ class OwnedOriginalTerminal:
             if mu <= ZERO:
                 raise ValueError('original terminal: original positive smallness')
             source_kkt = ar.hi.divide(inf, Decimal.from_float(self.initial_norm))
-            native = self._native_gradient.copy()
-            native[q == o.lower] = np.minimum(native[q == o.lower], 0.)
-            native[q == o.upper] = np.maximum(native[q == o.upper], 0.)
-            native_kkt = float(np.linalg.norm(native, np.inf)/self.initial_norm)
             gap = ar.hi.divide(squared, ar.lo.multiply(Decimal(2), mu))
             record.update(normalized_exact_bound_kkt=native_kkt,
                 source_normalized_kkt_upper=str(source_kkt), required_normalized_kkt=policy.required_kkt_normalized)
@@ -305,24 +335,30 @@ class OwnedOriginalTerminal:
             record['proof_basis'] = ('exact_source_feasible_kkt' if exact_stationary else 'free_face_neumann')
             error, kappa, eta = ZERO, ZERO, ZERO
             phase='free_face_contraction'
+            record['phase']=phase
             if f and not exact_stationary:
                 restricted = np.ascontiguousarray(o.sensitivity[:, self.free])
                 terms = [(t, t.derivative[:, self.free].T.tocsr()) for t in o.terms]
-                transpose = self._metric._numeric.lower.T.tocsr()
+                preconditioner = self._make_preconditioner_basis()
                 rows = [ZERO]*f
-                for index, j in enumerate(self.free):
-                    v = self._stored_action(ar, self._free_column(ar, int(j), restricted, terms), transpose)
+                for j in range(f):
+                    h_column = self._free_column(ar, int(self.free[j]), restricted, terms)
+                    self.actions += 1
+                    v = ar.matrix(preconditioner, h_column)
                     for i, pair in enumerate(v):
-                        value = _absolute(ar.sub(ar.exact(1. if i == index else 0.), pair))
+                        value = _absolute(ar.sub(ar.exact(1. if i == j else 0.), pair))
                         rows[i] = ar.hi.add(rows[i], value)
                 kappa = max(rows)
                 record.update(kappa_upper=str(kappa), contraction_row_sums=list(map(str, rows)))
                 if kappa >= ONE:
                     record['reason'] = 'contraction_not_certified'
                     return record
-                eta = max(map(_absolute, self._stored_action(ar, [gradient[i] for i in self.free], transpose)))
+                residual = ar.matrix(preconditioner, [gradient[i] for i in self.free])
+                self.actions += 1
+                eta = max(map(_absolute, residual))
                 error = ar.hi.divide(eta, ar.lo.subtract(ONE, kappa))
             phase='active_bound_margins'
+            record['phase']=phase
             inside = all(ar.lo.subtract(Decimal.from_float(float(q[i])), error) > Decimal.from_float(float(o.lower[i]))
                 and ar.hi.add(Decimal.from_float(float(q[i])), error) < Decimal.from_float(float(o.upper[i])) for i in self.free)
             coupling = self._coupling(ar) if f and error else [ZERO]*len(q)
@@ -339,6 +375,7 @@ class OwnedOriginalTerminal:
             maximum = ZERO
             rows = o.prediction_sensitivity
             phase='prediction_sensitivity'
+            record['phase']=phase
             for i in range((len(rows) if o.prediction_projection is None else len(rows)//3) if model else 0):
                 ar.check()
                 if o.prediction_projection is None:
@@ -366,7 +403,9 @@ class OwnedOriginalTerminal:
             record.update(reason='wall_cap', phase=phase)
             raise
         finally:
-            record.update(actions=self.actions, seconds=monotonic()-started)
+            record.update(actions=self.actions, preconditioner_basis_actions=(
+                0 if self._metric is None else self._metric.actions),
+                seconds=monotonic()-started)
             self.last_record = record.copy()
             self.close()
             record['disposed'] = self.live_payload_bytes == 0
@@ -375,6 +414,7 @@ class OwnedOriginalTerminal:
         if self._metric is not None:
             self._metric.close()
         self._metric = self._original = self._q = self._native_gradient = self._identity = None
+        self._preconditioner_basis = None
         self.free = None
         self._closed = True
 

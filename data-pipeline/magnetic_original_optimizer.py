@@ -55,7 +55,9 @@ class _MagneticDTO:
         if source_regularizer is None:
             # The retained M04 fixture imports its frozen adapter class; its
             # own engine remains authoritative for that historical control.
-            regularizer_hessian = o.regularizer.vendor.deriv2(q)
+            regularizer_hessian = (o.beta * o.regularizer.vendor.deriv2(q)).tocsr(copy=True)
+            regularizer_hessian.sum_duplicates()
+            regularizer_hessian.sort_indices()
         else:
             regularizer_hessian = self._regularizer_metric
         operands = owned.MetricOperands(owned.binding_for(self.identity(), q),

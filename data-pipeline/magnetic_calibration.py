@@ -161,23 +161,28 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
             objective, start_q, source_components=source_components,
             budget=budget, terminal=TERMINAL,
         )
+        terminal_audits = tuple({
+            "iteration": row.get("iteration"),
+            "seconds": row.get("seconds"),
+            "failure": row.get("failure"),
+            "phase": (row.get("check") or {}).get("phase"),
+            "proof_basis": (row.get("check") or {}).get("proof_basis"),
+            "check_reason": (row.get("check") or {}).get("reason"),
+            "actions": (row.get("check") or {}).get("actions"),
+            "preconditioner_basis_actions": (row.get("check") or {}).get("preconditioner_basis_actions"),
+            "source_normalized_kkt_upper": (row.get("check") or {}).get("source_normalized_kkt_upper"),
+            "kappa_upper": (row.get("check") or {}).get("kappa_upper"),
+            "free_error_inf_upper": (row.get("check") or {}).get("free_error_inf_upper"),
+            "active_sign_pass": (row.get("check") or {}).get("active_sign_pass"),
+            "bounds": (row.get("check") or {}).get("bounds"),
+            "passed": (row.get("check") or {}).get("passed"),
+        } for row in solved.get("terminal_audits", ()))
         if solved["status"] != "converged":
             candidate_q = solved.get("q")
             if type(candidate_q) is np.ndarray and candidate_q.dtype == np.float64:
                 candidate_q = _owned(candidate_q)
             else:
                 candidate_q = None
-            terminal_audits = tuple({
-                "iteration": row.get("iteration"),
-                "seconds": row.get("seconds"),
-                "failure": row.get("failure"),
-                "phase": (row.get("check") or {}).get("phase"),
-                "proof_basis": (row.get("check") or {}).get("proof_basis"),
-                "check_reason": (row.get("check") or {}).get("reason"),
-                "actions": (row.get("check") or {}).get("actions"),
-                "source_normalized_kkt_upper": (row.get("check") or {}).get("source_normalized_kkt_upper"),
-                "kappa_upper": (row.get("check") or {}).get("kappa_upper"),
-            } for row in solved.get("terminal_audits", ()))
             return {
                 "schema": "magnetic-linear-l2-fold-result-1",
                 "status": "failed",
@@ -243,6 +248,7 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
             "iterations": solved["iterations"],
             "elapsed_seconds": monotonic() - started,
             "trace": solved.get("trace"),
+            "terminal_audits": terminal_audits,
             "claims": {
                 "field_observations": False,
                 "field_geology_validated": False,

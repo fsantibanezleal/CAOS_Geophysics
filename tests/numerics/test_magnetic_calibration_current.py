@@ -122,6 +122,15 @@ def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
     assert np.isfinite(result["model_q"]).all()
     assert np.isfinite(result["prediction_nT"]).all()
     assert result["normalized_projected_kkt_inf"] <= calibration.TERMINAL.required_kkt_normalized
+    assert len(result["terminal_audits"]) == 1
+    terminal = result["terminal_audits"][0]
+    assert terminal["passed"] and terminal["check_reason"] == "original_accuracy_certified"
+    assert terminal["phase"] == "prediction_sensitivity" and terminal["active_sign_pass"]
+    assert float(terminal["source_normalized_kkt_upper"]) <= calibration.TERMINAL.required_kkt_normalized
+    assert float(terminal["kappa_upper"]) < 1.
+    assert float(terminal["bounds"]["model_error_upper"]) <= calibration.TERMINAL.model_error_limit
+    assert float(terminal["bounds"]["objective_gap_upper"]) <= calibration.TERMINAL.objective_gap_limit
+    assert float(terminal["bounds"]["physical_prediction_error_upper"]) <= calibration.TERMINAL.physical_prediction_error_limit
     assert set(result["fit_rows"]).isdisjoint(result["trace"].get("outer_rows", []))
 
 

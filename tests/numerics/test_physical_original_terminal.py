@@ -106,7 +106,8 @@ def test_original_exact_optimum_and_factor_actions_enclosed(covariance, projecte
         result = owner.certify(terminal.owned.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6))
     assert result['passed'] and result['disposed']
     assert result['inside_original_bounds'] and result['active_sign_pass']
-    assert result['actions'] == 7  # 3 independent probes, 3 columns, 1 residual.
+    assert result['actions'] == 7  # 3 independent probes, 3 source columns, 1 residual.
+    assert result['preconditioner_basis_actions'] == 3
     exact_delta = [Fraction(float(v))-target for v, target in zip(q, optimum)]
     error_squared = sum(v*v for v in exact_delta)
     bound = Fraction(Decimal(result['bounds']['model_error_upper']))
@@ -219,7 +220,11 @@ def test_contraction_failure_retains_denial_and_disposes(monkeypatch):
     o, identity, q, g, _, _ = fixture()
     owner = terminal.OwnedOriginalTerminal(metric(o, identity, q), o, identity, q, g, 1., **budget())
     # Negative test instrumentation, never a public construction operand.
-    monkeypatch.setattr(owner, '_stored_action', lambda ar, v, t: [(Decimal(0), Decimal(0))]*len(v))
+    def zero_basis():
+        owner._preconditioner_basis = np.zeros((len(owner.free), len(owner.free)), dtype=np.float64)
+        return owner._preconditioner_basis
+    monkeypatch.setattr(owner, '_make_preconditioner_basis', zero_basis)
     result = owner.certify(terminal.owned.TerminalPolicy(1e-7))
     assert not result['passed'] and result['reason'] == 'contraction_not_certified'
-    assert Decimal(result['kappa_upper']) == 1 and result['disposed']
+    assert Decimal(result['kappa_upper']) == 1 and result['phase'] == 'free_face_contraction'
+    assert result['disposed']
