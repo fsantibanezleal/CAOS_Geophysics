@@ -388,3 +388,15 @@ integrity evidence using a structural failure fixture. Request semantics and
 request-array unit binding are now checked by reconstruction and reparsing; full
 Result semantics, Result-array field-to-unit binding, fitted-result replay, Windows
 crash durability, optimizer binding, and R-415 acceptance remain open.
+
+## 2026-11-06 current-checkout foundation replay
+
+At source revision `721f7fcad4b53307087f710c5222e8b50d153882`, the focused
+M04 foundation selection collected 421 tests and exited successfully on the
+repository `.venv-pipeline` runtime. It covered the bounded survey reader,
+geometry planner, survey bundle, SimPEG/Geoana forward operator, fit assembly,
+likelihood, quantities, objective, and regularization. Ruff passed for the
+foundation modules. The command selection did not exercise a completed M04
+inverse or user-survey calibration: `magnetic_inverse.py`, the accepted M02
+optimizer binding, and the calibration CLI are absent. This replay refreshes
+only the foundation evidence; M04 remains planned and unaccepted.
