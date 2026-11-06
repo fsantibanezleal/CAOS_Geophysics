@@ -239,7 +239,7 @@ def test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predic
         "GEOPHYSICS_TEST_GRAVITY_PYTHON",
             Path(__file__).resolve().parents[2] / ".venv-gravity" / "Scripts" / "python.exe"
         if os.name == "nt" else sys.executable,
-    )).resolve()
+    )).absolute()
     harness = make_harness(gravity_l2_online_enabled=True)
     worker_settings = WorkerSettings(data_dir=harness.settings.data_dir,
         db_path=harness.settings.db_path, gravity_l2_online_enabled=True,
