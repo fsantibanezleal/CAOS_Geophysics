@@ -38,3 +38,28 @@ No M03 parser, correction, gridding, continuation, holdout or user-data acceptan
 The two official ISO metadata records were fetched again from the USGS Science Data Catalog and saved outside Git under the configured CAOS working-data root at `data/downloads/usgs-charleston-2019/`. Their bytes and SHA-256 values match the prior recorded XML: child metadata 17,806 bytes (`badd712ff0e169bd62ed70b34ce273ef9bea4b4ec7a206627b09eac55a98a1c2`), parent metadata 16,902 bytes (`dd9aa31c9c3635bf715bd98aad1bb72aebde903ec05ff334b622e3c406036c71`). The metadata names the CSV and data dictionary, and describes the CSV as processed horizontal magnetic gradiometry line data.
 
 The live ScienceBase JSON item (`https://www.sciencebase.gov/catalog/item/5f4da2c182ce4c3d1231922e?format=json`) still returns HTTP 403 from this environment. The official DOI landing page confirms that flight-line CSVs, GeoTIFFs, and the contractor report are release products, but its accessible page does not expose direct asset URLs. The CSV, dictionary, report, and magnetic grid therefore remain unacquired and unhashed; the M03 processing component and synthetic continuation control are not provider-data validation. The source remains an external-data dependency, not permission to substitute the provider grid or authored controls for flight-line evidence.
+
+## Access refresh: 2026-11-06
+
+The USGS Science Data Catalog child HTML record and pinned child XML metadata
+were fetched again and returned HTTP 200. The metadata bytes remain 17,806 with
+SHA-256 `badd712ff0e169bd62ed70b34ce273ef9bea4b4ec7a206627b09eac55a98a1c2`.
+The official ScienceBase item JSON URL and the documented item file endpoint
+were retried for the exact CSV and data dictionary names. Each returned HTTP
+403. The parent-file endpoint for
+`USGS-South Carolina-Geophysical Airborne Survey Report.pdf` also returned
+HTTP 403. Alternate `sciencebase.usgs.gov` and `api.sciencebase.gov` item hosts
+returned HTTP 404. No file response supplied bytes, a content length, or a
+download receipt, so none of these attempts is counted as data acquisition.
+
+The accessible catalog record still identifies the CSV as processed horizontal
+magnetic gradiometry and names the CSV, dictionary, GeoTIFF and contractor
+report. Its metadata URL is
+`https://data.usgs.gov/datacatalog/metadata/USGS.5f4da2c182ce4c3d1231922e.xml`;
+the item record is
+`https://data.usgs.gov/datacatalog/data/USGS%3A5f4da2c182ce4c3d1231922e`.
+The ScienceBase service's documented JSON pattern is described in the [USGS
+API and Web Services guidance](https://www.usgs.gov/sciencebase-instructions-and-documentation/api-and-web-services).
+The exact files remain a real access blocker from this environment. Do not
+replace them with an authored survey or claim Charleston validation until the
+provider bytes are obtained and hashed.
