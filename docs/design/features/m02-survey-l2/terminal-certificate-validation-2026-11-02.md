@@ -227,3 +227,24 @@ these Windows measurements do not establish an ML VPS limit, cgroup/container
 charge, or hosted job admission. The numerical resource repeatability gate is
 now source-current and locally measured; proof from the bounded allocation
 contract and actual-host admission remain separate required work.
+
+## Current-checkout independent replay — 2026-11-06
+
+The matrix auditor was rerun from checkout revision
+`88ea5958e78593bff0df766041a0b32aa06f51d8` against the retained 24 current-source
+calibration archives in the external `m02-terminal-cert-current-matrix` evidence
+set. It independently replayed all 208 CPU2 terminal certificates across all 24
+archives. The projected-KKT infinity norms ranged from
+`7.638334409421077e-14` to `9.704459458248493e-13`; minimum smallness curvature
+was `2,000,000`, and the minimum recorded strict-convexity lower bound was
+`1,220,000`.
+
+The new matrix receipt SHA-256 is
+`0e102cbf3d9fde13e17f387234ee10f975fc66f3678b17b1fea227af53f45d01`; its
+internal receipt identity is
+`35d6d3570bbdd3a8308686e53aae6f3ca26ab19de70a1cd2dba3e4ba17190004`. Both the
+matrix receipt and auditor explicitly retain `research_only=true` and
+`acceptance=false`. This replay confirms certificate arithmetic and archive
+identity only. The allocation upper-bound proof, actual-host admission, and
+independent peer/owner review remain open; M02 and product acceptance remain
+unaccepted.
