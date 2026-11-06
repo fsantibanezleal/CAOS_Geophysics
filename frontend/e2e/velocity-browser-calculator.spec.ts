@@ -53,10 +53,18 @@ test("user changes λ, browser reruns the submitted acquisition and exports both
     });
     const lambda = page.getByRole("spinbutton", { name: "Regularization weight λ" });
     await expect(lambda).toHaveValue("25");
+    const m12 = page.getByRole("checkbox", { name: /Also run the experimental M12 residual CNN/ });
+    await m12.check();
+    await expect(page.getByText(/failed its frozen joint held-out comparison/)).toBeVisible();
     const calculate = page.getByRole("button", { name: "Calculate locally in browser" });
     await calculate.click();
     await expect(page.locator("[data-testid=velocity-browser-calculator]").getByText(/WRMS/)).toBeVisible();
     await expect(page.locator("[data-testid=velocity-browser-calculator]")).toContainText("λ 25");
+    const modelChoice = page.getByRole("combobox", { name: "Velocity result" });
+    await expect(modelChoice.locator("option")).toHaveCount(2);
+    await modelChoice.selectOption("m12");
+    await expect(page.getByRole("alert")).toContainText("exploratory-unvalidated");
+    await expect(page.getByRole("alert")).toContainText("92e5a3cc5bc70d81c122a1d64c2b4bd722eed47cfa55e2f2473f755cf499f261");
     await page.screenshot({ path: join(qa.evidence, `${viewport}-${width}-lambda-25.png`) });
     const [firstDownload] = await Promise.all([page.waitForEvent("download"),
       page.getByRole("button", { name: "Export browser result JSON" }).click()]);
@@ -66,6 +74,8 @@ test("user changes λ, browser reruns the submitted acquisition and exports both
     await lambda.fill("1000");
     await calculate.click();
     await expect(page.locator("[data-testid=velocity-browser-calculator]")).toContainText("λ 1000");
+    await modelChoice.selectOption("m12");
+    await expect(page.getByRole("alert")).toContainText("exploratory-unvalidated");
     await page.screenshot({ path: join(qa.evidence, `${viewport}-${width}-lambda-1000.png`) });
     const [secondDownload] = await Promise.all([page.waitForEvent("download"),
       page.getByRole("button", { name: "Export browser result JSON" }).click()]);
@@ -80,6 +90,13 @@ test("user changes λ, browser reruns the submitted acquisition and exports both
     expect(first.provenance.effective_request_sha256).not.toBe(second.provenance.effective_request_sha256);
     expect(first.velocity_m_s).not.toEqual(second.velocity_m_s);
     expect(first.predicted_s).not.toEqual(second.predicted_s);
+    expect(first.learned.status).toBe("exploratory-unvalidated");
+    expect(second.learned.status).toBe("exploratory-unvalidated");
+    expect(first.learned.checkpoint_sha256).toBe("23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1");
+    expect(first.learned.onnx_sha256).toBe("92e5a3cc5bc70d81c122a1d64c2b4bd722eed47cfa55e2f2473f755cf499f261");
+    expect(first.learned.velocity_m_s).toEqual(second.learned.velocity_m_s);
+    expect(first.learned.predicted_s).toEqual(second.learned.predicted_s);
+    expect(first.learned.supported_cells).toHaveLength(16);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(errors).toEqual([]); expect(apiRequests).toEqual([]);
     await context.close();

@@ -128,6 +128,42 @@ problem [Hu et al., 2021]. Recent physics-informed methods optimize travel-time
 and eikonal constraints together [Zeng et al., 2026]. These methods are not
 reproduced by this residual CNN and were not compared on matched input here.
 
+## Optional browser inference with the frozen M12 checkpoint
+
+The **Calculate supplied first-arrival data** workbench can also run the
+physics-v2 residual CNN when its optional checkbox is selected. It downloads a
+137 kB ONNX model from the same static app origin, verifies both the model hash
+and its receipt, then performs inference with the browser's WebAssembly runtime.
+The submitted request and arrays remain in the browser worker; no user survey
+is posted to the VPS. Unchecking the option runs only the weighted classical
+inverse. The browser displays both methods against the same observed arrivals,
+and computes predicted times and residuals from the input ray geometry.
+
+The CNN uses the fixed local 800 m by 800 m, 16 by 16 grid and two channels:
+coverage-normalized residual slowness and normalized path coverage. The latter
+is also returned as a separate support mask. A network velocity in an
+unsupported cell is a prior-dominated output, not a measurement. The result is
+always marked `exploratory-unvalidated`. The source checkpoint failed its
+predeclared joint-held-out comparator, with error ratios 2.1875 for velocity
+and 5.4173 for independent forward travel time. The browser option exposes the
+method for inspecting domain shift; it does not claim improvement or field
+accuracy. The conversion receipt records PyTorch/ONNX parity on 640 records,
+with a maximum absolute difference of 0.0004883 m/s; that is export parity,
+not independent scientific validation.
+
+The model is regenerated separately from the application build:
+
+```powershell
+.venv-pipeline\Scripts\python.exe scripts/export_m12_browser_model.py --output E:\_Datos\CAOS_Geophysics\validation\m12-browser-rebuild\m12-physics.onnx
+```
+
+The command refuses overwrite, verifies the checkpoint and frozen training
+receipt, exports dynamic-batch ONNX, checks the graph, and recomputes parity
+against the frozen PyTorch weights on validation and all four held-out cohorts.
+`frontend/copy-data.mjs` only packages the committed ONNX and receipt after
+checking their pinned identities; the production build does not train or
+re-export the model.
+
 References: [Earp and Curtis, DOI 10.1007/s00521-020-04921-8](https://doi.org/10.1007/s00521-020-04921-8),
 [Hu et al., DOI 10.1190/geo2020-0140.1](https://doi.org/10.1190/geo2020-0140.1),
 [Zeng et al., DOI 10.1111/1365-2478.70184](https://doi.org/10.1111/1365-2478.70184).

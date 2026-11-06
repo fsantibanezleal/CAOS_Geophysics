@@ -17,6 +17,33 @@ const source=sourceArg<0?derivedSource('v2'):resolve(here,process.argv[sourceArg
 const phaseSource=derivedSource('phase/browser-assets/stead');
 const courseSource=derivedSource('m01-scientific-course');
 const fieldSource=derivedSource('field');
+const m12Source=resolve(here,'../models/experimental/m12-physics-cuda-20261004');
+const m12ModelPath=join(m12Source,'m12-physics.onnx');
+const m12ReceiptPath=join(m12Source,'m12-physics-browser-receipt.json');
+const m12TrainingReceiptPath=join(m12Source,'receipt.json');
+const m12CheckpointPath=join(m12Source,'m12-physics.npz');
+const m12ModelSha256='92e5a3cc5bc70d81c122a1d64c2b4bd722eed47cfa55e2f2473f755cf499f261';
+const m12CheckpointSha256='23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1';
+for(const path of [m12Source,m12ModelPath,m12ReceiptPath,m12TrainingReceiptPath,m12CheckpointPath]){
+  const stat=lstatSync(path);
+  const directory=path===m12Source;
+  if(stat.isSymbolicLink()||(directory?!stat.isDirectory():!stat.isFile()))
+    throw new Error('M12 model source is not a regular reviewed file.');
+}
+const m12Receipt=JSON.parse(readFileSync(m12ReceiptPath,'utf8'));
+const m12TrainingReceipt=JSON.parse(readFileSync(m12TrainingReceiptPath,'utf8'));
+const m12ModelBytes=readFileSync(m12ModelPath);
+if(m12Receipt.schema!=='geophysics.m12-browser-model/v1'||m12Receipt.status!=='parity-verified'||
+  m12Receipt.model?.file!=='m12-physics.onnx'||m12Receipt.model?.bytes!==m12ModelBytes.byteLength||
+  m12Receipt.model?.sha256!==m12ModelSha256||createHash('sha256').update(m12ModelBytes).digest('hex')!==m12ModelSha256||
+  m12Receipt.checkpoint?.sha256!==m12CheckpointSha256||m12Receipt.training?.scientific_verdict!=='failed-held-out-comparator'||
+  m12TrainingReceipt.schema!=='geophysics.m12-physics/v2'||m12TrainingReceipt.checkpoint_sha256!==m12CheckpointSha256||
+  m12Receipt.training?.receipt_sha256!==createHash('sha256').update(readFileSync(m12TrainingReceiptPath)).digest('hex')||
+  createHash('sha256').update(readFileSync(m12CheckpointPath)).digest('hex')!==m12CheckpointSha256||
+  m12Receipt.training?.source_sha256!==m12TrainingReceipt.code_sha256||
+  m12Receipt.training?.operator_source_sha256!==m12TrainingReceipt.operator_code_sha256||
+  m12Receipt.parity?.passed!==true||m12Receipt.parity?.records!==640||m12Receipt.parity?.max_absolute_error_m_s>0.002)
+  throw new Error('M12 browser model or parity receipt does not match the pinned experiment.');
 const courseIndex=JSON.parse(readFileSync(join(here,'src/data/m01-course-record-index.json'),'utf8'));
 const fieldIndex=JSON.parse(readFileSync(join(here,'src/data/field-study-index.json'),'utf8'));
 if(!Array.isArray(courseIndex)||courseIndex.length!==3)throw new Error('Invalid authored M01 course index.');
@@ -71,6 +98,10 @@ for(const entry of readdirSync(join(here,'public-release/data/v2'),{withFileType
 mkdirSync(join(here,'public-release/data/phase'),{recursive:true});
 cpSync(phaseSource,join(here,'public-release/data/phase/stead'),{recursive:true});
 cpSync(join(here,'public/svg'),join(here,'public-release/svg'),{recursive:true});
+const m12Destination=join(here,'public-release/data/models/m12-physics-v2');
+mkdirSync(m12Destination,{recursive:true});
+cpSync(m12ModelPath,join(m12Destination,'m12-physics.onnx'));
+cpSync(m12ReceiptPath,join(m12Destination,'m12-physics-browser-receipt.json'));
 for(const file of courseFiles){
   const destination=join(here,'public-release/data/m01-scientific-course',file);
   mkdirSync(dirname(destination),{recursive:true});

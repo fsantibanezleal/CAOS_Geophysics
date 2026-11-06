@@ -12,6 +12,14 @@ export type BrowserVelocityResult = {
   request: VelocityRequest; velocity_m_s: number[][]; predicted_s: number[]; residual_s: number[];
   normalized_residual: number[]; bilinear_predicted_s: number[]; coverage_m: number[][];
   metrics: { data_wrms: number; data_chi_square: number; cell_vs_bilinear_rmse_s: number; clipped_cells: number };
+  learned?: {
+    method: "M12 physics-v2 residual CNN"; status: "exploratory-unvalidated";
+    checkpoint_sha256: string; onnx_sha256: string; velocity_m_s: number[][];
+    predicted_s: number[]; residual_s: number[]; normalized_residual: number[];
+    supported_cells: boolean[][]; supported_cell_fraction: number;
+    metrics: { data_wrms: number; data_chi_square: number; unsupported_cells: number };
+    limitations: string[];
+  };
   execution: { location: "browser"; uploaded: false; field_truth_known: false; field_validated: false; heldout_advantage: false };
 };
 
@@ -122,6 +130,85 @@ export function calculateVelocityInBrowser(request: VelocityRequest): BrowserVel
     bilinear_predicted_s:alternate,coverage_m:Array.from({length:GRID},(_,z)=>Array.from(coverage.slice(z*GRID,(z+1)*GRID))),
     metrics:{data_wrms:Math.sqrt(chi/n),data_chi_square:chi,cell_vs_bilinear_rmse_s:Math.sqrt(diff/n),clipped_cells:clippedCells},
     execution:{location:"browser",uploaded:false,field_truth_known:false,field_validated:false,heldout_advantage:false}};
+}
+
+/** Build the exact dimensionless/physical input channels used by physics-v2. */
+export function velocityPhysicsFeatures(request: VelocityRequest): {
+  tensor: Float32Array; coverage: number[][]; rows: ReturnType<typeof crossingRow>[];
+} {
+  const rows = request.rays_m.map(crossingRow);
+  const reference = Float64Array.from({ length: CELLS }, (_, i) =>
+    2000 + 0.35 * ((Math.floor(i / GRID) + 0.5) * DX));
+  const coverage = new Float64Array(CELLS);
+  const residualSlowness = new Float64Array(rows.length);
+  for (let r = 0; r < rows.length; r++) {
+    const length = rows[r].length;
+    let backgroundTime = 0;
+    for (const [cell, pathLength] of rows[r].pairs) {
+      coverage[cell] += pathLength;
+      backgroundTime += pathLength / reference[cell];
+    }
+    residualSlowness[r] = (request.times_s[r] - backgroundTime) / length;
+  }
+  const feature = new Float32Array(2 * CELLS);
+  const maximumCoverage = Math.max(...coverage);
+  if (!(maximumCoverage > 0) || !Number.isFinite(maximumCoverage))
+    throw new Error("M12 feature coverage is empty or nonfinite");
+  const accumulated = new Float64Array(CELLS);
+  for (let r = 0; r < rows.length; r++) {
+    for (const [cell, pathLength] of rows[r].pairs)
+      accumulated[cell] += pathLength * residualSlowness[r];
+  }
+  for (let cell = 0; cell < CELLS; cell++) {
+    feature[cell] = coverage[cell] > 0
+      ? -accumulated[cell] / coverage[cell] * reference[cell] ** 2 / 400
+      : 0;
+    feature[CELLS + cell] = coverage[cell] / maximumCoverage;
+  }
+  return {
+    tensor: feature,
+    coverage: Array.from({ length: GRID }, (_, z) => Array.from(coverage.slice(z * GRID, (z + 1) * GRID))),
+    rows,
+  };
+}
+
+/** Apply a caller-supplied ONNX session to one user survey without server transfer. */
+export async function calculateM12PhysicsInBrowser(
+  request: VelocityRequest,
+  infer: (tensor: Float32Array) => Promise<Float32Array>,
+  identities: { checkpointSha256: string; onnxSha256: string },
+): Promise<NonNullable<BrowserVelocityResult["learned"]>> {
+  const { tensor, coverage, rows } = velocityPhysicsFeatures(request);
+  const velocity = await infer(tensor);
+  if (!(velocity instanceof Float32Array) || velocity.length !== CELLS
+      || [...velocity].some(value => !Number.isFinite(value) || value < 1400 || value > 4000))
+    throw new Error("M12 ONNX inference returned an invalid velocity grid");
+  const predicted = rows.map(({ pairs }) => pairs.reduce((sum, [cell, length]) => sum + length / velocity[cell], 0));
+  const residual = predicted.map((value, i) => request.times_s[i] - value);
+  const normalized = residual.map((value, i) => value / request.sigma_s[i]);
+  const chi = normalized.reduce((sum, value) => sum + value * value, 0);
+  const supported = coverage.map(row => row.map(value => value > 0));
+  const supportedCount = supported.flat().filter(Boolean).length;
+  return {
+    method: "M12 physics-v2 residual CNN",
+    status: "exploratory-unvalidated",
+    checkpoint_sha256: identities.checkpointSha256,
+    onnx_sha256: identities.onnxSha256,
+    velocity_m_s: Array.from({ length: GRID }, (_, z) => Array.from(velocity.slice(z * GRID, (z + 1) * GRID))),
+    predicted_s: predicted,
+    residual_s: residual,
+    normalized_residual: normalized,
+    supported_cells: supported,
+    supported_cell_fraction: supportedCount / CELLS,
+    metrics: { data_wrms: Math.sqrt(chi / rows.length), data_chi_square: chi, unsupported_cells: CELLS - supportedCount },
+    limitations: [
+      "Synthetic training only; no field accuracy or generalization claim.",
+      "The original held-out joint comparator failed; this output is exploratory.",
+      "Fixed 16 by 16 grid, local 800 m domain and straight-ray input features.",
+      "Unsupported cells are prior-dominated network output, not measured velocities.",
+      "The normalized residual feature does not model pick uncertainty or correlated errors.",
+    ],
+  };
 }
 
 export function parseAndCalculateVelocity(bytes: Uint8Array) { const request=parseVelocityRequest(bytes); return calculateVelocityInBrowser(request); }

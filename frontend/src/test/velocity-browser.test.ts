@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { parseAndCalculateVelocity, parseVelocityRequest, velocityRequestWithLambda } from "../api/velocity-browser";
+import { calculateM12PhysicsInBrowser, parseAndCalculateVelocity, parseVelocityRequest,
+  velocityPhysicsFeatures, velocityRequestWithLambda, type VelocityRequest } from "../api/velocity-browser";
 
-function request() {
+function request(): VelocityRequest {
   const f=(i:number)=>i/7;
   const left=Array.from({length:8},(_,i)=>[0,(.08+.84*f(i))*800] as const);
   const right=Array.from({length:8},(_,i)=>[800,(.1+.8*f(i))*800] as const);
@@ -48,5 +49,31 @@ describe("client-side first-arrival inversion",()=>{
     expect(selected.predicted_s).not.toEqual(baseline.predicted_s);
     expect(()=>velocityRequestWithLambda(source,0)).toThrow();
     expect(()=>velocityRequestWithLambda(source,1_000_001)).toThrow();
+  });
+  it("reproduces the Python physics-v2 feature operator and keeps support separate",()=>{
+    const q=request(),{tensor,coverage}=velocityPhysicsFeatures(q);
+    expect(tensor).toHaveLength(512);
+    // Channel 0 is the geometry-normalized residual; channel 1 begins at 256.
+    expect(tensor[1]).toBeCloseTo(-0.00031037768349051476,9);
+    expect(tensor[16]).toBeCloseTo(0.00008211217209463939,9);
+    expect(tensor[127]).toBeCloseTo(0.00046271205064840615,9);
+    expect(tensor[128]).toBeCloseTo(0.0009559880127198994,9);
+    expect(tensor[256 + 127]).toBeCloseTo(0.3301851451396942,7);
+    expect(coverage[0][0]).toBe(0);
+    expect(coverage.some(row => row.some(value => value > 0))).toBe(true);
+  });
+  it("independently forwards an exploratory model and masks unsupported cells",async()=>{
+    const q=request(),velocity=new Float32Array(256).fill(2000);
+    const learned=await calculateM12PhysicsInBrowser(q,async features=>{
+      expect(features).toHaveLength(512); return velocity;
+    },{checkpointSha256:"a".repeat(64),onnxSha256:"b".repeat(64)});
+    expect(learned.status).toBe("exploratory-unvalidated");
+    expect(learned.velocity_m_s).toHaveLength(16);
+    expect(learned.supported_cells[0][0]).toBe(false);
+    expect(learned.metrics.unsupported_cells).toBeGreaterThan(0);
+    expect(learned.predicted_s).toHaveLength(q.rays_m.length);
+    expect(learned.residual_s[0]).toBeCloseTo(q.times_s[0]-learned.predicted_s[0],12);
+    await expect(calculateM12PhysicsInBrowser(q,async()=>new Float32Array(256).fill(4001),
+      {checkpointSha256:"a".repeat(64),onnxSha256:"b".repeat(64)})).rejects.toThrow("invalid velocity grid");
   });
 });

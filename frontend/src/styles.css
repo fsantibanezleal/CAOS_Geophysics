@@ -9,6 +9,8 @@
 }
 .processing-sidebar { overflow-y: auto !important; }
 .processing-actions, .processing-controls, .processing-run-form { display: flex; flex-direction: column; gap: .65rem; min-width: 0; }
+.velocity-browser-toggle { display: flex; flex-direction: row; align-items: flex-start; gap: .6rem; color: var(--color-fg-subtle); line-height: 1.45; }
+.velocity-browser-toggle input { flex: 0 0 auto; margin: .2rem 0 0; }
 .processing-main { overflow-y: auto; gap: .45rem; }
 .processing-status, .processing-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; font-size: .85rem; }
 .processing-status { border-bottom: 1px solid var(--color-border); padding-bottom: .5rem; }
