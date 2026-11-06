@@ -176,7 +176,7 @@ def test_isolated_cli_loads_only_trusted_sibling_source():
 
 
 def test_interpreter_runtime_pins_official_distribution_and_identity():
-    assert python_runtime.NAME == 'cpython-3.12.16-20261026-r3'
+    assert python_runtime.NAME == 'cpython-3.12.16-20261026-r4'
     assert python_runtime.SERVICE_TRAVERSE_MODE == 0o711
     assert python_runtime.ARCHIVE_BYTES == 67921566
     assert python_runtime.SHA256 == '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'

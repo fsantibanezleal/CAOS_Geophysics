@@ -18,7 +18,7 @@ The transient service uses `DynamicUser` and a `StateDirectory` with mode 0700. 
 
 ## M02 uploaded ordinary-L2 child lane
 
-M02 uses a separate CPU child environment because its SimPEG runtime has a different pinned pandas stack from the API/MT environment. Stage the registered CPython 3.12.16 runtime using `scripts/stage_python_runtime.py`, create `.venv-gravity` from that interpreter, install only `requirements-gravity-runtime.txt`, run `pip check`, and run `scripts/verify_gravity_linux_runtime.py`. Install the API, test and Choclo oracle requirements in `.venv`; record both interpreter and dependency receipts. The exact gravity child interpreter is passed to the isolated test through `GEOPHYSICS_TEST_GRAVITY_PYTHON`.
+M02 uses a separate CPU child environment because its SimPEG runtime has a different pinned pandas stack from the API/MT environment. Stage the registered CPython 3.12.16 runtime using `scripts/stage_python_runtime.py`, create `.venv-gravity` from that interpreter, install only `requirements-gravity-runtime.txt`, run `pip check`, and run `scripts/verify_gravity_linux_runtime.py`. Install the API, test and Choclo oracle requirements in `.venv`; record both interpreter and dependency receipts. Use `-B` and `PYTHONDONTWRITEBYTECODE=1` for all setup commands so pip cannot mutate the base interpreter receipt. The exact gravity child interpreter is passed to the isolated test through `GEOPHYSICS_TEST_GRAVITY_PYTHON`.
 
 From a committed immutable admission checkout, invoke:
 

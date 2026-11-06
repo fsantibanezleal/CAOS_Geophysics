@@ -67,6 +67,9 @@ directories. The receipt remains mode 0600. This is required because both
 candidate venv interpreters resolve to this shared standalone runtime. It does
 not replace `/usr/bin/python3` or modify system packages. A failed staging
 directory is retained; use a new versioned interpreter identity after repair.
+Run every root-side Python setup command with `-B` and set
+`PYTHONDONTWRITEBYTECODE=1`; pip must not create `.pyc` files in the shared
+base interpreter because those invalidate its immutable tree receipt.
 
 The bounded installer is executable from the staged candidate's source:
 
@@ -75,7 +78,7 @@ The bounded installer is executable from the staged candidate's source:
   --release /var/www/geophysics.ml.fasl-work.com/releases/REVIEWED_ID \
   --evidence /var/lib/geophysics-deploy/REVIEWED_RUNTIME_ID \
   --bundle-sha256 REVIEWED_MANIFEST_SHA256 \
-  --interpreter /var/lib/geophysics-deploy/python-runtimes/cpython-3.12.16-20261026-r3/python/bin/python3.12
+  --interpreter /var/lib/geophysics-deploy/python-runtimes/cpython-3.12.16-20261026-r4/python/bin/python3.12
 ```
 
 Use the explicit measured IDs and digest, not these placeholders. This operator
