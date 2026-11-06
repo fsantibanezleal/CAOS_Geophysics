@@ -43,7 +43,9 @@ test.beforeAll(async ({browser}) => {
 test.afterAll(async () => {await context?.close();});
 
 test("owner upload to flag result and verified export", async () => {
-  await page.goto(origin+"/app"); await page.getByRole("button",{name:"Projects & raw data",exact:true}).click();
+  await page.goto(origin+"/app");
+  await page.getByRole("button",{name:"Experiment controls",exact:true}).click();
+  await page.getByRole("button",{name:"Projects & raw data",exact:true}).click();
   await page.getByLabel("Email",{exact:true}).fill(email); await page.getByLabel("Password",{exact:true}).fill(password); await page.getByRole("button",{name:"Sign in",exact:true}).click();
   await page.getByLabel("Project name",{exact:true}).fill("Five-station QC control"); await page.getByLabel("Description",{exact:true}).fill("Independent QA, not a scientific benchmark");
   await page.getByRole("button",{name:"Create project",exact:true}).click();
