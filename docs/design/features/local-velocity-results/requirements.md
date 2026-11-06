@@ -3,9 +3,9 @@
 This is a separate public local-file channel for the actual velocity user-data
 producer, not a project upload, server job, inverse or training implementation.
 
-LVR-01 WHEN original result.json and manifest.json are selected, THE reader SHALL
+LVR-01 WHEN a result.json and manifest.json are selected, THE reader SHALL
 check finite byte metadata before reading, strict UTF8/JSON depth/node/duplicate
-keys, exact result SHA/length, closed schema, dimensions, units and identities.
+keys, exact result SHA/length, closed v1/v2 schema, dimensions, units and identities.
 Gate: frontend/src/test/velocity-local.test.ts malformed and hash controls.
 
 LVR-02 IF validation or the selection lifetime changes, THEN THE view SHALL
@@ -25,9 +25,11 @@ arrays SHALL not be substituted with classical values. Gate: the same named
 unit/browser gates with actual original and physics-v2 producer generations.
 
 LVR-05 THE view SHALL distinguish byte binding and scalar consistency from
-independent ray-operator/optimizer replay, coverage from uncertainty, clipping
-from certified bounded optimum and cell/bilinear predictions from field truth.
-Gate: velocity-local.test.ts false claims/metric/residual controls and browser
+independent ray-operator/optimizer replay, coverage from uncertainty, a v2
+bounded-QP result from a historical v1 solve-then-clip result, and
+cell/bilinear predictions from field truth. It SHALL display producer-declared
+KKT diagnostics without implying that the browser replayed them. Gate:
+velocity-local.test.ts false claims/metric/residual controls and browser
 label/export assertions. The producer verify_generation remains the physics gate.
 
 LVR-06 THE adapter SHALL reuse existing shared-shell/workbench/Heatmap/Plot
