@@ -21,19 +21,27 @@ E:\_worktrees\_runs\m12-nullspace-v1_1-full-20261027b
 ```
 
 On the audit date, `Test-Path -LiteralPath` returned false for that directory,
-`receipt.json`, and `checkpoint.npz`. This establishes that the exact recorded
-location was unavailable in the current Windows environment. It does not
-establish whether another independently managed copy exists elsewhere.
+`receipt.json`, and `checkpoint.npz`. The hash-matching receipt is separately
+present in the checkout at
+`data/derived/v2/models/m12-nullspace-v1_1/receipt.json`; its SHA-256 matches
+the historical value above. It contains 480 held-out `per_record` metric rows,
+but those rows are not raw solver inputs. The source v3.1 checkpoint and
+training receipt named by the receipt are absent from the checkout. This
+establishes that the exact external run location was unavailable in the
+current Windows environment. It does not establish whether another
+independently managed copy exists elsewhere.
 
 ## Current interpretation
 
 The successful 2026-10-31 historical replay remains documented evidence of a
-past verification. It is not a current reproduction: the exact receipt,
-checkpoint, and per-case arrays are not available at their recorded path, so
-this audit did not rerun or recompute any M12 metric. The method remains
-unaccepted for M12 and product release. Do not regenerate substitute files
-under the old run identity or treat the committed summary JSON as a replacement
-for the missing source-run artifacts.
+past verification, and the hash-matching receipt with per-case metrics remains
+available for inspection and metric reanalysis. It is not a current full
+reproduction: the exact source checkpoint, training receipt, and raw generated
+inputs are unavailable in the checked locations, so this audit did not rerun
+the solver or recompute M12 metrics. The method remains unaccepted for M12 and
+product release. Do not regenerate substitute files under the old run
+identity or treat the receipt summary as a replacement for the missing
+source-run artifacts.
 
 To restore reproducibility, recover the original run files and verify the
 receipt and checkpoint hashes above before invoking

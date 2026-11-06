@@ -100,14 +100,19 @@ at `E:\_worktrees\_runs\m12-nullspace-v1_1-full-20261027b`. Receipt
 SHA-256: `30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22`.
 The independent `--verify` replay recorded on 2026-10-31 regenerated all four
 held-out cohorts and reproduced their stored metrics; its scientific verdict
-was `supported-within-bounded-synthetic-protocol`. A current custody check on
-2026-11-05 found that recorded directory absent. The historical replay record
-remains in the repository, but the receipt, checkpoint, and per-case arrays
-were not available at that path for current re-verification. Do not describe
-those external artifacts as currently retained or use this study as a
-reproducible release gate until the exact hash-matching files are restored.
-The bounded synthetic result does not validate field data, establish
-geological recovery, or change overall M12 or product release acceptance.
+was `supported-within-bounded-synthetic-protocol`. The hash-matching receipt
+is also retained in the repository at
+`data/derived/v2/models/m12-nullspace-v1_1/receipt.json`. A current custody
+check on 2026-11-05 found the recorded external run directory absent. The
+repository receipt preserves 480 held-out per-case metric records and their
+manifests, but it does not include the source checkpoint or the raw generated
+input arrays needed to rerun the experiment. The exact v3.1 checkpoint and
+training receipt are not present in the checkout. Thus the recorded historical
+replay remains inspectable and its summary statistics can be reanalyzed, but a
+full current `--verify` replay is not available. Do not treat this as a current
+source-to-result reproduction or as a reproducible release gate. The bounded
+synthetic result does not validate field data, establish geological recovery,
+or change overall M12 or product release acceptance.
 
 ### Float-safe compatibility replay
 
