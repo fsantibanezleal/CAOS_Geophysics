@@ -308,12 +308,12 @@
       "methods": [
         "M09"
       ],
-      "title": "First-arrival tomography",
+      "title": "First-arrival tomography: fixed-ray and Dijkstra controls",
       "sources": [
         "https://www.pygimli.org/_examples_auto/2_seismics/plot_04_koenigsee",
         "https://www.pygimli.org/user-guide/inversion"
       ],
-      "content_scope": "Introduces first-arrival tomography and its defined comparison context."
+      "content_scope": "Compares fixed straight rays with the M09 Dijkstra inverse and demonstrates rights-declared local SGT ingestion, coordinate normalization, QC and fail-closed whole-shot eligibility."
     },
     {
       "en": "notebooks/en/06-seismology/03-seismic-method-comparison.ipynb",

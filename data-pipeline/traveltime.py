@@ -575,11 +575,27 @@ def _validate_user_source(source: dict) -> dict:
     scope = source["scope"]
     if type(scope) is not str or scope != expected_scope:
         raise TraveltimeError(f"rights {rights!r} require scope {expected_scope!r}")
-    if source["frame"] != "local-x-y-down" or source["units"] != {
+    frame = source["frame"]
+    if (type(frame) is not str or frame not in {"local-x-y-up", "local-x-y-down"}
+            or source["units"] != {
         "distance": "m", "time": "s",
-    }:
-        raise TraveltimeError("M09 .sgt inputs require declared local x/y-down metres and time seconds")
+            }):
+        raise TraveltimeError(
+            "M09 .sgt inputs require local x metres, a declared y-up or y-down frame, and time seconds"
+        )
     return source
+
+
+def _serialize_sgt(survey: Survey) -> bytes:
+    """Serialize parsed values in the strict SGT grammar without changing picks."""
+    lines = [f"{len(survey.sensor_xy_m)} # shot/geophone points", "#x y"]
+    lines.extend(f"{x:.17g} {y:.17g}" for x, y in survey.sensor_xy_m)
+    lines.extend((f"{len(survey.time_s)} # measurements", "#s g t"))
+    lines.extend(
+        f"{shot + 1} {receiver + 1} {time_s:.17g}"
+        for (shot, receiver), time_s in zip(survey.shot_geophone, survey.time_s)
+    )
+    return ("\n".join(lines) + "\n").encode("utf-8")
 
 
 def run_user_survey(path: Path, *, source: dict, allow_inverse: bool = True,
@@ -605,28 +621,48 @@ def run_user_survey(path: Path, *, source: dict, allow_inverse: bool = True,
     if not temp_root_value:
         raise TraveltimeError("set CAOS_TEMP_ROOT to an external temporary-data directory")
     temp_root = Path(temp_root_value).resolve(strict=True)
-    digest = hashlib.sha256(raw).hexdigest()
+    source_digest = hashlib.sha256(raw).hexdigest()
+    if provenance["frame"] == "local-x-y-down":
+        engine_survey = Survey(
+            survey.sensor_xy_m * np.asarray([1.0, -1.0]),
+            survey.shot_geophone.copy(),
+            survey.time_s.copy(),
+        )
+        engine_bytes = _serialize_sgt(engine_survey)
+        coordinate_transform = "source y-down-positive; engine y-up-positive = -source y"
+    else:
+        engine_bytes = raw
+        coordinate_transform = "source and engine y-up-positive; no coordinate sign transform"
+    engine_digest = hashlib.sha256(engine_bytes).hexdigest()
     with tempfile.TemporaryDirectory(prefix="m09-user-", dir=temp_root) as directory:
         staged = Path(directory) / "source.sgt"
-        staged.write_bytes(raw)
+        staged.write_bytes(engine_bytes)
         report = run(
-            staged, source_sha256=digest, allow_inverse=allow_inverse,
+            staged, source_sha256=engine_digest, allow_inverse=allow_inverse,
             validation_policy=validation_policy,
         )
+    vertical_basis = (
+        "input y-down-positive; normalized to pyGIMLi y-up-positive"
+        if provenance["frame"] == "local-x-y-down" else "input y-up-positive"
+    )
     user_unit_basis = (
-        "user-declared local x/y-down coordinates in metres and picked times in seconds; "
-        "frame and datum are not independently verified"
+        f"user-declared local x/y metres ({vertical_basis}) and picked times in seconds; "
+        "CRS and vertical datum are not independently verified"
     )
     report.update(
+        source_sha256=source_digest,
+        source_bytes=len(raw),
         source_id=provenance["id"],
         source_kind="local-user-supplied",
         source_record={**provenance, "verification": "user-declared; not independently verified"},
+        engine_input_sha256=engine_digest,
+        coordinate_transform=coordinate_transform,
         rights_decision="owner-declared-local-only",
         raw_publication=False,
         unit_basis=user_unit_basis,
     )
     report["qc"]["unit_basis"] = user_unit_basis
-    report["qc"]["units"]["y"] = "m, user-declared local down-positive frame"
+    report["qc"]["units"]["y"] = f"m, {vertical_basis}"
     return report
 
 
