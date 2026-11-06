@@ -206,6 +206,15 @@ def test_MP03_unknown_workspace_tuple_remains_closed(monkeypatch,fault):
     with pytest.raises(ValueError): metric._workspace_closure()
 
 
+def test_MP03_registered_linux_workspace_tuple_requires_exact_runtime(monkeypatch):
+    monkeypatch.setattr(metric.sys,'platform','linux')
+    monkeypatch.setattr(metric.sys,'version_info',(3,12,16))
+    monkeypatch.setattr(metric,'_LOADED_PINS',metric._LINUX_CLOSURE_EXPECTED)
+    for variable in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS'):
+        monkeypatch.setenv(variable,'1')
+    metric._workspace_closure()
+
+
 def test_MP02_old_face_callback_does_not_keep_optimizer_parent_alive(monkeypatch):
     import gravity_l2 as l2
     from test_gravity_l2 import tiny,noise
