@@ -88,6 +88,33 @@ class MagneticRegularizer:
             reference_model=self.reference_q, reference_model_in_smooth=True,
             weights={"volume": self.volumes / self.total_volume},
         )
+        # This is an L2 objective, so its Hessian is constant in q. Own the
+        # sparse SimPEG result once instead of rebuilding and densifying it on
+        # every objective/line-search evaluation.
+        hessian = self.simpeg.deriv2(self.reference_q)
+        if hasattr(hessian, "tocsr"):
+            hessian = hessian.tocsr(copy=True)
+            hessian.sum_duplicates()
+            hessian.sort_indices()
+            if (hessian.shape != (active_count, active_count)
+                    or not np.isfinite(hessian.data).all()):
+                raise FloatingPointError("regularization produced an invalid SimPEG Hessian")
+            hessian.data.flags.writeable = False
+            hessian.indices.flags.writeable = False
+            hessian.indptr.flags.writeable = False
+            diagonal = np.asarray(hessian.diagonal(), dtype=np.float64)
+        else:
+            hessian = np.array(hessian, dtype=np.float64, copy=True, order="C")
+            if (hessian.shape != (active_count, active_count)
+                    or not np.isfinite(hessian).all()):
+                raise FloatingPointError("regularization produced an invalid SimPEG Hessian")
+            hessian.flags.writeable = False
+            diagonal = np.diag(hessian).copy()
+        if not np.isfinite(diagonal).all():
+            raise FloatingPointError("regularization produced an invalid SimPEG Hessian diagonal")
+        diagonal.flags.writeable = False
+        self.hessian = hessian
+        self.hessian_diagonal = diagonal
         self._smallness_quadratic = np.diag(self.volumes / self.total_volume)
         self._smooth_quadratic = self._quadratic - self._smallness_quadratic
 
@@ -182,16 +209,9 @@ class MagneticRegularizer:
         action = 2. * self._quadratic
         phi_simpeg = float(self.simpeg(q))
         gradient_simpeg = np.asarray(self.simpeg.deriv(q), dtype=np.float64)
-        hessian_simpeg = self.simpeg.deriv2(q)
-        if hasattr(hessian_simpeg, "toarray"):
-            hessian_simpeg = hessian_simpeg.toarray()
-        hessian_simpeg = np.asarray(hessian_simpeg, dtype=np.float64)
         if (not np.isfinite([phi_independent, phi_simpeg]).all()
-                or not np.isfinite(gradient_simpeg).all()
-                or not np.isfinite(hessian_simpeg).all()):
+                or not np.isfinite(gradient_simpeg).all()):
             raise FloatingPointError("regularization produced nonfinite values")
-        hessian_simpeg = hessian_simpeg.copy(order="C")
-        hessian_simpeg.flags.writeable = False
 
         def hessian_action(direction):
             if (type(direction) is not np.ndarray or direction.dtype != np.float64
@@ -199,7 +219,7 @@ class MagneticRegularizer:
                 raise TypeError("direction_q: expected native float64 active-cell vector")
             if not np.isfinite(direction).all():
                 raise ValueError("direction_q: values must be finite")
-            result = hessian_simpeg @ direction
+            result = self.hessian @ direction
             if not np.isfinite(result).all():
                 raise FloatingPointError("regularization Hessian action is nonfinite")
             result.flags.writeable = False

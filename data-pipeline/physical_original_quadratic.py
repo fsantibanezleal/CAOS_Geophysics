@@ -265,6 +265,28 @@ def _map(ar, sensitivity, projection, vector):
     return [ar.dot(projection, values[i:i+3]) for i in range(0, len(values), 3)]
 
 
+def _diagonal_unit_weighted_derivative(term):
+    """Compose only exact diagonal weights with +/-1 derivative entries.
+
+    This is algebraically identical to ``W @ (D @ x)`` because multiplying a
+    binary64 weight by either unit sign is exact. Other source terms keep the
+    fully nested interval operations below.
+    """
+    derivative, weights = term.derivative, term.weights
+    rows = derivative.shape[0]
+    if (weights.shape != (rows, rows) or weights.nnz != rows
+            or not np.array_equal(weights.indptr, np.arange(rows + 1, dtype=np.int32))
+            or not np.array_equal(weights.indices, np.arange(rows, dtype=np.int32))
+            or not np.isin(derivative.data, (-1., 1.)).all()):
+        return None
+    derivative_rows = np.repeat(np.arange(rows, dtype=np.int32), np.diff(derivative.indptr))
+    values = derivative.data * weights.data[derivative_rows]
+    if not np.isfinite(values).all():
+        return None
+    return sp.csr_matrix((values, derivative.indices.copy(), derivative.indptr.copy()),
+                         shape=derivative.shape)
+
+
 def _adjoint(ar, sensitivity, projection, vector):
     if projection is not None:
         vector = [ar.scalar(p, v) for v in vector for p in projection]
@@ -337,8 +359,13 @@ def certify_chord(o, identity, q, qt, native_gradient, native_phi, native_phi_tr
             change = ar.scalar(o.likelihood_scale, ar.change(wr, dy))
             delta = [ar.sub(v, ar.exact(ref)) for v, ref in zip(qv, o.reference)]
             for term in o.terms:
-                r = ar.matrix(term.weights, ar.matrix(term.derivative, delta))
-                dr = ar.matrix(term.weights, ar.matrix(term.derivative, dq))
+                weighted = _diagonal_unit_weighted_derivative(term)
+                if weighted is None:
+                    r = ar.matrix(term.weights, ar.matrix(term.derivative, delta))
+                    dr = ar.matrix(term.weights, ar.matrix(term.derivative, dq))
+                else:
+                    r = ar.matrix(weighted, delta)
+                    dr = ar.matrix(weighted, dq)
                 change = ar.add(change, ar.scalar(o.beta, ar.scalar(term.alpha, ar.change(r, dr))))
             margin = ar.sub(change, ar.scalar(1e-4, slope))
             record.update(passes=passes, precision_digits=digits,

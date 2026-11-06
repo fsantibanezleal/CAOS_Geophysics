@@ -183,6 +183,8 @@ def test_immutable_snapshot_and_expiry_disposal():
     with pytest.raises(terminal.source.intervals._Expired):
         owner.certify(terminal.owned.TerminalPolicy(1e-7))
     assert owner.live_payload_bytes == 0
+    assert owner.last_record['reason'] == 'wall_cap' and owner.last_record['phase'] == 'entry'
+    assert owner.last_record['disposed']
 
 
 def test_hidden_native_jacobian_backing_is_not_an_unaccounted_input():

@@ -9,6 +9,8 @@ import pytest
 import magnetic_calibration as calibration
 import magnetic_inverse
 import magnetic_optimizer_adapter
+import magnetic_original_optimizer
+import magnetic_regularization
 import magnetic_survey
 import magnetic_survey_json
 from magnetic_survey_json import digest
@@ -21,7 +23,7 @@ def _request(name):
     return (ROOT / "requests" / name).read_bytes()
 
 
-def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_outer_state(monkeypatch):
+def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_regularizer(monkeypatch):
     component_jacobian=np.array([
         [1.,.2], [.1,.7], [.4,.3],
         [.8,.5], [.3,.9], [.2,.6],
@@ -39,8 +41,15 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_outer_state(monke
         "active":np.ones(2,dtype=np.bool_),
     }
     reference=np.array([.1,.2],dtype=np.float64)
+    calls=[]
+    original=magnetic_regularization.WeightedLeastSquares.deriv2
+    def counted(vendor,model,*args,**kwargs):
+        calls.append(None)
+        return original(vendor,model,*args,**kwargs)
+    monkeypatch.setattr(magnetic_regularization.WeightedLeastSquares,"deriv2",counted)
     regularizer=magnetic_optimizer_adapter.MagneticRegularizer(
         mesh,reference,np.array([3.,4.,5.],dtype=np.float64))
+    assert len(calls)==1
     beta=.03
     objective=magnetic_optimizer_adapter.MagneticObjective(
         operator,regularizer,np.array([.5,-.2,.1],dtype=np.float64),
@@ -49,18 +58,15 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_outer_state(monke
     q=np.array([.3,.5],dtype=np.float64)
     vector=np.array([-.7,.4],dtype=np.float64)
     weighted_jacobian=objective._state(q)[-1]
-    regularizer_hessian=regularizer.vendor.deriv2(q)
+    regularizer_hessian=regularizer.source.hessian
     expected=2.*weighted_jacobian.T@(weighted_jacobian@vector)+beta*(regularizer_hessian@vector)
 
-    calls=[]
-    original=regularizer.vendor.deriv2
-    def counted(model,*args,**kwargs):
-        calls.append(None)
-        return original(model,*args,**kwargs)
-    monkeypatch.setattr(regularizer.vendor,"deriv2",counted)
     _,_,hessian=objective.evaluate(q,return_g=True,return_H=True)
     np.testing.assert_allclose(hessian@vector,expected,rtol=2e-14,atol=1e-14)
     np.testing.assert_allclose(hessian@(-vector),-expected,rtol=2e-14,atol=1e-14)
+    metric=magnetic_original_optimizer._MagneticDTO(objective,9).metric_operands(q)
+    np.testing.assert_allclose(metric.regularizer.toarray(),beta*regularizer.source.hessian.toarray(),
+                               rtol=0.,atol=0.)
     assert len(calls)==1
 
 
@@ -76,12 +82,15 @@ def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
     plan = magnetic_survey.plan_geometry(handle)
     fold = plan["partition"]["folds"][0]
     result = calibration.fit_l2_fold(raw, 0, 0.0001, wall_seconds=120.0)
-    assert result["status"] == "converged", {
+    diagnostics = {
         key: result.get(key) for key in (
             "status", "reason", "iterations", "elapsed_seconds",
             "normalized_projected_kkt_inf", "objective",
         )
     }
+    diagnostics["terminal_audits_last"] = result.get("terminal_audits", ())[-3:]
+    print("MAGNETIC_FOLD_DIAGNOSTICS " + json.dumps(diagnostics, sort_keys=True))
+    assert result["status"] == "converged", diagnostics
     assert result["claims"] == {
         "field_observations": False,
         "field_geology_validated": False,

@@ -77,6 +77,7 @@ class OwnedOriginalTerminal:
         self._metric = self._original = self._q = self._native_gradient = None
         self._identity = None
         self.actions = 0
+        self.last_record = None
         self._closed = True
         started = monotonic()
         allocation = source.validate(original, identity, q, deadline=deadline,
@@ -242,6 +243,13 @@ class OwnedOriginalTerminal:
         try:
             self._check()
             owned.validate_terminal(policy)
+        except source.intervals._Expired:
+            self.last_record = dict(domain='original_noise_strongly_convex_free_face',
+                passed=False, reason='wall_cap', phase='entry', actions=self.actions,
+                seconds=0., disposed=False)
+            self.close()
+            self.last_record['disposed'] = True
+            raise
         except BaseException:
             self.close()
             raise
@@ -252,8 +260,10 @@ class OwnedOriginalTerminal:
             reason=None, source_sha256=self.source_sha256, model_sha256=self.model_sha256,
             face_sha256=self.face_sha256, factor_sha256=self.factor_sha256,
             free_indices=self.free.tolist(), precision_digits=34, allocation=self.allocation,
-            setup_seconds=self.setup_seconds, seconds=0., actions=0, disposed=False, bounds=None)
+            setup_seconds=self.setup_seconds, seconds=0., actions=0, disposed=False, bounds=None,
+            phase='entry')
         try:
+            phase='source_gradient'
             gradient = source._gradient(ar, o, q)
             # Outward binary64 row bounds accelerate the ordinary source KKT
             # enclosure. If every component can still be zero, refine once
@@ -263,6 +273,7 @@ class OwnedOriginalTerminal:
                 exact_ar=source.intervals._Intervals(34,self.deadline)
                 exact_ar._use_native_rows=False
                 gradient=source._gradient(exact_ar,o,q)
+            phase='source_kkt'
             projected, squared, inf = [], ZERO, ZERO
             for i, (lo, hi) in enumerate(gradient):
                 if q[i] == o.lower[i]:
@@ -293,6 +304,7 @@ class OwnedOriginalTerminal:
             exact_stationary = squared == ZERO
             record['proof_basis'] = ('exact_source_feasible_kkt' if exact_stationary else 'free_face_neumann')
             error, kappa, eta = ZERO, ZERO, ZERO
+            phase='free_face_contraction'
             if f and not exact_stationary:
                 restricted = np.ascontiguousarray(o.sensitivity[:, self.free])
                 terms = [(t, t.derivative[:, self.free].T.tocsr()) for t in o.terms]
@@ -310,6 +322,7 @@ class OwnedOriginalTerminal:
                     return record
                 eta = max(map(_absolute, self._stored_action(ar, [gradient[i] for i in self.free], transpose)))
                 error = ar.hi.divide(eta, ar.lo.subtract(ONE, kappa))
+            phase='active_bound_margins'
             inside = all(ar.lo.subtract(Decimal.from_float(float(q[i])), error) > Decimal.from_float(float(o.lower[i]))
                 and ar.hi.add(Decimal.from_float(float(q[i])), error) < Decimal.from_float(float(o.upper[i])) for i in self.free)
             coupling = self._coupling(ar) if f and error else [ZERO]*len(q)
@@ -325,6 +338,7 @@ class OwnedOriginalTerminal:
             model = ar.hi.multiply(ar.hi.next_plus(ar.hi.sqrt(Decimal(f))), error) if f else ZERO
             maximum = ZERO
             rows = o.prediction_sensitivity
+            phase='prediction_sensitivity'
             for i in range((len(rows) if o.prediction_projection is None else len(rows)//3) if model else 0):
                 ar.check()
                 if o.prediction_projection is None:
@@ -348,8 +362,12 @@ class OwnedOriginalTerminal:
             self._check()
             record.update(passed=bool(passed), reason='original_accuracy_certified' if passed else 'original_accuracy_not_certified')
             return record
+        except source.intervals._Expired:
+            record.update(reason='wall_cap', phase=phase)
+            raise
         finally:
             record.update(actions=self.actions, seconds=monotonic()-started)
+            self.last_record = record.copy()
             self.close()
             record['disposed'] = self.live_payload_bytes == 0
 

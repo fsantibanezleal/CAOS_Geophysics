@@ -154,6 +154,8 @@ class _Linear(reduced._Linear):
             return row['check']['passed']
         except source.intervals._Expired:
             row['failure'] = 'wall_cap'
+            if owner is not None and owner.last_record is not None:
+                row['check'] = owner.last_record
             self.fail('wall_cap')
         except (ValueError, TypeError, KeyError, ArithmeticError, RuntimeError) as error:
             row['failure'] = type(error).__name__+':'+str(error)[:160]

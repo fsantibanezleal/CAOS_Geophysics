@@ -84,6 +84,27 @@ def exact(o, q):
     return phi, g
 
 
+def test_diagonal_unit_regularizer_factors_compose_without_rounding():
+    o, _, _ = operands(projected=True)
+    vectors = (
+        [Fraction.from_float(v) for v in (.2, -.3, .1)],
+        [Fraction.from_float(v) for v in (1., 0., -2.)],
+    )
+    for term in o.terms:
+        weighted = original._diagonal_unit_weighted_derivative(term)
+        assert weighted is not None
+        for vector in vectors:
+            nested = mat(term.weights, mat(term.derivative, vector))
+            composed = mat(weighted, vector)
+            assert composed == nested
+    nonunit = original.owned.QuadraticTerm(1., sp.eye(2, format='csr'),
+        sp.csr_matrix(np.array([[2., 0., 0.], [0., -1., 1.]])))
+    assert original._diagonal_unit_weighted_derivative(nonunit) is None
+    nondiagonal = original.owned.QuadraticTerm(1., sp.csr_matrix(np.array([[1., .1], [.1, 1.]])),
+        sp.eye(2, format='csr'))
+    assert original._diagonal_unit_weighted_derivative(nondiagonal) is None
+
+
 @pytest.mark.parametrize('covariance', [False, True])
 @pytest.mark.parametrize('projected', [False, True])
 @pytest.mark.parametrize('half', [False, True])

@@ -21,13 +21,18 @@ def _regularizer():
 
 def test_simpeg_regularizer_matches_independent_nonuniform_active_face_quadratic():
     regularizer, _ = _regularizer()
-    q = np.array([.1, .24, .19, .55, .37, .41, .8, .22, .47, .9], dtype=np.float64)
-    result = regularizer.evaluate(q)
-    np.testing.assert_allclose(result["phi"], result["independent_phi"], rtol=2e-13, atol=2e-14)
-    np.testing.assert_allclose(result["gradient_q"], result["independent_gradient_q"], rtol=3e-13, atol=2e-14)
-    np.testing.assert_allclose(result["hessian_action"](np.ones_like(q)),
-                               result["independent_hessian"] @ np.ones_like(q),
-                               rtol=3e-13, atol=2e-14)
+    models = (
+        np.array([.1, .24, .19, .55, .37, .41, .8, .22, .47, .9], dtype=np.float64),
+        np.linspace(.08, .92, regularizer.parameter_count, dtype=np.float64),
+    )
+    for q in models:
+        result = regularizer.evaluate(q)
+        np.testing.assert_allclose(result["phi"], result["independent_phi"], rtol=2e-13, atol=2e-14)
+        np.testing.assert_allclose(result["gradient_q"], result["independent_gradient_q"], rtol=3e-13, atol=2e-14)
+        direction = np.linspace(-.8, .9, len(q), dtype=np.float64)
+        np.testing.assert_allclose(result["hessian_action"](direction),
+                                   result["independent_hessian"] @ direction,
+                                   rtol=3e-13, atol=2e-14)
     assert result["active_face_count_by_axis"] == (6, 4, 5)
     assert result["unit"] == "dimensionless"
     assert np.linalg.eigvalsh(result["independent_hessian"])[0] > 0.

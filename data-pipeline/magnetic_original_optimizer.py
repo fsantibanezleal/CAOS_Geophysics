@@ -37,9 +37,18 @@ class _MagneticDTO:
 
     def metric_operands(self, q):
         o = self.native
+        source_regularizer = getattr(o.regularizer, 'source', None)
+        if source_regularizer is None:
+            # The retained M04 fixture imports its frozen adapter class; its
+            # own engine remains authoritative for that historical control.
+            regularizer_hessian = o.regularizer.vendor.deriv2(q)
+        else:
+            regularizer_hessian = source_regularizer.hessian
+        regularizer_hessian = (o.beta * regularizer_hessian).tocsr(copy=True)
+        regularizer_hessian.sort_indices()
         return owned.MetricOperands(owned.binding_for(self.identity(), q),
             self.source_components, o.observed.size, len(q), o.factor is not None,
-            (o.beta*o.regularizer.vendor.deriv2(q)).tocsr().sorted_indices(),
+            regularizer_hessian,
             np.ascontiguousarray(o._state(q)[-1]))
 
     def quadratic_operands(self, q):
