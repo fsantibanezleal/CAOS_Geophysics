@@ -82,3 +82,20 @@ solver, choose parameters from test cohorts, or change the receipt's
 `scientific_acceptance=false` status. Static notebook checks, three focused
 regressions, and fresh execution of both lessons pass; whole-product R-008
 and M12 acceptance remain open.
+
+## Current-source reproduction : 2026-11-06
+
+The frozen v3.1 CUDA training protocol was rerun from current source on the
+NVIDIA RTX 4070 Laptop GPU, producing the same checkpoint hash as the retained
+failed run. CPU verification regenerated and scored all five cohorts; the
+joint-OOD velocity and oracle-time ratios remain 1.0437 and 1.3961, so v3.1
+remains failed. The v1.1 nullspace protocol was then rerun from this checkpoint
+on CPU. Its independent verifier regenerated all four held-out cohorts and
+reproduced the bounded result: joint-OOD ratios 0.9701 and 0.9967. The oracle-
+time gain is small; the receipt keeps `scientific_acceptance=false`.
+
+Both outputs are outside the checkout and hash-bound in
+[`m12-current-source-reproduction-2026-11-06.md`](../../../validation/m12-current-source-reproduction-2026-11-06.md).
+This restores current source-to-checkpoint-to-result reproducibility for these
+fixed synthetic protocols. It does not constitute a new holdout, field
+validation, full M12 acceptance, or release acceptance; R-008 remains failed.

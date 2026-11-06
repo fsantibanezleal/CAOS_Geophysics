@@ -4,7 +4,7 @@
   "gate": "tests/api/test_job_limits.py::test_cancel_timeout_failure_and_recovery",
   "gate_sha256": "275ff0037723ffdc8a3ea534f25690f3cc6c084b61c1ac60a22879e580e65376",
   "verdict": "pass",
-  "source_revision": "992dc8d6cf542e48ce73d327bdd1c4c2f5edbc67",
+  "source_revision": "7d395bed436334158d46ce3ccb5fd69265b0a352",
   "command": [
     ".venv-api/Scripts/python.exe",
     "-m",
