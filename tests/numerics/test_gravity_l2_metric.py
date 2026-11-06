@@ -198,7 +198,7 @@ def test_MP03_malformed_CSR_storage_refuses_before_factor_copy(monkeypatch,fault
 
 @pytest.mark.parametrize('fault',['platform','python','binary','threads','objects'])
 def test_MP03_unknown_workspace_tuple_remains_closed(monkeypatch,fault):
-    if fault=='platform': monkeypatch.setattr(metric.sys,'platform','linux')
+    if fault=='platform': monkeypatch.setattr(metric.sys,'platform','darwin')
     if fault=='python': monkeypatch.setattr(metric.sys,'version_info',(3,12,3))
     if fault=='binary': monkeypatch.setattr(metric,'_LOADED_PINS',('0'*64,)*3)
     if fault=='threads': monkeypatch.setenv('OPENBLAS_NUM_THREADS','2')
