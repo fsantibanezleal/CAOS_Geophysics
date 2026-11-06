@@ -27,6 +27,10 @@ npx.cmd playwright test -c playwright.processing.config.ts `
 The run used the loopback QA API and the local `.venv-gravity` worker. It did
 not contact or qualify the VPS.
 
+The application code under test was at commit `037aa0373f23ef94695ea4aaf7deb49513aa9c0f`.
+The executed test file SHA-256 was
+`847913fbdb9d42352b0cf982e66b0deb7a692502f93d2dcee210722b7b01924c`.
+
 ## Run measurements
 
 | Quantity | Value |

@@ -666,7 +666,7 @@
       "id": "R-014",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
-      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete. The uploaded M02 result view uses returned active-cell bounds and receiver coordinates in metres, a depth selector, observed/predicted/residual values in mGal, held-out markers and signed residual shapes. The complete method/view/animation matrix and owner visual acceptance remain open. A 2026-11-06 local production-preview browser replay verifies metre/second axes, a symmetric signed FWI residual scale, visible changes between saved wavefield frames and inverse updates, Play/Pause behavior, and 30-degree rotation only on actual 3D geometry; full modality-specific views remain open.",
+      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete. The uploaded M02 result view uses returned active-cell bounds and receiver coordinates in metres, a depth selector, observed/predicted/residual values in mGal, held-out markers and signed residual shapes. The complete method/view/animation matrix and owner visual acceptance remain open. A 2026-11-06 local production-preview browser replay verifies metre/second axes, a symmetric signed FWI residual scale, visible changes between saved wavefield frames and inverse updates, Play/Pause behavior, and 30-degree rotation only on actual 3D geometry; full modality-specific views remain open. A separate 2026-11-06 authenticated local M02 prism-control run verifies uploaded-result replay changes the recorded objective, normalized KKT and WebGL density frames from terminal to initial state; the retained receipt remains synthetic and host-ineligible, and the full modality matrix remains open.",
       "evidence": [
         {
           "path": "frontend/src/api/gravity-l2-contracts.ts",
@@ -699,6 +699,10 @@
         {
           "path": "docs/validation/r013-r014-browser-controls-2026-11-06.md",
           "sha256": "18a8e6800078225a784c3cb3381bef1626cc2cbf25876feed492c178c51fd38b"
+        },
+        {
+          "path": "docs/validation/m02-uploaded-prism-replay-2026-11-06.md",
+          "sha256": "bb84ae14cc4697ab60fcea8fe0c9b4b4cbb2e902463c150fc28389b9af4adf2b"
         }
       ],
       "receipts": []
