@@ -18,6 +18,7 @@ const analysisPath = argument("--analysis");
 const referenceDir = argument("--references");
 const reportArg = args.indexOf("--report");
 const reportPath = reportArg >= 0 && args[reportArg + 1] ? resolve(args[reportArg + 1]) : null;
+const useServedAssets = args.includes("--served");
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 async function safeFile(dir, name) {
   if (basename(name) !== name || !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(name))
@@ -37,7 +38,8 @@ function peak(values, offset) {
 }
 const manifestBytes = await safeFile(assetsDir, "manifest.json");
 const manifest = JSON.parse(manifestBytes.toString("utf8"));
-const analysis = JSON.parse(await readFile(analysisPath, "utf8"));
+const analysisBytes = await readFile(analysisPath);
+const analysis = JSON.parse(analysisBytes.toString("utf8"));
 const manifestHash = digest(manifestBytes);
 if (analysis.schema !== "caos.m13-browser-display-subset-analysis.v1" ||
     analysis.manifest_sha256 !== manifestHash || analysis.model_sha256 !== manifest.model.sha256 ||
@@ -56,7 +58,7 @@ try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   page.setDefaultTimeout(120000);
-  await page.route("**/data/phase/stead/**", async route => {
+  if (!useServedAssets) await page.route("**/data/phase/stead/**", async route => {
     const name = new URL(route.request().url()).pathname.split("/").at(-1);
     try {
       const bytes = await safeFile(assetsDir, name);
@@ -137,6 +139,10 @@ try {
   if (checked !== 23) throw new Error(`Expected 23 browser-inferred traces, checked ${checked}`);
   const report = { schema: "caos.m13-browser-population-parity.v1", status: "pass",
     measuredAt: new Date().toISOString(),
+    assetDelivery: useServedAssets ? "vite-publicDir" : "playwright-route",
+    verifierScriptSha256: digest(await readFile(new URL(import.meta.url))),
+    gateEntrypointSha256: digest(await readFile(new URL("./verify-phase-browser-parity.mjs", import.meta.url))),
+    cpuAnalysisSha256: digest(analysisBytes),
     parity: { sameFrozenOnnx: true, reference: analysis.reference_runtime,
       browser: "ONNX Runtime Web WASM through frontend/src/phase-runtime.ts",
       browserRuntimeVersion: JSON.parse(await readFile(new URL("../node_modules/onnxruntime-web/package.json", import.meta.url), "utf8")).version,
