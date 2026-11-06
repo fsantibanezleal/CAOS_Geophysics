@@ -7,6 +7,8 @@ import numpy as np
 import pytest
 
 import magnetic_calibration as calibration
+import magnetic_inverse
+import magnetic_optimizer_adapter
 import magnetic_survey
 import magnetic_survey_json
 from magnetic_survey_json import digest
@@ -17,6 +19,49 @@ ROOT = Path(__file__).parents[1] / "fixtures" / "magnetic_survey" / "generated"
 
 def _request(name):
     return (ROOT / "requests" / name).read_bytes()
+
+
+def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_outer_state(monkeypatch):
+    component_jacobian=np.array([
+        [1.,.2], [.1,.7], [.4,.3],
+        [.8,.5], [.3,.9], [.2,.6],
+        [.5,.1], [.6,.4], [.9,.2],
+    ],dtype=np.float64)
+    direction=np.array([0.,0.,1.],dtype=np.float64)
+    background=np.array([0.,0.,50000.],dtype=np.float64)
+    operator=magnetic_inverse.MagneticQuantity(
+        component_jacobian,background,direction,50000.,"linear_tmi_nT")
+    mesh={
+        "origin_m":np.array([0.,0.,0.],dtype=np.float64),
+        "hx_m":np.array([2.,3.],dtype=np.float64),
+        "hy_m":np.array([4.],dtype=np.float64),
+        "hz_m":np.array([5.],dtype=np.float64),
+        "active":np.ones(2,dtype=np.bool_),
+    }
+    reference=np.array([.1,.2],dtype=np.float64)
+    regularizer=magnetic_optimizer_adapter.MagneticRegularizer(
+        mesh,reference,np.array([3.,4.,5.],dtype=np.float64))
+    beta=.03
+    objective=magnetic_optimizer_adapter.MagneticObjective(
+        operator,regularizer,np.array([.5,-.2,.1],dtype=np.float64),
+        {"kind":"diagonal_sd","values":np.array([[.4],[.7],[.9]],dtype=np.float64)},
+        np.zeros(2,dtype=np.float64),np.full(2,10.,dtype=np.float64),beta,"a"*64,"b"*64)
+    q=np.array([.3,.5],dtype=np.float64)
+    vector=np.array([-.7,.4],dtype=np.float64)
+    weighted_jacobian=objective._state(q)[-1]
+    regularizer_hessian=regularizer.vendor.deriv2(q)
+    expected=2.*weighted_jacobian.T@(weighted_jacobian@vector)+beta*(regularizer_hessian@vector)
+
+    calls=[]
+    original=regularizer.vendor.deriv2
+    def counted(model,*args,**kwargs):
+        calls.append(None)
+        return original(model,*args,**kwargs)
+    monkeypatch.setattr(regularizer.vendor,"deriv2",counted)
+    _,_,hessian=objective.evaluate(q,return_g=True,return_H=True)
+    np.testing.assert_allclose(hessian@vector,expected,rtol=2e-14,atol=1e-14)
+    np.testing.assert_allclose(hessian@(-vector),-expected,rtol=2e-14,atol=1e-14)
+    assert len(calls)==1
 
 
 def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():

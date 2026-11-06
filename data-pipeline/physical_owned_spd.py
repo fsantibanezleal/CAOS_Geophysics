@@ -69,9 +69,12 @@ def _csr(v, rows, cols, maximum):
         or np.any(v.indptr > len(v.data)) or np.any(np.diff(v.indptr) < 0)
         or np.any(v.indices < 0) or np.any(v.indices >= cols) or not np.isfinite(v.data).all()):
         raise ValueError('SPD: malformed CSR backing')
-    for i in range(rows):
-        indices = v.indices[v.indptr[i]:v.indptr[i+1]]
-        if np.any(np.diff(indices) <= 0):
+    if len(v.indices)>1:
+        noncanonical=np.diff(v.indices)<=0
+        boundaries=v.indptr[1:-1]-1
+        boundaries=boundaries[(boundaries>=0)&(boundaries<len(noncanonical))]
+        noncanonical[boundaries]=False
+        if np.any(noncanonical):
             raise ValueError('SPD: canonical CSR required')
 
 

@@ -96,6 +96,25 @@ def test_original_direction_both_endpoints_and_strict_domain(ambient):
         optimizer.magnetic_domain_check(replace(domain, binding=replace(o.binding, model_sha256='f'*64)), o, q, q, deadline=monotonic()+120.)
 
 
+def test_original_magnetic_domain_uses_outward_batched_rows(monkeypatch):
+    o, _, q=operands(projected=True)
+    direction=o.projection.copy()
+    domain=optimizer.OriginalMagneticDomain(o.binding,np.array([0.,0.,10.]),10.,direction,'linear_tmi_nT')
+
+    def decimal_fallback_forbidden(*args,**kwargs):
+        raise AssertionError('admitted binary64 operands must use the proved outward batch path')
+
+    monkeypatch.setattr(source.intervals._Intervals,'_decimal_matrix',decimal_fallback_forbidden)
+    passed,ratio=optimizer.magnetic_domain_check(domain,o,q,q,deadline=monotonic()+30.)
+    assert passed and Decimal(ratio)>Decimal.from_float(1e-8)
+
+    sensitivity=np.zeros_like(o.sensitivity)
+    sensitivity[2::3,0]=-10.
+    cancelled=replace(o,sensitivity=sensitivity)
+    assert not optimizer.magnetic_domain_check(domain,cancelled,q,np.array([1.,0.,0.]),
+        deadline=monotonic()+30.)[0]
+
+
 def native_control():
     path = magnetic_control_source().resolve()
     spec = importlib.util.spec_from_file_location('original_magnetic_controls',

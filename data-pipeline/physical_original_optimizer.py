@@ -53,7 +53,6 @@ def magnetic_domain_check(domain, operands, q, qt, *, deadline):
     """Both original real affine endpoints retain strict ||B0+Gq||/F > 1e-8."""
     _validate_domain(domain, operands)
     ar = source.intervals._Intervals(34, deadline)
-    ar._use_native_rows = False
     minimum = None
     for model in (q, qt):
         raw = ar.matrix(operands.sensitivity, [ar.exact(v) for v in model])

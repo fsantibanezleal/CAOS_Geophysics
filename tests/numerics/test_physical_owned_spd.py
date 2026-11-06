@@ -119,6 +119,21 @@ def test_original_resource_dictionary():
         owned.validate_operands(dto, identity, q, allocation['maximum']-1)
 
 
+def test_csr_canonical_scan_is_rowwise_and_rejects_unsorted_or_duplicate():
+    data=np.array([1.,2.,3.],dtype=np.float64)
+    indptr=np.array([0,2,3],dtype=np.int32)
+    # Row 1 begins at column 0 after row 0 ends at column 2. A cross-row
+    # decrease is legal; only within-row ordering must be strictly increasing.
+    valid=sp.csr_matrix((data,np.array([1,2,0],dtype=np.int32),indptr),shape=(2,3),copy=False)
+    owned._csr(valid,2,3,6)
+    unsorted=sp.csr_matrix((data,np.array([2,0,1],dtype=np.int32),indptr.copy()),shape=(2,3),copy=False)
+    with pytest.raises(ValueError,match='canonical CSR'):
+        owned._csr(unsorted,2,3,6)
+    duplicate=sp.csr_matrix((data,np.array([0,0,1],dtype=np.int32),indptr.copy()),shape=(2,3),copy=False)
+    with pytest.raises(ValueError,match='canonical CSR'):
+        owned._csr(duplicate,2,3,6)
+
+
 @pytest.mark.parametrize('nonlinear', [False, True])
 def test_native_caps_and_residual(monkeypatch, nonlinear):
     obj = NonlinearPhysical() if nonlinear else Physical()

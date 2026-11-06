@@ -248,7 +248,6 @@ class OwnedOriginalTerminal:
         started = monotonic()
         o, q, f = self._original, self._q, len(self.free)
         ar = source.intervals._Intervals(34, self.deadline)
-        ar._use_native_rows = False
         record = dict(domain='original_noise_strongly_convex_free_face', passed=False,
             reason=None, source_sha256=self.source_sha256, model_sha256=self.model_sha256,
             face_sha256=self.face_sha256, factor_sha256=self.factor_sha256,
@@ -256,6 +255,14 @@ class OwnedOriginalTerminal:
             setup_seconds=self.setup_seconds, seconds=0., actions=0, disposed=False, bounds=None)
         try:
             gradient = source._gradient(ar, o, q)
+            # Outward binary64 row bounds accelerate the ordinary source KKT
+            # enclosure. If every component can still be zero, refine once
+            # through the original Decimal row path so exact-source stationarity
+            # remains distinguishable from a merely small rounded residual.
+            if all(lo<=ZERO<=hi for lo,hi in gradient):
+                exact_ar=source.intervals._Intervals(34,self.deadline)
+                exact_ar._use_native_rows=False
+                gradient=source._gradient(exact_ar,o,q)
             projected, squared, inf = [], ZERO, ZERO
             for i, (lo, hi) in enumerate(gradient):
                 if q[i] == o.lower[i]:

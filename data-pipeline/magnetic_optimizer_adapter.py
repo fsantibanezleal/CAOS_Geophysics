@@ -12,6 +12,7 @@ import hashlib
 import re
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.sparse.linalg import LinearOperator
 
 import magnetic_likelihood
@@ -234,10 +235,25 @@ class MagneticObjective:
             result.append(gradient.copy())
         if return_H:
             frozen = q.copy()
+            regularizer_hessian = self.regularizer.vendor.deriv2(frozen)
+            if sp.issparse(regularizer_hessian):
+                regularizer_hessian = regularizer_hessian.tocsr(copy=True)
+                if (regularizer_hessian.shape != (len(q),len(q))
+                        or not np.isfinite(regularizer_hessian.data).all()):
+                    raise ValueError("objective: invalid fixed SimPEG regularization Hessian")
+                regularizer_hessian.data.flags.writeable = False
+                regularizer_hessian.indices.flags.writeable = False
+                regularizer_hessian.indptr.flags.writeable = False
+            else:
+                regularizer_hessian = np.array(regularizer_hessian,dtype=np.float64,copy=True,order="C")
+                if (regularizer_hessian.shape != (len(q),len(q))
+                        or not np.isfinite(regularizer_hessian).all()):
+                    raise ValueError("objective: invalid fixed SimPEG regularization Hessian")
+                regularizer_hessian.flags.writeable = False
             result.append(LinearOperator(
                 (len(q), len(q)), dtype=np.float64,
                 matvec=lambda direction: 2. * weighted_jacobian.T @ (weighted_jacobian @ direction)
-                + self.beta * self.regularizer.vendor.deriv2(frozen, direction),
+                + self.beta * (regularizer_hessian @ direction),
             ))
         return tuple(result) if return_g or return_H else phi
 
