@@ -133,19 +133,22 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
     """Return a notebook in an isolated, input-complete copy of the product."""
     work = tmp_root / "repo"
     work.mkdir(parents=True, exist_ok=True)
-    # These two seismic lessons declare all runtime inputs under data/ and
-    # data-pipeline/. Copy their notebook files individually instead of staging
-    # unrelated documentation and model trees for a narrowly scoped check.
+    # Narrowly scoped lessons stage only their declared runtime inputs instead
+    # of copying the full release-shaped data/docs/models/notebooks tree.
     relative = Path(relative_notebook)
+    field_data_lesson = relative.as_posix() in {
+        "notebooks/en/02-gravity/03-long-valley-time-lapse-processing.ipynb",
+        "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
+    }
     seismic_lesson = relative.as_posix() in {
         "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb",
         "notebooks/es/06-seismology/04-m13-learned-phase-picking.ipynb",
         "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
         "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
     }
-    names = ("data", "data-pipeline") if seismic_lesson else (
+    names = ("data-pipeline",) if field_data_lesson else (("data", "data-pipeline") if seismic_lesson else (
         "data", "data-pipeline", "docs", "content", "models", "notebooks"
-    )
+    ))
     for name in names:
         origin = source_root / name
         target = work / name
@@ -157,7 +160,14 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
                 return ignored
 
             shutil.copytree(origin, target, ignore=ignore_generated)
-    if seismic_lesson:
+    if field_data_lesson:
+        artifact = Path("data/derived/field/long-valley/1982-06_to_1999-07.json")
+        origin = source_root / artifact
+        target = work / artifact
+        if origin.is_file() and not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(origin, target)
+    if seismic_lesson or field_data_lesson:
         origin = source_root / relative
         target = work / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -166,13 +176,16 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
     # The magnetic survey lessons execute these reviewed support modules from
     # their project-relative paths. They are notebook inputs just like the
     # pipeline and documentation trees above, not optional test-only fixtures.
-    support_files = (
-        "scripts/run_m10_lesson_worker.py",
-    ) if relative.as_posix().endswith("05-m10-fwi-case-matrix.ipynb") else (() if seismic_lesson else (
+    if relative.as_posix().endswith("05-m10-fwi-case-matrix.ipynb"):
+        support_files = ("scripts/run_m10_lesson_worker.py",)
+    elif seismic_lesson or field_data_lesson:
+        support_files = ()
+    else:
+        support_files = (
         "tests/data/magnetic_survey_support.py",
         "tests/fixtures/magnetic_survey/generate.py",
         "scripts/run_m10_lesson_worker.py",
-    ))
+        )
     for support in support_files:
         origin = source_root / support
         target = work / support
@@ -345,7 +358,7 @@ def output_differences(fresh: Path, committed: Path) -> str:
     return "output cells differ at " + ", ".join(changes[:12]) if changes else "metadata or source bytes differ"
 
 
-def method_problems() -> list[str]:
+def method_problems(selected_notebooks: list[Path] | None = None) -> list[str]:
     """What stops the run before any notebook executes: a method package of ``product.json`` that is not installed here or has no
     exact pin, and a notebook cell that defines a name a method package defines. The rules are the static check's, which this
     runner loads from the folder it lives in."""
@@ -359,7 +372,8 @@ def method_problems() -> list[str]:
     sys.dont_write_bytecode = True  # --check writes nothing in the repository, not even a bytecode cache of the checker
     spec.loader.exec_module(module)
     methods, problems = module.method_state(ROOT, strict=True)
-    for path in sorted(NOTEBOOKS.glob("*/*/*.ipynb")) if methods else []:
+    notebook_paths = selected_notebooks if selected_notebooks is not None else list(NOTEBOOKS.glob("*/*/*.ipynb"))
+    for path in sorted(notebook_paths) if methods else []:
         try:
             cells = json.loads(path.read_text(encoding="utf-8")).get("cells", [])
         except (OSError, ValueError):
@@ -422,16 +436,16 @@ def main() -> int:
     if stray:
         print(f"run_notebooks: no notebook ran; a notebook lives at {LAYOUT}: {', '.join(stray)}")
         return 1
-    problems = method_problems()
+    books = discover(a.only)
+    if not books:
+        print(f"run_notebooks: no notebook to run ({a.only or 'notebooks/*/*/*.ipynb'})")
+        return 2
+    problems = method_problems(books if a.only else None)
     if problems:
         print("run_notebooks: no notebook ran; the method packages of the product do not hold:")
         for line in problems:
             print(f"  - {line}")
         return 1
-    books = discover(a.only)
-    if not books:
-        print(f"run_notebooks: no notebook to run ({a.only or 'notebooks/*/*/*.ipynb'})")
-        return 2
     os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")  # the kernels import data-pipeline/ by path: leave no cache behind
     # The M07 lesson invokes its separately pinned pyGIMLi solver from a temp copy during --check.
     os.environ.setdefault("CAOS_SOURCE_ROOT", str(ROOT))

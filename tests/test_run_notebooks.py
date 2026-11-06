@@ -73,6 +73,32 @@ def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -
     assert (repo / "tests" / "fixtures" / "magnetic_survey" / "generate.py").read_bytes() == fixture.read_bytes()
 
 
+def test_long_valley_check_stages_only_its_declared_inputs(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    notebook = source / "notebooks" / "en" / "02-gravity" / "03-long-valley-time-lapse-processing.ipynb"
+    pipeline = source / "data-pipeline" / "long_valley_timelapse.py"
+    artifact = source / "data" / "derived" / "field" / "long-valley" / "1982-06_to_1999-07.json"
+    unrelated = source / "models" / "large-checkpoint.bin"
+    notebook.parent.mkdir(parents=True)
+    pipeline.parent.mkdir(parents=True)
+    artifact.parent.mkdir(parents=True)
+    unrelated.parent.mkdir(parents=True)
+    notebook.write_text("{}", encoding="utf-8")
+    pipeline.write_text("PIPELINE = True\n", encoding="utf-8")
+    artifact.write_text("{}\n", encoding="utf-8")
+    unrelated.write_bytes(b"unrelated model")
+
+    staged = staged_notebook_source(tmp_path / "check", notebook.relative_to(source).as_posix(), source)
+    repo = staged.parents[3]
+
+    assert staged.is_file()
+    assert (repo / "data-pipeline" / "long_valley_timelapse.py").read_bytes() == pipeline.read_bytes()
+    assert (repo / artifact.relative_to(source)).read_bytes() == artifact.read_bytes()
+    assert not (repo / "models").exists()
+    assert not (repo / "docs").exists()
+    assert not (repo / "data" / "derived" / "v2").exists()
+
+
 def encoded_png(image: Image.Image, *, compression: int) -> str:
     stream = io.BytesIO()
     image.save(stream, format="PNG", compress_level=compression)

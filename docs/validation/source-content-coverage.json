@@ -97,7 +97,9 @@
       ],
       "title": "Gravity observations: reference, units and plate scale",
       "sources": [
-        "https://pubs.usgs.gov/tm/02/d04/tm2d4.pdf",
+        "https://pubs.usgs.gov/twri/twri2-d1/pdf/twri_2-D1_d.pdf",
+        "https://pubs.usgs.gov/of/2002/0353/method.html",
+        "https://pubs.usgs.gov/publication/ofr20251019/full",
         "https://www.fatiando.org/harmonica/latest/api/index.html"
       ],
       "content_scope": "Explains gravity reference, sign, units, and plate-scale context used before station reduction."
@@ -110,7 +112,9 @@
       ],
       "title": "M01 gravity station corrections: a traceable calculation",
       "sources": [
-        "https://pubs.usgs.gov/tm/02/d04/tm2d4.pdf",
+        "https://pubs.usgs.gov/twri/twri2-d1/pdf/twri_2-D1_d.pdf",
+        "https://pubs.usgs.gov/of/2002/0353/method.html",
+        "https://pubs.usgs.gov/publication/ofr20251019/full",
         "https://www.fatiando.org/harmonica/latest/api/index.html"
       ],
       "content_scope": "Works through station correction lineage and the declared gravity reference chain."
@@ -137,6 +141,8 @@
       "sources": [
         "https://pubs.usgs.gov/dds/dds-81/intro.html",
         "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/DataFormat.html",
+        "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/gravity.html",
+        "https://doi.org/10.1029/JB090iB13p11210",
         "https://doi.org/10.1126/science.285.5436.2119"
       ],
       "content_scope": "Processes source-bound repeated station occupations, paired epoch differences, independent-error propagation and covariance sensitivity; no inversion or source interpretation."
@@ -329,7 +335,10 @@
       ],
       "title": "Learned P/S phase picking on STEAD traces",
       "sources": [
-        "https://doi.org/10.1093/gji/ggy423"
+        "https://doi.org/10.1093/gji/ggy423",
+        "https://doi.org/10.1109/ACCESS.2019.2947848",
+        "https://docs.obspy.org/packages/autogen/obspy.core.stream.stream.html",
+        "https://github.com/AI4EPS/PhaseNet"
       ],
       "content_scope": "Reviews learned P/S phase picking on STEAD traces and the stated evaluation limits."
     },
@@ -341,7 +350,10 @@
       ],
       "title": "M10 four-case FWI comparison",
       "sources": [
-        "https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html"
+        "https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html",
+        "https://doi.org/10.1190/1.3238367",
+        "https://doi.org/10.1190/1.1441754",
+        "https://www.ausargeo.com/deepwave/example_fwi"
       ],
       "content_scope": "Compares four catalogued synthetic FWI cases, including explicit negative or unresolved controls."
     },
