@@ -4,7 +4,7 @@
   "gate": "tests/api/test_job_limits.py::test_scratch_limit_terminates_child",
   "gate_sha256": "275ff0037723ffdc8a3ea534f25690f3cc6c084b61c1ac60a22879e580e65376",
   "verdict": "pass",
-  "source_revision": "7d395bed436334158d46ce3ccb5fd69265b0a352",
+  "source_revision": "7d93e09aafb67d8b38fe2ddcb4223fd423a2a0e0",
   "command": [
     ".venv-api/Scripts/python.exe",
     "-m",
@@ -16,11 +16,11 @@
     "tests/api/test_job_limits.py::test_scratch_limit_terminates_child",
     "tests/api/test_job_limits.py::test_rss_limit_terminates_child"
   ],
-  "measured_at": "2026-11-06T10:46:37Z",
+  "measured_at": "2026-11-06T19:41:02Z",
   "outputs": [
     {
       "path": "docs/validation/r007-current-source-2026-11-06.xml",
-      "sha256": "625b925f8459f0793db11079c367ba0fd87a4e911c1bfd45d8034fdecc0ce85d"
+      "sha256": "0ab83a792b4ee9af0eca6307d0bda49812843a62a0803f558e76c5d09b76e62e"
     }
   ]
 }
