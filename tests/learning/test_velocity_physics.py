@@ -65,6 +65,60 @@ def test_network_reference_bounds_and_checkpoint(tmp_path):
     assert hashlib.sha256(path.read_bytes()).hexdigest() == sha
 
 
+def test_user_survey_inference_is_source_bound_and_exposes_support(tmp_path):
+    rays = np.asarray([
+        [0.0, 100.0, 800.0, 100.0],
+        [0.0, 250.0, 800.0, 650.0],
+        [100.0, 0.0, 100.0, 800.0],
+        [300.0, 0.0, 700.0, 800.0],
+    ])
+    velocity = original.background().ravel()
+    observed = original.quadrature_matrix(rays) @ (1.0 / velocity)
+    path = tmp_path / "user-model.npz"
+    sha = original.save_checkpoint(refined.network(), path)
+
+    result = refined.predict_user_survey(rays, observed, path, sha)
+    features = refined.input_features(observed, original.cell_length_matrix(rays))
+    expected = refined.load_checkpoint(path, sha)(torch.from_numpy(features[None])).detach().numpy()[0]
+
+    assert result["schema"] == "geophysics.m12-user-inference/v1"
+    assert result["status"] == "exploratory-unvalidated"
+    assert result["checkpoint_sha256"] == sha
+    assert result["velocity_m_s"].shape == result["path_coverage_m"].shape == (16, 16)
+    assert np.any(~result["supported_cells"])
+    np.testing.assert_array_equal(result["velocity_m_s"], expected)
+    assert "no field accuracy is established" in " ".join(result["limitations"])
+
+
+def test_user_arrival_csv_contract_and_fail_closed_validation(tmp_path):
+    valid = tmp_path / "arrivals.csv"
+    valid.write_text(
+        "source_x_m,source_z_m,receiver_x_m,receiver_z_m,first_arrival_s\n"
+        "0,100,800,100,0.4\n"
+        "100,0,100,800,0.3\n",
+        encoding="utf-8",
+    )
+    rays, observed = refined.read_arrival_csv(valid)
+    assert rays.shape == (2, 4)
+    np.testing.assert_array_equal(observed, [0.4, 0.3])
+
+    invalid_files = {
+        "header": "sx,sz,rx,rz,time\n0,0,800,800,0.2\n",
+        "missing": "source_x_m,source_z_m,receiver_x_m,receiver_z_m,first_arrival_s\n0,0,800,800,\n",
+        "nan": "source_x_m,source_z_m,receiver_x_m,receiver_z_m,first_arrival_s\n0,0,800,800,nan\n",
+        "duplicate": (
+            "source_x_m,source_z_m,receiver_x_m,receiver_z_m,first_arrival_s\n"
+            "0,0,800,800,0.2\n800,800,0,0,0.21\n"
+        ),
+        "outside": "source_x_m,source_z_m,receiver_x_m,receiver_z_m,first_arrival_s\n0,0,801,800,0.2\n",
+    }
+    for name, content in invalid_files.items():
+        path = tmp_path / f"{name}.csv"
+        path.write_text(content, encoding="utf-8")
+        with pytest.raises(ValueError):
+            refined.read_arrival_csv(path)
+
+
 def test_scientific_verdict_preserves_failure():
     assert original.scientific_verdict({"learned_to_classical_velocity_ratio": 2,
                                        "learned_to_classical_oracle_ratio": 0.9}) == "failed-held-out-comparator"

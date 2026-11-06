@@ -70,6 +70,68 @@ is not independent field observation or proof of the true ray trajectory.
 Strong heterogeneity requires bent rays or a wave equation; this linearized
 tool does not silently label them as equivalent.
 
+## Exploratory learned refinement on a supplied survey
+
+The separate geometry-normalized residual network accepts a strict CSV for
+first-arrival picks. This is an offline research inference path, not the
+uncertainty-weighted regularized solver described above. It uses a frozen
+checkpoint trained on synthetic 16 by 16 models and reports its status as
+`exploratory-unvalidated`; it has not been validated on field geology. Do not
+use its output as a field velocity estimate or replace the weighted solver.
+
+The CSV header is exactly:
+
+```text
+source_x_m,source_z_m,receiver_x_m,receiver_z_m,first_arrival_s
+```
+
+Each row is one uncensored first arrival. Coordinates must already be in a local
+0 to 800 m square, with x horizontal and z positive down. The method builds
+straight paths through sixteen 50 m cells per axis. Rows with missing values,
+nonfinite or nonpositive times, out-of-domain coordinates, zero-length rays,
+duplicate source-receiver paths, or more than 4096 observations are rejected.
+Repeated observations must be resolved upstream; the network does not model
+pick uncertainty or correlated errors.
+
+```python
+import sys
+from pathlib import Path
+
+sys.path.insert(0, "data-pipeline")
+import velocity_physics_refinement as refinement
+
+checkpoint = Path("models/experimental/m12-physics-cuda-20261004/m12-physics.npz")
+receipt = checkpoint.with_name("receipt.json")
+import json
+
+sha256 = json.loads(receipt.read_text(encoding="utf-8"))["checkpoint_sha256"]
+rays_m, times_s = refinement.read_arrival_csv(Path("arrivals.csv"))
+result = refinement.predict_user_survey(rays_m, times_s, checkpoint, sha256)
+```
+
+The result carries the original ray arrays and times, an input SHA-256, the
+checkpoint identity, the 16 by 16 velocity field, path-length coverage in
+metres, a supported-cell mask, the device and explicit limitations. Keep the
+result outside the repository under the configured data root. Preserve the
+source file and its rights record alongside it. A zero-coverage cell is prior
+output from the network, not evidence that the cell has that velocity.
+
+This input adapter proves only that a supplied, contract-compliant survey can
+be passed through the frozen network. The synthetic training geometries are
+layouts A and B; layout C is a locked acquisition-shift test. An arbitrary
+field geometry, geology, timing convention or noise model is outside that
+validated population. The output is useful for inspecting coverage and
+researching domain shift, not for field decisions. Probabilistic travel-time
+networks explicitly report posterior uncertainty [Earp and Curtis, 2020], while
+ray-illumination compensation addresses a separate first-arrival gradient
+problem [Hu et al., 2021]. Recent physics-informed methods optimize travel-time
+and eikonal constraints together [Zeng et al., 2026]. These methods are not
+reproduced by this residual CNN and were not compared on matched input here.
+
+References: [Earp and Curtis, DOI 10.1007/s00521-020-04921-8](https://doi.org/10.1007/s00521-020-04921-8),
+[Hu et al., DOI 10.1190/geo2020-0140.1](https://doi.org/10.1190/geo2020-0140.1),
+[Zeng et al., DOI 10.1111/1365-2478.70184](https://doi.org/10.1111/1365-2478.70184).
+
 ## Run and independently reopen
 
 Use the repository's ignored environment with NumPy/SciPy; Torch is required

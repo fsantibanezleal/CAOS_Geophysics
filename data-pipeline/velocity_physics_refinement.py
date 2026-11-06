@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 from pathlib import Path
@@ -19,6 +20,15 @@ COHORTS = {
     "acquisition_only": (80, 157001, original.TRAIN_FAMILIES, ("C",)),
     "joint_ood": (160, 167001, original.TEST_FAMILIES, ("C",)),
 }
+
+USER_ARRIVAL_COLUMNS = (
+    "source_x_m",
+    "source_z_m",
+    "receiver_x_m",
+    "receiver_z_m",
+    "first_arrival_s",
+)
+MAX_USER_RAYS = 4096
 
 # Immutable training-source identity for the published v2 CUDA receipt. Its
 # executable training functions are unchanged; only verification was corrected
@@ -43,6 +53,95 @@ def input_features(observed, matrix):
     velocity_feature = -h * reference ** 2 / 400
     return np.stack((velocity_feature.reshape(16, 16),
                      (coverage / coverage.max()).reshape(16, 16))).astype(np.float32)
+
+
+def _validated_user_arrivals(rays, observed_times_s):
+    rays = np.asarray(rays, dtype=np.float64)
+    observed_times_s = np.asarray(observed_times_s, dtype=np.float64)
+    if (rays.ndim != 2 or rays.shape[1] != 4 or not 1 <= len(rays) <= MAX_USER_RAYS
+            or observed_times_s.shape != (len(rays),)):
+        raise ValueError("Expected 1 to 4096 rows of source/receiver coordinates and one time per ray")
+    if not np.isfinite(rays).all() or not np.isfinite(observed_times_s).all():
+        raise ValueError("Coordinates and first-arrival times must be finite")
+    if np.any((rays < 0.0) | (rays > original.EXTENT)):
+        raise ValueError("Coordinates must be local x/z metres in the 0 to 800 m model domain")
+    if np.any(observed_times_s <= 0.0):
+        raise ValueError("First-arrival times must be positive seconds")
+    sources, receivers = rays[:, :2], rays[:, 2:]
+    if np.any(np.linalg.norm(receivers - sources, axis=1) == 0.0):
+        raise ValueError("Source and receiver coordinates must differ")
+    forward = np.column_stack((sources, receivers))
+    reverse = np.column_stack((receivers, sources))
+    swap = ((sources[:, 0] > receivers[:, 0])
+            | ((sources[:, 0] == receivers[:, 0]) & (sources[:, 1] > receivers[:, 1])))
+    canonical = np.where(swap[:, None], reverse, forward)
+    if len(np.unique(canonical, axis=0)) != len(canonical):
+        raise ValueError("Each source/receiver path must occur once; resolve repeat picks before inversion")
+    return rays, observed_times_s
+
+
+def read_arrival_csv(path):
+    """Read the strict local-grid first-arrival CSV contract used by user inference."""
+    rows = []
+    with Path(path).open("r", encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        if reader.fieldnames != list(USER_ARRIVAL_COLUMNS):
+            raise ValueError(f"CSV columns must be exactly {', '.join(USER_ARRIVAL_COLUMNS)}")
+        for line_number, row in enumerate(reader, start=2):
+            if None in row or any(row[name] is None or not row[name].strip() for name in USER_ARRIVAL_COLUMNS):
+                raise ValueError(f"CSV line {line_number} has missing or extra fields")
+            try:
+                rows.append([float(row[name]) for name in USER_ARRIVAL_COLUMNS])
+            except ValueError as exc:
+                raise ValueError(f"CSV line {line_number} contains a nonnumeric value") from exc
+            if len(rows) > MAX_USER_RAYS:
+                raise ValueError(f"CSV exceeds the {MAX_USER_RAYS}-ray input limit")
+    if not rows:
+        raise ValueError("CSV must contain at least one first-arrival observation")
+    values = np.asarray(rows, dtype=np.float64)
+    return _validated_user_arrivals(values[:, :4], values[:, 4])
+
+
+def predict_user_survey(rays, observed_times_s, checkpoint_path, checkpoint_sha256, *, device="cpu"):
+    """Run explicitly exploratory inference on one submitted straight-ray survey."""
+    rays, observed_times_s = _validated_user_arrivals(rays, observed_times_s)
+    if device not in ("cpu", "cuda"):
+        raise ValueError("Inference device must be cpu or cuda")
+    import torch
+    if device == "cuda" and not torch.cuda.is_available():
+        raise ValueError("CUDA inference was requested but no CUDA device is available")
+    matrix = original.cell_length_matrix(rays)
+    features = input_features(observed_times_s, matrix)
+    model = load_checkpoint(checkpoint_path, checkpoint_sha256, device=device)
+    with torch.inference_mode():
+        prediction = model(torch.from_numpy(features[None]).to(device)).cpu().numpy()[0]
+    if prediction.shape != (16, 16) or not np.isfinite(prediction).all():
+        raise FloatingPointError("The checkpoint returned an invalid velocity model")
+    coverage = matrix.sum(axis=0).reshape(16, 16)
+    return {
+        "schema": "geophysics.m12-user-inference/v1",
+        "status": "exploratory-unvalidated",
+        "input_sha256": original.sha256_bytes(
+            rays.astype("<f8").tobytes() + observed_times_s.astype("<f8").tobytes()
+        ),
+        "checkpoint_sha256": checkpoint_sha256,
+        "device": device,
+        "grid": {"shape": [16, 16], "cell_size_m": 50.0, "extent_m": [0.0, 800.0],
+                 "x_axis": "local easting, metres", "z_axis": "positive-down depth, metres"},
+        "rays_m": rays,
+        "observed_first_arrival_s": observed_times_s,
+        "velocity_m_s": prediction,
+        "path_coverage_m": coverage,
+        "supported_cells": coverage > 0.0,
+        "supported_cell_fraction": float(np.mean(coverage > 0.0)),
+        "input_features": features,
+        "limitations": [
+            "straight-ray path operator on a fixed 16 by 16 grid",
+            "synthetic training families and acquisition geometries only",
+            "input pick uncertainty and correlated noise are not modelled",
+            "unsupported cells are prior-dominated and no field accuracy is established",
+        ],
+    }
 
 
 def make_cohort(name, ops, *, fixture=False):
