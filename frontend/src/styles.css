@@ -1555,3 +1555,36 @@
   .caos-wb .two-plots,
   .caos-wb .three-plots { column-gap: 0.35rem; }
 }
+
+@media (min-width: 901px) and (min-height: 851px) and (max-height: 950px) {
+  /* A 900px desktop canvas needs less shell chrome and taller instrument
+     rasters; retain full scientific axes and legends. */
+  .app-shell.fixed.contain:has(.caos-wb) > .site-header .header-inner { height: 36px; }
+  .caos-wb .context-view .case-evidence .three-plots > .science-plot {
+    height: 720px;
+  }
+  .mt-view .layer-stack { height: 540px; }
+  .mt-view .mt-curves .science-plot-shell .caos-plot.fill { height: 620px; }
+  .fwi-recovery-plots > .science-plot:nth-child(-n + 2) { height: 640px; }
+  [data-instrument="inversion-view"] .learned-recovery-layout .learned-recovery-plots > .science-plot:nth-child(-n + 2) {
+    height: 720px;
+  }
+}
+
+@media (min-width: 901px) and (min-height: 851px) and (max-height: 950px) {
+  [data-instrument="inversion-view"] .section-recovery-layout > .two-plots > .science-plot {
+    height: 760px;
+  }
+  [data-instrument="inversion-view"] .fwi-recovery-plots > .science-plot:nth-child(-n + 2) {
+    height: 720px;
+  }
+  [data-instrument="inversion-view"] .fwi-recovery-plots .science-plot-shell .caos-plot.fill {
+    height: 720px;
+  }
+}
+
+@media (min-width: 901px) and (min-height: 851px) and (max-height: 950px) {
+  [data-instrument="inversion-view"] .two-columns > .layer-column > .layer-stack {
+    height: 560px;
+  }
+}
