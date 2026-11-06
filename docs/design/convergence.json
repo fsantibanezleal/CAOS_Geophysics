@@ -89,7 +89,7 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across the uploaded-data modalities and a browser workbench check. The API suite and browser eligibility case pass locally; R-005 remains unresolved because complete end-to-end eligibility coverage across all supported inputs is not accepted.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across uploaded modalities, plus local browser coverage for gravity and the actual MT EDI workbench. Five distinct MT scenarios passed across two recorded invocations; the full five-case suite did not pass in one invocation, and the report retains the intermediate assertion failure. Magnetic, profile, waveform and physical-root browser paths and hosted admission remain unaccepted; R-005 remains unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -109,7 +109,23 @@
         },
         {
           "path": "docs/validation/r005-eligibility-current-2026-11-06.md",
-          "sha256": "44bfa0bcb06a0029c746563fdd43ad8b82cf15371014dad2f8ca70632e6de7dc"
+          "sha256": "26770fde0577ec61f750259a75cc293a7743ebfde7b0c49de3b95d0ae7765819"
+        },
+        {
+          "path": "frontend/e2e/mt-workbench.spec.ts",
+          "sha256": "bfc4eebe8000a2f18f7db9f653d2d8da3ce2014f1e484d829d5e121925c77a1c"
+        },
+        {
+          "path": "frontend/playwright.mt.config.ts",
+          "sha256": "3951e3da88a4c7e17d84ad7fd7099e0b292d566d8975574309ceb4a8953ef3ce"
+        },
+        {
+          "path": "tests/ui/mt_devserver.py",
+          "sha256": "21e9bbd0e67908c00a834b1ec4021ba9c3a58f9825c88b152dc5c03ab12e126f"
+        },
+        {
+          "path": "docs/validation/mt-workbench-browser-local-2026-11-06.md",
+          "sha256": "4db60182a1325ef767fa8ab385e3806b1fd95c8c6852a0db10610da1d6f5ea49"
         }
       ],
       "receipts": []

@@ -1,8 +1,8 @@
 """Isolated loopback actual MT API/worker QA. Backend checkout is READ ONLY.
 
-Explicit backend + interpreter required. Private DB/staging live only beneath this
-checkout's ignored frontend/node_modules/.mt-qa. Flag opt-in is QA-only, never a
-production activation. No API or scientific result is mocked.
+Explicit backend + interpreter required. Private DB/staging live beneath an
+external QA root. Flag opt-in is QA-only, never a production activation. No API
+or scientific result is mocked.
 """
 from __future__ import annotations
 import hashlib
@@ -34,7 +34,11 @@ def main():
     dist = (ROOT / "frontend/dist").resolve()
     if not (dist / "index.html").is_file():
         raise RuntimeError("Build frontend first")
-    parent = ROOT / "frontend/node_modules/.mt-qa"
+    parent = Path(os.environ.get(
+        "GEOPHYSICS_MT_QA_ROOT", Path(tempfile.gettempdir()) / "caos-geophysics-mt-qa"
+    )).expanduser().resolve()
+    if parent == ROOT or ROOT in parent.parents or any((path / ".git").exists() for path in (parent, *parent.parents)):
+        raise RuntimeError("MT QA root must be outside repository checkouts")
     parent.mkdir(parents=True, exist_ok=True)
     enabled = os.environ.get("GEOPHYSICS_MT_QA_ENABLE") == "isolated-test-only"
     os.environ["GEOPHYSICS_MT_ONLINE_ENABLED"] = "1" if enabled else "0"
@@ -97,7 +101,7 @@ def main():
         async def files(path: str):
             candidate = (dist/path).resolve()
             if candidate.is_relative_to(dist) and candidate.is_file(): return FileResponse(candidate)
-            if path.rstrip("/") in {"", "introduction", "methodology", "implementation", "experiments", "benchmark"}: return FileResponse(dist/"index.html")
+            if path.rstrip("/") in {"", "app", "introduction", "methodology", "implementation", "experiments", "benchmark"}: return FileResponse(dist/"index.html")
             raise HTTPException(404)
         uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
 if __name__ == "__main__": main()
