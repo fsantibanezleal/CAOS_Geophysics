@@ -98,3 +98,21 @@ worker RSS, and WASM capacity is the allocator's high-water capacity, not
 total browser memory. This one local headless host is not a supported-device
 population. Cross-device process-memory/latency qualification, Charleston
 provider files and field holdout, and actual ML VPS admission remain open.
+
+## Current-source repeat: 2026-11-06
+
+The same authored 25,000-row control was rerun against the current worker and
+Python processor. The receipt pins both current source hashes and is preserved
+at [`m03-browser-resource-profile-2026-11-06.json`](../../../validation/m03-browser-resource-profile-2026-11-06.json),
+SHA-256 `cf2eca3739589d39e8c199c97a8b258da3f13b379b25e8404458d5170e19f0a0`.
+Headless Chromium 153.0.8010.12 reported 32 logical threads and 32 GiB device
+memory at a 1280 × 900 viewport. Cold wall time was 9.81 s. Warm runs were 1.55,
+1.80 and 3.89 s; all four runs reported a 187,695,104-byte WASM heap capacity.
+The third warm run was slower, so the full range is retained rather than hidden
+by a best-case summary.
+
+This is a fresh same-host repeat, not a new device class. Main-thread heap
+sampling still excludes worker RSS, browser-process memory is not measured,
+and emulated phone viewports do not establish physical mobile-device
+performance. The outstanding cross-device resource gate, provider-source
+validation and VPS admission remain open.

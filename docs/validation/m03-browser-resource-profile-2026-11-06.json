@@ -1,0 +1,118 @@
+{
+  "schema": "caos.m03-browser-resource-profile.v1",
+  "status": "measured-authored-control-only",
+  "measured_at": "2026-11-06T07:50:27.254Z",
+  "browser": "Chromium 153.0.8010.12",
+  "viewport_css_px": [
+    1280,
+    900
+  ],
+  "dataset": {
+    "row_count": 25000,
+    "csv_bytes": 1040828,
+    "csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+    "source": "authored deterministic parallel-line survey; not field data"
+  },
+  "settings": {
+    "grid_spacing_m": 250,
+    "holdout_fraction": 0.2,
+    "seed": "M03-resource-profile-2026-10-27"
+  },
+  "device": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+    "hardware_concurrency": 32,
+    "device_memory_gib": 32
+  },
+  "implementation": {
+    "worker_source_sha256": "6b30f380f42e3e2fc054b69a38528661cd2787980ee106d6693e9db74ff6b711",
+    "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca"
+  },
+  "memory": {
+    "wasm_linear_heap_capacity_bytes_by_run": [
+      187695104,
+      187695104,
+      187695104,
+      187695104
+    ],
+    "js_heap_used_before_and_after_bytes": [
+      20500000,
+      20500000
+    ],
+    "js_heap_peak_observed_bytes": 20500000,
+    "limitations": [
+      "WASM linear heap capacity is the Pyodide allocator high-water capacity, not total browser process RSS.",
+      "The JS heap sample is main-thread performance.memory where Chromium exposes it; it does not include worker RSS.",
+      "One local headless Chromium host is not a supported-device population."
+    ]
+  },
+  "runs": [
+    {
+      "ordinal": 0,
+      "wall_ms": 9811.699999988079,
+      "runtime_reused": false,
+      "runtime_load_ms": 4584.600000023842,
+      "processing_ms": 4974.899999976158,
+      "total_worker_ms": 9563.299999952316,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    },
+    {
+      "ordinal": 1,
+      "wall_ms": 1801.300000011921,
+      "runtime_reused": true,
+      "runtime_load_ms": 0,
+      "processing_ms": 1792.199999988079,
+      "total_worker_ms": 1799.199999988079,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    },
+    {
+      "ordinal": 2,
+      "wall_ms": 1550.8999999761581,
+      "runtime_reused": true,
+      "runtime_load_ms": 0,
+      "processing_ms": 1546,
+      "total_worker_ms": 1548.5999999642372,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    },
+    {
+      "ordinal": 3,
+      "wall_ms": 3890.300000011921,
+      "runtime_reused": true,
+      "runtime_load_ms": 0,
+      "processing_ms": 3885.699999988079,
+      "total_worker_ms": 3888.300000011921,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    }
+  ]
+}
