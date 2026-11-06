@@ -143,21 +143,29 @@ class _Intervals:
 
     def _row_vectors(self, vector):
         centers,radii = np.empty(len(vector)),np.empty(len(vector))
-        tiny = float(np.finfo(np.float64).tiny)
         for i,(lo,hi) in enumerate(vector):
             if i % 16 == 0: self.check()
             center = float(lo)
-            if not np.isfinite(center) or (center!=0. and abs(center)<tiny):
+            if not np.isfinite(center):
                 raise ValueError('precision: unsupported native center')
             dc = Decimal.from_float(center)
             radius = max(self.hi.subtract(dc,lo),self.hi.subtract(hi,dc),_ZERO)
             native_radius = float(radius)
-            # A tiny conversion followed by a huge coefficient cannot be
-            # hidden in the accumulation's absolute-underflow allowance.
-            if radius!=0 and (native_radius<tiny or not np.isfinite(native_radius)):
+            # Binary64 subnormal centers are exact values, and a nonzero
+            # Decimal radius that underflows to zero is enclosed by the least
+            # positive binary64 value. Round every nonzero radius outward;
+            # the row reduction's absolute-underflow term then covers products
+            # that themselves underflow. Values outside binary64 remain on the
+            # exact Decimal path.
+            if not np.isfinite(native_radius):
                 raise ValueError('precision: unsupported radius conversion')
             centers[i] = center
-            radii[i] = 0. if radius==0 else np.nextafter(native_radius,np.inf)
+            if radius == 0:
+                radii[i] = 0.
+            else:
+                if native_radius == 0.:
+                    native_radius = np.nextafter(0., np.inf)
+                radii[i] = np.nextafter(native_radius, np.inf)
             if not np.isfinite(radii[i]): raise ValueError('precision: radius overflow')
         return centers,radii
 

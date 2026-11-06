@@ -57,6 +57,31 @@ def test_MP03_expired_factor_does_not_publish_partial_L_D():
         metric._factor(sp.eye(2,format='csr'),monotonic()-1.)
 
 
+def test_MP06_exact_stencil_content_cache_rechecks_mutation(monkeypatch):
+    matrix=sp.diags((-np.ones(4),np.full(5,2.25),-np.ones(4)),(-1,0,1),format='csr')
+    with metric._STENCIL_CACHE_LOCK:
+        metric._STENCIL_CACHE.clear()
+    calls=[]
+    original=metric._validate_stencil_uncached
+    def observed(value):
+        calls.append(None)
+        return original(value)
+    monkeypatch.setattr(metric,'_validate_stencil_uncached',observed)
+
+    metric._stencil(matrix)
+    metric._stencil(matrix.copy())
+    assert len(calls)==1
+
+    matrix.data[1]=1.
+    with pytest.raises(ValueError,match='stencil'):
+        metric._stencil(matrix)
+    assert len(calls)==2
+
+    matrix.data[1]=-1.
+    metric._stencil(matrix)
+    assert len(calls)==2
+
+
 def test_MP05_exact_phase_bound_not_observed_RSS_and_original_cap():
     bound=metric.allocation(2048,2048,4096,False)
     assert bound['native']==1140850688 and bound['interval']==838860800

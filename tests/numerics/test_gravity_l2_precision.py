@@ -403,14 +403,12 @@ def test_NI01_outward_row_matches_independent_rational_corners(width,sparse):
     assert F(direct[0])<=lo<=hi<=F(direct[1])
 
 
-@pytest.mark.parametrize('fault',['coefficient','center','radius','overflow'])
+@pytest.mark.parametrize('fault',['coefficient','overflow'])
 def test_NI02_unsupported_row_uses_original_decimal(monkeypatch,fault):
     module = importlib.import_module('gravity_l2_precision')
     arithmetic = module._Intervals(34,monotonic()+30.)
     coefficient,vector = 1.,[(Decimal(1),Decimal(1))]
     if fault=='coefficient': coefficient=np.nextafter(0.,1.)
-    if fault=='center': vector=[(Decimal('1E-330'),Decimal('2E-330'))]
-    if fault=='radius': vector=[(Decimal(1),Decimal('1.'+'0'*329+'1'))]
     if fault=='overflow': coefficient,vector=1e300,[(Decimal('1E100'),Decimal('1E100'))]
     with pytest.raises((ValueError,ArithmeticError)):
         centers,radii=arithmetic._row_vectors(vector)
@@ -425,6 +423,32 @@ def test_NI02_unsupported_row_uses_original_decimal(monkeypatch,fault):
     assert calls  # Unsupported fast native domain must not silently accept it.
     exact_lo=F.from_float(float(coefficient))*F(vector[0][0])
     exact_hi=F.from_float(float(coefficient))*F(vector[0][1])
+    assert F(bounds[0])<=exact_lo<=exact_hi<=F(bounds[1])
+
+
+@pytest.mark.parametrize('vector', [
+    [(Decimal('1E-330'),Decimal('2E-330'))],
+    [(Decimal(1),Decimal('1.'+'0'*329+'1'))],
+])
+def test_NI02_subnormal_center_or_radius_uses_outward_native_enclosure(monkeypatch,vector):
+    module = importlib.import_module('gravity_l2_precision')
+    arithmetic = module._Intervals(34,monotonic()+30.)
+    centers,radii = arithmetic._row_vectors(vector)
+    assert np.isfinite(centers).all() and np.isfinite(radii).all()
+    assert radii[0] > 0.
+    coefficient = np.array([1e300])
+    direct = arithmetic._enclosed_row(coefficient,centers,radii)
+    calls=[]
+    original=arithmetic._decimal_matrix
+    def observe(*args):
+        calls.append(None)
+        return original(*args)
+    monkeypatch.setattr(arithmetic,'_decimal_matrix',observe)
+    bounds=arithmetic.matrix(coefficient.reshape(1,1),vector)[0]
+    assert not calls
+    exact_lo=F.from_float(float(coefficient[0]))*F(vector[0][0])
+    exact_hi=F.from_float(float(coefficient[0]))*F(vector[0][1])
+    assert F(direct[0])<=exact_lo<=exact_hi<=F(direct[1])
     assert F(bounds[0])<=exact_lo<=exact_hi<=F(bounds[1])
 
 

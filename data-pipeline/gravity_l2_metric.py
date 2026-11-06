@@ -7,9 +7,11 @@ admission. This candidate is not native/host/scientific acceptance authority.
 import hashlib
 import math
 import os
+from collections import OrderedDict
 from pathlib import Path
 import sys
 import traceback
+from threading import Lock
 from time import monotonic
 
 import numpy as np
@@ -103,12 +105,12 @@ def _csr_storage(matrix,n,maximum):
         raise ValueError('metric: invalid CSR index structure')
 
 
-def _stencil(matrix):
-    if (type(matrix) is not sp.csr_matrix or not 1<=matrix.shape[0]<=4096
-        or matrix.shape[0]!=matrix.shape[1]):
-        raise ValueError('metric: native first-order square CSR required')
+_STENCIL_CACHE = OrderedDict()
+_STENCIL_CACHE_LOCK = Lock()
+
+
+def _validate_stencil_uncached(matrix):
     n=matrix.shape[0]
-    _csr_storage(matrix,n,7*n)
     for i in range(n):
         columns=matrix.indices[matrix.indptr[i]:matrix.indptr[i+1]]
         values=matrix.data[matrix.indptr[i]:matrix.indptr[i+1]]
@@ -119,6 +121,31 @@ def _stencil(matrix):
             raise ValueError('metric: unsupported first-order stencil/duplicate/diagonal')
     # Sparse bounded difference, never a dense native Hessian.
     if (matrix-matrix.T).nnz: raise ValueError('metric: exact native symmetry required')
+
+
+def _stencil(matrix):
+    if (type(matrix) is not sp.csr_matrix or not 1<=matrix.shape[0]<=4096
+        or matrix.shape[0]!=matrix.shape[1]):
+        raise ValueError('metric: native first-order square CSR required')
+    n=matrix.shape[0]
+    _csr_storage(matrix,n,7*n)
+    h=hashlib.sha256()
+    h.update(repr((matrix.shape,matrix.data.dtype.str,matrix.indices.dtype.str,
+                   matrix.indptr.dtype.str)).encode())
+    for backing in (matrix.data,matrix.indices,matrix.indptr):
+        h.update(memoryview(backing).cast('B'))
+    key=(matrix.shape,h.digest())
+    with _STENCIL_CACHE_LOCK:
+        if key in _STENCIL_CACHE:
+            # Storage guards above still run on every call. A content hit means
+            # this exact CSR payload already passed the full physical stencil
+            # and symmetry checks; writable mutations change the digest.
+            _STENCIL_CACHE.move_to_end(key)
+            return
+        _validate_stencil_uncached(matrix)
+        _STENCIL_CACHE[key]=None
+        if len(_STENCIL_CACHE)>128:
+            _STENCIL_CACHE.popitem(last=False)
 
 
 def _number(value):
