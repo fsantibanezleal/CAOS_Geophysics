@@ -13,11 +13,72 @@ import numpy as np
 import pytest
 
 import traveltime as pipeline
-from traveltime import Survey, TraveltimeError, run, run_source, shot_splits
+from traveltime import Survey, TraveltimeError, run, run_source, run_user_survey, shot_splits
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
 RAW = DATA_ROOT / "data/downloads/pygimli/koenigsee.sgt"
+
+
+def _small_sgt_bytes():
+    return ("4 # shot/geophone points\n#x y\n0 0\n10 0\n20 0\n30 0\n"
+            "4 # measurements\n#s g t\n1 2 0.01\n1 3 0.02\n"
+            "2 3 0.01\n4 1 0.03\n").encode()
+
+
+def _user_source_record(**changes):
+    return {"id": "local-survey-01", "citation": "Owner supplied local test survey",
+            "rights": "owner-permitted", "scope": "owner-provided",
+            "frame": "local-x-y-down", "units": {"distance": "m", "time": "s"},
+            **changes}
+
+
+def test_user_survey_qc_preserves_declared_provenance_and_cleans_staging(tmp_path, monkeypatch):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    temp_root = tmp_path / "external-temp"
+    temp_root.mkdir()
+    monkeypatch.setenv("CAOS_TEMP_ROOT", str(temp_root))
+
+    report = run_user_survey(source_path, source=_user_source_record(), allow_inverse=False)
+
+    assert report["source_id"] == "local-survey-01"
+    assert report["source_kind"] == "local-user-supplied"
+    assert report["source_sha256"] == hashlib.sha256(source_path.read_bytes()).hexdigest()
+    assert report["rights_decision"] == "owner-declared-local-only"
+    assert report["raw_publication"] is False
+    assert report["source_record"]["verification"] == "user-declared; not independently verified"
+    assert report["qc"]["pick_count"] == 4
+    assert report["qc"]["units"]["y"].startswith("m, user-declared")
+    assert report["inverse_status"] == "not-run"
+    assert list(temp_root.iterdir()) == []
+
+
+@pytest.mark.parametrize("source", [
+    _user_source_record(rights=["CC-BY"]),
+    _user_source_record(rights="CC-BY"),
+    _user_source_record(scope="public-reuse"),
+    _user_source_record(frame="unknown"),
+    _user_source_record(units={"distance": "km", "time": "s"}),
+])
+def test_user_survey_rejects_inconsistent_source_declarations(tmp_path, monkeypatch, source):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    temp_root = tmp_path / "external-temp"
+    temp_root.mkdir()
+    monkeypatch.setenv("CAOS_TEMP_ROOT", str(temp_root))
+
+    with pytest.raises(TraveltimeError):
+        run_user_survey(source_path, source=source, allow_inverse=False)
+
+    assert list(temp_root.iterdir()) == []
+
+
+def test_provider_run_rejects_mismatched_original_hash(tmp_path):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    with pytest.raises(TraveltimeError, match="source SHA-256"):
+        run(source_path, source_sha256="0" * 64, allow_inverse=False)
 
 
 def test_homogeneous_forward_oracle():

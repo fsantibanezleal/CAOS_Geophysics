@@ -466,7 +466,16 @@ def _field_verdict(results: dict[str, dict], *, minimum_improved_shots: int = 2)
 def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
         validation_policy: str = "pinned-15/v1") -> dict:
     """Preserve source QC, then attempt only the predeclared conditional inverse."""
-    survey = parse_sgt(path)
+    path = Path(path)
+    try:
+        raw = path.read_bytes()
+    except OSError as error:
+        raise TraveltimeError(f"cannot read the declared .sgt input: {error}") from error
+    if len(raw) > MAX_INPUT_BYTES:
+        raise TraveltimeError(f".sgt exceeds {MAX_INPUT_BYTES} bytes")
+    if hashlib.sha256(raw).hexdigest() != source_sha256:
+        raise TraveltimeError(".sgt bytes do not match the supplied source SHA-256")
+    survey = parse_sgt_bytes(raw)
     report: dict = {
         "schema": "inverse-earth.local-traveltime-m09/v1", "source_id": SOURCE_ID,
         "source_sha256": source_sha256, "source_bytes": Path(path).stat().st_size,
@@ -544,6 +553,80 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
     except (TraveltimeError, RuntimeError, ValueError, TypeError, AssertionError, IndexError) as error:
         report.update(inverse_status="not-converged", inverse_reason=f"pyGIMLi inverse/held-out forward failed: {error}")
     report["wall_seconds"] = round(time.perf_counter() - started, 3)
+    return report
+
+
+def _validate_user_source(source: dict) -> dict:
+    """Require the caller to declare local units, source, and permitted rights."""
+    if type(source) is not dict or set(source) != {
+        "id", "citation", "rights", "scope", "frame", "units",
+    }:
+        raise TraveltimeError("user source record must match the closed M09 provenance schema")
+    source_id = source["id"]
+    if type(source_id) is not str or re.fullmatch(r"[A-Za-z0-9_-]{1,64}", source_id) is None:
+        raise TraveltimeError("user source id must contain 1–64 ASCII letters, digits, underscore, or hyphen")
+    citation = source["citation"]
+    if type(citation) is not str or not citation.strip() or len(citation) > 2048:
+        raise TraveltimeError("user source citation or owner declaration must be non-empty and at most 2048 characters")
+    rights = source["rights"]
+    if type(rights) is not str or rights not in {"owner-permitted", "CC0", "CC-BY"}:
+        raise TraveltimeError("M09 local inversion requires owner-permitted, CC0, or CC-BY data")
+    expected_scope = "owner-provided" if rights == "owner-permitted" else "public-reuse"
+    scope = source["scope"]
+    if type(scope) is not str or scope != expected_scope:
+        raise TraveltimeError(f"rights {rights!r} require scope {expected_scope!r}")
+    if source["frame"] != "local-x-y-down" or source["units"] != {
+        "distance": "m", "time": "s",
+    }:
+        raise TraveltimeError("M09 .sgt inputs require declared local x/y-down metres and time seconds")
+    return source
+
+
+def run_user_survey(path: Path, *, source: dict, allow_inverse: bool = True,
+                    validation_policy: str = "supplied-whole-shot/v1") -> dict:
+    """Run owner-declared local SGT bytes without assigning provider identity or publishing the raw file.
+
+    The exact source is copied to a temporary file under CAOS_TEMP_ROOT so the
+    strict parser and pyGIMLi consume the same hashed bytes. The temporary copy
+    is removed when this call returns.
+    """
+    path = Path(path)
+    if path.is_symlink() or not path.is_file():
+        raise TraveltimeError("M09 user input must be a regular, non-symlink .sgt file")
+    try:
+        raw = path.read_bytes()
+    except OSError as error:
+        raise TraveltimeError(f"cannot read the user .sgt input: {error}") from error
+    if type(raw) is not bytes or not 0 < len(raw) <= MAX_INPUT_BYTES:
+        raise TraveltimeError(f"user .sgt input must contain 1–{MAX_INPUT_BYTES} bytes")
+    provenance = dict(_validate_user_source(source))
+    survey = parse_sgt_bytes(raw)
+    temp_root_value = os.environ.get("CAOS_TEMP_ROOT")
+    if not temp_root_value:
+        raise TraveltimeError("set CAOS_TEMP_ROOT to an external temporary-data directory")
+    temp_root = Path(temp_root_value).resolve(strict=True)
+    digest = hashlib.sha256(raw).hexdigest()
+    with tempfile.TemporaryDirectory(prefix="m09-user-", dir=temp_root) as directory:
+        staged = Path(directory) / "source.sgt"
+        staged.write_bytes(raw)
+        report = run(
+            staged, source_sha256=digest, allow_inverse=allow_inverse,
+            validation_policy=validation_policy,
+        )
+    user_unit_basis = (
+        "user-declared local x/y-down coordinates in metres and picked times in seconds; "
+        "frame and datum are not independently verified"
+    )
+    report.update(
+        source_id=provenance["id"],
+        source_kind="local-user-supplied",
+        source_record={**provenance, "verification": "user-declared; not independently verified"},
+        rights_decision="owner-declared-local-only",
+        raw_publication=False,
+        unit_basis=user_unit_basis,
+    )
+    report["qc"]["unit_basis"] = user_unit_basis
+    report["qc"]["units"]["y"] = "m, user-declared local down-positive frame"
     return report
 
 

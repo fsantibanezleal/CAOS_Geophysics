@@ -83,6 +83,15 @@
     "fwi_lesson.load_case",
     "fwi_lesson.run_case",
     "fwi_lesson.summarize_case",
-    "fwi_lesson.compare_schedules"
+    "fwi_lesson.compare_schedules",
+    "traveltime.parse_sgt_bytes",
+    "traveltime.qc",
+    "traveltime.shot_splits",
+    "traveltime.homogeneous_times",
+    "traveltime.offsets_m",
+    "traveltime.run_user_survey",
+    "m09_synthetic_control.run",
+    "m09_synthetic_control.execute",
+    "m09_synthetic_control.execute_user_survey"
   ]
 }
