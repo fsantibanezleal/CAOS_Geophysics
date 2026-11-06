@@ -145,8 +145,10 @@ targeting security-patched CPython 3.12.16 from a hash-pinned standalone
 distribution. The ordinary gravity and induced-magnetic operator runtime gates,
 gravity workspace closure and joint-survey planner explicitly recognize CPython
 3.12.10 and this 3.12.16 candidate. This is runtime compatibility, not
-scientific acceptance: Linux numerical replay and installed-source pins for
-3.12.16 remain pending. Unsupported runtimes or missing/changed external source
+full scientific acceptance: the pinned Linux source inventory, workspace
+closure, scalar-bound regressions and bounded uploaded-prism replay passed on
+the ML VPS on 2026-11-06; see the [actual-host receipt](../../../validation/actual-host-admission-m02-2026-11-06.md).
+Unsupported runtimes or missing/changed external source
 pins cannot pass the reviewed harness. Targeted pins are not a
 full transitive supply-chain hash. The original docs-only manifest retains its
 planned null operator hash; do not retroactively rewrite that provenance.

@@ -1,12 +1,31 @@
 {
-  "date": "2026-10-27",
+  "date": "2026-11-06",
   "evidence": {
     "field_eligibility": false,
     "full_M02_accepted": false,
-    "metric_workspace_closure": "previous-epoch passed; 3.12.16 replay pending",
+    "metric_workspace_closure": "passed on the ML VPS for the exact Linux CPython 3.12.16 and SciPy binary tuple; 165 focused tests pass",
     "ml_vps_host_admitted": false,
-    "scalar_bound_regression": "previous-epoch passed; 3.12.16 replay pending",
-    "uploaded_prism_calibration_and_sealed_evaluation": "previous-epoch passed; 3.12.16 replay pending"
+    "scalar_bound_regression": "passed in the Linux CPython 3.12.16 focused M02 numerical suite",
+    "uploaded_prism_calibration_and_sealed_evaluation": "passed in the isolated ML VPS authenticated-upload control with independent Choclo replay"
+  },
+  "host_replay": {
+    "date": "2026-11-06",
+    "run_id": "g2-20261106-58635ab",
+    "source_commit": "58635abaa1194b1291e1651863b9ab3b40de8305",
+    "source_archive_sha256": "e9f4550941381570e4c1d8e646412c98779870b21626b6e4ef5d62fa8ac451a5",
+    "suite": [
+      "tests/numerics/test_gravity_l2.py",
+      "tests/numerics/test_gravity_l2_metric.py",
+      "tests/api/test_gravity_l2_upload.py"
+    ],
+    "result": "165 passed, 0 failed, 93 deprecation warnings",
+    "pytest_seconds": 290.05,
+    "systemd_service_runtime_seconds": 297.318,
+    "systemd_cpu_seconds": 318.457,
+    "systemd_memory_peak_bytes": 408387584,
+    "systemd_memory_swap_peak_bytes": 0,
+    "test_log_sha256": "51f59cf9b1052ebdb3f3e33e2cc0713907c29344ad5553db744e9ad68101d09e",
+    "runtime_verification_sha256": "663d45b6db6936a5bed64ca3a2c0f64c88bd17db54b2af6afccf0519d2dee2c0"
   },
   "interpreter_distribution": {
     "name": "cpython-3.12.16+20261026-x86_64-unknown-linux-gnu-install_only.tar.gz",
@@ -39,7 +58,7 @@
   "requirements_sha256": "f34ad3ea85ebb0e1127fa9d36bcf558517c3d09a209dff856f8d2a46fceedd0e",
   "schema": "geophysics.prism-linux-runtime-pins/v1",
   "source_epoch": "m02-prism-linux-cpu-2",
-  "status": "CPython 3.12.16 security-patched candidate; Linux numerical replay and ML VPS admission remain open",
+  "status": "The pinned Linux CPU candidate passed the scoped M02 numerical and uploaded-survey replay on the ML VPS; full M02, field, release-capacity and product acceptance remain open",
   "targeted_source_sha256": {
     "choclo/constants.py": "81eda92d7a631ad9544ba318319561be115906e32dc6de23bcd48ca1ea458494",
     "choclo/prism/_gravity.py": "b50aa392db4b18124f439f8ec4b9d3214bd74dba7fb43f559ac19e3e33e8b94a",
