@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 from decimal import Decimal, localcontext
+from time import monotonic
 
 import choclo
 from choclo.constants import VACUUM_MAGNETIC_PERMEABILITY as MU0
@@ -11,6 +12,8 @@ import numpy as np
 import pytest
 
 import magnetic_forward
+from magnetic_inverse import MagneticQuantity, build_operator
+from magnetic_optimizer_adapter import MagneticObjective, MagneticRegularizer
 from magnetic_likelihood import GaussianWhitener
 from magnetic_quantity import compose_magnetic_observable
 from magnetic_survey import plan_geometry
@@ -167,3 +170,95 @@ def test_full_covariance_whitening():
                                np.linalg.norm(expected_jacobian, axis=0), rtol=1e-14, atol=1e-14)
     diagonal_only = residual/np.sqrt(np.diag(principal))
     assert not np.allclose(expected_white, diagonal_only, rtol=1e-3, atol=1e-3)
+
+
+def test_sealed_survey_operator_preserves_original_receiver_rows():
+    manifest = json.loads((GENERATED / "manifest.json").read_bytes())
+    item = next(case for case in manifest["cases"]
+                if case["regime"] == "A" and case["quantity"] == "secondary_enu_nT")
+    raw = (GENERATED / item["request"]["path"]).read_bytes()
+    handle = parse_request(raw)
+    metadata = handle.metadata()
+    usable = metadata["geometry"]["usable"]["data"]
+    rows = tuple(index for index, value in enumerate(usable) if value)[:4]
+    assert len(rows) == 4
+
+    operator = build_operator(raw, rows, deadline=monotonic() + 120.)
+    mesh = metadata["geometry"]["mesh"]
+    mesh_values = {
+        "origin_m": np.asarray(mesh["origin_m"]["data"], dtype=np.float64),
+        "hx_m": np.asarray(mesh["widths_x_m"]["data"], dtype=np.float64),
+        "hy_m": np.asarray(mesh["widths_y_m"]["data"], dtype=np.float64),
+        "hz_m": np.asarray(mesh["widths_z_m"]["data"], dtype=np.float64),
+        "active": np.asarray(mesh["active"]["data"], dtype=np.bool_),
+    }
+    receivers = np.asarray(metadata["geometry"]["receivers_m"]["data"], dtype=np.float64)
+    receivers = receivers.reshape(-1, 3, order="C")[list(rows)]
+    field = metadata["inducing_field"]
+    direct = magnetic_forward.forward_magnetic_with_kernel({
+        "schema": "magnetic-prism-forward-request-1", "engine": magnetic_forward.ENGINE,
+        "frame": magnetic_forward.FRAME, "mesh": mesh_values, "receivers_m": receivers,
+        "susceptibility_si": np.zeros(int(mesh_values["active"].sum()), dtype=np.float64),
+        "inducing_field": {"amplitude_nt": float(field["F_nT"]),
+                           "inclination_deg": float(field["I_deg"]),
+                           "declination_deg": float(field["D_deg"])},
+    })
+    q = np.linspace(.1, .8, operator.parameters, dtype=np.float64)
+    expected = compose_magnetic_observable(
+        direct["component_jacobian_nT_per_si"], .01 * q,
+        direct["inducing_field"]["background_enu_nt"], "secondary_enu",
+    )
+    actual = operator.evaluate(q)
+    np.testing.assert_allclose(actual["prediction_nT"], expected["values_nT"].reshape(-1),
+                               rtol=1e-13, atol=1e-13)
+    np.testing.assert_allclose(actual["jacobian_nT_per_q"], expected["jacobian_q_nT"],
+                               rtol=1e-13, atol=1e-13)
+    assert operator.rows == 4 and operator.components == 3
+
+
+def test_nonlinear_and_sparse_lanes_refuse_unregistered_optimizer_binding():
+    request = _small_forward_request()
+    forward = magnetic_forward.forward_magnetic_with_kernel(request)
+    background = forward["inducing_field"]["background_enu_nt"]
+    field_norm = float(np.linalg.norm(background))
+    direction = background / field_norm
+    nonlinear = MagneticQuantity(
+        forward["component_jacobian_nT_per_si"], background, direction,
+        field_norm, "exact_total_anomaly_nT",
+    )
+    prediction = nonlinear.evaluate(np.array([3.], dtype=np.float64))
+    assert prediction["prediction_nT"].shape == (3,)
+    assert prediction["jacobian_nT_per_q"].shape == (3, 1)
+
+    mesh = {"origin_m": request["mesh"]["origin_m"],
+            "hx_m": request["mesh"]["hx_m"], "hy_m": request["mesh"]["hy_m"],
+            "hz_m": request["mesh"]["hz_m"], "active": request["mesh"]["active"]}
+    reference = np.array([.2], dtype=np.float64)
+    lengths = np.array([10., 10., 10.], dtype=np.float64)
+    weight_model = np.array([.3], dtype=np.float64)
+    with pytest.raises(ValueError, match="fixed L2 only"):
+        MagneticRegularizer(mesh, reference, lengths, "sparse_smallness", .1, weight_model)
+    l2 = MagneticRegularizer(mesh, reference, lengths)
+    with pytest.raises(ValueError, match="affine magnetic quantities"):
+        MagneticObjective(
+            nonlinear, l2, np.zeros(3, dtype=np.float64),
+            {"kind": "diagonal_sd", "values": np.ones((3, 1), dtype=np.float64)},
+            np.zeros(1, dtype=np.float64), np.full(1, 10., dtype=np.float64),
+            .1, "a" * 64, "b" * 64,
+        )
+
+
+def test_magnetic_regularizer_rejects_oversized_mesh_before_tensor_allocation(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("TensorMesh construction preceded physical mesh caps")
+
+    monkeypatch.setattr("discretize.TensorMesh", forbidden)
+    mesh = {"origin_m": np.zeros(3, dtype=np.float64),
+            "hx_m": np.ones(64, dtype=np.float64),
+            "hy_m": np.ones(64, dtype=np.float64),
+            "hz_m": np.ones(2, dtype=np.float64),
+            "active": np.ones(8192, dtype=np.bool_)}
+    reference = np.ones(8192, dtype=np.float64)
+    lengths = np.ones(3, dtype=np.float64)
+    with pytest.raises(ValueError, match="full-cell cap"):
+        MagneticRegularizer(mesh, reference, lengths)

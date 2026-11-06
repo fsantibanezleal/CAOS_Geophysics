@@ -1,20 +1,37 @@
 # Independent validation and complete acceptance matrix
 
-## 2026-11-06 sparse L2 source-term export
+## 2026-11-06 source-bound linear inverse increment
 
-`MagneticRegularizer.terms()` now exports the existing volume-normalized L2
+`magnetic_inverse.build_operator` now parses the sealed survey, checks local
+processing eligibility and original-lineage status, preserves the selected
+usable receiver-row order, and constructs the actual SimPEG component kernel.
+`MagneticQuantity` evaluates secondary ENU, linear TMI, and exact total-field
+anomaly with their quantity-specific predictions and Jacobians.
+
+`MagneticRegularizer.terms()` exports the existing volume-normalized L2
 objective as sparse, weighted smallness and active-face operators. The cell
 term uses `sqrt(v_i/V)` and each axis face uses
 `ell_j * sqrt(V_face/V) / distance`; inactive-cell and exterior faces remain
 absent. The reconstructed Hessian, objective value, and gradient match the
 independent active-face quadratic on the nonuniform mesh with two inactive
-cells. The exact local run passed all 16 regularization tests, with no skips;
-Ruff and `git diff --check` passed.
+cells. `MagneticObjective` composes this with diagonal or full-covariance
+Gaussian whitening and binds only affine secondary-ENU and linear-TMI fits to
+the M02 original-noise solver. The exact total-field lane and sparse IRLS lane
+are refused by the optimizer adapter until their separate bindings exist.
 
-This exposes a solver-ready representation of the L2 regularizer only. It does
-not bind or run a magnetic optimizer, implement IRLS weight refresh across
-solves, fit a survey, score held-out rows, or change M04 scientific/release
-acceptance.
+The focused local run passed 26 tests with zero failures, errors, or skips.
+It covered sealed-survey row preservation, quantity guards, physical L2
+reconstruction, and four actual 30-receiver solves (secondary ENU and linear
+TMI, each with diagonal and full covariance) against an independent SciPy
+BVLS oracle. Ruff and `git diff --check` passed. JUnit receipt:
+`E:\_Datos\CAOS_Geophysics\validation\m04-linear-adapter-20261106-r3.xml`.
+
+This closes a local synthetic linear-inverse increment only. The frozen
+528-parameter first-fold request was not available, and there is no accepted
+full-survey calibration, sparse reweight-and-solve sequence, nonlinear exact
+total-field solver, nested beta/fold selection, sealed outer evaluation,
+field-data qualification, full result generation/export, full product
+integration, host admission, or M04/release acceptance.
 
 ## 2026-11-02 positive-down background correction
 
