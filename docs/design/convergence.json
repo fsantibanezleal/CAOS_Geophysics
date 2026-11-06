@@ -388,19 +388,19 @@
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "7cada013798dbf8283daf5bbc76de31a64435d8cda3f938058c92f5ffc225271"
+          "sha256": "c296ab7c27ec86327bd17c6b6f4c0f276bc36f978ad81819b6ab454192874a88"
         },
         {
           "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "df062229075c254758556f1d753a009fa3504f38cf09f06d095ad26772abaec8"
+          "sha256": "bf440474c13f71458b6cbee20e4c3acc8c15d06ac70cb89034200843de70cffa"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "36dfe906f3da5e77902f749b4f8ac1ac629c1a8c4677c64646c5211bb153cf6f"
+          "sha256": "9228908ef9300ad6f028b1e34c8bc836c68ffe2c0768e35d8dcdee4a91003751"
         },
         {
           "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "ec8927bb8d547e369d301975303104aa26051d5f2d2d2951bed8d9d4980c4f78"
+          "sha256": "360a7dfc398b100583d6fc22d9ccb6126d4257d926cf8ffc82463f5897928024"
         },
         {
           "path": "tests/api/test_gravity_l2_upload.py",
@@ -741,7 +741,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -801,19 +801,19 @@
         },
         {
           "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
-          "sha256": "d9b31fb9f06399569984210f08257b322b3d38a1da2cde0279f7d52d67e5d6c8"
+          "sha256": "9046bac75978aae9f3d2afa00a510d0f64f36ba09d2f7f7772f910c75432af07"
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "7cada013798dbf8283daf5bbc76de31a64435d8cda3f938058c92f5ffc225271"
+          "sha256": "c296ab7c27ec86327bd17c6b6f4c0f276bc36f978ad81819b6ab454192874a88"
         },
         {
           "path": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
-          "sha256": "e453604d8a3c26d06d0e35da3db4474357790854c523c3c4096684bc99ea420b"
+          "sha256": "23be1b4f1b70bdfdd73b40e1091a4f0a7e20a925129dedd5515fa78f2988205f"
         },
         {
           "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "df062229075c254758556f1d753a009fa3504f38cf09f06d095ad26772abaec8"
+          "sha256": "bf440474c13f71458b6cbee20e4c3acc8c15d06ac70cb89034200843de70cffa"
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
@@ -821,19 +821,19 @@
         },
         {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
-          "sha256": "0c2ac993fb7ef01390d3b41b20caa2d47a53422005765e8c01958d7cdee32937"
+          "sha256": "d1cbaeda107e95e6a279871664695adaf49190605f78da245623fa490922fc0f"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "36dfe906f3da5e77902f749b4f8ac1ac629c1a8c4677c64646c5211bb153cf6f"
+          "sha256": "9228908ef9300ad6f028b1e34c8bc836c68ffe2c0768e35d8dcdee4a91003751"
         },
         {
           "path": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
-          "sha256": "81032b35e5e8daee266e5040b78197b837f64c4848617a484827aa0881251614"
+          "sha256": "dfacec499a6ce914ed9525270c487711cce879836dde3a79cb36523b0080923c"
         },
         {
           "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "ec8927bb8d547e369d301975303104aa26051d5f2d2d2951bed8d9d4980c4f78"
+          "sha256": "360a7dfc398b100583d6fc22d9ccb6126d4257d926cf8ffc82463f5897928024"
         },
         {
           "path": "scripts/check_docs_matrix.py",

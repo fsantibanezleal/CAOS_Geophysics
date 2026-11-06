@@ -99,6 +99,100 @@ def test_long_valley_check_stages_only_its_declared_inputs(tmp_path: Path) -> No
     assert not (repo / "data" / "derived" / "v2").exists()
 
 
+def test_m11_check_stages_receipt_and_pipeline_without_full_data_tree(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    notebook = source / "notebooks" / "en" / "07-joint" / "04-m11-physical-matrix-evidence.ipynb"
+    pipeline = source / "data-pipeline" / "joint_survey_cases.py"
+    receipt = (
+        source
+        / "docs"
+        / "design"
+        / "features"
+        / "joint-survey-inversion"
+        / "evidence"
+        / "m11-final-precision-20261025.json"
+    )
+    unrelated = source / "data" / "derived" / "v2" / "large-case.npy"
+    notebook.parent.mkdir(parents=True)
+    pipeline.parent.mkdir(parents=True)
+    receipt.parent.mkdir(parents=True)
+    unrelated.parent.mkdir(parents=True)
+    notebook.write_text("{}", encoding="utf-8")
+    pipeline.write_text("PIPELINE = True\n", encoding="utf-8")
+    receipt.write_text("{}\n", encoding="utf-8")
+    unrelated.write_bytes(b"unrelated large case")
+
+    staged = staged_notebook_source(tmp_path / "check", notebook.relative_to(source).as_posix(), source)
+    repo = staged.parents[3]
+
+    assert staged.is_file()
+    assert (repo / pipeline.relative_to(source)).read_bytes() == pipeline.read_bytes()
+    assert (repo / receipt.relative_to(source)).read_bytes() == receipt.read_bytes()
+    assert not (repo / "data").exists()
+    assert not (repo / "docs" / "design" / "SDD.md").exists()
+
+
+def test_m12_checkpoint_and_nullspace_lessons_stage_only_their_inputs(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    pipeline_module = source / "data-pipeline" / "velocity_validation.py"
+    nullspace_receipt = source / "data" / "derived" / "v2" / "models" / "m12-nullspace-v1_1" / "receipt.json"
+    unrelated = source / "data" / "derived" / "v2" / "FWI_LAYERED" / "reference.json"
+    pipeline_module.parent.mkdir(parents=True)
+    nullspace_receipt.parent.mkdir(parents=True)
+    unrelated.parent.mkdir(parents=True)
+    pipeline_module.write_text("PIPELINE = True\n", encoding="utf-8")
+    nullspace_receipt.write_text("{}\n", encoding="utf-8")
+    unrelated.write_bytes(b"unrelated case")
+
+    checkpoint = source / "notebooks" / "en" / "08-learning" / "05-m12-velocity-checkpoint.ipynb"
+    checkpoint.parent.mkdir(parents=True)
+    checkpoint.write_text("{}", encoding="utf-8")
+    staged_checkpoint = staged_notebook_source(
+        tmp_path / "checkpoint-check", checkpoint.relative_to(source).as_posix(), source
+    )
+    checkpoint_repo = staged_checkpoint.parents[3]
+    assert (checkpoint_repo / pipeline_module.relative_to(source)).is_file()
+    assert not (checkpoint_repo / "data").exists()
+
+    nullspace = source / "notebooks" / "es" / "08-learning" / "06-nullspace-refinement-evidence.ipynb"
+    nullspace.parent.mkdir(parents=True)
+    nullspace.write_text("{}", encoding="utf-8")
+    staged_nullspace = staged_notebook_source(
+        tmp_path / "nullspace-check", nullspace.relative_to(source).as_posix(), source
+    )
+    nullspace_repo = staged_nullspace.parents[3]
+    assert (nullspace_repo / pipeline_module.relative_to(source)).is_file()
+    assert (nullspace_repo / nullspace_receipt.relative_to(source)).read_bytes() == nullspace_receipt.read_bytes()
+    assert not (nullspace_repo / unrelated.relative_to(source)).exists()
+
+
+def test_m10_check_stages_catalog_and_only_reference_case_files(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    notebook = source / "notebooks" / "en" / "06-seismology" / "05-m10-fwi-case-matrix.ipynb"
+    notebook.parent.mkdir(parents=True)
+    notebook.write_text("{}", encoding="utf-8")
+    (source / "data-pipeline").mkdir(parents=True)
+    (source / "data-pipeline" / "fwi_lesson.py").write_text("PIPELINE = True\n", encoding="utf-8")
+    v2 = source / "data" / "derived" / "v2"
+    v2.mkdir(parents=True)
+    (v2 / "catalog.json").write_text("{}\n", encoding="utf-8")
+    case_ids = ("FWI_LAYERED", "FWI_FAULT", "FWI_CYCLE_SKIP", "FWI_NOISY")
+    for case_id in case_ids:
+        case_dir = v2 / case_id
+        case_dir.mkdir()
+        (case_dir / "reference.json").write_text("{}\n", encoding="utf-8")
+        (case_dir / "contrast.json").write_text("unneeded", encoding="utf-8")
+
+    staged = staged_notebook_source(tmp_path / "check", notebook.relative_to(source).as_posix(), source)
+    repo = staged.parents[3]
+
+    assert (repo / "data" / "derived" / "v2" / "catalog.json").is_file()
+    for case_id in case_ids:
+        assert (repo / "data" / "derived" / "v2" / case_id / "reference.json").is_file()
+        assert not (repo / "data" / "derived" / "v2" / case_id / "contrast.json").exists()
+    assert not (repo / "data" / "derived" / "v2" / "models").exists()
+
+
 def encoded_png(image: Image.Image, *, compression: int) -> str:
     stream = io.BytesIO()
     image.save(stream, format="PNG", compress_level=compression)

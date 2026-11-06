@@ -140,13 +140,31 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
         "notebooks/en/02-gravity/03-long-valley-time-lapse-processing.ipynb",
         "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
     }
-    seismic_lesson = relative.as_posix() in {
-        "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb",
-        "notebooks/es/06-seismology/04-m13-learned-phase-picking.ipynb",
+    joint_survey_lesson = relative.as_posix() in {
+        "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
+        "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
+    }
+    m12_checkpoint_lesson = relative.as_posix() in {
+        "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+        "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
+    }
+    m12_nullspace_lesson = relative.as_posix() in {
+        "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
+        "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
+    }
+    m10_fwi_lesson = relative.as_posix() in {
         "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
         "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
     }
-    names = ("data-pipeline",) if field_data_lesson else (("data", "data-pipeline") if seismic_lesson else (
+    seismic_lesson = relative.as_posix() in {
+        "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb",
+        "notebooks/es/06-seismology/04-m13-learned-phase-picking.ipynb",
+    }
+    compact_pipeline_lesson = (
+        field_data_lesson or joint_survey_lesson or m12_checkpoint_lesson
+        or m12_nullspace_lesson or m10_fwi_lesson
+    )
+    names = ("data-pipeline",) if compact_pipeline_lesson else (("data", "data-pipeline") if seismic_lesson else (
         "data", "data-pipeline", "docs", "content", "models", "notebooks"
     ))
     for name in names:
@@ -167,7 +185,35 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
         if origin.is_file() and not target.exists():
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(origin, target)
-    if seismic_lesson or field_data_lesson:
+    if joint_survey_lesson:
+        receipt = Path(
+            "docs/design/features/joint-survey-inversion/evidence/m11-final-precision-20261025.json"
+        )
+        origin = source_root / receipt
+        target = work / receipt
+        if origin.is_file() and not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(origin, target)
+    if m12_nullspace_lesson:
+        receipt = Path("data/derived/v2/models/m12-nullspace-v1_1/receipt.json")
+        origin = source_root / receipt
+        target = work / receipt
+        if origin.is_file() and not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(origin, target)
+    if m10_fwi_lesson:
+        case_files = [Path("data/derived/v2/catalog.json")]
+        case_files.extend(
+            Path(f"data/derived/v2/{case_id}/reference.json")
+            for case_id in ("FWI_LAYERED", "FWI_FAULT", "FWI_CYCLE_SKIP", "FWI_NOISY")
+        )
+        for relative_input in case_files:
+            origin = source_root / relative_input
+            target = work / relative_input
+            if origin.is_file() and not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(origin, target)
+    if seismic_lesson or field_data_lesson or joint_survey_lesson or m12_checkpoint_lesson or m12_nullspace_lesson or m10_fwi_lesson:
         origin = source_root / relative
         target = work / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -178,7 +224,7 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
     # pipeline and documentation trees above, not optional test-only fixtures.
     if relative.as_posix().endswith("05-m10-fwi-case-matrix.ipynb"):
         support_files = ("scripts/run_m10_lesson_worker.py",)
-    elif seismic_lesson or field_data_lesson:
+    elif seismic_lesson or field_data_lesson or joint_survey_lesson or m12_checkpoint_lesson or m12_nullspace_lesson:
         support_files = ()
     else:
         support_files = (
