@@ -939,7 +939,7 @@
         },
         {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "80b0ee7bc24ddb2f6135eb6b353b943a84a525b025d6f86400d619ee2da1a177"
+          "sha256": "b4d7049083665ce150758d273856e6d5bd2026d2a3d5f33df3c3f2f25e7ee9ea"
         },
         {
           "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
@@ -959,7 +959,7 @@
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "11b942bbda3fb9c62ce8e4aa8d6d2f78d1934d0cf02dba3acda9550804414b71"
+          "sha256": "92bb4a1229168ef38712991419ad761c83140691f8e9a52f1dc930bb8ffb6352"
         },
         {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
