@@ -2,14 +2,15 @@
 
 Date: 2026-11-06. This is local, isolated browser evidence for the uploaded MT
 workbench. The API and worker ran from the read-only product checkout at
-`7d5c9de24cbf05fdb56eade50b4d955f8dd5016f`; only the test harness and test
-assertions changed in this validation work. `GEOPHYSICS_MT_ONLINE_ENABLED` was
-enabled only for loopback QA. No public or VPS admission was enabled.
+`ea969964b38145f00cc1a85264389cec2b761c67`; solver, bundle, EDI parser and
+electromagnetics source hashes are recorded in each external run receipt.
+`GEOPHYSICS_MT_ONLINE_ENABLED` was enabled only for loopback QA. No public or
+VPS admission was enabled.
 
 ## Results
 
-Five distinct browser cases passed across two recorded runs. They were not all
-green in one invocation:
+Five distinct browser cases passed across recorded runs. They were not all green
+in one invocation:
 
 - The full five-case run at `E:\_Datos\CAOS_Geophysics\validation\mt-workbench-current-20261106-release`
   passed the owner upload/M05-M06 calculation, layered-parameter sensitivity,
@@ -25,10 +26,18 @@ green in one invocation:
   Lake comparison screenshots cover EN/ES, light/dark, and 1280, 1600, 2560,
   and 390 pixel widths. Its `run-receipt-enabled.json` records four passes and
   zero browser errors.
+- The cleanup-hardened focused rerun at
+  `E:\_Datos\CAOS_Geophysics\validation\mt-workbench-current-20261106-clean`
+  passed the same four selected cases. Its `run-receipt-enabled.json` records
+  commit `ea96996`, four passes, and zero browser errors. The paired runtime
+  root `mt-workbench-runtime-20261106-clean` was empty after shutdown and no
+  test server or worker process remained.
 
 The full run receipt preserves its one harness assertion failure; the focused
-receipt preserves the later passing Clear Lake run. Read them together and do
-not report this as a single clean five-test run.
+receipts preserve the later passing Clear Lake runs. The suite's test-4 visual
+matrix passed in the full run, while the cleanup-hardened rerun selected tests
+1-3 and 5. Read the receipts together and do not report this as a single clean
+five-test run.
 
 ## Scientific and data boundary
 

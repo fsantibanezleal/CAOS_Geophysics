@@ -103,5 +103,11 @@ def main():
             if candidate.is_relative_to(dist) and candidate.is_file(): return FileResponse(candidate)
             if path.rstrip("/") in {"", "app", "introduction", "methodology", "implementation", "experiments", "benchmark"}: return FileResponse(dist/"index.html")
             raise HTTPException(404)
-        uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+        server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning"))
+        @app.post("/__qa/shutdown")
+        async def shutdown():
+            stop()
+            server.should_exit = True
+            return {"stopping": True}
+        server.run()
 if __name__ == "__main__": main()
