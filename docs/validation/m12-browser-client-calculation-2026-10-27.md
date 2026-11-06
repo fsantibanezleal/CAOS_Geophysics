@@ -31,4 +31,13 @@ The same tests reject duplicate-key JSON, an invalid coordinate and fewer than e
 
 ## Scientific limits
 
-The solve assumes fixed straight rays and fixed source timing on an 800 m × 800 m, 16 × 16 grid. It does not estimate origin time, refraction, bent rays, anisotropy or wave propagation. The unconstrained normal-equation solution is clipped in slowness to 1/4000–1/1400 s/m afterward; clipping is not a certified box-constrained optimum. WRMS uses the submitted sigma and is not truth error. A result generated in the browser uses the distinct `geophysics.velocity-browser-result/v1` schema and is not accepted by the Python-generation verifier. The local Python route remains available when its independently verified result/manifest bundle or optional experimental checkpoint workflow is needed.
+The solve assumes fixed straight rays and fixed source timing on an 800 m × 800 m, 16 × 16 grid. It does not estimate origin time, refraction, bent rays, anisotropy or wave propagation. The unconstrained normal-equation solution was clipped in slowness to 1/4000–1/1400 s/m afterward; clipping is not a certified box-constrained optimum. WRMS uses the submitted sigma and is not truth error. This record describes the original `geophysics.velocity-browser-result/v1` implementation and remains historical evidence.
+
+## Superseding solver correction (2026-11-06)
+
+The solve-then-clip description above no longer describes current source. The
+Python and browser user-data solvers now solve the box-constrained quadratic
+directly, emit v2 result schemas and report a projected KKT gate. Current-source
+implementation, SciPy oracle checks, active-bound cross-runtime control and
+remaining limits are recorded in
+[m12-user-data-bounded-qp-2026-11-06.md](m12-user-data-bounded-qp-2026-11-06.md).

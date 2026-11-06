@@ -50,6 +50,21 @@ describe("client-side first-arrival inversion",()=>{
     expect(()=>velocityRequestWithLambda(source,0)).toThrow();
     expect(()=>velocityRequestWithLambda(source,1_000_001)).toThrow();
   });
+  it("keeps active velocity bounds in the solved objective and reports projected KKT",()=>{
+    const q=request();q.times_s=q.times_s.map((v,i)=>v+.1*(2*i/(q.times_s.length-1)-1));
+    const result=parseAndCalculateVelocity(new TextEncoder().encode(JSON.stringify(q)));
+    expect(result.metrics.active_bound_cells).toBeGreaterThan(0);
+    expect(result.metrics.kkt_relative).toBeLessThanOrEqual(result.metrics.kkt_relative_tolerance);
+    expect(result.metrics.kkt_relative_tolerance).toBe(1e-9);
+    expect(result.solver).toBe("Deterministic primal active-set box-QP with projected KKT gate");
+    expect(result.velocity_m_s.flat().every(v=>v>=1400&&v<=4000)).toBe(true);
+    expect(result.metrics.active_bound_cells).toBe(127);
+    expect(result.metrics.solver_iterations).toBe(134);
+    expect(result.metrics.data_wrms).toBeCloseTo(17.276330634904177,7);
+    expect(result.velocity_m_s[0][0]).toBeCloseTo(2064.8644568639766,3);
+    expect(result.velocity_m_s[5][7]).toBeCloseTo(2286.153461042268,3);
+    expect(result.velocity_m_s[15][15]).toBeCloseTo(2081.4622948206534,3);
+  });
   it("reproduces the Python physics-v2 feature operator and keeps support separate",()=>{
     const q=request(),{tensor,coverage}=velocityPhysicsFeatures(q);
     expect(tensor).toHaveLength(512);

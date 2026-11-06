@@ -58,8 +58,10 @@ test("user changes λ, browser reruns the submitted acquisition and exports both
     await expect(page.getByText(/failed its frozen joint held-out comparison/)).toBeVisible();
     const calculate = page.getByRole("button", { name: "Calculate locally in browser" });
     await calculate.click();
-    await expect(page.locator("[data-testid=velocity-browser-calculator]").getByText(/WRMS/)).toBeVisible();
-    await expect(page.locator("[data-testid=velocity-browser-calculator]")).toContainText("λ 25");
+    const calculator = page.locator("[data-testid=velocity-browser-calculator]");
+    await expect(calculator.getByText(/WRMS/)).toBeVisible();
+    await expect(calculator).toContainText("λ 25");
+    await expect(calculator).toContainText("projected KKT relative residual");
     const modelChoice = page.getByRole("combobox", { name: "Velocity result" });
     await expect(modelChoice.locator("option")).toHaveCount(2);
     await modelChoice.selectOption("m12");
@@ -70,6 +72,9 @@ test("user changes λ, browser reruns the submitted acquisition and exports both
       page.getByRole("button", { name: "Export browser result JSON" }).click()]);
     const firstPath = join(qa.evidence, `${viewport}-lambda-25.json`); await firstDownload.saveAs(firstPath);
     const first = JSON.parse(readFileSync(firstPath, "utf8"));
+    expect(first.schema).toBe("geophysics.velocity-browser-result/v2");
+    expect(first.solver).toBe("Deterministic primal active-set box-QP with projected KKT gate");
+    expect(first.metrics.kkt_relative).toBeLessThanOrEqual(first.metrics.kkt_relative_tolerance);
 
     await lambda.fill("1000");
     await calculate.click();
@@ -81,6 +86,8 @@ test("user changes λ, browser reruns the submitted acquisition and exports both
       page.getByRole("button", { name: "Export browser result JSON" }).click()]);
     const secondPath = join(qa.evidence, `${viewport}-lambda-1000.json`); await secondDownload.saveAs(secondPath);
     const second = JSON.parse(readFileSync(secondPath, "utf8"));
+    expect(second.schema).toBe("geophysics.velocity-browser-result/v2");
+    expect(second.metrics.kkt_relative).toBeLessThanOrEqual(second.metrics.kkt_relative_tolerance);
 
     expect(first.provenance.source_file_sha256).toBe(sourceHash);
     expect(second.provenance.source_file_sha256).toBe(sourceHash);

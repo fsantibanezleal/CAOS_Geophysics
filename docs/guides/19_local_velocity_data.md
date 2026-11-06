@@ -2,12 +2,21 @@
 
 The App's **First-arrival velocity** instrument accepts this same JSON request
 and calculates it in a browser worker. The browser builds cell-crossing lengths,
-solves the 256-cell regularized weighted slowness system, and reports velocity,
+solves the 256-cell regularized weighted slowness system as a box-constrained
+quadratic, and reports velocity,
 path-length coverage, predicted times, residuals, standardized residuals and a
 separate bilinear quadrature check. The input is capped at 512 KiB and 2,048
 rays. The worker does not upload data or call an API. The downloaded
-`geophysics.velocity-browser-result/v1` is a client calculation record; it is
+`geophysics.velocity-browser-result/v2` is a client calculation record; it is
 not the independently reopened Python generation described below.
+
+The current browser result uses `geophysics.velocity-browser-result/v2` and
+records the active-set solver and its projected KKT
+residual, relative scale, tolerance, iteration count, active bounds and
+regularization objective. The KKT value is recomputed from the exported model
+array. It is a numerical optimality check for this convex quadratic, not a
+physical validation or a formal interval-arithmetic proof. The browser result
+is distinct from the Python export.
 
 The equivalent local executable `scripts/process_velocity.py` accepts supplied
 source-receiver segments, arrival times and uncertainties and writes a verified
@@ -16,12 +25,16 @@ checkpoint path. It neither uploads data nor trains a model. Both methods use
 fixed straight rays and remain separate from the field bent-ray M09 solver and
 acoustic FWI.
 
-The browser port is compared with the pinned Python product solver on an
-authored 128-ray control (`frontend/src/test/velocity-browser.test.ts`). This
-establishes implementation parity for that control, not independent field
-validation, universal numerical equivalence, or geological truth. The
-calculation reports those limits in its output. See the [browser parity
-record](../validation/m12-browser-client-calculation-2026-10-27.md).
+The browser port and Python tool are compared on both an interior 128-ray
+control and a 128-ray control with active physical bounds. Python's solution is
+also compared with SciPy's bounded least-squares oracle. These controls test
+implementation parity and numerical optimality for the declared discretized
+objective; they do not validate field accuracy, ray physics, or geological
+truth. New Python exports use `geophysics.velocity-result/v2`. The local
+inspector continues to admit v1 result files as legacy records and labels their
+old solve-then-clip behavior; v1 outputs do not gain bounded-optimum evidence.
+See the [bounded solver validation](../validation/m12-user-data-bounded-qp-2026-11-06.md)
+and the earlier [browser implementation record](../validation/m12-browser-client-calculation-2026-10-27.md).
 
 ## Physical input
 
@@ -54,14 +67,21 @@ difference matrix D, the tool minimizes
 +\lambda\|Dq\|_2^2+0.01\|q\|_2^2.
 \]
 
-Cholesky solves this positive-definite normal equation. `lambda` is an explicit
-dimensionless smoothness weight, not a noise estimate or an automatically tuned
-regularization. Increasing it changes the solution toward spatial smoothness;
-changing a ray's sigma changes its actual likelihood weight. The estimate is
-then explicitly clipped in slowness to1400..4000 m/s. The clipped-cell count and
-post-clipping objective are recorded; this is not a certified box-constrained
-optimum. Residual is observed minus predicted, in seconds. WRMS divides by the
-supplied uncertainties; it is not a known-truth error.
+subject to `1000 (1/4000 - s0) <= q <= 1000 (1/1400 - s0)`.
+
+The normal matrix is positive definite because the weighted data term and
+first-difference penalty are positive semidefinite and the objective includes
+the `0.01 I` ridge. The solver uses a deterministic primal active-set method to
+minimize this same objective subject to
+`1/4000 <= s0 + q/1000 <= 1/1400` seconds per metre. It solves the box-constrained
+problem directly; the reported field is not produced by clipping an
+unconstrained answer. `lambda` is an explicit dimensionless smoothness weight,
+not a noise estimate or automatically tuned regularization. Increasing it
+changes the solution toward spatial smoothness; changing a ray's sigma changes
+its actual likelihood weight. The export records active-bound cells, the
+regularization objective, and the projected KKT residual recomputed from the
+exported velocity values. Residual is observed minus predicted, in seconds.
+WRMS divides by the supplied uncertainties; it is not a known-truth error.
 
 Coverage is accumulated path length per cell in metres. Zero coverage means no
 ray traverses that cell, not zero velocity or a probability of absence. A second

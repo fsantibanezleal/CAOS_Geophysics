@@ -167,7 +167,7 @@ def calculate(raw, *, checkpoint=None, checkpoint_sha256=None, checkpoint_protoc
         _fail()
     import numpy as np
     import scipy
-    from scipy.linalg import cho_factor, cho_solve
+    from bounded_quadratic import solve_box_quadratic
     from velocity_validation import (
         GRID, DX, _difference_gram, acquisition, background, cell_length_matrix,
         input_features, quadrature_matrix,
@@ -184,10 +184,12 @@ def calculate(raw, *, checkpoint=None, checkpoint_sha256=None, checkpoint_protoc
     y = (observed - a @ s0) / sigma
     gram = _difference_gram()
     normal = b.T @ b + doc["lambda"] * gram + 0.01 * np.eye(GRID * GRID)
-    q = cho_solve(cho_factor(normal), b.T @ y)
+    lower = 1000 * (1 / 4000 - s0)
+    upper = 1000 * (1 / 1400 - s0)
+    solution = solve_box_quadratic(normal, b.T @ y, lower, upper)
+    q = solution["value"]
     slowness = s0 + q / 1000
-    clipped = np.clip(slowness, 1 / 4000, 1 / 1400)
-    models = {"classical": 1 / clipped}
+    models = {"classical": 1 / slowness}
     warnings = ["Straight-ray approximation; no bent-ray or field accuracy established"]
     learned_domain = None
     if checkpoint is not None:
@@ -223,15 +225,21 @@ def calculate(raw, *, checkpoint=None, checkpoint_sha256=None, checkpoint_protoc
             "data_chi_square": float(np.sum((residual / sigma) ** 2)),
             "data_wrms": float(np.sqrt(np.mean((residual / sigma) ** 2))),
         }
-    bounded_q = 1000 * (clipped - s0)
+    bounded_q = 1000 * (1 / models["classical"] - s0)
+    from bounded_quadratic import projected_kkt_inf
+    exported_kkt_inf, exported_kkt_relative = projected_kkt_inf(normal, b.T @ y, bounded_q, lower, upper)
     outputs["classical"].update({
-        "clipped_cells": int(np.count_nonzero(slowness != clipped)),
+        "active_bound_cells": int(np.count_nonzero(np.isclose(bounded_q, lower, rtol=0, atol=1e-10)
+                                                    | np.isclose(bounded_q, upper, rtol=0, atol=1e-10))),
         "regularizer": float(doc["lambda"] * bounded_q @ gram @ bounded_q + 0.01 * bounded_q @ bounded_q),
-        "solver": "Cholesky unconstrained normal equation followed by explicit slowness clipping",
-        "bound_constrained_optimum_certified": False,
+        "solver": "Deterministic primal active-set box-QP with projected KKT gate",
+        "kkt_inf_norm": exported_kkt_inf,
+        "kkt_relative": exported_kkt_relative,
+        "kkt_relative_tolerance": solution["kkt_relative_tolerance"],
+        "solver_iterations": solution["iterations"],
     })
     return {
-        "schema": "geophysics.velocity-result/v1", "status": "computed", "request": doc,
+        "schema": "geophysics.velocity-result/v2", "status": "computed", "request": doc,
         "source": {"sha256": _hash(raw), "bytes": len(raw)},
         "axes": {"x_m": ((np.arange(GRID) + 0.5) * DX).tolist(),
                  "depth_m": ((np.arange(GRID) + 0.5) * DX).tolist(), "order": ["depth", "distance"]},
@@ -280,7 +288,8 @@ def _verify_result(raw, manifest):
     result = _decode(raw, MAX_RESULT)
     _keys(result, ("schema", "status", "request", "source", "axes", "coverage_m",
                    "results", "learned_domain", "warnings", "engine", "claims"))
-    if (result["schema"] != "geophysics.velocity-result/v1" or result["status"] != "computed"
+    if (result["schema"] not in ("geophysics.velocity-result/v1", "geophysics.velocity-result/v2")
+            or result["status"] != "computed"
             or result["source"] != manifest["source"] or result["engine"] != manifest["engine"]
             or result["claims"] != {"field_truth_known": False, "field_validated": False,
                                    "heldout_advantage": False, "online_admitted": False}):
@@ -303,7 +312,11 @@ def _verify_result(raw, manifest):
         keys = ("velocity_m_s", "predicted_s", "residual_s", "normalized_residual",
                 "bilinear_predicted_s", "cell_vs_bilinear_rmse_s", "data_chi_square", "data_wrms")
         if name == "classical":
-            keys += ("clipped_cells", "regularizer", "solver", "bound_constrained_optimum_certified")
+            if result["schema"] == "geophysics.velocity-result/v1":
+                keys += ("clipped_cells", "regularizer", "solver", "bound_constrained_optimum_certified")
+            else:
+                keys += ("active_bound_cells", "regularizer", "solver", "kkt_inf_norm",
+                         "kkt_relative", "kkt_relative_tolerance", "solver_iterations")
         _keys(record, keys)
         velocity = np.asarray(record["velocity_m_s"], dtype=np.float64)
         if velocity.shape != (GRID, GRID) or not np.isfinite(velocity).all() or np.any(velocity <= 0):
@@ -330,12 +343,37 @@ def _verify_result(raw, manifest):
         if name == "classical" and np.any((velocity < 1400) | (velocity > 4000)):
             _fail()
         if name == "classical":
-            bounded_q = 1000 * (1 / velocity.ravel() - 1 / background().ravel())
-            reg = float(request["lambda"] * bounded_q @ _difference_gram() @ bounded_q + 0.01 * bounded_q @ bounded_q)
-            if (not math.isclose(record["regularizer"], reg, rel_tol=1e-9, abs_tol=1e-12)
-                    or type(record["clipped_cells"]) is not int or not 0 <= record["clipped_cells"] <= GRID * GRID
-                    or record["bound_constrained_optimum_certified"] is not False):
+            reference_slowness = 1 / background().ravel()
+            bounded_q = 1000 * (1 / velocity.ravel() - reference_slowness)
+            gram = _difference_gram()
+            reg = float(request["lambda"] * bounded_q @ gram @ bounded_q + 0.01 * bounded_q @ bounded_q)
+            if not math.isclose(record["regularizer"], reg, rel_tol=1e-9, abs_tol=1e-12):
                 _fail()
+            if result["schema"] == "geophysics.velocity-result/v1":
+                if (type(record["clipped_cells"]) is not int or not 0 <= record["clipped_cells"] <= GRID * GRID
+                        or record["bound_constrained_optimum_certified"] is not False):
+                    _fail()
+            else:
+                from bounded_quadratic import KKT_RELATIVE_TOLERANCE, projected_kkt_inf
+                lower = 1000 * (1 / 4000 - reference_slowness)
+                upper = 1000 * (1 / 1400 - reference_slowness)
+                sigma = np.asarray(request["sigma_s"], dtype=np.float64)
+                weighted = a / (1000 * sigma[:, None])
+                centered = (np.asarray(request["times_s"]) - a @ reference_slowness) / sigma
+                hessian = weighted.T @ weighted + request["lambda"] * gram + 0.01 * np.eye(GRID * GRID)
+                rhs = weighted.T @ centered
+                absolute, relative = projected_kkt_inf(hessian, rhs, bounded_q, lower, upper)
+                active_count = int(np.count_nonzero(np.isclose(bounded_q, lower, rtol=0, atol=1e-10)
+                                                    | np.isclose(bounded_q, upper, rtol=0, atol=1e-10)))
+                if (record["solver"] != "Deterministic primal active-set box-QP with projected KKT gate"
+                        or record["kkt_relative_tolerance"] != KKT_RELATIVE_TOLERANCE
+                        or type(record["solver_iterations"]) is not int or not 1 <= record["solver_iterations"] <= 512
+                        or type(record["active_bound_cells"]) is not int or record["active_bound_cells"] != active_count
+                        or not math.isclose(record["kkt_inf_norm"], absolute, rel_tol=1e-10, abs_tol=1e-14)
+                        or not math.isclose(record["kkt_relative"], relative, rel_tol=1e-10, abs_tol=1e-14)
+                        or relative > KKT_RELATIVE_TOLERANCE
+                        or np.any(bounded_q < lower - 1e-10) or np.any(bounded_q > upper + 1e-10)):
+                    _fail()
     return result
 
 

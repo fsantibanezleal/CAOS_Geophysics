@@ -2,9 +2,11 @@
 export type VelocityModel = "classical" | "learned";
 type Model = { velocity_m_s: number[][]; predicted_s: number[]; residual_s: number[]; normalized_residual: number[];
   bilinear_predicted_s: number[]; cell_vs_bilinear_rmse_s: number; data_chi_square: number; data_wrms: number;
-  clipped_cells?: number; regularizer?: number; solver?: string; bound_constrained_optimum_certified?: false };
+  clipped_cells?: number; active_bound_cells?: number; regularizer?: number; solver?: string;
+  bound_constrained_optimum_certified?: false; kkt_inf_norm?: number; kkt_relative?: number;
+  kkt_relative_tolerance?: number; solver_iterations?: number };
 export interface VelocityResult {
-  schema: "geophysics.velocity-result/v1"; status: "computed";
+  schema: "geophysics.velocity-result/v1" | "geophysics.velocity-result/v2"; status: "computed";
   request: { schema: "geophysics.velocity-user-data/v1"; id: string; source: { citation: string; rights: string; scope: string };
     frame: "local-x-z-down"; units: { distance: "m"; time: "s"; velocity: "m/s" }; ray_ids: string[]; rays_m: number[][]; times_s: number[]; sigma_s: number[]; lambda: number };
   source: { sha256: string; bytes: number }; axes: { x_m: number[]; depth_m: number[]; order: ["depth", "distance"] }; coverage_m: number[][];
@@ -60,7 +62,8 @@ export function strictVelocityJson(bytes: Uint8Array, maxNodes = 160000, maxByte
 
 export function parseVelocityResult(value: unknown): VelocityResult {
   const d = closed(value, ["schema", "status", "request", "source", "axes", "coverage_m", "results", "learned_domain", "warnings", "engine", "claims"]);
-  require(d.schema === "geophysics.velocity-result/v1" && d.status === "computed");
+  require((d.schema === "geophysics.velocity-result/v1" || d.schema === "geophysics.velocity-result/v2") && d.status === "computed");
+  const v2 = d.schema === "geophysics.velocity-result/v2";
   const q = closed(d.request, ["schema", "id", "source", "frame", "units", "ray_ids", "rays_m", "times_s", "sigma_s", "lambda"]);
   require(q.schema === "geophysics.velocity-user-data/v1" && /^[A-Za-z0-9_-]{1,64}$/.test(text(q.id, 64)) && q.frame === "local-x-z-down");
   const rights = closed(q.source, ["citation", "rights", "scope"]); text(rights.citation, 2048);
@@ -79,14 +82,26 @@ export function parseVelocityResult(value: unknown): VelocityResult {
   closed(models, ["classical", ...(learned ? ["learned"] : [])]);
   const base = ["velocity_m_s", "predicted_s", "residual_s", "normalized_residual", "bilinear_predicted_s", "cell_vs_bilinear_rmse_s", "data_chi_square", "data_wrms"];
   for (const name of Object.keys(models)) {
-    const m = closed(models[name], [...base, ...(name === "classical" ? ["clipped_cells", "regularizer", "solver", "bound_constrained_optimum_certified"] : [])]);
+    const m = closed(models[name], [...base, ...(name === "classical" ? (v2
+      ? ["active_bound_cells", "regularizer", "solver", "kkt_inf_norm", "kkt_relative", "kkt_relative_tolerance", "solver_iterations"]
+      : ["clipped_cells", "regularizer", "solver", "bound_constrained_optimum_certified"]) : [])]);
     const v = matrix(m.velocity_m_s, name === "classical" ? 1400 : 0, name === "classical" ? 4000 : Infinity); require(v.flat().every(x => x > 0));
     const predicted = vector(m.predicted_s, n, 0), residual = vector(m.residual_s, n), normalized = vector(m.normalized_residual, n), alternate = vector(m.bilinear_predicted_s, n, 0);
     require(predicted.every(v => v > 0) && alternate.every(v => v > 0));
     let chi = 0, difference = 0;
     for (let i = 0; i < n; i++) { const r = times[i] - predicted[i], z = r / sigma[i]; near(residual[i], r, true); near(normalized[i], z, true); chi += z * z; difference += (predicted[i] - alternate[i]) ** 2; }
     near(m.data_chi_square, chi); near(m.data_wrms, Math.sqrt(chi / n)); near(m.cell_vs_bilinear_rmse_s, Math.sqrt(difference / n));
-    if (name === "classical") { int(m.clipped_cells, 0, 256); num(m.regularizer, 0); require(m.solver === "Cholesky unconstrained normal equation followed by explicit slowness clipping" && m.bound_constrained_optimum_certified === false); }
+    if (name === "classical") {
+      num(m.regularizer, 0);
+      if (v2) {
+        int(m.active_bound_cells, 0, 256); num(m.kkt_inf_norm, 0); num(m.kkt_relative, 0, 1e-9);
+        require(m.kkt_relative_tolerance === 1e-9); int(m.solver_iterations, 1, 512);
+        require(m.solver === "Deterministic primal active-set box-QP with projected KKT gate");
+      } else {
+        int(m.clipped_cells, 0, 256);
+        require(m.solver === "Cholesky unconstrained normal equation followed by explicit slowness clipping" && m.bound_constrained_optimum_certified === false);
+      }
+    }
   }
   const e = closed(d.engine, engineKeys); text(e.numpy, 64); text(e.scipy, 64); hash(e.user_tool_sha256); hash(e.velocity_operator_sha256);
   if (learned) {

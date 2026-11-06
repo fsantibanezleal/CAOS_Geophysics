@@ -2,19 +2,21 @@ import { describe, expect, it, vi } from "vitest";
 import { readVelocityFiles, velocitySelection, parseVelocityResult, strictVelocityJson } from "../api/velocity-local-contracts";
 
 // STRUCTURAL parser controls, not a computed inverse or physical replay fixture.
-function control(learned = false) {
+function control(learned = false, version: "v1" | "v2" = "v1") {
   const n = 8, predicted = Array(n).fill(.4), times = predicted.map((v, i) => v + (i % 2 ? .002 : -.001));
   const residual = times.map(v => v - .4), normalized = residual.map(v => v / .001);
   const chi = normalized.reduce((s, v) => s + v * v, 0);
   const record = { velocity_m_s: Array.from({ length: 16 }, () => Array(16).fill(2000)), predicted_s: predicted, residual_s: residual,
     normalized_residual: normalized, bilinear_predicted_s: predicted, cell_vs_bilinear_rmse_s: 0, data_chi_square: chi, data_wrms: Math.sqrt(chi / n) };
-  return { schema: "geophysics.velocity-result/v1", status: "computed", request: {
+  return { schema: `geophysics.velocity-result/${version}`, status: "computed", request: {
     schema: "geophysics.velocity-user-data/v1", id: "parser-control", source: { citation: "Structural parser-only control, not computed evidence", rights: "owner-permitted", scope: "synthetic-control" },
     frame: "local-x-z-down", units: { distance: "m", time: "s", velocity: "m/s" }, ray_ids: Array.from({ length: n }, (_, i) => `ray-${i}`),
     rays_m: Array.from({ length: n }, (_, i) => [0, 25 + 50 * i, 800, 25 + 50 * i]), times_s: times, sigma_s: Array(n).fill(.001), lambda: 100 },
     source: { sha256: "a".repeat(64), bytes: 1024 }, axes: { x_m: Array.from({ length: 16 }, (_, i) => 25 + 50 * i), depth_m: Array.from({ length: 16 }, (_, i) => 25 + 50 * i), order: ["depth", "distance"] },
-    coverage_m: Array.from({ length: 16 }, () => Array(16).fill(50)), results: { classical: { ...record, clipped_cells: 0, regularizer: 0,
-      solver: "Cholesky unconstrained normal equation followed by explicit slowness clipping", bound_constrained_optimum_certified: false }, ...(learned ? { learned: structuredClone(record) } : {}) },
+    coverage_m: Array.from({ length: 16 }, () => Array(16).fill(50)), results: { classical: { ...record,
+      ...(version === "v2" ? { active_bound_cells: 0, regularizer: 0, solver: "Deterministic primal active-set box-QP with projected KKT gate",
+        kkt_inf_norm: 1e-10, kkt_relative: 5e-10, kkt_relative_tolerance: 1e-9, solver_iterations: 4 }
+        : { clipped_cells: 0, regularizer: 0, solver: "Cholesky unconstrained normal equation followed by explicit slowness clipping", bound_constrained_optimum_certified: false }) }, ...(learned ? { learned: structuredClone(record) } : {}) },
     learned_domain: learned ? { training_geometry: false, training_noise: true, field_validated: false, heldout_advantage: false } : null,
     warnings: ["Straight-ray approximation; no bent-ray or field accuracy established"], engine: { numpy: "2.2.6", scipy: "1.15.2", user_tool_sha256: "b".repeat(64), velocity_operator_sha256: "c".repeat(64),
       checkpoint_sha256: learned ? "d".repeat(64) : null, checkpoint_protocol: learned ? "original" : null, refinement_code_sha256: null },
@@ -50,6 +52,11 @@ describe("local velocity scalar admission, not producer physical replay", () => 
     expect(p.ray.residual_s).toBe(c.results.learned!.residual_s[3]); expect(p.cell).toEqual({ x_index: 4, depth_index: 5, x_m: 225, depth_m: 275, velocity_m_s: 2000, coverage_m: 50 });
     expect(JSON.stringify(c)).toBe(before);
     expect(() => velocitySelection(parseVelocityResult(control()), "learned", 0, 0, 0)).toThrow();
+  });
+  it("admits bounded-solver v2 results and rejects a KKT residual beyond its declared gate", () => {
+    const c = control(false, "v2"); expect(parseVelocityResult(c).schema).toBe("geophysics.velocity-result/v2");
+    (c.results.classical as typeof c.results.classical & { kkt_relative: number }).kkt_relative = 2e-9;
+    expect(() => parseVelocityResult(c)).toThrow();
   });
   it.each(["original", "physics-v2"])("admits %s only with matching checkpoint/domain contract", protocol => {
     const c = control(true); c.engine.checkpoint_protocol = protocol;

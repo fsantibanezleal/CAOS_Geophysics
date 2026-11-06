@@ -8,10 +8,12 @@ export type VelocityRequest = {
   ray_ids: string[]; rays_m: number[][]; times_s: number[]; sigma_s: number[]; lambda: number;
 };
 export type BrowserVelocityResult = {
-  schema: "geophysics.velocity-browser-result/v1"; method: "fixed-straight-ray weighted slowness inversion";
+  schema: "geophysics.velocity-browser-result/v2"; method: "fixed-straight-ray weighted slowness inversion";
   request: VelocityRequest; velocity_m_s: number[][]; predicted_s: number[]; residual_s: number[];
   normalized_residual: number[]; bilinear_predicted_s: number[]; coverage_m: number[][];
-  metrics: { data_wrms: number; data_chi_square: number; cell_vs_bilinear_rmse_s: number; clipped_cells: number };
+  metrics: { data_wrms: number; data_chi_square: number; cell_vs_bilinear_rmse_s: number; active_bound_cells: number;
+    regularizer: number; kkt_inf_norm: number; kkt_relative: number; kkt_relative_tolerance: number; solver_iterations: number };
+  solver: "Deterministic primal active-set box-QP with projected KKT gate";
   learned?: {
     method: "M12 physics-v2 residual CNN"; status: "exploratory-unvalidated";
     checkpoint_sha256: string; onnx_sha256: string; velocity_m_s: number[][];
@@ -96,6 +98,46 @@ function choleskySolve(matrix: Float64Array[], rhs: Float64Array): Float64Array 
   return x;
 }
 
+const KKT_RELATIVE_TOLERANCE = 1e-9, MAX_ACTIVE_SET_ITERATIONS = 512;
+function solveBoxQuadratic(hessian: Float64Array[], rhs: Float64Array, lower: Float64Array, upper: Float64Array) {
+  const n=rhs.length, value=new Float64Array(n), active=new Int8Array(n);
+  for(let i=0;i<n;i++) { value[i]=Math.max(lower[i],Math.min(upper[i],0)); if(value[i]===lower[i])active[i]=-1; if(value[i]===upper[i])active[i]=1; }
+  const gradientAt=(x:Float64Array)=>Float64Array.from({length:n},(_,i)=>hessian[i].reduce((s,v,j)=>s+v*x[j],0)-rhs[i]);
+  const scaleAt=(x:Float64Array)=>{const g=gradientAt(x);return Math.max(1,...Array.from(rhs,Math.abs),...Array.from(g,(v,i)=>Math.abs(v+rhs[i])));};
+  for(let iteration=1;iteration<=MAX_ACTIVE_SET_ITERATIONS;iteration++) {
+    const free:number[]=[]; for(let i=0;i<n;i++)if(active[i]===0)free.push(i);
+    const gradient=gradientAt(value), step=new Float64Array(n);
+    if(free.length) {
+      const face=free.map(i=>Float64Array.from(free,j=>hessian[i][j]));
+      const faceStep=choleskySolve(face,Float64Array.from(free,i=>-gradient[i]));
+      free.forEach((i,j)=>step[i]=faceStep[j]);
+      let alpha=1; const blockers:{index:number;side:-1|1}[]=[];
+      for(const i of free) {
+        const direction=step[i]; if(direction===0)continue;
+        const side=direction>0?1:-1, candidate=direction>0?(upper[i]-value[i])/direction:(lower[i]-value[i])/direction;
+        if(candidate<alpha){alpha=Math.max(0,candidate);blockers.length=0;blockers.push({index:i,side});}
+        else if(candidate===alpha)blockers.push({index:i,side});
+      }
+      for(let i=0;i<n;i++)value[i]+=alpha*step[i];
+      if(alpha<1) {
+        if(!blockers.length)throw new Error("Bounded inversion failed: blocking constraint was not identified");
+        for(const {index,side} of blockers){value[index]=side<0?lower[index]:upper[index];active[index]=side;}
+        continue;
+      }
+    }
+    const gradientNow=gradientAt(value), scale=scaleAt(value), violations=new Float64Array(n);
+    for(let i=0;i<n;i++)if(active[i]===-1)violations[i]=Math.max(-gradientNow[i],0);else if(active[i]===1)violations[i]=Math.max(gradientNow[i],0);
+    const projected=Float64Array.from({length:n},(_,i)=>value[i]<=lower[i]?Math.min(gradientNow[i],0):value[i]>=upper[i]?Math.max(gradientNow[i],0):gradientNow[i]);
+    const kktInf=Math.max(...Array.from(projected,Math.abs)), kktRelative=kktInf/scale;
+    if(kktRelative<=KKT_RELATIVE_TOLERANCE) return {value,iterations:iteration,kktInf,kktRelative};
+    let release=-1, largest=KKT_RELATIVE_TOLERANCE*scale;
+    for(let i=0;i<n;i++)if(violations[i]>largest){largest=violations[i];release=i;}
+    if(release>=0){active[release]=0;continue;}
+    throw new Error("Bounded inversion failed: projected KKT residual exceeds tolerance");
+  }
+  throw new Error("Bounded inversion failed: active-set iteration limit reached");
+}
+
 function bilinearRow(ray: number[]): Float64Array {
   const [x0,z0,x1,z1]=ray, distance=Math.hypot(x1-x0,z1-z0), n=Math.ceil(distance/DX*8), row=new Float64Array(CELLS), step=distance/n;
   for(let i=0;i<n;i++){
@@ -119,16 +161,31 @@ export function calculateVelocityInBrowser(request: VelocityRequest): BrowserVel
     const i=z*GRID+x;
     for(const j of [...(x<GRID-1?[i+1]:[]),...(z<GRID-1?[i+GRID]:[])]){normal[i][i]+=request.lambda;normal[j][j]+=request.lambda;normal[i][j]-=request.lambda;normal[j][i]-=request.lambda;}
   }
-  const q=choleskySolve(normal,rhs), velocity=Array.from({length:CELLS},(_,i)=>{const slowness=s0[i]+q[i]/1000, clipped=Math.max(1/4000,Math.min(1/1400,slowness));return 1/clipped;});
-  let clippedCells=0; for(let i=0;i<CELLS;i++) if(s0[i]+q[i]/1000<1/4000||s0[i]+q[i]/1000>1/1400)clippedCells++;
+  const lower=Float64Array.from(s0,v=>1000*(1/4000-v)), upper=Float64Array.from(s0,v=>1000*(1/1400-v));
+  const solved=solveBoxQuadratic(normal,rhs,lower,upper), q=solved.value;
+  const velocity=Array.from({length:CELLS},(_,i)=>1/(s0[i]+q[i]/1000));
+  const exportedQ=Float64Array.from(velocity,(v,i)=>1000*(1/v-s0[i]));
+  const exportedGradient=Float64Array.from({length:CELLS},(_,i)=>normal[i].reduce((sum,v,j)=>sum+v*exportedQ[j],0)-rhs[i]);
+  const scale=Math.max(1,...Array.from(rhs,Math.abs),...Array.from(exportedGradient,(v,i)=>Math.abs(v+rhs[i])));
+  const projected=Float64Array.from(exportedGradient,(v,i)=>exportedQ[i]<=lower[i]?Math.min(v,0):exportedQ[i]>=upper[i]?Math.max(v,0):v);
+  const exportedKktInf=Math.max(...Array.from(projected,Math.abs)), exportedKktRelative=exportedKktInf/scale;
+  if(exportedKktRelative>KKT_RELATIVE_TOLERANCE||velocity.some(v=>v<1400||v>4000))throw new Error("Bounded inversion failed: exported model does not meet its physical KKT gate");
+  let activeBoundCells=0,regularizer=0;
+  for(let z=0;z<GRID;z++)for(let x=0;x<GRID;x++){
+    const i=z*GRID+x;
+    if(Math.abs(exportedQ[i]-lower[i])<=1e-10||Math.abs(exportedQ[i]-upper[i])<=1e-10)activeBoundCells++;
+    regularizer+=0.01*exportedQ[i]*exportedQ[i];
+    for(const j of [...(x<GRID-1?[i+1]:[]),...(z<GRID-1?[i+GRID]:[])])regularizer+=request.lambda*(exportedQ[i]-exportedQ[j])**2;
+  }
   const predicted=rows.map(({pairs})=>pairs.reduce((sum,[j,len])=>sum+len/velocity[j],0));
   const alternate=qrows.map(row=>row.reduce((sum,len,j)=>sum+len/velocity[j],0));
   const residual=predicted.map((v,i)=>request.times_s[i]-v), normalized=residual.map((v,i)=>v/request.sigma_s[i]);
   const chi=normalized.reduce((s,v)=>s+v*v,0), diff=predicted.reduce((s,v,i)=>s+(v-alternate[i])**2,0);
-  return {schema:"geophysics.velocity-browser-result/v1",method:"fixed-straight-ray weighted slowness inversion",request,
+  return {schema:"geophysics.velocity-browser-result/v2",method:"fixed-straight-ray weighted slowness inversion",solver:"Deterministic primal active-set box-QP with projected KKT gate",request,
     velocity_m_s:Array.from({length:GRID},(_,z)=>velocity.slice(z*GRID,(z+1)*GRID)),predicted_s:predicted,residual_s:residual,normalized_residual:normalized,
     bilinear_predicted_s:alternate,coverage_m:Array.from({length:GRID},(_,z)=>Array.from(coverage.slice(z*GRID,(z+1)*GRID))),
-    metrics:{data_wrms:Math.sqrt(chi/n),data_chi_square:chi,cell_vs_bilinear_rmse_s:Math.sqrt(diff/n),clipped_cells:clippedCells},
+    metrics:{data_wrms:Math.sqrt(chi/n),data_chi_square:chi,cell_vs_bilinear_rmse_s:Math.sqrt(diff/n),active_bound_cells:activeBoundCells,
+      regularizer,kkt_inf_norm:exportedKktInf,kkt_relative:exportedKktRelative,kkt_relative_tolerance:KKT_RELATIVE_TOLERANCE,solver_iterations:solved.iterations},
     execution:{location:"browser",uploaded:false,field_truth_known:false,field_validated:false,heldout_advantage:false}};
 }
 

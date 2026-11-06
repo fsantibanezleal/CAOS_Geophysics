@@ -8,6 +8,7 @@ import sys
 
 import numpy as np
 import pytest
+from scipy.optimize import lsq_linear
 
 import velocity_user_data as tool
 from velocity_validation import acquisition, background, cell_length_matrix, GRID
@@ -61,6 +62,7 @@ def test_identity_and_original_order():
     result = tool.calculate(payload)
     assert result["source"] == {"sha256": before, "bytes": len(payload)}
     assert result["request"]["ray_ids"] == request()["ray_ids"]
+    assert result["schema"] == "geophysics.velocity-result/v2"
     assert hashlib.sha256(payload).hexdigest() == before
     assert result["results"]["classical"]["data_wrms"] < 1e-10
     assert not any(result["claims"].values())
@@ -86,18 +88,60 @@ def test_weighted_inverse_and_parameter_effect():
     s0 = 1 / background().ravel()
     b = a / (1000 * sigma[:, None])
     y = (d["times_s"] - a @ s0) / sigma
-    q = np.linalg.solve(b.T @ b + d["lambda"] * diff.T @ diff + 0.01 * np.eye(GRID * GRID), b.T @ y)
-    expected = np.clip(s0 + q / 1000, 1 / 4000, 1 / 1400)
+    hessian = b.T @ b + d["lambda"] * diff.T @ diff + 0.01 * np.eye(GRID * GRID)
+    rhs = b.T @ y
+    lower = 1000 * (1 / 4000 - s0)
+    upper = 1000 * (1 / 1400 - s0)
+    factor = np.linalg.cholesky(hessian).T
+    oracle = lsq_linear(factor, np.linalg.solve(factor.T, rhs), bounds=(lower, upper),
+                        method="trf", tol=1e-13, lsq_solver="exact", max_iter=2000)
+    assert oracle.success
+    expected = s0 + oracle.x / 1000
     actual = 1 / np.asarray(result["velocity_m_s"]).ravel()
-    np.testing.assert_allclose(1000 * (actual - s0), 1000 * (expected - s0), atol=1e-10, rtol=1e-10)
+    np.testing.assert_allclose(actual, expected, atol=2e-10, rtol=2e-10)
     bounded_q = 1000 * (actual - s0)
     assert result["regularizer"] == pytest.approx(d["lambda"] * np.sum((diff @ bounded_q) ** 2) + 0.01 * np.sum(bounded_q ** 2), rel=1e-9)
+    assert result["kkt_relative"] <= result["kkt_relative_tolerance"] == 1e-9
+    assert result["solver_iterations"] > 0
     changed = copy.deepcopy(d)
     changed["lambda"] = 1
     assert not np.allclose(result["velocity_m_s"], tool.calculate(raw(changed))["results"]["classical"]["velocity_m_s"])
     changed = copy.deepcopy(d)
     changed["sigma_s"][0] *= 10
     assert not np.array_equal(result["velocity_m_s"], tool.calculate(raw(changed))["results"]["classical"]["velocity_m_s"])
+
+
+def test_active_velocity_bounds_match_independent_qp_oracle():
+    d = request()
+    d["times_s"] = (np.asarray(d["times_s"]) + np.linspace(-0.1, 0.1, len(d["times_s"]))).tolist()
+    result = tool.calculate(raw(d))["results"]["classical"]
+    a = cell_length_matrix(np.asarray(d["rays_m"]))
+    s0 = 1 / background().ravel()
+    sigma = np.asarray(d["sigma_s"])
+    b = a / (1000 * sigma[:, None])
+    y = (np.asarray(d["times_s"]) - a @ s0) / sigma
+    difference_rows = []
+    for z in range(GRID):
+        for x in range(GRID):
+            index = z * GRID + x
+            for neighbor in ((index + 1,) if x + 1 < GRID else ()) + ((index + GRID,) if z + 1 < GRID else ()):
+                row = np.zeros(GRID * GRID)
+                row[index], row[neighbor] = 1, -1
+                difference_rows.append(row)
+    difference = np.stack(difference_rows)
+    gram = difference.T @ difference
+    hessian = b.T @ b + d["lambda"] * gram + 0.01 * np.eye(GRID * GRID)
+    rhs = b.T @ y
+    lower, upper = 1000 * (1 / 4000 - s0), 1000 * (1 / 1400 - s0)
+    factor = np.linalg.cholesky(hessian).T
+    oracle = lsq_linear(factor, np.linalg.solve(factor.T, rhs), bounds=(lower, upper),
+                        method="trf", tol=1e-13, lsq_solver="exact", max_iter=2000)
+    assert oracle.success
+    expected = 1 / (s0 + oracle.x / 1000)
+    actual = np.asarray(result["velocity_m_s"]).ravel()
+    np.testing.assert_allclose(actual, expected, atol=3e-7, rtol=3e-10)
+    assert result["active_bound_cells"] > 0
+    assert result["kkt_relative"] <= result["kkt_relative_tolerance"]
 
 
 def test_actual_checkpoint_inference():
@@ -127,6 +171,20 @@ def test_bundle_roundtrip_and_corruption(tmp_path):
         tool.verify_generation(destination)
 
 
+def test_legacy_v1_result_remains_reopenable_as_historical_data(tmp_path):
+    result = tool.calculate(raw(request()))
+    result["schema"] = "geophysics.velocity-result/v1"
+    classical = result["results"]["classical"]
+    for key in ("active_bound_cells", "kkt_inf_norm", "kkt_relative", "kkt_relative_tolerance", "solver_iterations"):
+        classical.pop(key)
+    classical["clipped_cells"] = 0
+    classical["solver"] = "Cholesky unconstrained normal equation followed by explicit slowness clipping"
+    classical["bound_constrained_optimum_certified"] = False
+    destination = tmp_path / "legacy-v1"
+    assert tool.export_generation(result, destination) == result
+    assert tool.verify_generation(destination)["schema"] == "geophysics.velocity-result/v1"
+
+
 def test_physics_checkpoint_on_actual_user_data():
     path = ROOT / "models/experimental/m12-physics-cuda-20261004/m12-physics.npz"
     sha = "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
@@ -150,7 +208,7 @@ def test_failed_verification_has_no_success_manifest(tmp_path, monkeypatch):
 
 def test_rehashed_result_does_not_bypass_physical_reopen(tmp_path):
     result = tool.calculate(raw(request()))
-    for field in ("residual_s", "data_chi_square", "regularizer"):
+    for field in ("residual_s", "data_chi_square", "regularizer", "kkt_relative"):
         changed = copy.deepcopy(result)
         if field == "residual_s":
             changed["results"]["classical"][field][0] += 1
@@ -168,6 +226,7 @@ def test_upper_row_count_and_finite_export(tmp_path):
     d["sigma_s"] = d["sigma_s"] * 16
     d["ray_ids"] = [f"upper-{i}" for i in range(2048)]
     result = tool.calculate(raw(d))
+    assert result["schema"] == "geophysics.velocity-result/v2"
     assert len(result["results"]["classical"]["predicted_s"]) == 2048
     assert tool.export_generation(result, tmp_path / "upper") == result
 
