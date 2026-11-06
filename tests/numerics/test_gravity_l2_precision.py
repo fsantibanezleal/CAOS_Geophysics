@@ -403,6 +403,36 @@ def test_NI01_outward_row_matches_independent_rational_corners(width,sparse):
     assert F(direct[0])<=lo<=hi<=F(direct[1])
 
 
+@pytest.mark.parametrize('seed',range(4))
+def test_NI01_vectorized_dense_rows_match_exact_rational_corners(seed):
+    module=importlib.import_module('gravity_l2_precision')
+    arithmetic=module._Intervals(34,monotonic()+30.)
+    rng=np.random.Generator(np.random.PCG64(20261106+seed))
+    matrix=rng.normal(size=(7,19))*.2
+    matrix[rng.random(matrix.shape)<.45]=0.
+    centers=rng.normal(size=19)*.1
+    radii=np.abs(rng.normal(size=19))*2.**-38
+    vector=[]
+    for center,radius in zip(centers,radii):
+        value=arithmetic.exact(float(center))
+        uncertainty=arithmetic.exact(float(radius))
+        vector.append(arithmetic.sub(value,uncertainty)[0:1]+
+                      arithmetic.add(value,uncertainty)[1:2])
+    matrix[3]=0.
+    for operator in (matrix,sp.csr_matrix(matrix)):
+        bounds=arithmetic.matrix(operator,vector)
+        for row,pair in enumerate(bounds):
+            if row==3:
+                assert pair==(Decimal(0),Decimal(0))
+                continue
+            low=high=F(0)
+            for coefficient,interval in zip(matrix[row],vector):
+                exact=F.from_float(float(coefficient))
+                low+=exact*F(interval[0] if coefficient>=0 else interval[1])
+                high+=exact*F(interval[1] if coefficient>=0 else interval[0])
+            assert F(pair[0])<=low<=high<=F(pair[1])
+
+
 @pytest.mark.parametrize('fault',['coefficient','overflow'])
 def test_NI02_unsupported_row_uses_original_decimal(monkeypatch,fault):
     module = importlib.import_module('gravity_l2_precision')

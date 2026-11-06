@@ -192,6 +192,98 @@ class _Intervals:
         c = Decimal.from_float(center)
         return self.lo.subtract(c,error),self.hi.add(c,error)
 
+    @staticmethod
+    def _float_bound(value, upward):
+        """Convert a positive Decimal bound to binary64 in the safe direction."""
+        result = float(value)
+        if not np.isfinite(result): raise ValueError('precision: bound conversion overflow')
+        exact = Decimal.from_float(result)
+        if upward and exact < value:
+            result = np.nextafter(result,np.inf)
+        elif not upward and exact > value:
+            result = np.nextafter(result,-np.inf)
+        if not np.isfinite(result) or result < 0.:
+            raise ValueError('precision: bound conversion range')
+        return result
+
+    @staticmethod
+    def _upward_nonnegative(values):
+        result = np.nextafter(values,np.inf)
+        if not np.isfinite(result).all(): raise ValueError('precision: bound arithmetic overflow')
+        return result
+
+    def _enclosed_batched_rows(self, matrix, centers, radii):
+        """Vectorized row batches with the same outward dot-product bound.
+
+        The interval theorem is unchanged from ``_enclosed_row``: the native
+        reductions are enclosed by gamma_k and an absolute-underflow term;
+        input radii are propagated through |A|; all nonnegative bound
+        arithmetic is rounded outward before Decimal endpoints are formed.
+        """
+        rows, columns = matrix.shape
+        if (matrix.dtype != np.float64 or matrix.ndim != 2
+                or centers.shape != matrix.shape or radii.shape != matrix.shape
+                or not np.isfinite(matrix).all()):
+            raise ValueError('precision: unsupported batched matrix shape/domain')
+        tiny = float(np.finfo(np.float64).tiny)
+        if np.any((np.abs(matrix)<tiny)&(matrix!=0.)):
+            raise ValueError('precision: unsupported dense subnormal coefficient')
+        with np.errstate(over='raise',invalid='raise',under='ignore'):
+            products = matrix*centers
+            center = np.sum(products,axis=1,dtype=np.float64)
+            absolute = np.sum(np.abs(products),axis=1,dtype=np.float64)
+            radius_products = np.abs(matrix)*radii
+            radius_sum = np.sum(radius_products,axis=1,dtype=np.float64)
+        if not np.isfinite(center).all() or not np.isfinite(absolute).all() or not np.isfinite(radius_sum).all():
+            raise ValueError('precision: nonfinite dense row reduction')
+        gamma,divisor,loss = self._reduction_bound(columns)
+        gamma_f = self._float_bound(gamma,True)
+        divisor_f = self._float_bound(divisor,False)
+        loss_f = self._float_bound(loss,True)
+        if divisor_f<=0.: raise ValueError('precision: native error divisor')
+        with np.errstate(over='raise',invalid='raise',under='ignore',divide='raise'):
+            absolute_upper = self._upward_nonnegative(absolute+loss_f)/divisor_f
+            absolute_upper = self._upward_nonnegative(absolute_upper)
+            radius_upper = self._upward_nonnegative(radius_sum+loss_f)/divisor_f
+            radius_upper = self._upward_nonnegative(radius_upper)
+            error = self._upward_nonnegative(gamma_f*absolute_upper)
+            error = self._upward_nonnegative(error+loss_f)
+            error = self._upward_nonnegative(error+radius_upper)
+        exact_zero_rows = np.count_nonzero(matrix,axis=1)==0
+        error[exact_zero_rows] = 0.
+        output = []
+        for index,(native_center,native_error) in enumerate(zip(center,error)):
+            if index%16==0: self.check()
+            c,e = Decimal.from_float(float(native_center)),Decimal.from_float(float(native_error))
+            output.append((self.lo.subtract(c,e),self.hi.add(c,e)))
+        return output
+
+    def _enclosed_sparse_matrix(self, matrix, centers, radii):
+        """Batch narrow canonical CSR rows without a Python loop per stencil."""
+        row_counts = np.diff(matrix.indptr)
+        width = int(row_counts.max(initial=0))
+        if width==0: return [(_ZERO,_ZERO)]*matrix.shape[0]
+        if width>32: raise ValueError('precision: sparse batch width exceeds fixed 32')
+        output=[]
+        positions=np.arange(width,dtype=np.int64)
+        for first in range(0,matrix.shape[0],256):
+            self.check()
+            last=min(first+256,matrix.shape[0])
+            starts=matrix.indptr[first:last]
+            ends=matrix.indptr[first+1:last+1]
+            raw_positions=starts[:,None]+positions[None,:]
+            valid=raw_positions<ends[:,None]
+            safe_positions=np.minimum(raw_positions,len(matrix.data)-1)
+            indices=matrix.indices[safe_positions]
+            coefficients=matrix.data[safe_positions].copy()
+            coefficients[~valid]=0.
+            row_centers=centers[indices].copy()
+            row_radii=radii[indices].copy()
+            row_centers[~valid]=0.
+            row_radii[~valid]=0.
+            output.extend(self._enclosed_batched_rows(coefficients,row_centers,row_radii))
+        return output
+
     def matrix(self, matrix, vector):
         self.check()
         if not self._use_native_rows:
@@ -205,6 +297,22 @@ class _Intervals:
             centers,radii = self._row_vectors(vector)
         except (ArithmeticError,ValueError,OverflowError):
             return self._decimal_matrix(matrix,vector)
+        if type(matrix) is np.ndarray:
+            try:
+                row_centers=np.broadcast_to(centers[None,:],matrix.shape)
+                row_radii=np.broadcast_to(radii[None,:],matrix.shape)
+                output = self._enclosed_batched_rows(matrix,row_centers,row_radii)
+                self.check()
+                return output
+            except (ArithmeticError,ValueError,OverflowError, FloatingPointError):
+                return self._decimal_matrix(matrix,vector)
+        if type(matrix) is sp.csr_matrix:
+            try:
+                output=self._enclosed_sparse_matrix(matrix,centers,radii)
+                self.check()
+                return output
+            except (ArithmeticError,ValueError,OverflowError,FloatingPointError):
+                return self._decimal_matrix(matrix,vector)
         output = []
         sparse = sp.issparse(matrix)
         for i in range(matrix.shape[0]):
