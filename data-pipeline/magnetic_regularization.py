@@ -6,6 +6,7 @@ graph, and the reference model participates in the smoothness residual.
 """
 
 import numpy as np
+from scipy.sparse import csr_matrix, eye
 from discretize import TensorMesh
 from simpeg import maps
 from simpeg.regularization import Sparse, WeightedLeastSquares
@@ -127,6 +128,48 @@ class MagneticRegularizer:
             matrix[left, right] -= scale
             matrix[right, left] -= scale
         return matrix
+
+    def terms(self):
+        """Return sparse weighted operators for the exact frozen L2 quadratic.
+
+        Each term is represented as ``alpha * ||weights * derivative *
+        (q-reference)||^2``.  The cell-volume smallness term and each active
+        center-to-center face term are emitted separately so the source-bound
+        original-noise solver can reconstruct the physical objective without
+        importing a gravity-private regularizer or densifying the mesh graph.
+        """
+        active = self.parameter_count
+        fractions = np.asarray(self.volumes / self.total_volume, dtype=np.float64)
+        smallness = eye(active, dtype=np.float64, format="csr")
+        smallness.sort_indices()
+        smallness_weights = np.sqrt(fractions)
+        smallness_weights.flags.writeable = False
+        terms = [dict(alpha=1., weights=smallness_weights, derivative=smallness)]
+
+        for axis, length in enumerate(self.lengths_m):
+            faces = tuple(face for face in self._face_pairs if face[0] == axis)
+            if not faces:
+                continue
+            column_indices = np.fromiter(
+                (cell for _, left, right, _, _ in faces for cell in (left, right)),
+                dtype=np.int32, count=2 * len(faces),
+            )
+            data = np.tile(np.array([-1., 1.], dtype=np.float64), len(faces))
+            indptr = np.arange(0, 2 * len(faces) + 1, 2, dtype=np.int32)
+            derivative = csr_matrix(
+                (data, column_indices, indptr), shape=(len(faces), active)
+            )
+            derivative.sort_indices()
+            weights = np.fromiter(
+                (float(length) * np.sqrt(volume_fraction) / distance
+                 for _, _, _, distance, volume_fraction in faces),
+                dtype=np.float64, count=len(faces),
+            )
+            if not np.isfinite(weights).all() or np.any(weights <= 0.):
+                raise ValueError("regularizer: sparse active-face weights must be finite and positive")
+            weights.flags.writeable = False
+            terms.append(dict(alpha=1., weights=weights, derivative=derivative))
+        return tuple(terms)
 
     def evaluate(self, q):
         if type(q) is not np.ndarray or q.dtype != np.float64 or q.shape != (self.parameter_count,):

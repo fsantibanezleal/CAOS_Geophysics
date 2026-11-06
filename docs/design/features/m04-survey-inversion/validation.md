@@ -1,5 +1,21 @@
 # Independent validation and complete acceptance matrix
 
+## 2026-11-06 sparse L2 source-term export
+
+`MagneticRegularizer.terms()` now exports the existing volume-normalized L2
+objective as sparse, weighted smallness and active-face operators. The cell
+term uses `sqrt(v_i/V)` and each axis face uses
+`ell_j * sqrt(V_face/V) / distance`; inactive-cell and exterior faces remain
+absent. The reconstructed Hessian, objective value, and gradient match the
+independent active-face quadratic on the nonuniform mesh with two inactive
+cells. The exact local run passed all 16 regularization tests, with no skips;
+Ruff and `git diff --check` passed.
+
+This exposes a solver-ready representation of the L2 regularizer only. It does
+not bind or run a magnetic optimizer, implement IRLS weight refresh across
+solves, fit a survey, score held-out rows, or change M04 scientific/release
+acceptance.
+
 ## 2026-11-02 positive-down background correction
 
 The fold assembler had used the wrong vertical sign for its inducing-field

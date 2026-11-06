@@ -2,6 +2,7 @@ from decimal import Decimal, localcontext
 
 import numpy as np
 import pytest
+from scipy.sparse import diags
 from discretize import TensorMesh
 
 from magnetic_regularization import MagneticRegularizer
@@ -43,6 +44,35 @@ def test_inactive_cells_and_exterior_faces_are_not_regularized_across():
             if coords[axis] + 1 < shape[axis] and active[left] and active[left + stride]:
                 expected_counts[axis] += 1
     assert regularizer.evaluate(np.full(regularizer.parameter_count, .4, dtype=np.float64))["active_face_count_by_axis"] == tuple(expected_counts)
+
+
+def test_sparse_terms_reconstruct_exact_volume_normalized_l2_objective():
+    regularizer, _ = _regularizer()
+    q = np.array([.1, .24, .19, .55, .37, .41, .8, .22, .47, .9], dtype=np.float64)
+    delta = q - regularizer.reference_q
+    terms = regularizer.terms()
+    reconstructed = np.zeros_like(regularizer._quadratic)
+    value = 0.
+    gradient = np.zeros_like(q)
+    for term in terms:
+        derivative = term["derivative"]
+        weights = term["weights"]
+        transformed = derivative @ delta
+        weighted = weights * transformed
+        value += term["alpha"] * float(weighted @ weighted)
+        gradient += 2. * term["alpha"] * np.asarray(
+            derivative.T @ (weights * weighted)
+        ).reshape(-1)
+        reconstructed += term["alpha"] * (
+            derivative.T @ diags(weights * weights, format="csr") @ derivative
+        ).toarray()
+        assert not weights.flags.writeable
+
+    expected = regularizer.evaluate(q)
+    np.testing.assert_allclose(reconstructed, regularizer._quadratic, rtol=2e-15, atol=2e-15)
+    np.testing.assert_allclose(value, expected["phi"], rtol=2e-15, atol=2e-15)
+    np.testing.assert_allclose(gradient, expected["gradient_q"], rtol=3e-13, atol=2e-14)
+    assert len(terms) == 4
 
 
 def test_metadata_limits_precede_numeric_finite_scans(monkeypatch):
