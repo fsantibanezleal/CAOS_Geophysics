@@ -95,15 +95,19 @@ Ratios below one favor the refined method. Intervals are 95% percentile paired-c
 still means this linear null-space result is not a general data-invariance
 guarantee.
 
-The full immutable receipt and checkpoint are retained outside the checkout
+The full immutable receipt and checkpoint were recorded outside the checkout
 at `E:\_worktrees\_runs\m12-nullspace-v1_1-full-20261027b`. Receipt
 SHA-256: `30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22`.
-Independent `--verify` replay regenerated all four held-out cohorts and
-reproduced their stored metrics; the scientific verdict reproduced as
-`supported-within-bounded-synthetic-protocol`. This result supports further
-controlled research only; it does not
-validate field data, establish geological recovery, or change overall M12 or
-product release acceptance.
+The independent `--verify` replay recorded on 2026-10-31 regenerated all four
+held-out cohorts and reproduced their stored metrics; its scientific verdict
+was `supported-within-bounded-synthetic-protocol`. A current custody check on
+2026-11-05 found that recorded directory absent. The historical replay record
+remains in the repository, but the receipt, checkpoint, and per-case arrays
+were not available at that path for current re-verification. Do not describe
+those external artifacts as currently retained or use this study as a
+reproducible release gate until the exact hash-matching files are restored.
+The bounded synthetic result does not validate field data, establish
+geological recovery, or change overall M12 or product release acceptance.
 
 ### Float-safe compatibility replay
 
