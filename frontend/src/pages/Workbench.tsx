@@ -167,6 +167,9 @@ export default function Workbench() {
   const entry = catalog?.cases.find((c) => c.id === selected);
   useEffect(() => {
     setScientificView("earth");
+    // Start a newly selected experiment in the same focus state as a direct
+    // link, instead of carrying an expanded rail over from the previous case.
+    setRailOpen(false);
   }, [selected]);
   const usesSpatialVolume = ["gravity", "magnetics", "joint"].includes(run?.family ?? "");
   const lastScientificView = useRef(scientificView);

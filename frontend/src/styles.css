@@ -271,9 +271,43 @@
   scrollbar-width: thin;
 }
 @media (min-width: 901px) and (max-height: 850px) {
+  /* Keep the section selector on one line so the paired physical sections
+     receive more of the short viewport without changing their scales. */
+  .section-recovery-layout { gap: 0.35rem; }
+  .section-recovery-layout > .range-control {
+    display: grid;
+    grid-template-columns: minmax(10rem, auto) minmax(12rem, 1fr);
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0;
+  }
+}
+@media (min-width: 901px) and (max-height: 850px) {
   /* Preserve both the shell's question groups and the experiment's scientific
      view controls while trimming their vertical chrome on short displays. */
   .app-shell.fixed.contain:has(.caos-wb) > .site-header .header-inner { height: 36px; }
+  .instrument-main > .tabs.tabs-has-slot > .tabs-slot .cs-select-display {
+    padding-block: 0.1rem;
+    font-size: 0.76rem;
+    line-height: 1.1;
+  }
+  .instrument-main > .tabs.tabs-has-slot > .tabs-slot .cs-select-row .btn {
+    min-height: 26px;
+    padding-block: 0.1rem;
+    font-size: 0.76rem;
+    line-height: 1.1;
+  }
+  /* Reclaim axis and card gutters for the measured raster itself. The ticks
+     remain unchanged; only redundant horizontal padding is reduced. */
+  .caos-wb .science-plot-shell .caos-plot.fill { padding-inline: 0.1rem; }
+  .caos-wb .heatmap .axis-y { flex-basis: 0.9rem; }
+  .caos-wb .two-plots,
+  .caos-wb .three-plots { column-gap: 0.35rem; }
+  .caos-wb .context-view .case-evidence .three-plots > .science-plot,
+  [data-instrument="inversion-view"] .learned-recovery-layout .learned-recovery-plots > .science-plot:nth-child(-n + 2) {
+    height: 660px;
+  }
+  .evidence-layout { gap: 0.35rem; }
   .caos-cw > .tabs > .tablist,
   .instrument-main > .tabs > .tablist { margin-bottom: .12rem; padding-bottom: .08rem; }
   .caos-cw > .tabs > .tablist .tab,
@@ -402,12 +436,12 @@
   display: flex;
   flex-direction: column;
   position: relative;
-  min-height: clamp(420px, 72vh, 980px);
+  min-height: clamp(420px, 80vh, 1200px);
   height: auto;
 }
 .earth-view > .earth-scene {
-  height: clamp(420px, 72vh, 980px);
-  min-height: clamp(420px, 72vh, 980px);
+  height: clamp(420px, 80vh, 1200px);
+  min-height: clamp(420px, 80vh, 1200px);
   flex: 0 0 auto;
 }
 .scene-toolbar {
@@ -880,7 +914,7 @@
   [data-instrument="inversion-view"] .section-recovery-layout > .two-plots { grid-area: section-maps; }
   [data-instrument="inversion-view"] .section-recovery-layout > .two-plots > .science-plot {
     box-sizing: border-box;
-    height: clamp(640px, 66vh, 960px);
+    height: clamp(720px, 80vh, 1200px);
   }
   [data-instrument="inversion-view"] .section-recovery-layout > .recovery-analysis {
     grid-area: section-history;
@@ -1511,4 +1545,13 @@
   .scene-readout {
     max-width: 95%;
   }
+}
+
+@media (min-width: 901px) and (max-height: 950px) {
+  /* Intermediate desktop heights need the same dense scientific framing as
+     the short-screen layout. Preserve labels and axis values. */
+  .caos-wb .science-plot-shell .caos-plot.fill { padding-inline: 0.1rem; }
+  .caos-wb .heatmap .axis-y { flex-basis: 0.85rem; }
+  .caos-wb .two-plots,
+  .caos-wb .three-plots { column-gap: 0.35rem; }
 }
