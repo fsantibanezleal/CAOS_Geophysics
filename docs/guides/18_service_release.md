@@ -59,9 +59,14 @@ Stage the exact interpreter distribution registered in
 
 The script checks the official immutable archive's byte length and SHA-256,
 extracts into `/var/lib/geophysics-deploy/python-runtimes/`, checks the runtime
-tree and required extension modules, and writes a private receipt. It does not
-replace `/usr/bin/python3` or modify system packages. A failed staging directory
-is retained; use a new versioned interpreter identity after repair.
+tree and required extension modules, and writes a private receipt. After that
+verification, the evidence root, runtime parent and exact runtime root become
+root-owned mode 0711: service identities can traverse the known interpreter
+path and read its immutable Python files, but cannot list or write those
+directories. The receipt remains mode 0600. This is required because both
+candidate venv interpreters resolve to this shared standalone runtime. It does
+not replace `/usr/bin/python3` or modify system packages. A failed staging
+directory is retained; use a new versioned interpreter identity after repair.
 
 The bounded installer is executable from the staged candidate's source:
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import stat
 import sys
 import subprocess
 import time
@@ -176,6 +177,7 @@ def test_isolated_cli_loads_only_trusted_sibling_source():
 
 def test_interpreter_runtime_pins_official_distribution_and_identity():
     assert python_runtime.NAME == 'cpython-3.12.16-20261026-r3'
+    assert python_runtime.SERVICE_TRAVERSE_MODE == 0o711
     assert python_runtime.ARCHIVE_BYTES == 67921566
     assert python_runtime.SHA256 == '6a79e922e50006b601f29e688407659da1c2b86ebcd4e9c7254cf234be8b89de'
     assert python_runtime.URL.endswith('cpython-3.12.16%2B20261026-x86_64-unknown-linux-gnu-install_only.tar.gz')
@@ -183,6 +185,32 @@ def test_interpreter_runtime_pins_official_distribution_and_identity():
         'cpython', '3.12.16', 'linux', 'x86_64']
     with pytest.raises(ValueError, match='does not match'):
         runtime.interpreter_probe(b'cpython|3.12.3|linux|x86_64\n', '3.12.16')
+
+
+def test_shared_interpreter_path_is_search_only_for_service_users(tmp_path, monkeypatch):
+    directory = tmp_path / 'runtime-root'
+    directory.mkdir()
+    original_stat = Path.stat
+
+    def root_owned_stat(path, *args, **kwargs):
+        if path == directory:
+            return SimpleNamespace(st_mode=stat.S_IFDIR | 0o700, st_uid=0)
+        return original_stat(path, *args, **kwargs)
+
+    modes = []
+    monkeypatch.setattr(Path, 'stat', root_owned_stat)
+    monkeypatch.setattr(python_runtime.os, 'chmod', lambda path, mode: modes.append((path, mode)))
+    python_runtime._make_service_traversable(directory)
+    assert modes == [(directory, 0o711)]
+
+
+def test_shared_interpreter_path_refuses_group_or_world_writable_directory(tmp_path, monkeypatch):
+    directory = tmp_path / 'runtime-root'
+    directory.mkdir()
+    monkeypatch.setattr(Path, 'stat', lambda *_args, **_kwargs:
+                        SimpleNamespace(st_mode=stat.S_IFDIR | 0o733, st_uid=0))
+    with pytest.raises(ValueError, match='write policy differs'):
+        python_runtime._make_service_traversable(directory)
 
 
 def test_private_interpreter_must_match_its_receipted_canonical_path(tmp_path, monkeypatch):

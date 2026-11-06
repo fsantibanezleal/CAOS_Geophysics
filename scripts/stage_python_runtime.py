@@ -27,6 +27,7 @@ ARCHIVE_BYTES = 67921566
 MAX_ARCHIVE = 80 * 1024**2
 MAX_ENTRIES = 10000
 MAX_UNPACKED = 512 * 1024**2
+SERVICE_TRAVERSE_MODE = 0o711
 
 
 def _sha(path: Path) -> str:
@@ -105,10 +106,21 @@ def _verify_python(root: Path, *, installed_path: Path | None = None) -> dict:
             'sha256': _sha(executable)}
 
 
+def _make_service_traversable(path: Path) -> None:
+    no_links(path)
+    info = path.stat()
+    if (not stat.S_ISDIR(info.st_mode) or info.st_uid != 0
+            or info.st_mode & 0o022):
+        raise ValueError('interpreter service path ownership or write policy differs')
+    if stat.S_IMODE(info.st_mode) != SERVICE_TRAVERSE_MODE:
+        os.chmod(path, SERVICE_TRAVERSE_MODE)
+
+
 def _receipt(path: Path) -> dict:
     no_links(path)
     info = path.stat()
-    if not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or stat.S_IMODE(info.st_mode) != 0o700:
+    if (not stat.S_ISDIR(info.st_mode) or info.st_uid != 0 or info.st_mode & 0o022
+            or stat.S_IMODE(info.st_mode) not in (0o700, SERVICE_TRAVERSE_MODE)):
         raise ValueError('existing interpreter runtime root differs')
     manifest = json.loads((path / 'runtime.json').read_text(encoding='ascii'))
     if (manifest.get('schema') != 'geophysics.python-runtime/v1'
@@ -116,6 +128,8 @@ def _receipt(path: Path) -> dict:
             or manifest.get('tree_sha256') != _tree_digest(path / 'python')[0]
             or manifest.get('interpreter') != _verify_python(path)):
         raise ValueError('existing interpreter runtime receipt differs')
+    for directory in (EVIDENCE, RUNTIMES, path):
+        _make_service_traversable(directory)
     return manifest
 
 
@@ -186,6 +200,8 @@ def stage() -> dict:
         if target.exists():
             raise ValueError('interpreter target appeared during staging')
         os.rename(staging, target)
+        for directory in (EVIDENCE, RUNTIMES, target):
+            _make_service_traversable(directory)
         return receipt
     except Exception:
         # Keep the exact failed staging directory for operator inspection.
