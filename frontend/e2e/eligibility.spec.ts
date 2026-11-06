@@ -75,7 +75,7 @@ test("eligible method only is submittable; offline and incompatible methods show
   const method = page.getByRole("combobox", { name: "API method verdict", exact: true });
   await method.selectOption("gravity.survey-l2-ordinary/v1");
   await expect(page.getByTestId("method-eligibility")).toContainText("physical_metadata.geometry.ordinary_l2");
-  await expect(page.getByRole("button", { name: "Submit flag QC job", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Submit ordinary-L2 job", exact: true })).toBeDisabled();
   await method.selectOption("M05");
   await expect(page.getByTestId("method-eligibility")).toContainText("dataset.modality");
   await expect(page.getByRole("button", { name: "Submit flag QC job", exact: true })).toBeDisabled();

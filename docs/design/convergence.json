@@ -101,7 +101,15 @@
         },
         {
           "path": "frontend/e2e/eligibility.spec.ts",
-          "sha256": "ed70d0363d85e85b953a833387155d16435d8e25e2c0b0b1377a54f192bc52de"
+          "sha256": "179c40495850bb223dead63e04b3ba6c8559e097b0fe24d31e4c1354daab37cf"
+        },
+        {
+          "path": "tests/api/test_uploaded_method_eligibility_matrix.py",
+          "sha256": "d014a7b56d75545764bb0c6e19cb3b6c790e51111e75c3b6c0387c2d92af1ab8"
+        },
+        {
+          "path": "docs/validation/r005-eligibility-current-2026-11-06.md",
+          "sha256": "44bfa0bcb06a0029c746563fdd43ad8b82cf15371014dad2f8ca70632e6de7dc"
         }
       ],
       "receipts": []
