@@ -44,3 +44,22 @@ This is local process-level evidence only. It does not qualify Linux service
 limits, actual VPS admission, concurrent-job capacity, replacement service
 startup, or recovery of a deployed worker. R-007 remains unresolved until its
 host and deployment-specific requirements are measured.
+
+## Current-source replay : 2026-11-06
+
+The same three declared tests were rerun on source revision 992dc8d6cf542e48ce73d327bdd1c4c2f5edbc67. Pytest
+reported 3 passed, 0 failed, 0 skipped. The JUnit timestamp is
+2026-11-06T07:46:37.421367-03:00 (UTC 2026-11-06T10:46:37Z).
+
+Source hashes:
+- tests/api/test_job_limits.py: 275ff0037723ffdc8a3ea534f25690f3cc6c084b61c1ac60a22879e580e65376
+- app/worker.py: fd9614d2dfa604158ad8a815a508cb072f06cd02d7d6112e4279601d80893eb9
+- app/compute.py: f509dccfba0c8ff78e37d7ae82f4b4713d22f702147251c3dbdcc9a8d138b78d
+- docs/validation/r007-current-source-2026-11-06.xml: 625b925f8459f0793db11079c367ba0fd87a4e911c1bfd45d8034fdecc0ce85d
+
+Exact command:
+    .venv-api/Scripts/python.exe -m pytest -q --tb=short --junitxml=docs/validation/r007-current-source-2026-11-06.xml tests/api/test_job_limits.py::test_cancel_timeout_failure_and_recovery tests/api/test_job_limits.py::test_scratch_limit_terminates_child tests/api/test_job_limits.py::test_rss_limit_terminates_child
+
+These results remain local process-level evidence. VPS admission, concurrent
+capacity, deployed service startup and recovery remain unqualified; R-007 stays
+unresolved.

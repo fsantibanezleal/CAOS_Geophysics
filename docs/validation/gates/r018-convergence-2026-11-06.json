@@ -4,17 +4,16 @@
   "gate": "scripts/check_sdd_convergence.py::main",
   "gate_sha256": "2f260693df25a2827b2558075a82677ca07c5eb4e598576aadf3726a22caafef",
   "verdict": "pass",
-  "source_revision": "9255ec3b84ba042f7d63d08bc257434a054d39dc",
+  "source_revision": "992dc8d6cf542e48ce73d327bdd1c4c2f5edbc67",
   "command": [
     ".venv-api/Scripts/python.exe",
     "scripts/check_sdd_convergence.py"
   ],
-  "2026-11-06T10:43:00Z": "2026-11-06T10:43:00Z",
   "outputs": [
     {
       "path": "docs/validation/r018-convergence-current-2026-11-06.txt",
-      "sha256": "3b93b716c848b3352c44609d6996b25dd9fe0b667b52656073dacc625171c801"
+      "sha256": "4702d7ab81af89beb7993145e649ff391ac03bebfaa45bf56967c5420bc9cf2c"
     }
   ],
-  "measured_at": "2026-11-06T10:44:05Z"
+  "measured_at": "2026-11-06T10:57:45Z"
 }

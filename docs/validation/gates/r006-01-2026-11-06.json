@@ -4,7 +4,7 @@
   "gate": "tests/api/test_gravity_l2_upload.py::test_admission_memory_preflight_does_not_import_solver_engines",
   "gate_sha256": "8a3688f8cf67ffcfc7b5c9a1ff78942479490964b8e21aa96900b51d3138fa90",
   "verdict": "pass",
-  "source_revision": "9255ec3b84ba042f7d63d08bc257434a054d39dc",
+  "source_revision": "992dc8d6cf542e48ce73d327bdd1c4c2f5edbc67",
   "command": [
     ".venv-api/Scripts/python.exe",
     "-m",
@@ -16,11 +16,11 @@
     "tests/api/test_gravity_l2_upload.py::test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions",
     "tests/api/test_online_mt.py::test_inverse_parameter_effect_and_independent_oracle"
   ],
-  "measured_at": "2026-11-06T10:41:49Z",
+  "measured_at": "2026-11-06T10:51:44Z",
   "outputs": [
     {
       "path": "docs/validation/r006-current-source-2026-11-06.xml",
-      "sha256": "faab56ab7d47b869544c64966031a93f1edbc62e36f3a3f84fa42b478b1ab398"
+      "sha256": "31e238a9ed361cba3c1e0737e5b1170e540b03ebee99916905b02ce872e105db"
     }
   ]
 }

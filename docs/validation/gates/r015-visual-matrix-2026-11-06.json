@@ -4,12 +4,12 @@
   "gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation",
   "gate_sha256": "110a62bfd630ec9028463c35947ff4ef07f03a85e547b1b08225b1a161e206b2",
   "verdict": "pass",
-  "source_revision": "9255ec3b84ba042f7d63d08bc257434a054d39dc",
+  "source_revision": "992dc8d6cf542e48ce73d327bdd1c4c2f5edbc67",
   "command": [
     "npm run build",
     "$env:CAOS_VISUAL_MATRIX_OUTPUT=E:\\_Datos\\CAOS_Geophysics\\validation\\r015-visual-matrix-2026-11-06; npm run test:e2e:visual-matrix"
   ],
-  "measured_at": "2026-11-06T10:41:49Z",
+  "measured_at": "2026-11-06T10:57:45Z",
   "outputs": [
     {
       "path": "docs/validation/r015-visual-matrix-2026-11-06.json",
