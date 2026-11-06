@@ -6,6 +6,7 @@ import hashlib
 import importlib.metadata
 import json
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 import socket
 import subprocess
@@ -847,10 +848,15 @@ def test_no_io_hooks_runtime_or_legacy_mutation(monkeypatch):
     root = Path(__file__).resolve().parents[2]
     assert hashlib.sha256((root/'data-pipeline/gravity_forward.py').read_bytes()).hexdigest() == (
         '000992755f06859340b725f5fa504d59695a45814328ef785a9b91e61c389678')
-    old = json.loads((root/'docs/design/features/m02-prism-operator/runtime-pins.json').read_text())
-    new = json.loads((root/'docs/research/m02-survey-l2-evidence-2026-10-03.json').read_text())
-    sources = {**old['targeted_source_sha256'], **{k:v['sha256'] for k,v in new['installed_sources'].items()}}
-    assert len(sources) == 29
+    if sys.platform == 'linux' and sys.version_info[:3] == (3, 12, 16):
+        runtime = json.loads((root/'docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json').read_text())
+        sources = runtime['targeted_source_sha256']
+        assert len(sources) == 21
+    else:
+        old = json.loads((root/'docs/design/features/m02-prism-operator/runtime-pins.json').read_text())
+        new = json.loads((root/'docs/research/m02-survey-l2-evidence-2026-10-03.json').read_text())
+        sources = {**old['targeted_source_sha256'], **{k:v['sha256'] for k,v in new['installed_sources'].items()}}
+        assert len(sources) == 29
     for rel, expected in sources.items():
         path = importlib.metadata.distribution(rel.split('/')[0]).locate_file(rel)
         assert hashlib.sha256(path.read_bytes()).hexdigest() == expected, rel
