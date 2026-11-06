@@ -466,14 +466,17 @@
       "en": "notebooks/en/08-learning/04-first-arrival-user-data.ipynb",
       "es": "notebooks/es/08-learning/04-first-arrival-user-data.ipynb",
       "methods": [
-        "M12"
+        "M09"
       ],
-      "title": "First-arrival user-data inversion",
+      "title": "First-arrival data: a bounded straight-ray inverse",
       "sources": [
+        "https://docs.scipy.org/doc/scipy-1.15.2/reference/generated/scipy.optimize.lsq_linear.html",
+        "https://docs.scipy.org/doc/scipy-1.15.2/reference/generated/scipy.sparse.linalg.lsqr.html",
+        "https://doi.org/10.1145/355984.355989",
         "https://www.pygimli.org/_examples_auto/2_seismics/plot_04_koenigsee/",
         "https://www.pygimli.org/user-guide/inversion/"
       ],
-      "content_scope": "Exercises first-arrival user-data inversion and sensitivity with its documented evidence limits."
+      "content_scope": "Runs the bounded straight-ray first-arrival inverse on the authored control or rights-cleared local picks, compares bounded and unbounded methods, and reports sensitivity without claiming field accuracy."
     },
     {
       "en": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",

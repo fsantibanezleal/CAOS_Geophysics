@@ -34,7 +34,7 @@ Bilingual lessons connect the theory to the repository’s implementations and r
 | `08-learning` | 1 | [Learned inverse, group splits and paired uncertainty](08-learning/01-learning-splits.ipynb) | [01-learning-splits](../es/08-learning/01-learning-splits.ipynb) |
 | `08-learning` | 2 | [Novelty thresholds and OOD consequences](08-learning/02-learning-heldout.ipynb) | [02-learning-heldout](../es/08-learning/02-learning-heldout.ipynb) |
 | `08-learning` | 3 | [Phase-picker stress strata and browser-parity boundary](08-learning/03-learning-method-comparison.ipynb) | [03-learning-method-comparison](../es/08-learning/03-learning-method-comparison.ipynb) |
-| `08-learning` | 3 | [First-arrival user-data processing and sensitivity](08-learning/04-first-arrival-user-data.ipynb) | [04-first-arrival-user-data](../es/08-learning/04-first-arrival-user-data.ipynb) |
+| `08-learning` | 3 | [First-arrival data: a bounded straight-ray inverse](08-learning/04-first-arrival-user-data.ipynb) | [04-first-arrival-user-data](../es/08-learning/04-first-arrival-user-data.ipynb) |
 | `08-learning` | 3 | [M12 learned velocity checkpoint: locked holdout](08-learning/05-m12-velocity-checkpoint.ipynb) | [05-m12-velocity-checkpoint](../es/08-learning/05-m12-velocity-checkpoint.ipynb) |
 | `08-learning` | 3 | [Null-space refinement: calibration and held-out stress tests](08-learning/06-nullspace-refinement-evidence.ipynb) | [06-nullspace-refinement-evidence](../es/08-learning/06-nullspace-refinement-evidence.ipynb) |
 | `08-learning` | 4 | [Geometry-normalized velocity refinement under held-out shifts](08-learning/07-physics-conditioned-velocity-refinement.ipynb) | [07-physics-conditioned-velocity-refinement](../es/08-learning/07-physics-conditioned-velocity-refinement.ipynb) |

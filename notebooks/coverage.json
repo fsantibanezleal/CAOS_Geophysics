@@ -25,6 +25,7 @@
       "06-seismology/04-m13-learned-phase-picking.ipynb"
     ],
     "M-9": [
+      "06-seismology/02-traveltime-fwi.ipynb",
       "08-learning/04-first-arrival-user-data.ipynb"
     ],
     "M-10": [

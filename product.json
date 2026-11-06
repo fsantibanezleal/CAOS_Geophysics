@@ -65,6 +65,7 @@
     "ert.run",
     "waveform_processing.process_waveform_record",
     "traveltime.run",
+    "velocity_user_data.calculate",
     "seismic.invert_observations",
     "physical_optimizer.solve_bounded_physical",
     "velocity_residual_learning.execute",
