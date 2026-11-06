@@ -617,7 +617,7 @@
       "id": "R-013",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/selected-case-reactivity.spec.ts.",
-      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete. For uploaded gravity M02, selected dataset, eligibility, parameters, job state and completed result are connected in one workbench; the result binds to the selected dataset/job receipt. This local path does not establish product-wide selected-case reactivity.",
+      "note": "Merged gravity and MT owner workbenches execute actual API/worker upload, eligibility, parameterized jobs, result selection and exports. MT has seven linked scientific views, conditional controls and real cl061 QC-only rejection. All promised modality-linked views remain incomplete. For uploaded gravity M02, selected dataset, eligibility, parameters, job state and completed result are connected in one workbench; the result binds to the selected dataset/job receipt. This local path does not establish product-wide selected-case reactivity. A 2026-11-06 local production-preview browser replay verifies baked gravity-to-magnetic case switching, variant changes, and FWI source-position changes against rendered chart pixels, changed state keys and data-stale=0; the complete uploaded-result and modality matrix remains open.",
       "evidence": [
         {
           "path": "docs/design/features/processing-workbench/validation.md",
@@ -654,6 +654,10 @@
         {
           "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
           "sha256": "f06e815c1c2a9574d307061a0a8a0e709deb66eb1e7b860aedd3ce74b0da6209"
+        },
+        {
+          "path": "docs/validation/r013-r014-browser-controls-2026-11-06.md",
+          "sha256": "c5e0bc8ecb3e39662f3ba7df93c8f44b2f4a5f97f038c89375b42538b152896e"
         }
       ],
       "receipts": []
@@ -662,7 +666,7 @@
       "id": "R-014",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/scientific-views.spec.ts and frontend/e2e/animation-controls.spec.ts.",
-      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete. The uploaded M02 result view uses returned active-cell bounds and receiver coordinates in metres, a depth selector, observed/predicted/residual values in mGal, held-out markers and signed residual shapes. The complete method/view/animation matrix and owner visual acceptance remain open.",
+      "note": "Merged MT views show actual complex responses, signed residuals, fixed-layer profiles, conditional samples and objective-call states without invented geology. Full modality-specific user-result instruments and physically meaningful animation gates remain incomplete. The uploaded M02 result view uses returned active-cell bounds and receiver coordinates in metres, a depth selector, observed/predicted/residual values in mGal, held-out markers and signed residual shapes. The complete method/view/animation matrix and owner visual acceptance remain open. A 2026-11-06 local production-preview browser replay verifies metre/second axes, a symmetric signed FWI residual scale, visible changes between saved wavefield frames and inverse updates, Play/Pause behavior, and 30-degree rotation only on actual 3D geometry; full modality-specific views remain open.",
       "evidence": [
         {
           "path": "frontend/src/api/gravity-l2-contracts.ts",
@@ -691,6 +695,10 @@
         {
           "path": "docs/validation/m02-frontend-workbench-2026-10-28.md",
           "sha256": "f06e815c1c2a9574d307061a0a8a0e709deb66eb1e7b860aedd3ce74b0da6209"
+        },
+        {
+          "path": "docs/validation/r013-r014-browser-controls-2026-11-06.md",
+          "sha256": "c5e0bc8ecb3e39662f3ba7df93c8f44b2f4a5f97f038c89375b42538b152896e"
         }
       ],
       "receipts": []
