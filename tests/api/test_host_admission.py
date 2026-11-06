@@ -281,5 +281,7 @@ def test_real_parent_crash_and_recovery(make_harness, tmp_path):
 def test_host_guide_contract():
     guide = (ROOT / "docs/guides/12_actual_host_admission.md").read_text(encoding="utf-8")
     for term in ("DynamicUser", "StateDirectory", "twenty", "TestClient", "SIGKILL",
-                 "operator", "Pages", "70%", "two rollback releases", "RLIMIT_AS"):
+                 "operator", "Pages", "70%", "two rollback releases", "RLIMIT_AS",
+                 "M02 uploaded ordinary-L2 child lane", "3.12.16",
+                 "server_gravity_l2_admission.sh", "does not establish recovery of field geology"):
         assert term in guide
