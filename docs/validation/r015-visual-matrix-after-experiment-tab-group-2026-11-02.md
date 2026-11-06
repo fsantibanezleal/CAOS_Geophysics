@@ -1,4 +1,4 @@
-# Current visual matrix after experiment navigation grouping — 2026-11-02
+# Current visual matrix after experiment navigation grouping : 2026-11-02
 
 The current production bundle was tested with the declared 16-combination browser matrix: EN/ES, light/dark, desktop/phone and normal/reduced motion. **16 passed; zero failed, skipped or flaky.** The run traversed all declared routes and navigation dialogs and produced 112 screenshots (11,169,838 bytes).
 

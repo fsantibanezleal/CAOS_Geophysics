@@ -1,4 +1,4 @@
-# M04 quantity Jacobian and full-covariance gates — 2026-11-02
+# M04 quantity Jacobian and full-covariance gates : 2026-11-02
 
 ## R-405: quantity-specific physical composition
 

@@ -1,4 +1,4 @@
-# Long Valley gravity time-lapse validation — 2026-11-02
+# Long Valley gravity time-lapse validation : 2026-11-02
 
 ## Scope
 

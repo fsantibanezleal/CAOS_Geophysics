@@ -1,4 +1,4 @@
-# M08 local scientific and service checks — 2026-11-02
+# M08 local scientific and service checks : 2026-11-02
 
 ## Results
 

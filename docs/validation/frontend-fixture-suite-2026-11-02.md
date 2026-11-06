@@ -1,4 +1,4 @@
-# Frontend fixture-backed suite — 2026-11-02
+# Frontend fixture-backed suite : 2026-11-02
 
 ## Run identity
 

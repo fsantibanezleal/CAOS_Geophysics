@@ -1,4 +1,4 @@
-# Gravity single-cell KKT regression — 2026-11-02
+# Gravity single-cell KKT regression : 2026-11-02
 
 ## Finding and correction
 

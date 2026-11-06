@@ -1,4 +1,4 @@
-# M04 magnetic physical foundation replay — 2026-11-02
+# M04 magnetic physical foundation replay : 2026-11-02
 
 ## Scope
 

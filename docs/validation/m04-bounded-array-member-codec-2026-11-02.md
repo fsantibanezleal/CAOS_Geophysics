@@ -1,4 +1,4 @@
-# M04 bundle container, array and history controls — 2026-11-02
+# M04 bundle container, array and history controls : 2026-11-02
 
 This is a scoped validation record for the NPY member primitives in
 `data-pipeline/magnetic_survey_bundle.py`. It is **not** acceptance of R-415,

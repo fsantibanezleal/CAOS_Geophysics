@@ -1,4 +1,4 @@
-# M04 independent synthetic acquisition matrix — 2026-11-02
+# M04 independent synthetic acquisition matrix : 2026-11-02
 
 ## What was generated
 

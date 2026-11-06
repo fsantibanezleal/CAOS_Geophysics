@@ -1,4 +1,4 @@
-# Local job resource-limit controls — 2026-11-06
+# Local job resource-limit controls : 2026-11-06
 
 ## Result
 

@@ -1,4 +1,4 @@
-# M02 uploaded-prism browser run — 2026-11-01
+# M02 uploaded-prism browser run : 2026-11-01
 
 ## Result
 

@@ -1,4 +1,4 @@
-# Shell product gate on current dirty checkout — 2026-11-05
+# Shell product gate on current dirty checkout : 2026-11-05
 
 ## Result
 

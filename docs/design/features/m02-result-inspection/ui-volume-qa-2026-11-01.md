@@ -1,4 +1,4 @@
-# M02 3D volume component visual check — 2026-11-01
+# M02 3D volume component visual check : 2026-11-01
 
 This is a browser rendering and interaction check of the isolated physical
 volume component. The authored preview fixture is an eight-cell signed-density

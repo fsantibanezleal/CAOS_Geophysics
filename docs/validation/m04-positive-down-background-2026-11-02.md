@@ -1,4 +1,4 @@
-# M04 positive-down inducing-field background correction — 2026-11-02
+# M04 positive-down inducing-field background correction : 2026-11-02
 
 ## Finding and correction
 

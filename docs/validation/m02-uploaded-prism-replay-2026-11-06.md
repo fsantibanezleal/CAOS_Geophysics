@@ -1,4 +1,4 @@
-# M02 uploaded prism replay acceptance — 2026-11-06
+# M02 uploaded prism replay acceptance : 2026-11-06
 
 ## Result
 

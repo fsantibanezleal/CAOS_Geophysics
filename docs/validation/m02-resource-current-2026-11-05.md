@@ -1,4 +1,4 @@
-# M02 current-source resource replay — 2026-11-05
+# M02 current-source resource replay : 2026-11-05
 
 ## Result
 

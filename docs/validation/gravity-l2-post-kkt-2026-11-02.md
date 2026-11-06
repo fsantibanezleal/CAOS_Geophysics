@@ -1,4 +1,4 @@
-# Gravity L2 locked matrix after scalar-bound KKT fix — 2026-11-02
+# Gravity L2 locked matrix after scalar-bound KKT fix : 2026-11-02
 
 ## Reproduction and scope
 

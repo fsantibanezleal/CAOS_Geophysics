@@ -1,4 +1,4 @@
-# CPU2 terminal certificate validation ledger — 2026-11-02
+# CPU2 terminal certificate validation ledger : 2026-11-02
 
 **Current verdict: validation in progress; no scientific acceptance.** This is
 candidate-source evidence under the approved design amendment. It is not a
@@ -86,7 +86,7 @@ resource-gate failures; they are not erased by the later replays. The fresh-root
 isolated replays passed the unchanged 120-second cap, so neither overrun
 reproduced. No limit was changed and no scientific acceptance is inferred.
 
-## Exact-checkout focused rerun — 2026-11-02 12:19 CLST
+## Exact-checkout focused rerun : 2026-11-02 12:19 CLST
 
 A fresh focused replay of `tests/numerics/test_gravity_irls_corrected.py` on the
 current direct checkout passed 36/36 tests with the required one-thread BLAS,
@@ -101,7 +101,7 @@ Exact-checkout SHA-256:
 - `data-pipeline/gravity_irls_corrected.py`: `d5a6a80c75b22d3fd9b01f251d40443585b4c9cd24e5b27fa1d72a037bdc4b01`
 - `tests/numerics/test_gravity_irls_corrected.py`: `8e185a8009b1eb3228cfc59c814d3a79335b8fa35af470c2d0dd35da126f7b53`
 
-## Current-source family-0 / condition-0 replay — 2026-11-02
+## Current-source family-0 / condition-0 replay : 2026-11-02
 
 The prior CPU2 archive failed current-source identity because its recorded
 `gravity_l2.py` digest differed from the working tree. It remains historical;
@@ -138,7 +138,7 @@ Independent review of the other 23 family/condition cells, complete resource
 upper-bound/host admission, remaining scientific/product gates, and VPS cutover
 remain open.
 
-## Current-source certificate matrix and independent replay — 2026-11-02
+## Current-source certificate matrix and independent replay : 2026-11-02
 
 After detecting that the earlier archived CPU2 calibration used a different
 `gravity_l2.py` source hash, the complete frozen matrix was rerun in a fresh
@@ -195,7 +195,7 @@ exact-source resource replay and justified upper-bound/host admission are open.
 External peer/owner review, the other M02 workflows, and all broader
 product/release gates also remain open.
 
-## Exact-current-source resource replay — 2026-11-02
+## Exact-current-source resource replay : 2026-11-02
 
 The frozen 20-cap/20-nominal resource harness was rerun into a new external
 directory after the previous receipt was found to contain a stale
@@ -228,7 +228,7 @@ charge, or hosted job admission. The numerical resource repeatability gate is
 now source-current and locally measured; proof from the bounded allocation
 contract and actual-host admission remain separate required work.
 
-## Current-checkout independent replay — 2026-11-06
+## Current-checkout independent replay : 2026-11-06
 
 The matrix auditor was rerun from checkout revision
 `88ea5958e78593bff0df766041a0b32aa06f51d8` against the retained 24 current-source

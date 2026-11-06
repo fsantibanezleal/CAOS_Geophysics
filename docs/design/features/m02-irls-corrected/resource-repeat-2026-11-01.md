@@ -1,4 +1,4 @@
-# Corrected CPU2 resource repeats — 2026-11-01
+# Corrected CPU2 resource repeats : 2026-11-01
 
 ## Scope and evidence
 

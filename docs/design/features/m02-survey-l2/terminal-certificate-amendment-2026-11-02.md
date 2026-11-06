@@ -1,4 +1,4 @@
-# Additive M02 terminal certificate amendment — 2026-11-02
+# Additive M02 terminal certificate amendment : 2026-11-02
 
 **Decision:** the user approved designing and validating this additive certificate.
 **State:** design approved; candidate implementation present in the direct checkout.
