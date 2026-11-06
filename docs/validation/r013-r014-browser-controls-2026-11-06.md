@@ -2,11 +2,12 @@
 
 ## Scope
 
-This is a local browser result for the static scientific workbench at source
-revision `6061ea28088b480516f7d484d21123b557860b05`. The production frontend
-build completed with `npm run build`. The browser suite ran against that build
-with Vite preview; it did not call an API, upload a file, modify project data,
-or use the VPS.
+This is a local browser result for the static scientific workbench. Its
+production frontend build completed with `npm run build` at application-source
+revision `6061ea28088b480516f7d484d21123b557860b05`. The browser tests and
+receipt were added afterward and committed as `f95fb4e`. The suite ran against
+that build with Vite preview; it did not call an API, upload a file, modify
+project data, or use the VPS.
 
 Command:
 
