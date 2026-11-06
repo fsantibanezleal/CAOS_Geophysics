@@ -23,6 +23,26 @@ class ContinuationError(ValueError):
     """The grid cannot support the declared harmonic continuation."""
 
 
+def _canonical_parent_bytes(value: object) -> bytes:
+    """Serialize the strict JSON value used for an in-memory parent identity."""
+    def json_value(node: object) -> bool:
+        if node is None or type(node) in (str, bool, int):
+            return True
+        if type(node) is float:
+            return bool(np.isfinite(node))
+        if type(node) is list:
+            return all(json_value(child) for child in node)
+        if type(node) is dict:
+            return all(type(key) is str and json_value(child) for key, child in node.items())
+        return False
+
+    if not json_value(value):
+        raise ContinuationError("input M03 result must be strict JSON with string keys and finite numbers")
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")
+
+
 def upward_continue(
     values: object,
     *,
@@ -121,6 +141,8 @@ def process_grid_result(result: object, *, height_m: float, roi: tuple[int, int,
     """
     if not isinstance(result, dict) or result.get("schema") != "magnetic-flightline-process-result-1":
         raise ContinuationError("input must be a magnetic-flightline-process-result-1 artifact")
+    parent_bytes = _canonical_parent_bytes(result)
+    parent_sha256 = sha256(parent_bytes).hexdigest()
     grid_record = result.get("grid")
     if not isinstance(grid_record, dict):
         raise ContinuationError("input M03 result has no gridded field")
@@ -153,7 +175,8 @@ def process_grid_result(result: object, *, height_m: float, roi: tuple[int, int,
                                 height_m=height_m, support_mask=window_support)
     continued.update({
         "source": result.get("source"),
-        "parent_result_sha256": None,
+        "parent_result_sha256": parent_sha256,
+        "parent_result_sha256_basis": "canonical-json-utf8-sorted-keys-v1",
         "value_unit": result.get("configuration", {}).get("value_unit"),
         "x_easting_m": x[c0:c1].tolist(),
         "y_northing_m": y[r0:r1].tolist(),
@@ -189,6 +212,7 @@ def main(argv: list[str] | None = None) -> int:
         continued = process_grid_result(result, height_m=args.height_m,
                                         roi=tuple(args.roi) if args.roi is not None else None)
         continued["parent_result_sha256"] = sha256(raw).hexdigest()
+        continued["parent_result_sha256_basis"] = "input-file-bytes"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with output_path.open("x", encoding="utf-8", newline="\n") as stream:
             json.dump(continued, stream, indent=2, allow_nan=False)

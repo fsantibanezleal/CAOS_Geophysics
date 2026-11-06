@@ -264,6 +264,62 @@ optimizador público M02, L2/IRLS, incertidumbre, UI, contención y despliegue.
 
 ## Source-linked continuation, not a numerical claim
 
+### M03 upward-continuation utility
+
+`magnetic_continuation.upward_continue` applies the harmonic Fourier transfer
+`F(k,h)=F(k,0) exp(-|k|h)` to a complete, uniformly sampled rectangular grid.
+It fits and preserves the affine regional plane, filters the residual, rejects
+nonfinite or unsupported cells, and reports the periodic-edge seam ratio. The
+analytic sinusoid lesson checks the predicted `exp(-|k|h)` attenuation and
+unchanged affine plane; this is a controlled operator check, not field-data
+validation or a subsurface inverse.
+
+`magnetic_continuation.process_grid_result` composes the transform with an M03
+processing-result object. The caller selects a half-open row/column ROI; every
+cell in that rectangle must be supported and the parent axes must be increasing
+with uniform metric spacing. The child retains the selected east/north axes,
+value unit, source identity and ROI bounds. For an in-memory result object,
+`parent_result_sha256` hashes canonical UTF-8 JSON with sorted keys, compact
+separators and finite numbers only (`canonical-json-utf8-sorted-keys-v1`). The
+CLI instead binds the exact parent-file bytes (`input-file-bytes`). The basis
+field makes those identities distinguishable. Neither digest authorizes raw
+source redistribution or upgrades the transform into a correction, provider
+equivalence claim or inverse result.
+
+The exact callable names are listed in `product.json` under
+`method_entrypoints`; the bilingual M03 lesson runs the parser, geometry
+planner, CSV processor, analytic continuation, and direct result-composition
+path. Its authored survey is synthetic and deliberately includes a tie-line
+bias and one height-QC outlier.
+
+### Español: utilidad de continuación hacia arriba M03
+
+`magnetic_continuation.upward_continue` aplica la transferencia armónica de
+Fourier `F(k,h)=F(k,0) exp(-|k|h)` a una grilla rectangular completa y uniforme.
+Ajusta y conserva el plano regional afín, filtra el residual, rechaza celdas no
+finitas o sin soporte e informa la razón de salto periódico en los bordes. La
+lección sinusoidal verifica la atenuación prevista `exp(-|k|h)` y el plano afín
+sin cambios; es un control del operador, no una validación de datos de campo ni
+una inversión del subsuelo.
+
+`magnetic_continuation.process_grid_result` compone la transformación con un
+objeto de resultado M03. El usuario selecciona una ROI semiabierta de filas y
+columnas; cada celda debe tener soporte y los ejes padre deben ser crecientes y
+uniformes en metros. El hijo conserva ejes este/norte seleccionados, unidad,
+identidad fuente y límites ROI. Para un objeto en memoria,
+`parent_result_sha256` calcula SHA-256 sobre JSON UTF-8 canónico con claves
+ordenadas, separadores compactos y solo números finitos
+(`canonical-json-utf8-sorted-keys-v1`). La CLI vincula los bytes exactos del
+archivo padre (`input-file-bytes`). El campo de base distingue ambas
+identidades. Ningún hash autoriza redistribuir datos originales ni convierte la
+transformación en corrección, equivalencia con un proveedor o inversión.
+
+Los nombres invocables se declaran en `product.json`, bajo `method_entrypoints`;
+la lección bilingüe M03 ejecuta parser, planificador geométrico, procesador CSV,
+continuación analítica y composición directa de resultados. El levantamiento
+propio es sintético e incluye deliberadamente sesgo de amarre y un atípico QC de
+altura.
+
 Physical and inverse definitions remain tied to actual primary
 [SimPEG magnetic source](https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/potential_fields/magnetics/simulation.py),
 [WeightedLeastSquares](https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/regularization/base.py),

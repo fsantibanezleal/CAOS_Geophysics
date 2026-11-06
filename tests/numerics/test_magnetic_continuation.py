@@ -107,7 +107,22 @@ def test_m03_result_roi_preserves_coordinates_and_rejects_unsupported_cells():
     assert window["x_easting_m"] == x[2:10].tolist()
     assert window["y_northing_m"] == y[1:9].tolist()
     assert window["value_unit"] == "nT"
+    expected_parent_hash = sha256(json.dumps(
+        artifact, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")).hexdigest()
+    assert window["parent_result_sha256"] == expected_parent_hash
+    assert window["parent_result_sha256_basis"] == "canonical-json-utf8-sorted-keys-v1"
     with pytest.raises(ContinuationError, match="complete true support mask"):
+        process_grid_result(artifact, height_m=100)
+
+
+@pytest.mark.parametrize("invalid_member", [{1: "non-JSON key"}, {"bad": float("nan")}])
+def test_m03_result_parent_hash_requires_strict_json(invalid_member):
+    artifact = {
+        "schema": "magnetic-flightline-process-result-1",
+        "extra": invalid_member,
+    }
+    with pytest.raises(ContinuationError, match="strict JSON"):
         process_grid_result(artifact, height_m=100)
 
 
@@ -130,6 +145,7 @@ def test_cli_hashes_parent_result_and_never_overwrites(tmp_path):
     assert main(["--input", str(source), "--output", str(output), "--height-m", "250"]) == 0
     saved = json.loads(output.read_text(encoding="utf-8"))
     assert saved["parent_result_sha256"] == sha256(source.read_bytes()).hexdigest()
+    assert saved["parent_result_sha256_basis"] == "input-file-bytes"
     assert saved["height_m"] == 250
     with pytest.raises(SystemExit) as error:
         main(["--input", str(source), "--output", str(output), "--height-m", "250"])

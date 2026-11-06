@@ -478,7 +478,7 @@
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
-          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+          "sha256": "891a44ae2bc6b34f849568858c33004bdf53cfb90e50725de1351e79ef9256e1"
         },
         {
           "path": "docs/validation/m12-nullspace-v1_1-compatible-replay-2026-10-31.json",
@@ -883,7 +883,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages, the docs matrix binds all 66 notebook files, and the M09 pair has zero findings in the current static notebook gate. The repository-wide static notebook gate still reports 255 findings elsewhere; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 208 findings across 52 notebooks, all in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -939,7 +939,7 @@
         },
         {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "8b039c2179925a6c63cbe644f340ab3851ef792025826b76299b064296748892"
+          "sha256": "80b0ee7bc24ddb2f6135eb6b353b943a84a525b025d6f86400d619ee2da1a177"
         },
         {
           "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
@@ -959,7 +959,7 @@
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "e0a84610a9600d516431505142b99e6be3f8c9521c4d33681903f43a4e49cc37"
+          "sha256": "11b942bbda3fb9c62ce8e4aa8d6d2f78d1934d0cf02dba3acda9550804414b71"
         },
         {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
@@ -983,7 +983,7 @@
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
-          "sha256": "c033478310a136f3e448f46a71fb5d6c22a6f190a24bf54941e155297f8db01e"
+          "sha256": "891a44ae2bc6b34f849568858c33004bdf53cfb90e50725de1351e79ef9256e1"
         },
         {
           "path": "docs/validation/long-valley-time-lapse-2026-11-02.md",
