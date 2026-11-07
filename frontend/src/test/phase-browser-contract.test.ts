@@ -26,8 +26,15 @@ const manifest = () => ({
   selection: { selected: 24, qc_valid: 23, qc_rejected: 1, full_benchmark_selected: 6000,
     selected_before_heldout_scoring: true },
   source: { dataset: "STEAD", citation: "Stanford Earthquake Dataset", authors: "Mousavi et al.",
-    doi: "10.1109/ACCESS.2019.2947848", license: "CC BY 4.0", license_url: "https://example.org/license",
-    original_url: "https://example.org/source", mirror_url: "https://example.org/mirror", modification: "ENZ normalized" },
+    doi: "10.1109/ACCESS.2019.2947848", license: "CC BY 4.0",
+    license_url: "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE",
+    original_url: "https://example.org/source", mirror_url: "https://example.org/mirror", modification: "ENZ normalized",
+    redistribution: { decision: "approved-with-attribution", license: "CC BY 4.0",
+      license_url: "https://creativecommons.org/licenses/by/4.0/",
+      review: "docs/design/features/phase-picking/rights-review-2026-10-28.md",
+      attribution_file: "ATTRIBUTION.md", upstream_license_commit: "b".repeat(40),
+      upstream_license_blob_sha1: "c".repeat(40), upstream_license_sha256: hash,
+      seisbench_commit: "d".repeat(40), seisbench_stead_blob_sha1: "e".repeat(40), mirror_license_sha256: hash } },
   records: Array.from({ length: 24 }, (_, i) => i === 19 ? {
     trace_id: `trace-${i}`, status: "qc-rejected", category: "noise", network: "AV", station_id: "AV.ANNE",
     channel: "EH", analyst_p_s: null, analyst_s_s: null, reference_is_ground_truth: false,
@@ -82,6 +89,18 @@ describe("M13 browser input and frozen asset boundary", () => {
     const changed = manifest();
     changed.records[19].waveform_file = "replacement.f32";
     expect(() => parsePhaseManifest(changed)).toThrow(/QC-failed/);
+  });
+
+  it("rejects an unreviewed or malformed public asset rights declaration", () => {
+    const unreviewed = manifest();
+    unreviewed.source.redistribution.decision = "pending";
+    expect(() => parsePhaseManifest(unreviewed)).toThrow(/redistribution rights/);
+    const mutableLicense = manifest();
+    mutableLicense.source.license_url = "https://github.com/smousavi05/STEAD/blob/master/LICENSE";
+    expect(() => parsePhaseManifest(mutableLicense)).toThrow(/pinned to the reviewed license/);
+    const malformed = manifest();
+    malformed.source.redistribution.upstream_license_sha256 = "not-a-digest";
+    expect(() => parsePhaseManifest(malformed)).toThrow(/SHA-256/);
   });
 
   it("checks the sealed benchmark population and checkpoint before showing offline metrics", () => {

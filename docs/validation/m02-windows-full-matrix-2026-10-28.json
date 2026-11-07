@@ -1,0 +1,496 @@
+{
+  "schema": "caos.geophysics.m02-windows-control-matrix/v1",
+  "run_id": "m02-control-matrix-parallel-20261028-1207",
+  "source_revision": "455cf910878897f38ffd02537ba6c4272fcd4f9f",
+  "recorded_utc": "2026-10-28T15:29:38Z",
+  "scope": "full 4-condition x 6-family locked ordinary gravity L2 control matrix; Windows CPU; independent process per case",
+  "runtime": {
+    "python": "3.12.10",
+    "platform": "Windows-11-10.0.26300-SP0",
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "NUMEXPR_NUM_THREADS": "1"
+    },
+    "gpu_used": false
+  },
+  "summary": {
+    "expected": 24,
+    "executed": 24,
+    "passed": 24,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "max_case_wall_seconds": 1214.054
+  },
+  "sources": {
+    "data-pipeline/gravity_l2.py": "742d4ead0e9837bd56f11f2f99e566e80deb3c030fe3d8a09f2bb7dc15b04486",
+    "data-pipeline/gravity_l2_metric.py": "202b8e6355334d805b6b4f898089ef0e3c5e92f9264f8200dd647a5184fc12ba",
+    "data-pipeline/gravity_l2_precision.py": "57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a",
+    "data-pipeline/gravity_survey_l2.py": "50934e1f56fcd468787b113598d01966b0a0eb1b124cb95363605fea8278da97",
+    "tests/data/test_gravity_survey_l2.py": "0da369509d4725646473fb611ee69a5c8e4aead81bfa4468b2e1b763c2a7816e",
+    "tests/numerics/test_gravity_l2.py": "18a8981be46e7d1f5cdc7e2663af90f8e6e5f88c464d2b4e6f14a355cd4060e4",
+    "tests/numerics/test_gravity_l2_selection.py": "112abe0ebeea7c74e1ea60728f2d47a5283bf2fe71fc6045b8a49f51b3b0a17a",
+    "scripts/run_m02_control_matrix.ps1": "4c8e61e39cf64a6b1efc55ede34da60bc3e9c5c246fd9fc617c2cd6c2433e102"
+  },
+  "cases": [
+    {
+      "family": 0,
+      "condition": 0,
+      "seed": 700001,
+      "selection_status": "selected",
+      "selected_index": 5,
+      "outer_wrms": 1.2327063603217272,
+      "model_rmse_ratio": 0.8978827037838887,
+      "test_wall_seconds": 843.594000000041,
+      "junit_sha256": "bcbf90689d5dada966622ef8df53b93151b1ab32a5e845b606691f1e3a05d036",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 853.22
+    },
+    {
+      "family": 1,
+      "condition": 0,
+      "seed": 700101,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 0.9420062807059089,
+      "model_rmse_ratio": 0.8314482984052772,
+      "test_wall_seconds": 944.3589999999967,
+      "junit_sha256": "3f3d8ae9e303584a73c1a6f2d17509779f4a827ee7d5562158ee2fe80e64e421",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 954.171
+    },
+    {
+      "family": 2,
+      "condition": 0,
+      "seed": 700201,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 1.1323578984218765,
+      "model_rmse_ratio": 0.6103740884197871,
+      "test_wall_seconds": 952.3439999999828,
+      "junit_sha256": "2e40cf4ee01106bc89ca24f9aeadb5047d0909d202939f9488b5347e21b3e941",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 962.714
+    },
+    {
+      "family": 3,
+      "condition": 0,
+      "seed": 700301,
+      "selection_status": "selected",
+      "selected_index": 5,
+      "outer_wrms": 1.003482481611938,
+      "model_rmse_ratio": 0.4345550370895293,
+      "test_wall_seconds": 910.25,
+      "junit_sha256": "de6ccfbe414e0e1d847e626e8998e6180f6dc0a6d337c4c29e125f09ea168c3c",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 920.804
+    },
+    {
+      "family": 4,
+      "condition": 0,
+      "seed": 700401,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 1.14313716776524,
+      "model_rmse_ratio": null,
+      "test_wall_seconds": 870.6089999999967,
+      "junit_sha256": "165bcf9c3833430b1b08895ba0d3f07a0cf4b09a164e999bc8bdcb4f1396e4e9",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 874.2
+    },
+    {
+      "family": 5,
+      "condition": 0,
+      "seed": 700501,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 1.1080232806137744,
+      "model_rmse_ratio": 0.8443968367238341,
+      "test_wall_seconds": 866.469000000041,
+      "junit_sha256": "f8a04fec7d3ae0216bd550b4c3f30c96dbd966a3f93142d178253199b8d48755",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 878.118
+    },
+    {
+      "family": 0,
+      "condition": 1,
+      "seed": 700002,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 1.2183073213497042,
+      "model_rmse_ratio": 0.606923671559843,
+      "test_wall_seconds": 870.515000000014,
+      "junit_sha256": "ec62c6898adb13865782f50f34663f1de83639b998872ea863b504904334d267",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 882.063
+    },
+    {
+      "family": 1,
+      "condition": 1,
+      "seed": 700102,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 1.2202875571027072,
+      "model_rmse_ratio": 0.8331853951348568,
+      "test_wall_seconds": 914.469000000041,
+      "junit_sha256": "2cb340a49a7f9efcec004878df67fb15ff6c3b7fd1621aab2d125a3fd0c74b5c",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 926.866
+    },
+    {
+      "family": 2,
+      "condition": 1,
+      "seed": 700202,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 1.1158673017915455,
+      "model_rmse_ratio": 0.6068497764023744,
+      "test_wall_seconds": 1012.4679999999935,
+      "junit_sha256": "ec82281d84550720e996cf605ebd332a6e0dc6b3e1eb7c623855284e25a35e84",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1025.742
+    },
+    {
+      "family": 3,
+      "condition": 1,
+      "seed": 700302,
+      "selection_status": "selected",
+      "selected_index": 5,
+      "outer_wrms": 1.0872236350579787,
+      "model_rmse_ratio": 0.4830628901753926,
+      "test_wall_seconds": 888.015000000014,
+      "junit_sha256": "06f8adbcd7f6135c666b14b1ed68e5e94a291abcf5eddef0d63cde8972c2c35e",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 899.873
+    },
+    {
+      "family": 4,
+      "condition": 1,
+      "seed": 700402,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 1.1720061427884343,
+      "model_rmse_ratio": null,
+      "test_wall_seconds": 944.7339999999967,
+      "junit_sha256": "130bb87306693dea4876457711711df31b5d51eb19e8ddee66b8fd1bf966e1e9",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 948.597
+    },
+    {
+      "family": 5,
+      "condition": 1,
+      "seed": 700502,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 0.9007948658183716,
+      "model_rmse_ratio": 0.8739019622042774,
+      "test_wall_seconds": 1041.640000000014,
+      "junit_sha256": "48c3bfa0972cee8fbb4358f70608705024946cd1b2c35bfd3c1039909f573ff1",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1053.978
+    },
+    {
+      "family": 0,
+      "condition": 2,
+      "seed": 700003,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 1.2741567801613016,
+      "model_rmse_ratio": 0.5322373766795688,
+      "test_wall_seconds": 1000.125,
+      "junit_sha256": "9091348be39123731682c7097e775460cfc60a51683b3f4955a14be91d7390d9",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1011.967
+    },
+    {
+      "family": 1,
+      "condition": 2,
+      "seed": 700103,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 1.05424272152114,
+      "model_rmse_ratio": 0.8719134402793293,
+      "test_wall_seconds": 889.0310000000172,
+      "junit_sha256": "43a6d85699dcdf450c1960f2c1a138dc748e84b9e8090dbbb22b0c8826fbe74b",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 900.614
+    },
+    {
+      "family": 2,
+      "condition": 2,
+      "seed": 700203,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 0.838976437863179,
+      "model_rmse_ratio": 0.6052629754866046,
+      "test_wall_seconds": 851.5779999999795,
+      "junit_sha256": "8c15032f33e69b0005d16afbffe2a1d577ea216d66b04d489541fb37a4f101ce",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 862.824
+    },
+    {
+      "family": 3,
+      "condition": 2,
+      "seed": 700303,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 1.0658219826063413,
+      "model_rmse_ratio": 0.5046876740153079,
+      "test_wall_seconds": 929.1560000000172,
+      "junit_sha256": "942ac6add1dc1f420a64e0c9dbc5c4214a7e67e72ff81d361c38a3c5a7a8bd36",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 938.593
+    },
+    {
+      "family": 4,
+      "condition": 2,
+      "seed": 700403,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 0.9662605203546203,
+      "model_rmse_ratio": null,
+      "test_wall_seconds": 939.8119999999763,
+      "junit_sha256": "87c15ba19197643255f3479fd64a95d7efbb43e010deb66b39ea8fc98238b3e5",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 942.022
+    },
+    {
+      "family": 5,
+      "condition": 2,
+      "seed": 700503,
+      "selection_status": "selected",
+      "selected_index": 5,
+      "outer_wrms": 0.81844103496711,
+      "model_rmse_ratio": 0.9107903787925868,
+      "test_wall_seconds": 943.4380000000237,
+      "junit_sha256": "25bf4eb9157c3ea43bcba37c5dbd88965e039fb4f94caf0dcf1e0be6fa75db85",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 954.407
+    },
+    {
+      "family": 0,
+      "condition": 3,
+      "seed": 700004,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 2.850740900524035,
+      "model_rmse_ratio": 1.0350324554509625,
+      "test_wall_seconds": 1060.6879999999655,
+      "junit_sha256": "f0fab3da823ef0a488c5206db8e337ed57a72d12bf457829ac0efd6176b4b370",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1090.467
+    },
+    {
+      "family": 1,
+      "condition": 3,
+      "seed": 700104,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 2.7298637358086753,
+      "model_rmse_ratio": 0.881845472119205,
+      "test_wall_seconds": 1203.5470000000205,
+      "junit_sha256": "5c27c61b8b87e2fec022d49594139ae9ea0eb2ccc6abe26023e590b8ea37f6fb",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1214.054
+    },
+    {
+      "family": 2,
+      "condition": 3,
+      "seed": 700204,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 2.898435688066707,
+      "model_rmse_ratio": 0.9367831538442674,
+      "test_wall_seconds": 1135.3130000000237,
+      "junit_sha256": "d6852d37a0634cf5895047218ed0d0a7f64935b6fdde2f02e5661af91f24f9d7",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1144.971
+    },
+    {
+      "family": 3,
+      "condition": 3,
+      "seed": 700304,
+      "selection_status": "selected",
+      "selected_index": 6,
+      "outer_wrms": 2.6391209321754636,
+      "model_rmse_ratio": 0.6199497178958504,
+      "test_wall_seconds": 1136.734999999986,
+      "junit_sha256": "7e06cdf774e779e269c4a42f48ebdce618d656331a30c418e57fbdffdd970257",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1145.705
+    },
+    {
+      "family": 4,
+      "condition": 3,
+      "seed": 700404,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 2.9572042381665353,
+      "model_rmse_ratio": null,
+      "test_wall_seconds": 933.5310000000172,
+      "junit_sha256": "d5c7f07232047ba051a6893b38789ec42dd75cee3b462efa84182f3f269d65e6",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 935.548
+    },
+    {
+      "family": 5,
+      "condition": 3,
+      "seed": 700504,
+      "selection_status": "selected",
+      "selected_index": 7,
+      "outer_wrms": 2.612627980213754,
+      "model_rmse_ratio": 0.9540366225205023,
+      "test_wall_seconds": 1195.5310000000172,
+      "junit_sha256": "80a151d8550af0118eac33f329df56d4ba608d3c55ac9cea87d9592c0e96fd87",
+      "log_sha256": "914192d0b998765b000418f37d07a01536c2ae674628eb5a10b106f2b50ebb92",
+      "pytest": {
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "pytest_wall_seconds": 1203.157
+    }
+  ],
+  "interpretation": "All locked synthetic/local control assertions pass on this source/runtime. This does not close field-data, hosted admission, broader M02, or product scientific acceptance."
+}

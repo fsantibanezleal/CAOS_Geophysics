@@ -15,7 +15,7 @@ from app.processing_contract import (
 )
 
 
-MIGRATION_HEAD = "0003_processing_jobs"
+MIGRATION_HEAD = "0004_waveform_artifacts"
 
 
 def make_engine(settings: Settings):
@@ -97,6 +97,9 @@ async def reconcile_private_files(settings: Settings, sessions: async_sessionmak
             except Exception as exc:
                 raise RuntimeError("private_recovery_required: dataset bytes or schema changed") from exc
             derived_keys.add(key)
+            if dataset.modality=='waveform_counts_response':
+                from app.waveform_processing import validate_source_rows
+                await validate_source_rows(session,settings,dataset,payload)
         jobs = (await session.execute(select(ProcessingJob))).scalars().all()
         for job in jobs:
             if job.state == "succeeded":
@@ -109,8 +112,23 @@ async def reconcile_private_files(settings: Settings, sessions: async_sessionmak
                 except Exception as exc:
                     raise RuntimeError("private_recovery_required: result bytes or schema changed") from exc
                 derived_keys.add(key)
+                if job.method_id=='seismic.waveform-qc-classical/v1':
+                    from app.models import WaveformResultArtifact
+                    from app.waveform_result import verified_artifacts
+                    rows=(await session.execute(select(WaveformResultArtifact).where(
+                        WaveformResultArtifact.job_id==job.id))).scalars().all()
+                    verified_artifacts(settings,job,payload,rows)
+                    derived_keys.update(row.storage_key for row in rows)
             elif any(value is not None for value in (job.result_key, job.result_sha256, job.result_bytes)):
                 raise RuntimeError("private_recovery_required: non-success job has result bytes")
+        from app.models import WaveformResultArtifact, WaveformDatasetSource
+        all_artifacts=(await session.execute(select(WaveformResultArtifact))).scalars().all()
+        if any(row.storage_key not in derived_keys for row in all_artifacts):
+            raise RuntimeError('private_recovery_required: orphan waveform artifact row')
+        dependency_ids=(await session.execute(select(WaveformDatasetSource.dataset_id))).scalars().all()
+        waveform_ids={dataset.id for dataset in datasets if dataset.modality=='waveform_counts_response'}
+        if any(identity not in waveform_ids for identity in dependency_ids):
+            raise RuntimeError('private_recovery_required: unexpected waveform dependency')
         derived_root = root / "derived"
         if derived_root.is_symlink() or (derived_root.exists() and not derived_root.is_dir()):
             raise RuntimeError("private_recovery_required: invalid derived directory")

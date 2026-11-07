@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 from electromagnetics import impedance,torch_impedance,curves
-from geology import registry,properties,volume_grid,seismic_model,VOLUME_SHAPE
+from geology import registry,properties,volume_grid,seismic_model,VOLUME_SHAPE,SURVEY_SHAPE
 from potential import operators,invert
 from joint import cross_gradient
 from learning import InverseCNN,ObservationAE,load_checkpoint,generate
@@ -54,7 +54,11 @@ def test_gravity_independent_prism_and_linear_scaling():
 
 
 def test_inverse_improves_data_fit():
-    mesh,_,G,_=operators()
+    mesh,receivers,G,_=operators()
+    assert receivers.shape==(int(np.prod(SURVEY_SHAPE)),3)
+    assert G.shape==(int(np.prod(SURVEY_SHAPE)),mesh.nC)
+    assert np.diff(np.unique(receivers[:,0])).mean()==pytest.approx(2100/(SURVEY_SHAPE[1]-1))
+    assert np.diff(np.unique(receivers[:,1])).mean()==pytest.approx(1800/(SURVEY_SHAPE[0]-1))
     truth=properties('stock',mesh.cell_centers)[0]
     d=G@truth
     for sparse in (False,True):
@@ -103,10 +107,11 @@ def test_learning_split_hashes_and_checkpoint_inference():
             assert digest not in seen,'Duplicate model across or within splits'
             seen.add(digest)
     run=json.loads((DATA/'LEARNED_CNN/reference.json').read_text(encoding='utf-8'))
-    x=torch.tensor(np.asarray(run['survey']['observed'])/meta['input_scale'],dtype=torch.float32).reshape(1,1,16,16)
+    input_shape=tuple(run['survey']['shape'])
+    x=torch.tensor(np.asarray(run['survey']['observed'])/meta['input_scale'],dtype=torch.float32).reshape(1,1,*input_shape)
     with torch.no_grad():
-        cnn=load_checkpoint(InverseCNN(),DATA/'models/cnn.json')
-        ae=load_checkpoint(ObservationAE(),DATA/'models/autoencoder.json')
+        cnn=load_checkpoint(InverseCNN(input_shape=input_shape),DATA/'models/cnn.json')
+        ae=load_checkpoint(ObservationAE(input_shape=input_shape),DATA/'models/autoencoder.json')
         np.testing.assert_allclose(cnn(x)[0].numpy()*meta['target_scale'],run['methods']['cnn']['model'],atol=.003)
         np.testing.assert_allclose(ae(x).flatten().numpy()*meta['input_scale'],run['methods']['autoencoder']['predicted'],atol=1e-5)
     assert len(meta['models']['cnn']['test_errors'])==160

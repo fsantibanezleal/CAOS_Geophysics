@@ -1,0 +1,47 @@
+{
+  "schema": "geophysics.actual-host-capacity-readonly/v1",
+  "measured_at": "2026-10-31T08:01:00Z",
+  "tested_commit": "9f022aae8d178211b4c77730b722723fc3345a3b",
+  "workspace_dirty": true,
+  "workspace_changed_paths_at_capture": 73,
+  "read_only": true,
+  "origin": {
+    "url": "https://geophysics.ml.fasl-work.com/",
+    "http_status": 200,
+    "server": "nginx/1.24.0",
+    "title": "Inverse Earth Studio | Geophysics",
+    "catalog_url": "https://geophysics.ml.fasl-work.com/data/v2/catalog.json",
+    "catalog_status": 200,
+    "catalog_version": "0.04.001",
+    "api_health_status": 200,
+    "api_health_content_type": "text/html",
+    "api_health_body": "SPA index.html fallback; not an API health response",
+    "api_service_health_verified": false
+  },
+  "host": {
+    "ipv4": "89.167.4.175",
+    "filesystem": "/dev/sda1",
+    "root_total_bytes": 80290492416,
+    "root_used_bytes": 45213458432,
+    "root_available_bytes": 31749431296,
+    "root_use_percent": 59,
+    "mem_available_bytes": 5228388352,
+    "active_release": "20260926235216",
+    "release_directories": [
+      "20260926200023",
+      "20260926233737",
+      "20260926235216"
+    ],
+    "geophysics_release_tree_bytes": 2322522112,
+    "geophysics_deploy_state_bytes": 3193536512,
+    "geophysics_data_bytes": 262144,
+    "api_service": "inactive",
+    "worker_service": "inactive"
+  },
+  "runtime_stager_minimum_free_bytes": 4294967296,
+  "storage_precondition_met": true,
+  "current_plus_two_rollbacks_preserved": true,
+  "replacement_staged": false,
+  "replacement_activated": false,
+  "hosted_project_job_acceptance": false
+}

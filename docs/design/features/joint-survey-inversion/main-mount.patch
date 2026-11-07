@@ -1,0 +1,30 @@
+diff --git a/frontend/src/data/citations.ts b/frontend/src/data/citations.ts
+--- a/frontend/src/data/citations.ts
++++ b/frontend/src/data/citations.ts
+@@ -1,5 +1,7 @@
+ import type { Citation } from "@fasl-work/caos-app-shell";
+ import { M01_COURSE_CITATIONS } from "./m01-scientific-course";
++import { M11_COURSE_CITATIONS } from "./m11-scientific-course";
+ 
+ export const CITATIONS: Citation[] = [
++  ...M11_COURSE_CITATIONS,
+   ...M01_COURSE_CITATIONS,
+diff --git a/frontend/src/pages/Workbench.tsx b/frontend/src/pages/Workbench.tsx
+--- a/frontend/src/pages/Workbench.tsx
++++ b/frontend/src/pages/Workbench.tsx
+@@ -12,3 +12,4 @@
+ import { Tabs, useShellLang } from "@fasl-work/caos-app-shell";
++import { M11ScientificCourse } from "../components/M11ScientificCourse";
+ import { EarthScene } from "../components/EarthScene";
+ import {
+@@ -1220,5 +1221,10 @@
+             <Tabs
+               key={selected}
+               ariaLabel={t("Scientific views", "Vistas científicas")}
+               tabs={[
++                ...(run.family === "joint" ? [{
++                  id: "supplied-joint-method",
++                  label: t("Supplied-survey theory", "Teoría para levantamientos"),
++                  content: <M11ScientificCourse />,
++                }] : []),
+                 {

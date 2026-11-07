@@ -14,7 +14,8 @@ DATA=Path(os.environ.get('INVERSE_EARTH_DATA',ROOT/'data/derived/v2'))
 
 def test_matched_noisy_classical_test_baseline():
     meta=json.loads((DATA/'models/training.json').read_text())
-    mesh,_,G,_=operators()
+    input_shape=tuple(meta.get('survey_shape',(16,16)))
+    mesh,_,G,_=operators(samples=input_shape)
     observations=[generate(mesh.cell_centers,n,s)@G.T for n,s in zip(meta['split_counts'],meta['seeds'])]
     scale=float(np.std(observations[0]));rng=np.random.default_rng(5001)
     noisy=[d+rng.normal(0,.02*scale,d.shape) for d in observations]
@@ -56,7 +57,8 @@ def test_frozen_regularization_is_marked_not_a_neural_intervention():
 @pytest.mark.parametrize('variant',('reference','contrast','noise','acquisition','coverage','regularization'))
 def test_case_score_is_input_consistent_and_not_a_geological_verdict(case,variant):
     run=json.loads((DATA/case/f'{variant}.json').read_text(encoding='utf-8'))
-    attach(run,load_bundle(DATA/'models',device='cpu'))
+    input_shape=tuple(run['survey']['shape'])
+    attach(run,load_bundle(DATA/'models',device='cpu',grid_shape=input_shape))
     method=run['methods']['autoencoder']
     net=np.asarray(method['network_input']);pred=np.asarray(method['predicted'])
     residual=np.asarray(method['residual']);errors=np.asarray(method['model'])
@@ -74,9 +76,10 @@ def test_case_score_is_input_consistent_and_not_a_geological_verdict(case,varian
 
 def test_frozen_bundle_rejects_tampered_checkpoint(tmp_path):
     import shutil
+    ledger = json.loads((DATA/'models'/'training.json').read_text(encoding='utf-8'))
     for name in ('training.json','cnn.json','autoencoder.json'):
         shutil.copyfile(DATA/'models'/name,tmp_path/name)
     with (tmp_path/'cnn.json').open('ab') as file:
         file.write(b' ')
     with pytest.raises(ValueError,match='Checkpoint hash mismatch: cnn'):
-        load_bundle(tmp_path,device='cpu')
+        load_bundle(tmp_path,device='cpu',grid_shape=tuple(ledger['survey_shape']))

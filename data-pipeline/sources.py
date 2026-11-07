@@ -35,6 +35,20 @@ class SourceError(ValueError):
     """A source could not pass its declared acquisition contract."""
 
 
+def local_data_root(root: Path | None = None) -> Path:
+    """Resolve working storage independently of the read-only product ledger."""
+    configured = root if root is not None else os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT")
+    if not configured:
+        raise SourceError("Set GEOPHYSICS_LOCAL_DATA_ROOT or --data-root to an external working-data directory")
+    selected = Path(configured).expanduser()
+    if not selected.is_absolute():
+        raise SourceError("Working-data root must be absolute")
+    selected = selected.resolve()
+    if selected == ROOT or selected.is_relative_to(ROOT):
+        raise SourceError("Working-data root must be outside the repository")
+    return selected
+
+
 def archive_member_key(name: str) -> PurePosixPath:
     """Portable, canonical file/directory name; no Windows aliases or devices."""
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_. /-]+", name):
@@ -294,7 +308,7 @@ def _receipt(record: dict, target: Path, root: Path, method: str, original_filen
     }
 
 
-def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path = ROOT,
+def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path | None = None,
                    ledger_path: Path = LEDGER) -> tuple[dict, Path, dict]:
     """Acquire exactly one ledger source; never replace a raw asset or its receipt."""
     records = load_ledger(ledger_path)
@@ -307,7 +321,7 @@ def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path
     if mode == "provider-link":
         raise SourceError(f"{source_id}: provider-link metadata is not an acquirable raw asset; "
                           f"consult {record['object_url']} and review a separate acquisition contract first")
-    root = Path(root).resolve()
+    root = local_data_root(root)
     target = _inside(root, _raw_key(record["raw_path"]), "downloads")
     receipt_path = _inside(root, PurePosixPath("data/raw/acquisition") / f"{source_id}.json", "raw")
     if local_file is not None:
@@ -370,7 +384,10 @@ def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path
                       "rights_statement", "citation", "validation_status"):
             if receipt.get(field) != expected[field]:
                 raise SourceError(f"{source_id}: immutable receipt drift in {field}; inspect {receipt_path}")
-        if (receipt.get("acquisition_method") not in {"provider-fetch", "local-import"} or
+        # An already-present original can legitimately be verified without a
+        # retrieval performed by this command. Keep that distinction on reuse;
+        # never rewrite the receipt as if an import/download occurred.
+        if (receipt.get("acquisition_method") not in {"provider-fetch", "local-import", "existing-verified"} or
                 not isinstance(receipt.get("original_filename"), str) or
                 not receipt["original_filename"].strip() or
                 Path(receipt["original_filename"]).name != receipt["original_filename"]):

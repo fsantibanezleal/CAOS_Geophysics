@@ -1,6 +1,7 @@
 """Pinned Koenigsee identity, strict pick parsing and rights-contained QC."""
 
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -11,7 +12,8 @@ from sources import acquire_source, load_ledger
 from traveltime import Survey, TraveltimeError, parse_sgt, qc
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/koenigsee.sgt"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/koenigsee.sgt"
 
 
 def _synthetic_sgt() -> str:

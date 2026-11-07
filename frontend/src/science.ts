@@ -1,4 +1,6 @@
 import { artifactBase, deploymentMode } from './lib/deployment';
+import { formatForCurrentLocale } from "./lib/number-format";
+import { gunzipSync } from "fflate";
 
 export type Family =
   | "gravity"
@@ -184,10 +186,62 @@ export type Run = {
   };
 };
 export const appBase = artifactBase(deploymentMode, typeof location === 'undefined' ? '/' : location.pathname);
+let fwiArtifactTail: Promise<void> = Promise.resolve();
+
+function abortError(): DOMException {
+  return new DOMException("The operation was aborted", "AbortError");
+}
+
+function abortable<T>(operation: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return operation;
+  if (signal.aborted) return Promise.reject(abortError());
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener("abort", onAbort, { once: true });
+    operation.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        if (signal.aborted) reject(abortError());
+        else resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
+}
+
+async function loadFwiReference<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const previous = fwiArtifactTail;
+  let release!: () => void;
+  fwiArtifactTail = new Promise<void>((resolve) => { release = resolve; });
+  const operation = previous.then(async () => {
+    if (signal?.aborted) throw abortError();
+    // The transport is gzip, but Fetch may already decode HTTP Content-Encoding
+    // before exposing the body (Vite does this for .json.gz). Accept either the
+    // original gzip member or browser-decoded JSON, then parse the same canonical
+    // artifact. Keep requests serial to bound peak memory.
+    const response = await fetch(`${appBase}data/v2/${path}.gz`, { cache: "no-cache" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}: ${path}.gz`);
+    const transported = new Uint8Array(await response.arrayBuffer());
+    const raw = transported[0] === 0x1f && transported[1] === 0x8b
+      ? gunzipSync(transported)
+      : transported;
+    const json = new TextDecoder("utf-8", { fatal: true }).decode(raw);
+    return JSON.parse(json) as T;
+  });
+  operation.then(release, release);
+  return abortable(operation, signal);
+}
+
 export async function loadArtifact<T>(
   path: string,
   signal?: AbortSignal,
 ): Promise<T> {
+  if (/^FWI_[A-Z0-9_]+\/[a-z0-9_-]+\.json$/.test(path)) {
+    return loadFwiReference<T>(path, signal);
+  }
   const response = await fetch(`${appBase}data/v2/${path}`, { signal,cache:'no-cache' });
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${path}`);
   return response.json();
@@ -219,10 +273,8 @@ export function format(v: number): string {
   return !Number.isFinite(v)
     ? "Unavailable"
     : Math.abs(v) < 0.001 && v !== 0
-      ? v.toExponential(2)
-      : v.toLocaleString("en", {
-          maximumFractionDigits: Math.abs(v) < 1 ? 4 : 2,
-        });
+      ? formatForCurrentLocale(v, { notation: "scientific", maximumSignificantDigits: 3 })
+      : formatForCurrentLocale(v, { maximumFractionDigits: Math.abs(v) < 1 ? 4 : 2 });
 }
 export function flatten(v: number[] | number[][]): number[] {
   return v.flat();
@@ -240,6 +292,37 @@ export function sliceVolume(
       (_, ix) => values[(nz - 1 - iz) * ny * nx + j * nx + ix],
     ),
   );
+}
+
+/** Choose the cross-line section that best exposes the modeled structure.
+ * The section index is still user-controlled; this only avoids opening a 3-D
+ * case on an arbitrary plane that misses its body entirely. */
+export function preferredSection(values: number[], shape: number[], activeFraction = 0.1): number {
+  if (shape.length !== 3 || shape.some((n) => !Number.isInteger(n) || n < 1)
+      || values.length !== shape.reduce((a, b) => a * b, 1)
+      || !values.every(Number.isFinite)) return 0;
+  const maximum = Math.max(...values.map(Math.abs));
+  if (!(maximum > 0)) return Math.floor(shape[1] / 2);
+  const threshold = maximum * Math.max(0, Math.min(1, activeFraction));
+  let best = Math.floor(shape[1] / 2), bestArea = -1;
+  for (let section = 0; section < shape[1]; section++) {
+    const image = sliceVolume(values, shape, section);
+    const active: [number, number][] = [];
+    image.forEach((row, depth) => row.forEach((v, east) => {
+      if (Math.abs(v) > threshold) active.push([east, depth]);
+    }));
+    if (!active.length) continue;
+    const east = active.map(([x]) => x), depth = active.map(([, z]) => z);
+    const area = (Math.max(...east) - Math.min(...east) + 1)
+      * (Math.max(...depth) - Math.min(...depth) + 1);
+    const distance = Math.abs(section - (shape[1] - 1) / 2);
+    const bestDistance = Math.abs(best - (shape[1] - 1) / 2);
+    if (area > bestArea || (area === bestArea && distance < bestDistance)) {
+      best = section;
+      bestArea = area;
+    }
+  }
+  return best;
 }
 export type Palette = "earth" | "field" | "velocity" | "error";
 const palettes: Record<Palette, string[]> = {

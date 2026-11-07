@@ -256,8 +256,9 @@ Self-review: exactly two additive code/test paths and this feature folder; all
 six PR120 plan files, legacy physics, dependency/environment, API/UI and canonical
 bytes are unchanged. Private 137-file backup and ignored candidates/receipts
 remain unstaged/untouched. Independent final FULL code/policy/diff review and
-exact-source rerun by main are still pending. Keep the ready pin stable; this
-milestone is not inverse, survey, full M02, field, GPU, host or deployment acceptance.
+full product review are still pending. The current Linux source/test rerun is
+recorded separately below. Keep the ready pin stable; this milestone is not
+inverse, survey, full M02, field, GPU, host or deployment acceptance.
 
 Final staged static checks pass: content standards, template residue, CI budget,
 SDD structure and `git diff --cached --check`. Read-only receipt self-audit verifies
@@ -266,3 +267,28 @@ strict JSON/no duplicate keys, all source/test/receipt/manifest SHA bindings,
 scope, six PR120 files unchanged, and private backup count 137 / zero tracked.
 The structural ledger reports 1 fail / 18 unresolved on this branch; this does
 not imply scientific or release acceptance and has not been edited here.
+
+## Independent Linux rerun, 2026-10-27
+
+The current platform-amended source was independently reviewed and executed
+under its committed Linux CPython 3.12.10 source epoch in Ubuntu 24.04 WSL2.
+The receipt [linux-independent-rerun-2026-10-27.json](evidence/linux-independent-rerun-2026-10-27.json)
+binds the exact current operator/test bytes and the 2026-10-25 Linux source-pin
+manifest. The existing test verifies all 20 registered installed dependency
+source/binary digests. Standalone operator controls pass **80 / 0 skips**;
+the scoped potential-source and user-CSV regression passes **118 / 2 existing
+skips / 11 deselected**. The exact commands and runtimes are in the receipt.
+
+At the time of that earlier rerun, the service stager still required wheels and
+the dedicated gravity requirements omitted SimPEG's `pymatsolver` dependency.
+The follow-up repair and isolated Linux install-profile evidence are recorded in
+[linux-runtime-staging-2026-10-27.json](evidence/linux-runtime-staging-2026-10-27.json).
+That receipt verifies the installed package versions, 21 targeted installed
+source files, both pure-Python wheel tags, and a clean `pip check`; the focused
+operator and scoped integration reruns pass 80 and 118 tests respectively. The
+runtime-stager unit suite passes 41 tests with five Windows-only skips for Linux
+process-group controls. The complete immutable release stager was not run against
+a VPS release, and no runtime, capacity, solver-admission or release gate is
+claimed. The earlier source-intake context refers to the official
+[SimPEG 0.25.2](https://pypi.org/project/simpeg/0.25.2/) and
+[pymatsolver 0.4.0](https://pypi.org/project/pymatsolver/0.4.0/) releases.

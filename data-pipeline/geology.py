@@ -6,6 +6,7 @@ import numpy as np
 # Same physical domain; refinement is not additional survey information.
 VOLUME_SHAPE = (16, 24, 28)  # depth, northing, easting
 VOLUME_SPACING = (80.0, 80.0, 70.0)  # easting, northing, up (m)
+SURVEY_SHAPE = (32, 32)  # northing, easting; sample interval approximately matches the horizontal mesh
 SEISMIC_SHAPE = (128, 96)
 SEISMIC_SPACING = 12.5
 

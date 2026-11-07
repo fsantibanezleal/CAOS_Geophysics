@@ -26,6 +26,13 @@ def test_model_and_benchmark_are_bound_to_public_manifest() -> None:
     assert manifest["source"]["license"] == "CC BY 4.0"
     assert manifest["source"]["doi"] == "10.1109/ACCESS.2019.2947848"
     assert "modification" in manifest["source"]
+    redistribution = manifest["source"]["redistribution"]
+    assert redistribution["decision"] == "approved-with-attribution"
+    assert redistribution["license"] == "CC BY 4.0"
+    assert redistribution["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
+    assert redistribution["attribution_file"] == "ATTRIBUTION.md"
+    receipt = json.loads((ROOT / "data/derived/phase/stead-waveform-source.json").read_text(encoding="utf-8"))
+    assert receipt["rights"]["rights_review"] == redistribution["review"]
     assert _sha256(ASSETS / manifest["model"]["file"]) == manifest["model"]["sha256"]
     assert _sha256(ASSETS / manifest["benchmark"]["file"]) == manifest["benchmark"]["sha256"]
     assert benchmark["schema"] == "caos.stead-phase-heldout-benchmark.v1"

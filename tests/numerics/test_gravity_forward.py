@@ -7,9 +7,11 @@ import hashlib
 import importlib.metadata
 import json
 import os
+import platform
 from pathlib import Path
 import socket
 import subprocess
+import sys
 
 import choclo
 import numpy as np
@@ -21,7 +23,12 @@ import gravity_forward as op
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins.json"
+if sys.platform == "win32":
+    PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins.json"
+elif sys.platform == "linux" and platform.machine().lower() == "x86_64":
+    PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins-linux-cp312.json"
+else:
+    PINS = ROOT / "docs/design/features/m02-prism-operator/runtime-pins-unsupported.json"
 
 
 def request(nonuniform=False):
@@ -417,7 +424,7 @@ def audit_trusted_pins(pin):
     for rel, digest in pin["targeted_source_sha256"].items():
         assert rel in expected["targeted_source_sha256"] and ".." not in Path(rel).parts
         pkg = rel.split("/")[0]
-        assert pkg in {"simpeg", "geoana", "discretize", "scipy", "choclo"}
+        assert pkg in {"simpeg", "geoana", "discretize", "scipy", "choclo", "pymatsolver"}
         dist = importlib.metadata.distribution(pkg)
         assert rel in {str(p).replace("\\", "/") for p in dist.files}
         assert hashlib.sha256(dist.locate_file(rel).read_bytes()).hexdigest() == digest
@@ -435,6 +442,13 @@ def test_runtime_epoch_and_external_source_pins(monkeypatch):
     with pytest.raises(RuntimeError, match="loaded package"): op.forward_gravity(request())
     monkeypatch.setattr(op.geoana, "__version__", Hook())
     with pytest.raises(RuntimeError, match="loaded package"): op.forward_gravity(request())
+
+
+@pytest.mark.parametrize("version", [(3, 12, 10), (3, 12, 16)])
+def test_registered_cpython_runtime_versions(version, monkeypatch):
+    with monkeypatch.context() as patch:
+        patch.setattr(op.sys, "version_info", version)
+        assert op._runtime() == op.VERSIONS
 
 
 def test_no_io_hooks_or_inverse_behavior(monkeypatch):

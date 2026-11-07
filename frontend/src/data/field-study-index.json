@@ -1,0 +1,10 @@
+{
+  "schema": "geophysics.field-study-index/v1",
+  "artifacts": [
+    {
+      "path": "long-valley/1982-06_to_1999-07.json",
+      "bytes": 50084,
+      "sha256": "25d856bad85575f400eb4d1c3ec21096ea603134170a807289956d14d6ecfbe2"
+    }
+  ]
+}

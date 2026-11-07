@@ -1,4 +1,5 @@
 import { Figure, useShellLang } from "@fasl-work/caos-app-shell";
+import { formatNumber } from "../lib/number-format";
 export function MethodDiagram({ kind }: { kind: string }) {
   const es = useShellLang() === "es";
   const t = (a: string, b: string) => (es ? b : a);
@@ -155,7 +156,7 @@ export function MethodDiagram({ kind }: { kind: string }) {
                 fill="var(--color-accent)"
               />
             ))}
-            {txt(45, 210, "128 × 96 · Δx = Δz = 12.5 m")}
+            {txt(45, 210, `128 × 96 · Δx = Δz = ${formatNumber(12.5, es ? "es-CL" : "en-US")} m`)}
             {txt(
               450,
               57,

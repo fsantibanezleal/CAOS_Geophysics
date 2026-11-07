@@ -100,6 +100,7 @@ class RawUploadInput(BaseModel):
     format: Literal[
         "gravity_csv", "magnetic_csv", "traveltime_csv", "ert_csv", "geotiff",
         "edi", "miniseed", "stationxml", "segy", "mth5",
+        "ert_ohm", "traveltime_sgt",
     ]
     source: SourceInput
     physical: PhysicalInput

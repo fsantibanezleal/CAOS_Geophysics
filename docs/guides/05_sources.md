@@ -19,6 +19,20 @@ The pyGIMLi byte counts and SHA-256 values were checked against commit `3bab9c6b
 
 ## Commands and exact outputs
 
+Configure `GEOPHYSICS_LOCAL_DATA_ROOT` to an absolute directory outside the
+repository before acquisition or field processing. Alternatively pass
+`--data-root` explicitly. The paths below such as `data/downloads/` and
+`data/raw/` are relative to that external root, not the checkout. The ledger
+and compact deliberately published derivatives remain repository content.
+Local originals, large intermediates, caches and test scratch are external;
+only the explicitly requested ignored Python environments stay in the repo.
+
+Acquisition receipts distinguish `provider-fetch`, `local-import` and
+`existing-verified`. The last means the original was already present and passed
+the pinned byte/hash checks; it does not claim this command downloaded or
+imported it. Reuse validates the original and immutable receipt without changing
+its timestamp, acquisition method, rights or attribution.
+
 For the two reviewed automatic tutorial objects:
 
 ```powershell
@@ -60,9 +74,10 @@ Use an isolated Python 3.12 environment because the pinned M07 pyGIMLi 1.6.1 nee
 ```powershell
 py -3.12 -m venv .venv-ert
 .\.venv-ert\Scripts\python.exe -m pip install -r data-pipeline/requirements-ert.txt
-New-Item -ItemType Directory -Force data/downloads/pygimli | Out-Null
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gimli-org/example-data/3bab9c6b96a606e2ca12cbdafc8c7da4f1b73c67/ert/slagdump.ohm' -OutFile 'data/downloads/pygimli/.incoming-slagdump.ohm'
-.\.venv-ert\Scripts\python.exe data-pipeline/acquire.py --source-id pygimli-slagdump --file data/downloads/pygimli/.incoming-slagdump.ohm
+if (-not $env:GEOPHYSICS_LOCAL_DATA_ROOT) { throw 'Declare an absolute external data root first' }
+New-Item -ItemType Directory -Force "$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/pygimli" | Out-Null
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gimli-org/example-data/3bab9c6b96a606e2ca12cbdafc8c7da4f1b73c67/ert/slagdump.ohm' -OutFile "$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/pygimli/.incoming-slagdump.ohm"
+.\.venv-ert\Scripts\python.exe data-pipeline/acquire.py --source-id pygimli-slagdump --file "$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/pygimli/.incoming-slagdump.ohm"
 .\.venv-ert\Scripts\python.exe data-pipeline/ert.py --qc-only
 .\.venv-ert\Scripts\python.exe data-pipeline/ert.py
 ```
@@ -84,9 +99,10 @@ Use an isolated Python 3.12 environment; the M09 pyGIMLi pins require NumPy 2.4 
 ```powershell
 py -3.12 -m venv .venv-traveltime
 .\.venv-traveltime\Scripts\python.exe -m pip install -r data-pipeline/requirements-traveltime.txt
-New-Item -ItemType Directory -Force data/downloads/pygimli | Out-Null
-Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gimli-org/example-data/3bab9c6b96a606e2ca12cbdafc8c7da4f1b73c67/traveltime/koenigsee.sgt' -OutFile 'data/downloads/pygimli/.incoming-koenigsee.sgt'
-.\.venv-traveltime\Scripts\python.exe data-pipeline/acquire.py --source-id pygimli-koenigsee --file data/downloads/pygimli/.incoming-koenigsee.sgt
+if (-not $env:GEOPHYSICS_LOCAL_DATA_ROOT) { throw 'Declare an absolute external data root first' }
+New-Item -ItemType Directory -Force "$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/pygimli" | Out-Null
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/gimli-org/example-data/3bab9c6b96a606e2ca12cbdafc8c7da4f1b73c67/traveltime/koenigsee.sgt' -OutFile "$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/pygimli/.incoming-koenigsee.sgt"
+.\.venv-traveltime\Scripts\python.exe data-pipeline/acquire.py --source-id pygimli-koenigsee --file "$env:GEOPHYSICS_LOCAL_DATA_ROOT/data/downloads/pygimli/.incoming-koenigsee.sgt"
 .\.venv-traveltime\Scripts\python.exe data-pipeline/traveltime.py --qc-only
 .\.venv-traveltime\Scripts\python.exe data-pipeline/traveltime.py
 ```

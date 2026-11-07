@@ -18,11 +18,11 @@ def test_upgrade_and_schema_guard(harness):
     config = Config("app/alembic.ini")
     command.check(config)
     with sqlite3.connect(harness.settings.database_path) as db:
-        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "0003_processing_jobs"
+        assert db.execute("SELECT version_num FROM alembic_version").fetchone()[0] == "0004_waveform_artifacts"
         db.execute("UPDATE alembic_version SET version_num='stale'")
     async def capture(_a, _b, _c):
         return None
-    with pytest.raises(RuntimeError, match="not 0003_processing_jobs"):
+    with pytest.raises(RuntimeError, match="not 0004_waveform_artifacts"):
         with TestClient(create_app(harness.settings, capture)):
             pass
 

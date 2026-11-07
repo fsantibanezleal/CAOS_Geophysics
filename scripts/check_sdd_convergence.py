@@ -20,8 +20,12 @@ ROOT = Path(__file__).resolve().parents[1]
 VERDICTS = {"pass", "fail", "unresolved", "ineligible"}
 REQUIREMENT = re.compile(r"^(R-\d{3})\s+THE\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
 ALTERNATE = re.compile(r"^(R-\d{3})\s+(?:WHEN|IF)\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
-GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
+GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|mjs|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
 SHA = re.compile(r"^[0-9a-f]{64}$")
+TEXT_SUFFIXES = {
+    ".css", ".csv", ".html", ".ipynb", ".js", ".json", ".md", ".mjs",
+    ".py", ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
+}
 
 
 class LedgerError(ValueError):
@@ -29,7 +33,14 @@ class LedgerError(ValueError):
 
 
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    # Evidence hashes are created on Windows and checked on Linux as well.
+    # Git may normalize CRLF text to LF between those environments, so hash a
+    # canonical LF representation for known text formats. Binary artifacts
+    # retain their exact byte-level SHA-256.
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def strict_json(path: Path) -> dict:
@@ -107,9 +118,13 @@ def executable_gate(root: Path, name: str) -> Path:
 def method_declarations(sdd: Path) -> dict[str, list[str]]:
     """Expand R-008's explicit reference to the M01-M13 acceptance table."""
     text = sdd.read_text(encoding="utf-8")
-    rows = re.findall(r"^\| (M\d{2}) \|[^\n]+\| ([^|]+) \|\s*$", text, re.M)
+    # The current SDD labels this first column M-01..M-13, while the approved
+    # baseline and requirement R-008 refer to the same methods as M01..M13.
+    # Accept both spellings and normalize before enforcing complete coverage.
+    rows = re.findall(r"^\| (M-?\d{1,2}) \|[^\n]+\| ([^|]+) \|\s*$", text, re.M)
     result = {}
     for key, gate in rows:
+        key = f"M{int(key.removeprefix('M').replace('-', '')):02d}"
         matches = list(GATE.finditer(gate))
         if key in result or not matches:
             raise LedgerError(f"duplicate method or missing method gate: {key}")
@@ -159,7 +174,7 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
         gate_matches = list(GATE.finditer(declared[key]))
         if key == "R-008":
             gate_matches.extend(GATE.fullmatch(name) for names in method_declarations(sdd).values() for name in names)
-        required = {m.group() for m in gate_matches if Path(m["file"]).suffix in {".py", ".ts"}}
+        required = {m.group() for m in gate_matches if Path(m["file"]).suffix in {".py", ".ts", ".mjs"}}
         # A document is a required artifact, not an executable invocation. The
         # ledger validates itself structurally; hashing its own receipt inside
         # itself would require an impossible cryptographic fixed point.

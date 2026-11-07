@@ -439,9 +439,17 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         root = Path(__file__).resolve().parents[1]
-        output = args.output_dir.resolve()
-        if output.is_relative_to(root) and not output.is_relative_to(root / "data/raw/gravity-m01"):
-            raise GravityContractError("output-dir: inside repository use only ignored data/raw/gravity-m01")
+        if not args.output_dir.is_absolute():
+            raise GravityContractError("output-dir: require explicit absolute external storage")
+        output = args.output_dir.absolute()
+        for parent in (output, *output.parents):
+            if parent.is_symlink() or (hasattr(parent, "is_junction") and parent.is_junction()):
+                raise GravityContractError("output-dir: external storage cannot traverse symlink/junction")
+            if (parent / ".git").exists() or (parent / ".git").is_symlink():
+                raise GravityContractError("output-dir: require external storage outside every repository")
+        output = output.resolve()
+        if output.is_relative_to(root):
+            raise GravityContractError("output-dir: require external storage outside repository")
         if output.exists():
             raise GravityContractError("output-dir: already exists; overwrite forbidden")
         if args.input.stat().st_size > 32 * 1024 * 1024:

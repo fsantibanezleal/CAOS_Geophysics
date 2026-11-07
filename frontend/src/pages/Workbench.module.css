@@ -1,0 +1,21 @@
+/* Page-local exceptions for the full-screen App workbench. */
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .sceneSettings {
+    position: static;
+    align-self: stretch;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  .sceneSettings[open] {
+    width: auto;
+  }
+}
+
+/* Keep the complete Spanish learned-method name legible in the compact
+   control rail; the browser reserves part of a native select for its arrow. */
+.methodControl :global(.select) {
+  font-size: 0.78rem;
+}

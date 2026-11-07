@@ -143,3 +143,27 @@ def test_miniseed_companion_must_be_owned(harness):
     miniseed["physical"]["geometry"]["stationxml_asset_id"] = station.json()["asset_id"]
     accepted = harness.upload(project["id"], body, miniseed)
     assert accepted.status_code == 201, accepted.text
+
+
+def test_stationxml_is_companion_metadata_not_a_dataset(harness):
+    harness.account()
+    project = harness.project()
+    stationxml = b'<FDSNStationXML><Network code="N"><Station code="S"><Channel code="BHZ"/></Station></Network></FDSNStationXML>'
+    meta = gravity_metadata(stationxml)
+    meta.update({"filename": "station.xml", "mime": "application/xml", "format": "stationxml"})
+    meta["physical"].update({"measurement_unit": "counts", "component_frame": "channel azimuth/dip"})
+    meta["physical"]["geometry"] = {
+        "network": "N", "station": "S", "channels": ["BHZ"],
+        "response_epoch_utc": "2026-09-27T12:00:00Z",
+        "channel_orientation_deg": {"BHZ": [0, -90]},
+    }
+    asset = harness.upload(project["id"], stationxml, meta)
+    assert asset.status_code == 201, asset.text
+
+    response = harness.request("POST", f"/api/projects/{project['id']}/datasets",
+                               json={"asset_id": asset.json()["asset_id"]})
+    assert response.status_code == 422, response.text
+    assert response.json()["code"] == "dataset_adapter_unavailable"
+    assert "matching owned MiniSEED" in response.json()["message"]
+    assert "dataset.adapter" in response.json()["fields"]
+    assert harness.client.get(f"/api/projects/{project['id']}/datasets").json()["datasets"] == []

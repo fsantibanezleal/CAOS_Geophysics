@@ -3,8 +3,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import katex from "katex";
 import { chapters } from "../data/methods";
 import { CITATIONS } from "../data/citations";
-import { historyInfo, methodName, metricInfo } from "../data/metrics";
-import { isosurface } from "../isosurface";
+import { historyInfo, methodName, methodOptionName, metricInfo } from "../data/metrics";
+import { isosurface, isosurfaceWithValues } from "../isosurface";
+import { color } from "../science";
 const source = (name: string) =>
   readFileSync(new URL("../" + name, import.meta.url), "utf8");
 describe("scientific explanations and canonical presentation", () => {
@@ -95,6 +96,14 @@ describe("scientific explanations and canonical presentation", () => {
       "active gravity stations",
     );
   });
+  it("uses compact bilingual method names in the constrained workbench selector", () => {
+    expect(methodOptionName("l2", true)).toBe("L2 espacial");
+    expect(methodOptionName("irls", true)).toBe("IRLS espacial");
+    expect(methodOptionName("cnn", true)).toBe("Inferencia CNN");
+    expect(methodOptionName("autoencoder", true)).toBe("Autoencoder observacional");
+    expect(methodOptionName("l2", false)).toBe("Spatial L2");
+    expect(methodOptionName("mt-lm", true)).toMatch(/trust.region|TRF/i);
+  });
 });
 describe("isosurface interpolation", () => {
   it("rejects incompatible input shapes", () =>
@@ -147,5 +156,18 @@ describe("isosurface interpolation", () => {
         n.reduce((sum, v, k) => sum + (v * (a[k] + b[k] + c[k])) / 3, 0),
       ).toBeGreaterThanOrEqual(0);
     }
+  });
+  it("moves contour geometry with the requested property level and preserves its palette value", () => {
+    // x-fast scalar field: a positive body whose value rises toward easting.
+    const field = [0, 0.2, 0.8, 1, 0, 0.2, 0.8, 1];
+    const low = isosurfaceWithValues(field, [1, 2, 4], [0, 0, 0], [100, 50, 25], 0.3);
+    const high = isosurfaceWithValues(field, [1, 2, 4], [0, 0, 0], [100, 50, 25], 0.7);
+    expect(low.positions.length).toBeGreaterThan(0);
+    expect(high.positions.length).toBeGreaterThan(0);
+    expect([...low.values].every((value) => Math.abs(value - 0.3) < 1e-6)).toBe(true);
+    expect([...high.values].every((value) => Math.abs(value - 0.7) < 1e-6)).toBe(true);
+    const maxEasting = (positions: Float32Array) => Math.max(...positions.filter((_, i) => i % 3 === 0));
+    expect(maxEasting(high.positions)).toBeLessThan(maxEasting(low.positions));
+    expect(color(0.3, [0, 1], "earth")).not.toBe(color(0.7, [0, 1], "earth"));
   });
 });

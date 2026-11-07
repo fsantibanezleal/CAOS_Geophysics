@@ -20,4 +20,4 @@ Raw downloaded archives remain in ignored `data/downloads/`. The public reposito
 
 ## Deployment
 
-GitHub Actions publishes `frontend/dist` to GitHub Pages. `deploy/deploy.ps1` promotes the same build to the ML VPS with an immutable release directory and an atomic Nginx symlink. No request-time backend or runtime secret is required.
+The sole application origin is `https://geophysics.ml.fasl-work.com/`, served from the ML VPS. `deploy/deploy.ps1` promotes a validated release to an immutable directory and switches the Nginx `current` symlink. GitHub Actions validates source and build artifacts; it does not publish the application. No second application origin is maintained.

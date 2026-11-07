@@ -1,0 +1,31 @@
+{
+  "schema": "geophysics.vps-science-replay/v1",
+  "date_local": "2026-10-27",
+  "candidate": {
+    "release_directory": "/var/www/geophysics.ml.fasl-work.com/releases/release-033a5e7",
+    "source_revision": "033a5e7cf9c37300b5008767892fea1fd5d1ad5d",
+    "bundle_sha256": "ea4263266d8496d8c15fa0fb1f38bfc92d43fa4276beca5fa445403a94ffbaa6",
+    "private_python": "CPython 3.12.16",
+    "interpreter_sha256": "88824fc08d28dc998af64dd55a8dd01366005d517903282a6989b1a3ccd70ded",
+    "runtime_receipt_path": "/var/lib/geophysics-deploy/runtime-release-033a5e7/runtime.json",
+    "runtime_receipt_sha256": "e7e376a53278e8a66f7b287f023c99da3ac9ea060a85279f4394f9c0d2b5a7f7",
+    "validation_overlay_sha256": "078a0628bebd3d0698902c9f718a35808b56994a8e8abe51a6961920e3926766"
+  },
+  "execution": {
+    "command": "python -m pytest -o addopts= -p no:cacheprovider -q tests/numerics/test_gravity_forward.py tests/numerics/test_magnetic_forward.py tests/numerics/test_gravity_l2_selection.py tests/numerics/test_joint_survey_plan.py",
+    "environment": "PYTHONPATH=<validation-overlay>/data-pipeline:<candidate>/.venv-gravity/lib/python3.12/site-packages; PYTHONDONTWRITEBYTECODE=1; OPENBLAS_NUM_THREADS=1; OMP_NUM_THREADS=1; MKL_NUM_THREADS=1",
+    "passed": 381,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 10793.32,
+    "duration_hms": "02:59:53",
+    "platform": "Linux x86_64, hash-pinned CPython 3.12.16"
+  },
+  "deployment_state": {
+    "active_release_before_and_after": "/var/www/geophysics.ml.fasl-work.com/releases/20260926235216",
+    "candidate_activated": false,
+    "host_admitted": false,
+    "full_release_accepted": false
+  },
+  "scope_limit": "Fresh Linux runtime replay of the named numerical controls only; does not close scientific, user-data, browser, capacity, API-admission, whole-product, or release acceptance."
+}

@@ -1,0 +1,16 @@
+# Client-first access adversarial validation
+
+Status: focused local adversarial gates PASS on 2026-10-29 (7 API tests, 31 Vitest tests, 6 Playwright tests). The full language/theme/viewport screenshot matrix and actual-host acceptance remain OPEN; these local tests cannot establish VPS configuration, deployment or host admission.
+
+The wrapper executes every original requirement gate: seven focused SQLite/API lifecycle tests, the local-access Vitest contract suite and six targeted local-access Playwright cases against the built application. The browser suite intercepts API responses and is UI/protocol evidence only; it is not live API or host evidence. The full screenshot matrix is tracked as open rather than inferred from these focused checks.
+
+| requirement | adversarial check | gate |
+|---|---|---|
+| CFA-001 | Remove SMTP and auth-mode variables, then plant an invalid profile; startup must expose the local non-secret profile without SMTP and reject the invalid mode. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-002 | Request public registration, verification and reset routes, then exercise login/logout; unavailable mail routes must stay absent and the session/CSRF behavior must remain bounded to the local account. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-003 | Plant duplicate, missing and too-short credentials and sentinel secrets; provisioning must refuse unsafe input, preserve the validated identifier, hash accepted secrets and redact secret material. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-004 | Rotate one account while two accounts hold sessions and projects; only the rotated account's old session must fail, while both project sets and the other session remain. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-005 | Attempt anonymous writes and cross-account reads/uploads/jobs after creating two accounts with multiple projects; each unauthorized operation must fail closed. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-006 | Exercise the public routes and browser calculator as a guest, then plant unavailable, unknown and expired account states; public computation must remain available while protected controls stay unavailable. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-007 | Pass malformed private credential files containing sentinel secrets and try the forbidden password CLI option; provisioning must not echo secrets or create a database from invalid input. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |
+| CFA-008 | Delete a local project and inspect the retained backup-custody case; response must report `not_configured`/`not_attempted`, avoid external-erasure claims and refuse deletion when recorded local custody exists. | `tests/adversarial/test_client_first_access_adversarial.py::test_adversarial_client_first_access_contract` |

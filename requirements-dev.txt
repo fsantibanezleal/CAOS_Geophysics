@@ -3,3 +3,4 @@ pytest==9.1.1
 ruff==0.15.18
 # Authenticated API TestClient, kept out of the production runtime lane.
 httpx==0.28.1
+jsonschema==4.25.1

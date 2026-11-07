@@ -1,6 +1,6 @@
 {
   "schema": "inverse-earth.release/v2",
-  "version": "0.04.002",
+  "version": "0.04.003",
   "complete": true,
   "cases": 20,
   "runs": 120,
@@ -13,6 +13,21 @@
     "Deepwave 0.0.27",
     "mt-metadata 1.0.10"
   ],
-  "container_migration_sha256": "0f14b7786b551f9625bfc2b6d3f43035ea57848aa6ebcd9af19689ac727aead6",
-  "container_validation_sha256": "4d4dcf491d08eb838139fe86b9dcb3e98e65a3d32f7a37aa335512a213c7b8d4"
+  "evidence_files": {
+    "validation.json": {
+      "bytes": 267911,
+      "sha256": "5c1500f53d40aaaff86a6ed98bde0289711fd314dc46494fa2d117d0ea80a191",
+      "schema": "inverse-earth.recovery-validation/v1"
+    },
+    "fwi-replay.json": {
+      "bytes": 12484,
+      "sha256": "79721c8b1f167559a96dc481e631b1869c6bdd66dbe2dc5b945dbae5464a0c2a",
+      "schema": "inverse-earth/fwi-replay/v1"
+    },
+    "mt-replay.json": {
+      "bytes": 34402,
+      "sha256": "7d79f561253151e1f8c33c6dcc9d6402a5c51cfc3b79c474632839160da47f69",
+      "schema": "inverse-earth/mt-source-reconciliation/v1"
+    }
+  }
 }

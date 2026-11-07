@@ -1,0 +1,33 @@
+Geophysical inversion is underdetermined: observations constrain a
+subsurface model only through acquisition geometry, a forward operator,
+error assumptions, parameterization, prior information, and numerical
+optimization. Inverse Earth Studio is an open-source research workbench
+connecting data ingestion and processing, forward modelling, inversion,
+diagnostics, and interpretation across potential fields,
+electromagnetics, electrical methods, and seismology. Its implementation
+includes Python pipelines and solvers, bilingual computational
+notebooks, provenance-bearing experiments, browser instruments, and a
+bounded authenticated-service design.
+
+The method suite spans gravity and magnetic processing and inversion,
+magnetotelluric screening and layered-earth inversion,
+electrical-resistivity quality control and inversion, waveform
+processing and phase picking, travel-time inversion, acoustic
+full-waveform inversion, joint inversion, and learned estimators.
+Results include both recoveries and failures. For example, a synthetic
+gravity case has weighted WRMS 1 while recovered model correlation is
+0.283 and centroid depth is about 570 m for a 282 m truth; a
+low-velocity FWI case remains unresolved. Clear Lake station cl061 is
+retained for tensor quality control and excluded from 1D inversion after
+failing the consistency screen. A proposed travel-time residual
+refinement shows a small positive result on one fixed synthetic cohort,
+which does not establish field transfer or general superiority.
+
+The workbench makes data fit, model recovery, and geological
+interpretation separate questions. Synthetic cases carry known truth;
+field observations do not. Replayed browser artifacts are distinguished
+from online calculations, and notebook execution is distinguished from
+scientific validation. The report documents the methods, numerical
+assumptions, data provenance, executable results, and limitations; it
+does not claim that unresolved scientific or service-acceptance gates
+have passed.

@@ -1,0 +1,269 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{Noto Serif}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{bookmark}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\urlstyle{same}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\emergencystretch}{3em}
+\newcommand{\doctype}{Working manuscript}
+\newcommand{\docversion}{v0.01}
+\newcommand{\docdate}{5 November 2026}
+\newcommand{\docrepo}{github.com/fsantibanezleal/CAOS\_Geophysics}
+\newcounter{algorithm}
+\newenvironment{algorithm}[1]{%
+  \refstepcounter{algorithm}%
+  \begin{center}\begin{minipage}{0.96\textwidth}\hrule\vspace{5pt}%
+  \textbf{Algorithm \thealgorithm. #1}\par\vspace{4pt}\hrule\vspace{4pt}%
+}{\vspace{4pt}\hrule\end{minipage}\end{center}}
+\newcommand{\headerblock}{%
+\begin{center}
+\fbox{\parbox{0.94\textwidth}{\small\raggedright
+\textbf{\doctype} \quad$\cdot$\quad \docversion, \docdate \quad$\cdot$\quad Licence CC BY 4.0\\[2pt]
+CAOS Research open-problems programme \quad$\cdot$\quad product Inverse Earth Studio \quad$\cdot$\quad first-arrival tomography\\[2pt]
+Version DOI: not assigned\\[2pt]
+Concept DOI: not assigned\\[2pt]
+Not peer reviewed. Source code, data and computational records: \href{https://github.com/fsantibanezleal/CAOS_Geophysics}{\texttt{\docrepo}}
+}}
+\end{center}
+\vspace{4pt}}
+\title{Geometry-normalized learned first-arrival tomography and null-space correction: two synthetic studies}
+\author{Felipe Santib\'a\~nez-Leal}
+\date{}
+\begin{document}
+\maketitle
+\headerblock
+
+\begin{abstract}
+Learned inverse maps can return velocity perturbations that fit their training distribution but disagree with an acquisition operator. The frozen v3.1 supervised residual correction failed its joint out-of-distribution gate: learned-to-classical velocity RMSE was 1.0437 and independent travel-time RMSE was 1.3961; the travel-time ratio exceeded one in every evaluated cohort. A later synthetic follow-up projects a frozen learned slowness correction into the null space of a straight-ray path-length matrix, then applies bounded velocity conversion. Its four test-cohort aggregate ratios were below one for both metrics; on joint shift they were 0.9701 (paired case-bootstrap 95\% interval 0.9661--0.9737) and 0.9967 (0.9950--0.9983). The two experiments use different cohorts, and no raw unprojected prediction is retained for the follow-up cases, so this comparison cannot isolate the projection's incremental effect. The exact source checkpoint and raw generated inputs are also absent from the current checkout, preventing a full replay. These bounded synthetic records neither establish a new null-space method nor demonstrate field transfer, geological recovery or superiority to current eikonal and learned tomography methods.
+\end{abstract}
+
+\section{Introduction}
+First-arrival tomography estimates a spatial velocity field from source--receiver travel times. Finite acquisition geometry leaves model directions weakly constrained or unobservable. An inverse solution therefore depends on its parameterization, regularization, starting model and data coverage, rather than on travel times alone. A visually coherent model does not establish that the data identify its internal structure.
+
+Classical tomography addresses this ill-posedness through regularization and an explicit forward operator. Learned methods add data-distribution priors, parameterize the inverse map, or impose wave-propagation physics during optimization. Examples include supervised networks motivated by the structure of circular tomography \cite{fan_ying_2023}, physics-informed eikonal inversion \cite{waheed_2021}, neural-network parameterization with ensemble Kalman inversion \cite{eki_nn_2024}, and recent multiparameter and residual PINN formulations \cite{song_2025,msp_respinns_2026}. These approaches differ in their inputs, governing equations and optimization; they are not interchangeable baselines.
+
+The inverse-problem language matters here because several different questions are often collapsed into one map image. A model can have low velocity RMSE against a synthetic truth and still predict travel times that disagree with the observed data. Conversely, a model may fit the data while being far from the generator truth along directions the survey does not resolve. Classical resolution analysis distinguishes data fit, parameter resolution and model uncertainty; these are related but not interchangeable quantities \cite{backus_gilbert_1968,menke_2012,aster_2018}. First-arrival travel time itself is also an approximation to wave propagation. Ray theory treats travel time as an integral along a path; finite-frequency sensitivity occupies a region around the geometrical ray, and wavefront solvers account for first arrivals through eikonal approximations \cite{vidale_1988,hole_1992,podvin_lecomte_1991,dahlen_2000,dahlen_resolution_2004}. The experiments described below use straight rays for the inverse and a second fixed-ray discretization for scoring. They do not evaluate finite-frequency effects or refracted paths.
+
+The v3.1 experiment was designed as a supervised residual correction around a matched regularized straight-ray inverse. Its locked result is not a clean claim that all learned residuals fail: the velocity map is better than the classical map on ID and acquisition-layout cases, while its independently evaluated travel-time errors are worse in every recorded cohort. The family and joint shifts also worsen velocity error. This distinction is the main scientific reason to report both domains, to retain every cohort, and to avoid describing a visually sharper learned image as a physical improvement. A learned map induces a distribution-dependent regularizer through its weights and training set, but the training distribution does not supply new measurements in the nullspace of an unseen acquisition.
+
+Null-space projection is also established. Pratt used null-space model components to incorporate a priori information into cross-hole travel-time inversion \cite{pratt_1997}; later work used null-space projection to explore non-uniqueness in magnetotellurics \cite{chave_2007}. The present computation therefore does not claim to introduce null-space projection. It asks a narrower empirical question: when a frozen learned estimate is available, does projecting its slowness correction against the acquisition's straight-ray operator improve two matched aggregate criteria relative to a straight-ray L2 solution on fixed synthetic cohorts?
+
+That question is deliberately narrower than a comparison of current tomography systems. The supervised map, a PINN that minimizes the eikonal residual, an ensemble inversion, a fast-marching objective and a full-waveform method have different forward physics, data access and uncertainty semantics. They cannot be ranked by placing unrelated published metrics in one table. The paper therefore reports the product's paired internal comparison and uses the literature to define method boundaries, not to imply a state-of-the-art benchmark. A fair head-to-head study would require common shot geometry, noise realization, parameterization, training information, parameter-selection budget, forward solvers and scoring, plus independent reproductions. None is available in this receipt.
+
+The research contribution is consequently an audit of a proposed hybrid and its evidence boundary, not a new inverse theory. The archived follow-up has an interesting bounded pattern: all cohort-level ratios favor the projected candidate, but the joint-OOD travel-time effect is only about three tenths of one percent and the comparison lacks the same-cohort unprojected prediction. The summary receipt preserves enough paired errors to inspect the distribution and compute bootstrap intervals; it does not preserve enough to reconstruct each input model, regenerate the path matrices or independently rerun the solver. Those distinctions determine what the paper can claim and what must remain open.
+
+\section{Inverse problem and correction}
+The v3.1 model is a residual CNN conditioned on a deterministic straight-ray inverse and two measured-geometry channels. Let $v_{\mathrm{ref}}$ be the fixed reference velocity, $t_i$ an observed travel time and $\ell_i=\sum_j A_{ij}$ the length of ray $i$. The ray residual feature is $q_i=(t_i-(A v_{\mathrm{ref}}^{-1})_i)/\ell_i$, which has slowness units. For cell $j$ with coverage $c_j=\sum_i A_{ij}>0$, the corrected backprojection feature is
+\[
+  b_j=-\frac{v_{\mathrm{ref},j}^2}{400\;\mathrm{m/s}}\frac{\sum_i A_{ij}q_i}{c_j},
+  \qquad z_j=\frac{c_j}{\max_k c_k}.
+\]
+The feature builder also supplies the deterministic inverse $v_0$ as the first channel, normalized as $(v_0-v_{\mathrm{ref}})/(400\;\mathrm{m/s})$. The three-channel network predicts a residual $\Delta v=250\tanh f_\theta((v_0-v_{\mathrm{ref}})/400,b,z)$ and returns $\hat v=\Pi_{[1400,4000]}(v_0+\Delta v)$. Its final convolution is zero-initialized, so the initial prediction is the deterministic inverse, subject to the same physical bounds. This corrected feature addresses a dimensional defect in an earlier residual input, but the frozen joint-shift test still performs worse than the matched straight-ray L2 baseline (Section~4). This paper evaluates a later null-space correction using the frozen learned estimate; it proposes no new null-space method.
+
+For a fixed acquisition, let $A\in\mathbb{R}^{n_d\times n_m}$ contain cell lengths traversed by each straight source--receiver ray. For slowness $s=1/v$, the linearized travel-time model is $t=As$. A regularized straight-ray estimate $s_c$ is compared with a learned velocity estimate $v_\ell$ from a frozen CNN checkpoint. The learned correction in slowness is
+\[
+  \delta s_\ell = v_\ell^{-1}-s_c.
+\]
+Let $N$ have orthonormal columns spanning $\ker(A)$, obtained from a full singular-value decomposition with a machine-precision rank tolerance. The orthogonal projector $P_N=NN^\mathsf{T}$ gives the candidate
+\[
+  s_\alpha = \operatorname{clip}\!\left(s_c+\alpha P_N\delta s_\ell,
+                 1/4000,1/1400\right), \qquad v_\alpha=s_\alpha^{-1}.
+\]
+The projection satisfies $A P_N\delta s_\ell\simeq 0$ before clipping, to numerical precision. Clipping and reciprocal conversion are nonlinear; consequently the final candidate need not preserve travel times exactly. The code checks the basis residual and records the projected-correction residual and clipped fraction for each acquisition.
+
+For calibration, $\alpha$ is selected from $\{0,0.25,\ldots,2\}$. A candidate is eligible only if both its velocity RMSE and its independent forward travel-time RMSE are below the straight-ray L2 result. Among eligible values, the smallest mean of those two ratios is selected, with the smaller $\alpha$ resolving ties. If none qualifies, $\alpha=0$ returns the straight-ray L2 baseline. Test-cohort scores do not select $\alpha$.
+
+The recorded calibration curve makes the trade-off and selection criterion inspectable (Figure~\ref{fig:calibration}). Velocity error reaches its minimum at the selected $\alpha=1.0$ and rises at larger corrections, whereas travel-time error decreases gradually over the tested grid. The selection is therefore not equivalent to minimizing velocity error alone: both criteria and a strict improvement over baseline determine eligibility, and no held-out cohort contributes to this choice.
+
+This post-hoc rule is distinct from training a neural network with an eikonal residual, learning a travel-time-to-slowness inverse map, or estimating an ensemble posterior. It also differs from the established use of null-space components to inject external prior structure: here the candidate direction is supplied by a learned estimate. No theorem states that its projection improves nonlinear travel times or velocity error.
+
+\section{Synthetic protocol}
+The source checkpoint is the v3.1 residual-correction model. The frozen protocol used 1,200 training cases (seeds 217001--218200), 160 validation cases (227001--227160), 160 ID cases (237001--237160), 80 family-only cases (247001--247080), 80 acquisition-only cases (257001--257080), and 160 joint-OOD cases (267001--267160). Training families were layered, lens and dipping with layouts A/B; the family holdout used fault/salt on A/B, the acquisition holdout used training families on layout C, and the joint holdout used fault/salt on C. Adam used seed 77214, learning rate $5\times10^{-4}$, batch size 64, maximum 100 epochs, patience 20 and gradient-norm cap 5. Validation selected epoch 100 and classical regularization $\lambda=100$. The locked table reports the archived ratios, not a replay performed for this manuscript. The joint-OOD ratios were 1.0437 for velocity RMSE and 1.3961 for independent travel-time RMSE; thus the checkpoint fails the requirement that both ratios be below one.
+
+The null-space follow-up uses that frozen checkpoint and an independently frozen calibration cohort of 160 realizations plus four new test cohorts: 160 in-distribution, 80 family-only shift, 80 acquisition-only shift and 160 joint family-and-acquisition shift. Their seed bases are 417001, 427001, 437001, 447001 and 457001. These seed namespaces are disjoint from the earlier M12 studies. The learned-model and null-space cohorts are different; no raw checkpoint prediction is saved for the follow-up cohorts. Consequently, the follow-up's comparison against the straight-ray L2 solver cannot isolate the effect of null-space projection. The hash-identified receipt retains split manifests and per-case RMSE metrics, but raw generated model/pick arrays and the exact source checkpoint are absent from the current checkout, so the full experiment cannot be rerun from the retained package.
+
+Velocity RMSE is computed against the synthetic generator's true velocity. Travel-time error is computed with an independent bilinear forward operator rather than reusing only the straight-ray matrix used for projection. Ratios are projected-candidate RMSE divided by straight-ray L2 baseline RMSE; values below one favor the projected candidate for that aggregate metric. The 95\% intervals resample paired case identifiers with replacement and calculate the ratio of mean per-case RMSEs on each of 20,000 draws using NumPy PCG64, seed 6122026 and linear quantiles. They quantify resampling variation within each fixed generator cohort, not variation across geological settings.
+
+The scorer passed an infinite value as its forward-threshold parameter. Its stored zero-exceedance fields are therefore not a threshold test and are excluded from interpretation. This does not alter the RMSE values or the calibration rule above, which uses the two aggregate ratios.
+
+\begin{table}[htbp]
+\centering
+\caption{Frozen calibration and held-out cohort definitions use disjoint seed namespaces and no test-set parameter selection.}
+\label{tab:cohort-design}
+\begin{tabular}{llrr}
+\toprule
+Role & Cohort & $n$ & Seed base \\
+\midrule
+Calibration & Parameter selection & 160 & 417001 \\
+Held-out & In-distribution & 160 & 427001 \\
+Held-out & Family-only shift & 80 & 437001 \\
+Held-out & Acquisition-only shift & 80 & 447001 \\
+Held-out & Joint family and acquisition shift & 160 & 457001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The computational sequence is summarized in Algorithm~\ref{alg:nullspace}. The split boundary is part of the method: the correction scale is selected from calibration cases only, and the held-out cohort records are evaluated after that choice is fixed. The published receipt stores cohort-level metrics and the 480 per-case metric records, but the missing checkpoint and raw inputs currently prevent a complete re-execution of these steps.
+
+\begin{algorithm}{Calibration and held-out evaluation of a projected learned correction}\label{alg:nullspace}
+\begin{enumerate}
+  \item Read the fixed straight-ray path matrix $A$, bounded classical model $s_c$, learned velocity $v_\ell$, truth and the calibration/test split manifests.
+  \item Compute a full SVD $A=U\Sigma V^\mathsf{T}$; set $\tau=\epsilon\max(n_d,n_m)\sigma_{\max}$, determine rank from $\sigma_i>\tau$, and take $N=V_{[:,\,r:n_m]}$.
+  \item Form $\delta s=1/v_\ell-s_c$ and $\delta s_N=N(N^\mathsf{T}\delta s)$; record rank, nullity, $\|AN\|_\infty$, $\|A\delta s_N\|_\infty$, and clipping diagnostics.
+  \item For each $\alpha\in\{0,0.25,\ldots,2\}$ on calibration cases, form bounded $s_\alpha=s_c+\alpha\delta s_N$, convert to velocity, and evaluate truth-space RMSE plus an independent bilinear travel-time RMSE.
+  \item Keep only candidates whose two calibration RMSE ratios are both below one; select the eligible candidate with the minimum mean ratio, breaking ties toward smaller $\alpha$, or set $\alpha=0$ if none qualifies.
+  \item Freeze the selected $\alpha$ and evaluate the four untouched test cohorts; save paired per-case errors and cohort manifests without tuning against test outcomes.
+\end{enumerate}
+\end{algorithm}
+
+\section{Results}
+\subsection{Geometry-normalized CNN}
+The corrected feature CNN fails the predeclared joint-shift comparison. Its velocity and independent travel-time RMSE ratios exceed one in every held-out cohort:
+
+\begin{table}[htbp]
+\centering
+\caption{Archived v3.1 residual-correction ratios compare the learned estimate with the matched straight-ray L2 model across validation and four synthetic test cohorts.}
+\label{tab:cnn-failure}
+\begin{tabular}{lrrr}
+\toprule
+Cohort & $n$ & Velocity RMSE ratio & Independent travel-time ratio \\
+\midrule
+Validation & 160 & 0.4052 & 1.0698 \\
+In-distribution & 160 & 0.4127 & 1.0690 \\
+Family-only shift & 80 & 1.0474 & 1.4043 \\
+Acquisition-only shift & 80 & 0.4168 & 1.0841 \\
+Joint family and acquisition shift & 160 & 1.0437 & 1.3961 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The archived v3.1 record shows a material distinction between model-space and data-space scores. Velocity RMSE improves on validation, ID and acquisition-only layouts, but the independent travel-time ratio is above one in every cohort. On the held-out geology family and joint-OOD cohort, both ratios exceed one. The locked joint-OOD gate therefore fails in both spaces. A visual model that resembles the target or a lower map RMSE on familiar families cannot override an independently computed forward mismatch. This negative outcome is distinct from the later v1.1 study, which evaluates a projected correction on new cohorts and cannot isolate projection's increment over the unprojected network.
+
+The failure is large in both model and data space and should not be obscured by the later, separately sampled correction study. In the joint-shift cohort, the learned estimate's velocity RMSE is more than twice the straight-ray baseline, while the independent travel-time RMSE is over five times larger. Threshold exceedance affects all 160 joint-shift cases. This is evidence against using this checkpoint as an unqualified first-arrival inverse, not evidence that every neural parameterization must fail. The acquisition- and family-specific values also show that the loss is not a uniform offset: generalization depends on which parts of the synthetic generator change, and aggregate results cannot identify a universal cause.
+
+\subsection{Null-space follow-up}
+Calibration selected straight-ray L2 regularization $\lambda=100$ and correction scale $\alpha=1.0$. All four follow-up test cohorts have aggregate ratios below one for both metrics:
+
+\begin{table}[htbp]
+\centering
+\caption{Aggregate projected-candidate to straight-ray L2 RMSE ratios with paired case-bootstrap intervals for four frozen synthetic test cohorts.}
+\label{tab:nullspace-ratios}
+\begin{tabular}{lrrr}
+\toprule
+Cohort & $n$ & Velocity ratio [95\% interval] & Travel-time ratio [95\% interval] \\
+\midrule
+In-distribution & 160 & 0.8035 [0.7808, 0.8256] & 0.9841 [0.9816, 0.9865] \\
+Family shift & 80 & 0.9718 [0.9667, 0.9771] & 0.9962 [0.9939, 0.9984] \\
+Acquisition shift & 80 & 0.8023 [0.7692, 0.8352] & 0.9842 [0.9795, 0.9887] \\
+Joint shift & 160 & 0.9701 [0.9661, 0.9737] & 0.9967 [0.9950, 0.9983] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The joint-shift travel-time difference is small. The intervals lie below one within these fixed cohorts, but they do not account for alternative geological generators, acquisition designs, noise models or forward-operator misspecification. For acquisition C, the matrix rank is 127 and nullity 129. The maximum absolute entry of $AN$ is $1.52\times10^{-13}$; the maximum projected-correction residual is $4.56\times10^{-18}$. No physical-bound clipping occurred. These checks establish numerical projection behavior for the evaluated matrices, not identifiability of a geological model.
+
+\begin{table}[htbp]
+\centering
+\caption{Receipt-level singular-value and projection diagnostics summarize numerical null-space checks for each distinct acquisition geometry.}
+\label{tab:projection-diagnostics}
+\begin{tabular}{lrrrrrr}
+\toprule
+Acquisition & Rank & Nullity & $\max|AN|$ & Limit & $\max|A P_N\delta s|$ & Clipped \\
+\midrule
+A & 126 & 130 & $8.53\times10^{-14}$ & $6.72\times10^{-8}$ & $5.53\times10^{-18}$ & 0\% \\
+B & 128 & 128 & $6.09\times10^{-14}$ & $6.69\times10^{-8}$ & $4.32\times10^{-18}$ & 0\% \\
+C & 127 & 129 & $1.52\times10^{-13}$ & $6.70\times10^{-8}$ & $4.56\times10^{-18}$ & 0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The paired case-level distributions provide information that the aggregate table alone cannot: the fraction of cases below a ratio of one differs between velocity error and the independent travel-time score (Figure~\ref{fig:paired-ecdf}). Their joint behavior is visible in the two-dimensional trade-off panels (Figure~\ref{fig:case-tradeoff}); a case is in the lower-left quadrant only when both errors improve. The aggregate paired bootstrap intervals and the synthetic subgroup ratios are shown separately in Figures~\ref{fig:aggregate-intervals} and~\ref{fig:subgroups}. Those subgroup summaries are descriptive partitions of the same receipt, not independent replications.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/m12-nullspace-paired-error-ecdf.pdf}
+\caption{Empirical distributions of log paired per-case RMSE ratios across held-out cohorts, with zero marking equal projected and straight-ray L2 error.}
+\label{fig:paired-ecdf}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/m12-nullspace-case-error-tradeoffs.pdf}
+\caption{Per-case velocity and independent travel-time RMSE ratios show whether each synthetic realization improves both criteria simultaneously.}
+\label{fig:case-tradeoff}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.98\textwidth]{figures/m12-nullspace-aggregate-ratio-intervals.pdf}
+\caption{Aggregate paired-case RMSE ratios and percentile bootstrap intervals quantify variation within each fixed synthetic cohort.}
+\label{fig:aggregate-intervals}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/m12-nullspace-subgroup-ratios.pdf}
+\caption{Receipt subgroup summaries separate generator-family and acquisition aggregates while retaining the shared cohort definitions.}
+\label{fig:subgroups}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/m12-nullspace-calibration-alpha-selection.pdf}
+\caption{Calibration-only RMSE ratios over the correction grid identify the selected scale without using test-cohort outcomes.}
+\label{fig:calibration}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/m12-nullspace-projection-diagnostics.pdf}
+\caption{Recorded SVD basis and projected-correction residuals verify numerical null-space behavior for acquisition geometries A, B, and C.}
+\label{fig:projection-diagnostics}
+\end{figure}
+
+\section{Relation to current methods and limits}
+The literature contains at least three distinct learned tomography families relevant to comparison. Supervised inverse maps learn from model--data pairs and can exploit geometry-specific structure \cite{fan_ying_2023}. Physics-informed methods optimize velocity and travel-time fields against the eikonal equation and may include field applications \cite{waheed_2021, song_2025}. Neural parameterizations with ensemble Kalman inversion offer a different optimization and uncertainty strategy \cite{eki_nn_2024}. Null-space analysis itself has long-standing geophysical precedents \cite{pratt_1997,chave_2007}. A 2024 sparse-ray neural inversion study also reports a synthetic volcanic-edifice setting \cite{volcano_ann_2024}.
+
+The present study compares only the projected candidate with the matched straight-ray L2 baseline. It does not compare those methods on common arrays, preprocessing, parameter tuning and scoring. In particular, there is no saved unprojected CNN prediction for the exact four follow-up cohorts; thus the incremental effect of projection relative to the raw learned estimate cannot be isolated. Nor does this computation reproduce or outperform the cited methods. A defensible benchmark against current tomography methods would require common data, implementations or faithful reproductions, matched information, and independent verification of every forward operator.
+
+The positive ratios are conditional on synthetic families, a fixed grid, straight-ray projection, one inherited checkpoint, and the independent bilinear scoring operator. The base checkpoint already failed a separate locked comparison. The study has no field measurements, no external replication, no uncertainty calibration over geology, and no user-data benchmark. A small aggregate improvement does not imply sharper resolution, uniqueness, or correct structure. On the joint-shift cohort, the ratios correspond to about a 3.0\% velocity-RMSE decrease and a 0.33\% travel-time-RMSE decrease, whose practical significance is unknown.
+
+The numerical projection check (Figure~\ref{fig:projection-diagnostics}) is a code-level consistency test for the chosen discretized path-length matrices. It says that the computed basis is close to the kernel of those matrices under the recorded tolerance and that the pre-clipping projected correction is numerically annihilated by the same operator. It does not assess whether the straight-ray matrix is a valid physical forward model for a heterogeneous medium, whether the test generator represents subsurface structure, or whether the learned correction contains useful geological information. The nonlinear velocity conversion and physical clipping occur after that linear check; independent travel-time evaluation is therefore essential and cannot be replaced by the $AN\approx0$ diagnostic.
+
+\section{Conclusion}
+On four fixed synthetic cohorts, a learned slowness correction projected into the straight-ray matrix null space reduced both aggregate velocity and independent travel-time RMSE relative to a matched straight-ray L2 solution. The joint-shift changes were small. The computation is a reproducible, bounded evaluation of an established null-space operation combined with a frozen learned estimate; it does not establish a new algorithm, superiority over current learned tomography, field performance, or geological recovery. The failed source checkpoint comparison and missing same-cohort unprojected prediction remain material limitations.
+
+\section*{Data and code availability}
+The implementation, synthetic cohort definitions, hash-identified receipt, compatibility replay, bootstrap calculation, figure generator and rendered figures are in the public source repository at \url{https://github.com/fsantibanezleal/CAOS_Geophysics}. The retained receipt SHA-256 is \texttt{30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22}; the generated figure hashes are listed in \texttt{figures/figure-manifest.json}. The compatibility replay changes only the equality tolerance for recomputed floating-point calibration candidate scores and retains the recorded source hashes, selection and held-out metrics. The exact source checkpoint and raw generated inputs required for a full solver rerun are not present in the current checkout. No field-data claim is made.
+
+{\small
+\begin{thebibliography}{99}
+\bibitem{backus_gilbert_1968} G. Backus and F. Gilbert, ``The resolving power of gross Earth data,'' \emph{Geophysical Journal of the Royal Astronomical Society}, 16(2), 169--205, 1968. \href{https://doi.org/10.1111/j.1365-246X.1968.tb00216.x}{doi:10.1111/j.1365-246X.1968.tb00216.x}.
+\bibitem{menke_2012} W. Menke, \emph{Geophysical Data Analysis: Discrete Inverse Theory}, 3rd ed., Academic Press, 2012.
+\bibitem{aster_2018} R. C. Aster, B. Borchers, and C. H. Thurber, \emph{Parameter Estimation and Inverse Problems}, 3rd ed., Elsevier, 2018. \href{https://doi.org/10.1016/C2015-0-02458-3}{doi:10.1016/C2015-0-02458-3}.
+\bibitem{vidale_1988} J. E. Vidale, ``Finite-difference calculation of travel times,'' \emph{Bulletin of the Seismological Society of America}, 78(6), 2062--2076, 1988.
+\bibitem{hole_1992} J. A. Hole, ``Nonlinear high-resolution three-dimensional seismic travel time tomography,'' \emph{Journal of Geophysical Research: Solid Earth}, 97(B5), 6553--6562, 1992. \href{https://doi.org/10.1029/92JB00235}{doi:10.1029/92JB00235}.
+\bibitem{podvin_lecomte_1991} P. Podvin and I. Lecomte, ``Finite difference computation of traveltimes in very contrasted velocity models: a massively parallel approach and its associated tools,'' \emph{Geophysical Journal International}, 105(1), 271--284, 1991. \href{https://doi.org/10.1111/j.1365-246X.1991.tb03461.x}{doi:10.1111/j.1365-246X.1991.tb03461.x}.
+\bibitem{dahlen_2000} F. A. Dahlen, S.-H. Hung, and G. Nolet, ``Fr\'echet kernels for finite-frequency traveltimes---I. Theory,'' \emph{Geophysical Journal International}, 141(1), 157--174, 2000. \href{https://doi.org/10.1046/j.1365-246X.2000.00070.x}{doi:10.1046/j.1365-246X.2000.00070.x}.
+\bibitem{dahlen_resolution_2004} F. A. Dahlen, ``Resolution limit of traveltime tomography,'' \emph{Geophysical Journal International}, 157(1), 315--331, 2004. \href{https://doi.org/10.1111/j.1365-246X.2004.02214.x}{doi:10.1111/j.1365-246X.2004.02214.x}.
+\bibitem{pratt_1997} P. S. Rowbotham and R. G. Pratt, ``Improved inversion through use of the null space,'' \emph{Geophysics}, 62(3), 869--883, 1997. \href{https://doi.org/10.1190/1.1444195}{doi:10.1190/1.1444195}.
+\bibitem{chave_2007} G. Mu\~noz and V. Rath, ``Beyond smooth inversion: the use of nullspace projection for the exploration of non-uniqueness in MT,'' \emph{Geophysical Journal International}, 164(2), 301--311, 2006. \href{https://doi.org/10.1111/j.1365-246X.2005.02825.x}{doi:10.1111/j.1365-246X.2005.02825.x}.
+\bibitem{fan_ying_2023} Y. Fan and L. Ying, ``Solving traveltime tomography with deep learning,'' \emph{Communications in Mathematics and Statistics}, 11, 3--19, 2023. \href{https://doi.org/10.1007/s40304-022-00329-z}{doi:10.1007/s40304-022-00329-z}.
+\bibitem{waheed_2021} U. B. Waheed, T. Alkhalifah, E. Haghighat, C. Song, and J. Virieux, ``PINNtomo: Seismic tomography using physics-informed neural networks,'' arXiv:2104.01588, 2021. \url{https://arxiv.org/abs/2104.01588}.
+\bibitem{eki_nn_2024} Y. Li, Y. Zhang, X. Zhu, and J. Gao, ``Seismic traveltime tomography based on ensemble Kalman inversion,'' \emph{Geophysical Journal International}, 240(1), 290--302, 2025. \href{https://doi.org/10.1093/gji/ggae329}{doi:10.1093/gji/ggae329}.
+\bibitem{volcano_ann_2024} A. Komeazi, G. R\"umpker, J. Faber, F. Limberger, and N. Srivastava, ``When linear inversion fails: Neural-network optimization for sparse-ray travel-time tomography of a volcanic edifice,'' \emph{Artificial Intelligence in Geosciences}, 5, 100086, 2024. \href{https://doi.org/10.1016/j.aiig.2024.100086}{doi:10.1016/j.aiig.2024.100086}.
+\bibitem{song_2025} C. Song, H. Geng, Y. Wang, U. B. Waheed, and C. Liu, ``Simultaneous P- and S-wave seismic traveltime tomography using physics-informed neural networks,'' \emph{Geophysical Prospecting}, 73(6), e70034, 2025. \href{https://doi.org/10.1111/1365-2478.70034}{doi:10.1111/1365-2478.70034}.
+\bibitem{msp_respinns_2026} Y. Xiang, Z. Song, Z. Wang, and G. Song, ``Residual Physics-Informed Neural Networks for Seismic Tomography with Multi-Source Prior Constraints,'' \emph{Mathematics}, 14(8), 1392, 2026. \href{https://doi.org/10.3390/math14081392}{doi:10.3390/math14081392}.
+\end{thebibliography}
+}
+\end{document}

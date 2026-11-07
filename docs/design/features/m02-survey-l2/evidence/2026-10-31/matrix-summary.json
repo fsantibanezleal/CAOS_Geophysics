@@ -1,0 +1,55 @@
+{
+  "cell_count": 24,
+  "conditions": {
+    "0": {
+      "cells": 6,
+      "classification": "within_declared_noise",
+      "model_rmse_ratio_count": 5,
+      "model_rmse_ratio_gt_one_count": 0,
+      "outer_wrms_max": 1.2327063603217272,
+      "outer_wrms_min": 0.9420062807059089
+    },
+    "1": {
+      "cells": 6,
+      "classification": "within_declared_noise",
+      "model_rmse_ratio_count": 5,
+      "model_rmse_ratio_gt_one_count": 0,
+      "outer_wrms_max": 1.2202875571027072,
+      "outer_wrms_min": 0.9007948658183716
+    },
+    "2": {
+      "cells": 6,
+      "classification": "within_declared_noise",
+      "model_rmse_ratio_count": 5,
+      "model_rmse_ratio_gt_one_count": 0,
+      "outer_wrms_max": 1.2741567801613016,
+      "outer_wrms_min": 0.81844103496711
+    },
+    "3": {
+      "cells": 6,
+      "classification": "poor_under_declared_noise",
+      "model_rmse_ratio_count": 5,
+      "model_rmse_ratio_gt_one_count": 1,
+      "outer_wrms_max": 2.9572042381665353,
+      "outer_wrms_min": 2.612627980213754
+    }
+  },
+  "duplicate_identical_replays": 0,
+  "field_eligibility": false,
+  "schema": "geophysics.m02-locked-matrix-validation/v1",
+  "scientific_acceptance": false,
+  "selection_status_counts": {
+    "selected": 24
+  },
+  "source_files": [
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/00-gph-l2-family-0-conditions23-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/01-gph-l2-family-1-conditions123-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/02-gph-l2-family-2-conditions123-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/03-gph-l2-family-3-conditions123-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/04-gph-l2-family-4-conditions123-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/05-gph-l2-family-5-conditions123-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/06-gph-l2-replay-a-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/07-gph-l2-replay-b-r1.xml",
+    "docs/design/features/m02-survey-l2/evidence/2026-10-31/08-gph-l2-replay-c-r1.xml"
+  ]
+}

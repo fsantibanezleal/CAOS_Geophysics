@@ -23,7 +23,7 @@ async function capture(name){
   rows.push({name,...layout});console.log('CAPTURE',name,JSON.stringify(layout),{errors:errors.length});
 }
 await page.goto(base,{waitUntil:'networkidle'});
-await page.getByLabel('Geological case',{exact:true}).waitFor();
+await page.getByRole('combobox',{name:'Geological case',exact:true}).waitFor();
 await page.getByRole('button',{name:'Synthetic target',exact:true}).waitFor();
 await capture('desktop-gravity-final');
 await page.getByRole('button',{name:'Synthetic target',exact:true}).click();
@@ -35,23 +35,35 @@ await page.getByText(/Model replay · saved state/).first().waitFor();
 await page.getByRole('button',{name:'Pause',exact:true}).click();
 await capture('desktop-replay');
 await page.getByRole('button',{name:'Show final model',exact:true}).click();
-await page.getByLabel('Geological case',{exact:true}).selectOption('GRAVITY_TILTED');
+await Promise.all([page.waitForResponse(response=>response.url().endsWith('/data/v2/GRAVITY_TILTED/reference.json')),
+  page.getByRole('combobox',{name:'Geological case',exact:true}).selectOption('GRAVITY_TILTED')]);
 await page.getByText('Loading numerical result…').waitFor({state:'hidden'});
 await capture('desktop-gravity-faulted-contact');
-await page.getByLabel('Geological case',{exact:true}).selectOption('MAGNETIC_DYKE');
+await Promise.all([page.waitForResponse(response=>response.url().endsWith('/data/v2/MAGNETIC_DYKE/reference.json')),
+  page.getByRole('combobox',{name:'Geological case',exact:true}).selectOption('MAGNETIC_DYKE')]);
 await page.getByText('Loading numerical result…').waitFor({state:'hidden'});
 await capture('desktop-magnetic-dyke');
-await page.getByLabel('Geological case',{exact:true}).selectOption('JOINT_SHARED');
+await Promise.all([page.waitForResponse(response=>response.url().endsWith('/data/v2/JOINT_SHARED/reference.json')),
+  page.getByRole('combobox',{name:'Geological case',exact:true}).selectOption('JOINT_SHARED')]);
+await page.getByText('Loading numerical result…').waitFor({state:'hidden'});
 await page.getByLabel('Inverse method',{exact:true}).selectOption('pgi');
 await page.getByRole('tab',{name:'Inversion',exact:true}).click();
 await capture('desktop-pgi');
-await page.getByLabel('Geological case',{exact:true}).selectOption('MT_CONDUCTIVE');
-await page.getByLabel('Inverse method',{exact:true}).selectOption('mt-lm');
+await Promise.all([page.waitForResponse(response=>response.url().endsWith('/data/v2/MT_CONDUCTIVE/reference.json')),
+  page.getByRole('combobox',{name:'Geological case',exact:true}).selectOption('MT_CONDUCTIVE')]);
+await page.getByText('Loading numerical result…').waitFor({state:'hidden'});
+await page.getByRole('tab',{name:'Inversion',exact:true}).click();
 await capture('desktop-mt-uncertainty');
-await page.getByLabel('Geological case',{exact:true}).selectOption('FWI_LAYERED');
+await Promise.all([page.waitForResponse(response=>response.url().endsWith('/data/v2/FWI_LAYERED/reference.json')),
+  page.getByRole('combobox',{name:'Geological case',exact:true}).selectOption('FWI_LAYERED')]);
+await page.getByText('Loading numerical result…').waitFor({state:'hidden'});
 await page.getByRole('tab',{name:'Model',exact:true}).click();
 await capture('desktop-fwi-model');
-await page.getByLabel('Geological case',{exact:true}).selectOption('LEARNED_AUTOENCODER');
+await Promise.all([page.waitForResponse(response=>response.url().endsWith('/data/v2/LEARNED_AUTOENCODER/reference.json')),
+  page.getByRole('combobox',{name:'Geological case',exact:true}).selectOption('LEARNED_AUTOENCODER')]);
+await page.getByText('Loading numerical result…').waitFor({state:'hidden'});
+await page.getByRole('button',{name:'Experiment controls',exact:true}).click();
+await page.getByRole('button',{name:'Experiment',exact:true}).click();
 await page.getByLabel('Inverse method',{exact:true}).selectOption('cnn');
 await capture('desktop-signed-cnn');
 for(const route of ['introduction','methodology','implementation','experiments','benchmark']){

@@ -103,11 +103,15 @@ def parse_gravity_dataset(
         raise ApiError(422, "storage_permission_missing", "Private processing requires an explicit storage attestation", ["source.private_storage_permission"])
     physical = asset.physical_metadata
     geometry = physical.get("geometry", {})
-    if (physical.get("coordinate_reference") != "epsg" or physical.get("axis_order") != "xy"
+    coordinate_reference = physical.get("coordinate_reference")
+    coordinates_admissible = (coordinate_reference == "epsg" and type(physical.get("epsg")) is int
+                              or coordinate_reference == "local" and isinstance(physical.get("local_crs"), str)
+                              and bool(physical["local_crs"].strip()))
+    if (not coordinates_admissible or physical.get("axis_order") != "xy"
             or physical.get("horizontal_unit") != "m" or physical.get("vertical_unit") != "m"
             or physical.get("measurement_unit") != "mGal" or not isinstance(geometry.get("sigma_column"), str)
             or not geometry["sigma_column"].strip()):
-        raise ApiError(422, "dataset_physics_ineligible", "Gravity processing needs projected xy metres, vertical metres, mGal and a declared sigma column", ["physical"])
+        raise ApiError(422, "dataset_physics_ineligible", "Gravity processing needs declared xy metres, vertical metres, mGal and a declared sigma column", ["physical"])
     names = [geometry.get(key) for key in (
         "station_id_column", "x_column", "y_column", "z_column", "value_column", "sigma_column",
     )]
@@ -116,12 +120,16 @@ def parse_gravity_dataset(
     try:
         content = raw.decode("utf-8-sig", errors="strict")
         reader = csv.DictReader(io.StringIO(content, newline=""), strict=True)
-        if reader.fieldnames is None or len(reader.fieldnames) != 6 or set(reader.fieldnames) != set(names):
-            raise ApiError(422, "dataset_columns_invalid", "CSV must contain exactly the six declared columns", ["physical.geometry"])
+        ordinary = geometry.get("ordinary_l2")
+        group_column = ordinary.get("partition_group_column") if type(ordinary) is dict else None
+        expected_names = [*names, group_column] if type(group_column) is str and group_column not in names else names
+        if reader.fieldnames is None or len(reader.fieldnames) != len(expected_names) or set(reader.fieldnames) != set(expected_names):
+            raise ApiError(422, "dataset_columns_invalid", "CSV columns must exactly match the declared gravity station and optional group columns", ["physical.geometry"])
         stations: list[str] = []
         coordinates: list[list[float]] = []
         values: list[float] = []
         sigma: list[float] = []
+        group_ids: list[str] = []
         seen_coordinates: set[tuple[float, float, float]] = set()
         for index, row in enumerate(reader, start=1):
             if index > settings.max_dataset_rows:
@@ -142,6 +150,11 @@ def parse_gravity_dataset(
             coordinates.append(list(xyz))
             values.append(observed)
             sigma.append(uncertainty)
+            if group_column is not None:
+                group = row[group_column].strip()
+                if not group:
+                    raise ApiError(422, "dataset_group_invalid", "Acquisition group IDs must be nonblank", [f"rows.{index}.{group_column}"])
+                group_ids.append(group)
             seen_coordinates.add(xyz)
     except (UnicodeError, csv.Error) as exc:
         raise ApiError(422, "dataset_csv_invalid", "Gravity station CSV cannot be parsed", ["asset_id"]) from exc
@@ -150,18 +163,38 @@ def parse_gravity_dataset(
     return {
         "schema": "geophysics.observation-dataset/v1", "dataset_id": dataset_id, "version": 1,
         "owner_id": owner_id, "project_id": project_id, "raw_asset_id": asset.id,
-        "parent_raw_sha256": asset.sha256, "parser_version": PARSER_VERSION,
+        "parent_raw_sha256": asset.sha256, "parent_raw_bytes": asset.byte_count,
+        "parser_version": PARSER_VERSION,
         "modality": "gravity_station", "dimensions": {"station": len(stations)},
         "axis_order": ["station"], "station_ids": stations, "xyz_m": coordinates,
+        "partition_group_ids": group_ids if group_column is not None else [],
+        "raw_columns": expected_names,
         "observed_mgal": values, "sigma_mgal": sigma, "uncertainty_kind": "per_station_standard_deviation",
         "mask": [False] * len(stations), "missing_reasons": [None] * len(stations),
         "physical_metadata": physical, "correction_history": [],
+        "source": {"source_id": source.id, "provider": source.provider, "exact_url": source.exact_url,
+                   "doi": source.doi, "citation": source.citation,
+                   "retrieved_at": source.retrieved_at.isoformat() if source.retrieved_at else None,
+                   "rights_decision": source.rights_decision, "rights_statement": source.rights_statement,
+                   "attribution": source.attribution},
         "qc_verdict": "parsed_for_flag_qc_only", "rights_decision": source.rights_decision,
         "rights_statement": source.rights_statement, "attribution": source.attribution,
     }
 
 
 def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> None:
+    if dataset.modality == "magnetic_flightline":
+        from app.magnetic_contract import validate_dataset_identity as validate_magnetic_dataset
+        validate_magnetic_dataset(payload, dataset)
+        return
+    if dataset.modality in {"ert_profile", "traveltime_profile"}:
+        from app.profile_contract import validate_profile_dataset
+        validate_profile_dataset(payload, dataset)
+        return
+    if dataset.modality == "waveform_counts_response":
+        from app.waveform_contract import validate_dataset
+        validate_dataset(payload, dataset)
+        return
     if dataset.modality == "edi_transfer_function":
         from app.mt_contract import validate_edi_dataset
         validate_edi_dataset(payload, dataset)
@@ -181,6 +214,36 @@ def validate_dataset_identity(payload: dict, dataset: ObservationDataset) -> Non
 
 
 def validate_result_identity(payload: dict, job: ProcessingJob) -> None:
+    if job.method_id == "magnetic.flightline-qc-grid/v1":
+        request = job.request_json
+        if (payload.get("schema") != "magnetic-flightline-process-result-1"
+                or payload.get("job_id") != job.id or payload.get("dataset_id") != job.dataset_id
+                or payload.get("dataset_sha256") != job.dataset_sha256
+                or payload.get("request_sha256") != job.request_sha256
+                or payload.get("method_id") != job.method_id
+                or payload.get("parameters") != request.get("parameters")
+                or payload.get("raw_asset_id") != request.get("raw_asset_id")
+                or payload.get("raw_sha256") != request.get("raw_sha256")
+                or payload.get("source_id") != request.get("source_id")
+                or payload.get("claims", {}).get("source_hash_recomputed_from_original_bytes") is not True):
+            raise ApiError(409, "derived_integrity_failed", "M03 result identity differs from its job/source receipt")
+        return
+    from app.gravity_l2_contract import METHOD_ID as GRAVITY_L2_ID, validate_result as validate_gravity_l2_result
+    from app.profile_contract import PROFILE_METHODS
+    if job.method_id == GRAVITY_L2_ID:
+        try:
+            validate_gravity_l2_result(payload, job)
+        except (TypeError, ValueError, KeyError) as exc:
+            raise ApiError(409, "derived_integrity_failed", "M02 typed result differs from its scientific/job receipt") from exc
+        return
+    if job.method_id in PROFILE_METHODS:
+        from app.profile_contract import validate_profile_result
+        validate_profile_result(payload, job)
+        return
+    if job.method_id == "seismic.waveform-qc-classical/v1":
+        from app.waveform_result import validate_result
+        validate_result(payload, job)
+        return
     if job.method_id.startswith("mt.edi-"):
         from app.mt_contract import validate_mt_result
         validate_mt_result(payload, job)

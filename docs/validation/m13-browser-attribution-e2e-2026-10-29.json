@@ -1,0 +1,19 @@
+{
+  "schema": "geophysics.m13-browser-attribution-e2e/v1",
+  "requirement": "R-019",
+  "command": "CAOS_PLAYWRIGHT_REUSE_SERVER=1 npx playwright test -c playwright.phase-picker.config.ts",
+  "result": "passed",
+  "runner_exit_code": 0,
+  "test_count": 1,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 68567,
+  "test_title": "M13 runs a hash-verified held-out STEAD trace in-browser and exports valid model scores",
+  "tested_commit": "8b909431c4ef99232cd2bf52e6de4c26d7db8b4a",
+  "working_tree_gate_sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8",
+  "playwright_config_sha256": "24320f8ba6a8a208e465c6bc68059c5f333a0fbdb82d32f33a8fad6a360910b9",
+  "built_index_sha256": "eb4aed0ec97b5741446fcfc66894431046bc5374a3f9913ebe983c0895fe1113",
+  "raw_playwright_report_sha256": "0c0869dbbec81b1647fa886d0c83c2598cce089d8877023b721734469e305ee0",
+  "scope_note": "Local built app, browser inference, attribution URL/content, held-out population copy, QC rejection, valid score export, finite [0,1] probabilities summing to one, and zero API requests were exercised. This is one curated UI integration case, not scientific population validation or whole-product acceptance."
+}

@@ -1,0 +1,65 @@
+{
+  "schema": "geophysics.prism-linux-independent-rerun/v1",
+  "executed_utc": "2026-10-27",
+  "review": {
+    "scope": "ordinary pinned M02 gravity forward operator only",
+    "python": "3.12.10",
+    "platform": "Ubuntu 24.04 WSL2 x86_64",
+    "operator_sha256": "3b8ccad20e1d700342ce7533d77226a5576e006da84c8d0bba3ef5bb3c17cc06",
+    "test_sha256": "fbf5eb6a656b5c3f8bd0b0d8188ed8de6c33a479b0c300ecd91ae9698517b54c",
+    "linux_runtime_pin_sha256": "44ae16e4279975c713df1e43c12f62a6a8f3788542f2d0b0d06e5043b8187fcd",
+    "gravity_requirements_sha256": "e162783d2d0e205416b5446b532e9f816042b27cc6c242e1e6a4c3540d554b8a",
+    "source_pin_tests": "20 installed dependency source and binary hashes checked by test_runtime_epoch_and_external_source_pins"
+  },
+  "runtime_versions": {
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "choclo": "0.3.2",
+    "numba": "0.67.0",
+    "llvmlite": "0.49.0",
+    "pymatsolver": "0.4.0",
+    "torch": "2.14.0+cu126",
+    "deepwave": "0.0.27"
+  },
+  "source_distributions": {
+    "simpeg-0.25.2.tar.gz": {
+      "sha256": "feeb106f70bf093ecd6b531dad49cc179d11c5e69dbff0c64f9c3cf8b5e2eb97",
+      "pypi_release": "https://pypi.org/project/simpeg/0.25.2/",
+      "note": "Official PyPI release has an sdist only; built in the isolated test environment."
+    },
+    "pymatsolver-0.4.0.tar.gz": {
+      "sha256": "0ef77e92ac5a780df08d921cc772e0fe230d88e114355eaa2958a2ffa5b35004",
+      "pypi_release": "https://pypi.org/project/pymatsolver/0.4.0/",
+      "note": "Installed to satisfy SimPEG metadata; not yet declared in requirements-gravity-runtime.txt."
+    }
+  },
+  "test_runs": [
+    {
+      "command": "python -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider",
+      "passed": 80,
+      "skipped": 0,
+      "seconds": 4.49
+    },
+    {
+      "command": "python -m pytest tests/numerics/test_gravity_forward.py tests/data/test_potential_sources.py tests/test_rebuild.py -k 'gravity_forward or potential_sources or gravity_independent_prism or inverse_improves_data_fit or ingest_rejects_invalid or user_csv_inverse' -o addopts= -q -p no:cacheprovider",
+      "passed": 118,
+      "skipped": 2,
+      "deselected": 11,
+      "seconds": 18.22
+    }
+  ],
+  "dependency_check": {
+    "status": "pass after manually installing hash-verified pymatsolver 0.4.0",
+    "production_runtime_installation": "not qualified"
+  },
+  "runtime_staging_findings": [
+    "The service stager uses --only-binary=:all:, but PyPI publishes SimPEG 0.25.2 only as a source distribution.",
+    "The gravity requirements omit pymatsolver, which SimPEG declares as a required dependency; pip check fails without it.",
+    "This local numerical rerun does not qualify the service runtime, VPS capacity, uploaded-survey inversion, field eligibility, or full M02/product release."
+  ],
+  "vps_admitted": false,
+  "release_accepted": false
+}
