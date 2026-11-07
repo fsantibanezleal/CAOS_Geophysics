@@ -11,6 +11,16 @@ const magneticBytes = Buffer.from([
   )).flat(),
   "",
 ].join("\n"));
+const ertBytes = Buffer.from([
+  "# Wenner array with 2m",
+  "8# Number of sensors",
+  "#x z",
+  ...Array.from({ length: 8 }, (_, index) => `${2 * index} 0`),
+  "5# Number of data",
+  "#a b m n R",
+  ...Array.from({ length: 5 }, (_, index) => `${index + 1} ${index + 4} ${index + 2} ${index + 3} 1`),
+  "",
+].join("\n"));
 let context: BrowserContext;
 let page: Page;
 let projectId = "";
@@ -135,4 +145,39 @@ test("owned magnetic survey shows source eligibility and refuses pending VPS adm
   await expect(page.getByRole("heading", { name: "Online M03 execution is pending host admission" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Run M03 line QC and grid", exact: true })).toHaveCount(0);
   await expect(page.getByText("Dataset receipt", { exact: true })).toBeVisible();
+});
+
+test("owned ERT profile parses with rights and exposes the closed VPS method gate", async () => {
+  const ertMetadata = {
+    filename: "r005-owned-profile.ohm", mime: "text/plain", format: "ert_ohm",
+    source: { provider: "Authored R-005 QA input", citation: "Synthetic ERT eligibility control; not field data.",
+      rights_statement: "Private test fixture authored for this test.", rights_decision: "derivative-only",
+      private_storage_permission: "attested", attribution: "R-005 browser test",
+      expected_bytes: ertBytes.length, expected_sha256: await cryptoHash(ertBytes) },
+    physical: { coordinate_reference: "local", local_crs: "Declared baseline", axis_order: "xy",
+      horizontal_datum: "Declared datum", vertical_datum: "Declared datum", vertical_positive: "up",
+      horizontal_unit: "m", vertical_unit: "m", measurement_unit: "ohm", epoch_utc: "2026-10-28T12:00:00Z",
+      component_frame: "ABMN", geometry: { electrode_count: 8, measurement_count: 5 } },
+  };
+  const uploadCsrf = await (await context.request.get(`${origin}/api/auth/csrf`)).json();
+  const upload = await context.request.post(`${origin}/api/projects/${projectId}/assets`, {
+    headers: { Origin: origin, "X-CSRF-Token": uploadCsrf.csrf_token,
+      "Content-Type": "text/plain", "X-Asset-Metadata": JSON.stringify(ertMetadata) }, data: ertBytes,
+  });
+  expect(upload.status(), await upload.text()).toBe(201);
+  const assetReceipt = await upload.json();
+
+  await page.goto(`${origin}/?project=${projectId}&instrument=profiles`);
+  await page.getByRole("combobox", { name: "Project method", exact: true }).selectOption("profiles");
+  await page.getByText("Processing controls", { exact: true }).click();
+  await page.getByRole("combobox", { name: "Stored original", exact: true }).selectOption(assetReceipt.asset_id);
+  await page.getByText("Dataset citation and processing permission", { exact: true }).click();
+  await page.getByLabel("Source citation for this profile", { exact: true }).fill("Declared own survey; authored R-005 test.");
+  await page.getByLabel("Declared rights holder", { exact: true }).fill("R-005 test owner");
+  await page.getByLabel("I have permission to process this original", { exact: true }).check();
+  await page.getByRole("button", { name: "Parse original profile", exact: true }).click();
+
+  await expect(page.getByText("host.profile_online_admission", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run native profile inversion on VPS", exact: true })).toBeDisabled();
+  await expect(page.getByRole("combobox", { name: "Parsed dataset", exact: true })).toContainText("r005-owned-profile.ohm");
 });

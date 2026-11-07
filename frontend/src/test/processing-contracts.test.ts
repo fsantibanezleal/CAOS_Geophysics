@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { bindDataset, bindResult, parseDatasetReceipt, parseEligibility, parseFlagResult, parseGravityDataset, parseProcessingJob, validateThreshold, verifyProcessingBundle } from "../api/processing-contracts";
+import { bindDataset, bindResult, parseDatasetReceipt, parseEligibility, parseFlagResult, parseGravityDataset, parseProcessingJob, parseProjectDatasetReceipt, validateThreshold, verifyProcessingBundle } from "../api/processing-contracts";
 import { bytes, fixture, id } from "./fixtures/processing";
 
 describe("activated flag-only processing contracts", () => {
+  it("accepts source-bound magnetic flight-line receipts in mixed-modality projects", () => {
+    const receipt = {
+      dataset_id: id(1), project_id: id(2), raw_asset_id: id(3), version: 1,
+      schema: "geophysics.observation-dataset/v1", modality: "magnetic_flightline", row_count: 12,
+      parser_version: "magnetic-flightline-original/v1", raw_sha256: "a".repeat(64), sha256: "b".repeat(64),
+      created_at: "2026-10-28T12:00:00Z", qc_verdict: "source_bound_not_numerically_processed",
+    };
+    expect(parseProjectDatasetReceipt(receipt)).toEqual(receipt);
+    expect(() => parseProjectDatasetReceipt({...receipt, parser_version: "unknown/v1"})).toThrow();
+    expect(() => parseProjectDatasetReceipt({...receipt, row_count: 11})).toThrow();
+  });
   it("accepts an explicitly declared local metric gravity frame", () => {
     const f = fixture();
     const dataset = {...f.dataset, physical_metadata: {...f.dataset.physical_metadata,

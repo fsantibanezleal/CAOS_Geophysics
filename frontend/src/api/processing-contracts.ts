@@ -37,7 +37,10 @@ export type EdiDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_versio
 export type ProfileDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_version" | "qc_verdict"> & {
   modality: "ert_profile" | "traveltime_profile"; parser_version: "supplied-profile-original/v1"; qc_verdict: "parsed_not_numerically_inverted";
 };
-export type ProjectDatasetReceipt = DatasetReceipt | EdiDatasetReceipt | ProfileDatasetReceipt | WaveformReceipt;
+export type MagneticFlightlineDatasetReceipt = Omit<DatasetReceipt, "modality" | "parser_version" | "qc_verdict"> & {
+  modality: "magnetic_flightline"; parser_version: "magnetic-flightline-original/v1"; qc_verdict: "source_bound_not_numerically_processed";
+};
+export type ProjectDatasetReceipt = DatasetReceipt | EdiDatasetReceipt | ProfileDatasetReceipt | WaveformReceipt | MagneticFlightlineDatasetReceipt;
 export const isGravityReceipt = (receipt: ProjectDatasetReceipt): receipt is DatasetReceipt => receipt.modality === "gravity_station";
 export const isEdiReceipt = (receipt: ProjectDatasetReceipt): receipt is EdiDatasetReceipt => receipt.modality === "edi_transfer_function";
 export const isProfileReceipt = (receipt: ProjectDatasetReceipt): receipt is ProfileDatasetReceipt => ["ert_profile","traveltime_profile"].includes(receipt.modality);
@@ -191,6 +194,7 @@ export function parseProjectDatasetReceipt(value: unknown): ProjectDatasetReceip
   else if (data.modality === "edi_transfer_function" && data.parser_version === "edi-strict-envelope/v1" && data.qc_verdict === "awaiting_full_tensor_qc") integer(data.row_count, 2, 512);
   else if (["ert_profile","traveltime_profile"].includes(String(data.modality)) && data.parser_version === "supplied-profile-original/v1" && data.qc_verdict === "parsed_not_numerically_inverted") integer(data.row_count,4,4096);
   else if (data.modality === "waveform_counts_response" && /^m08\/v1\/[a-f0-9]{64}$/.test(String(data.parser_version)) && data.qc_verdict === "structural_index_not_physical_qc") integer(data.row_count, 1, 180000);
+  else if (data.modality === "magnetic_flightline" && data.parser_version === "magnetic-flightline-original/v1" && data.qc_verdict === "source_bound_not_numerically_processed") integer(data.row_count, 12, 250000);
   else fail("dataset receipt modality/parser/verdict");
   hash(data.raw_sha256); hash(data.sha256); timestamp(data.created_at);
   return value as ProjectDatasetReceipt;
