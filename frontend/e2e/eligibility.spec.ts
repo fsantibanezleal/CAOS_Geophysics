@@ -4,6 +4,13 @@ const origin = "http://127.0.0.1:8877";
 const email = "eligibility-owner@example.org";
 const password = "a separate long R-005 QA password";
 const bytes = Buffer.from("station,x,y,z,g,sigma\nS1,500000,6200000,100,1,0.1\nS2,500010,6200010,100,2,0.1\nS3,500020,6200000,100,3,0.1\nS4,500030,6200010,100,4,0.1\nS5,500040,6200000,100,100,0.1\n");
+const magneticBytes = Buffer.from([
+  "E,N,TMI_nT,line,role,height_m,sample",
+  ...Array.from({ length: 5 }, (_, line) => Array.from({ length: 8 }, (_, sample) =>
+    `${500000 + sample * 10},${100000 + line * 100},${20 + line + sample / 10},F${line},flight,100,${sample}`,
+  )).flat(),
+  "",
+].join("\n"));
 let context: BrowserContext;
 let page: Page;
 let projectId = "";
@@ -87,4 +94,45 @@ test("eligible method only is submittable; offline and incompatible methods show
   await page.getByRole("combobox", { name: "Veredicto de método de la API", exact: true }).selectOption("gravity.survey-l2-ordinary/v1");
   await expect(page.getByTestId("method-eligibility")).toContainText("Campos que debe revisar");
   await expect(page.getByTestId("method-eligibility")).toContainText("physical_metadata.geometry.ordinary_l2");
+});
+
+test("owned magnetic survey shows source eligibility and refuses pending VPS admission", async () => {
+  const magneticMetadata = {
+    filename: "r005-magnetic-flight-lines.csv", mime: "text/csv", format: "magnetic_csv",
+    source: { provider: "Authored R-005 QA input", citation: "Synthetic eligibility control; not field data.",
+      rights_statement: "Private test fixture authored for this test.", rights_decision: "mirror",
+      private_storage_permission: "attested", attribution: "R-005 browser test",
+      expected_bytes: magneticBytes.length, expected_sha256: await cryptoHash(magneticBytes) },
+    physical: { coordinate_reference: "epsg", epsg: 32719, axis_order: "xy", horizontal_datum: "WGS84",
+      vertical_datum: "survey reference", vertical_positive: "up", horizontal_unit: "m", vertical_unit: "m",
+      measurement_unit: "nT", epoch_utc: "2026-10-28T12:00:00Z", component_frame: "total field",
+      geometry: { line_id_column: "line", x_column: "E", y_column: "N", z_column: "height_m",
+        value_column: "TMI_nT" } },
+  };
+  const uploadCsrf = await (await context.request.get(`${origin}/api/auth/csrf`)).json();
+  const asset = await context.request.post(`${origin}/api/projects/${projectId}/assets`, {
+    headers: { Origin: origin, "X-CSRF-Token": uploadCsrf.csrf_token,
+      "Content-Type": "text/csv", "X-Asset-Metadata": JSON.stringify(magneticMetadata) }, data: magneticBytes,
+  });
+  expect(asset.status(), await asset.text()).toBe(201);
+  const assetReceipt = await asset.json();
+
+  await page.evaluate(() => localStorage.setItem("caos.lang", "en"));
+  await page.goto(`${origin}/?project=${projectId}&instrument=magnetic-flightline`);
+  await expect(page.getByTestId("m03-eligibility")).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Stored magnetic CSV", exact: true }).selectOption(assetReceipt.asset_id);
+  for (const [label, value] of [
+    ["easting *", "E"], ["northing *", "N"], ["value *", "TMI_nT"], ["line id *", "line"],
+    ["line role *", "role"], ["sensor height m *", "height_m"], ["sample order *", "sample"],
+  ]) await page.getByLabel(label, { exact: true }).fill(value);
+  await page.getByLabel("Provider processing already applied", { exact: true }).fill("Synthetic total-field anomaly; no corrections applied.");
+  await page.getByLabel("Magnetic quantity", { exact: true }).fill("total-field anomaly [nT]");
+  await page.getByRole("button", { name: "Validate mapped dataset", exact: true }).click();
+
+  const eligibility = page.getByTestId("m03-eligibility");
+  await expect(eligibility).toContainText("M03 unavailable");
+  await expect(eligibility).toContainText("host.magnetic_online_admission");
+  await expect(page.getByRole("heading", { name: "Online M03 execution is pending host admission" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run M03 line QC and grid", exact: true })).toHaveCount(0);
+  await expect(page.getByText("Dataset receipt", { exact: true })).toBeVisible();
 });
