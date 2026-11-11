@@ -155,8 +155,6 @@ The VPS still serves the older release, and the product's content, notebook,
 manuscript, and scientific acceptance gates remain open, so no replacement was
 activated.
 
-## Release disposition
-
 ## M12 bilingual method lesson update
 
 The earlier M12 checkpoint lesson was a train-and-verify run with stale stored
