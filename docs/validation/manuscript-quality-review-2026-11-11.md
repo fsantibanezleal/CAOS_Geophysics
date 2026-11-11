@@ -114,8 +114,10 @@ branches; those edits were preserved and not staged or rewritten.
   on the newest published package.
 - A fresh template-base scan of remote product commit `1e208f8` was started. It
   completed its early gates, then stalled in `check_content_standards.py`; the
-  script was stopped and its exact temporary copy was removed after log review.
-  It is not a full template pass.
+  process was stopped after collecting its logs. The scan is not a full template
+  pass. Exact temporary scan and visual-QA directories remain because the local
+  command runner blocked recursive removal; only the LaTeX build intermediates
+  were cleaned.
 - Fresh scan findings include manuscript/schema and manuscript-depth failures,
   a document-check import crash (`contract_schemas`), readiness import failure
   (`pipeline`), base-integrity failures (shell modes, unadmitted model assets and
