@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "1a6ea0aff9683b9d12f5b8c7502dad0f1840fd1c93a79f8e21d8cf21542081fd",
+  "sdd_sha256": "bdc6eca47c71c75dfbb1efe80865a7fe24c1a72ef3576e78f02b1019ae34bccd",
   "assessed_revision": "b3b430365f8ee2481b597850dcf15f6ba059d5ac",
   "assessed_at": "2026-11-11T03:15:35Z",
   "release": {
@@ -129,7 +129,7 @@
         },
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
-          "sha256": "7db5f6972f7b0395520d38f5fedd490cd4537c2e55cd85b67705dd0f065584be"
+          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         }
       ],
       "receipts": []
@@ -262,7 +262,7 @@
         },
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
-          "sha256": "7db5f6972f7b0395520d38f5fedd490cd4537c2e55cd85b67705dd0f065584be"
+          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         }
       ],
       "receipts": [
@@ -470,7 +470,7 @@
         },
         {
           "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "6a167bbf95483c0fed195abc71ef03743d0641134fff66379a1bb3f972c20621"
+          "sha256": "59aa51dabbbe2317fe384f029cbfd8fd31e594509c9b3b87f79fed1d42e60194"
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
@@ -478,7 +478,7 @@
         },
         {
           "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "48ec9a603cd393b2ac618de25ea55051060dc17ea4f92514e073b238cc2a13cf"
+          "sha256": "d88be662ab9efb45bbfed330dad21a5fb5103a1346948d57420f19ee3a3355eb"
         },
         {
           "path": "tests/api/test_gravity_l2_upload.py",
@@ -799,7 +799,7 @@
         },
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
-          "sha256": "7db5f6972f7b0395520d38f5fedd490cd4537c2e55cd85b67705dd0f065584be"
+          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         }
       ],
       "receipts": []
@@ -856,7 +856,7 @@
         },
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
-          "sha256": "7db5f6972f7b0395520d38f5fedd490cd4537c2e55cd85b67705dd0f065584be"
+          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         }
       ],
       "receipts": []
@@ -983,7 +983,7 @@
         },
         {
           "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "6a167bbf95483c0fed195abc71ef03743d0641134fff66379a1bb3f972c20621"
+          "sha256": "59aa51dabbbe2317fe384f029cbfd8fd31e594509c9b3b87f79fed1d42e60194"
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
@@ -1003,7 +1003,7 @@
         },
         {
           "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "48ec9a603cd393b2ac618de25ea55051060dc17ea4f92514e073b238cc2a13cf"
+          "sha256": "d88be662ab9efb45bbfed330dad21a5fb5103a1346948d57420f19ee3a3355eb"
         },
         {
           "path": "scripts/check_docs_matrix.py",
@@ -1199,7 +1199,7 @@
         },
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
-          "sha256": "7db5f6972f7b0395520d38f5fedd490cd4537c2e55cd85b67705dd0f065584be"
+          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         }
       ],
       "receipts": []
