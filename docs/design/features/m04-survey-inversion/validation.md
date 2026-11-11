@@ -1,5 +1,31 @@
 # Independent validation and complete acceptance matrix
 
+## 2026-11-11 selective likelihood decoding
+
+The fold assembler and calibration path previously materialized the complete
+observation vector and noise array before slicing fit rows. They now revalidate
+the bounded survey bytes, recompute and compare the geometry seal, then scan
+the original scalar tokens while copying only the authorized fit observations
+and the corresponding principal covariance block. Held-out likelihood values
+are not placed into NumPy arrays. A stale-seal regression refuses before that
+selection step; focused tests also verify diagonal fit dimensions and exact
+full-covariance principal-block reconstruction.
+
+The focused assembly suite passed six tests; the current calibration suite
+passed four tests with the reviewed `OPENBLAS_NUM_THREADS=1`,
+`OMP_NUM_THREADS=1`, and `MKL_NUM_THREADS=1` environment. The current-source
+528-parameter synthetic S2-A linear-TMI fold converged in 113 iterations in
+57.938 seconds. Its normalized projected KKT infinity norm was
+`1.420804898067916e-16`, and its original-accuracy terminal certificate passed.
+The 144 fit scalars were materialized; the separate 72 validation and 72 outer
+scalars remained sealed. The source-bound receipt is
+[`m04-current-source-selective-reader-2026-11-11.json`](../../../validation/m04-current-source-selective-reader-2026-11-11.json).
+
+This fixes the likelihood materialization boundary for the tested fit-fold
+path. It does not qualify candidate selection, held-out scoring, field data,
+nonlinear exact-magnitude inversion, sparse IRLS, API admission, full product
+acceptance, or a release.
+
 ## 2026-11-11 current-source 528-cell linear L2 fold
 
 The current-source fold test passed after extending its source inventory to

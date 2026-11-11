@@ -56,6 +56,8 @@ def test_assembles_only_sealed_fit_rows_and_subsets_data_noise(monkeypatch):
                           np.asarray(request()["geometry"]["receivers_m"]["data"]).reshape(-1, 3)[fit])
     assert np.array_equal(result["initial_data"]["residual_observed_minus_predicted_nT"],
                           np.asarray(doc["observations"]["values"]["data"])[expected])
+    assert result["objective"].data.observed_selected_nT.shape == expected.shape
+    assert result["objective"].data.whitener.dimension == len(expected)
     assert result["initial_data"]["phi_d"] > 0.
     assert "no inversion performed" in result["claim"]
 
@@ -69,6 +71,19 @@ def test_rejects_nonfold_index_before_any_geometry_work(monkeypatch):
         assert "fold_index" in str(exc)
     else:
         raise AssertionError("invalid fold was accepted")
+
+
+def test_selected_reader_rejects_changed_geometry_seal_before_materializing_values(monkeypatch):
+    handle = parse_request(encode(request()))
+    monkeypatch.setattr(assembly, "plan_geometry", lambda passed: {
+        "identity": {"seal_sha256": "a" * 64},
+    })
+    try:
+        assembly.read_selected_likelihood(handle, (0,), "b" * 64)
+    except ValueError as exc:
+        assert "geometry_seal" in str(exc)
+    else:
+        raise AssertionError("changed geometry seal was accepted")
 
 
 def test_subsets_full_covariance_by_original_scalar_rows(monkeypatch):
@@ -114,6 +129,12 @@ def test_subsets_full_covariance_by_original_scalar_rows(monkeypatch):
     result = assembly.assemble_magnetic_fit_objective(handle, 0)
     assert np.array_equal(result["source_flat_indices"], np.array(fit_rows, dtype=np.int64))
     assert result["initial_data"]["phi_d"] == sum((row / 0.5) ** 2 for row in fit_rows)
+    expected_principal = covariance[np.ix_(fit_rows, fit_rows)]
+    assert result["objective"].data.observed_selected_nT.shape == (len(fit_rows),)
+    assert result["objective"].data.whitener.dimension == len(fit_rows)
+    np.testing.assert_array_equal(result["objective"].data.whitener._factor @
+                                  result["objective"].data.whitener._factor.T,
+                                  expected_principal)
 
 
 def test_actual_nonzero_simpeg_fit_assembly_has_physical_objective_derivative():

@@ -67,13 +67,6 @@ def _source_inventory(raw: bytes, geometry_seal: str) -> dict[str, str]:
     return inventory
 
 
-def _likelihood(handle):
-    """Materialize validated observations/noise only after geometry sealing."""
-    from magnetic_fit_assembly import _likelihood as read_likelihood
-    document, observed, noise = read_likelihood(handle)
-    return document, observed, noise
-
-
 def _mesh(metadata):
     return magnetic_inverse.mesh_from_metadata(metadata)
 
@@ -118,16 +111,17 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
     if not fit_rows or tuple(sorted(set(fit_rows))) != fit_rows:
         raise ValueError("partition: fit rows must be nonempty, unique, and ordered")
     operator = magnetic_inverse.build_operator(raw, fit_rows, deadline=deadline)
-    document, observations, noise_values = _likelihood(handle)
-    quantity_components = 3 if document["processing"]["quantity"] == "secondary_enu_nT" else 1
+    quantity_components = 3 if metadata["processing"]["quantity"] == "secondary_enu_nT" else 1
     flat_rows = (np.asarray(fit_rows, dtype=np.int64)[:, None] * quantity_components
                  + np.arange(quantity_components, dtype=np.int64)).reshape(-1)
-    observed = _owned(observations.reshape(-1, order="C")[flat_rows])
+    document, selected_observations, selected_noise = magnetic_fit_assembly.read_selected_likelihood(
+        handle, tuple(int(index) for index in flat_rows), plan["identity"]["seal_sha256"]
+    )
+    observed = _owned(selected_observations)
     if document["noise"]["kind"] == "diagonal_sd":
-        noise = {"kind": "diagonal_sd", "values": _owned(noise_values.reshape(-1, order="C")[flat_rows, None])}
+        noise = {"kind": "diagonal_sd", "values": _owned(selected_noise)}
     else:
-        principal = noise_values[np.ix_(flat_rows, flat_rows)]
-        noise = {"kind": "full_covariance", "values": _owned(principal)}
+        noise = {"kind": "full_covariance", "values": _owned(selected_noise)}
 
     prior = metadata["prior"]
     lower = _owned(np.asarray(prior["lower_si"]["data"], dtype=np.float64) / 0.01)

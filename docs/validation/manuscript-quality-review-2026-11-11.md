@@ -191,3 +191,47 @@ current template compatibility, method matrix, and actual VPS acceptance remain
 incomplete. Do not merge to `develop`/`main` or activate a VPS release until the
 required gates pass. Publishing the reviewed manuscript would require a separate
 Zenodo deposit action; that has not been performed.
+
+## 2026-11-11 repository and manuscript recheck
+
+The manuscript-depth checker was rerun from CAOS_MANAGE against the current
+product checkout. It still reports five findings: the BS-1 draft title has no
+published `product.json` record; `geophysics-identifiability` has no LaTeX
+main file; the technical report and M12 manuscript lack `coverage.json`; and
+no folder is declared as a technical report. Measured depth is unchanged:
+BS-1 7,655 words / 16 equations / 7 figures / 6 tables / 32 references / 1
+algorithm; the technical report 3,357 / 0 / 1 / 1 / 14 / 0; M12 2,837 / 3 / 6
+/ 4 / 16 / 1. The technical report and M12 remain materially below the
+published content bar. A coverage file or registry entry alone cannot correct
+those content deficiencies; the draft remains unpublished and no DOI is
+claimed.
+
+Shared-repository state has changed since the earlier section above. Template
+PR #124 is merged to `develop` at `265d3ece6fba3533229497acf69ea50adce32416`;
+the checkout is synchronized and clean at that commit, but the version is not
+tagged as a release. Its stage-input guard has no matching stage-input workflow
+in this product, so copying that guard would not fix the product's open
+pipeline or manuscript gates. Shell PR #218 remains draft on
+`task/0-26-0-defects`; its branch is synchronized and clean, while the full
+browser/gate acceptance remains unverified. The product's reviewed integration
+pin remains Shell 0.25.0 pending a published and accepted successor. No shared
+repository changes were copied into the product during this review.
+
+The product's current-source M04 selective-likelihood change now materializes
+only the sealed fit observations and selected noise block after recomputing the
+geometry seal. Its focused six-test assembly suite and four-test calibration
+suite pass with the solver's required single-thread BLAS environment. A
+528-parameter synthetic fold also converged with the original-accuracy
+certificate. This is one fold and does not change the five manuscript findings
+or the product acceptance status: the SDD ledger remains one fail and 15
+unresolved, the VPS still serves 0.04.001, and replacement activation remains
+blocked by the required product, science, host, and release gates.
+
+The current deployment index and R-C06/API lifecycle requirements have been
+reconciled to the single ML-VPS origin and the approved internal-account
+profile. Public research/architecture copy no longer discusses a second host;
+the former 0.03/0.04 deployment receipts remain explicitly historical. The
+VPS-only deployment verifier was run against the canonical hostname and failed
+on the live-versus-local catalogue byte comparison, so no deployment occurred.
+The frontend's production build succeeds; Vite still reports an existing
+556-kB Workbench chunk above its 500-kB advisory threshold.

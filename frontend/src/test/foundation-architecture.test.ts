@@ -22,8 +22,8 @@ describe("target architecture communication", () => {
   });
   it("single VPS legacy and replacement public client remain distinct", () => {
     const system = architecture.tabs[0], lanes = architecture.tabs[1];
-    expect(system.body_en).toContain("ML VPS only; Pages publication has been withdrawn");
-    expect(system.body_es).toContain("sólo en ML VPS; la publicación en Pages fue retirada");
+    expect(system.body_en).toContain("static synthetic replay on the ML VPS only");
+    expect(system.body_es).toContain("reproducción sintética estática sólo en ML VPS");
     expect(system.body_en).toContain("server project persistence, uploads and VPS jobs require login");
     expect(system.body_es).toContain("persistencia de proyectos, las cargas y las tareas VPS requieren inicio de sesión");
     expect(system.body_en).toContain("not a claim that new VPS jobs are deployed");
