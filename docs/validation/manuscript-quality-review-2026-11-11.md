@@ -102,18 +102,29 @@ reproducible or as a state-of-the-art comparison.
 ## Shell and product-template compatibility
 
 All three repositories were fetched from origin. The product checkout is clean
-apart from this session's manuscript and review work. The shared Shell and
-Template checkouts contain additional dirty files from their own in-progress
-branches; those edits were preserved and not staged or rewritten.
+at `f50dc67`, synchronized with its task branch. The Shell and Template
+checkouts are also clean; their in-progress work is committed on task branches.
 
 - The product records template instantiation origin `0.13.001`; this is not a
-  claim that it conforms to the current template. Latest available template tag
-  verified remotely is `v0.15.006`; its shared checkout has active uncommitted
-  `0.15.007` work, which was preserved.
+  claim that it conforms to the current template. Latest released template tag
+  is `v0.15.006`. Template `0.15.007` is in open PR #124 and is not yet
+  merged or tagged. Its new stage-input guard is not used by this product's
+  pipeline workflow, so it has not been copied into the product.
 - Product frontend and lockfile still pin Shell `0.25.0`. `npm view` reports
   `0.25.0` as the published version. Shell main contains merged `0.26.0` work,
-  but there is no published `v0.26.000` tag/package to adopt; the product remains
-  on the newest published package.
+  but there is no published `v0.26.000` package to adopt. The local Shell task
+  branch adds two commits for known defects 43, 50, and 68 plus G21 tolerance.
+  Its 335 unit tests, build, and 434-requirement SDD gate pass. The full gate
+  matrix and browser suite remain unverified: this checkout already had three
+  other full gate runs active, so this run was stopped rather than adding load
+  or interfering with their shared fixture directory. The branch remains
+  unpushed and unpromoted; the product stays on published Shell 0.25.0.
+- Template `0.15.007` PR #124 contains the stamped-input guard plus a
+  case-insensitive `.JSON` regression. Eleven focused tests, Ruff, the
+  232-requirement SDD gate, and version coherence pass. The full pytest suite
+  was interrupted early and remains unverified. The Template CI workflow runs
+  on pushes to `main` and `develop`, not pull-request events; no workflow run
+  is recorded for this PR. It has not been promoted.
 - A fresh template-base scan of remote product commit `1e208f8` was started. It
   completed its early gates, then stalled in `check_content_standards.py`; the
   process was stopped after collecting its logs. The scan is not a full template
@@ -126,18 +137,23 @@ branches; those edits were preserved and not staged or rewritten.
   repository-local machine paths), and conflicting pins in the technology
   matrix. `check_doc_paths.py` also reports unresolved paths. The content
   standards guard did not complete.
-- The draft BS-1 entry was removed from `product.json` because that manifest
+- The draft BS-1 entry is absent from `product.json` because that manifest
   accepts DOI-backed records; the paper's draft state remains explicit here and
   in this review. As a result, the manuscript title-to-registry content gate
   remains open until a compliant Zenodo record exists; no DOI or publication is
   fabricated.
-- The deploy-place guard recognizes the VPS target. Its output says
-  `deploy/` has no service unit, so the scan does not establish that the live
-  service is deployable or accepted.
+- The repository contains the ML-VPS nginx configuration and systemd socket,
+  API, and worker units. The product's only configured origin is
+  `https://geophysics.ml.fasl-work.com/`; the product repository has no
+  GitHub Pages workflow. A read-only remote comparison found the VPS serves
+  catalog version `0.04.001`, while the local checkout is `0.04.003`.
+  `scripts/verify_deployment.py` fails at the exact catalog comparison, so the
+  candidate has not been deployed or accepted. No VPS files were changed.
 
-The user's single-origin rule remains decisive: the ML VPS is the sole app target;
-GitHub Pages is not an app deployment. The VPS currently serves the legacy
-release, so no new deployment was made from this failing product state.
+The single-origin rule remains decisive: the ML VPS is the sole app target.
+The VPS still serves the older release, and the product's content, notebook,
+manuscript, and scientific acceptance gates remain open, so no replacement was
+activated.
 
 ## Release disposition
 
@@ -161,12 +177,11 @@ the no-field-validation/no-online-admission claims. This repairs the M12
 lesson pair only. The repository-wide notebook content and product gates still
 fail on other lessons, so this work does not close R-016 or release acceptance.
 
-Shell and template review found the shared Shell at 0.26.0 in main/develop but
-the product must stay on its latest published 0.25.0 package until 0.26.0 is
-published. The shared Template's latest available tag is 0.15.006; the product
-origin is 0.13.001 and compatibility remains incomplete. Dirty Shell and
-Template work was preserved. The CAOS notebook depth gate now passes this M12
-pair, but course-wide notebook debt remains.
+Shell and template review found unreleased task-branch changes in both shared
+repositories. The product must stay on published Shell 0.25.0 until Shell
+0.26.0 is published; Template 0.15.007 remains in PR #124. Product template
+compatibility is still incomplete. The CAOS notebook depth gate passes this
+M12 pair, but course-wide notebook debt remains.
 
 ## Release disposition
 
