@@ -54,8 +54,9 @@ raw arrays required for full replay.
   method, every data contract, each pipeline stage and the results actually shown.
 - Create a separate LaTeX manuscript for BS-1 that reports the negative result,
   clearly limits it to the frozen synthetic generator, and does not make a
-  superiority or novelty claim. Include a defensible ablation or state why the
-  proposed method is withdrawn; do not tune against the held-out cohorts.
+  superiority or novelty claim. The exploratory two-channel ablation is now
+  recorded in `bs1-ablation-2026-11-11.md`; describe its post-hoc status and
+  limitations without using it to tune or rescue the primary held-out result.
 - Generate figures and result tables from committed scripts and hash-verified
   artifacts; do not hand-enter values or treat the external training directory as
   a repository deliverable.
