@@ -105,6 +105,7 @@
     "m09_synthetic_control.execute_user_survey",
     "long_valley_timelapse.parse_source",
     "long_valley_timelapse.difference",
-    "long_valley_timelapse.build_artifact"
+    "long_valley_timelapse.build_artifact",
+    "gravity_forward.forward_gravity"
   ]
 }
