@@ -181,6 +181,28 @@ repositories. The product must stay on published Shell 0.25.0 until Shell
 compatibility is still incomplete. The CAOS notebook depth gate passes this
 M12 pair, but course-wide notebook debt remains.
 
+## 2026-11-11 follow-up: released base adoption
+
+The preceding shared-base statements are historical snapshots and are
+superseded by the verified state below. CAOS App Shell 0.26.0 is now released
+and published; `main` is `d2b3351`, npm `latest` is 0.26.0, and its package
+`gitHead` matches the release. CAOS Product Template 0.15.008 is released on
+`main` at `7dce8c9`. Its exact-main CI and Pages build completed successfully.
+The Geophysics candidate pins Shell 0.26.0 and records 0.15.008 as the reviewed
+current template base while preserving `.template-version` as the original
+0.13.001 instantiation record.
+
+Candidate commit `37b4070` updates the SDD, exact package/gate assertions, and
+this adoption evidence. The focused Shell-version test passes (6 tests), and
+the production frontend build succeeds with 148 declared files copied. The
+build still reports a Workbench chunk above Vite's 500 kB advisory threshold.
+The PR remains draft. The notebook depth audit still fails with 181 findings;
+the report and M12 manuscript remain below their required content depth; the
+BS-1 draft remains unpublished; M04 and the complete product/science/host
+acceptance gates remain open. No deployment or release promotion is authorized
+by these base-adoption results. The ML VPS remains the single deployment
+target, and GitHub Pages is not configured for this product.
+
 ## Release disposition
 
 This review found and corrected scientific-description defects in the BS-1
