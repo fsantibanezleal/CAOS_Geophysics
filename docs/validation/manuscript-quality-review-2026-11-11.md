@@ -25,8 +25,8 @@ fails because the technical report and older manuscript are incomplete.
 
 | Document | Prose words | Equations | Figures | Tables | Cited works | Algorithms | Status |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Technical report 0.04.003 | 3,357 | 0 | 1 | 1 | 14 | 0 | Far below report floor |
-| M12 null-space study 0.01 | 2,837 | 3 | 6 | 4 | 16 | 1 | Below manuscript floor; raw inputs/checkpoint unavailable for full replay |
+| Technical report 0.04.003 | 3,289 | 0 | 1 | 1 | 14 | 0 | Far below report floor |
+| M12 null-space study 0.01 | 2,850 | 3 | 6 | 4 | 16 | 1 | Below manuscript floor; raw inputs/checkpoint unavailable for full replay |
 | BS-1 geometry-normalized residual study v0.01 draft | 7,655 | 16 | 7 | 6 | 32 | 1 | Measured depth, voice and independent scientific review pass at stated scope; unpublished-record gate remains open |
 
 The binding floors are 12,000/25/10/8/30/3 for a technical report and
@@ -200,7 +200,7 @@ published `product.json` record; `geophysics-identifiability` has no LaTeX
 main file; the technical report and M12 manuscript lack `coverage.json`; and
 no folder is declared as a technical report. Measured depth is unchanged:
 BS-1 7,655 words / 16 equations / 7 figures / 6 tables / 32 references / 1
-algorithm; the technical report 3,357 / 0 / 1 / 1 / 14 / 0; M12 2,837 / 3 / 6
+algorithm; the technical report 3,289 / 0 / 1 / 1 / 14 / 0; M12 2,850 / 3 / 6
 / 4 / 16 / 1. The technical report and M12 remain materially below the
 published content bar. A coverage file or registry entry alone cannot correct
 those content deficiencies; the draft remains unpublished and no DOI is
@@ -235,3 +235,49 @@ VPS-only deployment verifier was run against the canonical hostname and failed
 on the live-versus-local catalogue byte comparison, so no deployment occurred.
 The frontend's production build succeeds; Vite still reports an existing
 556-kB Workbench chunk above its 500-kB advisory threshold.
+
+## 2026-11-11 follow-up: shared-base and scorer review
+
+The current Shell PR #218 (`task/0-26-0-defects`) is still a draft against
+`develop`, with no reported checks. Its 0.26.000 changelog names known defects
+and adoption notes, but the full measured browser gate and release are not
+complete. The product stays pinned to published Shell 0.25.0; copying changes
+from the draft would bypass the shared-base release and adoption rules.
+
+Template PR #124 is merged to `develop` at `265d3ece6fba3533229497acf69ea50adce32416`,
+but 0.15.007 is not tagged or released. Its stamped-stage-input guard has no
+corresponding `stage_inputs` workflow in this product, so the change does not
+address a product defect and was not copied. The product's instantiation record
+and compatibility work remain separate from that unreleased template change.
+
+The current M04 fold scorer had a physical sign inconsistency: it reconstructed
+the inducing-field vertical component as `+F sin(I)` in ENU, while the
+validated engine uses `-F sin(I)` for positive inclination in its positive-up
+vertical coordinate. The scorer now consumes the
+engine-returned background vector, checks its shape and finiteness, and keeps
+the same selective post-seal read of validation-only likelihood values. A new
+analytic linear-TMI regression isolates the vertical contribution and checks
+the predicted score and weighted objective. The combined scorer and fit
+assembly suite passes 10 tests; Ruff and `git diff --check` pass. This closes
+that local scoring defect only; it is not a validation of the inversion
+method's scientific acceptance.
+
+The manuscript verdict is unchanged: the geometry-normalized residual draft is
+clean under the voice checker and meets the measured numeric depth floors, but
+the full depth gate still rejects it because its title is not in the
+DOI-backed `product.json` record. Its negative comparison against a
+regularized straight-ray baseline does not establish advantage over
+contemporary eikonal, Bayesian, or learned tomography methods. It remains
+unpublished and is not represented as a demonstrated beyond-state-of-the-art
+result. An initial repository-wide voice scan found 19 process/version phrases
+in the technical report and M12 manuscript. They were corrected in the M12
+LaTeX and report Markdown source, the generated report was rebuilt, and the
+voice checker now passes across `manuscripts/`. Both manuscripts compile to
+12-page PDFs. The forced second report build has no undefined-citation or
+undefined-reference warning; its methods table remains dense, and visual
+review of report pages 3-4 found no clipping. Visual review of M12 pages 5-6
+and 10 found legible tables and no clipped content despite three small
+overfull-box diagnostics in the LaTeX log. The technical report and M12
+manuscript remain below their required depth, the identifiability manuscript
+has no LaTeX main file, and the product-wide acceptance and VPS replacement
+gates remain open.

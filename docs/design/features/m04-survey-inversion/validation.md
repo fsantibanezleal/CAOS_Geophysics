@@ -21,6 +21,15 @@ The 144 fit scalars were materialized; the separate 72 validation and 72 outer
 scalars remained sealed. The source-bound receipt is
 [`m04-current-source-selective-reader-2026-11-11.json`](../../../validation/m04-current-source-selective-reader-2026-11-11.json).
 
+The development-fold scorer now uses the same post-seal selective reader for
+only the chosen validation rows and their diagonal errors or covariance
+principal block. Its public result remains aggregate-only. Four scorer tests,
+including a nonzero physical prediction and an analytic linear-TMI check of
+the engine's ENU vertical sign, pass; the combined
+assembly/scorer run passes ten tests. Ruff and `git diff --check` pass for the
+scoped changes. This does not add candidate selection or expose validation
+vectors to an optimizer.
+
 This fixes the likelihood materialization boundary for the tested fit-fold
 path. It does not qualify candidate selection, held-out scoring, field data,
 nonlinear exact-magnitude inversion, sparse IRLS, API admission, full product

@@ -17,7 +17,7 @@ data are not redistributed. The source commit was
 \texttt{0084021fcc6c1d2f112b144e6e5f0a3d92f20dff} (Mantilla course). The
 research survey distinguishes primary sources from implementation
 choices and identifies where the methods differ from cited work
-(\texttt{docs/research/review.md}). The aim is to connect domain
+(\url{docs/research/review.md}). The aim is to connect domain
 assumptions, executable calculations, diagnostic evidence, and failure
 states within one inspectable project.
 
@@ -29,7 +29,7 @@ tomography, acoustic full-waveform inversion, joint potential-field
 inversion, learned seismic-velocity estimation, and earthquake phase
 picking. It also evaluates a proposed coverage-conditioned null-space
 correction. Method definitions and numerical assumptions are in
-\texttt{docs/design/SDD.md}.
+\url{docs/design/SDD.md}.
 
 \section{Software and evidence
 design}\label{software-and-evidence-design}
@@ -136,9 +136,9 @@ separate decisions.
 
 \section{Methods}\label{methods}
 
-The method identifiers below follow \texttt{docs/design/SDD.md}. Each
-entry names an implementation and its tests; this does not imply
-validated use for every input or a complete end-to-end workflow.
+The method identifiers below follow \url{docs/design/SDD.md}. Each entry
+names an implementation and its tests; this does not imply validated use
+for every input or a complete end-to-end workflow.
 
 \begin{center}\small
 \begin{longtable}{@{}p{0.12\textwidth}p{0.40\textwidth}p{0.41\textwidth}@{}}
@@ -176,10 +176,10 @@ sensitivity operators \cite{cockett2015,heagy2017}, explicit survey
 geometry, uncertainty-weighted data residuals, and spatial
 regularization. The canonical potential-field setup uses a 10,752-cell
 mesh and 256 surface observations
-(\texttt{docs/research/scientific-implementation.md}). L2 and
-smoothed-L1 IRLS solutions are distinct estimators, not interchangeable
-render styles. Magnetic cases include scalar induced assumptions and
-vector magnetization so that remanence can be exposed as model
+(\url{docs/research/scientific-implementation.md}). L2 and smoothed-L1
+IRLS solutions are distinct estimators, not interchangeable render
+styles. Magnetic cases include scalar induced assumptions and vector
+magnetization so that remanence can be exposed as model
 misspecification. Choclo prism values \cite{choclo} provide an
 independent physical check for sign and scale in specified comparisons.
 Sensitivity and conditional noise ensembles are not interpreted as
@@ -279,18 +279,19 @@ family/acquisition-disjoint cohorts. The 2026-10-28 M12 computation used
 160 joint family/acquisition holdouts with learned/weighted-L2 velocity
 RMSE 536.99/95.62 m/s (ratio 5.616) and independent-oracle travel-time
 RMSE 28.61/2.34 ms (ratio 12.231; source:
-\texttt{docs/validation/m12-checkpoint-notebook-2026-10-28.md}). Both
-pre-specified comparison criteria fail. A separate checkpoint 3.1 run
-also fails its specified joint-shift comparisons. The separate
-null-space-constrained residual study reports velocity RMSE ratio 0.9701
-(paired case-bootstrap interval 0.9661--0.9737) and independent
-travel-time RMSE ratio 0.9967 (0.9950--0.9983); the aggregate ratios
-improve in all four fixed held-out cohorts. The v1.1 scorer used an
-infinite threshold, so the saved exceedance counts are not a valid
-threshold assessment and are not interpreted here. The paired intervals
-resample case IDs and compute the ratio of mean per-case RMSEs over
-20,000 PCG64 draws (seed 6122026); the exact calculation is retained in
-\texttt{docs/validation/m12-nullspace-v1\_1-bootstrap-2026-10-30.json}.
+\url{docs/validation/m12-checkpoint-notebook-2026-10-28.md}). Both
+pre-specified comparison criteria fail. A separate neural
+residual-correction run also fails its specified joint-shift
+comparisons. The separate null-space-constrained residual study reports
+velocity RMSE ratio 0.9701 (paired case-bootstrap interval
+0.9661--0.9737) and independent travel-time RMSE ratio 0.9967
+(0.9950--0.9983); the aggregate ratios improve in all four fixed
+held-out cohorts. The null-space-follow-up scorer used an infinite
+threshold, so the saved exceedance counts are not a valid threshold
+assessment and are not interpreted here. The paired intervals resample
+case IDs and compute the ratio of mean per-case RMSEs over 20,000 PCG64
+draws (seed 6122026); the exact calculation is retained in
+\url{docs/validation/m12-nullspace-v1_1-bootstrap-2026-10-30.json}.
 These intervals quantify variation within the fixed synthetic cohorts,
 not natural-geology uncertainty. The result is specific to that protocol
 and cohort. It does not change the failing M12 checkpoint result,
@@ -312,7 +313,7 @@ outcomes}\label{reference-condition-outcomes}
 
 The reference-condition summary lists 122 recovered, 184 unresolved, 6
 failed, and 36 negative-control method results (source:
-\texttt{docs/validation/results.md}). These are case-specific outcomes.
+\url{docs/validation/results.md}). These are case-specific outcomes.
 They must not be summed into an overall accuracy or treated as success
 probabilities because the cases, units, target variables, and criteria
 differ. Failure and unresolved outcomes are first-class evidence in this
@@ -321,8 +322,7 @@ project.
 \subsubsection{5.2 FWI case matrix}\label{fwi-case-matrix}
 
 The bilingual case-matrix lesson reads four hash-verified full-run
-arrays
-(\texttt{notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb};
+arrays (\url{notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb};
 Spanish counterpart). Layered reflection and fault are labeled recovered
 under the case-specific criteria; salt remains a cycle-skipping negative
 control; and the low-velocity channel remains unresolved. For the
@@ -357,7 +357,7 @@ The null-space-constrained computation uses a fixed cohort and reports
 velocity and independent forward-data ratios with paired case-bootstrap
 intervals. Each replicate resamples case IDs and computes the ratio of
 mean per-case RMSEs; 20,000 PCG64 draws use seed 6122026. The exact
-intervals, method protocol and receipt hash are archived with the
+intervals, method protocol and archive hash are archived with the
 computational outputs. For the joint-OOD cohort, velocity RMSE ratio is
 0.9701 with interval 0.9661--0.9737; independent travel-time RMSE ratio
 is 0.9967 with interval 0.9950--0.9983. The metrics show a small
@@ -408,17 +408,17 @@ scratch storage. Notebook sources are under \texttt{notebooks/en/} and
 Numerical outcomes are tied to their method-specific computation and
 date. The FWI case matrix reads hash-verified outputs and does not rerun
 the expensive inverse; its source is
-\texttt{notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb} and the
+\url{notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb} and the
 Spanish counterpart. The M12 notebook computation dated 28 October and
 browser-parity computation dated 27 October are documented computations
-in \texttt{docs/validation/m12-checkpoint-notebook-2026-10-28.md} and
-\texttt{docs/validation/m13-browser-population-parity-2026-10-27.md}.
-The null-space refinement results and cohort definitions are in
-\texttt{docs/design/features/m12-velocity-validation/nullspace-v1\_1-protocol.md}.
-Reference-condition metrics are in \texttt{docs/validation/results.md}.
+in \url{docs/validation/m12-checkpoint-notebook-2026-10-28.md} and
+\url{docs/validation/m13-browser-population-parity-2026-10-27.md}. The
+null-space refinement results and cohort definitions are in
+\url{docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md}.
+Reference-condition metrics are in \url{docs/validation/results.md}.
 Method equations, implementation details, and primary-source mapping are
-in \texttt{docs/research/scientific-implementation.md},
-\texttt{docs/research/review.md}, and \texttt{docs/design/SDD.md}.
+in \url{docs/research/scientific-implementation.md},
+\url{docs/research/review.md}, and \url{docs/design/SDD.md}.
 
 Notebook replay verifies execution for the recorded source and
 environment; it is not an independent physical oracle. Scientific

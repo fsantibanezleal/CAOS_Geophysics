@@ -1,16 +1,16 @@
 """Development-fold scoring for a caller-frozen M04 model; never a fit callback."""
 
 import hashlib
-import json
 import re
 
 import numpy as np
 
 from magnetic_forward import ENGINE, FRAME, forward_magnetic_with_kernel
+from magnetic_fit_assembly import read_selected_likelihood
 from magnetic_likelihood import GaussianDataTerm, GaussianWhitener
 from magnetic_quantity import CHI_SCALE_SI, compose_magnetic_observable
 from magnetic_survey import plan_geometry
-from magnetic_survey_json import SurveyHandle, _Lexer, _Schema
+from magnetic_survey_json import SurveyHandle
 
 
 _QUANTITIES = {
@@ -29,23 +29,6 @@ def model_q_sha256(model_q):
         raise ValueError("model_q: finite vector within the active-cell cap required")
     values = np.asarray(model_q, dtype="<f8", order="C")
     return hashlib.sha256(values.tobytes(order="C")).hexdigest()
-
-
-def _likelihood(handle):
-    lexer = _Lexer(handle._export_bytes())
-    document = lexer.document()
-    schema = _Schema(lexer)
-    schema.validate(document)
-
-    def values(descriptor):
-        span = descriptor["data"]
-        data = json.loads(lexer.raw[span.start:span.end])
-        result = np.asarray(data, dtype=np.float64).reshape(descriptor["shape"], order="C")
-        if not np.isfinite(result).all():
-            raise ValueError("likelihood payload: nonfinite values")
-        return result
-
-    return document, values(document["observations"]["values"]), values(document["noise"]["values"])
 
 
 def score_magnetic_validation_fold(handle, fold_index, model_q, expected_model_sha256):
@@ -70,7 +53,6 @@ def score_magnetic_validation_fold(handle, fold_index, model_q, expected_model_s
         raise ValueError("model hash: candidate changed after freeze")
 
     plan = plan_geometry(handle)
-    document, observations, noise = _likelihood(handle)
     metadata = handle.metadata()
     active = np.asarray(metadata["geometry"]["mesh"]["active"]["data"], dtype=np.bool_)
     if model_snapshot.shape != (int(np.count_nonzero(active)),):
@@ -85,16 +67,16 @@ def score_magnetic_validation_fold(handle, fold_index, model_q, expected_model_s
             or np.any(np.diff(validation_rows) <= 0)
             or np.intersect1d(validation_rows, plan["partition"]["outer_rows"]["data"]).size):
         raise ValueError("partition: invalid or outer-overlapping validation rows")
-    quantity, components = _QUANTITIES[document["processing"]["quantity"]]
+    quantity, components = _QUANTITIES[metadata["processing"]["quantity"]]
     source_indices = (validation_rows[:, None] * components
                       + np.arange(components, dtype=np.int64)).reshape(-1)
     local_indices = np.arange(len(source_indices), dtype=np.int64)
-    observed = observations.reshape(-1, order="C")[source_indices].astype(np.float64, copy=True)
+    document, observed, selected_noise = read_selected_likelihood(
+        handle, tuple(int(index) for index in source_indices), plan["identity"]["seal_sha256"]
+    )
     if document["noise"]["kind"] == "diagonal_sd":
-        selected_noise = noise.reshape(-1, order="C")[source_indices].reshape(-1, 1).copy()
         whitener = GaussianWhitener("diagonal_sd", selected_noise, local_indices)
     else:
-        selected_noise = noise[np.ix_(source_indices, source_indices)].copy(order="C")
         whitener = GaussianWhitener("full_covariance", selected_noise, local_indices)
 
     mesh_spec = metadata["geometry"]["mesh"]
@@ -105,9 +87,6 @@ def score_magnetic_validation_fold(handle, fold_index, model_q, expected_model_s
     amplitude = float(field["F_nT"])
     inclination = float(field["I_deg"])
     declination = float(field["D_deg"])
-    inc, dec = np.deg2rad(inclination), np.deg2rad(declination)
-    background = amplitude * np.array([np.cos(inc)*np.sin(dec),
-                                       np.cos(inc)*np.cos(dec), np.sin(inc)], dtype=np.float64)
     receivers = np.asarray(metadata["geometry"]["receivers_m"]["data"], dtype=np.float64)
     receivers = receivers.reshape(-1, 3, order="C")[validation_rows]
     forward_request = {
@@ -119,6 +98,11 @@ def score_magnetic_validation_fold(handle, fold_index, model_q, expected_model_s
                             "declination_deg": declination},
     }
     forward = forward_magnetic_with_kernel(forward_request)
+    background = np.asarray(
+        forward["inducing_field"]["background_enu_nt"], dtype=np.float64
+    )
+    if background.shape != (3,) or not np.isfinite(background).all():
+        raise ValueError("inducing field: engine returned an invalid ENU background vector")
     response = compose_magnetic_observable(
         forward["component_jacobian_nT_per_si"], CHI_SCALE_SI * model_snapshot,
         background, quantity,
