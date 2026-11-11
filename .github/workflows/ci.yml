@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
   workflow_dispatch:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -47,14 +49,20 @@ jobs:
       - name: Contract schema versions and lock
         env:
           BEFORE: ${{ github.event.before }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
-          base="$BEFORE"
+          base="$PR_BASE"
+          if [ -z "$base" ]; then base="$BEFORE"; fi
           if [ -z "${base//0/}" ]; then base=origin/develop; fi
           python scripts/check_contract_versions.py --base "$base"
       - name: Committed catalogue readiness record
         run: python scripts/check_readiness.py
       - name: Notebook structure and bilingual static guard; no notebook execution
         run: python scripts/check_notebooks.py
+      - name: Notebook depth and whole-tool teaching coverage
+        run: python scripts/check_notebook_depth.py --report
+      - name: Manuscript depth, coverage and title support
+        run: python scripts/check_manuscript_depth.py --report
       - name: Reader-facing method names; internal classification stays internal
         run: python scripts/check_internal_names.py
       - name: Repository area index

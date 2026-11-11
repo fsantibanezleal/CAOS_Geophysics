@@ -4,14 +4,12 @@ Receipts and scratch stay in explicit device data roots. Failures are archived
 before assertions and remain failures when a compatible receipt is replayed.
 """
 import json
-from pathlib import Path
 from time import monotonic
 
 import choclo
 import numpy as np
 import pytest
 
-import gravity_irls_corrected as corrected
 import gravity_irls_corrected_workflow as corrected_workflow
 import gravity_irls_pool as pool
 import gravity_l2 as l2

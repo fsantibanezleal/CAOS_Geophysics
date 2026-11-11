@@ -4,7 +4,8 @@ All notable changes to Inverse Earth Studio. Display versions use X.XX.XXX.
 
 ## Unreleased replacement
 
-- Adopts CAOS App Shell 0.19.12, including the ordinary CaseWorkbench G6 instrument-marker fix, and removes the temporary PlotCard caption-wrapping override after the measured product gate passed 1,442 states. Scientific acceptance and VPS cutover remain open.
+- Advances the shared Shell integration from 0.19.12 to released 0.26.0 and records CAOS Product Template 0.15.008 as the reviewed base. The earlier CaseWorkbench G6 instrument-marker gate passed 1,442 states; scientific acceptance and VPS cutover remain open.
+- Adds the released notebook-depth and LaTeX-manuscript-depth guards to product CI, adopts the stricter notebook floors and visible-markup parser, and runs CI on pull requests. The current content audit remains failing and is recorded in `docs/validation/template-content-guards-2026-11-11.md`.
 - Adds a source-bound requirement convergence ledger with strict coverage, evidence hashes, executable-gate checks and a separate release-refusal mode. Records the current incomplete M01-M13 platform state without changing the legacy release, scientific artifacts or public deployment.
 
 ## [0.04.003] - 2026-11-05
