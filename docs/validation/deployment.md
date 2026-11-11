@@ -1,4 +1,4 @@
-# Current deployment status — 2026-11-11
+# Current deployment status: 2026-11-11
 
 The only application origin is [https://geophysics.ml.fasl-work.com/](https://geophysics.ml.fasl-work.com/), served from the ML VPS. The current live release is `0.04.001`; the local candidate is `0.04.003`. No GitHub Pages application is configured or part of the deployment target.
 

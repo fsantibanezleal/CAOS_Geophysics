@@ -1,4 +1,4 @@
-# SDD evidence refresh — 2026-11-10
+# SDD evidence refresh: 2026-11-10
 
 This refresh binds `docs/design/convergence.json` to the current SDD and source revision after the shell/template version correction. The EARS requirements and their named gates are unchanged; this records identity and evidence-source changes, not a release acceptance.
 

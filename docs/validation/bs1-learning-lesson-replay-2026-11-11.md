@@ -31,7 +31,7 @@ No joint-shift survey improves both error measures. The declared advantage hypot
 
 Fresh-kernel execution passed for:
 
-- `notebooks/en/08-learning/07-physics-conditioned-velocity-refinement.ipynb` — SHA-256 `bbabd8eb247c4e1ad7fcb620d2098bda7080832699946acc4a59d76863d4c24d`.
-- `notebooks/es/08-learning/07-physics-conditioned-velocity-refinement.ipynb` — SHA-256 `92c64fc1234dff584ed92a44cca5e9fa4f0f84a5435761837b1232a268bf6c91`.
+- `notebooks/en/08-learning/07-physics-conditioned-velocity-refinement.ipynb`: SHA-256 `bbabd8eb247c4e1ad7fcb620d2098bda7080832699946acc4a59d76863d4c24d`.
+- `notebooks/es/08-learning/07-physics-conditioned-velocity-refinement.ipynb`: SHA-256 `92c64fc1234dff584ed92a44cca5e9fa4f0f84a5435761837b1232a268bf6c91`.
 
 Command: `python scripts/run_notebooks.py --check --tmp <CAOS_TEMP_ROOT> --only notebooks/en/08-learning/07-physics-conditioned-velocity-refinement.ipynb --only notebooks/es/08-learning/07-physics-conditioned-velocity-refinement.ipynb`, with `M12_OUTPUT` pointing to the verified external run. The two notebooks each contain five executed figures, three display equations, the cohort comparison, paired bootstrap intervals, the input-contract exercise, and the negative result. Both clear the CAOS Level 4 depth floors. The repository-wide notebook gates still report other findings; these two passes do not close notebook-set acceptance.

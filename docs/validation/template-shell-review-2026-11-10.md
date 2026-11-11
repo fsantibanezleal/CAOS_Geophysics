@@ -1,4 +1,4 @@
-# Template and shell reconciliation — 2026-11-10
+# Template and shell reconciliation: 2026-11-10
 
 ## Current references
 

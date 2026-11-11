@@ -196,3 +196,31 @@ None claimed. This product assembles established geophysical methods into a repr
 ## Research basis
 
 The dated management research dossiers 02-05 and validated replacement plan are the source of this design. Public primary references include [SimPEG](https://doi.org/10.1016/j.cageo.2015.09.015), [USGS gravity procedures](https://pubs.usgs.gov/tm/02/d04/tm2d4.pdf), [Harmonica](https://www.fatiando.org/harmonica/latest/api/index.html), [Verde blocked splitting](https://www.fatiando.org/verde/latest/api/generated/verde.train_test_split.html), [MTH5](https://mth5.readthedocs.io/en/latest/source/mth5_format.html), [MTpy](https://github.com/MTgeophysics/mtpy-v2), [pyGIMLi inversion](https://www.pygimli.org/user-guide/inversion/), [ObsPy](https://docs.obspy.org/packages/autogen/obspy.core.stream.Stream.html), [Deepwave FWI](https://www.ausargeo.com/deepwave/example_fwi), [Devito FWI](https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html), [SimPEG joint inversion](https://docs.simpeg.xyz/latest/content/user-guide/tutorials/13_joint_inversion/plot_inv_3_cross_gradient_pf.html), [PhaseNet](https://doi.org/10.1093/gji/ggy423), [OpenFWI](https://github.com/lanl/OpenFWI), [Data-proximal null-space networks](https://arxiv.org/abs/2309.06573), [W3C PROV-O](https://www.w3.org/TR/prov-o/) and [CF conventions](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.13/cf-conventions.html). Source-specific rights and exact attachment hashes remain acquisition gates, not inferred from these citations.
+
+
+## Dated amendment : 2026-11-11 proposed-method record
+
+The September 27 `## Beyond the state of the art` paragraph above records the
+initial approval state. It is historical and is superseded for current product
+scope by [`SDD.md`](SDD.md), section `Method ladder` and its proposed-method
+section. This amendment preserves that original decision while reconciling the
+current record with the implemented research.
+
+The current SDD registers one falsifiable method: geometry-normalized,
+physics-conditioned residual features for first-arrival travel-time velocity
+refinement. The method path-normalizes ray residuals, backprojects through the
+ray matrix, normalizes by cell coverage, and supplies the bounded residual
+network with a coverage channel. Its hypothesis tests whether these corrections
+improve both velocity-model and independently forward-predicted travel-time
+error under held-out geometry shifts. The frozen GPU experiment did not support
+the advantage hypothesis: on 160 joint-shift synthetic surveys, the
+learned/classical RMSE ratios were 2.1942 for velocity and 5.5854 for independent
+travel time, and all 160 cases failed the validation-derived screen. The result
+is reported as negative at this synthetic scope; it establishes neither a
+field-geology claim nor an advantage over the wider current literature.
+
+A LaTeX manuscript draft exists at
+`manuscripts/geometry-normalized-traveltime-refinement-v001/`. It has no verified
+Zenodo record or DOI and remains unpublished. Its measured depth and independent
+review do not close the manuscript registry, technical-report, M12, notebook,
+method-matrix or release gates. No publication identifier is inferred here.
