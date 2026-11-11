@@ -1,0 +1,26 @@
+{
+  "schema": "geophysics.gate-receipt/v1",
+  "requirement": "R-007",
+  "gate": "tests/api/test_job_limits.py::test_scratch_limit_terminates_child",
+  "gate_sha256": "275ff0037723ffdc8a3ea534f25690f3cc6c084b61c1ac60a22879e580e65376",
+  "verdict": "pass",
+  "source_revision": "b3b430365f8ee2481b597850dcf15f6ba059d5ac",
+  "command": [
+    ".venv-api/Scripts/python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "--junitxml=docs/validation/r007-current-source-2026-11-11.xml",
+    "tests/api/test_job_limits.py::test_cancel_timeout_failure_and_recovery",
+    "tests/api/test_job_limits.py::test_scratch_limit_terminates_child",
+    "tests/api/test_job_limits.py::test_rss_limit_terminates_child"
+  ],
+  "measured_at": "2026-11-11T03:13:41Z",
+  "outputs": [
+    {
+      "path": "docs/validation/r007-current-source-2026-11-11.xml",
+      "sha256": "d9108ccab924162741adb75172a64be82b1a0a01bd23c33242fdd349da4223f2"
+    }
+  ]
+}
