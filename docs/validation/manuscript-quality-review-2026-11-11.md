@@ -139,6 +139,35 @@ release, so no new deployment was made from this failing product state.
 
 ## Release disposition
 
+## M12 bilingual method lesson update
+
+The earlier M12 checkpoint lesson was a train-and-verify run with stale stored
+metrics and did not meet the notebook bar. It has been replaced by a frozen,
+hash-checked inference lesson in English and Spanish. Each mirror now measures
+1,620 explanatory words after the depth tool's excluded sections, three
+computed figures, two display equations, and six referenced sources. Both
+notebooks execute in fresh kernels and pass the isolated-run byte-freshness
+check. The runner now stages only this lesson's receipt and compact checkpoint
+alongside its pipeline source; a focused regression test covers that behavior.
+
+The recomputed M12 checkpoint remains a negative result: learned/classical
+velocity RMSE ratios are 27.597, 5.617, 27.217, and 5.616 across the ID,
+family-only, acquisition-only, and joint-shift groups; independent travel-time
+ratios are 26.804, 12.279, 25.596, and 12.231. The notebook calls the real
+local user-data processor with an explicitly synthetic control and preserves
+the no-field-validation/no-online-admission claims. This repairs the M12
+lesson pair only. The repository-wide notebook content and product gates still
+fail on other lessons, so this work does not close R-016 or release acceptance.
+
+Shell and template review found the shared Shell at 0.26.0 in main/develop but
+the product must stay on its latest published 0.25.0 package until 0.26.0 is
+published. The shared Template's latest available tag is 0.15.006; the product
+origin is 0.13.001 and compatibility remains incomplete. Dirty Shell and
+Template work was preserved. The CAOS notebook depth gate now passes this M12
+pair, but course-wide notebook debt remains.
+
+## Release disposition
+
 This review found and corrected scientific-description defects in the BS-1
 draft. The independent scientific verdict passes at the paper's stated
 synthetic scope, but the product release bar remains open: the unpublished

@@ -135,12 +135,18 @@ def test_m11_check_stages_receipt_and_pipeline_without_full_data_tree(tmp_path: 
 def test_m12_checkpoint_and_nullspace_lessons_stage_only_their_inputs(tmp_path: Path) -> None:
     source = tmp_path / "product"
     pipeline_module = source / "data-pipeline" / "velocity_validation.py"
+    checkpoint_dir = source / "models" / "experimental" / "m12-velocity-cpu-20260928"
+    checkpoint_receipt = checkpoint_dir / "receipt.json"
+    checkpoint_weights = checkpoint_dir / "m12-velocity.npz"
     nullspace_receipt = source / "data" / "derived" / "v2" / "models" / "m12-nullspace-v1_1" / "receipt.json"
     unrelated = source / "data" / "derived" / "v2" / "FWI_LAYERED" / "reference.json"
     pipeline_module.parent.mkdir(parents=True)
+    checkpoint_dir.mkdir(parents=True)
     nullspace_receipt.parent.mkdir(parents=True)
     unrelated.parent.mkdir(parents=True)
     pipeline_module.write_text("PIPELINE = True\n", encoding="utf-8")
+    checkpoint_receipt.write_text("{\"receipt\": true}\n", encoding="utf-8")
+    checkpoint_weights.write_bytes(b"frozen weights")
     nullspace_receipt.write_text("{}\n", encoding="utf-8")
     unrelated.write_bytes(b"unrelated case")
 
@@ -152,6 +158,8 @@ def test_m12_checkpoint_and_nullspace_lessons_stage_only_their_inputs(tmp_path: 
     )
     checkpoint_repo = staged_checkpoint.parents[3]
     assert (checkpoint_repo / pipeline_module.relative_to(source)).is_file()
+    assert (checkpoint_repo / checkpoint_receipt.relative_to(source)).read_bytes() == checkpoint_receipt.read_bytes()
+    assert (checkpoint_repo / checkpoint_weights.relative_to(source)).read_bytes() == checkpoint_weights.read_bytes()
     assert not (checkpoint_repo / "data").exists()
 
     nullspace = source / "notebooks" / "es" / "08-learning" / "06-nullspace-refinement-evidence.ipynb"

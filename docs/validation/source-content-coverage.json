@@ -484,11 +484,15 @@
       "methods": [
         "M12"
       ],
-      "title": "M12 learned velocity checkpoint: locked holdout",
+      "title": "Travel-time tomography: a learned inverse under held-out stress",
       "sources": [
-        "https://github.com/lanl/OpenFWI"
+        "https://doi.org/10.1109/36.17671",
+        "https://doi.org/10.1016/C2015-0-02458-3",
+        "https://doi.org/10.1016/j.pepi.2009.10.002",
+        "https://doi.org/10.1190/tle37010058.1",
+        "https://doi.org/10.1007/s00521-020-04921-8"
       ],
-      "content_scope": "Runs the trained M12 velocity checkpoint on family/acquisition-disjoint held-outs, compares the same inputs with the classical solver and independently forwards both maps."
+      "content_scope": "Reloads the hash-bound frozen M12 checkpoint, compares four held-out family/acquisition cohorts with a validation-selected regularized ray inverse and an independent travel-time scorer, executes a paired added-noise sensitivity experiment and the strict local user-data API with an explicitly synthetic control, and retains the negative result and non-field limits."
     },
     {
       "en": "notebooks/en/08-learning/07-physics-conditioned-velocity-refinement.ipynb",

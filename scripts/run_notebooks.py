@@ -201,6 +201,16 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
         if origin.is_file() and not target.exists():
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(origin, target)
+    if m12_checkpoint_lesson:
+        for relative_input in (
+            Path("models/experimental/m12-velocity-cpu-20260928/receipt.json"),
+            Path("models/experimental/m12-velocity-cpu-20260928/m12-velocity.npz"),
+        ):
+            origin = source_root / relative_input
+            target = work / relative_input
+            if origin.is_file() and not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(origin, target)
     if m10_fwi_lesson:
         case_files = [Path("data/derived/v2/catalog.json")]
         case_files.extend(
