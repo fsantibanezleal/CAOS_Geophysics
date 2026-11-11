@@ -1,5 +1,26 @@
 # Independent validation and complete acceptance matrix
 
+## 2026-11-11 current-source 528-cell linear L2 fold
+
+The current-source fold test passed after extending its source inventory to
+include the calibration module, the likelihood decoder, the quantity
+composition module and the actual SimPEG regularization implementation. The
+source inventory digest is recorded in
+[`m04-current-source-l2-fold-2026-11-11.json`](../../../validation/m04-current-source-l2-fold-2026-11-11.json).
+
+On the authored S2-A linear-TMI request, fold 0 used 144 fit rows and kept its
+72 validation rows and 72 outer rows sealed. The 528-parameter bounded L2
+solve converged in 113 iterations in 63.515 seconds. Its normalized projected
+KKT infinity norm was `1.420804898067916e-16`; the original-accuracy terminal
+certificate passed with a source-normalized KKT upper bound of
+`1.119698199062626295969625968149742E-16`.
+
+The four focused tests passed with no failures or skips. This is one authored
+synthetic development fold. It does not establish an independent full-fit
+oracle, truth recovery, candidate selection, sealed outer evaluation, sparse
+or exact-magnitude inversion, field eligibility, API admission or M04 method
+acceptance.
+
 ## 2026-11-06 source-bound linear inverse increment
 
 `magnetic_inverse.build_operator` now parses the sealed survey, checks local

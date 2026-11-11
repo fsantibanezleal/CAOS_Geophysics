@@ -79,6 +79,22 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_regularizer(monke
     assert len(calls)==1
 
 
+def test_source_inventory_binds_calibration_and_objective_decoder():
+    raw = _request("S2-A-linear_tmi_nT.json")
+    handle = magnetic_survey_json.parse_request(raw)
+    plan = magnetic_survey.plan_geometry(handle)
+    inventory = calibration._source_inventory(raw, plan["identity"]["seal_sha256"])
+    for name in (
+        "magnetic_calibration.py",
+        "magnetic_fit_assembly.py",
+        "magnetic_quantity.py",
+        "simpeg.optimization",
+        "simpeg.regularization",
+    ):
+        assert len(inventory[name]) == 64
+        assert all(character in "0123456789abcdef" for character in inventory[name])
+
+
 def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
     raw = _request("S2-A-linear_tmi_nT.json")
     manifest = json.loads((ROOT / "manifest.json").read_bytes())
@@ -110,6 +126,9 @@ def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
     }
     assert result["source_inventory_sha256"] == digest(result["source_inventory"])
     assert result["source_inventory"]["survey_request_sha256"] == request_sha256
+    assert result["source_inventory"]["magnetic_calibration.py"] == __import__("hashlib").sha256(
+        Path(calibration.__file__).read_bytes()
+    ).hexdigest()
     assert result["allocation_plan_sha256"] == digest(result["allocation"])
     assert result["allocation"]["parameters"] == 528
     assert result["allocation"]["fit_components"] == len(result["fit_rows"])

@@ -15,10 +15,12 @@ from time import monotonic
 import numpy as np
 
 import magnetic_forward
+import magnetic_fit_assembly
 import magnetic_inverse
 import magnetic_likelihood
 import magnetic_optimizer_adapter as adapter
 import magnetic_original_optimizer as bridge
+import magnetic_quantity
 import magnetic_regularization
 import magnetic_survey
 import magnetic_survey_json
@@ -38,9 +40,10 @@ TERMINAL = physical_owned_spd.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6)
 
 def _source_inventory(raw: bytes, geometry_seal: str) -> dict[str, str]:
     modules = (
-        adapter, bridge, magnetic_forward, magnetic_inverse,
-        magnetic_likelihood, magnetic_regularization, magnetic_survey,
-        magnetic_survey_json, physical_conditioned_optimizer,
+        adapter, bridge, magnetic_fit_assembly, magnetic_forward,
+        magnetic_inverse, magnetic_likelihood, magnetic_quantity,
+        magnetic_regularization, magnetic_survey, magnetic_survey_json,
+        physical_conditioned_optimizer,
         physical_original_optimizer, physical_original_quadratic,
         physical_original_terminal, physical_owned_spd,
         physical_reduced_optimizer,
@@ -49,13 +52,18 @@ def _source_inventory(raw: bytes, geometry_seal: str) -> dict[str, str]:
         Path(module.__file__).name: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
         for module in modules
     }
+    inventory[Path(__file__).name] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     inventory["survey_request_sha256"] = hashlib.sha256(raw).hexdigest()
     inventory["geometry_seal_sha256"] = geometry_seal
-    # Bind the installed SimPEG optimization implementation used by the actual
-    # forward/regularization paths, as well as the M02 native optimizer source.
+    # Bind the installed SimPEG optimization and actual regularization
+    # implementations used by this calculation.
     from simpeg import optimization
-    vendor_path = Path(inspect.getfile(optimization))
-    inventory["simpeg.optimization"] = hashlib.sha256(vendor_path.read_bytes()).hexdigest()
+    for name, implementation in (
+        ("simpeg.optimization", optimization),
+        ("simpeg.regularization", magnetic_regularization.WeightedLeastSquares),
+    ):
+        vendor_path = Path(inspect.getfile(implementation))
+        inventory[name] = hashlib.sha256(vendor_path.read_bytes()).hexdigest()
     return inventory
 
 
