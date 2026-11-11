@@ -5,6 +5,11 @@
       "path": "long-valley/1982-06_to_1999-07.json",
       "bytes": 50084,
       "sha256": "25d856bad85575f400eb4d1c3ec21096ea603134170a807289956d14d6ecfbe2"
+    },
+    {
+      "path": "amargosa/amargosa-m03-20261111.json",
+      "bytes": 78030,
+      "sha256": "4d7116d16239d1b5a29eff25bb7ae6c6066842479afda1ba232511f2e437e418"
     }
   ]
 }

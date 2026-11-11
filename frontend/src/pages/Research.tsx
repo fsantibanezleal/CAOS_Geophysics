@@ -26,6 +26,7 @@ import { M12ResidualEvidence } from "../components/M12ResidualEvidence";
 import { OnlineMTCourse, OnlineMTIntroduction } from "../components/OnlineMTCourse";
 import { M01ScientificCourse } from "../components/M01ScientificCourse";
 import { LongValleyTimeLapse } from "../components/LongValleyTimeLapse";
+import { AmargosaSurvey } from "../components/AmargosaSurvey";
 import { MagneticTheoryCourse } from "../components/MagneticTheoryCourse";
 import { lessons } from "../data/lessons";
 import { methodName, metricInfo, metricValue } from "../data/metrics";
@@ -1021,6 +1022,11 @@ export function Experiments() {
             id: "long-valley",
             label: t("Long Valley field record", "Registro de campo Long Valley"),
             content: <LongValleyTimeLapse />,
+          },
+          {
+            id: "amargosa",
+            label: t("Amargosa aeromagnetics", "Aeromagnetismo de Amargosa"),
+            content: <AmargosaSurvey />,
           },
             ],
           },

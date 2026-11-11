@@ -118,10 +118,12 @@ export default function copyProductData({ derived, out, repo }) {
     copied.push(...courseFiles);
 
     const fieldIndex = productIndex(repo, 'frontend/src/data/field-study-index.json');
-    if (fieldIndex.schema !== 'geophysics.field-study-index/v1' || fieldIndex.artifacts?.length !== 1) throw new Error('field study index must declare one reviewed public record');
-    const field = fieldIndex.artifacts[0];
-    if (field.path !== 'long-valley/1982-06_to_1999-07.json') throw new Error(`unexpected field-study path ${field.path}`);
-    copied.push(pin(join(derived, 'field', field.path), out, `field/${field.path}`, field.bytes, field.sha256, 2 * 1024 * 1024));
+    if (fieldIndex.schema !== 'geophysics.field-study-index/v1' || fieldIndex.artifacts?.length !== 2) throw new Error('field study index must declare the two reviewed public records');
+    const fieldPaths = new Set(['long-valley/1982-06_to_1999-07.json', 'amargosa/amargosa-m03-20261111.json']);
+    if (new Set(fieldIndex.artifacts.map((field) => field.path)).size !== fieldPaths.size ||
+        fieldIndex.artifacts.some((field) => !fieldPaths.has(field.path))) throw new Error('field-study index paths differ from the reviewed public records');
+    copied.push(...fieldIndex.artifacts.map((field) => pin(join(derived, 'field', field.path), out,
+      `field/${field.path}`, field.bytes, field.sha256, 2 * 1024 * 1024)));
 
     const fwiRoot = join(out, 'v2');
     for (const path of recursiveFiles(fwiRoot).filter((p) => /[\\/]FWI_[A-Z0-9_]+[\\/].+\.json$/.test(p))) {

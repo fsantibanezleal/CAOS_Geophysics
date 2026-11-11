@@ -301,3 +301,54 @@ The current product checkout also contains the exact ray-screen optimizer
 change and its 19-test rational-oracle suite. That focused code change does not
 alter any manuscript result or clear the remaining product or VPS acceptance
 gates.
+
+## 2026-11-11 measured-field case and final gate recheck
+
+The CAOS App Shell checkout is clean on `main` at `d2b3351` / tag `v0.26.000`;
+the Product Template checkout is clean on `main` at `7dce8c9` / tag `v0.15.008`.
+The product pins the released Shell `0.26.0` and records the released Template
+base in its SDD while retaining `.template-version` as the original `0.13.001`
+instantiation marker. Neither shared repository has an unpromoted patch needed
+for this integration, so neither was changed.
+
+The USGS Amargosa source and current product copy were rechecked against the
+official OFR 00-188 archive. The new adapter verifies the pinned compressed
+hash, source row and expansion counts, parses the three distinct magnetic
+channels, projects NAD27 coordinates, selects representative whole tracks,
+and runs M03 on the provider-levelled channel without repeating the provider's
+corrections. The bilingual foundational notebook pair replays the archive and
+exposes separate source-read, track-selection and M03 calls. The 78,030-byte
+derived result is hash-pinned in the field-study index and is now shown in the
+Research page with full-range nT colouring, measured flight/tie geometry,
+support-mask inspection, held-line metrics, source links and explicit limits.
+It remains interpolation evidence, not a subsurface inverse.
+
+Focused checks pass: six browser-artifact contract tests, 75 Python source/M03
+tests, Ruff, fresh execution of both Amargosa notebooks, production data copy,
+TypeScript and Vite build. Playwright checked desktop and 390-pixel mobile
+widths; the artifact returned 200 with the pinned 78,030 bytes, all 12 flight
+and 4 tie tracks render, the two display modes switch, and no page error or
+horizontal overflow was observed. The Vite build retains the existing
+556-kB Workbench chunk advisory.
+
+The full frontend suite is not green in a clean local environment: 433 pass,
+36 fail, and 29 skip because several unrelated custody/runtime tests require
+retained external M04/M11 matrix controls that are not configured here. Those
+controls were not synthesized. The repository-wide notebook depth checker
+still reports 153 findings, and the structural checker still reports other
+lesson failures; both Amargosa lessons themselves are absent from those
+findings. The manuscript checker still reports five admission findings. Its
+measures remain BS-1 7,655 / 16 / 7 / 6 / 32 / 1, the technical report
+3,289 / 0 / 1 / 1 / 14 / 0, and M12 2,850 / 3 / 6 / 4 / 16 / 1 (words /
+equations / figures / tables / references / algorithms). BS-1 remains a
+negative comparison against a regularized straight-ray baseline, not a
+state-of-the-art or novelty demonstration. The M12 null-space study lacks the
+matched unprojected predictions needed to attribute its effect.
+
+The VPS-only verifier was run against `https://geophysics.ml.fasl-work.com/`
+and failed on the first byte-level check: the live catalogue differs from the
+local `0.04.003` candidate. The current VPS remains at `0.04.001`; no file was
+uploaded, no GitHub Pages deployment exists, and no release was activated.
+The existing draft PR #151 has no recorded status checks and was not merged.
+The product, science, curriculum, manuscript, full-suite and host acceptance
+gates therefore remain open.

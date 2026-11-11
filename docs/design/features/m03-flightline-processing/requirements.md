@@ -37,3 +37,9 @@ Gate: frontend/src/test/magnetic-local.test.ts and frontend/src/test/magnetic-lo
 
 R-M03-12 WHEN the browser-local processor reports interpolation values, THE UI SHALL render unsupported cells as unsupported, distinguish line extents from measured paths, show holdout support separately from error, and preserve provenance and limitations in the exported receipt.
 Gate: frontend/src/test/magnetic-local-workbench.test.tsx plus visual inspection at desktop and mobile viewport sizes; visual QA does not establish scientific acceptance.
+
+R-M03-13 THE reviewed USGS Amargosa adapter SHALL verify the compressed source digest, gzip expansion, fixed-width record and row-count pins, preserve the three distinct magnetic channels, and transform declared NAD27 coordinates into the declared metric CRS with x/y ordering explicit.
+Gate: tests/data/test_sources.py::test_amargosa_source_contract_is_pinned_and_attributed and tests/numerics/test_magnetic_amargosa.py::test_fixed_width_reader_keeps_channel_identity_and_checks_exact_archive
+
+R-M03-14 WHEN local source segments share a cross-track cluster, THE Amargosa adapter SHALL deterministically select one representative segment per physical-track cluster, preserve every source ID and selected/omitted relationship in the receipt, and hold out complete selected flight tracks.
+Gate: tests/numerics/test_magnetic_amargosa.py::test_track_clustering_selects_one_longest_segment_per_physical_line and tests/numerics/test_magnetic_processing.py::test_blocked_line_holdout

@@ -19,10 +19,13 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "data/source-ledger.json"
 FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm", "research-zip", "fgdc-metadata-xml",
+           "usgs-amargosa-xyz-gz",
            "pygimli-traveltime-sgt", "stead-metadata-csv", "generated-case"}
 RIGHTS = {"mirror", "provider-link-only", "derivative-only", "forbidden"}
-FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov", "zenodo.org"}
+FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov",
+               "pubs.usgs.gov", "zenodo.org"}
 MIME = {"simpeg-obs-tar-gz": "application/gzip", "edi-transfer-function": "text/plain",
+        "usgs-amargosa-xyz-gz": "application/gzip",
         "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain",
         "research-zip": "application/zip", "fgdc-metadata-xml": "application/xml"}
 MAX_SOURCE_BYTES = 200_000_000
@@ -231,6 +234,15 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
             if any(not isinstance(record.get(field), str) or not record[field].strip()
                    for field in ("quantity", "value_unit", "coordinate_convention")):
                 raise SourceError(f"{source_id}: observation archive needs quantity, value_unit and coordinates")
+        if record["format"] == "usgs-amargosa-xyz-gz":
+            if (mode != "fetch" or record["rights_decision"] != "mirror"
+                    or any(not isinstance(record.get(field), str) or not record[field].strip()
+                           for field in ("quantity", "value_unit", "coordinate_convention"))
+                    or type(record.get("expanded_bytes")) is not int
+                    or not 0 < record["expanded_bytes"] <= 100_000_000
+                    or type(record.get("record_count")) is not int
+                    or not 0 < record["record_count"] <= 500_000):
+                raise SourceError(f"{source_id}: fixed-width USGS XYZ needs a pinned expanded size, row count, units and CRS")
         if record["format"] == "research-zip":
             validate_archive_contract(record.get("archive_contract"))
         elif "archive_contract" in record:

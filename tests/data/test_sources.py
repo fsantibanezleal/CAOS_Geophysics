@@ -31,7 +31,8 @@ def test_ledger_contract_and_rights():
     records = load_ledger()
     assert set(records) == {"simpeg-gravity", "simpeg-magnetics", "original-synthetic",
                             "clear-lake-cl061", "auslamp-nsw-c15", "pygimli-slagdump", "pygimli-koenigsee",
-                            "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2"}
+                            "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2",
+                            "usgs-amargosa-aeromagnetic"}
     assert {record["rights_decision"] for record in records.values()} <= {
         "mirror", "provider-link-only", "derivative-only", "forbidden"}
     assert all(record["raw_path"].startswith("data/downloads/") for record in records.values()
@@ -42,6 +43,17 @@ def test_ledger_contract_and_rights():
         assert records[source_id]["acquisition"] == "fetch"
         assert records[source_id]["rights_decision"] == "provider-link-only"
         assert records[source_id]["expected_bytes"] > 0
+
+
+def test_amargosa_source_contract_is_pinned_and_attributed():
+    source = load_ledger()["usgs-amargosa-aeromagnetic"]
+    assert source["object_url"] == "https://pubs.usgs.gov/of/2000/of00-188/data/amargosa.xyz.gz"
+    assert source["expected_bytes"] == 8_226_743
+    assert source["sha256"] == "2698b48a79822f28122f7f8bcd49d0d28c3c103340ddc0012fee0228866ec22c"
+    assert source["expanded_bytes"] == 26_963_280 and source["record_count"] == 374_490
+    assert source["rights_decision"] == "mirror"
+    assert "public domain" in source["rights_statement"]
+    assert "subsurface truth" in source["use"]
 
 
 def test_immutable_raw_asset_and_receipt(tmp_path):

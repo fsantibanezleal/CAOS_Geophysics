@@ -203,6 +203,27 @@
           }
         }
       }
+    },
+    {
+      "source_id": "usgs-amargosa-aeromagnetic",
+      "name": "USGS Amargosa Desert aeromagnetic fixed-width XYZ",
+      "provider": "United States Geological Survey",
+      "provider_url": "https://pubs.usgs.gov/of/2000/of00-188/",
+      "object_url": "https://pubs.usgs.gov/of/2000/of00-188/data/amargosa.xyz.gz",
+      "acquisition": "fetch",
+      "format": "usgs-amargosa-xyz-gz",
+      "quantity": "uncorrected magnetic field, total-field anomaly and levelled total-field anomaly",
+      "value_unit": "nT; heights in metres; geographic coordinates in decimal degrees",
+      "coordinate_convention": "NAD27 longitude/latitude, EPSG:4267; projected locally to NAD27 / UTM zone 11N, EPSG:26711",
+      "expected_bytes": 8226743,
+      "sha256": "2698b48a79822f28122f7f8bcd49d0d28c3c103340ddc0012fee0228866ec22c",
+      "expanded_bytes": 26963280,
+      "record_count": 374490,
+      "raw_path": "data/downloads/usgs-ofr-00-188/amargosa.xyz.gz",
+      "rights_decision": "mirror",
+      "rights_statement": "USGS source notes identify the distributed gzip data files as public domain. Attribute the report and dataset; USGS endorsement and accuracy warranty are not implied.",
+      "citation": "Blakely, R.J., Langenheim, V.E., Ponce, D.A., and Dixon, G.L. (2000), Aeromagnetic Survey of the Amargosa Desert, Nevada and California: A Tool for Understanding Near-Surface Geology and Hydrology, USGS Open-File Report 00-188, doi:10.3133/ofr2000188.",
+      "use": "Measured aeromagnetic line geometry and provider-levelled anomaly for bounded M03 QC and masked interpolation. Not raw instrument data, a reproduced provider grid, an inversion, independent-site validation or subsurface truth."
     }
   ]
 }
