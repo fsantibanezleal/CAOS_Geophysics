@@ -199,8 +199,8 @@ build still reports a Workbench chunk above Vite's 500 kB advisory threshold.
 The PR remains draft. The notebook depth audit still fails with 181 findings;
 the report and M12 manuscript remain below their required content depth; the
 BS-1 draft remains unpublished; M04 and the complete product/science/host
-acceptance gates remain open. No deployment or release promotion is authorized
-by these base-adoption results. The ML VPS remains the single deployment
+acceptance gates remain open. These base-adoption results do not justify release
+promotion or a VPS replacement. The ML VPS remains the single deployment
 target, and GitHub Pages is not configured for this product.
 
 ## Release disposition
