@@ -99,6 +99,18 @@ def direction_optimizer(obj):
 def test_actual_working_face_reconstruction_true_H_and_disposal(monkeypatch):
     obj = ReducedPhysical(bounded=True)
     opt = direction_optimizer(obj)
+    metric_operand_calls = []
+    metric_operands = obj.metric_operands
+    def count_metric_operands(q):
+        metric_operand_calls.append(q.copy())
+        return metric_operands(q)
+    monkeypatch.setattr(obj, 'metric_operands', count_metric_operands)
+    allocation_calls = []
+    validate_operands = reduced.core.spd.validate_operands
+    def count_validation(*args, **kwargs):
+        allocation_calls.append(args[0])
+        return validate_operands(*args, **kwargs)
+    monkeypatch.setattr(reduced.core.spd, 'validate_operands', count_validation)
     actual = reduced.core.spd.OwnedMetric
     live = []
     class Observe(actual):
@@ -109,6 +121,8 @@ def test_actual_working_face_reconstruction_true_H_and_disposal(monkeypatch):
     monkeypatch.setattr(reduced.core.spd, 'OwnedMetric', Observe)
     p = opt.findSearchDirection()
     assert len(opt.conditioning_attempts) >= 2
+    assert len(metric_operand_calls) == len(opt.conditioning_attempts)
+    assert len(allocation_calls) == 2*len(opt.conditioning_attempts)
     working = opt.bindingSet(opt.xc)
     used = 0
     for row in opt.conditioning_attempts:

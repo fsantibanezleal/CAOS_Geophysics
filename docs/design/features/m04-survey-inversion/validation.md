@@ -551,3 +551,58 @@ reports the missing `magnetic_inverse.py`, `magnetic_optimizer_adapter.py`,
 calibration CLI, hosted adapter, linked views, bilingual docs gate, and field
 eligibility gate. Scientific and field acceptance remain false; the M04
 requirements status remains planned.
+
+
+## 2026-11-11 active-face preflight reuse performance diagnostic
+
+The reduced active-face optimizer now passes the exact metric operands and
+allocation proof that it has just validated into the registered conditioned
+optimizer. The prior path built and validated the same source-bound operands
+again immediately before constructing the native metric. Reuse is scoped to one
+synchronous direction: the model must remain byte-equal to the admitted model,
+the operand object must be identical, identity is rechecked, and the cached
+objects are cleared on every exit. The native M02 loop, accepted stopping and
+terminal policy, active-face sequence, 200-CG cumulative limit, 512 production
+phase limit, byte ceiling, and 120-second inner wall limit are unchanged.
+
+The focused source-bound regression verifies one `metric_operands` construction
+per active-face phase and exactly two allocations validations per phase: the
+pre-native reservation plus `OwnedMetric`'s own validation. This removes the
+intermediate duplicate construction and validation while preserving the
+allocator's independent final check.
+
+The exact S2-A `linear_tmi_nT`, fold 0, beta `0.0001` request was run with the
+production 512-phase cap. It stopped honestly at `resource_cap` after 87 accepted
+steps and 513 recorded attempts (the last is the refusal), in 9.594 seconds.
+No candidate scoring or held-out evaluation ran. A separate, process-local
+sensitivity run set only `physical_reduced_optimizer.PHASE_LIMIT = 1024`, with
+the 120-second wall limit and all numerical rules unchanged. It returned
+`wall_cap` at 120.015 seconds: the epsilon `0.1` stage completed three outer
+updates, `0.05`, `0.025`, and `0.0125` completed one each, and the `0.00625`
+stage then timed out during its first inner solve. The remaining stages and
+selection were not run. The larger phase limit is diagnostic only and is not a
+production policy change.
+
+Evidence identity: input SHA-256
+`e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa`;
+`physical_conditioned_optimizer.py` SHA-256
+`cc2eb86c657a09f406d91cdc11c4ae30418ff76e1b2b2649233fe80917d338f5`;
+`physical_reduced_optimizer.py` SHA-256
+`e0fd50057c73a450159cf66ade51cb23a000b1e2090a559e4a7097e261ef68ae`;
+regression SHA-256
+`a150c605cdd2bfeeeccd528d6f11f4d7cd0180352828f16d687f8b0ae8736831`;
+Python 3.12.10, NumPy 2.2.6, SciPy 1.15.2, SimPEG 0.25.2, discretize 0.12.0,
+with `OPENBLAS_NUM_THREADS=1`, `OMP_NUM_THREADS=1`, and `MKL_NUM_THREADS=1`.
+The reduced-optimizer, physical-optimizer, owned-SPD, and current-source M04
+calibration suites passed together (89 tests); Ruff and `git diff --check` also
+passed. The calibration suite includes the current 528-cell L2 fold and a
+mocked sparse refusal control; it does not turn the production-cap sparse
+failure or the 1024-phase diagnostic into a successful sparse fold. A separate
+34-test M02 original-optimizer selection passed; it excluded the retained long
+low-beta initialization and locked full-fold runs, which were not needed to
+verify the default allocator hooks.
+
+This is an optimization increment with a reproducible negative sparse result.
+The all-eight-epsilon sparse fold, 16-candidate/three-fold selection, refit,
+sealed evaluation, field validation, complete M04 workflow, and product
+acceptance remain open.

@@ -136,3 +136,17 @@ processed values, not merely a parameter hash.
 resource feasibility. Local design does not choose new auth/endpoints.
 4. Full provider field rights/acquisition/offline coverage and appropriately
 reported predictive comparisons. No field acceptance from authored S2.
+
+
+## 2026-11-11 preflight reuse follow-up
+
+A validated source-bound metric object and its allocation proof are now reused
+within each active-face direction instead of being rebuilt before the native
+solve. Focused controls and the M04 current-source suite pass. The production
+512-phase cap still refuses the first sparse fold after 87 accepted steps. A
+separate process-local 1024-phase diagnostic reaches four complete epsilon
+values and times out during the fifth at the unchanged 120-second limit. The
+results and exact identities are recorded in
+[`validation.md`](validation.md#2026-11-11-active-face-preflight-reuse-performance-diagnostic).
+This is not a sparse-method pass; optimize the repeated active-face work under
+the existing caps before starting the candidate matrix.

@@ -208,6 +208,15 @@ class _Conditioning:
             return True
         return False
 
+    def metric_operands_for_direction(self, q):
+        """Return the source-bound metric operands for one native direction."""
+        return self.objective.metric_operands(linear._owned(q))
+
+    def validate_metric_operands_for_direction(self, operands, q):
+        """Validate metric operands against the active identity and memory cap."""
+        return spd.validate_operands(operands, self.identity_value, q,
+                                     self.budget.resource_limit_bytes)
+
     def findSearchDirection(self):
         self.check()
         a = self.identity_value['parameter_count']
@@ -241,9 +250,9 @@ class _Conditioning:
                 direction = self.projection(self.xc-inverse*self.g)-self.xc
             else:
                 self.branch = 1
-                operands = self.objective.metric_operands(linear._owned(self.xc))
+                operands = self.metric_operands_for_direction(self.xc)
                 self.check()
-                allocation = spd.validate_operands(operands, self.identity_value, self.xc, self.budget.resource_limit_bytes)
+                allocation = self.validate_metric_operands_for_direction(operands, self.xc)
                 if allocation['maximum'] > self.budget.admitted_bytes:
                     raise ValueError('conditioned: source plan omits owned metric phases')
                 setup_started = monotonic()

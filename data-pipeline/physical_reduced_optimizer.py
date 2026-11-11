@@ -67,6 +67,8 @@ class _Linear(core._Linear):
         self._audit_bytes = 0
         self._base_bytes = 0
         self._resource_peak = 0
+        self._preflight_operands = None
+        self._preflight_allocation = None
         # BEFORE any native direction. The vendor active gradient add-on would
         # violate a refined working face; this is not a patched/copied loop.
         self.step_active_set = False
@@ -84,7 +86,6 @@ class _Linear(core._Linear):
             self.check()
             allocation = core.spd.validate_operands(operands, self.identity_value,
                 self.xc, self.budget.resource_limit_bytes)
-            operands = None
         except core.linear._Failure:
             raise
         except (ValueError, TypeError, KeyError, ArithmeticError, RuntimeError) as error:
@@ -109,7 +110,29 @@ class _Linear(core._Linear):
                     admitted_bytes=self.budget.admitted_bytes, phase_limit=PHASE_LIMIT)))
             self.fail('resource_cap')
         self._resource_peak = max(self._resource_peak, prospective)
+        self._preflight_operands = operands
+        self._preflight_allocation = allocation
         return phase_bytes
+
+    def metric_operands_for_direction(self, q):
+        """Reuse the exact operands admitted immediately before this direction."""
+        self.check()
+        if (self._preflight_operands is None or type(q) is not np.ndarray
+                or not np.array_equal(q, self.xc)):
+            self.fail('state_mismatch')
+        return self._preflight_operands
+
+    def validate_metric_operands_for_direction(self, operands, q):
+        """Reuse the allocation proof made before this phase's native work."""
+        self.check()
+        if (operands is not self._preflight_operands
+                or self._preflight_allocation is None
+                or type(q) is not np.ndarray or not np.array_equal(q, self.xc)):
+            self.fail('state_mismatch')
+        allocation = self._preflight_allocation
+        self._preflight_operands = None
+        self._preflight_allocation = None
+        return allocation
 
     def findSearchDirection(self):
         self.check()
@@ -171,6 +194,8 @@ class _Linear(core._Linear):
                     self.fail('state_mismatch')
         finally:
             self._working = None
+            self._preflight_operands = None
+            self._preflight_allocation = None
             self.cg_count = used
             self.cg_maxiter = 200
             self.dispose_metric()
