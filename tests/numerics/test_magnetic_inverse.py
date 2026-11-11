@@ -10,10 +10,16 @@ import choclo
 from choclo.constants import VACUUM_MAGNETIC_PERMEABILITY as MU0
 import numpy as np
 import pytest
+import scipy.sparse as sp
 
 import magnetic_forward
 from magnetic_inverse import MagneticQuantity, build_operator
+import magnetic_optimizer_adapter
 from magnetic_optimizer_adapter import MagneticObjective, MagneticRegularizer
+import magnetic_original_optimizer
+import physical_original_quadratic
+import physical_original_optimizer
+import physical_owned_spd
 from magnetic_likelihood import GaussianWhitener
 from magnetic_quantity import compose_magnetic_observable
 from magnetic_survey import plan_geometry
@@ -216,7 +222,7 @@ def test_sealed_survey_operator_preserves_original_receiver_rows():
     assert operator.rows == 4 and operator.components == 3
 
 
-def test_nonlinear_and_sparse_lanes_refuse_unregistered_optimizer_binding():
+def test_nonlinear_lane_refuses_but_sparse_frozen_surrogate_runs_source_bound_solver():
     request = _small_forward_request()
     forward = magnetic_forward.forward_magnetic_with_kernel(request)
     background = forward["inducing_field"]["background_enu_nt"]
@@ -230,14 +236,91 @@ def test_nonlinear_and_sparse_lanes_refuse_unregistered_optimizer_binding():
     assert prediction["prediction_nT"].shape == (3,)
     assert prediction["jacobian_nT_per_q"].shape == (3, 1)
 
-    mesh = {"origin_m": request["mesh"]["origin_m"],
-            "hx_m": request["mesh"]["hx_m"], "hy_m": request["mesh"]["hy_m"],
-            "hz_m": request["mesh"]["hz_m"], "active": request["mesh"]["active"]}
-    reference = np.array([.2], dtype=np.float64)
+    sparse_request = _small_forward_request()
+    sparse_request["mesh"]["hx_m"] = np.array([100., 100.], dtype=np.float64)
+    sparse_request["mesh"]["active"] = np.ones(2, dtype=np.bool_)
+    sparse_request["susceptibility_si"] = np.array([.03, .04], dtype=np.float64)
+    sparse_forward = magnetic_forward.forward_magnetic_with_kernel(sparse_request)
+    mesh = {"origin_m": sparse_request["mesh"]["origin_m"],
+            "hx_m": sparse_request["mesh"]["hx_m"], "hy_m": sparse_request["mesh"]["hy_m"],
+            "hz_m": sparse_request["mesh"]["hz_m"], "active": sparse_request["mesh"]["active"]}
+    reference = np.array([.2, .25], dtype=np.float64)
     lengths = np.array([10., 10., 10.], dtype=np.float64)
-    weight_model = np.array([.3], dtype=np.float64)
-    with pytest.raises(ValueError, match="fixed L2 only"):
-        MagneticRegularizer(mesh, reference, lengths, "sparse_smallness", .1, weight_model)
+    weight_model = np.array([.3, .35], dtype=np.float64)
+    with pytest.raises(ValueError, match="frozen positive schedule"):
+        MagneticRegularizer(mesh, reference, lengths, "sparse", .2, weight_model)
+    with pytest.raises(TypeError, match="refresh model"):
+        MagneticRegularizer(mesh, reference, lengths, "sparse", .1, None)
+    sparse = MagneticRegularizer(mesh, reference, lengths, "sparse", .1, weight_model)
+    refreshed = sparse.source.evaluate_sparse(weight_model, .1)
+    q = np.array([.7, .65], dtype=np.float64)
+    evaluated = sparse.evaluate(q)
+    np.testing.assert_allclose(sparse.vendor(q), evaluated["phi"], rtol=2e-15, atol=0.)
+    np.testing.assert_allclose(sparse.vendor.deriv(q), evaluated["gradient_q"], rtol=2e-14, atol=1e-15)
+    np.testing.assert_array_equal(sparse.smallness_irls_weights, refreshed["smallness_irls_weights"])
+    terms = sparse.terms()
+    assert len(terms) == 2
+    np.testing.assert_allclose(
+        terms[0]["weights"],
+        np.sqrt(sparse.source.volumes / sparse.source.total_volume
+                * sparse.smallness_irls_weights), rtol=2e-15, atol=0.,
+    )
+    reconstructed_hessian = sp.csr_matrix(sparse.hessian.shape, dtype=np.float64)
+    for term in terms:
+        reconstructed_hessian += 2. * (
+            term["alpha"] * term["derivative"].T
+            @ sp.diags(term["weights"] ** 2, format="csr")
+            @ term["derivative"]
+        )
+    np.testing.assert_allclose(reconstructed_hessian.toarray(), sparse.hessian.toarray(), atol=1e-15)
+    field = sparse_forward["inducing_field"]["background_enu_nt"]
+    field_norm = float(np.linalg.norm(field))
+    linear_operator = MagneticQuantity(
+        sparse_forward["component_jacobian_nT_per_si"], field, field / field_norm,
+        field_norm, "secondary_enu_nT",
+    )
+    observed = linear_operator.evaluate(np.array([.8, .6], dtype=np.float64))["prediction_nT"]
+    objective = MagneticObjective(
+        linear_operator, sparse, observed,
+        {"kind": "diagonal_sd", "values": np.ones(
+            (linear_operator.rows, linear_operator.components), dtype=np.float64)},
+        np.zeros(2, dtype=np.float64), np.full(2, 10., dtype=np.float64),
+        .1, "a" * 64, "b" * 64,
+    )
+    phi, gradient, hessian = objective.evaluate(q, return_g=True, return_H=True)
+    np.testing.assert_allclose(gradient, objective._state(q)[3], rtol=0., atol=0.)
+    direction = np.array([.7, -.4], dtype=np.float64)
+    np.testing.assert_allclose(hessian @ direction,
+                               2. * objective._state(q)[-1].T
+                               @ (objective._state(q)[-1] @ direction)
+                               + objective.beta * sparse.hessian @ direction,
+                               rtol=2e-14, atol=1e-14)
+    assert np.isfinite(phi)
+    dto = magnetic_original_optimizer._MagneticDTO(objective, 9)
+    operands = dto.quadratic_operands(q)
+    assert len(operands.terms) == len(sparse.terms())
+    np.testing.assert_allclose(operands.terms[0].weights.diagonal(), terms[0]["weights"])
+    physical_original_quadratic.validate(
+        operands, dto.identity(), q, deadline=monotonic() + 15.,
+        resource_limit_bytes=805_306_368, admitted_bytes=805_306_368,
+    )
+    metric_model = np.array([.3, .4], dtype=np.float64)
+    metric = dto.metric_operands(metric_model)
+    metric_allocation = physical_owned_spd.validate_operands(
+        metric, dto.identity(), metric_model, 805_306_368,
+    )
+    assert metric_allocation["maximum"] <= 805_306_368
+    allocation_sha = "b" * 64
+    budget = physical_original_optimizer.ConditionedBudget(
+        monotonic() + 120., 200, 805_306_368, 805_306_368, allocation_sha,
+    )
+    terminal = physical_owned_spd.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6)
+    start = metric_model.copy()
+    solved = magnetic_optimizer_adapter.solve_linear(
+        objective, start, source_components=9, budget=budget, terminal=terminal,
+    )
+    assert solved["status"] == "converged", repr(solved)[:4000]
+    assert solved["iterations"] > 0
     l2 = MagneticRegularizer(mesh, reference, lengths)
     with pytest.raises(ValueError, match="affine magnetic quantities"):
         MagneticObjective(

@@ -33,7 +33,7 @@ class _MagneticDTO:
         self._regularizer_metric = None
         source_regularizer = getattr(objective.regularizer, 'source', None)
         if source_regularizer is not None:
-            regularizer_metric = (objective.beta * source_regularizer.hessian).tocsr(copy=True)
+            regularizer_metric = (objective.beta * objective.regularizer.hessian).tocsr(copy=True)
             regularizer_metric.sum_duplicates()
             regularizer_metric.sort_indices()
             regularizer_metric.data.flags.writeable = False

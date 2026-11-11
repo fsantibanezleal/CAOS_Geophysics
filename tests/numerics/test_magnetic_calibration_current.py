@@ -153,6 +153,64 @@ def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
     assert set(result["fit_rows"]).isdisjoint(result["trace"].get("outer_rows", []))
 
 
+def test_sparse_fold_retains_inner_resource_refusal_without_acceptance(monkeypatch):
+    raw = _request("S2-A-linear_tmi_nT.json")
+    manifest = json.loads((ROOT / "manifest.json").read_bytes())
+    request_sha256 = __import__("hashlib").sha256(raw).hexdigest()
+    record = next(case for case in manifest["cases"]
+                  if case["regime"] == "A" and case["quantity"] == "linear_tmi_nT")
+    assert request_sha256 == record["request"]["sha256"]
+
+    resource = {
+        "base_bytes": 745_213_200,
+        "workspace_bytes": 8_388_608,
+        "retained_audit_bytes": 7_158_016,
+        "prospective_bytes": 760_776_464,
+        "admitted_bytes": calibration.RESOURCE_LIMIT_BYTES,
+        "phase_limit": 512,
+    }
+    attempts = tuple({} for _ in range(511)) + ({
+        "phase": 3, "branch": "admission_refusal", "failure": "resource_cap",
+        "iterations": 0, "cumulative_CG": 5, "resource": resource,
+    },)
+
+    def resource_capped(objective, start_q, *, source_components, budget, terminal):
+        assert objective.regularizer.penalty == "sparse"
+        assert objective.regularizer.epsilon_q == .1
+        assert len(start_q) == 528
+        assert source_components == 3 * 288
+        return {
+            "status": "failed", "reason": "resource_cap", "iterations": 87,
+            "terminal_audits": (), "conditioning_attempts": attempts,
+            "failed_trial": {
+                "iteration": 87, "reason": "resource_cap", "model_q": np.ones(528),
+                "last_actual_line_search": {
+                    "iteration": 87, "trial": 12, "alpha": .5, "phi_current": 4.,
+                    "phi_trial": 4.1, "projected_slope": .2,
+                    "trial_model_sha256": "a" * 64, "accepted": False,
+                    "model_q": np.ones(528),
+                },
+            },
+        }
+
+    monkeypatch.setattr(calibration.adapter, "solve_linear", resource_capped)
+    result = calibration.fit_sparse_fold(raw, 0, .0001, wall_seconds=120.)
+    assert result["status"] == "failed" and result["reason"] == "resource_cap"
+    assert result["history"][0]["conditioning_attempt_count"] == 512
+    assert result["history"][0]["last_conditioning_attempt"]["resource"] == resource
+    assert result["history"][0]["inner_failed_trial"] == {
+        "iteration": 87, "reason": "resource_cap",
+        "last_actual_line_search": {
+            "iteration": 87, "trial": 12, "alpha": .5, "phi_current": 4.,
+            "phi_trial": 4.1, "projected_slope": .2,
+            "trial_model_sha256": "a" * 64, "accepted": False,
+        },
+    }
+    assert result["claims"]["candidate_selected"] is False
+    assert result["claims"]["method_accepted"] is False
+    assert "prediction_nT" not in result
+
+
 def test_nonlinear_quantity_refuses_before_forward_kernel(monkeypatch):
     raw = _request("S2-A-exact_total_anomaly_nT.json")
 

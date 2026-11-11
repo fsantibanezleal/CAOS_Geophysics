@@ -7,6 +7,25 @@ by those foundation tests. No placeholder code is requested.
 The product holds scientific definitions and implementation; private execution,
 coordination and release records remain in management.
 
+## Current implementation checkpoint : 2026-11-11
+
+The source-bound sparse inner-surrogate path and sealed-fold IRLS driver are now
+implemented in `magnetic_optimizer_adapter.py` and `magnetic_calibration.py`.
+Focused controls show the actual SimPEG frozen weights, objective, gradient,
+Hessian and original quadratic operands agree; a two-parameter inner solve
+converges through the registered M02 solver. The full authored S2-A 528-cell
+linear-TMI fold 0 at beta `0.0001` was also attempted. It stopped as
+`resource_cap` after 87 accepted iterations and 512 conditioning phases; its
+measured byte reservation remained below 805,306,368 bytes, so the limiting
+condition was the reviewed phase-count cap. The fold remains failed and cannot
+enter candidate scoring.
+
+T43 remains open: no complete S2 sparse fold has passed all eight epsilon
+stages; the 16-candidate, three-fold matrix, nested selection, development
+refit, immutable freeze and one-time sealed evaluation are not complete. The
+passing small inner control and a retained non-success are implementation
+evidence, not sparse-method acceptance.
+
 ## T41: source/protocol and geometry foundation
 
 Requirements R-401..404, R-413.

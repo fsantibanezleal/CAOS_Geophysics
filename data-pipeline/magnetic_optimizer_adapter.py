@@ -3,7 +3,8 @@
 Only affine secondary-ENU and linear-TMI objectives are admitted by the
 original-noise solver. The exact total-field anomaly has a nonlinear Jacobian
 and remains refused until a separately accepted nonlinear M02 binding exists.
-Sparse IRLS is also deliberately outside this fixed-weight L2 adapter.
+Sparse IRLS uses a frozen actual-SimPEG quadratic for each M02 inner solve;
+the caller owns epsilon scheduling and the true fixed-epsilon outer checks.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ import hashlib
 import re
 
 import numpy as np
+import scipy.sparse as sp
 from scipy.sparse.linalg import LinearOperator
 
 import magnetic_likelihood
@@ -32,13 +34,19 @@ def _digest(value, name):
 
 
 class MagneticRegularizer:
-    """Closed L2 adapter exposing actual SimPEG and sparse active-face terms."""
+    """Closed frozen L2 or sparse-surrogate adapter over actual SimPEG terms."""
 
     def __init__(self, mesh, reference_q, lengths_m, penalty="l2", epsilon_q=0., weight_model=None):
         if type(mesh) is not dict or set(mesh) != {"origin_m", "hx_m", "hy_m", "hz_m", "active"}:
             raise TypeError("mesh: expected exact origin/widths/active mapping")
-        if type(penalty) is not str or penalty != "l2" or type(epsilon_q) not in (int, float) or epsilon_q != 0.:
-            raise ValueError("regularizer: the source-bound M02 adapter currently accepts fixed L2 only")
+        if (type(penalty) is not str or penalty not in ("l2", "sparse")
+                or type(epsilon_q) not in (int, float)):
+            raise ValueError("regularizer: expected the frozen L2 or sparse-IRLS policy")
+        if penalty == "l2" and epsilon_q != 0.:
+            raise ValueError("regularizer: fixed L2 requires epsilon_q=0")
+        if penalty == "sparse" and (type(epsilon_q) is not float
+                or epsilon_q not in magnetic_regularization.SPARSE_EPSILON_Q):
+            raise ValueError("regularizer: sparse epsilon must be in the frozen positive schedule")
         origin = mesh["origin_m"]
         widths = tuple(mesh[key] for key in ("hx_m", "hy_m", "hz_m"))
         active = mesh["active"]
@@ -63,7 +71,12 @@ class MagneticRegularizer:
             raise TypeError("reference: expected native float64 active-cell vector")
         if type(lengths_m) is not np.ndarray or lengths_m.dtype != np.float64 or lengths_m.shape != (3,):
             raise TypeError("lengths: expected native float64 ENU vector")
-        if weight_model is not None:
+        if penalty == "sparse":
+            if type(weight_model) is not np.ndarray or weight_model.dtype != np.float64:
+                raise TypeError("weight model: sparse IRLS requires a native float64 refresh model")
+            if weight_model.shape != (active_count,):
+                raise ValueError("weight model: shape mismatch")
+        elif weight_model is not None:
             if type(weight_model) is not np.ndarray or weight_model.dtype != np.float64:
                 raise TypeError("weight model: expected native float64 vector")
             if weight_model.shape != (active_count,):
@@ -82,12 +95,45 @@ class MagneticRegularizer:
         self.source = magnetic_regularization.MagneticRegularizer(
             tensor, active, reference_q, lengths_m
         )
-        self.vendor = self.source.simpeg
         self.reference = self.source.reference_q
         self.lengths_m = self.source.lengths_m
         self.parameter_count = self.source.parameter_count
-        self.penalty = "l2"
-        self.epsilon_q = 0.
+        self.penalty = penalty
+        self.epsilon_q = float(epsilon_q)
+        self.weight_model = None
+        self.smallness_irls_weights = None
+        self._terms = self.source.terms()
+        self.vendor = self.source.simpeg
+        self.hessian = self.source.hessian
+        self.hessian_diagonal = self.source.hessian_diagonal
+        if penalty == "sparse":
+            self.weight_model = np.array(weight_model, dtype=np.float64, copy=True, order="C")
+            self.weight_model.flags.writeable = False
+            refreshed = self.source.evaluate_sparse(self.weight_model, self.epsilon_q)
+            self.vendor = self.source.sparse
+            irls_weights = np.array(refreshed["smallness_irls_weights"], dtype=np.float64, copy=True)
+            irls_weights.flags.writeable = False
+            self.smallness_irls_weights = irls_weights
+            first = dict(self._terms[0])
+            first["weights"] = np.asarray(first["weights"] * np.sqrt(irls_weights), dtype=np.float64)
+            first["weights"].flags.writeable = False
+            self._terms = (first, *self._terms[1:])
+            volume_fraction = self.source.volumes / self.source.total_volume
+            smooth = self.source.hessian * .5 - sp.diags(volume_fraction, format="csr")
+            hessian = (2. * (smooth + sp.diags(volume_fraction * irls_weights, format="csr"))).tocsr()
+            hessian.sum_duplicates()
+            hessian.sort_indices()
+            if (hessian.shape != (active_count, active_count)
+                    or not np.isfinite(hessian.data).all()
+                    or np.any(hessian.diagonal() <= 0.)):
+                raise FloatingPointError("sparse surrogate: invalid frozen positive-definite Hessian")
+            hessian.data.flags.writeable = False
+            hessian.indices.flags.writeable = False
+            hessian.indptr.flags.writeable = False
+            self.hessian = hessian
+            diagonal = np.asarray(hessian.diagonal(), dtype=np.float64)
+            diagonal.flags.writeable = False
+            self.hessian_diagonal = diagonal
         self.sha256 = self._identity_digest()
 
     def _identity_digest(self):
@@ -98,26 +144,45 @@ class MagneticRegularizer:
             payload.extend((term["weights"].astype("<f8", copy=False).tobytes(),
                             derivative.data.astype("<f8", copy=False).tobytes(),
                             derivative.indices.tobytes(), derivative.indptr.tobytes()))
+        if self.penalty == "sparse":
+            payload.extend((b"sparse", repr(self.epsilon_q).encode("ascii"),
+                            self.weight_model.astype("<f8", copy=False).tobytes()))
         return hashlib.sha256(b"".join(payload)).hexdigest()
 
     def terms(self):
         return tuple({"alpha": term["alpha"],
                       "weights": term["weights"].copy(),
                       "derivative": term["derivative"].copy()}
-                     for term in self.source.terms())
+                     for term in self._terms)
 
     def evaluate(self, q):
-        return self.source.evaluate(q)
+        if self.penalty == "l2":
+            return self.source.evaluate(q)
+        if (type(q) is not np.ndarray or q.dtype != np.float64
+                or q.shape != (self.parameter_count,)):
+            raise TypeError("q: expected native float64 active-cell vector")
+        if not np.isfinite(q).all() or np.any((q < 0.) | (q > 10.)):
+            raise ValueError("q: finite normalized susceptibility values in [0,10] required")
+        delta = q - self.reference
+        gradient = np.asarray(self.hessian @ delta, dtype=np.float64)
+        phi = float(.5 * (delta @ gradient))
+        if not np.isfinite(phi) or not np.isfinite(gradient).all():
+            raise FloatingPointError("sparse surrogate: nonfinite objective or gradient")
+        return {"phi": phi, "gradient_q": gradient,
+                "hessian_action": lambda direction: self.hessian @ direction,
+                "independent_phi": phi, "independent_gradient_q": gradient.copy(),
+                "unit": "dimensionless", "parameter_unit": "q=chi_si/0.01",
+                "engine_epoch": self.source.evaluate(self.reference)["engine_epoch"]}
 
 
 class MagneticObjective:
-    """Frozen original-row Gaussian objective plus physical L2 regularization."""
+    """Frozen original-row Gaussian objective plus one fixed quadratic penalty."""
 
     def __init__(self, operator, regularizer, observed_nT, noise, lower_q, upper_q,
                  beta, source_inventory_sha256, allocation_plan_sha256, stage_index=0):
         from magnetic_inverse import MagneticQuantity
         if type(operator) is not MagneticQuantity or type(regularizer) is not MagneticRegularizer:
-            raise TypeError("objective: expected owned magnetic quantity and L2 regularizer")
+            raise TypeError("objective: expected owned magnetic quantity and frozen regularizer")
         if operator.quantity not in LINEAR_QUANTITIES:
             raise ValueError("objective: this source-bound M02 adapter accepts affine magnetic quantities only")
         _digest(source_inventory_sha256, "source inventory")
@@ -233,7 +298,7 @@ class MagneticObjective:
         if return_g:
             result.append(gradient.copy())
         if return_H:
-            regularizer_hessian = self.regularizer.source.hessian
+            regularizer_hessian = self.regularizer.hessian
             result.append(LinearOperator(
                 (len(q), len(q)), dtype=np.float64,
                 matvec=lambda direction: 2. * weighted_jacobian.T @ (weighted_jacobian @ direction)
@@ -243,7 +308,7 @@ class MagneticObjective:
 
     def binding_diagonal(self, q):
         weighted_jacobian = self._state(q)[-1]
-        regularizer_diagonal = self.regularizer.source.hessian_diagonal
+        regularizer_diagonal = self.regularizer.hessian_diagonal
         diagonal = 2. * np.sum(weighted_jacobian * weighted_jacobian, axis=0) + self.beta * regularizer_diagonal
         if not np.isfinite(diagonal).all() or np.any(diagonal <= 0.):
             raise ValueError("objective: actual positive Gauss-Newton diagonal required")
