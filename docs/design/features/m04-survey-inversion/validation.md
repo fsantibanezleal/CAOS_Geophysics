@@ -644,3 +644,32 @@ optimizer SHA-256
 `ee7fbfb3627d22da4f7115c1400eaa9fc21fe20692e952503978daadd4796a9d`.
 The focused module passed 19 tests; Ruff passed on the optimizer, test module,
 and benchmark script; `git diff --check` passed.
+
+## 2026-11-11 sparse active-face phase profile
+
+To locate the remaining cap without changing the solve, a one-fold profile
+wrapper records each native direction's conditioning phases, CG work, frozen
+cell counts and existing timers. It requires the reviewed single-thread
+environment and keeps the 512-phase, 120-second and 805,306,368-byte limits
+unchanged. The exact S2-A fold completed its diagnostic run in 15.969 s and
+again stopped at `resource_cap`: 87 accepted updates, 88 direction calls, 513
+conditioning attempts, with only epsilon `0.1` reached.
+
+The direction-phase count distribution was 3:4, 4:11, 5:24, 6:16, 7:23 and
+8:10. Of 513 phases, 306 used one CG iteration, 145 used two and 61 used
+three; one was the refusal. The first accepted direction froze 100 new
+coordinates after its initial solve, then the subsequent restricted solves
+identified further outward bound coordinates in groups of 41, 24, 11, 6 and
+4. The record locates the budget pressure in repeated active-face updates, not
+CG exhaustion or the isolated bound-ray arithmetic. It does not establish
+that these updates can be combined without changing the accepted constrained
+solution; a new active-set rule requires its own source-bound proof and
+adversarial validation under the same limits.
+
+Profile runner SHA-256:
+`60bfae2af11c3cc833e9c335d037218b806adcf2ad0aa32281b55e9a0c94de89`.
+External diagnostic receipt SHA-256:
+`e18c59e2f5029faefe81cc95d0dc8914d4fc190c5befa2dd38a74a38f8d17fda3`.
+The focused optimizer module remains 19 passing tests; Ruff passes on the
+profile runner. This is diagnostic evidence only. Sparse acceptance, M04,
+the method ladder and product release remain open.
