@@ -196,6 +196,52 @@ def test_exact_inward_released_contact(q, p):
     assert Fraction(alpha) >= best and Fraction(float(np.nextafter(alpha, 0.))) < best
 
 
+def test_vector_screen_preserves_exact_first_contact_against_rational_oracle():
+    rng = np.random.default_rng(20261111)
+    lo = np.full(96, -3.0)
+    hi = np.full(96, 5.0)
+    for _ in range(80):
+        q = rng.uniform(-2.9, 4.9, size=len(lo))
+        p = rng.normal(size=len(lo))
+        p[rng.random(len(p)) < .12] = 0.
+        if not np.any(p):
+            p[0] = 1.
+        alpha, coordinate = reduced.initial_ray(q, p, -p, lo, hi,
+            deadline=monotonic()+120.)
+        ratios = [
+            (i, (Fraction(float(hi[i] if p[i] > 0 else lo[i]))-Fraction(float(q[i])))
+            / Fraction(float(p[i])))
+            for i in range(len(p)) if p[i] != 0.
+        ]
+        exact = min(Fraction(1), *(value for _, value in ratios))
+        expected = next((i for i, value in ratios if value == exact), -1) if exact < 1 else -1
+        assert coordinate == expected
+        assert Fraction(alpha) >= exact
+        assert Fraction(float(np.nextafter(alpha, 0.))) < exact
+
+
+@pytest.mark.parametrize('q,p,lo,hi', [
+    ([.123, .432], [1e308, 9e307], [-1., -1.], [1., 1.]),
+    ([0., 0.], [np.nextafter(0., 1.), 1.], [-1., -1.], [1., 1.]),
+    ([0., 0.], [1., 1.], [-1., -1.], [1., 1.]),
+    ([1., 0.], [0., 1.], [-1., -1.], [1., 1.]),
+])
+def test_ray_interval_screen_extreme_and_tied_contacts(q, p, lo, hi):
+    q, p, lo, hi = map(lambda x: np.asarray(x, dtype=np.float64), (q, p, lo, hi))
+    gradient = -(p/np.max(np.abs(p)))*.5
+    alpha, coordinate = reduced.initial_ray(q, p, gradient, lo, hi, deadline=monotonic()+120.)
+    ratios = [
+        (i, (Fraction(float(hi[i] if p[i] > 0 else lo[i]))-Fraction(float(q[i])))
+        / Fraction(float(p[i])))
+        for i in range(len(p)) if p[i] != 0.
+    ]
+    exact = min(Fraction(1), *(value for _, value in ratios))
+    expected = next((i for i, value in ratios if value == exact), -1) if exact < 1 else -1
+    assert coordinate == expected
+    assert Fraction(alpha) >= exact
+    assert Fraction(float(np.nextafter(alpha, 0.))) < exact
+
+
 def test_outward_null_clock_and_binding_before_proposal():
     q, p = np.array([-1., 1.]), np.array([-1., -1.])
     with pytest.raises(ValueError, match='outward'):

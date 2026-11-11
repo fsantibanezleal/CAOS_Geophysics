@@ -606,3 +606,41 @@ This is an optimization increment with a reproducible negative sparse result.
 The all-eight-epsilon sparse fold, 16-candidate/three-fold selection, refit,
 sealed evaluation, field validation, complete M04 workflow, and product
 acceptance remain open.
+
+## 2026-11-11 exact ray-screen optimization
+
+`physical_reduced_optimizer.initial_ray` now computes outward-rounded lower
+and upper intervals for each nonzero direction coordinate. It retains the
+exact `Fraction` comparison for every coordinate whose interval can contain
+the first contact. The interval screen cannot select the contact or change
+the returned step; the exact rational minimum still defines both. Zero
+direction coordinates are excluded before screening, including a zero
+coordinate that is already on a bound. The deterministic rational-oracle tests
+cover random 96-coordinate inputs, ties, subnormal motion, very large
+components, and bound-resident zero coordinates.
+
+The preserved scalar implementation and optimized implementation were
+measured with `python scripts/benchmark_physical_ray.py` on a seeded 528-cell
+vector, 120 repetitions. Both returned exactly `(0.09004450897719632, 98)`.
+The scalar scan took 0.2600024 s and the screened version took 0.0085985 s,
+30.24x for this isolated operation. This is a local microbenchmark, not an
+end-to-end fit speed claim.
+
+The exact S2-A `linear_tmi_nT`, fold 0, beta `0.0001` sparse request was then
+replayed once with the production limits unchanged. It stopped at the same
+phase resource cap after 87 accepted updates and 513 conditioning attempts
+(512 admitted, then one refusal), in 20.297 s. The refusal recorded 7,158,016
+retained audit bytes, 760,776,464 prospective bytes, an 805,306,368-byte
+admission ceiling, and a 512-phase ceiling. Only epsilon `0.1` ran; no candidate
+selection or evaluation ran. This optimization is retained as a bounded
+cost reduction but does not resolve the sparse solver bottleneck or change any
+method/product acceptance claim.
+
+The run used request SHA-256
+`e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa` and
+optimizer SHA-256
+`3d026d44b32f644ded036e5f309e3fe1eb1b3bbb627798647cd5ee43fe2e6887`.
+`tests/numerics/test_physical_reduced_optimizer.py` has SHA-256
+`ee7fbfb3627d22da4f7115c1400eaa9fc21fe20692e952503978daadd4796a9d`.
+The focused module passed 19 tests; Ruff passed on the optimizer, test module,
+and benchmark script; `git diff --check` passed.

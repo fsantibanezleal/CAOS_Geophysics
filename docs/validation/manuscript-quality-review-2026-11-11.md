@@ -260,17 +260,17 @@ The frontend's production build succeeds; Vite still reports an existing
 
 ## 2026-11-11 follow-up: shared-base and scorer review
 
-The current Shell PR #218 (`task/0-26-0-defects`) is still a draft against
-`develop`, with no reported checks. Its 0.26.000 changelog names known defects
-and adoption notes, but the full measured browser gate and release are not
-complete. The product stays pinned to published Shell 0.25.0; copying changes
-from the draft would bypass the shared-base release and adoption rules.
-
-Template PR #124 is merged to `develop` at `265d3ece6fba3533229497acf69ea50adce32416`,
-but 0.15.007 is not tagged or released. Its stamped-stage-input guard has no
-corresponding `stage_inputs` workflow in this product, so the change does not
-address a product defect and was not copied. The product's instantiation record
-and compatibility work remain separate from that unreleased template change.
+The shared-base state in the preceding paragraphs is superseded by the
+released-base adoption record above. CAOS App Shell `v0.26.000` is on shared
+`main` at `d2b3351`, and the product dependency and lockfile pin `0.26.0`.
+CAOS Product Template `v0.15.008` is on shared `main` at `7dce8c9`; the product
+SDD records this as its reviewed current base while `.template-version` retains
+the original `0.13.001` instantiation. The 0.15.007 stage-input guard remains
+inapplicable because the product does not run that template workflow. The
+reviewed base pins and changes are verified; this does not mean every current
+template requirement or product gate passes. In particular, the measured
+notebook, manuscript, method, deployment and product acceptance gaps below
+remain open.
 
 The current M04 fold scorer had a physical sign inconsistency: it reconstructed
 the inducing-field vertical component as `+F sin(I)` in ENU, while the
@@ -284,22 +284,20 @@ assembly suite passes 10 tests; Ruff and `git diff --check` pass. This closes
 that local scoring defect only; it is not a validation of the inversion
 method's scientific acceptance.
 
-The manuscript verdict is unchanged: the geometry-normalized residual draft is
-clean under the voice checker and meets the measured numeric depth floors, but
-the full depth gate still rejects it because its title is not in the
-DOI-backed `product.json` record. Its negative comparison against a
-regularized straight-ray baseline does not establish advantage over
-contemporary eikonal, Bayesian, or learned tomography methods. It remains
-unpublished and is not represented as a demonstrated beyond-state-of-the-art
-result. An initial repository-wide voice scan found 19 process/version phrases
-in the technical report and M12 manuscript. They were corrected in the M12
-LaTeX and report Markdown source, the generated report was rebuilt, and the
-voice checker now passes across `manuscripts/`. Both manuscripts compile to
-12-page PDFs. The forced second report build has no undefined-citation or
-undefined-reference warning; its methods table remains dense, and visual
-review of report pages 3-4 found no clipping. Visual review of M12 pages 5-6
-and 10 found legible tables and no clipped content despite three small
-overfull-box diagnostics in the LaTeX log. The technical report and M12
-manuscript remain below their required depth, the identifiability manuscript
-has no LaTeX main file, and the product-wide acceptance and VPS replacement
-gates remain open.
+The BS-1 geometry-normalized residual draft meets the measured manuscript depth
+floors and passes the voice check, but the product-level manuscript gate still
+rejects the unregistered title and the paper remains unpublished. Its frozen
+negative comparison against a regularized straight-ray baseline does not
+establish advantage over contemporary eikonal, Bayesian or learned tomography
+methods. The null-space follow-up uses different cases and lacks the unprojected
+predictions needed to isolate the projection's effect; it does not substantiate
+a separate novel method. The technical report and M12 manuscript remain far
+below their required content floors, `geophysics-identifiability` still has no
+LaTeX main file, and the current depth checker retains five findings. These
+manuscript facts and the earlier build/page review were rechecked against the
+current checkout on 2026-11-11. No DOI or publication claim is assigned.
+
+The current product checkout also contains the exact ray-screen optimizer
+change and its 19-test rational-oracle suite. That focused code change does not
+alter any manuscript result or clear the remaining product or VPS acceptance
+gates.

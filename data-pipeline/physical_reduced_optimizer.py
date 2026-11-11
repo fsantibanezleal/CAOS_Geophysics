@@ -39,18 +39,41 @@ def initial_ray(q, p, gradient, lower, upper, *, deadline):
         raise ValueError('reduced ray: actual descent required')
     if np.any(((q == lower) & (p < 0.)) | ((q == upper) & (p > 0.))):
         raise ValueError('reduced ray: outward bound direction')
+    if monotonic() > deadline:
+        raise core.spd.kernel.DeadlineExceeded('reduced ray clock')
+
+    # Screen all cells with outward-rounded intervals. Each subtraction is
+    # expanded by one representable value, then each positive division is
+    # expanded again. Thus an exact rational ratio can be a minimum only where
+    # its lower interval endpoint is no greater than the smallest upper end.
+    # Exact Fraction comparisons are retained for that small candidate set;
+    # the float screen never chooses the contact cell or changes alpha.
+    moving = p != 0.
+    positive = p > 0.
+    distance = np.where(positive, upper-q, q-lower)
+    speed = np.abs(p)
+    distance_low = np.nextafter(distance, -np.inf)
+    distance_high = np.nextafter(distance, np.inf)
+    with np.errstate(over='ignore', under='ignore', divide='ignore', invalid='raise'):
+        ratio_low = np.nextafter(distance_low/speed, -np.inf)
+        ratio_high = np.nextafter(distance_high/speed, np.inf)
+    ratio_low = np.where(moving, ratio_low, np.inf)
+    ratio_high = np.where(moving, ratio_high, np.inf)
+    if monotonic() > deadline:
+        raise core.spd.kernel.DeadlineExceeded('reduced ray clock')
+    screen_limit = min(1., float(np.min(ratio_high)))
+    candidates = np.flatnonzero(ratio_low <= screen_limit)
+
     best, coordinate = Fraction(1), -1
-    for i in range(len(q)):
+    for i in candidates:
         if monotonic() > deadline:
             raise core.spd.kernel.DeadlineExceeded('reduced ray clock')
-        if p[i] == 0.:
-            continue
-        bound = upper[i] if p[i] > 0. else lower[i]
+        bound = upper[i] if positive[i] else lower[i]
         ratio = (Fraction(float(bound))-Fraction(float(q[i])))/Fraction(float(p[i]))
         if ratio <= 0:
             raise ValueError('reduced ray: nonpositive exact first-bound ratio')
         if ratio < best:
-            best, coordinate = ratio, i
+            best, coordinate = ratio, int(i)
     alpha = float(best)
     if Fraction(alpha) < best:
         alpha = float(np.nextafter(alpha, np.inf))
