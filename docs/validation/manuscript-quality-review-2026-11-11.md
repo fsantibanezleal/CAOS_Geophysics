@@ -102,8 +102,8 @@ reproducible or as a state-of-the-art comparison.
 ## Shell and product-template compatibility
 
 All three repositories were fetched from origin. The product checkout is clean
-at `f50dc67`, synchronized with its task branch. The Shell and Template
-checkouts are also clean; their in-progress work is committed on task branches.
+and synchronized with its task branch. The Shell and Template checkouts are also
+clean; their in-progress work is committed on task branches.
 
 - The product records template instantiation origin `0.13.001`; this is not a
   claim that it conforms to the current template. Latest released template tag
