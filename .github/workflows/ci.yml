@@ -60,8 +60,10 @@ jobs:
       - name: Notebook structure and bilingual static guard; no notebook execution
         run: python scripts/check_notebooks.py
       - name: Notebook depth and whole-tool teaching coverage
+        if: always()
         run: python scripts/check_notebook_depth.py --report
       - name: Manuscript depth, coverage and title support
+        if: always()
         run: python scripts/check_manuscript_depth.py --report
       - name: Reader-facing method names; internal classification stays internal
         run: python scripts/check_internal_names.py

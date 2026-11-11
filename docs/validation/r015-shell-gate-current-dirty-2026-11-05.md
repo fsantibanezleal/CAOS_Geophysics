@@ -8,7 +8,7 @@ The minimum App drawing share was 50.9% at 1280×800 (FWI_NOISY, Inversion). Min
 
 ## Reproduction and source identity
 
-- Checkout: `D:\_Repos\_Web_Projects\CAOS_Geophysics`.
+- Checkout: the direct `CAOS_Geophysics` product checkout.
 - Base `HEAD`: `f0ec2fc37fdae1f0c1c7d40b6cae386a85d7e6ac`; checkout was dirty with an active merge (`MERGE_HEAD c595aeb963a612da6b73e277757a66dd4acd6d21`).
 - Command: `cd frontend; npm run build`, then `npm run gate -- --out E:\_Datos\CAOS_Geophysics\validation\shell-full-final3-20261105`.
 - Shared shell pin: `@fasl-work/caos-app-shell` 0.19.12.
