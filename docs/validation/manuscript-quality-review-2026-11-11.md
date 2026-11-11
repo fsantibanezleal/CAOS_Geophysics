@@ -6,20 +6,22 @@ release approval.
 
 ## Manuscript gate
 
-The full local `check_manuscript_depth.py <product> --report` run finds four
-remaining product-level defects:
+The full local `check_manuscript_depth.py <product> --report` run finds five
+remaining product-level findings:
 
-1. `manuscripts/geophysics-identifiability` has no LaTeX `main.tex`.
-2. `manuscripts/inverse-earth-studio-report-0.04.003/coverage.json` is missing.
-3. `manuscripts/m12-nullspace-refinement-v0.01/coverage.json` is missing.
-4. No manuscript folder is declared as the required technical report.
+1. The BS-1 draft title is absent from `product.json`, which records published
+   DOI-backed documents only. The draft must not be added before the complete
+   report and publication workflow; no DOI is invented.
+2. `manuscripts/geophysics-identifiability` has no LaTeX `main.tex`.
+3. `manuscripts/inverse-earth-studio-report-0.04.003/coverage.json` is missing.
+4. `manuscripts/m12-nullspace-refinement-v0.01/coverage.json` is missing.
+5. No manuscript folder is declared as the required technical report.
 
 The remote branch baseline at `1e208f8` has a fifth finding: BS-1 has no
 manuscript. This working tree now contains a draft BS-1 paper and a `coverage.json`
 claim map. Its measured depth and scientific-content review pass, but the
-product-level content checker rejects it because a draft without a Zenodo
-concept DOI cannot be declared in the published-record registry. The full gate
-also fails because the technical report and older manuscript are incomplete.
+product-level checker has no published-record title match. The full gate also
+fails because the technical report and older manuscript are incomplete.
 
 | Document | Prose words | Equations | Figures | Tables | Cited works | Algorithms | Status |
 |---|---:|---:|---:|---:|---:|---:|---|
