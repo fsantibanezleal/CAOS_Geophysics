@@ -931,11 +931,11 @@
         },
         {
           "path": "docs/validation/source-content-coverage.json",
-          "sha256": "0b3ad260eb74c272723cb731ac2b77573e36ff29a3b4a86fe61c95d223d4500a"
+          "sha256": "5b6fdd7304994cfafd82bae22a03129cee92c8e956baa8a845f6fdd918081131"
         },
         {
           "path": "docs/validation/source-to-content-review.md",
-          "sha256": "24c958dddb15c0000f33d43a59bcb1ffed4d59e1f2a6f425fd9ca27ed01429c3"
+          "sha256": "9c0b1fc7688e7a76e66cdd95cbd0d378eb8977b45b5d1baa2b1758f8a30416c8"
         },
         {
           "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
@@ -1019,11 +1019,11 @@
         },
         {
           "path": "notebooks/en/02-gravity/03-long-valley-time-lapse-processing.ipynb",
-          "sha256": "28c818bdec42589bd988d750bf11e4103a1b4ce60f8f560318328d361a5d8da4"
+          "sha256": "6403b583b22c4f561b796ecdbfd24e1e2c1d646e2f17c56a10b2433ace160629"
         },
         {
           "path": "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
-          "sha256": "63ddd0892cb68ffa21de9c9ff0375f6085303567be84691aedd26135344c0948"
+          "sha256": "ef3e9fb868de23488625832af1ae6f886ccf3dc1893680f05ad124ac4268c89b"
         }
       ],
       "receipts": []

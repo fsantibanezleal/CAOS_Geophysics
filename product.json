@@ -102,6 +102,9 @@
     "traveltime.run_user_survey",
     "m09_synthetic_control.run",
     "m09_synthetic_control.execute",
-    "m09_synthetic_control.execute_user_survey"
+    "m09_synthetic_control.execute_user_survey",
+    "long_valley_timelapse.parse_source",
+    "long_valley_timelapse.difference",
+    "long_valley_timelapse.build_artifact"
   ]
 }

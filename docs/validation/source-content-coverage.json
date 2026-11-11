@@ -500,7 +500,7 @@
       "methods": [
         "M12"
       ],
-      "title": "Geometry-normalized velocity refinement",
+      "title": "Geometry-normalized residual learning for first-arrival tomography",
       "sources": [
         "https://arxiv.org/abs/2309.06573",
         "https://github.com/lanl/OpenFWI"
