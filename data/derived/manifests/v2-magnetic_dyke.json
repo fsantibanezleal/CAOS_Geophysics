@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "MAGNETIC_DYKE",
+  "artifacts": [
+    {
+      "path": "v2/MAGNETIC_DYKE/reference.json",
+      "bytes": 2653947,
+      "sha256": "3d9da79036045b89c63c7570f852e669c51b1e1d01070e46d8b928af412a98c4"
+    },
+    {
+      "path": "v2/MAGNETIC_DYKE/contrast.json",
+      "bytes": 2629365,
+      "sha256": "a237c63461ab8515d5ef8259974b0d58b0f35fbd8774f3a0695f767d3f8aa97a"
+    },
+    {
+      "path": "v2/MAGNETIC_DYKE/noise.json",
+      "bytes": 2653440,
+      "sha256": "d75ace1e3ea04a4ce531adfeed723f718e24e8b067315489d805e0bdef0d6414"
+    },
+    {
+      "path": "v2/MAGNETIC_DYKE/acquisition.json",
+      "bytes": 2652088,
+      "sha256": "f1c2127418af42bf98991d424dbe35f250aed2420ced38d2bfbd8258f6db4fda"
+    },
+    {
+      "path": "v2/MAGNETIC_DYKE/coverage.json",
+      "bytes": 2654405,
+      "sha256": "f3e8ba4f226df5a29fe37eec5c201af0eabbeb07d894a1d0a1ab7a7ce0f6ef6f"
+    },
+    {
+      "path": "v2/MAGNETIC_DYKE/regularization.json",
+      "bytes": 2655206,
+      "sha256": "bbb7030c47b6574c34e4125289542ac1a68e118660de5b86c66e6d41888fc48b"
+    }
+  ]
+}

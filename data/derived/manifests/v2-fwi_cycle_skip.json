@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "FWI_CYCLE_SKIP",
+  "artifacts": [
+    {
+      "path": "v2/FWI_CYCLE_SKIP/reference.json",
+      "bytes": 25083849,
+      "sha256": "5ae0fbea6c386fc1703184405b27a299dd7ebcdb21b4dd9876b115bb7c183644"
+    },
+    {
+      "path": "v2/FWI_CYCLE_SKIP/contrast.json",
+      "bytes": 25131506,
+      "sha256": "5075425607cbca992635611a42c8ffb4ba6a378e0cf63dbfc8d7eb4d937aecae"
+    },
+    {
+      "path": "v2/FWI_CYCLE_SKIP/noise.json",
+      "bytes": 24969806,
+      "sha256": "a5d565916cf0aebf3f334c6e7c09b160e6d4b720ba03da742cea04e867b27023"
+    },
+    {
+      "path": "v2/FWI_CYCLE_SKIP/acquisition.json",
+      "bytes": 24446450,
+      "sha256": "a1df986495a11a71c1a44f1fd9936b72f6d77c9e00a885079a6ff633334907e2"
+    },
+    {
+      "path": "v2/FWI_CYCLE_SKIP/coverage.json",
+      "bytes": 23360379,
+      "sha256": "b806e3a0a6201be4a5cdc87a74803b9caf989f1392261aa741d2a53be679e4ba"
+    },
+    {
+      "path": "v2/FWI_CYCLE_SKIP/regularization.json",
+      "bytes": 25078266,
+      "sha256": "7ce33fef62a88c36cc8792f3a0b0ad6ecf8a1ac636691949d6e50d5feaadc500"
+    }
+  ]
+}

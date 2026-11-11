@@ -1,0 +1,136 @@
+import { createHash } from 'node:crypto';
+import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { gzipSync } from 'node:zlib';
+
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const inside = (root, rel) => {
+  if (typeof rel !== 'string' || rel === '' || isAbsolute(rel) || /^[a-z]:/i.test(rel)) return false;
+  const resolved = resolve(root, rel);
+  const from = relative(root, resolved);
+  return from !== '' && from !== '..' && !from.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) && !isAbsolute(from);
+};
+
+function pin(source, targetRoot, rel, bytes, digest, maxBytes) {
+  if (!inside(targetRoot, rel) || !Number.isSafeInteger(bytes) || bytes < 1 || bytes > maxBytes || !/^[0-9a-f]{64}$/.test(digest)) {
+    throw new Error(`invalid public artifact declaration: ${rel}`);
+  }
+  const stat = lstatSync(source);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size !== bytes || sha256(readFileSync(source)) !== digest) {
+    throw new Error(`public artifact identity mismatch: ${source}`);
+  }
+  const target = join(targetRoot, rel);
+  mkdirSync(dirname(target), { recursive: true });
+  cpSync(source, target);
+  return rel.replaceAll('\\', '/');
+}
+
+function productIndex(repo, rel) {
+  const path = join(repo, rel);
+  const stat = lstatSync(path);
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 256 * 1024) throw new Error(`invalid product public index: ${rel}`);
+  return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+function recursiveFiles(root) {
+  const out = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const path = join(root, entry.name);
+    if (entry.isSymbolicLink()) throw new Error(`symbolic link in reviewed public source: ${path}`);
+    if (entry.isDirectory()) out.push(...recursiveFiles(path));
+    else if (entry.isFile()) out.push(path);
+    else throw new Error(`unsupported file entry in reviewed public source: ${path}`);
+  }
+  return out;
+}
+
+export default function copyProductData({ derived, out, repo }) {
+  const copied = [];
+  const problems = [];
+  try {
+    const catalog = JSON.parse(readFileSync(join(out, 'v2/catalog.json'), 'utf8'));
+    if (catalog.schema !== 'inverse-earth.catalog/v2' || catalog.complete !== true || catalog.cases.length !== 20) {
+      throw new Error('copied v2 catalog is not the reviewed complete 20-case release');
+    }
+    for (const c of catalog.cases) {
+      if (!Array.isArray(c.variants) || c.variants.length !== 6) throw new Error(`${c.id}: expected six variants in copied catalog`);
+      for (const v of c.variants) {
+        const rel = `v2/${v.path}`;
+        if (!inside(out, rel) || !Number.isSafeInteger(v.bytes) || !/^[0-9a-f]{64}$/.test(v.sha256)) throw new Error(`${c.id}: invalid catalog artifact binding`);
+        const target = join(out, rel);
+        if (!existsSync(target) || lstatSync(target).size !== v.bytes) throw new Error(`${c.id}: copied artifact size mismatch: ${rel}`);
+      }
+    }
+
+    const phaseRoot = join(derived, 'phase/browser-assets/stead');
+    const phase = JSON.parse(readFileSync(join(phaseRoot, 'manifest.json'), 'utf8'));
+    const phaseNames = new Set([
+      'manifest.json', 'ATTRIBUTION.md', phase.benchmark?.file, phase.model?.file,
+      ...(Array.isArray(phase.records) ? phase.records.map((record) => record.waveform_file).filter(Boolean) : []),
+    ]);
+    if (phase.records?.length !== 24 || phase.selection?.qc_valid !== 23 || phase.selection?.qc_rejected !== 1 ||
+        [...phaseNames].some((name) => typeof name !== 'string' || !/^[A-Za-z0-9_.-]+$/.test(name))) {
+      throw new Error('STEAD browser asset manifest does not list the expected reviewed records');
+    }
+    for (const name of phaseNames) {
+      const source = join(phaseRoot, name);
+      const stat = lstatSync(source);
+      if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 12 * 1024 * 1024) throw new Error(`invalid STEAD browser asset ${name}`);
+      const rel = `phase/stead/${name}`;
+      mkdirSync(dirname(join(out, rel)), { recursive: true });
+      cpSync(source, join(out, rel));
+      copied.push(rel);
+    }
+
+    const modelRoot = join(repo, 'models/experimental/m12-physics-cuda-20261004');
+    const modelReceipt = JSON.parse(readFileSync(join(modelRoot, 'm12-physics-browser-receipt.json'), 'utf8'));
+    const trainingReceipt = JSON.parse(readFileSync(join(modelRoot, 'receipt.json'), 'utf8'));
+    const modelBytes = readFileSync(join(modelRoot, 'm12-physics.onnx'));
+    const modelSha = '92e5a3cc5bc70d81c122a1d64c2b4bd722eed47cfa55e2f2473f755cf499f261';
+    const checkpointSha = '23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1';
+    if (modelReceipt.schema !== 'geophysics.m12-browser-model/v1' || modelReceipt.status !== 'parity-verified' ||
+        modelReceipt.model?.sha256 !== modelSha || sha256(modelBytes) !== modelSha ||
+        modelReceipt.checkpoint?.sha256 !== checkpointSha || trainingReceipt.schema !== 'geophysics.m12-physics/v2' ||
+        trainingReceipt.checkpoint_sha256 !== checkpointSha || modelReceipt.training?.scientific_verdict !== 'failed-held-out-comparator' ||
+        modelReceipt.parity?.passed !== true || modelReceipt.parity?.records !== 640 || modelReceipt.parity?.max_absolute_error_m_s > 0.002) {
+      throw new Error('M12 model, checkpoint, negative scientific verdict or browser parity receipt changed');
+    }
+    const receiptBytes = readFileSync(join(modelRoot, 'm12-physics-browser-receipt.json'));
+    if (modelReceipt.model.bytes !== modelBytes.byteLength || modelReceipt.training?.receipt_sha256 !== sha256(readFileSync(join(modelRoot, 'receipt.json')))) {
+      throw new Error('M12 browser receipt does not bind the exact model and training receipt bytes');
+    }
+    copied.push(pin(join(modelRoot, 'm12-physics.onnx'), out, 'models/m12-physics-v2/m12-physics.onnx', modelBytes.byteLength, modelSha, 16 * 1024 * 1024));
+    copied.push(pin(join(modelRoot, 'm12-physics-browser-receipt.json'), out, 'models/m12-physics-v2/m12-physics-browser-receipt.json', receiptBytes.byteLength, sha256(receiptBytes), 64 * 1024));
+
+    const courseIndex = productIndex(repo, 'frontend/src/data/m01-course-record-index.json');
+    if (!Array.isArray(courseIndex) || courseIndex.length !== 3) throw new Error('M01 course index must declare three reviewed synthetic cases');
+    const courseSource = join(derived, 'm01-scientific-course');
+    const courseFiles = courseIndex.flatMap((record, i) => {
+      if (record.scenario_id !== `prism-case-${i}` || record.label_kind !== 'synthetic_control_replay' || record.artifacts?.length !== 11) {
+        throw new Error(`M01 course case ${i} has invalid scope or artifact count`);
+      }
+      return record.artifacts.map((artifact) => {
+        if (!/^prism-case-[012]\/[a-z-]+\.(json|svg|png)$/.test(artifact.path)) throw new Error(`unsafe M01 course path ${artifact.path}`);
+        return pin(join(courseSource, artifact.path), out, `m01-scientific-course/${artifact.path}`, artifact.bytes, artifact.sha256, 32 * 1024 * 1024);
+      });
+    });
+    if (new Set(courseFiles).size !== 33) throw new Error('M01 course artifact paths are not unique');
+    copied.push(...courseFiles);
+
+    const fieldIndex = productIndex(repo, 'frontend/src/data/field-study-index.json');
+    if (fieldIndex.schema !== 'geophysics.field-study-index/v1' || fieldIndex.artifacts?.length !== 1) throw new Error('field study index must declare one reviewed public record');
+    const field = fieldIndex.artifacts[0];
+    if (field.path !== 'long-valley/1982-06_to_1999-07.json') throw new Error(`unexpected field-study path ${field.path}`);
+    copied.push(pin(join(derived, 'field', field.path), out, `field/${field.path}`, field.bytes, field.sha256, 2 * 1024 * 1024));
+
+    const fwiRoot = join(out, 'v2');
+    for (const path of recursiveFiles(fwiRoot).filter((p) => /[\\/]FWI_[A-Z0-9_]+[\\/].+\.json$/.test(p))) {
+      const rel = relative(out, path).replaceAll('\\', '/');
+      writeFileSync(`${path}.gz`, gzipSync(readFileSync(path), { level: 9, mtime: 0 }));
+      copied.push(`${rel}.gz`);
+    }
+  } catch (error) {
+    problems.push(error instanceof Error ? error.message : String(error));
+  }
+  return { copied, absent: [], problems };
+}

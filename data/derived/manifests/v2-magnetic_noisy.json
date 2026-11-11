@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "MAGNETIC_NOISY",
+  "artifacts": [
+    {
+      "path": "v2/MAGNETIC_NOISY/reference.json",
+      "bytes": 2633839,
+      "sha256": "61e6f083b0e1e8b177c0fbf147571501c0f30ef33ecb3d193d3d949a45fb4375"
+    },
+    {
+      "path": "v2/MAGNETIC_NOISY/contrast.json",
+      "bytes": 2608055,
+      "sha256": "eae77eadfbc5c4315a864a641919991585b237a2870b8605dc09c8246ba465fa"
+    },
+    {
+      "path": "v2/MAGNETIC_NOISY/noise.json",
+      "bytes": 2631422,
+      "sha256": "2547ff19af47e6fea0b462b5bcf36ee40117afb031c28df9445f938f9e0e7c19"
+    },
+    {
+      "path": "v2/MAGNETIC_NOISY/acquisition.json",
+      "bytes": 2630242,
+      "sha256": "159cc540e2953b609caa63b9e4a767e5bc3502034e1a4b815b48b7041111ac00"
+    },
+    {
+      "path": "v2/MAGNETIC_NOISY/coverage.json",
+      "bytes": 2633240,
+      "sha256": "392c10e0ec5ef1221ba69fafc230710f393d3a374edbd19e14691e78e45068fe"
+    },
+    {
+      "path": "v2/MAGNETIC_NOISY/regularization.json",
+      "bytes": 2633124,
+      "sha256": "e4c673c11b06c8ba384d73579a10ab98e9986f9c75be40b1cc43111057904c86"
+    }
+  ]
+}

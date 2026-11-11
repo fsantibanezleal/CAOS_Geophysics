@@ -133,12 +133,26 @@ describe("native local joint output, not a browser inverse", () => {
     expect(result.result).toBeNull(); expect(result.model).toBeNull(); expect(result.frozen).toBeNull();
     await expect(importJointOutput(await mutateJson(files, "aborted/aborted.json", v => { (v.payload as Record<string, unknown>).plan_sha256 = "0".repeat(64); }))).rejects.toThrow("retained failure identity binding");
   });
-  it.skipIf(!outputMatrix)("imports every actual24-case output without excluding failures", async () => {
+  const matrixBatches = Array.from({ length: 6 }, (_, batch) => ({
+    label: `${String(batch * 4).padStart(2, "0")}-${String(batch * 4 + 3).padStart(2, "0")}`,
+    indices: Array.from({ length: 4 }, (_, offset) => batch * 4 + offset),
+  }));
+  const matrixTotals = { attempts: 0, nonconverged: 0 };
+  it.skipIf(!outputMatrix).each(matrixBatches)("imports actual output cases $label without excluding failures", async ({ indices }) => {
     let actualAttempts = 0, nonconverged = 0;
-    for (let i = 0; i < 24; i++) { const r = await importJointOutput(actualJointFiles(join(outputMatrix!, `joint-control-${String(i).padStart(2, "0")}`, "output")));
-      actualAttempts += r.candidates.length; nonconverged += r.candidates.filter(c => c.status === "nonconverged").length; }
-    expect(actualAttempts).toBe(624); expect(nonconverged).toBeGreaterThan(0);
+    for (const i of indices) {
+      const r = await importJointOutput(actualJointFiles(join(outputMatrix!, `joint-control-${String(i).padStart(2, "0")}`, "output")));
+      actualAttempts += r.candidates.length;
+      nonconverged += r.candidates.filter(c => c.status === "nonconverged").length;
+    }
+    expect(actualAttempts).toBe(indices.length * 26);
+    matrixTotals.attempts += actualAttempts;
+    matrixTotals.nonconverged += nonconverged;
   }, 120_000);
+  it.skipIf(!outputMatrix)("retains the complete actual24-case candidate count and failures", () => {
+    expect(matrixTotals.attempts).toBe(624);
+    expect(matrixTotals.nonconverged).toBeGreaterThan(0);
+  });
   it.skipIf(!maximum)("admits actual maximum-count resource output without recovery claim", async () => {
     const r = await importJointOutput(actualJointFiles(maximum!)); expect(r.model!.arrays.density_kg_m3.shape).toEqual([1932]);
     expect(r.model!.arrays.density_kg_m3.values.every(v => v === 0)).toBe(true);
