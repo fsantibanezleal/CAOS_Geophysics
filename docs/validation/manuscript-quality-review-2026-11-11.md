@@ -1,77 +1,147 @@
-# Manuscript quality review
+# Manuscript, shell and template review
 
-Date: 2026-11-11. This review applies the binding CAOS manuscript content bar in
-`_CAOS_MANAGE/conventions/manuscript-content-bar.md` to the current geophysics
-checkout. It is a release finding, not manuscript approval.
+Date: 2026-11-11. This is a local release review against the binding CAOS
+manuscript bar and template 0.15.006. It is not scientific acceptance or a
+release approval.
 
-## Gate result
+## Manuscript gate
 
-The product does not pass the manuscript gate. The authoritative command
-`python tools/zenodo/check_manuscript_depth.py <product> --report`, run from
-CAOS_MANAGE, returned five findings:
+The full local `check_manuscript_depth.py <product> --report` run finds four
+remaining product-level defects:
 
 1. `manuscripts/geophysics-identifiability` has no LaTeX `main.tex`.
 2. `manuscripts/inverse-earth-studio-report-0.04.003/coverage.json` is missing.
 3. `manuscripts/m12-nullspace-refinement-v0.01/coverage.json` is missing.
-4. No manuscript is declared as the required technical report.
-5. The SDD's proposed BS-1 method has no manuscript mapped to it.
+4. No manuscript folder is declared as the required technical report.
 
-Measured content against the binding floors:
+The remote branch baseline at `1e208f8` has a fifth finding: BS-1 has no
+manuscript. This working tree now contains a draft BS-1 paper and a `coverage.json`
+claim map. Its measured depth and scientific-content review pass, but the
+product-level content checker rejects it because a draft without a Zenodo
+concept DOI cannot be declared in the published-record registry. The full gate
+also fails because the technical report and older manuscript are incomplete.
 
-| Manuscript | Prose words | Display equations | Figures | Tables | Cited works | Algorithms | Required floor |
+| Document | Prose words | Equations | Figures | Tables | Cited works | Algorithms | Status |
 |---|---:|---:|---:|---:|---:|---:|---|
-| Technical report 0.04.003 | 3,357 | 0 | 1 | 1 | 14 | 0 | 12,000 / 25 / 10 / 8 / 30 / 3 |
-| M12 null-space study 0.01 | 2,837 | 3 | 6 | 4 | 16 | 1 | 7,000 / 12 / 6 / 4 / 25 / 1 |
+| Technical report 0.04.003 | 3,357 | 0 | 1 | 1 | 14 | 0 | Far below report floor |
+| M12 null-space study 0.01 | 2,837 | 3 | 6 | 4 | 16 | 1 | Below manuscript floor; raw inputs/checkpoint unavailable for full replay |
+| BS-1 geometry-normalized residual study v0.01 draft | 7,655 | 16 | 7 | 6 | 32 | 1 | Measured depth, voice and independent scientific review pass at stated scope; unpublished-record gate remains open |
 
-The existing technical report and null-space manuscript are both LaTeX, but neither
-meets its content floor. The technical report misses every measured floor. The
-null-space paper meets only the figure, table and algorithm counts; it is short by
-4,163 prose words, nine display equations and nine cited works, before section,
-uncertainty, ablation, caption, label and figure-generation review.
+The binding floors are 12,000/25/10/8/30/3 for a technical report and
+7,000/12/6/4/25/1 for a method manuscript (words/equations/figures/tables/
+references/algorithms). The BS-1 draft adds an artifact-generated resolution-
+kernel spectrum, numerical rank, supported-cell and angular-gap diagnostics. It
+makes no untested lower-variance claim and does not claim that its negative
+benchmark demonstrates novelty or advantage.
 
-## Proposed method and evidence boundary
+### BS-1 evidence and scientific limits
 
-The SDD's BS-1 is geometry-normalized, physics-conditioned residual input for a
-bounded travel-time velocity CNN. Its current frozen `physics-v2` run trained on
-the RTX 4070 Laptop GPU for 40 epochs and selected epoch 40. Its held-out result is
-negative: on the 160 joint family/acquisition-shift surveys, learned-to-classical
-RMSE ratios are 2.1942 for velocity and 5.5854 for independently computed travel
-time; all 160 cases exceed the predeclared forward-residual threshold. The locked
-advantage predicate therefore fails. The experiment supports no improvement,
-novelty, field accuracy or geological-generalization claim.
+The SDD defines BS-1 as geometry-normalized, physics-conditioned residual input
+for travel-time velocity refinement. The frozen GPU run selected epoch 40 of 40.
+On 160 joint family/acquisition-shift synthetic surveys, learned-to-classical
+RMSE ratios are 2.1942 for velocity (95% paired bootstrap interval 2.1328–2.2641)
+and 5.5854 for observed-pick travel time (5.5093–5.6623); all 160 cases exceed
+the validation-derived 6.091015 ms screen. The locked advantage rule fails. The
+paper describes the comparison with a regularized straight-ray baseline and a
+separately discretized bilinear scorer that also generates the synthetic picks,
+but does not claim exhaustive comparison with current eikonal, Bayesian or
+learned tomography implementations. Results remain
+specific to the frozen synthetic generator and its acquisition shifts.
 
-The bilingual Level 4 notebooks replay this result and the hash-bound receipt is
-recorded in `bs1-learning-lesson-replay-2026-11-11.md`. That is valuable negative
-experimental evidence, but it is not a manuscript and does not close the BS-1
-paper requirement. The earlier M12 null-space manuscript studies a different
-projection follow-up and cannot be relabelled as the BS-1 paper. The two studies
-use different checkpoints/cohorts and the older follow-up explicitly lacks the
-raw arrays required for full replay.
+The paper corrects the implementation description: the reference solves an
+unconstrained regularized normal system and clips physical slowness after the
+solve. It does not label this as a bounded least-squares optimizer. Later channel
+ablations use new test-cohort seed bases but reuse the primary training seed;
+they are exploratory and do not alter the locked primary result. The paper was
+rebuilt to a 25-page PDF. Layouts A/B/C have 252/254/251 supported cells and
+numerical kernel ranks 126/128/127 at a relative eigenvalue cutoff of $10^{-10}$;
+their largest axial-angle gaps are 11.30/10.96/11.64 degrees. These describe the
+discretized acquisition operators, not geological uncertainty. Visual review of
+pages 1, 12, 15, 16, 19 and 25 found a readable title/header, legible equations,
+the complete diagnostics table and no clipping on those inspected pages.
 
-## Required work before publication
+Local verification performed:
 
-- Create the technical report as a substantive LaTeX account of every implemented
-  method, every data contract, each pipeline stage and the results actually shown.
-- Create a separate LaTeX manuscript for BS-1 that reports the negative result,
-  clearly limits it to the frozen synthetic generator, and does not make a
-  superiority or novelty claim. The exploratory two-channel ablation is now
-  recorded in `bs1-ablation-2026-11-11.md`; describe its post-hoc status and
-  limitations without using it to tune or rescue the primary held-out result.
-- Generate figures and result tables from committed scripts and hash-verified
-  artifacts; do not hand-enter values or treat the external training directory as
-  a repository deliverable.
-- Add `coverage.json` for each qualifying manuscript, exact titles in coverage
-  and `product.json`, the required sections and section-level depth, notation,
-  uncertainty, caption/label references and checked citations.
-- Re-run the full content gate and obtain a separate scientific review of claims,
-  methods, figures and title support. Do not reserve a DOI or publish before both
-  checks pass.
+- `build_analysis.py`: receipt and source hashes verified; seven figures and five
+  generated result tables produced.
+- `latexmk -xelatex -interaction=nonstopmode -halt-on-error main.tex`: success,
+  25-page PDF. No undefined reference/citation or overfull-box failure appeared.
+- `check_manuscript_depth.py --only geometry-normalized-traveltime-refinement-v001 --report`:
+  measured 7,655 words, 16 equations, 7 figures, 6 tables, 32 references and one
+  algorithm; the content gate reports the missing published-record title match.
+- `check_manuscript_voice.py` and the product `check_internal_names.py`: pass.
+- `git diff --check`: pass.
+- A separate scientific reviewer found the paper passes the content bar at its
+  stated synthetic scope, verified formulas, hash-bound results and all seven
+  figures, and found no P1 issue. Its three P2 language/citation findings were
+  corrected. The reviewer then verified the revised wording, removed citations,
+  rebuilt PDF and affected rendered pages; no remaining blocker was found.
 
-## Related shell/template reconciliation
+The paper remains a draft. It has no DOI and is not published, so it is kept in
+the manuscript workspace and is not added to the Zenodo-backed `product.json`
+manifest. No DOI is invented to make the checker green. The technical report and
+M12 paper also have no assigned DOI in their LaTeX headers.
 
-CAOS_APP_SHELL 0.26.0 is merged to both `develop` and `main` (PRs #215 and #216).
-The main-branch release CI, including its long browser/G15 gate, is still running.
-The public npm version remains 0.25.0 and CAOS_Geophysics still pins 0.25.0, so
-the product has not yet adopted the 0.26.0 package. The local product template is
-clean and synced to `develop` 0.15.006. This review does not claim a new app build,
-host acceptance or deployment.
+## Technical report and earlier null-space manuscript
+
+The report remains a short overview rather than the required thesis-depth account
+of all implemented methods, data contracts, pipeline stages, results and limits.
+Its current source is LaTeX, but it lacks measured depth and generated evidence
+coverage. It cannot be repaired by adding a coverage file alone.
+
+The M12 null-space study is a distinct follow-up, not a substitute for the BS-1
+paper. It compares a projected candidate against a straight-ray baseline on
+four synthetic cohorts and explicitly says it does not reproduce or outperform
+the cited contemporary methods. Its receipt is present, but the exact source
+checkpoint and raw generated inputs required for full solver replay are absent.
+The paper is below the content floor and must not be presented as fully
+reproducible or as a state-of-the-art comparison.
+
+## Shell and product-template compatibility
+
+All three repositories were fetched from origin. The product checkout is clean
+apart from this session's manuscript and review work. The shared Shell and
+Template checkouts contain additional dirty files from their own in-progress
+branches; those edits were preserved and not staged or rewritten.
+
+- The product records template instantiation origin `0.13.001`; this is not a
+  claim that it conforms to the current template. Latest available template tag
+  verified remotely is `v0.15.006`; its shared checkout has active uncommitted
+  `0.15.007` work, which was preserved.
+- Product frontend and lockfile still pin Shell `0.25.0`. `npm view` reports
+  `0.25.0` as the published version. Shell main contains merged `0.26.0` work,
+  but there is no published `v0.26.000` tag/package to adopt; the product remains
+  on the newest published package.
+- A fresh template-base scan of remote product commit `1e208f8` was started. It
+  completed its early gates, then stalled in `check_content_standards.py`; the
+  script was stopped and its exact temporary copy was removed after log review.
+  It is not a full template pass.
+- Fresh scan findings include manuscript/schema and manuscript-depth failures,
+  a document-check import crash (`contract_schemas`), readiness import failure
+  (`pipeline`), base-integrity failures (shell modes, unadmitted model assets and
+  repository-local machine paths), and conflicting pins in the technology
+  matrix. `check_doc_paths.py` also reports unresolved paths. The content
+  standards guard did not complete.
+- The draft BS-1 entry was removed from `product.json` because that manifest
+  accepts DOI-backed records; the paper's draft state remains explicit here and
+  in this review. As a result, the manuscript title-to-registry content gate
+  remains open until a compliant Zenodo record exists; no DOI or publication is
+  fabricated.
+- The deploy-place guard recognizes the VPS target. Its output says
+  `deploy/` has no service unit, so the scan does not establish that the live
+  service is deployable or accepted.
+
+The user's single-origin rule remains decisive: the ML VPS is the sole app target;
+GitHub Pages is not an app deployment. The VPS currently serves the legacy
+release, so no new deployment was made from this failing product state.
+
+## Release disposition
+
+This review found and corrected scientific-description defects in the BS-1
+draft. The independent scientific verdict passes at the paper's stated
+synthetic scope, but the product release bar remains open: the unpublished
+manuscript registry, full technical report, M12 paper, data and notebook gates,
+current template compatibility, method matrix, and actual VPS acceptance remain
+incomplete. Do not merge to `develop`/`main` or activate a VPS release until the
+required gates pass. Publishing the reviewed manuscript would require a separate
+Zenodo deposit action; that has not been performed.

@@ -1,0 +1,16 @@
+{
+  "kind": "manuscript",
+  "title_support": [
+    "tab:primary",
+    "fig:primary-ratios",
+    "tab:ablation",
+    "fig:ablation",
+    "fig:architecture",
+    "fig:features",
+    "fig:kernel-spectrum",
+    "tab:kernel-diagnostics"
+  ],
+  "claims": {
+    "BS-1": "sec:method"
+  }
+}
