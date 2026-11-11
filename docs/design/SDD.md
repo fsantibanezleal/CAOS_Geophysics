@@ -48,13 +48,13 @@ Format adapters are separate and fail closed: gravity station tables; magnetic l
 
 | Layer | Contract and pinned implementation |
 |---|---|
-| Shared interface | `@fasl-work/caos-app-shell` exact version 0.25.0; shell owns design tokens, fonts, controls, page structure, route chrome and guided-scene primitives. Product-owned story views must present sourced scientific quantities. |
+| Shared interface | `@fasl-work/caos-app-shell` exact version 0.26.0; shell owns design tokens, fonts, controls, page structure, route chrome and guided-scene primitives. Product-owned story views must present sourced scientific quantities. |
 | Routes | App, Introduction, Methodology, Implementation, Experiments, Benchmark; App at `/app`; `/` opens Introduction. |
 | Web | React 19, TypeScript, Vite, Three.js, uPlot, ONNX Runtime Web; exact lockfile is `frontend/package-lock.json`. |
 | Numerical pipeline | Python 3.12; exact scientific and notebook pins in `requirements-precompute.txt`, `requirements-gpu.txt` and `notebooks/requirements.txt`. |
 | API runtime | Pinned FastAPI/runtime requirements, isolated from the offline pipeline environment; numerical work runs in the separate worker. |
 | Data and artifacts | Versioned JSON contracts, explicit axes/units, content hashes and reviewed source ledger; public build copies only allow-listed derived artifacts. |
-| Template | Instantiated from CAOS_PRODUCT_TEMPLATE 0.13.001, retained in `.template-version`. Template 0.15.007 is merged to shared `develop` at `265d3ece6fba3533229497acf69ea50adce32416` but is not tagged as a release. The product has adopted the declared-artifact publication contract from 0.15.006; 0.15.007's stage-input refusal guard does not apply to the product's current pipeline stages. Remaining template-compliance findings are listed in `docs/validation/template-shell-review-2026-11-10.md` and the current manuscript review. The original instantiation marker is not rewritten to imply a full template upgrade. |
+| Template | Instantiated from CAOS_PRODUCT_TEMPLATE 0.13.001, retained in `.template-version`. Current released base is CAOS_PRODUCT_TEMPLATE 0.15.008; the product adopts the exact Shell 0.26.0 package and retains its product-owned ingestion pipelines. The upstream 0.15.007 authored-stage-input guard is not applicable because this product does not use the template's `scripts/local/workflow.py` stage-input runner. Remaining template-compliance findings are listed in `docs/validation/template-shell-review-2026-11-10.md` and the current manuscript review. The original instantiation marker is not rewritten to imply a full template upgrade. |
 
 ## Resources
 

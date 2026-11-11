@@ -78,10 +78,10 @@ describe("frontend route and shell foundation", () => {
     const manifest = JSON.parse(read("../../package.json"));
     const lock = JSON.parse(read("../../package-lock.json"));
     const installed = JSON.parse(read("../../node_modules/@fasl-work/caos-app-shell/package.json"));
-    expect(manifest.dependencies["@fasl-work/caos-app-shell"]).toBe("0.25.0");
-    expect(lock.packages[""].dependencies["@fasl-work/caos-app-shell"]).toBe("0.25.0");
-    expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.25.0");
-    expect(installed.version).toBe("0.25.0");
+    expect(manifest.dependencies["@fasl-work/caos-app-shell"]).toBe("0.26.0");
+    expect(lock.packages[""].dependencies["@fasl-work/caos-app-shell"]).toBe("0.26.0");
+    expect(lock.packages["node_modules/@fasl-work/caos-app-shell"].version).toBe("0.26.0");
+    expect(installed.version).toBe("0.26.0");
     const entry = read("../main.tsx");
     const releaseVersion = read("../../../VERSION").trim();
     const metadata = entry.slice(entry.indexOf(`version: "${releaseVersion}"`), entry.indexOf("  architecture,"));
@@ -101,7 +101,7 @@ describe("frontend route and shell foundation", () => {
     expect(gate).toContain("product.workbench_route ?? '/app'");
     expect(gate).toContain("workbench: appRoute");
     expect(gate).toContain("requireFocus: true");
-    expect(gate).toContain("expectedShellVersion = '0.25.0'");
+    expect(gate).toContain("expectedShellVersion = '0.26.0'");
     expect(gate).toContain("requireShowcase: true");
     expect(gate).toContain("GEOPHYSICS_GATE_OUTPUT");
     expect(gate).toContain("outside every Git checkout");
