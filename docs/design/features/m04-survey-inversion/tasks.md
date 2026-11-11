@@ -26,6 +26,17 @@ refit, immutable freeze and one-time sealed evaluation are not complete. The
 passing small inner control and a retained non-success are implementation
 evidence, not sparse-method acceptance.
 
+A single sensitivity replay of that same first fold used a process-local
+conditioning-phase limit of 1024 while keeping the production 120-second wall
+and byte limits, numerical tolerances, beta, epsilon schedule and model bounds
+unchanged. Three epsilon stages converged, but the fourth reached the wall cap;
+the remaining stages and candidate selection did not run. The first inner solve
+used 635 conditioning phases with a 762,623,424-byte prospective peak below the
+805,306,368-byte cap. This is a diagnostic negative result, not a production
+cap change or method pass. See the [phase sensitivity record](validation.md#2026-11-11-sparse-first-fold-phase-limit-sensitivity-diagnostic-only).
+Optimize solver work under the existing accepted limits before any candidate
+matrix run.
+
 ## T41: source/protocol and geometry foundation
 
 Requirements R-401..404, R-413.

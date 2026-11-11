@@ -1,5 +1,47 @@
 # Independent validation and complete acceptance matrix
 
+## 2026-11-11 sparse first-fold phase-limit sensitivity (diagnostic only)
+
+The exact S2-A `linear_tmi_nT`, fold-0, beta-`0.0001` request was run once with
+the production 120-second per-fit wall clock and byte cap unchanged. A
+process-local diagnostic override raised only
+`physical_reduced_optimizer.PHASE_LIMIT` from 512 to 1024; no source file,
+stopping tolerance, epsilon, beta, model bound, or scientific acceptance rule
+was changed. This is a sensitivity diagnostic, not an accepted production
+configuration or an M04 pass.
+
+The run returned `failed / wall_cap` at 120.016 seconds. Epsilons `0.1`, `0.05`,
+and `0.025` converged after 3, 1, and 1 outer updates. At `0.0125`, the final
+inner call reached the wall cap after three solver iterations; the remaining
+four epsilon stages did not run, and no candidate selection or outer evaluation
+occurred. The first epsilon's 528-parameter solve used 127 accepted iterations
+and 635 conditioning phases. Its prospective memory peak was 762,623,424 bytes
+against the unchanged 805,306,368-byte limit. The later stages each needed
+three conditioning phases in their completed inner calls. The full eight-stage
+schedule therefore remains incomplete.
+
+Evidence identity: checkout `d975d0456db350a5b80f25fa1064e0ac454db1f0`;
+request SHA-256
+`e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa`;
+`magnetic_calibration.py` SHA-256
+`58e33b05bdd796bf62535fa6b9068b9d41b5f28020d57487e04162d7305e5ded`;
+`physical_reduced_optimizer.py` SHA-256
+`22bf04a7e260b5f93c2e54430f54c3d3464150b3ce78d861c8236bc3d6b21aad`;
+`magnetic_optimizer_adapter.py` SHA-256
+`9655f02dcd1becc3a994cf1956dfa130899cd06e01a5f7d0d6c58a1bcA544f4f`;
+Python 3.12.10, NumPy 2.2.6, SciPy 1.15.2, SimPEG 0.25.2, discretize 0.12.0,
+single-thread BLAS. The four LaTeX build intermediates in the manuscript
+directory were present before this diagnostic and were not touched.
+
+The phase-cap sensitivity shows that the 512-phase refusal is not the only
+cause: continuing past it reaches the unchanged wall limit before completing
+the frozen schedule. Do not raise the cap or wall limit to call this accepted.
+The next solver change must reduce work per accepted model step while retaining
+the original noise objective, active-bound policy, byte budget, wall budget,
+epsilon schedule, terminal certificates, and outer-data seal. Re-run only this
+first failing fold after a source change; do not launch the candidate matrix
+until it passes all eight stages and its full independent certificate.
+
 ## 2026-11-11 selective likelihood decoding
 
 The fold assembler and calibration path previously materialized the complete
