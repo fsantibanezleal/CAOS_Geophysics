@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import re
 import sys
@@ -18,6 +19,38 @@ ROOT = Path(__file__).resolve().parents[1]
 CATALOG = Path("data/derived/v2/catalog.json")
 READINESS = Path("data/derived/readiness.json")
 VERSION = re.compile(r"^\d+\.\d{2}\.\d{3}$")
+
+
+def custom_provider(root: Path):
+    """Load only an explicitly declared, guarded provider from the product checkout."""
+    config_path = ROOT / "scripts/local/workflow.json"
+    if not config_path.is_file():
+        return None
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    name = config.get("readiness_provider")
+    if name is None:
+        if config.get("product_admission"):
+            raise ValueError("custom product admission requires an explicit readiness_provider script")
+        return None
+    if not isinstance(name, str) or not name or Path(name).is_absolute() or ".." in Path(name).parts:
+        raise ValueError("readiness_provider must name a Python script inside the product")
+    path = ROOT / name
+    if path.suffix != ".py" or not path.is_file() or not path.resolve().is_relative_to(ROOT):
+        raise ValueError("readiness_provider is missing or escapes the product")
+    for component in (path, *path.parents):
+        if component == ROOT:
+            break
+        if component.is_symlink() or getattr(component, "is_junction", lambda: False)():
+            raise ValueError("readiness_provider cannot contain redirected paths")
+    spec = importlib.util.spec_from_file_location("geophysics_readiness_provider", path)
+    if spec is None or spec.loader is None:
+        raise ValueError("readiness_provider cannot be loaded")
+    provider = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(provider)
+    validate = getattr(provider, "validate", None)
+    if not callable(validate):
+        raise ValueError("readiness_provider must implement validate(root)")
+    return validate
 
 
 def document(root: Path) -> dict:
@@ -87,12 +120,23 @@ def document(root: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--repo-root", type=Path, default=ROOT)
+    parser.add_argument("judged_root", nargs="?", type=Path)
+    parser.add_argument("--repo-root", type=Path)
     parser.add_argument("--write", action="store_true", help="write the deterministic readiness record")
     args = parser.parse_args()
-    root = args.repo_root.resolve()
+    if args.judged_root is not None and args.repo_root is not None:
+        parser.error("pass either judged_root or --repo-root, not both")
+    root = (args.judged_root or args.repo_root or ROOT).resolve()
     output = root / READINESS
     try:
+        provider = custom_provider(ROOT)
+        if provider is not None:
+            if args.write:
+                raise ValueError("custom readiness providers are validation-only")
+            if provider(root) is False:
+                raise ValueError("custom readiness provider returned false")
+            print("readiness: current (declared product provider)")
+            return 0
         fresh = document(root)
         expected = json.dumps(fresh, separators=(",", ":"), ensure_ascii=False) + "\n"
         if args.write:
@@ -110,8 +154,8 @@ def main() -> int:
         print(f"readiness: current ({fresh['state']}; {fresh['counts']['cases']} cases, "
               f"{fresh['counts']['variants']} variants, {fresh['artifacts']['present']} artifacts present)")
         return 0
-    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
-        print(f"readiness: invalid ({exc})")
+    except Exception as exc:
+        print(f"readiness: invalid admission provider\n  {exc}")
         return 1
 
 
