@@ -4,6 +4,6 @@ This directory contains a working report draft. The page-one header deliberately
 
 ## Build
 
-From this directory, run `./build.ps1`. The script generates the LaTeX fragments from `abstract.md` and `body.md`, assembles `main.tex` from `main.tex.in`, and compiles `main.pdf` with `latexmk` and XeLaTeX. Figure assets are in `figures/` and are embedded by relative path.
+From this directory, run `./build.ps1`. The script assembles `main.tex` from `main.tex.in` and compiles `main.pdf` directly from the LaTeX sources with `latexmk` and XeLaTeX. Figure assets are in `figures/` and are embedded by relative path.
 
-The scientific text is in `body.md`; the short abstract is in `abstract.md`. The LaTeX files are generated outputs plus the template. Confirm the PDF visually after changes. Numerical claims cite their underlying repository artifacts; the report does not claim field validation or release acceptance.
+The report source is `body.tex` and the abstract source is `abstract.tex`. `main.tex.in` assembles both with the bibliography and page-one header. Confirm the PDF visually after changes. Numerical claims cite their underlying repository artifacts; the report does not claim field validation or release acceptance.

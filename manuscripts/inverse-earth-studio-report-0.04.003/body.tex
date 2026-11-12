@@ -260,8 +260,8 @@ worsening susceptibility. Neither is a joint two-property recovery gain.
 In a deliberately conflicting case, the negative control rejects a
 general claim that structural or petrophysical coupling must help.
 
-\subsubsection{4.4 Learned methods and the beyond-established
-experiment}\label{learned-methods-and-the-beyond-established-experiment}
+\subsubsection{4.4 Learned methods and residual
+refinement}\label{learned-methods-and-residual-refinement}
 
 The original gravity CNN predicts column density rather than a
 depth-resolved volume, reflecting the non-identifiability of depth from
@@ -286,16 +286,39 @@ comparisons. The separate null-space-constrained residual study reports
 velocity RMSE ratio 0.9701 (paired case-bootstrap interval
 0.9661--0.9737) and independent travel-time RMSE ratio 0.9967
 (0.9950--0.9983); the aggregate ratios improve in all four fixed
-held-out cohorts. The null-space-follow-up scorer used an infinite
-threshold, so the saved exceedance counts are not a valid threshold
-assessment and are not interpreted here. The paired intervals resample
-case IDs and compute the ratio of mean per-case RMSEs over 20,000 PCG64
-draws (seed 6122026); the exact calculation is retained in
+held-out cohorts. Its original scorer used an infinite threshold, making
+the stored zero-exceedance flags invalid. A separate calibration-only
+reconciliation sets one 1.0649004873 ms threshold from the 95th
+percentile of learned-oracle errors and applies a strict greater-than
+rule to retained per-case values. It flags 7 of 160 in-distribution, 80
+of 80 family-shift, 3 of 80 acquisition-shift and 160 of 160 joint-shift
+cases. These are synthetic oracle-error diagnostics, not field QC,
+calibrated probabilities or geological classifications, and they do not
+change the RMSE results or method status. The threshold calculation is
+retained in
+\url{data/derived/v2/models/m12-nullspace-v1_1/threshold-reconciliation.json}
+and its method and limitations are documented in
+\url{docs/validation/m12-nullspace-threshold-reconciliation-2026-10-30.md}.
+The paired intervals resample case IDs and compute the ratio of mean
+per-case RMSEs over 20,000 PCG64 draws (seed 6122026); the exact
+calculation is retained in
 \url{docs/validation/m12-nullspace-v1_1-bootstrap-2026-10-30.json}.
 These intervals quantify variation within the fixed synthetic cohorts,
-not natural-geology uncertainty. The result is specific to that protocol
-and cohort. It does not change the failing M12 checkpoint result,
-establish geological recovery, or demonstrate field transfer.
+not natural-geology uncertainty.
+
+A historical hash-bound compatibility replay verified the retained
+metric computation across four cohorts while preserving the checkpoint
+hash and selected parameters. A later custody review found that the
+external run directory, source checkpoint and generated raw inputs were
+absent from the checked locations. The repository keeps per-case metrics
+for reanalysis, but not the inputs needed to regenerate the original
+solver run. The historical replay therefore does not establish current
+full reproduction or field-supported performance. It does not change the
+failing M12 checkpoint comparison, establish geological recovery or
+demonstrate field transfer. The relevant records are
+\url{docs/validation/m12-nullspace-v1_1-compatible-replay-2026-10-31.json}
+and
+\url{docs/validation/m12-nullspace-v1_1-custody-status-2026-11-05.md}.
 
 The proposed coverage-conditioned correction asks whether a
 dimensionally consistent, coverage-conditioned learned residual improves

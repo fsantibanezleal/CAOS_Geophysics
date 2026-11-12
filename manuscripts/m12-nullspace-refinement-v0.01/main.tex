@@ -16,8 +16,8 @@
 \setlength{\parskip}{5pt}
 \setlength{\emergencystretch}{3em}
 \newcommand{\doctype}{Working manuscript}
-\newcommand{\docversion}{v0.01}
-\newcommand{\docdate}{5 November 2026}
+\newcommand{\docversion}{v0.02}
+\newcommand{\docdate}{12 November 2026}
 \newcommand{\versiondoi}{not-assigned}
 \newcommand{\conceptdoi}{not-assigned}
 \newcommand{\docrepo}{github.com/fsantibanezleal/CAOS\_Geophysics}
@@ -46,7 +46,7 @@ Not peer reviewed. Source code, data and computational records: \href{https://gi
 \headerblock
 
 \begin{abstract}
-Learned inverse maps can return velocity perturbations that fit their training distribution but disagree with an acquisition operator. The frozen earlier supervised residual correction failed its joint out-of-distribution gate: learned-to-L2 velocity RMSE was 1.0437 and independent travel-time RMSE was 1.3961; the travel-time ratio exceeded one in every evaluated cohort. A later synthetic follow-up projects a frozen learned slowness correction into the null space of a straight-ray path-length matrix, then applies bounded velocity conversion. Its four test-cohort aggregate ratios were below one for both metrics; on joint shift they were 0.9701 (paired case-bootstrap 95\% interval 0.9661--0.9737) and 0.9967 (0.9950--0.9983). The two experiments use different cohorts, and no raw unprojected prediction is retained for the follow-up cases, so this comparison cannot isolate the projection's incremental effect. The exact source checkpoint and raw generated inputs are also absent from the current checkout, preventing a full replay. These bounded synthetic records neither establish a new null-space method nor demonstrate field transfer, geological recovery or superiority to current eikonal and learned tomography methods.
+Learned inverse maps can return velocity perturbations that fit their training distribution but disagree with an acquisition operator. The frozen supervised residual correction failed its joint family-and-acquisition comparison: learned-to-L2 velocity RMSE was 1.0437 and independent travel-time RMSE was 1.3961; travel-time error was higher in every evaluated cohort. A separate synthetic follow-up projects a frozen learned slowness correction into the null space of a straight-ray path-length matrix and then applies bounded velocity conversion. Its four test-cohort aggregate ratios were below one for both metrics; on joint shift they were 0.9701 (paired case-bootstrap 95\% interval 0.9661--0.9737) and 0.9967 (0.9950--0.9983). A calibration-only threshold reanalysis of retained synthetic learned-oracle errors used 1.0649 ms and flagged 160 of 160 joint-shift cases. This diagnostic is not field accuracy. The two correction studies use different cohorts, and no unprojected prediction is retained for the follow-up cases, so projection's incremental effect is unidentified. A historical hash-bound compatibility replay verified four cohorts, but current custody checks found the raw inputs and checkpoint unavailable for a full rerun. The results do not establish a new null-space method, field transfer, geological recovery or superiority to published tomography methods.
 \end{abstract}
 
 \section{Introduction}
@@ -96,7 +96,11 @@ The null-space follow-up uses that frozen checkpoint and an independently frozen
 
 Velocity RMSE is computed against the synthetic generator's true velocity. Travel-time error is computed with an independent bilinear forward operator rather than reusing only the straight-ray matrix used for projection. Ratios are projected-candidate RMSE divided by straight-ray L2 baseline RMSE; values below one favor the projected candidate for that aggregate metric. The 95\% intervals resample paired case identifiers with replacement and calculate the ratio of mean per-case RMSEs on each of 20,000 draws using NumPy PCG64, seed 6122026 and linear quantiles. They quantify resampling variation within each fixed generator cohort, not variation across geological settings.
 
-The scorer passed an infinite value as its forward-threshold parameter. Its stored zero-exceedance fields are therefore not a threshold test and are excluded from interpretation. This does not alter the RMSE values or the calibration rule above, which uses the two aggregate ratios.
+The archived scorer passed an infinite value as its forward-threshold parameter, so its stored zero-exceedance fields are invalid threshold results. A separate post hoc calculation applies one threshold, 1.0649004873 ms, defined as the 95th percentile of calibration learned-oracle RMSE and held fixed across all cohorts. Table~\ref{tab:threshold-reconciliation} reports the resulting counts from the retained per-case errors. It flags 160 of 160 joint-shift cases and 80 of 80 family-shift cases, while only 3 of 80 acquisition-shift cases exceed the threshold. These are synthetic cohort diagnostics derived from an oracle error, not a field detector, calibrated probability or measure of geological accuracy; they do not change the RMSE comparison or the study's evidence limits.
+
+\input{generated/threshold-reconciliation-table.tex}
+
+The historical compatibility replay verified the hash-bound metric computation over four cohorts and retained the original source identities. A later custody check found that the external run directory, exact source checkpoint and raw generated inputs were no longer available in the checked locations. The replay is therefore historical evidence of compatibility, not a current full regeneration of the solver inputs and predictions. The current repository retains per-case metric rows for reanalysis, but those rows cannot replace raw arrays or a training checkpoint.
 
 \begin{table}[htbp]
 \centering
@@ -136,9 +140,10 @@ The corrected feature CNN fails the predeclared joint-shift comparison. Its velo
 \centering
 \caption{Archived earlier residual-correction ratios compare the learned estimate with the matched straight-ray L2 model across validation and four synthetic test cohorts.}
 \label{tab:cnn-failure}
+\small
 \begin{tabular}{lrrr}
 \toprule
-Cohort & $n$ & Velocity RMSE ratio & Independent travel-time ratio \\
+Cohort & $n$ & Velocity ratio & Independent time ratio \\
 \midrule
 Validation & 160 & 0.4052 & 1.0698 \\
 In-distribution & 160 & 0.4127 & 1.0690 \\
@@ -149,7 +154,7 @@ Joint family and acquisition shift & 160 & 1.0437 & 1.3961 \\
 \end{tabular}
 \end{table}
 
-The archived earlier record shows a material distinction between model-space and data-space scores. Velocity RMSE improves on validation, ID and acquisition-only layouts, but the independent travel-time ratio is above one in every cohort. On the held-out geology family and joint-OOD cohort, both ratios exceed one. The locked joint-OOD gate therefore fails in both spaces. A visual model that resembles the target or a lower map RMSE on familiar families cannot override an independently computed forward mismatch. This negative outcome is distinct from the later null-space follow-up study, which evaluates a projected correction on new cohorts and cannot isolate projection's increment over the unprojected network.
+The archived earlier record shows a material distinction between model-space and data-space scores. Velocity RMSE improves on validation, ID and acquisition-only layouts, but the independent travel-time ratio is above one in every cohort. On the held-out geology family and joint-OOD cohort, both ratios exceed one. The locked joint-OOD criterion therefore fails in both spaces. A visual model that resembles the target or a lower map RMSE on familiar families cannot override an independently computed forward mismatch. This negative outcome is distinct from the later null-space follow-up study, which evaluates a projected correction on new cohorts and cannot isolate projection's increment over the unprojected network.
 
 The failure is large in both model and data space and should not be obscured by the later, separately sampled correction study. In the joint-shift cohort, the learned estimate's velocity RMSE is more than twice the straight-ray baseline, while the independent travel-time RMSE is over five times larger. Threshold exceedance affects all 160 joint-shift cases. This is evidence against using this checkpoint as an unqualified first-arrival inverse, not evidence that every neural parameterization must fail. The acquisition- and family-specific values also show that the loss is not a uniform offset: generalization depends on which parts of the synthetic generator change, and aggregate results cannot identify a universal cause.
 
@@ -158,11 +163,12 @@ Calibration selected straight-ray L2 regularization $\lambda=100$ and correction
 
 \begin{table}[htbp]
 \centering
+\small
 \caption{Aggregate projected-candidate to straight-ray L2 RMSE ratios with paired case-bootstrap intervals for four frozen synthetic test cohorts.}
 \label{tab:nullspace-ratios}
 \begin{tabular}{lrrr}
 \toprule
-Cohort & $n$ & Velocity ratio [95\% interval] & Travel-time ratio [95\% interval] \\
+Cohort & $n$ & Velocity ratio [95\% CI] & Time ratio [95\% CI] \\
 \midrule
 In-distribution & 160 & 0.8035 [0.7808, 0.8256] & 0.9841 [0.9816, 0.9865] \\
 Family shift & 80 & 0.9718 [0.9667, 0.9771] & 0.9962 [0.9939, 0.9984] \\
@@ -243,10 +249,10 @@ The positive ratios are conditional on synthetic families, a fixed grid, straigh
 The numerical projection check (Figure~\ref{fig:projection-diagnostics}) is a code-level consistency test for the chosen discretized path-length matrices. It says that the computed basis is close to the kernel of those matrices under the recorded tolerance and that the pre-clipping projected correction is numerically annihilated by the same operator. It does not assess whether the straight-ray matrix is a valid physical forward model for a heterogeneous medium, whether the test generator represents subsurface structure, or whether the learned correction contains useful geological information. The nonlinear velocity conversion and physical clipping occur after that linear check; independent travel-time evaluation is therefore essential and cannot be replaced by the $AN\approx0$ diagnostic.
 
 \section{Conclusion}
-On four fixed synthetic cohorts, a learned slowness correction projected into the straight-ray matrix null space reduced both aggregate velocity and independent travel-time RMSE relative to a matched straight-ray L2 solution. The joint-shift changes were small. The computation is a reproducible, bounded evaluation of an established null-space operation combined with a frozen learned estimate; it does not establish a new algorithm, superiority over current learned tomography, field performance, or geological recovery. The failed source checkpoint comparison and missing same-cohort unprojected prediction remain material limitations.
+On four fixed synthetic cohorts, a learned slowness correction projected into the straight-ray matrix null space had lower aggregate velocity and independent travel-time RMSE than a matched straight-ray L2 solution. The joint-shift changes were small. The retained cohort metrics and historical compatibility replay support a bounded synthetic evaluation, but missing raw inputs and the source checkpoint preclude full regeneration from the current checkout. The comparison does not isolate the projection's effect, establish a new algorithm, demonstrate superiority over current learned tomography, or show field performance or geological recovery.
 
 \section*{Data and code availability}
-The implementation, synthetic cohort definitions, hash-identified data package, compatibility replay, bootstrap calculation, figure generator and rendered figures are in the public source repository at \url{https://github.com/fsantibanezleal/CAOS_Geophysics}. The retained archive SHA-256 is \texttt{30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22}; the generated figure hashes are listed in \texttt{figures/figure-manifest.json}. The compatibility replay changes only the equality tolerance for recomputed floating-point calibration candidate scores and retains the recorded source hashes, selection and held-out metrics. The exact source checkpoint and raw generated inputs required for a full solver rerun are not present in the current checkout. No field-data claim is made.
+The implementation, synthetic cohort definitions, hash-identified data package, historical compatibility replay, bootstrap calculation, threshold reconciliation, figure generator and rendered figures are in the public source repository at \url{https://github.com/fsantibanezleal/CAOS_Geophysics}. The archived experiment-manifest SHA-256 is \texttt{30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22}; generated figure hashes are listed in \texttt{figures/figure-manifest.json}. The 2026-10-31 compatibility replay changes only the equality tolerance for recomputed floating-point calibration candidate scores and retains the recorded source hashes, selection and held-out metrics. A 2026-11-05 custody check found that the exact source checkpoint and raw generated inputs required for a current full solver rerun are unavailable in the checked locations. The retained per-case metrics allow reanalysis but not regeneration. No field-data claim is made.
 
 {\small
 \begin{thebibliography}{99}
