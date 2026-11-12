@@ -68,6 +68,21 @@ export default function copyProductData({ derived, out, repo }) {
       'manifest.json', 'ATTRIBUTION.md', phase.benchmark?.file,
       ...(Array.isArray(phase.records) ? phase.records.map((record) => record.waveform_file).filter(Boolean) : []),
     ]);
+    if (phase.browser_parity_verified === true) {
+      const receipt = phase.browser_parity_receipt;
+      if (!receipt || receipt.file !== 'browser-parity.json' || !/^[0-9a-f]{64}$/.test(receipt.sha256)) {
+        throw new Error('verified STEAD browser assets must pin their parity receipt');
+      }
+      const receiptBytes = readFileSync(join(phaseRoot, receipt.file));
+      const parity = JSON.parse(receiptBytes.toString('utf8'));
+      if (sha256(receiptBytes) !== receipt.sha256 || parity.schema !== 'caos.m13-browser-population-parity.v1' ||
+          parity.status !== 'pass' || parity.modelSha256 !== phase.model?.sha256 ||
+          parity.population?.qcValidBrowserInferences !== 23 || parity.population?.qcRejectedExcluded !== 1 ||
+          parity.population?.accuracyClaim !== false) {
+        throw new Error('STEAD browser parity receipt differs from its manifest or acceptance population');
+      }
+      phaseNames.add(receipt.file);
+    }
     const modelFile = phase.model?.file;
     const modelSourceFile = phase.model?.source_file ?? modelFile;
     if (modelSourceFile !== modelFile) phaseNames.add(modelSourceFile);

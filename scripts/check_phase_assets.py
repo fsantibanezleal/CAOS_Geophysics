@@ -29,7 +29,8 @@ def digest(payload: bytes) -> str:
 
 
 def validate() -> None:
-    manifest = json.loads(raw("manifest.json"))
+    manifest_bytes = raw("manifest.json")
+    manifest = json.loads(manifest_bytes)
     benchmark_bytes = raw("benchmark.json")
     benchmark = json.loads(benchmark_bytes)
     overlap = json.loads(OVERLAP.read_bytes())
@@ -96,6 +97,34 @@ def validate() -> None:
     assert overlap["checkpoint_sha256"] == benchmark["checkpoint_sha256"]
     assert overlap["array_sha256"]["test"] == benchmark["test_array_sha256"]
 
+    assert manifest["browser_parity_verified"] is True
+    parity_meta = manifest["browser_parity_receipt"]
+    parity_bytes = raw("browser-parity.json")
+    parity = json.loads(parity_bytes)
+    assert parity_meta["file"] == "browser-parity.json"
+    assert parity_meta["sha256"] == digest(parity_bytes)
+    assert parity["schema"] == "caos.m13-browser-population-parity.v1"
+    assert parity["status"] == "pass"
+    assert parity["manifestSha256"] == digest((
+        json.dumps({**{key: value for key, value in manifest.items() if key != "browser_parity_receipt"},
+                    "browser_parity_verified": False}, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8"))
+    assert parity["modelSha256"] == manifest["model"]["sha256"]
+    assert parity["verifierScriptSha256"] == digest(
+        (ROOT / "frontend/scripts/verify-phase-browser-population.mjs").read_bytes()
+    )
+    assert parity["gateEntrypointSha256"] == digest(
+        (ROOT / "frontend/scripts/verify-phase-browser-parity.mjs").read_bytes()
+    )
+    assert parity["population"] == {
+        "selected": 24, "qcValidBrowserInferences": 23, "qcRejectedExcluded": 1,
+        "selectionBeforeHeldoutScoring": True, "allCpuReferenceHashesVerified": True,
+        "accuracyClaim": False,
+    }
+    assert parity["maxProbabilityAbsoluteError"] <= 0.001
+    assert parity["maxPeakDifferenceSamples"] <= 1
+    assert len(parity["traces"]) == 23
+
     records = manifest["records"]
     assert len(records) == 24 and len({row["trace_id"] for row in records}) == 24
     identity = "\n".join(sorted(row["trace_id"] for row in records)).encode()
@@ -114,7 +143,7 @@ def validate() -> None:
         assert digest(payload) == row["waveform_sha256"]
     assert wave_files == {path.name for path in ASSETS.glob("trace-*.f32")}
     assert (ASSETS / "ATTRIBUTION.md").is_file()
-    print("PASS: M13 model, rights decision, attribution, 23 waveform assets, QC rejection, benchmark and hashes consistent")
+    print("PASS: M13 rights, assets, 6,000-trace benchmark, 23/1 display population, browser parity receipt and hashes consistent")
 
 
 if __name__ == "__main__":

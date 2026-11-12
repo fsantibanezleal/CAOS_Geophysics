@@ -7,7 +7,17 @@
     "sha256": "9e9f22f50b789fa8b85d2249321472ad0678ba01ceb0e97b1f32f3abcf3c7b96",
     "tolerance_s": 0.5
   },
-  "browser_parity_verified": false,
+  "browser_parity_receipt": {
+    "accuracy_claim": false,
+    "file": "browser-parity.json",
+    "max_peak_difference_samples": 0,
+    "max_probability_absolute_error": 4.887580871582031e-06,
+    "mean_browser_inference_ms": 88.53478260856608,
+    "measured_at": "2026-11-12T18:58:19.093Z",
+    "schema": "caos.m13-browser-population-parity.v1",
+    "sha256": "96086eb1dacfab551319c78e801be304c039a1ca70c1604368a42abc031ddb6e"
+  },
+  "browser_parity_verified": true,
   "input": {
     "component_order": [
       "E",

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import base64
+import gzip
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -71,6 +73,50 @@ def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -
     assert not (repo / "data" / "experiments").exists()
     assert (repo / "tests" / "data" / "magnetic_survey_support.py").read_bytes() == support.read_bytes()
     assert (repo / "tests" / "fixtures" / "magnetic_survey" / "generate.py").read_bytes() == fixture.read_bytes()
+
+
+def test_m13_notebook_materializes_only_verified_compressed_onnx_in_scratch(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    assets = source / "data/derived/phase/browser-assets/stead"
+    notebook = source / "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb"
+    assets.mkdir(parents=True)
+    notebook.parent.mkdir(parents=True)
+    notebook.write_text("{}\n", encoding="utf-8")
+    model_bytes = b"frozen onnx bytes"
+    (assets / "model.onnx.gz").write_bytes(gzip.compress(model_bytes))
+    (assets / "manifest.json").write_text(json.dumps({"model": {
+        "file": "model.onnx", "bytes": len(model_bytes),
+        "sha256": hashlib.sha256(model_bytes).hexdigest(),
+    }}), encoding="utf-8")
+
+    staged = staged_notebook_source(
+        tmp_path / "check", notebook.relative_to(source).as_posix(), source
+    )
+    staged_model = staged.parents[3] / "data/derived/phase/browser-assets/stead/model.onnx"
+
+    assert staged_model.read_bytes() == model_bytes
+    assert not (assets / "model.onnx").exists()
+
+
+def test_m13_notebook_rejects_corrupt_compressed_onnx(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    assets = source / "data/derived/phase/browser-assets/stead"
+    notebook = source / "notebooks/en/06-seismology/04-m13-learned-phase-picking.ipynb"
+    assets.mkdir(parents=True)
+    notebook.parent.mkdir(parents=True)
+    notebook.write_text("{}\n", encoding="utf-8")
+    model_bytes = b"wrong model"
+    (assets / "model.onnx.gz").write_bytes(gzip.compress(model_bytes))
+    (assets / "manifest.json").write_text(json.dumps({"model": {
+        "file": "model.onnx", "bytes": len(model_bytes), "sha256": "0" * 64,
+    }}), encoding="utf-8")
+
+    import pytest
+
+    with pytest.raises(ValueError, match="do not match the frozen manifest"):
+        staged_notebook_source(
+            tmp_path / "check", notebook.relative_to(source).as_posix(), source
+        )
 
 
 def test_long_valley_check_stages_only_its_declared_inputs(tmp_path: Path) -> None:

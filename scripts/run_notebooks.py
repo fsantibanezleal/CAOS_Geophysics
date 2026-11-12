@@ -23,8 +23,10 @@ temp root it stops with exit 2, and the system temp folder is never used. A prod
 and no notebook may define a name they define: the run stops before any notebook executes (``scripts/check_notebooks.py`` holds
 the same names statically when the packages are installed).
 
-It runs in ``.venv-notebooks`` (``scripts/setup.sh --notebooks`` or ``scripts/setup.ps1 -Notebooks``, built from
-``notebooks/requirements.txt``): started with another interpreter, it re-runs itself in that venv. A local release gate, never CI
+It runs in the notebook runtime declared by ``scripts/local/workflow.json`` (``when: notebooks``), created by
+``scripts/setup.sh --notebooks`` or ``scripts/setup.ps1 -Notebooks`` from ``notebooks/requirements.txt``.
+External environments use the same configured ``CAOS_VENVS_ROOT`` and product namespace as setup; no local alias is required.
+Started with another interpreter, it re-runs itself in that environment. A local release gate, never CI
 (ADR-0074). A missing artifact fails the notebook with its path in the error; nothing stands in for it.
 A notebook outside ``notebooks/<language>/<topic>/<notebook>.ipynb`` fails the run before any notebook executes.
 Exit 0 every notebook ran, 1 on any failure, 2 on a usage or environment problem.
@@ -34,6 +36,8 @@ from __future__ import annotations
 import argparse
 import base64
 import copy
+import gzip
+import hashlib
 import importlib.util
 import io
 import json
@@ -56,10 +60,34 @@ LANGS = ("en", "es")
 LAYOUT = "notebooks/<language>/<topic>/<notebook>.ipynb"
 
 
-def venv_python() -> Path | None:
+def notebook_environment() -> Path:
+    """Use the same declared external runtime as setup, without creating an alias."""
+    config_path = ROOT / "scripts/local/workflow.json"
+    if not config_path.is_file():
+        return VENV
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    if not config.get("external_environments_required"):
+        return VENV
+    candidates = [item["path"] for item in config.get("environments", []) if item.get("when") == "notebooks"]
+    if len(candidates) != 1:
+        raise ValueError("Declare exactly one notebook runtime in scripts/local/workflow.json")
+    helper_path = ROOT / "scripts/local/workflow.py"
+    if not helper_path.is_file():
+        raise ValueError("The external notebook runtime requires scripts/local/workflow.py")
+    spec = importlib.util.spec_from_file_location("notebook_local_workflow", helper_path)
+    helper = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(helper)
+    try:
+        return helper.environment_directory(ROOT, candidates[0])
+    except helper.Failure as error:
+        raise ValueError(str(error)) from error
+
+
+def venv_python(directory: Path | None = None) -> Path | None:
+    directory = notebook_environment() if directory is None else directory
     for rel in ("Scripts/python.exe", "bin/python"):
-        if (VENV / rel).is_file():
-            return VENV / rel
+        if (directory / rel).is_file():
+            return directory / rel
     return None
 
 
@@ -178,6 +206,22 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
                 return ignored
 
             shutil.copytree(origin, target, ignore=ignore_generated)
+    if seismic_lesson:
+        # The release stores the 5 MB browser model compressed. Materialize
+        # the exact manifest-pinned ONNX bytes only in this isolated scratch
+        # copy so the local pipeline can consume the same artifact as the web
+        # build without committing a second, uncompressed model.
+        asset_dir = work / "data/derived/phase/browser-assets/stead"
+        manifest = json.loads((asset_dir / "manifest.json").read_text(encoding="utf-8"))
+        model = manifest["model"]
+        model_path = asset_dir / model["file"]
+        compressed_path = asset_dir / f"{model['file']}.gz"
+        if not model_path.is_file():
+            model_bytes = gzip.decompress(compressed_path.read_bytes())
+            if (len(model_bytes) != model["bytes"] or
+                    hashlib.sha256(model_bytes).hexdigest() != model["sha256"]):
+                raise ValueError("Compressed M13 ONNX bytes do not match the frozen manifest")
+            model_path.write_bytes(model_bytes)
     if field_data_lesson:
         artifact = Path("data/derived/field/long-valley/1982-06_to_1999-07.json")
         origin = source_root / artifact
@@ -478,8 +522,20 @@ def main() -> int:
     runtime_dir.mkdir(parents=True, exist_ok=True)
     os.environ["JUPYTER_RUNTIME_DIR"] = str(runtime_dir)
 
-    py = venv_python()
-    if not a.inner and py is not None and Path(sys.prefix).resolve() != VENV.resolve():
+    try:
+        directory = notebook_environment()
+        py = venv_python(directory)
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(f"run_notebooks: notebook environment is unavailable: {error}")
+        return 2
+    if py is None:
+        print("run_notebooks: initialize the declared notebook runtime with scripts/setup.ps1 -Notebooks "
+              "or scripts/setup.sh --notebooks; configure CAOS_VENVS_ROOT for external environments")
+        return 2
+    if Path(sys.prefix).resolve() != directory.resolve():
+        if a.inner:
+            print("run_notebooks: the inner runner is not using the declared notebook environment")
+            return 2
         return subprocess.run([str(py), __file__, "--inner", *sys.argv[1:]], cwd=ROOT).returncode
     try:
         import nbclient  # noqa: F401

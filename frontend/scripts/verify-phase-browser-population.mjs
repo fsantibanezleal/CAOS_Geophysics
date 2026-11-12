@@ -36,18 +36,42 @@ function peak(values, offset) {
   for (let i = 1; i < 6000; i++) if (values[offset + i] > values[offset + best]) best = i;
   return best;
 }
+function picks(values, thresholds) {
+  const pIndex = peak(values, 6000), sIndex = peak(values, 12000);
+  const p = values[6000 + pIndex] >= thresholds.P ? pIndex : null;
+  let s = values[12000 + sIndex] >= thresholds.S ? sIndex : null;
+  if (s !== null && p !== null && s - p < 40) s = null;
+  return { P: p, S: s };
+}
 const manifestBytes = await safeFile(assetsDir, "manifest.json");
 const manifest = JSON.parse(manifestBytes.toString("utf8"));
 const analysisBytes = await readFile(analysisPath);
 const analysis = JSON.parse(analysisBytes.toString("utf8"));
 const manifestHash = digest(manifestBytes);
-if (analysis.schema !== "caos.m13-browser-display-subset-analysis.v1" ||
-    analysis.manifest_sha256 !== manifestHash || analysis.model_sha256 !== manifest.model.sha256 ||
-    analysis.selected_count !== 24 || analysis.qc_valid_count !== 23 || analysis.qc_rejected_count !== 1 ||
-    manifest.browser_parity_verified !== false)
+const runtimeReceipt = analysis.schema === "geophysics.phase-browser-runtime-oracle/v1";
+if ((runtimeReceipt
+      ? analysis.model_sha256 !== manifest.model.sha256 || analysis.runtime?.provider !== "CPUExecutionProvider"
+      : analysis.schema !== "caos.m13-browser-display-subset-analysis.v1" ||
+        analysis.manifest_sha256 !== manifestHash || analysis.model_sha256 !== manifest.model.sha256 ||
+        analysis.selected_count !== 24 || analysis.qc_valid_count !== 23 || analysis.qc_rejected_count !== 1) ||
+    manifest.browser_parity_verified !== false || manifest.records.length !== 24)
   throw new Error("CPU reference analysis and frozen browser asset manifest do not match");
-const expectedByTrace = new Map(analysis.traces.map(row => [row.trace_id, row]));
+const referenceRows = runtimeReceipt ? analysis.records : analysis.traces;
+const expectedByTrace = new Map(referenceRows.map(row => [row.trace_id, row]));
 if (expectedByTrace.size !== 23) throw new Error("CPU reference does not contain exactly 23 valid display traces");
+if (runtimeReceipt) {
+  for (const row of manifest.records) {
+    if (row.status === "qc-rejected") {
+      if (row.waveform_file || expectedByTrace.has(row.trace_id))
+        throw new Error(`QC-rejected ${row.trace_id} has a waveform or CPU reference`);
+      continue;
+    }
+    const source = expectedByTrace.get(row.trace_id);
+    if (!source || source.input_file !== row.waveform_file || source.input_sha256 !== row.waveform_sha256 ||
+        source.output_bytes !== 72000 || !/^[a-f0-9]{64}$/.test(source.output_sha256 || ""))
+      throw new Error(`Retained CPU receipt does not match current waveform identity for ${row.trace_id}`);
+  }
+}
 
 const server = await createServer({ configFile: resolve("vite.config.ts"), server: { host: "127.0.0.1", port: 0 } });
 let browser;
@@ -107,9 +131,10 @@ try {
     }, index);
     if (browserResult.traceId !== record.trace_id || browserResult.probabilities.length !== 18000)
       throw new Error(`Wrong browser trace/output shape for ${record.trace_id}`);
-    const referenceName = `${basename(record.waveform_file, ".f32")}.probabilities.f32`;
+    const referenceName = runtimeReceipt ? cpuRow.output_file : `${basename(record.waveform_file, ".f32")}.probabilities.f32`;
     const cpuBytes = await safeFile(referenceDir, referenceName);
-    if (!cpuRow.m13_probabilities_sha256 || digest(cpuBytes) !== cpuRow.m13_probabilities_sha256)
+    const expectedCpuHash = runtimeReceipt ? cpuRow.output_sha256 : cpuRow.m13_probabilities_sha256;
+    if (!expectedCpuHash || digest(cpuBytes) !== expectedCpuHash)
       throw new Error(`CPU reference hash differs for ${record.trace_id}`);
     const cpu = f32(cpuBytes);
     let traceMax = 0;
@@ -121,10 +146,11 @@ try {
       const samples = Math.abs(peak(cpu, offset) - peak(browserResult.probabilities, offset));
       maximumPeakDifferenceSamples = Math.max(maximumPeakDifferenceSamples, samples);
       if (samples > 1) throw new Error(`${record.trace_id} ${phase} probability peak differs by ${samples} samples`);
-      const cpuPick = cpuRow[`m13_${phase.toLowerCase()}_s`];
+      const cpuPick = runtimeReceipt ? picks(cpu, manifest.model.thresholds)[phase] : cpuRow[`m13_${phase.toLowerCase()}_s`];
       const wasmPick = browserResult.picks[phase];
-      if ((cpuPick === null) !== (wasmPick === null) ||
-          (cpuPick !== null && Math.abs(cpuPick * 100 - wasmPick) > 1))
+      const cpuPickSamples = runtimeReceipt ? cpuPick : cpuPick === null ? null : cpuPick * 100;
+      if ((cpuPickSamples === null) !== (wasmPick === null) ||
+          (cpuPickSamples !== null && Math.abs(cpuPickSamples - wasmPick) > 1))
         throw new Error(`${record.trace_id} ${phase} CPU/WASM pick or abstention differs`);
     }
     totalInferenceMs += browserResult.elapsedMs;
@@ -142,7 +168,10 @@ try {
     assetDelivery: useServedAssets ? "vite-publicDir" : "playwright-route",
     verifierScriptSha256: digest(await readFile(new URL(import.meta.url))),
     gateEntrypointSha256: digest(await readFile(new URL("./verify-phase-browser-parity.mjs", import.meta.url))),
-    cpuAnalysisSha256: digest(analysisBytes),
+    cpuAnalysisSha256: digest(analysisBytes), cpuReferenceKind: runtimeReceipt ? analysis.schema : "display-subset-analysis",
+    cpuReferenceManifestSha256: analysis.manifest_sha256 ?? null,
+    cpuReferenceManifestHashMatched: runtimeReceipt ? analysis.manifest_sha256 === manifestHash : true,
+    cpuReferencePopulationIdentity: runtimeReceipt ? "per-trace-model-and-waveform-hashes" : "manifest-hash",
     parity: { sameFrozenOnnx: true, reference: analysis.reference_runtime,
       browser: "ONNX Runtime Web WASM through frontend/src/phase-runtime.ts",
       browserRuntimeVersion: JSON.parse(await readFile(new URL("../node_modules/onnxruntime-web/package.json", import.meta.url), "utf8")).version,
