@@ -12,6 +12,13 @@
   "year": 2026,
   "app": "workbench",
   "workbench_route": "/app",
+  "showcase": {
+    "story_routes": [
+      "/story/reference",
+      "/story/coverage",
+      "/story/regularization"
+    ]
+  },
   "method_packages": [],
   "manuscripts": [
     {

@@ -152,8 +152,8 @@ export default function FWIReplayStory() {
     steps={steps}
     activeId={activeId}
     onStepChange={id => navigate(`/story/${id}`)}
-    onExit={() => navigate("/experiments")}
-    labels={{ steps: es ? "Lectura del experimento" : "Experiment walkthrough", previous: es ? "Anterior" : "Previous", next: es ? "Siguiente" : "Next", play: es ? "Reproducir" : "Play", pause: es ? "Pausar" : "Pause", exit: es ? "Volver a experimentos" : "Back to experiments" }}
+    onExit={() => navigate("/app?case=FWI_LAYERED")}
+    labels={{ steps: es ? "Lectura del experimento" : "Experiment walkthrough", previous: es ? "Anterior" : "Previous", next: es ? "Siguiente" : "Next", play: es ? "Reproducir" : "Play", pause: es ? "Pausar" : "Pause", exit: es ? "Abrir el caso FWI en la App" : "Open the FWI case in the App" }}
     className="geophysics-fwi-story"
   /></LinkedViewProvider>;
 }

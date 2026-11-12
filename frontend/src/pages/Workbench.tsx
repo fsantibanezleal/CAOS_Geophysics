@@ -106,8 +106,9 @@ function Range({
 export default function Workbench() {
   const es = useShellLang() === "es";
   const t = (a: string, b: string) => (es ? b : a);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [catalog, setCatalog] = useState<Catalog>();
-  const [selected, setSelected] = useState("GRAVITY_INTRUSION");
+  const [selected, setSelected] = useState(() => searchParams.get("case") ?? "GRAVITY_INTRUSION");
   const [variant, setVariant] = useState("reference");
   const [run, setRun] = useState<Run>();
   const [methodId, setMethodId] = useState("irls");
@@ -137,7 +138,6 @@ export default function Workbench() {
   const [railOpen, setRailOpen] = useState(false);
   const [sidebarPanel, setSidebarPanel] = useState<"experiment" | "replay" | "evidence">("experiment");
   const [projectsOpen, setProjectsOpen] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
   const requestedProjectId = searchParams.get("project") ?? "";
   const processingProjectId = deploymentMode === "single-origin" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedProjectId) ? requestedProjectId : "";
   const selectProcessingProject = (id: string) => {
@@ -164,6 +164,19 @@ export default function Workbench() {
       });
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    if (!catalog) return;
+    const requested = searchParams.get("case");
+    if (requested && catalog.cases.some((item) => item.id === requested)) {
+      if (requested !== selected) setSelected(requested);
+      return;
+    }
+    if (requested) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("case");
+      setSearchParams(next, { replace: true });
+    }
+  }, [catalog, searchParams, selected, setSearchParams]);
   const entry = catalog?.cases.find((c) => c.id === selected);
   useEffect(() => {
     setScientificView("earth");
@@ -290,6 +303,11 @@ export default function Workbench() {
   );
   const select = (id: string) => {
     setSelected(id);
+    setSearchParams(current => {
+      const next = new URLSearchParams(current);
+      next.set("case", id);
+      return next;
+    }, { replace: true });
     setControlsOpen(false);
     setSidebarPanel("experiment");
     setVariant("reference");
