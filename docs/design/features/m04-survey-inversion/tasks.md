@@ -178,3 +178,13 @@ the full candidate/fold matrix, selection, final development refit, frozen
 generation, sealed evaluation and independent-acquisition controls have not
 run. No method, field, hosted or release claim follows from this single
 synthetic development fold.
+
+The current continuation adds a resumable 16-candidate/three-fold runner at
+`scripts/run_m04_candidate_matrix.py`. It persists one source-bound receipt per
+beta/fold, reuses the one same-beta L2 fit for the paired sparse candidate,
+scores only the sealed validation rows, and refuses to aggregate a candidate
+with any failed fold. `fit_l2_final_refit` and `fit_sparse_final_refit` select
+the presealed final development rows through partition index `-1`; they do not
+read outer rows. This is execution plumbing only. The complete matrix, selected
+refit, immutable freeze, one-time outer evaluation, full result bundle and
+independent acceptance remain unrun.

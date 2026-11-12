@@ -105,6 +105,45 @@ def test_source_inventory_binds_calibration_and_objective_decoder():
         assert all(character in "0123456789abcdef" for character in inventory[name])
 
 
+def test_final_refit_partition_is_sealed_development_only_and_wrappers_are_explicit(monkeypatch):
+    raw = _request("S2-A-linear_tmi_nT.json")
+    handle = magnetic_survey_json.parse_request(raw)
+    plan = magnetic_survey.plan_geometry(handle)
+    rows = calibration._partition_fit_rows(plan, -1)
+    development = set(plan["partition"]["development_rows"]["data"])
+    outer = set(plan["partition"]["outer_rows"]["data"])
+    assert rows == tuple(plan["final_refit_rows"]["data"])
+    assert set(rows).issubset(development)
+    assert set(rows).isdisjoint(outer)
+    assert len(rows) == 216
+    assert calibration._partition_fit_rows(plan, 0) == tuple(
+        plan["partition"]["folds"][0]["fit_rows"]["data"]
+    )
+    for invalid in (True, -2, 3, 0.0):
+        with pytest.raises(ValueError, match="development fold"):
+            calibration._partition_fit_rows(plan, invalid)
+
+    calls = []
+    sentinel = object()
+    monkeypatch.setattr(
+        calibration, "fit_l2_fold",
+        lambda *args, **kwargs: calls.append(("l2", args, kwargs)) or sentinel,
+    )
+    monkeypatch.setattr(
+        calibration, "fit_sparse_fold",
+        lambda *args, **kwargs: calls.append(("sparse", args, kwargs)) or sentinel,
+    )
+    assert calibration.fit_l2_final_refit(raw, .0001, wall_seconds=90.) is sentinel
+    assert calibration.fit_sparse_final_refit(
+        raw, .0001, l2_result={"schema": "test"}, wall_seconds=90.
+    ) is sentinel
+    assert calls[0] == ("l2", (raw, -1, .0001), {"wall_seconds": 90.})
+    assert calls[1] == (
+        "sparse", (raw, -1, .0001),
+        {"l2_result": {"schema": "test"}, "wall_seconds": 90.},
+    )
+
+
 def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
     raw = _request("S2-A-linear_tmi_nT.json")
     manifest = json.loads((ROOT / "manifest.json").read_bytes())

@@ -807,3 +807,39 @@ method acceptance and online admission false. This closes one compliant
 synthetic development fold only. The candidate/fold matrix, nested selection,
 final refit, freeze, sealed evaluation and independent acquisitions remain
 required; T43, M04 and product release remain open.
+
+## Resumable candidate-matrix and final-refit plumbing
+
+The current source adds `data-pipeline/magnetic_candidate_matrix.py` and
+`scripts/run_m04_candidate_matrix.py`. The runner fixes the eight beta values,
+L2-before-sparse ordering and three development folds from the approved
+contract. It uses the same-beta converged L2 fit as the sparse starting model,
+scores each frozen model only on that fold's validation rows, and writes a
+hash-bound receipt per beta/fold under `GEOPHYSICS_LOCAL_DATA_ROOT`. Resume
+requires exact request, partition, product-commit and solver-source identity;
+partial or source-stale receipts are rejected. Candidate aggregation uses
+pooled `sum(phi_d)/sum(n_components)` and requires all three fold metrics.
+Score ties use the contract's floating tolerance, L2 preference, larger beta
+and fixed candidate ID.
+
+The same change adds explicit ordinary-L2 and sparse final-refit entry points.
+Partition index `-1` resolves only to `plan.final_refit_rows`, which is a
+subset of development rows and disjoint from the outer partition. A focused
+current-source test proves this row selection and both wrapper calls; candidate
+order, pooled scoring, failed-fold rejection and tie resolution pass three
+deterministic unit tests. Ruff and `git diff --check` pass.
+
+No full candidate matrix was run by this plumbing check. No selected model,
+final refit, model freeze, sealed outer score, independent acquisition,
+resource-upper proof or scientific acceptance is claimed. T43 and R-008 remain
+open. The reproduction command after commit is:
+
+```powershell
+python scripts/run_m04_candidate_matrix.py `
+  --request tests/fixtures/magnetic_survey/generated/requests/S2-A-linear_tmi_nT.json `
+  --output-dir "$env:GEOPHYSICS_LOCAL_DATA_ROOT/research-runs/<run-id>/m04-candidate-matrix"
+```
+
+The unchanged per-fit wall limit is 120 seconds. Matrix completion means the
+declared outcomes were recorded, including failures; it does not itself pass
+the candidate, field, method, host or product gates.

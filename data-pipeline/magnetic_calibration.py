@@ -77,6 +77,20 @@ def _owned(value):
     return result
 
 
+def _partition_fit_rows(plan: dict, partition_index: int) -> tuple[int, ...]:
+    """Return sealed fit rows; -1 denotes the final development-only refit."""
+    if type(partition_index) is not int or partition_index not in (-1, 0, 1, 2):
+        raise ValueError("partition: expected development fold 0..2 or final refit -1")
+    if partition_index == -1:
+        values = plan["final_refit_rows"]["data"]
+    else:
+        values = plan["partition"]["folds"][partition_index]["fit_rows"]["data"]
+    rows = tuple(values)
+    if not rows or tuple(sorted(set(rows))) != rows:
+        raise ValueError("partition: fit rows must be nonempty, unique, and ordered")
+    return rows
+
+
 def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float = MAX_WALL_SECONDS):
     """Fit one presealed development fold; never score or inspect held-out rows.
 
@@ -87,8 +101,8 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
     """
     if type(raw) is not bytes:
         raise TypeError("request: bounded immutable bytes required")
-    if type(fold_index) is not int or fold_index not in (0, 1, 2):
-        raise ValueError("fold: expected sealed development fold 0, 1, or 2")
+    if type(fold_index) is not int or fold_index not in (-1, 0, 1, 2):
+        raise ValueError("fold: expected development fold 0..2 or final refit -1")
     if type(beta) is not float or not np.isfinite(beta) or beta <= 0.0:
         raise ValueError("beta: finite positive dimensionless value required")
     if type(wall_seconds) not in (int, float) or not np.isfinite(wall_seconds) or not 0.0 < wall_seconds <= MAX_WALL_SECONDS:
@@ -106,10 +120,7 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
 
     # Geometry and row membership are fixed before observation or covariance
     # payloads are decoded. Outer and validation rows never enter the fit.
-    fold = plan["partition"]["folds"][fold_index]
-    fit_rows = tuple(fold["fit_rows"]["data"])
-    if not fit_rows or tuple(sorted(set(fit_rows))) != fit_rows:
-        raise ValueError("partition: fit rows must be nonempty, unique, and ordered")
+    fit_rows = _partition_fit_rows(plan, fold_index)
     operator = magnetic_inverse.build_operator(raw, fit_rows, deadline=deadline)
     quantity_components = 3 if metadata["processing"]["quantity"] == "secondary_enu_nT" else 1
     flat_rows = (np.asarray(fit_rows, dtype=np.int64)[:, None] * quantity_components
@@ -267,6 +278,11 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
         objective.release_state()
 
 
+def fit_l2_final_refit(raw: bytes, beta: float, *, wall_seconds: float = MAX_WALL_SECONDS):
+    """Fit the frozen final development partition with ordinary L2."""
+    return fit_l2_fold(raw, -1, beta, wall_seconds=wall_seconds)
+
+
 def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *,
                     l2_result: dict, wall_seconds: float = MAX_WALL_SECONDS):
     """Run the frozen eight-epsilon, fixed-beta SimPEG sparse IRLS policy.
@@ -278,8 +294,8 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *,
     """
     if type(raw) is not bytes:
         raise TypeError("request: bounded immutable bytes required")
-    if type(fold_index) is not int or fold_index not in (0, 1, 2):
-        raise ValueError("fold: expected sealed development fold 0, 1, or 2")
+    if type(fold_index) is not int or fold_index not in (-1, 0, 1, 2):
+        raise ValueError("fold: expected development fold 0..2 or final refit -1")
     if type(beta) is not float or not np.isfinite(beta) or beta <= 0.:
         raise ValueError("beta: finite positive dimensionless value required")
     if type(l2_result) is not dict or l2_result.get("schema") != "magnetic-linear-l2-fold-result-1":
@@ -308,10 +324,7 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *,
     if metadata["processing"]["quantity"] not in adapter.LINEAR_QUANTITIES:
         raise ValueError("quantity: current original-noise adapter supports affine quantities only")
 
-    fold = plan["partition"]["folds"][fold_index]
-    fit_rows = tuple(fold["fit_rows"]["data"])
-    if not fit_rows or tuple(sorted(set(fit_rows))) != fit_rows:
-        raise ValueError("partition: fit rows must be nonempty, unique, and ordered")
+    fit_rows = _partition_fit_rows(plan, fold_index)
     operator = magnetic_inverse.build_operator(raw, fit_rows, deadline=deadline)
     l2_model = l2_result.get("model_q")
     if (type(l2_model) is not np.ndarray or l2_model.dtype != np.float64
@@ -630,3 +643,10 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *,
         finally:
             final_operator.release_state()
     return result
+
+
+def fit_sparse_final_refit(raw: bytes, beta: float, *, l2_result: dict,
+                           wall_seconds: float = MAX_WALL_SECONDS):
+    """Fit the final development partition using the same-beta L2 start."""
+    return fit_sparse_fold(raw, -1, beta, l2_result=l2_result,
+                           wall_seconds=wall_seconds)
