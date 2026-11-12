@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "599b354c8961d7e4108a0de06335ddcd7be6882e9102ddaa316bf41af597badf",
+  "sdd_sha256": "6ab7039d349d2b5e36ca4bdd93bb581bde0a3123a0e2b8ef9ea2cdcfdb50f182",
   "assessed_revision": "b3b430365f8ee2481b597850dcf15f6ba059d5ac",
   "assessed_at": "2026-11-11T03:15:35Z",
   "release": {
@@ -138,7 +138,7 @@
       "id": "R-006",
       "verdict": "pass",
       "declared_gate": "tests/api/test_gravity_l2_upload.py::test_admission_memory_preflight_does_not_import_solver_engines, tests/api/test_gravity_l2_upload.py::test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions, and tests/api/test_online_mt.py::test_inverse_parameter_effect_and_independent_oracle.",
-      "note": "On 2026-11-11 at source revision b3b4303, all three named gates passed in one fresh run (3 passed, 0 failed, 0 skipped): admission preflight, authenticated authored gravity execution with independent Choclo response and parameter-dependent predictions, and uploaded EDI MT inverse against its independent oracle. The JUnit receipt records a 411.139 s total across the three tests. This is local authored-data evidence only; actual-host admission remains R-017, method coverage remains R-008, and no field-geology acceptance follows.",
+      "note": "On 2026-11-11 at source revision b3b4303, all three named gates passed in one fresh run (3 passed, 0 failed, 0 skipped): admission preflight, authenticated authored gravity execution with independent Choclo response and parameter-dependent predictions, and uploaded EDI MT inverse against its independent oracle. The JUnit receipt records a 411.139 s total across the three tests. This is local authored-data evidence only; actual-host admission remains R-017, method coverage remains R-008, and no field-geology acceptance follows. A repeat at current source revision d582cf5 on 2026-11-12 also passed all three named tests (97.872 seconds; 3 passed, zero failures/skips); current JUnit and per-gate receipts are bound as supplemental evidence. This does not change the host or field-data limits above.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -210,7 +210,7 @@
         },
         {
           "path": "docs/guides/06_api.md",
-          "sha256": "6b3f28c3d4fc78171a1e8e6121c53489430e21ab337cce78ccf1aef24fd764ad"
+          "sha256": "c693cbb12d14f3e719d4c466d5979fd742deee58e1d14425863dfa32752c15d8"
         },
         {
           "path": "docs/validation/m02-online-preflight-2026-10-30.json",
@@ -263,6 +263,22 @@
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
           "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
+        },
+        {
+          "path": "docs/validation/r006-current-source-2026-11-12.xml",
+          "sha256": "b2c51f82467b35de5eb51047872f5f5ea7ba05e9b78151c5f8524d76f63e64b3"
+        },
+        {
+          "path": "docs/validation/gates/r006-01-2026-11-12.json",
+          "sha256": "0e0983d98389657b5934b7670896bf82d912715595666235533a6082444d8ced"
+        },
+        {
+          "path": "docs/validation/gates/r006-02-2026-11-12.json",
+          "sha256": "a5d6628a1e38c925c40a38bd2a4e459e045961caa0ec7a8de48589c1668929b6"
+        },
+        {
+          "path": "docs/validation/gates/r006-03-2026-11-12.json",
+          "sha256": "0fb7f40953581904ab4c7d76512a825412b6dcdf97ef4d057b576529e7cfb992"
         }
       ],
       "receipts": [
@@ -865,7 +881,7 @@
       "id": "R-015",
       "verdict": "pass",
       "declared_gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation.",
-      "note": "On 2026-11-11 at source revision b3b4303, the exact 16-case rendered browser matrix passed (16 expected, 0 skipped, 0 unexpected, 0 flaky; 123.9 s): EN/ES, light/dark, desktop/phone, and reduced-motion/no-preference. Playwright screenshots are retained outside the checkout at E:\\_Datos\\CAOS_Geophysics\\validation\\r015-visual-matrix-2026-11-11. This accepts that named local visual gate only; scientific, owner and actual-host release gates remain separate.",
+      "note": "On 2026-11-11 at source revision b3b4303, the exact 16-case rendered browser matrix passed (16 expected, 0 skipped, 0 unexpected, 0 flaky; 123.9 s): EN/ES, light/dark, desktop/phone, and reduced-motion/no-preference. Playwright screenshots are retained outside the checkout at E:\\_Datos\\CAOS_Geophysics\\validation\\r015-visual-matrix-2026-11-11. This accepts that named local visual gate only; scientific, owner and actual-host release gates remain separate. A fresh build and the 2026-11-12 current-source matrix passed all 16 EN/ES, light/dark, desktop/phone, and motion combinations; the versioned report and screenshots in E:\\_Datos\\CAOS_Geophysics\\validation\\r015-visual-matrix-2026-11-12 are bound as supplemental evidence. This is route/layout coverage, not complete visual acceptance.",
       "evidence": [
         {
           "path": "docs/validation/shell-gate-20261025.json",
@@ -898,6 +914,14 @@
         {
           "path": "docs/validation/r015-visual-matrix-2026-11-06.json",
           "sha256": "3584287da91552e4c73f4ca9a8b27aca67d97174932020f863f2e9ade16aeeec"
+        },
+        {
+          "path": "docs/validation/r015-playwright-report-2026-11-12.json",
+          "sha256": "0578846a7283b905f74f9093bfc87e7bb7933e75ba725db51396098bf4507d9b"
+        },
+        {
+          "path": "docs/validation/gates/r015-visual-matrix-2026-11-12.json",
+          "sha256": "1dc7b4b6864db30866ec3de0350a7348dcaa76bdcc05dca8aba61b4491e3179f"
         }
       ],
       "receipts": [
@@ -911,7 +935,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 192 findings across 52 notebooks; the M12 bilingual pair now passes its content and fresh-kernel checks, while the remaining findings are in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved. The revised M12 EN/ES lesson pair measures 1,620 content-bar words each, three figures, two equations and six sources; both isolated fresh-kernel byte checks pass and the focused staging regression tests pass. This closes only this pair.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 192 findings across 52 notebooks; the M12 bilingual pair now passes its content and fresh-kernel checks, while the remaining findings are in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved. The revised M12 EN/ES lesson pair measures 1,620 content-bar words each, three figures, two equations and six sources; both isolated fresh-kernel byte checks pass and the focused staging regression tests pass. This closes only this pair. Supplemental current-source checks on 2026-11-12: docs-matrix structure passes for 13 methods and 66 bilingual notebook files, but notebook depth reports 153 findings; manuscript depth reports four findings (identifiability LaTeX main absent, two coverage manifests absent, and no report classified as technical-report). Full educational/manuscript quality remains open.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -931,11 +955,11 @@
         },
         {
           "path": "docs/validation/source-content-coverage.json",
-          "sha256": "5b6fdd7304994cfafd82bae22a03129cee92c8e956baa8a845f6fdd918081131"
+          "sha256": "d91b3651fbb7f0c9afbbce7593b26b0cea3eacac0148fc5a36de96ed0d7a8095"
         },
         {
           "path": "docs/validation/source-to-content-review.md",
-          "sha256": "9c0b1fc7688e7a76e66cdd95cbd0d378eb8977b45b5d1baa2b1758f8a30416c8"
+          "sha256": "823d607298473e10530aae2590fe104a6856b6c214ac6b5a67d6b582e5e762d1"
         },
         {
           "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
@@ -1024,6 +1048,14 @@
         {
           "path": "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
           "sha256": "ef3e9fb868de23488625832af1ae6f886ccf3dc1893680f05ad124ac4268c89b"
+        },
+        {
+          "path": "docs/validation/notebook-depth-current-2026-11-12.txt",
+          "sha256": "d597f9b61f6edbac90d2cffbcb6b4a824051ffa5020d9b7458c6695c7056869f"
+        },
+        {
+          "path": "docs/validation/manuscript-depth-current-2026-11-12.txt",
+          "sha256": "7b07344b248c82404ccb8f50ac382df70647952b754591deaf4a2bdb1fa05c2c"
         }
       ],
       "receipts": []
@@ -1069,7 +1101,7 @@
       "id": "R-018",
       "verdict": "pass",
       "declared_gate": "scripts/check_sdd_convergence.py::main and docs/design/convergence.json.",
-      "note": "On 2026-11-11 at source revision b3b4303, the structural checker passed: 3 current local requirements pass, 15 remain unresolved, and 1 remains failed. It validates the complete SDD gate map, evidence hashes, and source-bound receipts; this is ledger integrity only, not scientific acceptance or release acceptance.",
+      "note": "On 2026-11-11 at source revision b3b4303, the structural checker passed: 3 current local requirements pass, 15 remain unresolved, and 1 remains failed. It validates the complete SDD gate map, evidence hashes, and source-bound receipts; this is ledger integrity only, not scientific acceptance or release acceptance. A second structural checker run on 2026-11-12 passes against the refreshed SDD/evidence hashes and retains the same 1 failed / 15 unresolved / 3 passed counts. Its current output is separately captured; this is ledger integrity only.",
       "evidence": [
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -1118,6 +1150,14 @@
         {
           "path": "docs/validation/r018-convergence-current-2026-11-11.txt",
           "sha256": "ef02150ce5716c2679edc1ed295f6d859baaad2efb8259153e6f0a867a7f138c"
+        },
+        {
+          "path": "docs/validation/r018-convergence-current-2026-11-12.txt",
+          "sha256": "c116a4d9ec7301d0b101294f5aaac885b506bf39fb0e070d13e65616e441d127"
+        },
+        {
+          "path": "docs/validation/gates/r018-convergence-2026-11-12.json",
+          "sha256": "b1189ec96e5c31bf98b2608e9214a65c04efd3e74912da227bce111a0abbc214"
         }
       ],
       "receipts": [

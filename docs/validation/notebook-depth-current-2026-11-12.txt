@@ -1,0 +1,154 @@
+  - notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb: no third-level own data heading
+  - notebooks/en/03-magnetics/03-m04-induced-prism-forward.ipynb: prose 1131, current level3 floor is 1500
+  - notebooks/en/03-magnetics/03-m04-induced-prism-forward.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/03-magnetics/03-m04-induced-prism-forward.ipynb: sources 1, current level3 floor is 4
+  - notebooks/en/03-magnetics/03-m04-induced-prism-forward.ipynb: no third-level own data heading
+  - notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb: prose 409, current level3 floor is 1500
+  - notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb: figures 1, current level3 floor is 3
+  - notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb: sources 1, current level3 floor is 4
+  - notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb: no third-level sensitivity/limits heading
+  - notebooks/en/03-magnetics/04-m04-fit-objective-validation.ipynb: no third-level own data heading
+  - notebooks/en/05-ert/01-ert-rights.ipynb: prose 613, current level1 floor is 1000
+  - notebooks/en/05-ert/01-ert-rights.ipynb: figures 1, current level1 floor is 2
+  - notebooks/en/05-ert/01-ert-rights.ipynb: equations 0, current level1 floor is 1
+  - notebooks/en/05-ert/01-ert-rights.ipynb: sources 2, current level1 floor is 3
+  - notebooks/en/05-ert/02-ert-inversion.ipynb: prose 975, current level2 floor is 1500
+  - notebooks/en/05-ert/02-ert-inversion.ipynb: equations 0, current level2 floor is 2
+  - notebooks/en/05-ert/02-ert-inversion.ipynb: sources 2, current level2 floor is 4
+  - notebooks/en/05-ert/02-ert-inversion.ipynb: no third-level sensitivity/limits heading
+  - notebooks/en/05-ert/02-ert-inversion.ipynb: no third-level own data heading
+  - notebooks/en/05-ert/03-ert-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/en/05-ert/03-ert-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/05-ert/03-ert-method-comparison.ipynb: sources 2, current level3 floor is 4
+  - notebooks/en/05-ert/03-ert-method-comparison.ipynb: no third-level own data heading
+  - notebooks/en/06-seismology/01-waveforms.ipynb: figures 1, current level1 floor is 2
+  - notebooks/en/06-seismology/01-waveforms.ipynb: equations 0, current level1 floor is 1
+  - notebooks/en/06-seismology/01-waveforms.ipynb: sources 1, current level1 floor is 3
+  - notebooks/en/06-seismology/02-traveltime-fwi.ipynb: figures 2, current level2 floor is 3
+  - notebooks/en/06-seismology/02-traveltime-fwi.ipynb: equations 0, current level2 floor is 2
+  - notebooks/en/06-seismology/02-traveltime-fwi.ipynb: sources 2, current level2 floor is 4
+  - notebooks/en/06-seismology/02-traveltime-fwi.ipynb: no third-level own data heading
+  - notebooks/en/06-seismology/03-seismic-method-comparison.ipynb: prose 1034, current level3 floor is 1500
+  - notebooks/en/06-seismology/03-seismic-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/en/06-seismology/03-seismic-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/06-seismology/03-seismic-method-comparison.ipynb: sources 1, current level3 floor is 4
+  - notebooks/en/06-seismology/03-seismic-method-comparison.ipynb: no third-level own data heading
+  - notebooks/en/07-joint/01-joint-hypothesis.ipynb: prose 750, current level1 floor is 1000
+  - notebooks/en/07-joint/01-joint-hypothesis.ipynb: figures 1, current level1 floor is 2
+  - notebooks/en/07-joint/01-joint-hypothesis.ipynb: equations 0, current level1 floor is 1
+  - notebooks/en/07-joint/01-joint-hypothesis.ipynb: sources 2, current level1 floor is 3
+  - notebooks/en/07-joint/02-joint-objective.ipynb: prose 845, current level2 floor is 1500
+  - notebooks/en/07-joint/02-joint-objective.ipynb: figures 2, current level2 floor is 3
+  - notebooks/en/07-joint/02-joint-objective.ipynb: equations 0, current level2 floor is 2
+  - notebooks/en/07-joint/02-joint-objective.ipynb: sources 2, current level2 floor is 4
+  - notebooks/en/07-joint/02-joint-objective.ipynb: no third-level sensitivity/limits heading
+  - notebooks/en/07-joint/02-joint-objective.ipynb: no third-level own data heading
+  - notebooks/en/07-joint/03-joint-method-comparison.ipynb: prose 949, current level3 floor is 1500
+  - notebooks/en/07-joint/03-joint-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/en/07-joint/03-joint-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/07-joint/03-joint-method-comparison.ipynb: sources 2, current level3 floor is 4
+  - notebooks/en/07-joint/03-joint-method-comparison.ipynb: no third-level own data heading
+  - notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb: prose 828, current level3 floor is 1500
+  - notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb: sources 2, current level3 floor is 4
+  - notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb: no third-level own data heading
+  - notebooks/en/08-learning/01-learning-splits.ipynb: prose 288, current level1 floor is 1000
+  - notebooks/en/08-learning/01-learning-splits.ipynb: figures 1, current level1 floor is 2
+  - notebooks/en/08-learning/01-learning-splits.ipynb: equations 0, current level1 floor is 1
+  - notebooks/en/08-learning/02-learning-heldout.ipynb: prose 500, current level2 floor is 1500
+  - notebooks/en/08-learning/02-learning-heldout.ipynb: equations 0, current level2 floor is 2
+  - notebooks/en/08-learning/02-learning-heldout.ipynb: sources 3, current level2 floor is 4
+  - notebooks/en/08-learning/02-learning-heldout.ipynb: no third-level sensitivity/limits heading
+  - notebooks/en/08-learning/02-learning-heldout.ipynb: no third-level own data heading
+  - notebooks/en/08-learning/03-learning-method-comparison.ipynb: prose 623, current level3 floor is 1500
+  - notebooks/en/08-learning/03-learning-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/en/08-learning/03-learning-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/08-learning/03-learning-method-comparison.ipynb: sources 3, current level3 floor is 4
+  - notebooks/en/08-learning/03-learning-method-comparison.ipynb: no third-level sensitivity/limits heading
+  - notebooks/en/08-learning/03-learning-method-comparison.ipynb: no third-level own data heading
+  - notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb: prose 809, current level3 floor is 1500
+  - notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb: figures 2, current level3 floor is 3
+  - notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb: equations 0, current level3 floor is 2
+  - notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb: sources 2, current level3 floor is 4
+  - notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb: no third-level own data heading
+  - notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb: no third-level own data heading
+  - notebooks/es/03-magnetics/03-m04-induced-prism-forward.ipynb: prose 1092, current level3 floor is 1500
+  - notebooks/es/03-magnetics/03-m04-induced-prism-forward.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/03-magnetics/03-m04-induced-prism-forward.ipynb: sources 1, current level3 floor is 4
+  - notebooks/es/03-magnetics/03-m04-induced-prism-forward.ipynb: no third-level sensitivity/limits heading
+  - notebooks/es/03-magnetics/03-m04-induced-prism-forward.ipynb: no third-level own data heading
+  - notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb: prose 468, current level3 floor is 1500
+  - notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb: figures 1, current level3 floor is 3
+  - notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb: sources 1, current level3 floor is 4
+  - notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb: no third-level sensitivity/limits heading
+  - notebooks/es/03-magnetics/04-m04-fit-objective-validation.ipynb: no third-level own data heading
+  - notebooks/es/05-ert/01-ert-rights.ipynb: prose 743, current level1 floor is 1000
+  - notebooks/es/05-ert/01-ert-rights.ipynb: figures 1, current level1 floor is 2
+  - notebooks/es/05-ert/01-ert-rights.ipynb: equations 0, current level1 floor is 1
+  - notebooks/es/05-ert/01-ert-rights.ipynb: sources 2, current level1 floor is 3
+  - notebooks/es/05-ert/02-ert-inversion.ipynb: prose 1065, current level2 floor is 1500
+  - notebooks/es/05-ert/02-ert-inversion.ipynb: equations 0, current level2 floor is 2
+  - notebooks/es/05-ert/02-ert-inversion.ipynb: sources 2, current level2 floor is 4
+  - notebooks/es/05-ert/02-ert-inversion.ipynb: no third-level sensitivity/limits heading
+  - notebooks/es/05-ert/02-ert-inversion.ipynb: no third-level own data heading
+  - notebooks/es/05-ert/03-ert-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/es/05-ert/03-ert-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/05-ert/03-ert-method-comparison.ipynb: sources 2, current level3 floor is 4
+  - notebooks/es/05-ert/03-ert-method-comparison.ipynb: no third-level own data heading
+  - notebooks/es/06-seismology/01-waveforms.ipynb: prose 841, current level1 floor is 1000
+  - notebooks/es/06-seismology/01-waveforms.ipynb: figures 1, current level1 floor is 2
+  - notebooks/es/06-seismology/01-waveforms.ipynb: equations 0, current level1 floor is 1
+  - notebooks/es/06-seismology/01-waveforms.ipynb: sources 1, current level1 floor is 3
+  - notebooks/es/06-seismology/02-traveltime-fwi.ipynb: figures 2, current level2 floor is 3
+  - notebooks/es/06-seismology/02-traveltime-fwi.ipynb: equations 0, current level2 floor is 2
+  - notebooks/es/06-seismology/02-traveltime-fwi.ipynb: sources 2, current level2 floor is 4
+  - notebooks/es/06-seismology/02-traveltime-fwi.ipynb: no third-level own data heading
+  - notebooks/es/06-seismology/03-seismic-method-comparison.ipynb: prose 824, current level3 floor is 1500
+  - notebooks/es/06-seismology/03-seismic-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/es/06-seismology/03-seismic-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/06-seismology/03-seismic-method-comparison.ipynb: sources 1, current level3 floor is 4
+  - notebooks/es/06-seismology/03-seismic-method-comparison.ipynb: no third-level own data heading
+  - notebooks/es/07-joint/01-joint-hypothesis.ipynb: prose 733, current level1 floor is 1000
+  - notebooks/es/07-joint/01-joint-hypothesis.ipynb: figures 1, current level1 floor is 2
+  - notebooks/es/07-joint/01-joint-hypothesis.ipynb: equations 0, current level1 floor is 1
+  - notebooks/es/07-joint/01-joint-hypothesis.ipynb: sources 2, current level1 floor is 3
+  - notebooks/es/07-joint/02-joint-objective.ipynb: prose 855, current level2 floor is 1500
+  - notebooks/es/07-joint/02-joint-objective.ipynb: figures 2, current level2 floor is 3
+  - notebooks/es/07-joint/02-joint-objective.ipynb: equations 0, current level2 floor is 2
+  - notebooks/es/07-joint/02-joint-objective.ipynb: sources 2, current level2 floor is 4
+  - notebooks/es/07-joint/02-joint-objective.ipynb: no third-level sensitivity/limits heading
+  - notebooks/es/07-joint/02-joint-objective.ipynb: no third-level own data heading
+  - notebooks/es/07-joint/03-joint-method-comparison.ipynb: prose 909, current level3 floor is 1500
+  - notebooks/es/07-joint/03-joint-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/es/07-joint/03-joint-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/07-joint/03-joint-method-comparison.ipynb: sources 2, current level3 floor is 4
+  - notebooks/es/07-joint/03-joint-method-comparison.ipynb: no third-level own data heading
+  - notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb: prose 749, current level3 floor is 1500
+  - notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb: sources 2, current level3 floor is 4
+  - notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb: no third-level own data heading
+  - notebooks/es/08-learning/01-learning-splits.ipynb: prose 272, current level1 floor is 1000
+  - notebooks/es/08-learning/01-learning-splits.ipynb: figures 1, current level1 floor is 2
+  - notebooks/es/08-learning/01-learning-splits.ipynb: equations 0, current level1 floor is 1
+  - notebooks/es/08-learning/02-learning-heldout.ipynb: prose 445, current level2 floor is 1500
+  - notebooks/es/08-learning/02-learning-heldout.ipynb: equations 0, current level2 floor is 2
+  - notebooks/es/08-learning/02-learning-heldout.ipynb: sources 3, current level2 floor is 4
+  - notebooks/es/08-learning/02-learning-heldout.ipynb: no third-level sensitivity/limits heading
+  - notebooks/es/08-learning/02-learning-heldout.ipynb: no third-level own data heading
+  - notebooks/es/08-learning/03-learning-method-comparison.ipynb: prose 581, current level3 floor is 1500
+  - notebooks/es/08-learning/03-learning-method-comparison.ipynb: figures 2, current level3 floor is 3
+  - notebooks/es/08-learning/03-learning-method-comparison.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/08-learning/03-learning-method-comparison.ipynb: sources 3, current level3 floor is 4
+  - notebooks/es/08-learning/03-learning-method-comparison.ipynb: no third-level own data heading
+  - notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb: prose 797, current level3 floor is 1500
+  - notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb: figures 2, current level3 floor is 3
+  - notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb: equations 0, current level3 floor is 2
+  - notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb: sources 2, current level3 floor is 4
+  - notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb: no third-level own data heading
+  - product.json: no pipeline stage inventory; declare real pipeline_stage_sources when stages use another layout
+  - notebooks/coverage.json: contracts does not map api-payloads
+  - notebooks/coverage.json: contracts does not map data-readiness
+  - notebooks/coverage.json: contracts does not map private-api
+check_notebook_depth: FAILED (153 findings)

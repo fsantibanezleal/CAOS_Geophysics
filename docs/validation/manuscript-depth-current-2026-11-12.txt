@@ -1,0 +1,5 @@
+MANUSCRIPT CONTENT CHECK FAILED (4 findings; conventions/manuscript-content-bar.md):
+  - manuscripts/geophysics-identifiability: no LaTeX main file with \documentclass: a CAOS manuscript is written in LaTeX (conventions/manuscript-content-bar.md section 2)
+  - manuscripts/inverse-earth-studio-report-0.04.003: coverage.json is missing (conventions/manuscript-content-bar.md section 5)
+  - manuscripts/m12-nullspace-refinement-v0.01: coverage.json is missing (conventions/manuscript-content-bar.md section 5)
+  - manuscripts/: no technical report (a folder whose coverage.json has kind technical-report) (conventions/manuscript-content-bar.md section 3)
