@@ -79,7 +79,7 @@ Unmeasured capacity is an open release gate, not an implied unlimited server all
 | Local GPU | Supported FWI, neural training, large matrices and full bake. | Explicit device selection, pinned environment, seeded protocols, held-out splits, checkpoint identity and independent CPU replay. |
 | Static artifact replay | View baked arrays and computed optimizer states where the release explicitly labels them. | Artifact hashes and scientific receipts match; replay is never represented as an online inverse calculation. |
 
-The MT response lessons also cite the primary phase-tensor formulation by Caldwell, Bibby and Brown (https://doi.org/10.1111/j.1365-246X.2004.02281.x) and the MTPy software article by Kirkby et al. (https://doi.org/10.21105/joss.01358). These sources support the response conventions and software context; the product's own QC and inversion behavior remains defined by the executable methods and tests below.
+The MT response lessons also cite the primary phase-tensor formulation by Caldwell, Bibby and Brown (https://doi.org/10.1111/j.1365-246X.2004.02281.x) and the MTPy software article by Kirkby et al. (https://doi.org/10.21105/joss.01358). These sources support the response conventions and software context; the product's own QC and inversion behavior remains defined by the executable methods and tests below. The M12 null-space analysis also cites Backus and Gilbert (https://doi.org/10.1111/j.1365-246X.1968.tb00216.x), Rowbotham and Pratt (https://doi.org/10.1190/1.1444195), and Muñoz and Rath (https://doi.org/10.1111/j.1365-246X.2005.02825.x) for resolution limits and established null-space use; the retained study is not a reproduction of those methods.
 
 ## Method ladder
 

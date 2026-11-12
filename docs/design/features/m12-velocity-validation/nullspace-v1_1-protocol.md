@@ -155,3 +155,21 @@ probabilities. The original v1.1 receipt and RMSE metrics are unchanged; M12
 scientific acceptance remains false. See
 [the reconciliation record](../../../validation/m12-nullspace-threshold-reconciliation-2026-10-30.md)
 for source hashes and reproduction.
+
+## Paired-metric CSV analysis
+
+`data-pipeline/m12_nullspace_analysis.py::analyze_paired_metrics_csv` accepts a local table of already-computed, case-matched errors. It is a post-evaluation analysis tool; it does not ingest raw geophysical measurements, run either inversion, derive truth, or choose a calibration parameter.
+
+The CSV header must include `case_id`, `cohort`, `learned_velocity_rmse_m_s`, `classical_velocity_rmse_m_s`, `learned_oracle_rmse_ms`, and `classical_oracle_rmse_ms`. Velocity errors are in m/s and oracle-time errors are in ms. Each row must refer to the same realization and same declared truth/reference for both methods. The oracle-time columns must come from the same independently specified forward scorer. A field survey without known truth cannot supply these RMSE columns; report measured-data residuals separately instead of inventing reference errors.
+
+The reader records SHA-256 over the exact bytes it parses, rejects repeated `(cohort, case_id)` pairs, invalid headers, malformed rows, nonnumeric/nonfinite values, negative learned errors, and nonpositive reference errors. For each cohort it reports the ratio of cohort-mean errors, median and 90th-percentile casewise ratios, fractions improving each metric and both metrics, and a paired percentile interval. The bootstrap resamples rows within each cohort with NumPy PCG64 and a fixed, reported seed. This interval describes case resampling only; it does not quantify uncertainty across training, generator, geology, acquisition, or measurement populations.
+
+```python
+from m12_nullspace_analysis import analyze_paired_metrics_csv
+
+summary = analyze_paired_metrics_csv("paired-errors.csv")
+print(summary["source_sha256"])
+print(summary["cohorts"])
+```
+
+The bilingual M12 lesson exposes this path through `CAOS_M12_METRICS_CSV`. It prints summaries and the source hash without uploading the file. The canonical receipt workflow remains the reproducible study result; external CSV summaries do not alter its frozen calibration or scientific acceptance.

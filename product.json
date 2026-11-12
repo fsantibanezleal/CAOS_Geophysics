@@ -137,6 +137,7 @@
     "long_valley_timelapse.build_artifact",
     "gravity_forward.forward_gravity",
     "m12_nullspace_analysis.analyze_receipt",
-    "m12_nullspace_analysis.paired_bootstrap_intervals"
+    "m12_nullspace_analysis.paired_bootstrap_intervals",
+    "m12_nullspace_analysis.analyze_paired_metrics_csv"
   ]
 }
