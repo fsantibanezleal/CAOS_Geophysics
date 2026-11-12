@@ -154,11 +154,16 @@
         "M03",
         "M04"
       ],
-      "title": "Magnetic quantities, frame and provenance",
+      "title": "Magnetic quantities, field frame and measured survey",
       "sources": [
-        "https://doi.org/10.1016/j.cageo.2015.09.015"
+        "https://doi.org/10.3133/ofr2000188",
+        "https://pubs.usgs.gov/of/2000/of00-188/data/amargosa.xyz.gz",
+        "https://pubs.usgs.gov/of/2000/of00-188/data/amargosa.info",
+        "https://doi.org/10.1017/CBO9780511549816",
+        "https://doi.org/10.1016/j.cageo.2015.09.015",
+        "https://doi.org/10.1046/j.1365-2478.1999.00133.x"
       ],
-      "content_scope": "Defines magnetic quantities, coordinate frame, and provenance common to the magnetic methods."
+      "content_scope": "Defines measured magnetic quantities, field frame, and source provenance used by M03 and M04."
     },
     {
       "en": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
