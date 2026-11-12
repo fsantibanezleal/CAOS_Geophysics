@@ -97,3 +97,47 @@ def analyze_receipt(receipt: Mapping[str, object]) -> dict[str, object]:
         "grid": alpha.get("grid", {}),
     }
     return output
+
+
+def paired_bootstrap_intervals(receipt: Mapping[str, object], cohort_name: str,
+                               *, draws: int = 20_000, seed: int = 6_122_026) -> dict[str, object]:
+    """Reproduce the manuscript's paired case-bootstrap intervals for both RMSE ratios.
+
+    Each replicate resamples case indices with replacement and takes the ratio of
+    the two cohort means. The two metrics use the same seeded index sequence,
+    preserving the case pairing. Intervals describe resampling within this fixed
+    synthetic cohort, not variation across geological settings.
+    """
+    if cohort_name not in COHORTS:
+        raise ValueError(f"unknown held-out cohort: {cohort_name}")
+    if isinstance(draws, bool) or not isinstance(draws, int) or draws < 2:
+        raise ValueError("bootstrap draws must be an integer of at least two")
+    if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+        raise ValueError("bootstrap seed must be a nonnegative integer")
+    cohorts = receipt.get("cohorts")
+    cohort = cohorts.get(cohort_name) if isinstance(cohorts, Mapping) else None
+    records = cohort.get("per_record") if isinstance(cohort, Mapping) else None
+    if not isinstance(records, list) or not records:
+        raise ValueError(f"cohort {cohort_name} has no paired records")
+
+    count = len(records)
+    indices = np.random.Generator(np.random.PCG64(seed)).integers(0, count, size=(draws, count))
+    intervals: dict[str, object] = {}
+    for metric, (learned_key, classical_key) in ERROR_PAIRS.items():
+        learned, classical = _paired_values(records, learned_key, classical_key)
+        ratios = learned[indices].mean(axis=1) / classical[indices].mean(axis=1)
+        low, high = np.quantile(ratios, (0.025, 0.975), method="linear")
+        intervals[metric] = {
+            "point_ratio": float(learned.mean() / classical.mean()),
+            "ci95": [float(low), float(high)],
+        }
+    return {
+        "schema": "caos-geophysics.m12-paired-bootstrap/v1",
+        "cohort": cohort_name,
+        "count": count,
+        "draws": draws,
+        "seed": seed,
+        "generator": "NumPy PCG64",
+        "interval": "95% percentile; ratio of means per paired case-resample",
+        "metrics": intervals,
+    }
