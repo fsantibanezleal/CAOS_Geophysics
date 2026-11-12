@@ -1641,7 +1641,7 @@ class Reading:
         for i, c in enumerate(self.cells):
             if c["cell_type"] == "markdown":
                 fenced = False
-                for line in text_of(c["source"]).splitlines():
+                for line in visible_markdown(text_of(c["source"])).splitlines():
                     if FENCE.match(line):
                         fenced = not fenced
                     elif not fenced and (m := HEADING2.match(line)):
