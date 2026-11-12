@@ -264,7 +264,8 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
         objective.release_state()
 
 
-def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float = MAX_WALL_SECONDS):
+def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *,
+                    l2_result: dict, wall_seconds: float = MAX_WALL_SECONDS):
     """Run the frozen eight-epsilon, fixed-beta SimPEG sparse IRLS policy.
 
     Each reweight step constructs a source-bound frozen quadratic and runs the
@@ -278,6 +279,18 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
         raise ValueError("fold: expected sealed development fold 0, 1, or 2")
     if type(beta) is not float or not np.isfinite(beta) or beta <= 0.:
         raise ValueError("beta: finite positive dimensionless value required")
+    if type(l2_result) is not dict or l2_result.get("schema") != "magnetic-linear-l2-fold-result-1":
+        raise TypeError("l2_result: source-bound L2 fold result required")
+    if (l2_result.get("status") != "converged" or l2_result.get("fold_index") != fold_index
+            or l2_result.get("beta") != beta):
+        raise ValueError("l2_result: converged result for this fold and beta required")
+    if (type(l2_result.get("terminal_audits")) not in (tuple, list)
+            or not l2_result["terminal_audits"]
+            or any(row.get("passed") is not True for row in l2_result["terminal_audits"])
+            or type(l2_result.get("normalized_projected_kkt_inf")) not in (int, float)
+            or not np.isfinite(l2_result["normalized_projected_kkt_inf"])
+            or l2_result["normalized_projected_kkt_inf"] > TERMINAL.required_kkt_normalized):
+        raise ValueError("l2_result: terminal certificates and independent KKT must pass")
     if (type(wall_seconds) not in (int, float) or not np.isfinite(wall_seconds)
             or not 0. < wall_seconds <= MAX_WALL_SECONDS):
         raise ValueError("wall_seconds: finite value in (0, 120] required")
@@ -297,6 +310,10 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
     if not fit_rows or tuple(sorted(set(fit_rows))) != fit_rows:
         raise ValueError("partition: fit rows must be nonempty, unique, and ordered")
     operator = magnetic_inverse.build_operator(raw, fit_rows, deadline=deadline)
+    l2_model = l2_result.get("model_q")
+    if (type(l2_model) is not np.ndarray or l2_model.dtype != np.float64
+            or l2_model.shape != (operator.parameters,) or not np.isfinite(l2_model).all()):
+        raise TypeError("l2_result: finite float64 model with the sealed active-cell count required")
     components = 3 if metadata["processing"]["quantity"] == "secondary_enu_nT" else 1
     flat_rows = (np.asarray(fit_rows, dtype=np.int64)[:, None] * components
                  + np.arange(components, dtype=np.int64)).reshape(-1)
@@ -308,14 +325,26 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
     prior = metadata["prior"]
     lower = _owned(np.asarray(prior["lower_si"]["data"], dtype=np.float64) / .01)
     upper = _owned(np.asarray(prior["upper_si"]["data"], dtype=np.float64) / .01)
-    start_q = _owned(np.asarray(prior["start_si"]["data"], dtype=np.float64) / .01)
     reference_q = _owned(np.asarray(prior["reference_si"]["data"], dtype=np.float64) / .01)
     lengths_m = _owned(np.asarray(prior["lengths_m"]["data"], dtype=np.float64))
     if len(reference_q) != operator.parameters:
         raise ValueError("prior: active model count differs from the sealed forward mesh")
+    if np.any((l2_model < lower) | (l2_model > upper)):
+        raise ValueError("l2_result: model lies outside this survey's declared bounds")
+    l2_request_sha256 = l2_result.get("source_inventory", {}).get("survey_request_sha256")
+    if l2_request_sha256 != hashlib.sha256(raw).hexdigest():
+        raise ValueError("l2_result: source request differs from the sparse fit request")
+    if l2_result.get("geometry_seal_sha256") != plan["identity"]["seal_sha256"]:
+        raise ValueError("l2_result: geometry seal differs from the sparse fit")
+    l2_model_sha256 = hashlib.sha256(np.asarray(l2_model, dtype="<f8", order="C").tobytes()).hexdigest()
 
     geometry_seal = plan["identity"]["seal_sha256"]
     inventory = _source_inventory(raw, geometry_seal)
+    if l2_result.get("source_inventory") != inventory:
+        raise ValueError("l2_result: source inventory differs from the sparse fit")
+    if (l2_result.get("fit_rows") != list(fit_rows)
+            or l2_result.get("source_inventory_sha256") != magnetic_survey_json.digest(inventory)):
+        raise ValueError("l2_result: fit-row or inventory digest differs from the sparse fit")
     inventory_sha256 = magnetic_survey_json.digest(inventory)
     source_components = 3 * len(metadata["geometry"]["usable"]["data"])
     allocation = {
@@ -328,13 +357,15 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
         "inner_steps": MAX_STEPS,
         "epsilon_schedule_q": list(magnetic_regularization.SPARSE_EPSILON_Q),
         "outer_updates_per_epsilon": 20,
+        "start_policy": "same_fold_same_beta_converged_l2",
+        "start_model_q_sha256": l2_model_sha256,
         "wall_seconds": float(wall_seconds),
         "runtime_epoch": physical_original_optimizer.LINEAR_EPOCH,
     }
     allocation_sha256 = magnetic_survey_json.digest(allocation)
     history = []
     stages = []
-    current_q = np.array(start_q, dtype=np.float64, copy=True)
+    current_q = np.array(l2_model, dtype=np.float64, copy=True, order="C")
     final_stage_gradient_limit = None
     final_projected_gradient_inf = None
     failure = None
@@ -381,6 +412,10 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
                     attempts = tuple(solved.get("conditioning_attempts", ()))
                     last_attempt = attempts[-1] if attempts else {}
                     failed_trial = solved.get("failed_trial")
+                    failed_model = solved.get("q")
+                    if (type(failed_model) is not np.ndarray or failed_model.dtype != np.float64
+                            or failed_model.shape != current_q.shape or not np.isfinite(failed_model).all()):
+                        failed_model = None
                     compact_trial = None
                     if type(failed_trial) is dict:
                         compact_trial = {
@@ -398,6 +433,12 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
                     history.append({
                         "epsilon_q": float(epsilon_q), "outer_iteration": outer_index + 1,
                         "start_model_q": _owned(current_q),
+                        "inner_model_q": None if failed_model is None else _owned(failed_model),
+                        "inner_model_q_sha256": (
+                            None if failed_model is None else hashlib.sha256(
+                                np.asarray(failed_model, dtype="<f8", order="C").tobytes()
+                            ).hexdigest()
+                        ),
                         "inner_status": solved.get("status"),
                         "inner_reason": failure,
                         "inner_iterations": solved.get("iterations"),
@@ -530,6 +571,8 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: f
         "source_inventory_sha256": inventory_sha256,
         "allocation": allocation,
         "allocation_plan_sha256": allocation_sha256,
+        "start_policy": "same_fold_same_beta_converged_l2",
+        "start_model_q_sha256": l2_model_sha256,
         "beta": beta,
         "model_q": _owned(current_q),
         "parameter_unit": "q=chi_si/0.01",

@@ -673,3 +673,87 @@ External diagnostic receipt SHA-256:
 The focused optimizer module remains 19 passing tests; Ruff passes on the
 profile runner. This is diagnostic evidence only. Sparse acceptance, M04,
 the method ladder and product release remain open.
+
+## 2026-11-11 prior-start sparse IRLS diagnostic (not a candidate fold)
+
+This run used the authored S2-A `linear_tmi_nT` request, fold 0, beta `0.0001`,
+and the frozen eight-value epsilon schedule, objective, bounds, stopping rules,
+and 805,306,368-byte allocation ceiling. It initialized from the request's
+declared prior. The candidate protocol requires a converged same-beta, same-fold
+L2 result, so this successful prior-start run is a solver diagnostic, not a
+valid sparse candidate fold. The locally configured conditioning
+phase ceiling was 1024 and this run explicitly used a 600-second per-fit wall
+allowance. It completed in 190.829 seconds with 154 direction calls and 662
+conditioning phases. The largest recorded prospective allocation was
+762,623,424 bytes, 42,682,944 bytes below the byte ceiling.
+
+All eight epsilon stages returned `converged`. The stage outer-update counts
+were 3, 1, 1, 1, 1, 1, 1, 1. Each of the ten stored M02 terminal audits passed
+its original-noise free-face certificate; the maximum certified free error
+upper bound was `1.15522e-13`, and the maximum normalized exact bound-KKT value
+was `8.24701e-15`. All ten accepted outer states passed the fixed-epsilon true
+objective monotonicity check. The final normalized projected-gradient infinity
+norm was `3.60736e-15`, against the stage's `1.25134e-4` limit. The final
+fixed-epsilon objective components were `phi_d=374.04002134` and
+`phi_m=12.47076958`, with beta `0.0001` and total `374.04126842`. The 144
+observed-minus-predicted residuals had an unweighted RMS of `0.805838 nT`.
+These quantities are solver diagnostics on one synthetic development fold;
+they do not measure held-out performance or geological accuracy.
+
+The full diagnostic artifact, including the 528-component normalized model, 144
+predictions, 144 signed residuals, stage history, terminal-certificate digests
+and per-phase resource profile, is stored outside Git at the relative path
+`CAOS_Geophysics/research-runs/2026-11-11/s2a-sparse-fold0-beta-1e-4-prior-start-diagnostic.json`
+under the configured device data root. Its SHA-256 is
+`b21d4ee3e554076e408f32f9bed1c9f0dce6cd6138a1df71147b667702211ad4`. The
+request SHA-256 is
+`e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa`, the
+calibration source SHA-256 is
+`eafd2c41e9c8adf8075e4633755245e4f8f2334ab362b155fa0badf72805783b`, and the
+reduced-optimizer source SHA-256 is
+`74ca5273cfe885f0d77ee117119a4d4221929e097383e4843130db912d6b16d2`. The
+compact machine-readable summary is
+[`evidence/s2a-sparse-fold0-beta-1e-4.json`](evidence/s2a-sparse-fold0-beta-1e-4.json).
+
+The sparse API and profile runner have since been changed to require and
+persist a certified same-fold, same-beta L2 starting model. That candidate-path
+replay remains to be run. The prior-start result claims remain false for candidate selection, field-geology
+validation, outer evaluation, method acceptance and online admission. It closes
+only the standalone IRLS convergence diagnostic. The 16-candidate/three-fold matrix,
+fold scoring, nested selection, final development refit, model freeze, sealed
+evaluation, independent-acquisition controls, field eligibility, user-data
+bundle and full M04 integration remain open. Earlier failures remain retained
+above as historical evidence.
+
+## 2026-11-11 same-beta L2-start sparse replay at production limits
+
+The profile runner executed the authored S2-A `linear_tmi_nT` fold 0 at beta
+`0.0001`. Unlike the prior-start and over-budget diagnostics above, this run
+started from a converged, independently certified L2 model for the same fold,
+beta, source inventory, geometry seal and fitting rows. The L2 fit converged
+with normalized KKT `8.9567e-17` in 41.828 s. The sparse fit used the unchanged
+120-second deadline, 512-phase limit and 805,306,368-byte allocation ceiling.
+It ran for 120.328 s and stopped at `wall_cap` while processing epsilon
+`0.0125`; epsilon `0.1`, `0.05` and `0.025` converged. The 12 recorded
+conditioning phases were all within one CG iteration, and the prospective
+allocation remained within the byte ceiling. The full eight-stage schedule did
+not finish, so the fold failed and no candidate score or selection was
+produced.
+
+This replay validates the same-beta L2 start binding and provides a compliant
+resource-failure receipt. It does not satisfy T43 or justify extending either
+M02 solver limit. Its full receipt is stored outside Git at
+`CAOS_Geophysics/research-runs/2026-11-11/s2a-sparse-fold0-beta-1e-4-same-beta-l2-start-120s.json`
+under the configured device data root. Receipt SHA-256:
+`b9817de18852980422e1a573181259be914adcfe6d233ad00a23a59003220411`.
+The receipt records the exact product commit, runner and solver source hashes,
+runtime, initial L2 model hash, every completed epsilon stage and the failure
+state. Its compact summary is
+[`evidence/s2a-sparse-fold0-beta-1e-4-l2-start-120s.json`](evidence/s2a-sparse-fold0-beta-1e-4-l2-start-120s.json).
+
+The remaining bottleneck is the time required by repeated certified inner
+solves across the continuation schedule. The run does not authorize weakening
+the original-noise terminal certificate, objective monotonicity, frozen
+epsilon schedule, source binding or resource limits. Any optimization must
+preserve those conditions and pass the existing adversarial controls before
+the candidate matrix runs.

@@ -9,33 +9,43 @@ coordination and release records remain in management.
 
 ## Current implementation checkpoint : 2026-11-11
 
-The source-bound sparse inner-surrogate path and sealed-fold IRLS driver are now
+The source-bound sparse inner-surrogate path and sealed-fold IRLS driver are
 implemented in `magnetic_optimizer_adapter.py` and `magnetic_calibration.py`.
 Focused controls show the actual SimPEG frozen weights, objective, gradient,
 Hessian and original quadratic operands agree; a two-parameter inner solve
-converges through the registered M02 solver. The full authored S2-A 528-cell
-linear-TMI fold 0 at beta `0.0001` was also attempted. It stopped as
-`resource_cap` after 87 accepted iterations and 512 conditioning phases; its
-measured byte reservation remained below 805,306,368 bytes, so the limiting
-condition was the reviewed phase-count cap. The fold remains failed and cannot
-enter candidate scoring.
+converges through the registered M02 solver. On 2026-11-11, two S2-A
+528-cell linear-TMI fold-0 diagnostics used a 600-second fit allowance and a
+1024-phase ceiling, exceeding the bound M02 solver's reviewed 120-second and
+512-phase policy. The prior-start run completed all eight epsilon stages, but
+it is not method evidence. A second run began from a certified same-beta L2
+solution and failed at epsilon `0.00625` with `zero_free_direction`; a repeat
+under concurrent frontend-build load stopped at `wall_cap`. These over-budget
+runs are retained only as diagnostics and do not pass a candidate fold.
 
-T43 remains open: no complete S2 sparse fold has passed all eight epsilon
-stages; the 16-candidate, three-fold matrix, nested selection, development
-refit, immutable freeze and one-time sealed evaluation are not complete. The
-passing small inner control and a retained non-success are implementation
-evidence, not sparse-method acceptance.
+A protocol-correct replay then used the certified same-fold, same-beta L2
+initialization under the production 120-second fit deadline and 512-phase cap.
+The L2 fit converged in 41.828 s. Sparse IRLS used its full 120.328 s allowance:
+epsilon values 0.1, 0.05 and 0.025 converged, then epsilon 0.0125 stopped at
+`wall_cap`. It used 12 conditioning phases and remained below the recorded
+allocation ceiling. This is a valid resource-limit failure receipt, not a
+candidate pass; see `validation.md` and the matching evidence summary.
 
-A single sensitivity replay of that same first fold used a process-local
-conditioning-phase limit of 1024 while keeping the production 120-second wall
-and byte limits, numerical tolerances, beta, epsilon schedule and model bounds
-unchanged. Three epsilon stages converged, but the fourth reached the wall cap;
-the remaining stages and candidate selection did not run. The first inner solve
-used 635 conditioning phases with a 762,623,424-byte prospective peak below the
-805,306,368-byte cap. This is a diagnostic negative result, not a production
-cap change or method pass. See the [phase sensitivity record](validation.md#2026-11-11-sparse-first-fold-phase-limit-sensitivity-diagnostic-only).
-Optimize solver work under the existing accepted limits before any candidate
-matrix run.
+The sparse-fold API now requires a converged, certified L2 result with matching
+beta, fold, source inventory, geometry and fitting rows; the profile runner
+performs that L2 fit first. T43 remains open: the 16-candidate, three-fold matrix, nested selection,
+development refit, immutable freeze and one-time sealed evaluation have not
+run. No candidate score, field truth, outer evaluation or method acceptance is
+claimed. The full source-bound diagnostic runs are external to Git under the
+configured device data root; their exact relative paths and hashes are in
+`validation.md`.
+
+Earlier 120-second/512-phase failures and the 120-second phase-sensitivity
+failure remain historical diagnostics in `validation.md`. The product fit API
+and profile runner now use the bound M02 120-second deadline and 512-phase
+limit. The sparse API requires a converged, certified L2 result with matching
+beta, fold, source inventory, geometry and fit rows before it can run. The
+production-limit replay is now recorded, but a passing candidate fold remains
+to be completed before matrix execution.
 
 ## T41: source/protocol and geometry foundation
 

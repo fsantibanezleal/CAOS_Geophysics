@@ -222,7 +222,7 @@ def test_sealed_survey_operator_preserves_original_receiver_rows():
     assert operator.rows == 4 and operator.components == 3
 
 
-def test_nonlinear_lane_refuses_but_sparse_frozen_surrogate_runs_source_bound_solver():
+def test_nonlinear_lane_refuses_but_sparse_frozen_surrogate_runs_source_bound_solver(monkeypatch):
     request = _small_forward_request()
     forward = magnetic_forward.forward_magnetic_with_kernel(request)
     background = forward["inducing_field"]["background_enu_nt"]
@@ -254,7 +254,15 @@ def test_nonlinear_lane_refuses_but_sparse_frozen_surrogate_runs_source_bound_so
     sparse = MagneticRegularizer(mesh, reference, lengths, "sparse", .1, weight_model)
     refreshed = sparse.source.evaluate_sparse(weight_model, .1)
     q = np.array([.7, .65], dtype=np.float64)
+    source_evaluations = []
+    source_evaluate = sparse.source.evaluate
+    def counted_source_evaluate(model):
+        source_evaluations.append(None)
+        return source_evaluate(model)
+    monkeypatch.setattr(sparse.source, "evaluate", counted_source_evaluate)
     evaluated = sparse.evaluate(q)
+    assert source_evaluations == []
+    assert evaluated["engine_epoch"] == magnetic_optimizer_adapter.magnetic_regularization.ENGINE_EPOCH
     np.testing.assert_allclose(sparse.vendor(q), evaluated["phi"], rtol=2e-15, atol=0.)
     np.testing.assert_allclose(sparse.vendor.deriv(q), evaluated["gradient_q"], rtol=2e-14, atol=1e-15)
     np.testing.assert_array_equal(sparse.smallness_irls_weights, refreshed["smallness_irls_weights"])

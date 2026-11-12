@@ -95,6 +95,7 @@ class MagneticRegularizer:
         self.source = magnetic_regularization.MagneticRegularizer(
             tensor, active, reference_q, lengths_m
         )
+        self.engine_epoch = magnetic_regularization.ENGINE_EPOCH
         self.reference = self.source.reference_q
         self.lengths_m = self.source.lengths_m
         self.parameter_count = self.source.parameter_count
@@ -172,7 +173,7 @@ class MagneticRegularizer:
                 "hessian_action": lambda direction: self.hessian @ direction,
                 "independent_phi": phi, "independent_gradient_q": gradient.copy(),
                 "unit": "dimensionless", "parameter_unit": "q=chi_si/0.01",
-                "engine_epoch": self.source.evaluate(self.reference)["engine_epoch"]}
+                "engine_epoch": self.engine_epoch}
 
 
 class MagneticObjective:
@@ -227,6 +228,18 @@ class MagneticObjective:
         self.lower, self.upper = lower_q.copy(), upper_q.copy()
         self.lower.flags.writeable = False
         self.upper.flags.writeable = False
+        # The admitted quantities are affine, so SimPEG's source-bound
+        # component kernel yields one constant Jacobian for the whole solve.
+        # Derive it once through the canonical quantity implementation and
+        # reuse its exact whitened form at every accepted/trial model.
+        linear_state = self.operator.evaluate(self.lower)
+        self.linear_jacobian = np.array(linear_state["jacobian_nT_per_q"],
+                                        dtype=np.float64, copy=True, order="C")
+        if self.linear_jacobian.shape != (count, operator.parameters):
+            raise ValueError("objective: canonical affine Jacobian shape mismatch")
+        self.linear_jacobian.flags.writeable = False
+        self.weighted_linear_jacobian = self.whitener.whiten(self.linear_jacobian)
+        self.weighted_linear_jacobian.flags.writeable = False
         self.beta, self.inventory = beta, source_inventory_sha256
         self.allocation, self.stage = allocation_plan_sha256, stage_index
         self.sha256 = self._identity_digest()
@@ -271,10 +284,9 @@ class MagneticObjective:
             raise ValueError("q: model outside the frozen objective bounds")
         if self._cache is not None and np.array_equal(q, self._cache[0]):
             return self._cache[1:]
-        prediction = self.operator.evaluate(q)
-        residual = prediction["prediction_nT"] - self.observed
+        residual = self.linear_jacobian @ q - self.observed
         weighted_residual = self.whitener.whiten(residual)
-        weighted_jacobian = self.whitener.whiten(prediction["jacobian_nT_per_q"])
+        weighted_jacobian = self.weighted_linear_jacobian
         phi_d = float(weighted_residual @ weighted_residual)
         regularization = self.regularizer.evaluate(q)
         phi_m = float(regularization["phi"])
@@ -283,7 +295,7 @@ class MagneticObjective:
                     + self.beta * regularization["gradient_q"])
         if not np.isfinite([phi_d, phi_m, phi]).all() or not np.isfinite(gradient).all():
             raise FloatingPointError("objective: nonfinite Gaussian or SimPEG result")
-        self._cache = (q.copy(), phi_d, phi_m, phi, gradient.copy(), weighted_jacobian.copy())
+        self._cache = (q.copy(), phi_d, phi_m, phi, gradient.copy(), weighted_jacobian)
         return self._cache[1:]
 
     def components(self, q):

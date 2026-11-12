@@ -33,6 +33,12 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_regularizer(monke
     background=np.array([0.,0.,50000.],dtype=np.float64)
     operator=magnetic_inverse.MagneticQuantity(
         component_jacobian,background,direction,50000.,"linear_tmi_nT")
+    operator_calls=[]
+    original_operator_evaluate=operator.evaluate
+    def counted_operator_evaluate(model):
+        operator_calls.append(model.copy())
+        return original_operator_evaluate(model)
+    monkeypatch.setattr(operator,"evaluate",counted_operator_evaluate)
     mesh={
         "origin_m":np.array([0.,0.,0.],dtype=np.float64),
         "hx_m":np.array([2.,3.],dtype=np.float64),
@@ -55,7 +61,10 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_regularizer(monke
         operator,regularizer,np.array([.5,-.2,.1],dtype=np.float64),
         {"kind":"diagonal_sd","values":np.array([[.4],[.7],[.9]],dtype=np.float64)},
         np.zeros(2,dtype=np.float64),np.full(2,10.,dtype=np.float64),beta,"a"*64,"b"*64)
+    assert len(operator_calls)==1
     q=np.array([.3,.5],dtype=np.float64)
+    np.testing.assert_allclose(objective.linear_jacobian@q,
+        original_operator_evaluate(q)["prediction_nT"],rtol=2e-15,atol=1e-15)
     vector=np.array([-.7,.4],dtype=np.float64)
     weighted_jacobian=objective._state(q)[-1]
     regularizer_hessian=regularizer.source.hessian
@@ -72,6 +81,7 @@ def test_linear_objective_reuses_one_frozen_simpeg_hessian_per_regularizer(monke
     q_next=q.copy()
     q_next[0]=.31
     next_metric=dto.metric_operands(q_next)
+    assert len(operator_calls)==1
     assert next_metric is not metric
     assert next_metric.regularizer is metric.regularizer
     assert next_metric.binding.model_sha256 != metric.binding.model_sha256
@@ -155,6 +165,23 @@ def test_full528_linear_l2_fold_is_bound_and_exports_only_fit_predictions():
 
 def test_sparse_fold_retains_inner_resource_refusal_without_acceptance(monkeypatch):
     raw = _request("S2-A-linear_tmi_nT.json")
+    phase_limit = calibration.physical_reduced_optimizer.PHASE_LIMIT
+    handle = calibration.magnetic_survey_json.parse_request(raw)
+    plan = calibration.magnetic_survey.plan_geometry(handle)
+    geometry_seal = plan["identity"]["seal_sha256"]
+    inventory = calibration._source_inventory(raw, geometry_seal)
+    fit_rows = plan["partition"]["folds"][0]["fit_rows"]["data"]
+    l2_model = np.full(528, .25, dtype=np.float64)
+    l2_model.flags.writeable = False
+    l2_result = {
+        "schema": "magnetic-linear-l2-fold-result-1", "status": "converged",
+        "fold_index": 0, "beta": .0001, "model_q": l2_model,
+        "terminal_audits": ({"passed": True},),
+        "normalized_projected_kkt_inf": 0., "geometry_seal_sha256": geometry_seal,
+        "source_inventory": inventory,
+        "source_inventory_sha256": calibration.magnetic_survey_json.digest(inventory),
+        "fit_rows": list(fit_rows),
+    }
     manifest = json.loads((ROOT / "manifest.json").read_bytes())
     request_sha256 = __import__("hashlib").sha256(raw).hexdigest()
     record = next(case for case in manifest["cases"]
@@ -167,9 +194,9 @@ def test_sparse_fold_retains_inner_resource_refusal_without_acceptance(monkeypat
         "retained_audit_bytes": 7_158_016,
         "prospective_bytes": 760_776_464,
         "admitted_bytes": calibration.RESOURCE_LIMIT_BYTES,
-        "phase_limit": 512,
+        "phase_limit": phase_limit,
     }
-    attempts = tuple({} for _ in range(511)) + ({
+    attempts = tuple({} for _ in range(phase_limit - 1)) + ({
         "phase": 3, "branch": "admission_refusal", "failure": "resource_cap",
         "iterations": 0, "cumulative_CG": 5, "resource": resource,
     },)
@@ -178,6 +205,7 @@ def test_sparse_fold_retains_inner_resource_refusal_without_acceptance(monkeypat
         assert objective.regularizer.penalty == "sparse"
         assert objective.regularizer.epsilon_q == .1
         assert len(start_q) == 528
+        np.testing.assert_array_equal(start_q, l2_model)
         assert source_components == 3 * 288
         return {
             "status": "failed", "reason": "resource_cap", "iterations": 87,
@@ -194,9 +222,11 @@ def test_sparse_fold_retains_inner_resource_refusal_without_acceptance(monkeypat
         }
 
     monkeypatch.setattr(calibration.adapter, "solve_linear", resource_capped)
-    result = calibration.fit_sparse_fold(raw, 0, .0001, wall_seconds=120.)
+    result = calibration.fit_sparse_fold(
+        raw, 0, .0001, l2_result=l2_result, wall_seconds=120.
+    )
     assert result["status"] == "failed" and result["reason"] == "resource_cap"
-    assert result["history"][0]["conditioning_attempt_count"] == 512
+    assert result["history"][0]["conditioning_attempt_count"] == phase_limit
     assert result["history"][0]["last_conditioning_attempt"]["resource"] == resource
     assert result["history"][0]["inner_failed_trial"] == {
         "iteration": 87, "reason": "resource_cap",
