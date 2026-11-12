@@ -144,9 +144,11 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
     if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise LedgerError("assessment must name a full source revision")
     try:
-        datetime.fromisoformat(ledger["assessed_at"].replace("Z", "+00:00"))
+        assessed_at = datetime.fromisoformat(ledger["assessed_at"].replace("Z", "+00:00"))
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
         raise LedgerError("assessment must name an ISO timestamp") from exc
+    if assessed_at.tzinfo is None or assessed_at.utcoffset() is None:
+        raise LedgerError("assessment timestamp must include a timezone")
     records = ledger.get("requirements")
     if not isinstance(records, list) or any(not isinstance(record, dict) for record in records):
         raise LedgerError("requirements must be an object list")
@@ -190,12 +192,21 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
             name = receipt.get("gate")
             if name not in required or name in executed:
                 raise LedgerError(f"unknown or duplicate measured gate: {key}")
+            receipt_revision = receipt.get("source_revision")
+            try:
+                measured_at = datetime.fromisoformat(receipt["measured_at"].replace("Z", "+00:00"))
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                raise LedgerError(f"invalid measured receipt: {key}") from exc
             if (receipt.get("schema") != "geophysics.gate-receipt/v1"
                     or receipt.get("requirement") != key or receipt.get("verdict") != "pass"
-                    or receipt.get("source_revision") != revision
+                    or not isinstance(receipt_revision, str)
+                    or not re.fullmatch(r"[0-9a-f]{40}", receipt_revision)
+                    or (verdict == "pass" and receipt_revision != revision)
+                    or measured_at.tzinfo is None or measured_at.utcoffset() is None
+                    or measured_at > assessed_at
                     or not isinstance(receipt.get("command"), list) or not receipt["command"]
                     or any(not isinstance(arg, str) for arg in receipt["command"])
-                    or not isinstance(receipt.get("measured_at"), str)):
+                    ):
                 raise LedgerError(f"invalid measured receipt: {key}")
             checked_hash(executable_gate(root, name), receipt.get("gate_sha256"))
             outputs = receipt.get("outputs")

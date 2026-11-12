@@ -96,6 +96,28 @@ class TestConvergence(unittest.TestCase):
         with self.assertRaisesRegex(CHECK.LedgerError, "invalid measured receipt"):
             CHECK.validate(self.root, self.ledger)
 
+    def test_historical_receipts_are_valid_only_as_nonpass_evidence(self):
+        self.measured()
+        self.ledger["assessed_revision"] = "b" * 40
+        for record in self.ledger["requirements"]:
+            record["verdict"] = "unresolved"
+        self.assertEqual(CHECK.validate(self.root, self.ledger)["unresolved"], 2)
+
+        self.ledger["requirements"][0]["verdict"] = "pass"
+        with self.assertRaisesRegex(CHECK.LedgerError, "invalid measured receipt"):
+            CHECK.validate(self.root, self.ledger)
+
+    def test_receipt_after_assessment_is_rejected(self):
+        self.measured()
+        record = self.ledger["requirements"][0]
+        receipt_path = self.root / record["receipts"][0]["path"]
+        receipt = CHECK.strict_json(receipt_path)
+        receipt["measured_at"] = "2099-01-01T00:00:00Z"
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        record["receipts"][0]["sha256"] = CHECK.digest(receipt_path)
+        with self.assertRaisesRegex(CHECK.LedgerError, "invalid measured receipt"):
+            CHECK.validate(self.root, self.ledger)
+
     def test_release_rejects_partial_and_duplicate_deployment(self):
         with self.assertRaisesRegex(CHECK.LedgerError, "not accepted"):
             CHECK.validate(self.root, self.ledger, require_release=True)
