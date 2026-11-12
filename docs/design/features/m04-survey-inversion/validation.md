@@ -892,12 +892,12 @@ the model hash and final-development partition, and kept outer evaluation,
 field validation, method acceptance and online admission false.
 
 The matrix and freeze are authored S2-A controls, not field observations. The
-one-time sealed outer evaluation remains unrun; do not tune, select or replace
-the frozen model based on any outer result. Independent acquisition regimes,
-field eligibility, resource upper-profile controls, bundle/re-import, hosted
-integration and product acceptance remain open. This completes the
-matrix-selection and final-refit-freeze portion only; T43, M04 and the product
-release remain open.
+one-time sealed evaluation is recorded below: the frozen model was not changed
+or selected again after the outer result. Its failure leaves independent
+acquisition regimes, field eligibility, resource upper-profile controls,
+bundle/re-import, hosted integration and product acceptance open. This
+completes matrix selection, final-development refit, freeze and one outer
+prediction only; T43, M04 and the product release remain open.
 
 Focused validation under the declared one-thread BLAS/OMP runtime passed:
 `test_magnetic_final_refit.py`, `test_magnetic_candidate_matrix.py`,
