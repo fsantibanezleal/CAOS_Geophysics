@@ -67,16 +67,33 @@ def _metric(document, observed, predicted, selected_noise, kind, component_count
     }
 
 
-def _identity(raw, matrix_path, freeze_path, freeze, plan, *, runner_path, cli_path):
+def _committed_source_bytes(path: Path, commit: str, *, require_worktree_match: bool) -> bytes:
     root = Path(__file__).resolve().parents[1]
-    commit = subprocess.run(
-        ["git", "-C", str(root), "rev-parse", "HEAD"], check=True,
-        capture_output=True, text=True,
-    ).stdout.strip()
+    relative = path.resolve().relative_to(root).as_posix()
+    committed = subprocess.run(
+        ["git", "-C", str(root), "show", f"{commit}:{relative}"], check=True,
+        capture_output=True,
+    ).stdout
+    if require_worktree_match and path.read_bytes() != committed:
+        raise ValueError(f"source: {relative} must be committed before sealed evaluation")
+    return committed
+
+
+def _identity(raw, matrix_path, freeze_path, freeze, plan, *, runner_path, cli_path,
+              source_commit: str | None = None):
+    if source_commit is None:
+        source_commit = subprocess.run(
+            ["git", "-C", str(Path(__file__).resolve().parents[1]), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    current = magnetic_final_refit._current_commit()
+    if (len(source_commit) != 40 or any(char not in "0123456789abcdef" for char in source_commit)
+            or not magnetic_final_refit._is_ancestor(source_commit, current)):
+        raise ValueError("source: product commit must be a verified ancestor")
     matrix_bytes = matrix_path.read_bytes()
     freeze_bytes = freeze_path.read_bytes()
     return {
-        "product_commit": commit,
+        "product_commit": source_commit,
         "matrix_sha256": _hash(matrix_bytes),
         "matrix_product_commit": freeze["identity"]["matrix_product_commit"],
         "final_refit_product_commit": freeze["identity"]["final_refit_product_commit"],
@@ -86,8 +103,12 @@ def _identity(raw, matrix_path, freeze_path, freeze, plan, *, runner_path, cli_p
         "request_sha256": _hash(raw),
         "geometry_seal_sha256": plan["identity"]["seal_sha256"],
         "partition_sha256": plan["partition"]["sha256"],
-        "runner_sha256": _hash(runner_path.read_bytes()),
-        "cli_sha256": _hash(cli_path.read_bytes()),
+        "runner_sha256": _hash(_committed_source_bytes(
+            runner_path, source_commit, require_worktree_match=source_commit == current,
+        )),
+        "cli_sha256": _hash(_committed_source_bytes(
+            cli_path, source_commit, require_worktree_match=source_commit == current,
+        )),
     }
 
 
@@ -132,10 +153,12 @@ def verify_outer_evaluation(raw: bytes, matrix_dir: Path, freeze_path: Path,
     metadata = parse_request(raw).metadata()
     if metadata["processing"]["quantity"] not in COMPONENTS:
         raise ValueError("quantity: this outer-evaluation verifier supports secondary ENU or linear TMI")
+    pinned_commit = result.get("identity", {}).get("product_commit")
     identity = _identity(
         raw, matrix_path, freeze_path, freeze, plan,
         runner_path=Path(__file__).resolve(),
         cli_path=Path(__file__).resolve().parents[1] / "scripts" / "run_m04_outer_evaluation.py",
+        source_commit=pinned_commit,
     )
     if (intent.get("status") != "started" or intent.get("identity") != identity
             or result.get("status") != "complete" or result.get("identity") != identity

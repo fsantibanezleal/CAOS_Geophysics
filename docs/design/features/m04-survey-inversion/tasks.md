@@ -40,14 +40,19 @@ pooled validation selection chose `beta-1000-l2`, score
 model was frozen before outer evaluation. Exact artifact hashes and run details
 are in `validation.md`.
 
-T43 remains open because the one-time sealed outer evaluation has not run.
-Independent acquisition/negative-regime controls, resource upper-profile
-acceptance, real field eligibility, local user-data bundle/re-import, hosted
-adapter, linked UI/course gates and full method acceptance remain open. S2-A is
-an authored acquisition control, not provider field data; its in-sample
-development residuals are not predictive evidence. Earlier 120-second/512-phase
-failures remain historical records in `validation.md`; no cap or scientific
-threshold was changed to obtain the selected fit.
+The one-time sealed outer evaluation ran after the model freeze and was verified
+without rescoring. On the 72 held-out S2-A linear-TMI rows, outer RMS was
+`19.912051132289964 nT` and `phi_d=114189.05672493984`, versus development
+RMS `1.2575176242136095 nT`. This is a severe synthetic held-out generalization
+failure for the frozen model; no retuning or reselection followed it. T43's
+matrix, selection, development refit, freeze and sealed evaluation stages are
+implemented, but scientific acceptance remains open pending independent
+acquisition and negative-regime controls. Resource upper-profile acceptance,
+real field eligibility, local user-data bundle/re-import, hosted adapter,
+linked UI/course gates and full method acceptance also remain open. S2-A is an
+authored acquisition control, not provider field data. Earlier
+120-second/512-phase failures remain historical records in `validation.md`; no
+cap or scientific threshold was changed to obtain the selected fit.
 
 ## T41: source/protocol and geometry foundation
 
@@ -84,13 +89,16 @@ runtime/algorithm/limits in same scientific unit.
 ## T43: actual L2 and sparse calibration
 
 Requirements R-408..412.
+The complete S2-A beta/penalty/fold candidate matrix, development selection,
+final-development refit, immutable freeze and one-time sealed outer score are
+recorded in `validation.md`. Do not rerun or tune against that outer partition.
 Execute all frozen beta/penalty/fold candidates through accepted optimizer.
 Add actual SimPEG Sparse unscaled weights, positive epsilon schedule, fixed beta,
 true sparse objective and refreshed final certificate. Null/tiny near-zero,
 lower/upper release and alternate starts must genuinely converge or fail.
-Finish geometric nested selection, final development fit, immutable generation
-freeze and one-time sealed evaluation. Persist actual predictions/residuals/
-metrics/history, not invented examples. No tuning after outer evaluation.
+Continue with independent acquisition and method-acceptance controls. Preserve
+the actual predictions, residuals, metrics and receipts; do not represent this
+single failed held-out synthetic generalization result as method acceptance.
 
 ## T44: independent acquisition, resolution and resource controls
 
@@ -175,11 +183,11 @@ it does not become convergence. The previous same-beta production replay
 failure is superseded for this one fold by the exact-commit replay in
 [`validation.md`](validation.md#2026-11-12-source-exact-same-beta-sparse-fold).
 
-That fold is still only one of the required candidate folds. T43 remains open:
-the full candidate/fold matrix, selection, final development refit, frozen
-generation, sealed evaluation and independent-acquisition controls have not
-run. No method, field, hosted or release claim follows from this single
-synthetic development fold.
+At that checkpoint, the fold was still only one of the required candidate
+folds. The continuation below records the later complete matrix, selection,
+final development refit, freeze and one-time sealed evaluation. Independent
+acquisition remains open, so no method, field, hosted or release claim follows
+from this S2-A result.
 
 The current continuation adds a resumable 16-candidate/three-fold runner at
 `scripts/run_m04_candidate_matrix.py`. It persists one source-bound receipt per
@@ -187,6 +195,6 @@ beta/fold, reuses the one same-beta L2 fit for the paired sparse candidate,
 scores only the sealed validation rows, and refuses to aggregate a candidate
 with any failed fold. `fit_l2_final_refit` and `fit_sparse_final_refit` select
 the presealed final development rows through partition index `-1`; they do not
-read outer rows. This is execution plumbing only. The complete matrix, selected
-refit, immutable freeze, one-time outer evaluation, full result bundle and
-independent acceptance remain unrun.
+read outer rows. The complete matrix, selected refit, immutable freeze and
+one-time outer evaluation have now run; the result was poor on the sealed rows.
+A full accepted result bundle and independent acceptance remain open.

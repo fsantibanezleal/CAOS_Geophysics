@@ -934,3 +934,39 @@ regression now includes `{"check": null}`. This is control-flow handling only;
 no certificate predicate or solver threshold was weakened. The 14 receipts
 remain bound to their original `ba8fdc7` run and will not be reused by the
 corrected-source matrix.
+
+### 2026-11-12 one-time sealed outer evaluation
+
+After independently verifying the final-refit freeze, the S2-A model was
+evaluated once on its presealed 72-row outer partition. The evaluator checked
+the complete matrix and freeze before creating its write-once intent receipt;
+it made no fit, beta selection, or model update from outer observations. The
+result was reopened by `verify_m04_outer_evaluation.py`, which checked source,
+freeze, partition, prediction shape, and receipt identities without rescoring.
+
+The selected `beta-1000-l2` model did **not** generalize to this held-out
+synthetic partition. The development partition had `216` scalar observations,
+`phi_d=1366.2868969795745`, and RMS `1.2575176242136095 nT`. The sealed outer
+partition had `72` scalar observations, `phi_d=114189.05672493984`, normalized
+RMS `39.82410226457993`, and RMS `19.912051132289964 nT` (about 15.8 times the
+development RMS). Both partitions use the declared diagonal-SD likelihood and
+the source declares no cross-partition covariance dependence. The outer
+residuals are a negative predictive result for this authored S2-A control; they
+are not provider field accuracy or a geology validation. The model was not
+retuned or replaced after seeing this result.
+
+The write-once intent and result are stored outside Git under
+`GEOPHYSICS_LOCAL_DATA_ROOT/research-runs/m04-outer-evaluations/`, keyed by
+matrix SHA-256
+`f996ad339e48c1a72819bbd8418acec1403dbd489a70134c373844b237a1d79d`.
+Result receipt SHA-256:
+`5c2c3ebbe86b3ac9d28e9b9cdda260fc77b30095882e8be0c70f962e1925a040`;
+result file SHA-256:
+`8a2371db91f547baa0febb6a2c31bf0c49f376877d120969f4b6c284cdb03b1c`;
+intent file SHA-256:
+`e2bbeef4c55fe5f3ff753ccd453313dbcd115741945904c77aa7ac8a8389af66`.
+The model SHA-256 is
+`2e16aa3a726f5df1381f45e7a4ee7a0f2ac08d6c903615524b9736dfa57bcb65`.
+Claims remain false for field-source verification, known geology, method
+acceptance, and online admission. A consumed or failed attempt cannot be
+retried for the same matrix hash.

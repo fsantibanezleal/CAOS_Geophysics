@@ -58,6 +58,8 @@ def _fixture(monkeypatch, tmp_path, *, fail_forward=False):
     }
     handle = SimpleNamespace(metadata=lambda: handle_metadata)
     monkeypatch.setattr(outer, "local_data_root", lambda: root)
+    monkeypatch.setattr(outer, "_committed_source_bytes",
+                        lambda path, _commit, require_worktree_match: path.read_bytes())
     monkeypatch.setattr(magnetic_final_refit, "local_data_root", lambda: root)
     monkeypatch.setattr(magnetic_final_refit, "verify_final_refit", lambda *args: freeze)
     monkeypatch.setattr(magnetic_final_refit, "_load_and_verify_matrix",
