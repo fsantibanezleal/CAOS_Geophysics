@@ -33,3 +33,24 @@ $matrix = "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04-candidate-
   --request $request --matrix-dir $matrix `
   --receipt "$matrix\final-refit-<selected-id>.json"
 ```
+
+Only after that verifier passes, the sealed evaluator consumes exactly one
+outer evaluation token for the matrix file hash. It replays the frozen model on
+the original usable rows, scores the development and outer partitions with
+their declared Gaussian likelihoods, and writes immutable intent/result
+receipts outside Git. A failed or interrupted attempt is not retried under the
+same matrix hash. The verifier checks source, freeze, partition, row-order and
+receipt identities without recomputing predictions or scores.
+
+```powershell
+$freeze = "$matrix\final-refit-<selected-id>.json"
+$matrixHash = (Get-FileHash "$matrix\matrix.json" -Algorithm SHA256).Hash.ToLowerInvariant()
+$result = "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\m04-outer-evaluations\$matrixHash.json"
+.venv-pipeline\Scripts\python.exe scripts\run_m04_outer_evaluation.py `
+  --request $request --matrix-dir $matrix --freeze $freeze
+.venv-pipeline\Scripts\python.exe scripts\verify_m04_outer_evaluation.py `
+  --request $request --matrix-dir $matrix --freeze $freeze --result $result
+```
+
+This S2-A synthetic outer score does not establish field-source provenance,
+known geology, method acceptance, or online admission.
