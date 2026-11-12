@@ -153,3 +153,38 @@ No current full-product acceptance exists. Promotion to `develop`/`main` and
 the sole ML-VPS deployment remain blocked by the solver, complete scientific
 matrix, manuscript depth/coverage, all-route UI, and host-admission gates.
 GitHub Pages remains retired; there is no second application deployment.
+
+## 2026-11-12 evidence correction and M04 lesson review
+
+The BS-1 numerical cross-check is now reproducible from the recorded run roots.
+The manuscript folder had contained reserialized primary and ablation receipt
+JSON files that no longer matched the recorded SHA-256 values or the ablation's
+primary-receipt binding. The byte-exact files were recovered from
+`E:/_Datos/CAOS_Geophysics/m12-physics-v2-20261111-run1/receipt.json` and
+`E:/_Datos/CAOS_Geophysics/m12-physics-ablation-v1-20261111-run3/receipt.json`.
+Their hashes now match the manuscript's pinned identities. The committed
+checkpoints and ablation variants also match their receipt hashes.
+
+`build_analysis.py` then verified the source and artifacts and regenerated all
+seven figures and five result tables. The current joint-shift result is 2.1942
+(95% paired case-bootstrap interval 2.1328–2.2641) for velocity RMSE and 5.5854
+(5.5093–5.6623) for independent travel-time RMSE across 160 cases; all 160
+exceed the validation-derived 6.091015 ms threshold. These remain negative
+synthetic results and do not support novelty, field transfer or superiority.
+The compiled 25-page PDF extracts to the same text as the prior PDF; the
+LaTeX build has no unresolved references or overfull boxes. The depth check
+passes at 7,655 words, 16 equations, 7 figures, 6 tables, 32 references and one
+algorithm, and the scientific-voice check is clean. The paper is still an
+unpublished draft, and this review does not establish peer review or DOI
+publication.
+
+The bilingual M04 fit-objective lesson now explicitly compares a diagonal
+approximation with the production full-covariance whitener on the same three
+residual rows and marginal uncertainties. Fresh-kernel replay produces an
+identical 6.06% objective decrease in both languages, with an authored
+sensitivity covariance clearly distinguished from measured field covariance.
+The new method entrypoint, notebook title, sources and scope are synchronized
+across the product registry and source-to-content review. The structural docs
+matrix passes for all 13 methods and 66 notebooks. The course-wide notebook
+depth checker still has 142 findings; the four product-wide manuscript
+findings and remaining scientific/release gates are unchanged.

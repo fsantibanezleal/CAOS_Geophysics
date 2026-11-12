@@ -82,6 +82,7 @@
     "magnetic_fold_score.score_magnetic_validation_fold",
     "magnetic_fit_assembly.assemble_magnetic_fit_objective",
     "magnetic_fit_assembly.read_selected_likelihood",
+    "magnetic_likelihood.GaussianWhitener",
     "magnetic_continuation.upward_continue",
     "magnetic_continuation.process_grid_result",
     "magnetic_forward.forward_magnetic",

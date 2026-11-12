@@ -195,11 +195,14 @@
       "methods": [
         "M04"
       ],
-      "title": "Assemble and score a magnetic fit fold",
+      "title": "Magnetic objective assembly and held-out diagnostics",
       "sources": [
-        "https://doi.org/10.1016/j.cageo.2015.09.015"
+        "https://doi.org/10.1016/j.cageo.2015.09.015",
+        "https://doi.org/10.1109/36.17671",
+        "https://doi.org/10.1016/C2015-0-02458-3",
+        "https://www.fatiando.org/choclo/latest/"
       ],
-      "content_scope": "Assembles the physics-backed magnetic fit objective, checks its derivative, and scores a frozen model on separate validation rows; it does not run an inversion."
+      "content_scope": "Assembles the physics-backed magnetic fit objective, checks its derivative, scores a frozen model on separate validation rows, and measures how diagonal versus full covariance changes the same fit residual; it does not run an inversion."
     },
     {
       "en": "notebooks/en/04-mt/01-mt-response-observables.ipynb",
