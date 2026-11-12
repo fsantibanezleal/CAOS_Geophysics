@@ -6,8 +6,25 @@ Plain path-invoked modules, not an installable package. `rebuild.py` orchestrate
 
 `magnetic_processing.py` performs explicit-map M03 airborne line geometry, height QC, crossover diagnostics, blocked-line interpolation scoring and supported gridding without applying unverified corrections. `magnetic_continuation.py` optionally upward-continues a fully supported regular-grid ROI with the Fourier harmonic transfer function; it rejects missing support and records the parent-result digest and FFT seam diagnostics. The transform has analytic synthetic controls, not provider-data acceptance. See the [M03 method record](../docs/wiki/methods/m01-m06.md#m03-airborne-magnetic-line-qc-and-supported-gridding) and [requirements/validation](../docs/design/features/m03-flightline-processing/requirements.md).
 
+`magnetic_final_refit.py` consumes a completed, hash-bound M04 candidate matrix,
+verifies every beta/fold receipt and recomputes the pooled validation selection,
+then refits only the frozen final-development rows. It writes a write-once model
+freeze outside Git before any sealed outer evaluation. A failed fit is retained
+as a failed receipt; the command does not relax numerical/resource limits or
+claim field validation, method acceptance, or online admission.
+
 ```powershell
 .venv-pipeline\Scripts\python.exe data-pipeline\magnetic_processing.py --input request.json --output m03-lines.json
 .venv-pipeline\Scripts\python.exe data-pipeline\magnetic_continuation.py --input m03-lines.json --output m03-upward-500m.json --height-m 500 --roi 20 180 30 210
 .venv-pipeline\Scripts\python.exe -m pytest tests\numerics\test_magnetic_processing.py tests\numerics\test_magnetic_continuation.py -q
+```
+
+M04 final-refit reproduction (the selected candidate id is encoded in the
+write-once output filename):
+
+```powershell
+.venv-pipeline\Scripts\python.exe scripts\run_m04_final_refit.py `
+  --request tests\fixtures\magnetic_survey\generated\requests\S2-A-linear_tmi_nT.json `
+  --matrix-dir "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04-candidate-matrix" `
+  --output "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04-candidate-matrix\final-refit-<selected-id>.json"
 ```
