@@ -12,8 +12,26 @@ const product = JSON.parse(readFileSync(join(root, 'product.json'), 'utf8'));
 const routes = JSON.parse(readFileSync(join(frontend, 'src', 'lib', 'routes.json'), 'utf8'));
 const appRoute = product.workbench_route ?? '/app';
 const expectedShellVersion = '0.26.0';
+const storyRule = 'ADR-0082: every App has a guided story of 3 to 6 directly addressable steps';
+const storyRoutes = product.showcase?.story_routes;
+const storyRoutePattern = /^\/story\/[A-Za-z0-9][A-Za-z0-9._~-]*$/;
+if (storyRoutes === undefined) {
+  console.log('gate: no story is declared in product.json showcase.story_routes; measuring the App and documentation routes while the SDD and G21 continue to require the story');
+} else if (!Array.isArray(storyRoutes) || storyRoutes.length < 3 || storyRoutes.length > 6
+  || storyRoutes.some((route, index) => typeof route !== 'string' || !storyRoutePattern.test(route) || storyRoutes.indexOf(route) !== index)) {
+  console.error(`gate: product.json showcase.story_routes must be a list of 3 to 6 distinct "/story/<step>" routes (${storyRule})`);
+  process.exit(1);
+}
 const require = createRequire(import.meta.url);
-const shellPackagePath = require.resolve('@fasl-work/caos-app-shell/package.json');
+let shellPackagePath;
+for (let directory = dirname(require.resolve('@fasl-work/caos-app-shell/gate'));; directory = dirname(directory)) {
+  const candidate = join(directory, 'package.json');
+  if (existsSync(candidate) && JSON.parse(readFileSync(candidate, 'utf8')).name === '@fasl-work/caos-app-shell') {
+    shellPackagePath = candidate;
+    break;
+  }
+  if (directory === parse(directory).root) throw new Error('gate: could not locate the installed CAOS App Shell package metadata');
+}
 const shellPackage = JSON.parse(readFileSync(shellPackagePath, 'utf8'));
 
 if (shellPackage.version !== expectedShellVersion) {
@@ -48,6 +66,7 @@ const values = new Map([
 ]);
 const extra = {};
 const argv = process.argv.slice(2);
+let planOnly = false;
 for (let i = 0; i < argv.length; i += 1) {
   const flag = argv[i];
   if (!flag.startsWith('--')) {
@@ -55,7 +74,9 @@ for (let i = 0; i < argv.length; i += 1) {
     process.exit(2);
   }
   const key = flag.slice(2);
-  if (key === 'no-wide-font') {
+  if (key === 'plan') {
+    planOnly = true;
+  } else if (key === 'no-wide-font') {
     extra.wideFont = false;
   } else if (key === 'single-case') {
     extra.singleCase = true;
@@ -86,10 +107,33 @@ for (let i = 0; i < argv.length; i += 1) {
   }
 }
 
+const expectedRoutes = [...routes.map((route) => route.path), ...(storyRoutes ?? [])];
 const routesArg = extra.routes;
-if (routesArg !== undefined && !routesArg.split(',').map((route) => route.trim().replace(/(.)\/+$/, '$1')).includes(appRoute)) {
-  console.error(`gate: --routes omits the App route ${appRoute}; G18 would measure nothing`);
-  process.exit(1);
+if (routesArg !== undefined) {
+  const requestedRoutes = routesArg.split(',').map((route) => route.trim().replace(/\/+$/, '') || '/');
+  const requestedSet = new Set(requestedRoutes);
+  const expectedSet = new Set(expectedRoutes);
+  const undeclared = requestedRoutes.find((route) => !expectedSet.has(route));
+  if (undeclared) {
+    console.error(`gate: --routes contains undeclared route ${undeclared}; story steps must be listed in product.json showcase.story_routes`);
+    process.exit(1);
+  }
+  if (requestedSet.size !== requestedRoutes.length) {
+    console.error('gate: --routes contains a duplicate route; pass each App, documentation and declared story route once');
+    process.exit(1);
+  }
+  const omitted = expectedRoutes.find((route) => !requestedSet.has(route));
+  if (omitted) {
+    const context = storyRoutes?.includes(omitted) ? `; every declared story step is required (${storyRule})` : '';
+    console.error(`gate: --routes omits ${omitted}${context}`);
+    process.exit(1);
+  }
+}
+
+const plannedRoutes = routesArg ?? expectedRoutes.join(',');
+if (planOnly) {
+  console.log(`gate: routes ${plannedRoutes}`);
+  process.exit(0);
 }
 
 const outputValue = extra.out ?? process.env.GEOPHYSICS_GATE_OUTPUT;
@@ -118,7 +162,7 @@ const options = {
   workbench: appRoute,
   requireFocus: true,
   requireShowcase: true,
-  routes: extra.routes ?? [...routes.map((route) => route.path), '/story/reference', '/story/coverage', '/story/regularization'].join(','),
+  routes: plannedRoutes,
   out: outputPath,
 };
 if (!options.url && !existsSync(join(frontend, 'dist', 'index.html'))) {

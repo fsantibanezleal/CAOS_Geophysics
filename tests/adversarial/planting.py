@@ -88,7 +88,9 @@ def git_commit(repo: Path) -> str:
     """Make the copy a git repository with one commit (the base a ``--base`` check compares with); returns its SHA."""
     env = ["-c", "user.email=plant@example.invalid", "-c", "user.name=plant", "-c", "core.autocrlf=false"]
     subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
-    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    # Planted paths must be part of the base even when the host has a global ignore rule for a
+    # common fixture name such as frontend/src/model.ts.
+    subprocess.run(["git", "add", "-A", "--force"], cwd=repo, check=True, capture_output=True)
     subprocess.run(["git", *env, "commit", "-q", "-m", "base"], cwd=repo, check=True, capture_output=True)
     return subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
 
