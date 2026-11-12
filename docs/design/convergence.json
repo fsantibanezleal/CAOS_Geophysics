@@ -692,7 +692,7 @@
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "911126d734955fc1c67cdd2425f884372d5deaa029eb3dd4f55ad0c846e8470c"
+          "sha256": "374ca1d46b285e9c39eef54e2469940666b58bfa47c10bea5c2fe4b783251a39"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -1179,7 +1179,7 @@
         },
         {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "911126d734955fc1c67cdd2425f884372d5deaa029eb3dd4f55ad0c846e8470c"
+          "sha256": "374ca1d46b285e9c39eef54e2469940666b58bfa47c10bea5c2fe4b783251a39"
         },
         {
           "path": "docs/validation/m13-browser-e2e-20261025.json",

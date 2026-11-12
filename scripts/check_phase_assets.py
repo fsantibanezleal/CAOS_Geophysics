@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import re
@@ -72,8 +73,17 @@ def validate() -> None:
     assert manifest["input"]["component_order"] == ["E", "N", "Z"]
     assert manifest["output"]["classes"] == ["N", "P", "S"]
     assert manifest["model"]["file"] == "model.onnx"
-    model = raw("model.onnx")
-    assert len(model) == manifest["model"]["bytes"] <= 10_000_000
+    model_meta = manifest["model"]
+    source_name = model_meta.get("source_file", model_meta["file"])
+    assert Path(source_name).name == source_name
+    model_source = raw(source_name)
+    if source_name.endswith(".gz"):
+        assert len(model_source) == model_meta["source_bytes"] <= 5 * 1024 * 1024
+        assert digest(model_source) == model_meta["source_sha256"]
+        model = gzip.decompress(model_source)
+    else:
+        model = model_source
+    assert len(model) == model_meta["bytes"] <= 10_000_000
     assert digest(model) == manifest["model"]["sha256"]
     assert HOST_PATH.search(model) is None, "ONNX contains an absolute host path"
     assert manifest["benchmark"]["file"] == "benchmark.json"

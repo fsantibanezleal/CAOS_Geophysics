@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import struct
@@ -33,7 +34,17 @@ def test_model_and_benchmark_are_bound_to_public_manifest() -> None:
     assert redistribution["attribution_file"] == "ATTRIBUTION.md"
     receipt = json.loads((ROOT / "data/derived/phase/stead-waveform-source.json").read_text(encoding="utf-8"))
     assert receipt["rights"]["rights_review"] == redistribution["review"]
-    assert _sha256(ASSETS / manifest["model"]["file"]) == manifest["model"]["sha256"]
+    model = manifest["model"]
+    source_file = model.get("source_file", model["file"])
+    source_bytes = (ASSETS / source_file).read_bytes()
+    if source_file.endswith(".gz"):
+        assert len(source_bytes) == model["source_bytes"]
+        assert hashlib.sha256(source_bytes).hexdigest() == model["source_sha256"]
+        model_bytes = gzip.decompress(source_bytes)
+    else:
+        model_bytes = source_bytes
+    assert len(model_bytes) == model["bytes"]
+    assert hashlib.sha256(model_bytes).hexdigest() == model["sha256"]
     assert _sha256(ASSETS / manifest["benchmark"]["file"]) == manifest["benchmark"]["sha256"]
     assert benchmark["schema"] == "caos.stead-phase-heldout-benchmark.v1"
     assert benchmark["checkpoint_sha256"] == manifest["model"]["checkpoint_sha256"]

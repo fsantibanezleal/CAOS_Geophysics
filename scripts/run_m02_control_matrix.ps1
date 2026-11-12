@@ -1,8 +1,13 @@
 param(
-  [string]$OutputRoot = 'E:\_Temp\CAOS_Geophysics\validation\m02-control-matrix-parallel'
+  [string]$OutputRoot
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
+  $tempRoot = if (-not [string]::IsNullOrWhiteSpace($env:CAOS_TEMP_ROOT)) { $env:CAOS_TEMP_ROOT } else { $env:TEMP }
+  if ([string]::IsNullOrWhiteSpace($tempRoot)) { throw 'Set CAOS_TEMP_ROOT or TEMP for external matrix evidence.' }
+  $OutputRoot = Join-Path $tempRoot 'CAOS_Geophysics\validation\m02-control-matrix-parallel'
+}
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $python = Join-Path $repo '.venv-pipeline\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $python)) { throw "Pinned pipeline interpreter not found: $python" }

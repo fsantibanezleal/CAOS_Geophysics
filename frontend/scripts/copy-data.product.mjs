@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { gzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const inside = (root, rel) => {
@@ -65,10 +65,14 @@ export default function copyProductData({ derived, out, repo }) {
     const phaseRoot = join(derived, 'phase/browser-assets/stead');
     const phase = JSON.parse(readFileSync(join(phaseRoot, 'manifest.json'), 'utf8'));
     const phaseNames = new Set([
-      'manifest.json', 'ATTRIBUTION.md', phase.benchmark?.file, phase.model?.file,
+      'manifest.json', 'ATTRIBUTION.md', phase.benchmark?.file,
       ...(Array.isArray(phase.records) ? phase.records.map((record) => record.waveform_file).filter(Boolean) : []),
     ]);
+    const modelFile = phase.model?.file;
+    const modelSourceFile = phase.model?.source_file ?? modelFile;
+    if (modelSourceFile !== modelFile) phaseNames.add(modelSourceFile);
     if (phase.records?.length !== 24 || phase.selection?.qc_valid !== 23 || phase.selection?.qc_rejected !== 1 ||
+        typeof modelFile !== 'string' || typeof modelSourceFile !== 'string' ||
         [...phaseNames].some((name) => typeof name !== 'string' || !/^[A-Za-z0-9_.-]+$/.test(name))) {
       throw new Error('STEAD browser asset manifest does not list the expected reviewed records');
     }
@@ -76,10 +80,26 @@ export default function copyProductData({ derived, out, repo }) {
       const source = join(phaseRoot, name);
       const stat = lstatSync(source);
       if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 12 * 1024 * 1024) throw new Error(`invalid STEAD browser asset ${name}`);
+      if (name === modelSourceFile && modelSourceFile !== modelFile) continue;
       const rel = `phase/stead/${name}`;
       mkdirSync(dirname(join(out, rel)), { recursive: true });
       cpSync(source, join(out, rel));
       copied.push(rel);
+    }
+    if (modelSourceFile !== modelFile) {
+      const compressed = readFileSync(join(phaseRoot, modelSourceFile));
+      if (compressed.byteLength !== phase.model.source_bytes || sha256(compressed) !== phase.model.source_sha256 ||
+          compressed.byteLength > 5 * 1024 * 1024) {
+        throw new Error('STEAD compressed ONNX source differs from its declared identity or size bound');
+      }
+      const modelBytes = gunzipSync(compressed);
+      if (modelBytes.byteLength !== phase.model.bytes || sha256(modelBytes) !== phase.model.sha256) {
+        throw new Error('STEAD decompressed ONNX bytes differ from the public model identity');
+      }
+      const target = join(out, 'phase/stead', modelFile);
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, modelBytes);
+      copied.push(`phase/stead/${modelFile}`);
     }
 
     const modelRoot = join(repo, 'models/experimental/m12-physics-cuda-20261004');
