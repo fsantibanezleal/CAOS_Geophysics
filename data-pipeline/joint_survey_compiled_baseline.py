@@ -27,18 +27,18 @@ _NATIVE_NAMES = ('joint_survey_optimizer', 'joint_survey_compiled', 'joint_surve
 _LOADED_NATIVE = {name+'.py': hashlib.sha256((Path(original.__file__).parent/(name+'.py')).read_bytes()).hexdigest()
     for name in _NATIVE_NAMES}
 PINS = {
-    'physical_compiled_optimizer.py': '1554320f49012062b523e7a2d6d02baf0cf54ca18ec5c47efaee48c39194e7ab',
-    'physical_conditioned_optimizer.py': '1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c',
+    'physical_compiled_optimizer.py': 'f95518b0e51d90dddc19a4d9ec2be5f34099d8b47d3838f18d0978e9b2fde22f',
+    'physical_conditioned_optimizer.py': 'cc2eb86c657a09f406d91cdc11c4ae30418ff76e1b2b2649233fe80917d338f5',
     'physical_nonlinear_optimizer.py': 'b111000d118e1aaeecce7bee0d3101b2c6dec2b5eb50ada8c3d59db5b1343919',
     'physical_optimizer.py': '179f998ba35e9419dbbc06bc16d36fd026dea66344109e7e157df501316bc82c',
-    'physical_original_quadratic.py': '07c67519110d59758614516a3f3d98ed49713a969affcefb4711430b604186ce',
-    'physical_original_residual_terminal.py': 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7',
+    'physical_original_quadratic.py': '03a1f7f58a11945d005d99eeed195056247d2fcfa0c7671b4d8a4a68e7bd2873',
+    'physical_original_residual_terminal.py': '7714b85b085693c93d1d3345a80b3c90a37ea8b845e48e007d30a4fa9ee9b21b',
     'physical_original_rows.py': '8a18a0ae04bfd09336480e06d2e9526aecab79a232033e9ca5d0040b16e9f399',
-    'physical_original_terminal.py': 'dd4b07defa6921a173d3e4d75dad28697fa36743a5dccef6f5db815ae6a73991',
-    'physical_owned_spd.py': '8924508c3328b70bb9e08ac11a81e107bcdd713402812ba64afec838892d36c2',
-    'physical_reduced_optimizer.py': '22bf04a7e260b5f93c2e54430f54c3d3464150b3ce78d861c8236bc3d6b21aad',
-    'gravity_l2_metric.py': '202b8e6355334d805b6b4f898089ef0e3c5e92f9264f8200dd647a5184fc12ba',
-    'gravity_l2_precision.py': '57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a',
+    'physical_original_terminal.py': '6f3e76cd0fdd0f3b8b2408ed136febe158195bffc840b76f05581fbc9adb5524',
+    'physical_owned_spd.py': 'f5bd0381bea21e95b4635fdf75711cdddacec274430774b02723f1f9f35411b5',
+    'physical_reduced_optimizer.py': '3d026d44b32f644ded036e5f309e3fe1eb1b3bbb627798647cd5ee43fe2e6887',
+    'gravity_l2_metric.py': '45b55b45054e41cfce8c86379201926df4e3ed0bee3e425bcce925c901e91444',
+    'gravity_l2_precision.py': '405116ab5b6510f4ba362c553d1830f9caec8511c55a8a94eb820898b47d2c0c',
 }
 _NATIVE_VENDOR_PINS = (
     (original.CrossGradient, '85ff1c1e39ec9e8973707a7debd83706db23027b13832298c4e468b052e3298c'),
@@ -153,7 +153,7 @@ def source_inventory(clock=None):
     inventory['RegularizationMesh.cell_gradient'] = actual
     inventory.update(_LOADED_NATIVE)
     modules = (public, public.source, public.original_terminal,
-        public.original_terminal.exact_rows, public.residual, public.reduced,
+        public.exact_rows, public.residual, public.reduced,
         public.reduced.core, public.reduced.core.linear, public.reduced.core.nonlinear,
         public.source.owned, public.source.owned.kernel, public.source.owned.intervals)
     seen = set()

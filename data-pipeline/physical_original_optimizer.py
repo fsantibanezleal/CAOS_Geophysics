@@ -15,11 +15,12 @@ import numpy as np
 import physical_reduced_optimizer as reduced
 import physical_original_quadratic as source
 import physical_original_terminal as accuracy
+import physical_original_residual_terminal as residual_accuracy
 
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-6'
-POLICY = 'closed-original-noise-reduced-joseph-free-face-accuracy-1'
+LINEAR_EPOCH = 'physical-gncg-original-noise-reduced-joseph-candidate-7'
+POLICY = 'closed-original-noise-residual-strong-convexity-terminal-1'
 ConditionedBinding = reduced.ConditionedBinding
 ConditionedBudget = reduced.ConditionedBudget
 VENDOR_SOURCE_SHA256 = reduced.VENDOR_SOURCE_SHA256
@@ -145,7 +146,7 @@ class _Linear(reduced._Linear):
             audits = self._audit_bytes + sum(s[0].nbytes+128 for s in self.states)
             audits += 2048*len(self.line_search_trials)+4096*len(self.objective.domain_checks)
             audits += (32768+1024*len(q))*len(self.terminal_audits)
-            owner = accuracy.OwnedOriginalTerminal(self.objective.metric_operands(q),
+            owner = residual_accuracy.OwnedOriginalResidualTerminal(self.objective.metric_operands(q),
                 original, self.identity_value, q, self.g, float(self.initial_norm),
                 deadline=self.budget.deadline, resource_limit_bytes=self.budget.resource_limit_bytes,
                 admitted_bytes=self.budget.admitted_bytes, retained_audit_bytes=audits)
@@ -181,5 +182,7 @@ def solve_bounded_linear(objective, lower_q, upper_q, start_q, *, budget, bindin
         source_epoch=('physical_original_optimizer', SOURCE_SHA256, POLICY, LINEAR_EPOCH))
     result['magnetic_domain_checks'] = tuple(proxy.domain_checks)
     result['source_binding'].update(original_arithmetic=source.SOURCE_SHA256,
-        original_terminal=accuracy.SOURCE_SHA256, reduced_dependency=reduced.SOURCE_SHA256)
+        original_terminal=accuracy.SOURCE_SHA256,
+        original_residual_terminal=residual_accuracy.SOURCE_SHA256,
+        reduced_dependency=reduced.SOURCE_SHA256)
     return result

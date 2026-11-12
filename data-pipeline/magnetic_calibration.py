@@ -35,7 +35,7 @@ import physical_reduced_optimizer
 MAX_WALL_SECONDS = 120.0
 MAX_STEPS = 200
 RESOURCE_LIMIT_BYTES = 805_306_368
-TERMINAL = physical_owned_spd.TerminalPolicy(1e-7, 1e-6, 1e-8, 1e-6)
+TERMINAL = physical_owned_spd.TerminalPolicy(1e-12, 1e-6, 1e-8, 1e-6)
 
 
 def _source_inventory(raw: bytes, geometry_seal: str) -> dict[str, str]:
@@ -174,6 +174,9 @@ def fit_l2_fold(raw: bytes, fold_index: int, beta: float, *, wall_seconds: float
             "preconditioner_basis_actions": (row.get("check") or {}).get("preconditioner_basis_actions"),
             "source_normalized_kkt_upper": (row.get("check") or {}).get("source_normalized_kkt_upper"),
             "kappa_upper": (row.get("check") or {}).get("kappa_upper"),
+            "mu_lower": ((row.get("check") or {}).get("bounds") or {}).get("mu_lower"),
+            "residual_radius_upper": (row.get("check") or {}).get("residual_radius_upper"),
+            "inside_original_bounds": (row.get("check") or {}).get("inside_original_bounds"),
             "free_error_inf_upper": (row.get("check") or {}).get("free_error_inf_upper"),
             "active_sign_pass": (row.get("check") or {}).get("active_sign_pass"),
             "bounds": (row.get("check") or {}).get("bounds"),

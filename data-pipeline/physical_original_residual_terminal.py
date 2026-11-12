@@ -12,6 +12,7 @@ from time import monotonic
 import numpy as np
 
 import physical_original_terminal as original
+import physical_original_rows as exact_rows
 
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 STATE_EPOCH = 'original-physical-residual-strong-convexity-state-1'
@@ -53,12 +54,15 @@ class OwnedOriginalResidualTerminal(original.OwnedOriginalTerminal):
             model_sha256=self.model_sha256, face_sha256=self.face_sha256,
             factor_sha256=self.factor_sha256, allocation=self.allocation,
             setup_seconds=self.setup_seconds, seconds=0., actions=0, disposed=False,
-            native_fit_accepted=False, full_method_accepted=False, host_accepted=False)
+            native_fit_accepted=False, full_method_accepted=False, host_accepted=False,
+            phase='entry')
         started = monotonic()
         try:
             self._check()
             original.owned.validate_terminal(policy)
-            ar = original.original_row_arithmetic(34, self.deadline)
+            phase='source_gradient'
+            record['phase']=phase
+            ar = exact_rows.OriginalTerminalIntervals(34, self.deadline)
             o, q, free = self._original, self._q, self.free
             gradient = original.source._gradient(ar, o, q)
             projected = []
@@ -88,6 +92,8 @@ class OwnedOriginalResidualTerminal(original.OwnedOriginalTerminal):
             rho = ZERO
             residual = gradient
             if len(free):
+                phase='residual_witness'
+                record['phase']=phase
                 center = np.zeros(len(q), dtype=np.float64)
                 for j in free:
                     lo, hi = gradient[j]
@@ -104,6 +110,8 @@ class OwnedOriginalResidualTerminal(original.OwnedOriginalTerminal):
                 residual = [ar.add(g, h) for g, h in zip(gradient, hd)]
                 rho = ar.hi.divide(original._norm(ar, [residual[i] for i in free]), mu)
             # The virtual q+d is an exact real sum, not a rounded new model.
+            phase='active_bounds'
+            record['phase']=phase
             shifted = [ar.add(ar.exact(x), ar.exact(d)) for x, d in zip(q, witness)]
             inside = all(ar.lo.subtract(shifted[i][0], rho) > Decimal.from_float(float(o.lower[i]))
                 and ar.hi.add(shifted[i][1], rho) < Decimal.from_float(float(o.upper[i])) for i in free)
@@ -120,6 +128,8 @@ class OwnedOriginalResidualTerminal(original.OwnedOriginalTerminal):
             model = ar.hi.add(original._norm(ar, [ar.exact(witness[i]) for i in free]), rho)
             maximum = ZERO
             rows = o.prediction_sensitivity
+            phase='prediction_bound'
+            record['phase']=phase
             for i in range((len(rows) if o.prediction_projection is None else len(rows)//3) if model else 0):
                 ar.check()
                 if o.prediction_projection is None:

@@ -14,6 +14,7 @@ import scipy.sparse as sp
 
 import physical_original_quadratic as source
 import physical_original_terminal as original_terminal
+import physical_original_rows as exact_rows
 import physical_original_residual_terminal as residual
 import physical_reduced_optimizer as reduced
 
@@ -21,7 +22,7 @@ import physical_reduced_optimizer as reduced
 SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 LINEAR_EPOCH = 'physical-gncg-compiled-original-residual-candidate-1'
 POLICY = 'closed-compiled-identity-half-native-free-face-residual-accuracy-1'
-RESIDUAL_SHA256 = 'a9bf32a6c4e932d7d4efa1f38540778e2993f74982adb9f29985d921ecb5ddf7'
+RESIDUAL_SHA256 = '7714b85b085693c93d1d3345a80b3c90a37ea8b845e48e007d30a4fa9ee9b21b'
 PRECISION_SHA256 = '57727cac9ab6550eab902d20d6c43e662be8f9fac406896c6797d1e29b3e7c1a'
 _LOADED_PRECISION_SHA256 = hashlib.sha256(Path(source.owned.intervals.__file__).read_bytes()).hexdigest()
 BETAS = (.0001, .001, .01, .1, 1., 10., 100., 1000.)
@@ -54,7 +55,7 @@ class RetainedCompiledProblem:
 def _check_source():
     if residual.SOURCE_SHA256 != RESIDUAL_SHA256:
         raise ValueError('compiled original: literal residual source drift')
-    for module in (source, original_terminal, original_terminal.exact_rows, residual, reduced, reduced.core,
+    for module in (source, original_terminal, exact_rows, residual, reduced, reduced.core,
                    source.owned, source.owned.kernel):
         if hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest() != module.SOURCE_SHA256:
             raise ValueError('compiled original: loaded/on-disk public source drift')
@@ -251,7 +252,7 @@ class _CompiledResidualTerminal(residual.OwnedOriginalResidualTerminal):
             # Unscaled J is NOT the physical-unit predicate. All other exact
             # original gates are unchanged and this view cannot accept a fit.
             record = super().certify(replace(policy, physical_prediction_error_limit=None))
-            ar = original_terminal.original_row_arithmetic(34, self.deadline)
+            ar = exact_rows.OriginalTerminalIntervals(34, self.deadline)
             unscaled = Decimal(record['bounds']['physical_prediction_error_upper'])
             physical = ar.hi.multiply(unscaled, Decimal.from_float(self.mapping['physical_scale'][0]))
             record['unscaled_prediction_error_upper'] = str(unscaled)
@@ -446,5 +447,5 @@ def solve_bounded_linear(objective, lower_q, upper_q, start_q, *, budget, bindin
     result['allocation_plan'] = proxy.allocation
     result['source_binding'].update(original_arithmetic=source.SOURCE_SHA256,
         original_terminal=original_terminal.SOURCE_SHA256, original_residual_terminal=RESIDUAL_SHA256,
-        original_rows=original_terminal.exact_rows.SOURCE_SHA256, reduced_dependency=reduced.SOURCE_SHA256)
+        original_rows=exact_rows.SOURCE_SHA256, reduced_dependency=reduced.SOURCE_SHA256)
     return result
