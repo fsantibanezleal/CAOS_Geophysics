@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "6ab7039d349d2b5e36ca4bdd93bb581bde0a3123a0e2b8ef9ea2cdcfdb50f182",
+  "sdd_sha256": "8c35a36ac2695792d96bccee6620dc3621ccc91ca72e4dca7111cff3b58851b3",
   "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
   "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
@@ -1179,7 +1179,7 @@
       "id": "R-019",
       "verdict": "unresolved",
       "declared_gate": "frontend/e2e/phase-picker-live.spec.ts and tests/learning/test_phase_evaluation.py::test_matched_inputs_and_failed_picks and frontend/scripts/verify-phase-browser-parity.mjs.",
-      "note": "The retained 2026-10-29 CPU/WASM comparison remains same-checkpoint parity on a preselected display subset, not independent model validation or population accuracy. On 2026-10-30, the fresh product build and browser preview passed all four current phase-picker route/adversarial tests (0 failures, 0 skips); the exact dirty-worktree run is recorded at docs/validation/m13-browser-attribution-e2e-2026-10-30.json. This updates the bounded UI integration evidence only. The independent PyTorch-oracle parity and matched-input scientific evaluation are not established by that route suite; full app-route/owner acceptance, VPS release and broader product gates remain unresolved. On 2026-10-30, current-manifest same-checkpoint CPU/WASM parity passed across all 23 QC-valid display traces (max probability error 5.0664e-6, zero peak displacement); this does not establish the separate PyTorch-oracle comparison or accuracy, so R-019 remains unresolved. The current direct checkout was rebuilt and its current phase-picker browser suite passed 1/1 test on 2026-10-30; see docs/validation/m13-browser-current-e2e-2026-10-30.md. The suite is narrower than the older 4-test run and does not close independent PyTorch parity or M13 scientific accuracy; R-019 remains unresolved. On 2026-11-05 local time, a fresh npm run build and production-preview Playwright interaction passed 1/1. Browser WASM also passed all 23 QC-valid records from the actual Vite publicDir against hash-verified CPU ONNX arrays, with maximum probability error 5.0664e-6 and zero peak displacement; the one QC-rejected record was excluded. The verifier receipt and current source hashes are pinned in m13-browser-publicdir-parity-2026-11-05.json and m13-current-parity-and-lesson-2026-11-05.md. This remains same-checkpoint runtime parity, not the independent PyTorch-oracle comparison, population accuracy, owner acceptance, or release acceptance; R-019 remains unresolved.",
+      "note": "The retained 2026-10-29 CPU/WASM comparison remains same-checkpoint parity on a preselected display subset, not independent model validation or population accuracy. On 2026-10-30, the fresh product build and browser preview passed all four current phase-picker route/adversarial tests (0 failures, 0 skips); the exact dirty-worktree run is recorded at docs/validation/m13-browser-attribution-e2e-2026-10-30.json. This updates the bounded UI integration evidence only. The independent PyTorch-oracle parity and matched-input scientific evaluation are not established by that route suite; full app-route/owner acceptance, VPS release and broader product gates remain unresolved. On 2026-10-30, current-manifest same-checkpoint CPU/WASM parity passed across all 23 QC-valid display traces (max probability error 5.0664e-6, zero peak displacement); this does not establish the separate PyTorch-oracle comparison or accuracy, so R-019 remains unresolved. The current direct checkout was rebuilt and its current phase-picker browser suite passed 1/1 test on 2026-10-30; see docs/validation/m13-browser-current-e2e-2026-10-30.md. The suite is narrower than the older 4-test run and does not close independent PyTorch parity or M13 scientific accuracy; R-019 remains unresolved. On 2026-11-05 local time, a fresh npm run build and production-preview Playwright interaction passed 1/1. Browser WASM also passed all 23 QC-valid records from the actual Vite publicDir against hash-verified CPU ONNX arrays, with maximum probability error 5.0664e-6 and zero peak displacement; the one QC-rejected record was excluded. The verifier receipt and current source hashes are pinned in m13-browser-publicdir-parity-2026-11-05.json and m13-current-parity-and-lesson-2026-11-05.md. This remains same-checkpoint runtime parity, not the independent PyTorch-oracle comparison, population accuracy, owner acceptance, or release acceptance; R-019 remains unresolved. Fresh 2026-11-12 runtime parity bound to the current STEAD manifest and verifier passed for 23 preselected QC-valid traces (one rejected trace excluded): maximum CPU-ONNX/browser-WASM probability error 4.8876e-6 and zero peak displacement. This same-checkpoint receipt is runtime parity, not an independent PyTorch oracle, field accuracy or a representative accuracy cohort; R-019 remains unresolved.",
       "evidence": [
         {
           "path": "docs/validation/m13-browser-population-parity-2026-10-30.json",
@@ -1239,7 +1239,7 @@
         },
         {
           "path": "frontend/scripts/verify-phase-browser-population.mjs",
-          "sha256": "b7c61a197d232d66aeab79cedd964c3b6bce426e5830d9ae004b55c1ee7951f6"
+          "sha256": "fbe0eae4769f0afced5709a00be24413f41b01cdc9c1cba036d19a4488b45b98"
         },
         {
           "path": "frontend/scripts/verify-phase-browser-parity.mjs",
@@ -1248,6 +1248,10 @@
         {
           "path": "docs/validation/convergence-refresh-2026-11-10.md",
           "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
+        },
+        {
+          "path": "data/derived/phase/browser-assets/stead/browser-parity.json",
+          "sha256": "96086eb1dacfab551319c78e801be304c039a1ca70c1604368a42abc031ddb6e"
         }
       ],
       "receipts": []
