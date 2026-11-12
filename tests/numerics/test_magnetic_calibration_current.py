@@ -251,7 +251,7 @@ def test_sparse_fold_retains_inner_resource_refusal_without_acceptance(monkeypat
         assert source_components == 3 * 288
         return {
             "status": "failed", "reason": "resource_cap", "iterations": 87,
-            "terminal_audits": (), "conditioning_attempts": attempts,
+            "terminal_audits": ({"check": None},), "conditioning_attempts": attempts,
             "failed_trial": {
                 "iteration": 87, "reason": "resource_cap", "model_q": np.ones(528),
                 "last_actual_line_search": {

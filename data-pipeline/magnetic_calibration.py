@@ -422,7 +422,11 @@ def fit_sparse_fold(raw: bytes, fold_index: int, beta: float, *,
                     budget=budget, terminal=TERMINAL,
                 )
                 certificates = tuple(solved.get("terminal_audits", ()))
-                core_certificate = bool(certificates and certificates[-1].get("check", {}).get("passed"))
+                latest_audit = certificates[-1] if certificates and isinstance(certificates[-1], dict) else None
+                latest_check = latest_audit.get("check") if latest_audit is not None else None
+                core_certificate = (
+                    isinstance(latest_check, dict) and latest_check.get("passed") is True
+                )
                 if solved.get("status") != "converged" or not core_certificate:
                     failure = solved.get("reason") or "inner_core_certificate_failed"
                     attempts = tuple(solved.get("conditioning_attempts", ()))

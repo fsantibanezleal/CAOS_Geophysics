@@ -858,3 +858,16 @@ IRLS, KKT, objective, resource or model-selection threshold changes. A
 regression test pins this measured one-step discrepancy. The interrupted run
 remains an incomplete historical attempt; its prior receipts are not reused as
 evidence for a rerun with the corrected source.
+
+### Missing terminal-audit check handling
+
+The source-bound rerun at commit `ba8fdc7` completed 14 beta/fold cells, then
+stopped at beta 0.1, fold 2. Its inner sparse solve returned a terminal-audit
+record with `check: null`; the caller dereferenced that value and raised
+`AttributeError` rather than returning the existing failed-certificate outcome.
+The caller now treats an absent or non-object check as an unpassed certificate,
+preserving the solver's recorded failure and diagnostics. The resource-refusal
+regression now includes `{"check": null}`. This is control-flow handling only;
+no certificate predicate or solver threshold was weakened. The 14 receipts
+remain bound to their original `ba8fdc7` run and will not be reused by the
+corrected-source matrix.
