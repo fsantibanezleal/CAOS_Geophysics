@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).parents[2] / "data-pipeline"))
 import magnetic_candidate_matrix as matrix  # noqa: E402
 
@@ -71,4 +73,13 @@ def test_score_ties_prefer_l2_then_larger_beta_then_id():
     assert all(row["status"] == "complete" and row["score"] == 1. for row in candidates)
     assert selected == matrix.candidate_id(1000., "l2")
 
-\n
+
+def test_windows_style_path_is_accepted_by_runner_boundary(tmp_path, monkeypatch):
+    data_root = tmp_path / "external-data"
+    output_dir = data_root / "research-runs" / "candidate-matrix"
+    monkeypatch.setattr(matrix, "local_data_root", lambda: data_root.resolve())
+
+    with pytest.raises(ValueError) as error:
+        matrix.run_matrix(b"{}", output_dir)
+
+    assert "output_dir: an absolute external data-root path is required" not in str(error.value)

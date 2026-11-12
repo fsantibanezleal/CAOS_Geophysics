@@ -185,7 +185,7 @@ def run_matrix(raw: bytes, output_dir: Path, *, wall_seconds: float = 120.) -> d
     """Run/resume all 24 beta-fold pairs and write the aggregate selection table."""
     if type(raw) is not bytes:
         raise TypeError("request: immutable bytes required")
-    if type(output_dir) is not Path or not output_dir.is_absolute():
+    if not isinstance(output_dir, Path) or not output_dir.is_absolute():
         raise ValueError("output_dir: an absolute external data-root path is required")
     if type(wall_seconds) not in (int, float) or not 0. < wall_seconds <= 120.:
         raise ValueError("wall_seconds: must remain within the approved 120-second fit cap")
