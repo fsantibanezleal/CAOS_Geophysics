@@ -2,8 +2,8 @@
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
   "sdd_sha256": "6ab7039d349d2b5e36ca4bdd93bb581bde0a3123a0e2b8ef9ea2cdcfdb50f182",
-  "assessed_revision": "b3b430365f8ee2481b597850dcf15f6ba059d5ac",
-  "assessed_at": "2026-11-11T03:15:35Z",
+  "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
+  "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
     "replacement_accepted": false,
     "class": "legacy-static",
@@ -279,20 +279,24 @@
         {
           "path": "docs/validation/gates/r006-03-2026-11-12.json",
           "sha256": "0fb7f40953581904ab4c7d76512a825412b6dcdf97ef4d057b576529e7cfb992"
+        },
+        {
+          "path": "docs/validation/r006-current-source-head-30a2969-2026-11-12.xml",
+          "sha256": "7af7bb97a8be3201b1f9a5f884b2bb8ef6f4878b731e370d2b23c1c111d97289"
         }
       ],
       "receipts": [
         {
-          "path": "docs/validation/gates/r006-01-2026-11-11.json",
-          "sha256": "2f0248fa52774ea70e2176b465ee8816bc85d428f1022925d11ff89c1fad311f"
+          "path": "docs/validation/gates/r006-01-head-30a2969-2026-11-12.json",
+          "sha256": "776fb42623f286fc591da1d7befcd6e88a33ae020bd766af346c57745dee8df2"
         },
         {
-          "path": "docs/validation/gates/r006-02-2026-11-11.json",
-          "sha256": "a2a3488ab232a878604be62e46428075d1c92a19ad9ae63bbbc14cd10a00c763"
+          "path": "docs/validation/gates/r006-02-head-30a2969-2026-11-12.json",
+          "sha256": "bf366fb4651c101039b25397701f21097af910e58cefa7d02eb38f13e28d166a"
         },
         {
-          "path": "docs/validation/gates/r006-03-2026-11-11.json",
-          "sha256": "d3717b36ceff53936dd7e4d7f31c3a5d54a6b63cd3a0998bf19e4b42b36b5801"
+          "path": "docs/validation/gates/r006-03-head-30a2969-2026-11-12.json",
+          "sha256": "a57c30aab12ed61aa688f89302d6dd96fcf14c5529f729131e220286dedf1fb7"
         }
       ]
     },
@@ -922,12 +926,16 @@
         {
           "path": "docs/validation/gates/r015-visual-matrix-2026-11-12.json",
           "sha256": "1dc7b4b6864db30866ec3de0350a7348dcaa76bdcc05dca8aba61b4491e3179f"
+        },
+        {
+          "path": "docs/validation/r015-playwright-report-head-30a2969-2026-11-12.json",
+          "sha256": "459f1b10e4b39c6265d23532bacc3d2b4db131872a2a92eea26b02f28eff543e"
         }
       ],
       "receipts": [
         {
-          "path": "docs/validation/gates/r015-visual-matrix-2026-11-11.json",
-          "sha256": "f510ef3e9205208ab8b3c9ee30ce6c739f5c2a5feddf50baa9adcb8e429cdfdc"
+          "path": "docs/validation/gates/r015-visual-matrix-head-30a2969-2026-11-12.json",
+          "sha256": "a488ea340c46197f227734e9235c6f9bb88fa61b71694bdd433e2d47be8e2f73"
         }
       ]
     },
@@ -955,11 +963,11 @@
         },
         {
           "path": "docs/validation/source-content-coverage.json",
-          "sha256": "d91b3651fbb7f0c9afbbce7593b26b0cea3eacac0148fc5a36de96ed0d7a8095"
+          "sha256": "92d3352e42b39c54ff1581e46d98925a35c53d3737328870947e401077203f2d"
         },
         {
           "path": "docs/validation/source-to-content-review.md",
-          "sha256": "823d607298473e10530aae2590fe104a6856b6c214ac6b5a67d6b582e5e762d1"
+          "sha256": "d8f130e0b33964b828826ac371fdd60994102092e234347502d8e24c734397a9"
         },
         {
           "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
@@ -1162,8 +1170,8 @@
       ],
       "receipts": [
         {
-          "path": "docs/validation/gates/r018-convergence-2026-11-11.json",
-          "sha256": "902450308b2f024051ec3739c1246ae12dba118ae1d0a63d9ad4464cc24956e3"
+          "path": "docs/validation/gates/r018-convergence-head-30a2969-2026-11-12.json",
+          "sha256": "37688d9a10c6f4e7c3bbee13333069abf9393f7cfb9ff8fc2001c05e42dad530"
         }
       ]
     },
