@@ -123,6 +123,41 @@ class _OriginalObjective:
 
 
 class _Linear(reduced._Linear):
+    def findSearchDirection(self):
+        try:
+            return super().findSearchDirection()
+        except reduced.core.linear._Failure as failure:
+            if str(failure) != 'zero_free_direction':
+                raise
+            # A zero native direction is only an optimum when the independent
+            # source-bound terminal proof certifies this exact retained state.
+            # Otherwise preserve the original failure and its fail-closed status.
+            if not self.stronger_terminal():
+                raise
+            self.reason = 'absolute_stationary'
+            raise _CertifiedStationary from None
+
+    def stoppingCriteria(self, inLS=False):
+        try:
+            return super().stoppingCriteria(inLS)
+        except reduced.core.linear._Failure as failure:
+            if not inLS or str(failure) != 'zero_free_direction':
+                raise
+            # A rounded no-op trial is not accepted. It can end the run only
+            # when the independent source proof certifies the unchanged model.
+            if not self.stronger_terminal():
+                raise
+            self.reason = 'absolute_stationary'
+            raise _CertifiedStationary from None
+
+    def minimize(self, *args, **kwargs):
+        try:
+            return super().minimize(*args, **kwargs)
+        except _CertifiedStationary:
+            # The outer solve still checks that this is exactly the final
+            # recorded state and independently re-evaluates its objective.
+            return self.xc.copy()
+
     def stronger_terminal(self):
         self.check()
         self.dispose_metric()
@@ -165,6 +200,10 @@ class _Linear(reduced._Linear):
             if owner is not None:
                 owner.close()
             row['seconds'] = monotonic()-started
+
+
+class _CertifiedStationary(Exception):
+    """Private control-flow signal for a proof-certified zero native direction."""
 
 
 def solve_bounded_linear(objective, lower_q, upper_q, start_q, *, budget, binding, terminal):

@@ -329,6 +329,61 @@ def test_nonlinear_lane_refuses_but_sparse_frozen_surrogate_runs_source_bound_so
     )
     assert solved["status"] == "converged", repr(solved)[:4000]
     assert solved["iterations"] > 0
+
+    # A native zero direction is recoverable only when the same exact source
+    # state passes the independent original-objective terminal certificate.
+    stationary_regularizer = MagneticRegularizer(
+        mesh, q, lengths, "sparse", .1, q.copy(),
+    )
+    stationary_objective = MagneticObjective(
+        linear_operator, stationary_regularizer,
+        linear_operator.evaluate(q)["prediction_nT"],
+        {"kind": "diagonal_sd", "values": np.ones(
+            (linear_operator.rows, linear_operator.components), dtype=np.float64)},
+        np.zeros(2, dtype=np.float64), np.full(2, 10., dtype=np.float64),
+        .1, "a" * 64, "b" * 64,
+    )
+    native_stopping = physical_original_optimizer.reduced.core.linear._NativeRecorded.stoppingCriteria
+
+    def withhold_stationary_stop(self, inLS=False):
+        if inLS:
+            self.reason = "zero_free_direction"
+            raise physical_original_optimizer.reduced.core.linear._Failure("zero_free_direction")
+        answer = native_stopping(self, inLS)
+        if not inLS and answer and self.reason == "absolute_stationary":
+            return False
+        return answer
+
+    monkeypatch.setattr(
+        physical_original_optimizer.reduced.core.linear._NativeRecorded,
+        "stoppingCriteria", withhold_stationary_stop,
+    )
+    stationary_budget = physical_original_optimizer.ConditionedBudget(
+        monotonic() + 120., 200, 805_306_368, 805_306_368, allocation_sha,
+    )
+    stationary = magnetic_optimizer_adapter.solve_linear(
+        stationary_objective, q.copy(), source_components=9,
+        budget=stationary_budget, terminal=terminal,
+    )
+    assert stationary["status"] == "converged", repr(stationary)[:4000]
+    assert stationary["reason"] == "absolute_stationary"
+    assert stationary["iterations"] == 0
+    np.testing.assert_array_equal(stationary["q"], q)
+    assert stationary["terminal_audits"][-1]["check"]["proof_basis"] == (
+        "original_physical_residual_strong_convexity"
+    )
+    assert stationary["terminal_audits"][-1]["check"]["passed"] is True
+
+    monkeypatch.setattr(physical_original_optimizer._Linear, "stronger_terminal", lambda _self: False)
+    uncertified = magnetic_optimizer_adapter.solve_linear(
+        stationary_objective, q.copy(), source_components=9,
+        budget=physical_original_optimizer.ConditionedBudget(
+            monotonic() + 120., 200, 805_306_368, 805_306_368, allocation_sha,
+        ), terminal=terminal,
+    )
+    assert uncertified["status"] == "nonconverged"
+    assert uncertified["reason"] == "zero_free_direction"
+
     l2 = MagneticRegularizer(mesh, reference, lengths)
     with pytest.raises(ValueError, match="affine magnetic quantities"):
         MagneticObjective(
