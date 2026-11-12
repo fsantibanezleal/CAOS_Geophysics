@@ -160,3 +160,21 @@ results and exact identities are recorded in
 [`validation.md`](validation.md#2026-11-11-active-face-preflight-reuse-performance-diagnostic).
 This is not a sparse-method pass; optimize the repeated active-face work under
 the existing caps before starting the candidate matrix.
+
+## 2026-11-12 certified no-op line-search stop
+
+The original physical optimizer now catches only the native
+`zero_free_direction` failure raised for a zero direction or a rounded
+no-displacement line-search trial. It can terminate at the unchanged recorded
+state only when the source-bound original-objective terminal proof passes. The
+outer solve still checks exact equality with its final recorded state and
+re-evaluates the objective. A refused certificate retains the native failure;
+it does not become convergence. The previous same-beta production replay
+failure is superseded for this one fold by the exact-commit replay in
+[`validation.md`](validation.md#2026-11-12-source-exact-same-beta-sparse-fold).
+
+That fold is still only one of the required candidate folds. T43 remains open:
+the full candidate/fold matrix, selection, final development refit, frozen
+generation, sealed evaluation and independent-acquisition controls have not
+run. No method, field, hosted or release claim follows from this single
+synthetic development fold.

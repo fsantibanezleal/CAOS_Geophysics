@@ -48,7 +48,7 @@ The independent CAOS_MANAGE depth checker currently reports:
 | `geometry-normalized-traveltime-refinement-v001` | 7,655 | 16 | 7 | 6 | 32 | 1 | Meets the measured manuscript floors; declared as a draft with no DOI or peer-review claim. |
 | `inverse-earth-studio-report-0.04.003` | 3,289 | 0 | 1 | 1 | 14 | 0 | Fails the technical-report content floor and has no `coverage.json`. |
 | `m12-nullspace-refinement-v0.01` | 2,850 | 3 | 6 | 4 | 16 | 1 | Fails the manuscript floor and has no `coverage.json`; it is not mapped to a declared SDD claim. |
-| `geophysics-identifiability` | — | — | — | — | — | — | Markdown only; it is not a LaTeX manuscript. |
+| `geophysics-identifiability` | n/a | n/a | n/a | n/a | n/a | n/a | Markdown only; it is not a LaTeX manuscript. |
 
 The three LaTeX titles and kinds are now registered in `product.json`; no DOI
 has been assigned to any of them. This removes the unmatched geometry-paper

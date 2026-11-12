@@ -757,3 +757,53 @@ the original-noise terminal certificate, objective monotonicity, frozen
 epsilon schedule, source binding or resource limits. Any optimization must
 preserve those conditions and pass the existing adversarial controls before
 the candidate matrix runs.
+
+## 2026-11-12 source-exact same-beta sparse fold
+
+The M04 fold-0 failure above was traced to a native line-search trial whose
+rounded model equalled the current model. SimPEG's in-line-search
+`zero_free_direction` guard fires before the ordinary stopping-criteria
+terminal check. Commit `89453682c1bb41724b4f6f6f7d1d8e5c116f78a7` adds a narrow
+catch for that exact failure, plus the corresponding zero native-direction
+case. Neither path accepts a trial or changes the model. A successful stop
+requires the existing original-source residual/strong-convexity certificate;
+the native solve wrapper then verifies exact equality to the last recorded
+state and reevaluates the objective. If certification is withheld, the result
+remains `nonconverged / zero_free_direction`.
+
+The regression control exercises both outcomes. It passes with the actual
+certificate and the unchanged model, and fails closed when the certificate is
+withheld. `tests/numerics/test_magnetic_inverse.py` and the applicable tests in
+`tests/numerics/test_physical_original_optimizer.py` pass: 11 passed, 1 skipped.
+The one external-control test was excluded because
+`GEOPHYSICS_M02_MAGNETIC_SOURCE` is not set to its retained control snapshot;
+the unfiltered invocation fails at that required environment precondition.
+Ruff, Python compilation, `git diff --check`, and the independent
+`joint_survey_compiled_baseline.source_inventory()` closure also pass.
+
+The exact-commit profile reran S2-A `linear_tmi_nT`, fold 0, beta `0.0001`,
+starting from the converged same-fold/same-beta L2 model and retaining the
+original schedule, 120-second per-fit wall cap, 512-phase cap and
+805,306,368-byte allocation ceiling. All eight epsilon values
+`[0.1, 0.05, 0.025, 0.0125, 0.00625, 0.003125, 0.0015625, 0.001]` converged.
+The sparse fit used 112.297 seconds and 24 direction calls / 24 conditioning
+phases; all eight stored terminal audits passed. Final normalized projected
+gradient infinity norm was `4.921145520829682e-15`. At epsilon `0.001`, the
+fixed-epsilon true objective was `374.0412684186038` (`phi_d` `374.0400213416462`,
+true `phi_m` `12.470769576338325`). The full profile took 141.109 seconds
+because it includes the preceding L2 fit; the sparse fit itself stayed under
+its unchanged 120-second limit.
+
+The source-exact receipt, including the 528-cell model, 144 fit predictions,
+signed residuals, stage history, terminal proofs and resource profile, is
+stored outside Git at
+`CAOS_Geophysics/research-runs/2026-11-12/s2a-sparse-fold0-beta-1e-4-8945368-120s.json`
+under the configured device data root. Receipt SHA-256:
+`f7ce714bc5c5e9eb399649caec8890cf70f5735a3d9a5791569e838f524c1734`.
+Request SHA-256 remains
+`e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa`.
+The receipt still marks candidate selection, field validation, outer evaluation,
+method acceptance and online admission false. This closes one compliant
+synthetic development fold only. The candidate/fold matrix, nested selection,
+final refit, freeze, sealed evaluation and independent acquisitions remain
+required; T43, M04 and product release remain open.
