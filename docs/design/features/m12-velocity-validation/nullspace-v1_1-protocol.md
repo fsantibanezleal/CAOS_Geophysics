@@ -114,6 +114,20 @@ source-to-result reproduction or as a reproducible release gate. The bounded
 synthetic result does not validate field data, establish geological recovery,
 or change overall M12 or product release acceptance.
 
+### Current-source reproduction supersedes the custody snapshot
+
+On 2026-11-06, the frozen residual-v3.1 protocol was rerun from source on an
+NVIDIA RTX 4070 Laptop GPU, then independently verified on CPU. The nullspace
+v1.1 protocol was rerun from that checkpoint and independently verified on CPU.
+Both verifiers returned `status=verified`; the regenerated checkpoint hash
+matches the retained value. Their exact outputs are committed under
+`data/derived/v2/models/m12-current-reproduction-20261106/`. This supersedes the
+2026-11-05 custody snapshot above for current source-to-result reproducibility.
+It does not change the failed residual comparator, the bounded synthetic scope,
+`scientific_acceptance=false`, or R-008/product release status. See
+[`m12-current-source-reproduction-2026-11-06.md`](../../../validation/m12-current-source-reproduction-2026-11-06.md)
+for the source revision, hashes, commands and cohort results.
+
 ### Float-safe compatibility replay
 
 On 2026-10-30, the original verify entry point was independently rerun against

@@ -352,3 +352,46 @@ uploaded, no GitHub Pages deployment exists, and no release was activated.
 The existing draft PR #151 has no recorded status checks and was not merged.
 The product, science, curriculum, manuscript, full-suite and host acceptance
 gates therefore remain open.
+
+## 2026-11-12 recheck: current-source M12 reproduction
+
+The 2026-11-11 statements that the M12 source checkpoint and raw generated
+inputs were unavailable are superseded. I reran both retained independent CPU
+verifiers against the 2026-11-06 outputs: residual-v3.1 returned
+`status=verified` for five cohorts, and nullspace-v1.1 returned
+`status=verified` for four cohorts. The CUDA-trained checkpoint and exact
+receipts now exist in the product checkout under
+`data/derived/v2/models/m12-current-reproduction-20261106/`; the staged byte
+hashes match the external run records. The reproducibility gap for those
+frozen synthetic cohorts is closed. The learned residual comparator remains
+failed (joint-shift velocity/oracle-time ratios 1.0437/1.3961), while the
+separate null-space follow-up remains bounded synthetic evidence
+(0.9701/0.9967) and does not isolate projection's incremental effect.
+Neither result establishes field accuracy or product acceptance.
+
+The working M12 paper was updated to v0.03 and its factual custody text now
+matches that reproduction. Its depth is still only 3,223 words, 3 equations,
+6 figures, 5 tables, 18 references and 1 algorithm; it is below the manuscript
+bar and has no `coverage.json`. The technical report now records the verified
+reproduction, but remains 3,481 words, 0 equations, 1 figure, 1 table, 14
+references and 0 algorithms, with no coverage map. The independent BS-1 paper
+remains the strongest manuscript (7,655 words, 16 equations, 7 figures, 6
+tables, 32 references, 1 algorithm); its negative synthetic result and
+single-seed, no-field limits remain explicit. The recorded independent review
+found no remaining blocker at the paper's stated synthetic scope. Complete
+comparison against the broader current method set and the publication gates
+are still open.
+
+The current depth checker reports three findings: report coverage missing,
+M12 coverage missing, and no manuscript declared as the technical report.
+It is not a pass: measured depth and the technical report's required content
+are far below the binding floors. The November 11 shell/template audit remains
+historical; the current checkouts are shell 0.26.000 and template 0.15.010,
+with the product's shell pin already updated. No product release was promoted
+or deployed by this recheck; the live ML-VPS and one-origin release gates remain
+open.
+
+The M12 manuscript PDF and technical report PDF were rebuilt with XeLaTeX. The
+M12 cover/reproducibility pages and report cover/M12-results page were rendered
+and inspected; no clipping or overlap was observed. Both logs have no
+undefined citations/references or overfull boxes.

@@ -8,3 +8,5 @@ data/derived/m01-scientific-course/**/*.svg -text whitespace=-blank-at-eol,cr-at
 /manuscripts/geometry-normalized-traveltime-refinement-v001/data/ablation-receipt.json -text whitespace=cr-at-eol
 
 tests/fixtures/manuscript-depth/softqp-published/** -text whitespace=-blank-at-eol,-blank-at-eof
+
+data/derived/v2/models/m12-current-reproduction-20261106/** -text whitespace=-blank-at-eol,-blank-at-eof

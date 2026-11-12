@@ -306,19 +306,7 @@ calculation is retained in
 These intervals quantify variation within the fixed synthetic cohorts,
 not natural-geology uncertainty.
 
-A historical hash-bound compatibility replay verified the retained
-metric computation across four cohorts while preserving the checkpoint
-hash and selected parameters. A later custody review found that the
-external run directory, source checkpoint and generated raw inputs were
-absent from the checked locations. The repository keeps per-case metrics
-for reanalysis, but not the inputs needed to regenerate the original
-solver run. The historical replay therefore does not establish current
-full reproduction or field-supported performance. It does not change the
-failing M12 checkpoint comparison, establish geological recovery or
-demonstrate field transfer. The relevant records are
-\url{docs/validation/m12-nullspace-v1_1-compatible-replay-2026-10-31.json}
-and
-\url{docs/validation/m12-nullspace-v1_1-custody-status-2026-11-05.md}.
+An initial custody review on 5 November 2026 found the earlier external run directory and its checkpoint absent from the locations checked at that time. This was superseded by a current-source reproduction on 6 November: residual-v3.1 was trained on an NVIDIA RTX 4070 Laptop GPU, then its five cohorts were independently replayed on CPU; the null-space run was rebuilt from that checkpoint and its four held-out cohorts were independently replayed on CPU. Both verifiers returned \texttt{status=verified}. The checkpoint hash is \url{0f7a8fc43a078ab4cb16016774d44b356ccb70d9c60e0f197506fd3f7a53ea03}; the residual receipt hash is \url{f6f52c544af1a86f07fc17c83296de2ac09e884058e2af1d72adeb3bb35bc1dc}; and the null-space receipt hash is \url{0d4cd8c14e290b9cd17da387800dbe6cf7314729379d03221df8585b1243d880}. The checkpoint and receipts are now committed under \url{data/derived/v2/models/m12-current-reproduction-20261106/}. This restores source-to-result reproduction for the frozen synthetic protocol only. It does not change the failed residual-v3.1 comparator, establish geological recovery or demonstrate field transfer. The independent replay and its source revision are recorded in \url{docs/validation/m12-current-source-reproduction-2026-11-06.md}.
 
 The proposed coverage-conditioned correction asks whether a
 dimensionally consistent, coverage-conditioned learned residual improves
