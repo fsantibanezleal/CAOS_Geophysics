@@ -808,7 +808,7 @@ synthetic development fold only. The candidate/fold matrix, nested selection,
 final refit, freeze, sealed evaluation and independent acquisitions remain
 required; T43, M04 and product release remain open.
 
-## Resumable candidate-matrix and final-refit plumbing
+## Resumable candidate-matrix implementation (pre-run checkpoint)
 
 The current source adds `data-pipeline/magnetic_candidate_matrix.py` and
 `scripts/run_m04_candidate_matrix.py`. The runner fixes the eight beta values,
@@ -829,10 +829,10 @@ current-source test proves this row selection and both wrapper calls; candidate
 order, pooled scoring, failed-fold rejection and tie resolution pass three
 deterministic unit tests. Ruff and `git diff --check` pass.
 
-No full candidate matrix was run by this plumbing check. No selected model,
-final refit, model freeze, sealed outer score, independent acquisition,
-resource-upper proof or scientific acceptance is claimed. T43 and R-008 remain
-open. The reproduction command after commit is:
+At this implementation checkpoint the full matrix and final refit had not run;
+the later source-bound execution is recorded below. No sealed outer score,
+independent acquisition, resource-upper proof or scientific acceptance was
+claimed here. T43 and R-008 remained open. The reproduction command is:
 
 ```powershell
 python scripts/run_m04_candidate_matrix.py `
@@ -843,6 +843,69 @@ python scripts/run_m04_candidate_matrix.py `
 The unchanged per-fit wall limit is 120 seconds. Matrix completion means the
 declared outcomes were recorded, including failures; it does not itself pass
 the candidate, field, method, host or product gates.
+
+## 2026-11-12 complete S2-A candidate matrix and development freeze
+
+The exact S2-A `linear_tmi_nT` request was run through the source-bound 16
+candidate by three fold matrix at product commit
+`a4638a1e860277754101e3aef56e8233e967983f`. All 24 beta/fold receipts were
+written and independently hash-checked. Ten of the 16 candidate rows completed
+all three folds. Six remain ineligible; their failed folds were preserved:
+
+| Candidate | Outcome |
+|---|---|
+| `beta-0p0001-l2` | Fold 1 `resource_cap` |
+| `beta-0p0001-sparse_smallness` | Fold 1 same-beta L2 start failed |
+| `beta-1-sparse_smallness` | Folds 1 and 2 `wall_cap` |
+| `beta-10-sparse_smallness` | All folds `wall_cap` |
+| `beta-100-sparse_smallness` | All folds `wall_cap` |
+| `beta-1000-sparse_smallness` | All folds `wall_cap` |
+
+Recomputation from the 24 cell receipts selected `beta-1000-l2` with pooled
+`sum(phi_d)/sum(n_components) = 1038.2769621173156`. The matrix file SHA-256 is
+`f996ad339e48c1a72819bbd8418acec1403dbd489a70134c373844b237a1d79d`. Its
+external location is
+`GEOPHYSICS_LOCAL_DATA_ROOT/research-runs/m04-2026-11-12-a4638a1-candidate-matrix/matrix.json`.
+
+The selected ordinary-L2 candidate was refit on exactly 216 presealed
+development rows, disjoint from all 72 sealed outer rows. At commit
+`740461e1c51845db9023df32cf2909c56bacd8a0`, the refit converged in 56
+iterations and 25.438 seconds under the unchanged 120-second cap. Its
+normalized projected KKT infinity norm is `8.173766766465541e-17`; final
+`phi_d=1366.2868969795722`, `phi_m=0.26941238860277106`, and
+`phi_engine=1635.6992855823432`. The 216-row development residual RMS is
+`1.2575176242136095 nT`; this is an in-sample fit diagnostic and is not a
+predictive or field-accuracy measure. The 528-cell model has 164 nonzero
+dimensionless `q=chi/0.01` values, with range `[0, 1.2378895850020297]`.
+
+The immutable freeze receipt is
+`GEOPHYSICS_LOCAL_DATA_ROOT/research-runs/m04-2026-11-12-a4638a1-candidate-matrix/final-refit-beta-1000-l2.json`.
+File SHA-256:
+`3daa299ce840f83a38fac9012658da7ab387988a1978937bf03e4eb11e421d73`;
+internal canonical receipt SHA-256:
+`7e2488b9d4c954175bf4bee7c0c4d3424e40b20b9c8835bfb0073d71219e4d7d`;
+frozen model SHA-256:
+`2e16aa3a726f5df1381f45e7a4ee7a0f2ac08d6c903615524b9736dfa57bcb65`.
+`verify_m04_final_refit.py` reopened the receipt, validated the complete matrix,
+recomputed candidate selection, checked commit-pinned source hashes, confirmed
+the model hash and final-development partition, and kept outer evaluation,
+field validation, method acceptance and online admission false.
+
+The matrix and freeze are authored S2-A controls, not field observations. The
+one-time sealed outer evaluation remains unrun; do not tune, select or replace
+the frozen model based on any outer result. Independent acquisition regimes,
+field eligibility, resource upper-profile controls, bundle/re-import, hosted
+integration and product acceptance remain open. This completes the
+matrix-selection and final-refit-freeze portion only; T43, M04 and the product
+release remain open.
+
+Focused validation under the declared one-thread BLAS/OMP runtime passed:
+`test_magnetic_final_refit.py`, `test_magnetic_candidate_matrix.py`,
+`test_magnetic_survey.py`, and `test_magnetic_calibration_current.py`.
+Running the calibration test directly without the one-thread environment
+refused before iteration with `metric: reviewed single-thread native workspace
+required`, as intended by the physical allocation gate. Both runners now set
+the documented thread limits before importing the numerical stack.
 
 ### Floating-point parity correction
 

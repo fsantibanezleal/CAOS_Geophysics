@@ -340,3 +340,115 @@ def run_final_refit(raw: bytes, matrix_dir: Path, output_path: Path, *,
     }
     receipt = _write_once(output_path, body)
     return receipt
+
+
+def verify_final_refit(raw: bytes, matrix_dir: Path, receipt_path: Path) -> dict:
+    """Reopen and verify the write-once freeze against its exact source commits."""
+    directory = _safe_data_path(matrix_dir, must_exist=True)
+    path = _safe_data_path(receipt_path, must_exist=True)
+    if path.parent != directory:
+        raise ValueError("receipt: final-refit file must be beside its candidate matrix")
+    frozen, selected, plan, handle = _load_and_verify_matrix(raw, matrix_dir)
+    if path.name != f"final-refit-{selected['id']}.json":
+        raise ValueError("receipt: filename does not match the selected candidate")
+    if path.stat().st_size > 128 * 1024 * 1024:
+        raise ValueError("receipt: exceeds the bounded M04 result size")
+    try:
+        receipt = json.loads(path.read_bytes())
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        raise ValueError("receipt: malformed final-refit JSON") from error
+    if (type(receipt) is not dict or receipt.get("schema") != SCHEMA
+            or receipt.get("receipt_sha256") != _receipt_hash(receipt)
+            or receipt.get("status") != "converged"):
+        raise ValueError("receipt: schema, integrity, or convergence check failed")
+    identity = receipt.get("identity")
+    final_commit = identity.get("final_refit_product_commit") if type(identity) is dict else None
+    current_commit = _current_commit()
+    if (type(final_commit) is not str or len(final_commit) != 40
+            or any(char not in "0123456789abcdef" for char in final_commit)
+            or not _is_ancestor(final_commit, current_commit)):
+        raise ValueError("receipt: final-refit source commit is not an ancestor of current HEAD")
+    expected = {
+        "matrix_sha256": _hash((directory / "matrix.json").read_bytes()),
+        "matrix_product_commit": frozen["identity"]["product_commit"],
+        "request_sha256": _hash(raw),
+        "geometry_seal_sha256": plan["identity"]["seal_sha256"],
+        "partition_sha256": plan["partition"]["sha256"],
+        "selected_candidate": selected["id"],
+        "selected_score": selected["score"],
+    }
+    if any(identity.get(key) != value for key, value in expected.items()):
+        raise ValueError("receipt: matrix, request, partition, or selection identity mismatch")
+
+    root = Path(__file__).resolve().parents[1]
+    committed_files = {
+        "runner_sha256": "data-pipeline/magnetic_final_refit.py",
+        "cli_sha256": "scripts/run_m04_final_refit.py",
+    }
+    for identity_key, relative in committed_files.items():
+        blob = subprocess.run(
+            ["git", "-C", str(root), "show", f"{final_commit}:{relative}"],
+            check=True, capture_output=True,
+        ).stdout
+        if identity.get(identity_key) != _hash(blob):
+            raise ValueError(f"receipt: committed source hash mismatch for {relative}")
+    source_paths = {
+        "magnetic_calibration.py": "data-pipeline/magnetic_calibration.py",
+        "magnetic_candidate_matrix.py": "data-pipeline/magnetic_candidate_matrix.py",
+        "magnetic_fold_score.py": "data-pipeline/magnetic_fold_score.py",
+        "magnetic_survey.py": "data-pipeline/magnetic_survey.py",
+    }
+    source_hashes = identity.get("sources")
+    if type(source_hashes) is not dict:
+        raise ValueError("receipt: missing source hashes")
+    for name, relative in source_paths.items():
+        blob = subprocess.run(
+            ["git", "-C", str(root), "show", f"{final_commit}:{relative}"],
+            check=True, capture_output=True,
+        ).stdout
+        if source_hashes.get(name) != _hash(blob):
+            raise ValueError(f"receipt: committed source hash mismatch for {relative}")
+
+    partition = receipt.get("partition")
+    fit = receipt.get("fit")
+    if type(partition) is not dict or type(fit) is not dict:
+        raise ValueError("receipt: missing fit or partition")
+    rows = tuple(plan["final_refit_rows"]["data"])
+    if (partition.get("fit_rows") != list(rows)
+            or partition.get("fit_row_count") != len(rows)
+            or partition.get("outer_rows_read_for_scoring") is not False
+            or partition.get("outer_evaluation_performed") is not False
+            or not set(rows).issubset(plan["partition"]["development_rows"]["data"])
+            or not set(rows).isdisjoint(plan["partition"]["outer_rows"]["data"])):
+        raise ValueError("receipt: final refit is not the sealed development-only partition")
+    expected_schema = ("magnetic-linear-l2-fold-result-1" if selected["penalty"] == "l2"
+                       else "magnetic-linear-sparse-fold-result-1")
+    model_values = fit.get("model_q")
+    model = np.asarray(model_values, dtype=np.float64)
+    if (fit.get("schema") != expected_schema or fit.get("status") != "converged"
+            or fit.get("fold_index") != -1 or fit.get("beta") != selected["beta"]
+            or fit.get("fit_rows") != list(rows) or model.ndim != 1
+            or model.size != plan["preflight"]["active_cells"]
+            or not np.isfinite(model).all()
+            or candidate_matrix.model_q_sha256(model) != receipt.get("frozen_model_sha256")):
+        raise ValueError("receipt: fitted model does not match the selected source-bound refit")
+    prediction = np.asarray(fit.get("prediction_nT"), dtype=np.float64)
+    residual = np.asarray(fit.get("residual_observed_minus_predicted_nT"), dtype=np.float64)
+    component_count = 1 if handle.metadata()["processing"]["quantity"] == "linear_tmi_nT" else 3
+    if prediction.ndim == 1 and component_count == 1 and prediction.size == len(rows):
+        prediction = prediction.reshape(len(rows), 1)
+    if residual.ndim == 1 and component_count == 1 and residual.size == len(rows):
+        residual = residual.reshape(len(rows), 1)
+    if (prediction.ndim != 2 or prediction.shape != (len(rows), component_count)
+            or residual.shape != prediction.shape or not np.isfinite(prediction).all()
+            or not np.isfinite(residual).all()):
+        raise ValueError("receipt: fit predictions/residuals are incomplete or non-finite")
+    claims = receipt.get("claims")
+    if (type(claims) is not dict
+            or claims.get("model_frozen_before_outer_evaluation") is not True
+            or claims.get("outer_evaluation_performed") is not False
+            or claims.get("field_validation") is not False
+            or claims.get("method_accepted") is not False
+            or claims.get("online_admitted") is not False):
+        raise ValueError("receipt: scientific acceptance boundary is inconsistent")
+    return receipt

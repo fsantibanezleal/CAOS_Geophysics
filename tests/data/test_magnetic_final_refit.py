@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -94,7 +95,10 @@ def _configure(monkeypatch, tmp_path, plan):
     monkeypatch.setattr(final_refit, "local_data_root", lambda: tmp_path.resolve())
     monkeypatch.setattr(final_refit, "_current_commit", lambda: "b" * 40)
     monkeypatch.setattr(final_refit, "_is_ancestor", lambda old, new: True)
-    monkeypatch.setattr(final_refit, "parse_request", lambda raw: object())
+    monkeypatch.setattr(
+        final_refit, "parse_request",
+        lambda raw: SimpleNamespace(metadata=lambda: {"processing": {"quantity": "linear_tmi_nT"}}),
+    )
     monkeypatch.setattr(final_refit.magnetic_survey, "plan_geometry", lambda handle: plan)
 
 
@@ -122,6 +126,14 @@ def test_recomputes_all_fold_scores_then_freezes_selected_dev_only_model(tmp_pat
     assert receipt["claims"]["outer_evaluation_performed"] is False
     assert seen == [(raw, 1000., 120.)]
     assert json.loads(target.read_bytes())["receipt_sha256"] == receipt["receipt_sha256"]
+
+    repo = Path(__file__).parents[2]
+    def committed_blob(command, *, check, capture_output):
+        relative = command[-1].split(":", 1)[1]
+        return SimpleNamespace(stdout=(repo / relative).read_bytes())
+    monkeypatch.setattr(final_refit.subprocess, "run", committed_blob)
+    verified = final_refit.verify_final_refit(raw, matrix_dir, target)
+    assert verified["receipt_sha256"] == receipt["receipt_sha256"]
     with pytest.raises(FileExistsError, match="refusing to overwrite"):
         final_refit.run_final_refit(raw, matrix_dir, target)
 

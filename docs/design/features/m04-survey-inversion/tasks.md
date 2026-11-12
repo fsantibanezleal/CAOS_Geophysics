@@ -7,7 +7,7 @@ by those foundation tests. No placeholder code is requested.
 The product holds scientific definitions and implementation; private execution,
 coordination and release records remain in management.
 
-## Current implementation checkpoint : 2026-11-11
+## Current implementation checkpoint : 2026-11-12
 
 The source-bound sparse inner-surrogate path and sealed-fold IRLS driver are
 implemented in `magnetic_optimizer_adapter.py` and `magnetic_calibration.py`.
@@ -30,22 +30,24 @@ epsilon values 0.1, 0.05 and 0.025 converged, then epsilon 0.0125 stopped at
 allocation ceiling. This is a valid resource-limit failure receipt, not a
 candidate pass; see `validation.md` and the matching evidence summary.
 
-The sparse-fold API now requires a converged, certified L2 result with matching
-beta, fold, source inventory, geometry and fitting rows; the profile runner
-performs that L2 fit first. T43 remains open: the 16-candidate, three-fold matrix, nested selection,
-development refit, immutable freeze and one-time sealed evaluation have not
-run. No candidate score, field truth, outer evaluation or method acceptance is
-claimed. The full source-bound diagnostic runs are external to Git under the
-configured device data root; their exact relative paths and hashes are in
-`validation.md`.
+The sparse-fold API requires a converged, certified same-beta L2 starting model.
+The source-bound 16-candidate/three-fold S2-A matrix has now recorded all 24
+beta/fold outcomes. Ten candidates completed every fold; six were excluded by
+recorded `resource_cap`, `wall_cap`, or same-fold L2-start failures. Recomputed
+pooled validation selection chose `beta-1000-l2`, score
+`1038.2769621173156`. The final development-only refit then converged on the
+216 presealed rows, with normalized projected KKT `8.173766766465541e-17`; its
+model was frozen before outer evaluation. Exact artifact hashes and run details
+are in `validation.md`.
 
-Earlier 120-second/512-phase failures and the 120-second phase-sensitivity
-failure remain historical diagnostics in `validation.md`. The product fit API
-and profile runner now use the bound M02 120-second deadline and 512-phase
-limit. The sparse API requires a converged, certified L2 result with matching
-beta, fold, source inventory, geometry and fit rows before it can run. The
-production-limit replay is now recorded, but a passing candidate fold remains
-to be completed before matrix execution.
+T43 remains open because the one-time sealed outer evaluation has not run.
+Independent acquisition/negative-regime controls, resource upper-profile
+acceptance, real field eligibility, local user-data bundle/re-import, hosted
+adapter, linked UI/course gates and full method acceptance remain open. S2-A is
+an authored acquisition control, not provider field data; its in-sample
+development residuals are not predictive evidence. Earlier 120-second/512-phase
+failures remain historical records in `validation.md`; no cap or scientific
+threshold was changed to obtain the selected fit.
 
 ## T41: source/protocol and geometry foundation
 

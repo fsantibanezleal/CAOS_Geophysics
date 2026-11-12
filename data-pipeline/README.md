@@ -23,8 +23,13 @@ M04 final-refit reproduction (the selected candidate id is encoded in the
 write-once output filename):
 
 ```powershell
+$request = (Resolve-Path 'tests\fixtures\magnetic_survey\generated\requests\S2-A-linear_tmi_nT.json').Path
+$matrix = "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04-candidate-matrix"
 .venv-pipeline\Scripts\python.exe scripts\run_m04_final_refit.py `
-  --request tests\fixtures\magnetic_survey\generated\requests\S2-A-linear_tmi_nT.json `
-  --matrix-dir "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04-candidate-matrix" `
-  --output "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04-candidate-matrix\final-refit-<selected-id>.json"
+  --request $request `
+  --matrix-dir $matrix `
+  --output "$matrix\final-refit-<selected-id>.json"
+.venv-pipeline\Scripts\python.exe scripts\verify_m04_final_refit.py `
+  --request $request --matrix-dir $matrix `
+  --receipt "$matrix\final-refit-<selected-id>.json"
 ```
