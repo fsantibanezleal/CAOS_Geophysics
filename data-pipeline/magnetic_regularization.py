@@ -17,6 +17,7 @@ MAX_ACTIVE_CELLS = 2048
 MAX_LENGTH_M = 1e5
 ENGINE_EPOCH = "simpeg-0.25.2-discretize-0.12.0-magnetic-volume-faces-1"
 SPARSE_EPSILON_Q = (.1, .05, .025, .0125, .00625, .003125, .0015625, .001)
+SPARSE_WEIGHT_RTOL = 3e-16
 
 
 class MagneticRegularizer:
@@ -266,7 +267,11 @@ class MagneticRegularizer:
             for obj in self.sparse.objfcts[1:]
         )
         expected_weights = 1. / root
-        if (not np.array_equal(smallness_weights, expected_weights)
+        # SimPEG and NumPy evaluate sqrt(delta**2 + epsilon**2) through
+        # different floating-point operation paths; admit at most the same
+        # 3e-16 relative rounding already used by the numerical parity tests.
+        if (not np.allclose(smallness_weights, expected_weights,
+                            rtol=SPARSE_WEIGHT_RTOL, atol=0.)
                 or any(not np.array_equal(weights, np.ones_like(weights))
                        for weights in smoothness_weights)):
             raise RuntimeError("SimPEG sparse weights differ from frozen positive-epsilon policy")

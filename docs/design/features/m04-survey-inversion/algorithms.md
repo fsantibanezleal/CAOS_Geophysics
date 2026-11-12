@@ -160,6 +160,11 @@ outer policy, NOT default UpdateIRLS/BetaSchedule, uses epsilon_q sequence
 Smoothness epsilon_j=epsilon_q/ell_j in m^-1, positive even though p=2 weights
 are1. Smallness weights r_i=1/sqrt(delta_i^2+epsilon_q^2);
 smoothness weights exactly1. At null delta, r_i=1/epsilon_q finite.
+The actual SimPEG smallness weights are compared with this formula at relative
+tolerance 3e-16 and zero absolute tolerance: SimPEG and NumPy can differ by one
+float64 rounding step when evaluating the same square-root expression. The
+smoothness weights remain exactly1. This tolerance is below the independent
+gradient and objective tolerances and does not change a solver stopping rule.
 Beta stays fixed at that candidate's value, no hidden lambda/max rescaling.
 
 For each epsilon, maximum20 reweight-and-solve outer iterations. Each inner

@@ -843,3 +843,18 @@ python scripts/run_m04_candidate_matrix.py `
 The unchanged per-fit wall limit is 120 seconds. Matrix completion means the
 declared outcomes were recorded, including failures; it does not itself pass
 the candidate, field, method, host or product gates.
+
+### Floating-point parity correction
+
+The 2026-11-12 matrix attempt stopped at beta 0.001, fold 2, after SimPEG's
+refreshed sparse smallness weight differed from `1/hypot(delta, epsilon)` by
+one float64 rounding step: maximum absolute difference `5.551115123125783e-17`
+and relative difference `1.5807589881050383e-16`; the three smoothness weight
+vectors were exactly one. Reproduction used the same frozen request, beta,
+fold and epsilon 0.0125. The old bitwise equality check treated this equivalent
+evaluation path as a solver failure. The corrected guard uses the existing
+3e-16 relative parity tolerance with zero absolute tolerance; no solver,
+IRLS, KKT, objective, resource or model-selection threshold changes. A
+regression test pins this measured one-step discrepancy. The interrupted run
+remains an incomplete historical attempt; its prior receipts are not reused as
+evidence for a rerun with the corrected source.

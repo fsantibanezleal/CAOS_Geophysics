@@ -129,6 +129,23 @@ def test_sparse_refresh_uses_actual_simpeg_weights_and_true_fixed_epsilon_gradie
     assert result["smoothness_epsilon_per_m"] == tuple(epsilon / ell for ell in (4., 9., 16.))
 
 
+def test_sparse_weight_guard_accepts_only_measured_float64_rounding():
+    regularizer, _ = _regularizer()
+    q = regularizer.reference_q.copy()
+    q[0] += 2.847614800807541
+    epsilon = .0125
+    regularizer.sparse.objfcts[0].irls_threshold = epsilon
+    for objective, length in zip(regularizer.sparse.objfcts[1:], regularizer.lengths_m):
+        objective.irls_threshold = epsilon / length
+    regularizer.sparse.update_weights(q)
+    actual = np.asarray(regularizer.sparse.objfcts[0].get_weights("irls"), dtype=np.float64)
+    expected = 1. / np.hypot(q - regularizer.reference_q, epsilon)
+    assert np.count_nonzero(actual != expected) == 1
+    assert np.max(np.abs(actual - expected) / np.abs(expected)) <= 3e-16
+    result = regularizer.evaluate_sparse(q, epsilon)
+    np.testing.assert_allclose(result["smallness_irls_weights"], expected, rtol=3e-16, atol=0.)
+
+
 @pytest.mark.parametrize("change", [1e-10, -1e-10, 0.])
 def test_sparse_smallness_preserves_tiny_positive_values_against_decimal80(change):
     regularizer, _ = _regularizer()
