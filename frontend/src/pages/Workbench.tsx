@@ -1519,6 +1519,10 @@ export default function Workbench() {
       context={{
         label: { en: "Interpretation", es: "Interpretación" },
         content: <div className="context-view">
+          {measurements && <section className="case-evidence" aria-label={t("Observed and modelled evidence", "Evidencia observada y modelada")}>
+            <h3 className="case-evidence-title">{t("Observed data and selected-model response", "Datos observados y respuesta del modelo seleccionado")}</h3>
+            {measurements}
+          </section>}
           <h2>{lesson.question[lang]}</h2>
           <p>{lesson.read[lang]}</p>
           <p>{lesson.limit[lang]}</p>

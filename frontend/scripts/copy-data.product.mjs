@@ -125,6 +125,37 @@ export default function copyProductData({ derived, out, repo }) {
     copied.push(...fieldIndex.artifacts.map((field) => pin(join(derived, 'field', field.path), out,
       `field/${field.path}`, field.bytes, field.sha256, 2 * 1024 * 1024)));
 
+    const ediRoot = join(derived, 'v2', 'edi');
+    const ediManifestPath = join(ediRoot, 'manifest.json');
+    const ediManifestBytes = readFileSync(ediManifestPath);
+    const edi = JSON.parse(ediManifestBytes.toString('utf8'));
+    if (edi.schema !== 'inverse-earth/edi-bundle/v1' || edi.fixtures?.length !== 3 ||
+        edi.field_screens?.length !== 1 || edi.calibration?.length !== 2) {
+      throw new Error('EDI bundle manifest differs from the reviewed fixture, field-screen, and calibration inventory');
+    }
+    const ediFiles = [{ path: 'manifest.json', bytes: ediManifestBytes.byteLength, sha256: sha256(ediManifestBytes) }];
+    for (const fixture of edi.fixtures) {
+      for (const [path, digest] of [[fixture.source, fixture.source_sha256], [fixture.artifact, fixture.artifact_sha256]]) {
+        ediFiles.push({ path, bytes: lstatSync(join(ediRoot, path)).size, sha256: digest });
+      }
+    }
+    for (const field of edi.field_screens) {
+      ediFiles.push({ path: field.artifact, bytes: field.artifact_bytes, sha256: field.artifact_sha256 });
+    }
+    for (const calibration of edi.calibration) {
+      const source = join(ediRoot, calibration.artifact);
+      const size = calibration.artifact_bytes ?? lstatSync(source).size;
+      ediFiles.push({ path: calibration.artifact, bytes: size, sha256: calibration.artifact_sha256 });
+    }
+    if (new Set(ediFiles.map((file) => file.path)).size !== ediFiles.length ||
+        ediFiles.some((file) => typeof file.path !== 'string' || !/^[a-z0-9][a-z0-9.-]*$/i.test(file.path))) {
+      throw new Error('EDI bundle manifest contains duplicate or unsafe artifact names');
+    }
+    copied.push(...ediFiles.map((file) => pin(
+      join(ediRoot, file.path), out, `v2/edi/${file.path}`,
+      file.bytes, file.sha256, 16 * 1024 * 1024,
+    )));
+
     const fwiRoot = join(out, 'v2');
     for (const path of recursiveFiles(fwiRoot).filter((p) => /[\\/]FWI_[A-Z0-9_]+[\\/].+\.json$/.test(p))) {
       const rel = relative(out, path).replaceAll('\\', '/');

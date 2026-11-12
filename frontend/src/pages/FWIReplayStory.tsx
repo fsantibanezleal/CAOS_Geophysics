@@ -135,7 +135,7 @@ export default function FWIReplayStory() {
           ]} title={es ? "RMSE contra verdad sintética" : "RMSE against synthetic truth"} xLabel={es ? "Condición" : "Condition"} yLabel="Velocity RMSE (m/s)" /><LinkedTargets side="scene" items={[{ id: "rmse-reference", label: es ? "Referencia" : "Reference" }, { id: "rmse-control", label: es ? "Control" : "Control" }]} /><LinkedScrubber side="scene" label={es ? "Índice del replay" : "Replay index"} /></>,
           [
             callout("reference-rmse", es ? "RMSE · base" : "RMSE · baseline", "m/s", format(reference.velocity_rmse), "m/s", "m/s", { x: 0.14, y: 0.8 }),
-            callout("regularization-rmse", es ? "RMSE · control" : "RMSE · control", "m/s", format(regularization.velocity_rmse), "m/s", "m/s", { x: 0.9, y: 0.18 }, "alarm", "up"),
+            callout("regularization-rmse", es ? "RMSE · control" : "RMSE · control", "m/s", format(regularization.velocity_rmse), "m/s", "m/s", { x: 0.66, y: 0.08 }, "alarm", "up"),
             callout("control-status", es ? "Estado" : "Status", es ? "resultado" : "outcome", regularization.status, es ? "artefacto" : "artifact", es ? "estado" : "state", { x: 0.54, y: 0.58 }, "alarm"),
           ],
         ),
@@ -154,7 +154,6 @@ export default function FWIReplayStory() {
     onStepChange={id => navigate(`/story/${id}`)}
     onExit={() => navigate("/experiments")}
     labels={{ steps: es ? "Lectura del experimento" : "Experiment walkthrough", previous: es ? "Anterior" : "Previous", next: es ? "Siguiente" : "Next", play: es ? "Reproducir" : "Play", pause: es ? "Pausar" : "Pause", exit: es ? "Volver a experimentos" : "Back to experiments" }}
-    autoAdvanceMs={8000}
     className="geophysics-fwi-story"
   /></LinkedViewProvider>;
 }

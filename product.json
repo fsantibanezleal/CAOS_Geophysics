@@ -13,6 +13,20 @@
   "app": "workbench",
   "workbench_route": "/app",
   "method_packages": [],
+  "manuscripts": [
+    {
+      "title": "Geometry-normalized residual learning for first-arrival traveltime tomography: a controlled synthetic comparison",
+      "kind": "manuscript"
+    },
+    {
+      "title": "Inverse Earth Studio: a reproducible geophysical workbench for processing, forward modelling, inversion, and scientific review",
+      "kind": "technical-report"
+    },
+    {
+      "title": "Geometry-normalized learned first-arrival tomography and null-space correction: two synthetic studies",
+      "kind": "manuscript"
+    }
+  ],
   "pages": [
     {
       "id": "app",

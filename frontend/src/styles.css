@@ -321,6 +321,15 @@
 }
 .geophysics-fwi-story .caos-story-layout { grid-template-columns: minmax(0, 1fr) minmax(280px, 27%); }
 .caos-story-scene { position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; }
+@media (min-width: 1280px) {
+  .caos-story-scene { --caos-stage-floor: 640px; }
+  .app-shell:has(.geophysics-fwi-story) .site-footer { display: none; }
+  .geophysics-fwi-story .caos-story-layout { min-height: 662px; }
+  .geophysics-fwi-story .caos-story-verb { display: none; }
+  .geophysics-fwi-story .caos-story-heading > p { display: none; }
+  .geophysics-fwi-story .caos-story-step { min-height: 40px; padding-block: 0.1rem; }
+  .geophysics-fwi-story .caos-story-step-headline { font-size: 0.68rem; line-height: 1.05; }
+}
 .caos-story-scene > .science-plot-shell { height: calc(100% - 3rem) !important; }
 .fwi-linked-targets { display: flex; flex-wrap: wrap; gap: .35rem; }
 .fwi-linked-targets-scene { position: absolute; z-index: 5; inset-inline-start: .75rem; inset-block-start: .75rem; max-width: 48%; }

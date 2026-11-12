@@ -43,7 +43,7 @@ Other data paths include provider-linked or rights-restricted data. For example,
 The method identifiers below follow \url{docs/design/SDD.md}. Each entry names an implementation and its tests; this does not imply validated use for every input or a complete end-to-end workflow.
 
 \begin{center}\small
-\begin{longtable}{@{}p{0.12\textwidth}p{0.40\textwidth}p{0.41\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}@{}}
 \toprule
 Method & Executable purpose & Principal limitations \\
 \midrule

@@ -44,9 +44,9 @@ function AmargosaMap({ data, display, es }: { data: AmargosaResult; display: "an
         const flight = track.role === "flight";
         return <g key={track.track_id} className={flight ? "amargosa-flight" : "amargosa-tie"}><line x1={X(east[0])} x2={X(east[1])} y1={Y(north[0])} y2={Y(north[1])} strokeWidth={flight ? 2.4 : 2.2} strokeDasharray={flight ? undefined : "6 4"}><title>{`${track.track_id} · ${track.role} · ${track.representative_source_line_id} · ${track.representative_sample_count} ${t(es,"samples","muestras")}`}</title></line></g>;
       })}
-      {[0,1,2,3,4].map((step) => <g key={`tick-${step}`}><text x={left + mapWidth * step / 4} y={top + mapHeight + 25} textAnchor="middle">{format(x0 + (x1-x0)*step/4)}</text><text x={left - 10} y={top + mapHeight - mapHeight*step/4 + 4} textAnchor="end">{format(y0 + (y1-y0)*step/4)}</text></g>)}
-      <text x={left + mapWidth / 2} y={height - 18} textAnchor="middle">{t(es, "Easting, m", "Este, m")}</text>
-      <text x={18} y={top + mapHeight / 2} textAnchor="middle" transform={`rotate(-90 18 ${top + mapHeight / 2})`}>{t(es, "Northing, m", "Norte, m")}</text>
+      {[0,1,2,3,4].map((step) => <g key={`tick-${step}`} fill="var(--color-fg-subtle)"><text x={left + mapWidth * step / 4} y={top + mapHeight + 25} textAnchor="middle">{format(x0 + (x1-x0)*step/4)}</text><text x={left - 10} y={top + mapHeight - mapHeight*step/4 + 4} textAnchor="end">{format(y0 + (y1-y0)*step/4)}</text></g>)}
+      <text x={left + mapWidth / 2} y={height - 18} textAnchor="middle" fill="var(--color-fg)">{t(es, "Easting, m", "Este, m")}</text>
+      <text x={18} y={top + mapHeight / 2} textAnchor="middle" transform={`rotate(-90 18 ${top + mapHeight / 2})`} fill="var(--color-fg)">{t(es, "Northing, m", "Norte, m")}</text>
     </svg>
     {display === "anomaly" && <><Legend range={range} unit="nT" palette="field"/><p className="amargosa-range-note">{t(es, "Full supported-cell range; no color clipping.", "Rango completo de celdas soportadas; sin recorte de color.")}</p></>}
     <div className="amargosa-line-legend"><span><i className="amargosa-flight-key"/> {t(es,"Flight tracks","Líneas de vuelo")} · {data.source_selection.track_count.flight}</span><span><i className="amargosa-tie-key"/> {t(es,"Tie tracks (QC only)","Líneas de amarre (solo QC)")} · {data.source_selection.track_count.tie}</span></div>
