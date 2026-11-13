@@ -696,7 +696,7 @@
       "evidence": [
         {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "374ca1d46b285e9c39eef54e2469940666b58bfa47c10bea5c2fe4b783251a39"
+          "sha256": "07319a68b599f519661cf9c48416b2b6116951152c27c779f7c0e48f1107c03d"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -1011,7 +1011,7 @@
         },
         {
           "path": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
-          "sha256": "a8b47a9495324215321d760aab17b7aa5f9b428451a80e036e96d2fcb74ea15b"
+          "sha256": "83a1ecee296fc87c78f90eeea0fb8aea4ce3d56e73ffa7491d64adf2272103c5"
         },
         {
           "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
@@ -1187,7 +1187,7 @@
         },
         {
           "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "374ca1d46b285e9c39eef54e2469940666b58bfa47c10bea5c2fe4b783251a39"
+          "sha256": "07319a68b599f519661cf9c48416b2b6116951152c27c779f7c0e48f1107c03d"
         },
         {
           "path": "docs/validation/m13-browser-e2e-20261025.json",
