@@ -355,8 +355,8 @@ def schema_findings(data: dict) -> list[str]:
     try:
         import jsonschema  # noqa: PLC0415
     except ImportError:
-        return ["the jsonschema package is not installed: pip install jsonschema==4.26.0 (it is in requirements-dev.txt); "
-                f"{EXEC_FILE} cannot be validated without it"]
+        return ["the jsonschema package is not installed: install the pinned development dependencies with "
+                f"'pip install -r requirements-dev.txt'; {EXEC_FILE} cannot be validated without it"]
     try:
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
         validator = jsonschema.Draft202012Validator(schema)
