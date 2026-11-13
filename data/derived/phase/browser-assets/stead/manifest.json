@@ -14,10 +14,12 @@
     "max_probability_absolute_error": 4.887580871582031e-06,
     "mean_browser_inference_ms": 88.53478260856608,
     "measured_at": "2026-11-12T18:58:19.093Z",
+    "release_accepted": false,
     "schema": "caos.m13-browser-population-parity.v1",
     "sha256": "96086eb1dacfab551319c78e801be304c039a1ca70c1604368a42abc031ddb6e"
   },
   "browser_parity_verified": true,
+  "export_status": "assets-exported-browser-parity-not-yet-verified",
   "input": {
     "component_order": [
       "E",
@@ -828,5 +830,5 @@
       "upstream_license_sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411"
     }
   },
-  "status": "assets-exported-browser-parity-not-yet-verified"
+  "status": "browser-runtime-parity-verified; accuracy-unproven; release-unaccepted"
 }

@@ -38,6 +38,10 @@ def validate() -> None:
     rights = manifest["source"]["redistribution"]
     source_rights = source_receipt["rights"]
     assert manifest["schema"] == "caos.phase-browser-assets.v1"
+    assert manifest["status"] == (
+        "browser-runtime-parity-verified; accuracy-unproven; release-unaccepted"
+    )
+    assert manifest["export_status"] == "assets-exported-browser-parity-not-yet-verified"
     assert manifest["source"]["license"] == "CC BY 4.0"
     assert manifest["source"]["license_url"] == (
         "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE"
@@ -99,15 +103,22 @@ def validate() -> None:
 
     assert manifest["browser_parity_verified"] is True
     parity_meta = manifest["browser_parity_receipt"]
+    assert parity_meta["accuracy_claim"] is False
+    assert parity_meta["release_accepted"] is False
     parity_bytes = raw("browser-parity.json")
     parity = json.loads(parity_bytes)
     assert parity_meta["file"] == "browser-parity.json"
     assert parity_meta["sha256"] == digest(parity_bytes)
     assert parity["schema"] == "caos.m13-browser-population-parity.v1"
     assert parity["status"] == "pass"
+    exported_manifest = {
+        key: value for key, value in manifest.items()
+        if key not in {"browser_parity_receipt", "export_status"}
+    }
+    exported_manifest["status"] = manifest["export_status"]
+    exported_manifest["browser_parity_verified"] = False
     assert parity["manifestSha256"] == digest((
-        json.dumps({**{key: value for key, value in manifest.items() if key != "browser_parity_receipt"},
-                    "browser_parity_verified": False}, indent=2, sort_keys=True) + "\n"
+        json.dumps(exported_manifest, indent=2, sort_keys=True) + "\n"
     ).encode("utf-8"))
     assert parity["modelSha256"] == manifest["model"]["sha256"]
     assert parity["verifierScriptSha256"] == digest(

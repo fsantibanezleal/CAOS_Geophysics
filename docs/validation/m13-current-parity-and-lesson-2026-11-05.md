@@ -31,3 +31,7 @@ On 2026-11-05 local time, the declared gate `frontend/scripts/verify-phase-brows
 This confirms browser inference through the production public directory on those 23 preselected records. CPU ONNX and browser WASM still use the same exported checkpoint, so this is not PyTorch-oracle parity, an M08 accuracy comparison, population accuracy, field validation or product acceptance. R-019 therefore remains unresolved.
 
 This evidence does not establish population accuracy beyond the separate locked benchmark, independent model quality, field generalization, public hosting, protected VPS workflow, or full release readiness.
+
+## Finalized manifest status reconciliation · 2026-11-13
+
+The finalized manifest previously carried `browser_parity_verified: true` and a passing receipt while its `status` still said parity had not been verified. The finalizer now preserves that exact pre-finalization value in `export_status`; `status` reports `browser-runtime-parity-verified; accuracy-unproven; release-unaccepted`. The receipt is revalidated against a byte-identical reconstruction of the original exported manifest, including its recorded manifest hash. The model, waveform and parity-receipt bytes were not changed. `scripts/check_phase_assets.py`, the four focused phase-asset tests, Ruff and the production build passed. This metadata correction does not upgrade M13 accuracy, independent PyTorch parity, field validity or product-release status.

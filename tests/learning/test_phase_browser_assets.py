@@ -56,6 +56,30 @@ def test_model_and_benchmark_are_bound_to_public_manifest() -> None:
     assert overlap["status"] == "no-exact-cross-partition-overlap"
 
 
+def test_finalized_parity_status_preserves_export_identity_and_nonacceptance() -> None:
+    manifest = json.loads((ASSETS / "manifest.json").read_text(encoding="utf-8"))
+    receipt_bytes = (ASSETS / "browser-parity.json").read_bytes()
+    receipt = json.loads(receipt_bytes)
+    assert manifest["status"] == (
+        "browser-runtime-parity-verified; accuracy-unproven; release-unaccepted"
+    )
+    assert manifest["export_status"] == "assets-exported-browser-parity-not-yet-verified"
+    assert manifest["browser_parity_verified"] is True
+    assert manifest["browser_parity_receipt"]["accuracy_claim"] is False
+    assert manifest["browser_parity_receipt"]["release_accepted"] is False
+    assert manifest["browser_parity_receipt"]["sha256"] == hashlib.sha256(receipt_bytes).hexdigest()
+
+    exported = {
+        key: value for key, value in manifest.items()
+        if key not in {"browser_parity_receipt", "export_status"}
+    }
+    exported["status"] = manifest["export_status"]
+    exported["browser_parity_verified"] = False
+    exported_bytes = (json.dumps(exported, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    assert receipt["manifestSha256"] == hashlib.sha256(exported_bytes).hexdigest()
+    assert receipt["population"]["accuracyClaim"] is False
+
+
 def test_predeclared_display_population_preserves_qc_failure() -> None:
     manifest = json.loads((ASSETS / "manifest.json").read_text(encoding="utf-8"))
     records = manifest["records"]
