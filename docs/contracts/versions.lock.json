@@ -15,9 +15,9 @@
     "sha256": "b6eb000fb9163088f2d7d2af6aa9dcc55ff3d7093f5e9a7d88d801e63facfd32"
   },
   "api-payloads": {
-    "version": "1.2.0",
+    "version": "1.3.0",
     "schema": "docs/contracts/schemas/api-payloads.schema.json",
-    "sha256": "79969a73cbbe0077178de977ed3d78b1b6da19eaf0346ebd7c2a021766d6468d"
+    "sha256": "b1c6e3024c6f3fb6a35e947c01a299438e02f89f5dd2f6790dbf8ac13328963b"
   },
   "browser-model-assets": {
     "version": "1.0.0",

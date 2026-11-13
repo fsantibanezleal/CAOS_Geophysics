@@ -1666,7 +1666,7 @@
           ]
         },
         "physical_metadata": {
-          "$ref": "#/$defs/RawPhysicalMetadata"
+          "$ref": "#/$defs/EdiPhysicalMetadata"
         },
         "qc_verdict": {
           "const": "awaiting_full_tensor_qc"
@@ -2454,7 +2454,208 @@
         }
       },
       "additionalProperties": true,
-      "description": "Shared root of gravity flag, MT QC/inversion and supplied-profile solver results. Full method-specific nested outputs are not yet exhaustively constrained; see API payload inventory in catalog.md."
+      "description": "Shared root of gravity flag, MT QC/inversion and supplied-profile solver results. Full method-specific nested outputs are not yet exhaustively constrained; see API payload inventory in catalog.md.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "method_id": {
+                "const": "mt.edi-full-tensor-qc/v1"
+              }
+            },
+            "required": [
+              "method_id"
+            ]
+          },
+          "then": {
+            "required": [
+              "screen",
+              "inverse",
+              "qc_screen_sha256",
+              "truth",
+              "axis_order",
+              "dimensions",
+              "frequency_hz",
+              "physical_metadata",
+              "source",
+              "raw_asset_id",
+              "raw_sha256",
+              "raw_bytes",
+              "parser_sha256",
+              "forward_sha256"
+            ],
+            "properties": {
+              "screen": {
+                "$ref": "#/$defs/EdiScreen"
+              },
+              "inverse": {
+                "type": "null"
+              },
+              "qc_screen_sha256": {
+                "type": "null"
+              },
+              "truth": {
+                "type": "null"
+              },
+              "parameters": {
+                "type": "object",
+                "maxProperties": 0
+              },
+              "axis_order": {
+                "const": [
+                  "frequency"
+                ]
+              },
+              "dimensions": {
+                "type": "object",
+                "required": [
+                  "frequency"
+                ],
+                "properties": {
+                  "frequency": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 512
+                  }
+                },
+                "additionalProperties": false
+              },
+              "frequency_hz": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 512,
+                "items": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "physical_metadata": {
+                "$ref": "#/$defs/EdiPhysicalMetadata"
+              },
+              "source": {
+                "$ref": "#/$defs/EdiSource"
+              },
+              "raw_asset_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "raw_sha256": {
+                "$ref": "#/$defs/Sha256"
+              },
+              "raw_bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5242880
+              },
+              "parser_sha256": {
+                "$ref": "#/$defs/Sha256"
+              },
+              "forward_sha256": {
+                "$ref": "#/$defs/Sha256"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "method_id": {
+                "const": "mt.edi-fixed-thickness-trf/v1"
+              }
+            },
+            "required": [
+              "method_id"
+            ]
+          },
+          "then": {
+            "required": [
+              "screen",
+              "inverse",
+              "qc_screen_sha256",
+              "truth",
+              "axis_order",
+              "dimensions",
+              "frequency_hz",
+              "physical_metadata",
+              "source",
+              "raw_asset_id",
+              "raw_sha256",
+              "raw_bytes",
+              "parser_sha256",
+              "forward_sha256"
+            ],
+            "properties": {
+              "screen": {
+                "$ref": "#/$defs/EdiScreen"
+              },
+              "inverse": {
+                "$ref": "#/$defs/EdiInverse"
+              },
+              "qc_screen_sha256": {
+                "$ref": "#/$defs/Sha256"
+              },
+              "truth": {
+                "type": "null"
+              },
+              "parameters": {
+                "$ref": "#/$defs/M06Parameters"
+              },
+              "axis_order": {
+                "const": [
+                  "frequency"
+                ]
+              },
+              "dimensions": {
+                "type": "object",
+                "required": [
+                  "frequency"
+                ],
+                "properties": {
+                  "frequency": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 512
+                  }
+                },
+                "additionalProperties": false
+              },
+              "frequency_hz": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 512,
+                "items": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "physical_metadata": {
+                "$ref": "#/$defs/EdiPhysicalMetadata"
+              },
+              "source": {
+                "$ref": "#/$defs/EdiSource"
+              },
+              "raw_asset_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "raw_sha256": {
+                "$ref": "#/$defs/Sha256"
+              },
+              "raw_bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5242880
+              },
+              "parser_sha256": {
+                "$ref": "#/$defs/Sha256"
+              },
+              "forward_sha256": {
+                "$ref": "#/$defs/Sha256"
+              }
+            }
+          }
+        }
+      ]
     },
     "WaveformProcessingResult": {
       "type": "object",
@@ -2934,6 +3135,1810 @@
       ],
       "title": "MagneticParameters",
       "type": "object"
+    },
+    "EdiPhysicalMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate_reference",
+        "epsg",
+        "local_crs",
+        "axis_order",
+        "horizontal_datum",
+        "vertical_datum",
+        "vertical_positive",
+        "horizontal_unit",
+        "vertical_unit",
+        "measurement_unit",
+        "epoch_utc",
+        "component_frame",
+        "geometry"
+      ],
+      "properties": {
+        "coordinate_reference": {
+          "enum": [
+            "epsg",
+            "local"
+          ]
+        },
+        "epsg": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "local_crs": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "axis_order": {
+          "enum": [
+            "xy",
+            "yx",
+            "lon_lat",
+            "lat_lon"
+          ]
+        },
+        "horizontal_datum": {
+          "type": "string"
+        },
+        "vertical_datum": {
+          "type": "string"
+        },
+        "vertical_positive": {
+          "enum": [
+            "up",
+            "down"
+          ]
+        },
+        "horizontal_unit": {
+          "enum": [
+            "m",
+            "km",
+            "degree"
+          ]
+        },
+        "vertical_unit": {
+          "enum": [
+            "m",
+            "ft"
+          ]
+        },
+        "measurement_unit": {
+          "enum": [
+            "ohm",
+            "mV/km/nT"
+          ]
+        },
+        "epoch_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "component_frame": {
+          "enum": [
+            "geographic ENU",
+            "instrument axes"
+          ]
+        },
+        "geometry": {
+          "$ref": "#/$defs/EdiGeometry"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "component_frame": {
+                "const": "geographic ENU"
+              }
+            },
+            "required": [
+              "component_frame"
+            ]
+          },
+          "then": {
+            "properties": {
+              "geometry": {
+                "properties": {
+                  "rotation_reference": {
+                    "const": "geographic-north"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "component_frame": {
+                "const": "instrument axes"
+              }
+            },
+            "required": [
+              "component_frame"
+            ]
+          },
+          "then": {
+            "properties": {
+              "geometry": {
+                "properties": {
+                  "rotation_reference": {
+                    "const": "unspecified"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "EdiGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "station_id",
+        "frequency_count",
+        "tensor_components",
+        "rotation_degrees",
+        "rotation_reference",
+        "sign_convention",
+        "variance_convention"
+      ],
+      "properties": {
+        "station_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "frequency_count": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 512
+        },
+        "tensor_components": {
+          "oneOf": [
+            {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "Zxx",
+                  "Zxy",
+                  "Zyx",
+                  "Zyy"
+                ]
+              },
+              "allOf": [
+                {
+                  "contains": {
+                    "const": "Zxx"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Zxy"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Zyx"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Zyy"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                }
+              ]
+            },
+            {
+              "type": "array",
+              "minItems": 6,
+              "maxItems": 6,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "Zxx",
+                  "Zxy",
+                  "Zyx",
+                  "Zyy",
+                  "Tx",
+                  "Ty"
+                ]
+              },
+              "allOf": [
+                {
+                  "contains": {
+                    "const": "Zxx"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Zxy"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Zyx"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Zyy"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Tx"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                },
+                {
+                  "contains": {
+                    "const": "Ty"
+                  },
+                  "minContains": 1,
+                  "maxContains": 1
+                }
+              ]
+            }
+          ]
+        },
+        "rotation_degrees": {
+          "type": "number"
+        },
+        "rotation_reference": {
+          "enum": [
+            "geographic-north",
+            "unspecified"
+          ]
+        },
+        "sign_convention": {
+          "enum": [
+            "+",
+            "-"
+          ]
+        },
+        "variance_convention": {
+          "enum": [
+            "complex",
+            "per-real-component"
+          ]
+        }
+      }
+    },
+    "EdiCurve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "real",
+        "imag",
+        "apparent",
+        "phase",
+        "sigma_real_imag_ohm"
+      ],
+      "properties": {
+        "real": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "imag": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "apparent": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "phase": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "sigma_real_imag_ohm": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "EdiInverseCurve": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "real",
+        "imag",
+        "apparent",
+        "phase"
+      ],
+      "properties": {
+        "real": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "imag": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "apparent": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "phase": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "EdiTensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "real",
+        "imag",
+        "sigma",
+        "rotation_deg"
+      ],
+      "properties": {
+        "real": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "imag": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "sigma": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "rotation_deg": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "EdiCompatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xx_component_wrms",
+        "yy_component_wrms",
+        "antisymmetry_conservative_wrms",
+        "threshold",
+        "passes_screen",
+        "criteria",
+        "caveat"
+      ],
+      "properties": {
+        "xx_component_wrms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "yy_component_wrms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "antisymmetry_conservative_wrms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "threshold": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "passes_screen": {
+          "type": "boolean"
+        },
+        "criteria": {
+          "type": "string",
+          "minLength": 1
+        },
+        "caveat": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "EdiProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_file",
+        "source_sha256",
+        "source_bytes",
+        "parser",
+        "parser_version",
+        "preflight",
+        "original_units",
+        "output_units",
+        "units_multiplier_to_ohm",
+        "original_sign_convention",
+        "output_sign_convention",
+        "variance_convention",
+        "sigma_definition",
+        "error_assumption",
+        "interpretation_arguments",
+        "rotation_action",
+        "rotation_reference",
+        "original_rotation_deg",
+        "tipper_present",
+        "tipper_used_in_1d_inversion",
+        "frequency_permutation",
+        "original_frequency_hz",
+        "data_kind",
+        "synthetic",
+        "target_known"
+      ],
+      "properties": {
+        "source_file": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "parser": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parser_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preflight": {
+          "type": "string",
+          "minLength": 1
+        },
+        "original_units": {
+          "enum": [
+            "mt",
+            "ohm"
+          ]
+        },
+        "output_units": {
+          "const": "ohm"
+        },
+        "units_multiplier_to_ohm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "original_sign_convention": {
+          "enum": [
+            "+",
+            "-"
+          ]
+        },
+        "output_sign_convention": {
+          "enum": [
+            "+",
+            "-"
+          ]
+        },
+        "variance_convention": {
+          "enum": [
+            "complex",
+            "per-real-component"
+          ]
+        },
+        "sigma_definition": {
+          "type": "string"
+        },
+        "error_assumption": {
+          "type": "string"
+        },
+        "interpretation_arguments": {
+          "type": "object",
+          "required": [
+            "units",
+            "sign_convention",
+            "variance_convention"
+          ],
+          "properties": {
+            "units": {
+              "type": "string"
+            },
+            "sign_convention": {
+              "type": "string"
+            },
+            "variance_convention": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rotation_action": {
+          "type": "string"
+        },
+        "rotation_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "original_rotation_deg": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "tipper_present": {
+          "type": "boolean"
+        },
+        "tipper_used_in_1d_inversion": {
+          "type": "boolean"
+        },
+        "frequency_permutation": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "original_frequency_hz": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "data_kind": {
+          "type": "string"
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "target_known": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EdiMetadata": {
+      "type": "object",
+      "required": [
+        "header",
+        "info",
+        "mtsect",
+        "measurement_layout"
+      ],
+      "properties": {
+        "header": {
+          "type": "object"
+        },
+        "info": {
+          "type": "object"
+        },
+        "mtsect": {
+          "type": "object"
+        },
+        "measurement_layout": {
+          "type": "object",
+          "required": [
+            "HX",
+            "HY",
+            "EX",
+            "EY"
+          ],
+          "properties": {
+            "HX": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "id",
+                "azimuth_deg"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "azimuth_deg": {
+                  "type": "number"
+                }
+              }
+            },
+            "HY": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "id",
+                "azimuth_deg"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "azimuth_deg": {
+                  "type": "number"
+                }
+              }
+            },
+            "EX": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "id",
+                "azimuth_deg"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "azimuth_deg": {
+                  "type": "number"
+                }
+              }
+            },
+            "EY": {
+              "type": "object",
+              "additionalProperties": true,
+              "required": [
+                "id",
+                "azimuth_deg"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "azimuth_deg": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "EdiScreen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id",
+        "family",
+        "source_kind",
+        "truth",
+        "methods",
+        "inversion_performed",
+        "one_d_fit_performed",
+        "one_d_inversion_eligible",
+        "interpretation",
+        "frequencies_hz",
+        "observed",
+        "tensor",
+        "compatibility",
+        "provenance",
+        "metadata"
+      ],
+      "properties": {
+        "schema": {
+          "const": "inverse-earth/edi-screen/v1"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family": {
+          "const": "mt"
+        },
+        "source_kind": {
+          "enum": [
+            "original synthetic EDI transfer functions",
+            "measured EDI transfer functions"
+          ]
+        },
+        "truth": {
+          "type": "null"
+        },
+        "methods": {
+          "type": "object",
+          "maxProperties": 0
+        },
+        "inversion_performed": {
+          "const": false
+        },
+        "one_d_fit_performed": {
+          "const": false
+        },
+        "one_d_inversion_eligible": {
+          "type": "boolean"
+        },
+        "interpretation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "frequencies_hz": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "observed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "xy",
+            "yx"
+          ],
+          "properties": {
+            "xy": {
+              "$ref": "#/$defs/EdiCurve"
+            },
+            "yx": {
+              "$ref": "#/$defs/EdiCurve"
+            }
+          }
+        },
+        "tensor": {
+          "$ref": "#/$defs/EdiTensor"
+        },
+        "compatibility": {
+          "$ref": "#/$defs/EdiCompatibility"
+        },
+        "provenance": {
+          "$ref": "#/$defs/EdiProvenance"
+        },
+        "metadata": {
+          "$ref": "#/$defs/EdiMetadata"
+        }
+      }
+    },
+    "EdiTrialSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model_ohm_m",
+        "training_objective",
+        "training_component_wrms",
+        "heldout_component_wrms",
+        "solver_success",
+        "stop_reason"
+      ],
+      "properties": {
+        "model_ohm_m": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "training_objective": {
+          "type": "number",
+          "minimum": 0
+        },
+        "training_component_wrms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "heldout_component_wrms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "solver_success": {
+          "type": "boolean"
+        },
+        "stop_reason": {
+          "type": "string"
+        },
+        "initial_ohm_m": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "beta": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "thickness_m": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 2,
+            "maximum": 4000
+          }
+        }
+      }
+    },
+    "EdiUncertainty": {
+      "type": "object",
+      "required": [
+        "kind",
+        "solver",
+        "conditioning",
+        "members",
+        "quantiles",
+        "lower",
+        "upper",
+        "mean",
+        "std",
+        "units",
+        "target",
+        "confidence",
+        "interval_method",
+        "conditioning_model",
+        "fixed_thickness_m",
+        "bounds_ohm_m",
+        "sigma_per_real_component",
+        "active",
+        "initial_model",
+        "beta",
+        "sampling_law",
+        "seed",
+        "sample_seeds",
+        "successful_seeds",
+        "requested",
+        "completed",
+        "failures",
+        "samples",
+        "interval_ohm_m",
+        "status",
+        "limitations"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "solver": {
+          "type": "string"
+        },
+        "conditioning": {
+          "type": "string"
+        },
+        "members": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 40
+        },
+        "quantiles": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "lower": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "upper": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "mean": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "std": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "units": {
+          "const": "ohm m"
+        },
+        "target": {
+          "type": "string"
+        },
+        "confidence": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "interval_method": {
+          "type": "string"
+        },
+        "conditioning_model": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "fixed_thickness_m": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "type": "number"
+          }
+        },
+        "bounds_ohm_m": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "sigma_per_real_component": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 512,
+          "items": {
+            "type": "number"
+          }
+        },
+        "active": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 64,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "initial_model": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "beta": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "sampling_law": {
+          "type": "string"
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sample_seeds": {
+          "type": "array",
+          "minItems": 20,
+          "maxItems": 40,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "successful_seeds": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 40,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "requested": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 40
+        },
+        "completed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 40
+        },
+        "failures": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "samples": {
+          "type": "array",
+          "minItems": 20,
+          "maxItems": 40,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "interval_ohm_m": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "status": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "EdiFit": {
+      "type": "object",
+      "required": [
+        "name",
+        "name_es",
+        "model",
+        "predicted",
+        "residual",
+        "history",
+        "frames",
+        "metrics",
+        "solver",
+        "states",
+        "device",
+        "state",
+        "objective",
+        "identifiability",
+        "target",
+        "state_identity",
+        "evaluation",
+        "uncertainty"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "name_es": {
+          "type": "string"
+        },
+        "model": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "predicted": {
+          "$ref": "#/$defs/EdiInverseCurve"
+        },
+        "residual": {
+          "$ref": "#/$defs/EdiInverseCurve"
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "frames": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "required": [
+            "wrms",
+            "active_component_wrms",
+            "withheld_component_wrms",
+            "initial_component_wrms",
+            "objective",
+            "data_objective",
+            "regularization_objective",
+            "other_component_wrms"
+          ],
+          "properties": {
+            "wrms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "active_component_wrms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "withheld_component_wrms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "initial_component_wrms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "objective": {
+              "type": "number",
+              "minimum": 0
+            },
+            "data_objective": {
+              "type": "number",
+              "minimum": 0
+            },
+            "regularization_objective": {
+              "type": "number",
+              "minimum": 0
+            },
+            "other_component_wrms": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "solver": {
+          "type": "object",
+          "required": [
+            "algorithm",
+            "max_nfev",
+            "nfev",
+            "success",
+            "stop_reason",
+            "status",
+            "optimality",
+            "tolerance",
+            "bounds_ohm_m",
+            "beta",
+            "initial_model",
+            "fixed_thickness_m"
+          ],
+          "properties": {
+            "algorithm": {
+              "type": "string"
+            },
+            "max_nfev": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "nfev": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "residual_calls": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "success": {
+              "type": "boolean"
+            },
+            "stop_reason": {
+              "type": "string"
+            },
+            "status": {
+              "type": "integer"
+            },
+            "optimality": {
+              "type": "number",
+              "minimum": 0
+            },
+            "tolerance": {
+              "type": "object",
+              "required": [
+                "ftol",
+                "xtol",
+                "gtol"
+              ],
+              "properties": {
+                "ftol": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "xtol": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "gtol": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "bounds_ohm_m": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "beta": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "initial_model": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "fixed_thickness_m": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 1,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": true
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "frame_index",
+              "step",
+              "kind",
+              "objective"
+            ],
+            "properties": {
+              "frame_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "step": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string"
+              },
+              "objective": {
+                "type": "object",
+                "required": [
+                  "total",
+                  "data",
+                  "regularization"
+                ],
+                "properties": {
+                  "total": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "data": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "regularization": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "device": {
+          "type": "string"
+        },
+        "state": {
+          "type": "object"
+        },
+        "objective": {
+          "type": "object",
+          "required": [
+            "definition",
+            "beta",
+            "total",
+            "data",
+            "regularization"
+          ],
+          "properties": {
+            "definition": {
+              "type": "string"
+            },
+            "beta": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "total": {
+              "type": "number",
+              "minimum": 0
+            },
+            "data": {
+              "type": "number",
+              "minimum": 0
+            },
+            "regularization": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": true
+        },
+        "identifiability": {
+          "type": "object",
+          "required": [
+            "kind",
+            "singular_values",
+            "effective_rank",
+            "parameter_count",
+            "status"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string"
+            },
+            "singular_values": {
+              "type": "array",
+              "items": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "effective_rank": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "parameter_count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "status": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": true
+        },
+        "target": {
+          "type": "object",
+          "required": [
+            "quantity",
+            "units",
+            "dimensionality",
+            "provenance"
+          ],
+          "properties": {
+            "quantity": {
+              "type": "string"
+            },
+            "units": {
+              "type": "string"
+            },
+            "dimensionality": {
+              "type": "string"
+            },
+            "provenance": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "state_identity": {
+          "type": "object"
+        },
+        "evaluation": {
+          "type": "object"
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/EdiUncertainty"
+        }
+      },
+      "additionalProperties": true
+    },
+    "EdiInverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "id",
+        "family",
+        "source_kind",
+        "component",
+        "geometry",
+        "units",
+        "data_units",
+        "frequencies",
+        "thickness",
+        "observed",
+        "sigma",
+        "active",
+        "methods",
+        "tensor",
+        "compatibility",
+        "provenance",
+        "metadata",
+        "parameters",
+        "truth",
+        "clean",
+        "evaluation_protocol"
+      ],
+      "properties": {
+        "schema": {
+          "const": "inverse-earth/edi-1d/v1"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "family": {
+          "const": "mt"
+        },
+        "source_kind": {
+          "const": "EDI transfer functions"
+        },
+        "component": {
+          "enum": [
+            "xy",
+            "yx"
+          ]
+        },
+        "geometry": {
+          "const": "operator-supplied fixed-thickness 1D model"
+        },
+        "units": {
+          "const": "ohm m"
+        },
+        "data_units": {
+          "const": "ohm"
+        },
+        "frequencies": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 64,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "thickness": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 2,
+            "maximum": 4000
+          }
+        },
+        "observed": {
+          "$ref": "#/$defs/EdiInverseCurve"
+        },
+        "sigma": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 64,
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "active": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 64,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "methods": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mt-lm"
+          ],
+          "properties": {
+            "mt-lm": {
+              "$ref": "#/$defs/EdiFit"
+            }
+          }
+        },
+        "tensor": {
+          "$ref": "#/$defs/EdiTensor"
+        },
+        "compatibility": {
+          "$ref": "#/$defs/EdiCompatibility"
+        },
+        "provenance": {
+          "$ref": "#/$defs/EdiProvenance"
+        },
+        "metadata": {
+          "$ref": "#/$defs/EdiMetadata"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "regularization",
+            "bounds_ohm_m",
+            "component"
+          ],
+          "properties": {
+            "regularization": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "bounds_ohm_m": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "component": {
+              "enum": [
+                "xy",
+                "yx"
+              ]
+            }
+          }
+        },
+        "truth": {
+          "type": "null"
+        },
+        "clean": {
+          "type": "null"
+        },
+        "evaluation_protocol": {
+          "type": "object",
+          "required": [
+            "frequency_partition",
+            "training_mask",
+            "selection",
+            "starts",
+            "halfspace_baseline",
+            "beta_sensitivity",
+            "thickness_sensitivity",
+            "selected_start_ohm_m",
+            "uncertainty_limit"
+          ],
+          "properties": {
+            "frequency_partition": {
+              "type": "string"
+            },
+            "training_mask": {
+              "type": "array",
+              "minItems": 12,
+              "maxItems": 64,
+              "items": {
+                "type": "boolean"
+              }
+            },
+            "selection": {
+              "type": "string"
+            },
+            "starts": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/EdiTrialSummary"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "initial_ohm_m"
+                    ],
+                    "properties": {
+                      "initial_ohm_m": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "halfspace_baseline": {
+              "$ref": "#/$defs/EdiTrialSummary"
+            },
+            "beta_sensitivity": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/EdiTrialSummary"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "beta"
+                  ],
+                  "properties": {
+                    "beta": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                }
+              ]
+            },
+            "thickness_sensitivity": {
+              "type": "array",
+              "maxItems": 2,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/EdiTrialSummary"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "thickness_m"
+                    ],
+                    "properties": {
+                      "thickness_m": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 1,
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "selected_start_ohm_m": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "uncertainty_limit": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
     }
   }
 }

@@ -38,7 +38,7 @@ Both successful methods return `schema=geophysics.processing-result/v1`, job/dat
 | `inverse.evaluation_protocol` | Every fifth sorted frequency held out before fitting; three starts selected by training objective; same-input halfspace, alternative beta and thickness perturbations. No holdout tuning. |
 | `inverse.methods.mt-lm.uncertainty` | 20..40 `[draw][layer]` conditional samples, seeds, bounds, fixed thickness, conditioning model/errors/beta/mask, failures and pointwise percentile lower/upper/mean/SD. No geological posterior or field coverage assertion. |
 
-The [MT chapter](../problem-types/mt-recovery.md) gives the plane-wave recurrence, complete objective, sigma normalization and independent halfspace/reflection-formula oracles. Held-out periods from one sounding do not establish independent-station generalization or 1D geology.
+The machine contract in `docs/contracts/schemas/api-payloads.schema.json` constrains the EDI dataset metadata, full 2x2 complex tensor, frequency-aligned observed curves, provenance, QC-only M05 result, and M06 fit, bootstrap, and held-out evaluation shapes. `scripts/check_api_contracts.py` checks these definitions against the actual serialized M05/M06 test receipt and malformed tensor/target variants. Raw provider-header maps remain open objects because their keys are source-defined; scientific arrays and method results are not. The [MT chapter](../problem-types/mt-recovery.md) gives the plane-wave recurrence, complete objective, sigma normalization and independent halfspace/reflection-formula oracles. Held-out periods from one sounding do not establish independent-station generalization or 1D geology.
 
 ## Re-import and host-harness artifact
 

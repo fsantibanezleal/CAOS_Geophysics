@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import json
 from pathlib import Path
 import sys
@@ -303,6 +304,49 @@ def check_contracts(root: Path = ROOT) -> list[str]:
             else:
                 issues.append(f"invalid {name} sample accepted")
 
+    # Validate the actual immutable M05/M06 receipts produced by the pinned
+    # MT worker. This prevents permissive object schemas from drifting away
+    # from the numerical arrays and QC-to-inverse handoff used by the app.
+    mt_fixture_path = root / "frontend/src/test/fixtures/mt-actual.json"
+    try:
+        mt_fixture = json.loads(mt_fixture_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        issues.append(f"actual MT contract fixture is unreadable: {error}")
+    else:
+        edi_samples = (
+            ("EdiDatasetPayload", mt_fixture.get("dataset")),
+            ("ScientificProcessingResult", mt_fixture.get("m05")),
+            ("ScientificProcessingResult", mt_fixture.get("m06")),
+        )
+        for name, payload in edi_samples:
+            try:
+                Draft202012Validator({"$ref": schema_doc["$id"] + f"#/$defs/{name}"}, registry=registry,
+                                     format_checker=FormatChecker()).validate(payload)
+            except Exception as error:
+                issues.append(f"actual MT {name} receipt rejected: {error}")
+
+        invalid_mt = []
+        broken_dataset = copy.deepcopy(mt_fixture["dataset"])
+        broken_dataset["physical_metadata"]["geometry"]["tensor_components"] = ["Zxx", "Zxy", "Zyx", "Tx"]
+        invalid_mt.append(("EdiDatasetPayload", broken_dataset, "incomplete impedance tensor"))
+        broken_m05 = copy.deepcopy(mt_fixture["m05"])
+        broken_m05["screen"]["tensor"]["real"][0][0] = [1.0]
+        invalid_mt.append(("ScientificProcessingResult", broken_m05, "non-2x2 impedance row"))
+        broken_m05_handoff = copy.deepcopy(mt_fixture["m05"])
+        broken_m05_handoff["inverse"] = {}
+        invalid_mt.append(("ScientificProcessingResult", broken_m05_handoff, "M05 must remain QC-only"))
+        broken_m06 = copy.deepcopy(mt_fixture["m06"])
+        broken_m06["truth"] = {"model": [100.0]}
+        invalid_mt.append(("ScientificProcessingResult", broken_m06, "field inversion cannot invent truth"))
+        for name, payload, description in invalid_mt:
+            try:
+                Draft202012Validator({"$ref": schema_doc["$id"] + f"#/$defs/{name}"}, registry=registry,
+                                     format_checker=FormatChecker()).validate(payload)
+            except Exception:
+                pass
+            else:
+                issues.append(f"invalid actual MT sample accepted: {description}")
+
     required_defs = {
         "ProjectCreate", "ProjectUpdate", "SourceInput", "PhysicalInput", "AssetMetadata",
         "PhysicalAssetMetadata", "UploadMetadata", "DatasetCreate", "JobCreate", "UserCreate", "User",
@@ -312,13 +356,17 @@ def check_contracts(root: Path = ROOT) -> list[str]:
         "GravityDatasetPayload", "EdiDatasetPayload", "ProfileDatasetPayload", "RawPhysicalMetadata", "EdiSource", "WaveformDatasetPayload",
         "PhysicalDatasetPayload", "PhysicalSource", "PhysicalMetadata", "PhysicalStation", "PhysicalHistory",
         "Methods", "Job", "ProcessingResult", "WaveformProcessingResult",
+        "EdiPhysicalMetadata", "EdiGeometry", "EdiCurve", "EdiInverseCurve", "EdiTensor",
+        "EdiCompatibility", "EdiProvenance", "EdiMetadata", "EdiScreen", "EdiTrialSummary",
+        "EdiUncertainty", "EdiFit", "EdiInverse",
     }
     missing_defs = required_defs - schema_doc.get("$defs", {}).keys()
     if missing_defs:
         issues.append("missing API payload schema definitions: " + ", ".join(sorted(missing_defs)))
     result_methods = set(schema_doc.get("$defs", {}).get("ScientificProcessingResult", {})
                          .get("properties", {}).get("method_id", {}).get("enum", []))
-    required_methods = {"gravity.survey-l2-ordinary/v1", "magnetic.flightline-qc-grid/v1"}
+    required_methods = {"gravity.survey-l2-ordinary/v1", "magnetic.flightline-qc-grid/v1",
+                        "mt.edi-full-tensor-qc/v1", "mt.edi-fixed-thickness-trf/v1"}
     if not required_methods <= result_methods:
         issues.append("scientific result method IDs omit uploaded-data methods: "
                       + ", ".join(sorted(required_methods - result_methods)))

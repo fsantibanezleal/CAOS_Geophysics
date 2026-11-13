@@ -51,12 +51,12 @@ def main() -> None:
     write_json(SCHEMA_PATH, document)
 
     lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
-    lock["api-payloads"]["version"] = "1.2.0"
+    lock["api-payloads"]["version"] = "1.3.0"
     normalized_schema = SCHEMA_PATH.read_bytes().replace(b"\r\n", b"\n")
     lock["api-payloads"]["sha256"] = hashlib.sha256(normalized_schema).hexdigest()
     write_json(LOCK_PATH, lock)
     print(f"updated {SCHEMA_PATH.relative_to(ROOT)}: {len(definitions)} definitions")
-    print(f"api-payloads 1.2.0 sha256={lock['api-payloads']['sha256']}")
+    print(f"api-payloads 1.3.0 sha256={lock['api-payloads']['sha256']}")
 
 
 if __name__ == "__main__":
