@@ -54,7 +54,7 @@ primary Windows scientific environment; it is not claimed as a newly relocated
 environment or full transitive source audit. Private execution/path receipts are
 kept separately; original historical receipts are not rewritten.
 
-This closes only scoped development-intake controls. JS09..13 and the full
-roundtrip/CLI/claim JS14..16 remain open. No full directory numerical regression,
+This closes only scoped development-intake controls. JS-009..13 and the full
+roundtrip/CLI/claim JS-014..16 remain open. No full directory numerical regression,
 full-cap solve, two production baselines, coupled fit,24inverse/selection benefit,
 GPU/host/API/browser/field eligibility or R-008 release acceptance is inferred.

@@ -35,4 +35,4 @@ tests/numerics/test_joint_survey_serialization.py::test_prewrite_rejection check
 source/commitment/extra-key/nonexternal/overwrite rejection before output exists.
 Gate: tests/numerics/test_joint_survey_serialization.py::test_explicit_root checks
 external roots without repository or system-temp fallback. Complete solver-result
-export and solve CLI remain separate JS14/15 obligations, not asserted here.
+export and solve CLI remain separate JS-014/15 obligations, not asserted here.

@@ -47,7 +47,7 @@ The supplementary probe measured maximum objective disagreement4.7273e-11,
 magnetic prediction disagreement2.6178e-10nT and normalized-coordinate gradient
 disagreement1.1136e-9. Nineteen of192 near-optimum gradient comparisons fail
 the unchanged atol1e-10/rtol1e-9 predicate. These remain failed PRECISION verdicts,
-not JS08 acceptance. The tiny original derivative controls still exercise their
+not JS-008 acceptance. The tiny original derivative controls still exercise their
 original gates. A new separate case14/beta0.0001 test requires the precision
 negative to remain observable. No producer kernel, weighting or tolerance changes
 were made to conceal it. This near-stationary cross-library gradient comparison

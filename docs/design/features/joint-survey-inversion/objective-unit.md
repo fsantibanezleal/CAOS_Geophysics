@@ -1,6 +1,6 @@
 # Development-only physical objective unit
 
-This additive contract refines JS08 before implementation. It evaluates the
+This additive contract refines JS-008 before implementation. It evaluates the
 already defined objective/derivatives; it never optimizes, selects candidates,
 refits on validation, consumes sealed observations or integrates an optimizer.
 The nonlinear algorithm proposal at the earlier pin remains unchanged.

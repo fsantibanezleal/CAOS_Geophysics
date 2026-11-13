@@ -6,8 +6,6 @@ residuals and all negatives. Historical failures remain separate immutable
 receipts. Unit tests, engine agreement, field prediction and release acceptance
 are separate gates. Do not raise tolerances, bounds or caps to erase a failure.
 
-## Planner and physical controls
-
 ## Requirement-to-adversarial-gate matrix
 
 The wrappers below execute focused numerical tests for each contract. They
@@ -32,6 +30,8 @@ complete matrix or field acceptance.
 | JS-014 | Plant stale/tampered source bytes and forged result summaries; verify intake, export and independent replay reject altered artifacts. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_014_serialized_replay` |
 | JS-015 | Change a scientific input and corrupt a CLI result; verify the real-file pipeline recomputes and validates the changed result. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_015_cli_pipeline` |
 | JS-016 | Plant forged metric summaries or claim flags; verify evaluator output is recomputed and retains the provisional/nonclaim boundary. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_016_result_claims` |
+
+## Planner and physical controls
 
 Exact-type traps cover dictionaries, string/scalar equality, array subclasses,
 object/complex/float32/endian arrays, wrong shapes, masked reasons, duplicate
@@ -142,10 +142,10 @@ passes before correction: NaN nodes and biased interior centres were not rejecte
 The own planner now rejects both at the unchanged geometry tolerance. No genuine
 Geoana centre-based physics defect was inferred from that injected negative.
 
-JS01..JS05 and structural JS07 have foundation coverage. JS06 has independent
+JS-001..JS-005 and structural JS-007 have foundation coverage. JS-006 has independent
 prism controls plus unchanged accepted forward quadrature tests; full synthetic
-inverse JS09..JS12, actual full-pipeline resources JS13, serialized export/CLI
-JS14..JS16 and completed weighted objective JS08 remained pending at this
+inverse JS-009..JS-012, actual full-pipeline resources JS-013, serialized export/CLI
+JS-014..JS-016 and completed weighted objective JS-008 remained pending at this
 foundation epoch, not PASS.
 The probe's measured working set is not a full-cap solve benchmark. No GPU,
 host/API/browser, field eligibility or full R-008 release acceptance is asserted.
@@ -187,9 +187,9 @@ SHA5283b4f854906aeb05c216ff1c83174c99a7c53fe6a3ce8227b8ea483e785f44.
 Seven distinct trusted loaded structural source files are pinned in this later
 epoch; no earlier receipt is relabelled as having audited that extra file.
 
-JS08 now has this scoped objective coverage. Coupled optimization, two genuinely
+JS-008 now has this scoped objective coverage. Coupled optimization, two genuinely
 optimized baselines, sealed selection,24 refined-source cases, complete measured
-resources and serialized import/export/CLI gates JS09..JS16 are still pending.
+resources and serialized import/export/CLI gates JS-009..JS-016 are still pending.
 Neither source agreement nor tiny derivative precision closes those gates.
 
 At the subsequent test epoch07c74efa9a66479acf7f6aa5eac57bf284be844c,
@@ -236,7 +236,7 @@ Current shared physical_optimizer still refuses nonlinear_gauss_newton; its
 quadratic certificate and200/200/20 limits are not used as the M11 solver.
 
 This is a validated scientific implementation milestone, NOT complete inverse
-acceptance. JS09..JS16 production separately optimized baselines, coupled solves,
+acceptance. JS-009..JS-016 production separately optimized baselines, coupled solves,
 frozen selection/sealed evaluation, full result export/replay, measured complete
 resource envelope, field eligibility and deploy remain factual open gates.
 
