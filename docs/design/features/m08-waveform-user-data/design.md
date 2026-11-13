@@ -11,7 +11,7 @@ resource ceilings below remain unchanged; no full-VPS/field acceptance follows.
 
 Status: ordinary local implementation / native and field gates open. This packet defines the local calculation, not online activation or release.
 
-Read in order: [research](research.md), [contracts](contracts.md), [algorithms](algorithms.md), [requirements](requirements.md), [validation](validation-plan.md), [real case plan](ridgecrest-case.md), [tasks](tasks.md). Each requirement has a future named gate. Ordinary tests exist; resource/field/full-method gates remain separate. See tasks for current scope.
+Read the historical local-stage record in this order: [research](research.md), [contracts](contracts.md), [algorithms](algorithms.md), [requirements](requirements.md), and [validation plan](validation-plan.md). The current protected workflow and task sequence are in [protected waveform design](../m08-protected-waveform/design.md) and [protected waveform tasks](../m08-protected-waveform/tasks.md). Retained provider-format findings are in the [Ridgecrest format diagnostic](ridgecrest-format-diagnostic.md); current field-case limits are in [intrinsic validation](intrinsic-validation.md).
 
 ## 1. Scientific question and complete local result
 
@@ -34,9 +34,9 @@ The named proposed method is `seismic.waveform-qc-classical/v1`, separate from t
 | `tests/data/test_waveform_ridgecrest.py` | Opt-in exact original case receipts, rights and retained QC negatives; no live download during a test. |
 | `tests/fixtures/waveform_m08/README.md`, `tests/fixtures/waveform_m08/authored-controls.json` | Explicitly authored sensor/signal/record recipes and expected analytical values, not provider bytes or fabricated field truth. |
 
-These files are not authorized yet. No legacy file is a proposed implementation target. In particular, no `ingest.py`, `app/`, requirements file, source ledger, canonical registry, frontend, M13 reader/model/checkpoint or frozen comparator edit. Dependency availability is a separate approval decision; absent/incompatible ObsPy must stop execution rather than trigger an installation. No internal package is introduced.
+Historical scope note (2026-10-08): at this stage, the files listed above were proposals, not implementation authorization. That local-only decision was superseded by the protected workflow linked above. This paragraph records the original exclusions and does not override later approved scope or claim that the full product workflow is accepted. The implementation and its current gates remain subject to the protected design, intrinsic amendments, and release acceptance.
 
-Future case originals and execution outputs go only to user-declared external/private ignored directories. The retained case declaration belongs to `docs/design/features/m08-waveform-user-data/evidence/ridgecrest-case-receipt.json` after a separately approved acquisition; its current plan is [ridgecrest-case.md](ridgecrest-case.md), with actual byte/hash fields unset. Field arrays cannot be committed merely because they are small.
+Original Ridgecrest source and phase bytes remain external/private. The immutable [2026-10-03 terminal receipt](evidence/ridgecrest-terminal-20261003.json) records a rejected calculation with `decoder_called=false`, `field_eligible=false`, and no emitted physical arrays; it is negative evidence, not a processed field result. The [format diagnostic](ridgecrest-format-diagnostic.md) and [intrinsic validation](intrinsic-validation.md) document the current source semantics and remaining limits. Field arrays cannot be committed merely because they are small.
 
 ## 3. Calculation sequence and terminal semantics
 
