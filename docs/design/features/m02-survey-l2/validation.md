@@ -11,10 +11,12 @@ see [the focused certificate record](../../../validation/cpu2-terminal-certifica
 The same independent check now passes on all six folds for beta candidates 5
 and 6; see [the six-fold replay record](../../../validation/cpu2-candidate5-6-frozen-folds-2026-11-13.md).
 The first complete current-source original24 calibration and held-out evaluation
-also passes for synthetic family 0 / condition 0; see [its bounded report](../../../validation/cpu2-family0-condition0-calibration-2026-11-13.md).
-The two frozen reports establish a selected beta only for that one synthetic
-scenario. The other 23 family/condition scenarios and the broader M02, field,
-API, browser, host, and release gates remain open.
+passed for synthetic family 0 / condition 0. The remaining 23 cases then passed
+the current-source CPU2 original24 matrix run; see the [complete matrix report](../../../validation/cpu2-original24-calibration-matrix-2026-11-13.md)
+and the [single-case receipt](../../../validation/cpu2-family0-condition0-calibration-2026-11-13.md).
+All 24 synthetic calibration controls now select and independently evaluate a
+frozen result. The matrix is local software/synthetic evidence only; the broader
+M02, field, API, browser, host and release gates remain open.
 The retained 24-condition ordinary-L2 report is source-bound to commit
 `64372916d2853db13b8b7595570bce4f31eba2f2` and must not be presented as a pass
 for later source bytes. See [requirements](requirements.md) for the release

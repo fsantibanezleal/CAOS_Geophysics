@@ -37,4 +37,4 @@ $env:PYTHONDONTWRITEBYTECODE = '1'
 
 ## Scope limit
 
-This establishes one frozen synthetic control, its calibration selection, and one independent held-out evaluation. It does not establish the other 23 family/condition scenarios, field-data accuracy or eligibility, the complete M02 gate, API/browser/host acceptance, or release readiness. In particular, this does not qualify the separate Clear Lake field case; that case remains QC-only under the approved product definition.
+This report records the first frozen synthetic control and its independent held-out evaluation. The subsequent complete 24-scenario current-source CPU2 replay is documented in the [full matrix report](cpu2-original24-calibration-matrix-2026-11-13.md). Neither report establishes field-data accuracy or eligibility, the complete M02 gate, API/browser/host acceptance, or release readiness. In particular, these synthetic controls do not qualify the separate Clear Lake field case; it remains QC-only under the approved product definition.

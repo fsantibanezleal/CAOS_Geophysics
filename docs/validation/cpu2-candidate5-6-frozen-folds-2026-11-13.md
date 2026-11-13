@@ -35,4 +35,4 @@ $env:PYTHONDONTWRITEBYTECODE = '1'
 
 ## Scientific boundary
 
-These six frozen development-fold solves establish solver convergence and independently checked fixed-stage terminal states for two candidate beta values. They do **not** establish the selected beta, full calibration success, sealed outer-test performance, field-data eligibility, or complete M02 acceptance. The remaining six beta candidates and full candidate/fold matrix still require calibration; no product-level or field-accuracy claim follows from these synthetic controls.
+These six frozen development-fold solves establish solver convergence and independently checked fixed-stage terminal states for two candidate beta values. At the time this focused replay was first recorded, it did **not** establish the selected beta, full calibration success, sealed outer-test performance, field-data eligibility, or complete M02 acceptance. The complete current-source candidate/fold matrix and outer evaluations were later run; see the [full matrix report](cpu2-original24-calibration-matrix-2026-11-13.md). No product-level or field-accuracy claim follows from these synthetic controls.
