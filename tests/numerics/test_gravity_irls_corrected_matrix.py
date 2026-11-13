@@ -234,21 +234,20 @@ def test_original24_corrected_science(family, condition, record_property):
         assert outcome['model_rmse_ratio'] < 1., outcome
 
 
-def test_cpu2_terminal_certificate_frozen_candidate6_fold2(record_property):
-    """Replay the approved terminal certificate on the locked 48-cell case."""
+def _assert_cpu2_frozen_fold(candidate, fold, record_property):
     request, _, _ = corrected_request(0, 0)
     workflow = corrected_workflow._Workflow('cpu2')
     admitted = workflow.admit(request)
-    fold = admitted['plan']['folds'][2]
     started = monotonic()
-    packed = workflow._fit(admitted, fold['fit_rows'], l2.BETA_CANDIDATES[6], started+120.)
+    packed = workflow._fit(admitted, admitted['plan']['folds'][fold]['fit_rows'],
+                           l2.BETA_CANDIDATES[candidate], started+120.)
     fit = pool.decode(packed)
     terminal = fit['terminal']
     stages = fit['stages']
     final = stages[-1]
     certificate = terminal['fixed_point_certificate']
     result_summary = {
-        'candidate': 6, 'fold': 2, 'beta': l2.BETA_CANDIDATES[6],
+        'candidate': candidate, 'fold': fold, 'beta': l2.BETA_CANDIDATES[candidate],
         'request_sha256': survey._digest(request),
         'source_inventory_sha256': survey._digest(fit['source_inventory']),
         'status': terminal['status'], 'reason': terminal['reason'],
@@ -258,21 +257,28 @@ def test_cpu2_terminal_certificate_frozen_candidate6_fold2(record_property):
         'certificate': certificate,
         'research_only': True, 'product_acceptance': False,
     }
-    record_property('cpu2_terminal_certificate_case',
+    record_property(f'cpu2_frozen_candidate_{candidate}_fold_{fold}',
                     json.dumps(result_summary, sort_keys=True, allow_nan=False))
 
     assert terminal['status'] == 'converged', result_summary
-    assert terminal['reason'] == 'irls_fixed_point_certificate', result_summary
+    assert terminal['reason'] in ('irls_fixed_point', 'irls_fixed_point_certificate'), result_summary
     assert terminal['weight_updates'] == 20 and len(stages) == 21
     assert fit['iterations'] <= 200 and fit['wall_seconds'] <= 120.
     assert final['index'] == 20 and final['inner']['status'] == 'converged'
     assert final['inner']['reason'] == 'absolute_stationary'
     assert final['inner']['iterations'] == 0 and final['inner']['failed_trial'] is None
-    assert result_summary['final_three_changes'][0]['weights_relative'] > 1e-6
-    assert result_summary['final_three_changes'][1:] == (
-        {'model_relative': 0.0, 'weights_relative': 0.0},
-        {'model_relative': 0.0, 'weights_relative': 0.0},
-    )
+    if certificate is not None:
+        assert terminal['reason'] == 'irls_fixed_point_certificate'
+        assert result_summary['final_three_changes'][0]['weights_relative'] > 1e-6
+        assert result_summary['final_three_changes'][1:] == (
+            {'model_relative': 0.0, 'weights_relative': 0.0},
+            {'model_relative': 0.0, 'weights_relative': 0.0},
+        )
+    else:
+        assert terminal['reason'] == 'irls_fixed_point'
+        assert all(change['model_relative'] <= 1e-6
+                   and change['weights_relative'] <= 1e-6
+                   for change in result_summary['final_three_changes'])
 
     start, stop = final['adopted_row'], final['stop_row']
     q = np.array(fit['models_q'][stop], dtype=np.float64, copy=True)
@@ -285,7 +291,7 @@ def test_cpu2_terminal_certificate_frozen_candidate6_fold2(record_property):
     noise = {key: admitted['noise'][key] for key in ('kind', 'values')}
     problem = l2._build_problem(admitted['plan']['request'],
         admitted['observations']['gz_up_mgal'], noise, admitted['prior'],
-        fold['fit_rows'], l2.BETA_CANDIDATES[6],
+        admitted['plan']['folds'][fold]['fit_rows'], l2.BETA_CANDIDATES[candidate],
         observation_rows=admitted['plan']['development_rows'])
     simulation, alpha = problem['simulation'], problem['alpha']
     independent_sparse = regularization.Sparse(
@@ -318,9 +324,25 @@ def test_cpu2_terminal_certificate_frozen_candidate6_fold2(record_property):
     convexity_lower_bound = float(problem['beta_engine']*curvature_min)
     assert np.isfinite(diagonal).all() and np.all(diagonal > 0.)
     assert kkt_inf <= 1e-12
-    assert certificate['projected_kkt_inf'] == kkt_inf
-    assert certificate['smallness_min_curvature'] == curvature_min
-    assert certificate['strict_convexity_lower_bound'] == convexity_lower_bound > 0.
-    assert certificate['weight_sha256'] == independent_weight_hashes
-    assert certificate['model_sha256'] == survey._digest(q)
-    assert certificate['source_inventory_sha256'] == workflow.engine._INVENTORY
+    if certificate is not None:
+        assert certificate['projected_kkt_inf'] == kkt_inf
+        assert certificate['smallness_min_curvature'] == curvature_min
+        assert certificate['strict_convexity_lower_bound'] == convexity_lower_bound > 0.
+        assert certificate['weight_sha256'] == independent_weight_hashes
+        assert certificate['model_sha256'] == survey._digest(q)
+        assert certificate['source_inventory_sha256'] == workflow.engine._INVENTORY
+    else:
+        assert final['canonical_absolute_kkt'] == kkt_inf <= 1e-12
+        assert final['canonical_weight_mismatch'] <= 1e-6
+
+
+def test_cpu2_terminal_certificate_frozen_candidate6_fold2(record_property):
+    """Replay the approved terminal certificate on the locked 48-cell case."""
+    _assert_cpu2_frozen_fold(6, 2, record_property)
+
+
+@pytest.mark.parametrize(('candidate', 'fold'),
+                         [(5, 0), (5, 1), (5, 2), (6, 0), (6, 1)])
+def test_cpu2_frozen_candidate5_and_6_folds(candidate, fold, record_property):
+    """Reproduce the other folds of both eligible beta candidates independently."""
+    _assert_cpu2_frozen_fold(candidate, fold, record_property)

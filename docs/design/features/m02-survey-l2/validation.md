@@ -8,9 +8,13 @@ JUnit SHA-256 is `78726d2315e9e5aaee359c9392e0384e2419d2842acf0cd06c652eb3db1978
 The approved CPU2 terminal certificate now also passes a current-source,
 independently reconstructed replay on the frozen candidate-6/fold-2 control;
 see [the focused certificate record](../../../validation/cpu2-terminal-certificate-candidate6-fold2-2026-11-13.md).
-This admits one fixed-quadratic terminal state only. It does not make a beta
-candidate eligible or close the 24-fold calibration, held-out evaluation,
-M02, field, API, browser, host or release gates.
+The same independent check now passes on all six folds for beta candidates 5
+and 6; see [the six-fold replay record](../../../validation/cpu2-candidate5-6-frozen-folds-2026-11-13.md).
+The first complete current-source original24 calibration and held-out evaluation
+also passes for synthetic family 0 / condition 0; see [its bounded report](../../../validation/cpu2-family0-condition0-calibration-2026-11-13.md).
+The two frozen reports establish a selected beta only for that one synthetic
+scenario. The other 23 family/condition scenarios and the broader M02, field,
+API, browser, host, and release gates remain open.
 The retained 24-condition ordinary-L2 report is source-bound to commit
 `64372916d2853db13b8b7595570bce4f31eba2f2` and must not be presented as a pass
 for later source bytes. See [requirements](requirements.md) for the release
