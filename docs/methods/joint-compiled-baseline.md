@@ -111,4 +111,4 @@ full comparison matrix. Scientific replay, frozen validation selection, sealed
 evaluation, coupled fits, field rights and deployed authority remain distinct.
 
 See [local supplied joint methodology](../guides/22_local_joint_survey.md) and
-[exact local inspection contract](../data-contract/04_joint-local-inspection.md).
+[exact joint-survey contract](../design/features/joint-survey-inversion/contracts.md).

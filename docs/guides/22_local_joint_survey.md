@@ -11,7 +11,7 @@ active-cell property sections and all retained optimization attempts/states. It
 exports an original-byte private archive and separately labelled numeric inspection
 sidecar. It never runs or refits the scientific method, reads undeclared inputs,
 uses a vector-factor coupling approximation or grants redistribution rights.
-See the [local inspection contract](../data-contract/04_joint-local-inspection.md).
+See the [joint-survey request and result contract](../design/features/joint-survey-inversion/contracts.md).
 
 ## Prepare external immutable inputs
 
@@ -140,7 +140,7 @@ The native state view displays source-bound response/residual/holdout metrics,
 exact physical property sections and per-active-cell face-Gram contributions.
 It exports an exact state JSON with rows/units/models/metrics/coupling/source
 identities and preserves all original private bytes in the archive. The formula
-is documented in the [accepted-state design](../design/features/joint-state-instrument/design.md),
+is documented in the [joint-survey integration record](../design/features/joint-survey-inversion/integration-status-20261025.md),
 with independent nonuniform/sparse/null/sign controls. It does not approximate
 the optimized scalar with an averaged-vector cross-product map.
 

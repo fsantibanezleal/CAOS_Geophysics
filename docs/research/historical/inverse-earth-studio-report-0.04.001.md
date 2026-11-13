@@ -42,7 +42,7 @@ The learned inverse predicts column density rather than non-identifiable depth-r
 
 ## 4. Results
 
-The full reference-condition table is generated directly from artifacts in [results.md](../../docs/validation/results.md); all six conditions are available in the app and catalogue. These selected observations describe this fixed run, not a general ranking of algorithms.
+The full reference-condition table is generated directly from artifacts in [results.md](../../validation/results.md); all six conditions are available in the app and catalogue. These selected observations describe this fixed run, not a general ranking of algorithms.
 
 Across all 348 method/condition results, the declared evaluator labels 116 recovered, 192 unresolved, 4 failed and 36 negative controls. These are case-specific diagnostic criteria, not comparable success probabilities. On the layered reference, velocity RMSE falls from 229.095 to 125.563 m/s with full-band FWI and 121.865 m/s with continuation; both meet the declared waveform-noise criterion. On the normal-fault reference it falls from 301.203 to 223.448 and 200.638 m/s respectively, but the full-band result remains unresolved because active and withheld WRMS are 3.511 and 3.621; continuation meets the criterion at 1.391 and 1.450. On the gas-channel reference, RMSE falls from 340.618 to 258.465 and 241.098 m/s, but both methods remain unresolved because their active and withheld WRMS exceed two. The salt/cycle-skipping reference remains a negative control: continuation reaches 624.312 m/s whole-model RMSE but active and withheld WRMS are 2.215 and 2.375, and deep recovery remains poor. Lower model error does not by itself establish noise-consistent data fit. Full-band and continuation use matched background and update budgets.
 
@@ -56,7 +56,7 @@ Six sensitivity variants per case are independent controlled conditions, not unc
 
 ### 4.1 Spatial discretization diagnostic
 
-The local diagnostic compares original 14×12×8 and refined 28×24×16 potential-field grids with a 56×48×32 discretization at 36 common receivers. Uniform-prism subdivision agrees within 1.73×10⁻⁹ relative difference. Ten of twelve geological responses move closer to the fine-grid reference. The basin and opposing-body responses do not: cell-centre sampling of discontinuous boundaries is not monotonically convergent. The fine grid is a numerical reference, not exact geological truth. Results are preserved in [refinement.json](../../docs/validation/refinement.json).
+The local diagnostic compares original 14×12×8 and refined 28×24×16 potential-field grids with a 56×48×32 discretization at 36 common receivers. Uniform-prism subdivision agrees within 1.73×10⁻⁹ relative difference. Ten of twelve geological responses move closer to the fine-grid reference. The basin and opposing-body responses do not: cell-centre sampling of discontinuous boundaries is not monotonically convergent. The fine grid is a numerical reference, not exact geological truth. Results are preserved in [refinement.json](../../validation/refinement.json).
 
 An independent seismic forward comparison at refined space/time increments gives relative receiver-trace L2 difference 0.00268063 for the declared test section. This is a bounded discretization check, not a full dispersion or geological convergence study. The current 0.04 inverse uses 1.6 s traces; the earlier 1.1 s display-case result is not carried forward as a current recovery metric.
 
@@ -94,4 +94,4 @@ The instrument makes several established inverse-problem failure modes directly 
 8. [SciPy bounded least squares](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.least_squares.html) and [MTpy-v2 EDI documentation](https://mtpy-v2.readthedocs.io/en/latest/notebooks/mt_object.html).
 9. [USGS Clear Lake data release](https://doi.org/10.5066/P14KAQ3M) and [EarthScope EMTF transfer-function collection](https://doi.org/10.17611/DP/EMTF/GMEG/Clearlake), sources for the measured `cl061` screening record, not for synthetic inversion validation.
 
-Further primary-source mappings and explicit deviations are in [the research review](../../docs/research/review.md).
+Further primary-source mappings and explicit deviations are in [the research review](../review.md).

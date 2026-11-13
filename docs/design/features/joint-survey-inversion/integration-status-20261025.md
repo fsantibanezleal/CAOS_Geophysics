@@ -139,7 +139,7 @@ instrument was exported and replay-validated from that exact fresh output. Its
 workflow/index data remain outside Git under
 `E:\_worktrees\_runs\CAOS_Geophysics-M11-integrated-20261025\data`; the
 reproducible receipt, hashes, resource samples and nonclaims are recorded in
-[`m11-fresh-workflow-20261026.json`](evidence/m11-fresh-workflow-20261026.json).
+[`m11-fresh-workflow-20261026.json`](../../../../evidence/m11-fresh-workflow-20261026.json).
 The real artifact browser-import test passes on the instrument bundle, and the
 actual Python API archive test passes on the terminal failure receipt. This
 does not exercise the deployed VPS worker process.
