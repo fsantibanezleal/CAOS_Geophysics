@@ -188,3 +188,32 @@ across the product registry and source-to-content review. The structural docs
 matrix passes for all 13 methods and 66 notebooks. The course-wide notebook
 depth checker still has 142 findings; the four product-wide manuscript
 findings and remaining scientific/release gates are unchanged.
+
+## Follow-up: 2026-11-12 current template adoption
+
+The prior follow-up contains two stale statements corrected here. The current
+checkout includes `scripts/local/workflow.py` and `scripts/local/workflow.json`;
+the workflow declares `scripts/local/geophysics_readiness.py` and the product
+readiness checker guards that provider. `.template-version` now records the
+adopted CAOS_PRODUCT_TEMPLATE 0.15.010 release. The product-local staged
+workflow already contains the custom-provider admission behavior introduced
+by 0.15.010 and the explicitly scoped engine-version checks introduced by
+0.15.009; its other product-specific differences were reviewed rather than
+replaced wholesale from the template. The exact Shell 0.26.0 pin remains in
+the manifest, lockfile, and product gate. No shell CSS, font, or package source
+was changed.
+
+Fresh verification on this checkout passed the custom-readiness and bootstrap
+admission tests (47 passed, 7 skipped), and `python scripts/check_readiness.py`
+reported the declared product provider current. The convergence ledger is
+hash-bound to the corrected SDD. Manuscript-depth measurement reports 7,655
+words for the geometry-normalized synthetic comparison and 7,887 words for
+the M12 null-space study; both meet the measured manuscript floor. The geometry
+paper reports its failed predeclared comparison and explicitly disclaims an
+algorithmic novelty or field-transfer result. The product technical report
+remains 3,481 words, with no equations or algorithms, one figure, one table,
+14 references, and no `coverage.json`; it still fails the 12,000-word, method-
+and-contract-coverage report bar. Current manuscript-depth checking reports
+those two technical-report coverage/classification findings. This update does
+not turn either manuscript's structural measure into peer review, scientific
+acceptance, or release acceptance.
