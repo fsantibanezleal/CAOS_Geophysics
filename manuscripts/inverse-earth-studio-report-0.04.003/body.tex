@@ -1,4 +1,4 @@
-\section{Scientific motivation}\label{scientific-motivation}
+\section{Introduction}\label{introduction}
 
 An inverse image can look geologically persuasive even when multiple
 models explain the data, the assumed physics are violated, or a withheld
@@ -12,7 +12,7 @@ about a specified objective under a specified data model. By itself, it
 is not evidence of unique or accurate geology.
 
 The topic sequence draws on the public theoretical-practical geophysical
-inversion course by Mantilla. Its notebooks, recordings, images, and raw
+inversion course by Mantilla \cite{course}. Its notebooks, recordings, images, and raw
 data are not redistributed. The source commit was
 \texttt{0084021fcc6c1d2f112b144e6e5f0a3d92f20dff} (Mantilla course). The
 research survey distinguishes primary sources from implementation
@@ -31,8 +31,31 @@ picking. It also evaluates a proposed coverage-conditioned null-space
 correction. Method definitions and numerical assumptions are in
 \url{docs/design/SDD.md}.
 
-\section{Software and evidence
-design}\label{software-and-evidence-design}
+The intended reader moves between physical interpretation and software
+inspection: a geophysicist can ask what an observation constrains, while
+a developer can follow the same sample through parsing, processing,
+forward prediction, inversion, evaluation, and export. The workbench is
+organized around that chain rather than a single image of a buried
+object. Gravity, magnetics, and electromagnetic methods have different
+depth sensitivities and units; refraction and waveform methods depend
+on travel paths, bandwidth, and source-receiver geometry. Their shared
+presentation therefore emphasizes method-specific variables, physical
+axes, masks, residuals, and status labels instead of a common visual
+score. Each case must explain whether it is synthetic or measured,
+what evidence is available, and what conclusions remain unsupported.
+
+The product's public course is inspired by a cited geophysical
+inversion course, but the source notebooks, recordings, and datasets
+are not copied into this repository. The English and Spanish lessons
+are authored to teach the implemented methods and their own data
+contracts. Their executable status and measured depth are independent
+of learning effectiveness, which has not been evaluated in a controlled
+study. Likewise, the breadth of the method catalogue does not mean that
+every advertised physical workflow accepts arbitrary user observations
+or produces a field-ready model. The report records the evidence now
+available and the tests still needed to make those workflows complete.
+
+\section{System architecture and evidence design}\label{system-architecture}
 
 \subsubsection{2.1 Evidence chain}\label{evidence-chain}
 
@@ -84,7 +107,136 @@ corrected where translations, counts, or numerical interpretations
 differed. Execution and translation checks establish neither field
 validity nor educational efficacy.
 
-\section{Data and experimental scope}\label{data-and-experimental-scope}
+\section{Problem formulation}\label{problem-formulation}
+
+For observations $\mathbf d\in\mathbb R^N$ and a discretized model
+$\mathbf m\in\mathbb R^M$, the forward problem evaluates a method-
+specific operator $\mathbf F$ under a declared acquisition, coordinate
+frame, and physical approximation. The inverse problem estimates model
+parameters consistent with the data and an explicit error model while
+using a prior to control directions the observations do not determine:
+\begin{equation}\label{eq:general-inverse}
+ \mathbf d=\mathbf F(\mathbf m)+\boldsymbol\epsilon,\qquad
+ \widehat{\mathbf m}=\underset{\mathbf m\in\mathcal C}{\arg\min}\;
+ \frac{1}{2}\|\mathbf W_d(\mathbf F(\mathbf m)-\mathbf d)\|_2^2
+ +\beta\,\mathcal R(\mathbf m-\mathbf m_{\rm ref}).
+\end{equation}
+The error vector $\boldsymbol\epsilon$, weight $\mathbf W_d$, admissible
+set $\mathcal C$, regularizer $\mathcal R$, trade-off $\beta$, and
+reference $\mathbf m_{\rm ref}$ define the estimator as much as the
+solver. If errors are independent and correctly scaled, diagonal weights
+may use inverse standard deviations; correlated errors require an
+appropriate covariance model. Observation units, coordinate reference,
+geometry, masks, and uncertainties therefore belong to the numerical
+problem, not to display metadata. A residual score with no named
+transformation and units is not comparable across physical methods.
+
+For a linearized potential-field operator $\mathbf G$, an invisible
+model perturbation obeys
+\begin{equation}\label{eq:linear-nullspace}
+ \mathbf G\,\delta\mathbf m=\mathbf 0.
+\end{equation}
+Regularization selects an estimate among models that fit similarly; it
+does not add observations to the null space. Mesh spacing, survey
+placement, depth weighting, bounds, and the reference model can all
+change the selected structure. For a nonlinear forward model, the local
+Jacobian $\mathbf J(\mathbf m)$ describes local sensitivity and does
+not prove global uniqueness. An optimizer's stopping state or a small
+training loss is a numerical fact. Recovery is a separate conclusion
+that needs a predeclared metric and, for synthetic tests, known truth.
+
+The method families instantiate different physics and parameterizations.
+Gravity and magnetic inverses use volume sensitivities and density or
+susceptibility variables. Layered MT uses complex transfer functions
+over frequency. ERT depends on electrode geometry and conductivity.
+First-arrival times integrate slowness over paths, while waveform
+inversion solves a wave equation and fits time samples. Joint objectives
+introduce a structural or petrophysical coupling assumption; learned
+estimators add a training distribution and representation. Their
+objective values are not a common quality scale. A readable result must
+name its data, operator, prior, weights, constraints, stopping rule, and
+evaluation variable. When a field input lacks source, units, datum,
+orientation, or error metadata needed by that method, the correct state
+is ineligible or QC-only, not a model with guessed conventions.
+The objective must also be interpreted with its units and geometry
+intact. A normalized residual may help balance scales but can change
+noise variance; a regularizer may stabilize an estimate but can bias
+the recovered amplitude or shape. Two optimizers applied to different
+parameterizations or weights do not constitute a controlled algorithm
+comparison. This is why each comparison fixes a target, operator,
+starting model, acquisition, and selection protocol before comparing
+test outcomes. A visually smooth model can be a consequence of its prior,
+and a low data misfit can result from fitting noise or an incorrect
+forward model. Independent physical checks and held-out prediction
+address different failure modes and are reported separately.
+
+\section{Notation}\label{notation}
+
+The cross-method frame uses $x$ for easting, $y$ for northing, and $z$
+for depth positive downward unless the original format explicitly
+defines otherwise. A coordinate value is not assumed to be a geographic
+datum. The vectors $\mathbf d$, $\mathbf m$, and
+$\boldsymbol\epsilon$ denote observations, model parameters, and errors
+only within the relevant method; their dimensions and physical units
+vary. The symbols table is a reading aid and does not imply that
+density, conductivity, magnetization, velocity, and slowness share a
+numerical scale. Each artifact's axis labels and units remain
+authoritative for interpreting its values.
+
+\begin{center}\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Symbol & Meaning & Unit or convention\\
+\midrule
+$N$, $M$ & Observation and model dimensions & counts\\
+$\mathbf d$, $\mathbf F(\mathbf m)$ & Observed and predicted data & method-specific\\
+$\boldsymbol\epsilon$ & Data and modelling error & data units\\
+$\mathbf W_d$ & Data-weighting operator & inverse data units\\
+$\mathcal R$, $\beta$ & Regularizer and trade-off & method-specific\\
+$\mathbf m_{\rm ref}$ & Reference or starting model & model units\\
+$\mathbf G$, $\mathbf J$ & Linear operator and local Jacobian & method-specific\\
+$\sigma$, $\Sigma$ & Marginal scale and covariance & units and squared units\\
+$f$, $t$, $\omega$ & Frequency, time, angular frequency & Hz, s, rad/s\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Subscripts are local to an experiment: $i$ commonly indexes
+observations, $j$ model cells, $k$ frequencies or time samples, and
+$s$ sources or shots. Superscript $T$ denotes transpose; a complex
+conjugate transpose is written $H$. In MT, $Z_{ab}(f)$ is a complex
+transfer function whose units, axes, and tensor convention come from
+the source record. In waveform processing, $u(t)$ denotes recorded
+amplitude and $p_P(t)$ denotes a model probability; they are distinct
+quantities. In travel-time methods, $t_i$ is an observed or predicted
+arrival according to context, and $s=1/v$ denotes slowness when the
+section explicitly uses it.
+
+Units are converted only at a named processing boundary. A magnetic
+field in nanotesla must not be compared directly with a vector stored in
+tesla without its scale conversion. A log-resistivity parameter is not
+itself measured in ohm-metres, although exponentiating it may produce a
+physical resistivity. Coverage, sensitivity, and resolution also have
+different meanings: ray counts describe support, Jacobian columns
+describe local response, and resolution requires an explicit operator
+or experiment. None is a standard deviation unless a calibration
+procedure establishes that interpretation. Method sections define
+additional symbols at first use and carry grid ordering and axis
+orientation into their artifact contracts.
+When arrays are reshaped, the declared order is part of the numerical
+definition: for example, a depth-major velocity tensor and a
+northing-major surface map cannot be displayed with the same implicit
+transpose. Sampling interval and acquisition time are distinct from
+the physical coordinate vector, and radians per second are distinct
+from hertz by a factor of $2\pi$. Complex-valued transfer functions
+retain their real and imaginary parts together; amplitude and phase
+plots are derived views. A missing value is represented by a mask and
+reason rather than a numeric sentinel that could be mistaken for a
+measurement. These conventions make exported files interpretable
+outside the browser and reduce the chance that a display transform is
+silently treated as a scientific operation.
+
+\section{Data and data contracts}\label{data-and-experimental-scope}
 
 \subsubsection{3.1 Authored synthetic
 experiments}\label{authored-synthetic-experiments}
@@ -127,21 +279,112 @@ example, the Slagdump ERT raw asset is absent locally under its
 provider-link-only status; focused notebook checks consequently skip
 tests that require those bytes. The Koenigsee travel-time lesson is an
 authored synthetic method control and does not establish execution on
-the provider-linked case. The M13 STEAD excerpts \cite{mousavi2019} and
+the provider-linked case. The STEAD excerpts \cite{mousavi2019} and
 associated project-trained checkpoint have a scoped redistribution
 decision with attribution; that decision does not generalize to other
 data or establish model accuracy. Rights, data custody, field
 eligibility, numerical correctness, and scientific validation remain
 separate decisions.
 
+\subsection{Data contracts}
+
+\subsubsection{Experiment catalogue}\label{contract-catalog}
+
+The experiment catalogue is the public index of baked examples. Each
+case identifies its physical family, geometry, seed, and available
+variants. A variant points to an artifact with an expected path, byte
+count, and SHA-256 digest, and describes the methods, metrics, status,
+target quantity, units, and target provenance that the interface may
+display. This declaration allows a client to locate a reproducible
+array and verify that the served bytes match the committed inventory.
+The catalogue is not an inverse solver, an uncertainty model, or a
+scientific acceptance certificate. A row can correctly report an
+unresolved or failed result. The product guard checks artifact closure
+and a separate numerical validation checks selected arrays and
+calculations; neither replaces interpretation of the stated target and
+evaluation criteria. The type and versioned schema are recorded with
+the catalogue contract.
+
+\subsubsection{Data readiness}\label{contract-readiness}
+
+The readiness record answers whether the declared product artifacts
+exist and agree with their expected inventory. It carries the product
+and catalogue versions and provides a deterministic status for a
+release candidate. Readiness is intentionally narrower than scientific
+quality: a complete byte inventory can contain a failed experiment,
+QC-only observation, or synthetic result with limited transfer. It
+does not clear source rights, validate units or datum, establish that a
+field survey is eligible for an inverse, or prove that a solver recovered
+geology. Downstream interfaces must keep this meaning visible and must
+not upgrade a readiness state into a scientific verdict. The readiness
+schema and independent validator provide the boundary; the catalogue's
+method evaluations and method-specific evidence remain separate. This
+division allows a release to be reproducible while still recording
+unresolved science without hiding it.
+
+\subsubsection{Private API}\label{contract-private-api}
+
+The API contract separates open public exploration from protected
+project operations. Public viewers can inspect documentation and use
+browser calculations whose client-side behavior is specified. Project
+creation, ownership, uploaded data, saved processing jobs, and
+server-side computation require authenticated access. Requests and
+responses carry declared ownership and lifecycle states so the UI can
+distinguish an unavailable service, a rejected input, a queued operation,
+and a completed result. The OpenAPI document is the route-level source
+for this boundary, while the runtime authorization and state checks
+remain implementation responsibilities. The API is currently not
+accepted for production use: schema presence and local tests do not prove
+public TLS behavior, resource limits, cancellation, isolation, backup,
+or deployment admission. The approved test system has one canonical
+ML-VPS origin; there is no second Pages origin.
+
+\subsubsection{API payloads}\label{contract-api-payloads}
+
+The payload schemas describe data submitted to and returned from the
+private workflows. They bind a payload to its modality, version,
+source or parent identity, units and coordinate metadata where known,
+processing parameters, and hashes for the raw or scientific values.
+Method-specific shapes retain arrays and masks instead of flattening
+their physical meaning: for example, EDI impedance keeps its complex
+tensor and aligned frequency axis, while waveform records retain sample
+time and channel metadata. Eligibility reasons and QC outcomes are
+represented explicitly so that malformed, incomplete, or unsupported
+measurements are not silently converted into inverse results. Current
+schemas cover the declared API surface, but nested constraints are not
+yet exhaustive for every advertised modality. A schema-valid payload
+therefore still needs parser, physics, rights, ownership, and
+method-specific validation before a calculation is accepted.
+
+\subsubsection{Browser model assets}\label{contract-browser-assets}
+
+Browser-executable learned assets use a public manifest that binds the
+model file, dimensions, normalization, preprocessing, and evaluation
+records to exact digests. The browser runtime must consume the declared
+checkpoint and arrays; it must not silently substitute a differently
+trained model or recompute a second approximate dataset. This contract
+supports reproducible asset loading and parity comparisons for the
+specified CPU and WebAssembly paths. The recorded phase-picker parity
+uses 23 selected QC-valid display traces from the same checkpoint; its
+maximum output discrepancy and peak displacement are runtime-consistency
+measures only. They do not establish agreement with an independent
+training framework, population accuracy, field transfer, or analyst
+acceptance. Model training and full inverse solves remain offline
+workflows. A valid asset manifest proves file identity and metadata
+shape, not predictive quality or a novel method claim.
+
 \section{Methods}\label{methods}
 
 The method identifiers below follow \url{docs/design/SDD.md}. Each entry
 names an implementation and its tests; this does not imply validated use
 for every input or a complete end-to-end workflow.
+Table~\ref{tab:methods-limitations} summarizes the implemented purpose
+and evidence limits, while Figure~\ref{fig:m01-height-continuation}
+shows one source-bound, synthetic processing example.
 
 \begin{center}\small
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}>{\raggedright\arraybackslash}p{0.38\textwidth}@{}}
+\caption{Methods, executable purpose and evidence limits across the implemented geophysical method set. Rows summarize current implementations and bounded datasets; they do not imply field-wide validity.}\label{tab:methods-limitations}\\
 \toprule
 Method & Executable purpose & Principal limitations \\
 \midrule
@@ -197,13 +440,14 @@ fit.
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=0.95\linewidth,height=\textheight,keepaspectratio,alt={M01 authored synthetic control. Upper left: original station disturbance and blocked holdout or masked locations. Upper right: harmonic continuation to 300 m. Lower left: propagated conditional noise standard deviation, with blank cells unsupported. Lower right: signed prediction residuals at original receiver locations. The figure is synthetic and does not represent field measurements.}]{figures/m01-height-continuation.png}
-\caption{M01 authored synthetic control. Upper left: original station
+\includegraphics[width=0.95\linewidth,height=\textheight,keepaspectratio,alt={Authored gravity processing control. Upper left: original station disturbance and blocked holdout or masked locations. Upper right: harmonic continuation to 300 m. Lower left: propagated conditional noise standard deviation, with blank cells unsupported. Lower right: signed prediction residuals at original receiver locations. The figure is synthetic and does not represent field measurements.}]{figures/m01-height-continuation.png}
+\caption{Authored gravity processing control. Upper left: original station
 disturbance and blocked holdout or masked locations. Upper right:
 harmonic continuation to 300 m. Lower left: propagated conditional noise
 standard deviation, with blank cells unsupported. Lower right: signed
 prediction residuals at original receiver locations. The figure is
 synthetic and does not represent field measurements.}
+\label{fig:m01-height-continuation}
 \end{figure}
 
 \subsubsection{4.2 MT, ERT, and waveform
@@ -226,7 +470,7 @@ PyGIMLi \cite{pygimli}. The numerical examples distinguish authored
 controls from absent or restricted field assets and retain failed
 inversions. Seismic preprocessing distinguishes instrument counts,
 response-corrected units, filters, gaps, and sample windows. STA/LTA
-picking and M13 learned inference consume explicitly specified traces;
+picking and learned phase inference consume explicitly specified traces;
 analyst picks are reference annotations, not subsurface truth.
 
 \subsubsection{4.3 Travel-time tomography, FWI, and joint
@@ -235,7 +479,7 @@ inversion}\label{travel-time-tomography-fwi-and-joint-inversion}
 Travel-time inversion uses specified ray geometry and a
 training/withheld partition. Its velocity maps are interpreted together
 with ray support; unsupported cells do not receive equivalent evidential
-status. The M09 bilingual lesson calls the product inverse core on an
+status. The bilingual first-arrival lesson calls the product inverse core on an
 authored refracting two-layer survey and compares complete withheld
 shots with a training-only homogeneous baseline. This is a bounded
 synthetic calculation.
@@ -276,7 +520,7 @@ geometries; its measured failure to detect the withheld family is
 retained. These models are compact baselines and have not been compared
 with a broader set of published inverse methods.
 
-The currently submitted BS-1 paper reports a geometry-normalized,
+The separate geometry-normalized residual manuscript reports a geometry-normalized,
 coverage-conditioned residual CNN against a validation-selected weighted
 straight-ray reference. Its input has two channels (normalized residual
 and coverage); the network has 24 hidden feature maps, not 24 input
@@ -293,8 +537,21 @@ between-seed training variance. The source-bound receipts, checkpoints,
 bootstrap calculation and current limitations are in
 \url{manuscripts/geometry-normalized-traveltime-refinement-v001/}.
 
+The method uses normalized residuals and ray-coverage maps as inputs,
+then predicts a bounded correction on the fixed grid. This design can
+condition corrections on sampled ray support, but it cannot recover
+unsupported structure without a generator-dependent prior. The
+weighted-L2 reference is selected on validation data; the held-out
+comparison does not retune it. Ratios above one favor that reference,
+and bootstrap intervals quantify resampling within these cases only.
+The experiment has no independent-seed estimate, no matched fast-marching
+baseline, and no field observations. Feature construction and bilinear
+scoring use nonidentical operators, a known mismatch that narrows the
+result's interpretation. The complete paper reports the objective,
+training protocol, ablations, receipts, and per-case failure analysis.
+
 An earlier residual-v3.1/null-space experiment and its analysis remain
-archived, but they are not the current BS-1 experiment. Their older
+archived, but they are not the current geometry-normalized experiment. Their older
 cohort, checkpoint, scorer and operator evidence cannot be combined with
 the current results. The archive is retained for provenance at
 \url{docs/research/archive/m12-nullspace-evaluation-draft-2026-11-13/};
@@ -303,8 +560,53 @@ This distinction prevents the old positive aggregate ratios from being
 read as results of the current method or as a beyond-state-of-the-art
 claim.
 
-\section{Selected results and
-interpretation}\label{selected-results-and-interpretation}
+\section{Experimental protocol}\label{experimental-protocol}
+
+The original cross-method catalogue contains 20 authored geometries,
+six controlled variants per case, and 348 method result records. These
+counts describe a frozen artifact family, not 348 independent geological
+samples. The variants change specific acquisition or physical factors
+such as contrast, noise, coverage, or regularization. Their outcomes are
+reported within each method's own variables and criteria. A shared
+catalogue organizes retrieval; it does not justify pooling unlike
+metrics into an overall success rate. Additional current-source work
+adds separate field-intake, survey, user-input, and learned cohorts,
+each with its own provenance and acceptance boundary.
+
+For learned travel-time estimation, the fixed training protocol uses 800
+training and 160 validation surveys, 40 epochs, and predeclared family,
+acquisition, and joint-shift evaluation cohorts. The geometry-normalized
+paper preserves case identifiers and receipts; its second CUDA run
+uses the same seed and manifests, so it measures execution sensitivity
+and not training-seed uncertainty. The exploratory ablations use new
+test-cohort seeds and do not replace the locked comparison. The phase
+picker has a separate locked 6,000-trace benchmark against analyst
+annotations. A 23-trace browser parity subset is selected for runtime
+comparison and is not a substitute for that cohort. FWI results use
+four stated synthetic models, including a salt cycle-skipping negative
+control and an unresolved low-velocity channel; saved output is
+distinguished from a fresh solve. These designs answer bounded
+questions and are not interchangeable.
+
+Before each inverse, data are divided according to the relevant
+independence unit: flight line, shot, geological family, station, or
+trace. Spatially adjacent samples must not leak across a blocked holdout
+when the purpose is to assess transfer to new acquisition support.
+Hyperparameters are selected on the designated validation data; final
+evaluation uses sealed test data only after the selection is fixed.
+Records preserve the source bytes, preprocessing, coordinate and unit
+conventions, model grid, random seeds, engine versions, objective,
+stopping state, and output hashes. A missing provider-linked dataset
+remains unavailable and does not become a synthetic substitute. The
+protocol therefore prioritizes traceable negative and unresolved cases
+over a pooled headline score. Full current-course replay, all external
+data permissions, independent training seeds, and representative field
+validation are not yet complete. The reported benchmark sizes and splits
+are method-specific, and larger catalogue totals do not change their
+independence unit. No held-out result is reweighted after inspecting a
+failure.
+
+\section{Results}\label{selected-results-and-interpretation}
 
 \subsubsection{5.1 Reference-condition
 outcomes}\label{reference-condition-outcomes}
@@ -338,7 +640,7 @@ picker}\label{edi-screening-and-phase-picker}
 The observed cl061 EDI tensor is screened against necessary 1D
 consistency conditions and fails them. It remains QC-only. It provides
 no 1D resistivity model for cl061 and makes no geological interpretation
-from that station. For M13, the 2026-10-27 local browser parity
+from that station. For the phase picker, the 2026-10-27 local browser parity
 computation reports all 23 valid selected display traces matching CPU
 ONNX Runtime: maximum absolute probability difference 5.0664×10⁻⁶, no
 P/S peak displacement, and matching accepted/abstained picks within one
@@ -359,7 +661,7 @@ post-hoc projection experiment also does not provide a matched current
 checkpoint/operator comparison that would isolate projection as the
 cause of an improvement. The archived aggregate ratios and threshold
 diagnostics remain historical calculations for their stated frozen
-cohorts; they are not outcomes of the current BS-1 paper and do not
+cohorts; they are not outcomes of the current geometry-normalized manuscript and do not
 establish superiority over published methods.
 
 The current geometry-normalized residual study is likewise a bounded
@@ -373,8 +675,143 @@ protocol, broader generators, matched contemporary baselines, exact
 operator controls and validation on eligible field observations. No
 such claim is made here.
 
-\section{Educational and visualization
-design}\label{educational-and-visualization-design}
+The catalog-wide plots and generated tables below make the comparison
+population inspectable without collapsing physically different errors
+into one score. Figure~\ref{fig:report-gravity-correlation-depth}
+separates gravity model correlation from centroid-depth error, while
+Figure~\ref{fig:report-gravity-variant-sensitivity} shows how one fixed
+intrusion responds to individually named acquisition perturbations.
+Table~\ref{tab:generated-gravity} preserves the case and solver rows
+behind those summaries. A data residual near its assumed noise level
+does not identify the location or extent of the causative body.
+
+For layered MT, Figure~\ref{fig:report-mt-active-withheld-wrms} pairs
+active complex-component fit with log-resistivity model error, and
+Table~\ref{tab:generated-mt} retains solver status and starting-model
+error. Figure~\ref{fig:report-fwi-active-withheld} and
+Table~\ref{tab:generated-fwi} show active and receiver-held-out waveform
+misfit for the FWI reference cases. Receiver holdout evaluates spatial
+transfer within the selected synthetic acquisition, not transfer to a
+new geology or field survey.
+
+The joint-inversion panel in Figure~\ref{fig:report-joint-coupling-controls}
+reports changes relative to optimized uncoupled property estimates;
+Table~\ref{tab:generated-joint} includes both physical data residuals
+and evaluation status. Figure~\ref{fig:report-learned-column-baseline}
+and Table~\ref{tab:generated-learned} compare learned column targets
+with the matched classical estimate, without interpreting anomaly flags
+as calibrated geology. Figure~\ref{fig:report-phase-picker-perturbations}
+and Table~\ref{tab:generated-phase} report the frozen STEAD held-out
+benchmark across channel and signal perturbations; annotation
+uncertainty and benchmark population bound the interpretation.
+
+Figure~\ref{fig:report-catalog-verdict-counts} counts method-by-variant
+verdict records by physical family. It is an inventory of outcomes, not
+a pooled accuracy rate, because the family denominators differ.
+Table~\ref{tab:generated-family-inventory} states case, variant, and
+method-key counts. Figure~\ref{fig:report-refinement-negative-result}
+and Table~\ref{tab:generated-refinement} expose the pre-registered
+geometry-normalized ratios with bootstrap intervals. For the joint-shift
+cohort, the intervals remain above the unit pass boundary, supporting the
+negative result rather than a performance claim.
+
+\input{generated/tables.tex}
+
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-gravity-correlation-depth.pdf}
+\caption{Reference gravity cases separate density-model correlation from centroid-depth error across the frozen experiment catalog of synthetic bodies.}
+\label{fig:report-gravity-correlation-depth}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-gravity-variant-sensitivity.pdf}
+\caption{A single gravity intrusion case shows model error under individually named acquisition perturbations with its forward and inverse settings fixed.}
+\label{fig:report-gravity-variant-sensitivity}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-mt-active-withheld-wrms.pdf}
+\caption{Layered MT reference cases compare active complex-response fit with resistivity-model error across the catalogued solver implementations.}
+\label{fig:report-mt-active-withheld-wrms}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-fwi-active-withheld.pdf}
+\caption{Acoustic FWI reference cases retain active and receiver-held-out waveform residuals beside the declared noise-scale criterion.}
+\label{fig:report-fwi-active-withheld}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-joint-coupling-controls.pdf}
+\caption{Joint inversion controls show density-error changes relative to optimized uncoupled estimates for compatible and conflicting structures.}
+\label{fig:report-joint-coupling-controls}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-learned-column-baseline.pdf}
+\caption{Learned gravity column estimates and matched L2 baselines are compared on the same catalogued observations and targets.}
+\label{fig:report-learned-column-baseline}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-phase-picker-perturbations.pdf}
+\caption{Frozen STEAD held-out P-phase F1 scores compare three pickers under channel removal, added noise, and a fixed timing shift.}
+\label{fig:report-phase-picker-perturbations}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-catalog-verdict-counts.pdf}
+\caption{Catalog verdict counts retain recovered, unresolved, and negative-control method variants by physical family without pooling accuracy.}
+\label{fig:report-catalog-verdict-counts}
+\end{figure}
+\begin{figure}[!ht]
+\centering\includegraphics[width=.88\linewidth]{figures/report-refinement-negative-result.pdf}
+\caption{Geometry-normalized refinement error ratios and bootstrap intervals are shown against the preregistered unit pass boundary.}
+\label{fig:report-refinement-negative-result}
+\end{figure}
+
+\section{Validation}\label{validation}
+
+Validation is staged so that one successful gate cannot stand in for a
+different claim. Parser tests check byte bounds, structure, coordinate
+and unit declarations, masks, and rejection reasons. Forward tests
+compare analytical or library identities on small controlled problems;
+for selected prism calculations, an independent physical implementation
+checks signs and magnitudes. These tests can expose implementation
+errors, but an oracle comparison covers only the geometries and
+precision tested. Gradient checks compare a local derivative with
+finite differences and do not establish a global optimum or convexity.
+
+Inverse validation separately records solver termination, data
+residual, model error where truth exists, prior sensitivity, spatial
+coverage, and held-out predictions. The gravity example demonstrates
+that a noise-scaled data fit may coexist with low model correlation and
+a centroid-depth error. A low-velocity FWI case improves model RMSE over
+its starting model but remains unresolved because fitted and withheld
+residuals exceed the specified noise scale. The learned travel-time
+refinement fails both predeclared joint-shift ratios in two same-seed
+executions, with every test case above its run-specific validation
+threshold. Those values remain negative evidence, not a reason to move
+the threshold after seeing the test results. The measured Clear Lake
+cl061 transfer function fails the necessary 1D consistency screen and
+is not passed to a layered inversion.
+
+Reproducibility checks bind sources, arrays, environments, seeds, and
+manifests; same-checkpoint CPU/WebAssembly parity checks only runtime
+consistency on the selected traces. Independent-oracle parity, cohort
+accuracy, field transfer, and user acceptance are separate tests. The
+technical report currently passes LaTeX compilation and the method
+matrix is structurally complete, but the manuscript-depth checker still
+fails its required figures, tables, references, algorithms, and
+coverage fields. Notebook depth and the SDD convergence ledger also
+remain incomplete. Consequently, none of these local checks constitutes
+whole-product scientific acceptance or release approval. This section
+states the evidence layers and retains their failure states rather than
+combining them into a single validation score.
+The data-derived summary tables are regenerated by
+\texttt{scripts/build\_report\_assets.py} from the committed experiment
+catalog, frozen phase benchmark, and geometry-normalized analysis
+receipt. The script refuses an incomplete catalog and records method
+metrics at the case level before aggregation. This provenance check
+protects the displayed numbers but is not an independent implementation
+of every underlying solver. The plots preserve the comparison
+denominators, and the tables retain terminal status so that unresolved
+rows remain discoverable during scientific review.
+
+\section{Discussion}\label{discussion}
 
 The bilingual notebook sequence covers inverse-problem foundations,
 gravity, magnetics, MT, ERT, seismology, joint inversion, and learning.
@@ -400,6 +837,57 @@ computed states. Their effect on interpretation has not been measured in
 a user study, and browser performance has not been characterized across
 devices, routes, languages, and themes.
 
+The strongest methodological conclusion is that observation fit,
+parameter recovery, geological interpretation, and transfer to new data
+are separate questions. Potential-field inverses can fit within a
+noise model while leaving large structural uncertainty; coupled
+objectives can trade one property against another; learned models can
+perform well on their training family and fail under a combined shift.
+The report's examples are chosen to expose these distinctions with
+explicit targets and negative controls. They do not imply that the
+catalogue spans the variability of real geology, or that one selected
+case can represent a basin or survey population.
+
+The software contribution is consequently methodological infrastructure:
+it brings data custody, numerical operators, solver settings, evaluation
+criteria, and presentation into a traceable workflow. That infrastructure
+can make it easier to inspect assumptions, but it does not by itself
+create novel inverse theory. The separate geometry-normalized study
+tests a specific learned correction and fails its prespecified shifted
+cohort. Its negative result is useful evidence about that feature,
+network, generator, and comparator. The experiment does not demonstrate
+that the method is beyond the state of the art, because published
+contemporary methods were not reproduced under matched operators and
+data splits.
+For the geometry-normalized experiment, model and travel-time ratios use
+the same held-out cases but different outputs and therefore need not
+have equal scale. Bootstrap intervals describe resampling variation
+within the frozen cohort; they do not represent variation across
+training seeds, geology generators, or survey regions. The independent
+operator mismatch between feature construction and the bilinear scoring
+operator remains a threat to construct validity, even though it is
+disclosed and replayed. These limits prevent the current figures from
+supporting an algorithmic superiority claim.
+
+The implementation should be read as a research environment with
+unevenly mature verticals. A local parser or inverse call can be real
+without making the entire user-data workflow complete. Public visitors
+can inspect documented cases and run supported browser calculations;
+protected project flows and heavy server jobs still require secure
+host-side qualification. The current VPS release remains the legacy
+version, so the candidate's UI, user-data paths, and authenticated jobs
+have not been accepted live. This operational distinction matters when
+assessing claims made from local artifacts or screenshots.
+
+The work therefore leaves concrete questions open: how much structure
+is identifiable under each acquisition, how sensitive is the estimate
+to the chosen prior and grid, which data-quality failures should block
+an inverse, and do the linked views improve expert review? Answering
+them requires matched field data, independent solvers, calibrated
+uncertainty, and measured user studies. The present report supplies
+definitions and executable examples for asking those questions; it does
+not report those studies as complete.
+
 \section{Computational
 reproducibility}\label{computational-reproducibility}
 
@@ -415,7 +903,7 @@ Numerical outcomes are tied to their method-specific computation and
 date. The FWI case matrix reads hash-verified outputs and does not rerun
 the expensive inverse; its source is
 \url{notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb} and the
-Spanish counterpart. The M12 notebook computation dated 28 October and
+Spanish counterpart. The learned-velocity notebook computation dated 28 October and
 browser-parity computation dated 27 October are documented computations
 in \url{docs/validation/m12-checkpoint-notebook-2026-10-28.md} and
 \url{docs/validation/m13-browser-population-parity-2026-10-27.md}. The
@@ -461,7 +949,7 @@ questions}\label{limitations-and-open-research-questions}
   limited calibration matrix does not establish general superiority over
   optimized single-modality estimates.
 \item
-  \textbf{Machine learning.} The M12 learned-velocity calculation fails
+  \textbf{Machine learning.} The learned-velocity calculation fails
   its pre-specified joint-shift comparison. The positive null-space
   variant is narrow synthetic evidence and needs external reproduction
   and broader cohorts. The phase-picker's 23-trace parity set is not an
@@ -491,7 +979,16 @@ independent-seed training and calibration under forward-model and
 geological uncertainty; independent FWI propagation; licensed field
 inversions with source/datum/error review; and user studies of whether
 linking assumptions, predictions, residuals, and uncertainty improves
-interpretation.
+interpretation. The scope of external datasets is also bounded by
+licensing, redistribution rights, and metadata quality. A public catalog
+entry does not imply that all source bytes are stored locally. Likewise,
+an upload accepted by a parser is not automatically eligible for every
+inverse: a method may require a coordinate reference, error model,
+acquisition design, or dimensionality condition that the file does not
+establish. Explicit refusal and quarantine states are therefore part of
+the scientific boundary, alongside successful calculations. Until the
+user workflow is qualified end to end, local solver coverage should not
+be read as a claim that each visitor can process every survey.
 
 \section{Conclusions}\label{conclusions}
 
@@ -514,22 +1011,38 @@ established operation, not as a novel method. The work provides a
 reproducible software and experimental framework that makes assumptions
 and counterexamples inspectable. Algorithmic novelty and publication
 priority are not established.
+The quantitative tables and graphics deliberately preserve negative and
+unresolved outcomes alongside successful checks. They document what the
+implemented cases establish today and make the remaining evidence
+requirements concrete: eligible field data, matched independent
+baselines, calibrated uncertainty, and qualified end-to-end user
+workflows. Those requirements are prerequisites for stronger scientific
+and product claims; they are not implied by the breadth of the method
+catalogue.
 
 \section{Data and code availability}\label{data-and-code-availability}
 
 Source code is available at
-\texttt{https://github.com/fsantibanezleal/CAOS\_Geophysics}. Scientific
+\url{https://github.com/fsantibanezleal/CAOS_Geophysics}. Scientific
 methods, notebooks, test data, computational records, and source-rights
 decisions are linked above and organized in \texttt{data/},
 \texttt{data-pipeline/}, \texttt{docs/}, \texttt{notebooks/},
 \texttt{tests/}, and \texttt{models/}. Some external raw observations
 are absent because redistribution rights or field eligibility remain
 unresolved. The intended application origin is
-\texttt{https://geophysics.ml.fasl-work.com/}. Local computations do not
+\url{https://geophysics.ml.fasl-work.com/}. Local computations do not
 establish replacement-service capacity.
-
-\section{Acknowledgements}\label{acknowledgements}
-
-The work uses and cites open scientific software and public geophysical
-data sources listed below and in the repository's research review. No
-endorsement by the cited software or dataset authors is implied.
+The data-derived report assets are rebuilt locally with
+\texttt{.venv-pipeline/Scripts/python.exe scripts/build\_report\_assets.py};
+the report is compiled from
+\texttt{manuscripts/inverse-earth-studio-report-0.04.003/main.tex.in}
+using the repository's LaTeX build instructions. The frozen catalog is
+at \url{data/derived/v2/catalog.json}, held-out phase scores are at
+\url{data/derived/phase/stead-heldout-benchmark.json}, and the
+separate refinement analysis is at
+\url{manuscripts/geometry-normalized-traveltime-refinement-v001/generated/analysis.json}.
+Their inclusion does not grant redistribution rights to omitted source
+observations or convert synthetic cohorts into field evidence. The
+repository retains code, hashes, configurations, and derived outputs
+needed to inspect the reported values, subject to source licenses and
+the documented data-availability decisions.

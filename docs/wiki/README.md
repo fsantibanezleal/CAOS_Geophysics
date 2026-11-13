@@ -12,3 +12,5 @@ The chapters are grouped for navigation; each method remains separately identifi
 ## Evidence boundary
 
 The `scripts/check_docs_matrix.py` command checks English and Spanish method IDs, minimum scientific and reproducibility sections, implementation-path density, and local link targets. It is a documentation structure check. It does not certify mathematical correctness, source rights, field-data suitability, acceptance quality, or a release. The SDD convergence ledger and method-specific evidence remain authoritative for those decisions.
+
+For code ownership, data location, repository contracts, and the single deployment origin, see the [repository map](repository-map.md).

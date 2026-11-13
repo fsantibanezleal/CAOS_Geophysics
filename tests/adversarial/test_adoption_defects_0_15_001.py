@@ -345,11 +345,12 @@ def test_the_base_feature_rows_are_not_example_residue(tmp_path: Path) -> None:
 def test_adversarial_the_example_constant_is_still_residue(tmp_path: Path) -> None:
     repo = make_tree(tmp_path / "repo", "scripts/check_template_residue.py")
     (repo / "frontend/src").mkdir(parents=True)
-    constant = "SIR" + "Chart"  # assembled, so this test file is not itself example residue
+    constant = "S" + "IRChart"  # assembled to keep the planted token out of this test source
     (repo / "frontend/src/model.ts").write_text(f"export const {constant} = [0, 0.3, 0.6];\n", encoding="utf-8")
     residue_tree(repo)
     r = guard(repo, "check_template_residue.py")
-    assert r.returncode == 1 and "SIRChart" in r.stdout and "frontend/src/model.ts" in r.stdout, r.stdout
+    expected = "S" + "IRChart"
+    assert r.returncode == 1 and expected in r.stdout and "frontend/src/model.ts" in r.stdout, r.stdout
 
 
 # ---------------------------------------------------------------- BD-6: the dependency copy budget follows the install
