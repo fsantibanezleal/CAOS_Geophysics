@@ -20,7 +20,7 @@ import sys
 from types import ModuleType
 
 
-CORE_SHA256 = "7863699269b491c2895bcf030d3fb65cf27ac32a652fce91112bc2c7c9c73321"
+CORE_SHA256 = "dc6d529bdaef766012d076a5786fefd8388f6e6ad310c6239aa91ca43da425fe"
 PINS = {"boule": "0.5.0", "harmonica": "0.7.0", "numpy": "2.2.6", "scipy": "1.15.2"}
 METHOD = "gravity.station-corrections/v1"
 MAX_STATIONS = 400

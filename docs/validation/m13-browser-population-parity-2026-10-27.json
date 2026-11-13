@@ -1,0 +1,245 @@
+{
+  "schema": "caos.m13-browser-population-parity.v1",
+  "status": "pass",
+  "measuredAt": "2026-10-27T16:08:40.376Z",
+  "parity": {
+    "sameFrozenOnnx": true,
+    "reference": {
+      "name": "onnxruntime",
+      "version": "1.30.0",
+      "provider": "CPUExecutionProvider"
+    },
+    "browser": "ONNX Runtime Web WASM through frontend/src/phase-runtime.ts",
+    "browserRuntimeVersion": "1.30.0",
+    "chromiumVersion": "153.0.8010.12",
+    "probabilityAbsoluteTolerance": 0.001,
+    "peakToleranceSamples": 1,
+    "pickToleranceSamples": 1
+  },
+  "population": {
+    "selected": 24,
+    "qcValidBrowserInferences": 23,
+    "qcRejectedExcluded": 1,
+    "selectionBeforeHeldoutScoring": true,
+    "allCpuReferenceHashesVerified": true,
+    "accuracyClaim": false
+  },
+  "maxProbabilityAbsoluteError": 0.000005066394805908203,
+  "maxPeakDifferenceSamples": 0,
+  "meanBrowserInferenceMs": 65.21304347204125,
+  "manifestSha256": "d4d2b5b1a98d3a7a2077baab7750c8a96e4b5152b6930e4a09ae4bdc97db8394",
+  "modelSha256": "4e5962ed0a9037e545991c218ae770ae7aff2c01f1e6a919c338705780ce5f4c",
+  "limitations": [
+    "CPU ONNX and browser WASM execute the same exported checkpoint; this is runtime parity, not an independent PyTorch-oracle comparison.",
+    "The preselected 23-trace display subset is not an accuracy population; the frozen 6,000-trace benchmark remains the reported aggregate result."
+  ],
+  "traces": [
+    {
+      "traceId": "B917.PB_20110107214856_EV",
+      "maxProbabilityAbsoluteError": 0.000004291534423828125,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 65.39999997615814
+    },
+    {
+      "traceId": "B093.PB_20111211064029_EV",
+      "maxProbabilityAbsoluteError": 0.0000030994415283203125,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 49.60000002384186
+    },
+    {
+      "traceId": "BBGB.NC_20110929163129_EV",
+      "maxProbabilityAbsoluteError": 0.0000017285346984863281,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 49.30000001192093
+    },
+    {
+      "traceId": "BBGB.NC_20110309162307_EV",
+      "maxProbabilityAbsoluteError": 0.000004351139068603516,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 51.5
+    },
+    {
+      "traceId": "BBR.CI_20160306010500_EV",
+      "maxProbabilityAbsoluteError": 0.0000029802322387695312,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 46.299999952316284
+    },
+    {
+      "traceId": "LMR2.CI_20130325173024_EV",
+      "maxProbabilityAbsoluteError": 0.00000286102294921875,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 46.19999998807907
+    },
+    {
+      "traceId": "BDM.BK_20160112043452_EV",
+      "maxProbabilityAbsoluteError": 0.0000029802322387695312,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 45.90000003576279
+    },
+    {
+      "traceId": "SAO.BK_20131207235848_EV",
+      "maxProbabilityAbsoluteError": 0.0000014454126358032227,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 46.39999997615814
+    },
+    {
+      "traceId": "CRY.AZ_20120529154839_EV",
+      "maxProbabilityAbsoluteError": 0.000003993511199951172,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 48
+    },
+    {
+      "traceId": "CRY.AZ_20160919195008_EV",
+      "maxProbabilityAbsoluteError": 0.000003337860107421875,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 45.19999998807907
+    },
+    {
+      "traceId": "AMKA.AV_20140624152547_EV",
+      "maxProbabilityAbsoluteError": 0.0000029802322387695312,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 49.299999952316284
+    },
+    {
+      "traceId": "AMKA.AV_20140624064806_EV",
+      "maxProbabilityAbsoluteError": 0.000003159046173095703,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 46.80000001192093
+    },
+    {
+      "traceId": "KS21.GS_20150613095259_EV",
+      "maxProbabilityAbsoluteError": 0.000004202127456665039,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 69.5
+    },
+    {
+      "traceId": "KS21.GS_20150816095043_EV",
+      "maxProbabilityAbsoluteError": 0.0000021457672119140625,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 83.09999996423721
+    },
+    {
+      "traceId": "WAX.AK_20121110113339_EV",
+      "maxProbabilityAbsoluteError": 0.0000022649765014648438,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 85.89999997615814
+    },
+    {
+      "traceId": "MCK.AK_20090715002945_EV",
+      "maxProbabilityAbsoluteError": 0.00000286102294921875,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 83.29999995231628
+    },
+    {
+      "traceId": "LBR.NC_201804052102_NO",
+      "maxProbabilityAbsoluteError": 1.1920928955078125e-7,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 83.69999998807907
+    },
+    {
+      "traceId": "CHR.NC_200511172121_NO",
+      "maxProbabilityAbsoluteError": 1.1920928955078125e-7,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 83.10000002384186
+    },
+    {
+      "traceId": "AMKA.AV_20180115183754_NO",
+      "maxProbabilityAbsoluteError": 1.1920928955078125e-7,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 84.69999998807907
+    },
+    {
+      "traceId": "TIN.CI_20180115085612_NO",
+      "maxProbabilityAbsoluteError": 0.000005066394805908203,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 82.90000003576279
+    },
+    {
+      "traceId": "SOF.CI_201405251100_NO",
+      "maxProbabilityAbsoluteError": 1.1920928955078125e-7,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 85.59999996423721
+    },
+    {
+      "traceId": "B901.PB_201609191259_NO",
+      "maxProbabilityAbsoluteError": 2.384185791015625e-7,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 85.60000002384186
+    },
+    {
+      "traceId": "B900.PB_201607240537_NO",
+      "maxProbabilityAbsoluteError": 1.1920928955078125e-7,
+      "peakDifferenceSamples": {
+        "P": 0,
+        "S": 0
+      },
+      "browserInferenceMs": 82.60000002384186
+    }
+  ]
+}

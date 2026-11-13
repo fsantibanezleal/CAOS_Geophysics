@@ -1,0 +1,124 @@
+{
+  "schema": "caos-geophysics.m12-nullspace-v1.1-paired-bootstrap/v1",
+  "receipt_sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22",
+  "method": "Resample paired case IDs with replacement; for each draw compute mean learned RMSE divided by mean classical RMSE.",
+  "limitations": [
+    "Intervals quantify resampling variation within these fixed synthetic cohorts only.",
+    "They do not quantify variation across natural geology or establish field performance."
+  ],
+  "cohorts": {
+    "id_test": {
+      "velocity_rmse_m_s": {
+        "n": 160,
+        "observed_ratio_of_means": 0.803488502997178,
+        "percentile_95_interval": [
+          0.7808036153209859,
+          0.8255932944420681
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      },
+      "oracle_time_rmse_ms": {
+        "n": 160,
+        "observed_ratio_of_means": 0.9840650656872431,
+        "percentile_95_interval": [
+          0.9815886744642849,
+          0.9864905869877919
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      }
+    },
+    "family_only": {
+      "velocity_rmse_m_s": {
+        "n": 80,
+        "observed_ratio_of_means": 0.9717635360245294,
+        "percentile_95_interval": [
+          0.9666683869244586,
+          0.9771197559517703
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      },
+      "oracle_time_rmse_ms": {
+        "n": 80,
+        "observed_ratio_of_means": 0.9961692431215716,
+        "percentile_95_interval": [
+          0.9939165498636098,
+          0.99835635923938
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      }
+    },
+    "acquisition_only": {
+      "velocity_rmse_m_s": {
+        "n": 80,
+        "observed_ratio_of_means": 0.8023377559195833,
+        "percentile_95_interval": [
+          0.7691956365337029,
+          0.8352260390455049
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      },
+      "oracle_time_rmse_ms": {
+        "n": 80,
+        "observed_ratio_of_means": 0.9842192239406521,
+        "percentile_95_interval": [
+          0.9795215575507418,
+          0.9886519721331738
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      }
+    },
+    "joint_ood": {
+      "velocity_rmse_m_s": {
+        "n": 160,
+        "observed_ratio_of_means": 0.9700567151783237,
+        "percentile_95_interval": [
+          0.9661235666258972,
+          0.9737178836603574
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      },
+      "oracle_time_rmse_ms": {
+        "n": 160,
+        "observed_ratio_of_means": 0.9966524161829474,
+        "percentile_95_interval": [
+          0.994974180185715,
+          0.9983219398988945
+        ],
+        "draws": 20000,
+        "seed": 6122026,
+        "rng": "numpy.random.PCG64",
+        "quantile_method": "linear",
+        "paired_resampling_unit": "case_id"
+      }
+    }
+  },
+  "script_sha256": "153e5147a3aeee06751f7e9d44a7b11bd27d1f11a447ecd1c1bb1beef994ee38"
+}

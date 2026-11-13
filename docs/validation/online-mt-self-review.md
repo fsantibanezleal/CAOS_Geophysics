@@ -24,7 +24,7 @@ Commands ran from this worktree. Use a new short basetemp for each invocation wh
 | Broad lint | `ruff check app data-pipeline tests` | Pass |
 | Cheap repository guards | `scripts/check_content_standards.py`, `check_template_residue.py`, `check_ci_budget.py`, `check_phase_assets.py`; scoped whitespace, Markdown links and named feature gates | Pass |
 | Product ledger | `scripts/check_sdd_convergence.py` | Structure valid; zero product passes, 18 unresolved, one failed |
-| Product release mode | Same checker with `--require-release` | Expected nonzero: replacement not accepted, incomplete product gates, legacy dual origin |
+| Product release mode | Same checker with `--require-release` | Expected nonzero until replacement acceptance passes; deployment target is the single ML VPS origin |
 | Published artifact provenance | `scripts/check_artifacts.py` | **Fails**: stale MT scientific source/settings; release reconciliation required |
 | Actual VPS admission | Restricted Linux matrix, nominal p95/headroom, cancel/timeout/crash and concurrent-read responsiveness | **Not run; user-owned host harness pending** |
 

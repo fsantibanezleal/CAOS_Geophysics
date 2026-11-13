@@ -1,0 +1,31 @@
+{
+  "kind": "technical-report",
+  "title_support": [
+    "tab:methods-limitations",
+    "fig:m01-height-continuation"
+  ],
+  "methods": {
+    "M-1": "method-gravity-corrections",
+    "M-2": "method-gravity-inversion",
+    "M-3": "method-aeromagnetic-processing",
+    "M-4": "method-induced-magnetics",
+    "M-5": "method-mt-qc",
+    "M-6": "method-mt-inversion",
+    "M-7": "method-ert",
+    "M-8": "method-waveform",
+    "M-9": "method-traveltime",
+    "M-10": "method-fwi",
+    "M-11": "method-joint",
+    "M-12": "method-velocity-learning",
+    "M-13": "method-phase-picking",
+    "BS-1": "method-geometry-normalized"
+  },
+  "contracts": {
+    "experiment-catalog": "contract-catalog",
+    "data-readiness": "contract-readiness",
+    "private-api": "contract-private-api",
+    "api-payloads": "contract-api-payloads",
+    "browser-model-assets": "contract-browser-assets"
+  },
+  "claims": {}
+}

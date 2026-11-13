@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "FWI_FAULT",
+  "artifacts": [
+    {
+      "path": "v2/FWI_FAULT/reference.json",
+      "bytes": 24622627,
+      "sha256": "85beea1f0cc8f07d70a108aa20dd3c01445c2582356743235285f1f641982f2d"
+    },
+    {
+      "path": "v2/FWI_FAULT/contrast.json",
+      "bytes": 24648260,
+      "sha256": "09727b17736c286b5f3065f1d712924388d3ea7e13489003cf3eaa6779d0e6dc"
+    },
+    {
+      "path": "v2/FWI_FAULT/noise.json",
+      "bytes": 24514269,
+      "sha256": "eabbf2cfbd60ca9ee8abe5ed8997fcbe0f312e2d66dc7028c2e43e5d316655c8"
+    },
+    {
+      "path": "v2/FWI_FAULT/acquisition.json",
+      "bytes": 24193706,
+      "sha256": "8761d41e9c0183b4f0651d78b46711d06a0ca21e552a790affc12177d23f8605"
+    },
+    {
+      "path": "v2/FWI_FAULT/coverage.json",
+      "bytes": 22918039,
+      "sha256": "9f6b2e9d3d4315f542509239f31dbd4322bf190a97d6ca2e1f67cb0728e9d51e"
+    },
+    {
+      "path": "v2/FWI_FAULT/regularization.json",
+      "bytes": 24615854,
+      "sha256": "01698a133565c7de5752e9f87478362641ed39a6ae6ed76015b212ecb9db941d"
+    }
+  ]
+}

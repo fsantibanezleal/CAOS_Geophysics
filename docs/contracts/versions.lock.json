@@ -1,0 +1,27 @@
+{
+  "experiment-catalog": {
+    "version": "2.0.0",
+    "schema": "docs/contracts/schemas/catalog.schema.json",
+    "sha256": "85dde966500341fefdb3cc7cfc05c9eead17d4ccaa6a3a8bd9f02e5a7786d2fb"
+  },
+  "data-readiness": {
+    "version": "1.0.0",
+    "schema": "docs/contracts/schemas/readiness.schema.json",
+    "sha256": "3298efb184bc65563b571deaa59c083ff097526e25d105ddddf53d7e16d247ce"
+  },
+  "private-api": {
+    "version": "1.1.0",
+    "schema": "docs/contracts/api.openapi.json",
+    "sha256": "b6eb000fb9163088f2d7d2af6aa9dcc55ff3d7093f5e9a7d88d801e63facfd32"
+  },
+  "api-payloads": {
+    "version": "1.3.0",
+    "schema": "docs/contracts/schemas/api-payloads.schema.json",
+    "sha256": "b1c6e3024c6f3fb6a35e947c01a299438e02f89f5dd2f6790dbf8ac13328963b"
+  },
+  "browser-model-assets": {
+    "version": "1.0.0",
+    "schema": "docs/data-contract/model-artifacts.md",
+    "sha256": "9a400e49036cd330bc08f754738c2ef6a196977ce893b877d2de65f1b8ee6bc2"
+  }
+}

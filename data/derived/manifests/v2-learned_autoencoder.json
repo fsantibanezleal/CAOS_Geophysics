@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "LEARNED_AUTOENCODER",
+  "artifacts": [
+    {
+      "path": "v2/LEARNED_AUTOENCODER/reference.json",
+      "bytes": 1840985,
+      "sha256": "b03e8cf6bbcc88e651ad855fd2991d4d8716b1aa16e245fcbc81384eed40db4c"
+    },
+    {
+      "path": "v2/LEARNED_AUTOENCODER/contrast.json",
+      "bytes": 1813832,
+      "sha256": "b2a3e3d5e525376af5034f8b6b9f3d76a35bf32b113614a870a62ec5113326b4"
+    },
+    {
+      "path": "v2/LEARNED_AUTOENCODER/noise.json",
+      "bytes": 1832565,
+      "sha256": "93905c975bf6bbf703e448d022ed8fb7f8092de73238f0ebf197626b362a7396"
+    },
+    {
+      "path": "v2/LEARNED_AUTOENCODER/acquisition.json",
+      "bytes": 1840133,
+      "sha256": "6ed0954b7425238646061715474e91a77d9746c69492ae30fa075220b1ab772c"
+    },
+    {
+      "path": "v2/LEARNED_AUTOENCODER/coverage.json",
+      "bytes": 1840789,
+      "sha256": "a0f2f59d63103b3d63406238f0fb8a67f2bdea5505e6ec56ef4a810c6aa46bb2"
+    },
+    {
+      "path": "v2/LEARNED_AUTOENCODER/regularization.json",
+      "bytes": 1840881,
+      "sha256": "1c2db38e3ba6293d61cc64c5241995337869a8bacc9790051eaad0812e2e8e40"
+    }
+  ]
+}

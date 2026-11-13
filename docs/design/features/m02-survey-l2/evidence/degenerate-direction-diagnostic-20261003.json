@@ -1,0 +1,150 @@
+{
+  "controls": [
+    {
+      "accepted_optimizer_release_steps": 0,
+      "algebraic_trial_scan": [
+        {
+          "alpha": 1,
+          "armijo_rhs": 72.44850979739525,
+          "meets_armijo": true,
+          "objective": 49.396894403565916
+        }
+      ],
+      "certificate_residual": -23.535036892102347,
+      "descent_certificate_rhs": -1.749103193941614,
+      "independent_gradient_q": [
+        -52.15000235433059,
+        -86.46904592997357,
+        -169.67936779203094,
+        -29.941885622655587,
+        -58.76151740439943,
+        -86.24086782157858
+      ],
+      "initial_objective": 72.45103821140385,
+      "noise": "diagonal_sd",
+      "old_q_gcc": [
+        -0.075,
+        -0.075,
+        0.075,
+        -0.075,
+        0.075,
+        0.075
+      ],
+      "positive_diagonal": [
+        19.22116350987524,
+        52.21521600222871,
+        201.23012998154982,
+        6.301540218634453,
+        24.02663541408136,
+        52.56544695015024
+      ],
+      "proposal_direction_gcc": [
+        0.15,
+        0.15,
+        0,
+        0.15,
+        0,
+        0
+      ],
+      "proposal_direction_is_feasible": true,
+      "proposal_z_gcc": [
+        0.075,
+        0.075,
+        0.075,
+        0.075,
+        0.075,
+        0.075
+      ],
+      "slope": -25.284140086043962,
+      "unchanged_actual_iterations": 1,
+      "unchanged_actual_kkt": 0.47376436515266124,
+      "unchanged_actual_reason": "zero_free_direction",
+      "unchanged_actual_status": "nonconverged"
+    },
+    {
+      "accepted_optimizer_release_steps": 0,
+      "algebraic_trial_scan": [
+        {
+          "alpha": 1,
+          "armijo_rhs": 90.66873543272077,
+          "meets_armijo": true,
+          "objective": 61.81000832095373
+        }
+      ],
+      "certificate_residual": -29.47987438839299,
+      "descent_certificate_rhs": -2.1824705557838384,
+      "independent_gradient_q": [
+        -67.08547378817306,
+        -106.90459102268605,
+        -218.8289938018506,
+        -37.09223481698642,
+        -75.20106969271176,
+        -102.3841957688815
+      ],
+      "initial_objective": 90.67190166721518,
+      "noise": "full_covariance",
+      "old_q_gcc": [
+        -0.075,
+        -0.075,
+        0.075,
+        -0.075,
+        0.075,
+        0.075
+      ],
+      "positive_diagonal": [
+        25.390731431094117,
+        63.86981562812804,
+        266.6549869110743,
+        7.738144308948446,
+        31.386515900197825,
+        58.784089877933
+      ],
+      "proposal_direction_gcc": [
+        0.15,
+        0.15,
+        0,
+        0.15,
+        0,
+        0
+      ],
+      "proposal_direction_is_feasible": true,
+      "proposal_z_gcc": [
+        0.075,
+        0.075,
+        0.075,
+        0.075,
+        0.075,
+        0.075
+      ],
+      "slope": -31.662344944176827,
+      "unchanged_actual_iterations": 1,
+      "unchanged_actual_kkt": 0.45382643801372047,
+      "unchanged_actual_reason": "zero_free_direction",
+      "unchanged_actual_status": "nonconverged"
+    }
+  ],
+  "main_trusted_fixture_sha256": "dc4a6da238d84d9fe65592cd818961ac57ddad6f78471ecdf1e16080d35de070",
+  "new_policy_implemented": false,
+  "numerical_acceptance": false,
+  "schema": "m02-l2-degenerate-direction-diagnostic-1",
+  "scope": "Read-only producer algebraic one-direction certificate, not amended optimizer execution or full inverse acceptance",
+  "source_sha256": "ee006ccd26fc955a40b094676982b115e2ce95d7c00261847d66ec582aac733a",
+  "unchanged_optimizer_ast_against": "d7c66704edaeb46bc83dad4917f7cd41d12e09f1",
+  "recorded_date": "2026-10-03",
+  "attribution": "Producer read-only diagnostic using MAIN's exact trusted fixture; MAIN's independent failed report remains separate and unmodified",
+  "runtime": {
+    "python": "3.12.10",
+    "numpy": "2.2.6",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2",
+    "geoana": "0.8.1",
+    "discretize": "0.12.0",
+    "choclo": "0.3.2",
+    "platform": "Windows",
+    "blas_omp_threads": 1,
+    "bytecode_writes_disabled": true,
+    "installed_package_changes": 0
+  },
+  "original_main_failed_receipt_sha256": "f118d046a6be3929d9432a921c728cc5a6295bd265cfc444dfecaf8e56f774da",
+  "interpretation": "An algebraic proposal trial meets Armijo; neither it nor its endpoint was accepted by the production optimizer. The unchanged solve's two failures remain failures. This is not independent replay of an implemented new algorithm."
+}

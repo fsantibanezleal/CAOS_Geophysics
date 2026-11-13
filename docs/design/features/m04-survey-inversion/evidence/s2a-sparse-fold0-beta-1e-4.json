@@ -1,0 +1,163 @@
+{
+  "acceptance_boundary": "Prior-start solver diagnostic only: no same-beta L2 initialization, candidate score, selection, held-out evaluation, field validation, method acceptance or online admission.",
+  "certificates": {
+    "all_passed": true,
+    "count": 10,
+    "max_free_error_inf_upper": 1.1552178922923194e-13,
+    "max_normalized_exact_bound_kkt": 8.24700791978369e-15,
+    "proof_basis": [
+      "free_face_neumann"
+    ]
+  },
+  "claims": {
+    "candidate_selected": false,
+    "field_geology_validated": false,
+    "field_observations": false,
+    "method_accepted": false,
+    "online_admitted": false,
+    "outer_evaluation_performed": false
+  },
+  "configuration": {
+    "beta": 0.0001,
+    "case": "S2-A",
+    "epsilon_schedule_q": [
+      0.1,
+      0.05,
+      0.025,
+      0.0125,
+      0.00625,
+      0.003125,
+      0.0015625,
+      0.001
+    ],
+    "fold": 0,
+    "max_prospective_bytes": 762623424,
+    "phase_limit": 1024,
+    "quantity": "linear_tmi_nT",
+    "resource_limit_bytes": 805306368,
+    "start_policy": "declared_prior_diagnostic_not_candidate",
+    "wall_limit_seconds": 600.0
+  },
+  "fit": {
+    "direction_count": 154,
+    "elapsed_seconds": 190.8289999999979,
+    "final_gradient_limit": 0.0001251335840965574,
+    "fit_rows": 144,
+    "normalized_projected_gradient_inf": 3.607362678498755e-15,
+    "objective": {
+      "epsilon_q": 0.001,
+      "phi_d": 374.04002134164614,
+      "phi_engine_true_fixed_epsilon": 374.04126841860375,
+      "phi_m_surrogate_quadratic": 12.298151746158407,
+      "phi_m_true_fixed_epsilon": 12.470769576338327
+    },
+    "parameters": 528,
+    "phase_count": 662,
+    "phase_count_distribution": {
+      "1": 31,
+      "2": 10,
+      "3": 12,
+      "4": 22,
+      "5": 30,
+      "6": 16,
+      "7": 23,
+      "8": 10
+    },
+    "prediction_count": 144,
+    "reason": null,
+    "residual_rms_nT": 0.8058380960537108,
+    "status": "converged"
+  },
+  "outer_history": {
+    "all_monotonicity_passed": true,
+    "count": 10
+  },
+  "run_artifact": {
+    "bytes": 283796,
+    "relative_path": "CAOS_Geophysics/research-runs/2026-11-11/s2a-sparse-fold0-beta-1e-4-prior-start-diagnostic.json",
+    "sha256": "b21d4ee3e554076e408f32f9bed1c9f0dce6cd6138a1df71147b667702211ad4"
+  },
+  "schema": "m04-sparse-fold-validation-summary-1",
+  "source": {
+    "allocation_plan_sha256": "6bf321335658bbda20b13dafbb0c37a3c0e11fbc3e530fab6e1529fce2eb58cf",
+    "calibration_sha256": "eafd2c41e9c8adf8075e4633755245e4f8f2334ab362b155fa0badf72805783b",
+    "geometry_seal_sha256": "22d6214a89dc7f1fbcf988d4bff6475f2fd409c9464c7e22d58cebcf8f3a033d",
+    "reduced_optimizer_sha256": "74ca5273cfe885f0d77ee117119a4d4221929e097383e4843130db912d6b16d2",
+    "request_sha256": "e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa",
+    "source_inventory_sha256": "b33278da700f1ce6f2678efeeba707419a64ee9d6882718ac8ec6e83685519e4"
+  },
+  "stage_results": [
+    {
+      "epsilon_q": 0.1,
+      "gradient_limit": 0.0062498623355877045,
+      "model_relative": 2.3629720402595922e-11,
+      "outer_updates": 3,
+      "projected_gradient_inf": 5.372526991876487e-12,
+      "status": "converged",
+      "weights_relative": 4.031353029176898e-12
+    },
+    {
+      "epsilon_q": 0.05,
+      "gradient_limit": 0.00012513358381053806,
+      "model_relative": 3.2597480270624146e-09,
+      "outer_updates": 1,
+      "projected_gradient_inf": 1.0009855669074473e-11,
+      "status": "converged",
+      "weights_relative": 1.95698275362588e-09
+    },
+    {
+      "epsilon_q": 0.025,
+      "gradient_limit": 0.00012513358398195983,
+      "model_relative": 1.039164310157048e-09,
+      "outer_updates": 1,
+      "projected_gradient_inf": 4.353790875524376e-12,
+      "status": "converged",
+      "weights_relative": 6.52909015741443e-10
+    },
+    {
+      "epsilon_q": 0.0125,
+      "gradient_limit": 0.0001251335840543329,
+      "model_relative": 2.998299386547387e-10,
+      "outer_updates": 1,
+      "projected_gradient_inf": 5.8821059671591695e-12,
+      "status": "converged",
+      "weights_relative": 5.914577272392307e-10
+    },
+    {
+      "epsilon_q": 0.00625,
+      "gradient_limit": 0.0001251335840795559,
+      "model_relative": 2.454457082023964e-10,
+      "outer_updates": 1,
+      "projected_gradient_inf": 1.0319795928435831e-11,
+      "status": "converged",
+      "weights_relative": 9.566914371816893e-10
+    },
+    {
+      "epsilon_q": 0.003125,
+      "gradient_limit": 0.00012513358408994485,
+      "model_relative": 2.2387380838040372e-10,
+      "outer_updates": 1,
+      "projected_gradient_inf": 5.6689068197291305e-12,
+      "status": "converged",
+      "weights_relative": 6.93154422748421e-10
+    },
+    {
+      "epsilon_q": 0.0015625,
+      "gradient_limit": 0.00012513358409479202,
+      "model_relative": 1.0230056801674436e-10,
+      "outer_updates": 1,
+      "projected_gradient_inf": 8.14851248660749e-12,
+      "status": "converged",
+      "weights_relative": 1.8641221899429183e-10
+    },
+    {
+      "epsilon_q": 0.001,
+      "gradient_limit": 0.0001251335840965574,
+      "model_relative": 2.4286883615332043e-11,
+      "outer_updates": 1,
+      "projected_gradient_inf": 4.514022210967065e-12,
+      "status": "converged",
+      "weights_relative": 2.9229937581476403e-11
+    }
+  ]
+}

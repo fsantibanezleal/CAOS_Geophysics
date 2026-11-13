@@ -1,0 +1,52 @@
+[
+  {
+    "bytes": 17500,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/00-gph-l2-family-0-conditions23-r1.xml",
+    "sha256": "ef9379cdcbc5424f30fc821150c8f702bf8898d4f5c8b1a5b4b31050d42d9fef"
+  },
+  {
+    "bytes": 26208,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/01-gph-l2-family-1-conditions123-r1.xml",
+    "sha256": "c02276cc3112461e0170fed7ca69669d8afa8b4716811689764206ea3d988bcd"
+  },
+  {
+    "bytes": 26138,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/02-gph-l2-family-2-conditions123-r1.xml",
+    "sha256": "ea37befb5aabc0cb9a41c2638358fd4025ea7fb4dd96fbaa7836bd7df6ecf796"
+  },
+  {
+    "bytes": 26125,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/03-gph-l2-family-3-conditions123-r1.xml",
+    "sha256": "cb5b52a79e84f271f5200717428ae68256f4a23c8688dd919847068ad1793b87"
+  },
+  {
+    "bytes": 26206,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/04-gph-l2-family-4-conditions123-r1.xml",
+    "sha256": "5c28692e0ec81eec668ea5f57b4df6e4289338b787d78a2d606d71c78adb1394"
+  },
+  {
+    "bytes": 26184,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/05-gph-l2-family-5-conditions123-r1.xml",
+    "sha256": "416eb0f7f334da586cd1b7682a6fdbaa18f5100790f70a9e5fb32a348b78ece8"
+  },
+  {
+    "bytes": 26293,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/06-gph-l2-replay-a-r1.xml",
+    "sha256": "ddcc00535f3479d3ffcab71bf49b4b348a2db0c0db91a5d2ee13e93861abf128"
+  },
+  {
+    "bytes": 17528,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/07-gph-l2-replay-b-r1.xml",
+    "sha256": "cb2808082e3403dc7fa83b8ed5d5ce85b1f3ea76ac02e49cc8b0414051152588"
+  },
+  {
+    "bytes": 17604,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/08-gph-l2-replay-c-r1.xml",
+    "sha256": "a4fdd557c242c874585b26213f5d3755147e211228bc9e0b8eeb74d22ddbb65e"
+  },
+  {
+    "bytes": 8917,
+    "path": "docs/design/features/m02-survey-l2/evidence/2026-10-31/09-gph-l2-replay-d-r1.xml",
+    "sha256": "67c280fba6215b4f4283c593bf25c7e00b02058e0d0b03fd3419110522759c8b"
+  }
+]

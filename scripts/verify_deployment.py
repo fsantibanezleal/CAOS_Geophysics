@@ -45,9 +45,17 @@ def verify(origin):
             assert data==(edi_root/name).read_bytes(),'EDI file differs from local release: '+name
             assert hashlib.sha256(data).hexdigest()==entry[digest_field],'EDI hash mismatch: '+name
             edi_files.add(name)
-    assert fetch(base+'data/v2/release.json')==(root/'data/derived/v2/release.json').read_bytes(),'Release record differs from local release: '+base
-    for name in ('validation.json','fwi-replay.json'):
-        assert fetch(base+'data/v2/'+name)==(root/'data/derived/v2'/name).read_bytes(),name+' differs from local release: '+base
+    release_raw=(root/'data/derived/v2/release.json').read_bytes()
+    assert fetch(base+'data/v2/release.json')==release_raw,'Release record differs from local release: '+base
+    release=json.loads(release_raw)
+    evidence=release.get('evidence_files',{})
+    required={'validation.json','fwi-replay.json','mt-replay.json'}
+    assert set(evidence)==required,'Local release evidence inventory is incomplete'
+    for name,receipt in evidence.items():
+        expected=(root/'data/derived/v2'/name).read_bytes()
+        assert len(expected)==receipt['bytes'] and hashlib.sha256(expected).hexdigest()==receipt['sha256'],name+' local evidence hash mismatch'
+        actual=fetch(base+'data/v2/'+name)
+        assert actual==expected,name+' differs from local release: '+base
     index=(root/'frontend/dist/index.html').read_bytes()
     for route in ['', 'introduction/','methodology/','implementation/','experiments/','benchmark/']:
         assert fetch(base+route)==index,'Direct route build mismatch: '+route
@@ -58,7 +66,7 @@ def verify(origin):
     for path in static_files:
         relative=path.relative_to(root/'frontend/dist').as_posix()
         assert fetch(base+relative)==path.read_bytes(),'Static UI asset differs from local release: '+relative
-    result=dict(origin=base,https_verified=base.startswith('https://'),cases=len(catalog['cases']),verified_experiments=len(checked),verified_edi_files=len(edi_files),verified_routes=6,verified_model_files=3,verified_release_evidence_files=2,verified_static_ui_files=len(static_files),catalog_sha256=hashlib.sha256(catalog_raw).hexdigest(),index_sha256=hashlib.sha256(index).hexdigest())
+    result=dict(origin=base,https_verified=base.startswith('https://'),cases=len(catalog['cases']),verified_experiments=len(checked),verified_edi_files=len(edi_files),verified_routes=6,verified_model_files=3,verified_release_evidence_files=len(evidence),catalog_sha256=hashlib.sha256(catalog_raw).hexdigest(),index_sha256=hashlib.sha256(index).hexdigest())
     print(json.dumps(result),flush=True)
     return result
 

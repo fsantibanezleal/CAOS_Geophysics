@@ -1,0 +1,18 @@
+{
+  "schema": "geophysics.gate-receipt/v1",
+  "requirement": "R-015",
+  "gate": "frontend/e2e/visual-matrix.spec.ts::fit_and_pointer_navigation",
+  "gate_sha256": "110a62bfd630ec9028463c35947ff4ef07f03a85e547b1b08225b1a161e206b2",
+  "verdict": "pass",
+  "source_revision": "b3b430365f8ee2481b597850dcf15f6ba059d5ac",
+  "command": [
+    "$env:CAOS_VISUAL_MATRIX_OUTPUT=E:\\_Datos\\CAOS_Geophysics\\validation\\r015-visual-matrix-2026-11-11; npm run test:e2e:visual-matrix"
+  ],
+  "measured_at": "2026-11-11T03:10:40Z",
+  "outputs": [
+    {
+      "path": "docs/validation/r015-playwright-report-2026-11-11.json",
+      "sha256": "751e05842863618ca17d3f2451ddd4c3382e476d9fe16767c6d5d0cef93e697f"
+    }
+  ]
+}

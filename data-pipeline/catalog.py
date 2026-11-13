@@ -5,7 +5,8 @@ import json
 import math
 from pathlib import Path
 from geology import registry,VARIANTS
-from rebuild import generator_fingerprint,save,RELEASE_VERSION,REUSABLE_VERSIONS
+from rebuild import save,RELEASE_VERSION,REUSABLE_VERSIONS
+from provenance import matches_generator_fingerprint
 
 
 def update_extrema(stats, values):
@@ -45,7 +46,7 @@ def assemble(root,allow_partial=False):
             raw=path.read_bytes();run=json.loads(raw)
             provenance=run.get('provenance',{})
             version=provenance.get('version')
-            if version not in REUSABLE_VERSIONS or provenance.get('generator_fingerprint')!=generator_fingerprint(case['family'],version=version):
+            if version not in REUSABLE_VERSIONS or not matches_generator_fingerprint(case['family'],provenance.get('generator_fingerprint'),version=version):
                 raise ValueError(f'Stale scientific source/settings: {path}')
             if (run['id'],run['variant'])!=(case['id'],vid):raise ValueError('Identity mismatch')
             if case['family'] in ('gravity','magnetics','joint'):

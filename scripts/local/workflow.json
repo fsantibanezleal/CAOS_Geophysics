@@ -1,0 +1,111 @@
+{
+  "external_environments_required": false,
+  "readiness_provider": "scripts/local/geophysics_readiness.py",
+  "stage_inputs": [],
+  "stage_engine_versions": {},
+  "readiness_check": "scripts/check_readiness.py",
+  "primary_environment": ".venv-pipeline",
+  "generation_environments": [
+    ".venv-pipeline"
+  ],
+  "environments": [
+    {
+      "path": ".venv-pipeline",
+      "requirements": [
+        "requirements-precompute.txt",
+        "requirements-dev.txt"
+      ]
+    },
+    {
+      "path": ".venv",
+      "when": "api",
+      "requirements": [
+        "requirements-api.txt"
+      ]
+    },
+    {
+      "path": ".venv-notebooks",
+      "when": "notebooks",
+      "requirements": [
+        "notebooks/requirements.txt"
+      ]
+    }
+  ],
+  "node_stamp": ".caos-package-lock.sha256",
+  "required": [
+    "data/derived/v2/catalog.json",
+    "data/derived/v2/release.json",
+    "data/derived/readiness.json",
+    "data/derived/v2/models/training.json",
+    "data/derived/v2/models/cnn.json",
+    "data/derived/v2/models/autoencoder.json"
+  ],
+  "promote": [
+    "data/derived/v2",
+    "data/derived/readiness.json"
+  ],
+  "api": {
+    "environment": ".venv",
+    "active": "auto",
+    "port": 8000,
+    "health": "/health",
+    "command": [
+      "{python}",
+      "-m",
+      "uvicorn",
+      "app.main:app",
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "{port}"
+    ]
+  },
+  "web_port": 5173,
+  "frontend_environment": {
+    "CAOS_DATA_ROOT": "{root}/data/derived"
+  },
+  "frontend_prepare": [
+    [
+      "{npm}",
+      "run",
+      "predev"
+    ]
+  ],
+  "frontend_command": [
+    "node",
+    "node_modules/vite/bin/vite.js",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "{web_port}",
+    "--strictPort"
+  ],
+  "generation": [
+    {
+      "script": "data-pipeline/rebuild.py",
+      "args": [
+        "--output",
+        "{derived}/v2",
+        "--resume"
+      ]
+    },
+    {
+      "script": "scripts/local/geophysics_finalize.py",
+      "args": [
+        "{stage}"
+      ]
+    }
+  ],
+  "validators": [
+    {
+      "script": "scripts/check_artifacts.py",
+      "args": [
+        "--data",
+        "{derived}/v2"
+      ]
+    }
+  ],
+  "generation_modules": [
+    "numpy"
+  ]
+}

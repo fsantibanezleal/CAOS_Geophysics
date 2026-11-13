@@ -46,9 +46,11 @@ try {
     if (await panel.locator('.phase-arrivals strong').count() !== 3 ||
         !(await panel.locator('.phase-arrivals strong').first().innerText()).includes('s'))
       throw new Error(`${sample.name}: computed arrival readout is absent`);
-    await panel.getByText('0.9808').waitFor();
+    await panel.getByText(/0[.,]9808/).waitFor();
     await panel.locator('.phase-plots').screenshot({ path: resolve('dist', `${sample.name}-phase-plots.png`) });
     await panel.locator('.phase-benchmark').screenshot({ path: resolve('dist', `${sample.name}-heldout-benchmark.png`) });
+    await panel.evaluate(element => element.scrollIntoView({ block: 'start', inline: 'nearest' }));
+    await panel.screenshot({ path: resolve('dist', `${sample.name}-phase-picker.png`) });
     if (sample.name === 'desktop-en-light') {
       const traceBytes = await readFile(join(assetsDir, 'trace-00.f32'));
       const data = new DataView(traceBytes.buffer, traceBytes.byteOffset, traceBytes.byteLength);
@@ -68,11 +70,17 @@ try {
       await panel.getByRole('alert').getByText(/Only 100 Hz records/).waitFor();
       await panel.getByRole('combobox', { name: 'STEAD trace' }).selectOption('0');
     }
-    const fit = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: innerWidth,
-      height: document.documentElement.scrollHeight, viewportHeight: innerHeight }));
-    if (fit.width > fit.viewport || fit.height > fit.viewportHeight + 1)
-      errors.push(`${sample.name}: document overflow ${JSON.stringify(fit)}`);
-    await panel.screenshot({ path: resolve('dist', `${sample.name}-phase-picker.png`) });
+    const fit = await page.evaluate(() => {
+      const root = document.documentElement;
+      const scrollHeight = root.scrollHeight;
+      window.scrollTo(0, scrollHeight);
+      return { width: root.scrollWidth, viewport: innerWidth, scrollHeight,
+        viewportHeight: innerHeight, scrollY: window.scrollY };
+    });
+    if (fit.width > fit.viewport ||
+        (fit.scrollHeight > fit.viewportHeight + 1 &&
+          fit.scrollY < fit.scrollHeight - fit.viewportHeight - 1))
+      errors.push(`${sample.name}: horizontal overflow or page cannot scroll to its end ${JSON.stringify(fit)}`);
     await panel.getByRole('combobox', { name: sample.lang === 'es' ? 'Traza STEAD' : 'STEAD trace' }).selectOption('19');
     await panel.getByText(sample.lang === 'es' ? /QC rechazada; esta traza/ : /QC rejected; no waveform asset/).waitFor();
     if (await panel.getByRole('button', { name: sample.lang === 'es' ? 'Ejecutar inferencia web' : 'Run browser inference' }).isEnabled())

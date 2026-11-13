@@ -5,6 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { color, format, type Run } from "../science";
 import { useShellLang } from "@fasl-work/caos-app-shell";
 import { isosurface } from "../isosurface";
+import { surveyGlyphDiameter } from "./survey-glyphs";
 
 export function EarthScene({
   run,
@@ -42,10 +43,12 @@ export function EarthScene({
   const es = useShellLang() === "es";
   const host = useRef<HTMLDivElement>(null);
   const animate = useRef({ playing, speed });
+  const renderRef = useRef<() => void>(() => {});
   animate.current = { playing, speed };
   const [readout, setReadout] = useState("");
   const [error, setError] = useState("");
   const [visibleCells, setVisibleCells] = useState(0);
+  const stationDiameter = run.survey ? surveyGlyphDiameter(run.survey.locations) : 0;
   const pose = useRef<{
     position: THREE.Vector3;
     target: THREE.Vector3;
@@ -72,11 +75,14 @@ export function EarthScene({
     renderer.localClippingEnabled = true;
     container.appendChild(renderer.domElement);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 50);
+    let viewportWidth = 0;
+    let viewportHeight = 0;
+    let pixelRatio = Math.min(devicePixelRatio, 2);
     camera.position.set(2.65, 1.65, 2.9);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, -0.45, 0);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.12;
+    controls.dampingFactor = 0.5;
     controls.minDistance = 1.8;
     controls.maxDistance = 9;
     controls.maxPolarAngle = Math.PI * 0.78;
@@ -137,40 +143,45 @@ export function EarthScene({
     const surfaces: THREE.Mesh[] = [];
     if (representation === "surface" && threshold > 0)
       for (const sign of [1, -1]) {
-        if (!values.some((v) => v * sign > threshold)) continue;
-        const rawGeometry = new THREE.BufferGeometry();
-        rawGeometry.setAttribute(
-          "position",
-          new THREE.BufferAttribute(
-            isosurface(
-              values.map((v) => v * sign),
-              run.grid.shape,
-              run.grid.origin!,
-              spacing,
-              threshold,
-            ),
-            3,
-          ),
+        const signedValues = values.map((value) => sign * value);
+        let maximum = 0;
+        for (const value of signedValues) maximum = Math.max(maximum, value);
+        if (maximum <= threshold) continue;
+        // Nested contours encode the actual property levels on the fixed legend.
+        // The outer threshold remains the user-controlled inclusion boundary.
+        const levels = [0, 1, 2, 3].map(
+          (i) => threshold + ((maximum - threshold) * i) / 3,
         );
-        const meshGeometry = mergeVertices(rawGeometry, 1e-6);
-        rawGeometry.dispose();
-        meshGeometry.computeVertexNormals();
-        const surface = new THREE.Mesh(
-          meshGeometry,
-          new THREE.MeshStandardMaterial({
-            color: color(sign * threshold, range, palette),
-            roughness: 0.65,
-            side: THREE.DoubleSide,
-            transparent: opacity < 1,
-            opacity,
-            depthWrite: opacity > 0.65,
-            clippingPlanes: [
-              new THREE.Plane(new THREE.Vector3(0, 0, -1), cut / 1000),
-            ],
-          }),
-        );
-        scene.add(surface);
-        surfaces.push(surface);
+        for (const level of levels) {
+          const positions = isosurface(
+            signedValues,
+            run.grid.shape,
+            run.grid.origin!,
+            spacing,
+            level,
+          );
+          if (!positions.length) continue;
+          const rawGeometry = new THREE.BufferGeometry();
+          rawGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+          const meshGeometry = mergeVertices(rawGeometry, 1e-6);
+          rawGeometry.dispose();
+          meshGeometry.computeVertexNormals();
+          const surface = new THREE.Mesh(
+            meshGeometry,
+            new THREE.MeshBasicMaterial({
+              color: color(sign * level, range, palette),
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: opacity * 0.78,
+              depthWrite: false,
+              clippingPlanes: [
+                new THREE.Plane(new THREE.Vector3(0, 0, -1), cut / 1000),
+              ],
+            }),
+          );
+          scene.add(surface);
+          surfaces.push(surface);
+        }
       }
     const box = new THREE.BoxGeometry(2.24, 1.12, 1.92);
     const edges = new THREE.LineSegments(
@@ -190,33 +201,31 @@ export function EarthScene({
     const surveyValues = run.survey.observed;
     const observedMax = surveyMaxAbs && surveyMaxAbs > 0 ? surveyMaxAbs : Math.max(...surveyValues.map(Math.abs));
     if (showSurvey) {
-      const geom = new THREE.PlaneGeometry(0.132, 0.12);
+      const geom = new THREE.CircleGeometry(stationDiameter / 2000, 16);
       geom.rotateX(-Math.PI / 2);
       const mat = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.32,
         side: THREE.DoubleSide,
       });
-      const plane = new THREE.InstancedMesh(
+      const stations = new THREE.InstancedMesh(
         geom,
         mat,
         run.survey.locations.length,
       );
       run.survey.locations.forEach((p, i) => {
-        transform.makeTranslation(
-          p[0] / 1000,
-          p[2] / 1000 + 0.035,
-          p[1] / 1000,
-        );
-        plane.setMatrixAt(i, transform);
-        plane.setColorAt(
+        transform.makeScale(1, 1, 1);
+        transform.setPosition(p[0] / 1000, p[2] / 1000 + 0.035, p[1] / 1000);
+        stations.setMatrixAt(i, transform);
+        stations.setColorAt(
           i,
           new THREE.Color(
             color(surveyValues[i], [-observedMax, observedMax], "field"),
           ),
         );
       });
-      scene.add(plane);
+      stations.instanceMatrix.needsUpdate = true;
+      scene.add(stations);
       const positions = run.survey.locations
         .filter((_, i) => run.survey!.active[i])
         .flatMap((p) => [p[0] / 1000, p[2] / 1000 + 0.045, p[1] / 1000]);
@@ -296,21 +305,66 @@ export function EarthScene({
       });
     };
     theme();
-    const themeObserver = new MutationObserver(theme);
+    let frame = 0;
+    let previous = performance.now();
+    const render = (time: number) => {
+      frame = 0;
+      const dt = Math.min((time - previous) / 1000, 0.05);
+      previous = time;
+      controls.autoRotate = animate.current.playing;
+      controls.autoRotateSpeed = animate.current.speed / 6;
+      const controlsChanged = controls.update(dt);
+      renderer.render(scene, camera);
+      // OrbitControls reports whether damping or auto-rotation still changed the
+      // camera. Continue only while a visible change remains, or while the
+      // explicitly enabled orbit animation is playing.
+      if (animate.current.playing || controlsChanged) invalidate();
+    };
+    const invalidate = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(render);
+    };
+    renderRef.current = invalidate;
+    const onTheme = () => {
+      theme();
+      invalidate();
+    };
+    const themeObserver = new MutationObserver(onTheme);
     themeObserver.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["data-theme"],
     });
     const resize = new ResizeObserver(() => {
-      const { width, height } = container.getBoundingClientRect();
-      if (width && height) {
+      // Fractional layout jitter must not continuously resize the WebGL canvas.
+      const rect = container.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      const nextPixelRatio = Math.min(devicePixelRatio, 2);
+      if (
+        width > 0 &&
+        height > 0 &&
+        (Math.abs(width - viewportWidth) > 1 ||
+          Math.abs(height - viewportHeight) > 1 ||
+          nextPixelRatio !== pixelRatio)
+      ) {
+        viewportWidth = width;
+        viewportHeight = height;
+        if (nextPixelRatio !== pixelRatio) {
+          pixelRatio = nextPixelRatio;
+          renderer.setPixelRatio(pixelRatio);
+        }
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
-        camera.zoom = Math.min(1, camera.aspect / 1.25);
+        camera.zoom = Math.min(2, camera.aspect / 1.25);
         camera.updateProjectionMatrix();
+        invalidate();
       }
     });
     resize.observe(container);
+    controls.addEventListener("start", invalidate);
+    controls.addEventListener("change", invalidate);
+    for (const event of ["pointermove", "wheel", "touchmove", "keydown"])
+      renderer.domElement.addEventListener(event, invalidate, { passive: true });
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let picked: number | undefined;
@@ -354,24 +408,18 @@ export function EarthScene({
     };
     renderer.domElement.addEventListener("pointermove", move);
     renderer.domElement.addEventListener("click", click);
-    let frame = 0;
-    let previous = performance.now();
-    const render = (time: number) => {
-      const dt = Math.min((time - previous) / 1000, 0.05);
-      previous = time;
-      controls.autoRotate = animate.current.playing;
-      controls.autoRotateSpeed = animate.current.speed / 6;
-      controls.update(dt);
-      renderer.render(scene, camera);
-      frame = requestAnimationFrame(render);
-    };
-    frame = requestAnimationFrame(render);
+    invalidate();
     return () => {
+      renderRef.current = () => {};
       pose.current = {
         position: camera.position.clone(),
         target: controls.target.clone(),
       };
       cancelAnimationFrame(frame);
+      controls.removeEventListener("start", invalidate);
+      controls.removeEventListener("change", invalidate);
+      for (const event of ["pointermove", "wheel", "touchmove", "keydown"])
+        renderer.domElement.removeEventListener(event, invalidate);
       resize.disconnect();
       themeObserver.disconnect();
       controls.dispose();
@@ -410,12 +458,16 @@ export function EarthScene({
     range[0],
     range[1],
   ]);
+  useEffect(() => {
+    renderRef.current();
+  }, [playing, speed]);
   return (
     <div
       className="earth-scene"
       ref={host}
       role="img"
       data-visible-cells={visibleCells}
+      data-survey-glyph-diameter-m={stationDiameter}
       aria-label={`${label}: ${es ? "modelo tridimensional y levantamiento" : "three-dimensional subsurface model and survey"}`}
     >
       <div className="scene-label">

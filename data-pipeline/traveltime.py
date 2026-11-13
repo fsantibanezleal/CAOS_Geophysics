@@ -19,8 +19,9 @@ import tempfile
 import time
 
 import numpy as np
+from profile_mesh import parameter_mesh
 
-from sources import ROOT, SourceError, acquire_source
+from sources import SourceError, acquire_source, local_data_root
 
 SOURCE_ID = "pygimli-koenigsee"
 MAX_INPUT_BYTES = 1_000_000
@@ -78,6 +79,21 @@ def parse_sgt(path: Path) -> Survey:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as error:
         raise TraveltimeError(f"{path}: cannot read UTF-8 .sgt: {error}") from error
+    return _parse_sgt_lines(lines)
+
+
+def parse_sgt_bytes(raw: bytes) -> Survey:
+    """Use the identical grammar on bounded immutable original bytes."""
+    if type(raw) is not bytes or len(raw) > MAX_INPUT_BYTES:
+        raise TraveltimeError(".sgt original exceeds byte boundary")
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeError as error:
+        raise TraveltimeError(".sgt original is not UTF-8") from error
+    return _parse_sgt_lines(lines)
+
+
+def _parse_sgt_lines(lines: list[str]) -> Survey:
     if len(lines) < 5:
         raise TraveltimeError("source header: truncated .sgt")
     count = _count(lines[0], SENSOR_COUNT, "sensor count", 2, 1024)
@@ -184,17 +200,30 @@ def qc(survey: Survey) -> dict:
     }
 
 
-def shot_splits(survey: Survey) -> dict[str, dict[str, np.ndarray]]:
+def shot_splits(survey: Survey, *, policy: str = "pinned-15/v1") -> dict[str, dict[str, np.ndarray]]:
     """Freeze two whole-shot tests without looking at picked times."""
     shots = np.unique(survey.shot_geophone[:, 0])
-    if len(shots) != 15:
-        raise TraveltimeError(f"whole-shot validation requires the pinned 15 shots; found {len(shots)}")
-    held_groups = {"interleaved": shots[4::5], "central_block": shots[6:9]}
+    if policy == "pinned-15/v1":
+        if len(shots) != 15:
+            raise TraveltimeError(f"whole-shot validation requires the pinned 15 shots; found {len(shots)}")
+        held_groups = {"interleaved": shots[4::5], "central_block": shots[6:9]}
+        held_count = 3
+    elif policy == "supplied-whole-shot/v1":
+        n = len(shots)
+        if n < 10:
+            raise TraveltimeError("supplied whole-shot validation requires at least ten shots")
+        held_count = (n + 4) // 5
+        interleaved = np.asarray([((j + 1) * n) // held_count - 1 for j in range(held_count)])
+        start = (n - held_count) // 2
+        held_groups = {"interleaved": shots[interleaved],
+                       "central_block": shots[start:start + held_count]}
+    else:
+        raise TraveltimeError("unsupported whole-shot validation policy")
     result = {}
     for name, held_shots in held_groups.items():
         held = np.flatnonzero(np.isin(survey.shot_geophone[:, 0], held_shots))
         training = np.flatnonzero(~np.isin(survey.shot_geophone[:, 0], held_shots))
-        if len(held_shots) != 3 or len(training) < 100 or len(held) < 30:
+        if len(held_shots) != held_count or len(training) < 100 or len(held) < 30:
             raise TraveltimeError(f"{name}: insufficient whole-shot training or held-out picks")
         result[name] = {"held_shots": held_shots, "held_rows": held, "training_rows": training}
     return result
@@ -290,7 +319,7 @@ def _rmse_s(predicted: np.ndarray, observed: np.ndarray) -> float:
     return float(np.sqrt(np.mean((predicted - observed) ** 2)))
 
 
-def _split_record(name: str, parts: dict[str, np.ndarray]) -> dict:
+def _split_record(name: str, parts: dict[str, np.ndarray], *, policy: str = "pinned-15/v1") -> dict:
     record = {"rule": "every fifth shot in x order, starting at index 4" if name == "interleaved"
               else "three central shots by survey x order",
               "held_shots_zero_based": parts["held_shots"].tolist(),
@@ -298,6 +327,15 @@ def _split_record(name: str, parts: dict[str, np.ndarray]) -> dict:
               "heldout_rows": parts["held_rows"].tolist(),
               "training_count": len(parts["training_rows"]),
               "heldout_count": len(parts["held_rows"])}
+    if policy == "supplied-whole-shot/v1":
+        record["policy"] = policy
+        record["rule"] = (
+            "K=ceil(N/5) whole shots; ordered shot indices floor((j+1)*N/K)-1 for j=0..K-1"
+            if name == "interleaved" else
+            "K=ceil(N/5) central whole shots; ordered shot indices floor((N-K)/2)..floor((N-K)/2)+K-1"
+        )
+    elif policy != "pinned-15/v1":
+        raise TraveltimeError("unsupported whole-shot validation policy")
     record["sha256"] = hashlib.sha256(json.dumps(record, sort_keys=True).encode()).hexdigest()
     return record
 
@@ -406,6 +444,7 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     }
     if retain_arrays:
         result.update({"model_velocity_m_s": velocity.tolist(), "model_cell_center_xy_m": centers,
+                       "parameter_mesh": parameter_mesh(manager.mesh),
                        "raypath_coverage_m_per_cell": coverage.tolist(),
                        "predicted_t_s": predicted.tolist(),
                        "signed_residual_t_s": (predicted - observed).tolist(),
@@ -413,20 +452,30 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     return result
 
 
-def _field_verdict(results: dict[str, dict]) -> tuple[str, str | None]:
+def _field_verdict(results: dict[str, dict], *, minimum_improved_shots: int = 2) -> tuple[str, str | None]:
     for name in ("interleaved", "central_block"):
         result = results[name]
         if not result["engine_stopped_before_limit"]:
             return "not-converged", f"{name} inverse reached its iteration ceiling"
         if (not math.isfinite(result["heldout_improvement"]) or result["heldout_improvement"] < 0.10
-                or result["improved_held_shot_count"] < 2):
+                or result["improved_held_shot_count"] < minimum_improved_shots):
             return "not-converged", f"{name} whole-shot prediction failed the frozen improvement gate"
     return "passed", None
 
 
-def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
+def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
+        validation_policy: str = "pinned-15/v1") -> dict:
     """Preserve source QC, then attempt only the predeclared conditional inverse."""
-    survey = parse_sgt(path)
+    path = Path(path)
+    try:
+        raw = path.read_bytes()
+    except OSError as error:
+        raise TraveltimeError(f"cannot read the declared .sgt input: {error}") from error
+    if len(raw) > MAX_INPUT_BYTES:
+        raise TraveltimeError(f".sgt exceeds {MAX_INPUT_BYTES} bytes")
+    if hashlib.sha256(raw).hexdigest() != source_sha256:
+        raise TraveltimeError(".sgt bytes do not match the supplied source SHA-256")
+    survey = parse_sgt_bytes(raw)
     report: dict = {
         "schema": "inverse-earth.local-traveltime-m09/v1", "source_id": SOURCE_ID,
         "source_sha256": source_sha256, "source_bytes": Path(path).stat().st_size,
@@ -439,7 +488,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         return report
     started = time.perf_counter()
     try:
-        splits = shot_splits(survey)
+        splits = shot_splits(survey, policy=validation_policy)
     except TraveltimeError as error:
         report.update(inverse_status="ineligible", inverse_reason=str(error))
         report["wall_seconds"] = round(time.perf_counter() - started, 3)
@@ -466,14 +515,20 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
     report["environment_versions_sha256"] = hashlib.sha256(json.dumps(
         {key: value for key, value in report["engine"].items() if key != "options"},
         sort_keys=True).encode()).hexdigest()
-    report["split"] = {name: _split_record(name, parts) for name, parts in splits.items()}
-    report["configuration_sha256"] = hashlib.sha256(json.dumps(
-        {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
+    report["split"] = {name: _split_record(name, parts, policy=validation_policy) for name, parts in splits.items()}
+    configuration = {"primary_options": INVERSE_OPTIONS, "alternate_start": ALTERNATE_START_OPTIONS,
          "finer_mesh": FINER_MESH_OPTIONS, "cgls_max_iterations": CGLS_MAX_ITER,
          "cgls_residual_squared_tolerance": CGLS_TOLERANCE,
          "weight_rule": report["weighting"]["sigma_t_s"],
-         "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}},
-        sort_keys=True).encode()).hexdigest()
+         "split_hashes": {name: part["sha256"] for name, part in report["split"].items()}}
+    minimum_improved = 2
+    if validation_policy != "pinned-15/v1":
+        held_count = len(splits["interleaved"]["held_shots"])
+        minimum_improved = (2 * held_count + 2) // 3
+        report["validation_policy"] = {"name": validation_policy, "held_shot_count": held_count,
+                                        "minimum_improved_shots": minimum_improved}
+        configuration["validation_policy"] = report["validation_policy"]
+    report["configuration_sha256"] = hashlib.sha256(json.dumps(configuration, sort_keys=True).encode()).hexdigest()
     report["observations"] = {"sensor_xy_m": survey.sensor_xy_m.tolist(),
                               "shot_geophone_zero_based": survey.shot_geophone.tolist(),
                               "picked_t_s": survey.time_s.tolist(),
@@ -492,7 +547,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
                                                     FINER_MESH_OPTIONS, retain_arrays=False)},
             "meaning": "diagnostic perturbations only; never select primary model on held-out picks",
         }
-        report["inverse_status"], reason = _field_verdict(report["inverse"])
+        report["inverse_status"], reason = _field_verdict(report["inverse"], minimum_improved_shots=minimum_improved)
         if reason is not None:
             report["inverse_reason"] = reason
     except (TraveltimeError, RuntimeError, ValueError, TypeError, AssertionError, IndexError) as error:
@@ -501,9 +556,119 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
     return report
 
 
-def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse") -> Path:
+def _validate_user_source(source: dict) -> dict:
+    """Require the caller to declare local units, source, and permitted rights."""
+    if type(source) is not dict or set(source) != {
+        "id", "citation", "rights", "scope", "frame", "units",
+    }:
+        raise TraveltimeError("user source record must match the closed M09 provenance schema")
+    source_id = source["id"]
+    if type(source_id) is not str or re.fullmatch(r"[A-Za-z0-9_-]{1,64}", source_id) is None:
+        raise TraveltimeError("user source id must contain 1–64 ASCII letters, digits, underscore, or hyphen")
+    citation = source["citation"]
+    if type(citation) is not str or not citation.strip() or len(citation) > 2048:
+        raise TraveltimeError("user source citation or owner declaration must be non-empty and at most 2048 characters")
+    rights = source["rights"]
+    if type(rights) is not str or rights not in {"owner-permitted", "CC0", "CC-BY"}:
+        raise TraveltimeError("M09 local inversion requires owner-permitted, CC0, or CC-BY data")
+    expected_scope = "owner-provided" if rights == "owner-permitted" else "public-reuse"
+    scope = source["scope"]
+    if type(scope) is not str or scope != expected_scope:
+        raise TraveltimeError(f"rights {rights!r} require scope {expected_scope!r}")
+    frame = source["frame"]
+    if (type(frame) is not str or frame not in {"local-x-y-up", "local-x-y-down"}
+            or source["units"] != {
+        "distance": "m", "time": "s",
+            }):
+        raise TraveltimeError(
+            "M09 .sgt inputs require local x metres, a declared y-up or y-down frame, and time seconds"
+        )
+    return source
+
+
+def _serialize_sgt(survey: Survey) -> bytes:
+    """Serialize parsed values in the strict SGT grammar without changing picks."""
+    lines = [f"{len(survey.sensor_xy_m)} # shot/geophone points", "#x y"]
+    lines.extend(f"{x:.17g} {y:.17g}" for x, y in survey.sensor_xy_m)
+    lines.extend((f"{len(survey.time_s)} # measurements", "#s g t"))
+    lines.extend(
+        f"{shot + 1} {receiver + 1} {time_s:.17g}"
+        for (shot, receiver), time_s in zip(survey.shot_geophone, survey.time_s)
+    )
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
+def run_user_survey(path: Path, *, source: dict, allow_inverse: bool = True,
+                    validation_policy: str = "supplied-whole-shot/v1") -> dict:
+    """Run owner-declared local SGT bytes without assigning provider identity or publishing the raw file.
+
+    The exact source is copied to a temporary file under CAOS_TEMP_ROOT so the
+    strict parser and pyGIMLi consume the same hashed bytes. The temporary copy
+    is removed when this call returns.
+    """
+    path = Path(path)
+    if path.is_symlink() or not path.is_file():
+        raise TraveltimeError("M09 user input must be a regular, non-symlink .sgt file")
+    try:
+        raw = path.read_bytes()
+    except OSError as error:
+        raise TraveltimeError(f"cannot read the user .sgt input: {error}") from error
+    if type(raw) is not bytes or not 0 < len(raw) <= MAX_INPUT_BYTES:
+        raise TraveltimeError(f"user .sgt input must contain 1–{MAX_INPUT_BYTES} bytes")
+    provenance = dict(_validate_user_source(source))
+    survey = parse_sgt_bytes(raw)
+    temp_root_value = os.environ.get("CAOS_TEMP_ROOT")
+    if not temp_root_value:
+        raise TraveltimeError("set CAOS_TEMP_ROOT to an external temporary-data directory")
+    temp_root = Path(temp_root_value).resolve(strict=True)
+    source_digest = hashlib.sha256(raw).hexdigest()
+    if provenance["frame"] == "local-x-y-down":
+        engine_survey = Survey(
+            survey.sensor_xy_m * np.asarray([1.0, -1.0]),
+            survey.shot_geophone.copy(),
+            survey.time_s.copy(),
+        )
+        engine_bytes = _serialize_sgt(engine_survey)
+        coordinate_transform = "source y-down-positive; engine y-up-positive = -source y"
+    else:
+        engine_bytes = raw
+        coordinate_transform = "source and engine y-up-positive; no coordinate sign transform"
+    engine_digest = hashlib.sha256(engine_bytes).hexdigest()
+    with tempfile.TemporaryDirectory(prefix="m09-user-", dir=temp_root) as directory:
+        staged = Path(directory) / "source.sgt"
+        staged.write_bytes(engine_bytes)
+        report = run(
+            staged, source_sha256=engine_digest, allow_inverse=allow_inverse,
+            validation_policy=validation_policy,
+        )
+    vertical_basis = (
+        "input y-down-positive; normalized to pyGIMLi y-up-positive"
+        if provenance["frame"] == "local-x-y-down" else "input y-up-positive"
+    )
+    user_unit_basis = (
+        f"user-declared local x/y metres ({vertical_basis}) and picked times in seconds; "
+        "CRS and vertical datum are not independently verified"
+    )
+    report.update(
+        source_sha256=source_digest,
+        source_bytes=len(raw),
+        source_id=provenance["id"],
+        source_kind="local-user-supplied",
+        source_record={**provenance, "verification": "user-declared; not independently verified"},
+        engine_input_sha256=engine_digest,
+        coordinate_transform=coordinate_transform,
+        rights_decision="owner-declared-local-only",
+        raw_publication=False,
+        unit_basis=user_unit_basis,
+    )
+    report["qc"]["unit_basis"] = user_unit_basis
+    report["qc"]["units"]["y"] = f"m, {vertical_basis}"
+    return report
+
+
+def save_local_receipt(report: dict, *, root: Path | None = None, kind: str = "inverse") -> Path:
     """Install or verify a checksummed, immutable receipt inside ignored data/raw."""
-    root = Path(root).resolve()
+    root = local_data_root(root)
     folder = root / "data/raw/traveltime"
     if not folder.resolve().is_relative_to((root / "data/raw").resolve()):
         raise TraveltimeError("traveltime result path escapes ignored data/raw")
@@ -588,8 +753,9 @@ def save_local_receipt(report: dict, *, root: Path = ROOT, kind: str = "inverse"
     return output
 
 
-def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
+def run_source(*, root: Path | None = None, qc_only: bool = False) -> dict:
     """Reverify the ledger source, compute local evidence and retain its receipt."""
+    root = local_data_root(root)
     record, raw_path, receipt = acquire_source(SOURCE_ID, root=root)
     if receipt["validation_status"] != "hash-verified":
         raise TraveltimeError("Koenigsee acquisition receipt is not hash-verified")
@@ -604,9 +770,10 @@ def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--qc-only", action="store_true", help="Validate source geometry and picks without an inverse")
+    parser.add_argument("--data-root", type=Path, help="External working-data root; otherwise GEOPHYSICS_LOCAL_DATA_ROOT")
     args = parser.parse_args(argv)
     try:
-        result = run_source(qc_only=args.qc_only)
+        result = run_source(root=args.data_root, qc_only=args.qc_only)
     except (SourceError, TraveltimeError, OSError) as error:
         print(f"M09 Koenigsee failed: {error}", file=sys.stderr)
         return 2

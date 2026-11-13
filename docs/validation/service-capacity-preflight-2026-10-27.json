@@ -1,0 +1,28 @@
+{
+  "schema": "geophysics.release-capacity/v1",
+  "observed_at": "2026-10-27T21:15:04Z",
+  "releases": [
+    {
+      "id": "20260926235216",
+      "role": "current",
+      "bytes": 816111047
+    },
+    {
+      "id": "20260926233737",
+      "role": "rollback",
+      "bytes": 816120188
+    },
+    {
+      "id": "20260926200023",
+      "role": "rollback",
+      "bytes": 686433273
+    }
+  ],
+  "free_disk_bytes": 32396664832,
+  "additional_release_bytes": 856103491,
+  "job_scratch_bytes": 1073741824,
+  "available_memory_bytes": 5253464064,
+  "worker_memory_bytes": 2147483648,
+  "api_memory_bytes": 536870912,
+  "controller_memory_bytes": 1073741824
+}

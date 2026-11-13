@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "LEARNED_CNN",
+  "artifacts": [
+    {
+      "path": "v2/LEARNED_CNN/reference.json",
+      "bytes": 1852761,
+      "sha256": "84d3a90bb2360b6e541c64b980d6f430eca3163c090fc59be4e0a4223e2a7934"
+    },
+    {
+      "path": "v2/LEARNED_CNN/contrast.json",
+      "bytes": 1832138,
+      "sha256": "8d2afd9a1743f04b804a4300a320cadce1cb9a5c672e647af6bcab9fff57abe2"
+    },
+    {
+      "path": "v2/LEARNED_CNN/noise.json",
+      "bytes": 1845512,
+      "sha256": "55e71d34ea0edfcc87ba7e21cda3ffcc1f1b40958bae261864cad70e6fe79a39"
+    },
+    {
+      "path": "v2/LEARNED_CNN/acquisition.json",
+      "bytes": 1853926,
+      "sha256": "85fa0b7709b3ce239d9d83b615f25d60efffd1ce5f13c57848e473879474f9fa"
+    },
+    {
+      "path": "v2/LEARNED_CNN/coverage.json",
+      "bytes": 1852376,
+      "sha256": "26d9926cfb0aac18b6c61e3f0eb7debd8d1f4fcc48f6cb164410f296455f58db"
+    },
+    {
+      "path": "v2/LEARNED_CNN/regularization.json",
+      "bytes": 1852491,
+      "sha256": "5711f6d3d80757b18e0fec1b4d637e3bd47db2380433152a51b3b54827974310"
+    }
+  ]
+}

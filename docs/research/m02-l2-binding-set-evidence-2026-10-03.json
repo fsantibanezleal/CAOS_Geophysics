@@ -1,0 +1,211 @@
+{
+  "schema": "m02-l2-binding-set-research-proposal-1",
+  "date": "2026-10-03",
+  "status": "Docs-only evidence-backed proposal; no implementation or new numerical acceptance",
+  "frozen_implementation_head": "6331bee9cf289e59647566ac01efc178d51a8e6c",
+  "frozen_nine_path_sha256": {
+    "data-pipeline/gravity_l2.py": "2662dece5964fb4652c510dfcb89df99bf1b0344fe7aa9b9071f0c55c5e274df",
+    "data-pipeline/gravity_survey_l2.py": "50934e1f56fcd468787b113598d01966b0a0eb1b124cb95363605fea8278da97",
+    "tests/data/test_gravity_survey_l2.py": "59ada6fede6512149dcd55d1ebcc892d12eeb8a2f43367931028b3f39d378f99",
+    "tests/numerics/test_gravity_l2.py": "ab866e75a24ae8a3a1312764f83c08327bd7cf886ab86e3f81fd89e03d64a17a",
+    "tests/numerics/test_gravity_l2_selection.py": "44ea730ab3737e8b193141e6d27f6f9a221fb3df22ac938eecdcbc4c558b9ce5",
+    "docs/design/features/m02-survey-l2/implementation.md": "126466764db6d31447e4fe12d797274d5e3803c52493008336a44a37af5b5dd6",
+    "docs/design/features/m02-survey-l2/ordinary-near-zero-negative.md": "d9286e1046cd435da36a4a05f196f463cad4224ba7afe8cfe3a08df5ae2b975d",
+    "docs/design/features/m02-survey-l2/evidence/approved-release-execution-20261003.json": "231d558044ce86a4ad51293d56115cd0c9a2e29520c2027857331e1df97fdeb3",
+    "docs/design/features/m02-survey-l2/evidence/additional-wide-start-negative-20261003.json": "949ef10ced22c56faf2e2a59f4f64ff5679e78d846d6a79faa3586eb115dfde6"
+  },
+  "proposed_policy": {
+    "runtime_epoch": "m02-survey-l2-cpu-3",
+    "optimizer": "projected-gncg-binding-release-1",
+    "implemented": false,
+    "approved": false,
+    "selection": "After unchanged stops: any exact active-not-binding -> fixed positive diagonal feasible projection; otherwise native face CG",
+    "free_gradient_magnitude_threshold": null,
+    "ordinary_direction_promise_explicitly_amended": true,
+    "ordinary_CG_or_LS_failure_fallback": false,
+    "new_production_solver_dependency": false,
+    "local_descent_proof_only": true,
+    "full_GPCG_or_global_convergence_claim": false
+  },
+  "authority": {
+    "requested_by_MAIN": "Full docs-only algorithm amendment; freeze incomplete AS-B and original9 paths",
+    "implementation_authorized": false,
+    "tests_authorized": false,
+    "MAIN_full_packet_read_required": true
+  },
+  "actual_baseline": {
+    "runtime_epoch": "m02-survey-l2-cpu-2",
+    "optimizer": "projected-gncg-degenerate-release-1",
+    "whole_L2_accepted": false,
+    "complete_regression": {
+      "pass": 347,
+      "fail": 1,
+      "skip": 14,
+      "xml": "release-current-full.xml",
+      "sha256": "2b6702c8492761147fdf78623f7a71779fb2b675f50319cd49c6d83f12461408"
+    },
+    "focused_subset_of_same_XML": {
+      "pass": 240,
+      "fail": 1,
+      "skip": 0,
+      "tests": 241
+    },
+    "supplemental_start_gate": {
+      "pass": 23,
+      "fail": 1,
+      "skip": 0,
+      "xml": "release-wide-tight-starts.xml",
+      "sha256": "c8da711deed2bffee21f7f510a01aaa9aed2d3db349196e027a1b72e5fc22bfc"
+    },
+    "frozen_actual_trace": {
+      "path": "docs/design/features/m02-survey-l2/evidence/additional-wide-start-negative-20261003.json",
+      "sha256": "949ef10ced22c56faf2e2a59f4f64ff5679e78d846d6a79faa3586eb115dfde6",
+      "iterations": 51,
+      "states": 52,
+      "reason": "wall_cap",
+      "wall_seconds": 120.25,
+      "native_direction_count": 51,
+      "projected_release_count": 0,
+      "independent_KKT_at_state4": 0.0001297087805779684,
+      "inward_bound_gradient_q": -0.08871593992245919,
+      "nonzero_free_gradient_max_abs_q": 2.3983110636338623e-11,
+      "model_normalized_L2_error": 1.1286665317147966,
+      "objective_relative_error": 0.05268513341523953,
+      "prediction_max_abs_mgal": 0.000286669295700677
+    },
+    "MAIN_original_four_helper_sha256": "dc4a6da238d84d9fe65592cd818961ac57ddad6f78471ecdf1e16080d35de070",
+    "MAIN_original_failed_receipt_sha256": "f118d046a6be3929d9432a921c728cc5a6295bd265cfc444dfecaf8e56f774da",
+    "MAIN_additional16_helper_sha256": "de903e359c8791a7c9035b363308af867803d61a3cf9b2f8ce002def227024f7",
+    "MAIN_additional16_d7_counts_coordination_reported": {
+      "pass": 4,
+      "fail": 12
+    },
+    "MAIN_attribution": "Separate MAIN-agent coordination evidence; not this producer's execution or a new human scientific acceptance",
+    "producer_executed_MAIN16_helper": false,
+    "MAIN_new_source_independent_acceptance": false
+  },
+  "primary_full_text_review": [
+    {
+      "url": "https://ftp.mcs.anl.gov/pub/tech_reports/reports/P768.pdf",
+      "status": "VERIFIED via web full PDF text sections2/3; direct-byte request403 separately retained",
+      "pages_zero_based": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "focus": "active/binding distinction, gradient projection and reduced-face CG, separate progress/accuracy rules",
+      "applied_hybrid_theorem": false
+    },
+    {
+      "url": "https://web.mit.edu/6.252/www/LectureNotes/NLP_Slides.pdf",
+      "status": "VERIFIED relevant primary lecture full text",
+      "pages_zero_based": [
+        74,
+        75,
+        76,
+        79,
+        80
+      ],
+      "focus": "feasible chord versus projection arc, positive-definite scaled direction, nondiagonal caution",
+      "applied_hybrid_global_theorem": false
+    },
+    {
+      "url": "https://www.mcs.anl.gov/petsc/petsc-3.12/src/tao/quadratic/impls/gpcg/gpcg.c.html",
+      "status": "VERIFIED versioned official source through full solve/projection routine bodies via web; direct-byte request403 retained",
+      "source_lines": [
+        130,
+        291
+      ],
+      "runtime_dependency": false
+    },
+    {
+      "url": "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/optimization.py",
+      "status": "VERIFIED remote bytes equal unchanged trusted installed original pin; exact relevant local routines read",
+      "sha256": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+      "installed_modified": false
+    },
+    {
+      "url": "https://epubs.siam.org/doi/10.1137/0801008",
+      "status": "Full text UNAVAILABLE; current open internal error; previous bibliographic identification only",
+      "full_theorem_review_claimed": false
+    }
+  ],
+  "external_in_memory_byte_requests": [
+    {
+      "url": "https://raw.githubusercontent.com/simpeg/simpeg/v0.25.2/simpeg/optimization.py",
+      "status": 200,
+      "bytes": 50412,
+      "sha256": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+      "retrieved_utc": "2026-10-03T16:01:54.2094191Z",
+      "saved_files": 0
+    },
+    {
+      "url": "https://ftp.mcs.anl.gov/pub/tech_reports/reports/P768.pdf",
+      "error": "Response status code does not indicate success: 403 (Forbidden).",
+      "saved_files": 0
+    },
+    {
+      "url": "https://web.mit.edu/6.252/www/LectureNotes/NLP_Slides.pdf",
+      "status": 200,
+      "bytes": 569152,
+      "sha256": "6a31077ef25b0dd9e250ea20c5d2ac3fe1612627a9c3a1fec3c02421abcb3c6d",
+      "retrieved_utc": "2026-10-03T16:01:56.7590515Z",
+      "saved_files": 0
+    },
+    {
+      "url": "https://www.mcs.anl.gov/petsc/petsc-3.12/src/tao/quadratic/impls/gpcg/gpcg.c.html",
+      "error": "Response status code does not indicate success: 403 (Forbidden).",
+      "saved_files": 0
+    }
+  ],
+  "PDF_rendering": {
+    "MIT_74_75_76": "Screenshot references returned; pixels not inspected",
+    "Argonne_5_6": "Screenshot references returned; pixels not inspected",
+    "Argonne_7": "TimeoutError",
+    "rendered_verification_claimed": false
+  },
+  "proposal_numerical_runs": 0,
+  "proposal_code_or_test_edits": 0,
+  "installed_changes": 0,
+  "native_binaries_staged": 0,
+  "primary_files_saved": 0,
+  "frozen_caps_tolerances_seeds_candidates_modified": false,
+  "historical_receipts_modified": false,
+  "future_controls": [
+    "Original4 unchanged MAIN independent BVLS controls",
+    "All24 supplemental six-start/two-bound/two-noise controls",
+    "Separate MAIN16 signed-start helper, not replaced by producer24",
+    "Original all16 requirements and separate locked24 family/condition matrix",
+    "Unchanged8x3 candidates plus selected refit, sealed evaluation and full measured/projected resources"
+  ],
+  "not_accepted": [
+    "New binding-set policy/epoch or tests/code",
+    "Whole finite-precision optimizer/global convergence",
+    "Sealed selection/all24/resource completeness",
+    "Field/API/IRLS/GPU/host/canonical/main/merge/deploy"
+  ],
+  "docs_checks": {
+    "status": "Actual local checks passed on the four staged proposal files; final strict JSON and frozen hashes rechecked after this receipt update",
+    "ruff_data_pipeline_tests": "PASS; unchanged source/test bytes",
+    "content_standards": "PASS",
+    "template_residue": "PASS; 881 tracked files including the staged packet",
+    "CI_budget": "PASS",
+    "base_integrity_equivalent": "PASS; no tracked environment/native/heavy binary or leaked machine paths",
+    "artifacts": "PASS; 20 truths / 120 experiments / 348 method results, all SHA256 and sizes match",
+    "product_ledger": "Structurally valid; unchanged 1 fail / 18 unresolved / 0 pass / 0 ineligible; not scientific acceptance",
+    "strict_JSON": "PASS; reject duplicate keys and nonfinite constants",
+    "relative_links": "PASS; all 15 local targets exist",
+    "scoped_diff_whitespace": "PASS",
+    "frozen_nine_path_hashes": "PASS; same SHA256 as6331bee",
+    "protected_repository_hashes": "PASS; all18 original source/research pins unchanged",
+    "original_seven_SDD_files": "PASS; no diff from48245d1",
+    "historical_feature_receipts": "PASS; no diff from6331bee",
+    "private_backup": "Preserved, ignored, git ls-files empty",
+    "retained_current_full_XML_hash": "PASS; 2b6702c8492761147fdf78623f7a71779fb2b675f50319cd49c6d83f12461408",
+    "new_numerical_runs": 0,
+    "new_runtime_source_pin_tests": 0,
+    "reused_numeric_evidence": "Only actual6331bee source-bound historical results; no claimed execution of the proposed policy",
+    "numerical_acceptance": false
+  }
+}

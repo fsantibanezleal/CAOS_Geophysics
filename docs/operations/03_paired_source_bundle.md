@@ -1,5 +1,7 @@
 # Paired selected-source builder: local object provenance, not production trust
 
+Current operating contract: the optional historical recovery fixture is not a cutover prerequisite. SMTP, off-host backup/deletion authority and arbitrary30% whole-host free space are not current gates. This builder's immutable-object/bounded-output checks remain unchanged; source provenance does not establish runtime or scientific acceptance.
+
 The [builder SDD](../design/features/ops-source-bundle/requirements.md) was fully reviewed at `85d3bfc` and explicitly approved before implementation. This ordinary R-HFIX-06 prerequisite builds selected public code and two named public EDI test fixtures from exact local Git objects. It does not build a release, install/extract code, fetch objects, generate keys, access production/private app state, alter environments, control services or run the Linux drill. MAIN's independently reported PR112 validation is 180 pass/two Windows privilege skips/one upstream warning in282.70s against fresh parity59f; it is MAIN evidence, not this builder's execution.
 
 ## Primary-source basis and policy

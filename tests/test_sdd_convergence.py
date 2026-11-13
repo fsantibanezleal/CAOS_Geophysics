@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 from datetime import datetime, timezone
+import hashlib
 import importlib.util
 import json
 from pathlib import Path
@@ -95,6 +96,28 @@ class TestConvergence(unittest.TestCase):
         with self.assertRaisesRegex(CHECK.LedgerError, "invalid measured receipt"):
             CHECK.validate(self.root, self.ledger)
 
+    def test_historical_receipts_are_valid_only_as_nonpass_evidence(self):
+        self.measured()
+        self.ledger["assessed_revision"] = "b" * 40
+        for record in self.ledger["requirements"]:
+            record["verdict"] = "unresolved"
+        self.assertEqual(CHECK.validate(self.root, self.ledger)["unresolved"], 2)
+
+        self.ledger["requirements"][0]["verdict"] = "pass"
+        with self.assertRaisesRegex(CHECK.LedgerError, "invalid measured receipt"):
+            CHECK.validate(self.root, self.ledger)
+
+    def test_receipt_after_assessment_is_rejected(self):
+        self.measured()
+        record = self.ledger["requirements"][0]
+        receipt_path = self.root / record["receipts"][0]["path"]
+        receipt = CHECK.strict_json(receipt_path)
+        receipt["measured_at"] = "2099-01-01T00:00:00Z"
+        receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
+        record["receipts"][0]["sha256"] = CHECK.digest(receipt_path)
+        with self.assertRaisesRegex(CHECK.LedgerError, "invalid measured receipt"):
+            CHECK.validate(self.root, self.ledger)
+
     def test_release_rejects_partial_and_duplicate_deployment(self):
         with self.assertRaisesRegex(CHECK.LedgerError, "not accepted"):
             CHECK.validate(self.root, self.ledger, require_release=True)
@@ -126,6 +149,23 @@ class TestConvergence(unittest.TestCase):
         for path in ("../outside", "/etc/passwd", "C:/Windows/file", "docs\\file", "missing.json"):
             with self.assertRaises(CHECK.LedgerError, msg=path):
                 CHECK.checked_path(self.root, path)
+
+    def test_javascript_module_is_a_measured_executable_gate(self):
+        path = self.root / "frontend/scripts/verify.mjs"
+        path.parent.mkdir(parents=True)
+        path.write_text("process.exitCode = 0;\n", encoding="utf-8")
+        self.assertEqual(CHECK.executable_gate(self.root, "frontend/scripts/verify.mjs"), path)
+
+    def test_text_hashes_are_stable_across_windows_line_endings(self):
+        path = self.root / "docs/evidence.json"
+        path.write_bytes(b'{\r\n  "ok": true\r\n}\r\n')
+        expected = hashlib.sha256(b'{\n  "ok": true\n}\n').hexdigest()
+        self.assertEqual(CHECK.digest(path), expected)
+
+    def test_binary_hashes_preserve_every_byte(self):
+        path = self.root / "docs/evidence.bin"
+        path.write_bytes(b"header\r\n\x00payload")
+        self.assertEqual(CHECK.digest(path), hashlib.sha256(path.read_bytes()).hexdigest())
 
     def test_receipt_tampering_and_measured_output_tampering(self):
         self.measured()

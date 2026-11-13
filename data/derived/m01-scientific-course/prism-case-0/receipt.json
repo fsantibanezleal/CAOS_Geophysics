@@ -1,0 +1,59 @@
+{
+  "executed_utc": "2026-10-03T15:28:23.045877+00:00",
+  "files": [
+    {
+      "bytes": 400476,
+      "name": "diagnostics-dark.png",
+      "sha256": "f3579c10f389267b7106b8179222933bd31ee7d5ed357a5990b601b6f19c4001"
+    },
+    {
+      "bytes": 104024,
+      "name": "diagnostics-dark.svg",
+      "sha256": "a68f9c1f364bbdd943c0975dd260c06b94204108a15e0305c70ec71c36ba11d4"
+    },
+    {
+      "bytes": 404317,
+      "name": "diagnostics-light.png",
+      "sha256": "2f299c6468db16c5689767344302b5fbe4c55d80253b6498b60ee66019814967"
+    },
+    {
+      "bytes": 104024,
+      "name": "diagnostics-light.svg",
+      "sha256": "a70addb094119745daae17c5484f94484b794a8e4adc758ec3daab9cc8114c2c"
+    },
+    {
+      "bytes": 540126,
+      "name": "maps-dark.png",
+      "sha256": "e4170868115ebe70ef9dbc8ef0f96157e5ef7b323281934b9ae116e6e5a209fb"
+    },
+    {
+      "bytes": 151806,
+      "name": "maps-dark.svg",
+      "sha256": "7477a8c98f6678d701aa25eb07a55becdd33aab261d916500364cdcf23dd5ea5"
+    },
+    {
+      "bytes": 514534,
+      "name": "maps-light.png",
+      "sha256": "84eb961b2047425afec3032d72af0876810453980d31609232b28e8cd0bbe390"
+    },
+    {
+      "bytes": 151806,
+      "name": "maps-light.svg",
+      "sha256": "413984df11e687855389be854f60820f9bf9f87abda2b45ffcc748b3335ca011"
+    },
+    {
+      "bytes": 202493,
+      "name": "request.json",
+      "sha256": "22209f7b19e89271162df2f59b6302ad9ea7864c76430630a4d7ed75d7b404e9"
+    },
+    {
+      "bytes": 773207,
+      "name": "result.json",
+      "sha256": "c3c94f316b60ec4badb7184d89181c514d66660939d3c75cf99d6a5e67e4f9b8"
+    }
+  ],
+  "full_method_accepted": false,
+  "request_sha256": "3a12f777f7776762f16a7d866143222fffd5de523f4172cb3ce5a7169900f4d4",
+  "result_sha256": "da5e80919f8316a71f710d381736ddc3b6637b0f3da948c937d59664632eb2ae",
+  "schema_version": "gravity-transform-export-1"
+}

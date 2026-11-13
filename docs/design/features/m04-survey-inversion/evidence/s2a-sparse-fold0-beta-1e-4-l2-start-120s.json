@@ -1,0 +1,99 @@
+{
+  "schema": "m04-sparse-fold-validation-summary-1",
+  "acceptance_boundary": "Production-limit same-fold, same-beta L2-start diagnostic failure; no candidate score, selection, held-out evaluation, field validation, method acceptance or online admission.",
+  "claims": {
+    "candidate_selected": false,
+    "field_geology_validated": false,
+    "field_observations": false,
+    "method_accepted": false,
+    "online_admitted": false,
+    "outer_evaluation_performed": false
+  },
+  "configuration": {
+    "case": "S2-A",
+    "quantity": "linear_tmi_nT",
+    "fold": 0,
+    "beta": 0.0001,
+    "epsilon_schedule_q": [
+      0.1,
+      0.05,
+      0.025,
+      0.0125,
+      0.00625,
+      0.003125,
+      0.0015625,
+      0.001
+    ],
+    "phase_limit": 512,
+    "wall_limit_seconds": 120.0,
+    "resource_limit_bytes": 805306368,
+    "start_policy": "same_fold_same_beta_converged_l2",
+    "start_model_q_sha256": "f34b900a85a4744d040b84a7f6853e790cf7bc34e45e5d75eec04b521c4fb1c1"
+  },
+  "l2_start": {
+    "status": "converged",
+    "elapsed_seconds": 41.828000000008615,
+    "normalized_projected_kkt_inf": 8.956694112478353e-17,
+    "model_q_sha256": "f34b900a85a4744d040b84a7f6853e790cf7bc34e45e5d75eec04b521c4fb1c1"
+  },
+  "fit": {
+    "status": "failed",
+    "reason": "wall_cap",
+    "elapsed_seconds": 120.32799999997951,
+    "direction_count": 12,
+    "phase_count": 12,
+    "max_prospective_bytes": 753668624,
+    "normalized_projected_gradient_inf": null
+  },
+  "stage_results": [
+    {
+      "epsilon_q": 0.1,
+      "gradient_limit": 0.00012513360529981064,
+      "model_relative": 1.7562267595749859e-06,
+      "outer_updates": 1,
+      "projected_gradient_inf": 7.158100153942053e-12,
+      "status": "converged",
+      "weights_relative": 1.8618521071545047e-07
+    },
+    {
+      "epsilon_q": 0.05,
+      "gradient_limit": 0.00012513358381055842,
+      "model_relative": 3.261737546722543e-09,
+      "outer_updates": 1,
+      "projected_gradient_inf": 5.426097968243461e-12,
+      "status": "converged",
+      "weights_relative": 1.957094841742446e-09
+    },
+    {
+      "epsilon_q": 0.025,
+      "gradient_limit": 0.00012513358398195918,
+      "model_relative": 1.039161201532579e-09,
+      "outer_updates": 1,
+      "projected_gradient_inf": 8.01198419505308e-12,
+      "status": "converged",
+      "weights_relative": 6.529103036001516e-10
+    },
+    {
+      "epsilon_q": 0.0125,
+      "gradient_limit": 0.00012513358405433266,
+      "model_relative": null,
+      "outer_updates": 1,
+      "projected_gradient_inf": null,
+      "reason": "wall_cap",
+      "status": "failed",
+      "weights_relative": null
+    }
+  ],
+  "source": {
+    "request_sha256": "e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa",
+    "calibration_sha256": "f94dd8883a5ef94fd286b13ec30cd3dd24443d6015f2f5a0dff3f075ff2150d1",
+    "optimizer_sha256": "a1c0c724eb40bc25775fe34d6230127c837758a9695b384e6c25c2fa59075478",
+    "profile_runner_sha256": "3c7e9003c7765a2772043d0b2ab8749f9e3ff0985150362fc5737ed0d5cca8ab",
+    "product_commit": "68de7761432d9cb0f2be58f2d65216e7a7e81016"
+  },
+  "run_artifact": {
+    "relative_path": "CAOS_Geophysics\\research-runs\\2026-11-11\\s2a-sparse-fold0-beta-1e-4-same-beta-l2-start-120s.json",
+    "bytes": 49182,
+    "sha256": "b9817de18852980422e1a573181259be914adcfe6d233ad00a23a59003220411"
+  }
+}

@@ -14,6 +14,7 @@ describe("authenticated same-origin lifecycle client", () => {
     const calls: Array<[string, RequestInit]> = [];
     const fetcher = vi.fn(async (url: URL, options: RequestInit) => {
       calls.push([url.pathname, options]);
+      if (url.pathname === "/api/auth/config") return json({ mode: "email", registration_enabled: true, mail_flows_enabled: true });
       if (url.pathname === "/api/auth/csrf") return json({ csrf_token: "csrf-1" });
       if (url.pathname === "/api/auth/register") return json({ ...account, is_verified: false }, 201);
       if (url.pathname === "/api/auth/verify/verify") return json(account);
@@ -25,11 +26,11 @@ describe("authenticated same-origin lifecycle client", () => {
     expect((await client.verify("mailed-token")).is_verified).toBe(true);
     await client.forgotPassword(account.email);
     await client.resetPassword("reset-token", "another long secure password");
-    expect(calls.filter(([path]) => path !== "/api/auth/csrf").map(([path]) => path)).toEqual([
+    expect(calls.filter(([path]) => path !== "/api/auth/csrf" && path !== "/api/auth/config").map(([path]) => path)).toEqual([
       "/api/auth/register", "/api/auth/verify/request-token", "/api/auth/verify/verify",
       "/api/auth/reset-password/forgot-password", "/api/auth/reset-password/reset-password",
     ]);
-    for (const [, options] of calls.filter(([path]) => path !== "/api/auth/csrf")) {
+    for (const [, options] of calls.filter(([path]) => path !== "/api/auth/csrf" && path !== "/api/auth/config")) {
       expect(options.credentials).toBe("same-origin");
       expect(new Headers(options.headers).get("X-CSRF-Token")).toBe("csrf-1");
     }
@@ -39,6 +40,7 @@ describe("authenticated same-origin lifecycle client", () => {
     const calls: Array<[string, RequestInit]> = [];
     const fetcher = vi.fn(async (url: URL, options: RequestInit) => {
       calls.push([url.pathname, options]);
+      if (url.pathname === "/api/auth/config") return json({ mode: "local", registration_enabled: false, mail_flows_enabled: false });
       if (url.pathname === "/api/auth/csrf") return json({ csrf_token: "csrf-1" });
       if (url.pathname === "/api/auth/me") return json(account);
       if (url.pathname === "/api/auth/cookie/login" || url.pathname === "/api/auth/cookie/logout") return new Response(null, { status: 204 });

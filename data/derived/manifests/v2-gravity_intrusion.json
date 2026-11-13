@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "GRAVITY_INTRUSION",
+  "artifacts": [
+    {
+      "path": "v2/GRAVITY_INTRUSION/reference.json",
+      "bytes": 1807791,
+      "sha256": "7139c86798fa90687acf04f19a8b03b0560b2d2b62f8de009a5e837accde0282"
+    },
+    {
+      "path": "v2/GRAVITY_INTRUSION/contrast.json",
+      "bytes": 1786701,
+      "sha256": "e383f6660745d850a8ed75da05c19b42074cae73cf4b1d366037ddae774d9291"
+    },
+    {
+      "path": "v2/GRAVITY_INTRUSION/noise.json",
+      "bytes": 1796023,
+      "sha256": "72cc7523e9894bd2faa9d356f36dc140a576620cef1c0f9f0a5638d873b3d593"
+    },
+    {
+      "path": "v2/GRAVITY_INTRUSION/acquisition.json",
+      "bytes": 1805401,
+      "sha256": "7c02c47877024024379321726364e98c5641cf1b7795c392507cdf6fe10cb1b8"
+    },
+    {
+      "path": "v2/GRAVITY_INTRUSION/coverage.json",
+      "bytes": 1803504,
+      "sha256": "fc76412260a72f1397fd3465dd91c7488c7d6801982997474f63c5fa3c3d8dd7"
+    },
+    {
+      "path": "v2/GRAVITY_INTRUSION/regularization.json",
+      "bytes": 1812134,
+      "sha256": "bc0e05061e915ae439d763d091d72b359b21305f17560718766bc884c7215e7b"
+    }
+  ]
+}

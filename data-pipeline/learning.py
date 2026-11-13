@@ -10,25 +10,111 @@ import numpy as np
 import torch
 from torch import nn
 from scipy.interpolate import griddata
+import geology
 from geology import VOLUME_SHAPE, VOLUME_SPACING
 from potential import invert
 from evaluation import model_metrics
 
 
+_LEGACY_SURVEY_SHAPE = (16, 16)
+_CHECKPOINT_SCHEMA = "inverse-earth.learned-potential-checkpoint/v1"
+
+
+def survey_shape():
+    """Return the canonical (northing, easting) observation-grid dimensions.
+
+    The fallback preserves the original committed 16x16 release. Once geology
+    defines SURVEY_SHAPE, all newly trained models and artifacts bind to it.
+    """
+    shape = tuple(getattr(geology, "SURVEY_SHAPE", _LEGACY_SURVEY_SHAPE))
+    if len(shape) != 2 or any(not isinstance(size, (int, np.integer)) or size < 1 for size in shape):
+        raise ValueError(f"geology.SURVEY_SHAPE must contain two positive integers; got {shape!r}")
+    return tuple(int(size) for size in shape)
+
+
+def _observation_tensor(values, shape, scale, device):
+    values = np.asarray(values)
+    expected = int(np.prod(shape))
+    if values.ndim != 2 or values.shape[1] != expected:
+        raise ValueError(
+            f"Expected observations shaped (samples, {expected}) for survey grid {tuple(shape)}, "
+            f"got {values.shape}"
+        )
+    if not np.isfinite(scale) or scale <= 0:
+        raise ValueError(f"Observation normalization scale must be finite and positive; got {scale!r}")
+    return torch.as_tensor(values / scale, dtype=torch.float32, device=device).reshape(-1, 1, *shape)
+
+
 class InverseCNN(nn.Module):
-    def __init__(self):
+    architecture = "observation-cnn-to-column-density/v1"
+
+    def __init__(self, input_shape=None):
         super().__init__()
-        self.net=nn.Sequential(nn.Conv2d(1,16,3,padding=1),nn.GELU(),nn.Conv2d(16,24,3,padding=1),nn.GELU(),nn.AdaptiveAvgPool2d((4,4)),nn.Flatten(),nn.Linear(384,96),nn.GELU(),nn.Linear(96,VOLUME_SHAPE[1]*VOLUME_SHAPE[2]))
+        self.input_shape = tuple(input_shape or survey_shape())
+        self.net=nn.Sequential(nn.Conv2d(1,16,3,padding=1),nn.GELU(),nn.Conv2d(16,24,3,padding=1),nn.GELU(),DeterministicAdaptiveAveragePool2d(self.input_shape,(4,4)),nn.Flatten(),nn.Linear(384,96),nn.GELU(),nn.Linear(96,VOLUME_SHAPE[1]*VOLUME_SHAPE[2]))
     def forward(self,x):
+        if x.ndim != 4 or tuple(x.shape[1:2]) != (1,) or tuple(x.shape[-2:]) != self.input_shape:
+            raise ValueError(f"CNN expects (batch, 1, {self.input_shape[0]}, {self.input_shape[1]}), got {tuple(x.shape)}")
         return self.net(x).reshape(-1,*VOLUME_SHAPE[1:])
 
 
-class ObservationAE(nn.Module):
-    def __init__(self):
+class DeterministicAdaptiveAveragePool2d(nn.Module):
+    """Adaptive average pooling with a deterministic CUDA backward path.
+
+    PyTorch's adaptive CUDA backward is not deterministic. Divisible survey
+    shapes use the mathematically identical AvgPool2d kernel; irregular shapes
+    use a fixed linear map, whose matrix backward is deterministic under
+    ``torch.use_deterministic_algorithms(True)``.
+    """
+
+    def __init__(self, input_shape, output_shape):
         super().__init__()
-        self.net=nn.Sequential(nn.Flatten(),nn.Linear(256,64),nn.GELU(),nn.Linear(64,12),nn.GELU(),nn.Linear(12,64),nn.GELU(),nn.Linear(64,256))
+        self.input_shape = tuple(int(size) for size in input_shape)
+        self.output_shape = tuple(int(size) for size in output_shape)
+        if len(self.input_shape) != 2 or any(size < 1 for size in self.input_shape):
+            raise ValueError(f"Pooling input shape must contain two positive sizes; got {self.input_shape!r}")
+        if len(self.output_shape) != 2 or any(size < 1 for size in self.output_shape):
+            raise ValueError(f"Pooling output shape must contain two positive sizes; got {self.output_shape!r}")
+        if all(source % target == 0 for source, target in zip(self.input_shape, self.output_shape)):
+            kernel = tuple(source // target for source, target in zip(self.input_shape, self.output_shape))
+            self.pool = nn.AvgPool2d(kernel_size=kernel, stride=kernel)
+            self.register_buffer("weights", None, persistent=False)
+        else:
+            self.pool = None
+            height, width = self.input_shape
+            output_height, output_width = self.output_shape
+            weights = torch.zeros((output_height * output_width, height * width), dtype=torch.float32)
+            for row in range(output_height):
+                top = row * height // output_height
+                bottom = ((row + 1) * height + output_height - 1) // output_height
+                for column in range(output_width):
+                    left = column * width // output_width
+                    right = ((column + 1) * width + output_width - 1) // output_width
+                    indices = [y * width + x for y in range(top, bottom) for x in range(left, right)]
+                    weights[row * output_width + column, indices] = 1.0 / len(indices)
+            self.register_buffer("weights", weights, persistent=False)
+
+    def forward(self, values):
+        if values.ndim != 4 or tuple(values.shape[-2:]) != self.input_shape:
+            raise ValueError(f"Pooling expects (*, *, {self.input_shape[0]}, {self.input_shape[1]}), got {tuple(values.shape)}")
+        if self.pool is not None:
+            return self.pool(values)
+        pooled = values.flatten(start_dim=2) @ self.weights.to(dtype=values.dtype).T
+        return pooled.reshape(values.shape[0], values.shape[1], *self.output_shape)
+
+
+class ObservationAE(nn.Module):
+    architecture = "observation-autoencoder/v1"
+
+    def __init__(self, input_shape=None):
+        super().__init__()
+        self.input_shape = tuple(input_shape or survey_shape())
+        n_observations = int(np.prod(self.input_shape))
+        self.net=nn.Sequential(nn.Flatten(),nn.Linear(n_observations,64),nn.GELU(),nn.Linear(64,12),nn.GELU(),nn.Linear(12,64),nn.GELU(),nn.Linear(64,n_observations))
     def forward(self,x):
-        return self.net(x).reshape(-1,1,16,16)
+        if x.ndim != 4 or tuple(x.shape[1:2]) != (1,) or tuple(x.shape[-2:]) != self.input_shape:
+            raise ValueError(f"Autoencoder expects (batch, 1, {self.input_shape[0]}, {self.input_shape[1]}), got {tuple(x.shape)}")
+        return self.net(x).reshape(-1,1,*self.input_shape)
 
 
 def generate(centers,count,seed):
@@ -76,22 +162,52 @@ def generate_ood(centers,count=80,seed=59001):
 
 def checkpoint(model,path):
     state={name:dict(shape=list(value.shape),values=value.detach().cpu().numpy().ravel().tolist()) for name,value in model.state_dict().items()}
-    path.write_text(json.dumps(state,separators=(",",":")))
+    payload=dict(schema=_CHECKPOINT_SCHEMA,architecture=model.architecture,
+                 survey_shape=list(model.input_shape),state=state)
+    path.write_text(json.dumps(payload,separators=(",",":")))
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def load_checkpoint(model,path):
-    state=json.loads(Path(path).read_text())
-    model.load_state_dict({k:torch.tensor(v["values"],dtype=torch.float32).reshape(v["shape"]) for k,v in state.items()})
+    payload=json.loads(Path(path).read_text(encoding="utf-8"))
+    if payload.get("schema") == _CHECKPOINT_SCHEMA:
+        stored_shape=tuple(payload.get("survey_shape",()))
+        if stored_shape != model.input_shape:
+            raise ValueError(f"Checkpoint survey shape {stored_shape} does not match model survey shape {model.input_shape}")
+        if payload.get("architecture") != model.architecture:
+            raise ValueError(f"Checkpoint architecture {payload.get('architecture')!r} does not match {model.architecture!r}")
+        state=payload.get("state")
+    else:
+        # The unversioned checkpoints in v2 predate shape metadata. They are
+        # safe to interpret only at the original fixed 16x16 input geometry.
+        if model.input_shape != _LEGACY_SURVEY_SHAPE:
+            raise ValueError("Unversioned legacy checkpoint is fixed to 16x16; retrain for the current survey shape")
+        state=payload
+    if not isinstance(state, dict):
+        raise ValueError("Checkpoint state dictionary is missing or invalid")
+    tensors={}
+    for name,value in state.items():
+        if not isinstance(value,dict) or "shape" not in value or "values" not in value:
+            raise ValueError(f"Invalid checkpoint tensor entry: {name}")
+        tensors[name]=torch.as_tensor(value["values"],dtype=torch.float32).reshape(value["shape"])
+    model.load_state_dict(tensors)
     model.eval()
     return model
 
 
-def load_bundle(source,device=None):
+def load_bundle(source,device=None,grid_shape=None):
     """Reuse immutable, hash-checked training evidence for case-only rebuilds."""
     source=Path(source)
     meta=json.loads((source/'training.json').read_text(encoding='utf-8'))
-    if meta.get('schema')!='inverse-earth.learning/v2':
+    current_shape=tuple(grid_shape or survey_shape())
+    schema=meta.get('schema')
+    if schema=='inverse-earth.learning/v2':
+        if current_shape != _LEGACY_SURVEY_SHAPE:
+            raise ValueError(f"Legacy learning bundle is fixed to 16x16; current geology.SURVEY_SHAPE is {current_shape}. Retrain the learned models.")
+    elif schema=='inverse-earth.learning/v3':
+        if tuple(meta.get('survey_shape',())) != current_shape:
+            raise ValueError(f"Training ledger survey shape {tuple(meta.get('survey_shape',()))} does not match geology.SURVEY_SHAPE {current_shape}")
+    else:
         raise ValueError('Unsupported training ledger schema')
     models=[]
     for name,kind in [('cnn',InverseCNN),('autoencoder',ObservationAE)]:
@@ -99,26 +215,32 @@ def load_bundle(source,device=None):
         path=source/Path(entry['checkpoint']).name
         if hashlib.sha256(path.read_bytes()).hexdigest()!=entry['sha256']:
             raise ValueError(f'Checkpoint hash mismatch: {name}')
-        models.append(load_checkpoint(kind(),path).to(device or ('cuda' if torch.cuda.is_available() else 'cpu')))
+        models.append(load_checkpoint(kind(input_shape=current_shape),path).to(device or ('cuda' if torch.cuda.is_available() else 'cpu')))
     return *models,meta
 
 
 def train(mesh,G,outdir,epochs=180):
     device="cuda" if torch.cuda.is_available() else "cpu"
+    input_shape=survey_shape()
+    observation_count=int(np.prod(input_shape))
+    if np.asarray(G).ndim != 2 or np.asarray(G).shape[0] != observation_count:
+        raise ValueError(f"Forward operator must contain {observation_count} survey rows for {input_shape}; got {np.asarray(G).shape}")
     torch.manual_seed(7721)
     outdir=Path(outdir);outdir.mkdir(parents=True,exist_ok=True)
     counts=[800,160,160];seeds=[18001,29001,39001]
     models=[generate(mesh.cell_centers,n,s) for n,s in zip(counts,seeds)]
     # Physical forward modelling precedes data-only normalization.
     observations=[m@G.T for m in models]
+    if any(data.shape != (count, observation_count) for data,count in zip(observations,counts)):
+        raise ValueError(f"Forward observations do not match the survey geometry {input_shape}")
     scale=float(np.std(observations[0]))
     target_scale=400.0
     targets=[m.reshape(-1,*VOLUME_SHAPE).sum(1)*VOLUME_SPACING[2]/target_scale for m in models]
     rng=np.random.default_rng(5001)
     noisy=[d+rng.normal(0,.02*scale,d.shape) for d in observations]
-    xx=[torch.tensor(d/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16) for d in noisy]
+    xx=[_observation_tensor(d,input_shape,scale,device) for d in noisy]
     yy=[torch.tensor(v,dtype=torch.float32,device=device) for v in targets]
-    cnn=InverseCNN().to(device); ae=ObservationAE().to(device)
+    cnn=InverseCNN(input_shape=input_shape).to(device); ae=ObservationAE(input_shape=input_shape).to(device)
     records={}
     for name,model in [("cnn",cnn),("autoencoder",ae)]:
         optimizer=torch.optim.Adam(model.parameters(),lr=.001)
@@ -154,8 +276,8 @@ def train(mesh,G,outdir,epochs=180):
     ood=generate_ood(mesh.cell_centers)@G.T
     ood+=np.random.default_rng(59002).normal(0,.02*scale,ood.shape)
     with torch.no_grad():
-        cal_x=torch.tensor(calibration/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16)
-        ood_x=torch.tensor(ood/scale,dtype=torch.float32,device=device).reshape(-1,1,16,16)
+        cal_x=_observation_tensor(calibration,input_shape,scale,device)
+        ood_x=_observation_tensor(ood,input_shape,scale,device)
         calibration_error=(ae(cal_x)-cal_x).square().flatten(1).mean(1).cpu().numpy()
         ood_error=(ae(ood_x)-ood_x).square().flatten(1).mean(1).cpu().numpy()
     threshold=float(np.quantile(calibration_error,.99))
@@ -168,7 +290,7 @@ def train(mesh,G,outdir,epochs=180):
                    sensitivity=float(np.mean(ood_error>threshold)),specificity=float(np.mean(id_error<=threshold)),
                    roc_auc=float(np.mean(ood_error[:,None]>id_error[None,:])+.5*np.mean(ood_error[:,None]==id_error[None,:])),
                    limitation='Reconstruction error is not a universal out-of-distribution detector; missed withheld geometries are retained')
-    metadata=dict(schema="inverse-earth.learning/v2",device=device,gpu=torch.cuda.get_device_name(0) if device=="cuda" else None,
+    metadata=dict(schema="inverse-earth.learning/v3",survey_shape=list(input_shape),device=device,gpu=torch.cuda.get_device_name(0) if device=="cuda" else None,
         seeds=seeds,split_counts=counts,split_policy="Disjoint generator seeds; complete realization assigned to one split; oblique and ring geometries withheld from training",input_scale=scale,target_scale=target_scale,novelty_threshold=threshold,
         models=records,classical_test_mse=float(np.mean((classic_projection-truth_projection)**2)),cnn_test_mse=records["cnn"]["test_mse"]*target_scale**2,units="(g/cm³ m)²",
         classical_test_errors=np.mean((classic_projection-truth_projection)**2,axis=(1,2)).tolist(),
@@ -182,21 +304,30 @@ def train(mesh,G,outdir,epochs=180):
 def attach(run,bundle):
     cnn,ae,meta=bundle
     device=next(cnn.parameters()).device
+    input_shape=tuple(run.get("survey",{}).get("shape",()))
+    if input_shape != tuple(meta.get('survey_shape',_LEGACY_SURVEY_SHAPE)):
+        raise ValueError(f"Training bundle survey shape {tuple(meta.get('survey_shape',_LEGACY_SURVEY_SHAPE))} does not match run survey shape {input_shape}")
     observed_input=np.asarray(run["survey"]["observed"])
     mask=np.asarray(run["survey"]["active"],dtype=bool)
+    if observed_input.ndim != 1 or observed_input.size != int(np.prod(input_shape)) or mask.shape != observed_input.shape:
+        raise ValueError(f"Survey observations and active mask must each contain {int(np.prod(input_shape))} values for {input_shape}")
     if not mask.all():
         xy=np.asarray(run["survey"]["locations"])[:,:2]
+        if xy.shape != (observed_input.size,2):
+            raise ValueError(f"Survey locations must have shape ({observed_input.size}, 2); got {xy.shape}")
+        if not mask.any():
+            raise ValueError("Cannot interpolate a survey with no active observations")
         interpolated=griddata(xy[mask],observed_input[mask],xy,method="linear")
         nearest=griddata(xy[mask],observed_input[mask],xy,method="nearest")
         observed_input=np.where(np.isfinite(interpolated),interpolated,nearest)
     run["learning_preprocess"]="Training-scale normalization; linear interpolation of omitted stations with nearest edge fill; fixed-height trained network"
-    x=torch.tensor(observed_input/meta["input_scale"],dtype=torch.float32,device=device).reshape(1,1,16,16)
+    x=_observation_tensor(observed_input.reshape(1,-1),input_shape,meta["input_scale"],device)
     truth=np.asarray(run["truth"]).reshape(VOLUME_SHAPE).sum(0)*VOLUME_SPACING[2]
     with torch.no_grad():
         column=cnn(x)[0].cpu().numpy()*meta["target_scale"]
         reconstruction=ae(x)[0,0].cpu().numpy()*meta["input_scale"]
-    observed=np.asarray(run["survey"]["observed"]).reshape(16,16)
-    network_input=observed_input.reshape(16,16)
+    observed=np.asarray(run["survey"]["observed"]).reshape(input_shape)
+    network_input=observed_input.reshape(input_shape)
     # The detector was calibrated against the tensor supplied to the network.
     # In a coverage experiment this is an interpolated map, not the full survey.
     error=(reconstruction-network_input)**2/meta["input_scale"]**2

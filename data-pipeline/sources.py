@@ -19,10 +19,13 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "data/source-ledger.json"
 FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm", "research-zip", "fgdc-metadata-xml",
+           "usgs-amargosa-xyz-gz",
            "pygimli-traveltime-sgt", "stead-metadata-csv", "generated-case"}
 RIGHTS = {"mirror", "provider-link-only", "derivative-only", "forbidden"}
-FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov", "zenodo.org"}
+FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov",
+               "pubs.usgs.gov", "zenodo.org"}
 MIME = {"simpeg-obs-tar-gz": "application/gzip", "edi-transfer-function": "text/plain",
+        "usgs-amargosa-xyz-gz": "application/gzip",
         "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain",
         "research-zip": "application/zip", "fgdc-metadata-xml": "application/xml"}
 MAX_SOURCE_BYTES = 200_000_000
@@ -33,6 +36,20 @@ ARCHIVE_LIMITS = {"max_entries": 512, "max_expanded_bytes": 500_000_000,
 
 class SourceError(ValueError):
     """A source could not pass its declared acquisition contract."""
+
+
+def local_data_root(root: Path | None = None) -> Path:
+    """Resolve working storage independently of the read-only product ledger."""
+    configured = root if root is not None else os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT")
+    if not configured:
+        raise SourceError("Set GEOPHYSICS_LOCAL_DATA_ROOT or --data-root to an external working-data directory")
+    selected = Path(configured).expanduser()
+    if not selected.is_absolute():
+        raise SourceError("Working-data root must be absolute")
+    selected = selected.resolve()
+    if selected == ROOT or selected.is_relative_to(ROOT):
+        raise SourceError("Working-data root must be outside the repository")
+    return selected
 
 
 def archive_member_key(name: str) -> PurePosixPath:
@@ -217,6 +234,15 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
             if any(not isinstance(record.get(field), str) or not record[field].strip()
                    for field in ("quantity", "value_unit", "coordinate_convention")):
                 raise SourceError(f"{source_id}: observation archive needs quantity, value_unit and coordinates")
+        if record["format"] == "usgs-amargosa-xyz-gz":
+            if (mode != "fetch" or record["rights_decision"] != "mirror"
+                    or any(not isinstance(record.get(field), str) or not record[field].strip()
+                           for field in ("quantity", "value_unit", "coordinate_convention"))
+                    or type(record.get("expanded_bytes")) is not int
+                    or not 0 < record["expanded_bytes"] <= 100_000_000
+                    or type(record.get("record_count")) is not int
+                    or not 0 < record["record_count"] <= 500_000):
+                raise SourceError(f"{source_id}: fixed-width USGS XYZ needs a pinned expanded size, row count, units and CRS")
         if record["format"] == "research-zip":
             validate_archive_contract(record.get("archive_contract"))
         elif "archive_contract" in record:
@@ -294,7 +320,7 @@ def _receipt(record: dict, target: Path, root: Path, method: str, original_filen
     }
 
 
-def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path = ROOT,
+def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path | None = None,
                    ledger_path: Path = LEDGER) -> tuple[dict, Path, dict]:
     """Acquire exactly one ledger source; never replace a raw asset or its receipt."""
     records = load_ledger(ledger_path)
@@ -307,7 +333,7 @@ def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path
     if mode == "provider-link":
         raise SourceError(f"{source_id}: provider-link metadata is not an acquirable raw asset; "
                           f"consult {record['object_url']} and review a separate acquisition contract first")
-    root = Path(root).resolve()
+    root = local_data_root(root)
     target = _inside(root, _raw_key(record["raw_path"]), "downloads")
     receipt_path = _inside(root, PurePosixPath("data/raw/acquisition") / f"{source_id}.json", "raw")
     if local_file is not None:
@@ -370,7 +396,10 @@ def acquire_source(source_id: str, *, local_file: Path | None = None, root: Path
                       "rights_statement", "citation", "validation_status"):
             if receipt.get(field) != expected[field]:
                 raise SourceError(f"{source_id}: immutable receipt drift in {field}; inspect {receipt_path}")
-        if (receipt.get("acquisition_method") not in {"provider-fetch", "local-import"} or
+        # An already-present original can legitimately be verified without a
+        # retrieval performed by this command. Keep that distinction on reuse;
+        # never rewrite the receipt as if an import/download occurred.
+        if (receipt.get("acquisition_method") not in {"provider-fetch", "local-import", "existing-verified"} or
                 not isinstance(receipt.get("original_filename"), str) or
                 not receipt["original_filename"].strip() or
                 Path(receipt["original_filename"]).name != receipt["original_filename"]):

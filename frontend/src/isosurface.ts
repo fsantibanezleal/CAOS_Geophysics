@@ -6,6 +6,27 @@ export function isosurface(
   spacing: number[],
   level: number,
 ): Float32Array {
+  return interpolateIsosurface(values, shape, origin, spacing, level).positions;
+}
+
+/** Geometry and linearly interpolated scalar values on the same triangles. */
+export function isosurfaceWithValues(
+  values: number[],
+  shape: number[],
+  origin: number[],
+  spacing: number[],
+  level: number,
+): { positions: Float32Array; values: Float32Array } {
+  return interpolateIsosurface(values, shape, origin, spacing, level);
+}
+
+function interpolateIsosurface(
+  values: number[],
+  shape: number[],
+  origin: number[],
+  spacing: number[],
+  level: number,
+): { positions: Float32Array; values: Float32Array } {
   const [nz, ny, nx] = shape;
   if (values.length !== nx * ny * nz || !Number.isFinite(level))
     throw Error("Invalid scalar volume");
@@ -28,6 +49,8 @@ export function isosurface(
     [0, 4, 5, 6],
   ];
   const output: number[] = [];
+  const outputValues: number[] = [];
+  type Vertex = { p: number[]; value: number };
   for (let iz = -1; iz < nz; iz++)
     for (let iy = -1; iy < ny; iy++)
       for (let ix = -1; ix < nx; ix++) {
@@ -41,6 +64,7 @@ export function isosurface(
               : values[(z * ny + y) * nx + x];
           return {
             v,
+            scalar: v,
             p: [
               origin[0] + Math.max(0, Math.min(nx, x + 0.5)) * spacing[0],
               origin[2] + Math.max(0, Math.min(nz, z + 0.5)) * spacing[2],
@@ -52,7 +76,10 @@ export function isosurface(
           continue;
         const edge = (a: number, b: number) => {
           const t = (level - nodes[a].v) / (nodes[b].v - nodes[a].v);
-          return nodes[a].p.map((p, k) => (p + t * (nodes[b].p[k] - p)) / 1000);
+          return {
+            p: nodes[a].p.map((p, k) => (p + t * (nodes[b].p[k] - p)) / 1000),
+            value: nodes[a].scalar + t * (nodes[b].scalar - nodes[a].scalar),
+          };
         };
         for (const ids of tetra) {
           const inside = ids.filter((k) => nodes[k].v >= level),
@@ -65,33 +92,29 @@ export function isosurface(
               inside.reduce((sum, k) => sum + nodes[k].p[axis], 0) /
                 inside.length,
           );
-          const emit = (a: number[], b: number[], c: number[]) => {
-            const u = b.map((v, k) => v - a[k]),
-              v = c.map((v, k) => v - a[k]);
+          const emit = (a: Vertex, b: Vertex, c: Vertex) => {
+            const u = b.p.map((v, k) => v - a.p[k]),
+              v = c.p.map((v, k) => v - a.p[k]);
             const normal = [
               u[1] * v[2] - u[2] * v[1],
               u[2] * v[0] - u[0] * v[2],
               u[0] * v[1] - u[1] * v[0],
             ];
-            if (normal.reduce((sum, n, k) => sum + n * direction[k], 0) < 0)
-              output.push(...a, ...c, ...b);
-            else output.push(...a, ...b, ...c);
+            const triangle = normal.reduce((sum, n, k) => sum + n * direction[k], 0) < 0
+              ? [a, c, b]
+              : [a, b, c];
+            for (const vertex of triangle) {
+              output.push(...vertex.p);
+              outputValues.push(vertex.value);
+            }
           };
           if (inside.length === 1) {
             emit(
-              ...(outside.map((k) => edge(inside[0], k)) as [
-                number[],
-                number[],
-                number[],
-              ]),
+              ...(outside.map((k) => edge(inside[0], k)) as [Vertex, Vertex, Vertex]),
             );
           } else if (inside.length === 3) {
             emit(
-              ...(inside.map((k) => edge(outside[0], k)).reverse() as [
-                number[],
-                number[],
-                number[],
-              ]),
+              ...(inside.map((k) => edge(outside[0], k)).reverse() as [Vertex, Vertex, Vertex]),
             );
           } else if (inside.length === 2) {
             const a = edge(inside[0], outside[0]),
@@ -103,5 +126,5 @@ export function isosurface(
           }
         }
       }
-  return new Float32Array(output);
+  return { positions: new Float32Array(output), values: new Float32Array(outputValues) };
 }

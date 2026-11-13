@@ -1,0 +1,13 @@
+{
+  "schema": "m02-numerical-primary-retrievals-1",
+  "local_date": "2026-10-03",
+  "runtime_or_acceptance_authority": false,
+  "retrieval_method": "PowerShell Invoke-WebRequest, independent actual HTTP retrieval; no file writes",
+  "receipts": [
+    {"id": "P-NP-01", "url": "https://www.tuhh.de/ti3/paper/rump/OgRuOi05.pdf", "retrieved_utc": "2026-10-04T01:42:24.9037400Z", "status": 200, "bytes": 373558, "sha256": "56e897ffce0a843ea531769d50b8466241ae4f01094b0ddf83d8fff74255cfcc", "hash_domain": "raw response PDF bytes"},
+    {"id": "P-NP-02", "url": "https://www.netlib.org/lapack/lawnspdf/lawn165.pdf", "retrieved_utc": "2026-10-04T01:42:27.3614545Z", "status": 200, "bytes": 2398441, "sha256": "bc3d53e25397f7e9413b76379beb8c523afa045910d961e21c12ef394f84e6b9", "hash_domain": "raw response PDF bytes"},
+    {"id": "P-NP-03", "url": "https://arxiv.org/html/2405.18363v2", "retrieved_utc": "2026-10-04T01:42:27.7995549Z", "status": 200, "bytes": 616579, "sha256": "6b62916b4fcd142985e1f395c310707351fe030bfd008cfa9d64e7e12275c9bf", "hash_domain": "UTF8 encoding of decoded HTML response"},
+    {"id": "P-NP-04", "url": "https://docs.python.org/3.12/library/math.html", "retrieved_utc": "2026-10-04T01:42:28.1688084Z", "status": 200, "bytes": 94979, "sha256": "1f0108e2b139e7ed36a99cddda4d514cc6584f0ad46c10062c054d5d7fac543e", "hash_domain": "UTF8 encoding of decoded HTML response"},
+    {"id": "P-NP-05", "url": "https://docs.python.org/3.12/library/fractions.html", "retrieved_utc": "2026-10-04T01:42:28.3374027Z", "status": 200, "bytes": 47566, "sha256": "ac648cdd902b3b3ab5e18441137845603fad5ad260abbc87445bdd1cf416058e", "hash_domain": "UTF8 encoding of decoded HTML response"}
+  ]
+}

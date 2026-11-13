@@ -6,6 +6,21 @@ The ML VPS is the only application host. The previous secondary publication was 
 
 A geophysics investigation workbench with 20 distinct geological cases, six conditions per case, and 348 computed inverse-method results. The release uses original synthetic geology and arrays calculated by SimPEG, SciPy, PyTorch and Deepwave. The catalogue records each method's target, units, final state and recovery verdict.
 
+## Areas
+
+| Area | Folder | Status | What it holds |
+| --- | --- | --- | --- |
+| Web | [frontend/](frontend/) | active | Six-page bilingual scientific workbench and replay visualizations. |
+| API | [app/](app/) | active | Authenticated accounts, projects, datasets, jobs, and artifact routes. |
+| Core pipelines | [data-pipeline/](data-pipeline/) | active | Acquisition, preprocessing, forward models, inversion, evaluation, and export. |
+| Packages | [SimPEG](https://pypi.org/project/simpeg/) | active | Uses published scientific dependencies; this repository declares no package. |
+| Notebooks | [notebooks/](notebooks/) | active | 66 bilingual notebooks; executable method cases, theory, assumptions, limitations, and comparisons. Fresh-kernel replay evidence exists. M02/M04 include actual 3D inversions; M09 includes Dijkstra tomography, the local SGT ingestion/coordinate contract, and a straight-ray user-data inverse; M10 executes full-band and frequency-continuation product FWI on one controlled synthetic case; M13 executes ONNX inference. M11 executes one train-only 26-candidate calibration with separate modality baselines; a broader accepted FWI study (the single controlled M10 comparison remains unresolved), browser-side M12 straight-ray first-arrival calculation is available; learned M12 checkpoint inference remains experimental and fails its comparator, independent MT/ERT comparison, field-data workflows and whole-course acceptance remain open. See [notebook review](docs/validation/notebook-review-2026-10-27.md). |
+| Data | [data/](data/) | active | Versioned synthetic experiments, derived results, source records, and readiness. |
+| Contracts | [docs/contracts/](docs/contracts/) | active | Catalogue schemas, API index, version lock, and deterministic readiness record. |
+| Documentation | [docs/](docs/) | active | Research, methods, assumptions, limitations, operations, and scientific evidence. |
+| Tests and gates | [tests/](tests/) and [scripts/](scripts/) | active | Numerical, API, integrity, source, and release verification tools. |
+| Deploy | [deploy/](deploy/) | active | Single ML VPS target, service configuration, and release procedures. |
+
 ## Investigate
 
 - Gravity and magnetics: 3D geological volumes, survey fields, spatially regularized, noise-weighted scalar/vector inverses and conditional data-noise ensembles.
@@ -19,10 +34,17 @@ A geophysics investigation workbench with 20 distinct geological cases, six cond
 
 ```powershell
 ./scripts/setup.ps1 -Gpu
+./scripts/setup.ps1 -Api
 ./scripts/rebuild-release.ps1
 $env:INVERSE_EARTH_DATA = 'data/experiments/release-0.04.001'
 $env:FWI_RECOVERY_ARTIFACTS = $env:INVERSE_EARTH_DATA
-./.venv-pipeline/Scripts/python.exe tests/run_validation.py
+$env:GEOPHYSICS_LOCAL_DATA_ROOT = 'D:\\geophysics-data' # choose an existing external directory
+$env:M01_RETAINED_CORRECTION_PACKET = '<absolute path to the retained original correction packet>'
+$env:M01_RETAINED_TRANSFORM_PACKET = '<absolute path to the retained original transform packet>'
+$env:GEOPHYSICS_PROFILE_INCOMPLETE_RECEIPT = '<absolute path to the retained original q13 receipt>'
+./.venv-pipeline/Scripts/python.exe tests/run_validation.py `
+  --data-root $env:GEOPHYSICS_LOCAL_DATA_ROOT `
+  --output-root "$env:GEOPHYSICS_LOCAL_DATA_ROOT/validation"
 ./.venv-pipeline/Scripts/python.exe data-pipeline/ingest.py --external
 cd frontend
 npm ci
@@ -31,7 +53,7 @@ node copy-data.mjs --source ../data/experiments/release-0.04.001
 npx vite --host 127.0.0.1 --port 5179
 ```
 
-Python 3.12. Both `.venv` and `.venv-pipeline` are local and ignored. The full candidate rebuild runs artifact, recovery and 48-model CUDA replay gates; it requires the hash-pinned Clear Lake station EDI at the ignored path in `data/source-ledger.json` and fails before GPU computation if the file is missing. It never overwrites the canonical release. The default numerical precompute path is also ignored. The Vite command above previews candidate arrays; `npm run build` copies the committed canonical release only. CI performs CPU-safe artifact and frontend gates. Scripts are invoked by file path; there is no internal Python package.
+Python 3.12. `.venv`, `.venv-pipeline`, `.venv-ert`, and `.venv-api` are local and ignored. The validation runner executes offline scientific tests in `.venv-pipeline`, ERT/travel-time/profile-mesh tests in `.venv-ert`, API/service tests in `.venv-api`, and waveform data tests in their pinned M08 environment; mutable evidence stays under the external data root. Project-backup drills and the Windows-only local Job-custody harness are outside the approved release gate. The full candidate rebuild runs artifact, recovery and 48-model CUDA replay gates; it requires the hash-pinned Clear Lake station EDI at the ignored path in `data/source-ledger.json` and fails before GPU computation if the file is missing. It never overwrites the canonical release. The default numerical precompute path is also ignored. The Vite command above previews candidate arrays; `npm run build` copies the committed canonical release only. CI performs CPU-safe artifact and frontend gates. Scripts are invoked by file path; there is no internal Python package.
 
 ## What the results mean
 
@@ -41,6 +63,6 @@ GPU computations were executed locally on an NVIDIA RTX 4070 Laptop GPU. Public 
 
 ## Repository
 
-`data-pipeline/`: plain numerical and ingestion scripts. `data/derived/v2/`: catalogue, experiments and checkpoints. `frontend/`: shared-shell bilingual React instrument. `tests/`: numerical tests including CUDA adjoint verification. `docs/validation/`: release evidence. `docs/research/`: primary-source review. `manuscripts/`: software technical report, not a novelty claim.
+`data-pipeline/`: plain numerical and ingestion scripts. `data/derived/v2/`: catalogue, experiments and checkpoints. `frontend/`: shared-shell bilingual React instrument. `tests/`: numerical tests including CUDA adjoint verification. `docs/validation/`: release evidence. `docs/research/`: primary-source review. `manuscripts/`: technical report and research-paper sources, including the unpublished geometry-normalized refinement study; current evidence and publication gaps are recorded in `docs/validation/manuscript-quality-review-2026-11-11.md`.
 
 The [reference course](https://github.com/Anagabrielamantilla/inversion-geofisica-python) informed the topic sequence. Its unlicensed notebooks and data are not redistributed. Two external SimPEG tutorial archives are downloaded, hashed, validated and preprocessed locally; values stay ignored pending redistribution review. The measured EDI derivative cites the [USGS Clear Lake release](https://doi.org/10.5066/P14KAQ3M) and [EarthScope transfer-function collection](https://doi.org/10.17611/DP/EMTF/GMEG/Clearlake). Original code: Apache-2.0. Original content and generated synthetic data: CC-BY-4.0.

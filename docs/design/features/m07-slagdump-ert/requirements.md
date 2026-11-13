@@ -1,6 +1,6 @@
 # M07 Slagdump ERT requirements
 
-Date: 2026-09-28. Parent: [approved product SDD](../../SDD.md), M07 and sections 2, 5, 6. Scope is the offline, provider-linked Slagdump field profile only; no API, frontend, host or public raw-data change. The observed file is a 5,435-byte, SHA-256-pinned `.ohm` with 38 electrodes and 222 resistances, no supplied `k`, `err`, current, voltage or reciprocal pairs. The fixed upstream example-data tree has no licence file, and the file credits BGR Hannover and Markus Furche. Raw redistribution therefore remains unapproved.
+Date: 2026-10-31. Parent: [approved product SDD](../../SDD.md), M07 and sections 2, 5, 6. ERT-01–08 define the local, provider-linked Slagdump scientific gates. The separate [supplied-profile workflow](../supplied-profile-workflow/design.md) and [protected profile jobs](../protected-profile-jobs/requirements.md) define authenticated user-upload processing, result inspection and host admission; they must not be inferred from the offline gates alone. The observed file is a 5,435-byte, SHA-256-pinned `.ohm` with 38 electrodes and 222 resistances, no supplied `k`, `err`, current, voltage or reciprocal pairs. The fixed upstream example-data tree has no licence file, and the file credits BGR Hannover and Markus Furche. Raw redistribution therefore remains unapproved.
 
 | ID | EARS requirement | Named gate |
 | --- | --- | --- |

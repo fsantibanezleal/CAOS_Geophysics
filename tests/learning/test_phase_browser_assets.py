@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import struct
@@ -26,7 +27,24 @@ def test_model_and_benchmark_are_bound_to_public_manifest() -> None:
     assert manifest["source"]["license"] == "CC BY 4.0"
     assert manifest["source"]["doi"] == "10.1109/ACCESS.2019.2947848"
     assert "modification" in manifest["source"]
-    assert _sha256(ASSETS / manifest["model"]["file"]) == manifest["model"]["sha256"]
+    redistribution = manifest["source"]["redistribution"]
+    assert redistribution["decision"] == "approved-with-attribution"
+    assert redistribution["license"] == "CC BY 4.0"
+    assert redistribution["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
+    assert redistribution["attribution_file"] == "ATTRIBUTION.md"
+    receipt = json.loads((ROOT / "data/derived/phase/stead-waveform-source.json").read_text(encoding="utf-8"))
+    assert receipt["rights"]["rights_review"] == redistribution["review"]
+    model = manifest["model"]
+    source_file = model.get("source_file", model["file"])
+    source_bytes = (ASSETS / source_file).read_bytes()
+    if source_file.endswith(".gz"):
+        assert len(source_bytes) == model["source_bytes"]
+        assert hashlib.sha256(source_bytes).hexdigest() == model["source_sha256"]
+        model_bytes = gzip.decompress(source_bytes)
+    else:
+        model_bytes = source_bytes
+    assert len(model_bytes) == model["bytes"]
+    assert hashlib.sha256(model_bytes).hexdigest() == model["sha256"]
     assert _sha256(ASSETS / manifest["benchmark"]["file"]) == manifest["benchmark"]["sha256"]
     assert benchmark["schema"] == "caos.stead-phase-heldout-benchmark.v1"
     assert benchmark["checkpoint_sha256"] == manifest["model"]["checkpoint_sha256"]
@@ -36,6 +54,30 @@ def test_model_and_benchmark_are_bound_to_public_manifest() -> None:
     assert overlap["checkpoint_sha256"] == benchmark["checkpoint_sha256"]
     assert overlap["array_sha256"]["test"] == benchmark["test_array_sha256"]
     assert overlap["status"] == "no-exact-cross-partition-overlap"
+
+
+def test_finalized_parity_status_preserves_export_identity_and_nonacceptance() -> None:
+    manifest = json.loads((ASSETS / "manifest.json").read_text(encoding="utf-8"))
+    receipt_bytes = (ASSETS / "browser-parity.json").read_bytes()
+    receipt = json.loads(receipt_bytes)
+    assert manifest["status"] == (
+        "browser-runtime-parity-verified; accuracy-unproven; release-unaccepted"
+    )
+    assert manifest["export_status"] == "assets-exported-browser-parity-not-yet-verified"
+    assert manifest["browser_parity_verified"] is True
+    assert manifest["browser_parity_receipt"]["accuracy_claim"] is False
+    assert manifest["browser_parity_receipt"]["release_accepted"] is False
+    assert manifest["browser_parity_receipt"]["sha256"] == hashlib.sha256(receipt_bytes).hexdigest()
+
+    exported = {
+        key: value for key, value in manifest.items()
+        if key not in {"browser_parity_receipt", "export_status"}
+    }
+    exported["status"] = manifest["export_status"]
+    exported["browser_parity_verified"] = False
+    exported_bytes = (json.dumps(exported, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    assert receipt["manifestSha256"] == hashlib.sha256(exported_bytes).hexdigest()
+    assert receipt["population"]["accuracyClaim"] is False
 
 
 def test_predeclared_display_population_preserves_qc_failure() -> None:

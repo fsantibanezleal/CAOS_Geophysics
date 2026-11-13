@@ -20,8 +20,12 @@ ROOT = Path(__file__).resolve().parents[1]
 VERDICTS = {"pass", "fail", "unresolved", "ineligible"}
 REQUIREMENT = re.compile(r"^(R-\d{3})\s+THE\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
 ALTERNATE = re.compile(r"^(R-\d{3})\s+(?:WHEN|IF)\b.*?\s+Gate:\s*(.+?)\s*$", re.M)
-GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
+GATE = re.compile(r"(?P<file>(?:scripts|tests|frontend|docs)/[\w./-]+\.(?:py|ts|mjs|json|md))(?:::(?P<symbol>[A-Za-z_]\w*(?:(?:\.|::)[A-Za-z_]\w*)*))?")
 SHA = re.compile(r"^[0-9a-f]{64}$")
+TEXT_SUFFIXES = {
+    ".css", ".csv", ".html", ".ipynb", ".js", ".json", ".md", ".mjs",
+    ".py", ".sh", ".toml", ".ts", ".tsx", ".txt", ".yaml", ".yml",
+}
 
 
 class LedgerError(ValueError):
@@ -29,7 +33,14 @@ class LedgerError(ValueError):
 
 
 def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    # Evidence hashes are created on Windows and checked on Linux as well.
+    # Git may normalize CRLF text to LF between those environments, so hash a
+    # canonical LF representation for known text formats. Binary artifacts
+    # retain their exact byte-level SHA-256.
+    if path.suffix.lower() in TEXT_SUFFIXES:
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def strict_json(path: Path) -> dict:
@@ -107,9 +118,13 @@ def executable_gate(root: Path, name: str) -> Path:
 def method_declarations(sdd: Path) -> dict[str, list[str]]:
     """Expand R-008's explicit reference to the M01-M13 acceptance table."""
     text = sdd.read_text(encoding="utf-8")
-    rows = re.findall(r"^\| (M\d{2}) \|[^\n]+\| ([^|]+) \|\s*$", text, re.M)
+    # The current SDD labels this first column M-01..M-13, while the approved
+    # baseline and requirement R-008 refer to the same methods as M01..M13.
+    # Accept both spellings and normalize before enforcing complete coverage.
+    rows = re.findall(r"^\| (M-?\d{1,2}) \|[^\n]+\| ([^|]+) \|\s*$", text, re.M)
     result = {}
     for key, gate in rows:
+        key = f"M{int(key.removeprefix('M').replace('-', '')):02d}"
         matches = list(GATE.finditer(gate))
         if key in result or not matches:
             raise LedgerError(f"duplicate method or missing method gate: {key}")
@@ -129,9 +144,11 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
     if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise LedgerError("assessment must name a full source revision")
     try:
-        datetime.fromisoformat(ledger["assessed_at"].replace("Z", "+00:00"))
+        assessed_at = datetime.fromisoformat(ledger["assessed_at"].replace("Z", "+00:00"))
     except (KeyError, TypeError, ValueError, AttributeError) as exc:
         raise LedgerError("assessment must name an ISO timestamp") from exc
+    if assessed_at.tzinfo is None or assessed_at.utcoffset() is None:
+        raise LedgerError("assessment timestamp must include a timezone")
     records = ledger.get("requirements")
     if not isinstance(records, list) or any(not isinstance(record, dict) for record in records):
         raise LedgerError("requirements must be an object list")
@@ -159,7 +176,7 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
         gate_matches = list(GATE.finditer(declared[key]))
         if key == "R-008":
             gate_matches.extend(GATE.fullmatch(name) for names in method_declarations(sdd).values() for name in names)
-        required = {m.group() for m in gate_matches if Path(m["file"]).suffix in {".py", ".ts"}}
+        required = {m.group() for m in gate_matches if Path(m["file"]).suffix in {".py", ".ts", ".mjs"}}
         # A document is a required artifact, not an executable invocation. The
         # ledger validates itself structurally; hashing its own receipt inside
         # itself would require an impossible cryptographic fixed point.
@@ -175,12 +192,21 @@ def validate(root: Path, ledger: dict, *, require_release: bool = False) -> dict
             name = receipt.get("gate")
             if name not in required or name in executed:
                 raise LedgerError(f"unknown or duplicate measured gate: {key}")
+            receipt_revision = receipt.get("source_revision")
+            try:
+                measured_at = datetime.fromisoformat(receipt["measured_at"].replace("Z", "+00:00"))
+            except (KeyError, TypeError, ValueError, AttributeError) as exc:
+                raise LedgerError(f"invalid measured receipt: {key}") from exc
             if (receipt.get("schema") != "geophysics.gate-receipt/v1"
                     or receipt.get("requirement") != key or receipt.get("verdict") != "pass"
-                    or receipt.get("source_revision") != revision
+                    or not isinstance(receipt_revision, str)
+                    or not re.fullmatch(r"[0-9a-f]{40}", receipt_revision)
+                    or (verdict == "pass" and receipt_revision != revision)
+                    or measured_at.tzinfo is None or measured_at.utcoffset() is None
+                    or measured_at > assessed_at
                     or not isinstance(receipt.get("command"), list) or not receipt["command"]
                     or any(not isinstance(arg, str) for arg in receipt["command"])
-                    or not isinstance(receipt.get("measured_at"), str)):
+                    ):
                 raise LedgerError(f"invalid measured receipt: {key}")
             checked_hash(executable_gate(root, name), receipt.get("gate_sha256"))
             outputs = receipt.get("outputs")

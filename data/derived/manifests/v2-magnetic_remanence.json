@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "MAGNETIC_REMANENCE",
+  "artifacts": [
+    {
+      "path": "v2/MAGNETIC_REMANENCE/reference.json",
+      "bytes": 2735923,
+      "sha256": "c5740ad61a0ec52d26ab02b7ea6bf53b406390df52be5c704e4bf04a09f51750"
+    },
+    {
+      "path": "v2/MAGNETIC_REMANENCE/contrast.json",
+      "bytes": 2712202,
+      "sha256": "d3b4dcd729b51989fd062c6562ca7965720852f7f3e0841359c65ae90e2a282e"
+    },
+    {
+      "path": "v2/MAGNETIC_REMANENCE/noise.json",
+      "bytes": 2738096,
+      "sha256": "874af254b495adfc8cb595079cbdc13a20807f10d2b227904ced1937882ec42c"
+    },
+    {
+      "path": "v2/MAGNETIC_REMANENCE/acquisition.json",
+      "bytes": 2720244,
+      "sha256": "eb2c91e1a88efd370f8a5108758e14d1761ab40d205c37919e3c94f562129c38"
+    },
+    {
+      "path": "v2/MAGNETIC_REMANENCE/coverage.json",
+      "bytes": 2737303,
+      "sha256": "e1340c14a5dbdc21089b85639d07847801f873c4cb6fae92c52fc26a81d728a9"
+    },
+    {
+      "path": "v2/MAGNETIC_REMANENCE/regularization.json",
+      "bytes": 2743254,
+      "sha256": "bae04a5558c016c80d148ba225e50345a58cf24be80e15a4677fc7b511f492d3"
+    }
+  ]
+}

@@ -4,11 +4,21 @@ This guide covers the unreleased API foundation and its opt-in single-origin fro
 
 ## Local setup
 
-Use Python 3.12 or newer. On PowerShell, create a separate ignored runtime environment and install only the API lane:
+Use Python 3.12 or newer. The API and isolated M02 scientific child use separate ignored environments because their pandas pins differ. On PowerShell, create both environments with the repository setup command:
 
 ```powershell
-py -3.12 -m venv .venv-api
-.\.venv-api\Scripts\python.exe -m pip install -r requirements-api.txt
+./scripts/setup.ps1 -Api
+```
+
+On Linux, use `bash scripts/setup.sh --api`. The API environment includes its test-only Choclo oracle, and `.venv-gravity` uses the pinned M02 child requirements. To run the API suite:
+
+```powershell
+.\.venv-api\Scripts\python.exe -m pytest tests\api -q
+```
+
+Apply migrations and start the API from `.venv-api`:
+
+```powershell
 .\.venv-api\Scripts\alembic.exe -c app\alembic.ini upgrade head
 .\.venv-api\Scripts\uvicorn.exe app.main:app --host 127.0.0.1 --port 8000
 ```
@@ -17,21 +27,22 @@ Set these process environment variables before migration and startup. Keep their
 
 | Variable | Meaning |
 | --- | --- |
-| `GEOPHYSICS_AUTH_SECRET` | At least 32 random characters for FastAPI Users verification/reset tokens and request admission keys. |
+| `GEOPHYSICS_AUTH_SECRET` | At least 32 private random characters for request admission keys and any explicitly enabled library token flows. |
 | `GEOPHYSICS_PUBLIC_ORIGIN` | Exact browser origin, such as the final HTTPS site; no path or trailing slash. |
-| `GEOPHYSICS_SMTP_HOST`, `GEOPHYSICS_SMTP_PORT`, `GEOPHYSICS_SMTP_USERNAME`, `GEOPHYSICS_SMTP_PASSWORD`, `GEOPHYSICS_SMTP_FROM` | TLS mail delivery for verification and password reset. Missing credentials fail startup. |
+| `GEOPHYSICS_AUTH_MODE` | Default `local`: operator-provisioned SQLite accounts, no SMTP or public signup. Explicit `email` retains the historical email profile. |
+| `GEOPHYSICS_SMTP_HOST`, `GEOPHYSICS_SMTP_PORT`, `GEOPHYSICS_SMTP_USERNAME`, `GEOPHYSICS_SMTP_PASSWORD`, `GEOPHYSICS_SMTP_FROM` | Only for the explicit `email` profile. Not required or contacted by the default local profile. |
 | `GEOPHYSICS_DATA_DIR` | Optional absolute private root, default `data/raw/api/`. |
 | `GEOPHYSICS_DB_PATH` | Optional absolute SQLite path, default `<data_dir>/api.sqlite3`. Set before running Alembic too. |
 
-The default private path is already covered by `data/raw/` in `.gitignore`. The web server must never serve it as static content. The ASGI deployment must preserve a trustworthy client address for rate limits. Production cookies require HTTPS and are HTTP-only, host-only and SameSite Strict. Before any new migration, back up the SQLite file and private byte tree as a consistent restricted snapshot. The second migration adds private-storage attestations without retroactively asserting consent for older rows. Release requires encrypted/restricted backups, a restore drill and verified deletion-tombstone handling; this API branch has no external backup integration.
+The default private path is already covered by `data/raw/` in `.gitignore`. The web server must never serve it as static content. The ASGI deployment must preserve a trustworthy client address for rate limits. Deployed cookies require HTTPS and are HTTP-only, host-only and SameSite Strict. The second migration adds private-storage attestations without retroactively asserting consent for older rows. Off-host backup/restore and deletion-journal integration are not prerequisites for the current owner-tested deployment. Existing recovery tools and evidence remain historical/optional, not a claim that project backups exist. Retain the current application release and two rollback releases separately from private project storage.
 
 The test-only `cookie_secure=False` setting is available through `create_app(Settings(...))` for loopback HTTP tests, not through production environment configuration.
 
 ## Account and project flow
 
-All unsafe `/api/` requests require a same-origin `Origin` or `Referer`, a CSRF token from `GET /api/auth/csrf`, the `X-CSRF-Token` header, and the cookie set by that response. Obtain a new token when the browser session starts. Registration is `POST /api/auth/register`; the verification token is mailed and submitted to `POST /api/auth/verify/verify`. The library login is `POST /api/auth/cookie/login` with form fields `username` (the email address) and `password`. `GET /api/auth/me` confirms the verified session. `POST /api/auth/reset-password/forgot-password` emails a reset token; `POST /api/auth/reset-password/reset-password` accepts `{ "token": "...", "password": "..." }` and revokes all existing sessions. `POST /api/auth/cookie/logout` revokes the current token.
+All unsafe `/api/` requests require a same-origin `Origin` or `Referer`, a CSRF token from `GET /api/auth/csrf`, the `X-CSRF-Token` header, and the cookie set by that response. Obtain a new token when the browser session starts. `GET /api/auth/config` reports only the non-secret profile. Provision local accounts with the [internal account command](16_internal_accounts.md); registration, verification and emailed reset routes are absent in the default profile. Library login is `POST /api/auth/cookie/login` with form fields `username` and `password`. `GET /api/auth/me` confirms an active authenticated session, not mailbox verification. `POST /api/auth/cookie/logout` revokes the current token. Operator password rotation revokes all sessions of the selected account and preserves its projects. Historical registration/verification/reset flows remain available only under explicit `GEOPHYSICS_AUTH_MODE=email` and are not the current deployment requirement.
 
-Verified accounts can use `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/{project_id}`, and `GET/POST /api/projects/{project_id}/assets`. A project body is `{ "name": "Survey name", "description": "..." }`; PATCH accepts either field. Project, asset, download and export URLs return 404 for both missing and another owner's ID. Guests have no project or raw-byte access.
+Active local accounts can use `GET/POST /api/projects`, `GET/PATCH/DELETE /api/projects/{project_id}`, and `GET/POST /api/projects/{project_id}/assets`. A project body is `{ "name": "Survey name", "description": "..." }`; PATCH accepts either field. Multiple accounts/projects remain supported. Project, asset, download and export URLs return 404 for both missing and another owner's ID. Guests have no private server project or raw-byte access; they retain public scientific exploration and validated client-side calculation. Opening a file locally is not a server upload.
 
 The service accepts original bytes as the body of `POST /api/projects/{project_id}/assets`. Send `Content-Type` matching the declared MIME and one UTF-8 JSON `X-Asset-Metadata` header no larger than 16 KiB. A minimal gravity station example is:
 
@@ -76,10 +87,10 @@ The API accepts these raw envelopes and per-format caps: gravity, magnetic, trav
 
 `GET /api/projects/{project_id}/assets/{asset_id}` returns the versioned `geophysics.raw-asset-view/v1` receipt. The owner-only projection includes `owner_id`, `project_id`, `source_id`, `original_filename`, `mime_type`, byte count, SHA-256, physical metadata, `raw_metadata_checked`, nested `source.location: {kind: "upload", filename}`, and a receipt/download URL. Citation is null when none was provided; it is never invented. The private filesystem `storage_key` is intentionally absent from JSON, OpenAPI responses and export manifests. Append `/download` to retrieve exact bytes with `X-Content-SHA256`. `GET /api/projects/{project_id}/export` returns a ZIP with `manifest.json` and `raw/{asset_id}/{original_filename}` members; check each member against its manifest hash. If bytes have changed on disk, download/export returns `409 raw_integrity_failed`.
 
-`DELETE /api/projects/{project_id}` first rejects unexpected or changed project files and any active processing job. It also returns `409 backup_reconciliation_required` if any `.backups/<owner>/<project>` entry exists, including an empty directory: the API has no backup manifest proving that it owns the entry or knows its contents. This refusal leaves the project, raw/derived bytes, backup entry, quota and receipts unchanged. With no project backup entry, DELETE commits a deletion receipt with exact raw and derived IDs, hashes and sizes before unlinking only those verified owned files. The response includes a receipt ID, `backup_erasure_status: not_attempted` and `external_backup_status: pending_reconciliation`; the receipt records `backup_purge_status: not_attempted`. Neither is evidence that backup copies were erased. Backup inventory, retention or purge and tombstone-aware restore require a separate explicit operator procedure. Preserve and inspect any project backup in restricted storage before an operator clears its path and retries DELETE; do not treat moving it as erasure. External encrypted backups may still retain an older copy until their published retention period ends; a restore must honor the tombstone before returning any deleted project. That operational contract is a release blocker until the backup owner demonstrates it.
+`DELETE /api/projects/{project_id}` first rejects unexpected or changed project files and any active processing job. A legacy `.backups/<owner>/<project>` entry also causes `409 backup_reconciliation_required`: the API cannot prove that such pre-existing bytes belong to it, so it leaves the project, files, quota and receipts unchanged. This is a fail-closed safeguard for unexpected legacy state. The owner-tested profile does not create or require project backups, off-host backups, backup retention or restore infrastructure. When no unexpected path exists, DELETE commits a receipt with exact raw and derived IDs, hashes and sizes before removing only those verified application-owned files; receipt fields explicitly state that backup erasure was not attempted.
 
 Startup is a read-only private-state audit. It never age-sweeps staged files, exports, orphaned project bytes, interrupted `.deleting` directories or backups. Any such bytes, a missing referenced asset or inconsistent quota counter stops startup with `private_recovery_required`. An operator must preserve and inspect the exact SQLite snapshot, receipt and bytes in a restricted recovery area, then decide how to reconcile them; do not delete a directory simply because an older DB lacks its rows. This is intentionally an operational stop, not a successful upload or automatic repair.
 
 INT-API-FE-01 is implemented in `frontend/src/api/contracts.ts` on the frontend lifecycle branch: the v1 owner-view mirror omits the private storage key, accepts null citation and preserves `raw_metadata_checked`. A shared JSON fixture is validated by both the frontend parser and the API's Pydantic view. The six-route App exposes authenticated project/raw actions only in the opt-in `build:single-origin` output; the legacy static build keeps guest research and no unavailable account affordance. Local browser QA uses the real API, not a simulated response. This integration does not activate a public deployment or imply scientific dataset QC, processing or solver operations.
 
-The project API returns `{ "code", "message", "fields"? }` errors: 401 for absent verified account, 403 for origin/CSRF, 404 for missing/foreign IDs, 413 for a size cap, 415 for bytes/MIME/format, 422 for declared metadata, 429 for a rate window and 507 for account quota. FastAPI Users account routes retain their library error shape, including rejection of login before verification. The name and final hostname of the single public origin remain owner decisions; no deployment or cutover is part of this branch.
+The project API returns `{ "code", "message", "fields"? }` errors: 401 for an absent or inactive provisioned account, 403 for origin/CSRF, 404 for missing/foreign IDs, 413 for a size cap, 415 for bytes/MIME/format, 422 for declared metadata, 429 for a rate window and 507 for account quota. Local account login does not require mailbox verification. The single public origin is fixed at `https://geophysics.ml.fasl-work.com/`; release readiness and live cutover are tracked separately in the SDD and deployment guide.

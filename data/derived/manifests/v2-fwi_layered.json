@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "FWI_LAYERED",
+  "artifacts": [
+    {
+      "path": "v2/FWI_LAYERED/reference.json",
+      "bytes": 24665632,
+      "sha256": "0bd58753bebf96d8a8d577abc40abd27ad230e2f1a5a4e99f017af4c73fab4c9"
+    },
+    {
+      "path": "v2/FWI_LAYERED/contrast.json",
+      "bytes": 24692605,
+      "sha256": "dd35ad71b33314640c1895098019a37d05d3202325319725c0c8aaeaa9f1eafc"
+    },
+    {
+      "path": "v2/FWI_LAYERED/noise.json",
+      "bytes": 24551631,
+      "sha256": "e865ec83f51b47bfc7026bd7bbc0d3e3972726ac65067869cbe59002e9291879"
+    },
+    {
+      "path": "v2/FWI_LAYERED/acquisition.json",
+      "bytes": 24183174,
+      "sha256": "d48d06f0c0ee3f689bb29779a3f3645cf42688fd6863a3f50cd1856fa2ba901c"
+    },
+    {
+      "path": "v2/FWI_LAYERED/coverage.json",
+      "bytes": 22951643,
+      "sha256": "50f35b5bbe20f4c9c2809d4505ca7ea36ceccb8e5d3beaa8a5eb288a05d603e9"
+    },
+    {
+      "path": "v2/FWI_LAYERED/regularization.json",
+      "bytes": 24655816,
+      "sha256": "09363b1ca81be62f5d662b1c71f16b29a019298915a122f90f09b91f12421854"
+    }
+  ]
+}

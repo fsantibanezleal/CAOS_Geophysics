@@ -10,7 +10,7 @@ Start with [From a source file to a geophysical result](01_source-to-result.md) 
 
 ## Legacy local CLI observations (not authenticated API input)
 
-The following five-column CSV and `ingest.py` workflow belong to the local potential-field CLI. The authenticated API currently accepts a different, six-column gravity station contract with an explicit sigma declaration and only a flag-only QC method; see [the processing-job guide](../guides/07_processing_jobs.md). Passing the CLI contract does not create an API observation dataset.
+The following five-column CSV and `ingest.py` workflow belong to the local potential-field CLI. The authenticated API uses a separate six-column gravity station contract with explicit sigma and physical metadata. That typed observation can support flag QC; M02 ordinary-L2 additionally requires source-bound processing, uncertainty, acquisition-group and fixed-background declarations. The M02 online switch is closed in the current deployment. See [the processing-job guide](../guides/07_processing_jobs.md). Passing the CLI contract does not create an API observation dataset.
 
 UTF-8 CSV headers must be exactly `east_m,north_m,up_m,value,sigma`. At least four unique stations are required. Every value must be finite; sigma must be strictly positive. Duplicate coordinates reject the table; no silent averaging, clipping or outlier deletion occurs. Stations are sorted northing then easting. Coordinates are Cartesian ENU in metres. Gravity is gz, positive upward, in mGal. Magnetics is TMI in nT.
 

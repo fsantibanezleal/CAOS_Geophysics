@@ -9,7 +9,7 @@ from urllib.request import Request
 import pytest
 import sources
 
-from sources import SourceError, _NoRedirect, acquire_source, load_ledger
+from sources import SourceError, _NoRedirect, acquire_source, load_ledger, local_data_root
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -31,7 +31,8 @@ def test_ledger_contract_and_rights():
     records = load_ledger()
     assert set(records) == {"simpeg-gravity", "simpeg-magnetics", "original-synthetic",
                             "clear-lake-cl061", "auslamp-nsw-c15", "pygimli-slagdump", "pygimli-koenigsee",
-                            "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2"}
+                            "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2",
+                            "usgs-amargosa-aeromagnetic"}
     assert {record["rights_decision"] for record in records.values()} <= {
         "mirror", "provider-link-only", "derivative-only", "forbidden"}
     assert all(record["raw_path"].startswith("data/downloads/") for record in records.values()
@@ -42,6 +43,17 @@ def test_ledger_contract_and_rights():
         assert records[source_id]["acquisition"] == "fetch"
         assert records[source_id]["rights_decision"] == "provider-link-only"
         assert records[source_id]["expected_bytes"] > 0
+
+
+def test_amargosa_source_contract_is_pinned_and_attributed():
+    source = load_ledger()["usgs-amargosa-aeromagnetic"]
+    assert source["object_url"] == "https://pubs.usgs.gov/of/2000/of00-188/data/amargosa.xyz.gz"
+    assert source["expected_bytes"] == 8_226_743
+    assert source["sha256"] == "2698b48a79822f28122f7f8bcd49d0d28c3c103340ddc0012fee0228866ec22c"
+    assert source["expanded_bytes"] == 26_963_280 and source["record_count"] == 374_490
+    assert source["rights_decision"] == "mirror"
+    assert "public domain" in source["rights_statement"]
+    assert "subsurface truth" in source["use"]
 
 
 def test_immutable_raw_asset_and_receipt(tmp_path):
@@ -71,6 +83,36 @@ def test_immutable_raw_asset_and_receipt(tmp_path):
     with pytest.raises(SourceError, match="test-source: byte/hash mismatch"):
         acquire_source("test-source", root=tmp_path, ledger_path=ledger)
     assert target.read_bytes() == b"changed bytes"  # acquisition did not overwrite the disputed asset
+
+
+def test_existing_verified_receipt_is_reusable_without_retrieval_claim(tmp_path):
+    ledger, local, record = _test_ledger(tmp_path)
+    target = tmp_path / record["raw_path"]
+    target.parent.mkdir(parents=True)
+    target.write_bytes(local.read_bytes())
+    _, first_target, first = acquire_source("test-source", root=tmp_path, ledger_path=ledger)
+    assert first_target == target and first["acquisition_method"] == "existing-verified"
+    receipt_path = tmp_path / "data/raw/acquisition/test-source.json"
+    original_receipt, original_data = receipt_path.read_bytes(), target.read_bytes()
+    _, second_target, second = acquire_source("test-source", root=tmp_path, ledger_path=ledger)
+    assert second_target == target and second == first
+    assert receipt_path.read_bytes() == original_receipt and target.read_bytes() == original_data
+    changed = dict(first, acquisition_method="unverified")
+    receipt_path.write_text(json.dumps(changed), encoding="utf-8")
+    with pytest.raises(SourceError, match="invalid acquisition provenance"):
+        acquire_source("test-source", root=tmp_path, ledger_path=ledger)
+
+
+def test_working_data_root_requires_external_explicit_configuration(tmp_path, monkeypatch):
+    monkeypatch.delenv("GEOPHYSICS_LOCAL_DATA_ROOT", raising=False)
+    with pytest.raises(SourceError, match="Set GEOPHYSICS_LOCAL_DATA_ROOT"):
+        local_data_root()
+    for value in (ROOT, ROOT/"data/raw", Path("relative-data")):
+        with pytest.raises(SourceError):
+            local_data_root(value)
+    monkeypatch.setenv("GEOPHYSICS_LOCAL_DATA_ROOT", str(tmp_path))
+    assert local_data_root() == tmp_path.resolve()
+    assert local_data_root(tmp_path/"explicit") == (tmp_path/"explicit").resolve()
 
 
 def test_source_allowlist_and_link_only(tmp_path):

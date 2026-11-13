@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "GRAVITY_NOISY",
+  "artifacts": [
+    {
+      "path": "v2/GRAVITY_NOISY/reference.json",
+      "bytes": 1835718,
+      "sha256": "59657cae89ebfb56691c42591229194b8f634020568ec2e6573ebb25aa225f8c"
+    },
+    {
+      "path": "v2/GRAVITY_NOISY/contrast.json",
+      "bytes": 1819301,
+      "sha256": "0a8f832281dfc1abee409b4401265b21b83e6fc9e90f50e8e05eb60b4f2b9955"
+    },
+    {
+      "path": "v2/GRAVITY_NOISY/noise.json",
+      "bytes": 1826859,
+      "sha256": "ccb6c97b32edfd09575e9bd7b1e640a2c362d8947be6a7d6008e1ce99d253190"
+    },
+    {
+      "path": "v2/GRAVITY_NOISY/acquisition.json",
+      "bytes": 1834494,
+      "sha256": "2f4e3fbf67f9700e07354875bcdb627aa9d201e158d545842eb93fdd3bcc6d4b"
+    },
+    {
+      "path": "v2/GRAVITY_NOISY/coverage.json",
+      "bytes": 1836620,
+      "sha256": "858a38fe2fdc6c7299f2882ef07eb8aac0f1c4c2c64052941a6684dd6e5327cf"
+    },
+    {
+      "path": "v2/GRAVITY_NOISY/regularization.json",
+      "bytes": 1834966,
+      "sha256": "494db776a5fa31467e3b0af902c90f740656bca708e11ef89d18185d2e140906"
+    }
+  ]
+}

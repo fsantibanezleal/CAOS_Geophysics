@@ -122,7 +122,7 @@ def main():
         from app.config import Settings
         from app.server import create_app
         settings = Settings(data_dir=source, db_path=database, public_origin="http://testserver", cookie_secure=False,
-                            auth_secret="test-secret-with-at-least-32-characters-123456", mt_online_enabled=True)
+                            auth_secret="test-secret-with-at-least-32-characters-123456", mt_online_enabled=True, auth_mode="email")
 
         async def no_smtp(*args):
             raise AssertionError("Fixture must never send email")

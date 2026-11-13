@@ -1,8 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { bindDataset, bindResult, parseDatasetReceipt, parseEligibility, parseFlagResult, parseGravityDataset, parseProcessingJob, validateThreshold, verifyProcessingBundle } from "../api/processing-contracts";
+import { bindDataset, bindResult, parseDatasetReceipt, parseEligibility, parseFlagResult, parseGravityDataset, parseProcessingJob, parseProjectDatasetReceipt, validateThreshold, verifyProcessingBundle } from "../api/processing-contracts";
 import { bytes, fixture, id } from "./fixtures/processing";
 
 describe("activated flag-only processing contracts", () => {
+  it("accepts source-bound magnetic flight-line receipts in mixed-modality projects", () => {
+    const receipt = {
+      dataset_id: id(1), project_id: id(2), raw_asset_id: id(3), version: 1,
+      schema: "geophysics.observation-dataset/v1", modality: "magnetic_flightline", row_count: 12,
+      parser_version: "magnetic-flightline-original/v1", raw_sha256: "a".repeat(64), sha256: "b".repeat(64),
+      created_at: "2026-10-28T12:00:00Z", qc_verdict: "source_bound_not_numerically_processed",
+    };
+    expect(parseProjectDatasetReceipt(receipt)).toEqual(receipt);
+    expect(() => parseProjectDatasetReceipt({...receipt, parser_version: "unknown/v1"})).toThrow();
+    expect(() => parseProjectDatasetReceipt({...receipt, row_count: 11})).toThrow();
+  });
+  it("accepts an explicitly declared local metric gravity frame", () => {
+    const f = fixture();
+    const dataset = {...f.dataset, physical_metadata: {...f.dataset.physical_metadata,
+      coordinate_reference: "local" as const, epsg: null, local_crs: "authored local east north metric frame",
+      horizontal_datum: "authored local origin", vertical_datum: "authored upward survey plane",
+      vertical_positive: "up" as const, component_frame: "local vertical up"}};
+    expect(parseGravityDataset(dataset)).toEqual(dataset);
+    expect(() => parseGravityDataset({...dataset, physical_metadata: {...dataset.physical_metadata,
+      coordinate_reference: "local", local_crs: null}})).toThrow();
+    expect(() => parseGravityDataset({...dataset, physical_metadata: {...dataset.physical_metadata,
+      coordinate_reference: "epsg", epsg: null}})).toThrow();
+  });
   it("rejects identity shape physics and fake inverse drift", () => {
     const f = fixture();
     expect(parseDatasetReceipt(f.receipt)).toEqual(f.receipt); expect(parseGravityDataset(f.dataset)).toEqual(f.dataset); expect(parseFlagResult(f.result)).toEqual(f.result);
@@ -13,8 +36,9 @@ describe("activated flag-only processing contracts", () => {
     const changed = {...f.dataset, sigma_mgal: [1,1,1,1,1]}; expect(() => bindResult(f.result, f.job, changed)).toThrow("unchanged sigma");
     expect(() => parseDatasetReceipt({...f.receipt,dataset_id: "../../"})).toThrow();
     for (const n of [NaN, Infinity, "6", 0, 10.1]) expect(() => validateThreshold(n)).toThrow(); expect(validateThreshold(1.5)).toBe(1.5);
-    const eligibility = {dataset_id: id(3), methods: [{method_id: "future.mt/v1", eligible: true, lane: "online_processing", scope: "API says eligible"}], unavailable: [{method_id: "M01", eligible: false, lane: "not_activated", reason: "No full adapter"}]};
+    const eligibility = {dataset_id: id(3), methods: [{method_id: "future.mt/v1", eligible: true, lane: "online_processing", scope: "API says eligible"}], unavailable: [{method_id: "M01", eligible: false, lane: "offline_only", reason: "No full adapter", reason_fields: ["method.input_contract", "method.online_lane"]}, {method_id: "gravity.survey-l2-ordinary/v1", eligible: false, lane: "ineligible", reason: "Source admission failed", reason_fields: ["physical_metadata.geometry.ordinary_l2"], source_eligible: false, reasons: ["Explicit ordinary_l2 processing declaration is required"]}]};
     expect(parseEligibility(eligibility)).toEqual(eligibility); expect(() => parseEligibility({...eligibility, unavailable: [...eligibility.unavailable,...eligibility.unavailable]})).toThrow();
+    expect(() => parseEligibility({...eligibility, unavailable: [{...eligibility.unavailable[0], reason_fields: []}]})).toThrow();
   });
   it("validates state dependent job fields", () => {
     const {job} = fixture(); expect(parseProcessingJob(job)).toEqual(job);

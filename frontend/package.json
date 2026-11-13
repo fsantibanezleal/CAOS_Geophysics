@@ -1,25 +1,34 @@
 {
   "name": "inverse-earth-studio-web",
   "private": true,
-  "version": "0.4.1",
+  "version": "0.4.3",
   "type": "module",
+  "engines": {
+    "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+  },
   "scripts": {
     "dev": "node copy-data.mjs && vite --host 127.0.0.1",
-    "build": "tsc --noEmit && node copy-data.mjs && vite build",
+    "build": "node scripts/verify-joint-pins.mjs && tsc --noEmit && node copy-data.mjs && vite build",
     "build:single-origin": "npm run build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:e2e:eligibility": "playwright test -c playwright.eligibility.config.ts",
+    "test:e2e:visual-matrix": "tsc --noEmit -p tsconfig.visual-matrix.json && playwright test -c playwright.visual-matrix.config.ts",
+    "benchmark:m03": "node scripts/benchmark-magnetic-local.mjs",
+    "check:story": "node scripts/check_story_mode.mjs",
+    "gate": "node scripts/check_story_mode.mjs && node scripts/gate.mjs"
   },
   "dependencies": {
-    "@fasl-work/caos-app-shell": "0.6.8",
+    "@fasl-work/caos-app-shell": "0.26.0",
     "fflate": "0.8.3",
-    "katex": "^0.16.11",
+    "katex": "^0.19.1",
     "lucide-react": "^0.577.0",
     "onnxruntime-web": "^1.30.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router": "^8.3.0",
     "three": "^0.180.0",
+    "uplot": "1.6.32",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
@@ -29,8 +38,13 @@
     "@types/react-dom": "^19.2.0",
     "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "openapi-typescript": "7.13.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.12",
     "vitest": "^4.0.3"
+  },
+  "overrides": {
+    "@redocly/openapi-core": "1.34.22",
+    "minimatch": "11.0.1"
   }
 }

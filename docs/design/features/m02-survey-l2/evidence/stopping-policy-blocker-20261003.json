@@ -1,0 +1,61 @@
+{
+  "schema": "m02-l2-stopping-policy-blocker-replay-1",
+  "date": "2026-10-03",
+  "source_head": "c297294b5cdbec9360899945e1e2081f703259fd",
+  "status": "BLOCKED_APPROVED_STOPPING_POLICY_REVIEW_REQUIRED",
+  "source_sha256": {
+    "data-pipeline/gravity_l2.py": "9f97d30cb9551576dc1664bdb243b2936293db633a93850141a83654a47cc594",
+    "tests/numerics/test_gravity_l2.py": "daa44f3593734919b3ddfeeb0bd419be7adf8de5c664895b61139e50ce4c02df",
+    "docs/design/features/m02-survey-l2/binding-set-amendment.md": "9f4c33b94789b4428543a475cb000e4a4b19dc7c165551ed0474c136964a56f0",
+    "docs/design/features/m02-survey-l2/design.md": "dea0f62253cada9b974341f16852f47bb3c2aa801479cddc1b770783e50818cf"
+  },
+  "installed_simpeg_optimization_sha256": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+  "pytest": {
+    "node": "tests/numerics/test_gravity_l2.py::test_independent_six_cell_bound_starts[upper_lower-1500.0-diagonal_sd]",
+    "exit": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0,
+    "elapsed_seconds": 17.78,
+    "private_xml_sha256": "6cbbe5d00e48b40e70ec3d24a33c97a2fc99d7cc9951d7084de9d5cd46ff06d3"
+  },
+  "unchanged_direct_replay": {
+    "status": "nonconverged",
+    "reason": "zero_free_direction",
+    "iterations": 4,
+    "phi_trace": [18.062939101081465,13.165656011445346,11.10998940021354,0.043821538373794246,0.043821538373794246],
+    "relative_changes": [0.27112326860155933,0.15613856304955462,0.9960556633498721,0.0],
+    "kkt_normalized": 1.3099677235298743e-13,
+    "independent_gradient_inf": 2.3321768127804177e-11,
+    "independent_bvls_success": true,
+    "model_relative": 2.7047834410359302e-12,
+    "objective_relative": 1.1102230246251565e-16,
+    "prediction_max_abs_mgal": 1.5804233884050013e-14,
+    "model_kg_m3": [-312.27356739887875,-106.11791642564316,610.3328188822751,-349.8986181851353,356.1715786441699,779.4568153000861],
+    "direction_kinds": [1,1,0,0],
+    "last_trial": {"cause":"zero_free_direction","decision":"failure","iteration":4,"phi_trial":0.043821538373794246,"slope":0.0,"t":7.62939453125e-06,"trial":17}
+  },
+  "original_record_return_observer": {
+    "attribution": "Private diagnostic wrapper calls original once and returns exact original pair; no solve-policy change or independent-owner acceptance",
+    "observed_record_returns": [
+      {"iteration":0,"absolute_gradient_inf":28.625940989395474,"kkt_normalized":0.7524523004332561},
+      {"iteration":1,"absolute_gradient_inf":35.08454818128405,"kkt_normalized":0.9222211768845716},
+      {"iteration":2,"absolute_gradient_inf":11.673333626389164,"kkt_normalized":0.30684150240354785},
+      {"iteration":3,"absolute_gradient_inf":4.9835795212782585e-12,"kkt_normalized":1.3099677235298743e-13},
+      {"iteration":4,"absolute_gradient_inf":4.9835795212782585e-12,"kkt_normalized":1.3099677235298743e-13}
+    ],
+    "status": "nonconverged",
+    "reason": "zero_free_direction"
+  },
+  "frozen_policy": {"normalized_kkt_max":1e-5,"relative_change_max":1e-6,"successive_accepted_changes_required":3,"absolute_projected_gradient_max":1e-12,"rounded_zero_trial":"failure"},
+  "replacement_stopping_rule": null,
+  "threshold_changes": false,
+  "solver_or_test_changes": false,
+  "full_focused_rerun_this_replay": "NOT_RUN; prior189PASS1FAIL remains separately retained",
+  "full_M02_accepted": false,
+  "sealed_matrix_accepted": false,
+  "host_accepted": false,
+  "PR132": "OPEN_DRAFT",
+  "merged": false,
+  "deployed": false
+}

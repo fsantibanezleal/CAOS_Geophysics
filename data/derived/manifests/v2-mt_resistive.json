@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "MT_RESISTIVE",
+  "artifacts": [
+    {
+      "path": "v2/MT_RESISTIVE/reference.json",
+      "bytes": 60374,
+      "sha256": "4e24f6651635a43dbed1c557e8cab1c14813553c63bfbb8193062343630e9b56"
+    },
+    {
+      "path": "v2/MT_RESISTIVE/contrast.json",
+      "bytes": 59885,
+      "sha256": "e66bb20bba115ad8ad71b988f04ef5a141cb349f8a9f387679910bdfdc125042"
+    },
+    {
+      "path": "v2/MT_RESISTIVE/noise.json",
+      "bytes": 59730,
+      "sha256": "185cb3a7df8bfe13a48b36b76f3809bd196f36dc7d650d1aea36d1878d456ac8"
+    },
+    {
+      "path": "v2/MT_RESISTIVE/acquisition.json",
+      "bytes": 60213,
+      "sha256": "bab5cf2ee7271cf73d3533496708b877500e732d86a67ae9197b6390c17eac23"
+    },
+    {
+      "path": "v2/MT_RESISTIVE/coverage.json",
+      "bytes": 60008,
+      "sha256": "bf09560b9634f4a94bde680531438df22eb2df861cd054b201eb8f3fb70f578b"
+    },
+    {
+      "path": "v2/MT_RESISTIVE/regularization.json",
+      "bytes": 60244,
+      "sha256": "6d1c9f0676a2868f5a7522c58a74b6e025d39fd0d930fa62a3b279a17c44d9cc"
+    }
+  ]
+}

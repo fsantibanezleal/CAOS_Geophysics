@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "MT_CONDUCTIVE",
+  "artifacts": [
+    {
+      "path": "v2/MT_CONDUCTIVE/reference.json",
+      "bytes": 60151,
+      "sha256": "19c3314f3ad57e74c9087bbb061fd9accd8f295a6a5492cd1e78c12046771d08"
+    },
+    {
+      "path": "v2/MT_CONDUCTIVE/contrast.json",
+      "bytes": 60183,
+      "sha256": "d5ce60aed4da5fd2930416e36189cfe2465426d01f6467614e9dbd31eaf4f561"
+    },
+    {
+      "path": "v2/MT_CONDUCTIVE/noise.json",
+      "bytes": 59895,
+      "sha256": "87c9a4356e3932181e1380732e87b1e14b689b0b20f71dadfb24b80e4c039708"
+    },
+    {
+      "path": "v2/MT_CONDUCTIVE/acquisition.json",
+      "bytes": 60181,
+      "sha256": "ae1fcd374ef92441d98487409cf2b5a049517ac51bcbe6736d0e6b622d297a1e"
+    },
+    {
+      "path": "v2/MT_CONDUCTIVE/coverage.json",
+      "bytes": 59971,
+      "sha256": "6314529146b1d8247e8254036ebc2e99e81b6b0c86ac0a8d27099b57461d4da2"
+    },
+    {
+      "path": "v2/MT_CONDUCTIVE/regularization.json",
+      "bytes": 59353,
+      "sha256": "746054b2000d9604c1b389579aa6bc989bc3e7b1e25b603f422980e4fe80952a"
+    }
+  ]
+}

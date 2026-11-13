@@ -1,0 +1,205 @@
+\begin{table}[!ht]
+\centering
+\small
+\caption{Committed experiment coverage by physical family, including case, variant, and method-key counts for this frozen release artifact.}
+\label{tab:generated-family-inventory}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrr}
+\toprule
+Family & Cases & Variants & Method keys \\
+\midrule
+gravity & 4 & 24 & 2 \\
+joint & 2 & 12 & 5 \\
+learned & 2 & 12 & 4 \\
+magnetics & 4 & 24 & 3 \\
+mt & 4 & 24 & 3 \\
+seismic & 4 & 24 & 2 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Gravity reference recovery reports data fit and geometric error separately for every case and solver.}
+\label{tab:generated-gravity}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Case & Method & WRMS & Correlation & RMSE ratio & Depth error (m) \\
+\midrule
+GRAVITY\_INTRUSION & l2 & 1 & 0.5753 & 0.8145 & 63.683 \\
+GRAVITY\_INTRUSION & irls & 1 & 0.5836 & 0.8106 & 38.472 \\
+GRAVITY\_DEEP\_BODY & l2 & 1 & 0.3567 & 0.7938 & 277.79 \\
+GRAVITY\_DEEP\_BODY & irls & 1 & 0.3056 & 0.8092 & 282.76 \\
+GRAVITY\_NOISY & l2 & 1 & 0.5067 & 0.8753 & 92.496 \\
+GRAVITY\_NOISY & irls & 1 & 0.5263 & 0.8682 & 84.091 \\
+GRAVITY\_TILTED & l2 & 1 & 0.1578 & 0.8904 & 166.53 \\
+GRAVITY\_TILTED & irls & 1 & 0.1352 & 0.8962 & 183.28 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Layered MT reference results report active fit, initial-model error, and the explicit solver verdict on each synthetic sounding.}
+\label{tab:generated-mt}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Case & Solver & Active WRMS & Initial WRMS & log-rho RMSE & Status \\
+\midrule
+MT\_RESISTIVE & mt-lm & 1.022 & 24.375 & 0.17323 & recovered \\
+MT\_RESISTIVE & mt-adam & 1.022 & 24.375 & 0.1732 & recovered \\
+MT\_RESISTIVE & mt-neural & 1.023 & 24.375 & 0.21529 & recovered \\
+MT\_CONDUCTIVE & mt-lm & 0.9615 & 27.086 & 0.098159 & recovered \\
+MT\_CONDUCTIVE & mt-adam & 0.9615 & 27.086 & 0.098159 & recovered \\
+MT\_CONDUCTIVE & mt-neural & 0.9615 & 27.086 & 0.098159 & recovered \\
+MT\_MIXED & mt-lm & 0.9139 & 21.439 & 0.92457 & unresolved \\
+MT\_MIXED & mt-adam & 1.011 & 21.439 & 0.4252 & recovered \\
+MT\_MIXED & mt-neural & 0.9386 & 21.439 & 0.040128 & unresolved \\
+MT\_NOISY & mt-lm & 0.9034 & 19.208 & 0.031593 & recovered \\
+MT\_NOISY & mt-adam & 0.9034 & 19.208 & 0.030791 & recovered \\
+MT\_NOISY & mt-neural & 0.9034 & 19.208 & 0.031593 & recovered \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Acoustic FWI reference cases preserve active fit, held-out fit, model ratios, and unresolved outcomes for each frozen model.}
+\label{tab:generated-fwi}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Case & Schedule & Model ratio & Active WRMS & Withheld WRMS & Status \\
+\midrule
+FWI\_LAYERED & fwi-l2 & 0.5347 & 1.13 & 1.146 & recovered \\
+FWI\_LAYERED & fwi-multiscale & 0.5269 & 1.208 & 1.233 & recovered \\
+FWI\_FAULT & fwi-l2 & 0.7007 & 1.37 & 1.419 & recovered \\
+FWI\_FAULT & fwi-multiscale & 0.6533 & 1.34 & 1.388 & recovered \\
+FWI\_CYCLE\_SKIP & fwi-l2 & 0.8522 & 1.734 & 1.945 & negative-control \\
+FWI\_CYCLE\_SKIP & fwi-multiscale & 0.8026 & 1.751 & 1.966 & negative-control \\
+FWI\_NOISY & fwi-l2 & 0.6603 & 2.765 & 2.904 & unresolved \\
+FWI\_NOISY & fwi-multiscale & 0.5212 & 2.071 & 2.213 & unresolved \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Joint priors are compared with optimized uncoupled estimates while both physical residuals remain visible for each structure.}
+\label{tab:generated-joint}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Case & Method & Density ratio & Magnetic ratio & Gravity WRMS & Magnetic WRMS & Status \\
+\midrule
+JOINT\_SHARED & joint-uncoupled & 1 & 1 & 1 & 1 & unresolved \\
+JOINT\_SHARED & joint & 1.002 & 0.9991 & 1.039 & 1.004 & unresolved \\
+JOINT\_SHARED & pgi & 0.9947 & 1 & 1.017 & 1.023 & unresolved \\
+JOINT\_CONFLICT & joint-uncoupled & 1 & 1 & 1 & 1 & recovered \\
+JOINT\_CONFLICT & joint & 1.001 & 0.9989 & 1.009 & 1.014 & negative-control \\
+JOINT\_CONFLICT & pgi & 1 & 1 & 1 & 1 & negative-control \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Learned gravity outputs compare column targets with weighted-L2 estimates; flags are not calibrated geological classifications.}
+\label{tab:generated-learned}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Case & Method & Column RMSE & Classical RMSE & Ratio & AE flag & Status \\
+\midrule
+LEARNED\_CNN & l2 & 75.71 & -- & -- & -- & unresolved \\
+LEARNED\_CNN & cnn & 80.1 & 75.71 & 1.058 & -- & unresolved \\
+LEARNED\_CNN & autoencoder & -- & -- & -- & False & unresolved \\
+LEARNED\_AUTOENCODER & l2 & 84.9 & -- & -- & -- & unresolved \\
+LEARNED\_AUTOENCODER & cnn & 90.99 & 84.9 & 1.072 & -- & unresolved \\
+LEARNED\_AUTOENCODER & autoencoder & -- & -- & -- & False & unresolved \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Frozen STEAD held-out phase scores use analyst annotations, a fixed half-second arrival tolerance, and named signal perturbations.}
+\label{tab:generated-phase}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Condition & Model & Phase & Precision & Recall & F1 & Median abs. error (s) \\
+\midrule
+nominal & M00 & P & 0.142 & 0.168 & 0.154 & 1 \\
+nominal & M00 & S & 0.0739 & 0.0876 & 0.0802 & 2.99 \\
+nominal & M08 & P & 0.0771 & 0.0908 & 0.0834 & 4.8 \\
+nominal & M08 & S & 0.0233 & 0.0272 & 0.0251 & 7.27 \\
+nominal & M13 & P & 0.981 & 0.981 & 0.981 & 0.03 \\
+nominal & M13 & S & 0.959 & 0.952 & 0.955 & 0.05 \\
+drop\_E & M00 & P & 0.142 & 0.168 & 0.154 & 1 \\
+drop\_E & M00 & S & 0.0739 & 0.0876 & 0.0802 & 2.99 \\
+drop\_E & M08 & P & 0.0461 & 0.0544 & 0.0499 & 4.81 \\
+drop\_E & M08 & S & 0.0126 & 0.0148 & 0.0136 & 7.92 \\
+drop\_E & M13 & P & 0.983 & 0.979 & 0.981 & 0.03 \\
+drop\_E & M13 & S & 0.938 & 0.926 & 0.932 & 0.07 \\
+drop\_N & M00 & P & 0.142 & 0.168 & 0.154 & 1 \\
+drop\_N & M00 & S & 0.0739 & 0.0876 & 0.0802 & 2.99 \\
+drop\_N & M08 & P & 0.0452 & 0.0534 & 0.049 & 4.81 \\
+drop\_N & M08 & S & 0.0121 & 0.0142 & 0.013 & 7.86 \\
+drop\_N & M13 & P & 0.98 & 0.979 & 0.979 & 0.03 \\
+drop\_N & M13 & S & 0.936 & 0.927 & 0.931 & 0.07 \\
+drop\_Z & M00 & P & 0.142 & 0.168 & 0.154 & 1 \\
+drop\_Z & M00 & S & 0.0739 & 0.0876 & 0.0802 & 2.99 \\
+drop\_Z & M08 & P & 0.0515 & 0.0608 & 0.0558 & 4.81 \\
+drop\_Z & M08 & S & 0.0216 & 0.0254 & 0.0233 & 7.68 \\
+drop\_Z & M13 & P & 0.912 & 0.893 & 0.903 & 0.07 \\
+drop\_Z & M13 & S & 0.952 & 0.919 & 0.935 & 0.06 \\
+noise\_0p1 & M00 & P & 0.142 & 0.168 & 0.154 & 1 \\
+noise\_0p1 & M00 & S & 0.0739 & 0.0876 & 0.0802 & 2.99 \\
+noise\_0p1 & M08 & P & 0.513 & 0.593 & 0.55 & 0.27 \\
+noise\_0p1 & M08 & S & 0.562 & 0.535 & 0.548 & 0.24 \\
+noise\_0p1 & M13 & P & 0.924 & 0.653 & 0.765 & 0.05 \\
+noise\_0p1 & M13 & S & 0.954 & 0.613 & 0.746 & 0.08 \\
+shift\_plus\_800 & M00 & P & 0 & 0 & 0 & 8 \\
+shift\_plus\_800 & M00 & S & 0 & 0 & 0 & 9.13 \\
+shift\_plus\_800 & M08 & P & 0.0469 & 0.0552 & 0.0507 & 12.1 \\
+shift\_plus\_800 & M08 & S & 0.0101 & 0.0118 & 0.0109 & 15.9 \\
+shift\_plus\_800 & M13 & P & 0.98 & 0.981 & 0.981 & 0.03 \\
+shift\_plus\_800 & M13 & S & 0.959 & 0.952 & 0.956 & 0.05 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Preregistered refinement cohorts report candidate-to-baseline error ratios and bootstrap intervals; values above one favor the baseline.}
+\label{tab:generated-refinement}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\toprule
+Shift cohort & n & Velocity ratio & 95\% CI & Time ratio & 95\% CI & Flags \\
+\midrule
+id test & 160 & 3.034 & [2.942, 3.124] & 4.957 & [4.748, 5.172] & 14 \\
+family only & 80 & 2.178 & [2.097, 2.275] & 5.733 & [5.626, 5.84] & 80 \\
+acquisition only & 80 & 3.092 & [2.961, 3.229] & 5.268 & [4.987, 5.576] & 6 \\
+joint ood & 160 & 2.194 & [2.133, 2.264] & 5.585 & [5.509, 5.662] & 160 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

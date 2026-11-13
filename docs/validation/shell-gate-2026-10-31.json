@@ -1,0 +1,35 @@
+{
+  "schema": "geophysics.shell-browser-gate/v1",
+  "measured_at": "2026-10-31T08:08:23Z",
+  "tested_commit": "9f022aae8d178211b4c77730b722723fc3345a3b",
+  "workspace_dirty": true,
+  "workspace_changed_paths_at_capture": 73,
+  "shell_version": "0.19.9",
+  "production_index_sha256": "06c49bbe04ed753a5fbd07a9713118f1f38f06341f8603580e226b2c9ff15180",
+  "production_index_bytes": 670,
+  "artifact_bytes": 1045868078,
+  "gate": {
+    "ok": true,
+    "states": 1442,
+    "captures": 157,
+    "failures": [],
+    "waivers": [],
+    "sizes": ["390x844", "768x1024", "1280x800", "1600x900", "2560x1440"],
+    "themes": ["light", "dark"],
+    "languages": ["en", "es"],
+    "minimum_instrument_share": {
+      "value": 0.5023,
+      "route": "/app",
+      "mode": "1280x800 light en",
+      "trail": "analysis > recovery"
+    },
+    "minimum_stage_fill": {
+      "value": 0.5307,
+      "route": "/app",
+      "mode": "1280x800 light en",
+      "trail": "case FWI_CYCLE_SKIP > analysis > question"
+    }
+  },
+  "raw_artifact_directory": "${CAOS_TEMP_ROOT}/CAOS_Geophysics/validation/shell-gate-20261031",
+  "scope": "Local dirty-tree shell integration only; not scientific, complete frontend fixture, actual-host, or owner design acceptance."
+}

@@ -1,0 +1,6 @@
+manuscripts/geometry-normalized-traveltime-refinement-v001: words 7655, equations 16, figures 7, tables 6, references 32, algorithms 1, sections 12
+manuscripts/inverse-earth-studio-report-0.04.003: words 3481, equations 0, figures 1, tables 1, references 14, algorithms 0, sections 11
+manuscripts/m12-nullspace-refinement-v0.01: words 7887, equations 14, figures 7, tables 6, references 25, algorithms 1, sections 12
+MANUSCRIPT CONTENT CHECK FAILED (2 findings; conventions/manuscript-content-bar.md):
+  - manuscripts/inverse-earth-studio-report-0.04.003: coverage.json is missing (conventions/manuscript-content-bar.md section 5)
+  - manuscripts/: no technical report (a folder whose coverage.json has kind technical-report) (conventions/manuscript-content-bar.md section 3)
