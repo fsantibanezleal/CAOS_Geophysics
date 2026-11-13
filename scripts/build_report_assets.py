@@ -2,6 +2,7 @@
 """Generate report figures and tables from frozen catalog and validation artifacts."""
 from __future__ import annotations
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
@@ -22,12 +23,14 @@ C={"l2":"#315a7d","irls":"#d17a32","mt-lm":"#315a7d","mt-adam":"#d17a32",
  "mt-neural":"#618c65","fwi-l2":"#315a7d","fwi-multiscale":"#d17a32",
  "joint-uncoupled":"#586b7a","joint":"#287a74","pgi":"#c15c52",
  "cnn":"#315a7d","autoencoder":"#9b6b9b"}
+PDF_DATE = datetime(2026, 11, 13, tzinfo=timezone.utc)
 def load(p): return json.loads(p.read_text(encoding="utf-8"))
 def fam(cat, name): return [c for c in cat["cases"] if c["family"]==name]
 def ref(c, v="reference"): return next(x for x in c["variants"] if x["id"]==v)
 def met(c, m, k, v="reference"): return ref(c,v)["methods"][m]["metrics"].get(k)
 def outfig(f, name):
- f.tight_layout(); f.savefig(FIG/name,format="pdf",bbox_inches="tight",metadata={"Creator":"build_report_assets.py"}); plt.close(f)
+ f.tight_layout(); f.savefig(FIG/name,format="pdf",bbox_inches="tight",
+  metadata={"Creator":"build_report_assets.py","CreationDate":PDF_DATE,"ModDate":PDF_DATE}); plt.close(f)
 def num(v, n=4): return "--" if v is None else f"{float(v):.{n}g}"
 def esc(s):
  return str(s).replace("&",r"\&").replace("%",r"\%").replace("_",r"\_").replace("#",r"\#")
