@@ -91,6 +91,14 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(() => parsePhaseManifest(changed)).toThrow(/QC-failed/);
   });
 
+  it("adversarial: rejects waveform bytes added to the QC-rejected held-out row", () => {
+    const changed = manifest();
+    changed.records[19].waveform_file = "replacement.f32";
+    changed.records[19].waveform_sha256 = hash;
+    changed.records[19].waveform_bytes = 72000;
+    expect(() => parsePhaseManifest(changed)).toThrow(/QC-failed/);
+  });
+
   it("rejects an unreviewed or malformed public asset rights declaration", () => {
     const unreviewed = manifest();
     unreviewed.source.redistribution.decision = "pending";
