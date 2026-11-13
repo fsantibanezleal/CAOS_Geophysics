@@ -29,7 +29,7 @@ export function FwiLocalInstrument({admitted,es}:{admitted:FwiAdmission;es:boole
   const traceAmplitude=useMemo(()=>{let maximum=0;for(const name of ["observed",method+"-predicted",method+"-residual"])for(const value of arrays[name].subarray((shot*receivers+receiver)*samples,(shot*receivers+receiver+1)*samples))maximum=Math.max(maximum,Math.abs(value));return (maximum||1)*1.05;},[arrays,method,shot,receiver,receivers,samples]);
   const changeMethod=(value:FwiMethod)=>{setMethod(value);setFrame(-1);setPlaying(false);};
   const numeric=(label:string,value:number,min:number,max:number,set:(n:number)=>void)=><label className="select-control"><span>{label}</span><input type="number" min={min} max={max} step="1" value={value} onChange={e=>{const n=e.target.valueAsNumber;if(Number.isInteger(n)&&n>=min&&n<=max)set(n);}}/></label>;
-  return <article data-testid="fwi-local-instrument">
+  return <article className="fwi-local-instrument" data-testid="fwi-local-instrument">
     <h2>{q.id} · {t("Supplied acoustic inversion", "Inversión acústica suministrada")}</h2>
     <p className="plot-note">{t("Original local bytes verified. The browser inspects returned arrays; it does not rerun the acoustic propagator or submit a VPS job. A hash manifest is not a signature. No known field truth.","Bytes locales originales verificados. El navegador inspecciona matrices devueltas; no ejecuta propagador acústico ni envía tarea al VPS. Un manifiesto de hashes no es firma. Sin verdad de campo conocida.")}</p>
     <div className="processing-view-controls">

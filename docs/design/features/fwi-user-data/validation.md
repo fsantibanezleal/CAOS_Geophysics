@@ -3,6 +3,17 @@
 This records local controlled calculations and import checks, not field
 validation, VPS FWI admission or a complete product release.
 
+## Adversarial requirement coverage
+
+| requirement | adversarial check | gate |
+| --- | --- | --- |
+| FU-01 | Plant bad hashes, invalid units and shapes, duplicate JSON keys, nonfinite arrays, unlicensed rights, symlink/repository custody and a URL field; require rejection before the engine is called. | `tests/adversarial/test_fwi_user_data_adversarial.py::test_adversarial_fu_01_rejects_invalid_source` |
+| FU-02 | Run both requested CUDA acquisitions against supplied observations, change beta and verify the fitted model changes; unavailable CUDA must fail instead of falling back. | `tests/adversarial/test_fwi_user_data_adversarial.py::test_adversarial_fu_02_uses_supplied_gpu_inputs` |
+| FU-03 | Recompute the 3,200-sample full-budget case, perturb the original inputs and inspect exported states; require original byte identity, full sample order, withheld receivers and finite-budget labeling. | `tests/adversarial/test_fwi_user_data_adversarial.py::test_adversarial_fu_03_retains_full_budget_lineage` |
+| FU-04 | Alter binary members, then separately rehash manifests with forged truth, units, shapes, masks, state pointers or requests; require independent reopen to reject each generation. | `tests/adversarial/test_fwi_user_data_adversarial.py::test_adversarial_fu_04_rejects_tampered_generations` |
+| FU-05 | Reuse an occupied destination and submit an invalid preparation input; require nonzero status, unchanged marker bytes and no success manifest. | `tests/adversarial/test_fwi_user_data_adversarial.py::test_adversarial_fu_05_cli_fails_closed` |
+| FU-06 | Supply the complete original CUDA generation to the browser and plant missing, unknown, altered-array and false-physics members; require rejection while all eight language/theme/viewport contexts remain read-only. | `tests/adversarial/test_fwi_user_data_adversarial.py::test_adversarial_fu_06_browser_rejects_unverified_generation` |
+
 ## Actual original-input execution
 
 The final source-bound CUDA matrix passed 23 tests, zero failures/errors/skips.
@@ -105,3 +116,15 @@ are under external `E:/_Temp/geophysics-resume-20261008`, not a repository cache
 No private account information or raw field dataset is included in this record.
 Ruff and single-origin source/build gates pass; build warnings about the existing
 large main chunk remain explicit, not a measured performance acceptance.
+
+## Follow-up adversarial gate · 2026-11-13
+
+All six `tests/adversarial/test_fwi_user_data_adversarial.py` wrappers passed
+against the retained external CUDA generation. This includes supplied-input
+GPU execution, a 3,200-sample full-budget replay, fail-closed export/CLI cases,
+and the local browser matrix. The trace view is asserted through the shared
+accessible chart group and its 3,200 plotted samples; it is not an SVG chart.
+The frontend contract tests passed 2/2, and the FWI browser case passed across
+EN/ES, light/dark, and desktop/phone contexts. The global SDD checker still
+reports pre-existing findings in other feature areas; it reports no FWI
+user-data requirement finding. Ruff and `git diff --check` passed.

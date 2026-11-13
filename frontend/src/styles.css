@@ -699,6 +699,8 @@
   width: 100%;
   height: 100%;
 }
+.fwi-local-instrument .heatmap-axes { align-items: flex-start; }
+.fwi-local-instrument .heatmap-area { align-self: flex-start; }
 .axis-x {
   display: flex;
   justify-content: space-between;
