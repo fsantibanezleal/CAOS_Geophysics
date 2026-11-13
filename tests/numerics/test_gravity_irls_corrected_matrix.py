@@ -9,6 +9,7 @@ from time import monotonic
 import choclo
 import numpy as np
 import pytest
+from simpeg import maps, regularization
 
 import gravity_irls_corrected_workflow as corrected_workflow
 import gravity_irls_pool as pool
@@ -231,3 +232,95 @@ def test_original24_corrected_science(family, condition, record_property):
         assert result['selection_status'] == 'selected', outcome
         assert outcome['outer_wrms'] <= 2., outcome
         assert outcome['model_rmse_ratio'] < 1., outcome
+
+
+def test_cpu2_terminal_certificate_frozen_candidate6_fold2(record_property):
+    """Replay the approved terminal certificate on the locked 48-cell case."""
+    request, _, _ = corrected_request(0, 0)
+    workflow = corrected_workflow._Workflow('cpu2')
+    admitted = workflow.admit(request)
+    fold = admitted['plan']['folds'][2]
+    started = monotonic()
+    packed = workflow._fit(admitted, fold['fit_rows'], l2.BETA_CANDIDATES[6], started+120.)
+    fit = pool.decode(packed)
+    terminal = fit['terminal']
+    stages = fit['stages']
+    final = stages[-1]
+    certificate = terminal['fixed_point_certificate']
+    result_summary = {
+        'candidate': 6, 'fold': 2, 'beta': l2.BETA_CANDIDATES[6],
+        'request_sha256': survey._digest(request),
+        'source_inventory_sha256': survey._digest(fit['source_inventory']),
+        'status': terminal['status'], 'reason': terminal['reason'],
+        'iterations': fit['iterations'], 'weight_updates': terminal['weight_updates'],
+        'wall_seconds': fit['wall_seconds'],
+        'final_three_changes': terminal['stage_changes'][-3:],
+        'certificate': certificate,
+        'research_only': True, 'product_acceptance': False,
+    }
+    record_property('cpu2_terminal_certificate_case',
+                    json.dumps(result_summary, sort_keys=True, allow_nan=False))
+
+    assert terminal['status'] == 'converged', result_summary
+    assert terminal['reason'] == 'irls_fixed_point_certificate', result_summary
+    assert terminal['weight_updates'] == 20 and len(stages) == 21
+    assert fit['iterations'] <= 200 and fit['wall_seconds'] <= 120.
+    assert final['index'] == 20 and final['inner']['status'] == 'converged'
+    assert final['inner']['reason'] == 'absolute_stationary'
+    assert final['inner']['iterations'] == 0 and final['inner']['failed_trial'] is None
+    assert result_summary['final_three_changes'][0]['weights_relative'] > 1e-6
+    assert result_summary['final_three_changes'][1:] == (
+        {'model_relative': 0.0, 'weights_relative': 0.0},
+        {'model_relative': 0.0, 'weights_relative': 0.0},
+    )
+
+    start, stop = final['adopted_row'], final['stop_row']
+    q = np.array(fit['models_q'][stop], dtype=np.float64, copy=True)
+    assert np.array_equal(fit['models_q'][start], q)
+    assert np.array_equal(final['inner']['trace']['models_q'][-1], q)
+    assert np.array_equal(final['inner']['q'], q)
+
+    # Rebuild the fixed SimPEG Sparse objective independently of the producer's
+    # certificate function and compare every physical weight and KKT quantity.
+    noise = {key: admitted['noise'][key] for key in ('kind', 'values')}
+    problem = l2._build_problem(admitted['plan']['request'],
+        admitted['observations']['gz_up_mgal'], noise, admitted['prior'],
+        fold['fit_rows'], l2.BETA_CANDIDATES[6],
+        observation_rows=admitted['plan']['development_rows'])
+    simulation, alpha = problem['simulation'], problem['alpha']
+    independent_sparse = regularization.Sparse(
+        simulation.mesh, active_cells=simulation.active_cells,
+        mapping=maps.IdentityMap(nP=len(problem['reference_q'])),
+        reference_model=problem['reference_q'].copy(), reference_model_in_smooth=True,
+        alpha_s=alpha[0], alpha_x=alpha[1], alpha_y=alpha[2], alpha_z=alpha[3],
+        norms=[1., 2., 2., 2.], gradient_type='components', irls_scaled=True)
+    for component, threshold in zip(independent_sparse.objfcts,
+                                    admitted['policy']['irls']['epsilon_floor']):
+        component.irls_threshold = threshold
+    independent_sparse.update_weights(q)
+    independent_weights = tuple(np.array(component.get_weights('irls'), copy=True)
+                                for component in independent_sparse.objfcts)
+    independent_weight_hashes = tuple(survey._digest(weight) for weight in independent_weights)
+    assert np.array_equal(independent_weights[0], final['adopted_weights'])
+    assert independent_weight_hashes == tuple(final['weight_sha256'])
+
+    gradient = np.asarray(problem['misfit'].deriv(q)
+                          + problem['beta_engine']*independent_sparse.deriv(q))
+    lower = admitted['prior']['lower_kg_m3']/1000.
+    upper = admitted['prior']['upper_kg_m3']/1000.
+    projected = gradient.copy()
+    projected[(q <= lower) & (gradient > 0.)] = 0.
+    projected[(q >= upper) & (gradient < 0.)] = 0.
+    kkt_inf = float(np.linalg.norm(projected, ord=np.inf))
+    smallness_hessian = independent_sparse.objfcts[0].deriv2(q)
+    diagonal = np.asarray(smallness_hessian.diagonal(), dtype=np.float64)
+    curvature_min = float(np.min(diagonal))
+    convexity_lower_bound = float(problem['beta_engine']*curvature_min)
+    assert np.isfinite(diagonal).all() and np.all(diagonal > 0.)
+    assert kkt_inf <= 1e-12
+    assert certificate['projected_kkt_inf'] == kkt_inf
+    assert certificate['smallness_min_curvature'] == curvature_min
+    assert certificate['strict_convexity_lower_bound'] == convexity_lower_bound > 0.
+    assert certificate['weight_sha256'] == independent_weight_hashes
+    assert certificate['model_sha256'] == survey._digest(q)
+    assert certificate['source_inventory_sha256'] == workflow.engine._INVENTORY
