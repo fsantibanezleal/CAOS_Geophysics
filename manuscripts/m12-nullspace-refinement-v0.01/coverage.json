@@ -3,7 +3,9 @@
   "title_support": [
     "tab:cnn-failure",
     "tab:nullspace-ratios",
-    "fig:aggregate-intervals"
+    "fig:aggregate-intervals",
+    "tab:projection-counterfactual",
+    "fig:projection-counterfactual"
   ],
   "claims": {
     "BS-1": "sec:inverse-problem-and-correction"
