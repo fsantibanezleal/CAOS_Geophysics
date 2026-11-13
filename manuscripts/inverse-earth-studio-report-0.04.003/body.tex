@@ -557,8 +557,8 @@ the current results. The archive is retained for provenance at
 \url{docs/research/archive/m12-nullspace-evaluation-draft-2026-11-13/};
 the product no longer declares it as a separate proposed-method paper.
 This distinction prevents the old positive aggregate ratios from being
-read as results of the current method or as a beyond-state-of-the-art
-claim.
+read as results of the current method or as evidence of improved
+performance over published methods.
 
 \section{Experimental protocol}\label{experimental-protocol}
 
@@ -699,7 +699,7 @@ reports changes relative to optimized uncoupled property estimates;
 Table~\ref{tab:generated-joint} includes both physical data residuals
 and evaluation status. Figure~\ref{fig:report-learned-column-baseline}
 and Table~\ref{tab:generated-learned} compare learned column targets
-with the matched classical estimate, without interpreting anomaly flags
+with the matched weighted-L2 estimate, without interpreting anomaly flags
 as calibrated geology. Figure~\ref{fig:report-phase-picker-perturbations}
 and Table~\ref{tab:generated-phase} report the frozen STEAD held-out
 benchmark across channel and signal perturbations; annotation
@@ -856,9 +856,9 @@ create novel inverse theory. The separate geometry-normalized study
 tests a specific learned correction and fails its prespecified shifted
 cohort. Its negative result is useful evidence about that feature,
 network, generator, and comparator. The experiment does not demonstrate
-that the method is beyond the state of the art, because published
-contemporary methods were not reproduced under matched operators and
-data splits.
+that the method improves on contemporary published methods, because
+those methods were not reproduced under matched operators and data
+splits.
 For the geometry-normalized experiment, model and travel-time ratios use
 the same held-out cases but different outputs and therefore need not
 have equal scale. Bootstrap intervals describe resampling variation

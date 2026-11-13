@@ -94,7 +94,7 @@ def main():
  ax.axhline(0,color="#333",lw=.8,ls="--"); ax.set_xticks(xx,[c["id"].replace("JOINT_","") for c in joint])
  ax.set(ylabel="Change in density RMSE ratio vs uncoupled",title="Coupling effect under compatible and conflicting structure")
  ax.legend(frameon=False,ncol=3); ax.grid(axis="y",alpha=.18); outfig(fig,"report-joint-coupling-controls.pdf")
- # Learned depth-integrated target against same-observation classical estimate.
+ # Learned depth-integrated target against same-observation weighted-L2 estimate.
  fig,ax=plt.subplots(figsize=(7,3.6)); xx=np.arange(len(learned)); w=.34
  colors={"l2":"#7f8c95","cnn":"#315a7d"}
  for j,(m,hatch) in enumerate(zip(("l2","cnn"),("//",".."))):
@@ -181,7 +181,7 @@ def main():
    if q:
     z=q["metrics"]; rows.append((c["id"],m,num(z.get("column_rmse")),num(z.get("classical_column_rmse")),
      num(z.get("classical_baseline_ratio")),str(z.get("above_threshold","--")),q["evaluation"]["status"]))
- blocks.append(tab("Learned gravity outputs compare column targets with classical estimates; flags are not calibrated geological classifications.","tab:generated-learned",
+ blocks.append(tab("Learned gravity outputs compare column targets with weighted-L2 estimates; flags are not calibrated geological classifications.","tab:generated-learned",
   ["Case","Method","Column RMSE","Classical RMSE","Ratio","AE flag","Status"],rows))
  rows=[]
  for cond in conds:

@@ -696,7 +696,7 @@ to stop normally or the held-out improvement is below the predeclared
 threshold, the model remains visible as a failed or unresolved
 calculation and is not labeled accepted.
 
-\subsubsection{Waveform response, filtering and classical picks}\label{method-waveform}
+\subsubsection{Waveform response, filtering and STA/LTA picks}\label{method-waveform}
 
 Waveform processing begins with exact MiniSEED bytes and a StationXML inventory. The
 request identifies network, station, location, channel, UTC interval and
@@ -721,7 +721,7 @@ normalization are recorded with segment count, frequency increment,
 omitted tail and integrated RMS. The result labels spectral summaries as
 diagnostics rather than calibrated noise or magnitude.
 
-The classical picker computes the short-term average to long-term
+The STA/LTA picker computes the short-term average to long-term
 average ratio (STA/LTA) on the processed trace. Before this ratio is
 formed, samples are scaled by the largest absolute amplitude to avoid
 overflow without changing the ratio. For window lengths \(n_s<n_l\),
@@ -1135,7 +1135,7 @@ The second channel is normalized coverage \(c_j/\max_kc_k\); uncovered
 cells receive a zero residual feature and remain identifiable in the
 coverage image. The CNN returns a bounded velocity model, while a
 separately selected regularized weighted-L2 solve remains the
-classical comparator. Training uses disjoint procedural families and a
+reference comparator. Training uses disjoint procedural families and a
 validation set for checkpoint selection; test cohorts are separated by
 in-distribution, family shift, acquisition shift and their joint shift.
 The training notebook and receipt bind model bytes, data split, random
@@ -1145,7 +1145,7 @@ The frozen experiment uses 800 training and 160 validation examples,
 with test groups of 160, 80, 80 and 160 examples respectively. The
 current physics-v2 study trained for 40 epochs and selected the recorded
 validation checkpoint. On the 160-case joint family/acquisition holdout,
-the primary run's learned-to-classical velocity RMSE ratio is 2.194 and
+the primary run's learned-to-reference velocity RMSE ratio is 2.194 and
 the independent travel-time RMSE ratio is 5.585. A same-seed CUDA replay
 gives ratios 2.190 and 5.595. All 160 cases exceed each run's
 validation-derived diagnostic threshold. The repeated seed measures
@@ -1164,7 +1164,7 @@ bounded velocity and absence of field labels limit the result. The
 experiment supports a reproducible negative comparison, not a claim
 that a neural method improves tomography or a geological interpretation.
 
-The classical objective for each training realization is a bounded,
+The weighted-L2 objective for each training realization is a bounded,
 weighted, regularized least-squares problem in slowness perturbation
 \(q\) around the reference \(s_0=v_0^{-1}\):
 \begin{equation}\label{eq:velocity-l2}
