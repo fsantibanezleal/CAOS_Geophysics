@@ -217,3 +217,26 @@ and-contract-coverage report bar. Current manuscript-depth checking reports
 those two technical-report coverage/classification findings. This update does
 not turn either manuscript's structural measure into peer review, scientific
 acceptance, or release acceptance.
+
+The current notebook-depth checker reports 123 course findings, down from the
+stale 142 count in the preceding note. The structural EN/ES method and source
+matrix passes, but the depth result is not accepted. The product's sole
+deployment verifier still rejects the live ML-VPS catalogue because its bytes
+do not match this candidate; no deployment or origin change was attempted.
+
+The final remote sync for this review found Shell `main` and `develop` equal at
+`d2b3351` / v0.26.000, and Template `main` at `0da2ba6` / v0.15.010 with the
+current `develop` release promoted by PR #134. Both shared checkouts are clean
+and have one worktree. The product task branch is pushed at `a7bd187`; PR #151
+remains open and draft with no reported checks. Its existing remote branch is
+in sync, so no rebase was needed. Product promotion and the single ML-VPS
+cutover remain blocked by the scientific, content, browser, and host gates.
+
+The literature recheck supports the manuscript's restrained claim boundary.
+The M12 paper already cites the 2025 NeurIPS Non-Linear Projections of the
+Null-Space paper, the 2023 data-proximal null-space network work, and Bacca's
+2025 projection-correction preprint as related prior art; it explicitly says
+those methods were not reproduced or benchmarked. Its separate comparison of
+traveltime methods identifies differences in forward physics, data, objective,
+and uncertainty rather than ranking published metrics. No new novelty or
+superiority assertion is supported by the current evidence.
