@@ -1,9 +1,9 @@
 manuscripts/geometry-normalized-traveltime-refinement-v001: words 7655, equations 16, figures 7, tables 6, references 32, algorithms 1, sections 12
 manuscripts/inverse-earth-studio-report-0.04.003: words 3481, equations 0, figures 1, tables 1, references 14, algorithms 0, sections 11
-manuscripts/m12-nullspace-refinement-v0.01: words 3520, equations 3, figures 6, tables 5, references 18, algorithms 1, sections 7
+manuscripts/m12-nullspace-refinement-v0.01: words 3598, equations 3, figures 6, tables 5, references 18, algorithms 1, sections 7
 MANUSCRIPT CONTENT CHECK FAILED (11 findings; conventions/manuscript-content-bar.md):
   - manuscripts/inverse-earth-studio-report-0.04.003: coverage.json is missing (conventions/manuscript-content-bar.md section 5)
-  - manuscripts/m12-nullspace-refinement-v0.01: 3520 words, the manuscript floor is 7000
+  - manuscripts/m12-nullspace-refinement-v0.01: 3598 words, the manuscript floor is 7000
   - manuscripts/m12-nullspace-refinement-v0.01: 3 equations, the manuscript floor is 12
   - manuscripts/m12-nullspace-refinement-v0.01: 18 references, the manuscript floor is 25
   - manuscripts/m12-nullspace-refinement-v0.01: no section for Related work (a heading with one of: related work, background and related, prior work, literature)
