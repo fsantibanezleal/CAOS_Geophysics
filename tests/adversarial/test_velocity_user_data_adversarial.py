@@ -1,6 +1,13 @@
 """Adversarial acceptance gates for local first-arrival user data."""
 
+from pathlib import Path
+import subprocess
+import sys
+
 from tests.adversarial._existing_pytest_gate import run_existing
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_adversarial_vud_01_rejects_forged_requests():
@@ -34,8 +41,15 @@ def test_adversarial_vud_05_rejects_forged_generations():
     )
 
 
-def test_adversarial_vud_06_cli_fails_closed():
+def test_adversarial_vud_06_cli_fails_closed(tmp_path):
     run_existing(
         "tests/data/test_velocity_user_data.py::test_cli_actual_input_and_no_overwrite",
-        "tests/data/test_velocity_user_data.py::test_cli_invalid_input_has_no_partial_success",
     )
+    source, destination = tmp_path / "forged-survey.json", tmp_path / "failed-output"
+    source.write_bytes(b'{"schema":"geophysics.velocity-user-data/v1","times_s":[NaN]}')
+    command = [sys.executable, str(ROOT / "scripts/process_velocity.py"),
+               "--input", str(source), "--output", str(destination)]
+    failed = subprocess.run(command, capture_output=True, text=True, timeout=60)
+    assert failed.returncode == 2
+    assert "failed" in failed.stderr.lower()
+    assert not destination.exists()

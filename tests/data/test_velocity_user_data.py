@@ -241,14 +241,3 @@ def test_cli_actual_input_and_no_overwrite(tmp_path):
     repeat = subprocess.run(command, capture_output=True, text=True, timeout=60)
     assert repeat.returncode == 2
     assert tool.verify_generation(destination)["source"]["sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
-
-
-def test_cli_invalid_input_has_no_partial_success(tmp_path):
-    source, destination = tmp_path / "forged-survey.json", tmp_path / "failed-output"
-    source.write_bytes(b'{"schema":"geophysics.velocity-user-data/v1","times_s":[NaN]}')
-    command = [sys.executable, str(ROOT / "scripts/process_velocity.py"),
-               "--input", str(source), "--output", str(destination)]
-    failed = subprocess.run(command, capture_output=True, text=True, timeout=60)
-    assert failed.returncode == 2
-    assert "failed" in failed.stderr.lower()
-    assert not destination.exists()
