@@ -1,0 +1,371 @@
+\subsection{Method-specific mathematical formulations}
+\label{method-formulations}
+
+\subsubsection{Gravity station corrections and uncertainty}
+\label{method-gravity-corrections}
+
+The station workflow treats a gravity value as a measurement with a
+history, not as an unlabeled scalar. Each row retains the source value,
+station identifier, coordinate reference, elevation convention, unit,
+instrument or provider correction state, and uncertainty. A correction
+is applied only when the source record and selected operation establish
+that it has not already been applied. Unknown metadata are preserved as
+unknown and cause the corresponding derived quantity to be withheld;
+the code does not infer a datum or silently convert a likely unit.
+This fail-closed rule matters because a numerically plausible anomaly
+can be produced from an incorrect sign, a duplicated free-air term, a
+mixed reference datum, or a coordinate error.
+
+For a station record $i$, the processed anomaly can be represented as
+the source observation plus a vector of signed corrections and a
+reference shift,
+\begin{equation}
+  g_i^{\mathrm{proc}} = g_i^{\mathrm{src}} + \mathbf{c}_i^{\mathsf T}\mathbf{a}
+  + \Delta g_{\mathrm{datum}},
+  \label{eq:gravity-corrections}
+\end{equation}
+where $\mathbf{c}_i$ contains only corrections supported by the
+declared input and $\mathbf{a}$ contains their sign convention. This
+notation is an accounting identity, not an assertion that every source
+provides every correction. A missing correction value is not equivalent
+to zero. The implementation keeps the source and derived columns
+separate so a correction chain can be reproduced and audited. The
+no-double-correction validator rejects a record whose declared state is
+inconsistent with the requested chain before the output is emitted.
+
+If source and correction errors are independent, the propagated
+variance is the sum of their contributions. More generally, the
+declared covariance is transformed by the same linear operation,
+\begin{equation}
+  \sigma_{i,\mathrm{proc}}^2 = \mathbf{a}_i^{\mathsf T}\,\mathbf{C}_i\,\mathbf{a}_i,
+  \qquad
+  \mathbf{C}_{\mathrm{proc}} = \mathbf{A}\,\mathbf{C}_{\mathrm{src}}\,\mathbf{A}^{\mathsf T}.
+  \label{eq:gravity-uncertainty}
+\end{equation}
+Here $\mathbf{a}_i$ is the local coefficient vector for the scalar
+record, whereas $\mathbf{A}$ is the complete linear map over a stacked
+survey. A diagonal-only uncertainty output is justified only when the
+input specifies independent errors or when the transform preserves
+that assumption. The processor does not manufacture cross-station
+covariance from marginal standard deviations.
+
+Implementation is split between source parsing, unit and datum checks,
+correction-state validation, deterministic calculation, and a result
+receipt. The receipt binds each output to its parent asset and records
+the applied correction sequence, uncertainty provenance, and the
+implementation identity. The station tests exercise a known correction
+lineage, unit conversion, reference handling, uncertainty propagation,
+and rejection of duplicated or unknown operations. These tests prove
+the declared cases and code paths; they do not establish that an
+arbitrary downloaded table is a complete or eligible gravity survey.
+
+The lesson is deliberately connected to the potential-field inverse
+that follows. A station table can pass syntax checks while remaining
+scientifically inadmissible because of an undocumented tide convention,
+unresolved datum, missing terrain model, or provider-level correction
+that cannot be reconstructed. The interface therefore separates raw
+records from processed records and exposes the provenance of each
+column. A user must be able to determine which values came from the
+provider, which were calculated locally, and which remain unavailable.
+No corrected anomaly is presented as subsurface density, and no
+correction step is described as an inversion. The relevant executable
+entry point is \url{data-pipeline/gravity_processing.py}; the stable
+station contract and rejection tests are in
+\url{tests/numerics/test_gravity_processing.py}.
+
+The correction receipt also provides a practical way to compare
+processing paths without conflating them with a subsurface model. A
+reviewer can start from the same immutable station rows, select the
+permitted correction flags, and compare each derived column and
+uncertainty against a direct hand calculation. This check matters when
+adapting provider tables: field names alone do not reveal whether a
+Bouguer or terrain term is already included. The parser keeps the
+original numeric value and source metadata so the anomaly can be
+regenerated without overwriting the received record.
+
+Coordinate conversion is handled as its own provenance step. It
+preserves the source coordinate reference and transforms station
+locations before any spatial derivative, gridding or prism sensitivity
+is evaluated. The transformed coordinates, selected local origin and
+axis order travel with the derived survey. A correction is never
+reconstructed from display coordinates rounded for a map. That rounding
+may be visually harmless and still unacceptable for a derivative or a
+high-gradient terrain model. The result contract therefore separates
+display formatting from the coordinates used in the forward
+calculation.
+
+\subsubsection{Weighted three-dimensional gravity prism inversion}
+\label{method-gravity-inversion}
+
+The gravity inverse maps a discretized density contrast to observations
+through a forward operator assembled from three-dimensional prism
+responses. Let $\mathbf{m}$ contain cell density contrasts and let
+$\mathbf{G}$ map those contrasts to vertical gravity at the observation
+locations. For the declared linear density model, the prediction is
+\begin{equation}
+  \mathbf{d}_{\mathrm{pred}} = \mathbf{G}\mathbf{m},
+  \qquad
+  \mathbf{r}=\mathbf{d}_{\mathrm{obs}}-\mathbf{G}\mathbf{m}.
+  \label{eq:gravity-prism-forward}
+\end{equation}
+The units of $\mathbf{m}$, geometry, coordinates and $\mathbf{d}$ are
+checked at the interface. The mesh order is part of the numerical
+contract; a vector reshaped in a different cell order may look smooth
+but represents different physical cells.
+
+The bounded L2 reference minimizes a noise-weighted data term together
+with a model-space penalty,
+\begin{equation}
+  \Phi(\mathbf{m}) = \tfrac12\|\mathbf{W}_d(\mathbf{G}\mathbf{m}-\mathbf{d}_{\mathrm{obs}})\|_2^2
+  + \tfrac{\beta}{2}\|\mathbf{W}_m(\mathbf{m}-\mathbf{m}_{\mathrm{ref}})\|_2^2,
+  \qquad \mathbf{m}_{\min}\leq\mathbf{m}\leq\mathbf{m}_{\max}.
+  \label{eq:gravity-l2-objective}
+\end{equation}
+The reference model, bounds, weighting, regularization, mesh, active
+cells, and stopping conditions are reported as parameters of a run.
+Weights may encode stated standard deviations, but they do not
+transform a deterministic synthetic perturbation into a probability
+model. The minimizer is conditional on the mesh, reference and penalty.
+The reported model is not a unique geological image.
+
+For a linear forward model the gradient and normal equations provide
+an independently checkable oracle,
+\begin{equation}
+  \nabla\Phi(\mathbf{m}) = \mathbf{G}^{\mathsf T}\mathbf{W}_d^{\mathsf T}\mathbf{W}_d
+  (\mathbf{G}\mathbf{m}-\mathbf{d}_{\mathrm{obs}})
+  +\beta\mathbf{W}_m^{\mathsf T}\mathbf{W}_m(\mathbf{m}-\mathbf{m}_{\mathrm{ref}}).
+  \label{eq:gravity-gradient}
+\end{equation}
+The project checks selected forward values against an independent prism
+calculation, then compares the SimPEG-backed solve with a bounded
+least-squares reference on the same data, survey, mesh and error model.
+This separates a forward-kernel error from optimizer configuration
+and from differences caused by changing the data or discretization.
+
+Evaluation reports fitted and held-out predictions, weighted residual
+statistics, sensitivity or coverage diagnostics, and model-recovery
+metrics only when synthetic truth exists. The reference case
+demonstrates why these quantities are not interchangeable: a weighted
+WRMS near one coexists with a model correlation of 0.283 and a recovered
+centroid near 570 m for a truth near 282 m. The datum fit is consistent
+with the chosen scale, while the density distribution is unresolved.
+Potential-field depth/volume tradeoffs and mesh dependence remain; a
+single model slice cannot remove them. The implementation is
+\url{data-pipeline/gravity_l2.py} and the bounded calibration is covered
+by \url{tests/numerics/test_gravity_l2.py} and
+\url{tests/numerics/test_gravity_l2_selection.py}. The full family of
+solver outcomes, including ineligible or unresolved records, must be
+retained in the result catalogue rather than reduced to its best-looking
+case.
+
+The choice of data weighting and regularization has measurable
+consequences. Multiplying every data standard deviation by a common
+factor changes the relative balance between fit and model penalty unless
+$\beta$ is changed consistently. A comparison between two solvers is
+controlled only when observations, covariance, active cells, reference,
+bounds, regularization and stopping rules are shared. The locked L2
+control matrix varies its declared case factors while keeping that
+comparison contract explicit. It records solver status separately
+from scientific recovery: termination proves that a numerical stopping
+rule was reached, whereas recovery requires an independent truth metric
+and can still fail.
+
+The sensitivity matrix also explains why fit alone is insufficient for
+claiming resolution. Columns of $\mathbf{G}$ with similar predictions
+are difficult to distinguish in the measured geometry; the penalty
+selects one member from a family of acceptable models. A cellwise
+display should be read alongside data residuals, model regularization,
+depth sensitivity and synthetic truth when it exists. Potential-field
+depth/volume tradeoffs and mesh dependence remain. The browser may
+interpolate colors for display but must not regrid the model into
+apparent new resolution. This separation of mesh values from rendering
+coordinates is necessary for physical interpretation.
+
+\subsubsection{Aeromagnetic processing and harmonic continuation}
+\label{method-aeromagnetic-processing}
+
+The aeromagnetic workflow begins with flight-line geometry and provider
+leveling provenance. It checks coordinates, line identifiers, sample
+spacing, flight height, tie-line support, duplicate points, and data
+gaps before interpolation. A blocked flight line is reserved for
+evaluation before gridding; the withheld observations are not used to
+choose a grid or tune its smoothing. This test is intentionally
+different from randomly withholding nearby points, since spatially
+adjacent samples can share the same acquisition error and geological
+signal.
+
+Potential fields in a source-free half-space satisfy Laplace's equation.
+For a horizontal Fourier component with wavenumber magnitude $k$,
+upward continuation by height $h$ applies the transfer function
+\begin{equation}
+  \widehat{T}(k_x,k_y,h) = \widehat{T}(k_x,k_y,0)\exp(-h\sqrt{k_x^2+k_y^2}).
+  \label{eq:magnetic-continuation}
+\end{equation}
+Thus higher wavenumbers decay faster. The operation suppresses short
+wavelength content and is not an inverse continuation: recovering the
+surface field from an elevated grid would amplify noise. The implementation
+validates the transfer against a single analytic harmonic with known
+wavenumber and continuation height; the test is a physical identity,
+not an assertion that a gridded field uniquely determines its sources.
+
+Interpolation and support are represented separately. Let $\mathcal{S}$
+be the sampled footprint and $\mathcal{D}$ the output grid. A prediction
+outside an accepted support neighborhood is stored as unavailable,
+not silently filled with a value that looks measured. The gridding
+receipt records the interpolation rule, node spacing, coordinate frame,
+input line selections, mask, and any height transform. This permits a
+reviewer to distinguish the actual flight path from the raster display.
+The interface displays both the raster and the original lines, along
+with the blocked-line residuals and support mask.
+
+The current public USGS Amargosa example uses the provider-levelled
+channel without repeating upstream diurnal, IGRF, navigation, or
+flight/tie-line levelling corrections. Its rights and source hash are
+recorded in the research evidence; the calculation is a bounded
+processing/QC example, not independent site validation or a magnetic
+inversion. Upstream corrections cannot be reconstructed from absent
+instrument and processing records. A different provider dataset would
+need its own line geometry, units, leveling history, datum, and rights
+decision before being processed.
+
+The source implementation separates parsing, line selection, blocked
+holdout, support-aware gridding, continuation, and output provenance.
+The core processing functions are in
+\url{data-pipeline/magnetic_processing.py}, while upward continuation
+and its independent transfer check are in
+\url{data-pipeline/magnetic_continuation.py} and
+\url{tests/numerics/test_magnetic_continuation.py}. The measurable
+acceptance evidence is the held-out line and analytic harmonic; a smooth
+map alone is not a processing validation. Flight-line texture, mask
+boundaries, physical units and the acquisition track should remain
+visible in scientific views so that interpolated values cannot be
+mistaken for direct observations.
+
+Blocked-line scoring is calculated in the observation domain before
+interpretation of the raster. For held-out samples $H$, the noise-scaled
+residual summary is
+\begin{equation}
+  \mathrm{WRMS}_{H}=\sqrt{\frac{1}{|H|}\sum_{i\in H}
+  \left(\frac{T_i^{\mathrm{pred}}-T_i^{\mathrm{obs}}}{\sigma_i}\right)^2},
+  \label{eq:magnetic-blocked-wrms}
+\end{equation}
+provided each $\sigma_i$ belongs to the source-backed or explicitly
+authored error model. If that uncertainty is unavailable, the report
+uses a raw residual distribution and labels it as such; it does not
+invent a noise scale. The blocked-line mask is checked against the
+fitting rows so a withheld line cannot enter interpolation selection
+through a separate code path.
+
+The output should retain the flight path, elevation metadata, tie-line
+intersections and exact support mask. Height variation must not be
+flattened by silently assigning one nominal altitude. Continuation
+assumes a common upward shift in a source-free region; if receiver
+elevations differ, they must be accounted for by the declared geometry
+or a separate forward model. Finite-grid edge effects remain visible in
+the mask. An appealing color image that hides those boundaries can
+overstate the area constrained by measurements.
+
+This path is narrower than a complete aeromagnetic interpretation. It
+does not recompute diurnal variation, IGRF removal, leveling,
+microleveling, reduction to the pole or source inversion. Those steps
+need the raw navigation, magnetic base-station, regional reference and
+survey metadata that define them. The product preserves upstream
+corrections when documented and refuses to label a provider-levelled
+series as raw. The view shows the input state and operations actually
+run, not a generic sequence of plausible-looking products.
+
+\subsubsection{Induced-magnetization prism modelling}
+\label{method-induced-magnetics}
+
+The induced-field model assumes that each active cell's magnetization
+is parallel to a declared inducing field. For cell susceptibilities
+$\boldsymbol{\chi}$ and a fixed field direction $\hat{\mathbf{h}}_0$,
+the cell magnetization is proportional to $\chi_j\mathbf{H}_0$ under
+the stated linear, isotropic assumption. A prism kernel maps each cell
+to the vector magnetic field at receiver $i$; the scalar total-field
+response is a first-order projection onto the inducing direction,
+\begin{equation}
+  \Delta T_i \simeq \hat{\mathbf{h}}_0^{\mathsf T}\Delta\mathbf{B}_i,
+  \qquad
+  \Delta\mathbf{B}_i = \sum_j \mathbf{K}_{ij}(\mathcal{G})\,\chi_j\mathbf{H}_0.
+  \label{eq:magnetic-prism-forward}
+\end{equation}
+Here $\mathcal{G}$ includes prism bounds, coordinates, and the local
+frame. The approximation is the total-field linearization appropriate
+to the declared weak-anomaly model; the project does not reinterpret it
+as a recovered vector magnetization. Remanent magnetization that is
+not parallel to the inducing field violates the assumption and is a
+negative-control case.
+
+The fit objective is assembled from the physical forward predictions
+and a covariance model for the observation errors. For residual
+$\mathbf{r}(\mathbf{m})=\mathbf{d}_{\mathrm{pred}}(\mathbf{m})-\mathbf{d}$,
+\begin{equation}
+  \Phi(\mathbf{m})=\tfrac12\mathbf{r}^{\mathsf T}\mathbf{C}_d^{-1}\mathbf{r}
+  +\beta\,\Phi_m(\mathbf{m}),
+  \qquad
+  \nabla\Phi=\mathbf{J}^{\mathsf T}\mathbf{C}_d^{-1}\mathbf{r}
+  +\beta\nabla\Phi_m.
+  \label{eq:magnetic-fit-objective}
+\end{equation}
+The covariance may contain correlated errors; replacing it by a
+diagonal weight matrix changes the likelihood and therefore the inverse
+problem. The executable assembly binds the survey, sensitivity,
+covariance, model parameterization, prior, source implementation and
+selected likelihood into one objective identity. Derivative tests
+compare the analytical gradient with finite differences and a separate
+Choclo field calculation on fixed geometries.
+
+The currently retained 528-cell linear-TMI development fold has a
+source-bound objective and oracle certificate. It is a bounded
+synthetic fold, not completed survey inversion: candidate selection,
+sparse and nonlinear solves, held-out evaluation, field qualification,
+final export, and online resource admission remain unresolved. A
+converged fold would establish only that a specified numerical solve
+met its conditions; it would not validate remanence, geology, the
+inducing-field record, or performance on a real survey.
+
+The front end and report must expose the receiver geometry, inducing
+field vector and coordinate convention, model units, active-cell mask,
+predicted total-field anomaly, residuals, objective contributions and
+solver status. The display must not show a single centered body as if
+it were the recovered geology. Independent prism checks and
+noise-covariance diagnostics have separate evidence from optimizer
+convergence. Implementation details are in
+\url{data-pipeline/magnetic_forward.py},
+\url{data-pipeline/magnetic_fit_assembly.py}, and
+\url{data-pipeline/magnetic_likelihood.py}; source-bound tests include
+\url{tests/data/test_magnetic_fit_assembly.py} and
+\url{tests/numerics/test_magnetic_forward.py}.
+
+Parameter scale is part of the objective identity. Susceptibility is
+dimensionless in SI, while the inducing field and resulting anomaly use
+field units; unit conversions applied to observations must not be
+applied a second time to the physical kernel. The residual covariance
+is constructed in the same component order as vectorized observations.
+A permutation of receiver/component indices changes both covariance
+and Jacobian correspondence, so the assembly validates their shapes and
+identity before solving. These structural checks do not replace
+independent kernel values; the Choclo comparison remains a distinct
+mathematical oracle.
+
+Gradient evidence also has a limited scope. A finite-difference test
+checks a local derivative near selected model values and step sizes; it
+does not prove global convexity or an accurate optimum. A stationarity
+receipt must bind to the exact objective, covariance, source and model
+parameterization used. Candidate ranking and outer held-out evaluation
+require separate data. The passed development fold keeps its 72
+validation and 72 outer rows sealed, preventing calibration or debugging
+from leaking those measurements into selection. The remaining work is
+not closed by extending iterations on one fold; acceptance requires
+source-complete selection, held-out scoring and reproducible export
+under the predeclared criteria.
+
+For interpretation, the output distinguishes scalar total-field data
+from the vector secondary field used internally by the prism
+calculation. The inducing field amplitude, inclination, declination,
+coordinate frame, sign convention, model bounds and survey coverage
+must be visible. A sensitivity view can show which observations
+constrain a parameter, but it must not be labeled uncertainty unless a
+calibrated uncertainty procedure was run. This boundary prevents a
+forward calculation from being mistaken for a completed field inverse.

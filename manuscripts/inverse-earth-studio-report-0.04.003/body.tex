@@ -163,10 +163,12 @@ Acoustic full-waveform inversion & Acoustic constant-density FWI with Deepwave, 
 Joint potential-field inversion & Joint potential-field inversion comparing uncoupled fits, spatial cross-gradient coupling, and an explicit Gaussian-mixture petrophysical prior. & The project Gaussian-mixture-prior implementation is not the SimPEG PGI optimizer. Coupling can trade one property against another; one calibration matrix does not establish general performance. \\
 Learned seismic-velocity estimation & A learned seismic-velocity inversion trained on disjoint procedural families and compared with a same-input weighted L2 solve and independent quadrature forward operator. & The frozen joint family/acquisition holdout fails both prespecified ratios; training success does not override the held-out result. \\
 PhaseNet-family phase picking & PhaseNet-family P/S inference \cite{zhu2019}, matched STA/LTA comparison, and local browser ONNX inference with explicit preprocessing and abstention rules. & Curated browser parity is runtime consistency, not accuracy. Population metrics come from the separate locked test cohort and analyst references, not geological truth. \\
-Coverage-conditioned null-space velocity correction & Geometry-normalized backprojection of travel-time residuals, divided by path length and cell coverage, supplied with a coverage channel to a bounded residual CNN. & It is a falsifiable refinement proposal. The initial checkpoint 3.1 failed the joint-shift comparison; the later null-space-constrained variant gives a narrow synthetic improvement but does not change the M12 checkpoint result or establish field transfer. \\
+Geometry-normalized travel-time residual refinement & Backprojected travel-time residuals are normalized by ray length and cell coverage, then supplied with the coverage field to a bounded residual CNN. & The current physics-v2 study fails both predeclared joint-shift ratios in the primary and same-seed replay. This is a negative synthetic comparison; null-space projection is established prior methodology and no superiority claim is made. \\
 \bottomrule
 \end{longtable}
 \end{center}
+
+\input{method-details.tex}
 
 \subsubsection{4.1 Potential-field
 inverses}\label{potential-field-inverses}
@@ -274,47 +276,32 @@ geometries; its measured failure to detect the withheld family is
 retained. These models are compact baselines and have not been compared
 with a broader set of published inverse methods.
 
-M12 predicts seismic velocity from travel-time data and is evaluated by
-family/acquisition-disjoint cohorts. The 2026-10-28 M12 computation used
-160 joint family/acquisition holdouts with learned/weighted-L2 velocity
-RMSE 536.99/95.62 m/s (ratio 5.616) and independent-oracle travel-time
-RMSE 28.61/2.34 ms (ratio 12.231; source:
-\url{docs/validation/m12-checkpoint-notebook-2026-10-28.md}). Both
-pre-specified comparison criteria fail. A separate neural
-residual-correction run also fails its specified joint-shift
-comparisons. The separate null-space-constrained residual study reports
-velocity RMSE ratio 0.9701 (paired case-bootstrap interval
-0.9661--0.9737) and independent travel-time RMSE ratio 0.9967
-(0.9950--0.9983); the aggregate ratios improve in all four fixed
-held-out cohorts. Its original scorer used an infinite threshold, making
-the stored zero-exceedance flags invalid. A separate calibration-only
-reconciliation sets one 1.0649004873 ms threshold from the 95th
-percentile of learned-oracle errors and applies a strict greater-than
-rule to retained per-case values. It flags 7 of 160 in-distribution, 80
-of 80 family-shift, 3 of 80 acquisition-shift and 160 of 160 joint-shift
-cases. These are synthetic oracle-error diagnostics, not field QC,
-calibrated probabilities or geological classifications, and they do not
-change the RMSE results or method status. The threshold calculation is
-retained in
-\url{data/derived/v2/models/m12-nullspace-v1_1/threshold-reconciliation.json}
-and its method and limitations are documented in
-\url{docs/validation/m12-nullspace-threshold-reconciliation-2026-10-30.md}.
-The paired intervals resample case IDs and compute the ratio of mean
-per-case RMSEs over 20,000 PCG64 draws (seed 6122026); the exact
-calculation is retained in
-\url{docs/validation/m12-nullspace-v1_1-bootstrap-2026-10-30.json}.
-These intervals quantify variation within the fixed synthetic cohorts,
-not natural-geology uncertainty.
+The currently submitted BS-1 paper reports a geometry-normalized,
+coverage-conditioned residual CNN against a validation-selected weighted
+straight-ray reference. Its input has two channels (normalized residual
+and coverage); the network has 24 hidden feature maps, not 24 input
+channels. The fixed protocol uses seed 77213, 40 epochs, 800 training
+cases, 160 validation cases, and held-out identity, family, acquisition,
+and joint shifts. On the 160-case joint holdout, the primary checkpoint
+has velocity and independent travel-time RMSE ratios 2.194 and 5.585;
+the second CUDA execution, with the same seed and manifests, has ratios
+2.190 and 5.595. All 160 joint cases exceed each run's
+validation-derived threshold. The paper therefore records a negative
+result for its specified generator and operators. Repeating the same
+seed measures execution sensitivity; it does not estimate
+between-seed training variance. The source-bound receipts, checkpoints,
+bootstrap calculation and current limitations are in
+\url{manuscripts/geometry-normalized-traveltime-refinement-v001/}.
 
-An initial custody review on 5 November 2026 found the earlier external run directory and its checkpoint absent from the locations checked at that time. This was superseded by a current-source reproduction on 6 November: residual-v3.1 was trained on an NVIDIA RTX 4070 Laptop GPU, then its five cohorts were independently replayed on CPU; the null-space run was rebuilt from that checkpoint and its four held-out cohorts were independently replayed on CPU. Both verifiers returned \texttt{status=verified}. The checkpoint hash is \url{0f7a8fc43a078ab4cb16016774d44b356ccb70d9c60e0f197506fd3f7a53ea03}; the residual receipt hash is \url{f6f52c544af1a86f07fc17c83296de2ac09e884058e2af1d72adeb3bb35bc1dc}; and the null-space receipt hash is \url{0d4cd8c14e290b9cd17da387800dbe6cf7314729379d03221df8585b1243d880}. The checkpoint and receipts are now committed under \url{data/derived/v2/models/m12-current-reproduction-20261106/}. This restores source-to-result reproduction for the frozen synthetic protocol only. It does not change the failed residual-v3.1 comparator, establish geological recovery or demonstrate field transfer. The independent replay and its source revision are recorded in \url{docs/validation/m12-current-source-reproduction-2026-11-06.md}.
-
-The proposed coverage-conditioned correction asks whether a
-dimensionally consistent, coverage-conditioned learned residual improves
-on a matched weighted L2 inverse under geometry shifts. The proposal is
-falsifiable because model and independent forward-data ratios are frozen
-and both must be below one for an advantage claim. The differing
-outcomes show why protocol and checkpoint identity must accompany each
-comparison.
+An earlier residual-v3.1/null-space experiment and its analysis remain
+archived, but they are not the current BS-1 experiment. Their older
+cohort, checkpoint, scorer and operator evidence cannot be combined with
+the current results. The archive is retained for provenance at
+\url{docs/research/archive/m12-nullspace-evaluation-draft-2026-11-13/};
+the product no longer declares it as a separate proposed-method paper.
+This distinction prevents the old positive aggregate ratios from being
+read as results of the current method or as a beyond-state-of-the-art
+claim.
 
 \section{Selected results and
 interpretation}\label{selected-results-and-interpretation}
@@ -361,22 +348,30 @@ inferred. The separate locked 6,000-trace benchmark, not this curated
 benchmark compares predictions with analyst annotations and should not
 be described as geological truth.
 
-\subsubsection{5.4 Nullspace-constrained learned
-refinement}\label{nullspace-constrained-learned-refinement}
+\subsubsection{5.4 Novelty and null-space
+assessment}\label{nullspace-novelty-assessment}
 
-The null-space-constrained computation uses a fixed cohort and reports
-velocity and independent forward-data ratios with paired case-bootstrap
-intervals. Each replicate resamples case IDs and computes the ratio of
-mean per-case RMSEs; 20,000 PCG64 draws use seed 6122026. The exact
-intervals, method protocol and archive hash are archived with the
-computational outputs. For the joint-OOD cohort, velocity RMSE ratio is
-0.9701 with interval 0.9661--0.9737; independent travel-time RMSE ratio
-is 0.9967 with interval 0.9950--0.9983. The metrics show a small
-synthetic aggregate difference and do not establish a practical gain
-across field settings. Field robustness, performance under realistic
-source/model error, and reproduction by an external group have not been
-evaluated. The v1 computation was invalidated by a dimensional feature
-error; the checkpoint 3.1 computation remains a failed comparison.
+Null-space methods are established approaches for examining
+non-uniqueness in travel-time tomography and seismic inversion
+\cite{deWit2012,Liu2020,TorresSacchi2023}. The archived product draft
+does not introduce null-space projection as new inverse theory. Its
+post-hoc projection experiment also does not provide a matched current
+checkpoint/operator comparison that would isolate projection as the
+cause of an improvement. The archived aggregate ratios and threshold
+diagnostics remain historical calculations for their stated frozen
+cohorts; they are not outcomes of the current BS-1 paper and do not
+establish superiority over published methods.
+
+The current geometry-normalized residual study is likewise a bounded
+synthetic comparison, not a novel solver claim. It fails both
+pre-registered joint-shift error ratios for both same-seed CUDA runs.
+The scientifically supported contribution is therefore a reproducible
+negative comparison with explicit operators, cohort identities,
+per-case diagnostics and a disclosed replay discrepancy. A new
+method-performance claim would require an independent-seed training
+protocol, broader generators, matched contemporary baselines, exact
+operator controls and validation on eligible field observations. No
+such claim is made here.
 
 \section{Educational and visualization
 design}\label{educational-and-visualization-design}
@@ -491,11 +486,11 @@ questions}\label{limitations-and-open-research-questions}
 \end{enumerate}
 
 Useful next studies include preregistered geological-family and
-acquisition/noise ensembles; external reproduction of the null-space
-correction result; calibration under forward-model and geological
-uncertainty; independent FWI propagation; licensed field inversions with
-source/datum/error review; and user studies of whether linking
-assumptions, predictions, residuals, and uncertainty improves
+acquisition/noise ensembles; matched contemporary travel-time baselines;
+independent-seed training and calibration under forward-model and
+geological uncertainty; independent FWI propagation; licensed field
+inversions with source/datum/error review; and user studies of whether
+linking assumptions, predictions, residuals, and uncertainty improves
 interpretation.
 
 \section{Conclusions}\label{conclusions}
@@ -512,11 +507,12 @@ These computations do not establish field validity or generality across
 geological settings. Several method-specific comparisons, end-to-end
 user-supplied-data workflows, actual-host measurements, independent
 solver comparisons, and user-facing visual evaluations remain to be
-completed. The learned travel-time refinement has a narrowly positive
-synthetic result alongside failed variants and a separate M12 failure;
-no general learned advantage follows. The work provides a reproducible
-software and experimental framework that makes assumptions and
-counterexamples inspectable. Algorithmic novelty and publication
+completed. The current learned travel-time refinement fails its two
+joint-shift error criteria in the primary run and a same-seed replay.
+The earlier null-space draft is archived as a historical analysis of an
+established operation, not as a novel method. The work provides a
+reproducible software and experimental framework that makes assumptions
+and counterexamples inspectable. Algorithmic novelty and publication
 priority are not established.
 
 \section{Data and code availability}\label{data-and-code-availability}
