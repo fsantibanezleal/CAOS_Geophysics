@@ -8,6 +8,31 @@ are separate gates. Do not raise tolerances, bounds or caps to erase a failure.
 
 ## Planner and physical controls
 
+## Requirement-to-adversarial-gate matrix
+
+The wrappers below execute focused numerical tests for each contract. They
+preserve the parent requirement IDs and assertions; component gates do not imply
+complete matrix or field acceptance.
+
+| requirement | adversarial check | gate |
+| --- | --- | --- |
+| JS-001 | Plant non-native containers, unknown keys, invalid types and incomplete source/frame declarations; verify admission rejects without caller hooks or guessed values. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_001_exact_contract` |
+| JS-002 | Plant oversized shapes, metadata and logical aliases; verify preflight rejects before scanning, copying, hashing or engine invocation. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_002_preallocation` |
+| JS-003 | Plant nonuniform geometry, reordered axes, invalid bounds and outside receivers; verify physical geometry and declared closed-box behavior. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_003_geometry` |
+| JS-004 | Plant overlapping acquisition blocks, masked values and missing reasons; verify split isolation and mask preservation. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_004_partition_and_masks` |
+| JS-005 | Plant source identity drift and mutable snapshots; verify byte-bound source records remain distinct and unverified bytes are not promoted. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_005_source_binding` |
+| JS-006 | Plant sign, unit and volume-quadrature errors in potential-field outputs; verify independent gravity and magnetic physical oracles detect them. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_006_forward_oracles` |
+| JS-007 | Plant inconsistent face gradients, Hessian-vector products and PSD approximations; verify independent assembly, autograd and finite-difference controls. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_007_coupling_derivatives` |
+| JS-008 | Plant invalid covariance, physical scales and regularizer geometry; verify independent whitening and objective-chain controls reject mismatches. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_008_objective` |
+| JS-009 | Plant a false stationary state or mismatched input between coupled and uncoupled fits; verify independent fits and the bounded BVLS oracle. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_009_baseline_fits` |
+| JS-010 | Plant forged optimizer traces and invalid physical bound paths; verify bound, line-search, CG and KKT failures remain explicit. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_010_optimizer_controls` |
+| JS-011 | Mutate sealed and development values; verify sealed data cannot select a candidate and changed development data trigger actual refits. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_011_sealed_selection` |
+| JS-012 | Plant null, undercovered, disjoint and wrong-frame cases; verify adverse cases remain present and outcomes are not relabeled as success. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_012_case_matrix` |
+| JS-013 | Plant resource-cap breaches and forged receipts; verify measured RSS/scratch evidence and explicit failures. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_013_resources` |
+| JS-014 | Plant stale/tampered source bytes and forged result summaries; verify intake, export and independent replay reject altered artifacts. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_014_serialized_replay` |
+| JS-015 | Change a scientific input and corrupt a CLI result; verify the real-file pipeline recomputes and validates the changed result. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_015_cli_pipeline` |
+| JS-016 | Plant forged metric summaries or claim flags; verify evaluator output is recomputed and retains the provisional/nonclaim boundary. | `tests/adversarial/test_joint_survey_adversarial.py::test_adversarial_js_016_result_claims` |
+
 Exact-type traps cover dictionaries, string/scalar equality, array subclasses,
 object/complex/float32/endian arrays, wrong shapes, masked reasons, duplicate
 stations, empty source rights, mismatched frame and all nested unexpected keys.
