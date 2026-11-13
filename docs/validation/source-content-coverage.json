@@ -466,7 +466,10 @@
       "title": "Null-space refinement: calibration and held-out stress tests",
       "sources": [
         "https://arxiv.org/abs/2309.06573",
-        "https://github.com/lanl/OpenFWI"
+        "https://github.com/lanl/OpenFWI",
+        "https://doi.org/10.1111/j.1365-246X.1968.tb00216.x",
+        "https://doi.org/10.1190/1.1444195",
+        "https://doi.org/10.1111/j.1365-246X.2005.02825.x"
       ],
       "content_scope": "Studies null-space refinement calibration and held-out stress evidence."
     },
