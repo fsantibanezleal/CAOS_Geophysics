@@ -1235,7 +1235,7 @@
         },
         {
           "path": "docs/validation/m13-current-parity-and-lesson-2026-11-05.md",
-          "sha256": "a559621a77dde57c7c0c287319f1578ef3ddeb6c950b5746dcb8bf1b8e874dbc"
+          "sha256": "a52a140a4a08a673c06e102e09d7995fa9993cb4975d2324ea0c266130c599a5"
         },
         {
           "path": "frontend/scripts/verify-phase-browser-population.mjs",
