@@ -7,13 +7,13 @@ velocity squared cannot produce a velocity perturbation. Normalize each
 ray residual by its path length before backprojection. This choice follows
 the straight-ray integral, not a search over the old held-out scores.
 
-| ID | Frozen requirement | Gate in tests/learning/test_velocity_physics.py |
+| ID | Frozen requirement | Gate |
 | --- | --- | --- |
-| VPR-01 | A spatially constant slowness perturbation must map to its exact coverage-weighted slowness at every covered cell; units/sign and zero coverage must remain explicit. | test_uniform_slowness_feature_oracle |
-| VPR-02 | Use new disjoint realization seed namespaces for all six cohorts, freeze geometry/families/counts before training, and never select on test metrics. | test_fresh_cohorts_and_original_preservation |
-| VPR-03 | Train the actual residual CNN on corrected physical features; output must remain1400..4000 m/s with the exact reference represented at zero network output. Save/reload real weights with bounded finite state checks. | test_network_reference_bounds_and_checkpoint |
-| VPR-04 | Report every matched classical and independent bilinear-forward metric, original negative comparator and all new failures; no guarantee of improvement. | test_scientific_verdict_preserves_failure |
-| VPR-05 | Execute the full fixed40-epoch protocol on the local GPU when available and independently re-evaluate selected weights on CPU; a short fixture is not qualification. | test_frozen_receipt_and_replay |
+| VPR-01 | WHEN observations contain a constant slowness perturbation, feature construction SHALL recover its coverage-weighted value with the declared sign and units, and SHALL represent unsupported cells as zero. | `tests/adversarial/test_velocity_physics_adversarial.py::test_adversarial_vpr_01_refutes_dimensional_feature_errors` |
+| VPR-02 | WHEN the six revised cohorts are generated, their realization seeds SHALL be disjoint from each other and the original study, with the frozen family and acquisition separation preserved. | `tests/adversarial/test_velocity_physics_adversarial.py::test_adversarial_vpr_02_refutes_cohort_overlap` |
+| VPR-03 | WHEN the residual CNN is initialized or a checkpoint is reopened, the zero-network state SHALL equal the physical reference and every prediction SHALL remain within 1400 to 4000 m/s. | `tests/adversarial/test_velocity_physics_adversarial.py::test_adversarial_vpr_03_refutes_unbounded_or_unreopenable_weights` |
+| VPR-04 | WHEN held-out learned-to-classical or independent-forward ratios fail, the scientific verdict SHALL remain failed and the receipt SHALL retain the original comparator. | `tests/adversarial/test_velocity_physics_adversarial.py::test_adversarial_vpr_04_preserves_negative_comparator` |
+| VPR-05 | WHEN a one-epoch fixture is presented as qualification, verification SHALL reject it; the fixed 40-epoch CUDA receipt SHALL replay its cohorts and selected weights on CPU. | `tests/adversarial/test_velocity_physics_adversarial.py::test_adversarial_vpr_05_rejects_fixture_as_qualification` |
 
 This is a revised implementation study, not a novel inverse algorithm, an unseen
 geological-family claim or field validation. Primary method basis:
