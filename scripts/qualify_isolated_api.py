@@ -278,8 +278,8 @@ def unit_texts(release: Path, token: str, environment_file: Path | None = None) 
         raise ValueError('unexpected candidate path')
     name = 'geophysics-qualification-' + token
     socket_path = RUN / (name + '.sock')
-    api = (release / 'source/deploy/service/geophysics-api.service').read_text(encoding='utf-8')
-    sock = (release / 'source/deploy/service/geophysics-api.socket').read_text(encoding='utf-8')
+    api = (release / 'source/deploy/geophysics-api.service').read_text(encoding='utf-8')
+    sock = (release / 'source/deploy/geophysics-api.socket').read_text(encoding='utf-8')
     if (api.count('/var/www/geophysics.ml.fasl-work.com/current') != 2
             or api.count('geophysics-api.socket') != 2
             or sock.count('/run/geophysics-api/api.sock') != 1

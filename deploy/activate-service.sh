@@ -350,9 +350,9 @@ install -o root -g root -m 0600 "$candidate_env_dir/worker.env" /etc/geophysics/
 ln -s -- "$release" "$root/activate-$release_id"
 mv -T -- "$root/activate-$release_id" "$root/current"
 for unit in geophysics-api.socket geophysics-api.service geophysics-worker.service; do
-  install -m 0644 "$release/source/deploy/service/$unit" "/etc/systemd/system/$unit"
+  install -m 0644 "$release/source/deploy/$unit" "/etc/systemd/system/$unit"
 done
-install -m 0644 "$release/source/deploy/service/geophysics.nginx" "$site"
+install -m 0644 "$release/source/deploy/geophysics.ml.fasl-work.com.nginx" "$site"
 systemd-analyze verify /etc/systemd/system/geophysics-api.socket /etc/systemd/system/geophysics-api.service /etc/systemd/system/geophysics-worker.service
 nginx -t
 systemctl daemon-reload

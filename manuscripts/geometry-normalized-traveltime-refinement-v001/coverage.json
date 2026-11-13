@@ -2,7 +2,9 @@
   "kind": "manuscript",
   "title_support": [
     "tab:primary",
+    "tab:replay-sensitivity",
     "fig:primary-ratios",
+    "fig:replay-sensitivity",
     "tab:ablation",
     "fig:ablation",
     "fig:architecture",

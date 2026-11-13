@@ -321,8 +321,8 @@ def prepare(source: Path, output: Path, *, build: Path | None = None) -> dict:
             paths.update(o["path"] for o in read_ledger(source / item["path"])["outputs"])
     if not paths <= tracked:
         raise ValueError("release evidence/runtime is not committed")
-    required = {"deploy/service/geophysics-api.service", "deploy/service/geophysics-api.socket",
-                "deploy/service/geophysics-worker.service", "deploy/service/geophysics.nginx"}
+    required = {"deploy/geophysics-api.service", "deploy/geophysics-api.socket",
+                "deploy/geophysics-worker.service", "deploy/geophysics.ml.fasl-work.com.nginx"}
     if not required <= paths:
         raise ValueError("service configurations missing")
     receipt = copy_bundle(source, build, output, sorted(paths), revision)

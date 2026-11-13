@@ -18,10 +18,10 @@ import qualify_isolated_api as qualifier  # noqa: E402
 def release(tmp_path, monkeypatch):
     monkeypatch.setattr(qualifier, 'RELEASES', tmp_path / 'releases')
     path = qualifier.RELEASES / 'candidate'
-    templates = path / 'source/deploy/service'
+    templates = path / 'source/deploy'
     templates.mkdir(parents=True)
     for name in ('geophysics-api.socket', 'geophysics-api.service'):
-        (templates / name).write_bytes((ROOT / 'deploy/service' / name).read_bytes())
+        (templates / name).write_bytes((ROOT / 'deploy' / name).read_bytes())
     return path
 
 
@@ -61,7 +61,7 @@ def test_no_caller_selected_unit_target(release, token):
 
 
 def test_template_drift_fails_before_mutation(release):
-    path = release / 'source/deploy/service/geophysics-api.service'
+    path = release / 'source/deploy/geophysics-api.service'
     path.write_text(path.read_text().replace('After=geophysics-api.socket', 'After=unexpected.socket'))
     with pytest.raises(ValueError, match='template changed'):
         qualifier.unit_texts(release, 'a' * 12)

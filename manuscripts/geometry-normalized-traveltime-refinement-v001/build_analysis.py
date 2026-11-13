@@ -28,6 +28,10 @@ EXPECTED = {
     "residual-only.npz": "3127d7703ed6d1d9df8f6cbd5e9950ff3ff6d92726c9adf7a25e9d3a57949ec0",
     "coverage-only.npz": "6c022a53ddc3891129e906e6bb60053f0f3aa606ae493727487beaeff1a32ad6",
 }
+REPLAY_EXPECTED = {
+    "independent-replay-receipt.json": "d0b7905b80a184f01a761bb80430e7b6557fcc9dc00a88326f57c9bbdcf5975d",
+    "independent-replay-checkpoint.npz": "b7d606a04fe66286490b62b5ddae89e9c4aca882c15afe56524f21f0e511beaf",
+}
 EXPECTED_TRAINING_CODE = "aa85618783b014df20612e72ca0451f68e658e5dc12ebb4336d1f54259cf4b3e"
 EXPECTED_OPERATOR_CODE = "2b9ed95d3ba7b1b0f9f80167fa610640dc75c8a142dafb9f7f09791b96a1fd44"
 COHORTS = ("id_test", "family_only", "acquisition_only", "joint_ood")
@@ -51,7 +55,7 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
-def load_evidence() -> tuple[dict, dict, dict]:
+def load_evidence() -> tuple[dict, dict, dict, dict]:
     for name, expected in EXPECTED.items():
         actual = digest(DATA / name)
         require(actual == expected, f"{name} SHA-256 mismatch: {actual}")
@@ -63,6 +67,7 @@ def load_evidence() -> tuple[dict, dict, dict]:
             f"Current velocity operator source changed: {operator_source}")
     primary = json.loads((DATA / "primary-receipt.json").read_text(encoding="utf-8"))
     ablation = json.loads((DATA / "ablation-receipt.json").read_text(encoding="utf-8"))
+    replay = json.loads((DATA / "independent-replay-receipt.json").read_text(encoding="utf-8"))
     require(primary["schema"] == "geophysics.m12-physics/v2", "Unsupported primary receipt schema")
     require(primary["status"] == "failed-held-out-comparator", "Primary result is not the recorded negative result")
     require(primary["code_sha256"] == EXPECTED_TRAINING_CODE, "Primary training code identity mismatch")
@@ -72,12 +77,34 @@ def load_evidence() -> tuple[dict, dict, dict]:
     require(ablation["primary_checkpoint_sha256"] == EXPECTED["primary-checkpoint.npz"], "Ablation is not bound to primary checkpoint")
     require(ablation["operator_code_sha256"] == EXPECTED_OPERATOR_CODE, "Ablation operator identity mismatch")
     require(ablation["feature_code_sha256"] == EXPECTED_TRAINING_CODE, "Ablation feature code identity mismatch")
+    for name, expected in REPLAY_EXPECTED.items():
+        actual = digest(DATA / name)
+        require(actual == expected, f"{name} SHA-256 mismatch: {actual}")
+    require(replay["schema"] == primary["schema"] == "geophysics.m12-physics/v2",
+            "Independent replay schema differs from the primary run")
+    require(replay["status"] == primary["status"] == "failed-held-out-comparator",
+            "Independent replay status differs from the primary result")
+    require(replay["code_sha256"] == primary["code_sha256"] == EXPECTED_TRAINING_CODE,
+            "Independent replay training source differs")
+    require(replay["operator_code_sha256"] == primary["operator_code_sha256"] == EXPECTED_OPERATOR_CODE,
+            "Independent replay operator source differs")
+    require(replay["seed"] == primary["seed"] and replay["epochs"] == primary["epochs"],
+            "Independent replay seed or epoch budget differs")
+    for cohort in ("validation", *COHORTS):
+        current = replay["cohorts"][cohort]
+        frozen = primary["cohorts"][cohort]
+        require(current["manifest_sha256"] == frozen["manifest_sha256"],
+                f"Independent replay cohort differs: {cohort}")
+        require(current["count"] == frozen["count"], f"Independent replay cohort size differs: {cohort}")
+        require([row["id"] for row in current["per_record"]] == [row["id"] for row in frozen["per_record"]],
+                f"Independent replay case identifiers differ: {cohort}")
     for model in MODELS:
         filename = {"residual_only": "residual-only.npz", "coverage_only": "coverage-only.npz"}.get(model)
         if filename:
             require(ablation["variants"][model]["checkpoint_sha256"] == EXPECTED[filename], f"{model} checkpoint mismatch")
-    return primary, ablation, {
+    return primary, ablation, replay, {
         "receipt_sha256": {name: EXPECTED[name] for name in EXPECTED},
+        "replay_sha256": REPLAY_EXPECTED,
         "training_code_sha256": EXPECTED_TRAINING_CODE,
         "operator_code_sha256": EXPECTED_OPERATOR_CODE,
     }
@@ -136,9 +163,9 @@ def bootstrap_ratio(records: list[dict], learned_key: str, reference_key: str, s
     return {"ratio": point, "ci95": [float(low), float(high)], "n": len(records)}
 
 
-def summaries(primary: dict, ablation: dict) -> dict:
+def summaries(primary: dict, ablation: dict, replay: dict) -> dict:
     result = {"schema": "caos-geophysics-paper-analysis/v1", "bootstrap_replicates": BOOTSTRAPS,
-              "bootstrap_seed": BOOTSTRAP_SEED, "primary": {}, "ablation": {}}
+              "bootstrap_seed": BOOTSTRAP_SEED, "primary": {}, "ablation": {}, "independent_replay": {}}
     for ci, cohort in enumerate(COHORTS):
         p = primary["cohorts"][cohort]
         result["primary"][cohort] = {
@@ -153,6 +180,22 @@ def summaries(primary: dict, ablation: dict) -> dict:
         require(abs(result["primary"][cohort]["travel_time"]["ratio"] - p["learned_to_classical_oracle_ratio"]) < 1e-8,
                 f"Primary travel-time aggregate drift in {cohort}")
         result["ablation"][cohort] = {}
+        replay_cohort = replay["cohorts"][cohort]
+        result["independent_replay"][cohort] = {
+            "velocity": bootstrap_ratio(replay_cohort["per_record"], "learned_velocity_rmse_m_s",
+                                         "classical_velocity_rmse_m_s", BOOTSTRAP_SEED + 300 + ci),
+            "travel_time": bootstrap_ratio(replay_cohort["per_record"], "learned_oracle_rmse_ms",
+                                            "classical_oracle_rmse_ms", BOOTSTRAP_SEED + 310 + ci),
+            "flags": replay_cohort["forward_threshold_exceedances"],
+            "threshold_ms": replay["forward_threshold_ms"],
+            "checkpoint_sha256": replay["checkpoint_sha256"],
+        }
+        require(abs(result["independent_replay"][cohort]["velocity"]["ratio"]
+                    - replay_cohort["learned_to_classical_velocity_ratio"]) < 1e-8,
+                f"Independent replay velocity aggregate drift in {cohort}")
+        require(abs(result["independent_replay"][cohort]["travel_time"]["ratio"]
+                    - replay_cohort["learned_to_classical_oracle_ratio"]) < 1e-8,
+                f"Independent replay travel-time aggregate drift in {cohort}")
         for mi, model in enumerate(MODELS):
             a = ablation["variants"][model]["cohorts"][cohort]
             result["ablation"][cohort][model] = {
@@ -270,6 +313,31 @@ def draw_primary_ratios(analysis: dict) -> None:
     axes[0].set_yticks(range(len(COHORTS)), [COHORT_LABELS[c] for c in COHORTS])
     fig.suptitle("Primary frozen checkpoint; ratios above one favor the matched inverse", fontsize=10)
     save_figure(fig, "fig04-primary-heldout-ratios")
+
+
+def draw_replay_sensitivity(analysis: dict) -> None:
+    fig, axes = plt.subplots(1, 2, figsize=(10.0, 4.5), constrained_layout=True, sharey=True)
+    runs = (("primary", "Published checkpoint", "#315b72"),
+            ("independent_replay", "Independent CUDA replay", "#b56c38"))
+    offsets = {"primary": -0.12, "independent_replay": 0.12}
+    for ax, metric, title in zip(axes, ("velocity", "travel_time"),
+                                 ("Velocity RMSE ratio", "$Q$-scored observed-pick RMSE ratio"), strict=True):
+        for key, label, color in runs:
+            for i, cohort in enumerate(COHORTS):
+                value = analysis[key][cohort][metric]
+                ax.errorbar(value["ratio"], i + offsets[key],
+                            xerr=[[value["ratio"] - value["ci95"][0]],
+                                  [value["ci95"][1] - value["ratio"]]],
+                            fmt="o", color=color, capsize=3, label=label if i == 0 else None)
+        ax.axvline(1, color="#a84135", ls="--", lw=1)
+        ax.set_xscale("log")
+        ax.set_title(title)
+        ax.set_xlabel("Learned / regularized-ray RMSE, 95% case-bootstrap interval")
+        ax.grid(axis="x", alpha=0.25, which="both")
+    axes[0].set_yticks(range(len(COHORTS)), [COHORT_LABELS[c] for c in COHORTS])
+    axes[1].legend(frameon=False, fontsize=8)
+    fig.suptitle("Same seed and cases; separate CUDA checkpoints", fontsize=10)
+    save_figure(fig, "fig08-training-replay-sensitivity")
 
 
 def draw_case_scatter(primary: dict) -> None:
@@ -402,11 +470,28 @@ def render_tables(primary: dict, ablation: dict, analysis: dict) -> None:
     (GENERATED / "tables.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def render_replay_table(analysis: dict) -> None:
+    lines = [
+        r"\begin{table}[htbp]", r"\centering", r"\small",
+        r"\caption{A second CUDA training uses the same source, seed, and case manifests but a distinct checkpoint; both runs retain the negative comparison.}",
+        r"\label{tab:replay-sensitivity}", r"\begin{tabular}{lrrr}", r"\toprule",
+        r"Cohort & Velocity ratio, first / replay & Time ratio, first / replay & Flags, first / replay \\", r"\midrule",
+    ]
+    for cohort in COHORTS:
+        first = analysis["primary"][cohort]
+        second = analysis["independent_replay"][cohort]
+        lines.append(f"{COHORT_LABELS[cohort]} & {fmt(first['velocity']['ratio'])} / {fmt(second['velocity']['ratio'])} & "
+                     f"{fmt(first['travel_time']['ratio'])} / {fmt(second['travel_time']['ratio'])} & "
+                     f"{first['flags']}/{second['flags']} " + chr(92) * 2)
+    lines += [r"\bottomrule", r"\end{tabular}", r"\end{table}"]
+    (GENERATED / "replay-table.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     FIGURES.mkdir(parents=True, exist_ok=True)
     GENERATED.mkdir(parents=True, exist_ok=True)
-    primary, ablation, identities = load_evidence()
-    analysis = summaries(primary, ablation)
+    primary, ablation, replay, identities = load_evidence()
+    analysis = summaries(primary, ablation, replay)
     analysis["resolution_kernel"] = resolution_diagnostics()
     analysis.update(identities)
     (GENERATED / "analysis.json").write_text(json.dumps(analysis, indent=2, allow_nan=False) + "\n", encoding="utf-8")
@@ -414,14 +499,18 @@ def main() -> None:
     draw_feature_example()
     draw_training(primary, ablation)
     draw_primary_ratios(analysis)
+    draw_replay_sensitivity(analysis)
     draw_case_scatter(primary)
     draw_ablation(analysis)
     draw_kernel_spectrum(analysis)
     render_tables(primary, ablation, analysis)
-    print(json.dumps({"status": "verified", "figures": 7, "tables": 5,
+    render_replay_table(analysis)
+    print(json.dumps({"status": "verified", "figures": 8, "tables": 6,
                       "primary_receipt": identities["receipt_sha256"]["primary-receipt.json"],
+                      "independent_replay_receipt": identities["replay_sha256"]["independent-replay-receipt.json"],
                       "ablation_receipt": identities["receipt_sha256"]["ablation-receipt.json"],
                       "joint_primary": analysis["primary"]["joint_ood"],
+                      "joint_independent_replay": analysis["independent_replay"]["joint_ood"],
                       "outputs": [str(p.relative_to(PAPER)) for p in sorted(FIGURES.glob("*.pdf"))]}, indent=2))
 
 

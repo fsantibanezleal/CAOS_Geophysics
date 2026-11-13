@@ -150,9 +150,9 @@ def test_strict_json_explicit_large_private_receipt_bound():
 
 
 def test_service_boundaries():
-    socket = (ROOT / "deploy/service/geophysics-api.socket").read_text(encoding="utf-8")
-    api = (ROOT / "deploy/service/geophysics-api.service").read_text(encoding="utf-8")
-    nginx = (ROOT / "deploy/service/geophysics.nginx").read_text(encoding="utf-8")
+    socket = (ROOT / "deploy/geophysics-api.socket").read_text(encoding="utf-8")
+    api = (ROOT / "deploy/geophysics-api.service").read_text(encoding="utf-8")
+    nginx = (ROOT / "deploy/geophysics.ml.fasl-work.com.nginx").read_text(encoding="utf-8")
     assert "SocketMode=0660" in socket and "SocketGroup=www-data" in socket
     assert "--fd 3" in api and "--host" not in api and "PrivateNetwork=yes" in api
     assert "root /var/www/geophysics.ml.fasl-work.com/current/web;" in nginx
@@ -164,8 +164,8 @@ def test_service_boundaries():
 
 
 def test_worker_isolation():
-    api = (ROOT / "deploy/service/geophysics-api.service").read_text(encoding="utf-8")
-    worker = (ROOT / "deploy/service/geophysics-worker.service").read_text(encoding="utf-8")
+    api = (ROOT / "deploy/geophysics-api.service").read_text(encoding="utf-8")
+    worker = (ROOT / "deploy/geophysics-worker.service").read_text(encoding="utf-8")
     assert "EnvironmentFile=/etc/geophysics/api.env" in api
     assert "EnvironmentFile=/etc/geophysics/worker.env" in worker
     assert "api.env" not in worker and "GEOPHYSICS_AUTH_SECRET" not in worker

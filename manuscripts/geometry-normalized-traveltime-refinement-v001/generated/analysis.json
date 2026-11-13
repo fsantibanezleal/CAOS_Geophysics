@@ -354,6 +354,92 @@
       }
     }
   },
+  "independent_replay": {
+    "id_test": {
+      "velocity": {
+        "ratio": 3.0501495590520533,
+        "ci95": [
+          2.957685187792249,
+          3.14280712545413
+        ],
+        "n": 160
+      },
+      "travel_time": {
+        "ratio": 5.12806364444571,
+        "ci95": [
+          4.909776054230439,
+          5.3515578843934515
+        ],
+        "n": 160
+      },
+      "flags": 12,
+      "threshold_ms": 6.232810800266335,
+      "checkpoint_sha256": "b7d606a04fe66286490b62b5ddae89e9c4aca882c15afe56524f21f0e511beaf"
+    },
+    "family_only": {
+      "velocity": {
+        "ratio": 2.17351828433453,
+        "ci95": [
+          2.094761226085231,
+          2.2712122115232023
+        ],
+        "n": 80
+      },
+      "travel_time": {
+        "ratio": 5.7404576793026845,
+        "ci95": [
+          5.634243715245525,
+          5.848488682956003
+        ],
+        "n": 80
+      },
+      "flags": 80,
+      "threshold_ms": 6.232810800266335,
+      "checkpoint_sha256": "b7d606a04fe66286490b62b5ddae89e9c4aca882c15afe56524f21f0e511beaf"
+    },
+    "acquisition_only": {
+      "velocity": {
+        "ratio": 3.107449814609604,
+        "ci95": [
+          2.9729110690180103,
+          3.2467454983552764
+        ],
+        "n": 80
+      },
+      "travel_time": {
+        "ratio": 5.426592588220076,
+        "ci95": [
+          5.122104676016368,
+          5.758810336567175
+        ],
+        "n": 80
+      },
+      "flags": 7,
+      "threshold_ms": 6.232810800266335,
+      "checkpoint_sha256": "b7d606a04fe66286490b62b5ddae89e9c4aca882c15afe56524f21f0e511beaf"
+    },
+    "joint_ood": {
+      "velocity": {
+        "ratio": 2.189571204334301,
+        "ci95": [
+          2.1275999677112107,
+          2.260425941070534
+        ],
+        "n": 160
+      },
+      "travel_time": {
+        "ratio": 5.595372890906382,
+        "ci95": [
+          5.518567110163533,
+          5.672108177371448
+        ],
+        "n": 160
+      },
+      "flags": 160,
+      "threshold_ms": 6.232810800266335,
+      "checkpoint_sha256": "b7d606a04fe66286490b62b5ddae89e9c4aca882c15afe56524f21f0e511beaf"
+    }
+  },
   "resolution_kernel": [
     {
       "layout": "A",
@@ -1160,6 +1246,10 @@
     "ablation-receipt.json": "85838d36b5adb34329866ca25a55a468892e7baf21e63c4076673c79d5dfc5a6",
     "residual-only.npz": "3127d7703ed6d1d9df8f6cbd5e9950ff3ff6d92726c9adf7a25e9d3a57949ec0",
     "coverage-only.npz": "6c022a53ddc3891129e906e6bb60053f0f3aa606ae493727487beaeff1a32ad6"
+  },
+  "replay_sha256": {
+    "independent-replay-receipt.json": "d0b7905b80a184f01a761bb80430e7b6557fcc9dc00a88326f57c9bbdcf5975d",
+    "independent-replay-checkpoint.npz": "b7d606a04fe66286490b62b5ddae89e9c4aca882c15afe56524f21f0e511beaf"
   },
   "training_code_sha256": "aa85618783b014df20612e72ca0451f68e658e5dc12ebb4336d1f54259cf4b3e",
   "operator_code_sha256": "2b9ed95d3ba7b1b0f9f80167fa610640dc75c8a142dafb9f7f09791b96a1fd44"

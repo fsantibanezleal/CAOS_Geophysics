@@ -39,7 +39,7 @@ The corrected paired-bootstrap analysis resamples case identifiers, then compute
 
 The null-space operation is established and the product experiment does not compare it with Rowbotham–Pratt’s prior-informed construction, Muñoz–Rath’s non-uniqueness exploration, PINNtomo, EKI-NN, the sparse-ray ANN or current residual PINNs on matched arrays. More importantly, no unprojected prediction from the inherited checkpoint is saved for the exact four follow-up test cohorts. Therefore the measured difference against the classical baseline does not isolate the incremental causal effect of projection. The independent bilinear travel-time operator is a useful scoring control, but it does not replace a shared benchmark.
 
-The narrow conclusion is that this particular projected candidate had lower aggregate model and independent travel-time RMSE than the classical baseline in four fixed synthetic cohorts. The joint-shift differences are small, particularly for travel time. The experiment does not establish geological uniqueness, resolution, uncertainty calibration, external reproducibility, performance on field data, or superiority to published state-of-the-art methods. No global novelty claim is supported. The working manuscript `manuscripts/m12-nullspace-refinement-v0.01/main.tex` follows this boundary.
+The narrow conclusion is that this particular projected candidate had lower aggregate model and independent travel-time RMSE than the classical baseline in four fixed synthetic cohorts. The joint-shift differences are small, particularly for travel time. The experiment does not establish geological uniqueness, resolution, uncertainty calibration, external reproducibility, performance on field data, or superiority to published methods. No global novelty claim is supported. The draft is retained outside the publication set at `docs/research/archive/m12-nullspace-evaluation-draft-2026-11-13/`.
 
 ## Work needed for a stronger scientific claim
 
@@ -52,6 +52,12 @@ The narrow conclusion is that this particular projected candidate had lower aggr
 
 Until those studies exist, retain the result as a bounded research branch and keep M12 scientific acceptance false. The current evidence is appropriate for a working manuscript that reports the method and its limits; it is not a publishable superiority claim.
 
+## Publication-status reassessment, 2026-11-13
+
+The null-space projection itself is established in travel-time tomography and seismic inversion. de Wit et al. use a null-space shuttle to construct data-compatible travel-time tomography models and quantify non-uniqueness; Liu et al. review prior tomographic uses and develop a null-space shuttle for elastic FWI; Torres and Sacchi apply null-space projection and deep decomposition learning to seismic reflectivity. The existing M12 draft explicitly describes its study as a post-hoc intervention rather than new inverse theory. It also reports the older residual-v3.1 experiment and has not been updated to the current physics-v2 BS-1 result. It therefore cannot serve as a distinct proposed-method paper or claim the null-space operation as novel.
+
+The complete draft and its generated PDF are preserved in the research archive. The product registry no longer declares it as a manuscript. Its paired projection analysis may remain a bounded diagnostic in the scientific record after its protocol and checkpoint provenance are reconciled; no Zenodo publication or novelty claim is made from the current draft.
+
 ## Source records
 
 - Rowbotham, P. S., and R. G. Pratt (1997). “Improved inversion through use of the null space.” *Geophysics*, 62(3), 869–883. DOI: [10.1190/1.1444195](https://doi.org/10.1190/1.1444195).
@@ -62,3 +68,6 @@ Until those studies exist, retain the result as a bounded research branch and ke
 - Komeazi, A., G. Rümpker, J. Faber, F. Limberger, and N. Srivastava (2024). “When linear inversion fails: Neural-network optimization for sparse-ray travel-time tomography of a volcanic edifice.” *Artificial Intelligence in Geosciences*, 5, 100086. DOI: [10.1016/j.aiig.2024.100086](https://doi.org/10.1016/j.aiig.2024.100086).
 - Song, C., H. Geng, Y. Wang, U. B. Waheed, and C. Liu (2025). “Simultaneous P- and S-wave seismic traveltime tomography using physics-informed neural networks.” *Geophysical Prospecting*, 73(6), e70034. DOI: [10.1111/1365-2478.70034](https://doi.org/10.1111/1365-2478.70034).
 - Xiang, Y., Z. Song, Z. Wang, and G. Song (2026). “Residual Physics-Informed Neural Networks for Seismic Tomography with Multi-Source Prior Constraints.” *Mathematics*, 14(8), 1392. DOI: [10.3390/math14081392](https://doi.org/10.3390/math14081392).
+- de Wit, R. W. L., J. Trampert, and R. D. van der Hilst (2012). “Toward quantifying uncertainty in travel time tomography using the null-space shuttle.” *Journal of Geophysical Research: Solid Earth*, 117, B03301. DOI: [10.1029/2011JB008754](https://doi.org/10.1029/2011JB008754).
+- Liu, Y., et al. (2020). “Square-root variable metric-based nullspace shuttle: A characterization of the nonuniqueness in elastic full-waveform inversion.” *Journal of Geophysical Research: Solid Earth*. DOI: [10.1029/2019JB018687](https://doi.org/10.1029/2019JB018687).
+- Torres, A. and M. D. Sacchi (2023). “Deep decomposition learning for reflectivity inversion.” *Geophysical Prospecting*. DOI: [10.1111/1365-2478.13366](https://doi.org/10.1111/1365-2478.13366).

@@ -4,6 +4,8 @@ The sole public application origin is `https://geophysics.ml.fasl-work.com/`, ho
 
 The VPS release uses an immutable directory under `/var/www/geophysics.ml.fasl-work.com/releases/` and an atomic `current` symlink. Nginx serves the SPA with a deep-link fallback and caches hashed assets while keeping `index.html` and replay data revalidatable.
 
+The active deployment bundle is flat under `deploy/`: `geophysics.ml.fasl-work.com.nginx` is the single site configuration, and `geophysics-api.service`, `geophysics-api.socket`, and `geophysics-worker.service` are the release units. Release preparation and qualification read these canonical files directly. The legacy static-only site configuration is retained under validation evidence and is not an activation input.
+
 The current public release is still the legacy 0.04.001 static frontend. Removing the old secondary publication does not deploy or accept the replacement. Historical validation receipts remain historical, even where they document the former duplicate publication.
 
 ## Approved replacement

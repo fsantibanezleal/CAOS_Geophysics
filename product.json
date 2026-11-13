@@ -43,10 +43,6 @@
     {
       "title": "Inverse Earth Studio: a reproducible geophysical workbench for processing, forward modelling, inversion, and scientific review",
       "kind": "technical-report"
-    },
-    {
-      "title": "Geometry-normalized learned first-arrival tomography and null-space correction: two synthetic studies",
-      "kind": "manuscript"
     }
   ],
   "pages": [

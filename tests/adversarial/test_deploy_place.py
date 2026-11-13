@@ -55,10 +55,9 @@ def test_structured_static_plus_service_vps_target_is_valid(tmp_path: Path) -> N
     assert result.returncode == 0, result.stdout
 
 
-def test_vps_service_nested_under_deploy_service_is_valid(tmp_path: Path) -> None:
-    repo = deployment(tmp_path / "nested", "vps\n", nginx="geophysics.nginx")
-    service = repo / "deploy/service/geophysics-api.service"
-    service.parent.mkdir(parents=True)
+def test_vps_service_at_deploy_root_is_valid(tmp_path: Path) -> None:
+    repo = deployment(tmp_path / "root", "vps\n", nginx="geophysics.nginx")
+    service = repo / "deploy/app.service"
     service.write_text("[Service]\n", encoding="utf-8")
     result = guard(repo, "check_deploy_place.py", ok_marker="deploy place: OK, vps only")
     assert result.returncode == 0, result.stdout
