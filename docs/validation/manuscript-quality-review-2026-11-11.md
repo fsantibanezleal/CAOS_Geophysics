@@ -12,9 +12,9 @@ remaining product-level findings:
 1. The BS-1 draft title is absent from `product.json`, which records published
    DOI-backed documents only. The draft must not be added before the complete
    report and publication workflow; no DOI is invented.
-2. `manuscripts/geophysics-identifiability` has no LaTeX `main.tex`.
+2. The old geophysics-identifiability workspace has no LaTeX `main.tex`.
 3. `manuscripts/inverse-earth-studio-report-0.04.003/coverage.json` is missing.
-4. `manuscripts/m12-nullspace-refinement-v0.01/coverage.json` is missing.
+4. The older null-space manuscript has no `coverage.json`.
 5. No manuscript folder is declared as the required technical report.
 
 The remote branch baseline at `1e208f8` has a fifth finding: BS-1 has no
@@ -428,3 +428,42 @@ The rebuilt manuscript measures 8,015 prose words, 16 display equations, 7 figur
 The scientific conclusion remains a bounded negative result for the stated synthetic generator and fixed cohorts. It does not demonstrate a new beyond-state-of-the-art method: the proposed learned residual method fails against its selected regularized reference on its locked joint-shift test, and the manuscript has no matched-operator ablation, multiple-training-seed uncertainty, field validation, or controlled reimplementation of the newly cited methods. The operator-mismatch limitation remains explicit. The manuscript is a useful research report on a failed hypothesis, not evidence of product scientific acceptance.
 
 The product-wide manuscript gate still fails with two findings, both in the separate technical report: missing \texttt{coverage.json} and no folder declared as \texttt{kind: technical-report}. That report remains at 3,481 words, zero equations, one figure, one table, 14 references, and zero algorithms, below the documented report bar. This manuscript improvement does not resolve that gap or justify release, promotion to main, or VPS deployment.
+
+## 2026-11-13 final-source manuscript and base recheck
+
+The earlier two-finding report above is superseded by a fresh run against the
+current product checkout. `scripts/check_manuscript_depth.py . --report` now
+passes with two complete LaTeX documents:
+
+| Document | Prose words | Equations | Figures | Tables | References | Algorithms | Sections |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Technical report 0.04.003 | 16,848 | 32 | 10 | 9 | 32 | 3 | 14 |
+| Geometry-normalized travel-time refinement | 8,391 | 16 | 8 | 7 | 41 | 1 | 12 |
+
+The technical-report coverage map now binds all 13 ordinary methods plus the
+geometry-normalized method and five named data/API contracts. The separate
+method manuscript maps claim BS-1 to its method section and supported result
+tables/figures. Both exceed the required depth floors. A fresh run of
+`scripts/check_internal_names.py .` initially found one internal tier term in
+the EN null-space notebook's chart explanation; the text was replaced with the
+actual straight-ray baseline name. English and Spanish versions of that
+notebook then passed a fresh-kernel, in-memory run, and the repository-wide
+internal-name check passed. The repository-wide notebook-depth check still
+reports 113 findings elsewhere.
+
+The BS-1 manuscript remains a carefully bounded negative synthetic study, not
+a demonstrated beyond-current-method improvement. The learned residual result
+fails its locked comparison; no matched-operator control or reproduction of
+the newly cited methods is included, and no field accuracy is established.
+The prior independent read-only review found no P0/P1 issue at the manuscript's
+stated scope and retained the operator mismatch as a P2 interpretation limit.
+Its content/depth readiness does not convert the negative scientific result
+into a positive beyond-method claim. The technical report now meets its
+measured content/coverage gate; the broader product scientific and release
+gates remain separate.
+
+Shared bases are verified current: Shell `v0.26.000` / npm `0.26.0` at
+`d2b3351` and Template `v0.15.010` at `5d08269` on `develop`. The product pins
+Shell `0.26.0` and records Template `0.15.010`; no base override was needed.
+The canonical VPS page and catalogue still serve legacy `0.04.001`; the
+replacement candidate has not been deployed.
