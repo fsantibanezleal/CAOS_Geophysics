@@ -47,8 +47,58 @@
   "contracts": {
     "experiment-catalog": [
       "02-gravity/04-m02-prism-forward-and-inverse-limits.ipynb"
+    ],
+    "browser-model-assets": [
+      "06-seismology/04-m13-learned-phase-picking.ipynb"
     ]
   },
-  "stages": {},
+  "stages": {
+    "synthetic_bake": [
+      "01-foundations/01-inverse-problem-and-evidence.ipynb"
+    ],
+    "source_acquisition": [
+      "01-foundations/01-inverse-problem-and-evidence.ipynb"
+    ],
+    "observation_ingestion": [
+      "01-foundations/01-inverse-problem-and-evidence.ipynb",
+      "02-gravity/02-m01-station-corrections.ipynb"
+    ],
+    "gravity_processing": [
+      "02-gravity/02-m01-station-corrections.ipynb",
+      "02-gravity/03-long-valley-time-lapse-processing.ipynb"
+    ],
+    "magnetic_processing": [
+      "03-magnetics/02-m03-survey-geometry-and-holdout.ipynb"
+    ],
+    "mt_quality_control": [
+      "04-mt/02-mt-qc.ipynb"
+    ],
+    "ert_inversion": [
+      "05-ert/02-ert-inversion.ipynb",
+      "05-ert/03-ert-method-comparison.ipynb"
+    ],
+    "waveform_processing": [
+      "06-seismology/01-waveforms.ipynb"
+    ],
+    "traveltime_inversion": [
+      "06-seismology/02-traveltime-fwi.ipynb",
+      "08-learning/04-first-arrival-user-data.ipynb"
+    ],
+    "full_waveform_inversion": [
+      "06-seismology/05-m10-fwi-case-matrix.ipynb"
+    ],
+    "joint_inversion": [
+      "07-joint/03-joint-method-comparison.ipynb",
+      "07-joint/04-m11-physical-matrix-evidence.ipynb"
+    ],
+    "learned_models": [
+      "08-learning/05-m12-velocity-checkpoint.ipynb",
+      "08-learning/07-physics-conditioned-velocity-refinement.ipynb"
+    ],
+    "evaluation": [
+      "03-magnetics/04-m04-fit-objective-validation.ipynb",
+      "08-learning/03-learning-method-comparison.ipynb"
+    ]
+  },
   "packages": {}
 }

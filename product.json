@@ -20,6 +20,21 @@
     ]
   },
   "method_packages": [],
+  "pipeline_stage_sources": {
+    "synthetic_bake": "data-pipeline/rebuild.py",
+    "source_acquisition": "data-pipeline/acquire.py",
+    "observation_ingestion": "data-pipeline/ingest.py",
+    "gravity_processing": "data-pipeline/gravity_processing.py",
+    "magnetic_processing": "data-pipeline/magnetic_processing.py",
+    "mt_quality_control": "data-pipeline/mt_field_qc.py",
+    "ert_inversion": "data-pipeline/ert.py",
+    "waveform_processing": "data-pipeline/waveform_processing.py",
+    "traveltime_inversion": "data-pipeline/traveltime.py",
+    "full_waveform_inversion": "data-pipeline/seismic.py",
+    "joint_inversion": "data-pipeline/joint.py",
+    "learned_models": "data-pipeline/learning.py",
+    "evaluation": "data-pipeline/evaluation.py"
+  },
   "manuscripts": [
     {
       "title": "Geometry-normalized residual learning for first-arrival traveltime tomography: a controlled synthetic comparison",
