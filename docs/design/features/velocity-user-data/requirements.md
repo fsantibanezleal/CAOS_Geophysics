@@ -3,14 +3,14 @@
 This extends the approved local M09/M12 data-tools scope. It does not change the
 frozen learned benchmark, train a new checkpoint or assert field accuracy.
 
-| ID | Requirement | Gate in tests/data/test_velocity_user_data.py |
+| ID | Requirement | Gate |
 | --- | --- | --- |
-| VUD-01 | Reject excessive bytes/depth, duplicate keys, unknown fields, nonfinite values, missing physical units/frame/rights, invalid ray geometry and count/shape mismatch before scientific imports. | test_bounded_physical_contract |
-| VUD-02 | Preserve original bytes/hash, every ray ID, declared uncertainty and acquisition geometry; no amplitude thinning, invented truth or training. | test_identity_and_original_order |
-| VUD-03 | Execute actual error-weighted slowness least squares using supplied times, ray-cell intersections, explicit lambda and the existing physical smoothness/reference; solve the physical velocity box constraints inside the objective rather than clipping an unconstrained result; expose coverage, predictions, signed residuals, objective, active bounds and projected KKT diagnostics. | test_weighted_inverse_and_parameter_effect; test_active_velocity_bounds_match_independent_qp_oracle |
-| VUD-04 | Optional learned inference must use a hash-verified existing checkpoint on the same supplied observations/geometry, never classical substitution; retain failed benchmark and out-of-training-domain warnings. | test_actual_checkpoint_inference |
-| VUD-05 | Export finite arrays, physical axes, configuration, engine/source hashes and nonclaims to a fresh local generation. New v2 exports must have a serialized-model projected KKT residual within the frozen gate and pass producer-side physics verification. Historical v1 generations remain readable with their solve-then-clip status intact. An interrupted or altered generation is not successful. | test_bundle_roundtrip_and_corruption; test_legacy_v1_result_remains_reopenable_as_historical_data |
-| VUD-06 | The CLI must execute user bytes without downloads, uploads, implicit installs or overwrite; malformed input exits nonzero without a partial success. | test_cli_actual_input_and_no_overwrite |
+| VUD-01 | WHEN request bytes exceed a parser bound, contain duplicate or nonfinite values, or violate the physical contract, the local parser SHALL reject them before importing scientific packages. | `tests/adversarial/test_velocity_user_data_adversarial.py::test_adversarial_vud_01_rejects_forged_requests` |
+| VUD-02 | WHEN a valid survey is processed, the result SHALL preserve its input-byte hash, ray order and identifiers without adding truth claims or modifying the input. | `tests/adversarial/test_velocity_user_data_adversarial.py::test_adversarial_vud_02_preserves_supplied_identity` |
+| VUD-03 | WHEN supplied travel times, uncertainties or regularization change, the classical result SHALL solve the declared weighted, box-constrained slowness objective and pass an independent bounded-QP control. | `tests/adversarial/test_velocity_user_data_adversarial.py::test_adversarial_vud_03_refutes_unbounded_or_unweighted_solves` |
+| VUD-04 | WHEN a learned checkpoint is requested, inference SHALL verify its pinned digest, use the supplied observations and geometry, and retain the failed-comparator and out-of-domain evidence. | `tests/adversarial/test_velocity_user_data_adversarial.py::test_adversarial_vud_04_rejects_checkpoint_substitution` |
+| VUD-05 | WHEN an exported generation is altered or its physical diagnostics are inconsistent, verification SHALL reject it; historical v1 generations SHALL retain their explicit solve-then-clip status when reopened. | `tests/adversarial/test_velocity_user_data_adversarial.py::test_adversarial_vud_05_rejects_forged_generations` |
+| VUD-06 | WHEN the CLI receives malformed input or an existing output path, it SHALL exit nonzero and SHALL NOT report success or overwrite a generation. | `tests/adversarial/test_velocity_user_data_adversarial.py::test_adversarial_vud_06_cli_fails_closed` |
 
 Numerical controls: homogeneous cell-ray time agrees with distance/velocity to
 1e-10 s. An independent SciPy bounded least-squares oracle matches interior and
