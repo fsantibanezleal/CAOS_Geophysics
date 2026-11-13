@@ -165,10 +165,45 @@ def check_contracts(root: Path = ROOT) -> list[str]:
                          "attribution": "Survey group", "expected_sha256": "a" * 64},
                         {"provider": "x", "rights_statement": "x", "rights_decision": "unknown",
                          "private_storage_permission": "attested", "attribution": "x"}),
-        "DatasetCreate": ({"asset_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41"}, {"asset_id": "bad-id"}),
+        "DatasetCreate": ({"asset_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
+                            "magnetic_request": {
+                                "mapping": {"easting": "E", "northing": "N", "value": "TMI",
+                                            "line_id": "line", "line_role": "role",
+                                            "sensor_height_m": "height", "sample_order": "order"},
+                                "processing_state": "provider-levelled anomaly",
+                                "value_quantity": "total-field anomaly",
+                                "sensor_height_reference": "height above local ground"}},
+                           {"asset_id": "bad-id"}),
+        "JobCreate": ({"dataset_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
+                       "method_id": "gravity.survey-l2-ordinary/v1",
+                       "parameters": {"schema": "gravity.survey-l2-parameters/v1", "background_mgal": 0,
+                                      "mesh": {"origin_m": [-50, -50, -200], "hx_m": [100], "hy_m": [100],
+                                               "hz_m": [100], "active": [True]},
+                                      "split": {"block_origin_m": [-600, -600], "block_size_m": [100, 100],
+                                                "buffer_m": 25, "seed": 104729},
+                                      "prior": {"lower_kg_m3": [-1500], "upper_kg_m3": [1500],
+                                                "start_kg_m3": [0], "reference_kg_m3": [0],
+                                                "density_scale_kg_m3": 1000, "lengths_m": [100, 100, 100],
+                                                "basis": "Signed density contrast", "reference_in_smooth": True,
+                                                "spatial_weights": "none"}}},
+                      {"dataset_id": "bad-id", "method_id": "gravity.survey-l2-ordinary/v1",
+                       "parameters": {"schema": "gravity.survey-l2-parameters/v1"}}),
+        "ScientificProcessingResult": ({"schema": "geophysics.processing-result/v1",
+                                        "job_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
+                                        "dataset_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
+                                        "dataset_sha256": "a" * 64,
+                                        "method_id": "gravity.survey-l2-ordinary/v1",
+                                        "request_sha256": "b" * 64},
+                                       {"schema": "geophysics.processing-result/v1",
+                                        "job_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
+                                        "dataset_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
+                                        "dataset_sha256": "a" * 64, "method_id": "not-a-method",
+                                        "request_sha256": "b" * 64}),
         "M06Parameters": ({"qc_job_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41", "thickness_m": [350],
                            "initial_ohm_m": [100, 20], "beta": 0.5},
                           {"qc_job_id": "bad-id", "thickness_m": [1], "initial_ohm_m": [], "beta": 2}),
+        "MagneticParameters": ({"grid_spacing_m": 25, "holdout_fraction": 0.2, "seed": "M03-control-v1"},
+                               {"grid_spacing_m": 0, "holdout_fraction": 0.9, "seed": ""}),
         "WaveformDatasetPayload": ({"schema": "geophysics.waveform-dataset/v1", "dataset_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
                                      "version": 1, "owner_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
                                      "project_id": "d2719f2d-9968-4ef0-8a66-8df16ab12f41",
@@ -271,6 +306,8 @@ def check_contracts(root: Path = ROOT) -> list[str]:
     required_defs = {
         "ProjectCreate", "ProjectUpdate", "SourceInput", "PhysicalInput", "AssetMetadata",
         "PhysicalAssetMetadata", "UploadMetadata", "DatasetCreate", "JobCreate", "UserCreate", "User",
+        "GravityL2Parameters", "GravityMesh", "GravitySplit", "GravityPrior",
+        "MagneticDatasetOptions", "MagneticMapping", "MagneticParameters", "ScientificProcessingResult",
         "Project", "RawAsset", "DatasetReceipt", "DatasetPayload", "ObservationDatasetPayload",
         "GravityDatasetPayload", "EdiDatasetPayload", "ProfileDatasetPayload", "RawPhysicalMetadata", "EdiSource", "WaveformDatasetPayload",
         "PhysicalDatasetPayload", "PhysicalSource", "PhysicalMetadata", "PhysicalStation", "PhysicalHistory",
@@ -279,6 +316,12 @@ def check_contracts(root: Path = ROOT) -> list[str]:
     missing_defs = required_defs - schema_doc.get("$defs", {}).keys()
     if missing_defs:
         issues.append("missing API payload schema definitions: " + ", ".join(sorted(missing_defs)))
+    result_methods = set(schema_doc.get("$defs", {}).get("ScientificProcessingResult", {})
+                         .get("properties", {}).get("method_id", {}).get("enum", []))
+    required_methods = {"gravity.survey-l2-ordinary/v1", "magnetic.flightline-qc-grid/v1"}
+    if not required_methods <= result_methods:
+        issues.append("scientific result method IDs omit uploaded-data methods: "
+                      + ", ".join(sorted(required_methods - result_methods)))
     return issues
 
 

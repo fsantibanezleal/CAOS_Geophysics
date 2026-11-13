@@ -332,31 +332,56 @@
       ]
     },
     "DatasetCreate": {
-      "type": "object",
       "additionalProperties": false,
+      "properties": {
+        "asset_id": {
+          "format": "uuid",
+          "title": "Asset Id",
+          "type": "string"
+        },
+        "waveform_request": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Waveform Request"
+        },
+        "profile_metadata": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Profile Metadata"
+        },
+        "magnetic_request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MagneticDatasetOptions"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
       "required": [
         "asset_id"
       ],
-      "properties": {
-        "asset_id": {
-          "type": "string",
-          "format": "uuid"
-        },
-        "waveform_request": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
-        },
-        "profile_metadata": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "additionalProperties": true
-        }
-      }
+      "title": "DatasetCreate",
+      "type": "object"
     },
     "GravityJobParameters": {
       "type": "object",
@@ -373,101 +398,106 @@
       }
     },
     "M05Parameters": {
-      "type": "object",
-      "additionalProperties": false
+      "additionalProperties": false,
+      "properties": {},
+      "title": "M05Parameters",
+      "type": "object"
     },
     "M06Parameters": {
-      "type": "object",
       "additionalProperties": false,
+      "properties": {
+        "qc_job_id": {
+          "format": "uuid",
+          "title": "Qc Job Id",
+          "type": "string"
+        },
+        "thickness_m": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 1,
+          "title": "Thickness M",
+          "type": "array"
+        },
+        "initial_ohm_m": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 1,
+          "title": "Initial Ohm M",
+          "type": "array"
+        },
+        "beta": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Beta",
+          "type": "number"
+        },
+        "bootstrap_samples": {
+          "default": 20,
+          "maximum": 40,
+          "minimum": 20,
+          "title": "Bootstrap Samples",
+          "type": "integer"
+        },
+        "seed": {
+          "default": 61001,
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
       "required": [
         "qc_job_id",
         "thickness_m",
         "initial_ohm_m",
         "beta"
       ],
-      "properties": {
-        "qc_job_id": {
-          "type": "string",
-          "format": "uuid"
-        },
-        "thickness_m": {
-          "type": "array",
-          "maxItems": 1,
-          "items": {
-            "type": "number",
-            "minimum": 2,
-            "maximum": 4000
-          }
-        },
-        "initial_ohm_m": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 2,
-          "items": {
-            "type": "number",
-            "exclusiveMinimum": 1,
-            "exclusiveMaximum": 6000
-          }
-        },
-        "beta": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "bootstrap_samples": {
-          "type": "integer",
-          "minimum": 20,
-          "maximum": 40,
-          "default": 20
-        },
-        "seed": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 2147483647,
-          "default": 61001
-        }
-      }
+      "title": "M06Parameters",
+      "type": "object"
     },
     "ProfileParameters": {
-      "type": "object",
       "additionalProperties": false,
-      "description": "Currently an empty frozen parameter model; solver configuration is controlled by the installed implementation."
+      "description": "Frozen, independently tested numerical settings; no disguised display knobs.",
+      "properties": {},
+      "title": "ProfileParameters",
+      "type": "object"
     },
     "WaveformParameters": {
-      "type": "object",
-      "additionalProperties": true,
+      "additionalProperties": false,
+      "properties": {
+        "scientific_request_sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "title": "Scientific Request Sha256",
+          "type": "string"
+        }
+      },
       "required": [
         "scientific_request_sha256"
       ],
-      "properties": {
-        "scientific_request_sha256": {
-          "$ref": "#/$defs/Sha256"
-        }
-      },
-      "description": "The exact frozen waveform parameter model is defined in app/waveform_contract.py."
+      "title": "WaveformParameters",
+      "type": "object"
     },
     "JobCreate": {
-      "type": "object",
       "additionalProperties": false,
-      "required": [
-        "dataset_id",
-        "method_id",
-        "parameters"
-      ],
       "properties": {
         "dataset_id": {
-          "type": "string",
-          "format": "uuid"
+          "format": "uuid",
+          "title": "Dataset Id",
+          "type": "string"
         },
         "method_id": {
-          "type": "string",
+          "maxLength": 80,
           "minLength": 1,
-          "maxLength": 80
+          "title": "Method Id",
+          "type": "string"
         },
         "parameters": {
           "anyOf": [
             {
-              "$ref": "#/$defs/GravityJobParameters"
+              "$ref": "#/$defs/JobParameters"
             },
             {
               "$ref": "#/$defs/M05Parameters"
@@ -480,10 +510,24 @@
             },
             {
               "$ref": "#/$defs/WaveformParameters"
+            },
+            {
+              "$ref": "#/$defs/GravityL2Parameters"
+            },
+            {
+              "$ref": "#/$defs/MagneticParameters"
             }
-          ]
+          ],
+          "title": "Parameters"
         }
-      }
+      },
+      "required": [
+        "dataset_id",
+        "method_id",
+        "parameters"
+      ],
+      "title": "JobCreate",
+      "type": "object"
     },
     "Sha256": {
       "type": "string",
@@ -1049,17 +1093,38 @@
       "allOf": [
         {
           "if": {
-            "properties": { "eligible": { "const": false } },
-            "required": ["eligible"]
+            "properties": {
+              "eligible": {
+                "const": false
+              }
+            },
+            "required": [
+              "eligible"
+            ]
           },
-          "then": { "required": ["reason", "reason_fields"] }
+          "then": {
+            "required": [
+              "reason",
+              "reason_fields"
+            ]
+          }
         },
         {
           "if": {
-            "properties": { "eligible": { "const": true } },
-            "required": ["eligible"]
+            "properties": {
+              "eligible": {
+                "const": true
+              }
+            },
+            "required": [
+              "eligible"
+            ]
           },
-          "then": { "required": ["scope"] }
+          "then": {
+            "required": [
+              "scope"
+            ]
+          }
         }
       ]
     },
@@ -1233,70 +1298,520 @@
       }
     },
     "RawPhysicalMetadata": {
-      "type": "object", "additionalProperties": false,
-      "required": ["coordinate_reference", "epsg", "local_crs", "axis_order", "horizontal_datum", "vertical_datum", "vertical_positive", "horizontal_unit", "vertical_unit", "measurement_unit", "epoch_utc", "component_frame", "geometry"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate_reference",
+        "epsg",
+        "local_crs",
+        "axis_order",
+        "horizontal_datum",
+        "vertical_datum",
+        "vertical_positive",
+        "horizontal_unit",
+        "vertical_unit",
+        "measurement_unit",
+        "epoch_utc",
+        "component_frame",
+        "geometry"
+      ],
       "properties": {
-        "coordinate_reference": { "enum": ["epsg", "local"] }, "epsg": { "type": ["integer", "null"] },
-        "local_crs": { "type": ["string", "null"] }, "axis_order": { "enum": ["xy", "yx", "lon_lat", "lat_lon"] },
-        "horizontal_datum": { "type": "string" }, "vertical_datum": { "type": "string" },
-        "vertical_positive": { "enum": ["up", "down"] }, "horizontal_unit": { "enum": ["m", "km", "degree"] },
-        "vertical_unit": { "enum": ["m", "ft"] }, "measurement_unit": { "type": "string" },
-        "epoch_utc": { "type": "string", "format": "date-time" }, "component_frame": { "type": "string" },
-        "geometry": { "type": "object" }
+        "coordinate_reference": {
+          "enum": [
+            "epsg",
+            "local"
+          ]
+        },
+        "epsg": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "local_crs": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "axis_order": {
+          "enum": [
+            "xy",
+            "yx",
+            "lon_lat",
+            "lat_lon"
+          ]
+        },
+        "horizontal_datum": {
+          "type": "string"
+        },
+        "vertical_datum": {
+          "type": "string"
+        },
+        "vertical_positive": {
+          "enum": [
+            "up",
+            "down"
+          ]
+        },
+        "horizontal_unit": {
+          "enum": [
+            "m",
+            "km",
+            "degree"
+          ]
+        },
+        "vertical_unit": {
+          "enum": [
+            "m",
+            "ft"
+          ]
+        },
+        "measurement_unit": {
+          "type": "string"
+        },
+        "epoch_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "component_frame": {
+          "type": "string"
+        },
+        "geometry": {
+          "type": "object"
+        }
       }
     },
     "GravityDatasetPayload": {
-      "type": "object", "additionalProperties": false,
-      "required": ["schema", "dataset_id", "version", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parser_version", "modality", "dimensions", "axis_order", "station_ids", "xyz_m", "observed_mgal", "sigma_mgal", "uncertainty_kind", "mask", "missing_reasons", "physical_metadata", "correction_history", "qc_verdict", "rights_decision", "rights_statement", "attribution"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "dataset_id",
+        "version",
+        "owner_id",
+        "project_id",
+        "raw_asset_id",
+        "parent_raw_sha256",
+        "parser_version",
+        "modality",
+        "dimensions",
+        "axis_order",
+        "station_ids",
+        "xyz_m",
+        "observed_mgal",
+        "sigma_mgal",
+        "uncertainty_kind",
+        "mask",
+        "missing_reasons",
+        "physical_metadata",
+        "correction_history",
+        "qc_verdict",
+        "rights_decision",
+        "rights_statement",
+        "attribution"
+      ],
       "properties": {
-        "schema": { "const": "geophysics.observation-dataset/v1" }, "dataset_id": { "type": "string", "format": "uuid" },
-        "version": { "const": 1 }, "owner_id": { "type": "string", "format": "uuid" }, "project_id": { "type": "string", "format": "uuid" },
-        "raw_asset_id": { "type": "string", "format": "uuid" }, "parent_raw_sha256": { "$ref": "#/$defs/Sha256" },
-        "parser_version": { "const": "gravity-station-csv/v1" }, "modality": { "const": "gravity_station" },
-        "dimensions": { "type": "object", "additionalProperties": false, "required": ["station"], "properties": { "station": { "type": "integer", "minimum": 4, "maximum": 4096 } } },
-        "axis_order": { "const": ["station"] }, "station_ids": { "type": "array", "items": { "type": "string" } },
-        "xyz_m": { "type": "array", "items": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }], "minItems": 3, "maxItems": 3 } },
-        "observed_mgal": { "type": "array", "items": { "type": "number" } }, "sigma_mgal": { "type": "array", "items": { "type": "number", "exclusiveMinimum": 0 } },
-        "uncertainty_kind": { "const": "per_station_standard_deviation" }, "mask": { "type": "array", "items": { "const": false } },
-        "missing_reasons": { "type": "array", "items": { "type": "null" } }, "physical_metadata": { "$ref": "#/$defs/RawPhysicalMetadata" },
-        "correction_history": { "type": "array", "maxItems": 0 }, "qc_verdict": { "const": "parsed_for_flag_qc_only" },
-        "rights_decision": { "enum": ["mirror", "provider-link-only", "derivative-only"] }, "rights_statement": { "type": "string" }, "attribution": { "type": "string" }
+        "schema": {
+          "const": "geophysics.observation-dataset/v1"
+        },
+        "dataset_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "const": 1
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "project_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "raw_asset_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "parent_raw_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "parser_version": {
+          "const": "gravity-station-csv/v1"
+        },
+        "modality": {
+          "const": "gravity_station"
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "station"
+          ],
+          "properties": {
+            "station": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 4096
+            }
+          }
+        },
+        "axis_order": {
+          "const": [
+            "station"
+          ]
+        },
+        "station_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "xyz_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "observed_mgal": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "sigma_mgal": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "uncertainty_kind": {
+          "const": "per_station_standard_deviation"
+        },
+        "mask": {
+          "type": "array",
+          "items": {
+            "const": false
+          }
+        },
+        "missing_reasons": {
+          "type": "array",
+          "items": {
+            "type": "null"
+          }
+        },
+        "physical_metadata": {
+          "$ref": "#/$defs/RawPhysicalMetadata"
+        },
+        "correction_history": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "qc_verdict": {
+          "const": "parsed_for_flag_qc_only"
+        },
+        "rights_decision": {
+          "enum": [
+            "mirror",
+            "provider-link-only",
+            "derivative-only"
+          ]
+        },
+        "rights_statement": {
+          "type": "string"
+        },
+        "attribution": {
+          "type": "string"
+        }
       }
     },
     "EdiSource": {
-      "type": "object", "additionalProperties": false,
-      "required": ["provider", "exact_url", "doi", "citation", "rights_decision", "rights_statement", "attribution"],
-      "properties": { "provider": { "type": "string" }, "exact_url": { "type": ["string", "null"] }, "doi": { "type": ["string", "null"] }, "citation": { "type": ["string", "null"] }, "rights_decision": { "enum": ["mirror", "provider-link-only", "derivative-only"] }, "rights_statement": { "type": "string" }, "attribution": { "type": "string" } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "exact_url",
+        "doi",
+        "citation",
+        "rights_decision",
+        "rights_statement",
+        "attribution"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "exact_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doi": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "citation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rights_decision": {
+          "enum": [
+            "mirror",
+            "provider-link-only",
+            "derivative-only"
+          ]
+        },
+        "rights_statement": {
+          "type": "string"
+        },
+        "attribution": {
+          "type": "string"
+        }
+      }
     },
     "EdiDatasetPayload": {
-      "type": "object", "additionalProperties": false,
-      "required": ["schema", "dataset_id", "version", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parent_raw_bytes", "parser_version", "modality", "dimensions", "axis_order", "physical_metadata", "qc_verdict", "source"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "dataset_id",
+        "version",
+        "owner_id",
+        "project_id",
+        "raw_asset_id",
+        "parent_raw_sha256",
+        "parent_raw_bytes",
+        "parser_version",
+        "modality",
+        "dimensions",
+        "axis_order",
+        "physical_metadata",
+        "qc_verdict",
+        "source"
+      ],
       "properties": {
-        "schema": { "const": "geophysics.observation-dataset/v1" }, "dataset_id": { "type": "string", "format": "uuid" }, "version": { "const": 1 },
-        "owner_id": { "type": "string", "format": "uuid" }, "project_id": { "type": "string", "format": "uuid" }, "raw_asset_id": { "type": "string", "format": "uuid" },
-        "parent_raw_sha256": { "$ref": "#/$defs/Sha256" }, "parent_raw_bytes": { "type": "integer", "minimum": 1, "maximum": 5242880 },
-        "parser_version": { "const": "edi-strict-envelope/v1" }, "modality": { "const": "edi_transfer_function" },
-        "dimensions": { "type": "object", "additionalProperties": false, "required": ["frequency"], "properties": { "frequency": { "type": "integer", "minimum": 2, "maximum": 512 } } },
-        "axis_order": { "const": ["frequency"] }, "physical_metadata": { "$ref": "#/$defs/RawPhysicalMetadata" },
-        "qc_verdict": { "const": "awaiting_full_tensor_qc" }, "source": { "$ref": "#/$defs/EdiSource" }
+        "schema": {
+          "const": "geophysics.observation-dataset/v1"
+        },
+        "dataset_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "const": 1
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "project_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "raw_asset_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "parent_raw_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "parent_raw_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5242880
+        },
+        "parser_version": {
+          "const": "edi-strict-envelope/v1"
+        },
+        "modality": {
+          "const": "edi_transfer_function"
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "frequency"
+          ],
+          "properties": {
+            "frequency": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 512
+            }
+          }
+        },
+        "axis_order": {
+          "const": [
+            "frequency"
+          ]
+        },
+        "physical_metadata": {
+          "$ref": "#/$defs/RawPhysicalMetadata"
+        },
+        "qc_verdict": {
+          "const": "awaiting_full_tensor_qc"
+        },
+        "source": {
+          "$ref": "#/$defs/EdiSource"
+        }
       }
     },
     "ProfileDatasetPayload": {
-      "type": "object", "additionalProperties": false,
-      "required": ["schema", "dataset_id", "owner_id", "project_id", "raw_asset_id", "parent_raw_sha256", "parent_raw_bytes", "parser_version", "modality", "method_id", "dimensions", "axis_order", "geometry", "observed", "observation_unit", "profile_metadata", "physical_metadata", "qc", "qc_verdict", "truth"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "dataset_id",
+        "owner_id",
+        "project_id",
+        "raw_asset_id",
+        "parent_raw_sha256",
+        "parent_raw_bytes",
+        "parser_version",
+        "modality",
+        "method_id",
+        "dimensions",
+        "axis_order",
+        "geometry",
+        "observed",
+        "observation_unit",
+        "profile_metadata",
+        "physical_metadata",
+        "qc",
+        "qc_verdict",
+        "truth"
+      ],
       "properties": {
-        "schema": { "const": "geophysics.observation-dataset/v1" }, "dataset_id": { "type": "string", "format": "uuid" }, "owner_id": { "type": "string", "format": "uuid" },
-        "project_id": { "type": "string", "format": "uuid" }, "raw_asset_id": { "type": "string", "format": "uuid" }, "parent_raw_sha256": { "$ref": "#/$defs/Sha256" },
-        "parent_raw_bytes": { "type": "integer", "minimum": 1, "maximum": 1000000 }, "parser_version": { "const": "supplied-profile-original/v1" },
-        "modality": { "enum": ["ert_profile", "traveltime_profile"] }, "method_id": { "enum": ["ert.topographic-profile/v1", "traveltime.first-arrival-profile/v1"] },
-        "dimensions": { "type": "object", "required": ["sensor", "measurement"], "properties": { "sensor": { "type": "integer", "minimum": 2, "maximum": 1024 }, "measurement": { "type": "integer", "minimum": 4, "maximum": 100000 } } },
-        "axis_order": { "const": ["measurement"] }, "geometry": { "type": "object" }, "observed": { "type": "array", "items": { "type": "number" } },
-        "observation_unit": { "enum": ["ohm", "s"] }, "profile_metadata": { "type": "object" }, "physical_metadata": { "$ref": "#/$defs/RawPhysicalMetadata" },
-        "qc": { "type": "object" }, "qc_verdict": { "const": "parsed_not_numerically_inverted" }, "truth": { "type": "null" }
+        "schema": {
+          "const": "geophysics.observation-dataset/v1"
+        },
+        "dataset_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "owner_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "project_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "raw_asset_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "parent_raw_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "parent_raw_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "parser_version": {
+          "const": "supplied-profile-original/v1"
+        },
+        "modality": {
+          "enum": [
+            "ert_profile",
+            "traveltime_profile"
+          ]
+        },
+        "method_id": {
+          "enum": [
+            "ert.topographic-profile/v1",
+            "traveltime.first-arrival-profile/v1"
+          ]
+        },
+        "dimensions": {
+          "type": "object",
+          "required": [
+            "sensor",
+            "measurement"
+          ],
+          "properties": {
+            "sensor": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 1024
+            },
+            "measurement": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 100000
+            }
+          }
+        },
+        "axis_order": {
+          "const": [
+            "measurement"
+          ]
+        },
+        "geometry": {
+          "type": "object"
+        },
+        "observed": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "observation_unit": {
+          "enum": [
+            "ohm",
+            "s"
+          ]
+        },
+        "profile_metadata": {
+          "type": "object"
+        },
+        "physical_metadata": {
+          "$ref": "#/$defs/RawPhysicalMetadata"
+        },
+        "qc": {
+          "type": "object"
+        },
+        "qc_verdict": {
+          "const": "parsed_not_numerically_inverted"
+        },
+        "truth": {
+          "type": "null"
+        }
       }
     },
     "ObservationDatasetPayload": {
-      "oneOf": [{ "$ref": "#/$defs/GravityDatasetPayload" }, { "$ref": "#/$defs/EdiDatasetPayload" }, { "$ref": "#/$defs/ProfileDatasetPayload" }]
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GravityDatasetPayload"
+        },
+        {
+          "$ref": "#/$defs/EdiDatasetPayload"
+        },
+        {
+          "$ref": "#/$defs/ProfileDatasetPayload"
+        }
+      ]
     },
     "WaveformDatasetPayload": {
       "type": "object",
@@ -1405,68 +1920,298 @@
     "PhysicalSource": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["provider", "exact_url", "doi", "citation", "rights_decision", "rights_statement", "attribution"],
+      "required": [
+        "provider",
+        "exact_url",
+        "doi",
+        "citation",
+        "rights_decision",
+        "rights_statement",
+        "attribution"
+      ],
       "properties": {
-        "provider": { "type": "string", "minLength": 1 },
-        "exact_url": { "type": ["string", "null"] },
-        "doi": { "type": ["string", "null"] },
-        "citation": { "type": ["string", "null"] },
-        "rights_decision": { "enum": ["mirror", "provider-link-only", "derivative-only"] },
-        "rights_statement": { "type": "string", "minLength": 1 },
-        "attribution": { "type": "string", "minLength": 1 }
+        "provider": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exact_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "doi": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "citation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rights_decision": {
+          "enum": [
+            "mirror",
+            "provider-link-only",
+            "derivative-only"
+          ]
+        },
+        "rights_statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attribution": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "PhysicalMetadata": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source_kind", "source_sha256", "source_citation", "rights", "crs", "reference_ellipsoid", "height_datum", "height_unit", "height_sign", "gravity_unit", "gravity_sign", "gravity_quantity", "gravity_datum", "tide_system", "instrument_processing"],
+      "required": [
+        "source_kind",
+        "source_sha256",
+        "source_citation",
+        "rights",
+        "crs",
+        "reference_ellipsoid",
+        "height_datum",
+        "height_unit",
+        "height_sign",
+        "gravity_unit",
+        "gravity_sign",
+        "gravity_quantity",
+        "gravity_datum",
+        "tide_system",
+        "instrument_processing"
+      ],
       "properties": {
-        "source_kind": { "enum": ["field", "synthetic_control"] },
-        "source_sha256": { "$ref": "#/$defs/Sha256" },
-        "source_citation": { "type": "string", "minLength": 1 },
-        "rights": { "type": "string", "minLength": 1 },
-        "crs": { "const": "EPSG:4326" },
-        "reference_ellipsoid": { "const": "WGS84" },
-        "height_datum": { "enum": ["ellipsoidal", "orthometric"] },
-        "height_unit": { "const": "m" },
-        "height_sign": { "const": "upward" },
-        "gravity_unit": { "enum": ["mGal", "m/s^2", "microGal"] },
-        "gravity_sign": { "enum": ["downward", "upward"] },
-        "gravity_quantity": { "const": "absolute_gravity" },
-        "gravity_datum": { "type": "string", "minLength": 1 },
-        "tide_system": { "const": "tide_free" },
-        "instrument_processing": { "type": "object", "required": ["calibration", "drift", "tide"], "properties": { "calibration": { "$ref": "#/$defs/InstrumentDeclaration" }, "drift": { "$ref": "#/$defs/InstrumentDeclaration" }, "tide": { "$ref": "#/$defs/InstrumentDeclaration" } }, "additionalProperties": false },
-        "geoid_model": { "type": "string", "minLength": 1 }
+        "source_kind": {
+          "enum": [
+            "field",
+            "synthetic_control"
+          ]
+        },
+        "source_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "source_citation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rights": {
+          "type": "string",
+          "minLength": 1
+        },
+        "crs": {
+          "const": "EPSG:4326"
+        },
+        "reference_ellipsoid": {
+          "const": "WGS84"
+        },
+        "height_datum": {
+          "enum": [
+            "ellipsoidal",
+            "orthometric"
+          ]
+        },
+        "height_unit": {
+          "const": "m"
+        },
+        "height_sign": {
+          "const": "upward"
+        },
+        "gravity_unit": {
+          "enum": [
+            "mGal",
+            "m/s^2",
+            "microGal"
+          ]
+        },
+        "gravity_sign": {
+          "enum": [
+            "downward",
+            "upward"
+          ]
+        },
+        "gravity_quantity": {
+          "const": "absolute_gravity"
+        },
+        "gravity_datum": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tide_system": {
+          "const": "tide_free"
+        },
+        "instrument_processing": {
+          "type": "object",
+          "required": [
+            "calibration",
+            "drift",
+            "tide"
+          ],
+          "properties": {
+            "calibration": {
+              "$ref": "#/$defs/InstrumentDeclaration"
+            },
+            "drift": {
+              "$ref": "#/$defs/InstrumentDeclaration"
+            },
+            "tide": {
+              "$ref": "#/$defs/InstrumentDeclaration"
+            }
+          },
+          "additionalProperties": false
+        },
+        "geoid_model": {
+          "type": "string",
+          "minLength": 1
+        }
       },
-      "allOf": [{ "if": { "properties": { "height_datum": { "const": "orthometric" } } }, "then": { "required": ["geoid_model"] } }]
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "height_datum": {
+                "const": "orthometric"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "geoid_model"
+            ]
+          }
+        }
+      ]
     },
     "InstrumentDeclaration": {
-      "type": "object", "additionalProperties": false, "required": ["status", "citation"],
-      "properties": { "status": { "enum": ["applied", "not_applicable"] }, "citation": { "type": "string", "minLength": 1 } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "citation"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "applied",
+            "not_applicable"
+          ]
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     },
     "PhysicalStation": {
-      "type": "object", "additionalProperties": false,
-      "required": ["station_id", "latitude_deg", "longitude_deg", "receiver_height_m", "surface_height_m", "original_value", "value_mgal", "gravity_sigma", "receiver_sigma_m", "surface_sigma_m", "latitude_sigma_deg"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "station_id",
+        "latitude_deg",
+        "longitude_deg",
+        "receiver_height_m",
+        "surface_height_m",
+        "original_value",
+        "value_mgal",
+        "gravity_sigma",
+        "receiver_sigma_m",
+        "surface_sigma_m",
+        "latitude_sigma_deg"
+      ],
       "properties": {
-        "station_id": { "type": "string", "minLength": 1 },
-        "latitude_deg": { "type": "number", "minimum": -90, "maximum": 90 },
-        "longitude_deg": { "type": "number", "minimum": -180, "maximum": 180 },
-        "receiver_height_m": { "type": "number" }, "surface_height_m": { "type": "number" },
-        "original_value": { "type": "number" }, "value_mgal": { "type": "number" },
-        "gravity_sigma": { "type": "number", "minimum": 0 }, "receiver_sigma_m": { "type": "number", "minimum": 0 },
-        "surface_sigma_m": { "type": "number", "minimum": 0 }, "latitude_sigma_deg": { "type": "number", "minimum": 0 },
-        "geoid_m": { "type": "number" }, "geoid_sigma_m": { "type": "number", "minimum": 0 }
+        "station_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "latitude_deg": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude_deg": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "receiver_height_m": {
+          "type": "number"
+        },
+        "surface_height_m": {
+          "type": "number"
+        },
+        "original_value": {
+          "type": "number"
+        },
+        "value_mgal": {
+          "type": "number"
+        },
+        "gravity_sigma": {
+          "type": "number",
+          "minimum": 0
+        },
+        "receiver_sigma_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "surface_sigma_m": {
+          "type": "number",
+          "minimum": 0
+        },
+        "latitude_sigma_deg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "geoid_m": {
+          "type": "number"
+        },
+        "geoid_sigma_m": {
+          "type": "number",
+          "minimum": 0
+        }
       }
     },
     "PhysicalHistory": {
-      "type": "object", "additionalProperties": false,
-      "required": ["name", "parameters", "additions_mgal", "input_values_sha256", "output_values_sha256"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "parameters",
+        "additions_mgal",
+        "input_values_sha256",
+        "output_values_sha256"
+      ],
       "properties": {
-        "name": { "enum": ["normal_reference", "elevation_reference", "bouguer_plate", "terrain_residual"] },
-        "parameters": { "type": "object" },
-        "additions_mgal": { "type": "array", "items": { "type": "number" } },
-        "input_values_sha256": { "$ref": "#/$defs/Sha256" },
-        "output_values_sha256": { "$ref": "#/$defs/Sha256" }
+        "name": {
+          "enum": [
+            "normal_reference",
+            "elevation_reference",
+            "bouguer_plate",
+            "terrain_residual"
+          ]
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "additions_mgal": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "input_values_sha256": {
+          "$ref": "#/$defs/Sha256"
+        },
+        "output_values_sha256": {
+          "$ref": "#/$defs/Sha256"
+        }
       }
     },
     "PhysicalDatasetPayload": {
@@ -1562,7 +2307,9 @@
             "schema_version": {
               "const": "gravity-stations-1"
             },
-            "metadata": { "$ref": "#/$defs/PhysicalMetadata" },
+            "metadata": {
+              "$ref": "#/$defs/PhysicalMetadata"
+            },
             "state": {
               "enum": [
                 "observed_absolute",
@@ -1575,17 +2322,23 @@
               "type": "array",
               "minItems": 1,
               "maxItems": 400,
-              "items": { "$ref": "#/$defs/PhysicalStation" }
+              "items": {
+                "$ref": "#/$defs/PhysicalStation"
+              }
             },
             "history": {
               "type": "array",
               "maxItems": 4,
-              "items": { "$ref": "#/$defs/PhysicalHistory" }
+              "items": {
+                "$ref": "#/$defs/PhysicalHistory"
+              }
             }
           },
           "additionalProperties": false
         },
-        "source": { "$ref": "#/$defs/PhysicalSource" },
+        "source": {
+          "$ref": "#/$defs/PhysicalSource"
+        },
         "production": {
           "type": "null"
         },
@@ -1635,6 +2388,8 @@
         "method_id": {
           "enum": [
             "gravity.station-outlier-flags/v1",
+            "gravity.survey-l2-ordinary/v1",
+            "magnetic.flightline-qc-grid/v1",
             "mt.edi-full-tensor-qc/v1",
             "mt.edi-fixed-thickness-trf/v1",
             "ert.topographic-profile/v1",
@@ -1853,6 +2608,332 @@
           "$ref": "#/$defs/WaveformProcessingResult"
         }
       ]
+    },
+    "MagneticDatasetOptions": {
+      "additionalProperties": false,
+      "properties": {
+        "mapping": {
+          "$ref": "#/$defs/MagneticMapping"
+        },
+        "processing_state": {
+          "maxLength": 256,
+          "minLength": 3,
+          "title": "Processing State",
+          "type": "string"
+        },
+        "value_quantity": {
+          "maxLength": 128,
+          "minLength": 3,
+          "title": "Value Quantity",
+          "type": "string"
+        },
+        "sensor_height_reference": {
+          "maxLength": 128,
+          "minLength": 3,
+          "title": "Sensor Height Reference",
+          "type": "string"
+        }
+      },
+      "required": [
+        "mapping",
+        "processing_state",
+        "value_quantity",
+        "sensor_height_reference"
+      ],
+      "title": "MagneticDatasetOptions",
+      "type": "object"
+    },
+    "MagneticMapping": {
+      "additionalProperties": false,
+      "properties": {
+        "easting": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Easting",
+          "type": "string"
+        },
+        "northing": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Northing",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        },
+        "line_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Line Id",
+          "type": "string"
+        },
+        "line_role": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Line Role",
+          "type": "string"
+        },
+        "sensor_height_m": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Sensor Height M",
+          "type": "string"
+        },
+        "sample_order": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Sample Order",
+          "type": "string"
+        }
+      },
+      "required": [
+        "easting",
+        "northing",
+        "value",
+        "line_id",
+        "line_role",
+        "sensor_height_m",
+        "sample_order"
+      ],
+      "title": "MagneticMapping",
+      "type": "object"
+    },
+    "GravityL2Parameters": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "title": "Schema",
+          "type": "string"
+        },
+        "background_mgal": {
+          "title": "Background Mgal",
+          "type": "number"
+        },
+        "mesh": {
+          "$ref": "#/$defs/GravityMesh"
+        },
+        "split": {
+          "$ref": "#/$defs/GravitySplit"
+        },
+        "prior": {
+          "$ref": "#/$defs/GravityPrior"
+        }
+      },
+      "required": [
+        "schema",
+        "background_mgal",
+        "mesh",
+        "split",
+        "prior"
+      ],
+      "title": "GravityL2Parameters",
+      "type": "object"
+    },
+    "GravityMesh": {
+      "additionalProperties": false,
+      "properties": {
+        "origin_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Origin M",
+          "type": "array"
+        },
+        "hx_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Hx M",
+          "type": "array"
+        },
+        "hy_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Hy M",
+          "type": "array"
+        },
+        "hz_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Hz M",
+          "type": "array"
+        },
+        "active": {
+          "items": {
+            "type": "boolean"
+          },
+          "title": "Active",
+          "type": "array"
+        }
+      },
+      "required": [
+        "origin_m",
+        "hx_m",
+        "hy_m",
+        "hz_m",
+        "active"
+      ],
+      "title": "GravityMesh",
+      "type": "object"
+    },
+    "GravityPrior": {
+      "additionalProperties": false,
+      "properties": {
+        "lower_kg_m3": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Lower Kg M3",
+          "type": "array"
+        },
+        "upper_kg_m3": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Upper Kg M3",
+          "type": "array"
+        },
+        "start_kg_m3": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Start Kg M3",
+          "type": "array"
+        },
+        "reference_kg_m3": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Reference Kg M3",
+          "type": "array"
+        },
+        "density_scale_kg_m3": {
+          "exclusiveMinimum": 0,
+          "title": "Density Scale Kg M3",
+          "type": "number"
+        },
+        "lengths_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Lengths M",
+          "type": "array"
+        },
+        "basis": {
+          "maxLength": 1024,
+          "minLength": 1,
+          "title": "Basis",
+          "type": "string"
+        },
+        "reference_in_smooth": {
+          "title": "Reference In Smooth",
+          "type": "boolean"
+        },
+        "spatial_weights": {
+          "title": "Spatial Weights",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lower_kg_m3",
+        "upper_kg_m3",
+        "start_kg_m3",
+        "reference_kg_m3",
+        "density_scale_kg_m3",
+        "lengths_m",
+        "basis",
+        "reference_in_smooth",
+        "spatial_weights"
+      ],
+      "title": "GravityPrior",
+      "type": "object"
+    },
+    "GravitySplit": {
+      "additionalProperties": false,
+      "properties": {
+        "block_origin_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Block Origin M",
+          "type": "array"
+        },
+        "block_size_m": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Block Size M",
+          "type": "array"
+        },
+        "buffer_m": {
+          "exclusiveMinimum": 0,
+          "title": "Buffer M",
+          "type": "number"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "block_origin_m",
+        "block_size_m",
+        "buffer_m",
+        "seed"
+      ],
+      "title": "GravitySplit",
+      "type": "object"
+    },
+    "JobParameters": {
+      "additionalProperties": false,
+      "properties": {
+        "threshold": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Threshold",
+          "type": "number"
+        }
+      },
+      "required": [
+        "threshold"
+      ],
+      "title": "JobParameters",
+      "type": "object"
+    },
+    "MagneticParameters": {
+      "additionalProperties": false,
+      "properties": {
+        "grid_spacing_m": {
+          "exclusiveMinimum": 0,
+          "maximum": 100000,
+          "title": "Grid Spacing M",
+          "type": "number"
+        },
+        "holdout_fraction": {
+          "maximum": 0.5,
+          "minimum": 0.05,
+          "title": "Holdout Fraction",
+          "type": "number"
+        },
+        "seed": {
+          "maxLength": 128,
+          "minLength": 1,
+          "title": "Seed",
+          "type": "string"
+        }
+      },
+      "required": [
+        "grid_spacing_m",
+        "holdout_fraction",
+        "seed"
+      ],
+      "title": "MagneticParameters",
+      "type": "object"
     }
   }
 }

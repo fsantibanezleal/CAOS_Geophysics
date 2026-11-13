@@ -23,7 +23,7 @@ jobs:
       - name: Install lightweight contract and lint checkers
         run: pip install ruff==0.15.18 jsonschema==4.25.1
       - name: Lint
-        run: ruff check data-pipeline tests scripts/build_api_contracts.py scripts/check_api_contracts.py
+        run: ruff check data-pipeline tests scripts/build_api_contracts.py scripts/build_api_payload_schemas.py scripts/check_api_contracts.py
       - name: CONTRACT 2, manifests <-> artifacts consistent (no drift)
         run: python scripts/check_artifacts.py
       - name: M13 committed browser-asset integrity (no training)
