@@ -149,6 +149,10 @@
     "gravity_forward.forward_gravity",
     "m12_nullspace_analysis.analyze_receipt",
     "m12_nullspace_analysis.paired_bootstrap_intervals",
-    "m12_nullspace_analysis.analyze_paired_metrics_csv"
+    "m12_nullspace_analysis.analyze_paired_metrics_csv",
+    "ert.parse_ohm_bytes",
+    "ert.qc",
+    "ert.holdout_indices",
+    "ert.flat_halfspace_factors"
   ]
 }
