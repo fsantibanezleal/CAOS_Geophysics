@@ -7,7 +7,7 @@ from velocity_validation import (
 )
 
 
-def test_disjoint_groups_and_matched_inputs():
+def test_adversarial_disjoint_groups_and_matched_inputs():
     ops = operators()
     validation = make_cohort("validation", ops, fixture=True)
     family = make_cohort("family_only", ops, fixture=True)

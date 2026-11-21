@@ -25,7 +25,7 @@ The current product pins Shell 0.26.2 and records Product Template 0.15.014. Bot
 | Manuscript depth | Pass | Technical report: 16,851 words, 32 equations, 10 figures, 9 tables, 32 references, 3 algorithms. Geometry-refinement manuscript: 8,718 words, 16 equations, 8 figures, 7 tables, 43 references, 1 algorithm. |
 | Frontend production build | Pass | Current TypeScript and Vite build; Vite still warns that the Workbench and Three.js chunks exceed 500 kB minified. |
 | Frontend unit suite with retained joint fixtures | 508 passed, 12 skipped, 2 failed files | The two setup failures need unavailable retained M04 selected-final and owned-custody browser controls. The fixture-bound joint subset separately passes 86 tests, with 4 explicit skips. |
-| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 99 structural requirement issues after M06/M07/M09 requirement and adversarial-validation documentation updates. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
+| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 97 structural requirement issues after M06/M07/M09/M12 requirement and adversarial-validation updates. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
 
 `tests/run_validation.py` did not start its full scientific suite. Its fail-fast prerequisite check requires four exact retained originals that are not present at their configured paths: the M01 correction packet, M01 transform packet, profile-incomplete receipt, and M11 native database. No replacement or regenerated artifact was substituted. The method matrix reports all 13 structural gates present but `scientific_acceptance=false`.
 
@@ -64,3 +64,8 @@ The shell checkout is clean on `develop` at the release carrying `@fasl-work/cao
 ## Online EDI and replay verification
 
 A fresh current-source run of `tests/api/test_online_mt.py` in `.venv-api` passed all 17 tests in 254.40 s; one Starlette/httpx deprecation warning was emitted. The source-bound MT reconciliation suite passed all 9 tests in `.venv-pipeline` in 53.11 s. This is current local API and replay evidence. The local benchmark itself says actual ML-VPS admission is pending, so these tests do not open the worker feature flag or qualify live host capacity.
+
+
+## M12 validation-contract follow-up
+
+The learned velocity feature now has a seven-row adversarial validation map and its local requirements no longer embed a digest label that the SDD parser mistakes for a detached requirement ID. Existing tests are explicitly named as adversarial gates for split leakage, independent forward-operator checks, checkpoint tampering, same-input classical comparison, metric recomputation, negative-result retention, and fixture-only pipeline scope. The focused M12 inversion/comparison suite passes 7 tests; Ruff passes; the SDD checker reports no M12 feature findings and 97 findings overall. This changes contract traceability only: the frozen M12 learned method still fails its joint held-out comparison and does not establish beyond-SOTA performance or field validity.

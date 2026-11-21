@@ -715,32 +715,56 @@
     {
       "id": "R-010",
       "verdict": "unresolved",
-      "declared_gate": "tests/learning/test_split_and_benchmark.py::test_disjoint_groups_and_matched_inputs.",
-      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted. A fresh residual-v3.1 RTX 4070 run with disjoint seed namespaces and independent CPU replay also fails its frozen joint gate: velocity and oracle travel-time ratios are 1.04368 and 1.39609; the full receipt and checkpoint remain local and unchanged. M12 now has a corrected, independently replayed nullspace-refinement experiment on fresh disjoint cohorts, with both joint-OOD aggregate ratios below one; the source residual-v3.1 checkpoint itself remains a failed comparator, and this follow-up does not establish field generalization. M13 browser parity on the complete held-out trace population remains unresolved. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance.",
+      "declared_gate": "tests/learning/test_split_and_benchmark.py::test_adversarial_disjoint_groups_and_matched_inputs.",
+      "note": "M13 frozen event/station-disjoint STEAD evidence/browser parity remain unchanged. M12 preserves its original failure and adds a separate dimensionally corrected CUDA checkpoint with fresh realization seeds and full CPU replay. The revised CNN still loses to its same-input classical comparator; all480 held-out and160 validation records, residual flags and limitations remain recorded. No learned advantage, field-generalization or complete product acceptance is asserted. A fresh residual-v3.1 RTX 4070 run with disjoint seed namespaces and independent CPU replay also fails its frozen joint gate: velocity and oracle travel-time ratios are 1.04368 and 1.39609; the full receipt and checkpoint remain local and unchanged. M12 now has a corrected, independently replayed nullspace-refinement experiment on fresh disjoint cohorts, with both joint-OOD aggregate ratios below one; the source residual-v3.1 checkpoint itself remains a failed comparator, and this follow-up does not establish field generalization. M13 browser parity on the complete held-out trace population remains unresolved. A bilingual M12 v1.1 notebook now validates the immutable receipt and reconstructs per-cohort paired-error summaries; this strengthens inspectability only and does not change M12/product acceptance. Follow-up 2026-11-21: the M12 feature now binds its seven scientific and pipeline requirements to adversarial-named executable tests; focused learned inversion and same-input comparison tests pass 7/7. The retained joint-cohort method verdict remains negative; no method or product acceptance change.",
       "evidence": [
         {
-          "path": "docs/design/features/m13-browser/design.md",
-          "sha256": "07319a68b599f519661cf9c48416b2b6116951152c27c779f7c0e48f1107c03d"
+          "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
+          "sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22"
+        },
+        {
+          "path": "docs/design/SDD.md",
+          "sha256": "74ea732541e396b82bdc619012732b4ee21876bbd17eade7dd263e816ba0cfba"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
           "sha256": "48efaabcac84bb9e490317c928616df9eff93c13176aee5d4f2b8bde3c35cd40"
         },
         {
-          "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
-          "sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1"
+          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
+          "sha256": "c02d8b48bb5458342b220efe38b65d4f79d3360c736563ad636d6da6238cbf6c"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/requirements.md",
+          "sha256": "37046094096bc7d50198be0c071e4bf6518f33110ed4a805691ec6d1d3745b82"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/validation.md",
+          "sha256": "9ba860b5dc81f8ca701d246698c1412998c5043f655da5ff8cf7f750af6bc8f3"
+        },
+        {
+          "path": "docs/design/features/m13-browser/design.md",
+          "sha256": "07319a68b599f519661cf9c48416b2b6116951152c27c779f7c0e48f1107c03d"
+        },
+        {
+          "path": "docs/validation/release-readiness-review-2026-11-21.md",
+          "sha256": "342a68df03ca2fe3291fd2e2af7ce1913e166f1071a25f59b0a181f2209a8c02"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
           "sha256": "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
         },
         {
-          "path": "docs/design/features/m12-velocity-validation/nullspace-v1_1-protocol.md",
-          "sha256": "c02d8b48bb5458342b220efe38b65d4f79d3360c736563ad636d6da6238cbf6c"
+          "path": "models/experimental/m12-physics-cuda-20261004/receipt.json",
+          "sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1"
         },
         {
-          "path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
-          "sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22"
+          "path": "tests/learning/test_split_and_benchmark.py",
+          "sha256": "681c1fffc2c711e7e5785929f07e82d90205e9e67565709784ef24aeab62f3d2"
+        },
+        {
+          "path": "tests/learning/test_velocity_inversion.py",
+          "sha256": "c49670472af1d8357f68e46d0217044d0e41e23bdc6b400741f94f975f8f13ca"
         }
       ],
       "receipts": []
@@ -974,6 +998,10 @@
           "sha256": "464cc3d7b162ad4830380a0f72e3def9a2d169fe7720a219f31317f2842b3b42"
         },
         {
+          "path": "docs/design/SDD.md",
+          "sha256": "74ea732541e396b82bdc619012732b4ee21876bbd17eade7dd263e816ba0cfba"
+        },
+        {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
           "sha256": "d3a6b63df4d022ce0910de173a187a1e70de2e0d682571903a1ac4500cddfefe"
         },
@@ -984,6 +1012,14 @@
         {
           "path": "docs/design/features/m09-koenigsee-traveltime/validation.md",
           "sha256": "9daca4d5bd5f60c999217dab15fc8618c9d18d2d309150a2a002b84f31199375"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/requirements.md",
+          "sha256": "37046094096bc7d50198be0c071e4bf6518f33110ed4a805691ec6d1d3745b82"
+        },
+        {
+          "path": "docs/design/features/m12-velocity-validation/validation.md",
+          "sha256": "9ba860b5dc81f8ca701d246698c1412998c5043f655da5ff8cf7f750af6bc8f3"
         },
         {
           "path": "docs/design/features/phase-picking/rights-review-2026-10-28.md",
@@ -1023,7 +1059,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "01ec0e369f1afa2a25942798c02d8946972edb6a49b4c47bcaf4c25f3a891ad9"
+          "sha256": "342a68df03ca2fe3291fd2e2af7ce1913e166f1071a25f59b0a181f2209a8c02"
         },
         {
           "path": "docs/validation/source-content-coverage.json",
@@ -1116,6 +1152,14 @@
         {
           "path": "tests/data/test_traveltime_data.py",
           "sha256": "4f1eda2079931af7f7a957d076f1de2224b77f26a68a49f8db33fb4b4e4ccf59"
+        },
+        {
+          "path": "tests/learning/test_split_and_benchmark.py",
+          "sha256": "681c1fffc2c711e7e5785929f07e82d90205e9e67565709784ef24aeab62f3d2"
+        },
+        {
+          "path": "tests/learning/test_velocity_inversion.py",
+          "sha256": "c49670472af1d8357f68e46d0217044d0e41e23bdc6b400741f94f975f8f13ca"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",

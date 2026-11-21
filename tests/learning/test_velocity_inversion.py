@@ -18,7 +18,7 @@ def receipt_directory() -> Path:
     return Path(os.environ.get("M12_VELOCITY_RECEIPT", DEFAULT_RECEIPT))
 
 
-def test_family_acquisition_partition_and_hashes():
+def test_adversarial_family_acquisition_partition_and_hashes():
     ops = operators()
     cohorts = {name: make_cohort(name, ops, fixture=True) for name in COHORTS}
     identifiers = [record["id"] for cohort in cohorts.values() for record in cohort["records"]]
@@ -38,7 +38,7 @@ def test_family_acquisition_partition_and_hashes():
         assert all(record["velocity_sha256"] and record["noisy_picks_sha256"] for record in cohort["records"])
 
 
-def test_independent_oracle_and_ray_geometry():
+def test_adversarial_independent_oracle_and_ray_geometry():
     rays = acquisition("A")
     cell = cell_length_matrix(rays)
     oracle = quadrature_matrix(rays)
@@ -53,7 +53,7 @@ def test_independent_oracle_and_ray_geometry():
     assert DX == 50.0
 
 
-def test_family_disjoint_checkpoint_and_forward_consistency(tmp_path):
+def test_adversarial_checkpoint_digest_and_forward_consistency(tmp_path):
     output = receipt_directory()
     receipt = verify(output)
     assert receipt["status"] != "fixture-only"
@@ -71,7 +71,7 @@ def test_family_disjoint_checkpoint_and_forward_consistency(tmp_path):
     assert all(np.isfinite(item["learned_oracle_rmse_ms"]) for item in joint["per_record"])
 
 
-def test_receipt_metrics_recompute():
+def test_adversarial_receipt_metrics_recompute():
     receipt = verify(receipt_directory())
     threshold = receipt["forward_threshold_ms"]
     validation_errors = [row["learned_oracle_rmse_ms"] for row in receipt["cohorts"]["validation"]["per_record"]]
@@ -88,7 +88,7 @@ def test_receipt_metrics_recompute():
     assert detection["id_false_positive"] + detection["id_true_negative"] == receipt["counts"]["id_test"]
 
 
-def test_failure_verdict_is_not_suppressed():
+def test_adversarial_negative_verdict_is_not_suppressed():
     assert scientific_verdict({"learned_to_classical_velocity_ratio": 1.02,
                                "learned_to_classical_oracle_ratio": 0.6}) == "failed-held-out-comparator"
     assert scientific_verdict({"learned_to_classical_velocity_ratio": 0.6,
@@ -97,7 +97,7 @@ def test_failure_verdict_is_not_suppressed():
                                "learned_to_classical_oracle_ratio": 0.9}) == "supported-within-bounded-synthetic-protocol"
 
 
-def test_local_pipeline_scope(tmp_path):
+def test_adversarial_local_pipeline_scope(tmp_path):
     result = execute(tmp_path, epochs=1, device="cpu", fixture=True)
     assert result["status"] == "fixture-only"
     assert (tmp_path / result["checkpoint"]).is_file()
