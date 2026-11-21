@@ -276,6 +276,14 @@ def _rmse_log(predicted: np.ndarray, observed: np.ndarray) -> float:
     return float(np.sqrt(np.mean((np.log(predicted) - np.log(observed)) ** 2)))
 
 
+def assumed_resistance_sigma(resistance_ohm: np.ndarray) -> np.ndarray:
+    """Return the disclosed local error floor; it is not a source-calibrated uncertainty."""
+    values = np.asarray(resistance_ohm, dtype=float)
+    if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or np.any(values <= 0):
+        raise ERTError("assumed weighting requires a finite positive resistance vector")
+    return np.maximum(0.03 * np.abs(values), 0.001)
+
+
 def _mesh_sha256(mesh) -> str:
     """Fingerprint physical geometry, ignoring node IDs and round-off noise."""
     def position(node) -> tuple[float, float, float]:
@@ -353,7 +361,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         raise ERTError("positive resistance produced nonpositive apparent resistivity")
     training, held = holdout_indices(survey)
     blocked_training, blocked_held = blocked_holdout_indices(survey)
-    sigma_r = np.maximum(0.03 * np.abs(resistance), 0.001)
+    sigma_r = assumed_resistance_sigma(resistance)
     full["k"] = topo_k
     full["rhoa"] = apparent
     full["err"] = sigma_r / resistance

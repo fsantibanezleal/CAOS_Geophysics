@@ -25,7 +25,7 @@ The current product pins Shell 0.26.2 and records Product Template 0.15.014. Bot
 | Manuscript depth | Pass | Technical report: 16,851 words, 32 equations, 10 figures, 9 tables, 32 references, 3 algorithms. Geometry-refinement manuscript: 8,718 words, 16 equations, 8 figures, 7 tables, 43 references, 1 algorithm. |
 | Frontend production build | Pass | Current TypeScript and Vite build; Vite still warns that the Workbench and Three.js chunks exceed 500 kB minified. |
 | Frontend unit suite with retained joint fixtures | 508 passed, 12 skipped, 2 failed files | The two setup failures need unavailable retained M04 selected-final and owned-custody browser controls. The fixture-bound joint subset separately passes 86 tests, with 4 explicit skips. |
-| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 105 structural requirement issues after M06 requirements and adversarial-validation documentation were normalized. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
+| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 102 structural requirement issues after M06/M07 requirement and adversarial-validation documentation updates. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
 
 `tests/run_validation.py` did not start its full scientific suite. Its fail-fast prerequisite check requires four exact retained originals that are not present at their configured paths: the M01 correction packet, M01 transform packet, profile-incomplete receipt, and M11 native database. No replacement or regenerated artifact was substituted. The method matrix reports all 13 structural gates present but `scientific_acceptance=false`.
 
@@ -41,4 +41,8 @@ The product branch is already based on current `origin/develop` (zero commits be
 
 ## M06 documentation follow-up
 
-The measured MT feature requirements now use the current `AB-001` ID convention and have a requirement-by-requirement adversarial validation table. Six new tests cover pinned-source byte rejection, invalid variance, frame misalignment, full-period tensor gating, no-inverse behavior after a failed tensor screen, and rejection of an unreviewed station ID. The M06 feature gate no longer contributes SDD findings; its field conclusion remains negative for C15 and is not an MT inversion result. The course-wide SDD checker still reports 105 issues across other feature records.
+The measured MT feature requirements now use the current `AB-001` ID convention and have a requirement-by-requirement adversarial validation table. Six new tests cover pinned-source byte rejection, invalid variance, frame misalignment, full-period tensor gating, no-inverse behavior after a failed tensor screen, and rejection of an unreviewed station ID. The M06 feature gate no longer contributes SDD findings; its field conclusion remains negative for C15 and is not an MT inversion result. The course-wide SDD checker still reports 102 issues across other feature records.
+
+## M07 ERT follow-up
+
+The M07 Slagdump feature now has eight requirement-level adversarial checks. The ERT-08 gate is bound to a test that covers its convergence record, not to a documentation path presented as an executable gate. The pipeline now exposes `assumed_resistance_sigma`, the validated implementation of the declared `max(0.03*abs(R), 0.001 Ohm)` floor; invalid values fail before weighting. The M07 adversarial and existing parser/QC subset passed (12 passed); the separate M06 subset passed (11 passed, 3 skipped because ignored field bytes were unavailable in this checkout). This does not qualify the field inverse or host release.
