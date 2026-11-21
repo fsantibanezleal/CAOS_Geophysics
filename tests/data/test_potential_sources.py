@@ -42,7 +42,7 @@ def source_archive(tmp_path, entries=None, **caps):
     return record, raw, payload
 
 
-def test_pinned_source_identity_and_rights():
+def test_adversarial_pinned_source_identity_and_rights():
     ledger = load_ledger()
     original = ledger["bartlett-fgdc"]
     derivative = ledger["clear-lake-author-potentials-v2"]
@@ -59,7 +59,7 @@ def test_pinned_source_identity_and_rights():
         "data/ground_gravity_data.csv", "data/aeromagnetic_data.csv", "data/topography_data.csv", "README.pdf"}
 
 
-def test_selected_members_immutable(tmp_path):
+def test_adversarial_selected_members_immutable(tmp_path):
     record, raw, payload = source_archive(tmp_path)
     first = extract_selected(record, raw, root=tmp_path)
     target = tmp_path / first["members"][0]["path"]
@@ -83,7 +83,7 @@ def test_archive_path_negative_controls(tmp_path, bad_name):
     assert not (tmp_path / "data/downloads/extracted/fixture-source/data/ground.csv").exists()
 
 
-def test_archive_negative_controls(tmp_path):
+def test_adversarial_archive_negative_controls(tmp_path):
     for cap in ({"max_entries": 0}, {"max_expanded_bytes": 1}, {"max_member_bytes": 1}, {"max_expansion_ratio": .01}):
         record, raw, _ = source_archive(tmp_path, **cap)
         with pytest.raises(SourceError, match="limit"):
@@ -109,7 +109,7 @@ def test_archive_negative_controls(tmp_path):
         extract_selected(record, raw, root=tmp_path)
 
 
-def test_profile_preserves_correction_and_missingness(tmp_path):
+def test_adversarial_profile_preserves_correction_and_missingness(tmp_path):
     path = tmp_path / "observations.csv"
     text = io.StringIO(newline="")
     writer = csv.writer(text)
@@ -137,7 +137,7 @@ def test_profile_preserves_correction_and_missingness(tmp_path):
         profile_gravity(path, source=source)
 
 
-def test_profile_guide_and_real_source():
+def test_adversarial_profile_guide_and_real_source():
     guide = (ROOT / "docs/guides/11_potential_source_intake.md").read_text(encoding="utf-8")
     for term in ("CC BY 4.0", "NAD27", "IGSN1971", "vertical datum", "modelling_eligible", "potential_sources.py"):
         assert term in guide

@@ -53,7 +53,7 @@ def fixture(root, statuses=("PASS",), log=b"private case data\n"):
     return path, report
 
 
-def test_read_only_digest(tmp_path, monkeypatch):
+def test_adversarial_read_only_digest(tmp_path, monkeypatch):
     path, _ = fixture(tmp_path, ("PASS", "PASS"))
     before = {p: p.read_bytes() for p in tmp_path.rglob("*") if p.is_file()}
     def forbidden(*args, **kwargs):
@@ -71,7 +71,7 @@ def test_read_only_digest(tmp_path, monkeypatch):
     assert reader.main(["--report", str(path), "--device-root", str(tmp_path)]) == 0
 
 
-def test_failure_and_blocked_digest(tmp_path):
+def test_adversarial_failure_and_blocked_digest(tmp_path):
     path, _ = fixture(tmp_path, ("PASS", "FAIL", "BLOCKED", "REFUSED"))
     result = reader.inspect(str(path), str(tmp_path))
     assert result["counts"] == {"PASS": 1, "FAIL": 1, "BLOCKED": 1, "REFUSED": 1}
@@ -83,7 +83,7 @@ def test_failure_and_blocked_digest(tmp_path):
 @pytest.mark.parametrize("target", ["stdout.bin", "stderr.bin", "receipt.json", "plan.json", "seal.json",
                                    "report_status", "report_evidence", "report_fingerprint", "report_schema",
                                    "report_duplicate", "report_unknown", "report_path", "missing_receipt"])
-def test_tampered_evidence_refused(tmp_path, target):
+def test_adversarial_tampered_evidence_refused(tmp_path, target):
     path, report = fixture(tmp_path)
     entry = Path(report["nodes"][0]["receipt"]).parent
     if target.endswith(".bin"):
@@ -112,7 +112,7 @@ def test_tampered_evidence_refused(tmp_path, target):
     assert reader.main(["--report", str(path), "--device-root", str(tmp_path)]) == 2
 
 
-def test_predecessor_binding_refused(tmp_path):
+def test_adversarial_predecessor_binding_refused(tmp_path):
     path, report = fixture(tmp_path, ("PASS", "PASS"))
     # Alter only the earlier report binding; sealed descendant still binds the original.
     report["nodes"][0] = {"id": "node0", "fingerprint": "c" * 64, "evidence": None,
@@ -122,7 +122,7 @@ def test_predecessor_binding_refused(tmp_path):
         reader.inspect(str(path), str(tmp_path))
 
 
-def test_explicit_bounded_tail(tmp_path):
+def test_adversarial_explicit_bounded_tail(tmp_path):
     path, _ = fixture(tmp_path, ("FAIL",), log=b"x" * 12000 + b"last error")
     result = reader.inspect(str(path), str(tmp_path), tail_bytes=4096)
     tail = result["private_failure_tail"]["stdout.bin"]
@@ -133,12 +133,12 @@ def test_explicit_bounded_tail(tmp_path):
             reader.inspect(str(path), str(tmp_path), tail_bytes=invalid)
 
 
-def test_unfinished_report_refused(tmp_path):
+def test_adversarial_unfinished_report_refused(tmp_path):
     with pytest.raises(custody.Refusal, match="missing path"):
         reader.inspect(str(tmp_path / "missing.json"), str(tmp_path))
 
 
-def test_output_is_exclusive(tmp_path):
+def test_adversarial_output_is_exclusive(tmp_path):
     path, _ = fixture(tmp_path)
     output = tmp_path / "digest.json"
     argv = ["--report", str(path), "--device-root", str(tmp_path), "--output", str(output)]

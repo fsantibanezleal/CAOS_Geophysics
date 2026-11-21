@@ -1,14 +1,16 @@
 # Validation digest tasks
 
-- VD-001, VD-002: implement read-only consistency verification using the existing runner's evidence functions.
-- VD-003, VD-004: implement bounded JSON digest and explicit private failure tail.
-- VD-005: document acceptance boundaries and test that neither execution nor current inventories occur.
+- VDG-001: implement read-only consistency verification using the existing runner's evidence functions; do not execute commands or capture current inventories.
+- VDG-002: create requested output exclusively and refuse to overwrite existing evidence.
+- VDG-003, VDG-004: refuse tampered evidence and report bounded counts plus the first failed or refused node.
+- VDG-005: expose at most 4096 bytes per stream from only the first failed command when explicit tail inspection is requested.
+- VDG-006: document acceptance boundaries and test that retained receipts do not imply current-source, scientific, generated-output or deployment acceptance.
 - Run focused controls, then inspect an actual retained completed report without rerunning its command.
 - Record gate results after execution; this feature does not close scientific or deployment requirements.
 
 ## Feature verification
 
-VD-001 through VD-006 pass in the focused reader suite: 19 tests, zero failures,
+VDG-001 through VDG-006 pass in the focused reader suite: 19 tests, zero failures,
 errors or skips, 7.570 seconds. The local DAG's fresh complete declared
 source/runtime inventories agree before and after the command. Retained JUnit
 SHA-256: `74a6de9b8aba24cc15596f683014a79c03c02d3bf3da592e8172c2f2838a0d98`.

@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "74ea732541e396b82bdc619012732b4ee21876bbd17eade7dd263e816ba0cfba",
+  "sdd_sha256": "86bf1f6713132356337bf26253296f8323df2ffab53e8da969cff44271721e48",
   "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
   "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
@@ -113,7 +113,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "14b2a1503807232ce9b53fda19cbdf9fa84f9d98fab2176f0d65ee447d0cc3bf"
+          "sha256": "e7fe52020d354ec978dc2772de7ac4c0cb0bd15010c21702a8e5173e4a1aca52"
         },
         {
           "path": "frontend/e2e/eligibility.spec.ts",
@@ -724,7 +724,7 @@
         },
         {
           "path": "docs/design/SDD.md",
-          "sha256": "74ea732541e396b82bdc619012732b4ee21876bbd17eade7dd263e816ba0cfba"
+          "sha256": "86bf1f6713132356337bf26253296f8323df2ffab53e8da969cff44271721e48"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -748,7 +748,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "14b2a1503807232ce9b53fda19cbdf9fa84f9d98fab2176f0d65ee447d0cc3bf"
+          "sha256": "e7fe52020d354ec978dc2772de7ac4c0cb0bd15010c21702a8e5173e4a1aca52"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
@@ -772,7 +772,7 @@
     {
       "id": "R-011",
       "verdict": "unresolved",
-      "declared_gate": "tests/api/test_job_export.py::test_bundle_roundtrip_tamper_and_rights.",
+      "declared_gate": "tests/api/test_job_export.py::test_adversarial_bundle_roundtrip_tamper_and_rights.",
       "note": "Merged private raw/flag/MT bundles retain exact source and result identity. Five actual Linux MT ZIPs independently re-import on Windows; real browser exports re-import with the backend. All-method export/rights acceptance and operational durability remain incomplete. The uploaded M02 integration round-trips the result bundle with units, source identity and raw SHA-256 preserved. This closes that result path only; product-wide export and import coverage remain unresolved. The uploaded M02 integration verifies the source, units and result survive bundle export and round-trip after the independent forward and residual checks. Other method formats, rights paths and complete product export acceptance remain unresolved. On 2026-11-02, the owner export bundle round-trip, rights, units and tamper test passed. This is one flag-QC path; all-method exported-array, axis, unit, rights and provenance coverage remains unresolved.",
       "evidence": [
         {
@@ -999,7 +999,7 @@
         },
         {
           "path": "docs/design/SDD.md",
-          "sha256": "74ea732541e396b82bdc619012732b4ee21876bbd17eade7dd263e816ba0cfba"
+          "sha256": "86bf1f6713132356337bf26253296f8323df2ffab53e8da969cff44271721e48"
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -1059,7 +1059,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "14b2a1503807232ce9b53fda19cbdf9fa84f9d98fab2176f0d65ee447d0cc3bf"
+          "sha256": "e7fe52020d354ec978dc2772de7ac4c0cb0bd15010c21702a8e5173e4a1aca52"
         },
         {
           "path": "docs/validation/source-content-coverage.json",
@@ -1212,7 +1212,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "14b2a1503807232ce9b53fda19cbdf9fa84f9d98fab2176f0d65ee447d0cc3bf"
+          "sha256": "e7fe52020d354ec978dc2772de7ac4c0cb0bd15010c21702a8e5173e4a1aca52"
         },
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",

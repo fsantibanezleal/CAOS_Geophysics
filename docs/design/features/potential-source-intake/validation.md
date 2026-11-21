@@ -23,13 +23,13 @@ Named requirement gates:
 
 Final actual-enabled `tests/data` result: **79 passed, 1 skipped**. Focused hermetic source/intake result: **66 passed, 2 skipped**. Ruff and whitespace checks pass. The explicit skips are detailed below, not counted as passing controls.
 
-| Requirement | Passing gate | Evidence scope |
-| --- | --- | --- |
-| PFI-01 | `test_pinned_source_identity_and_rights`; `test_archive_contract_limits_in_ledger`; `test_archive_contract_member_pins_in_ledger`; `test_archive_contract_required_only_for_research_zip` | Metadata versus author-derived bytes/rights; bounded schema/pins |
-| PFI-02 | `test_selected_members_immutable`; `test_all_selected_pins_before_any_publication`; `test_existing_receipt_drift_before_publication` | Exact reuse; preserve disputed member/receipt; validate selection before install |
-| PFI-03 | `test_archive_negative_controls`; `test_archive_path_negative_controls`; `test_file_parent_and_case_aliases`; `test_unsupported_encrypted_and_special_entries`; `test_corrupted_compression_rejected_before_publication`; `test_storage_windows_junction_rejected`; `test_unselected_arrays_and_code_not_opened` | Actual malformed original fixtures, path/platform/expansion/type/pin controls; no provider execution |
-| PFI-04 | `test_profile_preserves_correction_and_missingness`; `test_profile_physical_diagnostics_do_not_clip_or_fill`; `test_profile_rejects_ambiguous_or_incomplete_layout` | Explicit processed channels, null/raw-token flags, unchanged diagnostics/row identifiers, no corrections or invented errors |
-| PFI-05 | `test_profile_guide_and_real_source`; `test_compact_inspection_evidence_not_solver_arrays`; opt-in `test_real_local_source_intake` | Paired entrypoints and honest compact evidence; actual pinned ZIP/2929 rows |
+| requirement | adversarial check | gate |
+|---|---|---|
+| PFI-001 | Plant inconsistent source identity, rights and archive pins; require exact metadata to remain explicit. | `tests/data/test_potential_sources.py::test_adversarial_pinned_source_identity_and_rights` |
+| PFI-002 | Mutate selected extracted bytes and re-import; require refusal without replacing the disputed bytes. | `tests/data/test_potential_sources.py::test_adversarial_selected_members_immutable` |
+| PFI-003 | Plant hostile paths, archive limits and hash mismatches; require rejection before selected members are published. | `tests/data/test_potential_sources.py::test_adversarial_archive_negative_controls` |
+| PFI-004 | Plant missing or invalid physical channels; require original correction distinctions and missingness, with no inferred truth or solve. | `tests/data/test_potential_sources.py::test_adversarial_profile_preserves_correction_and_missingness` |
+| PFI-005 | Remove documented source-rights and processing boundaries; require the local guide to state them. | `tests/data/test_potential_sources.py::test_adversarial_profile_guide_and_real_source` |
 
 The ordinary Windows symlink test skips because this machine lacks symlink creation privilege. The independent **Windows junction/reparse-path rejection test passes**. Hermetic runs additionally skip the deliberately opt-in actual archive test; enabled real runs do not skip it and do not download.
 

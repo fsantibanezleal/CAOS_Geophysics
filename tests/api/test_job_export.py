@@ -14,7 +14,7 @@ from app.worker import run_one
 from tests.api.conftest import PROCESSED_GRAVITY_CSV, processed_gravity_metadata
 
 
-def test_bundle_roundtrip_tamper_and_rights(harness):
+def test_adversarial_bundle_roundtrip_tamper_and_rights(harness):
     harness.account()
     project = harness.project()
     metadata = processed_gravity_metadata()

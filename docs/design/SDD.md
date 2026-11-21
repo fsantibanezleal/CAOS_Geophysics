@@ -193,7 +193,7 @@ R-009 THE release SHALL distinguish synthetic truth from field observations and 
 
 R-010 THE learned methods SHALL have versioned trained checkpoints, leakage-safe split hashes, per-group metrics and real same-input comparators. Gate: tests/learning/test_split_and_benchmark.py::test_adversarial_disjoint_groups_and_matched_inputs.
 
-R-011 WHEN a result is exported, THE recipient SHALL be able to re-import arrays, axes, units, rights, parameters and provenance with matching hashes. Gate: tests/api/test_job_export.py::test_bundle_roundtrip_tamper_and_rights.
+R-011 WHEN a result is exported, THE recipient SHALL be able to re-import arrays, axes, units, rights, parameters and provenance with matching hashes. Gate: tests/api/test_job_export.py::test_adversarial_bundle_roundtrip_tamper_and_rights.
 
 R-012 THE web workbench SHALL use exactly the six CAOS routes and the shared shell tokens/fonts, with no duplicate application deployment or invented top-level lifecycle routes. Gate: frontend/e2e/routes-shell.spec.ts plus scripts/check_single_origin.py::main.
 
