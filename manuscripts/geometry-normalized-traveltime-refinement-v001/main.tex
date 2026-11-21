@@ -20,7 +20,7 @@
 \setcounter{secnumdepth}{2}
 \newcommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \newcommand{\doctype}{Preprint}
-\newcommand{\docversion}{v0.03}
+\newcommand{\docversion}{v0.04}
 \newcommand{\docdate}{21 November 2026}
 \newcommand{\versiondoi}{not-assigned}
 \newcommand{\conceptdoi}{not-assigned}
@@ -76,6 +76,10 @@ Several 2026 studies sharpen the comparison boundary. Yang et al. use an untrain
 Huang et al. also develop a graph-factorized matrix-free Gauss--Newton method for first-arrival tomography on full-metric deformed grids, reusing frozen tangent-transport structure for repeated forward and transpose actions \cite{HuangDeformed2026}. This is a relevant classical computational alternative for topographic eikonal inversion, but its forward physics, mesh, optimization and computational question differ from our small supervised straight-ray experiment; we have not reproduced its performance.
 
 SARAS-PINN is a complementary forward-modeling contribution: its structure-aware initialization uses elliptical exclusion zones scaled by local velocity and directional gradients, then adaptively samples from both the eikonal residual and its spatial gradient \cite{XiangSARAS2026}. The publisher reports a layered-model MAE reduction from 0.1274 to 0.0086 ms and a 3.6-fold speedup to a 2.5 ms target MAE on Marmousi, alongside BP experiments. Those are the authors' forward-field results, not quantitative comparators for this supervised inverse: the method solves travel-time fields under eikonal constraints rather than correcting velocity from observed picks. The available publisher record says associated data can be obtained by contacting the authors. We therefore do not present it as a reproduced inversion baseline or a like-for-like result.
+
+\noindent\begin{minipage}{\textwidth}
+Travel-time completion is a neighboring but distinct task. Lee and Pyun combine a Swin Transformer masked autoencoder with a Swin-Unet to reconstruct missing samples in three-dimensional first-arrival travel-time data, comparing with FCN-based U-Net models \cite{LeePyun2026}. This predicts unobserved data-domain values; it does not invert observed picks for a subsurface velocity model. Its reported reconstruction errors therefore cannot be ranked against the velocity and travel-time inversion errors below, and it is not a baseline for the present method.
+\end{minipage}\par
 
 The method tested here is a direct supervised image-to-image estimate from two grid channels. It does not solve an eikonal equation, optimize a velocity model against field observations at inference, use a learned travel-time field, or sample a posterior. Its closest conceptual relatives are learned inverse maps and residual-update networks, but its input channels are determined by a specified straight-ray operator. That distinction matters: a small CNN can exploit repeated patterns in a generator even when the data map has a large null space. General inverse-imaging analyses warn that learned reconstructions depend on training distributions and may violate data consistency outside their training regime \cite{McCann2017,AdlerOktem2018,Ongie2020,Arridge2019}.
 
@@ -496,6 +500,7 @@ The experiment supports a narrow negative result for a known synthetic generator
 \bibitem{HuangDeformed2026} Z. Huang, P. Ma, P. Yu, T. Koyama, L. Zhang, C. Zhao, and M. Chu, ``Efficient matrix-free Gauss--Newton traveltime tomography on full-metric deformed grids,'' arXiv:2609.14982, 2026. \url{https://arxiv.org/abs/2609.14982}.
 \bibitem{ZhangAdjoint2026} Q. Zhang, X. Ma, Y. Nie, and H. Dong, ``Adjoint-state eikonal-equation-based traveltime tomography on unstructured triangular meshes,'' \emph{Journal of Applied Geophysics}, 253, 106395, 2026. \href{https://doi.org/10.1016/j.jappgeo.2026.106395}{doi:10.1016/j.jappgeo.2026.106395}.
 \bibitem{LiHungLeung2026} W. Li, K. K. T. Hung, and S. Leung, ``A multilayer level-set method for eikonal-based traveltime tomography,'' \emph{Journal of Computational Physics}, 560, 114941, 2026. \href{https://doi.org/10.1016/j.jcp.2026.114941}{doi:10.1016/j.jcp.2026.114941}.
+\bibitem{LeePyun2026} G. Lee and S. Pyun, ``Robust and efficient 3D first-arrival traveltime reconstruction using swin transformer and masked autoencoder,'' \emph{Journal of Geophysics and Engineering}, 23(3), 951--974, 2026. \href{https://doi.org/10.1093/jge/gxag032}{doi:10.1093/jge/gxag032}.
 \bibitem{TangNTK2026} J. Tang, ``Neural tangent kernel adaptive weight physics-informed neural network for traveltime tomography,'' \emph{Journal of Geophysical Prospecting}, 2(3), 273--282, 2026. \href{https://doi.org/10.1016/j.jgp.2026.05.007}{doi:10.1016/j.jgp.2026.05.007}.
 \bibitem{WangReciprocity2026} Y. Wang, H. Geng, C. Song, and C. Liu, ``Reciprocity-aware PINN-based seismic traveltime tomography and uncertainty quantification for models with irregular topography,'' \emph{Geophysical Journal International}, 244(3), ggag015, 2026. \href{https://doi.org/10.1093/gji/ggag015}{doi:10.1093/gji/ggag015}.
 \bibitem{WangReciprocityCode2026} Y. Wang et al., ``RA-MC-PINNtomo: official notebook-based implementation of reciprocity-aware traveltime tomography,'' GitHub repository, 2026. \url{https://github.com/wangyf2322/RA-MC-PINNtomo}.
