@@ -78,3 +78,7 @@ The learned velocity feature now has a seven-row adversarial validation map and 
 ## Manuscript literature update: 2026-11-21
 
 The BS-1 preprint was updated to v0.04 after checking a 2026 first-arrival travel-time reconstruction paper. The new paragraph classifies its Swin masked-autoencoder/Swin-Unet task as missing-data completion and explicitly excludes its reconstruction scores from velocity-inversion comparisons. The source and 29-page PDF were built from an external disposable copy; rendered pages 4, 5, and 28 were inspected. The manuscript content check passes at 8,789 words, 16 equations, 8 figures, 7 tables, 44 references and one algorithm. This improves related-work scope only; the paper remains a negative synthetic comparison and does not claim novelty, superiority, field transfer, or beyond-state-of-the-art performance.
+
+## EDI gate-name repair: 2026-11-21
+
+The current template SDD check found that the EDI feature mapped requirements to test names absent from the pinned historical test module. Separate adversarial entry points now execute those historical tests without changing their hash-bound source. The focused entry-point suite passed 13 cases; the SDD checker reports zero EDI mapping findings and 76 structural findings elsewhere. This repairs gate traceability only and does not close EDI host admission, method acceptance, manuscript novelty, or product release acceptance.
