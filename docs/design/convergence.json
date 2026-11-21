@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "6c30d50586e1537ab087758411a2d7d7817aacf001a307bcef5d102f79a34dd2",
+  "sdd_sha256": "0b7273d85a4a35427cf7748a898262725fc79e38ce93fa8150bb5d326962deb0",
   "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
   "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
