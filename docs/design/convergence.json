@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "0b7273d85a4a35427cf7748a898262725fc79e38ce93fa8150bb5d326962deb0",
+  "sdd_sha256": "dd05540871d6e6ab5873396d912ae9e33093751999f94831144deceac63af20a",
   "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
   "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
@@ -486,7 +486,7 @@
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "c296ab7c27ec86327bd17c6b6f4c0f276bc36f978ad81819b6ab454192874a88"
+          "sha256": "71a0d61e4f872a7fcfcc2f58e9a207fedee6857d33d63d351c75386b54e20e78"
         },
         {
           "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
@@ -494,7 +494,7 @@
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "9228908ef9300ad6f028b1e34c8bc836c68ffe2c0768e35d8dcdee4a91003751"
+          "sha256": "9da9ceff185c271933f512c341306ef0d70713627ae42bf5856a80bc87504d98"
         },
         {
           "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
@@ -1003,7 +1003,7 @@
         },
         {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "b4d7049083665ce150758d273856e6d5bd2026d2a3d5f33df3c3f2f25e7ee9ea"
+          "sha256": "2d3b44f48997f50f5fd697cf4bdc8e7e26050d4f6f52095c5dbb49a2e1fd487c"
         },
         {
           "path": "notebooks/en/06-seismology/05-m10-fwi-case-matrix.ipynb",
@@ -1011,7 +1011,7 @@
         },
         {
           "path": "notebooks/en/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "c296ab7c27ec86327bd17c6b6f4c0f276bc36f978ad81819b6ab454192874a88"
+          "sha256": "71a0d61e4f872a7fcfcc2f58e9a207fedee6857d33d63d351c75386b54e20e78"
         },
         {
           "path": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
@@ -1023,7 +1023,7 @@
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
-          "sha256": "92bb4a1229168ef38712991419ad761c83140691f8e9a52f1dc930bb8ffb6352"
+          "sha256": "5626f71d591bf8ed1bd5c8ef8431fa2c8d7686778dd3dfac941478bc38df8816"
         },
         {
           "path": "notebooks/es/06-seismology/05-m10-fwi-case-matrix.ipynb",
@@ -1031,7 +1031,7 @@
         },
         {
           "path": "notebooks/es/07-joint/04-m11-physical-matrix-evidence.ipynb",
-          "sha256": "9228908ef9300ad6f028b1e34c8bc836c68ffe2c0768e35d8dcdee4a91003751"
+          "sha256": "9da9ceff185c271933f512c341306ef0d70713627ae42bf5856a80bc87504d98"
         },
         {
           "path": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",

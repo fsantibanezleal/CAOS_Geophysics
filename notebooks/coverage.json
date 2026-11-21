@@ -50,6 +50,16 @@
     ],
     "browser-model-assets": [
       "06-seismology/04-m13-learned-phase-picking.ipynb"
+    ],
+    "api-payloads": [
+      "04-mt/04-mt-method-comparison.ipynb",
+      "08-learning/04-first-arrival-user-data.ipynb"
+    ],
+    "data-readiness": [
+      "01-foundations/01-inverse-problem-and-evidence.ipynb"
+    ],
+    "private-api": [
+      "08-learning/04-first-arrival-user-data.ipynb"
     ]
   },
   "stages": {
