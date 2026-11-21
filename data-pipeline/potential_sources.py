@@ -19,7 +19,7 @@ import zipfile
 import zlib
 
 from sources import (ROOT, SourceError, _digest_file, _inside, acquire_source,
-                     archive_member_key, validate_archive_contract)
+                     archive_member_key, local_data_root, validate_archive_contract)
 
 
 AUTHOR_SOURCE = "clear-lake-author-potentials-v2"
@@ -288,21 +288,25 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-id", default=AUTHOR_SOURCE, choices=[AUTHOR_SOURCE])
     parser.add_argument("--file", type=Path, help="Already downloaded pinned ZIP; never an arbitrary URL")
-    parser.add_argument("--output", type=Path, help="New ignored local inspection JSON; existing files are never replaced")
+    parser.add_argument("--data-root", type=Path, help="External working-data root; defaults to GEOPHYSICS_LOCAL_DATA_ROOT")
+    parser.add_argument("--output", type=Path, help="New ignored data/raw inspection JSON; existing files are never replaced")
     args = parser.parse_args(argv)
     try:
-        record, raw, _ = acquire_source(args.source_id, local_file=args.file)
-        receipt = extract_selected(record, raw)
+        root = local_data_root(args.data_root)
+        record, raw, _ = acquire_source(args.source_id, local_file=args.file, root=root)
+        receipt = extract_selected(record, raw, root=root)
         member = next(item for item in receipt["members"] if item["name"] == "data/ground_gravity_data.csv")
-        result = profile_gravity(ROOT / member["path"], source=record)
+        result = profile_gravity(root / member["path"], source=record)
         result["member_receipt_sha256"] = hashlib.sha256(canonical(receipt)).hexdigest()
         result["profiled_at_utc"] = datetime.now(timezone.utc).isoformat()
         if args.output:
-            target = args.output.absolute()
-            if not target.is_relative_to(ROOT / "data/raw"):
+            target = args.output if args.output.is_absolute() else root / args.output
+            target = target.resolve()
+            raw_root = (root / "data/raw").resolve()
+            if not target.is_relative_to(raw_root):
                 raise SourceError("Inspection output must stay in ignored data/raw, outside public artifacts")
-            key = PurePosixPath(target.relative_to(ROOT).as_posix())
-            target = safe_target(ROOT, key, "raw")
+            key = PurePosixPath(target.relative_to(root).as_posix())
+            target = safe_target(root, key, "raw")
             if target.exists():
                 raise SourceError("Inspection output already exists; choose a new path, do not replace it")
             publish_bytes(target, canonical(result))
