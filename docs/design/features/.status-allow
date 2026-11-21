@@ -1,0 +1,5 @@
+# Planned feature specifications remain visible but are excluded from the live requirement gate.
+m04-survey-inversion: full sparse candidate selection and sealed outer acceptance remain incomplete after the recorded negative evaluation
+physical-worker-accounting: host-specific process accounting and recovery controls are prospective and not deployed
+protected-profile-jobs: protected profile execution still requires complete service and actual-host qualification
+single-vps-service: release activation remains pending scientific, browser, security, host-capacity and rollback acceptance
