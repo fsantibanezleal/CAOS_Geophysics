@@ -158,6 +158,9 @@
     "seismic.independent_start",
     "seismic.lowpass",
     "seismic.physical_roughness",
-    "seismic.recovery_evaluation"
+    "seismic.recovery_evaluation",
+    "joint_survey_compiled.compile_joint_development",
+    "joint_survey_objective.evaluate_joint_objective",
+    "joint_survey_structure.evaluate_joint_structure"
   ]
 }
