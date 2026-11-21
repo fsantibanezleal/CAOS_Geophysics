@@ -81,3 +81,15 @@ py -3.12 scripts/check_notebooks.py
 ```
 
 The first command checks the current method/wiki and source-to-content inventory. The second checks the notebook repository structure and mirrors. Fresh-kernel execution is a separate, more expensive gate and is not implied by either command.
+
+## Source inventory refresh: 2026-11-21
+
+The EN notebook citation inventories below were expanded with the primary methods papers and the library/API references already used in their lesson text. The manifest now copies each current EN metadata source list exactly; these links are inventory evidence, not a claim of independent reproduction.
+
+- `notebooks/en/05-ert/02-ert-inversion.ipynb`: <https://www.pygimli.org/user-guide/inversion/>; <https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/>; <https://doi.org/10.1016/j.cageo.2017.07.011>; <https://doi.org/10.1111/j.1365-2478.1996.tb00162.x>; <https://www.pygimli.org/pygimliapi/_generated/pygimli.physics.ert/>
+- `notebooks/en/05-ert/03-ert-method-comparison.ipynb`: <https://www.pygimli.org/user-guide/inversion/>; <https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/>; <https://doi.org/10.1016/j.cageo.2017.07.011>; <https://www.pygimli.org/pygimliapi/_generated/pygimli.physics.ert/>
+- `notebooks/en/06-seismology/01-waveforms.ipynb`: <https://docs.obspy.org/packages/autogen/obspy.core.stream.stream.html>; <https://doi.org/10.1109/ACCESS.2019.2947848>; <https://doi.org/10.1093/gji/ggy423>; <https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html>
+- `notebooks/en/06-seismology/02-traveltime-fwi.ipynb`: <https://www.pygimli.org/_examples_auto/2_seismics/plot_04_koenigsee>; <https://www.pygimli.org/user-guide/inversion>; <https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.lsqr.html>; <https://doi.org/10.1109/36.17671>; <https://doi.org/10.1016/j.pepi.2009.10.002>
+- `notebooks/en/06-seismology/03-seismic-method-comparison.ipynb`: <https://doi.org/10.1190/1.3238367>; <https://www.ausargeo.com/deepwave/example_fwi>; <https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html>; <https://github.com/lanl/OpenFWI>
+- `notebooks/en/08-learning/02-learning-heldout.ipynb`: <https://arxiv.org/abs/1610.02136>; <https://proceedings.neurips.cc/paper_files/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html>; <https://dm.snu.ac.kr/static/docs/TR/SNUDM-TR-2015-03.pdf>; <https://doi.org/10.1016/j.cageo.2015.09.015>
+- `notebooks/en/08-learning/03-learning-method-comparison.ipynb`: <https://doi.org/10.1093/gji/ggy423>; <https://doi.org/10.1109/ACCESS.2019.2947848>; <https://doi.org/10.1785/0120180080>; <https://doi.org/10.1785/BSSA0680051521>

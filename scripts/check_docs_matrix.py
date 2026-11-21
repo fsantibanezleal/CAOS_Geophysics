@@ -40,7 +40,7 @@ LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 DISPLAY_MATH = re.compile(r"\$\$.*?\$\$|\\\[.*?\\\]", re.S)
 FENCED_CODE = re.compile(r"(?:```|~~~).*?(?:```|~~~)", re.S)
 INLINE_CODE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
-NUMBER_TOKEN = re.compile(r"(?<![A-Za-z])(?:\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)(?![A-Za-z])")
+NUMBER_TOKEN = re.compile(r"(?<![A-Za-z])(?:\d+(?:[.,]\d+)?(?:[eE][+-]?\d+)?)(?![A-Za-z])")
 INLINE_CODE_PATH = re.compile(
     r"(?<![\w/.-])(?:data-pipeline|app|frontend/src|tests|scripts)/"
     r"[A-Za-z0-9_./-]+(?:\.tsx|\.ts|\.mjs|\.py|\.json|\.ps1|\.md)"
@@ -54,6 +54,11 @@ REPOSITORY_PATH = re.compile(
 def fail(message: str) -> int:
     print(f"DOCS MATRIX FAIL: {message}", file=sys.stderr)
     return 1
+
+
+def numeric_tokens(text: str) -> list[str]:
+    """Compare numerical values across EN/ES while accepting decimal comma in Spanish prose."""
+    return [token.replace(",", ".") for token in NUMBER_TOKEN.findall(text)]
 
 
 def check_source_content_coverage(errors: list[str]) -> tuple[int, int]:
@@ -289,10 +294,11 @@ def main() -> int:
             ("code blocks", FENCED_CODE),
             ("inline code identifiers", INLINE_CODE),
             ("link targets", LINK),
-            ("numeric tokens", NUMBER_TOKEN),
         ):
             if pattern.findall(english) != pattern.findall(spanish):
                 errors.append(f"translation parity mismatch for {label}: {english_relative} vs {spanish_relative}")
+        if numeric_tokens(english) != numeric_tokens(spanish):
+            errors.append(f"translation parity mismatch for numeric tokens: {english_relative} vs {spanish_relative}")
     notebook_count, reviewed_method_count = check_source_content_coverage(errors)
     if errors:
         return fail("\n  - " + "\n  - ".join(errors))

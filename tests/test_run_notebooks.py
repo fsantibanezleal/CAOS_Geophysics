@@ -15,7 +15,10 @@ from scripts.run_notebooks import (
     canonical_png,
     discover,
     notebook_scratch_path,
+    output_differences,
+    same_bytes,
     staged_notebook_source,
+    strip_volatile,
     within_declared_plot_tolerance,
 )
 
@@ -43,6 +46,47 @@ def test_notebook_scratch_isolated_between_language_mirrors() -> None:
     spanish = notebook_scratch_path(root, "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb")
     assert english != spanish
     assert english.is_relative_to(root) and spanish.is_relative_to(root)
+
+
+def test_notebook_staleness_report_names_generated_cell_ids(tmp_path: Path) -> None:
+    fresh = tmp_path / "fresh.ipynb"
+    committed = tmp_path / "committed.ipynb"
+    fresh.write_text(json.dumps({"cells": [{"cell_type": "code", "id": "generated-id", "outputs": []}]}),
+                     encoding="utf-8")
+    committed.write_text(json.dumps({"cells": [{"cell_type": "code", "outputs": []}]}), encoding="utf-8")
+
+    assert output_differences(fresh, committed) == "cell IDs differ at 0"
+
+
+def test_notebook_normalization_canonicalizes_string_and_list_sources() -> None:
+    from_list = strip_volatile({"cells": [{"cell_type": "markdown", "source": ["A\n", "B"]}]})
+    from_string = strip_volatile({"cells": [{"cell_type": "markdown", "source": "A\nB"}]})
+
+    assert from_list == from_string
+
+
+def test_notebook_comparison_ignores_volatile_python_version_metadata(tmp_path: Path) -> None:
+    fresh = tmp_path / "fresh.ipynb"
+    committed = tmp_path / "committed.ipynb"
+    cells = [{"cell_type": "markdown", "source": ["Lesson"], "metadata": {}}]
+    fresh.write_text(json.dumps({"cells": cells, "metadata": {"language_info": {"name": "python"}}}),
+                     encoding="utf-8")
+    committed.write_text(json.dumps({"cells": cells, "metadata": {
+        "language_info": {"name": "python", "version": "3.12.10", "file_extension": ".py"}
+    }}), encoding="utf-8")
+
+    assert same_bytes(fresh, committed)
+
+
+def test_notebook_comparison_still_detects_changed_outputs(tmp_path: Path) -> None:
+    fresh = tmp_path / "fresh.ipynb"
+    committed = tmp_path / "committed.ipynb"
+    for path, value in ((fresh, "new"), (committed, "old")):
+        path.write_text(json.dumps({"cells": [{"cell_type": "code", "source": [], "metadata": {},
+                                               "outputs": [{"output_type": "stream", "text": value}]}]}),
+                        encoding="utf-8")
+
+    assert not same_bytes(fresh, committed)
 
 
 def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -> None:
@@ -147,6 +191,28 @@ def test_long_valley_check_stages_only_its_declared_inputs(tmp_path: Path) -> No
     assert not (repo / "models").exists()
     assert not (repo / "docs").exists()
     assert not (repo / "data" / "derived" / "v2").exists()
+
+
+def test_selective_check_completes_a_tree_after_a_narrow_notebook_was_staged(tmp_path: Path) -> None:
+    source = tmp_path / "product"
+    field = source / "notebooks" / "en" / "02-gravity" / "03-long-valley-time-lapse-processing.ipynb"
+    general = source / "notebooks" / "en" / "03-magnetics" / "01-magnetic-quantities-and-frame.ipynb"
+    sibling = source / "notebooks" / "es" / "03-magnetics" / "01-magnetic-quantities-and-frame.ipynb"
+    pipeline = source / "data-pipeline" / "long_valley_timelapse.py"
+    for path in (field, general, sibling, pipeline):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}\n", encoding="utf-8")
+
+    complete_trees: set[str] = set()
+    check_root = tmp_path / "check"
+    staged_notebook_source(check_root, field.relative_to(source).as_posix(), source, complete_trees)
+    staged = staged_notebook_source(
+        check_root, general.relative_to(source).as_posix(), source, complete_trees
+    )
+
+    assert staged.is_file()
+    repo = staged.parents[3]
+    assert (repo / sibling.relative_to(source)).is_file()
 
 
 def test_m11_check_stages_receipt_and_pipeline_without_full_data_tree(tmp_path: Path) -> None:

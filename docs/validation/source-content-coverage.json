@@ -281,7 +281,10 @@
       "title": "Topographic ERT inverse with synthetic control",
       "sources": [
         "https://www.pygimli.org/user-guide/inversion/",
-        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/"
+        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/",
+        "https://doi.org/10.1016/j.cageo.2017.07.011",
+        "https://doi.org/10.1111/j.1365-2478.1996.tb00162.x",
+        "https://www.pygimli.org/pygimliapi/_generated/pygimli.physics.ert/"
       ],
       "content_scope": "Runs the topographic 2D ERT inverse on an authored synthetic control."
     },
@@ -294,7 +297,9 @@
       "title": "Reproducible readiness audit when data are absent",
       "sources": [
         "https://www.pygimli.org/user-guide/inversion/",
-        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/"
+        "https://www.pygimli.org/_examples_auto/3_ert/plot_02_ert_field_data/",
+        "https://doi.org/10.1016/j.cageo.2017.07.011",
+        "https://www.pygimli.org/pygimliapi/_generated/pygimli.physics.ert/"
       ],
       "content_scope": "Audits ERT inversion readiness and evidence limits when provider data are absent."
     },
@@ -306,7 +311,10 @@
       ],
       "title": "Waveform QC and controlled picks",
       "sources": [
-        "https://docs.obspy.org/packages/autogen/obspy.core.stream.stream.html"
+        "https://docs.obspy.org/packages/autogen/obspy.core.stream.stream.html",
+        "https://doi.org/10.1109/ACCESS.2019.2947848",
+        "https://doi.org/10.1093/gji/ggy423",
+        "https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html"
       ],
       "content_scope": "Examines waveform QC and controlled classical onset candidates."
     },
@@ -319,7 +327,10 @@
       "title": "First-arrival tomography: fixed-ray and Dijkstra controls",
       "sources": [
         "https://www.pygimli.org/_examples_auto/2_seismics/plot_04_koenigsee",
-        "https://www.pygimli.org/user-guide/inversion"
+        "https://www.pygimli.org/user-guide/inversion",
+        "https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.lsqr.html",
+        "https://doi.org/10.1109/36.17671",
+        "https://doi.org/10.1016/j.pepi.2009.10.002"
       ],
       "content_scope": "Compares fixed straight rays with the M09 Dijkstra inverse and demonstrates rights-declared local SGT ingestion, coordinate normalization, QC and fail-closed whole-shot eligibility."
     },
@@ -331,7 +342,10 @@
       ],
       "title": "Acoustic FWI and cycle-skipping",
       "sources": [
-        "https://www.ausargeo.com/deepwave/example_fwi"
+        "https://doi.org/10.1190/1.3238367",
+        "https://www.ausargeo.com/deepwave/example_fwi",
+        "https://www.devitoproject.org/examples/seismic/tutorials/03_fwi.html",
+        "https://github.com/lanl/OpenFWI"
       ],
       "content_scope": "Studies acoustic FWI and cycle-skipping limitations."
     },
@@ -437,9 +451,10 @@
       ],
       "title": "Novelty detection and threshold cost",
       "sources": [
-        "https://doi.org/10.1093/gji/ggy423",
-        "https://github.com/AI4EPS/PhaseNet",
-        "https://github.com/lanl/OpenFWI"
+        "https://arxiv.org/abs/1610.02136",
+        "https://proceedings.neurips.cc/paper_files/paper/2019/hash/8558cb408c1d76621371888657d2eb1d-Abstract.html",
+        "https://dm.snu.ac.kr/static/docs/TR/SNUDM-TR-2015-03.pdf",
+        "https://doi.org/10.1016/j.cageo.2015.09.015"
       ],
       "content_scope": "Examines novelty thresholds and their consequences for held-out learned inversion."
     },
@@ -452,8 +467,9 @@
       "title": "PhaseNet evidence and browser parity",
       "sources": [
         "https://doi.org/10.1093/gji/ggy423",
-        "https://github.com/AI4EPS/PhaseNet",
-        "https://github.com/lanl/OpenFWI"
+        "https://doi.org/10.1109/ACCESS.2019.2947848",
+        "https://doi.org/10.1785/0120180080",
+        "https://doi.org/10.1785/BSSA0680051521"
       ],
       "content_scope": "Reviews PhaseNet evidence and the browser parity boundary for learned phase picking."
     },

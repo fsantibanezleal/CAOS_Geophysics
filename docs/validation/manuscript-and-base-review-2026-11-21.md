@@ -10,7 +10,7 @@ The product pins `@fasl-work/caos-app-shell` 0.26.2 in its frontend manifest, lo
 
 ## BS-1 manuscript
 
-The manuscript is an explicitly unreviewed, DOI-unassigned preprint and a negative synthetic comparison. It reports 8,734 prose words, 16 equations, 8 figures, 7 tables, 43 references and one algorithm; the content-bar checker passes. The refreshed source compiles successfully to a 29-page PDF. The rendered literature page was inspected after separating the newly added reference into its own paragraph.
+The manuscript is an explicitly unreviewed, DOI-unassigned preprint and a negative synthetic comparison. It reports 8,718 prose words, 16 equations, 8 figures, 7 tables, 43 references and one algorithm; the content-bar checker passes. The refreshed source compiles successfully to a 29-page PDF. The rendered literature page was inspected after separating the newly added reference into its own paragraph.
 
 The core claim is appropriately bounded: for this authored 16 by 16 experiment, the residual CNN loses to the regularized straight-ray reference on the frozen cohorts. The primary joint-shift ratios are 2.194 for velocity RMSE and 5.585 for Q-scored travel-time RMSE; all 160 cases exceed the fixed validation-derived threshold. A second CUDA execution reuses the same training seed and therefore is execution sensitivity, not independent initialization uncertainty. The ablations are post-hoc and exploratory. Data are synthetic, and the generator families were known by design.
 
@@ -32,3 +32,9 @@ The 0.04.003 report PDF is 48 pages. Its coverage map declares M01-M13 and BS-1 
 
 - Huang, Z. et al. (2026), *Efficient Matrix-Free Gauss--Newton Traveltime Tomography on Full-Metric Deformed Grids*, arXiv:2609.14982: https://arxiv.org/abs/2609.14982
 - SciPy `signal.welch` API reference used by the waveform lesson: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.welch.html
+
+## Fresh content-bar remeasurement: 2026-11-21
+
+`scripts/check_manuscript_depth.py . --report` was rerun against the current checkout. It measures the technical report at 16,851 prose words, 32 equations, 10 figures, 9 tables, 32 references and 3 algorithms; the geometry-normalized travel-time study measures 8,718 prose words, 16 equations, 8 figures, 7 tables, 43 references and one algorithm. Both documents pass the repository's structural depth and coverage checks.
+
+The beyond-methods paper remains a negative, fixed-simulator synthetic comparison. Its current literature coverage distinguishes contemporary forward solvers and inverse methods by operator, data, objective and validation protocol; cited methods were not reproduced as matched baselines. The measurements do not support a claim of novelty, superiority, field transfer or advancement beyond the state of the art. Structural depth is not peer review or product scientific acceptance.

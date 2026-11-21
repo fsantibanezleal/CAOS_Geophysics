@@ -7,10 +7,14 @@ import gzip
 import json
 from pathlib import Path
 import struct
+import sys
 
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "data/derived/phase/browser-assets/stead"
+sys.path.insert(0, str(ROOT / "data-pipeline"))
+
+from stead_phase_browser_subset import _finalized_parity_receipt_is_valid  # noqa: E402
 
 
 def _sha256(path: Path) -> str:
@@ -78,6 +82,16 @@ def test_finalized_parity_status_preserves_export_identity_and_nonacceptance() -
     exported_bytes = (json.dumps(exported, indent=2, sort_keys=True) + "\n").encode("utf-8")
     assert receipt["manifestSha256"] == hashlib.sha256(exported_bytes).hexdigest()
     assert receipt["population"]["accuracyClaim"] is False
+
+
+def test_finalized_runtime_receipt_is_accepted_only_for_its_bound_export() -> None:
+    manifest = json.loads((ASSETS / "manifest.json").read_text(encoding="utf-8"))
+
+    assert _finalized_parity_receipt_is_valid(ASSETS, manifest)
+
+    changed = json.loads(json.dumps(manifest))
+    changed["model"]["sha256"] = "0" * 64
+    assert not _finalized_parity_receipt_is_valid(ASSETS, changed)
 
 
 def test_predeclared_display_population_preserves_qc_failure() -> None:

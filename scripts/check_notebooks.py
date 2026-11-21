@@ -93,7 +93,7 @@ NO_LEVEL_3 = {"en": "No level 3:", "es": "Sin nivel 3:"}
 MIN_REASON_WORDS = 4
 NOTEBOOK_KEYS = {"kernelspec", "language_info", "caos"}
 CAOS_KEYS = ("language", "topic", "level", "title", "packages", "data", "sources", "beyond")
-OPTIONAL_KEYS = ("methods",)  # level 3 only: the ids of the SDD's sota methods the notebook runs
+OPTIONAL_KEYS = ("methods", "render_tolerance")  # methods are level-3; render tolerance is a narrow PNG reproducibility policy
 LADDER_SECTION = "Method ladder"
 LADDER_HEAD = ["id", "tier", "method", "acceptance criterion", "gate"]
 RULE = "CAOS_MANAGE conventions/method-tiers-and-manuscripts.md"
@@ -649,6 +649,21 @@ def check_notebook(root: Path, lang: str, topic: str, name: str, nb: dict, pins:
             for m in methods:
                 if ladder is not None and ladder.get(m) != "sota":
                     findings.append(f"{rel}: metadata: {m!r} is not a sota method of the SDD's Method ladder (tier sota)")
+        if "render_tolerance" in caos:
+            tolerance = caos["render_tolerance"]
+            if not isinstance(tolerance, dict) or set(tolerance) != {
+                "kind", "max_changed_pixel_fraction", "max_normalized_mean_absolute_error", "reason"
+            }:
+                findings.append(f"{rel}: metadata: caos.render_tolerance must declare the bounded PNG drift fields")
+            else:
+                limits = (tolerance.get("max_changed_pixel_fraction"),
+                          tolerance.get("max_normalized_mean_absolute_error"))
+                if (tolerance.get("kind") != "png-pixel-drift"
+                        or any(not isinstance(value, (int, float)) or isinstance(value, bool)
+                               or not 0 <= value <= 0.001 for value in limits)
+                        or not isinstance(tolerance.get("reason"), str)
+                        or len(tolerance["reason"].strip()) < 20):
+                    findings.append(f"{rel}: metadata: caos.render_tolerance exceeds the strict PNG-only drift policy")
     # ---- anatomy
     if not cells or cells[0]["cell_type"] != "markdown":
         findings.append(f"{rel}: anatomy: the first cell is not a markdown cell (title, level, prerequisites, reading time)")

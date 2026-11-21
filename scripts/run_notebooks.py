@@ -139,6 +139,9 @@ def strip_volatile(nb: dict) -> dict:
     for cell in nb.get("cells", []):
         tags = cell.get("metadata", {}).get("tags")
         cell["metadata"] = {"tags": tags} if tags else {}
+        source = cell.get("source", "")
+        source_text = "".join(source) if isinstance(source, list) else str(source)
+        cell["source"] = source_text.splitlines(keepends=True)
         if cell.get("cell_type") == "code":
             cell["outputs"] = coalesce_streams(cell.get("outputs", []))
             for output in cell["outputs"]:
@@ -157,7 +160,12 @@ def notebook_scratch_path(root: Path, relative_notebook: str) -> Path:
     return root / "notebook-work" / Path(relative_notebook).with_suffix("")
 
 
-def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: Path = ROOT) -> Path:
+def staged_notebook_source(
+    tmp_root: Path,
+    relative_notebook: str,
+    source_root: Path = ROOT,
+    complete_trees: set[str] | None = None,
+) -> Path:
     """Return a notebook in an isolated, input-complete copy of the product."""
     work = tmp_root / "repo"
     work.mkdir(parents=True, exist_ok=True)
@@ -195,17 +203,19 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
     names = ("data-pipeline",) if compact_pipeline_lesson else (("data", "data-pipeline") if seismic_lesson else (
         "data", "data-pipeline", "docs", "content", "models", "manuscripts", "notebooks"
     ))
+    copied_trees = complete_trees if complete_trees is not None else set()
     for name in names:
         origin = source_root / name
         target = work / name
-        if origin.exists() and not target.exists():
+        if origin.exists() and name not in copied_trees:
             def ignore_generated(directory: str, entries: list[str]) -> set[str]:
                 ignored = {entry for entry in entries if entry in {"__pycache__", ".ipynb_checkpoints"}}
                 if name == "data" and Path(directory).resolve() == origin.resolve():
                     ignored.add("experiments")
                 return ignored
 
-            shutil.copytree(origin, target, ignore=ignore_generated)
+            shutil.copytree(origin, target, ignore=ignore_generated, dirs_exist_ok=target.exists())
+            copied_trees.add(name)
     if seismic_lesson:
         # The release stores the 5 MB browser model compressed. Materialize
         # the exact manifest-pinned ONNX bytes only in this isolated scratch
@@ -379,7 +389,9 @@ def execute(src: Path, dest: Path, pipeline_kernels: Path, notebook_tmp: Path) -
     try:
         client.execute()
     except CellExecutionError as e:
-        return f"{type(e).__name__}: {str(e).strip().splitlines()[-1] if str(e).strip() else e}"
+        lines = str(e).strip().splitlines()
+        detail = "\n".join(lines[-8:]) if lines else str(e)
+        return f"{type(e).__name__}: {detail}"
     except Exception as e:  # a dead kernel, a timeout: the run fails and says why
         return f"{type(e).__name__}: {e}"
     finally:
@@ -394,8 +406,10 @@ def execute(src: Path, dest: Path, pipeline_kernels: Path, notebook_tmp: Path) -
 
 
 def same_bytes(a: Path, b: Path) -> bool:
-    """The two files hold the same bytes, line endings aside (a checkout may convert them)."""
-    return a.read_bytes().replace(b"\r\n", b"\n") == b.read_bytes().replace(b"\r\n", b"\n")
+    """Compare canonical notebook content while ignoring declared volatile metadata."""
+    left = strip_volatile(json.loads(a.read_text(encoding="utf-8")))
+    right = strip_volatile(json.loads(b.read_text(encoding="utf-8")))
+    return left == right
 
 
 def within_declared_plot_tolerance(fresh: Path, committed: Path) -> bool:
@@ -445,17 +459,78 @@ def within_declared_plot_tolerance(fresh: Path, committed: Path) -> bool:
 
 
 def output_differences(fresh: Path, committed: Path) -> str:
-    """Locate saved cells that disagree with a clean run so nondeterministic outputs can be diagnosed."""
+    """Locate notebook fields that disagree with a clean run so stale output and metadata can be diagnosed."""
+    import numpy as np
+    from PIL import Image
+
     left = json.loads(fresh.read_text(encoding="utf-8"))
     right = json.loads(committed.read_text(encoding="utf-8"))
-    changes = [
-        str(index)
-        for index, (new, old) in enumerate(zip(left.get("cells", []), right.get("cells", [])))
+    new_cells, old_cells = left.get("cells", []), right.get("cells", [])
+    if len(new_cells) != len(old_cells):
+        return "cell structure differs"
+    categories: list[str] = []
+    for key, label in (("id", "cell IDs"), ("source", "cell source"), ("metadata", "cell metadata"),
+                       ("execution_count", "execution counts")):
+        indexes = [
+            str(index) for index, (new, old) in enumerate(zip(new_cells, old_cells))
+            if new.get(key) != old.get(key)
+            and (key not in {"execution_count"} or new.get("cell_type") == "code")
+        ]
+        if indexes:
+            categories.append(f"{label} differ at " + ", ".join(indexes[:12]))
+    output_indexes = [
+        index for index, (new, old) in enumerate(zip(new_cells, old_cells))
         if new.get("cell_type") == "code" and new.get("outputs") != old.get("outputs")
     ]
-    if len(left.get("cells", [])) != len(right.get("cells", [])):
-        return "cell structure also differs"
-    return "output cells differ at " + ", ".join(changes[:12]) if changes else "metadata or source bytes differ"
+    if output_indexes:
+        previews = []
+        for index in output_indexes[:4]:
+            def preview(cell: dict) -> str:
+                parts = []
+                for output in cell.get("outputs", []):
+                    data = output.get("data", {})
+                    value = data.get("text/plain", output.get("text", ""))
+                    parts.extend(value if isinstance(value, list) else [value])
+                    old_png = data.get("image/png")
+                    if isinstance(old_png, str):
+                        parts.append(f"PNG bytes={len(old_png)}")
+                return " ".join(str(part) for part in parts).replace("\n", " ")[:180]
+
+            image_note = ""
+            old_outputs, new_outputs = old_cells[index].get("outputs", []), new_cells[index].get("outputs", [])
+            for old_output, new_output in zip(old_outputs, new_outputs):
+                old_png = old_output.get("data", {}).get("image/png")
+                new_png = new_output.get("data", {}).get("image/png")
+                if isinstance(old_png, str) and isinstance(new_png, str) and old_png != new_png:
+                    try:
+                        with Image.open(io.BytesIO(base64.b64decode(old_png))) as old_image, \
+                             Image.open(io.BytesIO(base64.b64decode(new_png))) as new_image:
+                            old_pixels = np.asarray(old_image.convert("RGBA"), dtype=np.int16)
+                            new_pixels = np.asarray(new_image.convert("RGBA"), dtype=np.int16)
+                        if old_pixels.shape == new_pixels.shape:
+                            delta = np.abs(old_pixels - new_pixels)
+                            changed = float(np.mean(np.any(delta != 0, axis=-1)))
+                            mae = float(np.mean(delta) / 255.0)
+                            image_note = f" PNG changed={changed:.6g}, normalized-MAE={mae:.6g}"
+                        else:
+                            image_note = f" PNG dimensions differ: {old_pixels.shape} vs {new_pixels.shape}"
+                    except (OSError, ValueError):
+                        image_note = " PNG could not be decoded for comparison"
+                    break
+            previews.append(f"cell {index} old={preview(old_cells[index])!r} fresh={preview(new_cells[index])!r}{image_note}")
+        categories.append("output cells differ at " + ", ".join(map(str, output_indexes[:12]))
+                          + ("; " + "; ".join(previews) if previews else ""))
+    for key in ("metadata", "nbformat", "nbformat_minor"):
+        if left.get(key) != right.get(key):
+            if key == "metadata":
+                changed_keys = [
+                    name for name in set(left.get(key, {})) | set(right.get(key, {}))
+                    if left.get(key, {}).get(name) != right.get(key, {}).get(name)
+                ]
+                categories.append("notebook metadata differs: " + ", ".join(sorted(changed_keys)))
+            else:
+                categories.append(f"notebook {key} differs")
+    return "; ".join(categories) if categories else "serialized notebook bytes differ"
 
 
 def method_problems(selected_notebooks: list[Path] | None = None) -> list[str]:
@@ -580,17 +655,22 @@ def main() -> int:
     if existing_jupyter_path:
         search_path.append(existing_jupyter_path)
     os.environ["JUPYTER_PATH"] = os.pathsep.join(search_path)
-    tmp_root = Path(tempfile.mkdtemp(prefix="run-notebooks-", dir=temp_root)) if a.check else None
+    # Always execute from a release-shaped copy. Normal notebook regeneration
+    # previously ran directly from the checkout, so compressed release assets
+    # (notably M13's ONNX model) were absent even though --check materialized
+    # and verified them in its isolated copy.
+    tmp_root = Path(tempfile.mkdtemp(prefix="run-notebooks-", dir=temp_root))
     failures: list[str] = []
+    complete_staged_trees: set[str] = set()
     try:
         for book in books:
             rel = book.relative_to(ROOT).as_posix()
-            src = book
-            notebook_tmp = notebook_scratch_path(tmp_root or temp_root, rel)
-            if tmp_root is not None:
-                # Execute against an isolated release-shaped tree, including
-                # trained/released model files, as required by template 0.13.001.
-                src = staged_notebook_source(tmp_root, rel)
+            notebook_tmp = notebook_scratch_path(tmp_root, rel)
+            # Execute against an isolated release-shaped tree, including
+            # trained/released model files, in both check and regeneration
+            # modes. Only the final notebook destination differs by mode.
+            src = staged_notebook_source(tmp_root, rel, complete_trees=complete_staged_trees)
+            if a.check:
                 fresh = tmp_root / "results" / rel
                 fresh.parent.mkdir(parents=True, exist_ok=True)
             else:
@@ -605,13 +685,12 @@ def main() -> int:
                 failures.append(rel)
                 print(f"  FAIL  {rel}: {why}", flush=True)
     finally:
-        if tmp_root is not None:
-            if a.keep_results:
-                shutil.rmtree(tmp_root / "repo", ignore_errors=True)
-                shutil.rmtree(tmp_root / "notebook-work", ignore_errors=True)
-                print(f"  fresh notebook outputs retained at {tmp_root / 'results'}", flush=True)
-            else:
-                shutil.rmtree(tmp_root, ignore_errors=True)
+        if a.check and a.keep_results:
+            shutil.rmtree(tmp_root / "repo", ignore_errors=True)
+            shutil.rmtree(tmp_root / "notebook-work", ignore_errors=True)
+            print(f"  fresh notebook outputs retained at {tmp_root / 'results'}", flush=True)
+        else:
+            shutil.rmtree(tmp_root, ignore_errors=True)
         kernel_tmp.cleanup()
     if failures:
         print(f"run_notebooks: {len(failures)} of {len(books)} notebooks failed: {', '.join(failures)}")

@@ -46,6 +46,47 @@ def _asset_child(root: Path, relative: object, *, description: str) -> Path:
     return candidate
 
 
+def _finalized_parity_receipt_is_valid(assets_dir: Path, manifest: dict) -> bool:
+    """Validate the immutable CPU/WASM receipt against the reconstructed export manifest."""
+    if manifest.get("browser_parity_verified") is False:
+        return True
+    metadata = manifest.get("browser_parity_receipt")
+    if (manifest.get("browser_parity_verified") is not True
+            or manifest.get("export_status") != "assets-exported-browser-parity-not-yet-verified"
+            or not isinstance(metadata, dict)):
+        return False
+    receipt_path = _asset_child(assets_dir, metadata.get("file"), description="browser-parity receipt")
+    receipt_bytes = receipt_path.read_bytes()
+    if hashlib.sha256(receipt_bytes).hexdigest() != metadata.get("sha256"):
+        return False
+    receipt = json.loads(receipt_bytes)
+    exported = {key: value for key, value in manifest.items()
+                if key not in {"browser_parity_receipt", "export_status"}}
+    exported["status"] = manifest["export_status"]
+    exported["browser_parity_verified"] = False
+    exported_bytes = (json.dumps(exported, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    return bool(
+        receipt.get("schema") == "caos.m13-browser-population-parity.v1"
+        and receipt.get("status") == "pass"
+        and receipt.get("manifestSha256") == hashlib.sha256(exported_bytes).hexdigest()
+        and receipt.get("modelSha256") == manifest.get("model", {}).get("sha256")
+        and receipt.get("maxProbabilityAbsoluteError", 1) <= 0.001
+        and receipt.get("maxPeakDifferenceSamples", 99) <= 1
+        and receipt.get("population", {}).get("selected") == 24
+        and receipt.get("population", {}).get("qcValidBrowserInferences") == 23
+        and receipt.get("population", {}).get("qcRejectedExcluded") == 1
+        and receipt.get("population", {}).get("allCpuReferenceHashesVerified") is True
+        and receipt.get("population", {}).get("accuracyClaim") is False
+        and receipt.get("parity", {}).get("sameFrozenOnnx") is True
+        and len(receipt.get("traces", [])) == 23
+        and metadata.get("schema") == receipt.get("schema")
+        and metadata.get("max_probability_absolute_error") == receipt.get("maxProbabilityAbsoluteError")
+        and metadata.get("max_peak_difference_samples") == receipt.get("maxPeakDifferenceSamples")
+        and metadata.get("accuracy_claim") is False
+        and metadata.get("release_accepted") is False
+    )
+
+
 def _metric_row(item: dict, *, noise_count: int) -> dict:
     tp = int(item["correct_within_tolerance"])
     missed = int(item["missed"])
@@ -93,7 +134,7 @@ def process(assets_dir: Path, output_path: Path, probability_output_dir: Path | 
     manifest = json.loads(manifest_bytes)
     benchmark = json.loads(benchmark_bytes)
     if (manifest.get("schema") != "caos.phase-browser-assets.v1"
-            or manifest.get("browser_parity_verified") is not False
+            or not _finalized_parity_receipt_is_valid(assets_dir, manifest)
             or manifest.get("selection", {}).get("selected_before_heldout_scoring") is not True
             or manifest.get("selection", {}).get("selected") != 24
             or manifest.get("selection", {}).get("qc_valid") != 23
@@ -239,7 +280,7 @@ def process(assets_dir: Path, output_path: Path, probability_output_dir: Path | 
             "The 23 valid display traces were selected before scoring but are not a representative accuracy sample.",
             "STEAD manual analyst picks are reference times, not geological ground truth.",
             "The selected-subset M08/M13 comparison is descriptive; only the frozen 6,000-trace test table supports the reported aggregate evaluation.",
-            "ONNX Runtime CPU inference here does not establish browser WASM parity; the manifest keeps browser_parity_verified=false.",
+            "CPU inference is recomputed here; browser WASM parity is a separately hash-bound runtime receipt, not an independent accuracy claim.",
             "M13 scores are uncalibrated; threshold abstentions are not calibrated uncertainty estimates.",
         ],
     }

@@ -40,3 +40,9 @@ artifacts. The joint matrix itself records `scientific_precision_accepted=false`
 `field_eligible=false` and `public_activation=false`. Passing importer tests
 does not accept the joint inverse or the product release. The missing M04
 controls also keep the complete frontend suite open.
+
+## 2026-11-21 fixture-bound rerun
+
+The retained joint artifacts were rebound using `scripts/run_joint_frontend_validation.ps1` and the configured external validation root. The seven joint fixture suites pass **86 tests with 4 explicit skips and 0 failures**. The full frontend suite was then run with those exact joint fixture paths: **508 passed, 12 skipped, 2 failed test files**. Both remaining setup failures are M04 controls unavailable in the external workspace: the selected-final audit extraction and the owned-custody browser control (including its actual input mapping and Python-produced dataset bytes). No synthetic replacement was created.
+
+The production Vite build also passes with the current pinned shell. Neither this build nor the passing joint artifact-import tests establishes field accuracy, accepted M04 inversion, full product acceptance, or VPS release readiness.
