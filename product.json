@@ -153,6 +153,10 @@
     "ert.parse_ohm_bytes",
     "ert.qc",
     "ert.holdout_indices",
-    "ert.flat_halfspace_factors"
+    "ert.flat_halfspace_factors",
+    "seismic.independent_start",
+    "seismic.lowpass",
+    "seismic.physical_roughness",
+    "seismic.recovery_evaluation"
   ]
 }
