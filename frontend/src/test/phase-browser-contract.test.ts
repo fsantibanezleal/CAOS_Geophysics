@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   normalizeCounts, parseLocalTrace, parseNormalizedF32, parsePhaseBenchmark, parsePhaseManifest,
-  validateProbabilities, PHASE_SAMPLES,
+  validateProbabilities, verifiedFetch, PHASE_SAMPLES,
 } from "../phase-picker";
 
 const hash = "a".repeat(64);
@@ -67,7 +67,19 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(parseLocalTrace(normalized).input[0]).toBe(-1);
   });
 
-  it("rejects unsupported rate, component ambiguity, gaps and filled/flat channels", () => {
+  it("adversarial: rejects a declared normalized channel that does not have unit peak", () => {
+    const normalized = local();
+    normalized.representation = "normalized";
+    normalized.unit = "dimensionless";
+    normalized.channels = {
+      E: channel(0, 0.5),
+      N: channel(0, 1),
+      Z: channel(0, 0.75),
+    };
+    expect(() => parseLocalTrace(normalized)).toThrow(/unit absolute peak/);
+  });
+
+  it("adversarial: rejects unsupported rate, component ambiguity, gaps and filled/flat channels", () => {
     const wrongRate = local(); wrongRate.sample_rate_hz = 50;
     expect(() => parseLocalTrace(wrongRate)).toThrow(/100 Hz/);
     const gaps = local(); gaps.qc.gaps = true;
@@ -91,7 +103,10 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(() => parsePhaseManifest(changed)).toThrow(/QC-failed/);
   });
 
-  it("adversarial: rejects waveform bytes added to the QC-rejected held-out row", () => {
+  it("adversarial: rejects duplicate trace identities and waveform bytes added to a QC-rejected row", () => {
+    const duplicate = manifest();
+    duplicate.records[1].trace_id = duplicate.records[0].trace_id;
+    expect(() => parsePhaseManifest(duplicate)).toThrow(/Duplicate browser trace identity/);
     const changed = manifest();
     changed.records[19].waveform_file = "replacement.f32";
     changed.records[19].waveform_sha256 = hash;
@@ -138,7 +153,7 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(() => parseNormalizedF32(bytes, parsePhaseManifest(manifest()).records[19])).toThrow(/QC-failed/);
   });
 
-  it("validates all raw output samples before global peaks and S abstention", () => {
+  it("adversarial: rejects invalid probability output before global peaks and S abstention", () => {
     const values = new Float32Array(18000);
     for (let i = 0; i < 6000; i++) values[i] = 1;
     values[100] = 0.1; values[6100] = 0.9;
@@ -151,5 +166,18 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(validateProbabilities(values, [1,3,6000]).picks).toEqual({ P: 100, S: 140 });
     values[400] = Number.NaN;
     expect(() => validateProbabilities(values, [1,3,6000])).toThrow(/Invalid N\/P\/S/);
+  });
+
+  it("adversarial: refuses a fetched model when its bytes differ from the manifest digest", async () => {
+    const bytes = new Uint8Array([1, 2, 3]);
+    const expected = await crypto.subtle.digest("SHA-256", new Uint8Array([4, 5, 6]));
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(bytes, { status: 200 }));
+    try {
+      await expect(verifiedFetch("/data/phase/stead/model.onnx", [...new Uint8Array(expected)]
+        .map(value => value.toString(16).padStart(2, "0")).join("")))
+        .rejects.toThrow("Asset SHA-256 differs from the reviewed manifest");
+    } finally {
+      fetcher.mockRestore();
+    }
   });
 });

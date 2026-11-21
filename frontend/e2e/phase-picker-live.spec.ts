@@ -66,3 +66,26 @@ test("M13 runs a hash-verified held-out STEAD trace in-browser and exports valid
   }
   expect(apiRequests).toEqual([]);
 });
+
+test("adversarial: an unsupported local trace is explained and cannot enter inference", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("caos.lang", "en"));
+  await page.goto("/benchmark#phase-picker");
+  await page.getByRole("button", { name: "Load reviewed STEAD assets", exact: true }).click();
+  const run = page.getByRole("button", { name: "Run browser inference", exact: true });
+  await expect(run).toBeEnabled({ timeout: 60_000 });
+
+  await page.getByText("Use local model or trace files", { exact: true }).click();
+  const invalidTrace = Buffer.from(JSON.stringify({
+    schema: "caos.phase-browser-trace.v1",
+    sample_rate_hz: 50,
+  }));
+  await page.getByLabel("Local E/N/Z trace JSON", { exact: true }).setInputFiles({
+    name: "unsupported-rate.json",
+    mimeType: "application/json",
+    buffer: invalidTrace,
+  });
+
+  await expect(page.getByRole("alert")).toContainText("Only 100 Hz records are supported");
+  await expect(run).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Export N/P/S scores (.f32)", exact: true })).toBeDisabled();
+});
