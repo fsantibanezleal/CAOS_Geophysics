@@ -114,7 +114,7 @@ def main():
  ax.set_xticks(xx,[c.replace("_"," ") for c in conds],rotation=22,ha="right"); ax.set_ylim(0,1.05)
  ax.set(ylabel="P-phase F1 within ±0.5 s",title="Frozen STEAD held-out benchmark under channel and signal shifts")
  ax.legend(frameon=False,ncol=3); ax.grid(axis="y",alpha=.18); outfig(fig,"report-phase-picker-perturbations.pdf")
- # Catalog verdicts by family, with unresolved and negative-control rows retained.
+  # Catalog result statuses by family, with unresolved and negative-control rows retained.
  counts={}
  for family in sorted({c["family"] for c in cat["cases"]}):
   counts[family]={"recovered":0,"unresolved":0,"negative-control":0}
@@ -128,8 +128,8 @@ def main():
   for i,v in enumerate(vals):
    if v: ax.text(i,bottom[i]+v/2,str(int(v)),ha="center",va="center",fontsize=7,color="white")
   bottom+=vals
- ax.set(ylabel="Method × variant verdict records",title="Catalog status by family (not a pooled accuracy score)")
- ax.legend(frameon=False,ncol=3); ax.grid(axis="y",alpha=.18); outfig(fig,"report-catalog-verdict-counts.pdf")
+  ax.set(ylabel="Method × variant result-status records",title="Catalog status by family (not a pooled accuracy score)")
+  ax.legend(frameon=False,ncol=3); ax.grid(axis="y",alpha=.18); outfig(fig,"report-catalog-outcome-counts.pdf")
  # Geometry-normalized proposed-method preregistered failure.
  primary=bs["primary"]; keys=("id_test","family_only","acquisition_only","joint_ood"); x=np.arange(len(keys))
  fig,ax=plt.subplots(figsize=(7,3.8))
@@ -160,7 +160,7 @@ def main():
    q=ref(c)["methods"][m]
    rows.append((c["id"],m,num(met(c,m,"active_component_wrms")),num(met(c,m,"initial_component_wrms"),5),
     num(met(c,m,"log_model_rmse"),5),q["evaluation"]["status"]))
- blocks.append(tab("Layered MT reference results report active fit, initial-model error, and the explicit solver verdict on each synthetic sounding.","tab:generated-mt",
+ blocks.append(tab("Layered MT reference results report active fit, initial-model error, and the solver status on each synthetic sounding.","tab:generated-mt",
   ["Case","Solver","Active WRMS","Initial WRMS","log-rho RMSE","Status"],rows))
  rows=[]
  for c in fwi:

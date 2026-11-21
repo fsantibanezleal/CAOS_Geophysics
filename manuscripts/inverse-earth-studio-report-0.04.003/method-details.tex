@@ -51,7 +51,7 @@ covariance from marginal standard deviations.
 
 Implementation is split between source parsing, unit and datum checks,
 correction-state validation, deterministic calculation, and a result
-receipt. The receipt binds each output to its parent asset and records
+result package. This package binds each output to its parent asset and records
 the applied correction sequence, uncertainty provenance, and the
 implementation identity. The station tests exercise a known correction
 lineage, unit conversion, reference handling, uncertainty propagation,
@@ -73,7 +73,7 @@ entry point is \url{data-pipeline/gravity_processing.py}; the stable
 station contract and rejection tests are in
 \url{tests/numerics/test_gravity_processing.py}.
 
-The correction receipt also provides a practical way to compare
+The correction record also provides a practical way to compare
 processing paths without conflating them with a subsurface model. A
 reviewer can start from the same immutable station rows, select the
 permitted correction flags, and compare each derived column and
@@ -230,7 +230,7 @@ Interpolation and support are represented separately. Let $\mathcal{S}$
 be the sampled footprint and $\mathcal{D}$ the output grid. A prediction
 outside an accepted support neighborhood is stored as unavailable,
 not silently filled with a value that looks measured. The gridding
-receipt records the interpolation rule, node spacing, coordinate frame,
+gridding metadata records the interpolation rule, node spacing, coordinate frame,
 input line selections, mask, and any height transform. This permits a
 reviewer to distinguish the actual flight path from the raster display.
 The interface displays both the raster and the original lines, along
@@ -370,7 +370,7 @@ mathematical oracle.
 Gradient evidence also has a limited scope. A finite-difference test
 checks a local derivative near selected model values and step sizes; it
 does not prove global convexity or an accurate optimum. A stationarity
-receipt must bind to the exact objective, covariance, source and model
+stationarity report must identify the exact objective, covariance, source and model
 parameterization used. Candidate ranking and outer held-out evaluation
 require separate data. The passed development fold keeps its 72
 validation and 72 outer rows sealed, preventing calibration or debugging
@@ -471,7 +471,7 @@ the square root of each native variance for diagonal components and
 combines marginal standard deviations for the antisymmetric pair. Since
 EDI variance conventions and cross-component covariance are not always
 specified, this bound can admit data that a stricter covariance-aware
-test would reject. The receipt records the convention verbatim and marks
+test would reject. The output records the convention verbatim and marks
 the physical interpretation unresolved. The screen uses every supplied
 period and does not choose a favorable band after viewing the score.
 The quarter-turn invariance check is applied to the relative tensor
@@ -490,7 +490,7 @@ record, while the independently computed scalar departure is shown
 separately; disagreement is evidence to investigate, not a license to
 override either record. In the app, selecting a station or component
 must update the frequency plot, tensor diagnostics and reason list from
-the same source-bound receipt. This design keeps observation-level QC
+the same source-bound result object. This design keeps observation-level QC
 distinct from any later inverse result.
 
 \subsubsection{Layered-earth magnetotelluric forward and inverse}\label{method-mt-inversion}
@@ -551,7 +551,7 @@ structure.
 The API validates that a field inverse is tied to an immutable QC result,
 fixed thickness and the exact source hash. It replays the screen before
 accepting the layered-earth job and checks the resulting environment and solver
-receipt. Clear Lake cl061 is never promoted from QC to inversion because
+solver output. Clear Lake cl061 is never promoted from QC to inversion because
 its MT tensor screen fails. The C15 record is also QC-only while units,
 variance convention and time-sign convention remain unresolved. Thus
 the online calculator is demonstrated for eligible synthetic or fully
@@ -604,7 +604,7 @@ strictly increasing surface sensors and exact ABMN indices. It rejects
 duplicate quadrupoles, malformed tails, nonfinite values and unsupported
 geometry rather than inferring columns or units. The immutable source
 hash and provider-link-only rights status remain attached to the local
-receipt; field truth is explicitly null.
+data record; field truth is explicitly null.
 
 For a flat homogeneous half-space, the signed four-electrode factor gives
 an independent check on the library geometry. With electrode positions
@@ -685,7 +685,7 @@ nearby geometry in both partitions. Agreement across both splits is
 more informative than a random row split, but neither split makes the
 field survey representative of unobserved lithology.
 
-The local receipt records sensor coordinates, ABMN rows, apparent
+The normalized record lists sensor coordinates, ABMN rows, apparent
 resistivity, topographic and flat factors, reciprocal pairs, QC flags,
 training and held-out identities, mesh hash, option values, convergence
 reason and prediction arrays. Plotting must preserve topographic
@@ -709,7 +709,7 @@ time from being borrowed to justify response removal at the sample time.
 The raw files, request identity, software versions, response-work units,
 filter coefficients, output descriptors and QC reasons are hash-bound in
 the local result. External helper calculations do not claim filesystem
-custody unless a separate execution receipt proves it.
+custody unless a separate execution record proves it.
 
 After demeaning and validated response removal, a zero-phase Butterworth
 bandpass is applied with second-order sections and forward-backward
@@ -842,7 +842,7 @@ The current source defaults the per-pick scale to the greater of three
 percent of the observed time and \(0.1\) ms. The inner CGLS solve is
 pinned to 1000 iterations and absolute squared-residual tolerance
 \(10^{-20}\); the outer mesh, starting model, z weighting and iteration
-budget are recorded in the receipt. The independent forward replay must
+budget are recorded with the fit parameters. The independent forward replay must
 match the fitted training response before held-shot error is accepted.
 
 The key limitation is the straight-ray geometry used by user-input
@@ -890,7 +890,7 @@ predicts the complete acquisition on the fitted mesh and checks the
 training portion against the inversion's stored response. These identity
 and operator checks make a low held-out error attributable to the
 declared model and partition rather than a split leak or stale response.
-Uncertainty remains assumed from the supplied scale; the receipt does
+Uncertainty remains assumed from the supplied scale; the result metadata do
 not call it calibrated if no independent calibration experiment was run.
 
 \subsubsection{Acoustic full-waveform inversion}
@@ -1046,7 +1046,7 @@ penalty is the negative log mixture density
  \mathcal{N}(u_i\mid\mu_k,\Sigma_k)\right].
 \end{equation}
 Both couplings are added to the same whitened gravity and magnetic
-misfit and spatial regularization terms. The separate term ledger
+misfit and spatial regularization terms. The separate term breakdown
 records data, smoothness, cross-gradient and mixture contributions so
 that one favorable aggregate objective cannot hide a poor modality fit.
 
@@ -1058,7 +1058,7 @@ noise scales, mesh, inducing field and source coordinates are fixed by
 the case artifact. Fitted and withheld observations are separated by
 the stored mask. The evaluation reports each modality's data residual,
 held-out residual where available, model error against the synthetic
-truth, the coupled-to-uncoupled ratios and the reason-coded verdict.
+truth, the coupled-to-uncoupled ratios and the reason-coded status.
 Known conflicting-boundary controls deliberately make structural
 coupling inappropriate; those outcomes are labeled negative controls,
 not optimizer failures to conceal.
@@ -1085,7 +1085,7 @@ optimizer identical to SimPEG's built-in cross-gradient implementation.
 The mesh and spacing are shared so the finite-difference gradients act
 on corresponding physical cells. Active observations, cell weights,
 per-modality uncertainty, inducing-field direction and objective
-normalization are fixed in the case receipt.
+normalization are fixed in the case definition.
 
 The uncoupled run is optimized jointly with both independent data terms,
 so it is a stricter comparator than simply concatenating two separately
@@ -1138,7 +1138,7 @@ separately selected regularized weighted-L2 solve remains the
 reference comparator. Training uses disjoint procedural families and a
 validation set for checkpoint selection; test cohorts are separated by
 in-distribution, family shift, acquisition shift and their joint shift.
-The training notebook and receipt bind model bytes, data split, random
+The training record binds model bytes, data split, random
 seed, optimizer history and evaluation files.
 
 The frozen experiment uses 800 training and 160 validation examples,
@@ -1257,7 +1257,7 @@ and signed timing residuals separate. A threshold sensitivity grid is
 exploratory and is not used to retune the locked population benchmark.
 
 The browser executes the exported ONNX model through WASM. The current
-parity receipt checks all 23 selected QC-valid held-out display traces
+parity calculation compares all 23 selected QC-valid held-out display traces
 against CPU ONNX arrays; the one QC-rejected trace remains excluded. The
 maximum same-checkpoint probability error was \(4.8876\times10^{-6}\),
 with zero P/S peak displacement. This validates browser runtime parity
@@ -1406,7 +1406,7 @@ Changing the mesh changes cell coverage and convolutional scale, so a
 new grid would require a new training and validation protocol rather
 than a direct pixelwise transfer. The error ratios are dimensionless,
 but the underlying velocity and travel-time errors retain their physical
-units in the source receipts. Because every locked joint-shift case
+units in the source measurements. Because every locked joint-shift case
 exceeds the selected threshold, aggregate success cannot be rescued by
 good in-distribution behavior. Future tests should predeclare a matched
 fast-marching or eikonal reference, repeat training across independent
@@ -1473,7 +1473,7 @@ with inferred conventions or successful-looking defaults.
 \label{alg:fwi-holdout}
 \begin{algorithmic}[1]
 \Require Acoustic observations, initial model, fixed geometry, noise scale, and frequency stages
-\Ensure Final velocity, active and withheld predictions, objective history, and verdict
+\Ensure Final velocity, active and withheld predictions, objective history, and status
 \State Freeze receiver holdout before selection; exclude it from gradient computation
 \State Estimate the declared coarse background using training receivers only
 \For{each frequency stage from low to high}

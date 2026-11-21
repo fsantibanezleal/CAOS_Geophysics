@@ -193,7 +193,7 @@ def staged_notebook_source(tmp_root: Path, relative_notebook: str, source_root: 
         or m12_nullspace_lesson or m10_fwi_lesson
     )
     names = ("data-pipeline",) if compact_pipeline_lesson else (("data", "data-pipeline") if seismic_lesson else (
-        "data", "data-pipeline", "docs", "content", "models", "notebooks"
+        "data", "data-pipeline", "docs", "content", "models", "manuscripts", "notebooks"
     ))
     for name in names:
         origin = source_root / name

@@ -50,13 +50,13 @@ Format adapters are separate and fail closed: gravity station tables; magnetic l
 
 | Layer | Contract and pinned implementation |
 |---|---|
-| Shared interface | `@fasl-work/caos-app-shell` exact version 0.26.0; shell owns design tokens, fonts, controls, page structure, route chrome and guided-scene primitives. Product-owned story views must present sourced scientific quantities. |
+| Shared interface | `@fasl-work/caos-app-shell` exact version 0.26.2; shell owns design tokens, fonts, controls, page structure, route chrome and guided-scene primitives. Product-owned story views must present sourced scientific quantities. |
 | Routes | App, Introduction, Methodology, Implementation, Experiments, Benchmark; App at `/app`; `/` opens Introduction. |
 | Web | React 19, TypeScript, Vite, Three.js, uPlot, ONNX Runtime Web; exact lockfile is `frontend/package-lock.json`. |
 | Numerical pipeline | Python 3.12; exact scientific and notebook pins in `requirements-precompute.txt`, `requirements-gpu.txt` and `notebooks/requirements.txt`. |
 | API runtime | Pinned FastAPI/runtime requirements, isolated from the offline pipeline environment; numerical work runs in the separate worker. |
 | Data and artifacts | Versioned JSON contracts, explicit axes/units, content hashes and reviewed source ledger; public build copies only allow-listed derived artifacts. |
-| Template | Instantiated from CAOS_PRODUCT_TEMPLATE 0.13.001; the current adopted template base is CAOS_PRODUCT_TEMPLATE 0.15.010, recorded in `.template-version`. The product uses the template's `scripts/local/workflow.py` and `workflow.json` with its guarded `scripts/local/geophysics_readiness.py` provider and product-owned ingestion pipelines. Template 0.15.009's explicit staged-engine pins and 0.15.010's guarded custom-readiness admission are therefore applicable and present; product-specific source, validators, requirements and promotion paths remain declared locally. Current foundation and manuscript findings are recorded in `docs/validation/template-shell-review-2026-11-11.md`. This adoption record does not claim byte-for-byte equivalence with the full template. |
+| Template | Instantiated from CAOS_PRODUCT_TEMPLATE 0.13.001; the current adopted template base is CAOS_PRODUCT_TEMPLATE 0.15.014, recorded in `.template-version`. The product uses the template's `scripts/local/workflow.py` and `workflow.json` with its guarded `scripts/local/geophysics_readiness.py` provider and product-owned ingestion pipelines. Applicable 0.15.009 engine-pin, 0.15.010 readiness, 0.15.014 printed-abstract, and manuscript-copy runner contracts are reviewed and locally adapted; product-specific source, validators, requirements and promotion paths remain declared locally. Current findings are recorded in `docs/validation/template-shell-review-2026-11-11.md`. This adoption record does not claim byte-for-byte equivalence with the full template. |
 
 ## Resources
 

@@ -12,6 +12,7 @@ These are prospective integration requirements for the content gate required by 
 | MC-006 | WHEN a native formatting blueprint is supplied, THE template SHALL derive it from the authoritative CAOS LaTeX base with documented provenance, keep report and paper separate, and use sections for the paper. | `tests/adversarial/test_manuscript_templates.py` |
 | MC-007 | WHEN a blueprint or test fixture is incomplete, THEN THE publication path SHALL NOT represent it as a complete, reviewed or published manuscript. | `tests/adversarial/test_manuscript_templates.py` |
 | MC-008 | WHEN a frozen published example is used for validation, THE template SHALL preserve its exact source/numerical bytes, attribution, source identity and negative-result boundaries. | `tests/adversarial/test_manuscript_examples.py` |
+| MC-009 | WHEN a technical report or paper is checked, THE guard SHALL count the printed abstract (including zero-argument macro values and inline formulas; excluding citations and references) and enforce 200–300 words for reports or 150–250 for papers. | `tests/adversarial/test_manuscript_depth.py` |
 
 The guard is a mechanical admission floor. It cannot establish scientific validity, novelty, fidelity of rendered equations or publication readiness by counting alone. Those remain independent reviews. The existing published SoftQP examples demonstrate source structure and formatting; they are separate historical studies, not results of the template's epidemic teaching example.
 

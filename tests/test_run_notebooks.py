@@ -48,10 +48,13 @@ def test_notebook_scratch_isolated_between_language_mirrors() -> None:
 def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -> None:
     source = tmp_path / "product"
     model = source / "models" / "picker" / "weights.json"
+    manuscript = source / "manuscripts" / "analysis" / "simulator.py"
     notebook = source / "notebooks" / "en" / "06-seismology" / "04-learned-picker.ipynb"
     model.parent.mkdir(parents=True)
+    manuscript.parent.mkdir(parents=True)
     notebook.parent.mkdir(parents=True)
     model.write_text('{"weights": [1, 2, 3]}', encoding="utf-8")
+    manuscript.write_text("VALUE = 7\n", encoding="utf-8")
     notebook.write_text("{}", encoding="utf-8")
     (source / "VERSION").write_text("0.04.003\n", encoding="utf-8")
     experiment_output = source / "data" / "experiments" / "discardable-run" / "large-result.bin"
@@ -69,6 +72,7 @@ def test_check_workspace_stages_released_models_with_notebooks(tmp_path: Path) -
     assert staged.is_file()
     repo = staged.parents[3]
     assert (repo / "models" / "picker" / "weights.json").read_bytes() == model.read_bytes()
+    assert (repo / "manuscripts" / "analysis" / "simulator.py").read_bytes() == manuscript.read_bytes()
     assert (repo / "VERSION").read_text(encoding="utf-8") == "0.04.003\n"
     assert not (repo / "data" / "experiments").exists()
     assert (repo / "tests" / "data" / "magnetic_survey_support.py").read_bytes() == support.read_bytes()

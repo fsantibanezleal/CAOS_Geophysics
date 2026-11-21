@@ -244,3 +244,15 @@ those methods were not reproduced or benchmarked. Its separate comparison of
 traveltime methods identifies differences in forward physics, data, objective,
 and uncertainty rather than ranking published metrics. No new novelty or
 superiority assertion is supported by the current evidence.
+
+## Follow-up: 2026-11-21 released-base adoption
+
+Remote fetch confirms the shared Shell release `v0.26.002` (npm `0.26.2`) and Product Template release `v0.15.014` are available. The product now pins Shell `0.26.2` in its manifest and lockfile, and its exact-version gate checks the installed package. This update adopts the chart keyboard-crosshair restoration after layout rebuild, wrapped long readouts and proxy-independent loopback browser launch. Product CSS, fonts and shell source were not overridden.
+
+The product's recorded template adoption is advanced to `0.15.014`. The applicable printed-abstract rule is implemented in the product manuscript-depth guard with adversarial controls for missing/out-of-range abstracts, macro values, inline math and ignored citations. The isolated general notebook tree now copies `manuscripts/` and its source-preservation test covers that contract. The special compact method runners remain scoped to their explicit pipeline inputs because the current notebooks do not import manuscript paths.
+
+Verification in this checkout: `tests/adversarial/test_manuscript_depth.py` passed 21 tests; `tests/test_run_notebooks.py` passed 14 tests; the focused exact-pin route test passed 6 tests. The exact-pin production visual gate passed all 1,684 measured states with zero failures, including the App, documentation routes, declared story steps, focus mode, viewport, theme, language and wide-font states. Its temporary screenshot set is not a release artifact. Shell and template source checkouts were only fetched and reviewed; this product task did not create shared-base changes.
+
+The full frontend test suite is not green: 453 passed, 29 skipped and 36 failed of 518. The failures require retained M11 matrix fixtures and magnetic selected-final audit inputs that are not present in the configured local data root. Those results are documented as missing validation inputs rather than treated as product passes. Independent repository checks also report 113 notebook-depth/contract findings and structural SDD errors.
+
+The candidate remains below whole-product release acceptance. Its SDD convergence ledger still records 1 failed, 15 unresolved and 3 passed requirements, and `--require-release` refuses the candidate. No VPS deployment or origin change has been made.

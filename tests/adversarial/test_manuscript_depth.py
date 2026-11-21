@@ -47,6 +47,7 @@ HEADER = "\n".join(f"\\newcommand{{\\{m}}}{{x}}" for m in depth.HEADER_MACROS)
 def tex(title: str, sections: list[str], refs: int) -> str:
     items = "\n".join(f"\\bibitem{{r{i}}} A. Author{i}, A paper on solvers, 20{i % 25:02d}." for i in range(refs))
     return (f"\\documentclass{{article}}\n{HEADER}\n\\title{{{title}}}\n\\begin{{document}}\n\\maketitle\n"
+            + f"\\begin{{abstract}}\n{prose(220)}\n\\end{{abstract}}\n"
             + "\n".join(sections)
             + f"\n\\begin{{thebibliography}}{{99}}\n{items}\n\\end{{thebibliography}}\n\\end{{document}}\n")
 
@@ -200,6 +201,27 @@ def test_adversarial_floats_not_read_in_the_text_fail(tmp_path):
 def test_adversarial_a_manuscript_without_ablation_or_uncertainty_fails(tmp_path):
     f = depth.check(product(tmp_path, paper=paper_tex(ablation=False, uncertainty=False)))
     assert has(f, "no section for Ablation") and has(f, "no uncertainty is reported")
+
+
+def test_adversarial_abstract_outside_kind_specific_range_fails(tmp_path):
+    report = report_tex().replace(prose(220), prose(301), 1)
+    paper = paper_tex().replace(prose(220), prose(251), 1)
+    assert has(depth.check(product(tmp_path / "report", report=report)), "abstract of 301 words", "200 to 300")
+    assert has(depth.check(product(tmp_path / "paper", paper=paper)), "abstract of 251 words", "150 to 250")
+
+
+def test_adversarial_missing_abstract_fails(tmp_path):
+    report = report_tex().replace(f"\\begin{{abstract}}\n{prose(220)}\n\\end{{abstract}}\n", "")
+    assert has(depth.check(product(tmp_path, report=report)), "no abstract", "200 to 300 words")
+
+
+def test_abstract_counts_printed_macros_inline_math_and_ignores_citations(tmp_path):
+    macro = "\\newcommand{\\sample}{0.95}"
+    abstract = prose(244) + r" \sample{} and $v=12$ \cite{r1} \ref{sec:test}"
+    paper = paper_tex().replace(prose(220), abstract, 1).replace("\\begin{document}", macro + "\n\\begin{document}", 1)
+    result = depth.check(product(tmp_path, paper=paper))
+    assert depth.abstract_words(depth.printed_abstract(abstract, depth.defined_macros(macro))) == 247
+    assert not any("abstract" in finding for finding in result), result
 
 
 def test_adversarial_internal_ids_and_vague_wording_fail(tmp_path):

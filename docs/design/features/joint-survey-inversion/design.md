@@ -53,14 +53,13 @@ but prevents claiming a completed shared-optimizer integration.
 ## Resources and implementation seams
 
 Only new `data-pipeline/joint_survey*.py`, paired
-`tests/numerics/test_joint_survey*.py`, `scripts/process_joint_survey.py` and this
+`tests/numerics/test_joint_survey*.py`, `scripts/run_joint_survey.py` and this
 feature/method documentation are implementation paths. Existing sources are
 read-only dependencies. Native functions accept exact builtin containers and
 native arrays, run no file/network/environment I/O, and expose private caller
 errors, not safe HTTP responses. Caller inputs must be private during snapshot.
 
-The implemented strict entry point is `scripts/run_joint_survey.py`; the
-prospective process_joint_survey filename above is not another implementation.
+The implemented strict entry point is `scripts/run_joint_survey.py`.
 Actual validation harnesses are validate_joint_matrix.py and
 validate_joint_resources.py. Reviewed candidate composition uses the separate
 public physical_nonlinear_optimizer export and its typed epoch2 binding, not the

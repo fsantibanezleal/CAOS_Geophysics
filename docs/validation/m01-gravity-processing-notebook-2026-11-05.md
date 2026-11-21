@@ -6,7 +6,7 @@ Status: bilingual lesson execution and structural checks passed. This receipt co
 
 The English and Spanish lesson pair reads the committed analytic one-station control at `docs/methods/gravity-processing/examples/station-control.json` and calls `data-pipeline/gravity_processing.py::process_survey`. The control is explicitly synthetic, authored under Apache-2.0, and defines a 12 mGal residual. It is not field evidence. The lesson now derives the reference and simple-plate equations, varies density through 21 production-pipeline calls, distinguishes conditional marginal uncertainty from omitted covariance, and documents the local station-bundle contract for a reader's own data.
 
-The optional field-contract cell looked for `data/incoming/gravity-stations.json`. No such file was present, so no field observation was ingested or represented as processed.
+The optional field-contract cell found no user-supplied field observation in the configured input location, so no field observation was ingested or represented as processed.
 
 ## Execution
 

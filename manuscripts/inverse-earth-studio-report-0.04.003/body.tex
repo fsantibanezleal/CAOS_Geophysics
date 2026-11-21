@@ -316,7 +316,7 @@ QC-only observation, or synthetic result with limited transfer. It
 does not clear source rights, validate units or datum, establish that a
 field survey is eligible for an inverse, or prove that a solver recovered
 geology. Downstream interfaces must keep this meaning visible and must
-not upgrade a readiness state into a scientific verdict. The readiness
+not upgrade a readiness state into a scientific conclusion. The readiness
 schema and independent validator provide the boundary; the catalogue's
 method evaluations and method-specific evidence remain separate. This
 division allows a release to be reproducible while still recording
@@ -533,7 +533,7 @@ the second CUDA execution, with the same seed and manifests, has ratios
 validation-derived threshold. The paper therefore records a negative
 result for its specified generator and operators. Repeating the same
 seed measures execution sensitivity; it does not estimate
-between-seed training variance. The source-bound receipts, checkpoints,
+between-seed training variance. The source-bound records, checkpoints,
 bootstrap calculation and current limitations are in
 \url{manuscripts/geometry-normalized-traveltime-refinement-v001/}.
 
@@ -548,9 +548,9 @@ The experiment has no independent-seed estimate, no matched fast-marching
 baseline, and no field observations. Feature construction and bilinear
 scoring use nonidentical operators, a known mismatch that narrows the
 result's interpretation. The complete paper reports the objective,
-training protocol, ablations, receipts, and per-case failure analysis.
+training protocol, ablations, saved run records, and per-case failure analysis.
 
-An earlier residual-v3.1/null-space experiment and its analysis remain
+Earlier residual-network and null-space experiments and their analyses remain
 archived, but they are not the current geometry-normalized experiment. Their older
 cohort, checkpoint, scorer and operator evidence cannot be combined with
 the current results. The archive is retained for provenance at
@@ -576,7 +576,7 @@ each with its own provenance and acceptance boundary.
 For learned travel-time estimation, the fixed training protocol uses 800
 training and 160 validation surveys, 40 epochs, and predeclared family,
 acquisition, and joint-shift evaluation cohorts. The geometry-normalized
-paper preserves case identifiers and receipts; its second CUDA run
+paper preserves case identifiers and run records; its second CUDA run
 uses the same seed and manifests, so it measures execution sensitivity
 and not training-seed uncertainty. The exploratory ablations use new
 test-cohort seeds and do not replace the locked comparison. The phase
@@ -705,8 +705,8 @@ and Table~\ref{tab:generated-phase} report the frozen STEAD held-out
 benchmark across channel and signal perturbations; annotation
 uncertainty and benchmark population bound the interpretation.
 
-Figure~\ref{fig:report-catalog-verdict-counts} counts method-by-variant
-verdict records by physical family. It is an inventory of outcomes, not
+Figure~\ref{fig:report-catalog-outcome-counts} counts method-by-variant
+result-status records by physical family. It is an inventory of outcomes, not
 a pooled accuracy rate, because the family denominators differ.
 Table~\ref{tab:generated-family-inventory} states case, variant, and
 method-key counts. Figure~\ref{fig:report-refinement-negative-result}
@@ -753,9 +753,9 @@ negative result rather than a performance claim.
 \label{fig:report-phase-picker-perturbations}
 \end{figure}
 \begin{figure}[!ht]
-\centering\includegraphics[width=.88\linewidth]{figures/report-catalog-verdict-counts.pdf}
-\caption{Catalog verdict counts retain recovered, unresolved, and negative-control method variants by physical family without pooling accuracy.}
-\label{fig:report-catalog-verdict-counts}
+\centering\includegraphics[width=.88\linewidth]{figures/report-catalog-outcome-counts.pdf}
+\caption{Catalog outcome counts retain recovered, unresolved, and negative-control method variants by physical family without pooling accuracy.}
+\label{fig:report-catalog-outcome-counts}
 \end{figure}
 \begin{figure}[!ht]
 \centering\includegraphics[width=.88\linewidth]{figures/report-refinement-negative-result.pdf}
@@ -796,7 +796,7 @@ accuracy, field transfer, and user acceptance are separate tests. The
 technical report currently passes LaTeX compilation and the method
 matrix is structurally complete, but the manuscript-depth checker still
 fails its required figures, tables, references, algorithms, and
-coverage fields. Notebook depth and the SDD convergence ledger also
+coverage fields. Notebook depth and the SDD convergence summary also
 remain incomplete. Consequently, none of these local checks constitutes
 whole-product scientific acceptance or release approval. This section
 states the evidence layers and retains their failure states rather than
@@ -804,7 +804,7 @@ combining them into a single validation score.
 The data-derived summary tables are regenerated by
 \texttt{scripts/build\_report\_assets.py} from the committed experiment
 catalog, frozen phase benchmark, and geometry-normalized analysis
-receipt. The script refuses an incomplete catalog and records method
+analysis record. The script refuses an incomplete catalog and records method
 metrics at the case level before aggregation. This provenance check
 protects the displayed numbers but is not an independent implementation
 of every underlying solver. The plots preserve the comparison

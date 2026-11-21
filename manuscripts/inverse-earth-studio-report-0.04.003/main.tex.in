@@ -27,7 +27,7 @@
 
 \newcommand{\docversion}{v0.04.003}
 
-\newcommand{\docdate}{13 November 2026}
+\newcommand{\docdate}{21 November 2026}
 
 \newcommand{\docrepo}{github.com/fsantibanezleal/CAOS\_Geophysics}
 \newcommand{\versiondoi}{not assigned}
@@ -58,6 +58,7 @@ Not peer reviewed. Source code, data and computational records: \href{https://gi
 \clearpage
 \input{body.tex}
 
+\raggedbottom
 \begin{thebibliography}{99}
 \bibitem{cockett2015} R. Cockett, L. J. Heagy, A. Pidlisecky, and D. W. Oldenburg, ``SimPEG: An open source framework for simulation and gradient based parameter estimation in geophysical applications,'' \emph{Computers \& Geosciences}, vol. 85, pp. 142--154, 2015. \href{https://doi.org/10.1016/j.cageo.2015.09.015}{doi:10.1016/j.cageo.2015.09.015}.
 \bibitem{heagy2017} L. J. Heagy, R. Cockett, S. Kang, G. K. Rosenkjaer, and D. W. Oldenburg, ``A framework for simulation and inversion in electromagnetics,'' \emph{Computers \& Geosciences}, vol. 107, pp. 1--19, 2017. \href{https://doi.org/10.1016/j.cageo.2017.06.018}{doi:10.1016/j.cageo.2017.06.018}.

@@ -713,7 +713,7 @@ calibration source SHA-256 is
 reduced-optimizer source SHA-256 is
 `74ca5273cfe885f0d77ee117119a4d4221929e097383e4843130db912d6b16d2`. The
 compact machine-readable summary is
-[`evidence/s2a-sparse-fold0-beta-1e-4.json`](evidence/s2a-sparse-fold0-beta-1e-4.json).
+[the evidence summary](evidence/s2a-sparse-fold0-beta-1e-4.json).
 
 The sparse API and profile runner have since been changed to require and
 persist a certified same-fold, same-beta L2 starting model. That candidate-path
@@ -749,7 +749,7 @@ under the configured device data root. Receipt SHA-256:
 The receipt records the exact product commit, runner and solver source hashes,
 runtime, initial L2 model hash, every completed epsilon stage and the failure
 state. Its compact summary is
-[`evidence/s2a-sparse-fold0-beta-1e-4-l2-start-120s.json`](evidence/s2a-sparse-fold0-beta-1e-4-l2-start-120s.json).
+[the evidence summary](evidence/s2a-sparse-fold0-beta-1e-4-l2-start-120s.json).
 
 The remaining bottleneck is the time required by repeated certified inner
 solves across the continuation schedule. The run does not authorize weakening

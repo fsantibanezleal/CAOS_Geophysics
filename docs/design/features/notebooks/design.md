@@ -14,7 +14,9 @@ structural prose and figure reader. These are static guards on committed files.
 They never execute notebook or engine code and do not contact a registry in CI.
 
 `run_notebooks.py` owns actual execution, fresh kernels, copied-tree admission,
-source/pin identity and preservation of canonical artifacts. Execution scratch and
+source/pin identity and preservation of canonical artifacts. General copied trees
+include `manuscripts/` so project-relative manuscript analysis modules remain
+available to notebook imports. Execution scratch and
 temporary training/model examples belong under the configured external task root.
 The example curriculum must not write into released `models/` or `data/` trees.
 

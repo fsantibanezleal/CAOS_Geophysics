@@ -48,6 +48,8 @@ SHORT_SECTIONS = ("conclusion", "reproducib", "availability", "acknowledg", "dec
 SUBSECTION_WORDS = 150
 CAPTION_WORDS = 15
 REGION = {"methods": (600, 2), "claims": (1500, 6), "contracts": (120, 0)}  # (words, display equations) per covered item
+# Content-bar abstract limits for reports and research papers.
+ABSTRACT_WORDS = {"technical-report": (200, 300), "manuscript": (150, 250)}
 
 # Required sections, by kind: each entry is (what the rule calls it, the heading words that satisfy it).
 REQUIRED = {
@@ -183,6 +185,49 @@ def plain(text: str) -> str:
 
 def words(text: str) -> int:
     return len(WORD.findall(plain(text)))
+
+
+MACRO_DEF = re.compile(r"\\(?:(?:new|renew|provide)command\*?\s*\{?\s*\\([A-Za-z]+)\s*\}?|def\s*\\([A-Za-z]+))\s*(?=\{)")
+
+
+def defined_macros(source: str) -> dict[str, str]:
+    """Return zero-argument LaTeX macros and their printed bodies."""
+    out: dict[str, str] = {}
+    for match in MACRO_DEF.finditer(source):
+        body, _ = braced(source, match.end())
+        if "#" not in body:
+            out[match.group(1) or match.group(2)] = body
+    return out
+
+
+def printed_abstract(text: str, macros: dict[str, str], passes: int = 6) -> str:
+    """Expand document-defined zero-argument macros and count computed values once."""
+    if macros:
+        names = sorted(macros, key=len, reverse=True)
+        use = re.compile(r"\\(" + "|".join(re.escape(name) for name in names) + r")(?![A-Za-z])(?:\{\})?")
+        for _ in range(passes):
+            new = use.sub(lambda m: " " + macros[m.group(1)] + " ", text)
+            if new == text:
+                break
+            text = new
+    return re.sub(r"\\the\s*\\numexpr.*?\\relax", " 0 ", text, flags=re.S)
+
+
+def abstract_words(text: str) -> int:
+    """Count printed abstract words; inline math/value macros count once, citations and refs zero."""
+    text = re.sub(r"\\(?:cite[a-z]*|ref|eqref|cref|Cref|autoref|label)\*?(?:\[[^\]]*\])?\{[^}]*\}", " ", text)
+    text = re.sub(r"\\\(.*?\\\)|(?<!\\)\$.*?(?<!\\)\$", " X ", text, flags=re.S)
+    text = re.sub(r"\\[A-Za-z]+\*?\{\}", " X ", text)
+    text = re.sub(r"\\[A-Za-z]+\*?(?=\s*[\[{])", " ", text)
+    text = re.sub(r"\\[A-Za-z]+\*?", " X ", text)
+    text = re.sub(r"\\.", " ", text)
+    text = re.sub(r"[{}\[\]~]", " ", text)
+    return sum(1 for word in text.split() if re.search(r"[A-Za-z0-9]", word))
+
+
+def abstract_of(doc: "Doc") -> str | None:
+    match = re.search(r"\\begin\{abstract\}(.*?)\\end\{abstract\}", doc.source, re.S)
+    return match.group(1) if match else None
 
 
 def clean_title(text: str) -> str:
@@ -344,6 +389,14 @@ def check_doc(root: Path, doc: Doc, cov: dict, methods: list[str], claims: set[s
     for key, floor in FLOORS[kind].items():
         if have[key] < floor:
             out.append(f"{at}: {have[key]} {key}, the {kind} floor is {floor}")
+    abstract = abstract_of(doc)
+    low, high = ABSTRACT_WORDS[kind]
+    if abstract is None:
+        out.append(f"{at}: no abstract; the {kind} abstract is {low} to {high} words")
+    else:
+        count = abstract_words(printed_abstract(abstract, defined_macros(doc.source)))
+        if not low <= count <= high:
+            out.append(f"{at}: abstract of {count} words, the {kind} abstract is {low} to {high} words")
     for name, needles in REQUIRED[kind]:
         heads = [s.title.lower() for s in doc.sections if not s.appendix]
         if not any(any(n in h for n in needles) for h in heads):

@@ -64,7 +64,7 @@ claims from the preprint, not independently reproduced results.
 
 ## Transfer and acceptance risks
 
-1. **Truth-selected checkpoints.** `scripts/40_train_tgv.py` passes the exact
+1. **Truth-selected checkpoints.** The [pinned upstream training script](https://github.com/ISAO9/mimir/blob/c7fb9c6a5839662ad2dd4a60869dec2dd74927a0/scripts/40_train_tgv.py) passes the exact
    generated `truth` grid into `TGVTrainer`. In the pinned
    `src/mimir/training/trainer.py`, `_validate` computes velocity-grid RMSE
    directly against `truth_grid`; `fit` saves the checkpoint with the minimum

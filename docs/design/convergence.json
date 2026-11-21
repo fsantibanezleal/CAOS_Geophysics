@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "3b43605fb1234b53cb1bc1bf34b5b8a22ac7081b764f5f54660e110a72875307",
+  "sdd_sha256": "6c30d50586e1537ab087758411a2d7d7817aacf001a307bcef5d102f79a34dd2",
   "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
   "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
@@ -987,11 +987,11 @@
         },
         {
           "path": "docs/wiki/methods/m01-m06.es.md",
-          "sha256": "8aeea451b86d7a4ab3bdd5bc0736130e2d832ab603872395cbc78325db96f613"
+          "sha256": "b69b094c6a0af61577e6f23205075c9f28b5658d659e44f9e6e882ac912104af"
         },
         {
           "path": "docs/wiki/methods/m01-m06.md",
-          "sha256": "b9a938cc3d47237efc64467417e226506c57b41815c3467a10b17ba6ff7fb3f4"
+          "sha256": "a8baf2a7d4e254ff4b6cb051f9abe2bcbe699a77e78d77c3f029e339e3daaaf2"
         },
         {
           "path": "docs/wiki/methods/m07-m13.es.md",
