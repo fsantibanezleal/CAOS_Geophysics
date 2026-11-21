@@ -25,7 +25,7 @@ The current product pins Shell 0.26.2 and records Product Template 0.15.014. Bot
 | Manuscript depth | Pass | Technical report: 16,851 words, 32 equations, 10 figures, 9 tables, 32 references, 3 algorithms. Geometry-refinement manuscript: 8,718 words, 16 equations, 8 figures, 7 tables, 43 references, 1 algorithm. |
 | Frontend production build | Pass | Current TypeScript and Vite build; Vite still warns that the Workbench and Three.js chunks exceed 500 kB minified. |
 | Frontend unit suite with retained joint fixtures | 508 passed, 12 skipped, 2 failed files | The two setup failures need unavailable retained M04 selected-final and owned-custody browser controls. The fixture-bound joint subset separately passes 86 tests, with 4 explicit skips. |
-| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 113 structural requirement issues. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
+| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 105 structural requirement issues after M06 requirements and adversarial-validation documentation were normalized. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
 
 `tests/run_validation.py` did not start its full scientific suite. Its fail-fast prerequisite check requires four exact retained originals that are not present at their configured paths: the M01 correction packet, M01 transform packet, profile-incomplete receipt, and M11 native database. No replacement or regenerated artifact was substituted. The method matrix reports all 13 structural gates present but `scientific_acceptance=false`.
 
@@ -38,3 +38,7 @@ The geometry-normalized travel-time paper is a bounded negative result on a fixe
 The read-only single-origin verifier compared the current local build with `https://geophysics.ml.fasl-work.com/` and returned `build_mismatch`. It therefore did not produce an acceptance receipt. The existing host is not a verified copy of this candidate. Deployment, promotion to `develop`/`main`, and release acceptance remain blocked by the unresolved scientific, source-custody, product-SDD, M04 actual-data, and hosted acceptance gates. No GitHub Pages deployment or second application origin was used.
 
 The product branch is already based on current `origin/develop` (zero commits behind); no rebase is required. The current PR #151 remains draft. Only the scoped, validated changes from this review should be committed to that branch; the broader candidate should not be merged or deployed until its gates pass.
+
+## M06 documentation follow-up
+
+The measured MT feature requirements now use the current `AB-001` ID convention and have a requirement-by-requirement adversarial validation table. Six new tests cover pinned-source byte rejection, invalid variance, frame misalignment, full-period tensor gating, no-inverse behavior after a failed tensor screen, and rejection of an unreviewed station ID. The M06 feature gate no longer contributes SDD findings; its field conclusion remains negative for C15 and is not an MT inversion result. The course-wide SDD checker still reports 105 issues across other feature records.
