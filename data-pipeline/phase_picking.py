@@ -292,19 +292,17 @@ def normalized_window(
     return values, scale
 
 
-def classical_stalta_picks(
+def stalta_characteristic(
     values: np.ndarray,
     *,
     sample_interval_s: float,
-    threshold: float = 2.5,
     sta_s: float = 0.12,
     lta_s: float = 1.2,
-    minimum_ps_s: float = 0.4,
-) -> dict[str, float | None]:
-    """Fixed-parameter classical M08 baseline; no analyst label is consulted.
+) -> np.ndarray:
+    """Return the multicomponent squared-energy STA/LTA curve used by M08.
 
-    This is an onset detector, not a phase classifier: the second trigger is
-    provisionally named S and may be wrong. Its failures remain in evaluation.
+    The result aligns to original sample indices; values before the first
+    complete long window are zero. Analyst labels are never consulted.
     """
     if values.ndim != 2 or values.shape[1] != 3 or not np.all(np.isfinite(values)):
         raise ValueError("expected finite [sample, component] waveform")
@@ -320,6 +318,26 @@ def classical_stalta_picks(
     lta = (cumulative[long:] - cumulative[:-long]) / long
     characteristic = np.zeros(len(values))
     characteristic[long - 1 :] = sta[long - short :] / np.maximum(lta, 1e-12)
+    return characteristic
+
+
+def classical_stalta_picks(
+    values: np.ndarray,
+    *,
+    sample_interval_s: float,
+    threshold: float = 2.5,
+    sta_s: float = 0.12,
+    lta_s: float = 1.2,
+    minimum_ps_s: float = 0.4,
+) -> dict[str, float | None]:
+    """Fixed-parameter classical M08 baseline; no analyst label is consulted.
+
+    This is an onset detector, not a phase classifier: the second trigger is
+    provisionally named S and may be wrong. Its failures remain in evaluation.
+    """
+    characteristic = stalta_characteristic(
+        values, sample_interval_s=sample_interval_s, sta_s=sta_s, lta_s=lta_s
+    )
     # Require an actual upward crossing. A max selected from a known label
     # neighbourhood would leak the reference onset into the comparator.
     crossings = np.flatnonzero((characteristic[1:] >= threshold) & (characteristic[:-1] < threshold)) + 1

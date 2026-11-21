@@ -1,4 +1,4 @@
-# Bilingual notebook depth follow-up — 2026-11-21
+# Bilingual notebook depth follow-up: 2026-11-21
 
 ## Scope
 

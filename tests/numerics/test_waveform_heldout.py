@@ -20,9 +20,9 @@ sys.path.insert(0, str(ROOT / "data-pipeline"))
 from phase_picking import classical_stalta_picks
 
 ASSETS = ROOT / "data/derived/phase/browser-assets/stead"
-MANIFEST_SHA = "3e8fac54427eeb5525c70317c508d1f55188deac3a5964ad78931561fe3c32f0"
+MANIFEST_SHA = "ef20c5466113ca283872e70b11954ca99f6ba5b30da5c3d0192b5dfd09673ca7"
 SELECTION_SHA = "0d15ae67096df0a39761e1d2a5e7ab110d6a8eb862adba132d0d0a7e391d9cd8"
-COMPARATOR_SHA = "daef04c71c81c6c3b63bdaab72d6ccd74445bb2ee3268ff52004b3bae393938a"
+COMPARATOR_SHA = "9fecc7300bc783d13dc17aebbacdcc44117f5eac152b2ff2ee96dfce139d62c4"
 
 
 def pinned_json(path, expected):

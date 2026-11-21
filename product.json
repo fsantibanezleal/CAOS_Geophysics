@@ -129,6 +129,7 @@
     "velocity_physics_refinement.predict_user_survey",
     "velocity_physics_refinement.read_arrival_csv",
     "phase_picking.classical_stalta_picks",
+    "phase_picking.stalta_characteristic",
     "phase_picking.evaluate_matched_picks",
     "fwi_lesson.load_case",
     "fwi_lesson.run_case",
