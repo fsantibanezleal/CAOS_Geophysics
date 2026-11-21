@@ -69,3 +69,8 @@ A fresh current-source run of `tests/api/test_online_mt.py` in `.venv-api` passe
 ## M12 validation-contract follow-up
 
 The learned velocity feature now has a seven-row adversarial validation map and its local requirements no longer embed a digest label that the SDD parser mistakes for a detached requirement ID. Existing tests are explicitly named as adversarial gates for split leakage, independent forward-operator checks, checkpoint tampering, same-input classical comparison, metric recomputation, negative-result retention, and fixture-only pipeline scope. The focused M12 inversion/comparison suite passes 7 tests; Ruff passes; the SDD checker reports no M12 feature findings and 97 findings overall. This changes contract traceability only: the frozen M12 learned method still fails its joint held-out comparison and does not establish beyond-SOTA performance or field validity.
+
+
+## Fresh single-origin build and VPS identity check
+
+`npm run build:single-origin` completed successfully after checking M11 browser pins and the declared 120-result catalog; Vite transformed 1,948 modules. The existing large Workbench/Three.js chunk warning remains. A direct HTTPS comparison of the first inventory member confirms why the read-only release verifier reports `build_mismatch`: the fresh local `index.html` is 657 bytes with SHA-256 `d9ceb6e784f78a41e0565ad89b2a2e80df2bf6cb7a85287e207e18666196fe03`, while the canonical VPS returns 801 bytes with SHA-256 `466ac797dd00f938444d9862ee3342c304e883e8ed1e3c7c8a539c124391bd00` and references a different hashed asset set. The live VPS therefore still serves its previous bundle. This is an expected pre-cutover mismatch, not evidence of a resource-capacity failure; no release was uploaded or activated.
