@@ -235,6 +235,14 @@ def homogeneous_times(survey: Survey, velocity_m_s: float) -> np.ndarray:
     return offsets_m(survey) / velocity_m_s
 
 
+def assumed_time_sigma(time_s: np.ndarray) -> np.ndarray:
+    """The disclosed local pick-error floor; it is not a measured uncertainty."""
+    values = np.asarray(time_s, dtype=float)
+    if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or np.any(values <= 0):
+        raise TraveltimeError("assumed pick weighting requires finite positive times")
+    return np.maximum(0.03 * values, 0.0001)
+
+
 def homogeneous_oracle() -> dict:
     """Compare an independent Euclidean formula to Dijkstra on a flat mesh."""
     try:
@@ -358,7 +366,7 @@ def _invert_once(tt, full, survey: Survey, parts: dict[str, np.ndarray],
     """Fit training shots and forward-predict held shots on a fresh frozen mesh."""
     observed = survey.time_s
     shot_ids = survey.shot_geophone[:, 0]
-    sigma = np.maximum(0.03 * observed, 0.0001)
+    sigma = assumed_time_sigma(observed)
     offset = offsets_m(survey)
     training, held, held_shots = parts["training_rows"], parts["held_rows"], parts["held_shots"]
     slowness, baseline = _weighted_homogeneous_baseline(offset, observed, sigma, training)
@@ -500,7 +508,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True,
         report.update(inverse_status="unverified", inverse_reason=f"forward/format oracle failed: {error}")
         report["wall_seconds"] = round(time.perf_counter() - started, 3)
         return report
-    sigma = np.maximum(0.03 * survey.time_s, 0.0001)
+    sigma = assumed_time_sigma(survey.time_s)
     full["err"] = sigma
     report["weighting"] = {"sigma_t_s": "max(0.03*t,0.0001)",
                            "source_error": "not supplied", "reciprocal_error": "not available",

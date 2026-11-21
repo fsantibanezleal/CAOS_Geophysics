@@ -25,7 +25,7 @@ The current product pins Shell 0.26.2 and records Product Template 0.15.014. Bot
 | Manuscript depth | Pass | Technical report: 16,851 words, 32 equations, 10 figures, 9 tables, 32 references, 3 algorithms. Geometry-refinement manuscript: 8,718 words, 16 equations, 8 figures, 7 tables, 43 references, 1 algorithm. |
 | Frontend production build | Pass | Current TypeScript and Vite build; Vite still warns that the Workbench and Three.js chunks exceed 500 kB minified. |
 | Frontend unit suite with retained joint fixtures | 508 passed, 12 skipped, 2 failed files | The two setup failures need unavailable retained M04 selected-final and owned-custody browser controls. The fixture-bound joint subset separately passes 86 tests, with 4 explicit skips. |
-| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 102 structural requirement issues after M06/M07 requirement and adversarial-validation documentation updates. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
+| SDD checker and release ledger | Not accepted | `scripts/check_sdd.py` reports 99 structural requirement issues after M06/M07/M09 requirement and adversarial-validation documentation updates. The convergence ledger remains 1 failed, 15 unresolved and 3 passed; `--require-release` does not accept the candidate. |
 
 `tests/run_validation.py` did not start its full scientific suite. Its fail-fast prerequisite check requires four exact retained originals that are not present at their configured paths: the M01 correction packet, M01 transform packet, profile-incomplete receipt, and M11 native database. No replacement or regenerated artifact was substituted. The method matrix reports all 13 structural gates present but `scientific_acceptance=false`.
 
@@ -46,3 +46,16 @@ The measured MT feature requirements now use the current `AB-001` ID convention 
 ## M07 ERT follow-up
 
 The M07 Slagdump feature now has eight requirement-level adversarial checks. The ERT-08 gate is bound to a test that covers its convergence record, not to a documentation path presented as an executable gate. The pipeline now exposes `assumed_resistance_sigma`, the validated implementation of the declared `max(0.03*abs(R), 0.001 Ohm)` floor; invalid values fail before weighting. The M07 adversarial and existing parser/QC subset passed (12 passed); the separate M06 subset passed (11 passed, 3 skipped because ignored field bytes were unavailable in this checkout). This does not qualify the field inverse or host release.
+
+
+## M09 travel-time follow-up
+
+The M09 feature now has a requirement-by-requirement adversarial table for TT-01 through TT-10. A named `assumed_time_sigma` function validates the disclosed pick-weighting floor before use; the new controls exercise strict source identity, malformed SGT rows, absent precision, the homogeneous oracle, uncertainty inputs, whole-shot splits, failed predictive gates, documentation boundaries, immutable receipt bytes, and owner-source declarations. The focused M09 parser/adversarial suite passes 14 tests and Ruff passes. The SDD checker now reports 99 structural findings, with no M09 findings. This local contract improvement does not establish field predictive acceptance or change the convergence ledger's failed/unresolved release verdicts.
+
+## Manuscript boundary recheck
+
+The current manuscript-depth check reports 8,718 prose words, 16 display equations, 8 figures, 7 tables, 43 cited works and one algorithm for the BS-1 paper; the technical report measures 16,851 words, 32 equations, 10 figures, 9 tables, 32 references and three algorithms. Both pass the measured content floors, and the manuscript scientific-voice check is clean. The BS-1 experiment remains a negative fixed-simulator comparison with a Q/A operator mismatch; its literature discussion does not include reproduced matched state-of-the-art baselines. It is a substantive proposed-method study and a falsified hypothesis, but its current evidence does not establish novelty or performance beyond the state of the art. Do not describe the app as scientifically accepted or the proposed method as superior.
+
+## Current shared-base review
+
+The shell checkout is clean on `develop` at the release carrying `@fasl-work/caos-app-shell` 0.26.2; the template checkout is clean on `develop` at 0.15.014. The product pins shell 0.26.2 in its manifest, lockfile and exact-version gate and records template 0.15.014. The reviewed current release notes show no unadopted released delta. Product-specific shared-file adaptations remain local and were not overwritten. No shell or template edit is justified by this review.

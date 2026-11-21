@@ -951,23 +951,59 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 192 findings across 52 notebooks; the M12 bilingual pair now passes its content and fresh-kernel checks, while the remaining findings are in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved. The revised M12 EN/ES lesson pair measures 1,620 content-bar words each, three figures, two equations and six sources; both isolated fresh-kernel byte checks pass and the focused staging regression tests pass. This closes only this pair. Supplemental current-source checks on 2026-11-12: docs-matrix structure passes for 13 methods and 66 bilingual notebook files, but notebook depth reports 153 findings; manuscript depth reports four findings (identifiability LaTeX main absent, two coverage manifests absent, and no report classified as technical-report). Full educational/manuscript quality remains open. A fresh 2026-11-12 review of the M12 null-space lesson pair records 2,332 English and 2,297 Spanish explanatory words, three computed figures, two distinct display equations and five sources per language. Both files pass targeted notebook-depth and structural checks and fresh-kernel replay. This closes only the M12 pair; course-wide notebook depth still has 123 findings, and scientific, rendered, field and release acceptance remain unresolved. On 2026-11-12, the bilingual null-space notebook source list was reconciled with its five notebook metadata sources. The current docs matrix passes structurally for 13 methods and 66 EN/ES notebook files. This is source traceability evidence only: the notebook-depth ledger still records broad content findings, so R-016 remains unresolved. On 2026-11-12 remeasurement, the bilingual M12 null-space evidence notebooks contain 2,332/2,297 content words, three figures, two display equations, and five cited sources each; the prior 809-word depth entry was stale. The full depth checker now reports 123 findings, so R-016 remains unresolved. Current 2026-11-21 refresh: all 66 bilingual notebooks executed in fresh kernels across the full run and the two measured PNG-only ERT reruns; notebook structure/depth, docs matrix, manuscript depth, focused Python tests and production build pass. The docs manifest is refreshed against seven current English source inventories. The broader app remains unresolved: the SDD checker reports 102 structural issues after the M06 feature row/adversarial-contract migration, two M04 browser suites lack retained original controls, four exact scientific source inputs are absent, and the read-only VPS verifier reports build_mismatch. See docs/validation/release-readiness-review-2026-11-21.md. This refresh updates evidence hashes and course replay status only; R-016 remains unresolved. Follow-up 2026-11-21: the M06 measured-MT requirements now use current AB-nnn SDD IDs, and the missing adversarial validation table is supplied. Six new synthetic/source-bound adversarial tests pass; C15 remains a negative QC-only field result. Course-wide SDD conformance remains incomplete at 102 findings. Follow-up 2026-11-21: the M07 Slagdump feature now has current requirement-level adversarial validation, with the ERT-08 gate bound to a live documentation test. The new local weighting helper rejects nonpositive/nonfinite inputs and preserves the declared 3%/0.001-Ohm floor. The M07 adversarial and existing parser/QC tests pass; field scientific acceptance remains bound to the external retained source and solver receipt.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 192 findings across 52 notebooks; the M12 bilingual pair now passes its content and fresh-kernel checks, while the remaining findings are in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved. The revised M12 EN/ES lesson pair measures 1,620 content-bar words each, three figures, two equations and six sources; both isolated fresh-kernel byte checks pass and the focused staging regression tests pass. This closes only this pair. Supplemental current-source checks on 2026-11-12: docs-matrix structure passes for 13 methods and 66 bilingual notebook files, but notebook depth reports 153 findings; manuscript depth reports four findings (identifiability LaTeX main absent, two coverage manifests absent, and no report classified as technical-report). Full educational/manuscript quality remains open. A fresh 2026-11-12 review of the M12 null-space lesson pair records 2,332 English and 2,297 Spanish explanatory words, three computed figures, two distinct display equations and five sources per language. Both files pass targeted notebook-depth and structural checks and fresh-kernel replay. This closes only the M12 pair; course-wide notebook depth still has 123 findings, and scientific, rendered, field and release acceptance remain unresolved. On 2026-11-12, the bilingual null-space notebook source list was reconciled with its five notebook metadata sources. The current docs matrix passes structurally for 13 methods and 66 EN/ES notebook files. This is source traceability evidence only: the notebook-depth ledger still records broad content findings, so R-016 remains unresolved. On 2026-11-12 remeasurement, the bilingual M12 null-space evidence notebooks contain 2,332/2,297 content words, three figures, two display equations, and five cited sources each; the prior 809-word depth entry was stale. The full depth checker now reports 123 findings, so R-016 remains unresolved. Current 2026-11-21 refresh: all 66 bilingual notebooks executed in fresh kernels across the full run and the two measured PNG-only ERT reruns; notebook structure/depth, docs matrix, manuscript depth, focused Python tests and production build pass. The docs manifest is refreshed against seven current English source inventories. The broader app remains unresolved: the SDD checker reports 102 structural issues after the M06 feature row/adversarial-contract migration, two M04 browser suites lack retained original controls, four exact scientific source inputs are absent, and the read-only VPS verifier reports build_mismatch. See docs/validation/release-readiness-review-2026-11-21.md. This refresh updates evidence hashes and course replay status only; R-016 remains unresolved. Follow-up 2026-11-21: the M06 measured-MT requirements now use current AB-nnn SDD IDs, and the missing adversarial validation table is supplied. Six new synthetic/source-bound adversarial tests pass; C15 remains a negative QC-only field result. Course-wide SDD conformance remains incomplete at 102 findings. Follow-up 2026-11-21: the M07 Slagdump feature now has current requirement-level adversarial validation, with the ERT-08 gate bound to a live documentation test. The new local weighting helper rejects nonpositive/nonfinite inputs and preserves the declared 3%/0.001-Ohm floor. The M07 adversarial and existing parser/QC tests pass; field scientific acceptance remains bound to the external retained source and solver receipt. Follow-up 2026-11-21: M09 TT-01 through TT-10 now map to explicit adversarial validation gates; the named assumed pick-uncertainty helper and ten source/split/receipt/provenance controls pass with the existing M09 parser/QC subset (14 passed). The course-wide SDD checker falls from 102 to 99 findings and reports no M09 findings; broader content and product acceptance remain unresolved. Current manuscript recheck: both LaTeX documents pass structural depth and voice checks, while BS-1 remains a negative synthetic result without demonstrated novelty or beyond-SOTA performance.",
       "evidence": [
+        {
+          "path": "data-pipeline/traveltime.py",
+          "sha256": "464cc3d7b162ad4830380a0f72e3def9a2d169fe7720a219f31317f2842b3b42"
+        },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
           "sha256": "d3a6b63df4d022ce0910de173a187a1e70de2e0d682571903a1ac4500cddfefe"
+        },
+        {
+          "path": "docs/design/features/m09-koenigsee-traveltime/requirements.md",
+          "sha256": "1063d53160efe492f3b4087d64334122c282383eddc3c5767b8c56d79a95f337"
+        },
+        {
+          "path": "docs/design/features/m09-koenigsee-traveltime/validation.md",
+          "sha256": "9daca4d5bd5f60c999217dab15fc8618c9d18d2d309150a2a002b84f31199375"
+        },
+        {
+          "path": "docs/design/features/phase-picking/rights-review-2026-10-28.md",
+          "sha256": "1fae06c417442b64be5f39eefaf51012246298c3d39e3f264c94de954b14b0cb"
         },
         {
           "path": "docs/research/m03-charleston-flightline-research-2026-10-25.md",
           "sha256": "f2eaa26832d0651fdbc75e4f68b71fc01c6fc3045576d8b9fdc652dd7dfcf7a5"
         },
         {
+          "path": "docs/validation/long-valley-time-lapse-2026-11-02.md",
+          "sha256": "67fc1e55170fa0d605038bc97d354b872394c37008ca89951a5f7c1ae9fc59b9"
+        },
+        {
+          "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
+          "sha256": "6d73bd4c0b9593c8d72100f810c49126091ba4cf7075ccccd53c026e9352ae6c"
+        },
+        {
           "path": "docs/validation/m12-checkpoint-notebook-2026-10-28.md",
           "sha256": "150842b2a9cc024cacb2ea903ad9136ff24e0cd498455a1ea080dbd38a4c12cc"
         },
         {
+          "path": "docs/validation/manuscript-depth-current-2026-11-12.txt",
+          "sha256": "9962520d8b3d6cb31d6d4152aa5595d0b5f8cc709cf8e92eca67fd3a1de51456"
+        },
+        {
+          "path": "docs/validation/notebook-depth-current-2026-11-12.txt",
+          "sha256": "b63a65509e42d8b79d24859c3cf0944edf1530e5d6d9c936c63595197b08e6b6"
+        },
+        {
           "path": "docs/validation/notebook-review-2026-10-27.md",
           "sha256": "5417edd9b4157ad5dc8d9e75d5a7a3d418b4ec4555faf9df38ba495f5ec4e756"
+        },
+        {
+          "path": "docs/validation/release-readiness-review-2026-11-21.md",
+          "sha256": "57bb839247dcd9695c92bdbe7089b5dae39aeffeb03ea5adf1b9e1bff6dd9197"
         },
         {
           "path": "docs/validation/source-content-coverage.json",
@@ -976,14 +1012,6 @@
         {
           "path": "docs/validation/source-to-content-review.md",
           "sha256": "46260ee6a823533ff2b26b632e927bd52dd11775c45bc81313b90cb6310e011e"
-        },
-        {
-          "path": "docs/validation/m04-notebook-pair-replay-2026-10-28.md",
-          "sha256": "6d73bd4c0b9593c8d72100f810c49126091ba4cf7075ccccd53c026e9352ae6c"
-        },
-        {
-          "path": "docs/design/features/phase-picking/rights-review-2026-10-28.md",
-          "sha256": "1fae06c417442b64be5f39eefaf51012246298c3d39e3f264c94de954b14b0cb"
         },
         {
           "path": "docs/wiki/README.md",
@@ -1006,6 +1034,10 @@
           "sha256": "c4701ed64a2934fa93ad9645ba2620aa26db7cbc96bef8b4650b02e4bbfc50b2"
         },
         {
+          "path": "notebooks/en/02-gravity/03-long-valley-time-lapse-processing.ipynb",
+          "sha256": "6403b583b22c4f561b796ecdbfd24e1e2c1d646e2f17c56a10b2433ace160629"
+        },
+        {
           "path": "notebooks/en/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
           "sha256": "2d3b44f48997f50f5fd697cf4bdc8e7e26050d4f6f52095c5dbb49a2e1fd487c"
         },
@@ -1018,12 +1050,16 @@
           "sha256": "71a0d61e4f872a7fcfcc2f58e9a207fedee6857d33d63d351c75386b54e20e78"
         },
         {
+          "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
+          "sha256": "59aa51dabbbe2317fe384f029cbfd8fd31e594509c9b3b87f79fed1d42e60194"
+        },
+        {
           "path": "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
           "sha256": "83a1ecee296fc87c78f90eeea0fb8aea4ce3d56e73ffa7491d64adf2272103c5"
         },
         {
-          "path": "notebooks/en/08-learning/05-m12-velocity-checkpoint.ipynb",
-          "sha256": "59aa51dabbbe2317fe384f029cbfd8fd31e594509c9b3b87f79fed1d42e60194"
+          "path": "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
+          "sha256": "ef3e9fb868de23488625832af1ae6f886ccf3dc1893680f05ad124ac4268c89b"
         },
         {
           "path": "notebooks/es/03-magnetics/02-m03-survey-geometry-and-holdout.ipynb",
@@ -1038,44 +1074,28 @@
           "sha256": "9da9ceff185c271933f512c341306ef0d70713627ae42bf5856a80bc87504d98"
         },
         {
-          "path": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
-          "sha256": "2fe11ba7d2d10a6f396e03121745c0347c8ad440c61f7cb316b8477629d539f8"
-        },
-        {
           "path": "notebooks/es/08-learning/05-m12-velocity-checkpoint.ipynb",
           "sha256": "d88be662ab9efb45bbfed330dad21a5fb5103a1346948d57420f19ee3a3355eb"
+        },
+        {
+          "path": "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb",
+          "sha256": "2fe11ba7d2d10a6f396e03121745c0347c8ad440c61f7cb316b8477629d539f8"
         },
         {
           "path": "scripts/check_docs_matrix.py",
           "sha256": "399237a17bdaf1af209b851ce9893d6cd7610f136c701b6c7af0cbab4941b934"
         },
         {
+          "path": "tests/adversarial/test_m09_koenigsee_traveltime.py",
+          "sha256": "e466afe95a34a7a1d1c478bb023c9213c991861b08ac82af6e97c4fd920a010a"
+        },
+        {
+          "path": "tests/data/test_traveltime_data.py",
+          "sha256": "4f1eda2079931af7f7a957d076f1de2224b77f26a68a49f8db33fb4b4e4ccf59"
+        },
+        {
           "path": "tests/numerics/test_magnetic_continuation.py",
           "sha256": "891a44ae2bc6b34f849568858c33004bdf53cfb90e50725de1351e79ef9256e1"
-        },
-        {
-          "path": "docs/validation/long-valley-time-lapse-2026-11-02.md",
-          "sha256": "67fc1e55170fa0d605038bc97d354b872394c37008ca89951a5f7c1ae9fc59b9"
-        },
-        {
-          "path": "notebooks/en/02-gravity/03-long-valley-time-lapse-processing.ipynb",
-          "sha256": "6403b583b22c4f561b796ecdbfd24e1e2c1d646e2f17c56a10b2433ace160629"
-        },
-        {
-          "path": "notebooks/es/02-gravity/03-long-valley-time-lapse-processing.ipynb",
-          "sha256": "ef3e9fb868de23488625832af1ae6f886ccf3dc1893680f05ad124ac4268c89b"
-        },
-        {
-          "path": "docs/validation/notebook-depth-current-2026-11-12.txt",
-          "sha256": "b63a65509e42d8b79d24859c3cf0944edf1530e5d6d9c936c63595197b08e6b6"
-        },
-        {
-          "path": "docs/validation/manuscript-depth-current-2026-11-12.txt",
-          "sha256": "9962520d8b3d6cb31d6d4152aa5595d0b5f8cc709cf8e92eca67fd3a1de51456"
-        },
-        {
-          "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "204583e7ff060931ba19805500dbbc620c6bf5cd789168503e171ed37ecec5b5"
         }
       ],
       "receipts": []

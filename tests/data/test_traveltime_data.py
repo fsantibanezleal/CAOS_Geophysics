@@ -101,7 +101,10 @@ def test_m09_documented_boundaries():
     guide = (ROOT / "docs/guides/05_sources.md").read_text(encoding="utf-8")
     design = (ROOT / "docs/design/features/m09-koenigsee-traveltime/design.md").read_text(encoding="utf-8")
     theory = (ROOT / "docs/problem-types/traveltime-recovery.md").read_text(encoding="utf-8")
+    convergence = (ROOT / "docs/design/features/m09-koenigsee-traveltime/convergence.md").read_text(encoding="utf-8")
     for term in ("Koenigsee", "provider-link-only", "held-out", "reciprocal", "pyGIMLi"):
         assert term in guide and term in design and term in theory
     for term in ("eikonal", "homogeneous", "uncertainty", "coverage"):
         assert term in theory
+    for term in ("source/rights", "provider-based", "within-profile", "does not establish"):
+        assert term in convergence
