@@ -171,7 +171,13 @@
     "learning.load_bundle",
     "learning.InverseCNN",
     "learning.ObservationAE",
-    "evaluation.model_metrics"
+    "evaluation.model_metrics",
+    "electromagnetics.impedance",
+    "electromagnetics.curves",
+    "electromagnetics.objective_residual",
+    "electromagnetics.identifiability",
+    "mt_field_qc.tensor_gate",
+    "mt_field_qc.phase_tensor_diagnostic"
   ],
   "method_factories": [
     "learning.load_checkpoint",
