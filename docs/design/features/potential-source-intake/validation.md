@@ -74,7 +74,7 @@ tests/data/test_potential_sources.py
 tests/data/test_sources.py
 ```
 
-## External-root CLI regression and real archive run — 2026-11-21
+## External-root CLI regression and real archive run: 2026-11-21
 
 The intake CLI now resolves one declared external root and passes it to acquisition, selective member extraction, profiling and immutable report publication. Relative report paths resolve under that root's `data/raw/`; absolute outputs outside that directory are refused. The test `test_adversarial_cli_preserves_external_data_root` exercises the complete CLI with a synthetic pinned archive and asserts that the extracted member and report remain under the external root.
 
