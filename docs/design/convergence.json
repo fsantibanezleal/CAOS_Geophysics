@@ -89,27 +89,35 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across uploaded modalities, plus local browser coverage for gravity and the actual MT EDI workbench. Five distinct MT scenarios passed across recorded invocations; the full five-case suite did not pass in one invocation, and the report retains the intermediate assertion failure. Magnetic, profile, waveform and physical-root browser paths and hosted admission remain unaccepted; R-005 remains unresolved. The current checkout adds owned synthetic magnetic-flightline and ERT eligibility paths; they were not replayed in this refresh and do not close the remaining modality or host gaps.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across uploaded modalities, plus local browser coverage for gravity and the actual MT EDI workbench. Five distinct MT scenarios passed across recorded invocations; the full five-case suite did not pass in one invocation, and the report retains the intermediate assertion failure. Magnetic, profile, waveform and physical-root browser paths and hosted admission remain unaccepted; R-005 remains unresolved. The current checkout adds owned synthetic magnetic-flightline and ERT eligibility paths; they were not replayed in this refresh and do not close the remaining modality or host gaps. Follow-up 2026-11-21: fresh current-source online EDI tests pass 17/17; source-valid MT replay reconciliation passes 9/9. This establishes local API/source/replay behavior only; actual ML-VPS admission remains pending, so the feature stays closed by default.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
           "sha256": "bf95fc9123a6ffa50b36b8ff796fc3af4710fe5022881530f181cfee136a8040"
         },
         {
-          "path": "tests/api/test_method_eligibility.py",
-          "sha256": "b84af52103274752af597839010accda9c5f23100e155c68ab370bedec230352"
+          "path": "docs/validation/convergence-refresh-2026-11-10.md",
+          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         },
         {
-          "path": "frontend/e2e/eligibility.spec.ts",
-          "sha256": "be546c9ba1468363ecce86b522f6548722bd4924333dee24a9585c301bdb168d"
+          "path": "docs/validation/mt-workbench-browser-local-2026-11-06.md",
+          "sha256": "ab71a5c1675d1428d95f538025306ba4cc01dcbcffed6c6ca1c1a16e03b2ecae"
         },
         {
-          "path": "tests/api/test_uploaded_method_eligibility_matrix.py",
-          "sha256": "d014a7b56d75545764bb0c6e19cb3b6c790e51111e75c3b6c0387c2d92af1ab8"
+          "path": "docs/validation/online-mt-local-benchmark.md",
+          "sha256": "171f42cd36e86c215e898e34f4422a991653e038b46dafe8a0b7aa51c8687d60"
         },
         {
           "path": "docs/validation/r005-eligibility-current-2026-11-06.md",
           "sha256": "26770fde0577ec61f750259a75cc293a7743ebfde7b0c49de3b95d0ae7765819"
+        },
+        {
+          "path": "docs/validation/release-readiness-review-2026-11-21.md",
+          "sha256": "01ec0e369f1afa2a25942798c02d8946972edb6a49b4c47bcaf4c25f3a891ad9"
+        },
+        {
+          "path": "frontend/e2e/eligibility.spec.ts",
+          "sha256": "be546c9ba1468363ecce86b522f6548722bd4924333dee24a9585c301bdb168d"
         },
         {
           "path": "frontend/e2e/mt-workbench.spec.ts",
@@ -120,16 +128,24 @@
           "sha256": "3951e3da88a4c7e17d84ad7fd7099e0b292d566d8975574309ceb4a8953ef3ce"
         },
         {
+          "path": "tests/api/test_method_eligibility.py",
+          "sha256": "b84af52103274752af597839010accda9c5f23100e155c68ab370bedec230352"
+        },
+        {
+          "path": "tests/api/test_online_mt.py",
+          "sha256": "231485e1ca756b1d84e948cce78642123bee65b75ad499961bd414a841e0fbb6"
+        },
+        {
+          "path": "tests/api/test_uploaded_method_eligibility_matrix.py",
+          "sha256": "d014a7b56d75545764bb0c6e19cb3b6c790e51111e75c3b6c0387c2d92af1ab8"
+        },
+        {
+          "path": "tests/test_mt_replay_reconciliation.py",
+          "sha256": "8903021e6468cf9a191d9206577e1f469e439e829b4cd11e5314ac2551b8d358"
+        },
+        {
           "path": "tests/ui/mt_devserver.py",
           "sha256": "5e962e9ae4be04b1ba6415fd38ca33ce9d05bac7d44929dc4c8a6f0f9685336d"
-        },
-        {
-          "path": "docs/validation/mt-workbench-browser-local-2026-11-06.md",
-          "sha256": "ab71a5c1675d1428d95f538025306ba4cc01dcbcffed6c6ca1c1a16e03b2ecae"
-        },
-        {
-          "path": "docs/validation/convergence-refresh-2026-11-10.md",
-          "sha256": "3d7cfc9916e4b139a90f70cbbc791f83ff1225bd3b3b11dd0cae9909407f3d4a"
         }
       ],
       "receipts": []
@@ -951,7 +967,7 @@
       "id": "R-016",
       "verdict": "unresolved",
       "declared_gate": "scripts/check_docs_matrix.py::main and docs/validation/source-to-content-review.md.",
-      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 192 findings across 52 notebooks; the M12 bilingual pair now passes its content and fresh-kernel checks, while the remaining findings are in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved. The revised M12 EN/ES lesson pair measures 1,620 content-bar words each, three figures, two equations and six sources; both isolated fresh-kernel byte checks pass and the focused staging regression tests pass. This closes only this pair. Supplemental current-source checks on 2026-11-12: docs-matrix structure passes for 13 methods and 66 bilingual notebook files, but notebook depth reports 153 findings; manuscript depth reports four findings (identifiability LaTeX main absent, two coverage manifests absent, and no report classified as technical-report). Full educational/manuscript quality remains open. A fresh 2026-11-12 review of the M12 null-space lesson pair records 2,332 English and 2,297 Spanish explanatory words, three computed figures, two distinct display equations and five sources per language. Both files pass targeted notebook-depth and structural checks and fresh-kernel replay. This closes only the M12 pair; course-wide notebook depth still has 123 findings, and scientific, rendered, field and release acceptance remain unresolved. On 2026-11-12, the bilingual null-space notebook source list was reconciled with its five notebook metadata sources. The current docs matrix passes structurally for 13 methods and 66 EN/ES notebook files. This is source traceability evidence only: the notebook-depth ledger still records broad content findings, so R-016 remains unresolved. On 2026-11-12 remeasurement, the bilingual M12 null-space evidence notebooks contain 2,332/2,297 content words, three figures, two display equations, and five cited sources each; the prior 809-word depth entry was stale. The full depth checker now reports 123 findings, so R-016 remains unresolved. Current 2026-11-21 refresh: all 66 bilingual notebooks executed in fresh kernels across the full run and the two measured PNG-only ERT reruns; notebook structure/depth, docs matrix, manuscript depth, focused Python tests and production build pass. The docs manifest is refreshed against seven current English source inventories. The broader app remains unresolved: the SDD checker reports 102 structural issues after the M06 feature row/adversarial-contract migration, two M04 browser suites lack retained original controls, four exact scientific source inputs are absent, and the read-only VPS verifier reports build_mismatch. See docs/validation/release-readiness-review-2026-11-21.md. This refresh updates evidence hashes and course replay status only; R-016 remains unresolved. Follow-up 2026-11-21: the M06 measured-MT requirements now use current AB-nnn SDD IDs, and the missing adversarial validation table is supplied. Six new synthetic/source-bound adversarial tests pass; C15 remains a negative QC-only field result. Course-wide SDD conformance remains incomplete at 102 findings. Follow-up 2026-11-21: the M07 Slagdump feature now has current requirement-level adversarial validation, with the ERT-08 gate bound to a live documentation test. The new local weighting helper rejects nonpositive/nonfinite inputs and preserves the declared 3%/0.001-Ohm floor. The M07 adversarial and existing parser/QC tests pass; field scientific acceptance remains bound to the external retained source and solver receipt. Follow-up 2026-11-21: M09 TT-01 through TT-10 now map to explicit adversarial validation gates; the named assumed pick-uncertainty helper and ten source/split/receipt/provenance controls pass with the existing M09 parser/QC subset (14 passed). The course-wide SDD checker falls from 102 to 99 findings and reports no M09 findings; broader content and product acceptance remain unresolved. Current manuscript recheck: both LaTeX documents pass structural depth and voice checks, while BS-1 remains a negative synthetic result without demonstrated novelty or beyond-SOTA performance.",
+      "note": "The bilingual M01-M13 wiki remains indexed. Earlier 52-, 56- and 58-notebook snapshots are historical. The current source review inventories 62 mirrored EN/ES notebooks; its M04 fit-fold pair freshly executes objective assembly, derivative checking and frozen validation scoring in separate kernels and explicitly does not run an inversion. The bilingual M12 checkpoint-inference pair freshly replays its source-bound verifier and independent held-out comparison, retaining failed comparator ratios. The M13 rights review records a scoped CC BY 4.0 distribution decision for the attributed package and does not establish model field accuracy or product deployment. Docs-matrix, notebook structure, content-standard and scoped replay gates pass. Complete in-app course coverage, rendered whole-product acceptance, scientific correctness, field qualification and release acceptance remain unresolved. The 2026-10-30 fresh-kernel gate executed all 62 notebooks successfully; the docs matrix binds the 62 current notebook files to the bilingual review manifest. This closes execution and traceability checks only, not the remaining course, science, field, or release requirements. A 2026-10-30 follow-up refreshed the English and Spanish M12 null-space figure outputs after terminology and legend-placement edits; the English/Spanish null-space pair, held-out learning plot and FWI control all pass fresh-kernel replay. Their evidence hashes now match these current notebook files; scientific, course, field and release gates remain open. The new Long Valley English/Spanish processing lessons freshly execute against the source table; their source-linked browser feature and validation record are recorded in docs/validation/long-valley-time-lapse-2026-11-02.md. This adds one field-data case and does not close remaining course or release gates. On 2026-11-05, both Long Valley lessons passed the fresh-kernel --check using the external CAOS data root; the pinned source was parsed, the prepared field artifact replayed byte-identically, and the compact-input staging regression passed. This closes only this lesson pair, not course-wide or scientific-release acceptance. The 2026-11-05 replay refreshes the M10 FWI case-matrix, M11 physical-matrix, and M12 checkpoint/null-space bilingual notebook outputs after fresh-kernel execution; M12 checkpoint retains its failed-held-out-comparator result. These replays close only their current notebook bytes and execution evidence, not scientific, course, field, or release acceptance. On 2026-11-06 the expanded bilingual M09 lesson passed fresh-kernel execution in both languages. The M03 continuation utility now binds in-memory derived results to a canonical parent SHA-256 and distinguishes CLI source-byte hashes; 13 focused numerical tests pass. Both revised M03 geometry/holdout lessons execute in fresh kernels, each has zero findings, and all 66 notebooks remain bound by the docs matrix. Visual review corrected the crossover reference to the flight-minus-tie sign and gave the attenuated harmonic map its own amplitude scale. The repository-wide static notebook gate now reports 192 findings across 52 notebooks; the M12 bilingual pair now passes its content and fresh-kernel checks, while the remaining findings are in other lessons; whole-course content, in-app coverage, science, field qualification, rendered acceptance and release acceptance remain unresolved, so R-016 remains unresolved. The revised M12 EN/ES lesson pair measures 1,620 content-bar words each, three figures, two equations and six sources; both isolated fresh-kernel byte checks pass and the focused staging regression tests pass. This closes only this pair. Supplemental current-source checks on 2026-11-12: docs-matrix structure passes for 13 methods and 66 bilingual notebook files, but notebook depth reports 153 findings; manuscript depth reports four findings (identifiability LaTeX main absent, two coverage manifests absent, and no report classified as technical-report). Full educational/manuscript quality remains open. A fresh 2026-11-12 review of the M12 null-space lesson pair records 2,332 English and 2,297 Spanish explanatory words, three computed figures, two distinct display equations and five sources per language. Both files pass targeted notebook-depth and structural checks and fresh-kernel replay. This closes only the M12 pair; course-wide notebook depth still has 123 findings, and scientific, rendered, field and release acceptance remain unresolved. On 2026-11-12, the bilingual null-space notebook source list was reconciled with its five notebook metadata sources. The current docs matrix passes structurally for 13 methods and 66 EN/ES notebook files. This is source traceability evidence only: the notebook-depth ledger still records broad content findings, so R-016 remains unresolved. On 2026-11-12 remeasurement, the bilingual M12 null-space evidence notebooks contain 2,332/2,297 content words, three figures, two display equations, and five cited sources each; the prior 809-word depth entry was stale. The full depth checker now reports 123 findings, so R-016 remains unresolved. Current 2026-11-21 refresh: all 66 bilingual notebooks executed in fresh kernels across the full run and the two measured PNG-only ERT reruns; notebook structure/depth, docs matrix, manuscript depth, focused Python tests and production build pass. The docs manifest is refreshed against seven current English source inventories. The broader app remains unresolved: the SDD checker reports 102 structural issues after the M06 feature row/adversarial-contract migration, two M04 browser suites lack retained original controls, four exact scientific source inputs are absent, and the read-only VPS verifier reports build_mismatch. See docs/validation/release-readiness-review-2026-11-21.md. This refresh updates evidence hashes and course replay status only; R-016 remains unresolved. Follow-up 2026-11-21: the M06 measured-MT requirements now use current AB-nnn SDD IDs, and the missing adversarial validation table is supplied. Six new synthetic/source-bound adversarial tests pass; C15 remains a negative QC-only field result. Course-wide SDD conformance remains incomplete at 102 findings. Follow-up 2026-11-21: the M07 Slagdump feature now has current requirement-level adversarial validation, with the ERT-08 gate bound to a live documentation test. The new local weighting helper rejects nonpositive/nonfinite inputs and preserves the declared 3%/0.001-Ohm floor. The M07 adversarial and existing parser/QC tests pass; field scientific acceptance remains bound to the external retained source and solver receipt. Follow-up 2026-11-21: M09 TT-01 through TT-10 now map to explicit adversarial validation gates; the named assumed pick-uncertainty helper and ten source/split/receipt/provenance controls pass with the existing M09 parser/QC subset (14 passed). The course-wide SDD checker falls from 102 to 99 findings and reports no M09 findings; broader content and product acceptance remain unresolved. Current manuscript recheck: both LaTeX documents pass structural depth and voice checks, while BS-1 remains a negative synthetic result without demonstrated novelty or beyond-SOTA performance. Fresh online EDI documentation and replay checks passed 17 API tests and 9 reconciliation tests; this does not close broad notebook/wiki depth findings or any live-host gate.",
       "evidence": [
         {
           "path": "data-pipeline/traveltime.py",
@@ -1002,8 +1018,12 @@
           "sha256": "5417edd9b4157ad5dc8d9e75d5a7a3d418b4ec4555faf9df38ba495f5ec4e756"
         },
         {
+          "path": "docs/validation/online-mt-local-benchmark.md",
+          "sha256": "171f42cd36e86c215e898e34f4422a991653e038b46dafe8a0b7aa51c8687d60"
+        },
+        {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "57bb839247dcd9695c92bdbe7089b5dae39aeffeb03ea5adf1b9e1bff6dd9197"
+          "sha256": "01ec0e369f1afa2a25942798c02d8946972edb6a49b4c47bcaf4c25f3a891ad9"
         },
         {
           "path": "docs/validation/source-content-coverage.json",
@@ -1090,12 +1110,20 @@
           "sha256": "e466afe95a34a7a1d1c478bb023c9213c991861b08ac82af6e97c4fd920a010a"
         },
         {
+          "path": "tests/api/test_online_mt.py",
+          "sha256": "231485e1ca756b1d84e948cce78642123bee65b75ad499961bd414a841e0fbb6"
+        },
+        {
           "path": "tests/data/test_traveltime_data.py",
           "sha256": "4f1eda2079931af7f7a957d076f1de2224b77f26a68a49f8db33fb4b4e4ccf59"
         },
         {
           "path": "tests/numerics/test_magnetic_continuation.py",
           "sha256": "891a44ae2bc6b34f849568858c33004bdf53cfb90e50725de1351e79ef9256e1"
+        },
+        {
+          "path": "tests/test_mt_replay_reconciliation.py",
+          "sha256": "8903021e6468cf9a191d9206577e1f469e439e829b4cd11e5314ac2551b8d358"
         }
       ],
       "receipts": []

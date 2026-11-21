@@ -59,3 +59,8 @@ The current manuscript-depth check reports 8,718 prose words, 16 display equatio
 ## Current shared-base review
 
 The shell checkout is clean on `develop` at the release carrying `@fasl-work/caos-app-shell` 0.26.2; the template checkout is clean on `develop` at 0.15.014. The product pins shell 0.26.2 in its manifest, lockfile and exact-version gate and records template 0.15.014. The reviewed current release notes show no unadopted released delta. Product-specific shared-file adaptations remain local and were not overwritten. No shell or template edit is justified by this review.
+
+
+## Online EDI and replay verification
+
+A fresh current-source run of `tests/api/test_online_mt.py` in `.venv-api` passed all 17 tests in 254.40 s; one Starlette/httpx deprecation warning was emitted. The source-bound MT reconciliation suite passed all 9 tests in `.venv-pipeline` in 53.11 s. This is current local API and replay evidence. The local benchmark itself says actual ML-VPS admission is pending, so these tests do not open the worker feature flag or qualify live host capacity.
