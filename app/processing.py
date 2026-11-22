@@ -56,6 +56,48 @@ from app.waveform_contract import (
 )
 
 
+M04_LOCAL_RECIPE = {
+    "schema": "m04-local-recipe/v1",
+    "status": "candidate_only",
+    "required_inputs": [
+        "unchanged original observation bytes",
+        "a complete closed M04 request with explicit coordinates, units, field, mesh, bounds, prior and noise",
+    ],
+    "commands": [
+        "python data-pipeline/run_magnetic_survey.py prepare --template <closed-request-template.json> --original <original.csv> --output <request.json>",
+        "python data-pipeline/run_magnetic_survey.py validate --request <request.json> --original <original.csv> --output <geometry.json>",
+        "python data-pipeline/run_magnetic_survey.py calibrate --request <request.json> --original <original.csv> --output-dir <candidate-output>",
+        "python data-pipeline/run_magnetic_survey.py evaluate --request <request.json> --original <original.csv> --matrix-dir <candidate-output> --freeze <candidate-output/freeze.json>",
+        "python data-pipeline/run_magnetic_survey.py verify --request <request.json> --original <original.csv> --matrix-dir <candidate-output> --freeze <candidate-output/freeze.json>",
+    ],
+    "acceptance": {
+        "method_accepted": False,
+        "field_validated": False,
+        "online_admitted": False,
+    },
+}
+
+
+def _m04_unavailable(source_eligible: bool) -> dict:
+    return {
+        "method_id": "M04",
+        "eligible": False,
+        "lane": "offline_only",
+        "source_eligible": source_eligible,
+        "reason": (
+            "The M03 flight-line upload is not a complete M04 3-D survey request. "
+            "M04 runs locally as a candidate workflow only; online inversion is closed."
+        ),
+        "reason_fields": ["dataset.m04_request", "method.online_lane", "method.acceptance"],
+        "local_recipe": {
+            **M04_LOCAL_RECIPE,
+            "required_inputs": list(M04_LOCAL_RECIPE["required_inputs"]),
+            "commands": list(M04_LOCAL_RECIPE["commands"]),
+            "acceptance": dict(M04_LOCAL_RECIPE["acceptance"]),
+        },
+    }
+
+
 class DatasetCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     asset_id: uuid.UUID
@@ -395,18 +437,27 @@ def install_processing_routes(app, settings: Settings, current_user, get_session
             if source.rights_decision == "forbidden":
                 source_reason_fields.append("source.rights_decision")
             if not source_matches or not settings.magnetic_online_enabled:
-                return {"dataset_id": dataset.id, "methods": [], "unavailable": [{
-                "method_id": MAGNETIC_ID, "eligible": False,
-                "lane": "ineligible_source" if not source_matches else "pending_host_admission",
-                "source_eligible": source_matches,
-                "reason": ("The source-bound M03 dataset is ready; online execution remains closed until its worker and actual ML VPS resource admission are validated"
-                           if source_matches else "The original hash, citation, rights or private-storage attestation changed after dataset admission"),
-                "reason_fields": sorted(set(source_reason_fields)) if not source_matches else ["host.magnetic_online_admission"],
-                }]}
+                m03_unavailable = {
+                    "method_id": MAGNETIC_ID,
+                    "eligible": False,
+                    "lane": "ineligible_source" if not source_matches else "pending_host_admission",
+                    "source_eligible": source_matches,
+                    "reason": (
+                        "The source-bound M03 dataset is ready; online execution remains closed until its worker and actual ML VPS resource admission are validated"
+                        if source_matches else
+                        "The original hash, citation, rights or private-storage attestation changed after dataset admission"
+                    ),
+                    "reason_fields": (
+                        sorted(set(source_reason_fields))
+                        if not source_matches else ["host.magnetic_online_admission"]
+                    ),
+                }
+                return {"dataset_id": dataset.id, "methods": [],
+                        "unavailable": [m03_unavailable, _m04_unavailable(source_matches)]}
             return {"dataset_id": dataset.id, "methods": [{
                 "method_id": MAGNETIC_ID, "eligible": True, "lane": "online_cpu",
                 "scope": "Source-byte-verified flight-line/height/crossover QC, blocked-line interpolation holdout and supported-only grid",
-            }], "unavailable": []}
+            }], "unavailable": [_m04_unavailable(source_matches)]}
         if dataset.modality in {"ert_profile", "traveltime_profile"}:
             method = data["method_id"]
             if not settings.profile_online_enabled:

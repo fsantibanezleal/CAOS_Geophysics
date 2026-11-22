@@ -89,7 +89,7 @@
       "id": "R-005",
       "verdict": "unresolved",
       "declared_gate": "tests/api/test_method_eligibility.py::test_contract_filtered_methods plus frontend/e2e/eligibility.spec.ts.",
-      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across uploaded modalities, plus local browser coverage for gravity and the actual MT EDI workbench. Five distinct MT scenarios passed across recorded invocations; the full five-case suite did not pass in one invocation, and the report retains the intermediate assertion failure. Magnetic, profile, waveform and physical-root browser paths and hosted admission remain unaccepted; R-005 remains unresolved. The current checkout adds owned synthetic magnetic-flightline and ERT eligibility paths; they were not replayed in this refresh and do not close the remaining modality or host gaps. Follow-up 2026-11-21: fresh current-source online EDI tests pass 17/17; source-valid MT replay reconciliation passes 9/9. This establishes local API/source/replay behavior only; actual ML-VPS admission remains pending, so the feature stays closed by default.",
+      "note": "Merged M05/M06 APIs distinguish original EDI QC, passing-screen fixed-layer inverse and flag-only gravity. Default public MT admission remains closed; end-to-end eligibility for all uploaded modalities is incomplete. The current branch adds field-specific reason paths for unavailable methods across uploaded modalities, plus local browser coverage for gravity and the actual MT EDI workbench. Five distinct MT scenarios passed across recorded invocations; the full five-case suite did not pass in one invocation, and the report retains the intermediate assertion failure. Magnetic, profile, waveform and physical-root browser paths and hosted admission remain unaccepted; R-005 remains unresolved. The current checkout adds owned synthetic magnetic-flightline and ERT eligibility paths; they were not replayed in this refresh and do not close the remaining modality or host gaps. Follow-up 2026-11-21: fresh current-source online EDI tests pass 17/17; source-valid MT replay reconciliation passes 9/9. This establishes local API/source/replay behavior only; actual ML-VPS admission remains pending, so the feature stays closed by default. A further local check adds an owner-scoped magnetic M04 candidate recipe with source-validity reason and explicit online closure; its focused API and magnetic upload regression tests pass, but M04 workflow/UI and host admission remain open.",
       "evidence": [
         {
           "path": "docs/design/features/project-processing-jobs/tasks.md",
@@ -130,6 +130,14 @@
         {
           "path": "tests/api/test_method_eligibility.py",
           "sha256": "b84af52103274752af597839010accda9c5f23100e155c68ab370bedec230352"
+        },
+        {
+          "path": "app/processing.py",
+          "sha256": "61102d1de9f5554e063038e6758147213cff9a253184c6c5068022ee5412eeec"
+        },
+        {
+          "path": "tests/api/test_magnetic_survey.py",
+          "sha256": "09dd634525e106a432854e7355be2c9544d118fefe63dc2093804a86e8b0f777"
         },
         {
           "path": "tests/api/test_online_mt.py",
@@ -206,7 +214,7 @@
         },
         {
           "path": "app/processing.py",
-          "sha256": "d72c6cbc8cf5a75316a2053f586b0794382ad2c9476c6b7c14b215a6fe3d9342"
+          "sha256": "61102d1de9f5554e063038e6758147213cff9a253184c6c5068022ee5412eeec"
         },
         {
           "path": "app/gravity_l2_compute.py",
