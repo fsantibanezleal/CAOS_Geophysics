@@ -13,15 +13,27 @@ freeze outside Git before any sealed outer evaluation. A failed fit is retained
 as a failed receipt; the command does not relax numerical/resource limits or
 claim field validation, method acceptance, or online admission.
 
-`run_magnetic_survey.py` accepts a closed request and an exact observation CSV
-under the format in the M04 [contracts](../docs/design/features/m04-survey-inversion/contracts.md).
-It compares all supplied row IDs and measurement values to the request before
-writing geometry or importing the numerical solver. Calibration/evaluation
-receipts live only below `GEOPHYSICS_LOCAL_DATA_ROOT`. These commands are local
-and CPU-bound; they do not download provider data, verify correction recipes,
-or confer scientific or field acceptance.
+`run_magnetic_survey.py prepare` binds an exact observation CSV to a closed
+metadata template under the format in the M04
+[contracts](../docs/design/features/m04-survey-inversion/contracts.md). It
+updates only observation and source hashes, revalidates the closed request, and
+creates a new request below `GEOPHYSICS_LOCAL_DATA_ROOT`. The companion
+`validate`, `calibrate`, `evaluate` and `verify` commands compare the supplied
+CSV's ordered row IDs and every measurement against that request before writing
+geometry or importing the numerical solver. Calibration/evaluation receipts
+also live only below the local data root. These commands are local and
+CPU-bound; they do not download provider data, verify correction recipes, or
+confer scientific or field acceptance.
 
 ```powershell
+$metadataTemplate = (Resolve-Path 'survey-metadata-template.json').Path
+$observationCsv = (Resolve-Path 'survey-observations.csv').Path
+$preparedRequest = "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\request.json"
+New-Item -ItemType Directory -Force -Path (Split-Path $preparedRequest) | Out-Null
+.venv-pipeline\Scripts\python.exe data-pipeline\run_magnetic_survey.py prepare `
+  --template $metadataTemplate --original $observationCsv --output $preparedRequest
+$request = (Resolve-Path $preparedRequest).Path
+
 .venv-pipeline\Scripts\python.exe data-pipeline\run_magnetic_survey.py validate `
   --request $request --original $observationCsv `
   --output "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\geometry.json"

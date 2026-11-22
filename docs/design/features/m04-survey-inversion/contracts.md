@@ -406,8 +406,16 @@ Exit0 means complete geometry validation/export only,2 invalid input/partition,
 provider original, so source.original_sha256 remains unverified raw provenance.
 It never advertises calibrate/evaluate. Those full tools remain R-414 scope.
 
-The separate `run_magnetic_survey.py` local workflow accepts a closed request
-plus a caller-owned observation CSV. The CSV is UTF-8 without BOM, uses LF line
+The separate `run_magnetic_survey.py prepare` workflow accepts a closed
+metadata template plus a caller-owned observation CSV. It replaces only the
+template's observation array, updates its source byte count/hash and original
+node input/output hashes, revalidates the complete closed request, then writes
+a new request exclusively below `GEOPHYSICS_LOCAL_DATA_ROOT`. The template must
+already declare correct geometry, field, noise, bounds, units, rights and
+provenance policy; the command does not guess or weaken any of them. Existing
+requests and output files are never overwritten. The companion `validate`,
+`calibrate`, `evaluate` and `verify` commands accept the resulting closed
+request plus that same caller-owned observation CSV. The CSV is UTF-8 without BOM, uses LF line
 endings and a final LF, and has exactly `row_id,E_nT,N_nT,U_nT` for
 `secondary_enu_nT` or `row_id,value_nT` for either scalar quantity. It contains
 exactly one row per acquisition row, in the declared original order, with

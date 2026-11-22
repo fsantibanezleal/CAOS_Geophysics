@@ -113,7 +113,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
+          "sha256": "fdc5d824a2e12d1a1851a034c42f6360a83f21fff56f5b8b49b8bb8a9a2e45e7"
         },
         {
           "path": "frontend/e2e/eligibility.spec.ts",
@@ -748,7 +748,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
+          "sha256": "fdc5d824a2e12d1a1851a034c42f6360a83f21fff56f5b8b49b8bb8a9a2e45e7"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
@@ -1059,7 +1059,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
+          "sha256": "fdc5d824a2e12d1a1851a034c42f6360a83f21fff56f5b8b49b8bb8a9a2e45e7"
         },
         {
           "path": "docs/validation/source-content-coverage.json",
@@ -1212,7 +1212,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
+          "sha256": "fdc5d824a2e12d1a1851a034c42f6360a83f21fff56f5b8b49b8bb8a9a2e45e7"
         },
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",

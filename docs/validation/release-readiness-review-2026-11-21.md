@@ -21,6 +21,16 @@ R-407--R-411 and R-416--R-419 remain structurally incomplete; the method
 inventory is 10/20, and scientific/field acceptance remain false. This local
 workflow change does not satisfy release or host cutover gates.
 
+The same CLI now includes `prepare`: it binds a source CSV to a closed metadata
+template, updates the observation and provenance hashes, validates the new
+request, and writes it exclusively under `GEOPHYSICS_LOCAL_DATA_ROOT`. A
+hash-bound row/value mismatch, duplicate-output attempt, path escape, and
+closed-request rejection before numerical imports are covered. This adds case
+preparation without inferring geometry, uncertainty, rights or corrections.
+The current seven-module targeted M04 replay passes 59 tests in
+`.venv-pipeline`; this is not the full M04 or product suite. The release verdict
+is unchanged.
+
 ## Implemented and checked in this review
 
 - Notebook execution now always uses a disposable, release-shaped copy. Compressed M13 ONNX bytes are decompressed only there after byte-count and SHA-256 verification, for both `--check` and output regeneration. This fixes normal replay against the source tree, where the published ONNX exists only compressed.

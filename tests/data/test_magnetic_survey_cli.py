@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import csv
+import copy
+import builtins
 import hashlib
 import io
 import json
@@ -89,6 +91,50 @@ def test_actual_user_bytes_and_reproduction(tmp_path):
     assert not rejected_output.exists()
 
 
+def test_prepare_binds_uploaded_csv_into_a_closed_request(tmp_path):
+    data_root = tmp_path / "research-data"
+    data_root.mkdir()
+    template = request()
+    measured = copy.deepcopy(template)
+    measured_values = [((index % 29) - 14) * 0.125 for index in range(864)]
+    measured["observations"]["values"]["data"] = measured_values
+    rehash(measured, "observations/values")
+    original = _source_csv(measured)
+    original_path = tmp_path / "owner-survey.csv"
+    original_path.write_bytes(original)
+    template_path = tmp_path / "metadata-template.json"
+    template_path.write_bytes(encode(template))
+
+    prepared_path = data_root / "prepared" / "survey-request.json"
+    prepared_path.parent.mkdir()
+    prepared = _run(["prepare", "--template", template_path, "--original", original_path,
+                     "--output", prepared_path], data_root)
+    assert prepared.returncode == 0, prepared.stdout + prepared.stderr
+    receipt = json.loads(prepared.stdout)
+    assert receipt["status"] == "prepared"
+    assert receipt["method_accepted"] is False
+    assert receipt["online_admitted"] is False
+    assert receipt["source_sha256"] == hashlib.sha256(original).hexdigest()
+    assert receipt["source_bytes"] == len(original)
+
+    prepared_document = json.loads(prepared_path.read_bytes())
+    assert prepared_document["observations"]["values"]["data"] == measured_values
+    assert prepared_document["source"]["original_sha256"] == hashlib.sha256(original).hexdigest()
+    assert prepared_document["source"]["original_bytes"] == len(original)
+    assert template_path.read_bytes() == encode(template)
+
+    geometry_path = data_root / "prepared" / "geometry.json"
+    replay = _run(["validate", "--request", prepared_path, "--original", original_path,
+                   "--output", geometry_path], data_root)
+    assert replay.returncode == 0, replay.stdout + replay.stderr
+    assert json.loads(replay.stdout)["status"] == "validated"
+
+    duplicate = _run(["prepare", "--template", template_path, "--original", original_path,
+                      "--output", prepared_path], data_root)
+    assert duplicate.returncode == 5
+    assert json.loads(duplicate.stdout)["code"] == "durability"
+
+
 def test_hash_bound_source_cannot_be_paired_with_different_observations(tmp_path):
     data_root = tmp_path / "research-data"
     data_root.mkdir()
@@ -170,3 +216,32 @@ def test_output_cannot_escape_external_data_root(tmp_path):
                    "--output", outside], data_root)
     assert result.returncode == 2
     assert not outside.exists()
+
+
+def test_closed_request_rejection_precedes_numerical_import(monkeypatch, tmp_path, capsys):
+    import run_magnetic_survey
+
+    data_root = tmp_path / "research-data"
+    data_root.mkdir()
+    request_path = tmp_path / "invalid-request.json"
+    request_path.write_bytes(b"{}")
+    original_path = tmp_path / "original.csv"
+    original_path.write_bytes(b"unparsed source bytes\n")
+    monkeypatch.setenv("GEOPHYSICS_LOCAL_DATA_ROOT", str(data_root))
+    original_import = builtins.__import__
+
+    def guarded_import(name, *args, **kwargs):
+        if name in {"numpy", "magnetic_survey", "magnetic_survey_bundle", "magnetic_candidate_matrix"}:
+            raise AssertionError(f"numerical module imported before request admission: {name}")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", guarded_import)
+    code = run_magnetic_survey.main([
+        "validate", "--request", str(request_path), "--original", str(original_path),
+        "--output", str(data_root / "rejected.json"),
+    ])
+    assert code == 2
+    error = json.loads(capsys.readouterr().out)
+    assert error["schema"] == "magnetic-local-error-1"
+    assert error["code"] == "type"
+    assert not (data_root / "rejected.json").exists()

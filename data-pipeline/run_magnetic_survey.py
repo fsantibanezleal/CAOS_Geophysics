@@ -16,6 +16,7 @@ import os
 from pathlib import Path
 import re
 import stat
+import struct
 import sys
 
 
@@ -39,23 +40,8 @@ def _read_regular(path: Path, maximum: int, label: str) -> bytes:
     return raw
 
 
-def _verify_original(request_raw: bytes, original_raw: bytes, parser, survey) -> dict:
-    handle = parser.parse_request(request_raw)
-    metadata = handle.metadata()
-    source = metadata["source"]
-    actual = hashlib.sha256(original_raw).hexdigest()
-    if source["original_bytes"] != len(original_raw) or source["original_sha256"] != actual:
-        raise ValueError("source: supplied original bytes do not match the declared size and SHA-256")
-    try:
-        document = json.loads(request_raw)
-    except json.JSONDecodeError as error:
-        raise ValueError("source: malformed admitted request") from error
-    if any(node["operation"] != "original" for node in document["processing"]["nodes"]):
-        raise ValueError("source: this CSV adapter accepts original measurements only; processed lineage requires its own verifier")
-
-    # The provenance digest alone does not establish that the sealed likelihood
-    # came from the supplied file. Admit one explicit UTF-8 CSV interchange and
-    # compare every row ID and measurement before exposing values to a solver.
+def _csv_values(original_raw: bytes, metadata: dict) -> list[float]:
+    """Read the exact normalized observation CSV, retaining source row order."""
     if original_raw.startswith(b"\xef\xbb\xbf") or b"\r" in original_raw or not original_raw.endswith(b"\n"):
         raise ValueError("source: expected UTF-8 CSV without BOM, CR line endings, or missing final LF")
     try:
@@ -70,28 +56,91 @@ def _verify_original(request_raw: bytes, original_raw: bytes, parser, survey) ->
         if next(rows, None) != expected_header:
             raise ValueError("source: CSV header does not match the declared observation quantity")
         expected_ids = metadata["acquisition"]["row_ids"]
-        raw_values = document["observations"]["values"]["data"]
         width = len(columns)
-        if len(raw_values) != len(expected_ids) * width:
-            raise ValueError("source: observation array count does not match the source row inventory")
-        for index, expected_id in enumerate(expected_ids):
+        values = []
+        for expected_id in expected_ids:
             row = next(rows, None)
             if row is None or len(row) != width + 1 or row[0] != expected_id:
                 raise ValueError("source: CSV row IDs or row count do not match the sealed inventory")
-            for component, token in enumerate(row[1:]):
+            for token in row[1:]:
                 if not _DECIMAL.fullmatch(token):
                     raise ValueError("source: CSV measurement must use a finite decimal literal")
                 try:
                     value = float(token)
                 except ValueError as error:
                     raise ValueError("source: CSV measurement is not a numeric value") from error
-                if not math.isfinite(value) or value != float(raw_values[index * width + component]):
-                    raise ValueError("source: CSV measurements do not match the sealed observations")
+                if not math.isfinite(value):
+                    raise ValueError("source: CSV measurement is not finite")
+                values.append(value)
         if next(rows, None) is not None:
             raise ValueError("source: unexpected rows after the sealed inventory")
     except (csv.Error, StopIteration) as error:
         raise ValueError("source: malformed or incomplete CSV observation table") from error
-    return survey.plan_geometry(handle)
+    return values
+
+
+def _verify_original(handle, request_raw: bytes, original_raw: bytes) -> None:
+    metadata = handle.metadata()
+    source = metadata["source"]
+    actual = hashlib.sha256(original_raw).hexdigest()
+    if source["original_bytes"] != len(original_raw) or source["original_sha256"] != actual:
+        raise ValueError("source: supplied original bytes do not match the declared size and SHA-256")
+    document = json.loads(request_raw)
+    nodes = document["processing"]["nodes"]
+    if len(nodes) != 1 or nodes[0]["operation"] != "original" or document["processing"]["final_node"] != nodes[0]["id"]:
+        raise ValueError("source: this CSV adapter accepts original measurements only; processed lineage requires its own verifier")
+    csv_values = _csv_values(original_raw, metadata)
+    raw_values = document["observations"]["values"]["data"]
+    if len(raw_values) != len(csv_values) or any(
+        value != float(source_value) for value, source_value in zip(raw_values, csv_values, strict=True)
+    ):
+        raise ValueError("source: CSV measurements do not match the sealed observations")
+
+
+def _prepare_request(template_raw: bytes, original_raw: bytes, parser) -> bytes:
+    """Bind normalized source observations and provenance into a closed request."""
+    template = parser.parse_request(template_raw)
+    metadata = template.metadata()
+    document = json.loads(template_raw)
+    nodes = document["processing"]["nodes"]
+    if len(nodes) != 1 or nodes[0]["operation"] != "original" or document["processing"]["final_node"] != nodes[0]["id"]:
+        raise ValueError("template: prepare accepts one original node; processed lineage requires its own verifier")
+    values = _csv_values(original_raw, metadata)
+    descriptor = document["observations"]["values"]
+    expected_count = math.prod(descriptor["shape"])
+    if len(values) != expected_count:
+        raise ValueError("source: CSV observation count differs from the closed template shape")
+
+    values_sha256 = hashlib.sha256(b"".join(struct.pack("<d", value) for value in values)).hexdigest()
+    source_sha256 = hashlib.sha256(original_raw).hexdigest()
+    descriptor["data"] = values
+    descriptor["sha256"] = values_sha256
+    document["observations"]["values_sha256"] = values_sha256
+    document["source"]["original_sha256"] = source_sha256
+    document["source"]["original_bytes"] = len(original_raw)
+    nodes[0]["input_sha256"] = source_sha256
+    nodes[0]["output_sha256"] = values_sha256
+
+    prepared = parser.canonical(document)
+    parser.parse_request(prepared)
+    return prepared
+
+
+def _write_new_file(target: Path, raw: bytes) -> None:
+    """Exclusive write, fsync, readback, and remove only this new file on failure."""
+    created = False
+    try:
+        with target.open("xb") as stream:
+            created = True
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if target.read_bytes() != raw:
+            raise OSError("output: readback differs from the prepared bytes")
+    except BaseException:
+        if created:
+            target.unlink(missing_ok=True)
+        raise
 
 
 def _data_path(path: Path, root: Path, *, must_exist: bool) -> Path:
@@ -119,6 +168,11 @@ def _summary(value: dict) -> str:
 def _main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="operation", required=True)
+
+    prepare = sub.add_parser("prepare", help="bind a normalized measurement CSV to a closed metadata template")
+    prepare.add_argument("--template", type=Path, required=True)
+    prepare.add_argument("--original", type=Path, required=True)
+    prepare.add_argument("--output", type=Path, required=True)
 
     validate = sub.add_parser("validate", help="validate bytes, rights, geometry, and write a sealed geometry export")
     validate.add_argument("--request", type=Path, required=True)
@@ -156,22 +210,45 @@ def _main(argv=None) -> int:
     try:
         from sources import local_data_root
         import magnetic_survey_json as request_parser
-        import magnetic_survey
-        import magnetic_survey_bundle
     except ImportError as error:
         print(_summary({"schema": "magnetic-local-error-1", "code": "dependency",
                         "message": f"local numerical environment unavailable: {type(error).__name__}"}))
         return 2
 
     try:
+        if args.operation == "prepare":
+            template_raw = _read_regular(args.template, MAX_REQUEST_BYTES, "template")
+            original_raw = _read_regular(args.original, MAX_ORIGINAL_BYTES, "original")
+            prepared = _prepare_request(template_raw, original_raw, request_parser)
+            target = _data_path(args.output, local_data_root(), must_exist=False)
+            if not target.parent.is_dir():
+                raise ValueError("output: parent directory must already exist under GEOPHYSICS_LOCAL_DATA_ROOT")
+            _write_new_file(target, prepared)
+            sealed = request_parser.parse_request(prepared)
+            sealed_metadata = sealed.metadata()
+            print(_summary({"status": "prepared", "request_sha256": hashlib.sha256(prepared).hexdigest(),
+                            "source_sha256": sealed_metadata["source"]["original_sha256"],
+                            "source_bytes": len(original_raw), "observation_rows": len(sealed_metadata["acquisition"]["row_ids"]),
+                            "method_accepted": False, "online_admitted": False}))
+            return 0
+
         request_raw = _read_regular(args.request, MAX_REQUEST_BYTES, "request")
         original_raw = _read_regular(args.original, MAX_ORIGINAL_BYTES, "original")
-        plan = _verify_original(request_raw, original_raw, request_parser, magnetic_survey)
+        handle = request_parser.parse_request(request_raw)
+        _verify_original(handle, request_raw, original_raw)
+
+        # No numerical geometry or solver module is imported until the complete
+        # closed request and the source-to-observation byte match have passed.
+        import magnetic_survey
+
+        plan = magnetic_survey.plan_geometry(handle)
 
         if args.operation == "validate":
             target = _data_path(args.output, local_data_root(), must_exist=False)
             if target.exists():
                 raise FileExistsError("output: geometry exports are write-once")
+            import magnetic_survey_bundle
+
             magnetic_survey_bundle.write_geometry(target, request_parser.parse_request(request_raw))
             print(_summary({"status": "validated", "geometry_seal_sha256": plan["identity"]["seal_sha256"],
                             "configuration_sha256": plan["identity"]["configuration_sha256"],
