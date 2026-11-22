@@ -1,7 +1,7 @@
 {
   "schema": "geophysics.sdd-convergence/v1",
   "sdd_path": "docs/design/SDD.md",
-  "sdd_sha256": "86bf1f6713132356337bf26253296f8323df2ffab53e8da969cff44271721e48",
+  "sdd_sha256": "8f54fe13649144521abdabacfc736e41b22384210f47807ec337025111b6a28e",
   "assessed_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
   "assessed_at": "2026-11-12T12:12:23Z",
   "release": {
@@ -113,7 +113,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "786d0b1fc0c498a8fbea69276dac7f45f92217802c4d6f085cd337f875dd6037"
+          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
         },
         {
           "path": "frontend/e2e/eligibility.spec.ts",
@@ -724,7 +724,7 @@
         },
         {
           "path": "docs/design/SDD.md",
-          "sha256": "86bf1f6713132356337bf26253296f8323df2ffab53e8da969cff44271721e48"
+          "sha256": "8f54fe13649144521abdabacfc736e41b22384210f47807ec337025111b6a28e"
         },
         {
           "path": "docs/design/features/m12-velocity-validation/convergence.md",
@@ -748,7 +748,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "786d0b1fc0c498a8fbea69276dac7f45f92217802c4d6f085cd337f875dd6037"
+          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
         },
         {
           "path": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
@@ -999,7 +999,7 @@
         },
         {
           "path": "docs/design/SDD.md",
-          "sha256": "86bf1f6713132356337bf26253296f8323df2ffab53e8da969cff44271721e48"
+          "sha256": "8f54fe13649144521abdabacfc736e41b22384210f47807ec337025111b6a28e"
         },
         {
           "path": "docs/design/features/m03-flightline-processing/validation.md",
@@ -1059,7 +1059,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "786d0b1fc0c498a8fbea69276dac7f45f92217802c4d6f085cd337f875dd6037"
+          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
         },
         {
           "path": "docs/validation/source-content-coverage.json",
@@ -1212,7 +1212,7 @@
         },
         {
           "path": "docs/validation/release-readiness-review-2026-11-21.md",
-          "sha256": "786d0b1fc0c498a8fbea69276dac7f45f92217802c4d6f085cd337f875dd6037"
+          "sha256": "bbc1d7f469939dea7b531d2c38b846515e8e867b544e491ae4882e4949b721ec"
         },
         {
           "path": "docs/validation/source-builder-independent-review-2026-10-03.md",

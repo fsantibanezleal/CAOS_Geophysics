@@ -86,3 +86,7 @@ The current template SDD check found that the EDI feature mapped requirements to
 ## Shared-shell visual acceptance: 2026-11-21
 
 `npm run gate -- --out E:\_Temp\CAOS_Geophysics\shell-gate-20261121-review` passed the installed Shell 0.26.2 gate: 1,684 measured states, 223 captures, zero failures and zero waivers across five viewport sizes, both themes, both languages and the declared wide-font runs. Four representative captures were manually inspected (desktop Methodology, phone App in English/light, phone App in Spanish/dark, and tablet App in Spanish/dark). This validates the measured shell contract for the current build; it does not cover the missing scientific acceptance rows or the live VPS cutover.
+
+## BS-1 acceptance wording correction
+
+The product SDD's BS-1 acceptance row now states the comparison boundary precisely: shared observations and case IDs, $Q$ as the data generator and scorer, $A$ for the residual features and reference inverse, and independent $Q$-based prediction scoring. The learned model still loses on the recorded cohorts, and this correction does not change scientific acceptance or release status.
